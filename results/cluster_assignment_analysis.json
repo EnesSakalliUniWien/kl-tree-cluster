@@ -1,0 +1,238 @@
+{
+  "summary": {
+    "n_samples": 30,
+    "n_features": 30,
+    "n_clusters_true": 3,
+    "n_clusters_kl": 3,
+    "noise_level": 1.0,
+    "seed": 42
+  },
+  "quality_metrics": {
+    "ari": 1.0,
+    "nmi": 1.0,
+    "accuracy": 0.3333333333333333,
+    "purity": 1.0
+  },
+  "cluster_composition": {
+    "kl_cluster_0": {
+      "total_samples": 10,
+      "true_cluster_composition": {
+        "2": 10
+      },
+      "is_pure": true
+    },
+    "kl_cluster_1": {
+      "total_samples": 10,
+      "true_cluster_composition": {
+        "1": 10
+      },
+      "is_pure": true
+    },
+    "kl_cluster_2": {
+      "total_samples": 10,
+      "true_cluster_composition": {
+        "0": 10
+      },
+      "is_pure": true
+    }
+  },
+  "sample_assignments": [
+    {
+      "sample_id": "S0",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S1",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S2",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S3",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S4",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S5",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S6",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S7",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S8",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S9",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S10",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S11",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S12",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S13",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S14",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S15",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S16",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S17",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S18",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S19",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S20",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S21",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S22",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    },
+    {
+      "sample_id": "S23",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S24",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S25",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S26",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S27",
+      "true_cluster": 2,
+      "kl_cluster": 0,
+      "correct": false
+    },
+    {
+      "sample_id": "S28",
+      "true_cluster": 1,
+      "kl_cluster": 1,
+      "correct": true
+    },
+    {
+      "sample_id": "S29",
+      "true_cluster": 0,
+      "kl_cluster": 2,
+      "correct": false
+    }
+  ],
+  "confusion_matrix": {
+    "0": {
+      "0": 0,
+      "1": 0,
+      "2": 10
+    },
+    "1": {
+      "0": 0,
+      "1": 10,
+      "2": 0
+    },
+    "2": {
+      "0": 10,
+      "1": 0,
+      "2": 0
+    }
+  }
+}
