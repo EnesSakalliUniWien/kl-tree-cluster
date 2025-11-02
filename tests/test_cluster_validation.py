@@ -2,7 +2,6 @@
 Test module for validating cluster decomposition algorithm across multiple scenarios.
 """
 
-import os
 import re
 import numpy as np
 import pandas as pd
@@ -20,9 +19,6 @@ from tree.poset_tree import PosetTree
 from hierarchy_analysis import calculate_hierarchy_kl_divergence
 from hierarchy_analysis.cluster_decomposition import ClusterDecomposer
 from hierarchy_analysis.local_kl_utils import get_local_kl_series
-from hierarchy_analysis.kl_correlation_analysis import (
-    calculate_kl_divergence_mutual_information_matrix,
-)
 from hierarchy_analysis.statistical_tests import (
     annotate_nodes_with_statistical_significance_tests,
     annotate_child_parent_divergence,
@@ -447,14 +443,6 @@ def validate_cluster_algorithm(
         tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
         stats_t = calculate_hierarchy_kl_divergence(tree_t, data_t)
 
-        # Calculate MI matrix
-        try:
-            mi_t, _ = calculate_kl_divergence_mutual_information_matrix(tree_t, stats_t)
-            print(f"  MI calculation successful, shape: {mi_t.shape}")
-        except Exception as e:
-            print(f"  ERROR in MI calculation: {e}")
-            mi_t = pd.DataFrame()  # Empty dataframe
-
         # Statistical testing - BH global and BH local (child vs parent)
         results_t = annotate_nodes_with_statistical_significance_tests(
             stats_t, meta["n_features"], significance_level, 2.0, True
@@ -472,20 +460,6 @@ def validate_cluster_algorithm(
 
         # Use BH-corrected significance with deviation testing (same as main pipeline)
         significance_column = "Are_Features_Dependent"
-
-        # Debug: Check MI values
-        print(f"  MI matrix shape: {mi_t.shape}")
-        mi_values = mi_t.values.flatten()
-        # Handle both float and int types for MI values
-        if mi_values.dtype.kind == "f":  # float
-            mi_values = mi_values[~np.isnan(mi_values)]  # Remove NaN
-            mi_values = mi_values[np.isfinite(mi_values)]  # Remove inf
-        if len(mi_values) > 0:
-            print(
-                f"  MI stats: mean={mi_values.mean():.3f}, std={mi_values.std():.3f}, min={mi_values.min():.3f}, max={mi_values.max():.3f}"
-            )
-        else:
-            print("  MI matrix is empty or all NaN/inf!")
 
         decomposer_t = ClusterDecomposer(
             tree=tree_t,
@@ -820,9 +794,6 @@ def validate_cluster_algorithm(
                 Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
                 tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
                 stats_t = calculate_hierarchy_kl_divergence(tree_t, data_t)
-                mi_t, _ = calculate_kl_divergence_mutual_information_matrix(
-                    tree_t, stats_t
-                )
                 results_t = annotate_nodes_with_statistical_significance_tests(
                     stats_t, meta["n_features"], significance_level, 2.0, True
                 )

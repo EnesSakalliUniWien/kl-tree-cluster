@@ -1,3 +1,9 @@
+"""Helpers for accessing and computing child-vs-parent KL divergences.
+
+These utilities hide the bookkeeping around cached values stored on the tree
+and provide a robust Series accessor used by multiple statistical routines.
+"""
+
 from __future__ import annotations
 
 from typing import Any, Iterable
@@ -18,7 +24,7 @@ def get_local_kl_value(
     parent_dist: Iterable[float] | None = None,
     default: float | None = np.nan,
 ) -> float | None:
-    """Return local KL for child‖parent, recomputing when needed."""
+    """Return local KL(child‖parent) using stored value or on-the-fly recompute."""
 
     node_data = tree.nodes[child_id]
     stored = node_data.get("kl_divergence_local")
@@ -41,7 +47,7 @@ def get_local_kl_value(
 
 
 def get_local_kl_series(df: pd.DataFrame | pd.Series | None) -> pd.Series:
-    """Return the local KL Series from a stats DataFrame with safe defaults."""
+    """Extract the local KL divergence column as a float Series with safe defaults."""
 
     if df is None:
         return pd.Series(dtype=float)
@@ -55,4 +61,3 @@ def get_local_kl_series(df: pd.DataFrame | pd.Series | None) -> pd.Series:
         return series.astype(float, copy=False)
 
     return pd.Series(index=getattr(df, "index", []), dtype=float)
-

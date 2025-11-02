@@ -6,21 +6,9 @@ Unit tests for clustering algorithm components and detailed validation.
 import pytest
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
 from sklearn.metrics import mutual_info_score
-from hierarchy_analysis import calculate_hierarchy_kl_divergence
-from hierarchy_analysis.kl_correlation_analysis import (
-    calculate_kl_divergence_mutual_information_matrix,
-)
-from hierarchy_analysis.statistical_tests import (
-    annotate_nodes_with_statistical_significance_tests,
-    annotate_child_parent_divergence,
-    annotate_sibling_independence_cmi,
-)
 from hierarchy_analysis.cluster_decomposition import ClusterDecomposer
-from tree.poset_tree import PosetTree
 
 
 @pytest.fixture
@@ -34,36 +22,6 @@ def test_data():
         X_bin, index=[f"S{j}" for j in range(20)], columns=[f"F{j}" for j in range(20)]
     )
     return data_t, y_t
-
-
-@pytest.fixture
-def processed_data(test_data):
-    """Process test data into tree, stats, MI matrix, and results."""
-    data_t, y_t = test_data
-
-    # Build tree and calculate stats
-    Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
-    tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
-    stats_t = calculate_hierarchy_kl_divergence(tree_t, data_t)
-
-    # Calculate MI matrix
-    mi_t, _ = calculate_kl_divergence_mutual_information_matrix(tree_t, stats_t)
-
-    # Statistical testing
-    results_t = annotate_nodes_with_statistical_significance_tests(
-        stats_t, 20, 0.05, 2.0
-    )
-    # Add BH-corrected local (child vs parent) significance
-    results_t = annotate_child_parent_divergence(
-        tree_t, results_t, 20, 0.05
-    )
-
-    # Add conditional MI-based sibling independence (per parent) with BH control
-    results_t = annotate_sibling_independence_cmi(
-        tree_t, results_t, significance_level_alpha=0.05, permutations=75
-    )
-
-    return tree_t, stats_t, mi_t, results_t, y_t
 
 
 def test_tree_structure(processed_data):

@@ -308,6 +308,7 @@ __all__ = [
     "_cmi_perm_from_args",
 ]
 
+
 # Backwards-compat alias expected by some imports/tests
 def _mi_binary_vec(x_1d: np.ndarray, y_2d: np.ndarray) -> np.ndarray:
     return _mi_binary_vec_accel(x_1d, y_2d)

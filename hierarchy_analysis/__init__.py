@@ -12,9 +12,6 @@ from .divergence_metrics import (
     calculate_kl_divergence_vector,
     calculate_hierarchy_kl_divergence,
 )
-from .similarity_analysis import (
-    analyze_hierarchy_similarity_patterns,
-)
 from .cluster_decomposition import ClusterDecomposer
 from .kl_correlation_analysis import (
     calculate_kl_divergence_mutual_information_matrix,
@@ -42,7 +39,6 @@ from .statistics import (
 __all__ = [
     "calculate_kl_divergence_vector",
     "calculate_hierarchy_kl_divergence",
-    "analyze_hierarchy_similarity_patterns",
     "ClusterDecomposer",
     "calculate_kl_divergence_mutual_information_matrix",
     "get_highly_similar_nodes",

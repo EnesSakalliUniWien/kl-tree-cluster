@@ -209,39 +209,9 @@ def get_node_mutual_information_summary(
         )
 
     if not summary_data:
-        return pd.DataFrame(
-            columns=["Node", "Mean_MI", "Max_MI", "Min_MI", "Std_MI"]
-        )
+        return pd.DataFrame(columns=["Node", "Mean_MI", "Max_MI", "Min_MI", "Std_MI"])
 
     summary_df = pd.DataFrame(summary_data)
     summary_df = summary_df.sort_values("Mean_MI", ascending=False)
 
     return summary_df
-
-
-# Backward-compatible wrappers (naming used elsewhere/tests)
-def calculate_kl_divergence_correlation_matrix(
-    tree: PosetTree, node_kl_stats_df: pd.DataFrame
-):
-    """
-    Backward-compatible alias. Returns (mi_matrix, kl_divergence_df).
-    """
-    return calculate_kl_divergence_mutual_information_matrix(tree, node_kl_stats_df)
-
-
-def get_highly_correlated_nodes(
-    mi_matrix: pd.DataFrame, threshold: float = 0.8, exclude_self: bool = True
-) -> pd.DataFrame:
-    """
-    Backward-compatible alias for get_highly_similar_nodes.
-    """
-    return get_highly_similar_nodes(
-        mi_matrix, threshold=threshold, exclude_self=exclude_self
-    )
-
-
-def get_node_correlation_summary(mi_matrix: pd.DataFrame) -> pd.DataFrame:
-    """
-    Backward-compatible alias for get_node_mutual_information_summary.
-    """
-    return get_node_mutual_information_summary(mi_matrix)

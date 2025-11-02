@@ -10,16 +10,22 @@ from .local_kl_utils import get_local_kl_value
 
 
 class ClusterDecomposer:
-    """
-    Split on independence; merge on dependence, with a LOCAL KL gate:
+    """Annotate a hierarchy with significance tests and carve it into clusters.
 
-      1) Local divergence gate (child vs parent):
-         - If either child is NOT significantly different from the parent
-           (low KL(child‖parent) under χ²), MERGE at the parent (stop).
+    The decomposer walks a :class:`~tree.poset_tree.PosetTree` top-down and decides
+    whether to split or merge at each internal node based on two statistical gates:
 
-      2) If both children diverge from the parent, test sibling independence via CMI:
-         - If annotated sibling independence (BH-corrected) is True → RECURSE (split)
-         - Else → MERGE at parent (stop)
+    #. **Local divergence gate** – both children must significantly diverge from the
+       parent according to the local KL (child‖parent) chi-square test. If either
+       child fails, the subtree is merged into a single cluster.
+    #. **Sibling independence gate** – provided the local gate passes, children must
+       be independent given the parent (conditional mutual information BH test).
+       If independence is rejected, the children are merged; otherwise the walk
+       recurses into each child.
+
+    Nodes that pass both gates become cluster boundaries. Leaves under the same
+    boundary node are assigned the same cluster identifier. The resulting report
+    captures the cluster root node, member leaves, and cluster size.
     """
 
     def __init__(
@@ -32,6 +38,29 @@ class ClusterDecomposer:
         significance_column: str = "Are_Features_Dependent",
         parent_gate: str = "off",  # "off" or "strict"
     ):
+        """Configure decomposition thresholds and pre-compute reusable metadata.
+
+        Parameters
+        ----------
+        tree
+            Directed hierarchy (typically a :class:`~tree.poset_tree.PosetTree`).
+        results_df
+            DataFrame of statistical annotations (e.g., columns produced by
+            ``hierarchy_analysis.statistics`` helpers). May be ``None`` if the caller
+            plans to rely on on-the-fly calculations.
+        n_features
+            Total number of feature dimensions; inferred from node distributions when
+            ``None``.
+        alpha_local
+            Significance level used when the local KL gate falls back to raw
+            chi-square tests.
+        significance_column
+            Column name in ``results_df`` representing node-level significance for the
+            optional parent gate.
+        parent_gate
+            ``"off"`` to ignore parent-level significance, ``"strict"`` to require
+            parents to be marked significant before splitting.
+        """
         self.tree = tree
         self.results_df = results_df if results_df is not None else pd.DataFrame()
         self.significance_column = significance_column
@@ -136,7 +165,7 @@ class ClusterDecomposer:
     # ---------- utilities ----------
 
     def _get_all_leaves(self, node_id: str) -> set[str]:
-        # Use cached descendant sets directly (faster than traversing)
+        """Return the set of leaf labels beneath ``node_id`` using cached posets."""
         fs = self._desc_sets.get(node_id, frozenset())
         if fs:
             return set(fs)
@@ -146,15 +175,17 @@ class ClusterDecomposer:
         return set()
 
     def is_significant(self, node_id: str) -> bool:
-        # Parent significance gate (optional)
+        """Convenience accessor for parent-level significance gate."""
         return bool(self._parent_sig.get(node_id, False))
 
     # ---------- local KL (child vs parent) ----------
 
     def _leaf_count(self, node_id: str) -> int:
+        """Retrieve cached leaf-count for ``node_id`` (populated during init)."""
         return self._leaf_count_cache[node_id]
 
     def _child_parent_pvalue(self, child: str, parent: str) -> float:
+        """Compute or reuse the chi-square p-value for ``child`` vs ``parent``."""
         key = (child, parent)
         if key in self._local_p_cache:
             return self._local_p_cache[key]
@@ -174,6 +205,7 @@ class ClusterDecomposer:
         return p
 
     def _child_diverges_from_parent(self, child: str, parent: str) -> bool:
+        """Determine whether the local KL test flags ``child`` as divergent."""
         key = (child, parent)
         if key in self._local_diverge_cache:
             return self._local_diverge_cache[key]
@@ -193,6 +225,7 @@ class ClusterDecomposer:
     # ---------- core decomposition (iterative, no recursion) ----------
 
     def _should_split(self, parent: str) -> bool:
+        """Evaluate both gates and return ``True`` when the parent should split."""
         # Optional: gate by parent significance
         if (
             self.parent_gate == "strict"
@@ -219,10 +252,11 @@ class ClusterDecomposer:
         return bool(indep is True)
 
     def _collect_cluster_leaves(self, node_id: str) -> set[str]:
+        """Gather all leaves under ``node_id`` to form a cluster record."""
         return self._get_all_leaves(node_id)
 
     def decompose_tree(self) -> dict[str, object]:
-        # Iterative DFS using a stack for speed and to avoid recursion overhead
+        """Return cluster assignments by iteratively traversing the hierarchy."""
         stack = [self._root]
         final_leaf_sets: List[set[str]] = []
 
@@ -270,6 +304,7 @@ class ClusterDecomposer:
     # ---------- LCA ----------
 
     def _find_cluster_root(self, leaf_labels: Set[str]) -> str:
+        """Identify the lowest common ancestor for a collection of leaf labels."""
         # Map labels to leaf node ids (small set → simple scan)
         leaf_nodes: List[str] = []
         for n in self.tree.nodes:

@@ -1,3 +1,9 @@
+"""Unit tests for local KL helper utilities.
+
+These checks ensure that cached values, recomputation paths, and Series extraction
+behave predictably for downstream statistical routines.
+"""
+
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -7,6 +13,7 @@ from hierarchy_analysis.local_kl_utils import get_local_kl_value, get_local_kl_s
 
 
 def _make_simple_tree():
+    """Build a minimal parent→child graph with preset Bernoulli distributions."""
     G = nx.DiGraph()
     parent_dist = np.array([0.6, 0.4], dtype=float)
     child_dist = np.array([0.9, 0.1], dtype=float)

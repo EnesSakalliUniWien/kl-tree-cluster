@@ -11,9 +11,22 @@ from sklearn.cluster import AgglomerativeClustering
 
 
 class PosetTree(nx.DiGraph):
-    """
-    Directed rooted tree as a partially ordered set (ancestor relation).
-    Edges: parent -> child. Leaves have out_degree == 0 (and 'is_leaf'=True).
+    """Directed tree wrapper that exposes hierarchy operations.
+
+    The class augments ``networkx.DiGraph`` with helpers that make hierarchical
+    clustering workflows easier to manage:
+
+    * the root (in-degree 0) is tracked and can be retrieved via :meth:`root`.
+    * leaves carry a ``label`` attribute so downstream consumers can recover the
+      original sample identifiers.
+    * multiple constructors (:meth:`from_agglomerative`, :meth:`from_linkage`,
+      :meth:`from_undirected_edges`) turn clustering output or undirected edge
+      lists into a consistent directed representation where edges always point
+      from parent to child.
+    * utility accessors (:meth:`get_leaves`, :meth:`compute_descendant_sets`)
+      provide common tree queries needed by statistical routines.
+
+    Leaves have ``out_degree == 0`` and are expected to carry ``is_leaf=True``.
     """
 
     # ---------------- Constructors ----------------
@@ -27,9 +40,24 @@ class PosetTree(nx.DiGraph):
         metric: str = "euclidean",
         compute_distances: bool = True,
     ) -> "PosetTree":
-        """
-        Build a binary tree from sklearn AgglomerativeClustering.
-        - X: (n_samples, n_features)
+        """Construct a tree from an :class:`sklearn.cluster.AgglomerativeClustering` fit.
+
+        Parameters
+        ----------
+        X
+            Feature matrix of shape ``(n_samples, n_features)`` used for hierarchical
+            clustering.
+        leaf_names
+            Optional list of labels; defaults to ``leaf_{i}`` when omitted.
+        linkage, metric, compute_distances
+            Passed straight through to :class:`AgglomerativeClustering` to control the
+            linkage strategy.
+
+        Returns
+        -------
+        PosetTree
+            Directed tree whose leaves correspond to the fitted samples and whose
+            internal nodes track merge heights provided by scikit-learn.
         """
         n = int(X.shape[0])
         if leaf_names is None:
@@ -71,9 +99,19 @@ class PosetTree(nx.DiGraph):
 
     @classmethod
     def from_undirected_edges(cls, edges: Iterable[Tuple]) -> "PosetTree":
-        """
-        Build a directed rooted tree from an iterable of undirected weighted edges (u, v, w).
-        Root chosen as an arbitrary leaf for stable orientation.
+        """Orient an undirected tree and promote it to :class:`PosetTree`.
+
+        Parameters
+        ----------
+        edges
+            Iterable of ``(u, v, weight)`` tuples describing an undirected weighted
+            tree.
+
+        Returns
+        -------
+        PosetTree
+            Directed version of the input tree with a deterministic root and leaf
+            annotations.
         """
         U = nx.Graph()
         U.add_weighted_edges_from(edges)
@@ -144,6 +182,7 @@ class PosetTree(nx.DiGraph):
     # ---------------- Poset helpers ----------------
 
     def root(self) -> str:
+        """Return the cached root node, discovering it if necessary."""
         r = self.graph.get("root")
         if r is None:
             roots = [u for u, d in self.in_degree() if d == 0]
@@ -159,8 +198,23 @@ class PosetTree(nx.DiGraph):
         return_labels: bool = True,
         sort: bool = True,
     ) -> List[str]:
-        """
-        Return all leaf nodes (or their labels) globally or under `node`.
+        """Collect leaf nodes globally or within a subtree.
+
+        Parameters
+        ----------
+        node
+            When ``None`` (default), returns all leaves. Otherwise restricts the search
+            to the descendants of ``node``.
+        return_labels
+            If ``True`` (default) return the ``label`` attribute; otherwise return raw
+            node ids.
+        sort
+            Whether to sort the returned values in ascending order.
+
+        Returns
+        -------
+        list[str]
+            Leaf labels or ids, depending on ``return_labels``.
         """
 
         def _is_leaf(n: str) -> bool:
@@ -183,8 +237,19 @@ class PosetTree(nx.DiGraph):
         return sorted(out) if sort else out
 
     def compute_descendant_sets(self, use_labels: bool = True) -> Dict[str, frozenset]:
-        """
-        Node -> frozenset of its descendant leaves (poset representation).
+        """Map each node to the set of leaf labels under it.
+
+        Parameters
+        ----------
+        use_labels
+            When ``True`` (default), map to stored ``label`` values; otherwise use
+            internal node identifiers.
+
+        Returns
+        -------
+        dict[str, frozenset]
+            Dictionary whose keys are node ids and whose values are the descendant leaf
+            labels/ids as a frozenset.
         """
         desc_sets: Dict[str, frozenset] = {}
         # process leaves first (reverse topological order)
