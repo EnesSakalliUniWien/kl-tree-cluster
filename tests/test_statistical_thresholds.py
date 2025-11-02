@@ -10,7 +10,7 @@ from tree.poset_tree import PosetTree
 from hierarchy_analysis import calculate_hierarchy_kl_divergence
 from hierarchy_analysis.statistical_tests import (
     annotate_nodes_with_statistical_significance_tests,
-    annotate_local_child_parent_significance,
+    annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
 
@@ -50,7 +50,7 @@ def test_sibling_cmi_with_li_threshold_interface():
     Implementation for 'li' may be pending; if so, this test will fail, guiding TDD.
     """
     tree, stats, _ = _build_small_case()
-    res = annotate_local_child_parent_significance(
+    res = annotate_child_parent_divergence(
         tree, annotate_nodes_with_statistical_significance_tests(
             stats, total_number_of_features=stats.iloc[0]["distribution"].size
         ), total_number_of_features=stats.iloc[0]["distribution"].size

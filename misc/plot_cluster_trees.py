@@ -19,7 +19,7 @@ from tree.poset_tree import PosetTree
 from hierarchy_analysis.cluster_decomposition import ClusterDecomposer
 from hierarchy_analysis.statistical_tests import (
     annotate_nodes_with_statistical_significance_tests,
-    annotate_local_child_parent_significance,
+    annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
 from hierarchy_analysis.kl_correlation_analysis import (
@@ -110,7 +110,7 @@ def run_statistical_analysis(tree, X):
         std_deviation_threshold=2.0,
         include_deviation_test=True,
     )
-    results_df = annotate_local_child_parent_significance(
+    results_df = annotate_child_parent_divergence(
         tree,
         results_df,
         total_number_of_features=X.shape[1],

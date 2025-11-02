@@ -38,6 +38,7 @@ from tree.poset_tree import PosetTree
 from hierarchy_analysis import calculate_hierarchy_kl_divergence
 from hierarchy_analysis.cluster_decomposition import ClusterDecomposer
 from hierarchy_analysis.decomposition_utils import generate_decomposition_report
+from hierarchy_analysis.local_kl_utils import get_local_kl_series
 
 # --- Configuration ---
 TEST_CASES = [
@@ -110,7 +111,7 @@ def get_local_significance(
     parent_nodes = [u for u, v in edges]
 
     kl_local = (
-        stats_df.get("kl_divergence_local", pd.Series(index=stats_df.index, dtype=float))
+        get_local_kl_series(stats_df)
         .reindex(children_nodes)
         .to_numpy()
     )

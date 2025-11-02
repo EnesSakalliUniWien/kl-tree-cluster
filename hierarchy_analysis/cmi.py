@@ -29,6 +29,9 @@ def _safe_mi_contrib(pxy: np.ndarray, px: np.ndarray, py: np.ndarray) -> np.ndar
     """
     Elementwise contribution pxy * log(pxy / (px * py)), masked at zeros.
     Shapes must be broadcastable and result 1-D along the batch axis.
+
+    This encodes the summand in the binary mutual information identity
+    MI(X;Y) = sum_{x,y} p(x,y) log(p(x,y) / (p(x)p(y))).
     """
     pxy = np.asarray(pxy, dtype=float)
     px = np.asarray(px, dtype=float)
@@ -48,30 +51,39 @@ def _mi_binary_vec_numpy(x_1d: np.ndarray, y_2d: np.ndarray) -> np.ndarray:
     x_1d: shape (F,), values in {0,1}
     y_2d: shape (P, F), rows are different Y vectors
     returns: shape (P,), MI per row
+
+    MI(X;Y) = sum_{x,y in {0,1}} p(x,y) log(p(x,y) / (p(x)p(y))) in nats.
     """
-    x = np.ascontiguousarray(x_1d, dtype=np.uint8)
-    Y = np.ascontiguousarray(y_2d, dtype=np.uint8)
-    P, F = Y.shape
+    x_u8 = np.ascontiguousarray(x_1d, dtype=np.uint8)
+    Y_u8 = np.ascontiguousarray(y_2d, dtype=np.uint8)
+
+    # Upcast to avoid overflow during dot-products when F > 255.
+    x_int = x_u8.astype(np.int32, copy=False)
+    Y_int = Y_u8.astype(np.int32, copy=False)
+
+    P, F = Y_int.shape
     if F == 0:
         return np.zeros(P, dtype=float)
 
-    sx = int(x.sum())
-    sy = Y.sum(axis=1)  # (P,)
-    n11 = Y @ x  # (P,)
+    # Count joint events: n_ab = |{f : X_f=a, Y_f=b}|.
+    sx = int(x_int.sum())
+    sy = Y_int.sum(axis=1)  # (P,)
+    n11 = Y_int @ x_int  # (P,)
     n10 = sx - n11  # (P,)
     n01 = sy - n11  # (P,)
     n00 = F - (n11 + n10 + n01)  # (P,)
 
-    px1 = sx / F
+    Ff = float(F)
+    px1 = sx / Ff
     px0 = 1.0 - px1
-    py1 = sy / F
+    py1 = sy / Ff
     py0 = 1.0 - py1
 
     # Probabilities
-    pxy00 = n00 / F
-    pxy01 = n01 / F
-    pxy10 = n10 / F
-    pxy11 = n11 / F
+    pxy00 = n00 / Ff
+    pxy01 = n01 / Ff
+    pxy10 = n10 / Ff
+    pxy11 = n11 / Ff
 
     # Broadcast px scalars to vectors where needed
     px0v = np.full(P, px0, dtype=float)
@@ -159,6 +171,9 @@ def _cmi_binary_vec(x_1d: np.ndarray, y_2d: np.ndarray, z_1d: np.ndarray) -> np.
     y_2d: (P, F), binary rows
     z_1d: (F,), binary
     returns: (P,)
+
+    Uses the decomposition I(X;Y|Z) = sum_z P(Z=z) * I(X;Y | Z=z),
+    reusing the mutual-information helper on each stratum.
     """
     z = np.ascontiguousarray(z_1d, dtype=np.uint8)
     P = y_2d.shape[0]
@@ -195,6 +210,9 @@ def _perm_cmi_binary_batch(
 ) -> np.ndarray:
     """
     Produce K permuted CMI values in one vectorized batch.
+
+    Under the null hypothesis X ⟂ Y | Z, shuffling Y within each Z stratum
+    preserves both marginals P(X|Z) and P(Y|Z) while breaking dependence.
     """
     F = y.size
     if K <= 0 or F == 0:

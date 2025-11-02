@@ -15,7 +15,7 @@ from hierarchy_analysis.kl_correlation_analysis import (
 )
 from hierarchy_analysis.statistical_tests import (
     annotate_nodes_with_statistical_significance_tests,
-    annotate_local_child_parent_significance,
+    annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
 from hierarchy_analysis.cluster_decomposition import ClusterDecomposer
@@ -65,7 +65,7 @@ def run_clustering_test(n_samples, n_features, centers, cluster_std, random_stat
         stats_t, n_features, 0.05, 2.0
     )
     # Add BH-corrected local (child vs parent) significance
-    results_t = annotate_local_child_parent_significance(
+    results_t = annotate_child_parent_divergence(
         tree_t, results_t, n_features, 0.05
     )
     # Add conditional MI-based sibling independence

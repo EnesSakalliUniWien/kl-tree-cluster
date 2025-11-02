@@ -6,7 +6,7 @@ import pandas as pd
 import networkx as nx
 from scipy.stats import chi2
 
-from .decomposition_utils import binary_kl
+from .local_kl_utils import get_local_kl_value
 
 
 class ClusterDecomposer:
@@ -160,10 +160,13 @@ class ClusterDecomposer:
             return self._local_p_cache[key]
 
         # Prefer precomputed local KL if present on node attributes
-        kl_local = self.tree.nodes[child].get("kl_divergence_local", None)
-        if kl_local is None or not np.isfinite(kl_local):
-            # compute from distributions once (arrays pre-cached)
-            kl_local = binary_kl(self._dist[child], self._dist[parent])
+        kl_local = get_local_kl_value(
+            self.tree,
+            child,
+            parent,
+            child_dist=self._dist[child],
+            parent_dist=self._dist[parent],
+        )
         n_leaves = self._leaf_count(child)
         chi2_stat = 2.0 * n_leaves * float(kl_local)
         p = float(chi2.sf(chi2_stat, df=self.n_features))

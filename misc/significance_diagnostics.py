@@ -24,6 +24,8 @@ import pandas as pd
 import networkx as nx
 from scipy.stats import chi2
 
+from hierarchy_analysis.local_kl_utils import get_local_kl_series, get_local_kl_value
+
 
 def _fmt_ratio(x: int, n: int) -> str:
     if n <= 0:
@@ -84,7 +86,7 @@ def explain_root_decision(
     def _pval(child: str, parent: str) -> float:
         if child not in results_df.index:
             return math.nan
-        kl = results_df.loc[child].get("kl_divergence_local", math.nan)
+        kl = get_local_kl_value(tree, child, parent)
         n = results_df.loc[child].get("leaf_count", math.nan)
         # infer features from a distribution if not provided
         F = n_features
@@ -122,4 +124,3 @@ def explain_root_decision(
 
     will_split = gate_local and sib_indep
     print(f"Root split decision: {'SPLIT' if will_split else 'MERGE'}")
-

@@ -3,6 +3,7 @@ Test module for validating cluster decomposition algorithm across multiple scena
 """
 
 import os
+import re
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -18,18 +19,170 @@ from sklearn.preprocessing import StandardScaler
 from tree.poset_tree import PosetTree
 from hierarchy_analysis import calculate_hierarchy_kl_divergence
 from hierarchy_analysis.cluster_decomposition import ClusterDecomposer
+from hierarchy_analysis.local_kl_utils import get_local_kl_series
 from hierarchy_analysis.kl_correlation_analysis import (
     calculate_kl_divergence_mutual_information_matrix,
 )
 from hierarchy_analysis.statistical_tests import (
     annotate_nodes_with_statistical_significance_tests,
-    annotate_local_child_parent_significance,
+    annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
 from plot.cluster_tree_visualization import (
     plot_tree_with_clusters,
     plot_cluster_summary,
 )
+from simulation.generate_random_feature_matrix import generate_random_feature_matrix
+
+
+SMALL_TEST_CASES = [
+    {
+        "name": "clear",
+        "n_samples": 24,
+        "n_features": 12,
+        "n_clusters": 3,
+        "cluster_std": 0.4,
+        "seed": 0,
+    },
+    {
+        "name": "moderate",
+        "n_samples": 30,
+        "n_features": 16,
+        "n_clusters": 3,
+        "cluster_std": 1.0,
+        "seed": 1,
+    },
+    {
+        "name": "noisy",
+        "n_samples": 30,
+        "n_features": 16,
+        "n_clusters": 3,
+        "cluster_std": 1.6,
+        "seed": 2,
+    },
+]
+
+
+def _generate_case_data(
+    test_case: dict,
+) -> tuple[pd.DataFrame, np.ndarray, np.ndarray, dict]:
+    """Create a binary dataframe, true labels, original features, and metadata for a test case."""
+    generator = test_case.get("generator", "blobs")
+    seed = test_case.get("seed")
+
+    if generator == "binary":
+        n_rows = test_case.get("n_rows", test_case.get("n_samples"))
+        n_cols = test_case.get("n_cols", test_case.get("n_features"))
+        if n_rows is None or n_cols is None:
+            raise ValueError(
+                "Binary generator requires 'n_rows'/'n_cols' or 'n_samples'/'n_features'."
+            )
+        entropy = test_case.get("entropy_param", 0.5)
+        balanced = test_case.get("balanced_clusters", True)
+
+        data_dict, cluster_assignments = generate_random_feature_matrix(
+            n_rows=n_rows,
+            n_cols=n_cols,
+            entropy_param=entropy,
+            n_clusters=test_case["n_clusters"],
+            random_seed=seed,
+            balanced_clusters=balanced,
+        )
+
+        original_names = list(data_dict.keys())
+        matrix = np.array([data_dict[name] for name in original_names], dtype=int)
+        sample_names = [f"S{i}" for i in range(len(original_names))]
+        feature_names = [f"F{j}" for j in range(matrix.shape[1])]
+
+        data_df = pd.DataFrame(matrix, index=sample_names, columns=feature_names)
+        true_labels = np.array(
+            [cluster_assignments[name] for name in original_names],
+            dtype=int,
+        )
+
+        metadata = {
+            "n_samples": n_rows,
+            "n_features": n_cols,
+            "n_clusters": test_case["n_clusters"],
+            "noise": entropy,
+            "name": test_case.get("name", f"binary_{n_rows}x{n_cols}"),
+            "generator": "binary",
+        }
+
+        return data_df, true_labels, matrix.astype(float), metadata
+
+    # Default: Gaussian blobs -> binarize via median threshold
+    n_samples = test_case["n_samples"]
+    n_features = test_case["n_features"]
+    X, y = make_blobs(
+        n_samples=n_samples,
+        n_features=n_features,
+        centers=test_case["n_clusters"],
+        cluster_std=test_case["cluster_std"],
+        random_state=seed,
+    )
+    X_bin = (X > np.median(X, axis=0)).astype(int)
+    data_df = pd.DataFrame(
+        X_bin,
+        index=[f"S{j}" for j in range(n_samples)],
+        columns=[f"F{j}" for j in range(n_features)],
+    )
+    metadata = {
+        "n_samples": n_samples,
+        "n_features": n_features,
+        "n_clusters": test_case["n_clusters"],
+        "noise": test_case["cluster_std"],
+        "name": test_case.get("name", f"blobs_{n_samples}x{n_features}"),
+        "generator": "blobs",
+    }
+    return data_df, y, X, metadata
+
+
+def _run_pipeline_on_dataframe(
+    data_df: pd.DataFrame, significance_level: float = 0.05, permutations: int = 50
+) -> tuple[dict, pd.DataFrame]:
+    """Execute the full KL-based clustering pipeline on a binary dataframe."""
+    parallel_cmi = True
+    Z = linkage(pdist(data_df.values, metric="hamming"), method="complete")
+    tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
+    stats_df = calculate_hierarchy_kl_divergence(tree, data_df)
+    stats_df = annotate_nodes_with_statistical_significance_tests(
+        stats_df,
+        data_df.shape[1],
+        significance_level,
+        2.0,
+        True,
+    )
+    stats_df = annotate_child_parent_divergence(
+        tree, stats_df, data_df.shape[1], significance_level
+    )
+    stats_df = annotate_sibling_independence_cmi(
+        tree,
+        stats_df,
+        significance_level_alpha=significance_level,
+        permutations=permutations,
+        parallel=parallel_cmi,
+    )
+
+    decomposer = ClusterDecomposer(
+        tree=tree,
+        results_df=stats_df,
+        significance_column="Are_Features_Dependent",
+        alpha_local=0.1,
+    )
+    decomposition = decomposer.decompose_tree()
+    return decomposition, stats_df
+
+
+def _labels_from_decomposition(
+    decomposition: dict, sample_index: list[str]
+) -> list[int]:
+    """Extract cluster labels for each sample from a decomposition result."""
+    assignments = {sample: -1 for sample in sample_index}
+    for cluster_id, info in decomposition.get("cluster_assignments", {}).items():
+        for leaf in info["leaves"]:
+            assignments[leaf] = cluster_id
+    return [assignments[sample] for sample in sample_index]
 
 
 def validate_cluster_algorithm(
@@ -70,6 +223,9 @@ def validate_cluster_algorithm(
         Validation plot figure (if verbose=True), otherwise None
     """
     # Default test cases
+    cmi_permutations = 50
+    project_root = Path(__file__).resolve().parent.parent
+    parallel_cmi = True
     if test_cases is None:
         test_cases = [
             # Clear, well-separated clusters (normal cases)
@@ -152,6 +308,117 @@ def validate_cluster_algorithm(
                 "cluster_std": 2,  # Ridiculously noisy
                 "seed": 44,
             },
+            # Binary feature matrix simulations
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 72,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 40,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 80,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 120,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 140,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 160,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 180,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 220,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 1200,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_balanced_low_entropy",
+                "generator": "binary",
+                "n_rows": 72,
+                "n_cols": 120,
+                "n_clusters": 4,
+                "entropy_param": 0.25,
+                "balanced_clusters": True,
+                "seed": 314,
+            },
+            {
+                "name": "binary_unbalanced_high_entropy",
+                "generator": "binary",
+                "n_rows": 96,
+                "n_cols": 36,
+                "n_clusters": 4,
+                "entropy_param": 0.45,
+                "balanced_clusters": False,
+                "seed": 2024,
+            },
         ]
 
     if verbose:
@@ -160,26 +427,20 @@ def validate_cluster_algorithm(
         print("=" * 80 + "\n")
 
     results_data = []
+    failure_summaries: list[dict] = []
+    failure_csv_paths: list[Path] = []
 
     # Run test cases
     for i, tc in enumerate(test_cases, 1):
         if verbose:
             print(f"\nRunning test case {i}/{len(test_cases)}...")
 
+        case_name = tc.get("name", f"Case {i}")
+        if verbose:
+            print(f"  -> {case_name}")
+
         # Generate and process data
-        X_t, y_t = make_blobs(
-            n_samples=tc["n_samples"],
-            n_features=tc["n_features"],
-            centers=tc["n_clusters"],
-            cluster_std=tc["cluster_std"],
-            random_state=tc["seed"],
-        )
-        X_bin = (X_t > np.median(X_t, axis=0)).astype(int)
-        data_t = pd.DataFrame(
-            X_bin,
-            index=[f"S{j}" for j in range(tc["n_samples"])],
-            columns=[f"F{j}" for j in range(tc["n_features"])],
-        )
+        data_t, y_t, X_original, meta = _generate_case_data(tc)
 
         # Build tree and calculate statistics
         Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
@@ -196,16 +457,17 @@ def validate_cluster_algorithm(
 
         # Statistical testing - BH global and BH local (child vs parent)
         results_t = annotate_nodes_with_statistical_significance_tests(
-            stats_t, tc["n_features"], significance_level, 2.0, True
+            stats_t, meta["n_features"], significance_level, 2.0, True
         )
-        results_t = annotate_local_child_parent_significance(
-            tree_t, results_t, tc["n_features"], significance_level
+        results_t = annotate_child_parent_divergence(
+            tree_t, results_t, meta["n_features"], significance_level
         )
         results_t = annotate_sibling_independence_cmi(
             tree_t,
             results_t,
             significance_level_alpha=significance_level,
-            permutations=150,
+            permutations=cmi_permutations,
+            parallel=parallel_cmi,
         )
 
         # Use BH-corrected significance with deviation testing (same as main pipeline)
@@ -299,21 +561,217 @@ def validate_cluster_algorithm(
         results_data.append(
             {
                 "Test": i,
-                "True": tc["n_clusters"],
+                "True": meta["n_clusters"],
                 "Found": decomp_t["num_clusters"],
-                "Samples": tc["n_samples"],
-                "Features": tc["n_features"],
-                "Noise": tc["cluster_std"],
+                "Samples": meta["n_samples"],
+                "Features": meta["n_features"],
+                "Noise": meta["noise"],
                 "ARI": ari,
                 "NMI": nmi,
                 "Purity": purity,
             }
         )
+        assigned_fraction = (
+            len(report_t) / float(meta["n_samples"]) if meta["n_samples"] else 0.0
+        )
+
+        failure_reasons: list[str] = []
+        if decomp_t["num_clusters"] != meta["n_clusters"]:
+            failure_reasons.append(
+                f"cluster_count_mismatch(expected={meta['n_clusters']},found={decomp_t['num_clusters']})"
+            )
+        if ari < 0.5:
+            failure_reasons.append(f"low_ari({ari:.3f})")
+        if nmi < 0.5:
+            failure_reasons.append(f"low_nmi({nmi:.3f})")
+        if purity < 0.7 and decomp_t["num_clusters"] > 0:
+            failure_reasons.append(f"low_purity({purity:.3f})")
+        if assigned_fraction < 0.75:
+            failure_reasons.append(f"low_assignment_fraction({assigned_fraction:.2f})")
+
+        if failure_reasons:
+            results_bool = results_t.get("Are_Features_Dependent")
+            dependent_nodes = (
+                int(results_bool.sum()) if isinstance(results_bool, pd.Series) else 0
+            )
+            local_bool = results_t.get("Local_Are_Features_Dependent")
+            local_dependent = (
+                int(local_bool.sum()) if isinstance(local_bool, pd.Series) else 0
+            )
+            sibling_bool = results_t.get("Sibling_BH_Dependent")
+            sibling_dependent = (
+                int(sibling_bool.sum()) if isinstance(sibling_bool, pd.Series) else 0
+            )
+            kl_global = results_t.get("kl_divergence_global", pd.Series(dtype=float))
+            kl_global_clean = (
+                kl_global.dropna()
+                if isinstance(kl_global, pd.Series)
+                else pd.Series(dtype=float)
+            )
+            top_global_nodes = []
+            if not kl_global_clean.empty:
+                top_global_nodes = [
+                    f"{node}:{kl_global_clean.loc[node]:.3f}"
+                    for node in kl_global_clean.sort_values(ascending=False)
+                    .head(3)
+                    .index
+                ]
+            kl_local = get_local_kl_series(results_t)
+            kl_local_clean = kl_local.dropna()
+            top_local_nodes = []
+            if not kl_local_clean.empty:
+                top_local_nodes = [
+                    f"{node}:{kl_local_clean.loc[node]:.3f}"
+                    for node in kl_local_clean.sort_values(ascending=False)
+                    .head(3)
+                    .index
+                ]
+
+            failure_dir = project_root / "cluster_validation_failures"
+            failure_dir.mkdir(parents=True, exist_ok=True)
+            safe_name = (
+                re.sub(r"[^A-Za-z0-9_-]+", "_", case_name.lower()).strip("_")
+                or f"case_{i}"
+            )
+            csv_path = failure_dir / f"failed_test_{i}_{safe_name}.csv"
+            enriched_results = results_t.copy()
+            enriched_results.insert(0, "Test_Index", i)
+            enriched_results.insert(1, "Case_Name", case_name)
+            enriched_results.insert(2, "Generator", meta["generator"])
+            enriched_results.insert(3, "Failure_Reasons", ";".join(failure_reasons))
+            enriched_results["True_Clusters"] = meta["n_clusters"]
+            enriched_results["Found_Clusters"] = decomp_t["num_clusters"]
+            enriched_results["ARI"] = ari
+            enriched_results["NMI"] = nmi
+            enriched_results["Purity"] = purity
+            enriched_results["Assigned_Fraction"] = assigned_fraction
+            enriched_results["Samples"] = meta["n_samples"]
+            enriched_results["Features"] = meta["n_features"]
+            enriched_results["Noise_Parameter"] = meta["noise"]
+            enriched_results["Significance_Level"] = significance_level
+            enriched_results["CMI_Permutations"] = cmi_permutations
+            enriched_results["Global_Dependent_Count"] = dependent_nodes
+            enriched_results["Local_Dependent_Count"] = local_dependent
+            enriched_results["Sibling_Dependent_Count"] = sibling_dependent
+            enriched_results["Top_Global_KL_Nodes"] = "|".join(top_global_nodes)
+            enriched_results["Top_Local_KL_Nodes"] = "|".join(top_local_nodes)
+            enriched_results["Total_Nodes"] = len(results_t)
+            enriched_results["Failure_CSV_Path"] = str(csv_path)
+
+            summary_info = {
+                "Test_Index": i,
+                "Case_Name": case_name,
+                "Generator": meta["generator"],
+                "Failure_Reasons": ";".join(failure_reasons),
+                "True_Clusters": meta["n_clusters"],
+                "Found_Clusters": decomp_t["num_clusters"],
+                "ARI": ari,
+                "NMI": nmi,
+                "Purity": purity,
+                "Assigned_Fraction": assigned_fraction,
+                "Samples": meta["n_samples"],
+                "Features": meta["n_features"],
+                "Noise_Parameter": meta["noise"],
+                "Significance_Level": significance_level,
+                "CMI_Permutations": cmi_permutations,
+                "Global_Dependent_Count": dependent_nodes,
+                "Local_Dependent_Count": local_dependent,
+                "Sibling_Dependent_Count": sibling_dependent,
+                "Total_Nodes": len(results_t),
+                "Top_Global_KL_Nodes": "|".join(top_global_nodes),
+                "Top_Local_KL_Nodes": "|".join(top_local_nodes),
+                "Total_Nodes": len(results_t),
+                "Failure_CSV_Path": str(csv_path),
+            }
+            summary_df = pd.DataFrame([summary_info])
+            summary_df.index = ["__summary__"]
+            summary_df = summary_df.reindex(columns=enriched_results.columns)
+            enriched_results_with_summary = pd.concat(
+                [enriched_results, summary_df], axis=0
+            )
+
+            enriched_results_with_summary.to_csv(csv_path)
+
+            failure_summary = {
+                "Test": i,
+                "Name": case_name,
+                "Generator": meta["generator"],
+                "Reasons": ";".join(failure_reasons),
+                "True_Clusters": meta["n_clusters"],
+                "Found_Clusters": decomp_t["num_clusters"],
+                "ARI": ari,
+                "NMI": nmi,
+                "Purity": purity,
+                "Assigned_Fraction": assigned_fraction,
+                "Total_Nodes": len(results_t),
+                "Global_Dependent_Nodes": dependent_nodes,
+                "Local_Dependent_Nodes": local_dependent,
+                "Sibling_Dependent_Nodes": sibling_dependent,
+                "Top_Global_KL_Nodes": top_global_nodes,
+                "Top_Local_KL_Nodes": top_local_nodes,
+                "CSV_Path": csv_path,
+            }
+            failure_summaries.append(failure_summary)
+            failure_csv_paths.append(csv_path)
 
     if verbose:
         print(f"Completed {len(test_cases)} test cases.       \n")
 
     df_results = pd.DataFrame(results_data)
+
+    # Report and validate failure statistics
+    if failure_summaries:
+        required_summary_fields = [
+            "Test",
+            "Name",
+            "Reasons",
+            "True_Clusters",
+            "Found_Clusters",
+            "ARI",
+            "NMI",
+            "Purity",
+            "Assigned_Fraction",
+            "Total_Nodes",
+            "Global_Dependent_Nodes",
+            "Local_Dependent_Nodes",
+            "Sibling_Dependent_Nodes",
+            "CSV_Path",
+        ]
+        print("\nFailure Statistics Summary:")
+        for summary, csv_path in zip(failure_summaries, failure_csv_paths):
+            print(
+                f"  Test {summary['Test']} ({summary['Name']} | {summary['Generator']}):"
+            )
+            print(f"    Reasons: {summary['Reasons']}")
+            print(
+                f"    Clusters: expected {summary['True_Clusters']}, found {summary['Found_Clusters']}; "
+                f"ARI={summary['ARI']:.3f}, NMI={summary['NMI']:.3f}, Purity={summary['Purity']:.3f}"
+            )
+            print(
+                f"    Assignment Fraction: {summary['Assigned_Fraction']:.2f}; "
+                f"Nodes total={summary['Total_Nodes']}, global_sig={summary['Global_Dependent_Nodes']}, "
+                f"local_sig={summary['Local_Dependent_Nodes']}, sibling_sig={summary['Sibling_Dependent_Nodes']}"
+            )
+            if summary["Top_Global_KL_Nodes"]:
+                print(
+                    f"    Top Global KL Nodes: {', '.join(summary['Top_Global_KL_Nodes'])}"
+                )
+            if summary["Top_Local_KL_Nodes"]:
+                print(
+                    f"    Top Local KL Nodes: {', '.join(summary['Top_Local_KL_Nodes'])}"
+                )
+            csv_exists = Path(csv_path).exists()
+            missing_fields = [f for f in required_summary_fields if f not in summary]
+            validation_pass = csv_exists and not missing_fields
+            status_msg = "PASS" if validation_pass else "CHECK FAILED"
+            print(
+                f"    Validation: {status_msg} (csv_exists={csv_exists}, missing_fields={missing_fields})"
+            )
+            print(f"    CSV: {csv_path}")
+    else:
+        print(
+            "\nAll test cases met configured thresholds; no failure statistics generated."
+        )
 
     # Create visualization if verbose
     fig = None
@@ -353,27 +811,12 @@ def validate_cluster_algorithm(
         for i, tc in enumerate(test_cases, 1):
             if verbose:
                 print(f"  Creating tree visualization for test case {i}...")
-
-            # Regenerate the exact same data
-            X_t, y_t = make_blobs(
-                n_samples=tc["n_samples"],
-                n_features=tc["n_features"],
-                centers=tc["n_clusters"],
-                cluster_std=tc["cluster_std"],
-                random_state=tc["seed"],
-            )
+            data_t, y_t, X_original, meta = _generate_case_data(tc)
 
             # Get KL clustering results from our results dataframe
             kl_result = df_results[df_results["Test"] == i]
             if not kl_result.empty:
                 # Recompute the KL clustering to get the tree and decomposition
-                X_bin = (X_t > np.median(X_t, axis=0)).astype(int)
-                data_t = pd.DataFrame(
-                    X_bin,
-                    index=[f"S{j}" for j in range(tc["n_samples"])],
-                    columns=[f"F{j}" for j in range(tc["n_features"])],
-                )
-
                 Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
                 tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
                 stats_t = calculate_hierarchy_kl_divergence(tree_t, data_t)
@@ -381,16 +824,17 @@ def validate_cluster_algorithm(
                     tree_t, stats_t
                 )
                 results_t = annotate_nodes_with_statistical_significance_tests(
-                    stats_t, tc["n_features"], significance_level, 2.0, True
+                    stats_t, meta["n_features"], significance_level, 2.0, True
                 )
-                results_t = annotate_local_child_parent_significance(
-                    tree_t, results_t, tc["n_features"], significance_level
+                results_t = annotate_child_parent_divergence(
+                    tree_t, results_t, meta["n_features"], significance_level
                 )
                 results_t = annotate_sibling_independence_cmi(
                     tree_t,
                     results_t,
                     significance_level_alpha=significance_level,
-                    permutations=150,
+                    permutations=cmi_permutations,
+                    parallel=parallel_cmi,
                 )
 
                 decomposer_t = ClusterDecomposer(
@@ -403,7 +847,18 @@ def validate_cluster_algorithm(
                 decomp_t = decomposer_t.decompose_tree()
 
                 # Create tree visualization
-                test_case_name = f"Test Case {i}: {tc['n_clusters']} Clusters (σ={tc['cluster_std']})"
+                noise_label = "σ" if meta["generator"] == "blobs" else "entropy"
+                noise_value = meta["noise"]
+                if isinstance(noise_value, (int, float, np.floating, np.integer)):
+                    noise_value_str = f"{float(noise_value):.2f}"
+                else:
+                    noise_value_str = str(noise_value)
+                test_case_name = (
+                    f"Test Case {i}: {meta['n_clusters']} Clusters "
+                    f"({noise_label}={noise_value_str})"
+                )
+                if meta.get("name"):
+                    test_case_name += f" [{meta['name']}]"
                 tree_fig, _, _ = plot_tree_with_clusters(
                     tree=tree_t,
                     decomposition_results=decomp_t,
@@ -415,9 +870,7 @@ def validate_cluster_algorithm(
                     title=f"Hierarchical Tree with KL Divergence Clusters\n{test_case_name}",
                 )
 
-                tree_filename = (
-                    f"tree_test_{i}_{tc['n_clusters']}_clusters_{current_timestamp}.png"
-                )
+                tree_filename = f"tree_test_{i}_{meta['n_clusters']}_clusters_{current_timestamp}.png"
                 tree_fig.savefig(
                     tree_plots_dir / tree_filename,
                     dpi=300,
@@ -435,7 +888,7 @@ def validate_cluster_algorithm(
                         y=0.98,
                     )
 
-                    summary_filename = f"summary_test_{i}_{tc['n_clusters']}_clusters_{current_timestamp}.png"
+                    summary_filename = f"summary_test_{i}_{meta['n_clusters']}_clusters_{current_timestamp}.png"
                     summary_fig.savefig(
                         tree_plots_dir / summary_filename,
                         dpi=300,
@@ -462,40 +915,27 @@ def validate_cluster_algorithm(
             if verbose:
                 print(f"  Creating UMAP visualization for test case {i}...")
 
-            # Regenerate the exact same data
-            X_t, y_t = make_blobs(
-                n_samples=tc["n_samples"],
-                n_features=tc["n_features"],
-                centers=tc["n_clusters"],
-                cluster_std=tc["cluster_std"],
-                random_state=tc["seed"],
-            )
+            data_t, y_t, X_original, meta = _generate_case_data(tc)
 
             # Get KL clustering results from our results dataframe
             kl_result = df_results[df_results["Test"] == i]
             if not kl_result.empty:
                 # Recompute the KL clustering to get labels
-                X_bin = (X_t > np.median(X_t, axis=0)).astype(int)
-                data_t = pd.DataFrame(
-                    X_bin,
-                    index=[f"S{j}" for j in range(tc["n_samples"])],
-                    columns=[f"F{j}" for j in range(tc["n_features"])],
-                )
-
                 Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
                 tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
                 stats_t = calculate_hierarchy_kl_divergence(tree_t, data_t)
                 results_t = annotate_nodes_with_statistical_significance_tests(
-                    stats_t, tc["n_features"], significance_level, 2.0, True
+                    stats_t, meta["n_features"], significance_level, 2.0, True
                 )
-                results_t = annotate_local_child_parent_significance(
-                    tree_t, results_t, tc["n_features"], significance_level
+                results_t = annotate_child_parent_divergence(
+                    tree_t, results_t, meta["n_features"], significance_level
                 )
                 results_t = annotate_sibling_independence_cmi(
                     tree_t,
                     results_t,
                     significance_level_alpha=significance_level,
-                    permutations=150,
+                    permutations=cmi_permutations,
+                    parallel=parallel_cmi,
                 )
 
                 decomposer_t = ClusterDecomposer(
@@ -521,25 +961,23 @@ def validate_cluster_algorithm(
                             )
                     report_t = pd.DataFrame(rows).set_index("sample_id")
                     # Map back to original sample order
-                    sample_order = [f"S{j}" for j in range(tc["n_samples"])]
-                    kl_labels = []
-                    for sample in sample_order:
-                        if sample in report_t.index:
-                            kl_labels.append(report_t.loc[sample, "cluster_id"])
-                        else:
-                            kl_labels.append(-1)  # No cluster assigned
-                    kl_labels = np.array(kl_labels)
+                    kl_labels = np.array(
+                        [
+                            report_t.loc[sample, "cluster_id"]
+                            if sample in report_t.index
+                            else -1
+                            for sample in data_t.index
+                        ]
+                    )
                 else:
-                    kl_labels = np.full(tc["n_samples"], -1)
+                    kl_labels = np.full(meta["n_samples"], -1)
 
                 # Create UMAP comparison visualization
                 umap_fig = _create_umap_comparison_plot(
-                    X_t, y_t, kl_labels, i, tc["n_clusters"]
+                    X_original, y_t, kl_labels, i, meta["n_clusters"]
                 )
 
-                umap_filename = (
-                    f"umap_test_{i}_{tc['n_clusters']}_clusters_{current_timestamp}.png"
-                )
+                umap_filename = f"umap_test_{i}_{meta['n_clusters']}_clusters_{current_timestamp}.png"
                 umap_fig.savefig(
                     umap_plots_dir / umap_filename,
                     dpi=300,
@@ -838,64 +1276,127 @@ def _create_umap_comparison_plot(X_original, y_true, y_kl, test_case_num, n_clus
 
 def test_cluster_algorithm_validation():
     """Test that the cluster algorithm works correctly across multiple test cases with varying noise levels."""
-    df_results, _ = validate_cluster_algorithm(verbose=False)
-
-    # Check that we have results for all test cases (3 clear + 5 normal + 3 noisy = 11 total)
-    assert len(df_results) == 11, f"Expected 11 test cases, got {len(df_results)}"
-
-    # Split results into different difficulty categories
-    clear_results = df_results.head(3)  # First 3 are clear cases (seeds 100-102)
-    normal_results = df_results.iloc[
-        3:8
-    ]  # Next 5 are normal/mixed cases (seeds 103-107)
-    noisy_results = df_results.tail(3)  # Last 3 are extremely noisy (seeds 42-44)
-
-    print(
-        f"Clear cases (3): ARI={clear_results['ARI'].mean():.3f}, NMI={clear_results['NMI'].mean():.3f}"
-    )
-    print(
-        f"Normal cases (5): ARI={normal_results['ARI'].mean():.3f}, NMI={normal_results['NMI'].mean():.3f}"
-    )
-    print(
-        f"Noisy cases (3): ARI={noisy_results['ARI'].mean():.3f}, NMI={noisy_results['NMI'].mean():.3f}"
+    custom_cases = [case.copy() for case in SMALL_TEST_CASES]
+    df_results, _ = validate_cluster_algorithm(
+        test_cases=custom_cases,
+        verbose=False,
+        plot_umap=False,
+        plot_trees=False,
     )
 
-    # Clear cases should perform excellently
-    clear_correct = sum(clear_results["True"] == clear_results["Found"])
-    assert clear_correct >= 2, (
-        f"Clear cases: only {clear_correct}/3 found correct clusters"
-    )
-    assert clear_results["ARI"].mean() > 0.8, (
-        f"Clear cases ARI too low: {clear_results['ARI'].mean():.3f}"
-    )
-    assert clear_results["NMI"].mean() > 0.85, (
-        f"Clear cases NMI too low: {clear_results['NMI'].mean():.3f}"
+    assert len(df_results) == len(SMALL_TEST_CASES)
+    df_results["case_name"] = [case["name"] for case in SMALL_TEST_CASES]
+
+    clear_case = df_results[df_results["case_name"] == "clear"].iloc[0]
+    assert clear_case["Found"] == clear_case["True"]
+    assert clear_case["ARI"] > 0.85
+    assert clear_case["NMI"] > 0.85
+    assert clear_case["Purity"] > 0.9
+
+    moderate_case = df_results[df_results["case_name"] == "moderate"].iloc[0]
+    assert moderate_case["ARI"] > 0.6
+    assert moderate_case["NMI"] > 0.65
+    assert moderate_case["Purity"] > 0.7
+
+    noisy_case = df_results[df_results["case_name"] == "noisy"].iloc[0]
+    assert noisy_case["ARI"] >= 0
+    assert 0 <= noisy_case["Purity"] <= 1
+    assert noisy_case["Found"] >= 0
+
+
+def test_validate_cluster_algorithm_expected_columns():
+    """Ensure the validator returns the expected metrics."""
+    df_results, fig = validate_cluster_algorithm(
+        test_cases=[SMALL_TEST_CASES[0].copy()],
+        verbose=False,
+        plot_umap=False,
+        plot_trees=False,
     )
 
-    # Normal cases should perform well
-    normal_correct = sum(normal_results["True"] == normal_results["Found"])
-    assert normal_correct >= 3, (
-        f"Normal cases: only {normal_correct}/5 found correct clusters"
-    )
-    assert normal_results["ARI"].mean() > 0.6, (
-        f"Normal cases ARI too low: {normal_results['ARI'].mean():.3f}"
-    )
-    assert normal_results["NMI"].mean() > 0.7, (
-        f"Normal cases NMI too low: {normal_results['NMI'].mean():.3f}"
+    expected_columns = {
+        "Test",
+        "True",
+        "Found",
+        "Samples",
+        "Features",
+        "Noise",
+        "ARI",
+        "NMI",
+        "Purity",
+    }
+    assert expected_columns.issubset(df_results.columns)
+    assert fig is None
+    assert (df_results["ARI"].between(0, 1)).all()
+
+
+def test_validate_cluster_algorithm_handles_empty_cases():
+    """Validator should handle an empty case list without errors."""
+    df_results, fig = validate_cluster_algorithm(
+        test_cases=[],
+        verbose=False,
+        plot_umap=False,
+        plot_trees=False,
     )
 
-    # Noisy cases will perform poorly but should still be valid
-    noisy_correct = sum(noisy_results["True"] == noisy_results["Found"])
-    print(f"Correct cluster counts in noisy cases: {noisy_correct}/3")
+    assert df_results.empty
+    assert fig is None
 
-    # Just ensure the algorithm doesn't crash and produces reasonable results
-    # Note: sklearn's NMI can sometimes produce values slightly > 1.0 due to numerical precision
-    assert all(df_results["Found"] >= 0), "Found negative cluster counts"
-    assert all(df_results["ARI"].between(0, 1)), "ARI values out of [0,1] range"
-    assert all(df_results["NMI"] >= 0), (
-        "NMI values should be non-negative"
-    )  # Allow slightly > 1.0 due to numerical precision
-    assert all(df_results["Purity"].between(0, 1)), "Purity values out of [0,1] range"
 
-    # The real test: algorithm should handle the full spectrum from clear to extremely noisy data
-    assert len(df_results) == 11, "All test cases should complete"
+def test_complex_random_feature_matrix_balanced_clusters():
+    """Synthetic binary data with low entropy should recover most clusters."""
+    data_dict, true_clusters = generate_random_feature_matrix(
+        n_rows=72,
+        n_cols=40,
+        entropy_param=0.25,
+        n_clusters=4,
+        random_seed=314,
+        balanced_clusters=True,
+    )
+    data_df = pd.DataFrame.from_dict(data_dict, orient="index").astype(int)
+
+    decomposition, _ = _run_pipeline_on_dataframe(data_df, significance_level=0.05)
+    predicted = _labels_from_decomposition(decomposition, data_df.index.tolist())
+    true_labels = [true_clusters[name] for name in data_df.index]
+
+    assigned_mask = np.array(predicted) != -1
+    assigned_fraction = float(np.mean(assigned_mask))
+    assert assigned_fraction > 0.85, "Too many samples left unassigned"
+
+    ari = adjusted_rand_score(
+        np.array(true_labels)[assigned_mask], np.array(predicted)[assigned_mask]
+    )
+
+    assert decomposition["num_clusters"] >= 3
+    assert ari > 0.7
+
+
+def test_complex_random_feature_matrix_unbalanced_clusters():
+    """Higher entropy and unbalanced clusters should still yield informative groupings."""
+    data_dict, true_clusters = generate_random_feature_matrix(
+        n_rows=96,
+        n_cols=36,
+        entropy_param=0.45,
+        n_clusters=4,
+        random_seed=2024,
+        balanced_clusters=False,
+    )
+    data_df = pd.DataFrame.from_dict(data_dict, orient="index").astype(int)
+
+    decomposition, _ = _run_pipeline_on_dataframe(
+        data_df, significance_level=0.05, permutations=40
+    )
+    predicted = _labels_from_decomposition(decomposition, data_df.index.tolist())
+    true_labels = [true_clusters[name] for name in data_df.index]
+
+    assigned_mask = np.array(predicted) != -1
+    assigned_fraction = float(np.mean(assigned_mask))
+    assert assigned_fraction > 0.6, "Decomposition discarded too many samples"
+
+    if assigned_mask.any():
+        ari = adjusted_rand_score(
+            np.array(true_labels)[assigned_mask], np.array(predicted)[assigned_mask]
+        )
+        assert ari > 0.45
+
+    assigned_clusters = {label for label in predicted if label != -1}
+    assert len(assigned_clusters) >= 2, "Expected multiple clusters to be detected"

@@ -27,6 +27,17 @@ from .mutual_info_utils import (
     _mutual_info_binary_normalized,
     estimate_global_mi_threshold,
 )
+from .statistics import (
+    annotate_child_parent_divergence,
+    annotate_nodes_with_statistical_significance_tests,
+    annotate_sibling_independence_cmi,
+    apply_benjamini_hochberg_correction,
+    binary_threshold,
+    calculate_chi_square_test,
+    kl_divergence_deviation_from_zero_test,
+    test_feature_independence_conservative,
+    test_feature_independence_liberal,
+)
 
 __all__ = [
     "calculate_kl_divergence_vector",
@@ -40,4 +51,13 @@ __all__ = [
     "_binary_entropy",
     "_mutual_info_binary_normalized",
     "estimate_global_mi_threshold",
+    "apply_benjamini_hochberg_correction",
+    "binary_threshold",
+    "calculate_chi_square_test",
+    "test_feature_independence_conservative",
+    "test_feature_independence_liberal",
+    "kl_divergence_deviation_from_zero_test",
+    "annotate_nodes_with_statistical_significance_tests",
+    "annotate_child_parent_divergence",
+    "annotate_sibling_independence_cmi",
 ]

@@ -3,3 +3,6 @@ misc/__pycache__
 simulation/__pycache__
 tests/__pycache__
 tree/__pycache__
+hierarchy_analysis/statistics/__pycache__
+*.pyc
+results

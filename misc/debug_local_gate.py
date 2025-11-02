@@ -24,6 +24,8 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import chi2
 
+from hierarchy_analysis.local_kl_utils import get_local_kl_series
+
 try:
     from statsmodels.stats.multitest import multipletests  # type: ignore
     HAVE_SM = True
@@ -73,7 +75,7 @@ def compute_local_pvals(tree, stats: pd.DataFrame, df_mode: str = "total", eps: 
         .to_numpy()
     )
     kl_local = (
-        stats.get("kl_divergence_local", pd.Series(index=stats.index, dtype=float))
+        get_local_kl_series(stats)
         .reindex(children)
         .to_numpy()
     )

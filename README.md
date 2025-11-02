@@ -1,66 +1,86 @@
-# KL-Divergence Clustering Analysis
+# KL-Divergence Hierarchical Clustering Toolkit
 
-A Python library for KL-divergence based hierarchical clustering with NetworkX integration and PosetTree representations.
+Pipeline utilities for exploring hierarchical cluster structure with KL-divergence based scoring,
+statistical significance testing, and tree decomposition helpers.
 
-## Features
+## Highlights
+- Build a hierarchy from binary data using SciPy linkage and NetworkX-backed `PosetTree`.
+- Quantify KL-divergence at every internal node to detect informative feature splits.
+- Run multiple statistical tests to flag significant child-parent and sibling relationships.
+- Decompose the resulting tree into cluster assignments you can validate against ground truth.
 
-- **Simulation**: Generate synthetic binary feature matrices with controllable clustering structure
-- **PosetTree**: Transform SciPy hierarchical clustering results into NetworkX directed graphs
-- **SageMath Integration**: Convert tree structures to SageMath Poset objects
+## Getting Started
+### Prerequisites
+- Python `>=3.11`
+- A virtual environment tool such as `uv` or `venv`
+- Optional: SageMath if you want the Sage-specific tooling (`uv sync --extra sage`)
 
-## Installation
+### Install Dependencies
+Using `uv` (recommended):
+```bash
+uv sync
+```
+
+Using `pip` inside a virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+## Run the Quick Start Pipeline
+`quick_start.py` wires together the full analysis pipeline on a synthetic dataset so you can see each
+stage in action.
 
 ```bash
-# Basic installation
-uv sync
-
-# With SageMath support (requires Python >=3.11)
-uv sync --extra sage
-
-# Development installation
-uv sync --extra dev
+python quick_start.py
 ```
 
-## Quick Start
+What the script does:
+1. **Generate data** – creates a binary feature matrix by thresholding Gaussian blobs so you can
+   reproduceable demo data with known clusters.
+2. **Build the hierarchy** – computes pairwise Hamming distances, runs SciPy `linkage`, and wraps the
+   result in a `PosetTree`.
+3. **Score nodes** – applies `calculate_hierarchy_kl_divergence` to quantify how informative each
+   split is for the generated features.
+4. **Annotate significance** – runs multiple hypothesis tests to identify statistically significant
+   branches (`annotate_nodes_with_statistical_significance_tests`,
+   `annotate_child_parent_divergence`, and `annotate_sibling_independence_cmi`).
+5. **Decompose clusters** – uses `ClusterDecomposer` to turn significant nodes into cluster
+   assignments and prints a concise report.
+6. **Validate results** – compares discovered clusters with the synthetic ground truth using
+   Adjusted Rand Index (ARI) so you know how well the decomposition performed.
 
-```python
-from simulation import generate_random_feature_matrix
-from tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
+You should see console output describing each step, a summary of discovered clusters, and the final
+ARI score (`1.0` is a perfect match; `0.0` indicates random assignment). No files are written by this
+demo; it is safe to rerun repeatedly.
 
-# Generate synthetic data
-data, clusters = generate_random_feature_matrix(
-    n_rows=100, n_cols=50, entropy_param=0.2, n_clusters=3
-)
+## Working With Your Own Data
+- Replace the synthetic data block in `quick_start.py` with your dataframe (binary feature matrix).
+- Keep sample names as the index so the reporting remains readable.
+- If your data is not binary, adapt the preprocessing section to binarize or adjust the distance
+  metric in `pdist`.
+- Preserve the overall pipeline order so the statistical annotations stay in sync with the
+  calculated metrics.
 
-# Create linkage matrix
-Z = linkage(list(data.values()), method='complete')
-
-# Transform to PosetTree
-tree = PosetTree.from_linkage(Z, leaf_names=list(data.keys()))
-
-# Optional: Convert to SageMath Poset
-poset = tree.to_sagemath_poset()
+## Project Layout
+```
+.
+├── quick_start.py                 # End-to-end reference pipeline
+├── tree/                          # PosetTree utilities and graph adapters
+├── hierarchy_analysis/            # KL divergence, statistical tests, decomposition
+├── simulation/                    # Alternative data generators and helpers
+├── notebooks/                     # Exploratory notebooks (see clustering_pipe_line.ipynb)
+├── tests/                         # Pytest suite (validation helpers, decomposition checks)
+└── docs/                          # Additional conceptual documentation and figures
 ```
 
-## Project Structure
-
-```
-kl-te-cluster/
-├── simulation/          # Data generation utilities
-│   └── generate_random_feature_matrix.py
-├── tree/               # Tree transformation modules
-│   └── poset_tree.py  # PosetTree class
-├── tests/             # Test suite
-└── docs/              # Documentation
-```
-
-## Requirements
-
-- Python >=3.11
-- NumPy, SciPy, NetworkX, scikit-learn, pandas
-- Optional: SageMath (for `to_sagemath_poset()`)
+## Validation & Testing
+- Run the automated tests with `pytest`.
+- Inspect `tests/test_cluster_validation.py` for examples of how to assert cluster quality in
+  custom scenarios.
+- Consider recording ARI or other metrics alongside your experiments to compare runs.
 
 ## License
-
 MIT

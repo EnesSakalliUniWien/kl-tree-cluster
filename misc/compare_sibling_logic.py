@@ -23,7 +23,7 @@ from hierarchy_analysis.kl_correlation_analysis import (
 )
 from hierarchy_analysis.statistical_tests import (
     annotate_nodes_with_statistical_significance_tests,
-    annotate_local_child_parent_significance,
+    annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
 from hierarchy_analysis.cluster_decomposition import ClusterDecomposer
@@ -59,7 +59,7 @@ def compare_sibling_independence_logic():
     results_t = annotate_nodes_with_statistical_significance_tests(
         stats_t, 30, 0.05, 2.0, True
     )
-    results_t = annotate_local_child_parent_significance(tree_t, results_t, 30, 0.05)
+    results_t = annotate_child_parent_divergence(tree_t, results_t, 30, 0.05)
     results_t = annotate_sibling_independence_cmi(
         tree_t, results_t, significance_level_alpha=0.05, permutations=75
     )

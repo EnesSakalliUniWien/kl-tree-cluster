@@ -84,17 +84,20 @@ def calculate_kl_divergence_mutual_information_matrix(
     )
 
     for i, node_i in enumerate(nodes):
-        for j, node_j in enumerate(nodes):
+        for j in range(i, len(nodes)):
+            node_j = nodes[j]
             if i == j:
                 # Self-MI is 1.0 (perfect dependence with itself)
                 mi_matrix.loc[node_i, node_j] = 1.0
-            else:
-                # Calculate MI between the two binary patterns
-                mi = mutual_info_score(
-                    binary_patterns_df.loc[node_i].values,
-                    binary_patterns_df.loc[node_j].values,
-                )
-                mi_matrix.loc[node_i, node_j] = mi
+                continue
+
+            # Calculate MI between the two binary patterns once and mirror
+            mi = mutual_info_score(
+                binary_patterns_df.loc[node_i].values,
+                binary_patterns_df.loc[node_j].values,
+            )
+            mi_matrix.loc[node_i, node_j] = mi
+            mi_matrix.loc[node_j, node_i] = mi
 
     # Normalize MI matrix to [0, 1] for interpretability (excluding diagonal)
     # Use the maximum non-diagonal value for normalization
@@ -203,6 +206,11 @@ def get_node_mutual_information_summary(
                 "Min_MI": other_mi.min(),
                 "Std_MI": other_mi.std(),
             }
+        )
+
+    if not summary_data:
+        return pd.DataFrame(
+            columns=["Node", "Mean_MI", "Max_MI", "Min_MI", "Std_MI"]
         )
 
     summary_df = pd.DataFrame(summary_data)
