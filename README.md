@@ -4,6 +4,7 @@ Pipeline utilities for exploring hierarchical cluster structure with KL-divergen
 statistical significance testing, and tree decomposition helpers.
 
 ## Overview
+
 - Analyse binary feature data through hierarchical clustering and information-theoretic scoring.
 - Annotate each merge with KL-divergence, chi-square significance, and conditional mutual information.
 - Support reproducible validation through permutation tests and multiple-testing control.
@@ -12,12 +13,14 @@ statistical significance testing, and tree decomposition helpers.
 The toolkit combines distance-based tree construction, KL scoring utilities, statistical testing helpers, and a decomposition routine that converts significant nodes into stable cluster assignments.
 
 ## Implementation Map
+
 - Tree construction, distribution propagation, and KL metrics: `hierarchy_analysis/divergence_metrics.py`.
 - Local KL chi-square helpers and shared statistical utilities: `hierarchy_analysis/statistics/shared_utils.py`.
 - Sibling independence via conditional mutual information: `hierarchy_analysis/statistics/sibling_independence.py`.
 - Decomposition logic that applies the statistical gates: `hierarchy_analysis/cluster_decomposition.py`.
 
-## Mathematical Workflow
+## Mathematical Workflow and Sibling Tests
+
 Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceeds as follows:
 
 Pairwise Hamming distance for linkage:
@@ -41,16 +44,29 @@ Conditional mutual information for siblings $c_1$ and $c_2$ given their parent $
 $$
 I(c_1; c_2 \mid u) = \sum_{k=1}^{p} \sum_{a,b \in \{0,1\}} \hat{P}_{u,k}(a,b) \log \frac{\hat{P}_{u,k}(a,b)}{\hat{P}_{u,k}(a)\,\hat{P}_{u,k}(b)} ,
 $$
-where $\hat{P}_{u,k}$ denotes the empirical joint distribution conditioned on membership in $C_u$. Permutation resampling generates a null distribution for the CMI statistic, and Benjamini–Hochberg control marks siblings as dependent when the adjusted $p$-value falls below the chosen threshold. The `ClusterDecomposer` traverses the hierarchy, only splitting nodes that satisfy both the local KL and sibling-independence gates.
+where $\hat{P}_{u,k}$ denotes the empirical joint distribution conditioned on membership in $C_u$. The function `annotate_sibling_independence_cmi` first thresholds node distributions using `binary_threshold`, obtains binary arrays $(X,Y,Z)$ for sibling 1, sibling 2, and the parent, and then evaluates
+$$
+I(X;Y \mid Z) = \frac{|Z=0|}{|Z|} I(X;Y \mid Z=0) + \frac{|Z=1|}{|Z|} I(X;Y \mid Z=1)
+$$
+via the batched routine `_cmi_binary_vec`. Under the null hypothesis that siblings are conditionally independent given their parent, shuffling $Y$ within each parent stratum leaves both marginals unchanged while breaking dependence, so the module draws permutation replicates
+$$
+\widehat{I}^{(b)}(X;Y \mid Z), \qquad b = 1,\dots,B .
+$$
+The observed value $\widehat{I}_{\text{obs}}$ is compared against the permutation distribution to estimate
+$$
+p = \frac{1 + \sum_{b=1}^{B} \mathbf{1}\{\widehat{I}^{(b)} \ge \widehat{I}_{\text{obs}}\}}{1 + B} .
+$$
+Because each parent node produces one sibling test, the code collects the $p$-values and applies Benjamini–Hochberg control through `apply_benjamini_hochberg_correction`, marking a parent as dependent on the corrected decision. This yields `Sibling_BH_Dependent` and `Sibling_BH_Independent` flags that inform the decomposition pass. The `ClusterDecomposer` traverses the hierarchy, splitting only when both the local KL gate and the CMI-based independence gate pass.
 
 ### Worked Example
+
 1. **Toy data**
 
    | sample | $f_1$ | $f_2$ |
-   | --- | --- | --- |
-   | $A$ | 1 | 0 |
-   | $B$ | 1 | 1 |
-   | $C$ | 0 | 1 |
+   | ------ | ----- | ----- |
+   | $A$    | 1     | 0     |
+   | $B$    | 1     | 1     |
+   | $C$    | 0     | 1     |
 
    Pairwise distances are
    $$
@@ -90,34 +106,44 @@ where $\hat{P}_{u,k}$ denotes the empirical joint distribution conditioned on me
    Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
 4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining binary vectors
+
    $$
    u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
    $$
+
    Conditional mutual information evaluates to
+
    $$
    I(u_{AB}; C \mid \text{root}) = 0.0,
    $$
+
    every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set to `False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
 
 ## Highlights
+
 - Build a hierarchy from binary data using SciPy linkage and NetworkX-backed `PosetTree`.
 - Quantify KL-divergence at every internal node to detect informative feature splits.
 - Run multiple statistical tests to flag significant child-parent and sibling relationships.
 - Decompose the resulting tree into cluster assignments you can validate against ground truth.
 
 ## Getting Started
+
 ### Prerequisites
+
 - Python `>=3.11`
 - A virtual environment tool such as `uv` or `venv`
 - Optional: SageMath if you want the Sage-specific tooling (`uv sync --extra sage`)
 
 ### Install Dependencies
+
 Using `uv` (recommended):
+
 ```bash
 uv sync
 ```
 
 Using `pip` inside a virtual environment:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
@@ -126,6 +152,7 @@ pip install -r requirements.txt
 ```
 
 ## Run the Quick Start Pipeline
+
 `quick_start.py` wires together the full analysis pipeline on a synthetic dataset so you can see each
 stage in action.
 
@@ -134,8 +161,9 @@ python quick_start.py
 ```
 
 What the script does:
+
 1. **Generate data** – creates a binary feature matrix by thresholding Gaussian blobs so you can
-   reproduceable demo data with known clusters.
+   reproduce demo data with known clusters.
 2. **Build the hierarchy** – computes pairwise Hamming distances, runs SciPy `linkage`, and wraps the
    result in a `PosetTree`.
 3. **Score nodes** – applies `calculate_hierarchy_kl_divergence` to quantify how informative each
@@ -153,6 +181,7 @@ ARI score (`1.0` is a perfect match; `0.0` indicates random assignment). No file
 demo; it is safe to rerun repeatedly.
 
 ## Working With Your Own Data
+
 - Replace the synthetic data block in `quick_start.py` with your dataframe (binary feature matrix).
 - Keep sample names as the index so the reporting remains readable.
 - If your data is not binary, adapt the preprocessing section to binarize or adjust the distance
@@ -161,7 +190,8 @@ demo; it is safe to rerun repeatedly.
   calculated metrics.
 
 ## Project Layout
-```
+
+```text
 .
 ├── quick_start.py                 # End-to-end reference pipeline
 ├── tree/                          # PosetTree utilities and graph adapters
@@ -173,10 +203,12 @@ demo; it is safe to rerun repeatedly.
 ```
 
 ## Validation & Testing
+
 - Run the automated tests with `pytest`.
 - Inspect `tests/test_cluster_validation.py` for examples of how to assert cluster quality in
   custom scenarios.
 - Consider recording ARI or other metrics alongside your experiments to compare runs.
 
 ## License
+
 MIT

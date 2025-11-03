@@ -27,6 +27,8 @@ def annotate_sibling_independence_cmi(
     if df.empty:
         return df
 
+    df["Sibling_CMI_Skipped"] = False
+
     dist_series = df.get("distribution", pd.Series(index=df.index, dtype=object))
     dist_dict = dist_series.to_dict()
     bin_dist = {
@@ -35,8 +37,19 @@ def annotate_sibling_independence_cmi(
         if dist is not None
     }
 
+    local_sig_map: dict[str, bool] | None = None
+    if "Local_BH_Significant" in df.columns:
+        local_sig_map = (
+            df["Local_BH_Significant"].fillna(False).astype(bool).to_dict()
+        )
+    elif "Local_Are_Features_Dependent" in df.columns:
+        local_sig_map = (
+            df["Local_Are_Features_Dependent"].fillna(False).astype(bool).to_dict()
+        )
+
     parent_nodes: List[str] = []
     args_list: List[Tuple[np.ndarray, np.ndarray, np.ndarray, int, int | None, int]] = []
+    skipped_nodes: List[str] = []
 
     ss = np.random.SeedSequence(random_state) if random_state is not None else None
 
@@ -45,6 +58,12 @@ def annotate_sibling_independence_cmi(
         if len(children) != 2:
             continue
         c1, c2 = children
+
+        if local_sig_map is not None:
+            if not (local_sig_map.get(c1, False) and local_sig_map.get(c2, False)):
+                skipped_nodes.append(parent)
+                continue
+
         x = bin_dist.get(c1)
         y = bin_dist.get(c2)
         z = bin_dist.get(parent)
@@ -65,6 +84,8 @@ def annotate_sibling_independence_cmi(
     df["Sibling_BH_Independent"] = False
 
     if not parent_nodes:
+        if skipped_nodes:
+            df.loc[skipped_nodes, "Sibling_CMI_Skipped"] = True
         return df
 
     results: List[Tuple[float, float]] = []
@@ -103,12 +124,19 @@ def annotate_sibling_independence_cmi(
         df.loc[parent_nodes, "Sibling_BH_Dependent"] = False
     df["Sibling_BH_Independent"] = ~df["Sibling_BH_Dependent"]
 
+    if skipped_nodes:
+        df.loc[skipped_nodes, "Sibling_CMI_Skipped"] = True
+        df.loc[skipped_nodes, "Sibling_BH_Independent"] = False
+
     with pd.option_context("future.no_silent_downcasting", True):
         df["Sibling_BH_Dependent"] = (
             df["Sibling_BH_Dependent"].fillna(False).astype(bool)
         )
         df["Sibling_BH_Independent"] = (
             df["Sibling_BH_Independent"].fillna(False).astype(bool)
+        )
+        df["Sibling_CMI_Skipped"] = (
+            df["Sibling_CMI_Skipped"].fillna(False).astype(bool)
         )
 
     return df

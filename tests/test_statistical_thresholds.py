@@ -68,3 +68,24 @@ def test_sibling_cmi_with_li_threshold_interface():
     assert "Sibling_CMI" in out.columns
     assert "Sibling_CMI_P_Value" in out.columns
 
+
+def test_sibling_cmi_skips_when_local_gate_fails():
+    tree, stats, _ = _build_small_case()
+    df_local = annotate_child_parent_divergence(
+        tree,
+        annotate_nodes_with_statistical_significance_tests(
+            stats, total_number_of_features=stats.iloc[0]["distribution"].size
+        ),
+        total_number_of_features=stats.iloc[0]["distribution"].size,
+    )
+    df_local["Local_BH_Significant"] = False
+    res = annotate_sibling_independence_cmi(
+        tree,
+        df_local,
+        permutations=5,
+        random_state=0,
+        parallel=False,
+    )
+    assert "Sibling_CMI_Skipped" in res.columns
+    assert res["Sibling_CMI_Skipped"].any()
+    assert res.loc[res["Sibling_CMI_Skipped"], "Sibling_CMI"].isna().all()
