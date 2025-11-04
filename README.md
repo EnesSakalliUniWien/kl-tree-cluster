@@ -42,9 +42,9 @@ $$
 
 2. **Node distributions** – average the descendant leaves $C_u$ to obtain Bernoulli parameters:
 
-   $$
-   \theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
-   $$
+$$
+\theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
+$$
 
 3. **Local KL scoring** – quantify how a child $c$ diverges from its parent $u$:
 
@@ -94,13 +94,13 @@ Mathematically, let the hierarchy be a directed tree $T = (V, E)$ with root $r$ 
 node. For an internal node $u$ with children $c_1$ and $c_2$, the walk evaluates
 
 $$
-\text{Gate}_1(u, c_i) = \mathbf{1}\bigl\{2\,|C_{c_i}|\,D_{\mathrm{KL}}(\theta_{c_i}\,\|\,\theta_u) > \chi^2_{p, \alpha}\bigr\},
+\text{Gate}_1(u, c_i) = \mathbf{1}\!\left[2\,|C_{c_i}|\,D_{\mathrm{KL}}(\theta_{c_i}\,\|\,\theta_u) > \chi^2_{p, \alpha}\right],
 $$
 
 and
 
 $$
-\text{Gate}_2(u) = \mathbf{1}\bigl\{\text{CMI}_{u}(c_1, c_2) \text{ is non-significant after BH correction}\bigr\}.
+\text{Gate}_2(u) = \mathbf{1}\!\left[\text{CMI}_{u}(c_1, c_2) \text{ is non-significant after BH correction}\right].
 $$
 
 The walk follows a depth-first rule:
