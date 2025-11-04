@@ -167,47 +167,47 @@ both the divergence scores and the independence flags it needs to decide where t
 
 2. **Node distributions** – Using `calculate_hierarchy_kl_divergence`, Bernoulli parameters propagate upward:
 
-   $$
-   \theta_A = (1, 0), \qquad \theta_B = (1, 1), \qquad \theta_C = (0, 1),
-   $$
+$$
+\theta_A = (1, 0), \qquad \theta_B = (1, 1), \qquad \theta_C = (0, 1),
+$$
 
-   $$
-   \theta_{u_{AB}} = \frac{1}{2}\left((1,0) + (1,1)\right) = (1, 0.5),
-   $$
+$$
+\theta_{u_{AB}} = \frac{1}{2}\left((1,0) + (1,1)\right) = (1, 0.5),
+$$
+$$
+\theta_{\text{root}} = \frac{1}{3}\left(2 \cdot (1,0.5) + (0,1)\right) = \left(\frac{2}{3}, \frac{2}{3}\right).
+$$
 
-   $$
-   \theta_{\text{root}} = \frac{1}{3}\left(2 \cdot (1,0.5) + (0,1)\right) = \left(\frac{2}{3}, \frac{2}{3}\right).
 3. **KL-based scoring** – For each edge, the module evaluates the KL divergence in nats:
 
-   $$
-   D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0.693,
-   $$
+$$
+D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0.693,
+$$
 
-   $$
-   D_{\mathrm{KL}}(\theta_{u_{AB}} \| \theta_{\text{root}}) = 0.464,
-   $$
+$$
+D_{\mathrm{KL}}(\theta_{u_{AB}} \| \theta_{\text{root}}) = 0.464,
+$$
 
-   $$
-   D_{\mathrm{KL}}(\theta_C \| \theta_{\text{root}}) = 1.504.
-   $$
+$$
+D_{\mathrm{KL}}(\theta_C \| \theta_{\text{root}}) = 1.504.
+$$
 
-   Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
+Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
 4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining
    binary vectors
 
-   $$
-   u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
-   $$
-
+$$
+u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
+$$
    Conditional mutual information evaluates to
 
-   $$
-   I(u_{AB}; C \mid \text{root}) = 0.0,
-   $$
+$$
+I(u_{AB}; C \mid \text{root}) = 0.0,
+$$
 
-   every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set
-   to `False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
+every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set
+to `False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
 
 ## Highlights
 
