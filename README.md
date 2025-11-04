@@ -86,25 +86,31 @@ Because each parent node produces one sibling test, the code collects the $p$-va
 2. **Node distributions** – Using `calculate_hierarchy_kl_divergence`, Bernoulli parameters propagate upward:
 
    ```math
-   \theta_A = (1, 0), \qquad \theta_B = (1, 1), \qquad \theta_C = (0, 1),
-   \theta_{u_{AB}} = \frac{1}{2}\big((1,0) + (1,1)\big) = (1, 0.5),
-   \theta_{\text{root}} = \frac{1}{3}\big(2 \cdot (1,0.5) + (0,1)\big) = \left(\tfrac{2}{3}, \tfrac{2}{3}\right).
+   \begin{aligned}
+   \theta_A &= (1, 0), & \theta_B &= (1, 1), & \theta_C &= (0, 1), \\
+   \theta_{u_{AB}} &= \tfrac{1}{2}\big((1,0) + (1,1)\big) = (1, 0.5), \\
+   \theta_{\text{root}} &= \tfrac{1}{3}\big(2 \cdot (1,0.5) + (0,1)\big) = \left(\tfrac{2}{3}, \tfrac{2}{3}\right).
+   \end{aligned}
    ```
 
 3. **KL-based scoring** – For each edge, the module evaluates the KL divergence in nats:
 
    ```math
-   D_{\mathrm{KL}}(\theta_A \Vert \theta_{u_{AB}}) = 0.693,
-   D_{\mathrm{KL}}(\theta_{u_{AB}} \Vert \theta_{\text{root}}) = 0.464,
-   D_{\mathrm{KL}}(\theta_C \Vert \theta_{\text{root}}) = 1.504.
+   \begin{aligned}
+   D_{\mathrm{KL}}(\theta_A \Vert \theta_{u_{AB}}) &= 0.693, \\
+   D_{\mathrm{KL}}(\theta_{u_{AB}} \Vert \theta_{\text{root}}) &= 0.464, \\
+   D_{\mathrm{KL}}(\theta_C \Vert \theta_{\text{root}}) &= 1.504.
+   \end{aligned}
    ```
    Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
 4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining binary vectors
 
    ```math
-   u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1),
-   I(u_{AB}; C \mid \text{root}) = 0.0.
+   \begin{aligned}
+   u_{AB} &\mapsto (1, 1), & C &\mapsto (0, 1), & \text{root} &\mapsto (1, 1), \\
+   I(u_{AB}; C \mid \text{root}) &= 0.0.
+   \end{aligned}
    ```
 
    every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set to `False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
