@@ -194,8 +194,8 @@ $$
 
 Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
-4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining
-   binary vectors
+4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining binary vectors
+
 
 $$
 u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
