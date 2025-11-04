@@ -172,13 +172,11 @@ both the divergence scores and the independence flags it needs to decide where t
    $$
 
    $$
-   \theta_{u_{AB}} = \frac{1}{2}\big((1,0) + (1,1)\big) = (1, 0.5),
+   \theta_{u_{AB}} = \frac{1}{2}\left((1,0) + (1,1)\right) = (1, 0.5),
    $$
 
    $$
-   \theta_{\text{root}} = \frac{1}{3}\big(2 \cdot (1,0.5) + (0,1)\big) = \left(\frac{2}{3}, \frac{2}{3}\right).
-   $$
-
+   \theta_{\text{root}} = \frac{1}{3}\left(2 \cdot (1,0.5) + (0,1)\right) = \left(\frac{2}{3}, \frac{2}{3}\right).
 3. **KL-based scoring** – For each edge, the module evaluates the KL divergence in nats:
 
    $$
