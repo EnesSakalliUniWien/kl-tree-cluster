@@ -24,16 +24,19 @@ The toolkit combines distance-based tree construction, KL scoring utilities, sta
 Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceeds as follows:
 
 Pairwise Hamming distance for linkage:
+
 ```math
 D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
 ```
 
 Node-level Bernoulli parameters obtained by averaging over descendant leaves $C_u$:
+
 ```math
 \theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
 ```
 
 Local KL-divergence for a child $c$ relative to its parent $u$:
+
 ```math
 D_{\mathrm{KL}}(\theta_c \Vert \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} + (1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}} .
 ```
@@ -41,21 +44,29 @@ D_{\mathrm{KL}}(\theta_c \Vert \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \fra
 Chi-square gate using the approximation $2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \Vert \theta_u) \sim \chi^{2}_{p}$ to decide whether a child diverges from its parent.
 
 Conditional mutual information for siblings $c_1$ and $c_2$ given their parent $u$:
+
 ```math
 I(c_1; c_2 \mid u) = \sum_{k=1}^{p} \sum_{a,b \in \{0,1\}} \hat{P}_{u,k}(a,b) \log \frac{\hat{P}_{u,k}(a,b)}{\hat{P}_{u,k}(a)\,\hat{P}_{u,k}(b)} ,
 ```
+
 where $\hat{P}_{u,k}$ denotes the empirical joint distribution conditioned on membership in $C_u$. The function `annotate_sibling_independence_cmi` first thresholds node distributions using `binary_threshold`, obtains binary arrays $(X,Y,Z)$ for sibling 1, sibling 2, and the parent, and then evaluates
+
 ```math
 I(X;Y \mid Z) = \frac{|Z=0|}{|Z|} I(X;Y \mid Z=0) + \frac{|Z=1|}{|Z|} I(X;Y \mid Z=1)
 ```
+
 via the batched routine `_cmi_binary_vec`. Under the null hypothesis that siblings are conditionally independent given their parent, shuffling $Y$ within each parent stratum leaves both marginals unchanged while breaking dependence, so the module draws permutation replicates
+
 ```math
 \widehat{I}^{(b)}(X;Y \mid Z), \qquad b = 1,\dots,B .
 ```
+
 The observed value $\widehat{I}_{\text{obs}}$ is compared against the permutation distribution to estimate
+
 ```math
 p = \frac{1 + \sum_{b=1}^{B} \mathbf{1}\{\widehat{I}^{(b)} \ge \widehat{I}_{\text{obs}}\}}{1 + B} .
 ```
+
 Because each parent node produces one sibling test, the code collects the $p$-values and applies Benjamini–Hochberg control through `apply_benjamini_hochberg_correction`, marking a parent as dependent on the corrected decision. This yields `Sibling_BH_Dependent` and `Sibling_BH_Independent` flags that inform the decomposition pass. The `ClusterDecomposer` traverses the hierarchy, splitting only when both the local KL gate and the CMI-based independence gate pass.
 
 ### Worked Example
@@ -73,6 +84,7 @@ Because each parent node produces one sibling test, the code collects the $p$-va
    ```math
    D_{AB} = 1,\quad D_{BC} = 1,\quad D_{AC} = 2 .
    ```
+
    SciPy linkage therefore merges $A$ with $B$ before attaching $C$, producing
 
    ```text
@@ -102,6 +114,7 @@ Because each parent node produces one sibling test, the code collects the $p$-va
    D_{\mathrm{KL}}(\theta_C \Vert \theta_{\text{root}}) &= 1.504.
    \end{aligned}
    ```
+
    Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
 4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining binary vectors
