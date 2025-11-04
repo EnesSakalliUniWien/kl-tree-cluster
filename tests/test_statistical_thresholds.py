@@ -34,7 +34,9 @@ def _build_small_case(n_samples=18, n_features=24, n_clusters=3, std=1.0, seed=1
 def test_annotate_nodes_with_statistical_significance_tests_basic():
     tree, stats, _ = _build_small_case()
     df = annotate_nodes_with_statistical_significance_tests(
-        stats, total_number_of_features=stats.iloc[0]["distribution"].size, include_deviation_test=True
+        stats,
+        total_number_of_features=stats.iloc[0]["distribution"].size,
+        include_deviation_test=True,
     )
     # Columns present
     assert "Are_Features_Dependent" in df.columns
@@ -51,9 +53,11 @@ def test_sibling_cmi_with_li_threshold_interface():
     """
     tree, stats, _ = _build_small_case()
     res = annotate_child_parent_divergence(
-        tree, annotate_nodes_with_statistical_significance_tests(
+        tree,
+        annotate_nodes_with_statistical_significance_tests(
             stats, total_number_of_features=stats.iloc[0]["distribution"].size
-        ), total_number_of_features=stats.iloc[0]["distribution"].size
+        ),
+        total_number_of_features=stats.iloc[0]["distribution"].size,
     )
 
     # Expect no error when using 'li' and required columns in result

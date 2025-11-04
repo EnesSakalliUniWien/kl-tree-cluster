@@ -6,3 +6,5 @@ tree/__pycache__
 hierarchy_analysis/statistics/__pycache__
 *.pyc
 results
+cluster_tree_plots
+cluster_validation_failures
