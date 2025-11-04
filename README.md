@@ -10,7 +10,8 @@ statistical significance testing, and tree decomposition helpers.
 - Support reproducible validation through permutation tests and multiple-testing control.
 - Produce annotated trees, cluster assignments, and tabular diagnostics for downstream analysis.
 
-The toolkit combines distance-based tree construction, KL scoring utilities, statistical testing helpers, and a decomposition routine that converts significant nodes into stable cluster assignments.
+The toolkit combines distance-based tree construction, KL scoring utilities, and statistical testing helpers.
+A dedicated decomposition routine converts significant nodes into stable cluster assignments.
 
 ## Implementation Map
 
@@ -21,53 +22,66 @@ The toolkit combines distance-based tree construction, KL scoring utilities, sta
 
 ## Mathematical Workflow and Sibling Tests
 
-Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceeds as follows:
+Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceeds through four checkpoints:
 
-Pairwise Hamming distance for linkage:
+1. **Pairwise linkage** – compute the Hamming distance between rows to drive clustering:
 
-```math
-D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
-```
+   $$
+   D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
+   $$
 
-Node-level Bernoulli parameters obtained by averaging over descendant leaves $C_u$:
+2. **Node distributions** – average the descendant leaves $C_u$ to obtain Bernoulli parameters:
 
-```math
-\theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
-```
+   $$
+   \theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
+   $$
 
-Local KL-divergence for a child $c$ relative to its parent $u$:
+3. **Local KL scoring** – quantify how a child $c$ diverges from its parent $u$:
 
-```math
-D_{\mathrm{KL}}(\theta_c \Vert \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} + (1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}} .
-```
+   $$
+   D_{\mathrm{KL}}(\theta_c \| \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} + (1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}} .
+   $$
 
-Chi-square gate using the approximation $2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \Vert \theta_u) \sim \chi^{2}_{p}$ to decide whether a child diverges from its parent.
+   The chi-square gate uses the approximation
 
-Conditional mutual information for siblings $c_1$ and $c_2$ given their parent $u$:
+   $$
+   2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \Vert \theta_u) \sim \chi^{2}_{p}
+   $$
 
-```math
-I(c_1; c_2 \mid u) = \sum_{k=1}^{p} \sum_{a,b \in \{0,1\}} \hat{P}_{u,k}(a,b) \log \frac{\hat{P}_{u,k}(a,b)}{\hat{P}_{u,k}(a)\,\hat{P}_{u,k}(b)} ,
-```
+   to decide whether the child diverges from its parent.
 
-where $\hat{P}_{u,k}$ denotes the empirical joint distribution conditioned on membership in $C_u$. The function `annotate_sibling_independence_cmi` first thresholds node distributions using `binary_threshold`, obtains binary arrays $(X,Y,Z)$ for sibling 1, sibling 2, and the parent, and then evaluates
+4. **Sibling independence** – evaluate conditional mutual information for siblings $c_1$ and $c_2$ given their parent $u$:
 
-```math
+   $$
+   I(c_1; c_2 \mid u) = \sum_{k=1}^{p} \sum_{a,b \in \{0,1\}} \hat{P}_{u,k}(a,b) \log \frac{\hat{P}_{u,k}(a,b)}{\hat{P}_{u,k}(a)\,\hat{P}_{u,k}(b)} ,
+   $$
+
+   where $\hat{P}_{u,k}$ denotes the empirical joint distribution conditioned on membership in $C_u$.
+
+The function `annotate_sibling_independence_cmi` first thresholds node distributions using `binary_threshold`. It then obtains binary arrays $(X, Y, Z)$ for sibling 1, sibling 2, and the parent before evaluating
+
+$$
 I(X;Y \mid Z) = \frac{|Z=0|}{|Z|} I(X;Y \mid Z=0) + \frac{|Z=1|}{|Z|} I(X;Y \mid Z=1)
-```
+$$
 
-via the batched routine `_cmi_binary_vec`. Under the null hypothesis that siblings are conditionally independent given their parent, shuffling $Y$ within each parent stratum leaves both marginals unchanged while breaking dependence, so the module draws permutation replicates
+via the batched routine `_cmi_binary_vec`.
 
-```math
+Under the null hypothesis that siblings are conditionally independent given their parent, shuffling $Y$ within each parent stratum leaves both marginals unchanged while breaking dependence. The module therefore draws permutation replicates
+
+$$
 \widehat{I}^{(b)}(X;Y \mid Z), \qquad b = 1,\dots,B .
-```
+$$
 
 The observed value $\widehat{I}_{\text{obs}}$ is compared against the permutation distribution to estimate
 
-```math
+$$
 p = \frac{1 + \sum_{b=1}^{B} \mathbf{1}\{\widehat{I}^{(b)} \ge \widehat{I}_{\text{obs}}\}}{1 + B} .
-```
+$$
 
-Because each parent node produces one sibling test, the code collects the $p$-values and applies Benjamini–Hochberg control through `apply_benjamini_hochberg_correction`, marking a parent as dependent on the corrected decision. This yields `Sibling_BH_Dependent` and `Sibling_BH_Independent` flags that inform the decomposition pass. The `ClusterDecomposer` traverses the hierarchy, splitting only when both the local KL gate and the CMI-based independence gate pass.
+Because each parent node produces one sibling test, the code collects the $p$-values and applies Benjamini–Hochberg control through `apply_benjamini_hochberg_correction`.
+The corrected decision marks a parent as dependent or independent.
+Those decisions yield `Sibling_BH_Dependent` and `Sibling_BH_Independent` flags that inform the decomposition pass.
+The `ClusterDecomposer` traverses the hierarchy and splits a node only when both the local KL gate and the CMI-based independence gate pass.
 
 ### Worked Example
 
@@ -81,9 +95,9 @@ Because each parent node produces one sibling test, the code collects the $p$-va
 
    Pairwise distances are
 
-   ```math
+   $$
    D_{AB} = 1,\quad D_{BC} = 1,\quad D_{AC} = 2 .
-   ```
+   $$
 
    SciPy linkage therefore merges $A$ with $B$ before attaching $C$, producing
 
@@ -97,34 +111,45 @@ Because each parent node produces one sibling test, the code collects the $p$-va
 
 2. **Node distributions** – Using `calculate_hierarchy_kl_divergence`, Bernoulli parameters propagate upward:
 
-   ```math
-   \begin{aligned}
-   \theta_A &= (1, 0), & \theta_B &= (1, 1), & \theta_C &= (0, 1), \\
-   \theta_{u_{AB}} &= \tfrac{1}{2}\big((1,0) + (1,1)\big) = (1, 0.5), \\
-   \theta_{\text{root}} &= \tfrac{1}{3}\big(2 \cdot (1,0.5) + (0,1)\big) = \left(\tfrac{2}{3}, \tfrac{2}{3}\right).
-   \end{aligned}
-   ```
+   $$
+   \theta_A = (1, 0), \qquad \theta_B = (1, 1), \qquad \theta_C = (0, 1),
+   $$
+
+   $$
+   \theta_{u_{AB}} = \frac{1}{2}\big((1,0) + (1,1)\big) = (1, 0.5),
+   $$
+
+   $$
+   \theta_{\text{root}} = \frac{1}{3}\big(2 \cdot (1,0.5) + (0,1)\big) = \left(\frac{2}{3}, \frac{2}{3}\right).
+   $$
 
 3. **KL-based scoring** – For each edge, the module evaluates the KL divergence in nats:
 
-   ```math
-   \begin{aligned}
-   D_{\mathrm{KL}}(\theta_A \Vert \theta_{u_{AB}}) &= 0.693, \\
-   D_{\mathrm{KL}}(\theta_{u_{AB}} \Vert \theta_{\text{root}}) &= 0.464, \\
-   D_{\mathrm{KL}}(\theta_C \Vert \theta_{\text{root}}) &= 1.504.
-   \end{aligned}
-   ```
+   $$
+   D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0.693,
+   $$
+
+   $$
+   D_{\mathrm{KL}}(\theta_{u_{AB}} \| \theta_{\text{root}}) = 0.464,
+   $$
+
+   $$
+   D_{\mathrm{KL}}(\theta_C \| \theta_{\text{root}}) = 1.504.
+   $$
 
    Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
 4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining binary vectors
 
-   ```math
-   \begin{aligned}
-   u_{AB} &\mapsto (1, 1), & C &\mapsto (0, 1), & \text{root} &\mapsto (1, 1), \\
-   I(u_{AB}; C \mid \text{root}) &= 0.0.
-   \end{aligned}
-   ```
+   $$
+   u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
+   $$
+
+   Conditional mutual information evaluates to
+
+   $$
+   I(u_{AB}; C \mid \text{root}) = 0.0,
+   $$
 
    every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set to `False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
 
@@ -178,8 +203,10 @@ What the script does:
 3. **Score nodes** – applies `calculate_hierarchy_kl_divergence` to quantify how informative each
    split is for the generated features.
 4. **Annotate significance** – runs multiple hypothesis tests to identify statistically significant
-   branches (`annotate_nodes_with_statistical_significance_tests`,
-   `annotate_child_parent_divergence`, and `annotate_sibling_independence_cmi`).
+   branches:
+   - `annotate_nodes_with_statistical_significance_tests`
+   - `annotate_child_parent_divergence`
+   - `annotate_sibling_independence_cmi`
 5. **Decompose clusters** – uses `ClusterDecomposer` to turn significant nodes into cluster
    assignments and prints a concise report.
 6. **Validate results** – compares discovered clusters with the synthetic ground truth using
