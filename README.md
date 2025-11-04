@@ -194,17 +194,18 @@ $$
 
 Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
-4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining binary vectors
+4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining
+   binary vectors
 
+   $$
+   u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
+   $$
 
-$$
-u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
-$$
    Conditional mutual information evaluates to
 
-$$
-I(u_{AB}; C \mid \text{root}) = 0.0,
-$$
+   $$
+   I(u_{AB}; C \mid \text{root}) = 0.0,
+   $$
 
 every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set
 to `False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
