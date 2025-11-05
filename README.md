@@ -1,9 +1,10 @@
 # KL-Divergence Hierarchical Clustering Toolkit
 
-This toolkit enables researchers to analyse binary feature datasets by constructing hierarchical cluster trees,
-quantifying each merge with Kullback–Leibler divergence, and applying formal statistical tests to identify the branches
-that constitute stable clusters. Use the toolkit when statistically defensible cluster boundaries, annotated merge
-diagnostics, and reproducible reports are required for downstream analyses of binary observations.
+This repository provides tooling to analyse binary feature datasets by constructing hierarchical cluster trees,
+quantifying each merge with Kullback–Leibler divergence, and applying statistical tests that identify the branches
+forming stable clusters. It is designed for workflows that need statistically defensible cluster boundaries, per-merge
+diagnostics (e.g., local KL score, chi-square p-value, sibling independence outcome), and reproducible reports
+supporting downstream analyses of binary observations.
 
 ## Overview
 
@@ -57,9 +58,7 @@ Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceed
 
    The chi-square gate uses the approximation
 
-   $$
-   2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \Vert \theta_u) \sim \chi^{2}_{p}
-   $$
+   $$2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \| \theta_u) \sim \chi^{2}_{p}$$
 
    to decide whether the child diverges from its parent. Intuitively, the KL term asks, “How surprised would we be to
    see the child’s feature rates if the parent’s pattern were still true?” Scaling by the child’s sample count turns
@@ -228,14 +227,13 @@ $$
 every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set to
 `False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
 
-I'll provide a concrete numerical example of the KL-divergence hierarchical clustering process using specific data
-points.
+A concrete numerical example of the KL-divergence hierarchical clustering process using specific data points follows.
 
 ## Numerical Example: KL-Divergence Hierarchical Clustering
 
 ### Sample Dataset
 
-Let's work with a binary feature matrix with 5 samples and 3 features:
+Consider a binary feature matrix with 5 samples and 3 features:
 
 | Sample | $f_1$ | $f_2$ | $f_3$ |
 | ------ | ----- | ----- | ----- |
@@ -285,7 +283,7 @@ $$
 Using minimum distances for linkage:
 
 1. First merge: A-B (distance = 1), A-E (distance = 1), B-C (distance = 1), D-E (distance = 1)
-2. Let's say we merge A-B first, then D-E, then (A,B)-C, then ((A,B),C)-(D,E)
+2. One possible sequence merges A-B first, then D-E, then (A,B)-C, and finally ((A,B),C)-(D,E)
 
 Resulting tree structure:
 
@@ -325,12 +323,7 @@ For each child-parent pair, calculate KL divergence:
 
 **A vs u_AB:**
 
-$$
-D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = \sum_{k=1}^{3} \left[
-\theta_{A,k} \log\left(\frac{\theta_{A,k}}{\theta_{u_{AB},k}}\right)
-+ (1-\theta_{A,k}) \log\left(\frac{1-\theta_{A,k}}{1-\theta_{u_{AB},k}}\right)
-\right]
-$$
+$$D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = \sum_{k=1}^{3} \left[\theta_{A,k} \log\left(\frac{\theta_{A,k}}{\theta_{u_{AB},k}}\right) + (1-\theta_{A,k}) \log\left(\frac{1-\theta_{A,k}}{1-\theta_{u_{AB},k}}\right)\right]$$
 
 For feature 1: $1 \cdot \log(1/1) + 0 \cdot \log(0/0) = 0 + 0 = 0$
 
@@ -360,61 +353,30 @@ For child B: $T_B = 2 \cdot |C_B| \cdot D_{\mathrm{KL}}(\theta_B \| \theta_{u_{A
 
 ### Step 6: Statistical Significance
 
-I'll provide a detailed explanation of Step 6 and why KL divergence works so well for this statistical testing
-framework.
-
-## Step 6: Statistical Significance - Deep Dive
-
-### Why KL Divergence Works Here
-
-The brilliance of using KL divergence in hierarchical clustering lies in its **information-theoretic foundation** and
-its connection to **likelihood ratio testing**. Here's why it works:
-
-### 1. **KL Divergence as "Information Surprise"**
-
-KL divergence measures how "surprised" you would be to see the child's distribution if the parent's distribution were
-the true underlying model:
+The statistical test used in Gate 1 treats the KL divergence as a likelihood-ratio statistic. For a child \(c\) and
+parent \(u\), the hypotheses are \(H_0: \theta_c = \theta_u\) versus \(H_1: \theta_c \neq \theta_u\). The likelihood
+ratio
 
 $$
-  D_{\mathrm{KL}}(\theta_{\text{child}} \| \theta_{\text{parent}}) = \mathbb{E}_{\text{child}}\left[\log \frac{P_{\text{child}}(X)}{P_{\text{parent}}(X)}\right]
+\Lambda = \frac{L(\theta_u \mid \text{child data})}{L(\theta_c \mid \text{child data})}
 $$
 
-**Intuition**: If child and parent are very similar, you're not surprised → low KL divergence. If they're very
-different, you're very surprised → high KL divergence.
+leads, via Wilks’ theorem, to the chi-square approximation
 
-### 2. **Connection to Likelihood Ratio Testing**
+$$
+-2\log(\Lambda) = 2|C_c|D_{\mathrm{KL}}(\theta_c \| \theta_u) \xrightarrow{d} \chi^2_p ,
+$$
 
-The chi-square statistic $T_c = 2|C_c|D_{\mathrm{KL}}(\theta_c \| \theta_u)$ is actually a **likelihood ratio test
-statistic**!
+as established by Wilks’ theorem for likelihood-ratio tests under suitable regularity conditions. For Bernoulli data the
+approximation holds when:
 
-**Null hypothesis**: $H_0: \theta_c = \theta_u$ (child has same parameters as parent) **Alternative hypothesis**:
-$H_1: \theta_c \neq \theta_u$ (child is genuinely different)
+- each feature exhibits non-degenerate variability (neither all zeros nor all ones),
+- the effective sample size \(|C_c|\) is moderately large relative to the number of features \(p\),
+- the null hypothesis \(H_0: \theta_c = \theta_u\) provides a reasonable approximation.
 
-The likelihood ratio is: $$\Lambda = \frac{L(\theta_u | \text{child data})}{L(\theta_c | \text{child data})}$$
+The degrees of freedom \(p\) correspond to the \(p\) equality constraints imposed under \(H_0\).
 
-And by Wilks' theorem: $$-2\log(\Lambda) = 2|C_c|D_{\mathrm{KL}}(\theta_c \| \theta_u) \xrightarrow{d} \chi^2_p$$
-
-### 3. **Why This Statistical Framework Works**
-
-#### **A. Large Sample Justification**
-
-For Bernoulli data with $n$ samples and $p$ features, the **asymptotic distribution** holds when:
-
-- Each feature has enough variability (not all 0s or all 1s)
-- Sample size $n$ is reasonably large relative to $p$
-- The null hypothesis (parent = child) is approximately true
-
-#### **B. Degrees of Freedom Logic**
-
-We use $\chi^2_p$ (p degrees of freedom) because:
-
-- Each feature contributes one constraint
-- We're testing $p$ independent Bernoulli parameters
-- Under $H_0$, we impose $p$ equality constraints: $\theta_{c,k} = \theta_{u,k}$ for $k = 1,\ldots,p$
-
-### 4. **Detailed Step 6 Analysis for Our Example**
-
-Let's break down exactly what's happening:
+### 4. Detailed Step 6 Analysis for the Example
 
 #### **Child A vs Parent u_AB**
 
@@ -587,7 +549,7 @@ pip install -r requirements.txt
 
 ## Run the Quick Start Pipeline
 
-`quick_start.py` wires together the full analysis pipeline on a synthetic dataset so you can see each stage in action.
+`quick_start.py` wires together the full analysis pipeline on a synthetic dataset to illustrate each stage.
 
 ```bash
 python quick_start.py
@@ -610,8 +572,9 @@ What the script does:
 6. **Validate results** – compares discovered clusters with the synthetic ground truth using Adjusted Rand Index (ARI)
    so you know how well the decomposition performed.
 
-You should see console output describing each step, a summary of discovered clusters, and the final ARI score (`1.0` is
-a perfect match; `0.0` indicates random assignment). No files are written by this demo; it is safe to rerun repeatedly.
+The script prints console output summarizing each step, reports the discovered clusters, and ends with the ARI score
+(`1.0` denotes a perfect match; `0.0` indicates random assignment). The demo does not create files, so reruns can be
+performed without cleanup.
 
 ## Working With Your Own Data
 
