@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import logging
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def compute_otsu_threshold(values: np.ndarray) -> float:
@@ -19,9 +22,16 @@ def compute_otsu_threshold(values: np.ndarray) -> float:
         return 0.5
     try:
         from skimage.filters import threshold_otsu  # type: ignore
+
         thr = float(threshold_otsu(v))
         return thr if np.isfinite(thr) else 0.5
-    except Exception:
+    except Exception as e:
+        logger.warning(
+            "scikit-image not available for Otsu thresholding, falling back to "
+            "custom implementation. Consider installing scikit-image for optimal "
+            "performance: pip install scikit-image>=0.22.0. Error: %s",
+            str(e),
+        )
         # Fallback to a simple histogram-based Otsu implementation
         hist, edges = np.histogram(v, bins=256, range=(0.0, 1.0))
         hist = hist.astype(float)
@@ -62,11 +72,18 @@ def compute_li_threshold(values: np.ndarray) -> float:
         return 0.5
     try:
         from skimage.filters import threshold_li  # type: ignore
+
         thr = float(threshold_li(v))
         if not np.isfinite(thr):
             return 0.5
         return thr
-    except Exception:
+    except Exception as e:
+        logger.warning(
+            "scikit-image not available for Li thresholding, falling back to "
+            "median. Consider installing scikit-image for optimal performance: "
+            "pip install scikit-image>=0.22.0. Error: %s",
+            str(e),
+        )
         return float(np.median(v))
 
 

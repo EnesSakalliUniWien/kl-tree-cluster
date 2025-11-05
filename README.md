@@ -2,9 +2,9 @@
 
 This repository provides tooling to analyse binary feature datasets by constructing hierarchical cluster trees,
 quantifying each merge with Kullback–Leibler divergence, and applying statistical tests that identify the branches
-forming stable clusters. It is designed for workflows that need statistically defensible cluster boundaries, per-merge
-diagnostics (e.g., local KL score, chi-square p-value, sibling independence outcome), and reproducible reports
-supporting downstream analyses of binary observations.
+forming stable clusters. It is intended for workflows that require statistically defensible cluster boundaries,
+per-merge diagnostics (local KL score, chi-square p-value, sibling independence outcome), and reproducible reports that
+support downstream analyses of binary observations.
 
 ## Overview
 
@@ -440,48 +440,9 @@ With $p = 3$ features, we compare against $\chi^2_3$ distribution:
 
 4. **Connects to entropy**: $D_{\mathrm{KL}}(P \| Q) = H(P,Q) - H(P)$ where $H(P,Q)$ is cross-entropy
 
-### 6. **Practical Interpretation of Our Results**
-
-#### **What $T_A = 1.386$ Means**
-
-- **Low evidence**: With only 1 sample, even moderate differences don't reach significance
-- **Feature 2 divergence**: The 0.693 nats from feature 2 indicates A strongly prefers feature 2 to be "on" while the
-  parent is ambivalent
-- **Conservative decision**: The statistical framework correctly says "we need more evidence before splitting"
-
-#### **Why This Makes Sense**
-
-**Biological/Real-world interpretation**: If A and B represent biological samples:
-
-- They agree on features 1 and 3
-- They disagree on feature 2, but this could be random variation
-- With only 1 sample each, we can't confidently say they represent different populations
-
-### 7. **When the Test Would Reject**
-
-The test would reject (favor splitting) when:
-
-1. **Larger sample sizes**: $|C_A| = 10$ would give $T_A = 2 \cdot 10 \cdot 0.693 = 13.86 > 7.815$
-2. **Larger divergences**: If features differed more dramatically
-3. **Fewer features**: With $p = 1$, critical value drops to $\chi^2_{1,0.05} = 3.84$
-
-### 8. **The Beautiful Mathematical Symmetry**
-
-The framework elegantly combines:
-
-- **Information theory** (KL divergence quantifies surprise)
-- **Statistical testing** (likelihood ratio test provides p-values)
-- **Hierarchical structure** (parent distributions naturally emerge from averaging)
-- **Multiple testing** (Benjamini-Hochberg controls family-wise error rate)
-
-This creates a principled, statistically rigorous method for deciding where to cut hierarchical trees based on
-**evidence**, not arbitrary distance thresholds.
-
-The KL divergence approach essentially asks: **"Given the data we've observed, is there enough information-theoretic
-evidence to justify treating these groups as fundamentally different?"** This is exactly the right question for
-unsupervised clustering!
-
-**Result:** The split between A and B is **not statistically significant** at the 0.05 level.
+The KL divergence approach therefore assesses whether the observed data provide sufficient evidence to justify treating
+the groups as distinct. For the worked example, the split between A and B is not statistically significant at the 0.05
+level.
 
 ### Step 7: P-values
 
@@ -503,9 +464,8 @@ Based on the statistical gates:
 - **Cluster 2:** {C}
 - **Cluster 3:** {D, E} (would need similar analysis)
 
-This numerical example demonstrates how the KL-divergence approach uses information theory and statistical testing to
-make principled decisions about where to cut the hierarchical tree. Explain 6 much more in detail. Why does it work to
-use the kl divergence here?
+This numerical example shows how the KL-divergence approach combines information-theoretic scoring with statistical
+testing to decide where to cut the hierarchical tree.
 
 ## Highlights
 
