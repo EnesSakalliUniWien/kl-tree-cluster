@@ -6,14 +6,11 @@ import re
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import matplotlib.pyplot as plt
 from datetime import datetime
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from sklearn.cluster import KMeans, SpectralClustering
-from sklearn.preprocessing import StandardScaler
 
 from tree.poset_tree import PosetTree
 from hierarchy_analysis import calculate_hierarchy_kl_divergence
@@ -24,9 +21,10 @@ from hierarchy_analysis.statistical_tests import (
     annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
-from plot.cluster_tree_visualization import (
-    plot_tree_with_clusters,
-    plot_cluster_summary,
+from plot.validation_visualizations import (
+    create_validation_plot,
+    create_tree_plots_from_results,
+    create_umap_plots_from_results,
 )
 from simulation.generate_random_feature_matrix import generate_random_feature_matrix
 
@@ -716,6 +714,9 @@ def validate_cluster_algorithm(
     failure_summaries: list[dict] = []
     failure_csv_paths: list[Path] = []
 
+    # Store computed results to avoid recalculation
+    computed_results = []
+
     # Run test cases
     for i, tc in enumerate(test_cases, 1):
         if verbose:
@@ -784,7 +785,22 @@ def validate_cluster_algorithm(
                 columns=["cluster_id", "cluster_root", "cluster_size"]
             ).set_index("sample_id")
 
-        # Calculate metrics
+        # Store computed results for later use in plotting
+        computed_results.append(
+            {
+                "test_case_num": i,
+                "tree": tree_t,
+                "decomposition": decomp_t,
+                "stats": results_t,
+                "data": data_t,
+                "meta": meta,
+                "X_original": X_original,
+                "y_true": y_t,
+                "kl_labels": _labels_from_decomposition(
+                    decomp_t, data_t.index.tolist()
+                ),
+            }
+        )
         if decomp_t["num_clusters"] > 0 and not report_t.empty:
             # Create a correct mapping from sample name (report_t index) to true cluster label
             true_label_map = {name: label for name, label in zip(data_t.index, y_t)}
@@ -944,7 +960,6 @@ def validate_cluster_algorithm(
                 "Total_Nodes": len(results_t),
                 "Top_Global_KL_Nodes": "|".join(top_global_nodes),
                 "Top_Local_KL_Nodes": "|".join(top_local_nodes),
-                "Total_Nodes": len(results_t),
                 "Failure_CSV_Path": str(csv_path),
             }
             summary_df = pd.DataFrame([summary_info])
@@ -1040,7 +1055,7 @@ def validate_cluster_algorithm(
     # Create visualization if verbose
     fig = None
     if verbose:
-        fig = _create_validation_plot(df_results)
+        fig = create_validation_plot(df_results)
         fig.savefig("validation_results.png", dpi=150, bbox_inches="tight")
         print("Validation plot saved to 'validation_results.png'")
         # plt.show()  # Skip interactive display in terminal
@@ -1066,96 +1081,12 @@ def validate_cluster_algorithm(
     if plot_trees:
         print("\nGenerating tree visualizations...")
         current_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-        # Create output directory
         tree_plots_dir = Path("../cluster_tree_plots")
-        tree_plots_dir.mkdir(exist_ok=True)
 
-        # We need to regenerate the data and trees for plotting
-        for i, tc in enumerate(test_cases, 1):
-            if verbose:
-                print(f"  Creating tree visualization for test case {i}...")
-            data_t, y_t, X_original, meta = _generate_case_data(tc)
-
-            # Get KL clustering results from our results dataframe
-            kl_result = df_results[df_results["Test"] == i]
-            if not kl_result.empty:
-                # Recompute the KL clustering to get the tree and decomposition
-                Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
-                tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
-                stats_t = calculate_hierarchy_kl_divergence(tree_t, data_t)
-                results_t = annotate_nodes_with_statistical_significance_tests(
-                    stats_t, meta["n_features"], significance_level, 2.0, True
-                )
-                results_t = annotate_child_parent_divergence(
-                    tree_t, results_t, meta["n_features"], significance_level
-                )
-                results_t = annotate_sibling_independence_cmi(
-                    tree_t,
-                    results_t,
-                    significance_level_alpha=significance_level,
-                    permutations=cmi_permutations,
-                    parallel=parallel_cmi,
-                )
-
-                decomposer_t = ClusterDecomposer(
-                    tree=tree_t,
-                    results_df=results_t,
-                    significance_column="Are_Features_Dependent",
-                    alpha_local=0.1,
-                )
-
-                decomp_t = decomposer_t.decompose_tree()
-
-                # Create tree visualization
-                noise_label = "σ" if meta["generator"] == "blobs" else "entropy"
-                noise_value = meta["noise"]
-                if isinstance(noise_value, (int, float, np.floating, np.integer)):
-                    noise_value_str = f"{float(noise_value):.2f}"
-                else:
-                    noise_value_str = str(noise_value)
-                test_case_name = (
-                    f"Test Case {i}: {meta['n_clusters']} Clusters "
-                    f"({noise_label}={noise_value_str})"
-                )
-                if meta.get("name"):
-                    test_case_name += f" [{meta['name']}]"
-                tree_fig, _, _ = plot_tree_with_clusters(
-                    tree=tree_t,
-                    decomposition_results=decomp_t,
-                    use_labels=True,
-                    figsize=(20, 14),
-                    node_size=2500,
-                    font_size=9,
-                    show_cluster_boundaries=True,
-                    title=f"Hierarchical Tree with KL Divergence Clusters\n{test_case_name}",
-                )
-
-                tree_filename = f"tree_test_{i}_{meta['n_clusters']}_clusters_{current_timestamp}.png"
-                tree_fig.savefig(
-                    tree_plots_dir / tree_filename,
-                    dpi=300,
-                    bbox_inches="tight",
-                )
-                plt.close(tree_fig)  # Close to save memory
-
-                # Create cluster summary visualization
-                if decomp_t["num_clusters"] > 0:
-                    summary_fig, _ = plot_cluster_summary(decomp_t, figsize=(14, 6))
-                    summary_fig.suptitle(
-                        f"Cluster Analysis Summary - {test_case_name}",
-                        fontsize=16,
-                        weight="bold",
-                        y=0.98,
-                    )
-
-                    summary_filename = f"summary_test_{i}_{meta['n_clusters']}_clusters_{current_timestamp}.png"
-                    summary_fig.savefig(
-                        tree_plots_dir / summary_filename,
-                        dpi=300,
-                        bbox_inches="tight",
-                    )
-                    plt.close(summary_fig)  # Close to save memory
+        # Use the new plotting utility with pre-computed results
+        create_tree_plots_from_results(
+            computed_results, tree_plots_dir, current_timestamp, verbose
+        )
 
         print("Tree plots saved as '../cluster_tree_plots/tree_test_*_clusters_*.png'")
         print(
@@ -1166,373 +1097,18 @@ def validate_cluster_algorithm(
     if plot_umap:
         print("\nGenerating UMAP comparison visualizations...")
         current_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-        # Create output directory
         umap_plots_dir = Path("../cluster_tree_plots")
-        umap_plots_dir.mkdir(exist_ok=True)
 
-        # We need to regenerate the data for UMAP plotting
-        for i, tc in enumerate(test_cases, 1):
-            if verbose:
-                print(f"  Creating UMAP visualization for test case {i}...")
-
-            data_t, y_t, X_original, meta = _generate_case_data(tc)
-
-            # Get KL clustering results from our results dataframe
-            kl_result = df_results[df_results["Test"] == i]
-            if not kl_result.empty:
-                # Recompute the KL clustering to get labels
-                Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
-                tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
-                stats_t = calculate_hierarchy_kl_divergence(tree_t, data_t)
-                results_t = annotate_nodes_with_statistical_significance_tests(
-                    stats_t, meta["n_features"], significance_level, 2.0, True
-                )
-                results_t = annotate_child_parent_divergence(
-                    tree_t, results_t, meta["n_features"], significance_level
-                )
-                results_t = annotate_sibling_independence_cmi(
-                    tree_t,
-                    results_t,
-                    significance_level_alpha=significance_level,
-                    permutations=cmi_permutations,
-                    parallel=parallel_cmi,
-                )
-
-                decomposer_t = ClusterDecomposer(
-                    tree=tree_t,
-                    results_df=results_t,
-                    significance_column="Are_Features_Dependent",
-                    alpha_local=0.1,
-                )
-
-                decomp_t = decomposer_t.decompose_tree()
-
-                # Create report dataframe to get KL labels
-                cluster_assignments = decomp_t.get("cluster_assignments", {})
-                if cluster_assignments:
-                    rows = []
-                    for cid, info in cluster_assignments.items():
-                        for leaf in info["leaves"]:
-                            rows.append(
-                                {
-                                    "sample_id": leaf,
-                                    "cluster_id": cid,
-                                }
-                            )
-                    report_t = pd.DataFrame(rows).set_index("sample_id")
-                    # Map back to original sample order
-                    kl_labels = np.array(
-                        [
-                            report_t.loc[sample, "cluster_id"]
-                            if sample in report_t.index
-                            else -1
-                            for sample in data_t.index
-                        ]
-                    )
-                else:
-                    kl_labels = np.full(meta["n_samples"], -1)
-
-                # Create UMAP comparison visualization
-                umap_fig = _create_umap_comparison_plot(
-                    X_original, y_t, kl_labels, i, meta["n_clusters"]
-                )
-
-                umap_filename = f"umap_test_{i}_{meta['n_clusters']}_clusters_{current_timestamp}.png"
-                umap_fig.savefig(
-                    umap_plots_dir / umap_filename,
-                    dpi=300,
-                    bbox_inches="tight",
-                )
-                plt.close(umap_fig)  # Close to save memory
+        # Use the new plotting utility with pre-computed results
+        create_umap_plots_from_results(
+            computed_results, umap_plots_dir, current_timestamp, verbose
+        )
 
         print(
             "UMAP comparison plots saved as '../cluster_tree_plots/umap_test_*_clusters_*.png'"
         )
 
     return df_results, fig
-
-
-def _create_validation_plot(df_results):
-    """Create 4-panel visualization of validation results."""
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle(
-        "Algorithm Performance Across Test Cases", fontsize=16, weight="bold", y=0.995
-    )
-
-    # 1. Cluster Detection Accuracy
-    ax1 = axes[0, 0]
-    x = df_results["Test"]
-    width = 0.35
-    ax1.bar(
-        x - width / 2,
-        df_results["True"],
-        width,
-        label="True Clusters",
-        color="#2ecc71",
-        alpha=0.8,
-        edgecolor="black",
-    )
-    ax1.bar(
-        x + width / 2,
-        df_results["Found"],
-        width,
-        label="Found Clusters",
-        color="#3498db",
-        alpha=0.8,
-        edgecolor="black",
-    )
-    for i, row in df_results.iterrows():
-        match = "✓" if row["True"] == row["Found"] else "✗"
-        color = "green" if row["True"] == row["Found"] else "red"
-        ax1.text(
-            row["Test"],
-            max(row["True"], row["Found"]) + 0.3,
-            match,
-            ha="center",
-            fontsize=20,
-            weight="bold",
-            color=color,
-        )
-    ax1.set_xlabel("Test Case", fontsize=11, weight="bold")
-    ax1.set_ylabel("Number of Clusters", fontsize=11, weight="bold")
-    ax1.set_title("Cluster Count: Expected vs Found", fontsize=12, weight="bold")
-    ax1.legend(loc="upper left")
-    ax1.set_xticks(x)
-    ax1.grid(axis="y", alpha=0.3)
-
-    # 2. Quality Metrics
-    ax2 = axes[0, 1]
-    x_pos = np.arange(len(df_results))
-    ax2.plot(
-        x_pos,
-        df_results["ARI"],
-        "o-",
-        linewidth=2.5,
-        markersize=10,
-        label="ARI",
-        color="#e74c3c",
-    )
-    ax2.plot(
-        x_pos,
-        df_results["NMI"],
-        "s-",
-        linewidth=2.5,
-        markersize=10,
-        label="NMI",
-        color="#9b59b6",
-    )
-    ax2.plot(
-        x_pos,
-        df_results["Purity"],
-        "^-",
-        linewidth=2.5,
-        markersize=10,
-        label="Purity",
-        color="#f39c12",
-    )
-    ax2.axhline(
-        y=1.0, color="green", linestyle="--", alpha=0.3, linewidth=2, label="Perfect"
-    )
-    ax2.set_xlabel("Test Case", fontsize=11, weight="bold")
-    ax2.set_ylabel("Score", fontsize=11, weight="bold")
-    ax2.set_title("Clustering Quality Metrics", fontsize=12, weight="bold")
-    ax2.set_xticks(x_pos)
-    ax2.set_xticklabels(df_results["Test"])
-    ax2.set_ylim(0, 1.1)
-    ax2.legend(loc="lower left")
-    ax2.grid(alpha=0.3)
-
-    # 3. Dataset Complexity
-    ax3 = axes[1, 0]
-    colors = [
-        "#2ecc71" if row["True"] == row["Found"] else "#e74c3c"
-        for _, row in df_results.iterrows()
-    ]
-    ax3.scatter(
-        df_results["Samples"],
-        df_results["Features"],
-        s=df_results["True"] * 100,
-        c=colors,
-        alpha=0.6,
-        edgecolors="black",
-        linewidth=2,
-    )
-    for i, row in df_results.iterrows():
-        ax3.annotate(
-            f"Test {row['Test']}\n{row['True']}→{row['Found']}",
-            (row["Samples"], row["Features"]),
-            xytext=(5, 5),
-            textcoords="offset points",
-            fontsize=9,
-            weight="bold",
-        )
-    ax3.set_xlabel("Number of Samples", fontsize=11, weight="bold")
-    ax3.set_ylabel("Number of Features", fontsize=11, weight="bold")
-    ax3.set_title(
-        "Dataset Complexity (size = true clusters, color = match)",
-        fontsize=12,
-        weight="bold",
-    )
-    ax3.grid(alpha=0.3)
-
-    # 4. Summary Statistics
-    ax4 = axes[1, 1]
-    ax4.axis("off")
-
-    # Calculate summary
-    matches = sum(df_results["True"] == df_results["Found"])
-    accuracy = matches / len(df_results) * 100
-    avg_ari = df_results["ARI"].mean()
-    avg_nmi = df_results["NMI"].mean()
-    avg_purity = df_results["Purity"].mean()
-
-    summary_text = f"""
-SUMMARY STATISTICS
-
-Cluster Detection
-  Correct:     {matches}/{len(df_results)} ({accuracy:.0f}%)
-  
-Quality Metrics (Average)
-  ARI:         {avg_ari:.3f}
-  NMI:         {avg_nmi:.3f}
-  Purity:      {avg_purity:.3f}
-  
-Test Complexity
-  Samples:     {df_results["Samples"].min()}-{df_results["Samples"].max()}
-  Features:    {df_results["Features"].min()}-{df_results["Features"].max()}
-  Clusters:    {df_results["True"].min()}-{df_results["True"].max()}
-  Noise (σ):   {df_results["Noise"].min()}-{df_results["Noise"].max()}
-"""
-
-    ax4.text(
-        0.1,
-        0.5,
-        summary_text,
-        fontsize=11,
-        verticalalignment="center",
-        fontfamily="monospace",
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.3),
-    )
-
-    plt.tight_layout()
-
-    return fig
-
-
-def _create_umap_comparison_plot(X_original, y_true, y_kl, test_case_num, n_clusters):
-    """Create UMAP visualization comparing KL clustering with other methods."""
-    import warnings
-
-    # Suppress all warnings during UMAP and clustering operations
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        # Standardize the data for better UMAP performance
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X_original)
-
-        # Reduce dimensionality if too high for UMAP
-        if X_scaled.shape[1] > 50:
-            from sklearn.decomposition import PCA
-
-            pca = PCA(
-                n_components=min(50, X_scaled.shape[0] - 1, X_scaled.shape[1]),
-                random_state=42,
-            )
-            X_scaled = pca.fit_transform(X_scaled)
-
-        # Apply UMAP for dimensionality reduction
-        import umap
-
-        reducer = umap.UMAP(
-            n_components=2,
-            random_state=42,
-            n_neighbors=min(15, len(X_scaled) - 1),
-            min_dist=0.1,
-        )
-        X_embedded = reducer.fit_transform(X_scaled)
-
-        # Apply comparison clustering methods
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-        y_kmeans = kmeans.fit_predict(X_scaled)
-
-        spectral = SpectralClustering(
-            n_clusters=n_clusters,
-            random_state=42,
-            affinity="nearest_neighbors",
-            assign_labels="cluster_qr",
-        )
-        y_spectral = spectral.fit_predict(X_scaled)  # Create figure with subplots
-    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    fig.suptitle(
-        f"Test Case {test_case_num}: {n_clusters} Clusters - UMAP Comparison",
-        fontsize=16,
-        weight="bold",
-        y=0.995,
-    )
-
-    methods = [
-        ("Ground Truth", y_true, "True cluster labels"),
-        ("KL Divergence", y_kl, "Local KL divergence clustering"),
-        ("K-Means", y_kmeans, "K-means clustering"),
-        ("Spectral", y_spectral, "Spectral clustering"),
-        ("UMAP X", X_embedded[:, 0], "UMAP dimension 1 (no clustering)"),
-        ("UMAP Y", X_embedded[:, 1], "UMAP dimension 2 (no clustering)"),
-    ]
-
-    colors = plt.cm.tab10(np.linspace(0, 1, n_clusters))
-
-    for i, (method_name, labels, description) in enumerate(methods):
-        ax = axes[i // 3, i % 3]
-
-        if method_name in ["Ground Truth", "KL Divergence", "K-Means", "Spectral"]:
-            # Clustering results - color by cluster
-            scatter = ax.scatter(
-                X_embedded[:, 0],
-                X_embedded[:, 1],
-                c=labels,
-                cmap="tab10",
-                alpha=0.7,
-                s=50,
-                edgecolors="black",
-                linewidth=0.5,
-            )
-            # Add cluster centers
-            for cluster_id in range(n_clusters):
-                mask = labels == cluster_id
-                if np.sum(mask) > 0:
-                    center_x = np.mean(X_embedded[mask, 0])
-                    center_y = np.mean(X_embedded[mask, 1])
-                    ax.scatter(
-                        center_x,
-                        center_y,
-                        c=[colors[cluster_id]],
-                        marker="x",
-                        s=100,
-                        linewidth=3,
-                    )
-        else:
-            # Raw t-SNE dimensions - color by value
-            scatter = ax.scatter(
-                X_embedded[:, 0],
-                X_embedded[:, 1],
-                c=labels,
-                cmap="viridis",
-                alpha=0.7,
-                s=50,
-                edgecolors="black",
-                linewidth=0.5,
-            )
-            plt.colorbar(scatter, ax=ax, shrink=0.8)
-
-        ax.set_title(f"{method_name}\n{description}", fontsize=11, weight="bold")
-        ax.set_xlabel("UMAP Dimension 1", fontsize=9)
-        ax.set_ylabel("UMAP Dimension 2", fontsize=9)
-        ax.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    return fig
 
 
 def test_cluster_algorithm_validation():
