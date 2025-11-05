@@ -23,30 +23,34 @@ hierarchy should stop splitting and which sibling branches stay merged.
 - **Information tests** – KL divergence and conditional mutual information supply the scores that determine whether a
   branch is informative enough to justify a split.
 
-## Implementation Map
+### Implementation Map
 
 - Tree construction, distribution propagation, and KL metrics: `hierarchy_analysis/divergence_metrics.py`.
 - Local KL chi-square helpers and shared statistical utilities: `hierarchy_analysis/statistics/shared_utils.py`.
 - Sibling independence via conditional mutual information: `hierarchy_analysis/statistics/sibling_independence.py`.
 - Decomposition logic that applies the statistical gates: `hierarchy_analysis/cluster_decomposition.py`.
 
-## Pipeline Workflow
+### Pipeline Workflow
 
 Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceeds through four checkpoints:
 
-1. **Pairwise linkage** – compute the Hamming distance between rows to drive clustering:
+### Pairwise linkage
+
+compute the Hamming distance between rows to drive clustering:
 
 $$
 D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
 $$
 
-2. **Node distributions** – average the descendant leaves $C_u$ to obtain Bernoulli parameters:
+## Node distributions
+
+Average the descendant leaves $C_u$ to obtain Bernoulli parameters:
 
 $$
 \theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
 $$
 
-3. **Local KL scoring** – quantify how a child $c$ diverges from its parent $u$:
+## Local KL scoring** – quantify how a child $c$ diverges from its parent $u$:
 
 $$
 D_{\mathrm{KL}}(\theta_c \| \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} +
@@ -65,11 +69,13 @@ surprise into a likelihood-ratio statistic, which large-sample theory says behav
 with one degree of freedom per feature. A chi-square goodness-of-fit check then compares the parent’s expected counts
 with the child's observed counts and flags cases where the mismatch is too large to blame on random noise.
 
-4. **Sibling independence** – evaluate how often the siblings co-occur relative to what you would expect from the parent
-   alone. For each feature $k$, count the proportions of $(c_1, c_2)$ taking every combination of
-   $\{0,1\} \times \{0,1\}$ among the samples where the parent equals 0 or 1. The conditional mutual information adds up
-   those log-ratio contributions to show whether the siblings carry extra information about each other once the parent
-   is known.
+## Sibling independence
+
+evaluate how often the siblings co-occur relative to what you would expect from the parent
+alone. For each feature $k$, count the proportions of $(c_1, c_2)$ taking every combination of
+$\{0,1\} \times \{0,1\}$ among the samples where the parent equals 0 or 1. The conditional mutual information adds up
+those log-ratio contributions to show whether the siblings carry extra information about each other once the parent
+is known.
 
 ## Statistical Gates and Independence Checks
 
@@ -165,7 +171,7 @@ both the divergence scores and the independence flags it needs to decide where t
    └─ C
    ```
 
-2. **Node distributions** – Using `calculate_hierarchy_kl_divergence`, Bernoulli parameters propagate upward:
+### Node distributions – Using `calculate_hierarchy_kl_divergence`, Bernoulli parameters propagate upward:
 
 $$
 \theta_A = (1, 0), \qquad \theta_B = (1, 1), \qquad \theta_C = (0, 1),
@@ -178,7 +184,7 @@ $$
 \theta_{\text{root}} = \frac{1}{3}\left(2 \cdot (1,0.5) + (0,1)\right) = \left(\frac{2}{3}, \frac{2}{3}\right).
 $$
 
-3. **KL-based scoring** – For each edge, the module evaluates the KL divergence in nats:
+#### KL-based scoring – For each edge, the module evaluates the KL divergence in nats:
 
 $$
 D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0.693,
@@ -194,7 +200,9 @@ $$
 
 Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
-4. **Sibling independence** – `annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining
+### Sibling independence
+
+`annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining
    binary vectors
 
    $$
