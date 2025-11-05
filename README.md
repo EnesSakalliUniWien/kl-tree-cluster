@@ -39,22 +39,15 @@ Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceed
 
 1. **Pairwise linkage** – compute the Hamming distance between rows to drive clustering.
 
-   $$
-   D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
-   $$
+   $$D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert$$
 
 2. **Node distributions** – average the descendant leaves $C_u$ to obtain Bernoulli parameters.
 
-   $$
-   \theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
-   $$
+   $$\theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik}$$
 
 3. **Local KL scoring** – quantify how a child $c$ diverges from its parent $u$.
 
-   $$
-   D_{\mathrm{KL}}(\theta_c \| \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} +
-   (1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}} .
-   $$
+   $$D_{\mathrm{KL}}(\theta_c \| \theta_u) = \sum_{k=1}^{p} \left[\theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} + (1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}}\right]$$
 
    The chi-square gate uses the approximation
 
