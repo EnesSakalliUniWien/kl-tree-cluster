@@ -36,43 +36,45 @@ hierarchy should stop splitting and which sibling branches stay merged.
 
 Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceeds through four checkpoints:
 
-1. **Pairwise linkage** – compute the Hamming distance between rows to drive clustering.
+#### 1. **Pairwise linkage** – compute the Hamming distance between rows to drive clustering.
 
-   $$
-   D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
-   $$
+$$
+D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
+$$
 
-2. **Node distributions** – average the descendant leaves $C_u$ to obtain Bernoulli parameters.
+#### 2. **Node distributions** – average the descendant leaves $C_u$ to obtain Bernoulli parameters.
 
-   $$
-   \theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
-   $$
+$$
+\theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
+$$
 
-3. **Local KL scoring** – quantify how a child $c$ diverges from its parent $u$.
+#### 3. **Local KL scoring** – quantify how a child $c$ diverges from its parent $u$.
 
-   $$
-   D_{\mathrm{KL}}(\theta_c \| \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} +
-   (1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}} .
-   $$
+$$
+D_{\mathrm{KL}}(\theta_c \| \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} +
+(1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}} .
+$$
 
-   The chi-square gate uses the approximation
+The chi-square gate uses the approximation
 
-   $$
-   2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \Vert \theta_u) \sim \chi^{2}_{p}
-   $$
+$$
+2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \Vert \theta_u) \sim \chi^{2}_{p}
+$$
 
-   to decide whether the child diverges from its parent. Intuitively, the KL term asks, “How surprised would we be to
-   see the child’s feature rates if the parent’s pattern were still true?” Scaling by the child’s sample count turns
-   that surprise into a likelihood-ratio statistic, which large-sample theory says behaves like a chi-square random
-   variable with one degree of freedom per feature. A chi-square goodness-of-fit check then compares the parent’s
-   expected counts with the child’s observed counts and flags cases where the mismatch is too large to blame on random
-   noise.
+to decide whether the child diverges from its parent. Intuitively, the KL term asks, “How surprised would we be to
+see the child’s feature rates if the parent’s pattern were still true?” Scaling by the child’s sample count turns
+that surprise into a likelihood-ratio statistic, which large-sample theory says behaves like a chi-square random
+variable with one degree of freedom per feature. A chi-square goodness-of-fit check then compares the parent’s
+expected counts with the child’s observed counts and flags cases where the mismatch is too large to blame on random
+noise.
 
-4. **Sibling independence** – evaluate how often the siblings co-occur relative to what you would expect from the parent
-   alone. For each feature $k$, count the proportions of $(c_1, c_2)$ taking every combination of
-   $\{0,1\} \times \{0,1\}$ among the samples where the parent equals 0 or 1. The conditional mutual information
-   aggregates those log-ratio contributions to show whether the siblings carry extra information about each other once
-   the parent is known.
+#### 4. **Sibling independence** – evaluate how often the siblings co-occur relative to what you would expect from the parent alone. 
+
+For each feature $k$, count the proportions of $(c_1, c_2)$ taking every combination of
+$\{0,1\} \times \{0,1\}$ among the samples where the parent equals 0 or 1. The conditional mutual information
+aggregates those log-ratio contributions to show whether the siblings carry extra information about each other once
+the parent is known.
+
 
 ## Statistical Gates and Independence Checks
 
