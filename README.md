@@ -338,13 +338,17 @@ For feature 2: $1 \cdot \log(1/0.5) + 0 \cdot \log(0/0.5) = \log(2) + 0 = 0.693$
 
 For feature 3: $0 \cdot \log(0/0) + 1 \cdot \log(1/1) = 0 + 0 = 0$
 
-$$D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0.693 \text{ nats}$$
+$$
+D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0.693 \text{ nats}
+$$
 
 **B vs u_AB:** For feature 1: $1 \cdot \log(1/1) + 0 \cdot \log(0/0) = 0$ For feature 2:
 $0 \cdot \log(0/0.5) + 1 \cdot \log(1/0.5) = 0 + \log(2) = 0.693$ For feature 3:
 $0 \cdot \log(0/0) + 1 \cdot \log(1/1) = 0$
 
-$$D_{\mathrm{KL}}(\theta_B \| \theta_{u_{AB}}) = 0.693 \text{ nats}$$
+$$
+D_{\mathrm{KL}}(\theta_B \| \theta_{u_{AB}}) = 0.693 \text{ nats}
+$$
 
 ### Step 5: Chi-Square Statistics
 
@@ -371,7 +375,9 @@ its connection to **likelihood ratio testing**. Here's why it works:
 KL divergence measures how "surprised" you would be to see the child's distribution if the parent's distribution were
 the true underlying model:
 
-$$D_{\mathrm{KL}}(\theta_{\text{child}} \| \theta_{\text{parent}}) = \mathbb{E}_{\text{child}}\left[\log \frac{P_{\text{child}}(X)}{P_{\text{parent}}(X)}\right]$$
+$$
+  D_{\mathrm{KL}}(\theta_{\text{child}} \| \theta_{\text{parent}}) = \mathbb{E}_{\text{child}}\left[\log \frac{P_{\text{child}}(X)}{P_{\text{parent}}(X)}\right]
+$$
 
 **Intuition**: If child and parent are very similar, you're not surprised → low KL divergence. If they're very
 different, you're very surprised → high KL divergence.
