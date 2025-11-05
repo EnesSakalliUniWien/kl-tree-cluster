@@ -1,7 +1,9 @@
 # KL-Divergence Hierarchical Clustering Toolkit
 
-Pipeline utilities for exploring hierarchical cluster structure with KL-divergence based scoring, statistical
-significance testing, and tree decomposition helpers.
+This toolkit enables researchers to analyse binary feature datasets by constructing hierarchical cluster trees,
+quantifying each merge with Kullback–Leibler divergence, and applying formal statistical tests to identify the branches
+that constitute stable clusters. Use the toolkit when statistically defensible cluster boundaries, annotated merge
+diagnostics, and reproducible reports are required for downstream analyses of binary observations.
 
 ## Overview
 
@@ -34,48 +36,43 @@ hierarchy should stop splitting and which sibling branches stay merged.
 
 Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceeds through four checkpoints:
 
-### Pairwise linkage
+1. **Pairwise linkage** – compute the Hamming distance between rows to drive clustering.
 
-compute the Hamming distance between rows to drive clustering:
+   $$
+   D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
+   $$
 
-$$
-D_{ij} = \sum_{k=1}^{p} \lvert X_{ik} - X_{jk} \rvert .
-$$
+2. **Node distributions** – average the descendant leaves $C_u$ to obtain Bernoulli parameters.
 
-## Node distributions
+   $$
+   \theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
+   $$
 
-Average the descendant leaves $C_u$ to obtain Bernoulli parameters:
+3. **Local KL scoring** – quantify how a child $c$ diverges from its parent $u$.
 
-$$
-\theta_{u,k} = \frac{1}{|C_u|} \sum_{i \in C_u} X_{ik} .
-$$
+   $$
+   D_{\mathrm{KL}}(\theta_c \| \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} +
+   (1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}} .
+   $$
 
-## Local KL scoring** – quantify how a child $c$ diverges from its parent $u$:
+   The chi-square gate uses the approximation
 
-$$
-D_{\mathrm{KL}}(\theta_c \| \theta_u) = \sum_{k=1}^{p} \theta_{c,k} \log \frac{\theta_{c,k}}{\theta_{u,k}} +
-(1-\theta_{c,k}) \log \frac{1-\theta_{c,k}}{1-\theta_{u,k}}.
-$$
+   $$
+   2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \Vert \theta_u) \sim \chi^{2}_{p}
+   $$
 
-The chi-square gate uses the approximation
+   to decide whether the child diverges from its parent. Intuitively, the KL term asks, “How surprised would we be to
+   see the child’s feature rates if the parent’s pattern were still true?” Scaling by the child’s sample count turns
+   that surprise into a likelihood-ratio statistic, which large-sample theory says behaves like a chi-square random
+   variable with one degree of freedom per feature. A chi-square goodness-of-fit check then compares the parent’s
+   expected counts with the child’s observed counts and flags cases where the mismatch is too large to blame on random
+   noise.
 
-$$
-2\,|C_c|\,D_{\mathrm{KL}}(\theta_c \Vert \theta_u) \sim \chi^{2}_{p}
-$$
-
-to decide whether the child diverges from its parent. Intuitively, the KL term asks, “How surprised would we be to see
-the child’s feature rates if the parent’s pattern were still true?” Scaling by the child’s sample count turns that
-surprise into a likelihood-ratio statistic, which large-sample theory says behaves like a chi-square random variable
-with one degree of freedom per feature. A chi-square goodness-of-fit check then compares the parent’s expected counts
-with the child's observed counts and flags cases where the mismatch is too large to blame on random noise.
-
-## Sibling independence
-
-evaluate how often the siblings co-occur relative to what you would expect from the parent
-alone. For each feature $k$, count the proportions of $(c_1, c_2)$ taking every combination of
-$\{0,1\} \times \{0,1\}$ among the samples where the parent equals 0 or 1. The conditional mutual information adds up
-those log-ratio contributions to show whether the siblings carry extra information about each other once the parent
-is known.
+4. **Sibling independence** – evaluate how often the siblings co-occur relative to what you would expect from the parent
+   alone. For each feature $k$, count the proportions of $(c_1, c_2)$ taking every combination of
+   $\{0,1\} \times \{0,1\}$ among the samples where the parent equals 0 or 1. The conditional mutual information
+   aggregates those log-ratio contributions to show whether the siblings carry extra information about each other once
+   the parent is known.
 
 ## Statistical Gates and Independence Checks
 
@@ -100,7 +97,7 @@ Mathematically, let the hierarchy be a directed tree $T = (V, E)$ with root $r$ 
 node. For an internal node $u$ with children $c_1$ and $c_2$, the walk evaluates
 
 $$
-\text{Gate}_1(u, c_i) = \mathbf{1}\!\left[2\,|C_{c_i}|\,D_{\mathrm{KL}}(\theta_{c_i}\,\|\,\theta_u) > \chi^2_{p, \alpha}\right],
+\text{Gate}_1(u, c_i) = \mathbf{1}\!\left[2\,|C_{c_i}|\,D_{\mathrm{KL}}(\theta_{c_i}\,\|\,\theta_u) \gt \chi^2_{p, \alpha}\right],
 $$
 
 and
@@ -132,12 +129,21 @@ From a tree perspective, the conditional mutual information (CMI) test supplies 
    feature either falls into the part of the subtree where the parent’s probability rounded to 0 or the part where it
    rounded to 1. The test compares how often the siblings agree within each of those two slices to see whether the
    branches add new information after the parent is fixed.
-3. **Build a “no extra information” reference** – For each parent slice, the algorithm repeatedly shuffles the feature
-   order of one child while keeping the parent and the other child fixed. These randomized runs describe how often
-   siblings would seem to agree if any connection between them were purely accidental.
-4. **Record the decision on the node** – The observed result is turned into a p-value and adjusted across all parents
-   with Benjamini–Hochberg control. A corrected flag of `Sibling_BH_Dependent = True` tells the decomposer to keep the
-   parent merged; `Sibling_BH_Independent = True` tells it the branch may open when the walk reaches that node.
+3. **Build a “no extra information” reference** – For each parent slice, repeatedly permute the order of one sibling’s
+   features while holding the parent and the other sibling fixed. This reshuffling is performed separately within the
+   parent-equals-0 subset and the parent-equals-1 subset so the parent’s conditioning is respected. The resulting CMI
+   values describe how often siblings would appear to agree if any dependence were purely accidental. For example,
+   suppose $Z = [0, 0, 1, 1]$, $X = [1, 0, 1, 0]$, and $Y = [1, 0, 0, 1]$. A valid permutation keeps the indices with
+   $Z=0$ (positions 1 and 2) together and the indices with $Z=1$ (positions 3 and 4) together. Shuffling only within
+   those strata might produce $Y' = [0, 1, 0, 1]$ (swap inside the $Z=0$ block), $Y' = [1, 0, 1, 0]$ (swap inside the
+   $Z=1$ block), or the original arrangement. Each distinct shuffled $Y'$ yields a new CMI value that contributes to the
+   reference distribution.
+4. **Record the decision on the node** – Convert the observed CMI into a p-value by repeatedly shuffling one sibling
+   within each parent state and recomputing the CMI. Count how many shuffled outcomes are at least as large as the
+   observed value, add one to both that count and the total number of trials to avoid zero-probability artefacts, and
+   take their ratio to obtain the p-value. Adjust the collection of sibling p-values across all parents with
+   Benjamini–Hochberg control. A corrected flag of `Sibling_BH_Dependent = True` tells the decomposer to keep the parent
+   merged; `Sibling_BH_Independent = True` tells it the branch may open when the walk reaches that node.
 
 Before running this test, make sure the tree nodes already contain their feature distributions, the project dependencies
 from `pyproject.toml` (NumPy, SciPy, pandas, NetworkX, StatsModels) are available, and each parent has enough examples
@@ -173,50 +179,372 @@ both the divergence scores and the independence flags it needs to decide where t
 
 ### Node distributions – Using `calculate_hierarchy_kl_divergence`, Bernoulli parameters propagate upward:
 
+**Leaf node parameters:**
+
 $$
 \theta_A = (1, 0), \qquad \theta_B = (1, 1), \qquad \theta_C = (0, 1),
 $$
 
+**Internal node parameters:**
+
 $$
 \theta_{u_{AB}} = \frac{1}{2}\left((1,0) + (1,1)\right) = (1, 0.5),
 $$
+
+**Root node parameters:**
+
 $$
 \theta_{\text{root}} = \frac{1}{3}\left(2 \cdot (1,0.5) + (0,1)\right) = \left(\frac{2}{3}, \frac{2}{3}\right).
 $$
 
 #### KL-based scoring – For each edge, the module evaluates the KL divergence in nats:
 
-$$
-D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0.693,
-$$
+**Child-to-parent divergences:**
 
 $$
-D_{\mathrm{KL}}(\theta_{u_{AB}} \| \theta_{\text{root}}) = 0.464,
-$$
-
-$$
-D_{\mathrm{KL}}(\theta_C \| \theta_{\text{root}}) = 1.504.
+\begin{align}
+D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) &= 0.693, \\
+D_{\mathrm{KL}}(\theta_{u_{AB}} \| \theta_{\text{root}}) &= 0.464, \\
+D_{\mathrm{KL}}(\theta_C \| \theta_{\text{root}}) &= 1.504.
+\end{align}
 $$
 
 Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
 ### Sibling independence
 
-`annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining
-   binary vectors
+`annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining binary vectors
 
-   $$
-   u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
-   $$
+$$
+u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
+$$
 
-   Conditional mutual information evaluates to
+Conditional mutual information evaluates to
 
-   $$
-   I(u_{AB}; C \mid \text{root}) = 0.0,
-   $$
+$$
+I(u_{AB}; C \mid \text{root}) = 0.0,
+$$
 
-every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set
-to `False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
+every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set to
+`False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
+
+I'll provide a concrete numerical example of the KL-divergence hierarchical clustering process using specific data
+points.
+
+## Numerical Example: KL-Divergence Hierarchical Clustering
+
+### Sample Dataset
+
+Let's work with a binary feature matrix with 5 samples and 3 features:
+
+| Sample | $f_1$ | $f_2$ | $f_3$ |
+| ------ | ----- | ----- | ----- |
+| A      | 1     | 1     | 0     |
+| B      | 1     | 0     | 0     |
+| C      | 1     | 0     | 1     |
+| D      | 0     | 1     | 1     |
+| E      | 0     | 1     | 0     |
+
+### Step 1: Pairwise Hamming Distances
+
+Calculate distances between all sample pairs:
+
+**Distances involving sample A:**
+
+$$
+\begin{align}
+D_{AB} &= |1-1| + |1-0| + |0-0| = 0 + 1 + 0 = 1 \\
+D_{AC} &= |1-1| + |1-0| + |0-1| = 0 + 1 + 1 = 2 \\
+D_{AD} &= |1-0| + |1-1| + |0-1| = 1 + 0 + 1 = 2 \\
+D_{AE} &= |1-0| + |1-1| + |0-0| = 1 + 0 + 0 = 1
+\end{align}
+$$
+
+**Distances involving sample B:**
+
+$$
+\begin{align}
+D_{BC} &= |1-1| + |0-0| + |0-1| = 0 + 0 + 1 = 1 \\
+D_{BD} &= |1-0| + |0-1| + |0-1| = 1 + 1 + 1 = 3 \\
+D_{BE} &= |1-0| + |0-1| + |0-0| = 1 + 1 + 0 = 2
+\end{align}
+$$
+
+**Distances involving samples C, D, E:**
+
+$$
+\begin{align}
+D_{CD} &= |1-0| + |0-1| + |1-1| = 1 + 1 + 0 = 2 \\
+D_{CE} &= |1-0| + |0-1| + |1-0| = 1 + 1 + 1 = 3 \\
+D_{DE} &= |0-0| + |1-1| + |1-0| = 0 + 0 + 1 = 1
+\end{align}
+$$
+
+### Step 2: Hierarchical Tree Construction
+
+Using minimum distances for linkage:
+
+1. First merge: A-B (distance = 1), A-E (distance = 1), B-C (distance = 1), D-E (distance = 1)
+2. Let's say we merge A-B first, then D-E, then (A,B)-C, then ((A,B),C)-(D,E)
+
+Resulting tree structure:
+
+```text
+        root
+       /    \
+    u_ABC   u_DE
+    /   \    /  \
+  u_AB   C  D    E
+  / \
+ A   B
+```
+
+### Step 3: Node Distribution Calculation
+
+Calculate Bernoulli parameters for each node:
+
+**Leaf nodes:**
+
+- $\theta_A = (1, 1, 0)$
+- $\theta_B = (1, 0, 0)$
+- $\theta_C = (1, 0, 1)$
+- $\theta_D = (0, 1, 1)$
+- $\theta_E = (0, 1, 0)$
+
+**Internal nodes:**
+
+- $\theta_{u_{AB}} = \frac{1}{2}[(1,1,0) + (1,0,0)] = (1.0, 0.5, 0.0)$
+- $\theta_{u_{DE}} = \frac{1}{2}[(0,1,1) + (0,1,0)] = (0.0, 1.0, 0.5)$
+- $\theta_{u_{ABC}} = \frac{1}{3}[2 \cdot (1.0,0.5,0.0) + (1,0,1)] = (\frac{3}{3}, \frac{1}{3}, \frac{1}{3})$
+  $= (1.0, 0.333, 0.333)$
+- $\theta_{\text{root}} = \frac{1}{5}[3 \cdot (1.0,0.333,0.333) + 2 \cdot (0.0,1.0,0.5)] = (0.6, 0.6, 0.4)$
+
+### Step 4: KL-Divergence Calculations
+
+For each child-parent pair, calculate KL divergence:
+
+**A vs u_AB:**
+
+$$
+D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = \sum_{k=1}^{3} \left[
+\theta_{A,k} \log\left(\frac{\theta_{A,k}}{\theta_{u_{AB},k}}\right)
++ (1-\theta_{A,k}) \log\left(\frac{1-\theta_{A,k}}{1-\theta_{u_{AB},k}}\right)
+\right]
+$$
+
+For feature 1: $1 \cdot \log(1/1) + 0 \cdot \log(0/0) = 0 + 0 = 0$
+
+For feature 2: $1 \cdot \log(1/0.5) + 0 \cdot \log(0/0.5) = \log(2) + 0 = 0.693$
+
+For feature 3: $0 \cdot \log(0/0) + 1 \cdot \log(1/1) = 0 + 0 = 0$
+
+$$D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0.693 \text{ nats}$$
+
+**B vs u_AB:** For feature 1: $1 \cdot \log(1/1) + 0 \cdot \log(0/0) = 0$ For feature 2:
+$0 \cdot \log(0/0.5) + 1 \cdot \log(1/0.5) = 0 + \log(2) = 0.693$ For feature 3:
+$0 \cdot \log(0/0) + 1 \cdot \log(1/1) = 0$
+
+$$D_{\mathrm{KL}}(\theta_B \| \theta_{u_{AB}}) = 0.693 \text{ nats}$$
+
+### Step 5: Chi-Square Statistics
+
+Convert KL divergences to chi-square statistics:
+
+For child A: $T_A = 2 \cdot |C_A| \cdot D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 2 \cdot 1 \cdot 0.693 = 1.386$
+
+For child B: $T_B = 2 \cdot |C_B| \cdot D_{\mathrm{KL}}(\theta_B \| \theta_{u_{AB}}) = 2 \cdot 1 \cdot 0.693 = 1.386$
+
+### Step 6: Statistical Significance
+
+I'll provide a detailed explanation of Step 6 and why KL divergence works so well for this statistical testing
+framework.
+
+## Step 6: Statistical Significance - Deep Dive
+
+### Why KL Divergence Works Here
+
+The brilliance of using KL divergence in hierarchical clustering lies in its **information-theoretic foundation** and
+its connection to **likelihood ratio testing**. Here's why it works:
+
+### 1. **KL Divergence as "Information Surprise"**
+
+KL divergence measures how "surprised" you would be to see the child's distribution if the parent's distribution were
+the true underlying model:
+
+$$D_{\mathrm{KL}}(\theta_{\text{child}} \| \theta_{\text{parent}}) = \mathbb{E}_{\text{child}}\left[\log \frac{P_{\text{child}}(X)}{P_{\text{parent}}(X)}\right]$$
+
+**Intuition**: If child and parent are very similar, you're not surprised → low KL divergence. If they're very
+different, you're very surprised → high KL divergence.
+
+### 2. **Connection to Likelihood Ratio Testing**
+
+The chi-square statistic $T_c = 2|C_c|D_{\mathrm{KL}}(\theta_c \| \theta_u)$ is actually a **likelihood ratio test
+statistic**!
+
+**Null hypothesis**: $H_0: \theta_c = \theta_u$ (child has same parameters as parent) **Alternative hypothesis**:
+$H_1: \theta_c \neq \theta_u$ (child is genuinely different)
+
+The likelihood ratio is: $$\Lambda = \frac{L(\theta_u | \text{child data})}{L(\theta_c | \text{child data})}$$
+
+And by Wilks' theorem: $$-2\log(\Lambda) = 2|C_c|D_{\mathrm{KL}}(\theta_c \| \theta_u) \xrightarrow{d} \chi^2_p$$
+
+### 3. **Why This Statistical Framework Works**
+
+#### **A. Large Sample Justification**
+
+For Bernoulli data with $n$ samples and $p$ features, the **asymptotic distribution** holds when:
+
+- Each feature has enough variability (not all 0s or all 1s)
+- Sample size $n$ is reasonably large relative to $p$
+- The null hypothesis (parent = child) is approximately true
+
+#### **B. Degrees of Freedom Logic**
+
+We use $\chi^2_p$ (p degrees of freedom) because:
+
+- Each feature contributes one constraint
+- We're testing $p$ independent Bernoulli parameters
+- Under $H_0$, we impose $p$ equality constraints: $\theta_{c,k} = \theta_{u,k}$ for $k = 1,\ldots,p$
+
+### 4. **Detailed Step 6 Analysis for Our Example**
+
+Let's break down exactly what's happening:
+
+#### **Child A vs Parent u_AB**
+
+**Child distribution**: $\theta_A = (1, 1, 0)$ **Parent distribution**: $\theta_{u_{AB}} = (1.0, 0.5, 0.0)$
+
+**Feature-by-feature analysis**:
+
+**Feature 1**:
+
+- Child: $\theta_{A,1} = 1$, Parent: $\theta_{u_{AB},1} = 1$
+- Contribution: $1 \cdot \log(1/1) + 0 \cdot \log(0/0) = 0$
+- **No divergence** - perfect agreement
+
+**Feature 2**:
+
+- Child: $\theta_{A,2} = 1$, Parent: $\theta_{u_{AB},2} = 0.5$
+- Contribution: $1 \cdot \log(1/0.5) + 0 \cdot \log(0/0.5) = \log(2) = 0.693$
+- **High divergence** - child is always 1, parent is 50/50
+
+**Feature 3**:
+
+- Child: $\theta_{A,3} = 0$, Parent: $\theta_{u_{AB},3} = 0$
+- Contribution: $0 \cdot \log(0/0) + 1 \cdot \log(1/1) = 0$
+- **No divergence** - perfect agreement
+
+**Total KL divergence**: $D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 0 + 0.693 + 0 = 0.693$ nats
+
+#### **Converting to Chi-Square Statistic**
+
+$$T_A = 2 \cdot |C_A| \cdot D_{\mathrm{KL}}(\theta_A \| \theta_{u_{AB}}) = 2 \cdot 1 \cdot 0.693 = 1.386$$
+
+**Why multiply by 2?** This comes from the likelihood ratio test theory - the factor of 2 ensures the statistic follows
+a chi-square distribution.
+
+**Why multiply by |C_A|?** More samples provide more evidence. With only 1 sample under A, we have limited evidence of
+divergence.
+
+#### **Statistical Decision**
+
+With $p = 3$ features, we compare against $\chi^2_3$ distribution:
+
+- **Critical value** at $\alpha = 0.05$: $\chi^2_{3,0.05} = 7.815$
+- **Our statistic**: $T_A = 1.386$
+- **Decision**: $1.386 < 7.815$ → **Not significant**
+
+**P-value calculation**: $$\text{p-value} = \Pr(\chi^2_3 \geq 1.386) = 0.709$$
+
+### 5. **Why KL Divergence is Superior to Alternatives**
+
+#### **A. Compared to Simple Distance Metrics**
+
+**Euclidean distance**: $\|\theta_A - \theta_{u_{AB}}\| = \|(0, 0.5, 0)\| = 0.5$
+
+- **Problem**: No statistical framework, no p-values, no principled cutoff
+
+**Manhattan distance**: $\|\theta_A - \theta_{u_{AB}}\|_1 = 0 + 0.5 + 0 = 0.5$
+
+- **Problem**: Same issues as Euclidean
+
+#### **B. Information-Theoretic Advantages**
+
+1. **Asymmetric**: $D_{\mathrm{KL}}(A \| B) \neq D_{\mathrm{KL}}(B \| A)$
+   - This matters! We care about how surprised we'd be seeing the child given the parent, not vice versa
+
+2. **Scale-invariant**: KL divergence naturally handles features with different base rates
+
+3. **Additive**: Features contribute independently to the total divergence
+
+4. **Connects to entropy**: $D_{\mathrm{KL}}(P \| Q) = H(P,Q) - H(P)$ where $H(P,Q)$ is cross-entropy
+
+### 6. **Practical Interpretation of Our Results**
+
+#### **What $T_A = 1.386$ Means**
+
+- **Low evidence**: With only 1 sample, even moderate differences don't reach significance
+- **Feature 2 divergence**: The 0.693 nats from feature 2 indicates A strongly prefers feature 2 to be "on" while the
+  parent is ambivalent
+- **Conservative decision**: The statistical framework correctly says "we need more evidence before splitting"
+
+#### **Why This Makes Sense**
+
+**Biological/Real-world interpretation**: If A and B represent biological samples:
+
+- They agree on features 1 and 3
+- They disagree on feature 2, but this could be random variation
+- With only 1 sample each, we can't confidently say they represent different populations
+
+### 7. **When the Test Would Reject**
+
+The test would reject (favor splitting) when:
+
+1. **Larger sample sizes**: $|C_A| = 10$ would give $T_A = 2 \cdot 10 \cdot 0.693 = 13.86 > 7.815$
+2. **Larger divergences**: If features differed more dramatically
+3. **Fewer features**: With $p = 1$, critical value drops to $\chi^2_{1,0.05} = 3.84$
+
+### 8. **The Beautiful Mathematical Symmetry**
+
+The framework elegantly combines:
+
+- **Information theory** (KL divergence quantifies surprise)
+- **Statistical testing** (likelihood ratio test provides p-values)
+- **Hierarchical structure** (parent distributions naturally emerge from averaging)
+- **Multiple testing** (Benjamini-Hochberg controls family-wise error rate)
+
+This creates a principled, statistically rigorous method for deciding where to cut hierarchical trees based on
+**evidence**, not arbitrary distance thresholds.
+
+The KL divergence approach essentially asks: **"Given the data we've observed, is there enough information-theoretic
+evidence to justify treating these groups as fundamentally different?"** This is exactly the right question for
+unsupervised clustering!
+
+**Result:** The split between A and B is **not statistically significant** at the 0.05 level.
+
+### Step 7: P-values
+
+$$
+\begin{align}
+\text{p-value}_A &= \Pr(\chi^2_3 \geq 1.386) \approx 0.709 \\
+\text{p-value}_B &= \Pr(\chi^2_3 \geq 1.386) \approx 0.709
+\end{align}
+$$
+
+Since both p-values > 0.05, **Gate 1 fails** for the u_AB node, meaning A and B should remain merged as a single
+cluster.
+
+### Final Cluster Assignment
+
+Based on the statistical gates:
+
+- **Cluster 1:** {A, B} (failed to split)
+- **Cluster 2:** {C}
+- **Cluster 3:** {D, E} (would need similar analysis)
+
+This numerical example demonstrates how the KL-divergence approach uses information theory and statistical testing to
+make principled decisions about where to cut the hierarchical tree. Explain 6 much more in detail. Why does it work to
+use the kl divergence here?
 
 ## Highlights
 
