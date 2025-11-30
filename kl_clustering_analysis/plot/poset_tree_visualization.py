@@ -286,7 +286,7 @@ def plot_tree_with_independence_coloring(
 
     Example:
         >>> # After running statistical tests
-        >>> results_df = annotate_nodes_with_statistical_significance_tests(
+        >>> results_df = annotate_root_node_significance(
         ...     node_stats_df,
         ...     total_number_of_features=10
         ... )
@@ -504,6 +504,3 @@ def print_poset_properties(tree, poset_dict: Dict) -> None:
                 elif poset_dict[n2] <= poset_dict[n1]:
                     print(f"    {n2} ⊆ {n1}: {poset_dict[n2]} ⊆ {poset_dict[n1]}")
 
-
-# Backward compatibility alias
-plot_tree_with_significance_coloring = plot_tree_with_independence_coloring

@@ -30,7 +30,7 @@ hierarchy should stop splitting and which sibling branches stay merged.
 
 - Tree construction, distribution propagation, and KL metrics: `hierarchy_analysis/divergence_metrics.py`.
 - Local KL chi-square helpers and shared statistical utilities: `hierarchy_analysis/statistics/shared_utils.py`.
-- Sibling independence via conditional mutual information: `hierarchy_analysis/statistics/sibling_independence.py`.
+- Sibling independence via conditional mutual information: `hierarchy_analysis/statistics/conditional_sibling_independence.py`.
 - Decomposition logic that applies the statistical gates: `hierarchy_analysis/cluster_decomposition.py`.
 
 ### Pipeline Workflow
@@ -517,7 +517,7 @@ What the script does:
 3. **Score nodes** – applies `calculate_hierarchy_kl_divergence` to quantify how informative each split is for the
    generated features.
 4. **Annotate significance** – runs multiple hypothesis tests to identify statistically significant branches:
-   - `annotate_nodes_with_statistical_significance_tests`
+   - `annotate_root_node_significance`
    - `annotate_child_parent_divergence`
    - `annotate_sibling_independence_cmi`
 5. **Decompose clusters** – uses `ClusterDecomposer` to turn significant nodes into cluster assignments and prints a

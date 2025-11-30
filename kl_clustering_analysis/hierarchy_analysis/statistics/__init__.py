@@ -1,25 +1,15 @@
-from .shared_utils import (
-    apply_benjamini_hochberg_correction,
-    binary_threshold,
-    calculate_chi_square_test,
+from .kl_tests import (
+    kl_divergence_chi_square_test,
+    annotate_child_parent_divergence,
+    annotate_root_node_significance,
 )
-from .root_significance import (
-    annotate_nodes_with_statistical_significance_tests,
-    kl_divergence_deviation_from_zero_test,
-    test_feature_independence_conservative,
-    test_feature_independence_liberal,
-)
-from .edge_significance import annotate_child_parent_divergence
-from .sibling_independence import annotate_sibling_independence_cmi
+from .cmi_tests import annotate_sibling_independence_cmi
+from .multiple_testing import benjamini_hochberg_correction
 
 __all__ = [
-    "apply_benjamini_hochberg_correction",
-    "binary_threshold",
-    "calculate_chi_square_test",
-    "test_feature_independence_conservative",
-    "test_feature_independence_liberal",
-    "kl_divergence_deviation_from_zero_test",
-    "annotate_nodes_with_statistical_significance_tests",
+    "benjamini_hochberg_correction",
+    "kl_divergence_chi_square_test",
+    "annotate_root_node_significance",
     "annotate_child_parent_divergence",
     "annotate_sibling_independence_cmi",
 ]

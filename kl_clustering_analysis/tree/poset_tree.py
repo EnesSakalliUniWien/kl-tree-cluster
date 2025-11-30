@@ -1,9 +1,26 @@
 from __future__ import annotations
-from typing import Dict, List, Optional, Tuple, Iterable
+from typing import Dict, List, Optional, Tuple, Iterable, TYPE_CHECKING
 import numpy as np
 import networkx as nx
 
 from sklearn.cluster import AgglomerativeClustering
+from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics import (
+    _populate_distributions,
+    _populate_global_kl,
+    _populate_local_kl,
+    _extract_hierarchy_statistics,
+)
+from kl_clustering_analysis.hierarchy_analysis.cluster_decomposition import (
+    ClusterDecomposer,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics import (
+    annotate_child_parent_divergence,
+    annotate_sibling_independence_cmi,
+)
+from kl_clustering_analysis import config
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 # ============================================================
 # 1) PosetTree (NetworkX.DiGraph subclass)
@@ -30,6 +47,11 @@ class PosetTree(nx.DiGraph):
     """
 
     # ---------------- Constructors ----------------
+
+    def __init__(self, *args, **kwargs):
+        """Initialize PosetTree with stats_df property."""
+        super().__init__(*args, **kwargs)
+        self.stats_df: Optional["pd.DataFrame"] = None
 
     @classmethod
     def from_agglomerative(
@@ -216,18 +238,13 @@ class PosetTree(nx.DiGraph):
         list[str]
             Leaf labels or ids, depending on ``return_labels``.
         """
-
-        def _is_leaf(n: str) -> bool:
-            v = self.nodes[n].get("is_leaf")
-            return bool(v) if v is not None else (self.out_degree(n) == 0)
-
         if node is None:
-            leaf_nodes = [n for n in self.nodes if _is_leaf(n)]
+            leaf_nodes = [n for n in self.nodes if self._is_leaf(n)]
         else:
-            if _is_leaf(node):
+            if self._is_leaf(node):
                 leaf_nodes = [node]
             else:
-                leaf_nodes = [d for d in nx.descendants(self, node) if _is_leaf(d)]
+                leaf_nodes = [d for d in nx.descendants(self, node) if self._is_leaf(d)]
 
         out = (
             [self.nodes[n].get("label", n) for n in leaf_nodes]
@@ -235,6 +252,13 @@ class PosetTree(nx.DiGraph):
             else leaf_nodes
         )
         return sorted(out) if sort else out
+
+    def _is_leaf(self, node_id: str) -> bool:
+        """Check if a node is a leaf."""
+        is_leaf_attr = self.nodes[node_id].get("is_leaf")
+        if is_leaf_attr is not None:
+            return bool(is_leaf_attr)
+        return self.out_degree(node_id) == 0
 
     def compute_descendant_sets(self, use_labels: bool = True) -> Dict[str, frozenset]:
         """Map each node to the set of leaf labels under it.
@@ -261,3 +285,91 @@ class PosetTree(nx.DiGraph):
                 child_sets = [desc_sets[c] for c in self.successors(node)]
                 desc_sets[node] = frozenset.union(*child_sets)
         return desc_sets
+
+    def populate_node_divergences(self, leaf_data: "pd.DataFrame") -> None:
+        """Populate tree nodes with distributions and KL divergences.
+
+        Populates each node with:
+        - distribution: weighted mean of leaf/child distributions
+        - leaf_count: number of descendant leaves
+        - kl_divergence_global: KL(node||root)
+        - kl_divergence_local: KL(child||parent)
+        - per-column versions of both KL metrics
+
+        Assumes each feature is a Bernoulli probability in [0,1].
+
+        Note: Root's global KL is set to NaN (self-comparison is meaningless).
+
+        Parameters
+        ----------
+        leaf_data
+            DataFrame where rows are leaf labels and columns are feature probabilities.
+
+        Notes
+        -----
+        Results are stored in tree.stats_df for later access.
+        """
+        root = self.root()
+        _populate_distributions(self, root, leaf_data)
+        _populate_global_kl(self, root)
+        _populate_local_kl(self)
+        self.stats_df = _extract_hierarchy_statistics(self)
+
+    # ---------------- Decomposition helper ----------------
+
+    def decompose(
+        self,
+        results_df: Optional["pd.DataFrame"] = None,
+        leaf_data: Optional["pd.DataFrame"] = None,
+        **decomposer_kwargs,
+    ) -> Dict[str, object]:
+        """Run ``ClusterDecomposer`` directly from the tree.
+
+        Parameters
+        ----------
+        results_df
+            Optional statistics/annotations DataFrame. When omitted, falls back to
+            ``self.stats_df`` (populated by :meth:`populate_node_divergences`).
+        leaf_data
+            Optional leaf-level probability DataFrame. When provided and ``results_df``
+            is not supplied, ``populate_node_divergences`` will be invoked to
+            initialize node distributions/KL metrics prior to decomposition.
+        **decomposer_kwargs
+            Extra keyword arguments forwarded to ``ClusterDecomposer`` (e.g.,
+            ``alpha_local``, ``near_independence_alpha_buffer``).
+
+        Returns
+        -------
+        dict
+            Decomposition output from ``ClusterDecomposer.decompose_tree``.
+        """
+        if results_df is None:
+            if self.stats_df is None:
+                if leaf_data is None:
+                    raise ValueError(
+                        "Tree has no stats_df; provide results_df or leaf_data to populate."
+                    )
+                self.populate_node_divergences(leaf_data)
+            results_df = self.stats_df.copy()
+            # Run statistical annotations to align with pipeline_helpers
+            results_df = annotate_child_parent_divergence(
+                self,
+                results_df,
+                total_number_of_features=leaf_data.shape[1]
+                if leaf_data is not None
+                else results_df.attrs.get("n_features", 0),
+                significance_level_alpha=config.SIGNIFICANCE_ALPHA,
+            )
+            results_df = annotate_sibling_independence_cmi(
+                self,
+                results_df,
+                significance_level_alpha=config.SIGNIFICANCE_ALPHA,
+                n_permutations=config.N_PERMUTATIONS,
+            )
+
+        decomposer = ClusterDecomposer(
+            tree=self,
+            results_df=results_df,
+            **decomposer_kwargs,
+        )
+        return decomposer.decompose_tree()

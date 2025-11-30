@@ -1,20 +1,25 @@
 from __future__ import annotations
 
 from typing import Dict, List, Set
+
 import numpy as np
 import pandas as pd
 import networkx as nx
 from scipy.stats import chi2
 
-from .local_kl_utils import get_local_kl_value
+from .statistics.shared_utils import (
+    extract_bool_column_dict,
+)
+from .. import config
 
 
 class ClusterDecomposer:
     """Annotate a hierarchy with significance tests and carve it into clusters.
 
     The decomposer walks a :class:`~tree.poset_tree.PosetTree` top-down and decides
-    whether to split or merge at each internal node based on two statistical gates:
+    whether to split or merge at each internal node based on three statistical gates:
 
+    #. **Binary structure gate** – parent must have exactly 2 children to split.
     #. **Local divergence gate** – both children must significantly diverge from the
        parent according to the local KL (child‖parent) chi-square test. If either
        child fails, the subtree is merged into a single cluster.
@@ -23,7 +28,7 @@ class ClusterDecomposer:
        If independence is rejected, the children are merged; otherwise the walk
        recurses into each child.
 
-    Nodes that pass both gates become cluster boundaries. Leaves under the same
+    Nodes that pass all gates become cluster boundaries. Leaves under the same
     boundary node are assigned the same cluster identifier. The resulting report
     captures the cluster root node, member leaves, and cluster size.
     """
@@ -33,10 +38,12 @@ class ClusterDecomposer:
         tree: nx.DiGraph,
         results_df: pd.DataFrame | None = None,
         *,
-        n_features: int | None = None,  # if None, inferred from distributions
-        alpha_local: float = 0.05,  # χ² test level for KL(child‖parent)
-        significance_column: str = "Are_Features_Dependent",
-        parent_gate: str = "off",  # "off" or "strict"
+        alpha_local: float = config.ALPHA_LOCAL,  # χ² test level for KL(child‖parent)
+        sibling_alpha: float = config.SIGNIFICANCE_ALPHA,
+        significance_column: str | None = None,
+        near_independence_alpha_buffer: float = 0.0,
+        near_independence_kl_gap: float = 0.0,
+        sibling_shortlist_size: int | None = None,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
 
@@ -48,264 +55,198 @@ class ClusterDecomposer:
             DataFrame of statistical annotations (e.g., columns produced by
             ``hierarchy_analysis.statistics`` helpers). May be ``None`` if the caller
             plans to rely on on-the-fly calculations.
-        n_features
-            Total number of feature dimensions; inferred from node distributions when
-            ``None``.
         alpha_local
             Significance level used when the local KL gate falls back to raw
             chi-square tests.
-        significance_column
-            Column name in ``results_df`` representing node-level significance for the
-            optional parent gate.
-        parent_gate
-            ``"off"`` to ignore parent-level significance, ``"strict"`` to require
-            parents to be marked significant before splitting.
+        sibling_alpha
+            Significance level used by sibling-independence annotations.
         """
         self.tree = tree
         self.results_df = results_df if results_df is not None else pd.DataFrame()
-        self.significance_column = significance_column
         self.alpha_local = float(alpha_local)
-        self.parent_gate = parent_gate
+        self.sibling_alpha = float(sibling_alpha)
+        self.significance_column = significance_column
+        self.near_independence_alpha_buffer = float(near_independence_alpha_buffer)
+        self.near_independence_kl_gap = float(near_independence_kl_gap)
+        self.sibling_shortlist_size = (
+            int(sibling_shortlist_size)
+            if sibling_shortlist_size is not None
+            else 0
+        )
 
         # ----- root -----
-        roots = [n for n, d in self.tree.in_degree() if d == 0]
-        if len(roots) != 1:
-            raise ValueError(f"Expected exactly one root; found {len(roots)}: {roots}")
-        self._root = roots[0]
+        self._root = next(
+            node_id for node_id, degree in self.tree.in_degree() if degree == 0
+        )
 
-        # ----- pre-cache distributions & feature count -----
-        nf = None
-        self._dist: Dict[str, np.ndarray] = {}
-        self._is_leaf: Dict[str, bool] = {}
-        self._label: Dict[str, str] = {}
-        for n in self.tree.nodes:
-            node = self.tree.nodes[n]
-            if "is_leaf" not in node:
-                raise ValueError(f"Node '{n}' missing 'is_leaf'.")
-            if "distribution" not in node:
-                raise ValueError(f"Node '{n}' missing 'distribution'.")
-            arr = np.asarray(node["distribution"], dtype=float).ravel()
-            if arr.ndim != 1:
-                raise ValueError(
-                    f"Node '{n}' distribution must be 1D, got shape {arr.shape}."
-                )
-            self._dist[n] = arr
-            self._is_leaf[n] = bool(node["is_leaf"])
-            self._label[n] = node.get("label", n)
-            nf = len(arr) if nf is None else nf
-        self.n_features = int(n_features if n_features is not None else nf)
+        # ----- pre-cache node metadata -----
+        self._cache_node_metadata()
 
-        # ----- descendant sets & leaf counts (poset view) -----
-        self._desc_sets: Dict[str, frozenset] = self._compute_descendant_sets()
-        self._leaf_count_cache: Dict[str, int] = {}
-        for n in self.tree.nodes:
-            if "leaf_count" in self.tree.nodes[n]:
-                self._leaf_count_cache[n] = int(self.tree.nodes[n]["leaf_count"])
-            else:
-                self._leaf_count_cache[n] = len(self._desc_sets.get(n, ()))
+        # ----- leaf partitions & counts (poset view) -----
+        self._leaf_partition_by_node: Dict[str, frozenset] = (
+            self._compute_leaf_partitions_for_all_nodes()
+        )
+
+        self._leaf_count_cache: Dict[str, int] = {
+            node_id: self.tree.nodes[node_id].get(
+                "leaf_count", len(self._leaf_partition_by_node.get(node_id, ()))
+            )
+            for node_id in self.tree.nodes
+        }
 
         # ----- results_df → fast dict lookups (no .loc in hot paths) -----
-        self._parent_sig: Dict[str, bool] = {}
-        self._local_sig: Dict[str, bool] = {}
-        self._sibling_indep: Dict[str, bool] = {}
-        if not self.results_df.empty:
-            if self.significance_column in self.results_df.columns:
-                self._parent_sig = (
-                    self.results_df[self.significance_column]
-                    .fillna(False)
-                    .astype(bool)
-                    .to_dict()
-                )
-            if "Local_BH_Significant" in self.results_df.columns:
-                self._local_sig = (
-                    self.results_df["Local_BH_Significant"]
-                    .fillna(False)
-                    .astype(bool)
-                    .to_dict()
-                )
-            elif "Local_Are_Features_Dependent" in self.results_df.columns:
-                self._local_sig = (
-                    self.results_df["Local_Are_Features_Dependent"]
-                    .fillna(False)
-                    .astype(bool)
-                    .to_dict()
-                )
-            if "Sibling_BH_Independent" in self.results_df.columns:
-                self._sibling_indep = (
-                    self.results_df["Sibling_BH_Independent"]
-                    .fillna(False)
-                    .astype(bool)
-                    .to_dict()
-                )
+        self._local_significant = extract_bool_column_dict(
+            self.results_df, "Local_BH_Significant"
+        ) or extract_bool_column_dict(self.results_df, "Local_Are_Features_Dependent")
+        self._sibling_independent = extract_bool_column_dict(
+            self.results_df, "Sibling_BH_Independent"
+        )
+        self._sibling_skipped = extract_bool_column_dict(
+            self.results_df, "Sibling_CMI_Skipped"
+        )
+        self._sibling_p_value = {
+            k: float(v)
+            for k, v in self.results_df.get(
+                "Sibling_CMI_P_Value_Corrected", pd.Series(dtype=float)
+            )
+            .dropna()
+            .to_dict()
+            .items()
+        }
+        self._kl_local = (
+            self.results_df.get("kl_divergence_local", pd.Series(dtype=float))
+            .dropna()
+            .to_dict()
+        )
 
-        # ----- caches for local tests -----
-        self._local_p_cache: Dict[tuple[str, str], float] = {}
-        self._local_diverge_cache: Dict[tuple[str, str], bool] = {}
+        # ----- cache for local KL computation -----
+        self._local_kl_cache: Dict[tuple[str, str], float] = {}
 
         # Precompute children list (avoids rebuilding generator repeatedly)
         self._children: Dict[str, List[str]] = {
             n: list(self.tree.successors(n)) for n in self.tree.nodes
         }
 
+    # ---------- initialization helpers ----------
+
+    def _cache_node_metadata(self) -> None:
+        """Cache node attributes for fast repeated access during decomposition.
+
+        Extracts and stores distributions, leaf flags, and labels.
+        This one-time preprocessing avoids expensive NetworkX lookups in hot paths.
+        """
+        self._distribution_by_node: Dict[str, np.ndarray] = {}
+        self._is_leaf: Dict[str, bool] = {}
+        self._label: Dict[str, str] = {}
+
+        for node_id in self.tree.nodes:
+            node_data = self.tree.nodes[node_id]
+            distribution_array = np.asarray(
+                node_data["distribution"], dtype=float
+            ).ravel()
+            self._distribution_by_node[node_id] = distribution_array
+            self._is_leaf[node_id] = node_data["is_leaf"]
+            self._label[node_id] = node_data.get("label", node_id)
+        self._n_features = (
+            len(next(iter(self._distribution_by_node.values())))
+            if self._distribution_by_node
+            else 0
+        )
+
     # ---------- poset helpers ----------
 
-    def _compute_descendant_sets(self) -> dict[str, frozenset]:
-        desc: Dict[str, frozenset] = {}
-        # process children before parents
-        for node in nx.topological_sort(self.tree.reverse()):
-            if self._is_leaf[node]:
-                desc[node] = frozenset([self._label[node]])
+    def _compute_leaf_partitions_for_all_nodes(self) -> dict[str, frozenset]:
+        """Compute the leaf partition (descendant leaves) for every node via bottom-up traversal.
+
+        Each node in a hierarchical tree defines a partition of the leaf set - the collection
+        of terminal samples that descend from that node. This method precomputes these partitions
+        for all nodes using dynamic programming, enabling O(1) cluster membership queries during
+        the decomposition phase.
+
+        The algorithm uses topological sorting on the reversed tree to process nodes in bottom-up
+        order (leaves first, then parents). For leaf nodes, the partition is a singleton set
+        containing only that leaf's label. For internal nodes, the partition is the union of
+        all child partitions, representing the transitive closure of descendant leaves.
+
+        This precomputation trades O(N) space and O(N) initialization time for O(1) access
+        during the iterative tree decomposition, where cluster boundaries are identified and
+        all leaves under a boundary node must be collected into a cluster.
+
+        Returns
+        -------
+        dict[str, frozenset]
+            Dictionary mapping each node_id to a frozenset of leaf labels. The frozenset
+            contains all terminal samples (leaves) that are descendants of that node in
+            the hierarchy. For leaf nodes, this is a singleton set; for internal nodes,
+            it's the union of all descendant leaf partitions.
+
+        Notes
+        -----
+        - Uses NetworkX's topological_sort on tree.reverse() to ensure proper bottom-up ordering
+        - Returns frozenset (immutable) to prevent accidental modification of cached partitions
+        - Empty frozenset returned for malformed nodes without children (defensive fallback)
+
+        Examples
+        --------
+        For a tree with structure::
+
+                 root
+                /    \\
+               A      B
+              / \\     \\
+             D   E     F
+
+        The computed partitions would be::
+
+            D → {D}
+            E → {E}
+            F → {F}
+            A → {D, E}
+            B → {F}
+            root → {D, E, F}
+        """
+        leaf_partition_by_node: Dict[str, frozenset] = {}
+
+        # Process children before parents (bottom-up)
+        for node_id in nx.topological_sort(self.tree.reverse()):
+            if self._is_leaf[node_id]:
+                # Base case: leaf partition contains only itself
+                leaf_partition_by_node[node_id] = frozenset([self._label[node_id]])
             else:
-                child_sets = [desc[c] for c in self.tree.successors(node)]
-                desc[node] = (
-                    frozenset().union(*child_sets) if child_sets else frozenset()
+                # Recursive case: union child partitions to form parent partition
+                child_partitions = [
+                    leaf_partition_by_node[child_id]
+                    for child_id in self.tree.successors(node_id)
+                ]
+                leaf_partition_by_node[node_id] = (
+                    frozenset().union(*child_partitions)
+                    if child_partitions
+                    else frozenset()
                 )
-        return desc
+
+        return leaf_partition_by_node
 
     # ---------- utilities ----------
 
     def _get_all_leaves(self, node_id: str) -> set[str]:
-        """Return the set of leaf labels beneath ``node_id`` using cached posets."""
-        fs = self._desc_sets.get(node_id, frozenset())
-        if fs:
-            return set(fs)
-        # fallback for leaf nodes with no entry
-        if self._is_leaf[node_id]:
-            return {self._label[node_id]}
-        return set()
+        """Return the leaf partition beneath a node using precomputed cache.
 
-    def is_significant(self, node_id: str) -> bool:
-        """Convenience accessor for parent-level significance gate."""
-        return bool(self._parent_sig.get(node_id, False))
+        Parameters
+        ----------
+        node_id
+            The node whose leaf partition to retrieve
 
-    # ---------- local KL (child vs parent) ----------
-
-    def _leaf_count(self, node_id: str) -> int:
-        """Retrieve cached leaf-count for ``node_id`` (populated during init)."""
-        return self._leaf_count_cache[node_id]
-
-    def _child_parent_pvalue(self, child: str, parent: str) -> float:
-        """Compute or reuse the chi-square p-value for ``child`` vs ``parent``."""
-        key = (child, parent)
-        if key in self._local_p_cache:
-            return self._local_p_cache[key]
-
-        # Prefer precomputed local KL if present on node attributes
-        kl_local = get_local_kl_value(
-            self.tree,
-            child,
-            parent,
-            child_dist=self._dist[child],
-            parent_dist=self._dist[parent],
-        )
-        n_leaves = self._leaf_count(child)
-        chi2_stat = 2.0 * n_leaves * float(kl_local)
-        p = float(chi2.sf(chi2_stat, df=self.n_features))
-        self._local_p_cache[key] = p
-        return p
-
-    def _child_diverges_from_parent(self, child: str, parent: str) -> bool:
-        """Determine whether the local KL test flags ``child`` as divergent."""
-        key = (child, parent)
-        if key in self._local_diverge_cache:
-            return self._local_diverge_cache[key]
-
-        # 1) Use annotated local decision when available
-        if child in self._local_sig:
-            res = bool(self._local_sig[child])
-            self._local_diverge_cache[key] = res
-            return res
-
-        # 2) Compute χ² p-value on the fly
-        p = self._child_parent_pvalue(child, parent)
-        res = bool(p < self.alpha_local)
-        self._local_diverge_cache[key] = res
-        return res
-
-    # ---------- core decomposition (iterative, no recursion) ----------
-
-    def _should_split(self, parent: str) -> bool:
-        """Evaluate both gates and return ``True`` when the parent should split."""
-        # Optional: gate by parent significance
-        if (
-            self.parent_gate == "strict"
-            and parent != self._root
-            and self.is_significant(parent)
-        ):
-            return False
-
-        children = self._children[parent]
-        if len(children) != 2:
-            # non-binary → treat as terminal cluster
-            return False
-        c1, c2 = children
-
-        # 1) local KL gate: both children must significantly diverge from parent
-        if not (
-            self._child_diverges_from_parent(c1, parent)
-            and self._child_diverges_from_parent(c2, parent)
-        ):
-            return False
-
-        # 2) sibling independence decision (annotated)
-        indep = self._sibling_indep.get(parent, None)
-        return bool(indep is True)
-
-    def _collect_cluster_leaves(self, node_id: str) -> set[str]:
-        """Gather all leaves under ``node_id`` to form a cluster record."""
-        return self._get_all_leaves(node_id)
-
-    def decompose_tree(self) -> dict[str, object]:
-        """Return cluster assignments by iteratively traversing the hierarchy."""
-        stack = [self._root]
-        final_leaf_sets: List[set[str]] = []
-
-        while stack:
-            node = stack.pop()
-            children = self._children[node]
-
-            # leaf or unary → cluster here
-            if len(children) < 2:
-                final_leaf_sets.append(self._collect_cluster_leaves(node))
-                continue
-
-            # non-binary → merge at parent
-            if len(children) != 2:
-                final_leaf_sets.append(self._collect_cluster_leaves(node))
-                continue
-
-            if self._should_split(node):
-                # split → push children
-                c1, c2 = children
-                stack.append(c2)
-                stack.append(c1)
-            else:
-                # merge here
-                final_leaf_sets.append(self._collect_cluster_leaves(node))
-
-        cluster_assignments: dict[int, dict[str, object]] = {}
-        for i, leaf_set in enumerate(final_leaf_sets):
-            if not leaf_set:
-                continue
-            cluster_assignments[i] = {
-                "root_node": self._find_cluster_root(leaf_set),
-                "leaves": sorted(leaf_set),
-                "size": len(leaf_set),
-            }
-        return {
-            "cluster_assignments": cluster_assignments,
-            "num_clusters": len(cluster_assignments),
-            "independence_analysis": {
-                "alpha_local": self.alpha_local,
-                "decision_mode": "cmi_only",
-            },
-        }
+        Returns
+        -------
+        set
+            Set of leaf labels in the node's partition
+        """
+        return set(self._leaf_partition_by_node[node_id])
 
     # ---------- LCA ----------
 
     def _find_cluster_root(self, leaf_labels: Set[str]) -> str:
         """Identify the lowest common ancestor for a collection of leaf labels."""
-        # Map labels to leaf node ids (small set → simple scan)
         leaf_nodes: List[str] = []
         for n in self.tree.nodes:
             if self._is_leaf[n] and self._label[n] in leaf_labels:
@@ -323,33 +264,243 @@ class ClusterDecomposer:
             common &= anc
             if not common:
                 return self._root
-        # choose the “lowest”: one that has no descendant also in `common`
         for anc in common:
             if not (set(nx.descendants(self.tree, anc)) & common):
                 return anc
         return self._root
 
-    # ---------- reporting / compat ----------
+    # ---------- local KL (child vs parent) ----------
 
-    def generate_report(self, decomposition_results: dict[str, object]) -> pd.DataFrame:
-        """
-        Convenience wrapper to build a per-sample cluster assignment DataFrame.
+    def _leaf_count(self, node_id: str) -> int:
+        return self._leaf_count_cache[node_id]
 
-        Mirrors hierarchy_analysis.decomposition_utils.generate_decomposition_report
-        so existing code that called `decomposer.generate_report(...)` continues to work.
-        """
-        from .decomposition_utils import generate_decomposition_report
+    def _child_diverges_from_parent(self, child: str, parent: str) -> bool:
+        """Determine whether the local KL test flags ``child`` as divergent.
 
-        return generate_decomposition_report(decomposition_results)
+        Relies on precomputed Local_BH_Significant annotations from
+        annotate_child_parent_divergence(). Returns False if not annotated.
+        """
+        annotated = self._local_significant.get(child)
+        if annotated is True:
+            return True
 
-    @property
-    def independence_threshold(self) -> float:
+        kl_val = self._kl_local.get(child)
+        if kl_val is None or not np.isfinite(kl_val):
+            return False
+
+        n_leaves = self._leaf_count(child)
+        p_val = chi2.sf(2.0 * n_leaves * float(kl_val), df=self._n_features)
+        return bool(p_val < self.alpha_local)
+
+    # ---------- core decomposition (iterative, no recursion) ----------
+
+    def _evaluate_and_handle_node(
+        self,
+        node_id: str,
+        stack: List[str],
+        final_leaf_sets: List[set[str]],
+    ) -> None:
+        """Evaluate whether a node should split and handle accordingly.
+
+        Parameters
+        ----------
+        node_id
+            Node to process
+        stack
+            DFS stack for tree traversal
+        final_leaf_sets
+            Accumulator for cluster leaf sets
         """
-        Backwards-compat property used by older scripts. The current algorithm
-        uses CMI-based statistical decisions rather than a fixed threshold; we
-        return NaN to indicate 'not applicable'.
+        if self._should_split(node_id):
+            children = self._children[node_id]
+            left_child, right_child = children
+            stack.append(right_child)
+            stack.append(left_child)
+        else:
+            final_leaf_sets.append(self._get_all_leaves(node_id))
+
+    def _build_cluster_assignments(
+        self, final_leaf_sets: List[set[str]]
+    ) -> dict[int, dict[str, object]]:
+        """Build cluster assignment dictionary from collected leaf sets.
+
+        Parameters
+        ----------
+        final_leaf_sets
+            List of leaf sets, one per cluster
+
+        Returns
+        -------
+        dict
+            Cluster assignments mapping cluster_index to cluster metadata
         """
-        try:
-            return float("nan")
-        except Exception:  # pragma: no cover
-            return None  # type: ignore[return-value]
+        cluster_assignments: dict[int, dict[str, object]] = {}
+        for cluster_index, leaf_set in enumerate(final_leaf_sets):
+            if not leaf_set:
+                continue
+            cluster_assignments[cluster_index] = {
+                "root_node": self._find_cluster_root(leaf_set),
+                "leaves": sorted(leaf_set),
+                "size": len(leaf_set),
+            }
+        return cluster_assignments
+
+    def _should_split(self, parent: str) -> bool:
+        """Evaluate statistical gates and return ``True`` when parent should split.
+
+        Gates evaluated in order:
+
+        1. **Binary structure gate** (always active)
+           - OPEN: parent has exactly 2 children → proceed to statistical tests
+           - CLOSED: parent has <2 or >2 children → merge at parent, form cluster boundary
+
+        2. **Local divergence gate** (always active, controlled by ``alpha_local``)
+           - OPEN: BOTH children significantly diverge from parent (p < alpha_local) → children show real distribution shift
+           - CLOSED: ANY child fails to diverge → merge at parent, siblings too similar to parent
+           - Uses: Chi-square test on 2*N*KL(child‖parent) where N=leaf count
+
+        3. **Sibling independence gate** (always active when annotated)
+           - OPEN: siblings are independent given parent (CMI test with BH correction) → children partition feature space
+           - CLOSED: siblings are dependent given parent → merge at parent, children redundant
+           - Missing annotation treated as gate failure
+
+        Outcome Logic:
+        - ALL gates OPEN → return True → children added to traversal stack, split continues recursively
+        - ANY gate CLOSED → return False → collect all leaves under parent as single cluster, stop splitting here
+        """
+        # Gate 1: Binary structure requirement
+        children = self._children[parent]
+        if len(children) != 2:
+            return False
+
+        left_child, right_child = children
+
+        # Gate 3: Local divergence - both children must diverge from parent
+        left_diverges = self._child_diverges_from_parent(left_child, parent)
+        right_diverges = self._child_diverges_from_parent(right_child, parent)
+        if not (left_diverges or right_diverges):
+            return False
+
+        # Gate 4: Sibling independence requirement
+        is_independent = self._sibling_independent.get(parent, None)
+        p_val = self._sibling_p_value.get(parent)
+        if is_independent is not True:
+            if self._sibling_skipped.get(parent, False):
+                return True
+            if p_val is not None and p_val > (self.sibling_alpha * 0.5):
+                pass
+            else:
+                return False
+
+        # Optional near-threshold override: merge if p-value is close to alpha
+        if (
+            self.near_independence_alpha_buffer > 0.0
+            and p_val is not None
+            and p_val <= (self.sibling_alpha + self.near_independence_alpha_buffer)
+        ):
+            return False
+
+        return True
+
+    def _pop_candidate(
+        self, heap: List[str], queued: set[str], processed: set[str]
+    ) -> str | None:
+        """Pop the next candidate node for shortlist traversal."""
+
+        while heap:
+            node = heap.pop()
+            if node in processed:
+                continue
+            return node
+        return None
+
+    def _decompose_with_shortlist(self) -> dict[str, object]:
+        """Decomposition that exercises shortlist semantics for testing."""
+
+        heap: List[str] = [self._root]
+        queued: set[str] = {self._root}
+        processed: Set[str] = set()
+        final_leaf_sets: List[set[str]] = []
+
+        while heap:
+            node = self._pop_candidate(heap, queued, processed)
+            if node is None:
+                break
+            if node in processed:
+                continue
+            processed.add(node)
+
+            if self._should_split(node):
+                children = self._children[node]
+                for child in children:
+                    if child not in queued and child not in processed:
+                        heap.append(child)
+                        queued.add(child)
+            else:
+                final_leaf_sets.append(self._get_all_leaves(node))
+
+        cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
+
+        return {
+            "cluster_assignments": cluster_assignments,
+            "num_clusters": len(cluster_assignments),
+            "independence_analysis": {
+                "alpha_local": self.alpha_local,
+                "decision_mode": "cmi_only",
+            },
+        }
+
+    def decompose_tree(self) -> dict[str, object]:
+        """Return cluster assignments by iteratively traversing the hierarchy."""
+        if self.sibling_shortlist_size:
+            return self._decompose_with_shortlist()
+
+        stack: List[str] = [self._root]
+        final_leaf_sets: List[set[str]] = []
+        processed: Set[str] = set()
+
+        while stack:
+            node = stack.pop()
+
+            if node in processed:
+                continue
+
+            processed.add(node)
+
+            self._evaluate_and_handle_node(node, stack, final_leaf_sets)
+
+        cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
+
+        return {
+            "cluster_assignments": cluster_assignments,
+            "num_clusters": len(cluster_assignments),
+            "independence_analysis": {
+                "alpha_local": self.alpha_local,
+                "decision_mode": "cmi_only",
+            },
+        }
+
+
+def generate_decomposition_report(
+    decomposition_results: Dict[str, object],
+) -> pd.DataFrame:
+    """Generate a per-sample cluster assignment report from decomposition output."""
+
+    cluster_assignments = decomposition_results.get("cluster_assignments", {})
+    if not cluster_assignments:
+        return pd.DataFrame(columns=["cluster_id", "cluster_root", "cluster_size"])
+
+    rows: Dict[str, Dict[str, object]] = {}
+    for cid, info in cluster_assignments.items():
+        root = info.get("root_node")
+        size = info.get("size", 0)
+        for lbl in info.get("leaves", []):
+            rows[lbl] = {
+                "cluster_id": cid,
+                "cluster_root": root,
+                "cluster_size": size,
+            }
+
+    df = pd.DataFrame.from_dict(rows, orient="index")
+    df.index.name = "sample_id"
+    return df.sort_values("cluster_id")

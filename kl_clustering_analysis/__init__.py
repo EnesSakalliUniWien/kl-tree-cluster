@@ -11,15 +11,11 @@ __email__ = "your.email@example.com"
 
 # Core modules
 from . import hierarchy_analysis
-from . import misc
 from . import plot
-from . import tests
 from . import tree
 
 __all__ = [
     "hierarchy_analysis",
-    "misc",
     "plot",
-    "tests",
     "tree",
 ]

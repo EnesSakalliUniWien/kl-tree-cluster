@@ -8,3 +8,4 @@ hierarchy_analysis/statistics/__pycache__
 results
 cluster_tree_plots
 cluster_validation_failures
+node_modules

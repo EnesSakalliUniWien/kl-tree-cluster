@@ -7,13 +7,14 @@ from sklearn.metrics import adjusted_rand_score
 
 # Import the necessary functions from your library
 from tree.poset_tree import PosetTree
-from hierarchy_analysis.divergence_metrics import calculate_hierarchy_kl_divergence
-from hierarchy_analysis.statistical_tests import (
-    annotate_nodes_with_statistical_significance_tests,
+from kl_clustering_analysis.information_metrics import compute_node_divergences
+from hierarchy_analysis.statistics import (
+    annotate_root_node_significance,
     annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
-from hierarchy_analysis.cluster_decomposition import ClusterDecomposer
+from tree.poset_tree import PosetTree
+
 
 def main():
     """
@@ -34,7 +35,9 @@ def main():
         X_binary,
         index=[f"Sample_{j}" for j in range(X.shape[0])],
     )
-    print(f"\nStep 1: Generated a binary dataset with {data.shape[0]} samples and {data.shape[1]} features.")
+    print(
+        f"\nStep 1: Generated a binary dataset with {data.shape[0]} samples and {data.shape[1]} features."
+    )
     print(f"Ground truth contains {len(np.unique(y_true))} clusters.")
 
     # --- Execute the Core Pipeline ---
@@ -46,32 +49,26 @@ def main():
     tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
     print("Step 3: Converted hierarchy to PosetTree structure.")
 
-    # 4. calculate_hierarchy_kl_divergence()
+    # 4. compute_node_divergences()
     # Pass the NetworkX graph (the PosetTree itself), not its metadata dict
-    stats_df = calculate_hierarchy_kl_divergence(tree, data)
+    stats_df = compute_node_divergences(tree, data)
     print("Step 4: Calculated KL-divergence for all nodes in the tree.")
 
     # 5. annotate...() functions
     significance_level = 0.05
-    stats_df = annotate_nodes_with_statistical_significance_tests(
-        stats_df, data.shape[1], significance_level
-    )
     stats_df = annotate_child_parent_divergence(
         tree, stats_df, data.shape[1], significance_level
     )
-    # annotate_sibling_independence_cmi uses keyword-only arguments after '*'
     stats_df = annotate_sibling_independence_cmi(
         tree, stats_df, significance_level_alpha=significance_level
     )
     print("Step 5: Annotated tree with multiple statistical significance tests.")
 
-    # 6. ClusterDecomposer.decompose_tree()
-    decomposer = ClusterDecomposer(
-        tree=tree,
+    # 6. PosetTree.decompose()
+    decomposition_results = tree.decompose(
         results_df=stats_df,
         significance_column="Are_Features_Dependent",
     )
-    decomposition_results = decomposer.decompose_tree()
     print("Step 6: Decomposed the tree to extract significant clusters.")
 
     # --- Display Results ---
@@ -80,11 +77,13 @@ def main():
     print(f"\nAlgorithm found {num_found} clusters.")
 
     cluster_assignments = decomposition_results.get("cluster_assignments", {})
-    
+
     predicted_labels = {}
     if cluster_assignments:
         for cluster_id, info in cluster_assignments.items():
-            print(f"  - Cluster {cluster_id} (root: {info['root_node']}): {info['size']} samples")
+            print(
+                f"  - Cluster {cluster_id} (root: {info['root_node']}): {info['size']} samples"
+            )
             for leaf in info["leaves"]:
                 predicted_labels[leaf] = cluster_id
 
@@ -92,7 +91,7 @@ def main():
     ordered_true_labels = []
     ordered_pred_labels = []
     for sample_name in data.index:
-        sample_index = int(sample_name.split('_')[1])
+        sample_index = int(sample_name.split("_")[1])
         ordered_true_labels.append(y_true[sample_index])
         ordered_pred_labels.append(predicted_labels.get(sample_name, -1))
 
