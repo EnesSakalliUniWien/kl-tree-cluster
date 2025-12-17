@@ -1,15 +1,19 @@
+"""Tree decomposition logic for KL-based clustering.
+
+This module contains :class:`~kl_clustering_analysis.hierarchy_analysis.tree_decomposer.ClusterDecomposer`,
+which traverses a hierarchy and decides where to split or merge to form clusters.
+"""
+
 from __future__ import annotations
 
-from typing import Dict, List, Set
+from typing import Dict, Iterator, List, Set
 
 import numpy as np
 import pandas as pd
 import networkx as nx
 from scipy.stats import chi2
 
-from .statistics.shared_utils import (
-    extract_bool_column_dict,
-)
+from ..core_utils.data_utils import extract_bool_column_dict
 from .. import config
 
 
@@ -19,14 +23,16 @@ class ClusterDecomposer:
     The decomposer walks a :class:`~tree.poset_tree.PosetTree` top-down and decides
     whether to split or merge at each internal node based on three statistical gates:
 
-    #. **Binary structure gate** – parent must have exactly 2 children to split.
-    #. **Local divergence gate** – both children must significantly diverge from the
-       parent according to the local KL (child‖parent) chi-square test. If either
-       child fails, the subtree is merged into a single cluster.
-    #. **Sibling independence gate** – provided the local gate passes, children must
-       be independent given the parent (conditional mutual information BH test).
-       If independence is rejected, the children are merged; otherwise the walk
-       recurses into each child.
+    #. **Binary structure gate** – parent must have exactly two children to split.
+    #. **Local divergence gate** – at least one child must significantly diverge from
+       the parent according to the local Kullback-Leibler divergence
+       (child relative to parent) chi-square test. If neither child diverges, the
+       subtree is merged into a single cluster.
+    #. **Sibling independence gate** – when available, children must be independent
+       given the parent based on a conditional mutual information permutation test
+       with Benjamini-Hochberg multiple-testing correction. If independence is
+       rejected, the children are merged; otherwise the walk continues into each
+       child.
 
     Nodes that pass all gates become cluster boundaries. Leaves under the same
     boundary node are assigned the same cluster identifier. The resulting report
@@ -38,8 +44,8 @@ class ClusterDecomposer:
         tree: nx.DiGraph,
         results_df: pd.DataFrame | None = None,
         *,
-        alpha_local: float = config.ALPHA_LOCAL,  # χ² test level for KL(child‖parent)
-        sibling_alpha: float = config.SIGNIFICANCE_ALPHA,
+        alpha_local: float = config.ALPHA_LOCAL,
+        sibling_alpha: float = config.SIBLING_ALPHA,
         significance_column: str | None = None,
         near_independence_alpha_buffer: float = 0.0,
         near_independence_kl_gap: float = 0.0,
@@ -56,10 +62,10 @@ class ClusterDecomposer:
             ``hierarchy_analysis.statistics`` helpers). May be ``None`` if the caller
             plans to rely on on-the-fly calculations.
         alpha_local
-            Significance level used when the local KL gate falls back to raw
-            chi-square tests.
+            Significance level used when the local Kullback-Leibler divergence gate
+            falls back to raw chi-square tests.
         sibling_alpha
-            Significance level used by sibling-independence annotations.
+            Significance level used by sibling-independence annotations and gating.
         """
         self.tree = tree
         self.results_df = results_df if results_df is not None else pd.DataFrame()
@@ -69,9 +75,7 @@ class ClusterDecomposer:
         self.near_independence_alpha_buffer = float(near_independence_alpha_buffer)
         self.near_independence_kl_gap = float(near_independence_kl_gap)
         self.sibling_shortlist_size = (
-            int(sibling_shortlist_size)
-            if sibling_shortlist_size is not None
-            else 0
+            int(sibling_shortlist_size) if sibling_shortlist_size is not None else 0
         )
 
         # ----- root -----
@@ -94,7 +98,7 @@ class ClusterDecomposer:
             for node_id in self.tree.nodes
         }
 
-        # ----- results_df → fast dict lookups (no .loc in hot paths) -----
+        # ----- results_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
             self.results_df, "Local_BH_Significant"
         ) or extract_bool_column_dict(self.results_df, "Local_Are_Features_Dependent")
@@ -119,7 +123,7 @@ class ClusterDecomposer:
             .to_dict()
         )
 
-        # ----- cache for local KL computation -----
+        # ----- cache for local Kullback-Leibler divergence computation -----
         self._local_kl_cache: Dict[tuple[str, str], float] = {}
 
         # Precompute children list (avoids rebuilding generator repeatedly)
@@ -133,7 +137,7 @@ class ClusterDecomposer:
         """Cache node attributes for fast repeated access during decomposition.
 
         Extracts and stores distributions, leaf flags, and labels.
-        This one-time preprocessing avoids expensive NetworkX lookups in hot paths.
+        This one-time preprocessing avoids expensive NetworkX lookups in tight loops.
         """
         self._distribution_by_node: Dict[str, np.ndarray] = {}
         self._is_leaf: Dict[str, bool] = {}
@@ -275,10 +279,12 @@ class ClusterDecomposer:
         return self._leaf_count_cache[node_id]
 
     def _child_diverges_from_parent(self, child: str, parent: str) -> bool:
-        """Determine whether the local KL test flags ``child`` as divergent.
+        """Determine whether the local divergence test flags ``child`` as divergent.
 
-        Relies on precomputed Local_BH_Significant annotations from
-        annotate_child_parent_divergence(). Returns False if not annotated.
+        Relies on precomputed ``Local_BH_Significant`` annotations from
+        :func:`~kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance.annotate_child_parent_divergence`.
+        Returns ``False`` when annotations are missing and the fallback chi-square
+        calculation cannot be performed.
         """
         annotated = self._local_significant.get(child)
         if annotated is True:
@@ -294,30 +300,52 @@ class ClusterDecomposer:
 
     # ---------- core decomposition (iterative, no recursion) ----------
 
-    def _evaluate_and_handle_node(
+    def _process_node_for_decomposition(
         self,
         node_id: str,
-        stack: List[str],
+        nodes_to_visit: List[str],
         final_leaf_sets: List[set[str]],
     ) -> None:
-        """Evaluate whether a node should split and handle accordingly.
+        """Apply split-or-merge decision for one node during traversal.
 
         Parameters
         ----------
         node_id
             Node to process
-        stack
-            DFS stack for tree traversal
+        nodes_to_visit
+            Pending nodes list used as a last in, first out worklist.
         final_leaf_sets
             Accumulator for cluster leaf sets
         """
         if self._should_split(node_id):
             children = self._children[node_id]
             left_child, right_child = children
-            stack.append(right_child)
-            stack.append(left_child)
+            # Because this is a last in, first out worklist, pushing right then left
+            # means the left child is processed first (left-first depth-first traversal).
+            nodes_to_visit.append(right_child)
+            nodes_to_visit.append(left_child)
         else:
             final_leaf_sets.append(self._get_all_leaves(node_id))
+
+    def _iterate_nodes_to_visit(
+        self, nodes_to_visit: List[str], processed: Set[str]
+    ) -> Iterator[str]:
+        """Yield nodes from a mutable last in, first out list exactly once.
+
+        This is a small readability helper that encapsulates the common:
+        pop → skip processed → mark processed → yield pattern.
+
+        Notes
+        -----
+        The underlying algorithm still relies on mutating ``nodes_to_visit`` during
+        traversal (e.g., pushing children when a node should split).
+        """
+        while nodes_to_visit:
+            node_id = nodes_to_visit.pop()
+            if node_id in processed:
+                continue
+            processed.add(node_id)
+            yield node_id
 
     def _build_cluster_assignments(
         self, final_leaf_sets: List[set[str]]
@@ -387,7 +415,7 @@ class ClusterDecomposer:
         if is_independent is not True:
             if self._sibling_skipped.get(parent, False):
                 return True
-            if p_val is not None and p_val > (self.sibling_alpha * 0.5):
+            if p_val > self.sibling_alpha:
                 pass
             else:
                 return False
@@ -396,7 +424,7 @@ class ClusterDecomposer:
         if (
             self.near_independence_alpha_buffer > 0.0
             and p_val is not None
-            and p_val <= (self.sibling_alpha + self.near_independence_alpha_buffer)
+            and p_val <= (config.SIGNIFICANCE_ALPHA + self.near_independence_alpha_buffer)
         ):
             return False
 
@@ -451,23 +479,24 @@ class ClusterDecomposer:
         }
 
     def decompose_tree(self) -> dict[str, object]:
-        """Return cluster assignments by iteratively traversing the hierarchy."""
+        """Return cluster assignments by iteratively traversing the hierarchy.
+
+        Traversal order
+        ---------------
+        The traversal uses a last in, first out list (similar to an explicit stack),
+        which produces a depth-first traversal order. When a node is split, its
+        two children are appended in right-then-left order so that the left child
+        is processed first on the next iteration.
+        """
         if self.sibling_shortlist_size:
             return self._decompose_with_shortlist()
 
-        stack: List[str] = [self._root]
+        nodes_to_visit: List[str] = [self._root]
         final_leaf_sets: List[set[str]] = []
         processed: Set[str] = set()
 
-        while stack:
-            node = stack.pop()
-
-            if node in processed:
-                continue
-
-            processed.add(node)
-
-            self._evaluate_and_handle_node(node, stack, final_leaf_sets)
+        for node in self._iterate_nodes_to_visit(nodes_to_visit, processed):
+            self._process_node_for_decomposition(node, nodes_to_visit, final_leaf_sets)
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
@@ -480,27 +509,41 @@ class ClusterDecomposer:
             },
         }
 
+    @staticmethod
+    def build_sample_cluster_assignments(
+        decomposition_results: Dict[str, object],
+    ) -> pd.DataFrame:
+        """Build per-sample cluster assignments from decomposition output.
 
-def generate_decomposition_report(
-    decomposition_results: Dict[str, object],
-) -> pd.DataFrame:
-    """Generate a per-sample cluster assignment report from decomposition output."""
+        Parameters
+        ----------
+        decomposition_results
+            A decomposition result dictionary produced by :meth:`ClusterDecomposer.decompose_tree`.
 
-    cluster_assignments = decomposition_results.get("cluster_assignments", {})
-    if not cluster_assignments:
-        return pd.DataFrame(columns=["cluster_id", "cluster_root", "cluster_size"])
+        Returns
+        -------
+        pandas.DataFrame
+            A pandas DataFrame indexed by ``sample_id`` with columns:
+            - ``cluster_id``: integer cluster identifier
+            - ``cluster_root``: node identifier that forms the cluster boundary
+            - ``cluster_size``: number of samples in the cluster
+        """
 
-    rows: Dict[str, Dict[str, object]] = {}
-    for cid, info in cluster_assignments.items():
-        root = info.get("root_node")
-        size = info.get("size", 0)
-        for lbl in info.get("leaves", []):
-            rows[lbl] = {
-                "cluster_id": cid,
-                "cluster_root": root,
-                "cluster_size": size,
-            }
+        cluster_assignments = decomposition_results.get("cluster_assignments", {})
+        if not cluster_assignments:
+            return pd.DataFrame(columns=["cluster_id", "cluster_root", "cluster_size"])
 
-    df = pd.DataFrame.from_dict(rows, orient="index")
-    df.index.name = "sample_id"
-    return df.sort_values("cluster_id")
+        rows: Dict[str, Dict[str, object]] = {}
+        for cluster_identifier, info in cluster_assignments.items():
+            root = info.get("root_node")
+            size = info.get("size", 0)
+            for sample_identifier in info.get("leaves", []):
+                rows[sample_identifier] = {
+                    "cluster_id": cluster_identifier,
+                    "cluster_root": root,
+                    "cluster_size": size,
+                }
+
+        assignments_table = pd.DataFrame.from_dict(rows, orient="index")
+        assignments_table.index.name = "sample_id"
+        return assignments_table.sort_values("cluster_id")

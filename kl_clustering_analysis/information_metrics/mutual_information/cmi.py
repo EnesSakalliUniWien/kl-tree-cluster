@@ -8,58 +8,64 @@ from __future__ import annotations
 
 import numpy as np
 
-from .mi import _mi_binary_vec_accel
+from .mi import _mi_binary_vec
 
 
-def _cmi_binary_vec(x_1d: np.ndarray, y_2d: np.ndarray, z_1d: np.ndarray) -> np.ndarray:
+def _cmi_binary_vec(
+    x_vector: np.ndarray, y_matrix: np.ndarray, z_condition: np.ndarray
+) -> np.ndarray:
     """
-    Vectorized Conditional MI I(X;Y|Z) for binary arrays.
+    Vectorized Conditional MI I(X;Y|Z) for discrete arrays.
 
     Uses the decomposition:
     I(X;Y|Z) = sum_z P(Z=z) * I(X;Y | Z=z)
 
     This reuses the mutual-information helper on each stratum defined by Z.
+    Supports arbitrary discrete values for Z (not just binary).
 
     Parameters
     ----------
-    x_1d : np.ndarray
-        Shape (F,), binary values
-    y_2d : np.ndarray
-        Shape (P, F), binary rows - multiple Y vectors
-    z_1d : np.ndarray
-        Shape (F,), binary conditioning variable
+    x_vector : np.ndarray
+        Shape (F,), discrete values
+    y_matrix : np.ndarray
+        Shape (P, F), discrete rows - multiple Y vectors
+    z_condition : np.ndarray
+        Shape (F,), discrete conditioning variable
 
     Returns
     -------
     np.ndarray
         Shape (P,), CMI values for each Y vector
     """
-    z = np.ascontiguousarray(z_1d, dtype=np.uint8)
-    P = y_2d.shape[0]
-    if z.size == 0:
-        return np.zeros(P, dtype=float)
+    # Ensure Z is integer-like for unique
+    z_discrete = np.ascontiguousarray(z_condition)
+    num_y_vectors = y_matrix.shape[0]
 
-    # Split by Z=0 and Z=1 strata
-    m0 = z == 0
-    m1 = ~m0
-    n = float(z.size)
-    out = np.zeros(P, dtype=float)
+    if z_discrete.size == 0:
+        return np.zeros(num_y_vectors, dtype=float)
 
-    # Compute MI within Z=0 stratum
-    n0 = int(m0.sum())
-    if n0 > 0:
-        x0 = np.ascontiguousarray(x_1d[m0], dtype=np.uint8)
-        Y0 = np.ascontiguousarray(y_2d[:, m0], dtype=np.uint8)
-        out += (n0 / n) * _mi_binary_vec_accel(x0, Y0)
+    total_samples = float(z_discrete.size)
+    cmi_values = np.zeros(num_y_vectors, dtype=float)
 
-    # Compute MI within Z=1 stratum
-    n1 = int(m1.sum())
-    if n1 > 0:
-        x1 = np.ascontiguousarray(x_1d[m1], dtype=np.uint8)
-        Y1 = np.ascontiguousarray(y_2d[:, m1], dtype=np.uint8)
-        out += (n1 / n) * _mi_binary_vec_accel(x1, Y1)
+    # Iterate over all unique values of Z (strata)
+    unique_z = np.unique(z_discrete)
 
-    return out
+    for z_val in unique_z:
+        stratum_mask = z_discrete == z_val
+        stratum_count = int(stratum_mask.sum())
+
+        if stratum_count > 0:
+            # Extract stratum data
+            x_stratum = x_vector[stratum_mask]
+            y_stratum = y_matrix[:, stratum_mask]
+
+            # Calculate MI for this stratum
+            mi_stratum = _mi_binary_vec(x_stratum, y_stratum)
+
+            # Add weighted contribution
+            cmi_values += (stratum_count / total_samples) * mi_stratum
+
+    return cmi_values
 
 
 __all__ = ["_cmi_binary_vec"]

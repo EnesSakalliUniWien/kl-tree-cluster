@@ -7,13 +7,6 @@ from sklearn.metrics import adjusted_rand_score
 
 # Import the necessary functions from your library
 from tree.poset_tree import PosetTree
-from kl_clustering_analysis.information_metrics import compute_node_divergences
-from hierarchy_analysis.statistics import (
-    annotate_root_node_significance,
-    annotate_child_parent_divergence,
-    annotate_sibling_independence_cmi,
-)
-from tree.poset_tree import PosetTree
 
 
 def main():
@@ -49,27 +42,17 @@ def main():
     tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
     print("Step 3: Converted hierarchy to PosetTree structure.")
 
-    # 4. compute_node_divergences()
-    # Pass the NetworkX graph (the PosetTree itself), not its metadata dict
-    stats_df = compute_node_divergences(tree, data)
-    print("Step 4: Calculated KL-divergence for all nodes in the tree.")
-
-    # 5. annotate...() functions
+    # 4. PosetTree.decompose()
+    # The decompose method now handles divergence calculation and annotation internally
     significance_level = 0.05
-    stats_df = annotate_child_parent_divergence(
-        tree, stats_df, data.shape[1], significance_level
-    )
-    stats_df = annotate_sibling_independence_cmi(
-        tree, stats_df, significance_level_alpha=significance_level
-    )
-    print("Step 5: Annotated tree with multiple statistical significance tests.")
-
-    # 6. PosetTree.decompose()
     decomposition_results = tree.decompose(
-        results_df=stats_df,
-        significance_column="Are_Features_Dependent",
+        leaf_data=data,
+        alpha_local=significance_level,
+        sibling_alpha=significance_level,
     )
-    print("Step 6: Decomposed the tree to extract significant clusters.")
+    print(
+        "Step 4: Decomposed the tree to extract significant clusters (metrics computed internally)."
+    )
 
     # --- Display Results ---
     print("\n--- Analysis Complete ---")

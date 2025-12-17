@@ -15,7 +15,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
-    annotate_root_node_significance,
     annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
@@ -101,6 +100,7 @@ def run_statistical_analysis(tree, X):
         results_df,
         significance_level_alpha=config.SIGNIFICANCE_ALPHA,
         n_permutations=config.N_PERMUTATIONS,
+        random_state=0,
     )
 
     print("Statistical analysis complete.")

@@ -73,18 +73,20 @@ def _prepare_binary_distributions(
     dict[str, np.ndarray]
         A dictionary mapping node names to their binarized distributions.
     """
-    dist_series = df.get("distribution", pd.Series(index=df.index, dtype=object))
-    dist_dict = dist_series.to_dict()
+    distribution_series = df.get(
+        "distribution", pd.Series(index=df.index, dtype=object)
+    )
+    distribution_dict = distribution_series.to_dict()
     return {
-        node: binary_threshold(dist, thr=binarization_threshold)
-        for node, dist in dist_dict.items()
-        if dist is not None
+        node: binary_threshold(node_distribution, thr=binarization_threshold)
+        for node, node_distribution in distribution_dict.items()
+        if node_distribution is not None
     }
 
 
 def _should_skip_parent(
     children: List[str],
-    local_sig_map: dict[str, bool] | None,
+    local_significance_map: dict[str, bool] | None,
 ) -> bool:
     """Determine whether a parent node should be skipped based on child significance.
 
@@ -92,7 +94,7 @@ def _should_skip_parent(
     ----------
     children : List[str]
         List of child node names (should have exactly 2 elements).
-    local_sig_map : dict[str, bool] | None
+    local_significance_map : dict[str, bool] | None
         Mapping of node names to their local significance status.
 
     Returns
@@ -100,12 +102,13 @@ def _should_skip_parent(
     bool
         True if the parent should be skipped, False otherwise.
     """
-    if local_sig_map is None:
+    if local_significance_map is None:
         return False
-    if len(children) != 2:
-        return False
-    c1, c2 = children
-    return not (local_sig_map.get(c1, False) and local_sig_map.get(c2, False))
+    child1, child2 = children
+    return not (
+        local_significance_map.get(child1, False)
+        and local_significance_map.get(child2, False)
+    )
 
 
 def _validate_distribution_arrays(
@@ -158,8 +161,8 @@ def _generate_random_seed(seed_sequence: np.random.SeedSequence | None) -> int |
 
 def _collect_cmi_test_arguments(
     tree: nx.DiGraph,
-    bin_dist: dict[str, np.ndarray],
-    local_sig_map: dict[str, bool] | None,
+    binary_distributions: dict[str, np.ndarray],
+    local_significance_map: dict[str, bool] | None,
     n_permutations: int,
     batch_size: int,
     random_state: int | None,
@@ -174,9 +177,9 @@ def _collect_cmi_test_arguments(
     ----------
     tree : nx.DiGraph
         The tree structure.
-    bin_dist : dict[str, np.ndarray]
+    binary_distributions : dict[str, np.ndarray]
         Binary distributions for each node.
-    local_sig_map : dict[str, bool] | None
+    local_significance_map : dict[str, bool] | None
         Local significance map.
     n_permutations : int
         Number of permutations for tests.
@@ -199,28 +202,41 @@ def _collect_cmi_test_arguments(
     ] = []
     skipped_nodes: List[str] = []
 
-    ss = np.random.SeedSequence(random_state) if random_state is not None else None
+    seed_sequence = (
+        np.random.SeedSequence(random_state) if random_state is not None else None
+    )
 
     for parent in tree.nodes:
         children = list(tree.successors(parent))
         if len(children) != 2:
             continue
 
-        if _should_skip_parent(children, local_sig_map):
+        if _should_skip_parent(children, local_significance_map):
             skipped_nodes.append(parent)
             continue
 
-        c1, c2 = children
-        x = bin_dist.get(c1)
-        y = bin_dist.get(c2)
-        z = bin_dist.get(parent)
+        child1_node, child2_node = children
+        child1_distribution = binary_distributions.get(child1_node)
+        child2_distribution = binary_distributions.get(child2_node)
+        parent_distribution = binary_distributions.get(parent)
 
-        if not _validate_distribution_arrays(x, y, z):
+        if not _validate_distribution_arrays(
+            child1_distribution, child2_distribution, parent_distribution
+        ):
             continue
 
-        seed = _generate_random_seed(ss)
+        seed = _generate_random_seed(seed_sequence)
         parent_nodes.append(parent)
-        args_list.append((x, y, z, int(n_permutations), seed, int(batch_size)))
+        args_list.append(
+            (
+                child1_distribution,
+                child2_distribution,
+                parent_distribution,
+                int(n_permutations),
+                seed,
+                int(batch_size),
+            )
+        )
 
     return parent_nodes, args_list, skipped_nodes
 
@@ -265,12 +281,12 @@ def _execute_cmi_tests(
     results: List[Tuple[float, float]] = []
 
     if parallel and len(args_list) > 1:
-        import concurrent.futures as cf
+        import concurrent.futures as futures
 
         if _check_parallel_execution_feasibility():
-            with cf.ProcessPoolExecutor(max_workers=max_workers) as ex:
-                for res in ex.map(_cmi_perm_from_args, args_list):
-                    results.append(res)
+            with futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+                for result in executor.map(_cmi_perm_from_args, args_list):
+                    results.append(result)
         else:
             # Fallback to sequential if parallel is not feasible
             for args in args_list:
@@ -309,18 +325,18 @@ def _apply_results_to_dataframe(
     if not results:
         return df
 
-    cmi_vals = np.array([r[0] for r in results], dtype=float)
-    pvals = np.array([r[1] for r in results], dtype=float)
+    cmi_values = np.array([r[0] for r in results], dtype=float)
+    p_values = np.array([r[1] for r in results], dtype=float)
 
-    reject, p_corr, _ = benjamini_hochberg_correction(
-        pvals, alpha=float(significance_level_alpha)
+    reject, p_values_corrected, _ = benjamini_hochberg_correction(
+        p_values, alpha=float(significance_level_alpha)
     )
 
-    df.loc[parent_nodes, "Sibling_CMI"] = cmi_vals
-    df.loc[parent_nodes, "Sibling_CMI_P_Value"] = pvals
+    df.loc[parent_nodes, "Sibling_CMI"] = cmi_values
+    df.loc[parent_nodes, "Sibling_CMI_P_Value"] = p_values
 
-    if p_corr.size:
-        df.loc[parent_nodes, "Sibling_CMI_P_Value_Corrected"] = p_corr
+    if p_values_corrected.size:
+        df.loc[parent_nodes, "Sibling_CMI_P_Value_Corrected"] = p_values_corrected
         df.loc[parent_nodes, "Sibling_BH_Dependent"] = reject
     else:
         df.loc[parent_nodes, "Sibling_BH_Dependent"] = False
@@ -353,31 +369,6 @@ def _finalize_skipped_nodes(
 
     df.loc[skipped_nodes, "Sibling_CMI_Skipped"] = True
     df.loc[skipped_nodes, "Sibling_BH_Independent"] = False
-
-    return df
-
-
-def _enforce_boolean_types(df: pd.DataFrame) -> pd.DataFrame:
-    """Ensure boolean columns have proper boolean dtype without downcasting warnings.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        The dataframe to process.
-
-    Returns
-    -------
-    pd.DataFrame
-        The dataframe with boolean columns properly typed.
-    """
-    with pd.option_context("future.no_silent_downcasting", True):
-        df["Sibling_BH_Dependent"] = (
-            df["Sibling_BH_Dependent"].fillna(False).astype(bool)
-        )
-        df["Sibling_BH_Independent"] = (
-            df["Sibling_BH_Independent"].fillna(False).astype(bool)
-        )
-        df["Sibling_CMI_Skipped"] = df["Sibling_CMI_Skipped"].fillna(False).astype(bool)
 
     return df
 
@@ -433,16 +424,16 @@ def annotate_sibling_independence_cmi(
     df = _initialize_dataframe_columns(df)
 
     # Prepare binary distributions
-    bin_dist = _prepare_binary_distributions(df, binarization_threshold)
+    binary_distributions = _prepare_binary_distributions(df, binarization_threshold)
 
     # Extract local significance information
-    local_sig_map = _extract_local_significance_map(df)
+    local_significance_map = _extract_local_significance_map(df)
 
     # Collect test arguments for all eligible parent nodes
     parent_nodes, args_list, skipped_nodes = _collect_cmi_test_arguments(
         tree=tree,
-        bin_dist=bin_dist,
-        local_sig_map=local_sig_map,
+        binary_distributions=binary_distributions,
+        local_significance_map=local_significance_map,
         n_permutations=n_permutations,
         batch_size=batch_size,
         random_state=random_state,
@@ -451,7 +442,6 @@ def annotate_sibling_independence_cmi(
     # Early exit if no tests to perform
     if not parent_nodes:
         df = _finalize_skipped_nodes(df, skipped_nodes)
-        df = _enforce_boolean_types(df)
         return df
 
     # Execute CMI tests
@@ -464,9 +454,6 @@ def annotate_sibling_independence_cmi(
 
     # Handle skipped nodes
     df = _finalize_skipped_nodes(df, skipped_nodes)
-
-    # Enforce boolean types
-    df = _enforce_boolean_types(df)
 
     return df
 

@@ -20,9 +20,7 @@ from kl_clustering_analysis.core_utils.pipeline_helpers import (
     build_hierarchical_tree,
     run_statistical_analysis,
 )
-from kl_clustering_analysis.hierarchy_analysis.cluster_decomposition import (
-    generate_decomposition_report,
-)
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
 def analyze_cluster_assignments_label_invariant():
@@ -37,7 +35,8 @@ def analyze_cluster_assignments_label_invariant():
 
     # 2) Decomposition
     result = tree.decompose(results_df=results_df)
-    report = generate_decomposition_report(result)
+    assert isinstance(tree, PosetTree)
+    report = tree.build_sample_cluster_assignments(result)
 
     # 3) Align predictions to data order
     sample_ids = list(X.index)

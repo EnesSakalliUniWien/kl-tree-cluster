@@ -15,7 +15,7 @@ class TestCMI:
     def test_mi_binary_vec_basic(self):
         """Test basic mutual information calculation between binary vectors."""
         from kl_clustering_analysis.information_metrics import (
-            _mi_binary_vec_accel as _mi_binary_vec,
+            _mi_binary_vec,
         )
 
         # Simple case: identical vectors should have high MI
@@ -37,7 +37,7 @@ class TestCMI:
     def test_mi_binary_vec_edge_cases(self):
         """Test edge cases for mutual information."""
         from kl_clustering_analysis.information_metrics import (
-            _mi_binary_vec_accel as _mi_binary_vec,
+            _mi_binary_vec,
         )
 
         # Empty features

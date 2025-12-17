@@ -12,10 +12,9 @@ from kl_clustering_analysis.information_metrics import (
     calculate_kl_divergence_vector,
     compute_node_divergences,
 )
-from .cluster_decomposition import ClusterDecomposer
+from .tree_decomposer import ClusterDecomposer
 from .statistics import (
     annotate_child_parent_divergence,
-    annotate_root_node_significance,
     annotate_sibling_independence_cmi,
     benjamini_hochberg_correction,
     kl_divergence_chi_square_test,
@@ -27,7 +26,6 @@ __all__ = [
     "ClusterDecomposer",
     "benjamini_hochberg_correction",
     "kl_divergence_chi_square_test",
-    "annotate_root_node_significance",
     "annotate_child_parent_divergence",
     "annotate_sibling_independence_cmi",
 ]

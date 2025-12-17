@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis.cluster_decomposition import (
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposer import (
     ClusterDecomposer,
 )
 

@@ -9,7 +9,6 @@ from sklearn.datasets import make_blobs
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis.information_metrics import compute_node_divergences
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
-    annotate_root_node_significance,
     annotate_child_parent_divergence,
     annotate_sibling_independence_cmi,
 )
@@ -31,20 +30,6 @@ def _build_small_case(n_samples=18, n_features=24, n_clusters=3, std=1.0, seed=1
     return tree, stats, df
 
 
-def test_annotate_root_node_significance_basic():
-    tree, stats, _ = _build_small_case()
-    df = annotate_root_node_significance(
-        stats,
-        total_number_of_features=stats.iloc[0]["distribution"].size,
-        include_deviation_test=True,
-    )
-    # Columns present
-    assert "Are_Features_Dependent" in df.columns
-    assert "BH_P_Value_Uncorrected" in df.columns
-    # Booleans normalized
-    assert df["Are_Features_Dependent"].dtype == bool
-
-
 def test_sibling_cmi_with_li_threshold_interface():
     """
     Exercise the 'li' threshold option for sibling CMI.
@@ -54,9 +39,7 @@ def test_sibling_cmi_with_li_threshold_interface():
     tree, stats, _ = _build_small_case()
     res = annotate_child_parent_divergence(
         tree,
-        annotate_root_node_significance(
-            stats, total_number_of_features=stats.iloc[0]["distribution"].size
-        ),
+        stats,
         total_number_of_features=stats.iloc[0]["distribution"].size,
     )
 
@@ -77,9 +60,7 @@ def test_sibling_cmi_skips_when_local_gate_fails():
     tree, stats, _ = _build_small_case()
     df_local = annotate_child_parent_divergence(
         tree,
-        annotate_root_node_significance(
-            stats, total_number_of_features=stats.iloc[0]["distribution"].size
-        ),
+        stats,
         total_number_of_features=stats.iloc[0]["distribution"].size,
     )
     df_local["Local_BH_Significant"] = False

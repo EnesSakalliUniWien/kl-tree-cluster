@@ -1,4 +1,5 @@
 from __future__ import annotations
+import pandas as pd
 
 
 def extract_bool_column_dict(
@@ -20,13 +21,6 @@ def extract_bool_column_dict(
     dict[str, bool]
         Dictionary mapping index to boolean values.
     """
-    import pandas as pd
-
     if not isinstance(df, pd.DataFrame) or df.empty or column_name not in df.columns:
         return {}
     return df[column_name].fillna(default).astype(bool).to_dict()
-
-
-__all__ = [
-    "extract_bool_column_dict",
-]

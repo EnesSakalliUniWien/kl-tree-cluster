@@ -10,7 +10,7 @@ from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics
     _populate_local_kl,
     _extract_hierarchy_statistics,
 )
-from kl_clustering_analysis.hierarchy_analysis.cluster_decomposition import (
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposer import (
     ClusterDecomposer,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
@@ -351,6 +351,13 @@ class PosetTree(nx.DiGraph):
                     )
                 self.populate_node_divergences(leaf_data)
             results_df = self.stats_df.copy()
+
+            # Extract n_permutations if provided, otherwise use config default
+            n_permutations = decomposer_kwargs.pop(
+                "n_permutations", config.N_PERMUTATIONS
+            )
+            random_state = decomposer_kwargs.pop("random_state", 0)
+
             # Run statistical annotations to align with pipeline_helpers
             results_df = annotate_child_parent_divergence(
                 self,
@@ -364,12 +371,37 @@ class PosetTree(nx.DiGraph):
                 self,
                 results_df,
                 significance_level_alpha=config.SIGNIFICANCE_ALPHA,
-                n_permutations=config.N_PERMUTATIONS,
+                n_permutations=n_permutations,
+                random_state=random_state,
             )
+            # Update the tree's stats_df with the annotated results so they are available later
+            self.stats_df = results_df
 
         decomposer = ClusterDecomposer(
             tree=self,
             results_df=results_df,
             **decomposer_kwargs,
         )
+
         return decomposer.decompose_tree()
+
+    def build_sample_cluster_assignments(
+        self, decomposition_results: Dict[str, object]
+    ) -> "pd.DataFrame":
+        """Build a per-sample cluster assignment table from decomposition output.
+
+        This method is a convenience wrapper around
+        :meth:`kl_clustering_analysis.hierarchy_analysis.tree_decomposer.ClusterDecomposer.build_sample_cluster_assignments`.
+
+        Parameters
+        ----------
+        decomposition_results
+            A decomposition result dictionary produced by :meth:`decompose`.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A pandas DataFrame indexed by ``sample_id`` with cluster assignment columns.
+        """
+
+        return ClusterDecomposer.build_sample_cluster_assignments(decomposition_results)

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import scanpy as sc
@@ -15,7 +13,6 @@ from kl_clustering_analysis.information_metrics import (
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_child_parent_divergence,
-    annotate_root_node_significance,
     annotate_sibling_independence_cmi,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -60,21 +57,9 @@ def test_pbmc3k_pipeline_retains_divergent_feature():
     assert float(stats_df["kl_divergence_global"].max()) > 0.0
 
     n_features = prob_df.shape[1]
-    results_df = annotate_root_node_significance(
-        stats_df,
-        total_number_of_features=n_features,
-        significance_level_alpha=config.SIGNIFICANCE_ALPHA,
-        std_deviation_threshold=config.STD_DEVIATION_THRESHOLD,
-        include_deviation_test=True,
-        tree=tree,
-        data_df=prob_df,
-        use_permutation_test=True,
-        n_permutations=100,
-        permutation_seed=0,
-    )
     results_df = annotate_child_parent_divergence(
         tree,
-        results_df,
+        stats_df,
         total_number_of_features=n_features,
         significance_level_alpha=config.SIGNIFICANCE_ALPHA,
     )
@@ -104,18 +89,6 @@ def test_pbmc3k_pipeline_retains_divergent_feature():
     sc.pp.neighbors(adata, n_neighbors=15, n_pcs=min(25, adata.obsm["X_pca"].shape[1]))
     sc.tl.umap(adata)
     assert "X_umap" in adata.obsm and adata.obsm["X_umap"].shape[1] == 2
-
-    plots_root = Path(__file__).resolve().parents[2] / "cluster_tree_plots"
-    plots_root.mkdir(exist_ok=True)
-    sc.settings.figdir = plots_root.as_posix()
-    sc.pl.umap(
-        adata,
-        color="kl_cluster",
-        size=30,
-        alpha=0.85,
-        show=False,
-        save="_pbmc3k_debug.png",
-    )
 
     top_feature = stats_df["kl_divergence_global"].idxmax()
     assert top_feature in stats_df.index

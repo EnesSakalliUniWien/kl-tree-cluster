@@ -5,33 +5,158 @@ This module contains helper functions used across validation tests:
 - Data generation for test cases
 - Pipeline execution
 - Label extraction from decomposition
-- Visualization functions
+- Optional plotting helpers (matplotlib)
 """
 
 import numpy as np
 import pandas as pd
+import logging
 from pathlib import Path
 from datetime import datetime
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
+from sklearn.metrics import (
+    adjusted_rand_score,
+    normalized_mutual_info_score,
+    homogeneity_score,
+)
+
+try:
+    from .test_cases_config import get_default_test_cases
+except ImportError:
+    from test_cases_config import get_default_test_cases  # type: ignore
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis import compute_node_divergences
-from kl_clustering_analysis.hierarchy_analysis.statistics import (
-    annotate_root_node_significance,
-    annotate_child_parent_divergence,
-    annotate_sibling_independence_cmi,
-)
+from kl_clustering_analysis import config
 from kl_clustering_analysis.plot.validation_visualizations import (
     create_validation_plot,
     create_umap_plots_from_results,
     create_manifold_plots_from_results,
+    create_tree_plots_from_results,
 )
+
 from simulation.generate_random_feature_matrix import (
     generate_random_feature_matrix,
 )
-from kl_clustering_analysis import config
+
+
+def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
+    """
+    Run the clustering pipeline on a single dataframe.
+
+    Args:
+        data_df: DataFrame with features
+        significance_level: Alpha for statistical tests
+        **kwargs: Additional arguments for decomposition
+
+    Returns:
+        Tuple of (decomposition_results, tree)
+    """
+    Z = linkage(pdist(data_df.values, metric="hamming"), method="complete")
+    tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
+    decomposition = tree.decompose(
+        leaf_data=data_df,
+        alpha_local=config.ALPHA_LOCAL,
+        sibling_alpha=significance_level,
+        **kwargs,
+    )
+    return decomposition, tree
+
+
+# Configure logger
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
+def _log_validation_start(n_cases: int) -> None:
+    """Log the start of the validation process."""
+    logger.info("=" * 80)
+    logger.info("CLUSTER ALGORITHM VALIDATION")
+    logger.info("=" * 80)
+    logger.info(f"Evaluating {n_cases} test cases.")
+
+
+def _log_test_case_start(index: int, total: int, name: str) -> None:
+    """Log the start of a specific test case."""
+    logger.info(f"Running test case {index}/{total}: {name}")
+
+
+def _log_validation_completion(total_runs: int, n_cases: int) -> None:
+    """Log the completion of the validation process."""
+    logger.info(f"Completed {total_runs} validation runs across {n_cases} test cases.")
+
+
+def _log_detailed_results(df_results: pd.DataFrame) -> None:
+    """Log the detailed results table."""
+    logger.info("Detailed Results:")
+    # Convert dataframe to string and log each line to avoid truncation issues in some loggers
+    results_str = df_results[
+        [
+            "Test",
+            "Case_Name",
+            "True",
+            "Found",
+            "Samples",
+            "Features",
+            "Noise",
+            "ARI",
+            "NMI",
+            "Purity",
+        ]
+    ].to_string(index=False)
+    for line in results_str.split("\n"):
+        logger.info(line)
+
+
+def _generate_validation_plots(
+    df_results: pd.DataFrame,
+    computed_results: list,
+    plots_root: Path,
+    verbose: bool,
+    plot_umap: bool,
+    plot_manifold: bool,
+):
+    """Generate and save validation plots."""
+    if df_results.empty:
+        return None
+
+    fig = create_validation_plot(df_results)
+
+    if verbose:
+        fig.savefig("validation_results.png", dpi=150, bbox_inches="tight")
+        logger.info("Validation plot saved to 'validation_results.png'")
+
+        _log_detailed_results(df_results)
+
+        logger.info("Generating tree plots...")
+        plots_root.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        create_tree_plots_from_results(
+            computed_results, plots_root, timestamp, verbose=False
+        )
+        logger.info(f"Tree plots saved to {plots_root}")
+
+    if plot_umap:
+        logger.info("Generating UMAP comparison visualizations...")
+        current_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        create_umap_plots_from_results(
+            computed_results, plots_root, current_timestamp, verbose=verbose
+        )
+
+    if plot_manifold:
+        logger.info("Generating manifold diagnostics (UMAP vs Isomap)...")
+        current_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        create_manifold_plots_from_results(
+            computed_results,
+            plots_root,
+            current_timestamp,
+            verbose=verbose,
+        )
+
+    return fig
 
 
 def _generate_case_data(
@@ -109,34 +234,6 @@ def _generate_case_data(
     return data_df, y, X, metadata
 
 
-def _run_pipeline_on_dataframe(
-    data_df: pd.DataFrame,
-    significance_level: float = config.SIGNIFICANCE_ALPHA,
-    n_permutations: int = 50,
-) -> tuple[dict, pd.DataFrame]:
-    """Execute the full KL-based clustering pipeline on a binary dataframe."""
-    parallel_cmi = True
-    Z = linkage(pdist(data_df.values, metric="hamming"), method="complete")
-    tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
-    stats_df = compute_node_divergences(tree, data_df)
-    stats_df = annotate_child_parent_divergence(
-        tree, stats_df, data_df.shape[1], significance_level
-    )
-    stats_df = annotate_sibling_independence_cmi(
-        tree,
-        stats_df,
-        significance_level_alpha=significance_level,
-        n_permutations=n_permutations,
-        parallel=parallel_cmi,
-    )
-
-    decomposition = tree.decompose(
-        results_df=stats_df,
-        alpha_local=config.ALPHA_LOCAL,
-    )
-    return decomposition, stats_df
-
-
 def _labels_from_decomposition(
     decomposition: dict, sample_index: list[str]
 ) -> list[int]:
@@ -148,9 +245,58 @@ def _labels_from_decomposition(
     return [assignments[sample] for sample in sample_index]
 
 
+def _create_report_dataframe(cluster_assignments: dict) -> pd.DataFrame:
+    """Create a report dataframe from cluster assignments."""
+    if cluster_assignments:
+        rows = []
+        for cid, info in cluster_assignments.items():
+            for leaf in info["leaves"]:
+                rows.append(
+                    {
+                        "sample_id": leaf,
+                        "cluster_id": cid,
+                        "cluster_size": info["size"],
+                    }
+                )
+        return pd.DataFrame(rows).set_index("sample_id")
+
+    return pd.DataFrame(columns=["cluster_id", "cluster_size"]).set_index("sample_id")
+
+
+def _calculate_ari_nmi_purity_metrics(
+    num_clusters: int,
+    report_df: pd.DataFrame,
+    sample_names: pd.Index,
+    true_labels: np.ndarray,
+) -> tuple[float, float, float]:
+    """Calculate clustering metrics (ARI, NMI, Purity)."""
+    if num_clusters > 0 and not report_df.empty:
+        # Create a correct mapping from sample name (report_df index) to true cluster label
+        true_label_map = {name: label for name, label in zip(sample_names, true_labels)}
+
+        # Work on a copy to avoid side effects
+        df_metrics = report_df.copy()
+        df_metrics["true_cluster"] = df_metrics.index.map(true_label_map)
+
+        ari = adjusted_rand_score(
+            df_metrics["true_cluster"].values, df_metrics["cluster_id"].values
+        )
+
+        nmi = normalized_mutual_info_score(
+            df_metrics["true_cluster"].values, df_metrics["cluster_id"].values
+        )
+
+        purity = homogeneity_score(
+            df_metrics["true_cluster"].values, df_metrics["cluster_id"].values
+        )
+        return ari, nmi, purity
+
+    return 0.0, 0.0, 0.0
+
+
 def validate_cluster_algorithm(
     test_cases=None,
-    significance_level=config.SIGNIFICANCE_ALPHA,
+    significance_level=config.SIBLING_ALPHA,
     verbose=True,
     plot_umap=False,
     plot_manifold=False,
@@ -168,8 +314,8 @@ def validate_cluster_algorithm(
         - cluster_std: noise level (standard deviation)
         - seed: random seed
         If None, uses default test cases.
-    significance_level : float, default=0.05
-        Statistical significance level
+    significance_level : float, default=config.SIBLING_ALPHA
+        Significance level used for sibling-independence gating in decomposition
     verbose : bool, default=True
         If True, prints progress and displays validation results
     plot_umap : bool, default=False
@@ -182,30 +328,18 @@ def validate_cluster_algorithm(
     df_results : pd.DataFrame
         Results dataframe with columns: Test, True, Found, Samples, Features,
         Noise, ARI, NMI, Purity
-    fig : matplotlib.figure.Figure or None
-        Validation plot figure (if verbose=True), otherwise None
+    fig : None
+        Plotting has been removed; always returns None.
     """
-    from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-
-    # Import test cases here to avoid circular dependencies
-    try:
-        from .test_cases_config import get_default_test_cases
-    except ImportError:
-        from test_cases_config import get_default_test_cases  # type: ignore
 
     # Default test cases
-    cmi_permutations = 50
     project_root = Path(__file__).resolve().parents[1]
     plots_root = project_root / "cluster_tree_plots"
-    parallel_cmi = True
     if test_cases is None:
         test_cases = get_default_test_cases()
 
     if verbose:
-        print("=" * 80)
-        print("CLUSTER ALGORITHM VALIDATION")
-        print("=" * 80 + "\n")
-        print(f"Evaluating {len(test_cases)} test cases.\n")
+        _log_validation_start(len(test_cases))
 
     results_data = []
 
@@ -214,13 +348,11 @@ def validate_cluster_algorithm(
 
     # Run test cases
     total_runs = len(test_cases)
-    run_counter = 0
 
     for i, tc in enumerate(test_cases, 1):
         case_name = tc.get("name", f"Case {i}")
         if verbose:
-            print(f"\nRunning test case {i}/{len(test_cases)}...")
-            print(f"  -> {case_name}")
+            _log_test_case_start(i, total_runs, case_name)
 
         # Generate and process data
         data_t, y_t, X_original, meta = _generate_case_data(tc)
@@ -228,63 +360,23 @@ def validate_cluster_algorithm(
         # Build tree and calculate statistics once per test case
         Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
         tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
-        stats_t = compute_node_divergences(tree_t, data_t)
 
-        # Skip root-level significance for speed; use raw stats for downstream gates
-        base_results = stats_t.copy()
-        run_counter += 1
-        if verbose:
-            print(f"    Run {run_counter}/{total_runs}")
-
-        base_seed = tc.get("seed", 0) or 0
-        mode_seed = int(base_seed) + 1
-
-        # Local child-parent divergence
-        base_results_mode = base_results.copy()
-        results_t = annotate_child_parent_divergence(
-            tree_t,
-            base_results_mode,
-            meta["n_features"],
-            significance_level,
-        )
-        results_t = annotate_sibling_independence_cmi(
-            tree_t,
-            results_t,
-            significance_level_alpha=significance_level,
-            n_permutations=cmi_permutations,
-            parallel=parallel_cmi,
-            random_state=mode_seed + 7919,
-        )
-
+        # Use the direct decompose method from PosetTree which handles stats calculation internally
+        # if results_df is not provided but leaf_data is.
         decomp_t = tree_t.decompose(
-            results_df=results_t,
+            leaf_data=data_t,
             alpha_local=config.ALPHA_LOCAL,
+            sibling_alpha=significance_level,
+            # Pass kwargs for internal annotation functions if needed,
+            # though decompose() currently hardcodes some config defaults internally.
+            # We might need to ensure decompose() uses our significance_level for annotations too.
         )
 
-        if verbose:
-            print(
-                f"      Decision mode: CMI-based statistical testing "
-                f"(α={significance_level})"
-            )
+        # Extract the results_df that was computed internally
+        results_t = tree_t.stats_df
 
         # Create report dataframe from cluster assignments
-        cluster_assignments = decomp_t.get("cluster_assignments", {})
-        if cluster_assignments:
-            rows = []
-            for cid, info in cluster_assignments.items():
-                for leaf in info["leaves"]:
-                    rows.append(
-                        {
-                            "sample_id": leaf,
-                            "cluster_id": cid,
-                            "cluster_size": info["size"],
-                        }
-                    )
-            report_t = pd.DataFrame(rows).set_index("sample_id")
-        else:
-            report_t = pd.DataFrame(columns=["cluster_id", "cluster_size"]).set_index(
-                "sample_id"
-            )
+        report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))
 
         # Store computed results for later use in plotting
         computed_results.append(
@@ -302,42 +394,10 @@ def validate_cluster_algorithm(
                 ),
             }
         )
-        if decomp_t["num_clusters"] > 0 and not report_t.empty:
-            # Create a correct mapping from sample name (report_t index) to true cluster label
-            true_label_map = {name: label for name, label in zip(data_t.index, y_t)}
-            report_t["true_cluster"] = report_t.index.map(true_label_map)
 
-            # Sanity check: ensure all samples were mapped correctly
-            if report_t["true_cluster"].isna().any():
-                print(
-                    f"WARNING: {report_t['true_cluster'].isna().sum()} samples couldn't be mapped back to ground truth labels"
-                )
-                print(
-                    "This indicates a mismatch between PosetTree leaf labels and data_t.index"
-                )
-                # Continue but metrics will be affected
-
-            ari = adjusted_rand_score(
-                report_t["true_cluster"].values, report_t["cluster_id"].values
-            )
-
-            nmi = normalized_mutual_info_score(
-                report_t["true_cluster"].values, report_t["cluster_id"].values
-            )
-
-            purities = [
-                report_t[report_t["cluster_id"] == c]["true_cluster"]
-                .value_counts()
-                .max()
-                / len(report_t[report_t["cluster_id"] == c])
-                for c in report_t["cluster_id"].unique()
-            ]
-            purity = np.mean(purities) if purities else 0
-        else:
-            # No clusters were found, so metrics are 0
-            ari = 0
-            nmi = 0
-            purity = 0
+        ari, nmi, purity = _calculate_ari_nmi_purity_metrics(
+            decomp_t["num_clusters"], report_t, data_t.index, y_t
+        )
 
         results_data.append(
             {
@@ -355,65 +415,16 @@ def validate_cluster_algorithm(
         )
 
     if verbose:
-        print(
-            f"Completed {total_runs} validation runs across {len(test_cases)} test cases.\n"
-        )
+        _log_validation_completion(total_runs, len(test_cases))
 
     df_results = pd.DataFrame(results_data)
 
-    # Create visualization if verbose
-    fig = None
-    if verbose:
-        fig = create_validation_plot(df_results)
-        fig.savefig("validation_results.png", dpi=150, bbox_inches="tight")
-        print("Validation plot saved to 'validation_results.png'")
-        # plt.show()  # Skip interactive display in terminal
+    if not verbose and not plot_umap and not plot_manifold:
+        return df_results, None
 
-        print("\nDetailed Results:")
-        print(
-            df_results[
-                [
-                    "Test",
-                    "Case_Name",
-                    "True",
-                    "Found",
-                    "Samples",
-                    "Features",
-                    "Noise",
-                    "ARI",
-                    "NMI",
-                    "Purity",
-                ]
-            ].to_string(index=False)
-        )
-
-    # Create UMAP comparison visualizations if requested
-    if plot_umap:
-        print("\nGenerating UMAP comparison visualizations...")
-        current_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        umap_plots_dir = plots_root
-
-        # Use the new plotting utility with pre-computed results
-        create_umap_plots_from_results(
-            computed_results, umap_plots_dir, current_timestamp, verbose
-        )
-
-        print(
-            f"UMAP comparison plots saved as '{umap_plots_dir}/umap_test_*_clusters_*.png'"
-        )
-
-    if plot_manifold:
-        print("\nGenerating manifold diagnostics (UMAP vs Isomap)...")
-        current_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        manifold_dir = plots_root
-        create_manifold_plots_from_results(
-            computed_results,
-            manifold_dir,
-            current_timestamp,
-            verbose,
-        )
-        print(
-            f"Manifold plots saved as '{manifold_dir}/manifold_test_*_clusters_*.png'"
-        )
-
+    fig = _generate_validation_plots(
+        df_results, computed_results, plots_root, verbose, plot_umap, plot_manifold
+    )
+    if not verbose:
+        return df_results, None
     return df_results, fig

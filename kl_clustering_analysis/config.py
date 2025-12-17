@@ -7,6 +7,12 @@ Central configuration for the KL-TE clustering analysis library.
 # Default significance level (alpha) for hypothesis tests.
 SIGNIFICANCE_ALPHA: float = 0.05
 
+# Default significance level (alpha) for sibling-independence *gating* in clustering.
+# This is intentionally more conservative than SIGNIFICANCE_ALPHA because the sibling
+# CMI permutation test can be noisy at low permutation counts; using a smaller alpha
+# reduces over-merging at high levels of the tree.
+SIBLING_ALPHA: float = 0.01
+
 # Default number of permutations for permutation tests.
 N_PERMUTATIONS: int = 100
 
