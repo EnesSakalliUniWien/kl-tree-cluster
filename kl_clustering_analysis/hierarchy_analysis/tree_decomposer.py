@@ -11,7 +11,6 @@ from typing import Dict, Iterator, List, Set
 import numpy as np
 import pandas as pd
 import networkx as nx
-from scipy.stats import chi2
 
 from ..core_utils.data_utils import extract_bool_column_dict
 from .. import config
@@ -21,18 +20,14 @@ class ClusterDecomposer:
     """Annotate a hierarchy with significance tests and carve it into clusters.
 
     The decomposer walks a :class:`~tree.poset_tree.PosetTree` top-down and decides
-    whether to split or merge at each internal node based on three statistical gates:
+    whether to split or merge at each internal node based on two statistical gates:
 
     #. **Binary structure gate** – parent must have exactly two children to split.
-    #. **Local divergence gate** – at least one child must significantly diverge from
-       the parent according to the local Kullback-Leibler divergence
-       (child relative to parent) chi-square test. If neither child diverges, the
-       subtree is merged into a single cluster.
-    #. **Sibling independence gate** – when available, children must be independent
-       given the parent based on a conditional mutual information permutation test
-       with Benjamini-Hochberg multiple-testing correction. If independence is
-       rejected, the children are merged; otherwise the walk continues into each
-       child.
+    #. **Sibling divergence gate** – siblings must have significantly different
+       distributions according to a Jensen-Shannon divergence permutation test
+       with Benjamini-Hochberg multiple-testing correction. If siblings are
+       significantly different, the split proceeds; otherwise the children are
+       merged into a single cluster.
 
     Nodes that pass all gates become cluster boundaries. Leaves under the same
     boundary node are assigned the same cluster identifier. The resulting report
@@ -101,30 +96,14 @@ class ClusterDecomposer:
         # ----- results_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
             self.results_df, "Local_BH_Significant"
-        ) or extract_bool_column_dict(self.results_df, "Local_Are_Features_Dependent")
-        self._sibling_independent = extract_bool_column_dict(
-            self.results_df, "Sibling_BH_Independent"
+        )
+        # Sibling divergence test: Sibling_BH_Different = True means siblings differ -> SPLIT
+        self._sibling_different = extract_bool_column_dict(
+            self.results_df, "Sibling_BH_Different"
         )
         self._sibling_skipped = extract_bool_column_dict(
-            self.results_df, "Sibling_CMI_Skipped"
+            self.results_df, "Sibling_Divergence_Skipped"
         )
-        self._sibling_p_value = {
-            k: float(v)
-            for k, v in self.results_df.get(
-                "Sibling_CMI_P_Value_Corrected", pd.Series(dtype=float)
-            )
-            .dropna()
-            .to_dict()
-            .items()
-        }
-        self._kl_local = (
-            self.results_df.get("kl_divergence_local", pd.Series(dtype=float))
-            .dropna()
-            .to_dict()
-        )
-
-        # ----- cache for local Kullback-Leibler divergence computation -----
-        self._local_kl_cache: Dict[tuple[str, str], float] = {}
 
         # Precompute children list (avoids rebuilding generator repeatedly)
         self._children: Dict[str, List[str]] = {
@@ -283,20 +262,16 @@ class ClusterDecomposer:
 
         Relies on precomputed ``Local_BH_Significant`` annotations from
         :func:`~kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance.annotate_child_parent_divergence`.
-        Returns ``False`` when annotations are missing and the fallback chi-square
-        calculation cannot be performed.
+        No fallback computation is performed; missing annotations raise to signal
+        a misconfigured pipeline.
         """
         annotated = self._local_significant.get(child)
-        if annotated is True:
-            return True
-
-        kl_val = self._kl_local.get(child)
-        if kl_val is None or not np.isfinite(kl_val):
-            return False
-
-        n_leaves = self._leaf_count(child)
-        p_val = chi2.sf(2.0 * n_leaves * float(kl_val), df=self._n_features)
-        return bool(p_val < self.alpha_local)
+        if annotated is None:
+            raise ValueError(
+                "Local divergence annotations missing for node "
+                f"{child!r}; run annotate_child_parent_divergence first."
+            )
+        return bool(annotated)
 
     # ---------- core decomposition (iterative, no recursion) ----------
 
@@ -382,15 +357,10 @@ class ClusterDecomposer:
            - OPEN: parent has exactly 2 children → proceed to statistical tests
            - CLOSED: parent has <2 or >2 children → merge at parent, form cluster boundary
 
-        2. **Local divergence gate** (always active, controlled by ``alpha_local``)
-           - OPEN: BOTH children significantly diverge from parent (p < alpha_local) → children show real distribution shift
-           - CLOSED: ANY child fails to diverge → merge at parent, siblings too similar to parent
-           - Uses: Chi-square test on 2*N*KL(child‖parent) where N=leaf count
-
-        3. **Sibling independence gate** (always active when annotated)
-           - OPEN: siblings are independent given parent (CMI test with BH correction) → children partition feature space
-           - CLOSED: siblings are dependent given parent → merge at parent, children redundant
-           - Missing annotation treated as gate failure
+        2. **Sibling divergence gate** (always active when annotated)
+           - OPEN: siblings are significantly different (JSD permutation test with BH correction) → SPLIT
+           - CLOSED: siblings are not significantly different → MERGE
+           - Missing annotation treated as error
 
         Outcome Logic:
         - ALL gates OPEN → return True → children added to traversal stack, split continues recursively
@@ -401,34 +371,20 @@ class ClusterDecomposer:
         if len(children) != 2:
             return False
 
-        left_child, right_child = children
+        # Gate 2: Sibling divergence requirement
+        # Sibling_BH_Different = True means siblings have significantly different distributions -> SPLIT
+        is_different = self._sibling_different.get(parent)
 
-        # Gate 3: Local divergence - both children must diverge from parent
-        left_diverges = self._child_diverges_from_parent(left_child, parent)
-        right_diverges = self._child_diverges_from_parent(right_child, parent)
-        if not (left_diverges or right_diverges):
-            return False
-
-        # Gate 4: Sibling independence requirement
-        is_independent = self._sibling_independent.get(parent, None)
-        p_val = self._sibling_p_value.get(parent)
-        if is_independent is not True:
+        if is_different is None:
             if self._sibling_skipped.get(parent, False):
-                return True
-            if p_val > self.sibling_alpha:
-                pass
-            else:
+                # Skipped nodes default to no split (conservative)
                 return False
+            raise ValueError(
+                "Sibling divergence annotations missing for node "
+                f"{parent!r}; run annotate_sibling_divergence first."
+            )
 
-        # Optional near-threshold override: merge if p-value is close to alpha
-        if (
-            self.near_independence_alpha_buffer > 0.0
-            and p_val is not None
-            and p_val <= (config.SIGNIFICANCE_ALPHA + self.near_independence_alpha_buffer)
-        ):
-            return False
-
-        return True
+        return bool(is_different)
 
     def _pop_candidate(
         self, heap: List[str], queued: set[str], processed: set[str]

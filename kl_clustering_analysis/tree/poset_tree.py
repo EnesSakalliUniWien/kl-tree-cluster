@@ -15,7 +15,7 @@ from kl_clustering_analysis.hierarchy_analysis.tree_decomposer import (
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_child_parent_divergence,
-    annotate_sibling_independence_cmi,
+    annotate_sibling_divergence,
 )
 from kl_clustering_analysis import config
 
@@ -367,12 +367,10 @@ class PosetTree(nx.DiGraph):
                 else results_df.attrs.get("n_features", 0),
                 significance_level_alpha=config.SIGNIFICANCE_ALPHA,
             )
-            results_df = annotate_sibling_independence_cmi(
+            results_df = annotate_sibling_divergence(
                 self,
                 results_df,
                 significance_level_alpha=config.SIGNIFICANCE_ALPHA,
-                n_permutations=n_permutations,
-                random_state=random_state,
             )
             # Update the tree's stats_df with the annotated results so they are available later
             self.stats_df = results_df

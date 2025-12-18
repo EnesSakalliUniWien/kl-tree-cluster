@@ -9,12 +9,26 @@ Tests the full pipeline with:
 import numpy as np
 import pandas as pd
 from sklearn.metrics import adjusted_rand_score
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
 
 from simulation.generate_random_feature_matrix import generate_random_feature_matrix
-from tests.validation_utils import (
-    _run_pipeline_on_dataframe,
-    _labels_from_decomposition,
-)
+from kl_clustering_analysis.tree.poset_tree import PosetTree
+from kl_clustering_analysis import config
+from kl_clustering_analysis.benchmarking import _labels_from_decomposition
+
+
+def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
+    """Minimal pipeline helper for integration tests."""
+    Z = linkage(pdist(data_df.values, metric="hamming"), method="complete")
+    tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
+    decomposition = tree.decompose(
+        leaf_data=data_df,
+        alpha_local=config.ALPHA_LOCAL,
+        sibling_alpha=significance_level,
+        **kwargs,
+    )
+    return decomposition, tree
 
 
 def test_complex_random_feature_matrix_balanced_clusters():

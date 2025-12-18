@@ -72,6 +72,53 @@ def _create_gradient_templates(n_clusters: int, n_cols: int) -> List[List[int]]:
         return templates
 
 
+def _create_sparse_templates(
+    n_clusters: int, n_cols: int, sparsity: float
+) -> List[List[int]]:
+    """Creates distinct binary templates with sparse (low-variance) features.
+
+    Each cluster gets a distinct template where features are predominantly
+    0 or predominantly 1 (controlled by sparsity). This creates data where
+    Bernoulli variance is low (θ near 0 or 1).
+
+    Args:
+        n_clusters: The number of templates to generate.
+        n_cols: The number of features (length) of each template.
+        sparsity: Float in [0, 0.5] controlling feature means.
+            - 0.0: Features are exactly 0 or 1 (minimum variance)
+            - 0.5: Features have θ = 0.5 (maximum variance, like gradient)
+
+    Returns:
+        A list of binary template vectors.
+    """
+    templates = []
+    # Divide features among clusters so each cluster "owns" some features
+    features_per_cluster = n_cols // n_clusters
+    remainder = n_cols % n_clusters
+
+    for cluster_id in range(n_clusters):
+        # Base template: all features have low probability (sparse)
+        template = []
+        for feat_idx in range(n_cols):
+            # Determine which cluster "owns" this feature
+            if features_per_cluster > 0:
+                owner_cluster = min(feat_idx // features_per_cluster, n_clusters - 1)
+            else:
+                owner_cluster = feat_idx % n_clusters
+
+            if owner_cluster == cluster_id:
+                # This cluster's features are predominantly 1
+                prob_one = 1.0 - sparsity
+            else:
+                # Other clusters' features are predominantly 0
+                prob_one = sparsity
+
+            template.append(1 if np.random.random() < prob_one else 0)
+        templates.append(template)
+
+    return templates
+
+
 def _apply_bit_flip_noise(template: List[int], noise_prob: float) -> List[int]:
     """Applies bit-flip noise to a binary template.
 
@@ -155,6 +202,7 @@ def generate_random_feature_matrix(
     n_clusters: int = 2,
     random_seed: Optional[int] = None,
     balanced_clusters: bool = True,
+    feature_sparsity: Optional[float] = None,
 ) -> Tuple[Dict[str, list], Dict[str, int]]:
     """Generates a random binary feature matrix with controllable clustering.
 
@@ -165,15 +213,20 @@ def generate_random_feature_matrix(
         n_rows: The number of samples (rows) to generate.
         n_cols: The number of features (columns) to generate.
         entropy_param: A float between 0.0 and 1.0 that controls cluster
-            separation.
-            - 0.0: Creates maximally distinct, pure clusters.
+            separation (noise level).
+            - 0.0: Creates maximally distinct, pure clusters (no noise).
             - 0.5: Creates clusters with a moderate amount of noise/overlap.
-            - 1.0: Creates a single, uniform cluster (minimum separation).
+            - 1.0: Creates a single, uniform cluster (maximum noise).
         n_clusters: The number of clusters to generate.
         random_seed: An optional seed for the random number generator to ensure
             reproducibility.
         balanced_clusters: If True, clusters will have nearly equal sizes. If
             False, cluster sizes will be random.
+        feature_sparsity: Optional float between 0.0 and 0.5 controlling
+            feature means (Bernoulli θ). If provided, features will have
+            θ ∈ [sparsity, 1-sparsity], creating low-variance features when
+            sparsity is near 0 (θ near 0 or 1). Default None uses original
+            gradient-based templates (θ ≈ 0.5, high variance).
 
     Returns:
         A tuple containing:
@@ -194,6 +247,12 @@ def generate_random_feature_matrix(
         ...     n_rows=50, n_cols=30, entropy_param=0.8, balanced_clusters=False
         ... )
         >>> print(f"Cluster sizes: {list(np.bincount(list(clusters.values())))}")
+
+        >>> # Generate sparse data with low-variance features (θ near 0 or 1)
+        >>> data, clusters = generate_random_feature_matrix(
+        ...     n_rows=100, n_cols=50, entropy_param=0.1, n_clusters=3,
+        ...     feature_sparsity=0.05  # Features have θ ≈ 0.05 or 0.95
+        ... )
     """
     if random_seed is not None:
         np.random.seed(random_seed)
@@ -207,7 +266,11 @@ def generate_random_feature_matrix(
     # Step 1: Calculate cluster sizes
     cluster_sizes = _calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters)
 
-    # Step 2: Generate cluster templates and samples based on entropy parameter
+    # Step 2: Choose template generation strategy
+    # If feature_sparsity is provided, use sparse templates (low-variance features)
+    use_sparse = feature_sparsity is not None and 0.0 <= feature_sparsity <= 0.5
+
+    # Step 3: Generate cluster templates and samples based on entropy parameter
     if entropy_param >= 1.0 or n_clusters == 1:
         # Strategy A: All samples are identical (no real cluster structure)
         template = [1] * n_cols
@@ -217,7 +280,12 @@ def generate_random_feature_matrix(
 
     elif entropy_param <= 0.0:
         # Strategy B: Maximum separation (pure templates, no noise)
-        cluster_templates = _create_gradient_templates(n_clusters, n_cols)
+        if use_sparse:
+            cluster_templates = _create_sparse_templates(
+                n_clusters, n_cols, feature_sparsity
+            )
+        else:
+            cluster_templates = _create_gradient_templates(n_clusters, n_cols)
         sample_idx = 0
         for cluster_id, size in enumerate(cluster_sizes):
             for _ in range(size):
@@ -230,9 +298,14 @@ def generate_random_feature_matrix(
     else:
         # Strategy C: Intermediate entropy (templates with noise or convergence)
         if entropy_param < 0.5:
-            # C.1: Low entropy -> Distinct templates + bit-flip noise
+            # C.1: Low noise -> Distinct templates + bit-flip noise
             noise_prob = entropy_param * 2  # Scale [0, 0.5) -> [0, 1)
-            cluster_templates = _create_gradient_templates(n_clusters, n_cols)
+            if use_sparse:
+                cluster_templates = _create_sparse_templates(
+                    n_clusters, n_cols, feature_sparsity
+                )
+            else:
+                cluster_templates = _create_gradient_templates(n_clusters, n_cols)
             sample_idx = 0
             for cluster_id, size in enumerate(cluster_sizes):
                 base_template = cluster_templates[cluster_id]
@@ -242,7 +315,7 @@ def generate_random_feature_matrix(
                     cluster_assignments[f"L{sample_idx + 1}"] = cluster_id
                     sample_idx += 1
         else:
-            # C.2: High entropy -> Converging templates + probabilistic following
+            # C.2: High noise -> Converging templates + probabilistic following
             follow_prob = (entropy_param - 0.5) * 2  # Scale [0.5, 1) -> [0, 1)
             base_template = np.random.choice([0, 1], size=n_cols).tolist()
             cluster_templates = []
@@ -263,7 +336,7 @@ def generate_random_feature_matrix(
                     cluster_assignments[f"L{sample_idx + 1}"] = cluster_id
                     sample_idx += 1
 
-    # Step 3: Ensure all features appear at least once
+    # Step 4: Ensure all features appear at least once
     _ensure_feature_coverage(leaf_matrix_dict, n_cols)
 
     return leaf_matrix_dict, cluster_assignments

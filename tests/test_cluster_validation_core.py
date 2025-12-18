@@ -7,7 +7,7 @@ Tests basic functionality of the validation framework:
 - Empty case handling
 """
 
-from tests.validation_utils import validate_cluster_algorithm
+from kl_clustering_analysis.benchmarking import benchmark_cluster_algorithm
 
 try:
     from .test_cases_config import SMALL_TEST_CASES
@@ -18,7 +18,7 @@ except ImportError:
 def test_cluster_algorithm_validation():
     """Test that the cluster algorithm works correctly across multiple test cases with varying noise levels."""
     custom_cases = [case.copy() for case in SMALL_TEST_CASES]
-    df_results, _ = validate_cluster_algorithm(
+    df_results, _ = benchmark_cluster_algorithm(
         test_cases=custom_cases,
         verbose=False,
         plot_umap=False,
@@ -45,7 +45,7 @@ def test_cluster_algorithm_validation():
 
 def test_validate_cluster_algorithm_expected_columns():
     """Ensure the validator returns the expected metrics."""
-    df_results, fig = validate_cluster_algorithm(
+    df_results, fig = benchmark_cluster_algorithm(
         test_cases=[SMALL_TEST_CASES[0].copy()],
         verbose=False,
         plot_umap=False,
@@ -71,7 +71,7 @@ def test_validate_cluster_algorithm_expected_columns():
 
 def test_validate_cluster_algorithm_handles_empty_cases():
     """Validator should handle an empty case list without errors."""
-    df_results, fig = validate_cluster_algorithm(
+    df_results, fig = benchmark_cluster_algorithm(
         test_cases=[],
         verbose=False,
         plot_umap=False,

@@ -1,18 +1,20 @@
 """
-Utility functions for cluster validation testing.
+Benchmarking/validation pipeline for the clustering algorithm.
 
-This module contains helper functions used across validation tests:
-- Data generation for test cases
-- Pipeline execution
-- Label extraction from decomposition
-- Optional plotting helpers (matplotlib)
+Runs configurable test cases, computes metrics, and optionally produces plots.
+The implementation was previously housed in ``tests/validation_utils`` and is
+kept here so it can be reused outside the test suite.
 """
 
-import numpy as np
-import pandas as pd
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from datetime import datetime
+from typing import Tuple
+
+import numpy as np
+import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
@@ -22,14 +24,20 @@ from sklearn.metrics import (
     homogeneity_score,
 )
 
-try:
-    from .test_cases_config import get_default_test_cases
+try:  # Prefer test config when available (repo usage)
+    from tests.test_cases_config import get_default_test_cases  # type: ignore
 except ImportError:
-    from test_cases_config import get_default_test_cases  # type: ignore
+    try:  # Fallback when run from within tests package directly
+        from test_cases_config import get_default_test_cases  # type: ignore
+    except ImportError:  # As a last resort, use an empty default
+
+        def get_default_test_cases():
+            return []
+
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
-from kl_clustering_analysis.plot.validation_visualizations import (
+from kl_clustering_analysis.benchmarking.plots import (
     create_validation_plot,
     create_umap_plots_from_results,
     create_manifold_plots_from_results,
@@ -39,29 +47,6 @@ from kl_clustering_analysis.plot.validation_visualizations import (
 from simulation.generate_random_feature_matrix import (
     generate_random_feature_matrix,
 )
-
-
-def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
-    """
-    Run the clustering pipeline on a single dataframe.
-
-    Args:
-        data_df: DataFrame with features
-        significance_level: Alpha for statistical tests
-        **kwargs: Additional arguments for decomposition
-
-    Returns:
-        Tuple of (decomposition_results, tree)
-    """
-    Z = linkage(pdist(data_df.values, metric="hamming"), method="complete")
-    tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
-    decomposition = tree.decompose(
-        leaf_data=data_df,
-        alpha_local=config.ALPHA_LOCAL,
-        sibling_alpha=significance_level,
-        **kwargs,
-    )
-    return decomposition, tree
 
 
 # Configure logger
@@ -175,6 +160,7 @@ def _generate_case_data(
             )
         entropy = test_case.get("entropy_param", 0.5)
         balanced = test_case.get("balanced_clusters", True)
+        feature_sparsity = test_case.get("feature_sparsity", None)
 
         data_dict, cluster_assignments = generate_random_feature_matrix(
             n_rows=n_rows,
@@ -183,6 +169,7 @@ def _generate_case_data(
             n_clusters=test_case["n_clusters"],
             random_seed=seed,
             balanced_clusters=balanced,
+            feature_sparsity=feature_sparsity,
         )
 
         original_names = list(data_dict.keys())
@@ -294,7 +281,7 @@ def _calculate_ari_nmi_purity_metrics(
     return 0.0, 0.0, 0.0
 
 
-def validate_cluster_algorithm(
+def benchmark_cluster_algorithm(
     test_cases=None,
     significance_level=config.SIBLING_ALPHA,
     verbose=True,
@@ -302,7 +289,7 @@ def validate_cluster_algorithm(
     plot_manifold=False,
 ):
     """
-    Validate the cluster decomposition algorithm across multiple test cases.
+    Benchmark the cluster decomposition algorithm across multiple test cases.
 
     Parameters
     ----------
@@ -333,7 +320,7 @@ def validate_cluster_algorithm(
     """
 
     # Default test cases
-    project_root = Path(__file__).resolve().parents[1]
+    project_root = Path(__file__).resolve().parents[2]
     plots_root = project_root / "cluster_tree_plots"
     if test_cases is None:
         test_cases = get_default_test_cases()
@@ -371,6 +358,9 @@ def validate_cluster_algorithm(
             # though decompose() currently hardcodes some config defaults internally.
             # We might need to ensure decompose() uses our significance_level for annotations too.
         )
+
+        # Track the number of clusters actually found so plotting uses the right color mapping.
+        meta["found_clusters"] = decomp_t["num_clusters"]
 
         # Extract the results_df that was computed internally
         results_t = tree_t.stats_df
@@ -428,3 +418,13 @@ def validate_cluster_algorithm(
     if not verbose:
         return df_results, None
     return df_results, fig
+
+
+# Backward compatibility: keep old name while promoting the new one.
+validate_cluster_algorithm = benchmark_cluster_algorithm
+
+__all__ = [
+    "benchmark_cluster_algorithm",
+    "validate_cluster_algorithm",
+    "_labels_from_decomposition",
+]

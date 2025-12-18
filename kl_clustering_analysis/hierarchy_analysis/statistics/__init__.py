@@ -3,6 +3,7 @@ from .kl_tests import (
     annotate_child_parent_divergence,
 )
 from .cmi_tests import annotate_sibling_independence_cmi
+from .sibling_divergence import annotate_sibling_divergence
 from .multiple_testing import benjamini_hochberg_correction
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     "kl_divergence_chi_square_test",
     "annotate_child_parent_divergence",
     "annotate_sibling_independence_cmi",
+    "annotate_sibling_divergence",
 ]

@@ -116,19 +116,21 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 44,
         },
     ],
-    "binary_balanced_low_entropy": [
+    # Renamed from "binary_balanced_low_entropy" to "binary_balanced_low_noise"
+    # entropy_param controls NOISE level (cluster separation), NOT feature variance
+    "binary_balanced_low_noise": [
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 72,
             "n_clusters": 4,
-            "entropy_param": 0.25,
+            "entropy_param": 0.25,  # 25% noise (low noise = good separation)
             "balanced_clusters": True,
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 40,
@@ -138,7 +140,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 80,
@@ -148,7 +150,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 120,
@@ -158,7 +160,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 140,
@@ -168,7 +170,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 160,
@@ -178,7 +180,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 180,
@@ -188,7 +190,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 220,
@@ -198,7 +200,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 1200,
@@ -208,7 +210,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
         {
-            "name": "binary_balanced_low_entropy",
+            "name": "binary_balanced_low_noise",
             "generator": "binary",
             "n_rows": 72,
             "n_cols": 120,
@@ -218,9 +220,69 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 314,
         },
     ],
-    "binary_unbalanced_high_entropy": [
+    # NEW: Test cases with actual low-variance features (θ near 0 or 1)
+    # These test the variance-weighted df reduction
+    "binary_sparse_features": [
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "sparse_features_72x72",
+            "generator": "binary",
+            "n_rows": 72,
+            "n_cols": 72,
+            "n_clusters": 4,
+            "entropy_param": 0.1,  # Low noise
+            "balanced_clusters": True,
+            "feature_sparsity": 0.05,  # Features have θ ≈ 0.05 or 0.95
+            "seed": 500,
+        },
+        {
+            "name": "sparse_features_100x100",
+            "generator": "binary",
+            "n_rows": 100,
+            "n_cols": 100,
+            "n_clusters": 4,
+            "entropy_param": 0.1,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.05,
+            "seed": 501,
+        },
+        {
+            "name": "sparse_features_100x500",
+            "generator": "binary",
+            "n_rows": 100,
+            "n_cols": 500,
+            "n_clusters": 4,
+            "entropy_param": 0.1,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.05,  # Should reduce effective df from 500 to ~90
+            "seed": 502,
+        },
+        {
+            "name": "sparse_features_moderate",
+            "generator": "binary",
+            "n_rows": 100,
+            "n_cols": 200,
+            "n_clusters": 4,
+            "entropy_param": 0.15,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.1,  # Features have θ ≈ 0.1 or 0.9
+            "seed": 503,
+        },
+        {
+            "name": "sparse_features_extreme",
+            "generator": "binary",
+            "n_rows": 100,
+            "n_cols": 1000,
+            "n_clusters": 4,
+            "entropy_param": 0.1,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.02,  # Very sparse: θ ≈ 0.02 or 0.98
+            "seed": 504,
+        },
+    ],
+    # Renamed from "binary_unbalanced_high_entropy" to "binary_unbalanced_high_noise"
+    "binary_unbalanced_high_noise": [
+        {
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 36,
@@ -230,7 +292,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 36,
@@ -240,7 +302,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 300,
@@ -250,7 +312,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 300,
@@ -260,7 +322,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 300,
@@ -270,7 +332,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -280,7 +342,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -290,7 +352,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -300,7 +362,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -310,7 +372,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -320,7 +382,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -330,7 +392,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -340,7 +402,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -350,7 +412,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -360,7 +422,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -370,7 +432,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -380,7 +442,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 96,
             "n_cols": 3000,
@@ -390,7 +452,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 180,
             "n_cols": 3000,
@@ -400,7 +462,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 360,
             "n_cols": 3000,
@@ -410,7 +472,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 480,
             "n_cols": 3000,
@@ -420,7 +482,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 480,
             "n_cols": 3000,
@@ -430,7 +492,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 480,
             "n_cols": 3000,
@@ -440,7 +502,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 480,
             "n_cols": 3000,
@@ -450,7 +512,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 480,
             "n_cols": 3000,
@@ -460,7 +522,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 480,
             "n_cols": 3000,
@@ -470,7 +532,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 360,
             "n_cols": 3000,
@@ -480,7 +542,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 360,
             "n_cols": 3000,
@@ -490,7 +552,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 360,
             "n_cols": 3000,
@@ -500,7 +562,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 360,
             "n_cols": 3000,
@@ -510,7 +572,7 @@ DEFAULT_TEST_CASES_CONFIG = {
             "seed": 2024,
         },
         {
-            "name": "binary_unbalanced_high_entropy",
+            "name": "binary_unbalanced_high_noise",
             "generator": "binary",
             "n_rows": 360,
             "n_cols": 3000,
