@@ -11,13 +11,16 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from datetime import datetime
-from typing import Tuple
+from dataclasses import dataclass
+import importlib
 
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, squareform
+import networkx as nx
 from sklearn.datasets import make_blobs
+from sklearn.cluster import DBSCAN, OPTICS
 from sklearn.metrics import (
     adjusted_rand_score,
     normalized_mutual_info_score,
@@ -44,7 +47,7 @@ from kl_clustering_analysis.benchmarking.plots import (
     create_tree_plots_from_results,
 )
 
-from simulation.generate_random_feature_matrix import (
+from kl_clustering_analysis.benchmarking.generators import (
     generate_random_feature_matrix,
 )
 
@@ -54,6 +57,419 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class MethodSpec:
+    name: str
+    runner: Callable[..., "MethodRunResult"]
+    param_grid: list[dict[str, object]]
+
+
+@dataclass
+class MethodRunResult:
+    labels: np.ndarray | None
+    found_clusters: int
+    report_df: pd.DataFrame
+    status: str
+    skip_reason: str | None
+    extra: dict | None = None
+
+
+DEFAULT_METHODS = ["kl", "leiden", "louvain", "dbscan", "optics", "hdbscan"]
+
+
+def _optional_import(module: str):
+    """Return imported module or None when unavailable."""
+    try:
+        return importlib.import_module(module)
+    except Exception:
+        return None
+
+
+def _normalize_labels(labels: np.ndarray) -> np.ndarray:
+    """Map non-negative labels to contiguous IDs while keeping noise at -1."""
+    labels_arr = np.asarray(labels, dtype=int)
+    unique = sorted({int(x) for x in labels_arr if x >= 0})
+    mapping = {label: idx for idx, label in enumerate(unique)}
+    return np.array([mapping.get(int(x), -1) for x in labels_arr], dtype=int)
+
+
+def _format_params(params: dict[str, object]) -> str:
+    """Format parameters for result rows."""
+    if not params:
+        return ""
+    parts = [f"{key}={value}" for key, value in sorted(params.items())]
+    return ", ".join(parts)
+
+
+def _resolve_n_neighbors(n_samples: int, n_neighbors: int | None) -> int:
+    if n_samples <= 1:
+        return 0
+    if n_neighbors is None:
+        return max(2, min(10, n_samples - 1))
+    return max(1, min(int(n_neighbors), n_samples - 1))
+
+
+def _knn_edge_weights(
+    distance_matrix: np.ndarray, n_neighbors: int
+) -> list[tuple[int, int, float]]:
+    """Build undirected k-NN edge list with inverse-distance weights."""
+    n_samples = distance_matrix.shape[0]
+    if n_samples <= 1 or n_neighbors <= 0:
+        return []
+
+    edge_weights: dict[tuple[int, int], float] = {}
+    for i in range(n_samples):
+        neighbor_idx = np.argsort(distance_matrix[i])
+        neighbors = neighbor_idx[1 : n_neighbors + 1]
+        for j in neighbors:
+            if i == j:
+                continue
+            key = (i, j) if i < j else (j, i)
+            dist = float(distance_matrix[i, j])
+            weight = 1.0 / (1.0 + dist)
+            if key not in edge_weights or weight > edge_weights[key]:
+                edge_weights[key] = weight
+
+    return [(i, j, w) for (i, j), w in edge_weights.items()]
+
+
+def _estimate_dbscan_eps(distance_matrix: np.ndarray, min_samples: int) -> float:
+    """Estimate eps via the median k-distance heuristic."""
+    n_samples = distance_matrix.shape[0]
+    if n_samples <= 1:
+        return 0.0
+    k = min(max(int(min_samples), 1), n_samples - 1)
+    kth = np.partition(distance_matrix, k, axis=1)[:, k]
+    eps = float(np.median(kth))
+    return eps if eps > 0 else 1e-9
+
+
+def _create_report_dataframe_from_labels(
+    labels: np.ndarray, sample_names: pd.Index
+) -> pd.DataFrame:
+    """Create a report dataframe from flat cluster labels."""
+    if labels.size == 0:
+        return pd.DataFrame(
+            columns=["cluster_id", "cluster_size"],
+            index=pd.Index([], name="sample_id"),
+        )
+    series = pd.Series(labels, index=sample_names, name="cluster_id")
+    sizes = series.value_counts()
+    report = pd.DataFrame(
+        {
+            "cluster_id": series,
+            "cluster_size": series.map(sizes),
+        }
+    )
+    report.index.name = "sample_id"
+    return report
+
+
+def _run_kl_method(
+    data_df: pd.DataFrame,
+    distance_condensed: np.ndarray,
+    significance_level: float,
+) -> MethodRunResult:
+    Z_t = linkage(distance_condensed, method=config.TREE_LINKAGE_METHOD)
+    tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_df.index.tolist())
+    decomp_t = tree_t.decompose(
+        leaf_data=data_df,
+        alpha_local=config.ALPHA_LOCAL,
+        sibling_alpha=significance_level,
+    )
+    report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))
+    labels = np.asarray(_labels_from_decomposition(decomp_t, data_df.index.tolist()))
+    return MethodRunResult(
+        labels=labels,
+        found_clusters=int(decomp_t.get("num_clusters", 0)),
+        report_df=report_t,
+        status="ok",
+        skip_reason=None,
+        extra={
+            "tree": tree_t,
+            "decomposition": decomp_t,
+            "stats": tree_t.stats_df,
+        },
+    )
+
+
+def _run_leiden_method(
+    distance_matrix: np.ndarray,
+    params: dict[str, object],
+    seed: int | None,
+) -> MethodRunResult:
+    igraph = _optional_import("igraph")
+    leidenalg = _optional_import("leidenalg")
+    if igraph is None or leidenalg is None:
+        missing = [
+            name
+            for name, mod in [("igraph", igraph), ("leidenalg", leidenalg)]
+            if mod is None
+        ]
+        return MethodRunResult(
+            labels=None,
+            found_clusters=0,
+            report_df=_create_report_dataframe_from_labels(np.array([]), pd.Index([])),
+            status="skipped",
+            skip_reason=f"Missing optional deps: {', '.join(missing)}",
+        )
+
+    n_samples = distance_matrix.shape[0]
+    n_neighbors = _resolve_n_neighbors(n_samples, params.get("n_neighbors"))  # type: ignore[arg-type]
+    resolution = float(params.get("resolution", 1.0))
+    edges = _knn_edge_weights(distance_matrix, n_neighbors)
+    if not edges:
+        labels = np.zeros(n_samples, dtype=int)
+        return MethodRunResult(
+            labels=labels,
+            found_clusters=1 if n_samples else 0,
+            report_df=_create_report_dataframe_from_labels(
+                labels, pd.Index(range(n_samples))
+            ),
+            status="ok",
+            skip_reason=None,
+        )
+
+    edge_list = [(i, j) for i, j, _w in edges]
+    weights = [w for _i, _j, w in edges]
+    graph = igraph.Graph(n=n_samples, edges=edge_list, directed=False)
+    graph.es["weight"] = weights
+    partition = leidenalg.find_partition(
+        graph,
+        leidenalg.RBConfigurationVertexPartition,
+        weights="weight",
+        resolution_parameter=resolution,
+        seed=seed,
+    )
+    labels = _normalize_labels(np.asarray(partition.membership))
+    report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
+    return MethodRunResult(
+        labels=labels,
+        found_clusters=int(len({x for x in labels if x >= 0})),
+        report_df=report_df,
+        status="ok",
+        skip_reason=None,
+    )
+
+
+def _run_louvain_method(
+    distance_matrix: np.ndarray,
+    params: dict[str, object],
+    seed: int | None,
+) -> MethodRunResult:
+    n_samples = distance_matrix.shape[0]
+    n_neighbors = _resolve_n_neighbors(n_samples, params.get("n_neighbors"))  # type: ignore[arg-type]
+    resolution = float(params.get("resolution", 1.0))
+    edges = _knn_edge_weights(distance_matrix, n_neighbors)
+    if not edges:
+        labels = np.zeros(n_samples, dtype=int)
+        return MethodRunResult(
+            labels=labels,
+            found_clusters=1 if n_samples else 0,
+            report_df=_create_report_dataframe_from_labels(
+                labels, pd.Index(range(n_samples))
+            ),
+            status="ok",
+            skip_reason=None,
+        )
+
+    community = _optional_import("community")
+    if community is not None:
+        graph = nx.Graph()
+        graph.add_nodes_from(range(n_samples))
+        graph.add_weighted_edges_from(edges)
+        partition = community.best_partition(
+            graph, weight="weight", resolution=resolution, random_state=seed
+        )
+        labels = _normalize_labels(
+            np.array([partition.get(i, -1) for i in range(n_samples)], dtype=int)
+        )
+        report_df = _create_report_dataframe_from_labels(
+            labels, pd.Index(range(n_samples))
+        )
+        return MethodRunResult(
+            labels=labels,
+            found_clusters=int(len({x for x in labels if x >= 0})),
+            report_df=report_df,
+            status="ok",
+            skip_reason=None,
+        )
+
+    igraph = _optional_import("igraph")
+    if igraph is None:
+        return MethodRunResult(
+            labels=None,
+            found_clusters=0,
+            report_df=_create_report_dataframe_from_labels(np.array([]), pd.Index([])),
+            status="skipped",
+            skip_reason="Missing optional deps: python-louvain or igraph",
+        )
+
+    edge_list = [(i, j) for i, j, _w in edges]
+    weights = [w for _i, _j, w in edges]
+    graph = igraph.Graph(n=n_samples, edges=edge_list, directed=False)
+    graph.es["weight"] = weights
+    partition = graph.community_multilevel(weights="weight")
+    labels = _normalize_labels(np.asarray(partition.membership))
+    report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
+    return MethodRunResult(
+        labels=labels,
+        found_clusters=int(len({x for x in labels if x >= 0})),
+        report_df=report_df,
+        status="ok",
+        skip_reason=None,
+    )
+
+
+def _run_dbscan_method(
+    distance_matrix: np.ndarray,
+    params: dict[str, object],
+) -> MethodRunResult:
+    n_samples = distance_matrix.shape[0]
+    if n_samples <= 1:
+        labels = np.zeros(n_samples, dtype=int)
+        return MethodRunResult(
+            labels=labels,
+            found_clusters=1 if n_samples else 0,
+            report_df=_create_report_dataframe_from_labels(
+                labels, pd.Index(range(n_samples))
+            ),
+            status="ok",
+            skip_reason=None,
+        )
+
+    min_samples = int(params.get("min_samples", 5))
+    eps = params.get("eps")
+    if eps is None:
+        eps = _estimate_dbscan_eps(distance_matrix, min_samples)
+    model = DBSCAN(metric="precomputed", eps=float(eps), min_samples=min_samples)
+    labels = _normalize_labels(model.fit_predict(distance_matrix))
+    report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
+    return MethodRunResult(
+        labels=labels,
+        found_clusters=int(len({x for x in labels if x >= 0})),
+        report_df=report_df,
+        status="ok",
+        skip_reason=None,
+    )
+
+
+def _run_optics_method(
+    distance_matrix: np.ndarray,
+    params: dict[str, object],
+) -> MethodRunResult:
+    n_samples = distance_matrix.shape[0]
+    if n_samples <= 1:
+        labels = np.zeros(n_samples, dtype=int)
+        return MethodRunResult(
+            labels=labels,
+            found_clusters=1 if n_samples else 0,
+            report_df=_create_report_dataframe_from_labels(
+                labels, pd.Index(range(n_samples))
+            ),
+            status="ok",
+            skip_reason=None,
+        )
+
+    min_samples = int(params.get("min_samples", 5))
+    xi = float(params.get("xi", 0.05))
+    min_cluster_size = params.get("min_cluster_size", min_samples)
+    model = OPTICS(
+        metric="precomputed",
+        min_samples=min_samples,
+        xi=xi,
+        min_cluster_size=min_cluster_size,
+    )
+    labels = _normalize_labels(model.fit_predict(distance_matrix))
+    report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
+    return MethodRunResult(
+        labels=labels,
+        found_clusters=int(len({x for x in labels if x >= 0})),
+        report_df=report_df,
+        status="ok",
+        skip_reason=None,
+    )
+
+
+def _run_hdbscan_method(
+    distance_matrix: np.ndarray,
+    params: dict[str, object],
+) -> MethodRunResult:
+    hdbscan = _optional_import("hdbscan")
+    if hdbscan is None:
+        return MethodRunResult(
+            labels=None,
+            found_clusters=0,
+            report_df=_create_report_dataframe_from_labels(np.array([]), pd.Index([])),
+            status="skipped",
+            skip_reason="Missing optional deps: hdbscan",
+        )
+
+    n_samples = distance_matrix.shape[0]
+    if n_samples <= 1:
+        labels = np.zeros(n_samples, dtype=int)
+        return MethodRunResult(
+            labels=labels,
+            found_clusters=1 if n_samples else 0,
+            report_df=_create_report_dataframe_from_labels(
+                labels, pd.Index(range(n_samples))
+            ),
+            status="ok",
+            skip_reason=None,
+        )
+
+    min_cluster_size = int(params.get("min_cluster_size", 5))
+    min_samples = params.get("min_samples", None)
+    model = hdbscan.HDBSCAN(
+        metric="precomputed",
+        min_cluster_size=min_cluster_size,
+        min_samples=min_samples,
+    )
+    labels = _normalize_labels(model.fit_predict(distance_matrix))
+    report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
+    return MethodRunResult(
+        labels=labels,
+        found_clusters=int(len({x for x in labels if x >= 0})),
+        report_df=report_df,
+        status="ok",
+        skip_reason=None,
+    )
+
+
+METHOD_SPECS: dict[str, MethodSpec] = {
+    "kl": MethodSpec(
+        name="KL Divergence",
+        runner=_run_kl_method,
+        param_grid=[{}],
+    ),
+    "leiden": MethodSpec(
+        name="Leiden",
+        runner=_run_leiden_method,
+        param_grid=[{"n_neighbors": None, "resolution": 1.0}],
+    ),
+    "louvain": MethodSpec(
+        name="Louvain",
+        runner=_run_louvain_method,
+        param_grid=[{"n_neighbors": None, "resolution": 1.0}],
+    ),
+    "dbscan": MethodSpec(
+        name="DBSCAN",
+        runner=_run_dbscan_method,
+        param_grid=[{"min_samples": 5, "eps": None}],
+    ),
+    "optics": MethodSpec(
+        name="OPTICS",
+        runner=_run_optics_method,
+        param_grid=[{"min_samples": 5, "xi": 0.05, "min_cluster_size": 5}],
+    ),
+    "hdbscan": MethodSpec(
+        name="HDBSCAN",
+        runner=_run_hdbscan_method,
+        param_grid=[{"min_cluster_size": 5, "min_samples": None}],
+    ),
+}
 
 
 def _log_validation_start(n_cases: int) -> None:
@@ -78,20 +494,23 @@ def _log_detailed_results(df_results: pd.DataFrame) -> None:
     """Log the detailed results table."""
     logger.info("Detailed Results:")
     # Convert dataframe to string and log each line to avoid truncation issues in some loggers
-    results_str = df_results[
-        [
-            "Test",
-            "Case_Name",
-            "True",
-            "Found",
-            "Samples",
-            "Features",
-            "Noise",
-            "ARI",
-            "NMI",
-            "Purity",
-        ]
-    ].to_string(index=False)
+    columns = [
+        "Test",
+        "Case_Name",
+        "Method",
+        "Params",
+        "True",
+        "Found",
+        "Samples",
+        "Features",
+        "Noise",
+        "ARI",
+        "NMI",
+        "Purity",
+        "Status",
+    ]
+    available = [col for col in columns if col in df_results.columns]
+    results_str = df_results[available].to_string(index=False)
     for line in results_str.split("\n"):
         logger.info(line)
 
@@ -108,7 +527,8 @@ def _generate_validation_plots(
     if df_results.empty:
         return None
 
-    fig = create_validation_plot(df_results)
+    df_plot = df_results
+    fig = create_validation_plot(df_plot)
 
     if verbose:
         fig.savefig("validation_results.png", dpi=150, bbox_inches="tight")
@@ -174,7 +594,8 @@ def _generate_case_data(
 
         original_names = list(data_dict.keys())
         matrix = np.array([data_dict[name] for name in original_names], dtype=int)
-        sample_names = [f"S{i}" for i in range(len(original_names))]
+        # Use original_names as index to maintain consistency with true_labels
+        sample_names = original_names
         feature_names = [f"F{j}" for j in range(matrix.shape[1])]
 
         data_df = pd.DataFrame(matrix, index=sample_names, columns=feature_names)
@@ -247,7 +668,10 @@ def _create_report_dataframe(cluster_assignments: dict) -> pd.DataFrame:
                 )
         return pd.DataFrame(rows).set_index("sample_id")
 
-    return pd.DataFrame(columns=["cluster_id", "cluster_size"]).set_index("sample_id")
+    return pd.DataFrame(
+        columns=["cluster_id", "cluster_size"],
+        index=pd.Index([], name="sample_id"),
+    )
 
 
 def _calculate_ari_nmi_purity_metrics(
@@ -287,6 +711,8 @@ def benchmark_cluster_algorithm(
     verbose=True,
     plot_umap=False,
     plot_manifold=False,
+    methods: list[str] | None = None,
+    method_params: dict[str, list[dict[str, object]]] | None = None,
 ):
     """
     Benchmark the cluster decomposition algorithm across multiple test cases.
@@ -309,6 +735,11 @@ def benchmark_cluster_algorithm(
         If True, generates t-SNE plots comparing KL clustering with K-means and spectral clustering
     plot_manifold : bool, default=False
         If True, saves UMAP-vs-Isomap manifold diagnostics for each test case
+
+    methods : list of str, optional
+        Clustering methods to run (defaults to the full registry).
+    method_params : dict, optional
+        Optional per-method parameter grids. Values are lists of param dicts.
 
     Returns
     -------
@@ -334,75 +765,116 @@ def benchmark_cluster_algorithm(
     computed_results = []
 
     # Run test cases
-    total_runs = len(test_cases)
+    selected_methods = methods or DEFAULT_METHODS
+    method_params = method_params or {}
+    for method_id in selected_methods:
+        if method_id not in METHOD_SPECS:
+            raise ValueError(f"Unknown method: {method_id}")
+
+    param_sets = {
+        method_id: (method_params.get(method_id) or METHOD_SPECS[method_id].param_grid)
+        for method_id in selected_methods
+    }
+    total_cases = len(test_cases)
+    total_runs = total_cases * sum(len(params) for params in param_sets.values())
 
     for i, tc in enumerate(test_cases, 1):
         case_name = tc.get("name", f"Case {i}")
         if verbose:
-            _log_test_case_start(i, total_runs, case_name)
+            _log_test_case_start(i, total_cases, case_name)
 
         # Generate and process data
         data_t, y_t, X_original, meta = _generate_case_data(tc)
 
-        # Build tree and calculate statistics once per test case
-        Z_t = linkage(pdist(data_t.values, metric="hamming"), method="complete")
-        tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_t.index.tolist())
-
-        # Use the direct decompose method from PosetTree which handles stats calculation internally
-        # if results_df is not provided but leaf_data is.
-        decomp_t = tree_t.decompose(
-            leaf_data=data_t,
-            alpha_local=config.ALPHA_LOCAL,
-            sibling_alpha=significance_level,
-            # Pass kwargs for internal annotation functions if needed,
-            # though decompose() currently hardcodes some config defaults internally.
-            # We might need to ensure decompose() uses our significance_level for annotations too.
+        needs_distance_matrix = any(
+            method_id in {"leiden", "louvain", "dbscan", "optics", "hdbscan"}
+            for method_id in selected_methods
         )
+        needs_distance_condensed = "kl" in selected_methods or needs_distance_matrix
+        distance_condensed = None
+        distance_matrix = None
+        if needs_distance_condensed:
+            distance_condensed = pdist(
+                data_t.values, metric=config.TREE_DISTANCE_METRIC
+            )
+        if needs_distance_matrix:
+            distance_matrix = squareform(distance_condensed)
 
-        # Track the number of clusters actually found so plotting uses the right color mapping.
-        meta["found_clusters"] = decomp_t["num_clusters"]
+        for method_id in selected_methods:
+            spec = METHOD_SPECS[method_id]
+            params_list = param_sets[method_id]
+            for params in params_list:
+                meta_run = meta.copy()
+                if method_id == "kl":
+                    result = spec.runner(
+                        data_t,
+                        distance_condensed,
+                        significance_level,
+                    )
+                elif method_id in {"leiden", "louvain"}:
+                    result = spec.runner(
+                        distance_matrix,
+                        params,
+                        tc.get("seed"),
+                    )
+                else:
+                    result = spec.runner(distance_matrix, params)
 
-        # Extract the results_df that was computed internally
-        results_t = tree_t.stats_df
+                if result.status == "ok" and result.labels is not None:
+                    labels = result.labels
+                    report_df = _create_report_dataframe_from_labels(
+                        labels, data_t.index
+                    )
+                    found_clusters = result.found_clusters
+                    labels_len = len(labels)
+                    ari, nmi, purity = _calculate_ari_nmi_purity_metrics(
+                        found_clusters, report_df, data_t.index, y_t
+                    )
+                else:
+                    labels_len = 0
+                    found_clusters = 0
+                    ari, nmi, purity = np.nan, np.nan, np.nan
 
-        # Create report dataframe from cluster assignments
-        report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))
+                results_data.append(
+                    {
+                        "Test": i,
+                        "Case_Name": case_name,
+                        "Method": spec.name,
+                        "Params": _format_params(params),
+                        "True": meta["n_clusters"],
+                        "Found": found_clusters,
+                        "Samples": meta["n_samples"],
+                        "Features": meta["n_features"],
+                        "Noise": meta["noise"],
+                        "ARI": ari,
+                        "NMI": nmi,
+                        "Purity": purity,
+                        "Status": result.status,
+                        "Skip_Reason": result.skip_reason or "",
+                        "Labels_Length": labels_len,
+                    }
+                )
 
-        # Store computed results for later use in plotting
-        computed_results.append(
-            {
-                "test_case_num": i,
-                "tree": tree_t,
-                "decomposition": decomp_t,
-                "stats": results_t,
-                "data": data_t,
-                "meta": meta,
-                "X_original": X_original,
-                "y_true": y_t,
-                "kl_labels": _labels_from_decomposition(
-                    decomp_t, data_t.index.tolist()
-                ),
-            }
-        )
-
-        ari, nmi, purity = _calculate_ari_nmi_purity_metrics(
-            decomp_t["num_clusters"], report_t, data_t.index, y_t
-        )
-
-        results_data.append(
-            {
-                "Test": i,
-                "Case_Name": case_name,
-                "True": meta["n_clusters"],
-                "Found": decomp_t["num_clusters"],
-                "Samples": meta["n_samples"],
-                "Features": meta["n_features"],
-                "Noise": meta["noise"],
-                "ARI": ari,
-                "NMI": nmi,
-                "Purity": purity,
-            }
-        )
+                if result.status == "ok" and result.labels is not None:
+                    meta_run["found_clusters"] = found_clusters
+                    computed_results.append(
+                        {
+                            "test_case_num": i,
+                            "method_name": spec.name,
+                            "labels": result.labels,
+                            "data": data_t,
+                            "meta": meta_run,
+                            "X_original": X_original,
+                            "y_true": y_t,
+                            "tree": result.extra.get("tree") if result.extra else None,
+                            "decomposition": result.extra.get("decomposition")
+                            if result.extra
+                            else None,
+                            "stats": result.extra.get("stats")
+                            if result.extra
+                            else None,
+                        }
+                    )
 
     if verbose:
         _log_validation_completion(total_runs, len(test_cases))
@@ -420,11 +892,7 @@ def benchmark_cluster_algorithm(
     return df_results, fig
 
 
-# Backward compatibility: keep old name while promoting the new one.
-validate_cluster_algorithm = benchmark_cluster_algorithm
-
 __all__ = [
     "benchmark_cluster_algorithm",
-    "validate_cluster_algorithm",
     "_labels_from_decomposition",
 ]
