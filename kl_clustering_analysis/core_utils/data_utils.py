@@ -21,6 +21,18 @@ def extract_bool_column_dict(
     dict[str, bool]
         Dictionary mapping index to boolean values.
     """
-    if not isinstance(df, pd.DataFrame) or df.empty or column_name not in df.columns:
-        return {}
-    return df[column_name].fillna(default).astype(bool).to_dict()
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError(f"Expected a pandas DataFrame for {column_name!r} extraction.")
+    if df.empty:
+        raise ValueError(f"Empty DataFrame; missing required column {column_name!r}.")
+    if column_name not in df.columns:
+        raise KeyError(f"Missing required column {column_name!r} in dataframe.")
+
+    series = df[column_name]
+    if series.isna().any():
+        missing = series[series.isna()].index.tolist()
+        preview = ", ".join(map(repr, missing[:5]))
+        raise ValueError(
+            f"Column {column_name!r} contains missing values for nodes: {preview}."
+        )
+    return series.astype(bool).to_dict()

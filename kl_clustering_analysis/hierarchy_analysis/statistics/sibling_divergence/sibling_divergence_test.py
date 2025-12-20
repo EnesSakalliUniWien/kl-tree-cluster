@@ -4,8 +4,16 @@ This module implements a statistical test to determine whether sibling nodes
 in a hierarchical tree have significantly different distributions, which
 would warrant splitting them into separate clusters.
 
-The test uses Jensen-Shannon divergence with a chi-square approximation
-for statistical significance, consistent with the KL divergence chi-square test.
+The test uses a standardized Euclidean distance test statistic:
+    T = Σ (θ_left - θ_right)² / Var[θ_left - θ_right]
+
+where Var[Δθ] = θ_pooled(1-θ_pooled)(1/n_left + 1/n_right) for Bernoulli.
+
+Under H₀ (siblings have same distribution), T ~ χ²(p) where p is the
+number of features. This follows from the delta method / Wald test.
+
+When dimensionality is high (d >> n), random projection is used to reduce
+to k = O(log n) dimensions, making the chi-square approximation valid.
 """
 
 from __future__ import annotations
@@ -18,6 +26,13 @@ import networkx as nx
 from scipy.stats import chi2
 
 from ..multiple_testing import benjamini_hochberg_correction
+from ..random_projection import (
+    should_use_projection,
+    compute_projection_dimension,
+    generate_projection_matrix,
+    projected_euclidean_distance_squared,
+)
+from ..mi_feature_selection import select_informative_features
 from kl_clustering_analysis import config
 
 
@@ -69,12 +84,17 @@ def _sibling_divergence_chi_square_test(
     right_distribution: np.ndarray,
     left_sample_size: int,
     right_sample_size: int,
-    parent_distribution: Optional[np.ndarray] = None,
 ) -> Tuple[float, float, float, float]:
-    """Chi-square test for sibling divergence.
+    """Chi-square test for sibling divergence using standardized Euclidean.
 
     Tests H₀: siblings have the same distribution.
-    Uses asymptotic chi-square approximation: 2*N*JSD ~ χ²(df)
+    Uses Wald/standardized Euclidean test statistic:
+        T = Σ (θ_left - θ_right)² / Var[θ_left - θ_right] ~ χ²(p)
+
+    where Var[Δθ] = θ_pooled(1-θ_pooled)(1/n_left + 1/n_right).
+
+    When dimensionality is high (d >> n), uses random projection to reduce
+    to k = O(log n) dimensions for valid chi-square approximation.
 
     Parameters
     ----------
@@ -86,40 +106,165 @@ def _sibling_divergence_chi_square_test(
         Number of leaves under left sibling.
     right_sample_size : int
         Number of leaves under right sibling.
-    parent_distribution : np.ndarray, optional
-        Parent node distribution for variance-weighted df calculation.
-
     Returns
     -------
     Tuple[float, float, float, float]
-        (jsd, test_statistic, degrees_of_freedom, p_value)
+        (jsd_for_info, test_statistic, degrees_of_freedom, p_value)
     """
-    # Compute Jensen-Shannon divergence using pre-computed distributions
-    jsd = _jensen_shannon_divergence(left_distribution, right_distribution)
-
-    # Effective sample size (harmonic mean for two-sample comparison)
     n_left = float(left_sample_size)
     n_right = float(right_sample_size)
     n_effective = (2.0 * n_left * n_right) / (n_left + n_right)
 
-    # Chi-square test statistic: 2*N*JSD
-    test_statistic = 2.0 * n_effective * jsd
+    n_features = len(left_distribution)
 
-    # Calculate degrees of freedom (variance-weighted if parent available)
-    if parent_distribution is not None:
-        # Variance-weighted effective df (consistent with chi_square_test.py)
-        parent_theta = np.asarray(parent_distribution, dtype=np.float64)
-        variance_weights = 4.0 * parent_theta * (1.0 - parent_theta)
-        degrees_of_freedom = float(np.sum(variance_weights))
-    else:
-        # Fallback: use number of features
-        degrees_of_freedom = float(len(left_distribution))
+    # Check if random projection should be used
+    if should_use_projection(n_features, int(n_effective)):
+        # Use random projection for high-dimensional case
+        return _sibling_divergence_projected_test(
+            left_distribution,
+            right_distribution,
+            n_effective,
+            n_left,
+            n_right,
+        )
 
-    # Ensure df is at least 1 to avoid chi2.sf issues
+    # Compute JSD for informational purposes.
+    jsd = _jensen_shannon_divergence(left_distribution, right_distribution)
+
+    # Standardized Euclidean test statistic (Wald test)
+    # Under H₀: θ_left = θ_right, the difference Δθ = θ̂_left - θ̂_right
+    # has variance Var[Δθ_j] = θ_j(1-θ_j)(1/n_left + 1/n_right)
+    eps = 1e-10
+    left_arr = np.asarray(left_distribution, dtype=np.float64)
+    right_arr = np.asarray(right_distribution, dtype=np.float64)
+    diff = left_arr - right_arr
+
+    # Pooled estimate for variance (under H₀)
+    pooled = 0.5 * (left_arr + right_arr)
+    pooled = np.clip(pooled, eps, 1.0 - eps)
+
+    # Variance of the difference
+    inverse_n_sum = 1.0 / n_left + 1.0 / n_right
+    var_diff = pooled * (1.0 - pooled) * inverse_n_sum
+    var_diff = np.maximum(var_diff, eps)  # Avoid division by zero
+
+    # Test statistic: sum of squared standardized differences
+    test_statistic = float(np.sum(diff**2 / var_diff))
+
+    # Degrees of freedom = number of features
+    degrees_of_freedom = float(n_features)
     degrees_of_freedom = max(1.0, degrees_of_freedom)
 
     # Calculate right-tail p-value
     p_value = float(chi2.sf(test_statistic, df=degrees_of_freedom))
+
+    return jsd, test_statistic, degrees_of_freedom, p_value
+
+
+def _sibling_divergence_projected_test(
+    left_distribution: np.ndarray,
+    right_distribution: np.ndarray,
+    n_effective: float,
+    n_left: float,
+    n_right: float,
+) -> Tuple[float, float, float, float]:
+    """Standardized Euclidean test using random projection for high dimensions.
+
+    When d >> n, optionally filters by MI then projects to k = O(log n)
+    dimensions and uses standardized Euclidean distance.
+
+    The test statistic is derived as follows:
+    - Under H₀: θ_left = θ_right, so Δθ̂ = θ̂_left - θ̂_right has
+      Var[Δθ̂_j] = θ_j(1-θ_j) * (1/n_left + 1/n_right)
+    - After projection by R (k×d matrix with orthonormal rows scaled by √(d/k)):
+      R·Δθ̂ has components that are linear combinations
+    - Under H₀, ||R·Δθ̂||² / σ² ~ χ²(k) where σ² is the average variance
+
+    With MI filtering enabled:
+    - First removes low-information features (MI < median)
+    - Then projects the remaining informative features
+    - This reduces noise and focuses on discriminative features
+
+    Parameters
+    ----------
+    left_distribution : np.ndarray
+        Pre-computed distribution for left sibling node.
+    right_distribution : np.ndarray
+        Pre-computed distribution for right sibling node.
+    n_effective : float
+        Effective sample size (harmonic mean).
+    n_left : float
+        Number of samples in left sibling.
+    n_right : float
+        Number of samples in right sibling.
+    Returns
+    -------
+    Tuple[float, float, float, float]
+        (avg_projected_distance, test_statistic, degrees_of_freedom, p_value)
+    """
+    n_features_original = len(left_distribution)
+    eps = 1e-10
+
+    # Step 1: MI-based feature filtering (optional)
+    if config.USE_MI_FEATURE_FILTER:
+        mask, mi_values, n_informative = select_informative_features(
+            left_distribution,
+            right_distribution,
+            n_left,
+            n_right,
+            quantile_threshold=config.MI_FILTER_QUANTILE,
+            min_fraction=config.MI_FILTER_MIN_FRACTION,
+        )
+
+        # Filter to informative features
+        left_filtered = left_distribution[mask]
+        right_filtered = right_distribution[mask]
+        n_features = n_informative
+    else:
+        # No filtering - use all features
+        left_filtered = left_distribution
+        right_filtered = right_distribution
+        n_features = n_features_original
+
+    # Step 2: Random projection
+    # Compute target dimension: k = multiplier * log(n)
+    k = compute_projection_dimension(int(n_effective), n_features)
+
+    # Compute pooled variance for standardization
+    pooled = 0.5 * (left_filtered + right_filtered)
+    pooled = np.clip(pooled, eps, 1.0 - eps)
+    inverse_n_sum = 1.0 / n_left + 1.0 / n_right
+    var_diff = pooled * (1.0 - pooled) * inverse_n_sum
+    var_diff = np.maximum(var_diff, eps)
+
+    # Standardize the difference before projection
+    diff = left_filtered - right_filtered
+    standardized_diff = diff / np.sqrt(var_diff)
+
+    # Average over multiple random projections for stability
+    n_trials = config.PROJECTION_N_TRIALS
+    base_seed = config.PROJECTION_RANDOM_SEED
+
+    test_stats = []
+    for trial in range(n_trials):
+        seed = base_seed + trial if base_seed is not None else None
+        R = generate_projection_matrix(n_features, k, random_state=seed)
+        projected = R @ standardized_diff
+        # Test statistic: ||R·z||² where z is standardized
+        # Under H₀, this is approximately χ²(k) due to JL lemma
+        stat = float(np.sum(projected**2))
+        test_stats.append(stat)
+
+    test_statistic = float(np.mean(test_stats))
+
+    # Degrees of freedom = projection dimension
+    degrees_of_freedom = float(k)
+
+    # Calculate right-tail p-value
+    p_value = float(chi2.sf(test_statistic, df=degrees_of_freedom))
+
+    # Compute JSD for informational purposes (backward compatibility)
+    jsd = _jensen_shannon_divergence(left_distribution, right_distribution)
 
     return jsd, test_statistic, degrees_of_freedom, p_value
 
@@ -220,12 +365,17 @@ def _get_node_sample_size(
 def _collect_divergence_test_arguments(
     tree: nx.DiGraph,
     min_samples: int,
+    nodes_df: pd.DataFrame = None,
 ) -> Tuple[
     List[str],
-    List[Tuple[np.ndarray, np.ndarray, int, int, Optional[np.ndarray]]],
+    List[Tuple[np.ndarray, np.ndarray, int, int]],
     List[str],
 ]:
     """Collect arguments for sibling divergence tests from tree structure.
+
+    Only tests parents where at least one child has significant child-parent
+    divergence (i.e., the edge is in E_sig). This implements conditional
+    sibling testing as described in the manuscript.
 
     Uses pre-computed distributions from tree nodes (consistent with chi_square_test.py).
 
@@ -235,6 +385,10 @@ def _collect_divergence_test_arguments(
         The tree structure with pre-computed distributions.
     min_samples : int
         Minimum samples required per sibling to run the test.
+    nodes_df : pd.DataFrame, optional
+        DataFrame with 'Child_Parent_Divergence_Significant' column.
+        If provided, only tests parents where at least one child has
+        significant divergence from parent.
 
     Returns
     -------
@@ -244,8 +398,16 @@ def _collect_divergence_test_arguments(
         - skipped_nodes: List of parent node names that were skipped
     """
     parent_nodes: List[str] = []
-    args_list: List[Tuple[np.ndarray, np.ndarray, int, int, Optional[np.ndarray]]] = []
+    args_list: List[Tuple[np.ndarray, np.ndarray, int, int]] = []
     skipped_nodes: List[str] = []
+
+    # Extract child-parent significance if available
+    child_parent_sig = {}
+    if (
+        nodes_df is not None
+        and "Child_Parent_Divergence_Significant" in nodes_df.columns
+    ):
+        child_parent_sig = nodes_df["Child_Parent_Divergence_Significant"].to_dict()
 
     for parent in tree.nodes:
         children = list(tree.successors(parent))
@@ -253,6 +415,18 @@ def _collect_divergence_test_arguments(
             continue
 
         left_child, right_child = children
+
+        # CONDITIONAL TEST: Only test if at least one child has significant
+        # divergence from parent (edge is in E_sig)
+        if child_parent_sig:
+            left_significant = child_parent_sig.get(left_child, False)
+            right_significant = child_parent_sig.get(right_child, False)
+
+            if not (left_significant or right_significant):
+                # Neither child diverges significantly from parent
+                # Skip sibling test - this parent won't split anyway
+                skipped_nodes.append(parent)
+                continue
 
         # Get pre-computed distributions for each sibling
         left_dist = _get_node_distribution(tree, left_child)
@@ -272,17 +446,14 @@ def _collect_divergence_test_arguments(
             skipped_nodes.append(parent)
             continue
 
-        # Get parent distribution for variance-weighted df (if available)
-        parent_dist = _get_node_distribution(tree, parent)
-
         parent_nodes.append(parent)
-        args_list.append((left_dist, right_dist, left_n, right_n, parent_dist))
+        args_list.append((left_dist, right_dist, left_n, right_n))
 
     return parent_nodes, args_list, skipped_nodes
 
 
 def _execute_divergence_tests(
-    args_list: List[Tuple[np.ndarray, np.ndarray, int, int, Optional[np.ndarray]]],
+    args_list: List[Tuple[np.ndarray, np.ndarray, int, int]],
 ) -> List[Tuple[float, float, float, float]]:
     """Execute sibling divergence chi-square tests.
 
@@ -298,13 +469,12 @@ def _execute_divergence_tests(
     """
     results: List[Tuple[float, float, float, float]] = []
 
-    for left_dist, right_dist, left_n, right_n, parent_dist in args_list:
+    for left_dist, right_dist, left_n, right_n in args_list:
         jsd, test_stat, df, p_value = _sibling_divergence_chi_square_test(
             left_distribution=left_dist,
             right_distribution=right_dist,
             left_sample_size=left_n,
             right_sample_size=right_n,
-            parent_distribution=parent_dist,
         )
         results.append((jsd, test_stat, df, p_value))
 
@@ -316,7 +486,6 @@ def _apply_results_to_dataframe(
     parent_nodes: List[str],
     results: List[Tuple[float, float, float, float]],
     significance_level_alpha: float,
-    sample_sizes: Optional[List[Tuple[int, int]]] = None,
 ) -> pd.DataFrame:
     """Apply divergence test results to the dataframe with BH correction.
 
@@ -330,14 +499,12 @@ def _apply_results_to_dataframe(
         List of (jsd, test_statistic, df, p_value) tuples.
     significance_level_alpha : float
         Significance level for BH correction.
-    sample_sizes : List[Tuple[int, int]], optional
-        List of (left_n, right_n) sample sizes for adaptive α.
-
     Returns
     -------
     pd.DataFrame
         The updated dataframe with results.
     """
+
     if not results:
         return df
 
@@ -346,23 +513,8 @@ def _apply_results_to_dataframe(
     df_values = np.array([r[2] for r in results], dtype=float)
     p_values = np.array([r[3] for r in results], dtype=float)
 
-    # Compute adaptive α if enabled and sample sizes provided
-    if config.USE_ADAPTIVE_ALPHA and sample_sizes is not None:
-        # Use median effective sample size and df for global adaptive α
-        n_effective_list = [
-            (2.0 * left_n * right_n) / (left_n + right_n)
-            for left_n, right_n in sample_sizes
-        ]
-        median_n = np.median(n_effective_list)
-        median_df = np.median(df_values)
-        effective_alpha = config.compute_adaptive_alpha(
-            significance_level_alpha, median_n, median_df
-        )
-    else:
-        effective_alpha = significance_level_alpha
-
     reject, p_values_corrected, _ = benjamini_hochberg_correction(
-        p_values, alpha=float(effective_alpha)
+        p_values, alpha=float(significance_level_alpha)
     )
 
     df.loc[parent_nodes, "Sibling_JSD"] = jsd_values
@@ -424,7 +576,7 @@ def annotate_sibling_divergence(
     """Sibling divergence test using Jensen-Shannon divergence with chi-square test.
 
     Tests whether sibling nodes in the tree have significantly different
-    distributions. Unlike the CMI test, this test has intuitive polarity:
+    distributions. This test has intuitive polarity:
     rejecting H₀ means siblings are different → split.
 
     Uses pre-computed distributions from tree nodes (consistent with chi_square_test.py).
@@ -457,35 +609,60 @@ def annotate_sibling_divergence(
     """
     df = nodes_statistics_dataframe.copy()
     if len(df) == 0:
-        return df
+        raise ValueError(
+            "Empty nodes_statistics_dataframe; cannot annotate sibling divergence."
+        )
 
     # Initialize output columns
     df = _initialize_dataframe_columns(df)
 
-    # Collect test arguments for all eligible parent nodes
+    # Collect test arguments for eligible parent nodes
+    # Only tests parents where at least one child has significant child-parent divergence
     parent_nodes, args_list, skipped_nodes = _collect_divergence_test_arguments(
         tree=tree,
         min_samples=min_samples_per_sibling,
+        nodes_df=df,
     )
 
     # Early exit if no tests to perform
     if not parent_nodes:
-        df = _finalize_skipped_nodes(df, skipped_nodes)
+        # No eligible parent nodes - this can happen with very small trees
+        # Just return the dataframe with initialized columns
+        import warnings
+
+        warnings.warn(
+            "No eligible parent nodes for sibling divergence tests; "
+            "all nodes skipped due to insufficient samples.",
+            UserWarning,
+        )
         return df
+
+    # Log skipped nodes but don't error - this is expected for small subtrees
+    if skipped_nodes:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.debug(
+            f"Skipped {len(skipped_nodes)} nodes with insufficient samples "
+            f"for sibling divergence test."
+        )
 
     # Execute divergence tests
     results = _execute_divergence_tests(args_list)
 
-    # Extract sample sizes for adaptive α
+    # Extract sample sizes for potential future use
     sample_sizes = [(args[2], args[3]) for args in args_list]  # (left_n, right_n)
 
-    # Apply results with BH correction (using adaptive α if enabled)
+    # Apply results with BH correction
     df = _apply_results_to_dataframe(
-        df, parent_nodes, results, significance_level_alpha, sample_sizes
+        df, parent_nodes, results, significance_level_alpha
     )
 
-    # Handle skipped nodes
-    df = _finalize_skipped_nodes(df, skipped_nodes)
+    missing_mask = df.loc[parent_nodes, "Sibling_Divergence_P_Value"].isna()
+    if missing_mask.any():
+        missing = list(pd.Index(parent_nodes)[missing_mask])
+        preview = ", ".join(map(repr, missing[:5]))
+        raise ValueError(f"Sibling divergence results missing for nodes: {preview}.")
 
     return df
 

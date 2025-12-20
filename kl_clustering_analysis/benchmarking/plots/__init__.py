@@ -6,10 +6,15 @@ and batch export helpers) but re-exported here for convenience.
 """
 
 from .summary import create_validation_plot
-from .embedding import create_clustering_comparison_plot
+from .embedding import (
+    create_clustering_comparison_plot,
+    create_clustering_comparison_plot_3d,
+)
 from .manifold import create_manifold_alignment_plot
+from .diagnostics import create_k_distance_plot
 from .export import (
     create_umap_plots_from_results,
+    create_umap_3d_plots_from_results,
     create_manifold_plots_from_results,
     create_tree_plots_from_results,
 )
@@ -17,8 +22,11 @@ from .export import (
 __all__ = [
     "create_validation_plot",
     "create_clustering_comparison_plot",
+    "create_clustering_comparison_plot_3d",
     "create_manifold_alignment_plot",
     "create_umap_plots_from_results",
+    "create_umap_3d_plots_from_results",
     "create_manifold_plots_from_results",
     "create_tree_plots_from_results",
+    "create_k_distance_plot",
 ]

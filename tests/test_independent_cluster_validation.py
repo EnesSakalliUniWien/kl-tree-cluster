@@ -1,4 +1,4 @@
-"""Standalone sanity checks for ClusterDecomposer behavior.
+"""Standalone sanity checks for TreeDecomposition behavior.
 
 These tests avoid the heavier fixtures in ``test_cluster_validation.py`` and only
 use NetworkX + pandas to build a minimal hierarchy so the module can be verified
@@ -12,6 +12,7 @@ import unittest
 import numpy as np
 import pandas as pd
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+
 
 def _make_binary_tree() -> tuple[PosetTree, pd.DataFrame]:
     """Construct a tiny binary tree plus stats DataFrame for testing."""
@@ -28,18 +29,24 @@ def _make_binary_tree() -> tuple[PosetTree, pd.DataFrame]:
             "root": {
                 "distribution": np.array([0.5, 0.5]),
                 "is_leaf": False,
-                "Sibling_BH_Independent": True,
-                "Sibling_CMI_P_Value_Corrected": 0.01,
+                "Child_Parent_Divergence_Significant": False,
+                "Sibling_BH_Different": True,
+                "Sibling_Divergence_Skipped": False,
+                "Sibling_Divergence_P_Value_Corrected": 0.01,
             },
             "L": {
                 "distribution": np.array([0.7, 0.3]),
                 "is_leaf": True,
-                "Local_BH_Significant": True,
+                "Child_Parent_Divergence_Significant": True,
+                "Sibling_BH_Different": False,
+                "Sibling_Divergence_Skipped": False,
             },
             "R": {
                 "distribution": np.array([0.3, 0.7]),
                 "is_leaf": True,
-                "Local_BH_Significant": True,
+                "Child_Parent_Divergence_Significant": True,
+                "Sibling_BH_Different": False,
+                "Sibling_Divergence_Skipped": False,
             },
         },
         orient="index",
@@ -48,11 +55,12 @@ def _make_binary_tree() -> tuple[PosetTree, pd.DataFrame]:
 
 
 class TestIndependentClusterValidation(unittest.TestCase):
-    """Minimal, dependency-light validation of ClusterDecomposer."""
+    """Minimal, dependency-light validation of TreeDecomposition."""
 
     def test_split_occurs_when_all_gates_pass(self) -> None:
         tree, stats = _make_binary_tree()
-        results = tree.decompose(results_df=stats)
+        # Disable post-hoc merge to test base decomposition behavior
+        results = tree.decompose(results_df=stats, posthoc_merge=False)
 
         self.assertEqual(results["num_clusters"], 2)
         leaves = sorted(
@@ -62,9 +70,9 @@ class TestIndependentClusterValidation(unittest.TestCase):
         self.assertEqual(leaves, [("L",), ("R",)])
         print("Split test clusters:", leaves)
 
-    def test_merge_when_sibling_independence_fails(self) -> None:
+    def test_merge_when_sibling_divergence_fails(self) -> None:
         tree, stats = _make_binary_tree()
-        stats.loc["root", "Sibling_BH_Independent"] = False
+        stats.loc["root", "Sibling_BH_Different"] = False
         results = tree.decompose(results_df=stats)
 
         self.assertEqual(results["num_clusters"], 1)

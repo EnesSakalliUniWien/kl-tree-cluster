@@ -1,12 +1,12 @@
 """Tree decomposition logic for KL-based clustering.
 
-This module contains :class:`~kl_clustering_analysis.hierarchy_analysis.tree_decomposer.ClusterDecomposer`,
+This module contains :class:`~kl_clustering_analysis.hierarchy_analysis.tree_decomposition.TreeDecomposition`,
 which traverses a hierarchy and decides where to split or merge to form clusters.
 """
 
 from __future__ import annotations
 
-from typing import Dict, Iterator, List, Set
+from typing import Dict, Iterator, List, Set, Tuple
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ from ..core_utils.data_utils import extract_bool_column_dict
 from .. import config
 
 
-class ClusterDecomposer:
+class TreeDecomposition:
     """Annotate a hierarchy with significance tests and carve it into clusters.
 
     The decomposer walks a :class:`~tree.poset_tree.PosetTree` top-down and decides
@@ -45,6 +45,8 @@ class ClusterDecomposer:
         near_independence_alpha_buffer: float = 0.0,
         near_independence_kl_gap: float = 0.0,
         sibling_shortlist_size: int | None = None,
+        posthoc_merge: bool = config.POSTHOC_MERGE,
+        posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
 
@@ -61,6 +63,12 @@ class ClusterDecomposer:
             falls back to raw chi-square tests.
         sibling_alpha
             Significance level used by sibling-independence annotations and gating.
+        posthoc_merge
+            If True, apply tree-respecting post-hoc merging after initial decomposition.
+            This iteratively merges clusters whose underlying leaf clusters are NOT
+            significantly different, working bottom-up through the tree.
+        posthoc_merge_alpha
+            Significance level for post-hoc merge tests. Defaults to sibling_alpha if None.
         """
         self.tree = tree
         self.results_df = results_df if results_df is not None else pd.DataFrame()
@@ -71,6 +79,12 @@ class ClusterDecomposer:
         self.near_independence_kl_gap = float(near_independence_kl_gap)
         self.sibling_shortlist_size = (
             int(sibling_shortlist_size) if sibling_shortlist_size is not None else 0
+        )
+        self.posthoc_merge = bool(posthoc_merge)
+        self.posthoc_merge_alpha = (
+            float(posthoc_merge_alpha)
+            if posthoc_merge_alpha is not None
+            else self.sibling_alpha
         )
 
         # ----- root -----
@@ -95,7 +109,7 @@ class ClusterDecomposer:
 
         # ----- results_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
-            self.results_df, "Local_BH_Significant"
+            self.results_df, "Child_Parent_Divergence_Significant"
         )
         # Sibling divergence test: Sibling_BH_Different = True means siblings differ -> SPLIT
         self._sibling_different = extract_bool_column_dict(
@@ -104,6 +118,18 @@ class ClusterDecomposer:
         self._sibling_skipped = extract_bool_column_dict(
             self.results_df, "Sibling_Divergence_Skipped"
         )
+
+        for column_name, mapping in (
+            ("Child_Parent_Divergence_Significant", self._local_significant),
+            ("Sibling_BH_Different", self._sibling_different),
+            ("Sibling_Divergence_Skipped", self._sibling_skipped),
+        ):
+            missing = set(self.tree.nodes) - set(mapping.keys())
+            if missing:
+                preview = ", ".join(map(repr, list(missing)[:5]))
+                raise ValueError(
+                    f"Missing {column_name!r} values for nodes: {preview}."
+                )
 
         # Precompute children list (avoids rebuilding generator repeatedly)
         self._children: Dict[str, List[str]] = {
@@ -260,7 +286,7 @@ class ClusterDecomposer:
     def _child_diverges_from_parent(self, child: str, parent: str) -> bool:
         """Determine whether the local divergence test flags ``child`` as divergent.
 
-        Relies on precomputed ``Local_BH_Significant`` annotations from
+        Relies on precomputed ``Child_Parent_Divergence_Significant`` annotations from
         :func:`~kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance.annotate_child_parent_divergence`.
         No fallback computation is performed; missing annotations raise to signal
         a misconfigured pipeline.
@@ -357,10 +383,15 @@ class ClusterDecomposer:
            - OPEN: parent has exactly 2 children → proceed to statistical tests
            - CLOSED: parent has <2 or >2 children → merge at parent, form cluster boundary
 
-        2. **Sibling divergence gate** (always active when annotated)
-           - OPEN: siblings are significantly different (JSD permutation test with BH correction) → SPLIT
+        2. **Local KL divergence gate** (child vs parent)
+           - OPEN: at least one child significantly diverges from parent → proceed
+           - CLOSED: neither child diverges from parent → MERGE
+           - This ensures we only split when children have distinct distributions from parent
+
+        3. **Sibling divergence gate** (sibling vs sibling)
+           - OPEN: siblings are significantly different (JSD test with BH correction) → SPLIT
            - CLOSED: siblings are not significantly different → MERGE
-           - Missing annotation treated as error
+           - This ensures siblings represent genuinely different clusters
 
         Outcome Logic:
         - ALL gates OPEN → return True → children added to traversal stack, split continues recursively
@@ -371,17 +402,36 @@ class ClusterDecomposer:
         if len(children) != 2:
             return False
 
-        # Gate 2: Sibling divergence requirement
+        left_child, right_child = children
+
+        # Gate 2: Local KL divergence requirement (at least one child must diverge from parent)
+        left_diverges = self._local_significant.get(left_child)
+        right_diverges = self._local_significant.get(right_child)
+
+        if left_diverges is None or right_diverges is None:
+            raise ValueError(
+                "Missing child-parent divergence annotations for "
+                f"{left_child!r} or {right_child!r}; annotate before decomposing."
+            )
+
+        # At least one child must significantly diverge from parent
+        if not (left_diverges or right_diverges):
+            return False
+
+        # Gate 3: Sibling divergence requirement
         # Sibling_BH_Different = True means siblings have significantly different distributions -> SPLIT
         is_different = self._sibling_different.get(parent)
 
         if is_different is None:
-            if self._sibling_skipped.get(parent, False):
-                # Skipped nodes default to no split (conservative)
-                return False
             raise ValueError(
                 "Sibling divergence annotations missing for node "
                 f"{parent!r}; run annotate_sibling_divergence first."
+            )
+
+        if self._sibling_skipped.get(parent, False):
+            raise ValueError(
+                "Sibling divergence test skipped for node "
+                f"{parent!r}; annotations incomplete."
             )
 
         return bool(is_different)
@@ -425,14 +475,227 @@ class ClusterDecomposer:
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
+        # Apply post-hoc merge if enabled and distribution data is available
+        if self.posthoc_merge and self._distribution_by_node:
+            alpha = (
+                self.posthoc_merge_alpha
+                if self.posthoc_merge_alpha is not None
+                else self.alpha_local
+            )
+
+            # Extract cluster roots from initial decomposition
+            cluster_roots: Set[str] = set()
+            for info in cluster_assignments.values():
+                root_node = info.get("root_node")
+                if root_node:
+                    cluster_roots.add(root_node)
+
+            # Apply the tree-respecting post-hoc merge
+            merged_roots = self._apply_posthoc_merge(cluster_roots, alpha)
+
+            # Rebuild final_leaf_sets from merged cluster roots
+            # Note: _get_all_leaves returns leaf labels (sample IDs), not node IDs
+            merged_leaf_sets: List[set[str]] = []
+            for root in merged_roots:
+                leaf_labels = self._get_all_leaves(root)
+                if leaf_labels:
+                    merged_leaf_sets.append(set(leaf_labels))
+
+            # Rebuild cluster assignments
+            cluster_assignments = self._build_cluster_assignments(merged_leaf_sets)
+
         return {
             "cluster_assignments": cluster_assignments,
             "num_clusters": len(cluster_assignments),
             "independence_analysis": {
                 "alpha_local": self.alpha_local,
-                "decision_mode": "cmi_only",
+                "decision_mode": "sibling_divergence",
+                "posthoc_merge": self.posthoc_merge,
             },
         }
+
+    # ---------- post-hoc merge helpers ----------
+
+    def _get_leaf_clusters_under_node(
+        self, node: str, cluster_roots: Set[str]
+    ) -> List[str]:
+        """Get all cluster root nodes that are descendants of the given node.
+
+        Parameters
+        ----------
+        node
+            The tree node to search under.
+        cluster_roots
+            Set of current cluster root node IDs.
+
+        Returns
+        -------
+        List[str]
+            List of cluster root nodes that are descendants of `node`.
+        """
+        if node in cluster_roots:
+            return [node]
+
+        descendants = nx.descendants(self.tree, node)
+        return [n for n in descendants if n in cluster_roots]
+
+    def _compute_cluster_distribution(
+        self, cluster_root: str
+    ) -> Tuple[np.ndarray, int]:
+        """Compute the distribution for a cluster.
+
+        Uses the precomputed distribution from the tree node.
+
+        Parameters
+        ----------
+        cluster_root
+            The root node of the cluster.
+
+        Returns
+        -------
+        Tuple[np.ndarray, int]
+            (distribution, sample_size)
+        """
+        distribution = self._distribution_by_node[cluster_root]
+        sample_size = self._leaf_count(cluster_root)
+        return distribution, sample_size
+
+    def _test_cluster_pair_divergence(
+        self, cluster_a: str, cluster_b: str, common_ancestor: str
+    ) -> Tuple[float, float]:
+        """Test if two clusters are significantly different.
+
+        Uses the same JSD chi-square test as sibling divergence, with the
+        common ancestor's distribution for variance-weighted df calculation.
+
+        Parameters
+        ----------
+        cluster_a, cluster_b
+            The two cluster root nodes to compare.
+        common_ancestor
+            The lowest common ancestor in the tree (provides parent distribution).
+
+        Returns
+        -------
+        Tuple[float, float]
+            (jsd, p_value)
+        """
+        from .statistics.sibling_divergence.sibling_divergence_test import (
+            _sibling_divergence_chi_square_test,
+        )
+
+        dist_a, size_a = self._compute_cluster_distribution(cluster_a)
+        dist_b, size_b = self._compute_cluster_distribution(cluster_b)
+
+        jsd, _, _, p_value = _sibling_divergence_chi_square_test(
+            left_distribution=dist_a,
+            right_distribution=dist_b,
+            left_sample_size=size_a,
+            right_sample_size=size_b,
+        )
+
+        return jsd, p_value
+
+    def _apply_posthoc_merge(self, cluster_roots: Set[str], alpha: float) -> Set[str]:
+        """Apply tree-respecting post-hoc merging to reduce over-splitting.
+
+        Works bottom-up through the tree. For each internal node, compares
+        all pairs of leaf clusters across the sibling boundary. If any pair
+        is NOT significantly different, merges them by promoting their common
+        ancestor to be the cluster root.
+
+        The key insight: when a parent has children A and B, and B was split
+        into C1 and C2, we compare:
+        - A vs C1
+        - A vs C2
+
+        If A and C1 are not significantly different, we merge them.
+
+        Parameters
+        ----------
+        cluster_roots
+            Set of current cluster root node IDs.
+        alpha
+            Significance level for the merge test.
+
+        Returns
+        -------
+        Set[str]
+            Updated set of cluster root nodes after merging.
+        """
+        cluster_roots = set(cluster_roots)  # Copy to avoid mutation
+        changed = True
+
+        while changed:
+            changed = False
+
+            # Process nodes bottom-up (leaves first, then parents)
+            for node in nx.topological_sort(self.tree.reverse()):
+                children = self._children[node]
+                if len(children) != 2:
+                    continue
+
+                left_child, right_child = children
+
+                # Get leaf clusters under each child
+                left_clusters = self._get_leaf_clusters_under_node(
+                    left_child, cluster_roots
+                )
+                right_clusters = self._get_leaf_clusters_under_node(
+                    right_child, cluster_roots
+                )
+
+                if not left_clusters or not right_clusters:
+                    continue
+
+                # Find the pair with highest p-value (most similar)
+                best_pair = None
+                best_pvalue = 0.0
+
+                for lc in left_clusters:
+                    for rc in right_clusters:
+                        _, p_value = self._test_cluster_pair_divergence(lc, rc, node)
+                        if p_value > best_pvalue:
+                            best_pvalue = p_value
+                            best_pair = (lc, rc)
+
+                # If best pair is NOT significantly different, merge them
+                if best_pair is not None and best_pvalue > alpha:
+                    lc, rc = best_pair
+                    # Find the lowest common ancestor of the pair
+                    lca = self._find_lca_pair(lc, rc)
+
+                    # Remove the two clusters being merged
+                    cluster_roots.discard(lc)
+                    cluster_roots.discard(rc)
+
+                    # CRITICAL: Also remove any other cluster roots that are
+                    # descendants of the LCA, otherwise leaves would be counted
+                    # in multiple clusters (the LCA cluster AND the descendant clusters)
+                    lca_descendants = nx.descendants(self.tree, lca)
+                    cluster_roots -= lca_descendants
+
+                    # Add the LCA as the new merged cluster root
+                    cluster_roots.add(lca)
+                    changed = True
+                    break  # Restart from bottom after any merge
+
+        return cluster_roots
+
+    def _find_lca_pair(self, node_a: str, node_b: str) -> str:
+        """Find the lowest common ancestor of two nodes."""
+        ancestors_a = set(nx.ancestors(self.tree, node_a))
+        ancestors_a.add(node_a)
+
+        # Walk up from node_b until we find a common ancestor
+        current = node_b
+        while current not in ancestors_a:
+            parents = list(self.tree.predecessors(current))
+            if not parents:
+                return self._root
+            current = parents[0]
+
+        return current
 
     def decompose_tree(self) -> dict[str, object]:
         """Return cluster assignments by iteratively traversing the hierarchy.
@@ -456,12 +719,42 @@ class ClusterDecomposer:
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
+        # Apply post-hoc merge if enabled and distribution data is available
+        if self.posthoc_merge and self._distribution_by_node:
+            alpha = (
+                self.posthoc_merge_alpha
+                if self.posthoc_merge_alpha is not None
+                else self.alpha_local
+            )
+
+            # Extract cluster roots from initial decomposition
+            cluster_roots: Set[str] = set()
+            for info in cluster_assignments.values():
+                root_node = info.get("root_node")
+                if root_node:
+                    cluster_roots.add(root_node)
+
+            # Apply the tree-respecting post-hoc merge
+            merged_roots = self._apply_posthoc_merge(cluster_roots, alpha)
+
+            # Rebuild final_leaf_sets from merged cluster roots
+            # Note: _get_all_leaves returns leaf labels (sample IDs), not node IDs
+            merged_leaf_sets: List[set[str]] = []
+            for root in merged_roots:
+                leaf_labels = self._get_all_leaves(root)
+                if leaf_labels:
+                    merged_leaf_sets.append(set(leaf_labels))
+
+            # Rebuild cluster assignments
+            cluster_assignments = self._build_cluster_assignments(merged_leaf_sets)
+
         return {
             "cluster_assignments": cluster_assignments,
             "num_clusters": len(cluster_assignments),
             "independence_analysis": {
                 "alpha_local": self.alpha_local,
-                "decision_mode": "cmi_only",
+                "decision_mode": "sibling_divergence",
+                "posthoc_merge": self.posthoc_merge,
             },
         }
 
@@ -474,7 +767,7 @@ class ClusterDecomposer:
         Parameters
         ----------
         decomposition_results
-            A decomposition result dictionary produced by :meth:`ClusterDecomposer.decompose_tree`.
+            A decomposition result dictionary produced by :meth:`TreeDecomposition.decompose_tree`.
 
         Returns
         -------

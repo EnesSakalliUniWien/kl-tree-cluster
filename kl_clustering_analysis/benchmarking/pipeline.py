@@ -21,6 +21,7 @@ from scipy.spatial.distance import pdist, squareform
 import networkx as nx
 from sklearn.datasets import make_blobs
 from sklearn.cluster import DBSCAN, OPTICS
+import matplotlib.pyplot as plt
 from sklearn.metrics import (
     adjusted_rand_score,
     normalized_mutual_info_score,
@@ -798,7 +799,26 @@ def benchmark_cluster_algorithm(
                 data_t.values, metric=config.TREE_DISTANCE_METRIC
             )
         if needs_distance_matrix:
+            if distance_condensed is None:
+                distance_condensed = pdist(
+                    data_t.values, metric=config.TREE_DISTANCE_METRIC
+                )
             distance_matrix = squareform(distance_condensed)
+
+        # Generate and save k-distance plot for DBSCAN if applicable
+        if "dbscan" in selected_methods and distance_matrix is not None:
+            dbscan_params = param_sets.get("dbscan", [{}])[0]
+            min_samples = int(dbscan_params.get("min_samples", 5))
+            
+            from kl_clustering_analysis.benchmarking.plots.diagnostics import create_k_distance_plot
+            
+            k_dist_fig = create_k_distance_plot(distance_matrix, k=min_samples, test_case_num=i, meta=meta)
+            if k_dist_fig:
+                k_dist_plot_path = plots_root / f"k_dist_plot_case_{i}.png"
+                k_dist_fig.savefig(k_dist_plot_path, dpi=150, bbox_inches="tight")
+                plt.close(k_dist_fig)
+                if verbose:
+                    logger.info(f"K-distance plot for DBSCAN saved to '{k_dist_plot_path}'")
 
         for method_id in selected_methods:
             spec = METHOD_SPECS[method_id]

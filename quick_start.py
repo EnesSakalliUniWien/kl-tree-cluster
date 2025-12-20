@@ -6,7 +6,8 @@ from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
 
 # Import the necessary functions from your library
-from tree.poset_tree import PosetTree
+from kl_clustering_analysis.tree.poset_tree import PosetTree
+from kl_clustering_analysis import config
 
 
 def main():
@@ -34,9 +35,14 @@ def main():
     print(f"Ground truth contains {len(np.unique(y_true))} clusters.")
 
     # --- Execute the Core Pipeline ---
-    # 2. linkage()
-    Z = linkage(pdist(data.values, metric="hamming"), method="complete")
-    print("\nStep 2: Created hierarchy with SciPy linkage.")
+    # 2. linkage() - using Rogers-Tanimoto distance + average linkage
+    Z = linkage(
+        pdist(data.values, metric=config.TREE_DISTANCE_METRIC),
+        method=config.TREE_LINKAGE_METHOD,
+    )
+    print(
+        f"\nStep 2: Created hierarchy with {config.TREE_DISTANCE_METRIC} + {config.TREE_LINKAGE_METHOD} linkage."
+    )
 
     # 3. PosetTree.from_linkage()
     tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())

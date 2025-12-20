@@ -9,96 +9,72 @@ import numpy as np
 # Default significance level (alpha) for hypothesis tests.
 SIGNIFICANCE_ALPHA: float = 0.05
 
-# Default significance level (alpha) for sibling-independence *gating* in clustering.
-# This is intentionally more conservative than SIGNIFICANCE_ALPHA because the sibling
-# CMI permutation test can be noisy at low permutation counts; using a smaller alpha
-# reduces over-merging at high levels of the tree.
+# Default significance level (alpha) for sibling-divergence gating in clustering.
+# This is intentionally more conservative than SIGNIFICANCE_ALPHA to reduce
+# over-merging at high levels of the tree.
 SIBLING_ALPHA: float = 0.01
 
 # Default number of permutations for permutation tests.
 N_PERMUTATIONS: int = 100
 
-# Default standard deviation threshold for z-score-based deviation tests.
-STD_DEVIATION_THRESHOLD: float = 2.0
-
 # Epsilon value for numerical stability in KL-divergence and probability calculations.
 EPSILON: float = 1e-9
-
-# --- Attention Mechanism Parameters ---
-ATTENTION_TAU: float = 1.0
-ATTENTION_GAMMA: float = 1.0
-ATTENTION_N_ITERATIONS: int = 10
 
 # --- Decomposition Parameters ---
 
 # Default significance level for local (child-vs-parent) tests in decomposition.
 ALPHA_LOCAL: float = 0.05
 
-# --- Adaptive Significance Level ---
+# --- Post-Hoc Merge Parameters ---
 
-# Enable adaptive α based on sample-to-dimension ratio
-# Set to False by default - only enable after validation
-USE_ADAPTIVE_ALPHA: bool = False
+# Enable tree-respecting post-hoc merge by default.
+# This iteratively merges clusters whose underlying distributions are NOT
+# significantly different, working bottom-up through the tree to reduce over-splitting.
+POSTHOC_MERGE: bool = True
 
-# Exponent for adaptive α scaling: α_eff = α * (n/df)^exponent
-# - 0.0: No scaling (always use base α)
-# - 0.5: Square root scaling (moderate adjustment)
-# - 1.0: Linear scaling (aggressive adjustment)
-ADAPTIVE_ALPHA_EXPONENT: float = 0.5
+# Significance level for post-hoc merge tests.
+# If None, defaults to SIBLING_ALPHA at runtime.
+POSTHOC_MERGE_ALPHA: float | None = 0.05
 
+# --- Tree Inference Parameters ---
 
-def compute_adaptive_alpha(
-    base_alpha: float,
-    sample_size: float,
-    degrees_of_freedom: float,
-    exponent: float = ADAPTIVE_ALPHA_EXPONENT,
-) -> float:
-    """Compute sample-size-adjusted significance level.
+# Distance metric for hierarchical clustering
+# Options: 'hamming', 'rogerstanimoto', 'jaccard', 'dice', 'euclidean'
+# Rogers-Tanimoto double-weights mismatches, making it more sensitive to cluster boundaries
+TREE_DISTANCE_METRIC: str = "rogerstanimoto"
 
-    When sample size (n) is smaller than degrees of freedom (df), the chi-square
-    approximation becomes unreliable and p-values are inflated. This function
-    scales α upward to compensate for reduced power.
+# Linkage method for hierarchical clustering
+# Options: 'average', 'complete', 'single', 'ward'
+# Average (UPGMA) produces more balanced trees than complete linkage
+TREE_LINKAGE_METHOD: str = "average"
 
-    The scaling is: α_eff = α * min(1.0, (n/df)^exponent)
+# --- Random Projection Parameters ---
 
-    Parameters
-    ----------
-    base_alpha : float
-        Original significance level (e.g., 0.05)
-    sample_size : float
-        Effective sample size (n or harmonic mean for two-sample tests)
-    degrees_of_freedom : float
-        Effective degrees of freedom from the test
-    exponent : float
-        Scaling exponent (0.5 = square root, 1.0 = linear)
+# Enable random projection for high-dimensional sibling tests
+USE_RANDOM_PROJECTION: bool = True
 
-    Returns
-    -------
-    float
-        Adjusted significance level, always in [base_alpha, 1.0]
+# Apply projection when n_features > threshold_ratio * n_samples
+PROJECTION_THRESHOLD_RATIO: float = 2.0
 
-    Examples
-    --------
-    >>> compute_adaptive_alpha(0.05, 100, 50)  # n > df: well-powered
-    0.05
-    >>> compute_adaptive_alpha(0.05, 50, 200)  # n < df: underpowered
-    0.1  # α scaled up to compensate
-    """
-    if degrees_of_freedom <= 0:
-        return base_alpha
+# Target dimension k = k_multiplier * log(n)
+PROJECTION_K_MULTIPLIER: float = 4.0
 
-    ratio = sample_size / degrees_of_freedom
+# Minimum projected dimension
+PROJECTION_MIN_K: int = 10
 
-    if ratio >= 1.0:
-        # Well-powered test: use standard α
-        return base_alpha
+# Number of random projection trials for averaging
+PROJECTION_N_TRIALS: int = 5
 
-    # Underpowered: scale α upward (more liberal to compensate)
-    # α_eff = α / (ratio^exponent) but capped at reasonable level
-    scaling_factor = 1.0 / (ratio ** exponent) if ratio > 0 else 1.0
+# Random seed for projection reproducibility (None for random)
+PROJECTION_RANDOM_SEED: int | None = 42
 
-    # Cap the scaling to avoid absurdly high α
-    max_scaling = 4.0  # α can be scaled up by at most 4x
-    scaling_factor = min(scaling_factor, max_scaling)
+# --- MI Feature Filter Parameters ---
 
-    return min(base_alpha * scaling_factor, 0.20)  # Never exceed α = 0.20
+# Enable MI-based feature filtering before projection
+USE_MI_FEATURE_FILTER: bool = True
+
+# Quantile threshold for MI filtering (keep features above this quantile)
+MI_FILTER_QUANTILE: float = 0.5
+
+# Minimum fraction of features to retain
+MI_FILTER_MIN_FRACTION: float = 0.1

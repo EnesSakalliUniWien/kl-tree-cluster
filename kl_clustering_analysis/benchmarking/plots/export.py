@@ -107,6 +107,10 @@ def create_manifold_plots_from_results(
 ) -> None:
     output_dir.mkdir(exist_ok=True)
     for result in test_results:
+        # Manifold plots are specific to the main KL method
+        if result.get("method_name") != "KL Divergence":
+            continue
+
         i = result["test_case_num"]
         meta = result["meta"]
         found_clusters = meta.get("found_clusters", meta["n_clusters"])
@@ -115,7 +119,7 @@ def create_manifold_plots_from_results(
         try:
             fig, mantel_r, mantel_p = create_manifold_alignment_plot(
                 result["X_original"],
-                np.asarray(result["kl_labels"]),
+                np.asarray(result["labels"]),  # Use the correct key 'labels'
                 test_case_num=i,
                 meta=meta,
                 y_true=result.get("y_true"),
@@ -144,8 +148,12 @@ def create_tree_plots_from_results(
 ) -> None:
     output_dir.mkdir(exist_ok=True)
     for result in test_results:
-        tree_t = result["tree"]
-        decomp_t = result["decomposition"]
+        tree_t = result.get("tree")
+        decomp_t = result.get("decomposition")
+
+        if not tree_t or not decomp_t:
+            continue
+
         meta = result["meta"]
         found_clusters = meta.get("found_clusters", meta["n_clusters"])
         i = result["test_case_num"]

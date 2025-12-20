@@ -16,7 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_child_parent_divergence,
-    annotate_sibling_independence_cmi,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+    annotate_sibling_divergence,
 )
 from kl_clustering_analysis import config
 
@@ -92,15 +94,12 @@ def run_statistical_analysis(tree, X):
     results_df = annotate_child_parent_divergence(
         tree,
         results_df,
-        total_number_of_features=X.shape[1],
         significance_level_alpha=config.SIGNIFICANCE_ALPHA,
     )
-    results_df = annotate_sibling_independence_cmi(
+    results_df = annotate_sibling_divergence(
         tree,
         results_df,
         significance_level_alpha=config.SIGNIFICANCE_ALPHA,
-        n_permutations=config.N_PERMUTATIONS,
-        random_state=0,
     )
 
     print("Statistical analysis complete.")

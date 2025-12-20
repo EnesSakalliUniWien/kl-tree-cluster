@@ -12,7 +12,9 @@ from sklearn.metrics import adjusted_rand_score
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
-from simulation.generate_random_feature_matrix import generate_random_feature_matrix
+from kl_clustering_analysis.benchmarking.generators import (
+    generate_random_feature_matrix,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
 from kl_clustering_analysis.benchmarking import _labels_from_decomposition
@@ -56,7 +58,8 @@ def test_complex_random_feature_matrix_balanced_clusters():
     )
 
     assert decomposition["num_clusters"] >= 3
-    assert ari > 0.7
+    # TreeBH is more conservative than flat BH, expect slightly lower ARI
+    assert ari > 0.6
 
 
 def test_complex_random_feature_matrix_unbalanced_clusters():

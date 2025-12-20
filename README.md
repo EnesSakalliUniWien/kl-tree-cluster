@@ -31,7 +31,7 @@ hierarchy should stop splitting and which sibling branches stay merged.
 - Tree construction, distribution propagation, and KL metrics: `hierarchy_analysis/divergence_metrics.py`.
 - Local KL chi-square helpers and statistical utilities: `hierarchy_analysis/statistics/kl_tests/utils.py`.
 - Sibling independence via conditional mutual information: `hierarchy_analysis/statistics/conditional_sibling_independence.py`.
-- Decomposition logic that applies the statistical gates: `hierarchy_analysis/tree_decomposer.py`.
+- Decomposition logic that applies the statistical gates: `hierarchy_analysis/tree_decomposition.py`.
 
 ### Pipeline Workflow
 
@@ -68,7 +68,7 @@ Starting from a binary matrix $X \in \{0,1\}^{n \times p}$, the pipeline proceed
 
 ## Statistical Gates and Independence Checks
 
-The `ClusterDecomposer` treats every internal node as a checkpoint—called a gate—that decides whether the tree is
+The `TreeDecomposition` treats every internal node as a checkpoint—called a gate—that decides whether the tree is
 allowed to split at that spot. Each gate represents a statistical question about the parent/child relationship; if the
 answer is “yes,” the walk continues into the children, and if the answer is “no,” the branch stays merged and forms a
 cluster boundary.
@@ -77,8 +77,8 @@ cluster boundary.
   child-versus-parent KL divergence and converts it into a chi-square p-value. Both children must show a real shift away
   from their parent before the branch is allowed to split.
 - **Gate 2 – sibling independence check**: When both children pass Gate 1, the decomposer looks up
-  `Sibling_BH_Independent`. This flag comes from the conditional mutual information test and confirms that the two
-  children behave independently once the parent is known. If the flag is `False`, the children remain merged.
+  `Sibling_BH_Different`. This flag comes from the sibling divergence test (Jensen–Shannon divergence with a
+  chi-square approximation plus Benjamini–Hochberg correction). If the flag is `False`, the children remain merged.
 - **Optional parent gate**: Setting `parent_gate="strict"` adds one more requirement—only parents already marked
   significant can split. Leave it `off` to ignore this extra guard.
 
@@ -95,7 +95,7 @@ $$
 and
 
 $$
-\text{Gate}_2(u) = \mathbf{1}\!\left[\text{CMI}_{u}(c_1, c_2) \text{ is non-significant after BH correction}\right].
+\text{Gate}_2(u) = \mathbf{1}\!\left[p_{\mathrm{JSD}}(c_1, c_2) \le \alpha \text{ after BH correction}\right].
 $$
 
 The walk follows a depth-first rule:
@@ -107,35 +107,9 @@ The walk follows a depth-first rule:
 This simple “if-then” recursion ensures that every branch of the tree either terminates at the earliest node that fails
 a gate or keeps splitting while both gates continue to approve the children.
 
-The function `annotate_sibling_independence_cmi` chooses a threshold for each node with `binary_threshold`—either the
-default 0.5 cutoff or an adaptive rule such as Otsu (maximizes the separation between low and high values) or Li
-(balances the information content of the two sides)—so the parent/child probabilities can be expressed as binary arrays
-$(X, Y, Z)$ during the independence check.
-
-From a tree perspective, the conditional mutual information (CMI) test supplies a single question at every parent node:
-“Do these siblings still communicate once we know the parent?” It answers that question through four high-level steps:
-
-1. **Focus on relevant branches** – Only parents whose children already passed the local divergence gate are examined,
-   so the tree walk spends time on splits that looked promising in Gate 1.
-2. **Contrast sibling behaviour inside each parent state** – The parent node carries a binary distribution, so every
-   feature either falls into the part of the subtree where the parent’s probability rounded to 0 or the part where it
-   rounded to 1. The test compares how often the siblings agree within each of those two slices to see whether the
-   branches add new information after the parent is fixed.
-3. **Build a “no extra information” reference** – For each parent slice, repeatedly permute the order of one sibling’s
-   features while holding the parent and the other sibling fixed. This reshuffling is performed separately within the
-   parent-equals-0 subset and the parent-equals-1 subset so the parent’s conditioning is respected. The resulting CMI
-   values describe how often siblings would appear to agree if any dependence were purely accidental. For example,
-   suppose $Z = [0, 0, 1, 1]$, $X = [1, 0, 1, 0]$, and $Y = [1, 0, 0, 1]$. A valid permutation keeps the indices with
-   $Z=0$ (positions 1 and 2) together and the indices with $Z=1$ (positions 3 and 4) together. Shuffling only within
-   those strata might produce $Y' = [0, 1, 0, 1]$ (swap inside the $Z=0$ block), $Y' = [1, 0, 1, 0]$ (swap inside the
-   $Z=1$ block), or the original arrangement. Each distinct shuffled $Y'$ yields a new CMI value that contributes to the
-   reference distribution.
-4. **Record the decision on the node** – Convert the observed CMI into a p-value by repeatedly shuffling one sibling
-   within each parent state and recomputing the CMI. Count how many shuffled outcomes are at least as large as the
-   observed value, add one to both that count and the total number of trials to avoid zero-probability artefacts, and
-   take their ratio to obtain the p-value. Adjust the collection of sibling p-values across all parents with
-   Benjamini–Hochberg control. A corrected flag of `Sibling_BH_Dependent = True` tells the decomposer to keep the parent
-   merged; `Sibling_BH_Independent = True` tells it the branch may open when the walk reaches that node.
+The function `annotate_sibling_divergence` computes the Jensen–Shannon divergence between sibling distributions,
+converts it into a chi-square p-value, and applies Benjamini–Hochberg correction across all tested parents. Nodes with
+`Sibling_BH_Different = True` are eligible to split; nodes with `Sibling_BH_Different = False` are merged at the parent.
 
 ### Worked Example
 
@@ -192,8 +166,8 @@ What the script does:
    generated features.
 4. **Annotate significance** – runs multiple hypothesis tests to identify statistically significant branches:
    - `annotate_child_parent_divergence`
-   - `annotate_sibling_independence_cmi`
-5. **Decompose clusters** – uses `ClusterDecomposer` to turn significant nodes into cluster assignments and prints a
+   - `annotate_sibling_divergence`
+5. **Decompose clusters** – uses `TreeDecomposition` to turn significant nodes into cluster assignments and prints a
    concise report.
 6. **Validate results** – compares discovered clusters with the synthetic ground truth using Adjusted Rand Index (ARI)
    so you know how well the decomposition performed.
@@ -214,6 +188,19 @@ performed without cleanup.
 - Run the automated tests with `pytest`.
 - Inspect `tests/test_cluster_validation.py` for examples of how to assert cluster quality in custom scenarios.
 - Consider recording ARI or other metrics alongside your experiments to compare runs.
+
+## Benchmark Methods (Optional)
+
+The benchmarking suite can run additional clustering baselines side-by-side with the KL pipeline:
+
+- Graph community detection: Leiden, Louvain
+- Density-based clustering: DBSCAN, OPTICS, HDBSCAN (optional)
+
+Optional dependencies (skipped automatically if missing):
+
+```bash
+pip install leidenalg igraph python-louvain hdbscan
+```
 
 ## License
 

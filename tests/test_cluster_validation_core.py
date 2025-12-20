@@ -24,26 +24,29 @@ def test_cluster_algorithm_validation():
         plot_umap=False,
     )
 
-    assert len(df_results) == len(SMALL_TEST_CASES)
+    kl_results = df_results[df_results["Method"] == "KL Divergence"].reset_index(
+        drop=True
+    )
+    assert len(kl_results) == len(SMALL_TEST_CASES)
 
-    clear_case = df_results[(df_results["Case_Name"] == "clear")].iloc[0]
+    clear_case = kl_results[(kl_results["Case_Name"] == "clear")].iloc[0]
     assert clear_case["Found"] == clear_case["True"]
     assert clear_case["ARI"] > 0.85
     assert clear_case["NMI"] > 0.85
     assert clear_case["Purity"] > 0.9
 
-    moderate_case = df_results[(df_results["Case_Name"] == "moderate")].iloc[0]
+    moderate_case = kl_results[(kl_results["Case_Name"] == "moderate")].iloc[0]
     assert moderate_case["ARI"] > 0.6
     assert moderate_case["NMI"] > 0.65
     assert moderate_case["Purity"] > 0.7
 
-    noisy_case = df_results[(df_results["Case_Name"] == "noisy")].iloc[0]
+    noisy_case = kl_results[(kl_results["Case_Name"] == "noisy")].iloc[0]
     assert noisy_case["ARI"] >= 0
     assert 0 <= noisy_case["Purity"] <= 1
     assert noisy_case["Found"] >= 0
 
 
-def test_validate_cluster_algorithm_expected_columns():
+def test_benchmark_cluster_algorithm_expected_columns():
     """Ensure the validator returns the expected metrics."""
     df_results, fig = benchmark_cluster_algorithm(
         test_cases=[SMALL_TEST_CASES[0].copy()],
@@ -54,6 +57,8 @@ def test_validate_cluster_algorithm_expected_columns():
     expected_columns = {
         "Test",
         "Case_Name",
+        "Method",
+        "Params",
         "True",
         "Found",
         "Samples",
@@ -62,14 +67,18 @@ def test_validate_cluster_algorithm_expected_columns():
         "ARI",
         "NMI",
         "Purity",
+        "Status",
+        "Skip_Reason",
+        "Labels_Length",
     }
     assert expected_columns.issubset(df_results.columns)
-    assert len(df_results) == 1
+    kl_results = df_results[df_results["Method"] == "KL Divergence"]
+    assert len(kl_results) == 1
     assert fig is None
-    assert (df_results["ARI"].between(0, 1)).all()
+    assert (kl_results["ARI"].between(0, 1)).all()
 
 
-def test_validate_cluster_algorithm_handles_empty_cases():
+def test_benchmark_cluster_algorithm_handles_empty_cases():
     """Validator should handle an empty case list without errors."""
     df_results, fig = benchmark_cluster_algorithm(
         test_cases=[],

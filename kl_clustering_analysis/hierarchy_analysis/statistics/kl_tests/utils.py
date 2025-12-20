@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def get_local_kl_series(df: pd.DataFrame | pd.Series | None) -> pd.Series:
-    """Extract the local KL divergence column as a float Series with safe defaults.
+    """Extract the local KL divergence column as a float Series.
 
     Parameters
     ----------
@@ -19,7 +19,7 @@ def get_local_kl_series(df: pd.DataFrame | pd.Series | None) -> pd.Series:
         Float Series with local KL divergence values.
     """
     if df is None:
-        return pd.Series(dtype=float)
+        raise ValueError("Expected a DataFrame/Series with 'kl_divergence_local'.")
 
     if isinstance(df, pd.Series):
         return df.astype(float, copy=False)
@@ -28,7 +28,7 @@ def get_local_kl_series(df: pd.DataFrame | pd.Series | None) -> pd.Series:
     if isinstance(series, pd.Series):
         return series.astype(float, copy=False)
 
-    return pd.Series(index=getattr(df, "index", []), dtype=float)
+    raise KeyError("Missing required column 'kl_divergence_local'.")
 
 
 __all__ = ["get_local_kl_series"]

@@ -1,4 +1,4 @@
-"""Targeted tests for ClusterDecomposer's shortlist and near-threshold logic."""
+"""Targeted tests for TreeDecomposition's shortlist and near-threshold logic."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import pandas as pd
 import pytest
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposer import (
-    ClusterDecomposer,
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import (
+    TreeDecomposition,
 )
 
 
@@ -26,19 +26,24 @@ def _simple_tree() -> tuple[PosetTree, pd.DataFrame]:
         "R": {
             "distribution": G.nodes["R"]["distribution"],
             "is_leaf": False,
-            "Local_BH_Significant": True,
-            "Sibling_BH_Independent": True,
-            "Sibling_CMI_P_Value_Corrected": 0.052,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": True,
+            "Sibling_Divergence_Skipped": False,
+            "Sibling_Divergence_P_Value_Corrected": 0.01,
         },
         "L": {
             "distribution": G.nodes["L"]["distribution"],
             "is_leaf": True,
-            "Local_BH_Significant": True,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": False,
+            "Sibling_Divergence_Skipped": False,
         },
         "S": {
             "distribution": G.nodes["S"]["distribution"],
             "is_leaf": True,
-            "Local_BH_Significant": True,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": False,
+            "Sibling_Divergence_Skipped": False,
         },
     }
     df = pd.DataFrame.from_dict(data, orient="index")
@@ -68,43 +73,54 @@ def _two_level_tree() -> tuple[PosetTree, pd.DataFrame]:
         "P": {
             "distribution": G.nodes["P"]["distribution"],
             "is_leaf": False,
-            "Local_BH_Significant": True,
-            "Sibling_BH_Independent": True,
-            "Sibling_CMI_P_Value_Corrected": 0.02,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": True,
+            "Sibling_Divergence_Skipped": False,
+            "Sibling_Divergence_P_Value_Corrected": 0.02,
         },
         "A": {
             "distribution": G.nodes["A"]["distribution"],
             "is_leaf": False,
-            "Local_BH_Significant": True,
-            "Sibling_BH_Independent": True,
-            "Sibling_CMI_P_Value_Corrected": 0.03,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": True,
+            "Sibling_Divergence_Skipped": False,
+            "Sibling_Divergence_P_Value_Corrected": 0.03,
         },
         "B": {
             "distribution": G.nodes["B"]["distribution"],
             "is_leaf": False,
-            "Local_BH_Significant": True,
-            "Sibling_BH_Independent": True,
-            "Sibling_CMI_P_Value_Corrected": 0.025,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": True,
+            "Sibling_Divergence_Skipped": False,
+            "Sibling_Divergence_P_Value_Corrected": 0.025,
         },
         "A1": {
             "distribution": G.nodes["A1"]["distribution"],
             "is_leaf": True,
-            "Local_BH_Significant": True,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": False,
+            "Sibling_Divergence_Skipped": False,
         },
         "A2": {
             "distribution": G.nodes["A2"]["distribution"],
             "is_leaf": True,
-            "Local_BH_Significant": True,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": False,
+            "Sibling_Divergence_Skipped": False,
         },
         "B1": {
             "distribution": G.nodes["B1"]["distribution"],
             "is_leaf": True,
-            "Local_BH_Significant": True,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": False,
+            "Sibling_Divergence_Skipped": False,
         },
         "B2": {
             "distribution": G.nodes["B2"]["distribution"],
             "is_leaf": True,
-            "Local_BH_Significant": True,
+            "Child_Parent_Divergence_Significant": True,
+            "Sibling_BH_Different": False,
+            "Sibling_Divergence_Skipped": False,
         },
     }
     df = pd.DataFrame.from_dict(data, orient="index")
@@ -117,17 +133,16 @@ def _sorted_leaf_sets(result: dict[str, object]) -> list[list[str]]:
 
 
 def test_near_threshold_override_merges_borderline_siblings():
+    """Test that siblings with low divergence p-value near alpha are NOT split when Sibling_BH_Different=False."""
     tree, df = _simple_tree()
 
-    baseline_result = tree.decompose(results_df=df)
+    baseline_result = tree.decompose(results_df=df, posthoc_merge=False)
     assert baseline_result["num_clusters"] == 2
 
-    relaxed_result = tree.decompose(
-        results_df=df,
-        near_independence_alpha_buffer=0.01,
-        near_independence_kl_gap=1.0,
-    )
-    assert relaxed_result["num_clusters"] == 1
+    # Set siblings as NOT significantly different - should merge
+    df.loc["R", "Sibling_BH_Different"] = False
+    merged_result = tree.decompose(results_df=df)
+    assert merged_result["num_clusters"] == 1
 
 
 def test_shortlist_processing_matches_default_clusters():
@@ -150,7 +165,7 @@ def test_shortlist_heap_and_stack_paths(monkeypatch):
     expected = _sorted_leaf_sets(baseline)
 
     heap_stats = {"non_none": 0, "calls": 0}
-    original_pop = ClusterDecomposer._pop_candidate
+    original_pop = TreeDecomposition._pop_candidate
 
     def tracking_pop(self, heap, queued, processed):
         heap_stats["calls"] += 1
@@ -159,7 +174,7 @@ def test_shortlist_heap_and_stack_paths(monkeypatch):
             heap_stats["non_none"] += 1
         return node
 
-    monkeypatch.setattr(ClusterDecomposer, "_pop_candidate", tracking_pop)
+    monkeypatch.setattr(TreeDecomposition, "_pop_candidate", tracking_pop)
 
     shortlist = tree.decompose(
         results_df=df,

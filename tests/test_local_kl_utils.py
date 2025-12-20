@@ -6,6 +6,7 @@ for downstream statistical routines.
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests import (
     get_local_kl_series,
@@ -15,11 +16,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests import (
 def test_get_local_kl_series_handles_missing_column():
     df = pd.DataFrame({"leaf_count": [3, 4]}, index=["A", "B"])
 
-    series = get_local_kl_series(df)
-
-    assert list(series.index) == ["A", "B"]
-    assert series.isna().all()
-    assert series.dtype == float
+    with pytest.raises(KeyError):
+        get_local_kl_series(df)
 
 
 def test_get_local_kl_series_returns_existing_series():

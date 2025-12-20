@@ -10,8 +10,8 @@ from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics
     _populate_local_kl,
     _extract_hierarchy_statistics,
 )
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposer import (
-    ClusterDecomposer,
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import (
+    TreeDecomposition,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_child_parent_divergence,
@@ -323,7 +323,7 @@ class PosetTree(nx.DiGraph):
         leaf_data: Optional["pd.DataFrame"] = None,
         **decomposer_kwargs,
     ) -> Dict[str, object]:
-        """Run ``ClusterDecomposer`` directly from the tree.
+        """Run ``TreeDecomposition`` directly from the tree.
 
         Parameters
         ----------
@@ -335,13 +335,13 @@ class PosetTree(nx.DiGraph):
             is not supplied, ``populate_node_divergences`` will be invoked to
             initialize node distributions/KL metrics prior to decomposition.
         **decomposer_kwargs
-            Extra keyword arguments forwarded to ``ClusterDecomposer`` (e.g.,
+            Extra keyword arguments forwarded to ``TreeDecomposition`` (e.g.,
             ``alpha_local``, ``near_independence_alpha_buffer``).
 
         Returns
         -------
         dict
-            Decomposition output from ``ClusterDecomposer.decompose_tree``.
+            Decomposition output from ``TreeDecomposition.decompose_tree``.
         """
         if results_df is None:
             if self.stats_df is None:
@@ -362,9 +362,6 @@ class PosetTree(nx.DiGraph):
             results_df = annotate_child_parent_divergence(
                 self,
                 results_df,
-                total_number_of_features=leaf_data.shape[1]
-                if leaf_data is not None
-                else results_df.attrs.get("n_features", 0),
                 significance_level_alpha=config.SIGNIFICANCE_ALPHA,
             )
             results_df = annotate_sibling_divergence(
@@ -375,7 +372,7 @@ class PosetTree(nx.DiGraph):
             # Update the tree's stats_df with the annotated results so they are available later
             self.stats_df = results_df
 
-        decomposer = ClusterDecomposer(
+        decomposer = TreeDecomposition(
             tree=self,
             results_df=results_df,
             **decomposer_kwargs,
@@ -389,7 +386,7 @@ class PosetTree(nx.DiGraph):
         """Build a per-sample cluster assignment table from decomposition output.
 
         This method is a convenience wrapper around
-        :meth:`kl_clustering_analysis.hierarchy_analysis.tree_decomposer.ClusterDecomposer.build_sample_cluster_assignments`.
+        :meth:`kl_clustering_analysis.hierarchy_analysis.tree_decomposition.TreeDecomposition.build_sample_cluster_assignments`.
 
         Parameters
         ----------
@@ -402,4 +399,4 @@ class PosetTree(nx.DiGraph):
             A pandas DataFrame indexed by ``sample_id`` with cluster assignment columns.
         """
 
-        return ClusterDecomposer.build_sample_cluster_assignments(decomposition_results)
+        return TreeDecomposition.build_sample_cluster_assignments(decomposition_results)

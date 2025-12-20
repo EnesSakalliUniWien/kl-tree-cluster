@@ -13,7 +13,7 @@ from kl_clustering_analysis.information_metrics import (
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_child_parent_divergence,
-    annotate_sibling_independence_cmi,
+    annotate_sibling_divergence,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
@@ -60,20 +60,16 @@ def test_pbmc3k_pipeline_retains_divergent_feature():
     results_df = annotate_child_parent_divergence(
         tree,
         stats_df,
-        total_number_of_features=n_features,
         significance_level_alpha=config.SIGNIFICANCE_ALPHA,
     )
-    results_df = annotate_sibling_independence_cmi(
+    results_df = annotate_sibling_divergence(
         tree,
         results_df,
         significance_level_alpha=config.SIGNIFICANCE_ALPHA,
-        n_permutations=20,
-        parallel=False,
     )
 
     clusters = tree.decompose(
         results_df=results_df,
-        significance_column="Are_Features_Dependent",
         alpha_local=config.ALPHA_LOCAL,
     )
     assert clusters["num_clusters"] >= 1

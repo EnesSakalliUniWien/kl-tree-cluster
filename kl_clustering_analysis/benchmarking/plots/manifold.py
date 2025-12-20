@@ -51,6 +51,7 @@ def create_manifold_alignment_plot(
         embedding_umap = pca.fit_transform(X_scaled)
 
     embedding_umap = _pad_to_three_dims(embedding_umap)
+    embedding_umap = np.nan_to_num(embedding_umap, nan=0.0, posinf=0.0, neginf=0.0)
 
     n_neighbors_iso = min(10, len(X_scaled) - 1) if len(X_scaled) > 1 else 1
     embedding_iso = Isomap(
@@ -59,15 +60,27 @@ def create_manifold_alignment_plot(
         metric="euclidean",
     ).fit_transform(X_scaled)
     embedding_iso = _pad_to_three_dims(embedding_iso)
+    embedding_iso = np.nan_to_num(embedding_iso, nan=0.0, posinf=0.0, neginf=0.0)
 
     dist_umap = pairwise_distances(embedding_umap)
+    dist_umap = np.nan_to_num(dist_umap, nan=0.0, posinf=0.0, neginf=0.0)
+    dist_umap = 0.5 * (dist_umap + dist_umap.T)
+    np.fill_diagonal(dist_umap, 0.0)
+
     dist_iso = pairwise_distances(embedding_iso)
-    mantel_stat, mantel_p, _ = mantel(
-        dist_umap,
-        dist_iso,
-        method="pearson",
-        permutations=199,
-    )
+    dist_iso = np.nan_to_num(dist_iso, nan=0.0, posinf=0.0, neginf=0.0)
+    dist_iso = 0.5 * (dist_iso + dist_iso.T)
+    np.fill_diagonal(dist_iso, 0.0)
+
+    try:
+        mantel_stat, mantel_p, _ = mantel(
+            dist_umap,
+            dist_iso,
+            method="pearson",
+            permutations=199,
+        )
+    except Exception:
+        mantel_stat, mantel_p = float("nan"), float("nan")
 
     upper_idx = np.triu_indices_from(dist_umap, k=1)
 
@@ -106,7 +119,7 @@ def create_manifold_alignment_plot(
         ax.set_ylabel("dim 2")
         ax.set_zlabel("dim 3")
         if y_true is not None:
-            ax.text(0.02, 0.92, "color = KL labels", transform=ax.transAxes)
+            ax.text2D(0.02, 0.92, "color = KL labels", transform=ax.transAxes)
 
     ax1 = fig.add_subplot(1, 3, 1, projection="3d")
     _scatter3d(ax1, embedding_umap, "3D UMAP embedding")
