@@ -31,7 +31,9 @@ def analyze_projection_thresholds():
     print("=" * 70)
     print(f"\nConfig settings:")
     print(f"  USE_RANDOM_PROJECTION: {config.USE_RANDOM_PROJECTION}")
-    print(f"  PROJECTION_THRESHOLD_RATIO: {config.PROJECTION_THRESHOLD_RATIO}")
+    print(
+        "  PROJECTION_DECISION: JL-based (projection if n_features > n_samples and JL k < n_features)"
+    )
     print(f"  PROJECTION_K_MULTIPLIER: {config.PROJECTION_K_MULTIPLIER}")
     print(f"  PROJECTION_MIN_K: {config.PROJECTION_MIN_K}")
     print()
@@ -40,25 +42,21 @@ def analyze_projection_thresholds():
 
     print(f"For n_features = {n_features}:")
     print("-" * 50)
-    print(f"{'n_eff':>8} {'threshold':>10} {'use_proj':>10} {'k (if proj)':>12}")
+    print(f"{'n_eff':>8} {'use_proj':>10} {'k (if proj)':>12}")
     print("-" * 50)
 
     for n_eff in [2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 48, 64]:
-        threshold = config.PROJECTION_THRESHOLD_RATIO * n_eff
         use_proj = should_use_projection(n_features, n_eff)
         if use_proj:
             k = compute_projection_dimension(n_eff, n_features)
-            print(f"{n_eff:>8} {threshold:>10.1f} {str(use_proj):>10} {k:>12}")
+            print(f"{n_eff:>8} {str(use_proj):>10} {k:>12}")
         else:
-            print(f"{n_eff:>8} {threshold:>10.1f} {str(use_proj):>10} {'N/A':>12}")
+            print(f"{n_eff:>8} {str(use_proj):>10} {'N/A':>12}")
 
     print()
     print("Key insight:")
     print(
-        f"  Projection used when n_features > {config.PROJECTION_THRESHOLD_RATIO} × n_eff"
-    )
-    print(
-        f"  For 36 features: projection used when n_eff < {36 / config.PROJECTION_THRESHOLD_RATIO:.1f}"
+        "  Projection decision uses JL target dimension k; see table above for which n_eff cause projection."
     )
 
 

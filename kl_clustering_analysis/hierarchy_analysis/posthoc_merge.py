@@ -42,43 +42,13 @@ def _get_leaf_clusters_under_node(
     return [n for n in descendants if n in cluster_roots]
 
 
-def _find_lca_pair(node_a: str, node_b: str, tree: nx.DiGraph, root: str) -> str:
-    """Find the lowest common ancestor of two nodes.
-
-    Parameters
-    ----------
-    node_a, node_b
-        The two nodes to find the LCA for.
-    tree
-        The hierarchy tree.
-    root
-        The root node of the tree.
-
-    Returns
-    -------
-    str
-        The lowest common ancestor node ID.
-    """
-    ancestors_a = set(nx.ancestors(tree, node_a))
-    ancestors_a.add(node_a)
-
-    current = node_b
-    while current not in ancestors_a:
-        parents = list(tree.predecessors(current))
-        if not parents:
-            return root
-        current = parents[0]
-
-    return current
-
-
 def apply_posthoc_merge(
     cluster_roots: Set[str],
     alpha: float,
     tree: nx.DiGraph,
     children: Dict[str, List[str]],
     root: str,
-    test_divergence: Callable[[str, str, str], Tuple[float, float]],
+    test_divergence: Callable[[str, str, str], Tuple[float, float, float]],
 ) -> Set[str]:
     """Apply tree-respecting post-hoc merging to reduce over-splitting.
 
@@ -102,7 +72,7 @@ def apply_posthoc_merge(
         The root node ID of the tree.
     test_divergence
         Callable that takes (cluster_a, cluster_b, common_ancestor) and returns
-        (test_statistic, p_value).
+        (test_statistic, degrees_of_freedom, p_value).
 
     Returns
     -------
@@ -129,9 +99,11 @@ def apply_posthoc_merge(
 
         for lc in left_clusters:
             for rc in right_clusters:
-                _, p_value = test_divergence(lc, rc, node)
-                lca = _find_lca_pair(lc, rc, tree, root)
-                pairs.append((lc, rc, lca, p_value))
+                # test_divergence returns (test_statistic, df, p_value)
+                test_stat, df, p_value = test_divergence(lc, rc, node)
+                # For any lc under left_child and rc under right_child in a tree,
+                # the lowest common ancestor is the current boundary node.
+                pairs.append((lc, rc, node, p_value))
 
     if not pairs:
         return cluster_roots
@@ -140,14 +112,33 @@ def apply_posthoc_merge(
     p_values = np.array([p[3] for p in pairs])
     reject, _, _ = benjamini_hochberg_correction(p_values, alpha=alpha)
 
+    # Block merges across any boundary that shows a significant difference.
+    # If at least one comparison for a given LCA rejects H0, we should not
+    # merge anything under that ancestor even if other pairs are similar.
+    lca_has_reject: Dict[str, bool] = {}
+    for (_, _, lca, _), is_rejected in zip(pairs, reject):
+        if is_rejected:
+            lca_has_reject[lca] = True
+
     # Get mergeable pairs (failed to reject H0 = clusters are similar)
+    # Skip pairs whose LCA already has evidence of a significant difference.
     # Sort by p-value descending (most similar first)
-    mergeable = [(i, pairs[i]) for i, r in enumerate(reject) if not r]
+    mergeable = [
+        (i, pairs[i])
+        for i, r in enumerate(reject)
+        if (not r) and (not lca_has_reject.get(pairs[i][2], False))
+    ]
     mergeable.sort(key=lambda x: -p_values[x[0]])
 
     # Greedily merge non-overlapping pairs
     merged: Set[str] = set()
     for _, (lc, rc, lca, _) in mergeable:
+        # Only merge "live" cluster roots. This preserves the antichain property:
+        # after an earlier merge at an ancestor, lc/rc may no longer be active
+        # roots (they were removed as descendants), and we must not reintroduce
+        # overlapping descendants by merging stale pairs.
+        if lc not in cluster_roots or rc not in cluster_roots:
+            continue
         if lc in merged or rc in merged:
             continue
 

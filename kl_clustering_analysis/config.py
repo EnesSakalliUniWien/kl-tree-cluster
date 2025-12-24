@@ -2,7 +2,6 @@
 Central configuration for the KL-TE clustering analysis library.
 """
 
-import numpy as np
 
 # --- Statistical Parameters ---
 
@@ -12,18 +11,17 @@ SIGNIFICANCE_ALPHA: float = 0.05
 # Default significance level (alpha) for sibling-divergence gating in clustering.
 # This is intentionally more conservative than SIGNIFICANCE_ALPHA to reduce
 # over-merging at high levels of the tree.
-SIBLING_ALPHA: float = 0.01
-
-# Default number of permutations for permutation tests.
-N_PERMUTATIONS: int = 100
-
-# Epsilon value for numerical stability in KL-divergence and probability calculations.
-EPSILON: float = 1e-9
+SIBLING_ALPHA: float = 0.05
 
 # --- Decomposition Parameters ---
 
 # Default significance level for local (child-vs-parent) tests in decomposition.
 ALPHA_LOCAL: float = 0.05
+
+
+# Epsilon value for numerical stability in KL-divergence and probability calculations.
+EPSILON: float = 1e-9
+
 
 # --- Post-Hoc Merge Parameters ---
 
@@ -34,7 +32,7 @@ POSTHOC_MERGE: bool = True
 
 # Significance level for post-hoc merge tests.
 # If None, defaults to SIBLING_ALPHA at runtime.
-POSTHOC_MERGE_ALPHA: float | None = 0.05
+POSTHOC_MERGE_ALPHA: float | None = None
 
 # --- Tree Inference Parameters ---
 
@@ -53,8 +51,11 @@ TREE_LINKAGE_METHOD: str = "average"
 # Enable random projection for high-dimensional sibling tests
 USE_RANDOM_PROJECTION: bool = True
 
-# Apply projection when n_features > threshold_ratio * n_samples
-PROJECTION_THRESHOLD_RATIO: float = 2.0
+# Projection decision (JL-based):
+# Apply projection when n_features > n_samples AND the JL-computed target
+# dimension k = compute_projection_dimension(n_samples, n_features) is less than n_features.
+# Random projection is applied in the hypothesis tests via
+# `statistics.random_projection.compute_projection_dimension`.
 
 # Distortion tolerance for Johnson-Lindenstrauss projection.
 # Controls the trade-off between dimension reduction and distance preservation:
@@ -71,8 +72,6 @@ PROJECTION_K_MULTIPLIER: float = 4.0
 # Minimum projected dimension
 PROJECTION_MIN_K: int = 10
 
-# Number of random projection trials for averaging
-PROJECTION_N_TRIALS: int = 5
 
 # Random seed for projection reproducibility (None for random)
 PROJECTION_RANDOM_SEED: int | None = 42

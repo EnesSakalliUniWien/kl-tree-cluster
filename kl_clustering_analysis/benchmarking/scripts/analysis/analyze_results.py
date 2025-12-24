@@ -3,7 +3,7 @@
 from kl_clustering_analysis.benchmarking.pipeline import benchmark_cluster_algorithm
 from tests.test_cases_config import get_default_test_cases
 from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
-    should_use_projection,
+    compute_projection_dimension,
 )
 
 test_cases = get_default_test_cases()
@@ -17,7 +17,7 @@ print("=" * 90)
 for i, tc in enumerate(test_cases):
     n = tc.get("n_samples", tc.get("n_rows", 100))
     d = tc.get("n_features", tc.get("n_cols", 50))
-    df_results.loc[i, "Uses_Projection"] = should_use_projection(d, n)
+    df_results.loc[i, "Uses_Projection"] = compute_projection_dimension(n, d) < d
     df_results.loc[i, "n_rows"] = n
     df_results.loc[i, "n_cols"] = d
 

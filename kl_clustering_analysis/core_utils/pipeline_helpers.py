@@ -99,7 +99,7 @@ def run_statistical_analysis(tree, X):
     results_df = annotate_sibling_divergence(
         tree,
         results_df,
-        significance_level_alpha=config.SIGNIFICANCE_ALPHA,
+        significance_level_alpha=config.SIBLING_ALPHA,
     )
 
     print("Statistical analysis complete.")

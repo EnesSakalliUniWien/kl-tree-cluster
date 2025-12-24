@@ -1,176 +1,172 @@
-from __future__ import annotations
+"""Edge significance testing for hierarchical clustering.
 
-from typing import Optional
+Tests whether each child's distribution significantly diverges from its parent
+using a projected Wald test. This approach handles high dimensionality by
+projecting standardized z-scores to a lower dimension via Johnson-Lindenstrauss
+random projection.
+
+Test statistic: T = ||R·z||² ~ χ²(k) where:
+- z_i = (θ_child - θ_parent) / √(Var(θ̂)) is the standardized difference per feature
+- R is a k × d random projection matrix (k = O(log n))
+- k is the projection dimension from the JL lemma
+
+References
+----------
+Johnson, W. B., & Lindenstrauss, J. (1984). Extensions of Lipschitz
+    mappings into a Hilbert space. Contemporary Mathematics, 26, 189-206.
+Bogomolov et al. (2021). "Hypotheses on a tree: new error rates and
+    testing strategies". Biometrika, 108(3), 575-590.
+"""
+
+from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 import networkx as nx
+from scipy.stats import chi2
 
 from ..multiple_testing import apply_multiple_testing_correction
-from .utils import get_local_kl_series
-from .chi_square_test import kl_divergence_chi_square_test_batch
+from ..random_projection import compute_projection_dimension, generate_projection_matrix
 from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
     extract_parent_distributions,
-    raise_leaf_only_tree_error,
-)
-from .global_weighting import (
-    compute_global_weight,
-    compute_neutral_point,
-    extract_global_weighting_config,
 )
 from kl_clustering_analysis import config
-from kl_clustering_analysis.tree.poset_tree import compute_node_depths
+from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
 
-def _compute_variance_weighted_df(parent_distribution: np.ndarray) -> float:
-    """Compute variance-weighted effective degrees of freedom.
-
-    For Bernoulli features, the weight is 4*θ*(1-θ), which equals
-    the variance of a Bernoulli normalized to [0,1] (max at θ=0.5).
-
-    Parameters
-    ----------
-    parent_distribution
-        Parent node's feature means (θ values), shape (n_features,)
-
-    Returns
-    -------
-    float
-        Effective degrees of freedom (sum of variance weights)
-    """
-    theta = np.asarray(parent_distribution, dtype=np.float64)
-    variance_weights = 4.0 * theta * (1.0 - theta)
-    return max(1.0, float(np.sum(variance_weights)))
+# =============================================================================
+# Core Statistical Functions
+# =============================================================================
 
 
-def _extract_local_kl(
-    nodes_dataframe: pd.DataFrame, child_ids: list[str]
+def _compute_standardized_z(
+    child_dist: np.ndarray,
+    parent_dist: np.ndarray,
+    n_child: int,
 ) -> np.ndarray:
-    """Extract local KL divergence values for child nodes.
+    """Compute standardized z-scores for child vs parent.
+
+    Under H₀ (child ~ parent), each z_i ~ N(0, 1).
 
     Parameters
     ----------
-    nodes_dataframe
-        DataFrame with node statistics including KL divergence columns
-    child_ids
-        List of child node identifiers
+    child_dist
+        Child node's feature means (θ_child), shape (d,)
+    parent_dist
+        Parent node's feature means (θ_parent), shape (d,)
+    n_child
+        Sample size (leaf count) for the child node
 
     Returns
     -------
     np.ndarray
-        Local KL(child||parent) values aligned to child_ids
-
-    Raises
-    ------
-    ValueError
-        If any child nodes have missing local KL values
+        Standardized z-scores, shape (d,)
     """
-    child_local_kl = get_local_kl_series(nodes_dataframe).reindex(child_ids).to_numpy()
-    if np.isnan(child_local_kl).any():
-        missing = [child_ids[i] for i, v in enumerate(child_local_kl) if np.isnan(v)]
-        preview = ", ".join(map(repr, missing[:5]))
-        raise ValueError(
-            f"Missing kl_divergence_local values for child nodes: {preview}."
-        )
-
-    return child_local_kl
+    # Variance under null: Var(θ̂) = θ(1-θ)/n
+    var = parent_dist * (1 - parent_dist) / n_child
+    var = np.maximum(var, 1e-10)  # avoid division by zero
+    return (child_dist - parent_dist) / np.sqrt(var)
 
 
-def _compute_chi_square_p_values_per_edge(
-    child_leaf_counts: np.ndarray,
-    child_local_kl: np.ndarray,
-    parent_distributions: list[np.ndarray],
-    child_global_kl: Optional[np.ndarray] = None,
-    global_weight_beta: float = 0.0,
-    global_weight_method: str = "relative",
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute chi-square p-values for local KL divergence tests with per-edge df.
+def _compute_projected_test(
+    child_dist: np.ndarray,
+    parent_dist: np.ndarray,
+    n_child: int,
+    seed: int,
+) -> tuple[float, int, float]:
+    """Compute projected Wald test for one edge.
 
-    Tests χ² = 2*N*KL/w ~ χ²(df_eff) where N is leaf count, w is the global
-    weight, and df_eff is the variance-weighted effective degrees of freedom
-    based on the parent distribution.
-
-    Global weighting (when enabled):
-    - Adjusts test statistic by tree position: deeper nodes require stronger signal
-    - Uses relative strength (KL_local/KL_global) to adaptively penalize noise
-    - Preserves df (represents feature dimensionality, not depth)
+    Projects d-dimensional z-scores to k dimensions and computes
+    T = ||R·z||² ~ χ²(k).
 
     Parameters
     ----------
+    child_dist
+        Child node's feature means
+    parent_dist
+        Parent node's feature means
+    n_child
+        Sample size for child node
+    seed
+        Random seed for projection matrix
+
+    Returns
+    -------
+    tuple[float, int, float]
+        (test_statistic, degrees_of_freedom, p_value)
+    """
+    z = _compute_standardized_z(child_dist, parent_dist, n_child)
+    d = len(z)
+
+    # Projection dimension from JL lemma: k = O(log n)
+    k = compute_projection_dimension(n_child, d)
+
+    # Project to k dimensions
+    R = generate_projection_matrix(d, k, seed)
+    projected = R @ z
+
+    # Test statistic: sum of squared projected z-scores
+    stat = float(np.sum(projected**2))
+    pval = float(chi2.sf(stat, df=k))
+
+    return stat, k, pval
+
+
+def _compute_p_values_via_projection(
+    tree: nx.DiGraph,
+    child_ids: list[str],
+    parent_ids: list[str],
+    child_leaf_counts: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Compute p-values for all edges via random projection.
+
+    Parameters
+    ----------
+    tree
+        Hierarchy with 'distribution' attribute on nodes
+    child_ids
+        List of child node IDs
+    parent_ids
+        List of parent node IDs (aligned with child_ids)
     child_leaf_counts
-        Leaf count for each child node
-    child_local_kl
-        Local KL(child||parent) for each child node
-    parent_distributions
-        List of parent distribution arrays (one per edge). Must not contain None.
-    child_global_kl
-        Global KL(child||root) for each child node (optional, for global weighting)
-    global_weight_beta
-        Global weight strength parameter (0 = no weighting)
-    global_weight_method
-        Method for computing global weight ("fixed" or "relative")
+        Sample sizes for child nodes
 
     Returns
     -------
     tuple[np.ndarray, np.ndarray, np.ndarray]
-        (p_values, degrees_of_freedom, global_weights) arrays aligned to child nodes
+        (test_statistics, degrees_of_freedom, p_values)
     """
-    n_edges = len(child_leaf_counts)
-    degrees_of_freedom = np.full(n_edges, np.nan, dtype=float)
-    global_weights = np.ones(n_edges, dtype=float)
+    n_edges = len(child_ids)
+    stats = np.full(n_edges, np.nan)
+    dfs = np.full(n_edges, np.nan)
+    pvals = np.full(n_edges, np.nan)
 
-    valid_nodes = np.isfinite(child_local_kl) & (child_leaf_counts > 0)
+    seed = config.PROJECTION_RANDOM_SEED
 
-    # Check if global weighting is enabled
-    use_global_weighting = (
-        global_weight_beta > 0
-        and child_global_kl is not None
-        and len(child_global_kl) == n_edges
-    )
-
-    # Compute data-driven neutral point for symmetric weighting
-    neutral_point = 0.5  # default
-    if use_global_weighting and global_weight_method == "relative":
-        neutral_point = compute_neutral_point(
-            child_local_kl=child_local_kl,
-            child_global_kl=child_global_kl,
-            valid_mask=valid_nodes,
-        )
-
-    # Compute degrees of freedom and global weights for each edge
     for i in range(n_edges):
-        if not valid_nodes[i]:
+        child_dist = tree.nodes[child_ids[i]].get("distribution")
+        parent_dist = tree.nodes[parent_ids[i]].get("distribution")
+
+        # If test is not possible (missing data, no samples), mark as non-significant
+        if child_dist is None or parent_dist is None or child_leaf_counts[i] < 1:
+            stats[i], dfs[i], pvals[i] = 0.0, 0, 1.0
             continue
 
-        # Compute variance-weighted df from parent distribution
-        if parent_distributions[i] is None:
-            raise ValueError(
-                f"Parent distribution is not available for edge {i}. "
-                "Cannot compute variance-weighted degrees of freedom."
-            )
-        degrees_of_freedom[i] = _compute_variance_weighted_df(parent_distributions[i])
+        stats[i], dfs[i], pvals[i] = _compute_projected_test(
+            np.asarray(child_dist, dtype=np.float64),
+            np.asarray(parent_dist, dtype=np.float64),
+            int(child_leaf_counts[i]),
+            seed,
+        )
 
-        # Compute global weight if enabled
-        if use_global_weighting:
-            global_weights[i] = compute_global_weight(
-                child_local_kl=child_local_kl[i],
-                child_global_kl=child_global_kl[i],
-                beta=global_weight_beta,
-                method=global_weight_method,
-                neutral_point=neutral_point,
-            )
+    return stats, dfs, pvals
 
-    # Use vectorized chi-square test for all edges at once
-    _, p_values = kl_divergence_chi_square_test_batch(
-        kl_divergences=child_local_kl,
-        sample_sizes=child_leaf_counts,
-        degrees_of_freedom=degrees_of_freedom,
-        weights=global_weights,
-    )
 
-    return p_values, degrees_of_freedom, global_weights
+# =============================================================================
+# Public API
+# =============================================================================
 
 
 def annotate_child_parent_divergence(
@@ -179,23 +175,23 @@ def annotate_child_parent_divergence(
     significance_level_alpha: float = 0.05,
     fdr_method: str = "tree_bh",
 ) -> pd.DataFrame:
-    """Annotate each child node with local KL divergence significance test results.
+    """Test child-parent divergence using projected Wald test.
 
-    Tests whether each child's distribution significantly diverges from its parent
-    using chi-square test on 2*N*KL(child||parent) ~ χ²(df_eff) where N is leaf count
-    and df_eff is the variance-weighted effective degrees of freedom based on the
-    parent's distribution: df_eff = Σ 4·θᵢ·(1-θᵢ).
+    Tests whether each child's distribution significantly diverges from its
+    parent using a projected Wald test: T = ||R·z||² ~ χ²(k), where z is the
+    vector of standardized differences and R is a JL random projection matrix.
 
-    This weights features by their informativeness - features with θ near 0 or 1
-    contribute less to the degrees of freedom than features with θ near 0.5.
+    This approach properly handles high dimensionality by reducing the
+    d-dimensional z-scores to k = O(log n) dimensions, preventing noise
+    accumulation that occurs with full-dimensional tests.
 
     Parameters
     ----------
     tree
-        Directed acyclic graph representing the hierarchy. Nodes should have
+        Directed acyclic graph representing the hierarchy. Nodes must have
         'distribution' attribute containing feature means.
     nodes_statistics_dataframe
-        DataFrame indexed by node_id with 'leaf_count' and KL divergence columns
+        DataFrame indexed by node_id with 'leaf_count' column
     significance_level_alpha
         FDR threshold for correction
     fdr_method
@@ -209,18 +205,19 @@ def annotate_child_parent_divergence(
     -------
     pd.DataFrame
         Input DataFrame augmented with columns:
-        - Child_Parent_Divergence_P_Value: raw chi-square p-value
+        - Child_Parent_Divergence_P_Value: raw p-value from projected Wald test
         - Child_Parent_Divergence_P_Value_BH: corrected p-value
         - Child_Parent_Divergence_Significant: boolean, True if rejected after correction
-        - Child_Parent_Divergence_df: effective degrees of freedom used
+        - Child_Parent_Divergence_df: projection dimension k used
 
     References
     ----------
+    Johnson, W. B., & Lindenstrauss, J. (1984). Extensions of Lipschitz
+        mappings into a Hilbert space. Contemporary Mathematics, 26, 189-206.
     Bogomolov et al. (2021). "Hypotheses on a tree: new error rates and
-    testing strategies". Biometrika, 108(3), 575-590.
+        testing strategies". Biometrika, 108(3), 575-590.
     """
     nodes_dataframe = nodes_statistics_dataframe.copy()
-
     alpha = float(significance_level_alpha)
 
     # Extract all edges (parent -> child)
@@ -228,41 +225,16 @@ def annotate_child_parent_divergence(
     parent_ids = [parent_id for parent_id, _ in edge_list]
     child_ids = [child_id for _, child_id in edge_list]
 
-    # Tree contains only leaves (no internal nodes) - cannot compute local divergence
+    # Tree contains only leaves (no internal nodes)
     if not child_ids:
-        return raise_leaf_only_tree_error(nodes_dataframe)
-
-    # Extract parent distributions for variance-weighted df
-    parent_distributions = extract_parent_distributions(tree, parent_ids)
+        raise ValueError("Tree has no edges. Cannot compute child-parent divergence.")
 
     # Extract child node data
     child_leaf_counts = extract_leaf_counts(nodes_dataframe, child_ids)
-    child_local_kl = _extract_local_kl(nodes_dataframe, child_ids)
 
-    # Extract global KL if available and global weighting is enabled
-    child_global_kl = None
-    global_weight_beta = 0.0
-    global_weight_method = config.GLOBAL_WEIGHT_METHOD
-
-    if config.USE_GLOBAL_DIVERGENCE_WEIGHTING:
-        child_global_kl, global_weight_beta, global_weight_method = (
-            extract_global_weighting_config(
-                nodes_dataframe=nodes_dataframe,
-                child_ids=child_ids,
-                child_local_kl=child_local_kl,
-            )
-        )
-
-    # Compute chi-square p-values with per-edge variance-weighted df and global weights
-    p_values, degrees_of_freedom, global_weights = (
-        _compute_chi_square_p_values_per_edge(
-            child_leaf_counts,
-            child_local_kl,
-            parent_distributions,
-            child_global_kl=child_global_kl,
-            global_weight_beta=global_weight_beta,
-            global_weight_method=global_weight_method,
-        )
+    # Compute p-values via projected Wald test
+    test_stats, degrees_of_freedom, p_values = _compute_p_values_via_projection(
+        tree, child_ids, parent_ids, child_leaf_counts
     )
 
     if not np.isfinite(p_values).all():
@@ -286,7 +258,8 @@ def annotate_child_parent_divergence(
         tree=tree,
     )
 
-    # Assign results to dataframe
+    # Assign results to dataframe (global_weights = 1.0, not used in this version)
+    global_weights = np.ones(len(child_ids))
     return assign_divergence_results(
         nodes_dataframe=nodes_dataframe,
         child_ids=child_ids,

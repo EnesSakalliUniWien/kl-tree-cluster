@@ -74,9 +74,7 @@ def test_complex_random_feature_matrix_unbalanced_clusters():
     )
     data_df = pd.DataFrame.from_dict(data_dict, orient="index").astype(int)
 
-    decomposition, _ = _run_pipeline_on_dataframe(
-        data_df, significance_level=0.05, n_permutations=40
-    )
+    decomposition, _ = _run_pipeline_on_dataframe(data_df, significance_level=0.05)
     predicted = _labels_from_decomposition(decomposition, data_df.index.tolist())
     true_labels = [true_clusters[name] for name in data_df.index]
 

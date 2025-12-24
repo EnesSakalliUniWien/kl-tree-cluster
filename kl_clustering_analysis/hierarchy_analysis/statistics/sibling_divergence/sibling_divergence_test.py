@@ -190,8 +190,7 @@ def _run_tests(
 ) -> List[Tuple[float, float, float]]:
     """Execute sibling divergence tests for all collected pairs."""
     return [
-        sibling_divergence_test(left, right, n_l, n_r)
-        for left, right, n_l, n_r in args
+        sibling_divergence_test(left, right, n_l, n_r) for left, right, n_l, n_r in args
     ]
 
 
@@ -235,7 +234,7 @@ def annotate_sibling_divergence(
     tree: nx.DiGraph,
     nodes_statistics_dataframe: pd.DataFrame,
     *,
-    significance_level_alpha: float = config.SIGNIFICANCE_ALPHA,
+    significance_level_alpha: float = config.SIBLING_ALPHA,
     min_samples_per_sibling: int = 2,
 ) -> pd.DataFrame:
     """Test sibling divergence and annotate results in dataframe.
@@ -264,9 +263,7 @@ def annotate_sibling_divergence(
     df = nodes_statistics_dataframe.copy()
     df = initialize_sibling_divergence_columns(df)
 
-    parents, args, skipped = _collect_test_arguments(
-        tree, df, min_samples_per_sibling
-    )
+    parents, args, skipped = _collect_test_arguments(tree, df, min_samples_per_sibling)
 
     if not parents:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)

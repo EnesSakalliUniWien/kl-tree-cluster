@@ -134,20 +134,14 @@ def analyze_projection_usage():
     # For balanced binary split, n_eff ≈ n_samples / 2
     n_eff_approx = n_samples / 2
 
-    threshold = config.PROJECTION_THRESHOLD_RATIO * n_eff_approx
+    use_proj = should_use_projection(n_features, n_eff_approx)
 
-    print(f"\nProjection threshold check:")
+    print(f"\nProjection decision check:")
     print(f"  n_features: {n_features}")
     print(f"  n_eff (approx): {n_eff_approx}")
-    print(f"  Threshold ratio: {config.PROJECTION_THRESHOLD_RATIO}")
-    print(f"  Threshold: {threshold:.1f}")
-    print(f"  Use projection? {n_features > threshold}")
+    print(f"  Projection used? {use_proj}")
 
-    if n_features > threshold:
-        from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
-            compute_projection_dimension,
-        )
-
+    if use_proj:
         k = compute_projection_dimension(int(n_eff_approx), n_features)
         print(f"  Projection dimension k: {k}")
     else:

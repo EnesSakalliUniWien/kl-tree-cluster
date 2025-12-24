@@ -24,7 +24,7 @@ import numpy as np
 import networkx as nx
 from statsmodels.stats.multitest import multipletests
 
-from kl_clustering_analysis.tree.poset_tree import compute_node_depths
+from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
 
 @dataclass

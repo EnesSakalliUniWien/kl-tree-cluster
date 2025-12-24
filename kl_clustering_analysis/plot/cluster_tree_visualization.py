@@ -70,7 +70,8 @@ def plot_tree_with_clusters(
     colormap: Optional[str] = None,
     title: Optional[str] = None,
     figsize: Optional[Tuple[float, float]] = None,
-    show: bool = True,
+    ax: Optional["plt.Axes"] = None,
+    show: bool = False,
 ):
     """
     Plot hierarchical tree with cluster assignments.
@@ -126,10 +127,12 @@ def plot_tree_with_clusters(
             f"{num_clusters} Independent Clusters Identified"
         )
 
-    if figsize is None:
-        figsize = (max(width, 1) / 100.0, max(height, 1) / 100.0)
-
-    fig, ax = plt.subplots(figsize=figsize)
+    if ax is None:
+        if figsize is None:
+            figsize = (max(width, 1) / 100.0, max(height, 1) / 100.0)
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.figure
     nx.draw(
         G,
         pos,
@@ -168,6 +171,11 @@ def plot_tree_with_clusters(
             )
 
     if show:
-        plt.show()
+        import warnings
+
+        warnings.warn(
+            "plot_tree_with_clusters: 'show' is deprecated and will be removed; save figures externally instead.",
+            DeprecationWarning,
+        )
 
     return fig, ax

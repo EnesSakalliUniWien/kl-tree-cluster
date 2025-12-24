@@ -13,7 +13,9 @@ sys.path.insert(0, ".")
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
-from kl_clustering_analysis.benchmarking.generators import generate_random_feature_matrix
+from kl_clustering_analysis.benchmarking.generators import (
+    generate_random_feature_matrix,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
 
@@ -86,7 +88,9 @@ print("\n" + "-" * 40)
 print("CONFIG")
 print("-" * 40)
 print(f"USE_RANDOM_PROJECTION: {config.USE_RANDOM_PROJECTION}")
-print(f"PROJECTION_THRESHOLD_RATIO: {config.PROJECTION_THRESHOLD_RATIO}")
+print(
+    "PROJECTION_DECISION: JL-based (project if compute_projection_dimension(n_eff, n_features) < n_features and n_features > n_eff)"
+)
 print(f"SIBLING_ALPHA: {config.SIBLING_ALPHA}")
 print(f"ALPHA_LOCAL: {config.ALPHA_LOCAL}")
 

@@ -237,9 +237,7 @@ def initialize_sibling_divergence_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def extract_bool_column_dict(
-    df: object, column_name: str, default: bool = False
-) -> dict[str, bool]:
+def extract_bool_column_dict(df: object, column_name: str) -> dict[str, bool]:
     """Extract a boolean column from DataFrame as a dictionary.
 
     Parameters
@@ -248,8 +246,6 @@ def extract_bool_column_dict(
         DataFrame containing the column.
     column_name : str
         Name of the column to extract.
-    default : bool
-        Default value for missing/NaN entries.
 
     Returns
     -------

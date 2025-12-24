@@ -18,51 +18,10 @@ from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_sibling_divergence,
 )
 from kl_clustering_analysis import config
+from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
 if TYPE_CHECKING:
     import pandas as pd
-
-
-# ============================================================
-# Tree utilities
-# ============================================================
-
-
-def compute_node_depths(tree: nx.DiGraph) -> Dict[str, int]:
-    """Compute depth of each node from the root via BFS.
-
-    Parameters
-    ----------
-    tree
-        Directed acyclic graph representing the hierarchy.
-
-    Returns
-    -------
-    Dict[str, int]
-        Mapping from node_id to depth (root = 0).
-
-    Raises
-    ------
-    ValueError
-        If the tree has no root node (all nodes have parents).
-    """
-    roots = [n for n in tree.nodes() if tree.in_degree(n) == 0]
-    if not roots:
-        raise ValueError("Tree has no root node (all nodes have parents)")
-
-    depths: Dict[str, int] = {}
-    for root in roots:
-        depths[root] = 0
-
-    queue = list(roots)
-    while queue:
-        node = queue.pop(0)
-        for child in tree.successors(node):
-            if child not in depths:
-                depths[child] = depths[node] + 1
-                queue.append(child)
-
-    return depths
 
 
 # ============================================================
@@ -95,6 +54,7 @@ class PosetTree(nx.DiGraph):
         """Initialize PosetTree with stats_df property."""
         super().__init__(*args, **kwargs)
         self.stats_df: Optional["pd.DataFrame"] = None
+        self._depths: Optional[Dict[str, int]] = None
 
     @classmethod
     def from_agglomerative(
@@ -329,6 +289,97 @@ class PosetTree(nx.DiGraph):
                 desc_sets[node] = frozenset.union(*child_sets)
         return desc_sets
 
+    def _get_depths(self) -> Dict[str, int]:
+        """Computes and caches node depths from the root."""
+        if self._depths is None:
+            self._depths = compute_node_depths(self)
+        return self._depths
+
+    def find_lca(self, node_a: str, node_b: str) -> str:
+        """Find the lowest common ancestor (LCA) of two nodes.
+
+        This implementation assumes the graph is a tree (each node has one parent)
+        and uses node depths for an efficient O(depth) search.
+
+        Parameters
+        ----------
+        node_a, node_b
+            Node identifiers whose LCA is sought.
+
+        Returns
+        -------
+        str
+            The node id of the lowest common ancestor.
+        """
+        if node_a == node_b:
+            return node_a
+
+        depths = self._get_depths()
+        depth_a = depths.get(node_a)
+        depth_b = depths.get(node_b)
+
+        if depth_a is None or depth_b is None:
+            # Fallback for nodes not in the main tree structure. This can happen
+            # if the graph is not a single connected tree. The original
+            # implementation is a safe fallback for general DAGs.
+            ancestors_a = set(nx.ancestors(self, node_a))
+            ancestors_a.add(node_a)
+            current = node_b
+            while current not in ancestors_a:
+                parents = list(self.predecessors(current))
+                if not parents:
+                    return self.root()
+                current = parents[0]
+            return current
+
+        # Use depths to find LCA
+        current_a, current_b = node_a, node_b
+        # 1. Bring nodes to the same depth
+        if depth_a > depth_b:
+            for _ in range(depth_a - depth_b):
+                current_a = next(self.predecessors(current_a))
+        elif depth_b > depth_a:
+            for _ in range(depth_b - depth_a):
+                current_b = next(self.predecessors(current_b))
+
+        # 2. Walk up until they meet
+        while current_a != current_b:
+            current_a = next(self.predecessors(current_a))
+            current_b = next(self.predecessors(current_b))
+
+        return current_a
+
+    def find_lca_for_set(self, nodes: Iterable[str]) -> str:
+        """Find the lowest common ancestor for a collection of nodes.
+
+        Iteratively applies the two-node LCA function to find the LCA for the set.
+
+        Parameters
+        ----------
+        nodes
+            An iterable of node identifiers.
+
+        Returns
+        -------
+        str
+            The node id of the lowest common ancestor for the set.
+        """
+        node_iterator = iter(nodes)
+        try:
+            # Start with the first node as the initial LCA
+            lca = next(node_iterator)
+        except StopIteration:
+            # If the input iterable is empty, return the tree's root.
+            return self.root()
+
+        root = self.root()
+        for node in node_iterator:
+            lca = self.find_lca(lca, node)
+            # Optimization: if LCA is the root, it cannot get any higher.
+            if lca == root:
+                return root
+        return lca
+
     def populate_node_divergences(self, leaf_data: "pd.DataFrame") -> None:
         """Populate tree nodes with distributions and KL divergences.
 
@@ -394,12 +445,6 @@ class PosetTree(nx.DiGraph):
                     )
                 self.populate_node_divergences(leaf_data)
             results_df = self.stats_df.copy()
-
-            # Extract n_permutations if provided, otherwise use config default
-            n_permutations = decomposer_kwargs.pop(
-                "n_permutations", config.N_PERMUTATIONS
-            )
-            random_state = decomposer_kwargs.pop("random_state", 0)
 
             # Run statistical annotations to align with pipeline_helpers
             results_df = annotate_child_parent_divergence(

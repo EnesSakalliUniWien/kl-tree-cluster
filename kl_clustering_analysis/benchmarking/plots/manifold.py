@@ -27,6 +27,8 @@ def create_manifold_alignment_plot(
     test_case_num: int,
     meta: dict,
     y_true: np.ndarray | None = None,
+    *,
+    title: str | None = None,
 ):
     """Compare UMAP and Isomap manifolds with KL cluster coloring."""
     labels_array = np.asarray(y_kl)
@@ -86,12 +88,16 @@ def create_manifold_alignment_plot(
 
     found_clusters = int(meta.get("found_clusters", meta["n_clusters"]))
     fig = plt.figure(figsize=(18, 6))
-    fig.suptitle(
-        (
+    header = (
+        title
+        if title is not None
+        else (
             f"Test Case {test_case_num}: Manifold Alignment "
-            f"(expected={meta['n_clusters']}, KL found={found_clusters})\n"
-            f"UMAP vs Isomap concordance r={mantel_stat:.2f}, p={mantel_p:.3f}"
-        ),
+            f"(expected={meta['n_clusters']}, KL found={found_clusters})"
+        )
+    )
+    fig.suptitle(
+        f"{header}\nUMAP vs Isomap concordance r={mantel_stat:.2f}, p={mantel_p:.3f}",
         fontsize=15,
         weight="bold",
     )

@@ -14,10 +14,46 @@ from kl_clustering_analysis.benchmarking.generators.generate_random_feature_matr
     generate_random_feature_matrix,
 )
 from kl_clustering_analysis.tree.build_tree import build_kl_tree
-from kl_clustering_analysis.threshold.thresholding import calculate_threshold
+
+# Threshold utilities were removed from the package; provide a light fallback for debug scripts
+try:
+    from kl_clustering_analysis.threshold.thresholding import calculate_threshold  # type: ignore
+except Exception:  # pragma: no cover - fallback when threshold package is absent
+
+    def calculate_threshold(
+        node_df, significance_level: float = 0.01, verbose: bool = False
+    ):
+        """Fallback threshold calculator for debugging when threshold utils are removed.
+
+        This simple heuristic returns the quantile of sibling-corrected p-values
+        (or 0.5 if unavailable). It's intentionally conservative and suitable for
+        debugging workflows; production-grade thresholding has been removed.
+        """
+        # Prefer sibling-corrected p-values when available, else use edge p-values.
+        if "Sibling_Divergence_P_Value_Corrected" in node_df.columns:
+            vals = node_df["Sibling_Divergence_P_Value_Corrected"].dropna().values
+        elif "edge_p_value" in node_df.columns:
+            vals = node_df["edge_p_value"].dropna().values
+        else:
+            if verbose:
+                print("No p-value columns available; returning default threshold 0.5")
+            return 0.5
+
+        if len(vals) == 0:
+            return 0.5
+
+        # Use the provided significance level as a quantile threshold
+        q = float(significance_level)
+        thr = float(np.quantile(vals, q))
+        if verbose:
+            print(f"Fallback threshold (quantile {q}) = {thr}")
+        return thr
+
+
 from kl_clustering_analysis.hierarchy_analysis.edge_significance import (
     annotate_child_parent_divergence,
 )
+
 from kl_clustering_analysis.hierarchy_analysis.sibling_divergence_test import (
     annotate_sibling_divergence,
 )

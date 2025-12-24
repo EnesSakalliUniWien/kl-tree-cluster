@@ -66,7 +66,9 @@ def analyze_case_55():
     # Check projection settings
     print(f"\nProjection settings:")
     print(f"  USE_RANDOM_PROJECTION: {config.USE_RANDOM_PROJECTION}")
-    print(f"  PROJECTION_THRESHOLD_RATIO: {config.PROJECTION_THRESHOLD_RATIO}")
+    print(
+        "  PROJECTION_DECISION: JL-based (projection if n_features > n_samples and JL k < n_features)"
+    )
     print(f"  PROJECTION_K_MULTIPLIER: {config.PROJECTION_K_MULTIPLIER}")
     print(f"  PROJECTION_MIN_K: {config.PROJECTION_MIN_K}")
     print(f"  PROJECTION_N_TRIALS: {config.PROJECTION_N_TRIALS}")
