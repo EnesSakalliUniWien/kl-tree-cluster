@@ -56,6 +56,15 @@ USE_RANDOM_PROJECTION: bool = True
 # Apply projection when n_features > threshold_ratio * n_samples
 PROJECTION_THRESHOLD_RATIO: float = 2.0
 
+# Distortion tolerance for Johnson-Lindenstrauss projection.
+# Controls the trade-off between dimension reduction and distance preservation:
+#   eps=0.1 -> ±10% distortion, many dimensions (conservative)
+#   eps=0.3 -> ±30% distortion, moderate dimensions (good for hypothesis testing)
+#   eps=0.5 -> ±50% distortion, few dimensions (aggressive)
+# Uses sklearn's johnson_lindenstrauss_min_dim for theoretically-grounded dimension.
+PROJECTION_EPS: float = 0.3
+
+# Legacy parameter (deprecated, kept for backward compatibility)
 # Target dimension k = k_multiplier * log(n)
 PROJECTION_K_MULTIPLIER: float = 4.0
 
@@ -78,3 +87,26 @@ MI_FILTER_QUANTILE: float = 0.5
 
 # Minimum fraction of features to retain
 MI_FILTER_MIN_FRACTION: float = 0.1
+
+# --- Global Divergence Parameters ---
+
+# Enable global divergence weighting in edge significance tests
+# When True, edges are weighted by their global context: KL(child||root)
+USE_GLOBAL_DIVERGENCE_WEIGHTING: bool = True
+
+# Method for determining global weight strength (β parameter)
+# Options:
+#   "fixed": Use GLOBAL_WEIGHT_STRENGTH value directly
+#   "data_driven": Estimate β from KL_local/KL_global distribution
+#   "relative": Use relative strength mode (adaptive penalty/bonus)
+GLOBAL_WEIGHT_METHOD: str = "data_driven"
+
+# Fixed global weight strength (used when method="fixed")
+# Typical range: [0.3, 0.5]
+# Higher values = stronger depth penalty
+GLOBAL_WEIGHT_STRENGTH: float = 0.4
+
+# Percentile for data-driven estimation (used when method="data_driven")
+# Uses this percentile of KL_local/KL_global ratios to normalize
+# 50 = median, 75 = upper quartile (more conservative)
+GLOBAL_WEIGHT_PERCENTILE: float = 50.0

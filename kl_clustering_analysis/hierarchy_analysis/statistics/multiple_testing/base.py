@@ -1,7 +1,13 @@
-"""Multiple testing correction utilities for statistical hypothesis testing.
+"""Core Benjamini-Hochberg FDR correction.
 
-Provides methods for controlling false discovery rate (FDR) and family-wise
-error rate (FWER) when performing multiple hypothesis tests.
+This module provides the fundamental BH correction that other correction
+methods build upon.
+
+References
+----------
+Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery
+rate: a practical and powerful approach to multiple testing. Journal of
+the Royal Statistical Society Series B, 57, 289-300.
 """
 
 from __future__ import annotations
@@ -38,11 +44,13 @@ def benjamini_hochberg_correction(
     Returns empty arrays if input is empty (guards against edge cases).
     Uses statsmodels implementation of Benjamini-Hochberg procedure.
 
-    References
-    ----------
-    Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery
-    rate: a practical and powerful approach to multiple testing. Journal of
-    the Royal Statistical Society Series B, 57, 289-300.
+    Examples
+    --------
+    >>> import numpy as np
+    >>> p_values = np.array([0.001, 0.01, 0.03, 0.05, 0.1])
+    >>> rejected, adjusted, alpha = benjamini_hochberg_correction(p_values)
+    >>> rejected
+    array([ True,  True,  True, False, False])
     """
     # Convert to float array for numerical stability
     p_values_array = np.asarray(p_values, dtype=float)
@@ -71,6 +79,4 @@ def benjamini_hochberg_correction(
     return rejected_hypotheses, adjusted_p_values, alpha_threshold
 
 
-__all__ = [
-    "benjamini_hochberg_correction",
-]
+__all__ = ["benjamini_hochberg_correction"]

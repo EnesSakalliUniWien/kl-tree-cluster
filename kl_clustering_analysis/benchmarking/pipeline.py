@@ -53,11 +53,10 @@ from kl_clustering_analysis.benchmarking.generators import (
 )
 
 
-# Configure logger
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+# Configure logger (library-friendly: leave handlers/levels to callers)
 logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logger.addHandler(logging.NullHandler())
 
 
 @dataclass(frozen=True)

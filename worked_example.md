@@ -58,22 +58,12 @@ $$
 
 Multiplying by $2\,|C_c|$ yields chi-square statistics that feed the local significance gate.
 
-### Sibling independence
+### Sibling divergence
 
-`annotate_sibling_independence_cmi` thresholds each distribution at $0.5$, obtaining binary vectors
-
-$$
-u_{AB} \mapsto (1, 1), \qquad C \mapsto (0, 1), \qquad \text{root} \mapsto (1, 1).
-$$
-
-Conditional mutual information evaluates to
-
-$$
-I(u_{AB}; C \mid \text{root}) = 0.0,
-$$
-
-every permutation replicate achieves the same value, and the Benjamini–Hochberg step keeps `Sibling_BH_Dependent` set to
-`False`. The decomposer therefore treats the siblings as independent and recurses on each branch.
+`annotate_sibling_divergence` compares sibling distributions with Jensen–Shannon divergence and converts the result to a
+chi-square p-value. In this toy example, the sibling distributions are close enough that the corrected p-value is not
+significant, so `Sibling_BH_Different` stays `False`. The decomposer therefore treats the siblings as similar and merges
+at the parent.
 
 A concrete numerical example of the KL-divergence hierarchical clustering process using specific data points follows.
 

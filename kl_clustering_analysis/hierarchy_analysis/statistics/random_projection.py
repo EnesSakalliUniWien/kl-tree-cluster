@@ -26,7 +26,7 @@ from typing import Tuple, Optional, Dict
 
 import numpy as np
 from sklearn.random_projection import GaussianRandomProjection
-
+from sklearn.random_projection import johnson_lindenstrauss_min_dim
 from kl_clustering_analysis import config
 
 
@@ -64,38 +64,49 @@ def should_use_projection(
 def compute_projection_dimension(
     n_samples: int,
     n_features: int,
-    k_multiplier: float = config.PROJECTION_K_MULTIPLIER,
+    eps: float = config.PROJECTION_EPS,
     min_k: int = config.PROJECTION_MIN_K,
 ) -> int:
-    """Compute target dimension for random projection.
+    """Compute target dimension for random projection using Johnson-Lindenstrauss lemma.
 
-    Uses k = k_multiplier * log(n), capped at original dimension.
-    Based on the Johnson-Lindenstrauss lemma which guarantees that
-    k = O(log(n) / ε²) dimensions suffice to preserve pairwise
-    distances within a factor of (1 ± ε).
+    Uses sklearn's johnson_lindenstrauss_min_dim for a theoretically-grounded
+    dimension that guarantees pairwise distances are preserved within (1 ± eps).
+
+    The JL lemma formula: k >= 4 * ln(n) / (eps^2/2 - eps^3/3)
+    For small eps, this simplifies to approximately: k ≈ 8 * ln(n) / eps^2
 
     Parameters
     ----------
     n_samples : int
-        Effective sample size.
+        Effective sample size (number of points whose pairwise distances
+        need to be preserved).
     n_features : int
         Original number of features.
-    k_multiplier : float
-        Multiplier for log(n).
+    eps : float
+        Distortion tolerance. Distances are preserved within (1 ± eps).
+        - eps=0.1: Conservative, many dimensions, ±10% distortion
+        - eps=0.3: Balanced, moderate dimensions, ±30% distortion (recommended)
+        - eps=0.5: Aggressive, few dimensions, ±50% distortion
     min_k : int
-        Minimum projected dimension.
+        Minimum projected dimension (floor).
 
     Returns
     -------
     int
-        Target dimension k.
+        Target dimension k satisfying JL guarantee.
 
     References
     ----------
     Johnson, W. B., & Lindenstrauss, J. (1984). Extensions of Lipschitz
         mappings into a Hilbert space. Contemporary Mathematics, 26, 189-206.
+    sklearn.random_projection.johnson_lindenstrauss_min_dim
     """
-    k = int(np.ceil(k_multiplier * np.log(max(n_samples, 2))))
+
+    # Use sklearn's theoretically-grounded JL formula
+    # Ensure n_samples >= 1 to avoid edge cases
+    n_samples = max(n_samples, 1)
+    k = johnson_lindenstrauss_min_dim(n_samples=n_samples, eps=eps)
+
     k = max(k, min_k)
     k = min(k, n_features)  # Never exceed original dimension
     return k
@@ -322,62 +333,6 @@ def averaged_projected_distance(
     return float(dist_sq), k
 
 
-def projected_chi_square_statistic(
-    p: np.ndarray,
-    q: np.ndarray,
-    n_effective: float,
-    k: int,
-    n_trials: int = config.PROJECTION_N_TRIALS,
-    base_seed: Optional[int] = config.PROJECTION_RANDOM_SEED,
-) -> Tuple[float, int]:
-    """Compute chi-square statistic using random projection.
-
-    The statistic is based on the squared Euclidean distance in
-    projected space, scaled appropriately for a chi-square test.
-
-    For Bernoulli distributions with means θ, the squared difference
-    ||θ_left - θ_right||² relates to the chi-square statistic as:
-    χ² ≈ n_eff * ||Δθ||² / σ²
-
-    where σ² is the pooled variance. With projection:
-    χ² ≈ n_eff * ||R(Δθ)||²
-
-    Parameters
-    ----------
-    p, q : np.ndarray
-        Distributions (Bernoulli means) for each group.
-    n_effective : float
-        Effective sample size (e.g., harmonic mean for two-sample).
-    k : int
-        Target projection dimension.
-    n_trials : int
-        Number of projections to average.
-    base_seed : int, optional
-        Random seed for reproducibility.
-
-    Returns
-    -------
-    Tuple[float, int]
-        (chi_square_statistic, degrees_of_freedom)
-    """
-    avg_dist_sq, proj_dim = averaged_projected_distance(
-        p, q, k, n_trials=n_trials, base_seed=base_seed
-    )
-
-    # Scaling: n_eff * ||Δθ||² / (pooled_variance)
-    # For Bernoulli with unknown θ, use pooled estimate
-    pooled = 0.5 * (p + q)
-    pooled_var = pooled * (1 - pooled)
-
-    # Use the average variance as scaling
-    avg_var = float(np.mean(pooled_var)) + 1e-10
-
-    # Chi-square statistic
-    chi_sq = n_effective * avg_dist_sq / avg_var
-
-    return chi_sq, proj_dim
-
-
 __all__ = [
     "should_use_projection",
     "compute_projection_dimension",
@@ -389,5 +344,4 @@ __all__ = [
     "projected_euclidean_distance_squared",
     "projected_distance_with_projector",
     "averaged_projected_distance",
-    "projected_chi_square_statistic",
 ]

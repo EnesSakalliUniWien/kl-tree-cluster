@@ -14,6 +14,7 @@ import networkx as nx
 
 from ..core_utils.data_utils import extract_bool_column_dict
 from .. import config
+from .posthoc_merge import apply_posthoc_merge
 
 
 class TreeDecomposition:
@@ -383,19 +384,24 @@ class TreeDecomposition:
            - OPEN: parent has exactly 2 children → proceed to statistical tests
            - CLOSED: parent has <2 or >2 children → merge at parent, form cluster boundary
 
-        2. **Local KL divergence gate** (child vs parent)
-           - OPEN: at least one child significantly diverges from parent → proceed
-           - CLOSED: neither child diverges from parent → MERGE
-           - This ensures we only split when children have distinct distributions from parent
-
-        3. **Sibling divergence gate** (sibling vs sibling)
-           - OPEN: siblings are significantly different (JSD test with BH correction) → SPLIT
+        2. **Sibling divergence gate** (sibling vs sibling) - PRIMARY TEST
+           - OPEN: siblings are significantly different (JSD test with BH correction) → proceed
            - CLOSED: siblings are not significantly different → MERGE
-           - This ensures siblings represent genuinely different clusters
+           - Checked FIRST because if siblings are identical, no point checking parent relationship
+
+        3. **Local KL divergence gate** (child vs parent) - CONFIRMATION TEST
+           - OPEN: at least one child significantly diverges from parent → SPLIT
+           - CLOSED: neither child diverges from parent → MERGE
+           - Confirms there's actual signal in the children (not just noise)
 
         Outcome Logic:
         - ALL gates OPEN → return True → children added to traversal stack, split continues recursively
         - ANY gate CLOSED → return False → collect all leaves under parent as single cluster, stop splitting here
+
+        Rationale for gate order:
+        - Sibling test is more discriminative: directly asks "should these be separate clusters?"
+        - Local KL test validates signal exists: ensures children aren't just noise
+        - Efficiency: skip local KL checks if siblings are identical (saves computation)
         """
         # Gate 1: Binary structure requirement
         children = self._children[parent]
@@ -404,22 +410,8 @@ class TreeDecomposition:
 
         left_child, right_child = children
 
-        # Gate 2: Local KL divergence requirement (at least one child must diverge from parent)
-        left_diverges = self._local_significant.get(left_child)
-        right_diverges = self._local_significant.get(right_child)
-
-        if left_diverges is None or right_diverges is None:
-            raise ValueError(
-                "Missing child-parent divergence annotations for "
-                f"{left_child!r} or {right_child!r}; annotate before decomposing."
-            )
-
-        # At least one child must significantly diverge from parent
-        if not (left_diverges or right_diverges):
-            return False
-
-        # Gate 3: Sibling divergence requirement
-        # Sibling_BH_Different = True means siblings have significantly different distributions -> SPLIT
+        # Gate 2: Sibling divergence requirement (check FIRST - most discriminative)
+        # Sibling_BH_Different = True means siblings have significantly different distributions -> proceed to Gate 3
         is_different = self._sibling_different.get(parent)
 
         if is_different is None:
@@ -434,7 +426,23 @@ class TreeDecomposition:
                 f"{parent!r}; annotations incomplete."
             )
 
-        return bool(is_different)
+        # If siblings aren't different, no need to check local divergence - they should be merged
+        if not is_different:
+            return False
+
+        # Gate 3: Local KL divergence requirement (at least one child must diverge from parent)
+        # This confirms there's actual signal, not just random noise
+        left_diverges = self._local_significant.get(left_child)
+        right_diverges = self._local_significant.get(right_child)
+
+        if left_diverges is None or right_diverges is None:
+            raise ValueError(
+                "Missing child-parent divergence annotations for "
+                f"{left_child!r} or {right_child!r}; annotate before decomposing."
+            )
+
+        # At least one child must significantly diverge from parent to confirm signal
+        return bool(left_diverges or right_diverges)
 
     def _pop_candidate(
         self, heap: List[str], queued: set[str], processed: set[str]
@@ -491,7 +499,14 @@ class TreeDecomposition:
                     cluster_roots.add(root_node)
 
             # Apply the tree-respecting post-hoc merge
-            merged_roots = self._apply_posthoc_merge(cluster_roots, alpha)
+            merged_roots = apply_posthoc_merge(
+                cluster_roots=cluster_roots,
+                alpha=alpha,
+                tree=self.tree,
+                children=self._children,
+                root=self._root,
+                test_divergence=self._test_cluster_pair_divergence,
+            )
 
             # Rebuild final_leaf_sets from merged cluster roots
             # Note: _get_all_leaves returns leaf labels (sample IDs), not node IDs
@@ -515,29 +530,6 @@ class TreeDecomposition:
         }
 
     # ---------- post-hoc merge helpers ----------
-
-    def _get_leaf_clusters_under_node(
-        self, node: str, cluster_roots: Set[str]
-    ) -> List[str]:
-        """Get all cluster root nodes that are descendants of the given node.
-
-        Parameters
-        ----------
-        node
-            The tree node to search under.
-        cluster_roots
-            Set of current cluster root node IDs.
-
-        Returns
-        -------
-        List[str]
-            List of cluster root nodes that are descendants of `node`.
-        """
-        if node in cluster_roots:
-            return [node]
-
-        descendants = nx.descendants(self.tree, node)
-        return [n for n in descendants if n in cluster_roots]
 
     def _compute_cluster_distribution(
         self, cluster_root: str
@@ -581,121 +573,20 @@ class TreeDecomposition:
             (jsd, p_value)
         """
         from .statistics.sibling_divergence.sibling_divergence_test import (
-            _sibling_divergence_chi_square_test,
+            sibling_divergence_test,
         )
 
         dist_a, size_a = self._compute_cluster_distribution(cluster_a)
         dist_b, size_b = self._compute_cluster_distribution(cluster_b)
 
-        jsd, _, _, p_value = _sibling_divergence_chi_square_test(
-            left_distribution=dist_a,
-            right_distribution=dist_b,
-            left_sample_size=size_a,
-            right_sample_size=size_b,
+        test_stat, _, p_value = sibling_divergence_test(
+            left_dist=dist_a,
+            right_dist=dist_b,
+            n_left=float(size_a),
+            n_right=float(size_b),
         )
 
-        return jsd, p_value
-
-    def _apply_posthoc_merge(self, cluster_roots: Set[str], alpha: float) -> Set[str]:
-        """Apply tree-respecting post-hoc merging to reduce over-splitting.
-
-        Works bottom-up through the tree. For each internal node, compares
-        all pairs of leaf clusters across the sibling boundary. If any pair
-        is NOT significantly different, merges them by promoting their common
-        ancestor to be the cluster root.
-
-        The key insight: when a parent has children A and B, and B was split
-        into C1 and C2, we compare:
-        - A vs C1
-        - A vs C2
-
-        If A and C1 are not significantly different, we merge them.
-
-        Parameters
-        ----------
-        cluster_roots
-            Set of current cluster root node IDs.
-        alpha
-            Significance level for the merge test.
-
-        Returns
-        -------
-        Set[str]
-            Updated set of cluster root nodes after merging.
-        """
-        cluster_roots = set(cluster_roots)  # Copy to avoid mutation
-        changed = True
-
-        while changed:
-            changed = False
-
-            # Process nodes bottom-up (leaves first, then parents)
-            for node in nx.topological_sort(self.tree.reverse()):
-                children = self._children[node]
-                if len(children) != 2:
-                    continue
-
-                left_child, right_child = children
-
-                # Get leaf clusters under each child
-                left_clusters = self._get_leaf_clusters_under_node(
-                    left_child, cluster_roots
-                )
-                right_clusters = self._get_leaf_clusters_under_node(
-                    right_child, cluster_roots
-                )
-
-                if not left_clusters or not right_clusters:
-                    continue
-
-                # Find the pair with highest p-value (most similar)
-                best_pair = None
-                best_pvalue = 0.0
-
-                for lc in left_clusters:
-                    for rc in right_clusters:
-                        _, p_value = self._test_cluster_pair_divergence(lc, rc, node)
-                        if p_value > best_pvalue:
-                            best_pvalue = p_value
-                            best_pair = (lc, rc)
-
-                # If best pair is NOT significantly different, merge them
-                if best_pair is not None and best_pvalue > alpha:
-                    lc, rc = best_pair
-                    # Find the lowest common ancestor of the pair
-                    lca = self._find_lca_pair(lc, rc)
-
-                    # Remove the two clusters being merged
-                    cluster_roots.discard(lc)
-                    cluster_roots.discard(rc)
-
-                    # CRITICAL: Also remove any other cluster roots that are
-                    # descendants of the LCA, otherwise leaves would be counted
-                    # in multiple clusters (the LCA cluster AND the descendant clusters)
-                    lca_descendants = nx.descendants(self.tree, lca)
-                    cluster_roots -= lca_descendants
-
-                    # Add the LCA as the new merged cluster root
-                    cluster_roots.add(lca)
-                    changed = True
-                    break  # Restart from bottom after any merge
-
-        return cluster_roots
-
-    def _find_lca_pair(self, node_a: str, node_b: str) -> str:
-        """Find the lowest common ancestor of two nodes."""
-        ancestors_a = set(nx.ancestors(self.tree, node_a))
-        ancestors_a.add(node_a)
-
-        # Walk up from node_b until we find a common ancestor
-        current = node_b
-        while current not in ancestors_a:
-            parents = list(self.tree.predecessors(current))
-            if not parents:
-                return self._root
-            current = parents[0]
-
-        return current
+        return test_stat, p_value
 
     def decompose_tree(self) -> dict[str, object]:
         """Return cluster assignments by iteratively traversing the hierarchy.
@@ -735,7 +626,14 @@ class TreeDecomposition:
                     cluster_roots.add(root_node)
 
             # Apply the tree-respecting post-hoc merge
-            merged_roots = self._apply_posthoc_merge(cluster_roots, alpha)
+            merged_roots = apply_posthoc_merge(
+                cluster_roots=cluster_roots,
+                alpha=alpha,
+                tree=self.tree,
+                children=self._children,
+                root=self._root,
+                test_divergence=self._test_cluster_pair_divergence,
+            )
 
             # Rebuild final_leaf_sets from merged cluster roots
             # Note: _get_all_leaves returns leaf labels (sample IDs), not node IDs
