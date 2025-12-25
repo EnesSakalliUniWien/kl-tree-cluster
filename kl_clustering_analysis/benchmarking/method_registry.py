@@ -44,10 +44,10 @@ METHOD_SPECS: dict[str, MethodSpec] = {
                 "tree_distance_metric": "rogerstanimoto",
                 "tree_linkage_method": "average",
             },
-            # {
-            #     "tree_distance_metric": "rogerstanimoto",
-            #     "tree_linkage_method": "complete",
-            # },
+            {
+                "tree_distance_metric": "rogerstanimoto",
+                "tree_linkage_method": "complete",
+            },
             # {"tree_distance_metric": "rogerstanimoto", "tree_linkage_method": "ward"},
             # {"tree_distance_metric": "jaccard", "tree_linkage_method": "average"},
             # {"tree_distance_metric": "jaccard", "tree_linkage_method": "complete"},

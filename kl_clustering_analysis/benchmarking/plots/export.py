@@ -109,6 +109,291 @@ def create_umap_plots_from_results(
     return figs
 
 
+def _group_results_by_case(test_results: list) -> dict[int, list[dict]]:
+    results_by_case: dict[int, list[dict]] = {}
+    for result in test_results:
+        case_num = int(result.get("test_case_num", 0))
+        results_by_case.setdefault(case_num, []).append(result)
+    return results_by_case
+
+
+def _save_or_collect_figure(
+    fig: plt.Figure,
+    *,
+    pdf: PdfPages | None,
+    save: bool,
+    collect: bool,
+    figs: list,
+    output_path: Path | None,
+    test_case_num: int,
+) -> None:
+    if pdf is not None:
+        pdf.savefig(fig, bbox_inches="tight", pad_inches=0)
+        plt.close(fig)
+        return
+    if save and output_path is not None:
+        fig.savefig(output_path, dpi=200, bbox_inches="tight")
+        plt.close(fig)
+        return
+    if collect:
+        figs.append({"figure": fig, "test_case_num": test_case_num})
+        return
+    plt.close(fig)
+
+
+def _create_tree_grid_figure_for_case(
+    *,
+    case_num: int,
+    case_results: list[dict],
+) -> plt.Figure | None:
+    # Keep only tree-capable runs.
+    tree_results = [
+        r for r in case_results if r.get("tree") is not None and r.get("decomposition") is not None
+    ]
+    if not tree_results:
+        return None
+
+    n_items = len(tree_results)
+    n_cols = 2 if n_items > 1 else 1
+    n_rows = (n_items + n_cols - 1) // n_cols
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12 * n_cols, 7 * n_rows))
+    axes = np.atleast_1d(axes).ravel()
+
+    meta = tree_results[0].get("meta", {})
+    meta_text = (
+        f"samples={meta.get('n_samples', '?')}, "
+        f"features={meta.get('n_features', '?')}, "
+        f"generator={meta.get('generator', 'unknown')}, "
+        f"noise={meta.get('noise', 'n/a')}"
+    )
+    fig.suptitle(
+        f"Tree Comparisons – Test Case {case_num}\n{meta_text}",
+        fontsize=16,
+        weight="bold",
+        y=0.98,
+    )
+
+    for idx, result in enumerate(tree_results):
+        ax = axes[idx]
+        tree_t = result["tree"]
+        decomp_t = result["decomposition"]
+        method_name = result.get("method_name", "KL Divergence")
+        params = result.get("params", {})
+        param_str_display = _format_params_for_display(params)
+        found_clusters = result.get("meta", {}).get("found_clusters", "?")
+
+        title = (
+            f"{method_name}\n({param_str_display})\nfound={found_clusters}"
+            if param_str_display
+            else f"{method_name}\nfound={found_clusters}"
+        )
+
+        plot_tree_with_clusters(
+            tree=tree_t,
+            decomposition_results=decomp_t,
+            results_df=getattr(tree_t, "stats_df", None),
+            use_labels=True,
+            node_size=12,
+            font_size=9,
+            title=title,
+            ax=ax,
+            show=False,
+        )
+
+    for j in range(n_items, len(axes)):
+        axes[j].axis("off")
+
+    plt.tight_layout()
+    return fig
+
+
+def create_umap_then_tree_plots_from_results(
+    test_results: list,
+    output_dir: Path,
+    timestamp: str | None = None,
+    verbose: bool = True,
+    save: bool = True,
+    collect: bool = False,
+    collected: list | None = None,
+    *,
+    pdf: PdfPages | None = None,
+) -> list:
+    """For each test case: render UMAP grid, then the matching tree grid (if available)."""
+    if save:
+        output_dir.mkdir(exist_ok=True)
+    figs: list = collected if collected is not None else []
+
+    results_by_case = _group_results_by_case(test_results)
+
+    for case_num, case_results in sorted(results_by_case.items()):
+        if not case_results:
+            continue
+
+        first_result = case_results[0]
+        meta = first_result.get("meta", {})
+        if verbose:
+            print(f"  Creating UMAP→Tree plots for test case {case_num}...")
+
+        labels_to_plot = {"Ground Truth": first_result.get("y_true")}
+        for res in case_results:
+            method_name = res.get("method_name", "")
+            params = res.get("params", {})
+            param_str = _format_params_for_display(params)
+            unique_key = f"{method_name} ({param_str})" if param_str else method_name
+            if res.get("labels") is not None:
+                labels_to_plot[unique_key] = res["labels"]
+
+        try:
+            umap_fig = create_clustering_comparison_plot(
+                X_original=first_result["X_original"],
+                labels_dict=labels_to_plot,
+                test_case_num=case_num,
+                meta=meta,
+            )
+            umap_filename = (
+                f"umap_comparison_case_{case_num}_{timestamp}.png"
+                if timestamp
+                else f"umap_comparison_case_{case_num}.png"
+            )
+            _save_or_collect_figure(
+                umap_fig,
+                pdf=pdf,
+                save=save,
+                collect=collect,
+                figs=figs,
+                output_path=(output_dir / umap_filename) if save else None,
+                test_case_num=case_num,
+            )
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Skipping UMAP plot for test %s: %s", case_num, exc)
+        finally:
+            if not collect:
+                plt.close("all")
+
+        # Tree grid for same case (optional).
+        try:
+            tree_fig = _create_tree_grid_figure_for_case(
+                case_num=case_num, case_results=case_results
+            )
+            if tree_fig is None:
+                continue
+            tree_filename = (
+                f"tree_case_{case_num}_grid_{timestamp}.png"
+                if timestamp
+                else f"tree_case_{case_num}_grid.png"
+            )
+            _save_or_collect_figure(
+                tree_fig,
+                pdf=pdf,
+                save=save,
+                collect=collect,
+                figs=figs,
+                output_path=(output_dir / tree_filename) if save else None,
+                test_case_num=case_num,
+            )
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Skipping tree plot for test %s: %s", case_num, exc)
+        finally:
+            if not collect:
+                plt.close("all")
+
+    return figs
+
+
+def create_tree_then_umap_plots_from_results(
+    test_results: list,
+    output_dir: Path,
+    timestamp: str | None = None,
+    verbose: bool = True,
+    save: bool = True,
+    collect: bool = False,
+    collected: list | None = None,
+    *,
+    pdf: PdfPages | None = None,
+) -> list:
+    """For each test case: render tree grid (if available), then the matching UMAP grid."""
+    if save:
+        output_dir.mkdir(exist_ok=True)
+    figs: list = collected if collected is not None else []
+
+    results_by_case = _group_results_by_case(test_results)
+
+    for case_num, case_results in sorted(results_by_case.items()):
+        if not case_results:
+            continue
+
+        first_result = case_results[0]
+        meta = first_result.get("meta", {})
+        if verbose:
+            print(f"  Creating Tree→UMAP plots for test case {case_num}...")
+
+        # Tree grid first (optional).
+        try:
+            tree_fig = _create_tree_grid_figure_for_case(
+                case_num=case_num, case_results=case_results
+            )
+            if tree_fig is not None:
+                tree_filename = (
+                    f"tree_case_{case_num}_grid_{timestamp}.png"
+                    if timestamp
+                    else f"tree_case_{case_num}_grid.png"
+                )
+                _save_or_collect_figure(
+                    tree_fig,
+                    pdf=pdf,
+                    save=save,
+                    collect=collect,
+                    figs=figs,
+                    output_path=(output_dir / tree_filename) if save else None,
+                    test_case_num=case_num,
+                )
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Skipping tree plot for test %s: %s", case_num, exc)
+        finally:
+            if not collect:
+                plt.close("all")
+
+        # UMAP grid second (always attempted).
+        labels_to_plot = {"Ground Truth": first_result.get("y_true")}
+        for res in case_results:
+            method_name = res.get("method_name", "")
+            params = res.get("params", {})
+            param_str = _format_params_for_display(params)
+            unique_key = f"{method_name} ({param_str})" if param_str else method_name
+            if res.get("labels") is not None:
+                labels_to_plot[unique_key] = res["labels"]
+
+        try:
+            umap_fig = create_clustering_comparison_plot(
+                X_original=first_result["X_original"],
+                labels_dict=labels_to_plot,
+                test_case_num=case_num,
+                meta=meta,
+            )
+            umap_filename = (
+                f"umap_comparison_case_{case_num}_{timestamp}.png"
+                if timestamp
+                else f"umap_comparison_case_{case_num}.png"
+            )
+            _save_or_collect_figure(
+                umap_fig,
+                pdf=pdf,
+                save=save,
+                collect=collect,
+                figs=figs,
+                output_path=(output_dir / umap_filename) if save else None,
+                test_case_num=case_num,
+            )
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Skipping UMAP plot for test %s: %s", case_num, exc)
+        finally:
+            if not collect:
+                plt.close("all")
+
+    return figs
+
+
 def create_umap_3d_plots_from_results(
     test_results: list,
     output_dir: Path,
@@ -265,62 +550,11 @@ def create_tree_plots_from_results(
         results_by_case.setdefault(case_num, []).append(result)
 
     for case_num, case_results in sorted(results_by_case.items()):
-        if not case_results:
+        fig = _create_tree_grid_figure_for_case(
+            case_num=case_num, case_results=case_results
+        )
+        if fig is None:
             continue
-
-        # Layout: similar to UMAP grids, but default to 2 columns for readability.
-        n_items = len(case_results)
-        n_cols = 2 if n_items > 1 else 1
-        n_rows = (n_items + n_cols - 1) // n_cols
-
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(12 * n_cols, 7 * n_rows))
-        axes = np.atleast_1d(axes).ravel()
-
-        meta = case_results[0].get("meta", {})
-        meta_text = (
-            f"samples={meta.get('n_samples', '?')}, "
-            f"features={meta.get('n_features', '?')}, "
-            f"generator={meta.get('generator', 'unknown')}, "
-            f"noise={meta.get('noise', 'n/a')}"
-        )
-        fig.suptitle(
-            f"Tree Comparisons – Test Case {case_num}\n{meta_text}",
-            fontsize=16,
-            weight="bold",
-            y=0.98,
-        )
-
-        for idx, result in enumerate(case_results):
-            ax = axes[idx]
-            tree_t = result["tree"]
-            decomp_t = result["decomposition"]
-            method_name = result.get("method_name", "KL Divergence")
-            params = result.get("params", {})
-            param_str_display = _format_params_for_display(params)
-            found_clusters = result.get("meta", {}).get("found_clusters", "?")
-
-            title = (
-                f"{method_name}\n({param_str_display})\nfound={found_clusters}"
-                if param_str_display
-                else f"{method_name}\nfound={found_clusters}"
-            )
-
-            plot_tree_with_clusters(
-                tree=tree_t,
-                decomposition_results=decomp_t,
-                results_df=getattr(tree_t, "stats_df", None),
-                use_labels=True,
-                node_size=12,
-                font_size=9,
-                title=title,
-                ax=ax,
-                show=False,
-            )
-
-        for j in range(n_items, len(axes)):
-            axes[j].axis("off")
-
-        plt.tight_layout()
 
         filename = (
             f"tree_case_{case_num}_grid_{timestamp}.png"
@@ -348,4 +582,6 @@ __all__ = [
     "create_umap_3d_plots_from_results",
     "create_manifold_plots_from_results",
     "create_tree_plots_from_results",
+    "create_umap_then_tree_plots_from_results",
+    "create_tree_then_umap_plots_from_results",
 ]

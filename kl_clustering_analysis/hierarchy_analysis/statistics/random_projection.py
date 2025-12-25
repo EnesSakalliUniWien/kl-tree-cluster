@@ -1,16 +1,15 @@
 """Random projection utilities for dimensionality reduction.
 
-Uses GaussianRandomProjection with a fixed random_state for deterministic,
-reproducible projections. The projection matrix is created ONCE and cached
-for reuse across all statistical tests.
+Uses SparseRandomProjection for a fast, memory-efficient, and deterministic
+projection. The projection matrix is created ONCE and cached for reuse.
 
-Based on the Johnson-Lindenstrauss lemma which guarantees that
-k = O(log(n) / ε²) dimensions suffice to preserve pairwise
-distances within a factor of (1 ± ε).
+This approach is based on the Johnson-Lindenstrauss (JL) lemma, which
+guarantees that pairwise distances are preserved. When the number of features
+d >> sample size n, random projection reduces d to a smaller k = O(log n),
+making subsequent statistical approximations more reliable.
 
-When the number of features d >> sample size n, the chi-square
-approximation 2*n*JSD ~ χ²(d) becomes unreliable. Random projection
-reduces d to k = O(log n), making the approximation valid.
+Sparse random projections are highly efficient and theoretically sound, making
+them ideal for high-dimensional data.
 
 References
 ----------
@@ -25,14 +24,14 @@ from __future__ import annotations
 from typing import Dict, Tuple
 
 import numpy as np
-from sklearn.random_projection import GaussianRandomProjection
+from sklearn.random_projection import SparseRandomProjection
 from sklearn.random_projection import johnson_lindenstrauss_min_dim
 from kl_clustering_analysis import config
 
 
 # Global cache for projection matrices - fitted once, reused everywhere
-# Key: (n_features, k, random_state) -> fitted GaussianRandomProjection
-_PROJECTOR_CACHE: Dict[Tuple[int, int, int | None], GaussianRandomProjection] = {}
+# Key: (n_features, k, random_state) -> fitted SparseRandomProjection
+_PROJECTOR_CACHE: Dict[Tuple[int, int, int | None], SparseRandomProjection] = {}
 
 
 def compute_projection_dimension(
@@ -90,12 +89,14 @@ def _get_cached_projector(
     n_features: int,
     k: int,
     random_state: int | None = config.PROJECTION_RANDOM_SEED,
-) -> GaussianRandomProjection:
-    """Get or create a cached GaussianRandomProjection (internal helper)."""
+) -> SparseRandomProjection:
+    """Get or create a cached SparseRandomProjection (internal helper)."""
     cache_key = (n_features, k, random_state)
 
     if cache_key not in _PROJECTOR_CACHE:
-        projector = GaussianRandomProjection(
+        # Use SparseRandomProjection for performance with high-dimensional data.
+        # It's much faster than GaussianRandomProjection when n_features is large.
+        projector = SparseRandomProjection(
             n_components=k,
             random_state=random_state,
         )
@@ -112,10 +113,10 @@ def generate_projection_matrix(
     k: int,
     random_state: int | None = None,
 ) -> np.ndarray:
-    """Generate a random projection matrix using GaussianRandomProjection.
+    """Generate a random projection matrix using SparseRandomProjection.
 
-    Uses sklearn's GaussianRandomProjection which draws components
-    from N(0, 1/n_components) - this is the standard JL projection.
+    Uses sklearn's SparseRandomProjection, which is highly efficient for
+    high-dimensional data.
 
     Parameters
     ----------
@@ -133,7 +134,7 @@ def generate_projection_matrix(
 
     References
     ----------
-    Johnson-Lindenstrauss lemma guarantees distance preservation.
+    Achlioptas, D. (2003). "Database-friendly random projections."
     """
     projector = _get_cached_projector(n_features, k, random_state)
     return projector.components_

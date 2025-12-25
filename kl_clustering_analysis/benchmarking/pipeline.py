@@ -8,6 +8,7 @@ kept here so it can be reused outside the test suite.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import logging
 from pathlib import Path
 
@@ -75,6 +76,28 @@ def _format_params(params: dict[str, object]) -> str:
     return ", ".join(parts)
 
 
+def _format_timestamp_utc(dt: datetime) -> str:
+    """Return a filesystem-safe UTC timestamp like 20250101_235959Z."""
+    if dt.tzinfo is None:
+        raise ValueError("Timestamp must be timezone-aware.")
+    return dt.astimezone(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
+
+
+def _resolve_pdf_output_path(
+    concat_output: str | None,
+    *,
+    plots_root: Path,
+    started_at: datetime,
+) -> Path:
+    """Resolve the PDF output path, ensuring a timestamped default and .pdf suffix."""
+    if concat_output:
+        path = Path(concat_output)
+        return path.with_suffix(".pdf") if path.suffix == "" else path
+
+    stamp = _format_timestamp_utc(started_at)
+    return plots_root / f"benchmark_plots_{stamp}.pdf"
+
+
 # PDF concatenation helper moved to `kl_clustering_analysis.benchmarking.pdf_utils`.
 # See that module for the implementation.
 def benchmark_cluster_algorithm(
@@ -121,7 +144,7 @@ def benchmark_cluster_algorithm(
     concat_pattern : str, default="tree_case_*.png"
         Glob used to collect plots for concatenation (relative to plots_root).
     concat_output : str, optional
-        Output PDF path. Defaults to ``plots_root / 'all_plots.pdf'`` when omitted.
+        Output PDF path. Defaults to ``plots_root / f'benchmark_plots_{timestamp}.pdf'`` when omitted.
     save_individual_plots : bool, default=False
         When False, skip writing per-plot PNGs; collect figures for optional PDF output instead.
         The pipeline now defaults to not producing PNG artifacts; pass ``save_individual_plots=True``
@@ -137,6 +160,7 @@ def benchmark_cluster_algorithm(
     """
 
     # Default test cases
+    run_started_at = datetime.now(timezone.utc)
     project_root = Path(__file__).resolve().parents[2]
     plots_root = project_root / "results" / "plots"
     if test_cases is None:
@@ -151,13 +175,18 @@ def benchmark_cluster_algorithm(
     computed_results = []
 
     output_pdf = (
-        Path(concat_output) if concat_output else plots_root / "all_plots.pdf"
-    ) if concat_plots_pdf else None
+        _resolve_pdf_output_path(
+            concat_output,
+            plots_root=plots_root,
+            started_at=run_started_at,
+        )
+        if concat_plots_pdf
+        else None
+    )
 
     # When concatenating directly to a PDF without intermediate PNGs, stream to
     # PdfPages immediately and close each figure right away (prevents figure leaks).
     stream_pdf = bool(concat_plots_pdf and not save_individual_plots)
-    collect_figs = False if stream_pdf else False
 
     # Run test cases
     selected_methods = methods or DEFAULT_METHODS
@@ -178,7 +207,10 @@ def benchmark_cluster_algorithm(
         if stream_pdf:
             from matplotlib.backends.backend_pdf import PdfPages
 
-            output_pdf = output_pdf or (plots_root / "all_plots.pdf")
+            if output_pdf is None:
+                output_pdf = _resolve_pdf_output_path(
+                    None, plots_root=plots_root, started_at=run_started_at
+                )
             output_pdf.parent.mkdir(parents=True, exist_ok=True)
             pdf_pages = PdfPages(output_pdf)
 
@@ -338,12 +370,16 @@ def benchmark_cluster_algorithm(
 
         if concat_plots_pdf and save_individual_plots:
             # Legacy: allow arbitrary pattern -> single PDF of saved PNGs
+            if output_pdf is None:
+                output_pdf = _resolve_pdf_output_path(
+                    concat_output,
+                    plots_root=plots_root,
+                    started_at=run_started_at,
+                )
             _concat_plots_to_pdf(
                 plots_root=plots_root,
                 pattern=concat_pattern,
-                output_pdf=Path(concat_output)
-                if concat_output
-                else plots_root / "all_plots.pdf",
+                output_pdf=output_pdf,
                 verbose=bool(verbose),
             )
 

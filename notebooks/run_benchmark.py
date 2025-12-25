@@ -13,19 +13,12 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 if __name__ == "__main__":
-    plot_manifold = os.environ.get("PLOT_MANIFOLD", "").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "y",
-    }
-
     # Run validation with SMALL test cases and UMAP plotting enabled, producing PDFs only
     df_results, fig = benchmark_cluster_algorithm(
         significance_level=0.05,
         verbose=True,
         plot_umap=True,
-        plot_manifold=plot_manifold,
+        plot_manifold=False,
         concat_plots_pdf=True,
         save_individual_plots=False,
     )

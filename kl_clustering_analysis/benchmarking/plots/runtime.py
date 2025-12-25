@@ -14,6 +14,7 @@ from .summary import create_validation_plot
 from .export import (
     create_tree_plots_from_results,
     create_umap_plots_from_results,
+    create_tree_then_umap_plots_from_results,
     create_manifold_plots_from_results,
     create_umap_3d_plots_from_results,
 )
@@ -90,21 +91,10 @@ def generate_benchmark_plots(
 
     if verbose:
         logger.info("Generating tree plots...")
-    create_tree_plots_from_results(
-        test_results=computed_results,
-        output_dir=plots_root,
-        timestamp=None,
-        verbose=False,
-        save=save_png,
-        collect=collect_figs,
-        collected=collected_by_category["trees"],
-        pdf=pdf,
-    )
-
     if plot_umap:
         if verbose:
-            logger.info("Generating UMAP comparison visualizations...")
-        create_umap_plots_from_results(
+            logger.info("Generating Tree→UMAP comparison pages...")
+        create_tree_then_umap_plots_from_results(
             computed_results,
             plots_root,
             timestamp=None,
@@ -112,6 +102,17 @@ def generate_benchmark_plots(
             save=save_png,
             collect=collect_figs,
             collected=collected_by_category["umap"],
+            pdf=pdf,
+        )
+    else:
+        create_tree_plots_from_results(
+            test_results=computed_results,
+            output_dir=plots_root,
+            timestamp=None,
+            verbose=False,
+            save=save_png,
+            collect=collect_figs,
+            collected=collected_by_category["trees"],
             pdf=pdf,
         )
 

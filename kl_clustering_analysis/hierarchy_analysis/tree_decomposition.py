@@ -97,8 +97,13 @@ class TreeDecomposition:
         self._cache_node_metadata()
 
         # ----- leaf partitions & counts (poset view) -----
-        self._leaf_partition_by_node: Dict[str, frozenset] = (
-            self._compute_leaf_partitions_for_all_nodes()
+        if not hasattr(self.tree, "compute_descendant_sets"):
+            raise TypeError(
+                "TreeDecomposition requires a tree implementation that provides "
+                "`compute_descendant_sets(use_labels=...)` (e.g., PosetTree)."
+            )
+        self._leaf_partition_by_node = self.tree.compute_descendant_sets(  # type: ignore[attr-defined]
+            use_labels=True
         )
 
         self._leaf_count_cache: Dict[str, int] = {
@@ -162,79 +167,6 @@ class TreeDecomposition:
             if self._distribution_by_node
             else 0
         )
-
-    # ---------- poset helpers ----------
-
-    def _compute_leaf_partitions_for_all_nodes(self) -> dict[str, frozenset]:
-        """Compute the leaf partition (descendant leaves) for every node via bottom-up traversal.
-
-        Each node in a hierarchical tree defines a partition of the leaf set - the collection
-        of terminal samples that descend from that node. This method precomputes these partitions
-        for all nodes using dynamic programming, enabling O(1) cluster membership queries during
-        the decomposition phase.
-
-        The algorithm uses topological sorting on the reversed tree to process nodes in bottom-up
-        order (leaves first, then parents). For leaf nodes, the partition is a singleton set
-        containing only that leaf's label. For internal nodes, the partition is the union of
-        all child partitions, representing the transitive closure of descendant leaves.
-
-        This precomputation trades O(N) space and O(N) initialization time for O(1) access
-        during the iterative tree decomposition, where cluster boundaries are identified and
-        all leaves under a boundary node must be collected into a cluster.
-
-        Returns
-        -------
-        dict[str, frozenset]
-            Dictionary mapping each node_id to a frozenset of leaf labels. The frozenset
-            contains all terminal samples (leaves) that are descendants of that node in
-            the hierarchy. For leaf nodes, this is a singleton set; for internal nodes,
-            it's the union of all descendant leaf partitions.
-
-        Notes
-        -----
-        - Uses NetworkX's topological_sort on tree.reverse() to ensure proper bottom-up ordering
-        - Returns frozenset (immutable) to prevent accidental modification of cached partitions
-        - Empty frozenset returned for malformed nodes without children (defensive fallback)
-
-        Examples
-        --------
-        For a tree with structure::
-
-                 root
-                /    \\
-               A      B
-              / \\     \\
-             D   E     F
-
-        The computed partitions would be::
-
-            D → {D}
-            E → {E}
-            F → {F}
-            A → {D, E}
-            B → {F}
-            root → {D, E, F}
-        """
-        leaf_partition_by_node: Dict[str, frozenset] = {}
-
-        # Process children before parents (bottom-up)
-        for node_id in nx.topological_sort(self.tree.reverse()):
-            if self._is_leaf[node_id]:
-                # Base case: leaf partition contains only itself
-                leaf_partition_by_node[node_id] = frozenset([self._label[node_id]])
-            else:
-                # Recursive case: union child partitions to form parent partition
-                child_partitions = [
-                    leaf_partition_by_node[child_id]
-                    for child_id in self.tree.successors(node_id)
-                ]
-                leaf_partition_by_node[node_id] = (
-                    frozenset().union(*child_partitions)
-                    if child_partitions
-                    else frozenset()
-                )
-
-        return leaf_partition_by_node
 
     # ---------- utilities ----------
 
