@@ -186,6 +186,10 @@ class PosetTree(nx.DiGraph):
             leaf_names = [f"leaf_{i}" for i in range(n_leaves)]
 
         G = cls()
+        # Store linkage matrix for later use (e.g., inconsistency coefficient)
+        G.graph["linkage_matrix"] = linkage_matrix
+        G.graph["n_leaves"] = n_leaves
+        
         for i, name in enumerate(leaf_names):
             G.add_node(f"L{i}", label=name, is_leaf=True)
 
@@ -199,7 +203,7 @@ class PosetTree(nx.DiGraph):
                 f"L{int(right_idx)}" if right_idx < n_leaves else f"N{int(right_idx)}"
             )
 
-            G.add_node(node_id, is_leaf=False, height=float(dist))
+            G.add_node(node_id, is_leaf=False, height=float(dist), merge_idx=merge_idx)
             G.add_edge(node_id, left_id, weight=float(dist))
             G.add_edge(node_id, right_id, weight=float(dist))
         return G

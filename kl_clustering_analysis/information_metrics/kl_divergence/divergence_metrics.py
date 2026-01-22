@@ -4,6 +4,7 @@ import numpy.typing as npt
 import pandas as pd
 import networkx as nx
 from scipy.special import rel_entr
+from scipy.cluster.hierarchy import inconsistent as scipy_inconsistent
 
 from ... import config
 
@@ -253,16 +254,52 @@ def _populate_global_kl(
 def _extract_hierarchy_statistics(tree: "nx.DiGraph") -> pd.DataFrame:
     """
     Collect distributions and KL metrics into a DataFrame indexed by node_id.
+    
+    Also includes branch length information for diagnostic purposes:
+    - height: merge distance from linkage (internal nodes only)
+    - branch_length: distance from this node to its parent
+    - sibling_branch_sum: sum of branch lengths to both children (internal nodes)
     """
+    # Pre-compute parent heights for branch length calculation
+    parent_map = {}
+    for node_id in tree.nodes():
+        for child_id in tree.successors(node_id):
+            parent_map[child_id] = node_id
+    
     node_records = []
     for node_id in tree.nodes():
         node_attrs = tree.nodes[node_id]
+        
+        # Get height (merge distance, only meaningful for internal nodes)
+        height = node_attrs.get("height", 0.0)
+        is_leaf = node_attrs.get("is_leaf", False)
+        
+        # Compute branch length to parent
+        branch_length = np.nan
+        if node_id in parent_map:
+            parent_id = parent_map[node_id]
+            parent_height = tree.nodes[parent_id].get("height", 0.0)
+            node_height = height if not is_leaf else 0.0
+            branch_length = parent_height - node_height
+        
+        # Compute sibling branch sum (for internal nodes: sum of branches to children)
+        sibling_branch_sum = np.nan
+        children = list(tree.successors(node_id))
+        if len(children) == 2:
+            left_id, right_id = children
+            left_height = tree.nodes[left_id].get("height", 0.0) if not tree.nodes[left_id].get("is_leaf", False) else 0.0
+            right_height = tree.nodes[right_id].get("height", 0.0) if not tree.nodes[right_id].get("is_leaf", False) else 0.0
+            sibling_branch_sum = (height - left_height) + (height - right_height)
+        
         node_records.append(
             {
                 "node_id": node_id,
                 "distribution": node_attrs.get("distribution", None),
                 "leaf_count": node_attrs.get("leaf_count", 0),
-                "is_leaf": node_attrs.get("is_leaf", False),
+                "is_leaf": is_leaf,
+                "height": height,
+                "branch_length": branch_length,
+                "sibling_branch_sum": sibling_branch_sum,
                 "kl_divergence_global": node_attrs.get("kl_divergence_global", np.nan),
                 "kl_divergence_per_column_global": node_attrs.get(
                     "kl_divergence_per_column_global", None

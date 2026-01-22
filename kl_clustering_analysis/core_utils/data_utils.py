@@ -153,7 +153,6 @@ def assign_divergence_results(
     p_values_corrected: np.ndarray,
     reject_null: np.ndarray,
     degrees_of_freedom: np.ndarray,
-    global_weights: np.ndarray,
 ) -> pd.DataFrame:
     """Assign child-parent divergence test results to the nodes dataframe.
 
@@ -174,8 +173,6 @@ def assign_divergence_results(
         Boolean array indicating significant edges
     degrees_of_freedom
         Effective degrees of freedom for each edge
-    global_weights
-        Global weighting factors applied to each edge
 
     Returns
     -------
@@ -187,7 +184,6 @@ def assign_divergence_results(
     nodes_dataframe["Child_Parent_Divergence_P_Value_BH"] = np.nan
     nodes_dataframe["Child_Parent_Divergence_Significant"] = False
     nodes_dataframe["Child_Parent_Divergence_df"] = np.nan
-    nodes_dataframe["Child_Parent_Divergence_Global_Weight"] = 1.0
 
     # Assign results to child nodes
     nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_P_Value"] = p_values
@@ -196,9 +192,6 @@ def assign_divergence_results(
     )
     nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null
     nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_df"] = degrees_of_freedom
-    nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_Global_Weight"] = (
-        global_weights
-    )
 
     # Validate and convert significance column
     if nodes_dataframe["Child_Parent_Divergence_Significant"].isna().any():

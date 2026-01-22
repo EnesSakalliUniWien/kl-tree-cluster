@@ -16,6 +16,15 @@ from sklearn.datasets import make_blobs
 from kl_clustering_analysis.benchmarking.generators import (
     generate_random_feature_matrix,
 )
+from kl_clustering_analysis.benchmarking.generators.generate_categorical_matrix import (
+    generate_categorical_feature_matrix,
+)
+from kl_clustering_analysis.benchmarking.generators.generate_phylogenetic import (
+    generate_phylogenetic_data,
+)
+from kl_clustering_analysis.benchmarking.generators.generate_temporal_evolution import (
+    generate_temporal_evolution_data,
+)
 from kl_clustering_analysis.benchmarking.generators.generate_sbm import generate_sbm
 
 
@@ -153,6 +162,179 @@ def _generate_sbm_case(
     return data_df, ground_truth, A, metadata
 
 
+def _validate_categorical_params(test_case: dict) -> Tuple[int, int, int]:
+    """Validate and normalize parameters for the categorical generator.
+
+    Returns (n_rows, n_cols, n_categories).
+    """
+    n_rows = test_case.get("n_rows", test_case.get("n_samples"))
+    n_cols = test_case.get("n_cols", test_case.get("n_features"))
+    n_categories = test_case.get("n_categories", 3)
+    if n_rows is None or n_cols is None:
+        raise ValueError(
+            "Categorical generator requires 'n_rows'/'n_cols' or 'n_samples'/'n_features'."
+        )
+    return int(n_rows), int(n_cols), int(n_categories)
+
+
+def _generate_categorical_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Generate a categorical (multinomial) test case.
+
+    Returns a DataFrame where each cell contains a category index (0 to K-1),
+    and the distributions array contains the underlying probability distributions.
+    """
+    n_rows, n_cols, n_categories = _validate_categorical_params(test_case)
+    entropy = test_case.get("entropy_param", 0.5)
+    balanced = test_case.get("balanced_clusters", True)
+    category_sparsity = test_case.get("category_sparsity", None)
+
+    sample_dict, cluster_assignments, distributions = generate_categorical_feature_matrix(
+        n_rows=n_rows,
+        n_cols=n_cols,
+        n_categories=n_categories,
+        entropy_param=entropy,
+        n_clusters=test_case["n_clusters"],
+        random_seed=seed,
+        balanced_clusters=balanced,
+        category_sparsity=category_sparsity,
+    )
+
+    original_names = list(sample_dict.keys())
+    # Matrix of sampled categories (n_rows, n_cols)
+    matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
+    feature_names = [f"F{j}" for j in range(n_cols)]
+
+    data_df = pd.DataFrame(matrix, index=original_names, columns=feature_names)
+    true_labels = np.array(
+        [cluster_assignments[name] for name in original_names], dtype=int
+    )
+
+    metadata = {
+        "n_samples": n_rows,
+        "n_features": n_cols,
+        "n_categories": n_categories,
+        "n_clusters": test_case["n_clusters"],
+        "noise": entropy,
+        "name": test_case.get("name", f"categorical_{n_rows}x{n_cols}x{n_categories}"),
+        "generator": "categorical",
+        "distributions": distributions,  # (n_rows, n_cols, n_categories)
+    }
+
+    return data_df, true_labels, matrix.astype(float), metadata
+
+
+def _generate_phylogenetic_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Generate a phylogenetic simulation test case.
+
+    Simulates trait evolution along a random phylogenetic tree.
+    Each taxon (leaf) becomes a cluster, and samples are drawn from
+    the evolved distributions at each leaf.
+    """
+    n_taxa = test_case.get("n_taxa", test_case.get("n_clusters", 4))
+    n_features = test_case.get("n_features", test_case.get("n_cols", 50))
+    n_categories = test_case.get("n_categories", 4)
+    samples_per_taxon = test_case.get("samples_per_taxon", 10)
+    mutation_rate = test_case.get("mutation_rate", 0.3)
+    root_concentration = test_case.get("root_concentration", 1.0)
+
+    sample_dict, cluster_assignments, distributions, phylo_meta = generate_phylogenetic_data(
+        n_taxa=n_taxa,
+        n_features=n_features,
+        n_categories=n_categories,
+        samples_per_taxon=samples_per_taxon,
+        mutation_rate=mutation_rate,
+        root_concentration=root_concentration,
+        random_seed=seed,
+    )
+
+    original_names = list(sample_dict.keys())
+    matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
+    feature_names = [f"F{j}" for j in range(n_features)]
+
+    data_df = pd.DataFrame(matrix, index=original_names, columns=feature_names)
+    true_labels = np.array(
+        [cluster_assignments[name] for name in original_names], dtype=int
+    )
+
+    metadata = {
+        "n_samples": len(original_names),
+        "n_features": n_features,
+        "n_categories": n_categories,
+        "n_clusters": n_taxa,
+        "n_taxa": n_taxa,
+        "samples_per_taxon": samples_per_taxon,
+        "mutation_rate": mutation_rate,
+        "noise": mutation_rate,  # For compatibility
+        "name": test_case.get("name", f"phylo_{n_taxa}taxa_{n_features}feat"),
+        "generator": "phylogenetic",
+        "distributions": distributions,
+        "tree_structure": phylo_meta.get("tree_structure"),
+        "leaf_distributions": phylo_meta.get("leaf_distributions"),
+    }
+
+    return data_df, true_labels, matrix.astype(float), metadata
+
+
+def _generate_temporal_evolution_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Generate a temporal evolution test case.
+
+    Simulates sequence evolution along a growing branch over time.
+    Each time point becomes a cluster, with increasing divergence from ancestor.
+    """
+    n_time_points = test_case.get("n_time_points", test_case.get("n_clusters", 8))
+    n_features = test_case.get("n_features", test_case.get("n_cols", 200))
+    n_categories = test_case.get("n_categories", 4)
+    samples_per_time = test_case.get("samples_per_time", 20)
+    mutation_rate = test_case.get("mutation_rate", 0.3)
+    shift_strength = test_case.get("shift_strength", (0.15, 0.5))
+    root_concentration = test_case.get("root_concentration", 1.0)
+
+    sample_dict, cluster_assignments, distributions, evo_meta = generate_temporal_evolution_data(
+        n_time_points=n_time_points,
+        n_features=n_features,
+        n_categories=n_categories,
+        samples_per_time=samples_per_time,
+        mutation_rate=mutation_rate,
+        shift_strength=shift_strength,
+        root_concentration=root_concentration,
+        random_seed=seed,
+    )
+
+    original_names = list(sample_dict.keys())
+    matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
+    feature_names = [f"F{j}" for j in range(n_features)]
+
+    data_df = pd.DataFrame(matrix, index=original_names, columns=feature_names)
+    true_labels = np.array(
+        [cluster_assignments[name] for name in original_names], dtype=int
+    )
+
+    metadata = {
+        "n_samples": len(original_names),
+        "n_features": n_features,
+        "n_categories": n_categories,
+        "n_clusters": n_time_points,
+        "n_time_points": n_time_points,
+        "samples_per_time": samples_per_time,
+        "mutation_rate": mutation_rate,
+        "shift_strength": shift_strength,
+        "noise": mutation_rate,  # For compatibility
+        "name": test_case.get("name", f"temporal_{n_time_points}tp_{n_features}feat"),
+        "generator": "temporal_evolution",
+        "distributions": distributions,
+        "divergence_from_ancestor": evo_meta.get("divergence_from_ancestor"),
+        "divergence_matrix": evo_meta.get("divergence_matrix"),
+    }
+
+    return data_df, true_labels, matrix.astype(float), metadata
+
+
 def generate_case_data(
     test_case: dict,
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
@@ -169,5 +351,11 @@ def generate_case_data(
         return _generate_blobs_case(test_case, seed)
     elif generator == "sbm":
         return _generate_sbm_case(test_case, seed)
+    elif generator == "categorical":
+        return _generate_categorical_case(test_case, seed)
+    elif generator == "phylogenetic":
+        return _generate_phylogenetic_case(test_case, seed)
+    elif generator == "temporal_evolution":
+        return _generate_temporal_evolution_case(test_case, seed)
     else:
         raise ValueError(f"Unknown generator: {generator}")

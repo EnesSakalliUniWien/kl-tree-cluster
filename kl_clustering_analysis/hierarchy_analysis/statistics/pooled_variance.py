@@ -1,40 +1,24 @@
 """Pooled variance estimation for two-sample proportion tests.
 
-This module provides utilities for computing the pooled variance of the
-difference between two Bernoulli proportion estimates, as used in the
-standard Wald z-test for comparing proportions.
+Supports both binary (Bernoulli) and categorical (multinomial) distributions.
 
 Statistical Background
 ----------------------
-For two independent samples with Bernoulli observations:
-    - Sample 1: n₁ observations with estimated proportion θ̂₁
-    - Sample 2: n₂ observations with estimated proportion θ̂₂
+For two independent samples with observations from the same distribution family:
 
-Under the null hypothesis H₀: θ₁ = θ₂ = θ, the pooled estimator is:
-    θ̂_pooled = (n₁·θ̂₁ + n₂·θ̂₂) / (n₁ + n₂)
+Binary (Bernoulli):
+    Var[θ̂] = θ(1-θ)/n
+    
+Categorical (Multinomial):
+    Var[p̂_k] = p_k(1-p_k)/n  (diagonal elements)
+    Cov[p̂_j, p̂_k] = -p_j·p_k/n  (off-diagonal, but ignored for Wald test)
 
-This is the maximum likelihood estimator (MLE) under H₀.
-
-The variance of the difference Δθ̂ = θ̂₁ - θ̂₂ is:
-    Var[Δθ̂] = Var[θ̂₁] + Var[θ̂₂]
-             = θ(1-θ)/n₁ + θ(1-θ)/n₂
-             = θ(1-θ) × (1/n₁ + 1/n₂)
-
-Using the pooled estimate:
-    Var[Δθ̂] ≈ θ̂_pooled(1 - θ̂_pooled) × (1/n₁ + 1/n₂)
-
-The standardized difference (z-score) is:
-    z = Δθ̂ / √Var[Δθ̂]
-
-Under H₀, z ~ N(0,1) asymptotically, and z² ~ χ²(1).
-
-For multivariate case (p features), T = Σⱼ zⱼ² ~ χ²(p) under H₀.
+For the Wald test, we use the diagonal variance approximation, which is
+conservative and works well with random projection.
 
 References
 ----------
 Agresti, A. (2013). Categorical Data Analysis (3rd ed.). Wiley.
-Fleiss, J. L., Levin, B., & Paik, M. C. (2003). Statistical Methods
-    for Rates and Proportions (3rd ed.). Wiley.
 """
 
 from __future__ import annotations
@@ -43,6 +27,22 @@ from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
+
+
+def _is_categorical(arr: np.ndarray) -> bool:
+    """Check if array represents categorical distributions (2D)."""
+    return arr.ndim == 2 and arr.shape[1] > 1
+
+
+def _flatten_categorical(arr: np.ndarray) -> np.ndarray:
+    """Flatten categorical distribution to 1D for Wald test.
+    
+    For shape (d, K), returns shape (d * K,).
+    For shape (d,), returns unchanged.
+    """
+    if _is_categorical(arr):
+        return arr.ravel()
+    return arr
 
 
 def compute_pooled_proportion(
@@ -54,34 +54,26 @@ def compute_pooled_proportion(
 ) -> NDArray[np.floating]:
     """Compute the pooled proportion estimate under H₀: θ₁ = θ₂.
 
-    Uses sample-size weighted averaging, which is the MLE under H₀:
-        θ̂_pooled = (n₁·θ̂₁ + n₂·θ̂₂) / (n₁ + n₂)
+    Supports both binary (1D) and categorical (2D) distributions.
 
     Parameters
     ----------
     theta_1 : NDArray[np.floating]
-        Estimated proportions for sample 1, shape (p,) for p features.
+        Estimated proportions for sample 1.
+        Shape (d,) for binary or (d, K) for categorical.
     theta_2 : NDArray[np.floating]
-        Estimated proportions for sample 2, shape (p,).
+        Estimated proportions for sample 2. Same shape as theta_1.
     n_1 : float
         Sample size of group 1.
     n_2 : float
         Sample size of group 2.
     eps : float, optional
-        Small constant to clip proportions away from 0 and 1,
-        preventing degenerate variance estimates (default: 1e-10).
+        Small constant to clip proportions (default: 1e-10).
 
     Returns
     -------
     NDArray[np.floating]
-        Pooled proportion estimates, shape (p,), clipped to [eps, 1-eps].
-
-    Examples
-    --------
-    >>> theta_1 = np.array([0.3, 0.5, 0.7])
-    >>> theta_2 = np.array([0.4, 0.5, 0.6])
-    >>> pooled = compute_pooled_proportion(theta_1, theta_2, n_1=100, n_2=200)
-    >>> # With n_2 = 2×n_1, pooled is weighted 2:1 toward theta_2
+        Pooled proportion estimates, same shape as input.
     """
     n_total = n_1 + n_2
     pooled = (n_1 * theta_1 + n_2 * theta_2) / n_total
@@ -97,18 +89,21 @@ def compute_pooled_variance(
 ) -> NDArray[np.floating]:
     """Compute the variance of the difference between two proportions.
 
-    Under H₀: θ₁ = θ₂, the variance of Δθ̂ = θ̂₁ - θ̂₂ is:
-        Var[Δθ̂] = θ_pooled(1 - θ_pooled) × (1/n₁ + 1/n₂)
-
-    This uses the pooled proportion estimate (MLE under H₀) rather than
-    separate variance estimates, which is standard for hypothesis testing.
+    Supports both binary (1D) and categorical (2D) distributions.
+    
+    For categorical, uses diagonal variance approximation:
+        Var[p̂_k] = p_k(1-p_k)/n
+    
+    This ignores off-diagonal covariance terms, which is conservative
+    and works well with random projection.
 
     Parameters
     ----------
     theta_1 : NDArray[np.floating]
-        Estimated proportions for sample 1, shape (p,).
+        Estimated proportions for sample 1.
+        Shape (d,) for binary or (d, K) for categorical.
     theta_2 : NDArray[np.floating]
-        Estimated proportions for sample 2, shape (p,).
+        Estimated proportions for sample 2. Same shape as theta_1.
     n_1 : float
         Sample size of group 1.
     n_2 : float
@@ -119,17 +114,10 @@ def compute_pooled_variance(
     Returns
     -------
     NDArray[np.floating]
-        Variance of the difference for each feature, shape (p,).
-        Minimum value is eps to prevent division by zero.
-
-    Notes
-    -----
-    The formula Var = θ(1-θ)(1/n₁ + 1/n₂) comes from:
-    - Var[θ̂₁] = θ(1-θ)/n₁  (variance of sample proportion)
-    - Var[θ̂₂] = θ(1-θ)/n₂
-    - Var[θ̂₁ - θ̂₂] = Var[θ̂₁] + Var[θ̂₂]  (independence)
+        Variance of the difference, same shape as input.
     """
     pooled = compute_pooled_proportion(theta_1, theta_2, n_1, n_2, eps)
+    # Var = p(1-p) * (1/n1 + 1/n2) works for both binary and categorical
     variance = pooled * (1.0 - pooled) * (1.0 / n_1 + 1.0 / n_2)
     return np.maximum(variance, eps)
 
@@ -141,19 +129,18 @@ def standardize_proportion_difference(
     n_2: float,
     eps: float = 1e-10,
 ) -> Tuple[NDArray[np.floating], NDArray[np.floating]]:
-    """Compute the standardized difference (z-scores) between two proportions.
+    """Compute standardized difference (z-scores) between two proportions.
 
-    For each feature j, computes:
-        z_j = (θ̂₁_j - θ̂₂_j) / √Var[Δθ̂_j]
-
-    Under H₀: θ₁ = θ₂, each z_j ~ N(0,1) asymptotically.
+    Supports both binary (1D) and categorical (2D) distributions.
+    For categorical, flattens to 1D for the Wald test.
 
     Parameters
     ----------
     theta_1 : NDArray[np.floating]
-        Estimated proportions for sample 1, shape (p,).
+        Estimated proportions for sample 1.
+        Shape (d,) for binary or (d, K) for categorical.
     theta_2 : NDArray[np.floating]
-        Estimated proportions for sample 2, shape (p,).
+        Estimated proportions for sample 2. Same shape as theta_1.
     n_1 : float
         Sample size of group 1.
     n_2 : float
@@ -164,21 +151,18 @@ def standardize_proportion_difference(
     Returns
     -------
     Tuple[NDArray[np.floating], NDArray[np.floating]]
-        (z_scores, variance) where:
-        - z_scores: Standardized differences, shape (p,)
-        - variance: Pooled variance estimates, shape (p,)
-
-    Examples
-    --------
-    >>> theta_1 = np.array([0.3, 0.5])
-    >>> theta_2 = np.array([0.4, 0.5])
-    >>> z, var = standardize_proportion_difference(theta_1, theta_2, 100, 100)
-    >>> # z[0] < 0 (theta_1 < theta_2), z[1] ≈ 0 (equal proportions)
+        (z_scores, variance) where both are 1D arrays.
+        For categorical input, these are flattened.
     """
     variance = compute_pooled_variance(theta_1, theta_2, n_1, n_2, eps)
     difference = theta_1 - theta_2
-    z_scores = difference / np.sqrt(variance)
-    return z_scores, variance
+    
+    # Flatten if categorical
+    variance_flat = _flatten_categorical(variance)
+    difference_flat = _flatten_categorical(difference)
+    
+    z_scores = difference_flat / np.sqrt(variance_flat)
+    return z_scores, variance_flat
 
 
 __all__ = [

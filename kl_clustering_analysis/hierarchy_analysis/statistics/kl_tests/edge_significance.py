@@ -1,12 +1,11 @@
 """Edge significance testing for hierarchical clustering.
 
 Tests whether each child's distribution significantly diverges from its parent
-using a projected Wald test. This approach handles high dimensionality by
-projecting standardized z-scores to a lower dimension via Johnson-Lindenstrauss
-random projection.
+using a projected Wald test. Supports both binary (Bernoulli) and categorical
+(multinomial) distributions.
 
 Test statistic: T = ||R·z||² ~ χ²(k) where:
-- z_i = (θ_child - θ_parent) / √(Var(θ̂)) is the standardized difference per feature
+- z_i = (θ_child - θ_parent) / √(Var(θ̂)) is the standardized difference
 - R is a k × d random projection matrix (k = O(log n))
 - k is the projection dimension from the JL lemma
 
@@ -30,7 +29,6 @@ from ..random_projection import compute_projection_dimension, generate_projectio
 from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
-    extract_parent_distributions,
 )
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
@@ -48,26 +46,30 @@ def _compute_standardized_z(
 ) -> np.ndarray:
     """Compute standardized z-scores for child vs parent.
 
+    Supports both binary (1D) and categorical (2D) distributions.
     Under H₀ (child ~ parent), each z_i ~ N(0, 1).
 
     Parameters
     ----------
     child_dist
-        Child node's feature means (θ_child), shape (d,)
+        Child node's distribution. Shape (d,) for binary or (d, K) for categorical.
     parent_dist
-        Parent node's feature means (θ_parent), shape (d,)
+        Parent node's distribution. Same shape as child_dist.
     n_child
-        Sample size (leaf count) for the child node
+        Sample size (leaf count) for the child node.
 
     Returns
     -------
     np.ndarray
-        Standardized z-scores, shape (d,)
+        Standardized z-scores, flattened to 1D.
     """
-    # Variance under null: Var(θ̂) = θ(1-θ)/n
+    # Variance under null: Var(θ̂) = θ(1-θ)/n (works for both binary and categorical)
     var = parent_dist * (1 - parent_dist) / n_child
-    var = np.maximum(var, 1e-10)  # avoid division by zero
-    return (child_dist - parent_dist) / np.sqrt(var)
+    var = np.maximum(var, 1e-10)
+    z = (child_dist - parent_dist) / np.sqrt(var)
+    
+    # Flatten if categorical (2D -> 1D)
+    return z.ravel()
 
 
 def _compute_projected_test(
@@ -78,19 +80,18 @@ def _compute_projected_test(
 ) -> tuple[float, int, float]:
     """Compute projected Wald test for one edge.
 
-    Projects d-dimensional z-scores to k dimensions and computes
-    T = ||R·z||² ~ χ²(k).
+    Projects z-scores to k dimensions and computes T = ||R·z||² ~ χ²(k).
 
     Parameters
     ----------
     child_dist
-        Child node's feature means
+        Child node's distribution.
     parent_dist
-        Parent node's feature means
+        Parent node's distribution.
     n_child
-        Sample size for child node
+        Sample size for child node.
     seed
-        Random seed for projection matrix
+        Random seed for projection matrix.
 
     Returns
     -------
@@ -125,13 +126,13 @@ def _compute_p_values_via_projection(
     Parameters
     ----------
     tree
-        Hierarchy with 'distribution' attribute on nodes
+        Hierarchy with 'distribution' attribute on nodes.
     child_ids
-        List of child node IDs
+        List of child node IDs.
     parent_ids
-        List of parent node IDs (aligned with child_ids)
+        List of parent node IDs (aligned with child_ids).
     child_leaf_counts
-        Sample sizes for child nodes
+        Sample sizes for child nodes.
 
     Returns
     -------
@@ -149,7 +150,6 @@ def _compute_p_values_via_projection(
         child_dist = tree.nodes[child_ids[i]].get("distribution")
         parent_dist = tree.nodes[parent_ids[i]].get("distribution")
 
-        # If test is not possible (missing data, no samples), mark as non-significant
         if child_dist is None or parent_dist is None or child_leaf_counts[i] < 1:
             stats[i], dfs[i], pvals[i] = 0.0, 0, 1.0
             continue
@@ -177,62 +177,37 @@ def annotate_child_parent_divergence(
 ) -> pd.DataFrame:
     """Test child-parent divergence using projected Wald test.
 
-    Tests whether each child's distribution significantly diverges from its
-    parent using a projected Wald test: T = ||R·z||² ~ χ²(k), where z is the
-    vector of standardized differences and R is a JL random projection matrix.
-
-    This approach properly handles high dimensionality by reducing the
-    d-dimensional z-scores to k = O(log n) dimensions, preventing noise
-    accumulation that occurs with full-dimensional tests.
+    Supports both binary (Bernoulli) and categorical (multinomial) distributions.
 
     Parameters
     ----------
     tree
         Directed acyclic graph representing the hierarchy. Nodes must have
-        'distribution' attribute containing feature means.
+        'distribution' attribute containing feature parameters.
     nodes_statistics_dataframe
-        DataFrame indexed by node_id with 'leaf_count' column
+        DataFrame indexed by node_id with 'leaf_count' column.
     significance_level_alpha
-        FDR threshold for correction
+        FDR threshold for correction.
     fdr_method
-        FDR correction method:
-        - "tree_bh" (default): Family-wise BH with ancestor-adjusted thresholds
-                     (Bogomolov et al. 2021). Provides proper hierarchical FDR control.
-        - "flat": Standard Benjamini-Hochberg across all edges
-        - "level_wise": BH applied separately at each tree level
+        FDR correction method: "tree_bh", "flat", or "level_wise".
 
     Returns
     -------
     pd.DataFrame
-        Input DataFrame augmented with columns:
-        - Child_Parent_Divergence_P_Value: raw p-value from projected Wald test
-        - Child_Parent_Divergence_P_Value_BH: corrected p-value
-        - Child_Parent_Divergence_Significant: boolean, True if rejected after correction
-        - Child_Parent_Divergence_df: projection dimension k used
-
-    References
-    ----------
-    Johnson, W. B., & Lindenstrauss, J. (1984). Extensions of Lipschitz
-        mappings into a Hilbert space. Contemporary Mathematics, 26, 189-206.
-    Bogomolov et al. (2021). "Hypotheses on a tree: new error rates and
-        testing strategies". Biometrika, 108(3), 575-590.
+        Input DataFrame augmented with divergence test results.
     """
     nodes_dataframe = nodes_statistics_dataframe.copy()
     alpha = float(significance_level_alpha)
 
-    # Extract all edges (parent -> child)
     edge_list = list(tree.edges())
     parent_ids = [parent_id for parent_id, _ in edge_list]
     child_ids = [child_id for _, child_id in edge_list]
 
-    # Tree contains only leaves (no internal nodes)
     if not child_ids:
         raise ValueError("Tree has no edges. Cannot compute child-parent divergence.")
 
-    # Extract child node data
     child_leaf_counts = extract_leaf_counts(nodes_dataframe, child_ids)
 
-    # Compute p-values via projected Wald test
     test_stats, degrees_of_freedom, p_values = _compute_p_values_via_projection(
         tree, child_ids, parent_ids, child_leaf_counts
     )
@@ -244,11 +219,9 @@ def annotate_child_parent_divergence(
             f"Non-finite child-parent divergence p-values for nodes: {preview}."
         )
 
-    # Compute node depths for TreeBH hierarchical correction
     node_depths = compute_node_depths(tree)
     child_depths = np.array([node_depths.get(cid, 0) for cid in child_ids])
 
-    # Apply FDR correction with chosen method
     reject_null, p_values_corrected = apply_multiple_testing_correction(
         p_values=p_values,
         child_ids=child_ids,
@@ -258,8 +231,6 @@ def annotate_child_parent_divergence(
         tree=tree,
     )
 
-    # Assign results to dataframe (global_weights = 1.0, not used in this version)
-    global_weights = np.ones(len(child_ids))
     return assign_divergence_results(
         nodes_dataframe=nodes_dataframe,
         child_ids=child_ids,
@@ -267,10 +238,7 @@ def annotate_child_parent_divergence(
         p_values_corrected=p_values_corrected,
         reject_null=reject_null,
         degrees_of_freedom=degrees_of_freedom,
-        global_weights=global_weights,
     )
 
 
-__all__ = [
-    "annotate_child_parent_divergence",
-]
+__all__ = ["annotate_child_parent_divergence"]

@@ -156,17 +156,18 @@ class TreeDecomposition:
 
         for node_id in self.tree.nodes:
             node_data = self.tree.nodes[node_id]
-            distribution_array = np.asarray(
-                node_data["distribution"], dtype=float
-            ).ravel()
+            # Preserve shape: 1D for binary (Bernoulli), 2D for categorical (multinomial)
+            distribution_array = np.asarray(node_data["distribution"], dtype=float)
             self._distribution_by_node[node_id] = distribution_array
             self._is_leaf[node_id] = node_data["is_leaf"]
             self._label[node_id] = node_data.get("label", node_id)
-        self._n_features = (
-            len(next(iter(self._distribution_by_node.values())))
-            if self._distribution_by_node
-            else 0
-        )
+        
+        # n_features is the first dimension (number of features/variables)
+        if self._distribution_by_node:
+            first_dist = next(iter(self._distribution_by_node.values()))
+            self._n_features = first_dist.shape[0] if first_dist.ndim >= 1 else 0
+        else:
+            self._n_features = 0
 
     # ---------- utilities ----------
 
@@ -317,24 +318,25 @@ class TreeDecomposition:
            - OPEN: parent has exactly 2 children → proceed to statistical tests
            - CLOSED: parent has <2 or >2 children → merge at parent, form cluster boundary
 
-        2. **Sibling divergence gate** (sibling vs sibling) - PRIMARY TEST
-           - OPEN: siblings are significantly different (JSD test with BH correction) → proceed
-           - CLOSED: siblings are not significantly different → MERGE
-           - Checked FIRST because if siblings are identical, no point checking parent relationship
-
-        3. **Local KL divergence gate** (child vs parent) - CONFIRMATION TEST
-           - OPEN: at least one child significantly diverges from parent → SPLIT
+        2. **Child-parent divergence gate** (child vs parent) - SIGNAL DETECTION
+           - OPEN: at least one child significantly diverges from parent → proceed
            - CLOSED: neither child diverges from parent → MERGE
-           - Confirms there's actual signal in the children (not just noise)
+           - Checked FIRST to confirm there's actual signal (not just noise)
+           - This matches the annotation order: child-parent test runs before sibling test
+
+        3. **Sibling divergence gate** (sibling vs sibling) - CLUSTER SEPARATION
+           - OPEN: siblings are significantly different → SPLIT
+           - CLOSED: siblings are not significantly different → MERGE
+           - Only checked if child-parent gate passes (consistent with annotation)
 
         Outcome Logic:
         - ALL gates OPEN → return True → children added to traversal stack, split continues recursively
         - ANY gate CLOSED → return False → collect all leaves under parent as single cluster, stop splitting here
 
         Rationale for gate order:
-        - Sibling test is more discriminative: directly asks "should these be separate clusters?"
-        - Local KL test validates signal exists: ensures children aren't just noise
-        - Efficiency: skip local KL checks if siblings are identical (saves computation)
+        - Child-parent test detects signal: "Did the children diverge from the parent?"
+        - Sibling test confirms separation: "Did they diverge in different directions?"
+        - This order matches annotation: sibling test is only computed when child-parent passes
         """
         # Gate 1: Binary structure requirement
         children = self._children[parent]
@@ -343,8 +345,23 @@ class TreeDecomposition:
 
         left_child, right_child = children
 
-        # Gate 2: Sibling divergence requirement (check FIRST - most discriminative)
-        # Sibling_BH_Different = True means siblings have significantly different distributions -> proceed to Gate 3
+        # Gate 2: Child-parent divergence requirement (check FIRST - detects signal)
+        # At least one child must significantly diverge from parent to confirm there's real signal
+        left_diverges = self._local_significant.get(left_child)
+        right_diverges = self._local_significant.get(right_child)
+
+        if left_diverges is None or right_diverges is None:
+            raise ValueError(
+                "Missing child-parent divergence annotations for "
+                f"{left_child!r} or {right_child!r}; annotate before decomposing."
+            )
+
+        # If neither child diverges from parent, it's just noise - merge
+        if not (left_diverges or right_diverges):
+            return False
+
+        # Gate 3: Sibling divergence requirement (confirms cluster separation)
+        # Sibling_BH_Different = True means siblings have significantly different distributions
         is_different = self._sibling_different.get(parent)
 
         if is_different is None:
@@ -359,23 +376,8 @@ class TreeDecomposition:
                 f"{parent!r}; annotations incomplete."
             )
 
-        # If siblings aren't different, no need to check local divergence - they should be merged
-        if not is_different:
-            return False
-
-        # Gate 3: Local KL divergence requirement (at least one child must diverge from parent)
-        # This confirms there's actual signal, not just random noise
-        left_diverges = self._local_significant.get(left_child)
-        right_diverges = self._local_significant.get(right_child)
-
-        if left_diverges is None or right_diverges is None:
-            raise ValueError(
-                "Missing child-parent divergence annotations for "
-                f"{left_child!r} or {right_child!r}; annotate before decomposing."
-            )
-
-        # At least one child must significantly diverge from parent to confirm signal
-        return bool(left_diverges or right_diverges)
+        # Siblings must be significantly different to justify splitting
+        return bool(is_different)
 
     def _pop_candidate(
         self, heap: List[str], queued: set[str], processed: set[str]

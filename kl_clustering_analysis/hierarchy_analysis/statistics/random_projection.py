@@ -140,7 +140,36 @@ def generate_projection_matrix(
     return projector.components_
 
 
+def should_use_projection(
+    n_features: int,
+    n_samples: int,
+    eps: float = config.PROJECTION_EPS,
+) -> bool:
+    """Check if random projection will reduce dimensionality.
+
+    Projection is applied when the JL-based target dimension k is smaller
+    than the original number of features.
+
+    Parameters
+    ----------
+    n_features : int
+        Original number of features.
+    n_samples : int
+        Effective sample size.
+    eps : float
+        Distortion tolerance (default from config).
+
+    Returns
+    -------
+    bool
+        True if projection will reduce dimensionality.
+    """
+    k = compute_projection_dimension(n_samples, n_features, eps=eps)
+    return k < n_features
+
+
 __all__ = [
     "compute_projection_dimension",
     "generate_projection_matrix",
+    "should_use_projection",
 ]

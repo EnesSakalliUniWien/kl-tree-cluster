@@ -44,9 +44,14 @@ def _filter_informative_features(
     n_left: float,
     n_right: float,
 ) -> Tuple[np.ndarray, np.ndarray, int]:
-    """Filter to informative features if MI filtering is enabled."""
+    """Filter to informative features if MI filtering is enabled.
+    
+    Supports both binary (1D) and categorical (2D) distributions.
+    """
     if not config.USE_MI_FEATURE_FILTER:
-        return left, right, len(left)
+        # Return flattened length for categorical
+        n_features = left.size if left.ndim == 2 else len(left)
+        return left, right, n_features
 
     mask, _, n_kept = select_informative_features(
         left,
@@ -56,6 +61,9 @@ def _filter_informative_features(
         quantile_threshold=config.MI_FILTER_QUANTILE,
         min_fraction=config.MI_FILTER_MIN_FRACTION,
     )
+    # For categorical (2D), mask applies to features (rows), not categories
+    if left.ndim == 2:
+        return left[mask], right[mask], n_kept * left.shape[1]
     return left[mask], right[mask], n_kept
 
 
@@ -76,6 +84,8 @@ def sibling_divergence_test(
 ) -> Tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence with random projection.
 
+    Supports both binary (1D) and categorical (2D) distributions.
+
     Returns (test_statistic, degrees_of_freedom, p_value).
     """
     n_eff = hmean([n_left, n_right])
@@ -85,14 +95,17 @@ def sibling_divergence_test(
         left_dist, right_dist, n_left, n_right
     )
 
-    # Compute projection dimension
-    k = compute_projection_dimension(int(n_eff), n_features)
-
-    # Standardize difference (Wald z-scores)
+    # Standardize difference (Wald z-scores) - handles flattening for categorical
     z, _ = standardize_proportion_difference(left, right, n_left, n_right)
+    
+    # Use actual z-score length (may differ from n_features for categorical)
+    d = len(z)
+
+    # Compute projection dimension
+    k = compute_projection_dimension(int(n_eff), d)
 
     # Project and compute test statistic
-    R = generate_projection_matrix(n_features, k, config.PROJECTION_RANDOM_SEED)
+    R = generate_projection_matrix(d, k, config.PROJECTION_RANDOM_SEED)
     projected = R @ z
 
     return _compute_chi_square_pvalue(projected, k)
