@@ -4,9 +4,9 @@ import numpy.typing as npt
 import pandas as pd
 import networkx as nx
 from scipy.special import rel_entr
-from scipy.cluster.hierarchy import inconsistent as scipy_inconsistent
 
 from ... import config
+from ...tree.distributions import populate_distributions
 
 if TYPE_CHECKING:
     import networkx as nx
@@ -70,34 +70,31 @@ def calculate_kl_divergence_vector(
     reference_distribution: npt.NDArray[np.float64],
 ) -> npt.NDArray[np.float64]:
     """
-    Element-wise KL divergence: D_KL(Q||P) = sum_i q_i * log(q_i / p_i).
+    Element-wise KL divergence: D_KL(Q||P).
 
-    Uses scipy.special.rel_entr for numerically stable computation.
-    Handles general categorical distributions (not limited to binary/Bernoulli).
-    Automatically handles edge cases like 0*log(0) = 0.
+    Adapts to input shape:
+    - 1D input (n_features,): Treated as Bernoulli (binary).
+      Returns KL(Q||P) + KL(1-Q||1-P).
+    - 2D input (n_features, n_classes): Treated as Categorical.
+      Returns sum_k Q_k * log(Q_k/P_k) along axis 1.
 
     Parameters
     ----------
     query_distribution
-        Query distribution (probabilities, can be binary or categorical)
+        Query distribution.
     reference_distribution
-        Reference distribution (probabilities, can be binary or categorical)
+        Reference distribution.
 
     Returns
     -------
     np.ndarray
-        Element-wise relative entropy values
-
-    Notes
-    -----
-    For Bernoulli (binary) features in [0,1], this computes:
-        q*log(q/p) + (1-q)*log((1-q)/(1-p))
-    For general categorical distributions, computes:
-        sum_i q_i * log(q_i / p_i)
+        Vector of KL divergences per feature.
     """
-    query_probs = np.asarray(query_distribution, dtype=np.float64).reshape(-1)
-    reference_probs = np.asarray(reference_distribution, dtype=np.float64).reshape(-1)
-    return rel_entr(query_probs, reference_probs)
+    return _kl_categorical_general(
+        query_distribution, 
+        reference_distribution, 
+        eps=config.EPSILON
+    )
 
 
 def calculate_kl_divergence_per_feature(
@@ -133,67 +130,6 @@ def calculate_kl_divergence_per_feature(
         f"Distribution '{distribution_type}' not supported. "
         f"Available: {list(_KL_REGISTRY.keys())}"
     )
-
-
-def _calculate_leaf_distribution(
-    tree: "nx.DiGraph",
-    node_id: str,
-    leaf_data: Dict[Any, npt.NDArray[np.float64]],
-) -> None:
-    """
-    Set distribution and leaf count for a leaf node.
-    """
-    label = tree.nodes[node_id].get("label", node_id)
-    feature_probabilities = np.asarray(leaf_data[label], dtype=np.float64).reshape(-1)
-    tree.nodes[node_id]["distribution"] = feature_probabilities
-    tree.nodes[node_id]["leaf_count"] = 1
-
-
-def _calculate_hierarchy_node_distribution(tree: "nx.DiGraph", node_id: str) -> None:
-    """
-    Weighted mean of children distributions using children's leaf counts.
-    """
-    children = list(tree.successors(node_id))
-    weighted_distribution_sum = 0.0
-    total_descendant_leaves = 0
-    for child_id in children:
-        child_leaves = int(tree.nodes[child_id]["leaf_count"])
-        child_distribution = np.asarray(
-            tree.nodes[child_id]["distribution"], dtype=np.float64
-        )
-        weighted_distribution_sum += child_distribution * child_leaves
-        total_descendant_leaves += child_leaves
-    tree.nodes[node_id]["leaf_count"] = total_descendant_leaves
-    tree.nodes[node_id]["distribution"] = (
-        weighted_distribution_sum / total_descendant_leaves
-    )
-
-
-def _populate_distributions(
-    tree: "nx.DiGraph",
-    root: str,
-    leaf_data: pd.DataFrame,
-) -> None:
-    """
-    Populate 'distribution' and 'leaf_count' for all nodes bottom-up.
-
-    Traverses in postorder so children are processed before parents.
-    """
-    # Convert DataFrame to dict for efficient lookups
-    leaf_feature_data = {
-        idx: row.values.astype(np.float64) for idx, row in leaf_data.iterrows()
-    }
-
-    # Process nodes bottom-up (leaves first, then parents)
-    for node_id in nx.dfs_postorder_nodes(tree, source=root):
-        is_leaf = tree.nodes[node_id].get("is_leaf", False)
-
-        if is_leaf:
-            # Leaf node: use data directly from leaf_data
-            _calculate_leaf_distribution(tree, node_id, leaf_feature_data)
-        else:
-            # Internal node: weighted average of children distributions
-            _calculate_hierarchy_node_distribution(tree, node_id)
 
 
 def _populate_local_kl(
@@ -254,57 +190,29 @@ def _populate_global_kl(
 def _extract_hierarchy_statistics(tree: "nx.DiGraph") -> pd.DataFrame:
     """
     Collect distributions and KL metrics into a DataFrame indexed by node_id.
-    
-    Also includes branch length information for diagnostic purposes:
-    - height: merge distance from linkage (internal nodes only)
-    - branch_length: distance from this node to its parent
-    - sibling_branch_sum: sum of branch lengths to both children (internal nodes)
     """
-    # Pre-compute parent heights for branch length calculation
-    parent_map = {}
-    for node_id in tree.nodes():
-        for child_id in tree.successors(node_id):
-            parent_map[child_id] = node_id
-    
     node_records = []
     for node_id in tree.nodes():
         node_attrs = tree.nodes[node_id]
-        
-        # Get height (merge distance, only meaningful for internal nodes)
-        height = node_attrs.get("height", 0.0)
         is_leaf = node_attrs.get("is_leaf", False)
-        
-        # Compute branch length to parent
-        branch_length = np.nan
-        if node_id in parent_map:
-            parent_id = parent_map[node_id]
-            parent_height = tree.nodes[parent_id].get("height", 0.0)
-            node_height = height if not is_leaf else 0.0
-            branch_length = parent_height - node_height
-        
-        # Compute sibling branch sum (for internal nodes: sum of branches to children)
-        sibling_branch_sum = np.nan
-        children = list(tree.successors(node_id))
-        if len(children) == 2:
-            left_id, right_id = children
-            left_height = tree.nodes[left_id].get("height", 0.0) if not tree.nodes[left_id].get("is_leaf", False) else 0.0
-            right_height = tree.nodes[right_id].get("height", 0.0) if not tree.nodes[right_id].get("is_leaf", False) else 0.0
-            sibling_branch_sum = (height - left_height) + (height - right_height)
-        
+
         node_records.append(
             {
                 "node_id": node_id,
                 "distribution": node_attrs.get("distribution", None),
                 "leaf_count": node_attrs.get("leaf_count", 0),
                 "is_leaf": is_leaf,
-                "height": height,
-                "branch_length": branch_length,
-                "sibling_branch_sum": sibling_branch_sum,
                 "kl_divergence_global": node_attrs.get("kl_divergence_global", np.nan),
                 "kl_divergence_per_column_global": node_attrs.get(
                     "kl_divergence_per_column_global", None
                 ),
                 "kl_divergence_local": node_attrs.get("kl_divergence_local", np.nan),
+                "kl_divergence_local_composite": node_attrs.get(
+                    "kl_divergence_local_composite", np.nan
+                ),
+                "composite_score_weight": node_attrs.get(
+                    "composite_score_weight", np.nan
+                ),
                 "kl_divergence_per_column_local": node_attrs.get(
                     "kl_divergence_per_column_local", None
                 ),
@@ -317,6 +225,7 @@ def compute_node_divergences(
     tree: "nx.DiGraph",
     leaf_data: pd.DataFrame,
     distribution_type: str = "categorical",
+    lambda_factor: float = 0.2,
 ) -> pd.DataFrame:
     """
     Populate tree nodes with distributions and KL divergences, return summary DataFrame.
@@ -326,16 +235,80 @@ def compute_node_divergences(
     - leaf_count: number of descendant leaves
     - kl_divergence_global: KL(node||root)
     - kl_divergence_local: KL(child||parent)
+    - kl_divergence_local_composite: KL + lambda * (mean_KL/mean_BL) * branch_length
     - per-column versions of both KL metrics
 
-    Assumes each feature is a Bernoulli probability in [0,1].
+    Parameters
+    ----------
+    tree
+        A directed tree (e.g., PosetTree) with structure and optional branch lengths.
+    leaf_data
+        DataFrame where index matches leaf labels and columns are features.
+    distribution_type
+        Type of distribution for KL computation ('categorical' or 'poisson').
+    lambda_factor
+        Weight factor for branch length integration. Default 0.2 means branch length
+        accounts for ~20% of the composite score on average.
 
     Note: Root's global KL is set to NaN (self-comparison is meaningless).
     """
     root_node_id = tree.graph.get("root") or next(
         n for n, d in tree.in_degree() if d == 0
     )
-    _populate_distributions(tree, root_node_id, leaf_data)
+    populate_distributions(
+        tree,
+        leaf_data,
+    )
     _populate_global_kl(tree, root_node_id, distribution_type=distribution_type)
     _populate_local_kl(tree, distribution_type=distribution_type)
+
+    # 3. Compute Composite Score (KL + dynamic_weight * BranchLength)
+    # Collect stats for dynamic weighting
+    kl_values = []
+    bl_values = []
+
+    nodes_iter = [n for n in tree.nodes if n != root_node_id]  # skip root for local KL
+
+    for node in nodes_iter:
+        kl = tree.nodes[node].get("kl_divergence_local")
+        # Get branch length from parent edge
+        parents = list(tree.predecessors(node))
+        if parents:
+            parent = parents[0]
+            bl = tree.edges[parent, node].get("branch_length", 0.0)
+
+            if kl is not None and not np.isnan(kl):
+                kl_values.append(kl)
+                bl_values.append(bl if bl > 0 else 0.0)
+
+    if kl_values and bl_values:
+        mean_kl = np.mean(kl_values)
+        mean_bl = np.mean(bl_values)
+
+        # Avoid division by zero
+        if mean_bl < 1e-6:
+            dynamic_weight = 0.0
+        else:
+            # Scale branch length to have same magnitude as KL, then apply lambda factor
+            # dynamic_weight = lambda_factor * (mean_kl / mean_bl)
+            # This ensures (dynamic_weight * mean_bl) = lambda_factor * mean_kl
+            dynamic_weight = lambda_factor * (mean_kl / mean_bl)
+
+        # Apply score to all nodes
+        for node in nodes_iter:
+            kl = tree.nodes[node].get("kl_divergence_local", 0.0)
+            if kl is None or np.isnan(kl):
+                kl = 0.0
+
+            parents = list(tree.predecessors(node))
+            bl = 0.0
+            if parents:
+                bl = tree.edges[parents[0], node].get("branch_length", 0.0)
+
+            composite_score = kl + dynamic_weight * bl
+            tree.nodes[node]["kl_divergence_local_composite"] = composite_score
+            tree.nodes[node]["composite_score_weight"] = (
+                dynamic_weight  # detailed tracing
+            )
+
     return _extract_hierarchy_statistics(tree)

@@ -4,8 +4,8 @@ import numpy as np
 import networkx as nx
 
 from sklearn.cluster import AgglomerativeClustering
+from kl_clustering_analysis.tree.distributions import populate_distributions
 from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics import (
-    _populate_distributions,
     _populate_global_kl,
     _populate_local_kl,
     _extract_hierarchy_statistics,
@@ -81,8 +81,7 @@ class PosetTree(nx.DiGraph):
         Returns
         -------
         PosetTree
-            Directed tree whose leaves correspond to the fitted samples and whose
-            internal nodes track merge heights provided by scikit-learn.
+            Directed tree whose leaves correspond to the fitted samples.
         """
         n = int(X.shape[0])
         if leaf_names is None:
@@ -96,14 +95,19 @@ class PosetTree(nx.DiGraph):
         )
         model.fit(X)
         children = model.children_  # (n-1, 2) merges; indices in [0, 2n-2]
-        distances = getattr(
-            model, "distances_", np.arange(children.shape[0], dtype=float)
-        )
+
+        # Get distances if available (requires compute_distances=True)
+        distances = getattr(model, "distances_", None)
 
         def _id(idx: int) -> str:
             return f"L{idx}" if idx < n else f"N{idx}"
 
         G = cls()
+
+        # Store merge distances for computing branch lengths
+        # Leaves have merge_distance = 0
+        merge_distances = {_id(i): 0.0 for i in range(n)}
+
         # add leaves
         for i, name in enumerate(leaf_names):
             G.add_node(_id(i), is_leaf=True, label=str(name))
@@ -111,9 +115,22 @@ class PosetTree(nx.DiGraph):
         # add internal merges
         for k, (a, b) in enumerate(children):
             nid = _id(n + k)
-            G.add_node(nid, is_leaf=False, height=float(distances[k]))
-            G.add_edge(nid, _id(a))
-            G.add_edge(nid, _id(b))
+            G.add_node(nid, is_leaf=False)
+
+            if distances is not None:
+                # Store merge distance for this node
+                merge_distances[nid] = float(distances[k])
+
+                # Compute branch lengths: distance from this node to each child
+                left_branch_length = float(distances[k]) - merge_distances[_id(a)]
+                right_branch_length = float(distances[k]) - merge_distances[_id(b)]
+
+                G.add_edge(nid, _id(a), branch_length=left_branch_length)
+                G.add_edge(nid, _id(b), branch_length=right_branch_length)
+            else:
+                # No distances available, use default branch_length of 1.0
+                G.add_edge(nid, _id(a), branch_length=1.0)
+                G.add_edge(nid, _id(b), branch_length=1.0)
 
         # annotate root
         roots = [u for u, d in G.in_degree() if d == 0]
@@ -186,10 +203,11 @@ class PosetTree(nx.DiGraph):
             leaf_names = [f"leaf_{i}" for i in range(n_leaves)]
 
         G = cls()
-        # Store linkage matrix for later use (e.g., inconsistency coefficient)
-        G.graph["linkage_matrix"] = linkage_matrix
-        G.graph["n_leaves"] = n_leaves
-        
+
+        # Store merge distances for computing branch lengths
+        # Leaves have merge_distance = 0
+        merge_distances = {f"L{i}": 0.0 for i in range(n_leaves)}
+
         for i, name in enumerate(leaf_names):
             G.add_node(f"L{i}", label=name, is_leaf=True)
 
@@ -203,9 +221,16 @@ class PosetTree(nx.DiGraph):
                 f"L{int(right_idx)}" if right_idx < n_leaves else f"N{int(right_idx)}"
             )
 
-            G.add_node(node_id, is_leaf=False, height=float(dist), merge_idx=merge_idx)
-            G.add_edge(node_id, left_id, weight=float(dist))
-            G.add_edge(node_id, right_id, weight=float(dist))
+            # Store merge distance for this node
+            merge_distances[node_id] = float(dist)
+
+            # Compute branch lengths: distance from this node to each child
+            left_branch_length = float(dist) - merge_distances[left_id]
+            right_branch_length = float(dist) - merge_distances[right_id]
+
+            G.add_node(node_id, is_leaf=False)
+            G.add_edge(node_id, left_id, branch_length=left_branch_length)
+            G.add_edge(node_id, right_id, branch_length=right_branch_length)
         return G
 
     # ---------------- Poset helpers ----------------
@@ -408,7 +433,7 @@ class PosetTree(nx.DiGraph):
         Results are stored in tree.stats_df for later access.
         """
         root = self.root()
-        _populate_distributions(self, root, leaf_data)
+        populate_distributions(self, leaf_data)
         _populate_global_kl(self, root)
         _populate_local_kl(self)
         self.stats_df = _extract_hierarchy_statistics(self)
@@ -441,6 +466,10 @@ class PosetTree(nx.DiGraph):
         dict
             Decomposition output from ``TreeDecomposition.decompose_tree``.
         """
+        # Extract alpha values from kwargs (with defaults from config)
+        alpha_local = decomposer_kwargs.pop("alpha_local", config.ALPHA_LOCAL)
+        sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
+
         if results_df is None:
             if self.stats_df is None:
                 if leaf_data is None:
@@ -450,23 +479,27 @@ class PosetTree(nx.DiGraph):
                 self.populate_node_divergences(leaf_data)
             results_df = self.stats_df.copy()
 
-            # Run statistical annotations to align with pipeline_helpers
+            # Run statistical annotations using user-provided alpha values
             results_df = annotate_child_parent_divergence(
                 self,
                 results_df,
-                significance_level_alpha=config.SIGNIFICANCE_ALPHA,
+                significance_level_alpha=alpha_local,
             )
+
             results_df = annotate_sibling_divergence(
                 self,
                 results_df,
-                significance_level_alpha=config.SIGNIFICANCE_ALPHA,
+                significance_level_alpha=sibling_alpha,
             )
+
             # Update the tree's stats_df with the annotated results so they are available later
             self.stats_df = results_df
 
         decomposer = TreeDecomposition(
             tree=self,
             results_df=results_df,
+            alpha_local=alpha_local,
+            sibling_alpha=sibling_alpha,
             **decomposer_kwargs,
         )
 

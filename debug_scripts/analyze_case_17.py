@@ -195,13 +195,46 @@ def analyze_case_17():
     )
     tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
 
-    decomp = tree.decompose(leaf_data=data_df)
-    stats = tree.stats_df
+    from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import (
+        TreeDecomposition,
+    )
 
-    print(f"Found {decomp['num_clusters']} clusters (expected: 4)")
+    # 1. Update stats
+    tree.populate_node_divergences(pd.DataFrame(data_df))
+    from kl_clustering_analysis.hierarchy_analysis.statistics import (
+        annotate_child_parent_divergence,
+        annotate_sibling_divergence,
+    )
+
+    tree.stats_df = annotate_child_parent_divergence(
+        tree, tree.stats_df, significance_level_alpha=0.05
+    )
+    tree.stats_df = annotate_sibling_divergence(
+        tree, tree.stats_df, significance_level_alpha=0.05
+    )
+
+    # 2. Run V2
+    decomposer = TreeDecomposition(
+        tree=tree,
+        results_df=tree.stats_df,
+        alpha_local=0.05,
+        sibling_alpha=0.05,
+        use_signal_localization=True,
+        localization_max_depth=5,
+        localization_min_samples=2,
+    )
+
+    # Run V1 for comparison
+    decomp_v1 = decomposer.decompose_tree()
+    print(f"V1 Found {decomp_v1['num_clusters']} clusters (expected: 4)")
+
+    # Run V2
+    decomp = decomposer.decompose_tree_v2()
+    print(f"V2 Found {decomp['num_clusters']} clusters (expected: 4)")
 
     # Check sibling test results
     internal_nodes = [n for n in tree.nodes() if list(tree.successors(n))]
+    stats = tree.stats_df
 
     sig_count = 0
     not_sig_count = 0

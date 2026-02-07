@@ -38,8 +38,8 @@ POSTHOC_MERGE_ALPHA: float | None = None
 
 # Distance metric for hierarchical clustering
 # Options: 'hamming', 'rogerstanimoto', 'jaccard', 'dice', 'euclidean'
-# Rogers-Tanimoto double-weights mismatches, making it more sensitive to cluster boundaries
-TREE_DISTANCE_METRIC: str = "rogerstanimoto"
+# Hamming is the simplest, most standard binary distance with no arbitrary weighting
+TREE_DISTANCE_METRIC: str = "hamming"
 
 # Linkage method for hierarchical clustering
 # Options: 'average', 'complete', 'single', 'ward'
@@ -72,6 +72,12 @@ PROJECTION_MIN_K: int = 10
 # Random seed for projection reproducibility (None for random)
 PROJECTION_RANDOM_SEED: int | None = 42
 
+# Projection method:
+#   'sparse'     -> Fast SparseRandomProjection (JL lemma, approximate χ² distribution)
+#   'orthonormal' -> QR-based orthonormal projection (exact χ² distribution, slower)
+# Use 'orthonormal' when statistical exactness matters more than speed.
+PROJECTION_METHOD: str = "orthonormal"
+
 # --- MI Feature Filter Parameters ---
 
 # Enable MI-based feature filtering before projection
@@ -84,3 +90,9 @@ MI_FILTER_QUANTILE: float = 0.5
 MI_FILTER_MIN_FRACTION: float = 0.1
 
 
+# --- Signal Localization Parameters ---
+
+# Enable signal localization for soft cluster boundaries.
+# When True, uses _should_split_v2 which drills down to find WHERE
+# the divergence signal originates, enabling cross-boundary partial merges.
+USE_SIGNAL_LOCALIZATION: bool = False

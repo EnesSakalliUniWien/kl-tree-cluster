@@ -1,15 +1,15 @@
 """Random projection utilities for dimensionality reduction.
 
-Uses SparseRandomProjection for a fast, memory-efficient, and deterministic
-projection. The projection matrix is created ONCE and cached for reuse.
+Supports two projection methods:
+1. **Sparse (default for speed)**: Uses SparseRandomProjection based on the
+   Johnson-Lindenstrauss (JL) lemma. Fast and memory-efficient, but the
+   projected test statistic follows χ² only approximately.
 
-This approach is based on the Johnson-Lindenstrauss (JL) lemma, which
-guarantees that pairwise distances are preserved. When the number of features
-d >> sample size n, random projection reduces d to a smaller k = O(log n),
-making subsequent statistical approximations more reliable.
+2. **Orthonormal (for exactness)**: Uses QR decomposition of a Gaussian random
+   matrix to produce an orthonormal projection. Slower but guarantees that
+   T = ||R·z||² ~ χ²(k) exactly under H₀.
 
-Sparse random projections are highly efficient and theoretically sound, making
-them ideal for high-dimensional data.
+The projection matrix is created ONCE and cached for reuse.
 
 References
 ----------
@@ -22,6 +22,8 @@ Achlioptas, D. (2003). Database-friendly random projections.
 from __future__ import annotations
 
 from typing import Dict, Tuple
+import os
+from pathlib import Path
 
 import numpy as np
 from sklearn.random_projection import SparseRandomProjection
@@ -30,7 +32,13 @@ from kl_clustering_analysis import config
 
 
 # Global cache for projection matrices - fitted once, reused everywhere
-# Key: (n_features, k, random_state) -> fitted SparseRandomProjection
+# Key: (method, n_features, k, random_state) -> projection matrix (ndarray)
+_PROJECTION_CACHE: Dict[Tuple[str, int, int, int | None], np.ndarray] = {}
+
+# Audit cache to avoid logging the same projection repeatedly.
+_AUDITED_PROJECTIONS: set[Tuple[str, int, int, int | None]] = set()
+
+# Legacy cache for sparse projectors (kept for backward compatibility)
 _PROJECTOR_CACHE: Dict[Tuple[int, int, int | None], SparseRandomProjection] = {}
 
 
@@ -108,15 +116,63 @@ def _get_cached_projector(
     return _PROJECTOR_CACHE[cache_key]
 
 
-def generate_projection_matrix(
+def _generate_orthonormal_projection(
     n_features: int,
     k: int,
     random_state: int | None = None,
 ) -> np.ndarray:
-    """Generate a random projection matrix using SparseRandomProjection.
+    """Generate an orthonormal projection matrix via QR decomposition.
 
-    Uses sklearn's SparseRandomProjection, which is highly efficient for
-    high-dimensional data.
+    Creates R such that R @ R.T = I_k (identity), guaranteeing that
+    T = ||R @ z||² ~ χ²(k) exactly when z ~ N(0, I_d).
+
+    Parameters
+    ----------
+    n_features : int
+        Original dimension (d).
+    k : int
+        Target dimension. Must be <= n_features.
+    random_state : int, optional
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    np.ndarray
+        Orthonormal projection matrix of shape (k, n_features).
+    """
+    cache_key = ("orthonormal", n_features, k, random_state)
+
+    if cache_key not in _PROJECTION_CACHE:
+        rng = np.random.default_rng(random_state)
+
+        # Generate k×d Gaussian random matrix
+        G = rng.standard_normal((k, n_features))
+
+        # QR decomposition: G.T = Q @ R_qr, where Q has orthonormal columns
+        # Q is (n_features × k), so Q.T is (k × n_features) with orthonormal rows
+        Q, _ = np.linalg.qr(G.T)
+
+        # No scaling needed: R @ R.T = I guarantees ||R @ z||² ~ χ²(k)
+        # when z ~ N(0, I). The orthonormal rows preserve the chi-square
+        # distribution exactly.
+        R = Q.T  # Shape: (k, n_features)
+
+        _PROJECTION_CACHE[cache_key] = R
+
+    _maybe_audit_projection(cache_key, _PROJECTION_CACHE[cache_key])
+
+    return _PROJECTION_CACHE[cache_key]
+
+
+def _generate_sparse_projection(
+    n_features: int,
+    k: int,
+    random_state: int | None = None,
+) -> np.ndarray:
+    """Generate a sparse random projection matrix.
+
+    Uses sklearn's SparseRandomProjection for efficiency.
+    Note: R @ R.T ≠ I_k, so χ² distribution is approximate.
 
     Parameters
     ----------
@@ -130,14 +186,108 @@ def generate_projection_matrix(
     Returns
     -------
     np.ndarray
+        Sparse projection matrix of shape (k, n_features).
+    """
+    cache_key = ("sparse", n_features, k, random_state)
+
+    if cache_key not in _PROJECTION_CACHE:
+        projector = _get_cached_projector(n_features, k, random_state)
+        _PROJECTION_CACHE[cache_key] = projector.components_
+
+    _maybe_audit_projection(cache_key, _PROJECTION_CACHE[cache_key])
+
+    return _PROJECTION_CACHE[cache_key]
+
+
+def generate_projection_matrix(
+    n_features: int,
+    k: int,
+    random_state: int | None = None,
+    method: str | None = None,
+) -> np.ndarray:
+    """Generate a random projection matrix.
+
+    Supports two methods controlled by `method` parameter or config.PROJECTION_METHOD:
+    - 'sparse': Fast SparseRandomProjection (JL lemma, approximate χ² distribution)
+    - 'orthonormal': QR-based orthonormal projection (exact χ² distribution)
+
+    Parameters
+    ----------
+    n_features : int
+        Original dimension (d).
+    k : int
+        Target dimension.
+    random_state : int, optional
+        Random seed for reproducibility.
+    method : str, optional
+        Projection method: 'sparse' or 'orthonormal'.
+        If None, uses config.PROJECTION_METHOD.
+
+    Returns
+    -------
+    np.ndarray
         Projection matrix of shape (k, n_features).
 
-    References
-    ----------
-    Achlioptas, D. (2003). "Database-friendly random projections."
+    Notes
+    -----
+    For hypothesis testing where exact p-values matter, use 'orthonormal'.
+    For speed with very high dimensions (d > 10,000), use 'sparse'.
     """
-    projector = _get_cached_projector(n_features, k, random_state)
-    return projector.components_
+    if method is None:
+        method = getattr(config, "PROJECTION_METHOD", "sparse")
+
+    if method == "orthonormal":
+        return _generate_orthonormal_projection(n_features, k, random_state)
+    elif method == "sparse":
+        return _generate_sparse_projection(n_features, k, random_state)
+    else:
+        raise ValueError(
+            f"Unknown projection method: {method}. Use 'sparse' or 'orthonormal'."
+        )
+
+
+def _maybe_audit_projection(
+    cache_key: Tuple[str, int, int, int | None],
+    matrix: np.ndarray,
+) -> None:
+    """Optionally audit projection matrices to TensorBoard.
+
+    Controlled by KL_TE_MATRIX_AUDIT_ROOT env var. Audits only the first
+    occurrence of each cache key to limit output volume.
+    """
+    root = os.getenv("KL_TE_MATRIX_AUDIT_ROOT")
+    if not root:
+        return
+
+    if cache_key in _AUDITED_PROJECTIONS:
+        return
+
+    max_logs_env = os.getenv("KL_TE_MATRIX_AUDIT_MAX", "50")
+    try:
+        max_logs = int(max_logs_env)
+    except ValueError:
+        max_logs = 50
+    if len(_AUDITED_PROJECTIONS) >= max_logs:
+        return
+
+    try:
+        from benchmarks.shared.audit_utils import export_matrix_audit
+    except Exception:
+        return
+
+    _AUDITED_PROJECTIONS.add(cache_key)
+    method, n_features, k, random_state = cache_key
+    tag = f"random_projection/{method}_d{n_features}_k{k}_seed{random_state}"
+
+    matrices = {"projection_matrix": np.asarray(matrix)}
+    export_matrix_audit(
+        matrices=matrices,
+        output_root=Path(root),
+        tag_prefix=tag,
+        step=0,
+        include_products=True,
+        verbose=False,
+    )
 
 
 def should_use_projection(

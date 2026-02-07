@@ -31,12 +31,7 @@ from kl_clustering_analysis.benchmarking.logging import (
 )
 
 
-try:  # Prefer test config when available (repo usage)
-    from tests.test_cases_config import get_default_test_cases  # type: ignore
-except ImportError:
-    # No test config available; use an empty default
-    def get_default_test_cases():
-        return []
+from kl_clustering_analysis.benchmarking.test_cases import get_default_test_cases
 
 
 from kl_clustering_analysis.benchmarking.method_registry import METHOD_SPECS
@@ -235,8 +230,21 @@ def benchmark_cluster_algorithm(
             # Special-case: if the generator supplied an adjacency matrix (SBM), use it
             if meta.get("generator") == "sbm" and meta.get("adjacency") is not None:
                 adj = np.asarray(meta.get("adjacency"), dtype=float)
-                # Treat adjacency as similarity; convert to a distance matrix where smaller means closer
-                distance_matrix = 1.0 - adj
+                # Use modularity matrix transformation for graph data
+                # Modularity: B = A - k_i*k_j / 2m captures community structure
+                # because B[i,j] > 0 when nodes share more edges than expected
+                degrees = adj.sum(axis=1)
+                m = adj.sum() / 2  # Number of edges
+                if m > 0:
+                    expected = np.outer(degrees, degrees) / (2 * m)
+                    B = adj - expected
+                    # Shift to make non-negative similarity
+                    B_shifted = B - B.min()
+                    B_norm = B_shifted / (B_shifted.max() + 1e-10)
+                    distance_matrix = 1.0 - B_norm
+                else:
+                    # Fallback for empty graphs
+                    distance_matrix = 1.0 - adj
                 # Ensure diagonal is zero for a valid distance matrix
                 np.fill_diagonal(distance_matrix, 0.0)
                 # Condensed distance form for methods that need it (e.g., KL)
@@ -259,7 +267,7 @@ def benchmark_cluster_algorithm(
                 params_list = param_sets[method_id]
                 for params in params_list:
                     meta_run = meta.copy()
-                    if method_id == "kl":
+                    if method_id.startswith("kl"):
                         # KL runner supports per-run linkage/method configuration.
                         # Compute per-run distance_condensed if the metric differs.
                         metric = params.get(

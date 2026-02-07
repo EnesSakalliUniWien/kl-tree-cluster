@@ -261,9 +261,6 @@ def run_branch_length_benchmark(
             n_features=n_features,
             n_categories=n_categories,
             branch_length=bl,
-            mutation_rate=mutation_rate,
-            shift_strength=shift_strength,
-            root_concentration=root_concentration,
             random_state=rng,
         )
         
@@ -441,9 +438,6 @@ def plot_embedding_by_branch_length(
             n_features=n_features,
             n_categories=n_categories,
             branch_length=bl,
-            mutation_rate=mutation_rate,
-            shift_strength=shift_strength,
-            root_concentration=root_concentration,
             random_state=rng,
         )
         

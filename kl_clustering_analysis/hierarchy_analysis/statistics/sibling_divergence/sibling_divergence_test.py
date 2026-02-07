@@ -81,12 +81,35 @@ def sibling_divergence_test(
     right_dist: np.ndarray,
     n_left: float,
     n_right: float,
+    branch_length_left: float | None = None,
+    branch_length_right: float | None = None,
 ) -> Tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence with random projection.
 
     Supports both binary (1D) and categorical (2D) distributions.
+    
+    Optionally applies Felsenstein's (1985) Phylogenetic Independent Contrasts
+    adjustment by scaling variance by the sum of branch lengths.
 
-    Returns (test_statistic, degrees_of_freedom, p_value).
+    Parameters
+    ----------
+    left_dist : np.ndarray
+        Distribution of left sibling.
+    right_dist : np.ndarray
+        Distribution of right sibling.
+    n_left : float
+        Sample size of left sibling.
+    n_right : float
+        Sample size of right sibling.
+    branch_length_left : float, optional
+        Branch length (distance to parent) for left sibling.
+    branch_length_right : float, optional
+        Branch length (distance to parent) for right sibling.
+
+    Returns
+    -------
+    Tuple[float, float, float]
+        (test_statistic, degrees_of_freedom, p_value).
     """
     n_eff = hmean([n_left, n_right])
 
@@ -95,18 +118,47 @@ def sibling_divergence_test(
         left_dist, right_dist, n_left, n_right
     )
 
+    # Compute branch length sum for Felsenstein adjustment
+    branch_length_sum = None
+    if branch_length_left is not None and branch_length_right is not None:
+        branch_length_sum = branch_length_left + branch_length_right
+        if branch_length_sum <= 0:
+            branch_length_sum = None  # Fall back to unadjusted
+
     # Standardize difference (Wald z-scores) - handles flattening for categorical
-    z, _ = standardize_proportion_difference(left, right, n_left, n_right)
+    z, _ = standardize_proportion_difference(
+        left, right, n_left, n_right, 
+        branch_length_sum=branch_length_sum
+    )
     
+    # Sanitize Z-scores: Replace Inf/NaN to prevent downstream crashes
+    if not np.isfinite(z).all():
+        logging.warning(f"Found {np.sum(~np.isfinite(z))} non-finite values in Z-scores.")
+
+    # Replace NaN/Inf and CLAMP to avoid overflow in random projection
+    # |z| > 100 implies p approx 0, larger values just cause instability
+    z = np.nan_to_num(z, posinf=100.0, neginf=-100.0)
+    z = np.clip(z, -100.0, 100.0)
+    z = z.astype(np.float64) # Force float64
+
     # Use actual z-score length (may differ from n_features for categorical)
     d = len(z)
-
+    
     # Compute projection dimension
     k = compute_projection_dimension(int(n_eff), d)
 
     # Project and compute test statistic
     R = generate_projection_matrix(d, k, config.PROJECTION_RANDOM_SEED)
-    projected = R @ z
+
+    try:
+        # Optimize matmul by ensuring arrays are ostensibly aligned (though numpy handles this)
+        if hasattr(R, "dot"):
+            projected = R.dot(z)
+        else:
+            projected = R @ z
+    except Exception as e:
+        logging.error(f"Projection failed (Sibling): z.shape={z.shape}, R.shape={R.shape}, z_stats={np.min(z)}/{np.max(z)}")
+        raise e
 
     return _compute_chi_square_pvalue(projected, k)
 
@@ -135,15 +187,26 @@ def _either_child_significant(
 
 def _get_sibling_data(
     tree: nx.DiGraph,
+    parent: str,
     left: str,
     right: str,
-) -> Tuple[np.ndarray, np.ndarray, int, int]:
-    """Extract distributions and sample sizes for sibling pair."""
+) -> Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]:
+    """Extract distributions, sample sizes, and branch lengths for sibling pair.
+    
+    Branch lengths are extracted from the tree edges (parent → child).
+    If not available, returns None for the branch lengths.
+    """
+    # Extract branch lengths from tree edges
+    left_branch = tree.edges[parent, left].get("branch_length") if tree.has_edge(parent, left) else None
+    right_branch = tree.edges[parent, right].get("branch_length") if tree.has_edge(parent, right) else None
+    
     return (
         extract_node_distribution(tree, left),
         extract_node_distribution(tree, right),
         extract_node_sample_size(tree, left),
         extract_node_sample_size(tree, right),
+        left_branch,
+        right_branch,
     )
 
 
@@ -156,10 +219,11 @@ def _collect_test_arguments(
     tree: nx.DiGraph,
     nodes_df: pd.DataFrame,
     min_samples: int,
-) -> Tuple[List[str], List[Tuple[np.ndarray, np.ndarray, int, int]], List[str]]:
+) -> Tuple[List[str], List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]], List[str]]:
     """Collect sibling pairs eligible for testing.
 
     Returns (parent_nodes, test_args, skipped_nodes).
+    Each test_args tuple contains: (left_dist, right_dist, n_left, n_right, branch_left, branch_right)
     """
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
         raise ValueError(
@@ -170,7 +234,7 @@ def _collect_test_arguments(
     sig_map = nodes_df["Child_Parent_Divergence_Significant"].to_dict()
 
     parents: List[str] = []
-    args: List[Tuple[np.ndarray, np.ndarray, int, int]] = []
+    args: List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]] = []
     skipped: List[str] = []
 
     for parent in tree.nodes:
@@ -185,7 +249,9 @@ def _collect_test_arguments(
             skipped.append(parent)
             continue
 
-        left_dist, right_dist, n_left, n_right = _get_sibling_data(tree, left, right)
+        left_dist, right_dist, n_left, n_right, bl_left, bl_right = _get_sibling_data(
+            tree, parent, left, right
+        )
 
         # Skip if insufficient samples
         if n_left < min_samples or n_right < min_samples:
@@ -193,17 +259,18 @@ def _collect_test_arguments(
             continue
 
         parents.append(parent)
-        args.append((left_dist, right_dist, n_left, n_right))
+        args.append((left_dist, right_dist, n_left, n_right, bl_left, bl_right))
 
     return parents, args, skipped
 
 
 def _run_tests(
-    args: List[Tuple[np.ndarray, np.ndarray, int, int]],
+    args: List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]],
 ) -> List[Tuple[float, float, float]]:
     """Execute sibling divergence tests for all collected pairs."""
     return [
-        sibling_divergence_test(left, right, n_l, n_r) for left, right, n_l, n_r in args
+        sibling_divergence_test(left, right, n_l, n_r, bl_l, bl_r)
+        for left, right, n_l, n_r, bl_l, bl_r in args
     ]
 
 

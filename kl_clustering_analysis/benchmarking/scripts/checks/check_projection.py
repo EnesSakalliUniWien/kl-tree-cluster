@@ -1,6 +1,6 @@
 """Check which test cases use random projection."""
 
-from tests.test_cases_config import get_default_test_cases
+from kl_clustering_analysis.benchmarking.test_cases import get_default_test_cases
 from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
     compute_projection_dimension,
 )

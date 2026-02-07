@@ -49,7 +49,7 @@ def apply_posthoc_merge(
     children: Dict[str, List[str]],
     root: str,
     test_divergence: Callable[[str, str, str], Tuple[float, float, float]],
-) -> Set[str]:
+) -> Tuple[Set[str], List[Dict]]:
     """Apply tree-respecting post-hoc merging to reduce over-splitting.
 
     Collects all sibling-boundary cluster pairs, applies FDR correction once,
@@ -76,13 +76,14 @@ def apply_posthoc_merge(
 
     Returns
     -------
-    Set[str]
-        Updated set of cluster root nodes after merging.
+    Tuple[Set[str], List[Dict]]
+        - Updated set of cluster root nodes after merging.
+        - Audit trail list of all candidate merges and their outcomes.
     """
     cluster_roots = set(cluster_roots)
 
     # Collect all sibling-boundary pairs
-    pairs: List[Tuple[str, str, str, float]] = []
+    pairs: List[Dict] = []
 
     for node in tree.nodes:
         node_children = children[node]
@@ -103,51 +104,68 @@ def apply_posthoc_merge(
                 test_stat, df, p_value = test_divergence(lc, rc, node)
                 # For any lc under left_child and rc under right_child in a tree,
                 # the lowest common ancestor is the current boundary node.
-                pairs.append((lc, rc, node, p_value))
+                pairs.append(
+                    {
+                        "left_cluster": lc,
+                        "right_cluster": rc,
+                        "lca": node,
+                        "p_value": float(p_value),
+                        "test_stat": float(test_stat),
+                        "df": float(df),
+                    }
+                )
 
     if not pairs:
-        return cluster_roots
+        return cluster_roots, []
 
     # Single FDR correction on all pairs
-    p_values = np.array([p[3] for p in pairs])
+    p_values = np.array([p["p_value"] for p in pairs])
     reject, _, _ = benjamini_hochberg_correction(p_values, alpha=alpha)
+
+    # Update pairs with significance status
+    for i, is_rejected in enumerate(reject):
+        pairs[i]["is_significant"] = bool(is_rejected)
+        pairs[i]["was_merged"] = False  # Initialize
 
     # Block merges across any boundary that shows a significant difference.
     # If at least one comparison for a given LCA rejects H0, we should not
     # merge anything under that ancestor even if other pairs are similar.
     lca_has_reject: Dict[str, bool] = {}
-    for (_, _, lca, _), is_rejected in zip(pairs, reject):
+    for i, is_rejected in enumerate(reject):
+        lca = pairs[i]["lca"]
         if is_rejected:
             lca_has_reject[lca] = True
 
     # Get mergeable pairs (failed to reject H0 = clusters are similar)
     # Skip pairs whose LCA already has evidence of a significant difference.
     # Sort by p-value descending (most similar first)
-    mergeable = [
-        (i, pairs[i])
+    mergeable_indices = [
+        i
         for i, r in enumerate(reject)
-        if (not r) and (not lca_has_reject.get(pairs[i][2], False))
+        if (not r) and (not lca_has_reject.get(pairs[i]["lca"], False))
     ]
-    mergeable.sort(key=lambda x: -p_values[x[0]])
+    mergeable_indices.sort(key=lambda i: -p_values[i])
 
     # Greedily merge non-overlapping pairs
-    merged: Set[str] = set()
-    for _, (lc, rc, lca, _) in mergeable:
-        # Only merge "live" cluster roots. This preserves the antichain property:
-        # after an earlier merge at an ancestor, lc/rc may no longer be active
-        # roots (they were removed as descendants), and we must not reintroduce
-        # overlapping descendants by merging stale pairs.
+    merged_roots_count = 0
+    for idx in mergeable_indices:
+        lc = pairs[idx]["left_cluster"]
+        rc = pairs[idx]["right_cluster"]
+        lca = pairs[idx]["lca"]
+
+        # Only merge "live" cluster roots.
         if lc not in cluster_roots or rc not in cluster_roots:
             continue
-        if lc in merged or rc in merged:
-            continue
+
+        # We don't need a `merged` set if we check `cluster_roots`.
+        # Removing descendants from `cluster_roots` effectively handles this.
 
         cluster_roots.discard(lc)
         cluster_roots.discard(rc)
         cluster_roots -= nx.descendants(tree, lca)
         cluster_roots.add(lca)
 
-        merged.add(lc)
-        merged.add(rc)
+        pairs[idx]["was_merged"] = True
+        merged_roots_count += 1
 
-    return cluster_roots
+    return cluster_roots, pairs

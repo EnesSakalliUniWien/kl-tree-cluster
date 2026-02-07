@@ -40,21 +40,26 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             "kl_clustering_analysis.benchmarking.runners.kl_runner", "_run_kl_method"
         ),
         param_grid=[
+            # Default: Hamming + Average (UPGMA)
+            # Hamming is the simplest binary distance with no arbitrary weighting
+            # Average linkage produces balanced trees with good statistical properties
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+            },
+        ],
+    ),
+    "kl_rogerstanimoto": MethodSpec(
+        name="KL (Rogers-Tanimoto)",
+        runner=_safe_import_runner(
+            "kl_clustering_analysis.benchmarking.runners.kl_runner", "_run_kl_method"
+        ),
+        param_grid=[
+            # Rogers-Tanimoto double-weights mismatches
             {
                 "tree_distance_metric": "rogerstanimoto",
                 "tree_linkage_method": "average",
             },
-            {
-                "tree_distance_metric": "rogerstanimoto",
-                "tree_linkage_method": "complete",
-            },
-            # {"tree_distance_metric": "rogerstanimoto", "tree_linkage_method": "ward"},
-            # {"tree_distance_metric": "jaccard", "tree_linkage_method": "average"},
-            # {"tree_distance_metric": "jaccard", "tree_linkage_method": "complete"},
-            # {"tree_distance_metric": "jaccard", "tree_linkage_method": "ward"},
-            # {"tree_distance_metric": "euclidean", "tree_linkage_method": "average"},
-            # {"tree_distance_metric": "euclidean", "tree_linkage_method": "complete"},
-            # {"tree_distance_metric": "euclidean", "tree_linkage_method": "ward"},
         ],
     ),
     "leiden": MethodSpec(

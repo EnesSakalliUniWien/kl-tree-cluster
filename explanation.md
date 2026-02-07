@@ -62,3 +62,6 @@ $$ p = \frac{1}{K} \sum_{k=1}^{K} \mathbb{I}(I(C_1; C_2^* | P) \ge I_{obs}) $$
 
 ## Conclusion
 This approach constitutes a statistically grounded pruning of a hierarchical tree. By combining Information Geometry (KL Divergence) for distance and Information Theory (CMI) for structural independence, it ensures that the resulting clusters are both distinct from their neighbors and internally homogeneous, without relying on arbitrary global thresholds.
+
+
+Stochastic Block Models (SBM): As seen in Cases 64-66, the method struggles significantly (ARI ≈ 0) with graph-structured data lacking clear vector-space density separation. This is an expected trade-off for a density-oriented hierarchical algorithm.

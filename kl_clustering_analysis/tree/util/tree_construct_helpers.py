@@ -23,10 +23,9 @@ def add_cluster_node_recursive(G: nx.DiGraph, node: Any, leaf_names: list[str]) 
     node_id = f"N{int(getattr(node, 'id'))}"
     left_id = add_cluster_node_recursive(G, left, leaf_names)
     right_id = add_cluster_node_recursive(G, right, leaf_names)
-    dist = float(getattr(node, "dist", 0.0))
-    G.add_node(node_id, is_leaf=False, height=dist)
-    G.add_edge(node_id, left_id, weight=dist)
-    G.add_edge(node_id, right_id, weight=dist)
+    G.add_node(node_id, is_leaf=False)
+    G.add_edge(node_id, left_id)
+    G.add_edge(node_id, right_id)
     return node_id
 
 
@@ -44,7 +43,6 @@ def add_nested_tuple_recursive(
 
     left = node[0]
     right = node[1]
-    height = float(node[2]) if len(node) == 3 and node[2] is not None else None
 
     left_id = add_nested_tuple_recursive(G, left, counters)
     right_id = add_nested_tuple_recursive(G, right, counters)
@@ -52,10 +50,7 @@ def add_nested_tuple_recursive(
     node_id = f"N{counters['internal']}"
     counters["internal"] += 1
     attrs: Dict[str, Any] = {"is_leaf": False}
-    if height is not None:
-        attrs["height"] = height
     G.add_node(node_id, **attrs)
-    w = 1.0 if height is None else height
-    G.add_edge(node_id, left_id, weight=w)
-    G.add_edge(node_id, right_id, weight=w)
+    G.add_edge(node_id, left_id)
+    G.add_edge(node_id, right_id)
     return node_id

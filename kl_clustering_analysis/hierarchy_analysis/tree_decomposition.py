@@ -15,6 +15,13 @@ import networkx as nx
 from ..core_utils.data_utils import extract_bool_column_dict
 from .. import config
 from .posthoc_merge import apply_posthoc_merge
+from .signal_localization import (
+    LocalizationResult,
+    localize_divergence_signal,
+    merge_similarity_graphs,
+    merge_difference_graphs,
+    extract_constrained_clusters,
+)
 
 # Statistical sibling test used for pairwise cluster comparisons
 from .statistics.sibling_divergence.sibling_divergence_test import (
@@ -50,6 +57,9 @@ class TreeDecomposition:
         sibling_shortlist_size: int | None = None,
         posthoc_merge: bool = config.POSTHOC_MERGE,
         posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
+        use_signal_localization: bool = config.USE_SIGNAL_LOCALIZATION,
+        localization_max_depth: int | None = None,
+        localization_min_samples: int | None = None,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
 
@@ -72,6 +82,13 @@ class TreeDecomposition:
             significantly different, working bottom-up through the tree.
         posthoc_merge_alpha
             Significance level for post-hoc merge tests. Defaults to sibling_alpha if None.
+        use_signal_localization
+            If True, use signal localization (v2) to find WHERE divergence originates,
+            enabling cross-boundary partial merges for soft cluster boundaries.
+        localization_max_depth
+            Maximum recursion depth for signal localization.
+        localization_min_samples
+            Minimum samples per node for localization testing.
         """
         self.tree = tree
         self.results_df = results_df if results_df is not None else pd.DataFrame()
@@ -86,6 +103,15 @@ class TreeDecomposition:
             float(posthoc_merge_alpha)
             if posthoc_merge_alpha is not None
             else self.sibling_alpha
+        )
+
+        # Signal localization parameters
+        self.use_signal_localization = bool(use_signal_localization)
+        self.localization_max_depth = (
+            None if localization_max_depth is None else int(localization_max_depth)
+        )
+        self.localization_min_samples = (
+            None if localization_min_samples is None else int(localization_min_samples)
         )
 
         # ----- root -----
@@ -161,7 +187,7 @@ class TreeDecomposition:
             self._distribution_by_node[node_id] = distribution_array
             self._is_leaf[node_id] = node_data["is_leaf"]
             self._label[node_id] = node_data.get("label", node_id)
-        
+
         # n_features is the first dimension (number of features/variables)
         if self._distribution_by_node:
             first_dist = next(iter(self._distribution_by_node.values()))
@@ -379,6 +405,160 @@ class TreeDecomposition:
         # Siblings must be significantly different to justify splitting
         return bool(is_different)
 
+    def _test_node_pair_divergence(
+        self, node_a: str, node_b: str
+    ) -> Tuple[float, float, float]:
+        """Test divergence between two arbitrary tree nodes.
+
+        Wrapper for sibling_divergence_test that extracts distributions
+        and sample sizes from the tree.
+
+        Parameters
+        ----------
+        node_a, node_b : str
+            Tree node identifiers to compare.
+
+        Returns
+        -------
+        Tuple[float, float, float]
+            (test_statistic, degrees_of_freedom, p_value)
+        """
+        dist_a = self._distribution_by_node[node_a]
+        dist_b = self._distribution_by_node[node_b]
+        n_a = float(self._leaf_count(node_a))
+        n_b = float(self._leaf_count(node_b))
+
+        # Calculate patristic distances (sum of branch lengths) to LCA
+        lca = self.tree.find_lca(node_a, node_b)
+
+        # nx.shortest_path_length returns sum of 'weight' attribute
+        # For ancestor->descendant path in DiGraph, this works directly.
+        try:
+            dist_path_a = nx.shortest_path_length(
+                self.tree, source=lca, target=node_a, weight="branch_length"
+            )
+            dist_path_b = nx.shortest_path_length(
+                self.tree, source=lca, target=node_b, weight="branch_length"
+            )
+        except nx.NetworkXNoPath:
+            # Should not happen in a valid tree where lca is ancestor
+            dist_path_a = None
+            dist_path_b = None
+
+        return sibling_divergence_test(
+            left_dist=dist_a,
+            right_dist=dist_b,
+            n_left=n_a,
+            n_right=n_b,
+            branch_length_left=dist_path_a,
+            branch_length_right=dist_path_b,
+        )
+
+    def _check_edge_significance(self, node_id: str) -> bool:
+        """Check if a node is significantly different from its parent.
+
+        Wrapper around _local_significant dict for use as callback.
+        """
+        # Root has no parent edge to test, usually treated as significant/base
+        if node_id == self._root:
+            return True
+        return bool(self._local_significant.get(node_id, False))
+
+    def _should_split_v2(self, parent: str) -> Tuple[bool, LocalizationResult | None]:
+        """Enhanced split decision with signal localization.
+
+        Like _should_split but when siblings are "different", drills down
+        to find WHERE the difference originates, enabling cross-boundary
+        partial merges.
+
+        Gates evaluated in order:
+
+        1. **Binary structure gate** - parent must have exactly 2 children
+        2. **Child-parent divergence gate** - at least one child diverges
+        3. **Sibling divergence gate with localization**:
+           - If siblings are "same" → MERGE (return False, None)
+           - If siblings are "different" → LOCALIZE:
+             - If all cross-pairs different → HARD SPLIT (return True, result)
+             - If some cross-pairs similar → SOFT SPLIT (return True, result with edges)
+
+        Parameters
+        ----------
+        parent : str
+            The parent node to evaluate.
+
+        Returns
+        -------
+        Tuple[bool, LocalizationResult | None]
+            (should_split, localization_result)
+            - (False, None): Don't split (merge at parent)
+            - (True, None): Hard split without localization details
+            - (True, LocalizationResult): Split with localization info
+        """
+        # Gate 1: Binary structure requirement
+        children = self._children[parent]
+        if len(children) != 2:
+            return False, None
+
+        left_child, right_child = children
+
+        # Gate 2: Child-parent divergence requirement
+        left_diverges = self._local_significant.get(left_child)
+        right_diverges = self._local_significant.get(right_child)
+
+        if left_diverges is None or right_diverges is None:
+            raise ValueError(
+                "Missing child-parent divergence annotations for "
+                f"{left_child!r} or {right_child!r}; annotate before decomposing."
+            )
+
+        # If neither child diverges from parent, it's USUALLY noise - merge.
+        # EXCEPTION: If the tree is very unbalanced (e.g. 1 vs 1000), the large child
+        # will be statistically identical to the parent. In this case, we MUST check
+        # if the siblings are different from each other.
+        both_children_similar_to_parent = not (left_diverges or right_diverges)
+
+        # Check sibling divergence result (needed for the exception case)
+        is_different = self._sibling_different.get(parent)
+
+        if both_children_similar_to_parent:
+            # STRICT ENFORCEMENT of Child-Parent Gate (Equation 3.3.1 in Manuscript)
+            # If children are statistically indistinguishable from parent (noise),
+            # we must STOP and merge. Proceeding would split noise.
+            return False, None
+
+        # Gate 3: Sibling divergence with localization
+        is_different = self._sibling_different.get(parent)
+
+        if is_different is None:
+            raise ValueError(
+                "Sibling divergence annotations missing for node "
+                f"{parent!r}; run annotate_sibling_divergence first."
+            )
+
+        if self._sibling_skipped.get(parent, False):
+            raise ValueError(
+                "Sibling divergence test skipped for node "
+                f"{parent!r}; annotations incomplete."
+            )
+
+        # If siblings are not different at aggregate level, merge
+        if not is_different:
+            return False, None
+
+        # Siblings ARE different at aggregate level - now LOCALIZE the signal
+        localization_result = localize_divergence_signal(
+            tree=self.tree,
+            left_root=left_child,
+            right_root=right_child,
+            test_divergence=self._test_node_pair_divergence,
+            alpha=self.sibling_alpha,
+            max_depth=self.localization_max_depth,
+            min_samples=self.localization_min_samples,
+            is_edge_significant=self._check_edge_significance,
+        )
+
+        return True, localization_result
+
     def _pop_candidate(
         self, heap: List[str], queued: set[str], processed: set[str]
     ) -> str | None:
@@ -484,11 +664,32 @@ class TreeDecomposition:
         dist_a, size_a = self._compute_cluster_distribution(cluster_a)
         dist_b, size_b = self._compute_cluster_distribution(cluster_b)
 
+        # Calculate branch lengths from common_ancestor for Felsenstein adjustment
+        try:
+            branch_len_a = nx.shortest_path_length(
+                self.tree,
+                source=common_ancestor,
+                target=cluster_a,
+                weight="branch_length",
+            )
+            branch_len_b = nx.shortest_path_length(
+                self.tree,
+                source=common_ancestor,
+                target=cluster_b,
+                weight="branch_length",
+            )
+        except nx.NetworkXNoPath:
+            # Should not happen in a valid tree
+            branch_len_a = None
+            branch_len_b = None
+
         test_stat, df, p_value = sibling_divergence_test(
             left_dist=dist_a,
             right_dist=dist_b,
             n_left=float(size_a),
             n_right=float(size_b),
+            branch_length_left=branch_len_a,
+            branch_length_right=branch_len_b,
         )
 
         return test_stat, df, p_value
@@ -515,11 +716,15 @@ class TreeDecomposition:
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
-        cluster_assignments = self._maybe_apply_posthoc_merge(cluster_assignments)
+        # Apply post-hoc merge and capture audit trail
+        cluster_assignments, merge_audit = self._maybe_apply_posthoc_merge_with_audit(
+            cluster_assignments
+        )
 
         return {
             "cluster_assignments": cluster_assignments,
             "num_clusters": len(cluster_assignments),
+            "posthoc_merge_audit": merge_audit,
             "independence_analysis": {
                 "alpha_local": self.alpha_local,
                 "decision_mode": "sibling_divergence",
@@ -527,10 +732,108 @@ class TreeDecomposition:
             },
         }
 
-    def _maybe_apply_posthoc_merge(
+    def decompose_tree_v2(self) -> dict[str, object]:
+        """Return cluster assignments using signal localization for soft boundaries.
+
+        This enhanced version drills down when siblings are "different" to find
+        WHERE the divergence originates. This enables cross-boundary partial merges
+        when some sub-clusters are similar despite being on opposite sides of a split.
+
+        Algorithm
+        ---------
+        1. Standard top-down traversal collecting split points
+        2. For each split point, run signal localization to find soft boundaries
+        3. Build combined similarity graph from all split points
+        4. Extract final clusters from connected components
+
+        Returns
+        -------
+        dict[str, object]
+            Contains:
+            - cluster_assignments: Mapping from cluster ID to cluster info
+            - num_clusters: Number of clusters
+            - localization_results: Dict of LocalizationResult per split point
+            - similarity_graph: Combined similarity graph (edges = similar pairs)
+            - independence_analysis: Configuration metadata
+        """
+        # Phase 1: Standard traversal to collect split points
+        nodes_to_visit: List[str] = [self._root]
+        split_points: List[Tuple[str, str, str]] = []  # (parent, left, right)
+        merge_points: List[str] = []  # Nodes where we decided to merge
+        processed: Set[str] = set()
+        localization_results: Dict[str, LocalizationResult] = {}
+
+        while nodes_to_visit:
+            node = nodes_to_visit.pop()
+            if node in processed:
+                continue
+            processed.add(node)
+
+            should_split, loc_result = self._should_split_v2(node)
+
+            if should_split:
+                children = self._children[node]
+                if len(children) == 2:
+                    left_child, right_child = children
+                    split_points.append((node, left_child, right_child))
+
+                    if loc_result is not None:
+                        localization_results[node] = loc_result
+
+                    # Add children to traversal
+                    for child in children:
+                        if child not in processed:
+                            nodes_to_visit.append(child)
+            else:
+                merge_points.append(node)
+
+        # Phase 2: Build combined similarity and difference graphs
+        combined_similarity = merge_similarity_graphs(localization_results)
+        combined_difference = merge_difference_graphs(localization_results)
+
+        # Phase 3: Extract soft clusters with constraints
+        if combined_similarity.number_of_edges() > 0:
+            # We have soft boundaries - extract clusters using constrained merge
+            soft_clusters = extract_constrained_clusters(
+                similarity_graph=combined_similarity,
+                difference_graph=combined_difference,
+                tree=self.tree,
+                merge_points=merge_points,
+            )
+        else:
+            # No soft boundaries - use standard hard cluster extraction
+            soft_clusters = [self._get_all_leaves(node) for node in merge_points]
+
+        # Build final cluster assignments
+        cluster_assignments = self._build_cluster_assignments(soft_clusters)
+
+        # Apply post-hoc merge and capture audit trail
+        cluster_assignments, merge_audit = self._maybe_apply_posthoc_merge_with_audit(
+            cluster_assignments
+        )
+
+        return {
+            "cluster_assignments": cluster_assignments,
+            "num_clusters": len(cluster_assignments),
+            "localization_results": localization_results,
+            "similarity_graph": combined_similarity,
+            "difference_graph": combined_difference,
+            "split_points": split_points,
+            "posthoc_merge_audit": merge_audit,
+            "independence_analysis": {
+                "alpha_local": self.alpha_local,
+                "decision_mode": "sibling_divergence_v2_localized",
+                "posthoc_merge": self.posthoc_merge,
+                "use_signal_localization": True,
+                "localization_max_depth": self.localization_max_depth,
+                "localization_min_samples": self.localization_min_samples,
+            },
+        }
+
+    def _maybe_apply_posthoc_merge_with_audit(
         self, cluster_assignments: dict[int, dict[str, object]]
-    ) -> dict[int, dict[str, object]]:
-        """Optionally apply tree-respecting post-hoc merge to an existing decomposition.
+    ) -> Tuple[dict[int, dict[str, object]], List[Dict]]:
+        """Optionally apply tree-respecting post-hoc merge and return audit trail.
 
         Parameters
         ----------
@@ -539,11 +842,12 @@ class TreeDecomposition:
 
         Returns
         -------
-        dict[int, dict[str, object]]
-            Updated cluster assignments after optional post-hoc merging.
+        Tuple[dict[int, dict[str, object]], List[Dict]]
+            - Updated cluster assignments after optional post-hoc merging.
+            - Audit trail of merges tested.
         """
         if not (self.posthoc_merge and self._distribution_by_node):
-            return cluster_assignments
+            return cluster_assignments, []
 
         cluster_roots: Set[str] = set()
         for info in cluster_assignments.values():
@@ -552,9 +856,9 @@ class TreeDecomposition:
                 cluster_roots.add(root_node)
 
         if not cluster_roots:
-            return cluster_assignments
+            return cluster_assignments, []
 
-        merged_roots = apply_posthoc_merge(
+        merged_roots, audit_trail = apply_posthoc_merge(
             cluster_roots=cluster_roots,
             alpha=self.posthoc_merge_alpha,
             tree=self.tree,
@@ -570,7 +874,7 @@ class TreeDecomposition:
             if leaf_labels:
                 merged_leaf_sets.append(set(leaf_labels))
 
-        return self._build_cluster_assignments(merged_leaf_sets)
+        return self._build_cluster_assignments(merged_leaf_sets), audit_trail
 
     @staticmethod
     def build_sample_cluster_assignments(

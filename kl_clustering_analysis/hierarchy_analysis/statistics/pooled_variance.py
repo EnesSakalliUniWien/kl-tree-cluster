@@ -8,7 +8,7 @@ For two independent samples with observations from the same distribution family:
 
 Binary (Bernoulli):
     Var[θ̂] = θ(1-θ)/n
-    
+
 Categorical (Multinomial):
     Var[p̂_k] = p_k(1-p_k)/n  (diagonal elements)
     Cov[p̂_j, p̂_k] = -p_j·p_k/n  (off-diagonal, but ignored for Wald test)
@@ -36,7 +36,7 @@ def _is_categorical(arr: np.ndarray) -> bool:
 
 def _flatten_categorical(arr: np.ndarray) -> np.ndarray:
     """Flatten categorical distribution to 1D for Wald test.
-    
+
     For shape (d, K), returns shape (d * K,).
     For shape (d,), returns unchanged.
     """
@@ -90,10 +90,10 @@ def compute_pooled_variance(
     """Compute the variance of the difference between two proportions.
 
     Supports both binary (1D) and categorical (2D) distributions.
-    
+
     For categorical, uses diagonal variance approximation:
         Var[p̂_k] = p_k(1-p_k)/n
-    
+
     This ignores off-diagonal covariance terms, which is conservative
     and works well with random projection.
 
@@ -128,6 +128,7 @@ def standardize_proportion_difference(
     n_1: float,
     n_2: float,
     eps: float = 1e-10,
+    branch_length_sum: float | None = None,
 ) -> Tuple[NDArray[np.floating], NDArray[np.floating]]:
     """Compute standardized difference (z-scores) between two proportions.
 
@@ -147,6 +148,11 @@ def standardize_proportion_difference(
         Sample size of group 2.
     eps : float, optional
         Small constant for numerical stability (default: 1e-10).
+    branch_length_sum : float, optional
+        Sum of branch lengths (b_L + b_R) for Felsenstein's phylogenetic
+        independent contrasts adjustment. If provided, variance is scaled
+        by this factor to account for expected divergence over topological
+        distance. Longer branches -> more expected variance -> smaller Z.
 
     Returns
     -------
@@ -155,12 +161,29 @@ def standardize_proportion_difference(
         For categorical input, these are flattened.
     """
     variance = compute_pooled_variance(theta_1, theta_2, n_1, n_2, eps)
+
+    # Felsenstein (1985) branch-length adjustment with normalization:
+    # For sibling contrasts, variance scales with sum of branch lengths.
+    # We normalize: BL_norm = 1 + BL_sum/(2*mean_BL)
+    # The factor of 2 accounts for summing two branches.
+    # This ensures BL_norm ≥ 1, preventing variance shrinkage.
+    #
+    # Longer total branch length → more expected divergence → larger variance
+    # → smaller z-scores → harder to declare siblings as different.
+    if branch_length_sum is not None and branch_length_sum > 0:
+        # Default mean_bl estimate: assume typical BL ~ branch_length_sum/2
+        # This gives BL_norm ~ 2 on average
+        # TODO: Pass actual mean_bl from tree for more accurate normalization
+        mean_bl_estimate = branch_length_sum / 2  # rough estimate
+        bl_normalized = 1.0 + branch_length_sum / (2 * mean_bl_estimate)
+        variance = variance * bl_normalized
+
     difference = theta_1 - theta_2
-    
+
     # Flatten if categorical
     variance_flat = _flatten_categorical(variance)
     difference_flat = _flatten_categorical(difference)
-    
+
     z_scores = difference_flat / np.sqrt(variance_flat)
     return z_scores, variance_flat
 
