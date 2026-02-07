@@ -189,7 +189,7 @@ class PosetTree(nx.DiGraph):
         # Store linkage matrix for later use (e.g., inconsistency coefficient)
         G.graph["linkage_matrix"] = linkage_matrix
         G.graph["n_leaves"] = n_leaves
-        
+
         for i, name in enumerate(leaf_names):
             G.add_node(f"L{i}", label=name, is_leaf=True)
 
@@ -459,7 +459,7 @@ class PosetTree(nx.DiGraph):
             results_df = annotate_sibling_divergence(
                 self,
                 results_df,
-                significance_level_alpha=config.SIGNIFICANCE_ALPHA,
+                significance_level_alpha=config.SIBLING_ALPHA,
             )
             # Update the tree's stats_df with the annotated results so they are available later
             self.stats_df = results_df

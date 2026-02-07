@@ -78,9 +78,12 @@ def _compute_projected_test(
     n_child: int,
     seed: int,
 ) -> tuple[float, int, float]:
-    """Compute projected Wald test for one edge.
+    """Compute Wald test for one edge, with optional random projection.
 
-    Projects z-scores to k dimensions and computes T = ||R·z||² ~ χ²(k).
+    When ``config.USE_RANDOM_PROJECTION`` is ``True`` and the JL target
+    dimension is smaller than the feature count, projects z-scores to
+    k dimensions and computes T = ||R·z||² ~ χ²(k).  Otherwise uses
+    the full-dimensional z-scores directly.
 
     Parameters
     ----------
@@ -101,18 +104,20 @@ def _compute_projected_test(
     z = _compute_standardized_z(child_dist, parent_dist, n_child)
     d = len(z)
 
-    # Projection dimension from JL lemma: k = O(log n)
-    k = compute_projection_dimension(n_child, d)
+    if config.USE_RANDOM_PROJECTION:
+        # Projection dimension from JL lemma: k = O(log n)
+        k = compute_projection_dimension(n_child, d)
+        if k < d:
+            R = generate_projection_matrix(d, k, seed)
+            projected = R @ z
+            stat = float(np.sum(projected**2))
+            pval = float(chi2.sf(stat, df=k))
+            return stat, k, pval
 
-    # Project to k dimensions
-    R = generate_projection_matrix(d, k, seed)
-    projected = R @ z
-
-    # Test statistic: sum of squared projected z-scores
-    stat = float(np.sum(projected**2))
-    pval = float(chi2.sf(stat, df=k))
-
-    return stat, k, pval
+    # No projection: use full-dimensional test
+    stat = float(np.sum(z**2))
+    pval = float(chi2.sf(stat, df=d))
+    return stat, d, pval
 
 
 def _compute_p_values_via_projection(

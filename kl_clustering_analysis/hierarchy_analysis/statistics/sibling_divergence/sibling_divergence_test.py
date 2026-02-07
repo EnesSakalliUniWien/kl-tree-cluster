@@ -82,9 +82,12 @@ def sibling_divergence_test(
     n_left: float,
     n_right: float,
 ) -> Tuple[float, float, float]:
-    """Two-sample Wald test for sibling divergence with random projection.
+    """Two-sample Wald test for sibling divergence with optional random projection.
 
     Supports both binary (1D) and categorical (2D) distributions.
+    When ``config.USE_RANDOM_PROJECTION`` is ``True`` and the JL target
+    dimension is smaller than the feature count, z-scores are projected
+    to a lower-dimensional space before computing the chi-square statistic.
 
     Returns (test_statistic, degrees_of_freedom, p_value).
     """
@@ -101,14 +104,16 @@ def sibling_divergence_test(
     # Use actual z-score length (may differ from n_features for categorical)
     d = len(z)
 
-    # Compute projection dimension
-    k = compute_projection_dimension(int(n_eff), d)
+    # Apply random projection when enabled and beneficial
+    if config.USE_RANDOM_PROJECTION:
+        k = compute_projection_dimension(int(n_eff), d)
+        if k < d:
+            R = generate_projection_matrix(d, k, config.PROJECTION_RANDOM_SEED)
+            projected = R @ z
+            return _compute_chi_square_pvalue(projected, k)
 
-    # Project and compute test statistic
-    R = generate_projection_matrix(d, k, config.PROJECTION_RANDOM_SEED)
-    projected = R @ z
-
-    return _compute_chi_square_pvalue(projected, k)
+    # No projection: use full-dimensional test
+    return _compute_chi_square_pvalue(z, d)
 
 
 # =============================================================================
@@ -233,7 +238,7 @@ def _apply_results(
     df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
     df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
     df.loc[parents, "Sibling_BH_Different"] = reject
-    df["Sibling_BH_Same"] = ~df["Sibling_BH_Different"]
+    df.loc[parents, "Sibling_BH_Same"] = ~reject
 
     return df
 
@@ -278,12 +283,13 @@ def annotate_sibling_divergence(
 
     parents, args, skipped = _collect_test_arguments(tree, df, min_samples_per_sibling)
 
+    if skipped:
+        df.loc[skipped, "Sibling_Divergence_Skipped"] = True
+        logger.debug(f"Skipped {len(skipped)} nodes")
+
     if not parents:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
         return df
-
-    if skipped:
-        logger.debug(f"Skipped {len(skipped)} nodes")
 
     results = _run_tests(args)
     return _apply_results(df, parents, results, significance_level_alpha)

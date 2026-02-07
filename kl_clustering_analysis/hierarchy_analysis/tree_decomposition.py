@@ -29,11 +29,15 @@ class TreeDecomposition:
     whether to split or merge at each internal node based on two statistical gates:
 
     #. **Binary structure gate** - parent must have exactly two children to split.
+    #. **Child-parent divergence gate** - at least one child must show a
+       statistically significant KL divergence from the parent (projected
+       Wald chi-square test with FDR correction).
     #. **Sibling divergence gate** - siblings must have significantly different
-       distributions according to a Jensen-Shannon divergence permutation test
-       with Benjamini-Hochberg multiple-testing correction. If siblings are
-       significantly different, the split proceeds; otherwise the children are
-       merged into a single cluster.
+       distributions according to a two-sample Wald chi-square test with
+       Johnson-Lindenstrauss random projection and Benjamini-Hochberg
+       multiple-testing correction. If siblings are significantly different,
+       the split proceeds; otherwise the children are merged into a single
+       cluster.
 
     Nodes that pass all gates become cluster boundaries. Leaves under the same
     boundary node are assigned the same cluster identifier. The resulting report
@@ -370,11 +374,10 @@ class TreeDecomposition:
                 f"{parent!r}; run annotate_sibling_divergence first."
             )
 
+        # If the sibling test was skipped (e.g. neither child diverged from
+        # parent, or insufficient samples), do not split.
         if self._sibling_skipped.get(parent, False):
-            raise ValueError(
-                "Sibling divergence test skipped for node "
-                f"{parent!r}; annotations incomplete."
-            )
+            return False
 
         # Siblings must be significantly different to justify splitting
         return bool(is_different)
