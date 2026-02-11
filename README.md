@@ -148,6 +148,28 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+### Install From GitHub
+
+Install directly from a GitHub repo (no PyPI needed):
+
+```bash
+pip install git+https://github.com/<org>/<repo>.git
+```
+
+Pin a branch, tag, or commit:
+
+```bash
+pip install git+https://github.com/<org>/<repo>.git@main
+pip install git+https://github.com/<org>/<repo>.git@v0.1.0
+pip install git+https://github.com/<org>/<repo>.git@<commit_sha>
+```
+
+Example `requirements.txt` entry that installs everything (dev + benchmark extras):
+
+```text
+kl-clustering-analysis[dev,benchmark] @ git+https://github.com/<org>/<repo>.git
+```
+
 ## Run the Quick Start Pipeline
 
 `quick_start.py` wires together the full analysis pipeline on a synthetic dataset to illustrate each stage.
