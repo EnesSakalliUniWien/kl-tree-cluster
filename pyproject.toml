@@ -33,6 +33,9 @@ benchmark = [
     "python-louvain>=0.16",
     "hdbscan>=0.8.41",
 ]
+viz = [
+    "umap-learn>=0.5.11",
+]
 all = [
     "jupyter>=1.0.0",
     "ipython>=8.12.0",
