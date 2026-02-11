@@ -150,57 +150,56 @@ pip install -r requirements.txt
 
 ### Install From GitHub
 
-Install directly from a GitHub repo (no PyPI needed):
+Install directly from GitHub (no PyPI needed):
 
 ```bash
-pip install git+https://github.com/<org>/<repo>.git
+pip install git+https://github.com/EnesSakalliUniWien/kl-tree-cluster.git
 ```
 
 Pin a branch, tag, or commit:
 
 ```bash
-pip install git+https://github.com/<org>/<repo>.git@main
-pip install git+https://github.com/<org>/<repo>.git@v0.1.0
-pip install git+https://github.com/<org>/<repo>.git@<commit_sha>
+pip install git+https://github.com/EnesSakalliUniWien/kl-tree-cluster.git@main
+pip install git+https://github.com/EnesSakalliUniWien/kl-tree-cluster.git@v0.1.0
+pip install git+https://github.com/EnesSakalliUniWien/kl-tree-cluster.git@<commit_sha>
 ```
 
-Example `requirements.txt` entry that installs everything (dev + benchmark extras):
+Example `requirements.txt` entry that installs visualization and dev extras:
 
 ```text
-kl-clustering-analysis[dev,benchmark] @ git+https://github.com/<org>/<repo>.git
+kl-clustering-analysis[dev,viz] @ git+https://github.com/EnesSakalliUniWien/kl-tree-cluster.git
 ```
 
-## Run the Quick Start Pipeline
+## Run the Digits V2 Benchmark
 
-`quick_start.py` wires together the full analysis pipeline on a synthetic dataset to illustrate each stage.
+`digits_interactive_demo.py` runs the full pipeline on the scikit-learn Digits dataset, then renders an interactive UMAP
+comparison plot (true labels vs. KL-TE clusters). Install `bokeh` + `umap-learn` via `pip install -r requirements.txt`
+or the `viz` extra.
 
 ```bash
-python quick_start.py
+python digits_interactive_demo.py
 ```
 
 What the script does:
 
-1. **Generate data** – creates a binary feature matrix by thresholding Gaussian blobs so you can reproduce demo data
-   with known clusters.
-2. **Build the hierarchy** – computes pairwise Hamming distances, runs SciPy `linkage`, and wraps the result in a
-   `PosetTree` so each node keeps track of its distribution, significance markers, and children.
-3. **Score nodes** – applies `calculate_hierarchy_kl_divergence` to quantify how informative each split is for the
-   generated features.
-4. **Annotate significance** – runs multiple hypothesis tests to identify statistically significant branches:
-   - `annotate_child_parent_divergence`
-   - `annotate_sibling_divergence`
-5. **Decompose clusters** – uses `TreeDecomposition` to turn significant nodes into cluster assignments and prints a
-   concise report.
-6. **Validate results** – compares discovered clusters with the synthetic ground truth using Adjusted Rand Index (ARI)
-   so you know how well the decomposition performed.
+1. **Load digits** – pulls the scikit-learn Digits dataset and binarizes pixel intensities.
+2. **Build the hierarchy** – computes pairwise Jaccard distances, runs SciPy `linkage`, and wraps the result in a
+   `PosetTree`.
+3. **Annotate significance** – runs child-parent and sibling divergence tests.
+4. **Decompose clusters** – applies `TreeDecomposition` to obtain KL-TE clusters.
+5. **Visualize (optional)** – writes an interactive HTML plot if `bokeh` is installed.
 
-The script prints console output summarizing each step, reports the discovered clusters, and ends with the ARI score
-(`1.0` denotes a perfect match; `0.0` indicates random assignment). The demo does not create files, so reruns can be
-performed without cleanup.
+The script prints ARI/NMI and the cluster count, then saves `digits_interactive_demo.html` when visualization dependencies
+are present.
+
+## Other Examples
+
+- `umap_kl_demo.py` runs a compact synthetic demo and saves a UMAP plot plus cluster assignments.
+- `quick_start.py` runs the minimal end-to-end pipeline on synthetic data and reports ARI.
 
 ## Working With Your Own Data
 
-- Replace the synthetic data block in `quick_start.py` with your dataframe (binary feature matrix).
+- Replace the digits dataset in `digits_interactive_demo.py` with your own binary feature matrix.
 - Keep sample names as the index so the reporting remains readable.
 - If your data is not binary, adapt the preprocessing section to binarize or adjust the distance metric in `pdist`.
 - Preserve the overall pipeline order so the statistical annotations stay in sync with the calculated metrics.
