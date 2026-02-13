@@ -459,7 +459,7 @@ class PosetTree(nx.DiGraph):
             initialize node distributions/KL metrics prior to decomposition.
         **decomposer_kwargs
             Extra keyword arguments forwarded to ``TreeDecomposition`` (e.g.,
-            ``alpha_local``, ``near_independence_alpha_buffer``).
+            ``alpha_local``, ``sibling_alpha``).
 
         Returns
         -------
@@ -503,6 +503,8 @@ class PosetTree(nx.DiGraph):
             **decomposer_kwargs,
         )
 
+        if decomposer.use_signal_localization:
+            return decomposer.decompose_tree_v2()
         return decomposer.decompose_tree()
 
     def build_sample_cluster_assignments(

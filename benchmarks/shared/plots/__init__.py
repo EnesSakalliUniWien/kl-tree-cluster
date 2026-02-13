@@ -5,8 +5,15 @@ Functions are organized by purpose (summary, embedding comparison, manifold alig
 and batch export helpers) but re-exported here for convenience.
 """
 
+import matplotlib as mpl
+
+# Prefer TrueType embedding (Type 42) for publication-quality PDFs.
+mpl.rcParams["pdf.fonttype"] = 42
+mpl.rcParams["ps.fonttype"] = 42
+
 from .summary import create_validation_plot
 from .embedding import (
+    create_clustering_comparison_plots,
     create_clustering_comparison_plot,
     create_clustering_comparison_plot_3d,
 )
@@ -24,6 +31,7 @@ from .runtime import (
 
 __all__ = [
     "create_validation_plot",
+    "create_clustering_comparison_plots",
     "create_clustering_comparison_plot",
     "create_clustering_comparison_plot_3d",
     "create_manifold_alignment_plot",

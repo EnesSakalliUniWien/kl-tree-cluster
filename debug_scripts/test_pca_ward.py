@@ -14,7 +14,7 @@ from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
 from sklearn.decomposition import PCA
 
-from kl_clustering_analysis.benchmarking.generators import (
+from benchmarks.shared.generators import (
     generate_random_feature_matrix,
 )
 

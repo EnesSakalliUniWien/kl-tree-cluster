@@ -224,7 +224,7 @@ def test_end_to_end_pipeline():
     print("TEST 4: End-to-End Pipeline")
     print("=" * 60)
 
-    from kl_clustering_analysis.benchmarking.generators.generate_random_feature_matrix import (
+    from benchmarks.shared.generators.generate_random_feature_matrix import (
         generate_random_feature_matrix,
     )
     from kl_clustering_analysis import config

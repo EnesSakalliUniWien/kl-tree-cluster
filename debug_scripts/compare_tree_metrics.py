@@ -12,9 +12,9 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
-from kl_clustering_analysis.benchmarking.generators import generate_case_data
-from kl_clustering_analysis.benchmarking.test_cases import SMALL_TEST_CASES
-from kl_clustering_analysis.benchmarking.test_cases.gaussian import GAUSSIAN_CASES
+from benchmarks.shared.generators import generate_case_data
+from benchmarks.shared.cases import SMALL_TEST_CASES
+from benchmarks.shared.cases.gaussian import GAUSSIAN_CASES
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
 

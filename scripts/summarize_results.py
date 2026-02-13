@@ -3,7 +3,7 @@ import os
 
 
 def summarize():
-    input_path = "results/full_benchmark_comparison_hamming_vs_rt.csv"
+    input_path = "benchmarks/results/full_benchmark_alpha_0p001_now.csv"
     if not os.path.exists(input_path):
         print(f"File not found: {input_path}")
         return
@@ -52,7 +52,7 @@ def summarize():
     print("\nTop 5 Pro-Rogers-Tanimoto Cases (RT > KL):")
     print(significant_diff.tail(5))
 
-    output_pivot_path = "results/benchmark_summary_pivot.csv"
+    output_pivot_path = "benchmarks/results/benchmark_summary_pivot.csv"
     pivot.to_csv(output_pivot_path)
     print(f"\nSummary pivot saved to {output_pivot_path}")
 

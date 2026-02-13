@@ -48,14 +48,10 @@ TREE_LINKAGE_METHOD: str = "average"
 
 # --- Random Projection Parameters ---
 
-# Enable random projection for high-dimensional sibling tests
-USE_RANDOM_PROJECTION: bool = True
-
-# Projection decision (JL-based):
-# Apply projection when n_features > n_samples AND the JL-computed target
-# dimension k = compute_projection_dimension(n_samples, n_features) is less than n_features.
-# Random projection is applied in the hypothesis tests via
-# `statistics.random_projection.compute_projection_dimension`.
+# Random projection is integral to the Wald chi-square test and always applied.
+# The projection dimension k is computed adaptively via the JL lemma:
+# k = compute_projection_dimension(n_samples, n_features).
+# When n_features <= k, no effective dimensionality reduction occurs.
 
 # Distortion tolerance for Johnson-Lindenstrauss projection.
 # Controls the trade-off between dimension reduction and distance preservation:
@@ -71,12 +67,6 @@ PROJECTION_MIN_K: int = 10
 
 # Random seed for projection reproducibility (None for random)
 PROJECTION_RANDOM_SEED: int | None = 42
-
-# Projection method:
-#   'sparse'     -> Fast SparseRandomProjection (JL lemma, approximate χ² distribution)
-#   'orthonormal' -> QR-based orthonormal projection (exact χ² distribution, slower)
-# Use 'orthonormal' when statistical exactness matters more than speed.
-PROJECTION_METHOD: str = "orthonormal"
 
 # --- MI Feature Filter Parameters ---
 

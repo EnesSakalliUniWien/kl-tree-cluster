@@ -23,7 +23,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from benchmarks.phylogenetic.generator import generate_phylogenetic_data
+from benchmarks.shared.generators.generate_phylogenetic import (
+    generate_phylogenetic_data,
+)
 from benchmarks.phylogenetic.cases import PHYLOGENETIC_CASES
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
@@ -35,8 +37,8 @@ def main():
     print("=" * 70)
     print()
 
-    # Create output directory relative to script
-    output_dir = Path(__file__).parent / "results"
+    # Use a single benchmark results root for all suites
+    output_dir = repo_root / "benchmarks" / "results"
     output_dir.mkdir(exist_ok=True)
 
     # Convert dictionary cases to the format expected by the pipeline if necessary

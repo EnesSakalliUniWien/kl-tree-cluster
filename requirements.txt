@@ -1,5 +1,6 @@
 # Core dependencies for KL-clustering analysis
-numpy>=1.24.0
+# UMAP/numba compatibility: keep NumPy below 2.4.
+numpy>=1.24.0,<2.4
 pandas>=2.0.0
 scipy>=1.10.0
 matplotlib>=3.7.0
@@ -7,11 +8,13 @@ scikit-learn>=1.3.0
 networkx>=3.1
 scikit-image>=0.22.0
 scikit-bio>=0.6.0
-scanpy>=1.9.8
-numba>=0.59.0
 statsmodels>=0.14.0
+umap-learn>=0.5.11
 
 # Development dependencies
 jupyter>=1.0.0
 ipython>=8.12.0
 notebook>=7.0.0
+
+# Install this package from GitHub (dev + benchmark extras)
+kl-clustering-analysis[dev,benchmark,viz] @ git+https://github.com/EnesSakalliUniWien/kl-tree-cluster.git@a305251537e302fcb3659d05119d856bfb837052

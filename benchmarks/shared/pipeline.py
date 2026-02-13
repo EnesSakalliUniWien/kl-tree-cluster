@@ -51,15 +51,11 @@ from benchmarks.shared.audit_utils import (
     export_matrix_audit,
 )
 
-# PDF concatenation helper extracted to its own module.
-from benchmarks.shared.pdf_utils import (
-    concat_plots_to_pdf as _concat_plots_to_pdf,
-)
-
 # Small utilities (avoid circular imports by keeping them lightweight)
 from benchmarks.shared.utils_decomp import (
     _create_report_dataframe_from_labels,
 )
+from benchmarks.shared.time_utils import format_timestamp_utc
 
 
 # Configure logger (library-friendly: leave handlers/levels to callers)
@@ -79,13 +75,6 @@ def _format_params(params: dict[str, object]) -> str:
     return ", ".join(parts)
 
 
-def _format_timestamp_utc(dt: datetime) -> str:
-    """Return a filesystem-safe UTC timestamp like 20250101_235959Z."""
-    if dt.tzinfo is None:
-        raise ValueError("Timestamp must be timezone-aware.")
-    return dt.astimezone(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
-
-
 def _resolve_pdf_output_path(
     concat_output: str | None,
     *,
@@ -97,7 +86,7 @@ def _resolve_pdf_output_path(
         path = Path(concat_output)
         return path.with_suffix(".pdf") if path.suffix == "" else path
 
-    stamp = _format_timestamp_utc(started_at)
+    stamp = format_timestamp_utc(started_at)
     return plots_root / f"benchmark_plots_{stamp}.pdf"
 
 
@@ -167,9 +156,7 @@ def benchmark_cluster_algorithm(
     concat_output : str, optional
         Output PDF path. Defaults to ``plots_root / f'benchmark_plots_{timestamp}.pdf'`` when omitted.
     save_individual_plots : bool, default=False
-        When False, skip writing per-plot PNGs; collect figures for optional PDF output instead.
-        The pipeline now defaults to not producing PNG artifacts; pass ``save_individual_plots=True``
-        explicitly to enable PNG output (not recommended).
+        Deprecated. PNG output is disabled; benchmark plots are emitted to PDF only.
     matrix_audit : bool, default=False
         If True, export TensorBoard summaries for key matrices per test case.
 
@@ -185,7 +172,7 @@ def benchmark_cluster_algorithm(
     # Default test cases
     run_started_at = datetime.now(timezone.utc)
     project_root = Path(__file__).resolve().parents[2]
-    plots_root = project_root / "results" / "plots"
+    plots_root = project_root / "benchmarks" / "results" / "plots"
     if test_cases is None:
         test_cases = get_default_test_cases()
 
@@ -207,9 +194,18 @@ def benchmark_cluster_algorithm(
         else None
     )
 
-    # When concatenating directly to a PDF without intermediate PNGs, stream to
-    # PdfPages immediately and close each figure right away (prevents figure leaks).
-    stream_pdf = bool(concat_plots_pdf and not save_individual_plots)
+    if save_individual_plots:
+        logger.warning(
+            "save_individual_plots=True is ignored: benchmark plotting is PDF-only."
+        )
+        save_individual_plots = False
+    if (plot_umap or plot_manifold) and not concat_plots_pdf:
+        logger.warning(
+            "plot_umap/plot_manifold requested without concat_plots_pdf; skipping plot generation."
+        )
+
+    # PDF-only plotting mode.
+    stream_pdf = bool(concat_plots_pdf)
 
     # Run test cases
     selected_methods = methods or DEFAULT_METHODS
@@ -337,7 +333,21 @@ def benchmark_cluster_algorithm(
                             linkage_method = params.get(
                                 "tree_linkage_method", config.TREE_LINKAGE_METHOD
                             )
-                            distance_condensed_kl = pdist(data_t.values, metric=metric)
+                            # For SBM cases, the pre-computed modularity distance
+                            # MUST be used. Raw hamming/rogerstanimoto on adjacency
+                            # rows does not capture community structure. No fallback.
+                            if meta.get("generator") == "sbm":
+                                if distance_condensed is None:
+                                    raise ValueError(
+                                        f"SBM case '{meta.get('name', '?')}' requires "
+                                        "pre-computed modularity distance but "
+                                        "distance_condensed is None."
+                                    )
+                                distance_condensed_kl = distance_condensed
+                            else:
+                                distance_condensed_kl = pdist(
+                                    data_t.values, metric=metric
+                                )
                             result = spec.runner(
                                 data_t,
                                 distance_condensed_kl,
@@ -372,6 +382,7 @@ def benchmark_cluster_algorithm(
                             {
                                 "Test": case_idx,
                                 "Case_Name": case_name,
+                                "Case_Category": meta.get("category", "unknown"),
                                 "Method": spec.name,
                                 "Params": _format_params(params),
                                 "True": meta["n_clusters"],
@@ -535,16 +546,12 @@ def benchmark_cluster_algorithm(
 
             df_results = pd.DataFrame(results_data)
 
-            if (
-                not verbose
-                and not plot_umap
-                and not plot_manifold
-                and not concat_plots_pdf
-            ):
+            should_generate_plots = bool(concat_plots_pdf)
+            if not should_generate_plots:
                 return df_results, None
 
             plot_kwargs = {
-                "save_png": save_individual_plots,
+                "save_png": False,
                 "collect_figs": False,
             }
             if pdf_pages is not None:
@@ -559,21 +566,6 @@ def benchmark_cluster_algorithm(
                 plot_manifold,
                 **plot_kwargs,
             )
-
-            if concat_plots_pdf and save_individual_plots:
-                # Legacy: allow arbitrary pattern -> single PDF of saved PNGs
-                if output_pdf is None:
-                    output_pdf = _resolve_pdf_output_path(
-                        concat_output,
-                        plots_root=plots_root,
-                        started_at=run_started_at,
-                    )
-                _concat_plots_to_pdf(
-                    plots_root=plots_root,
-                    pattern=concat_pattern,
-                    output_pdf=output_pdf,
-                    verbose=bool(verbose),
-                )
 
             return df_results, fig
     finally:

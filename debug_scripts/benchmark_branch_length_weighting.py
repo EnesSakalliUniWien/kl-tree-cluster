@@ -25,7 +25,7 @@ from kl_clustering_analysis.tree.distributions import populate_distributions
 from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics import (
     compute_node_divergences,
 )
-from kl_clustering_analysis.benchmarking.generators.generate_phylogenetic import (
+from benchmarks.shared.generators.generate_phylogenetic import (
     generate_phylogenetic_data,
 )
 

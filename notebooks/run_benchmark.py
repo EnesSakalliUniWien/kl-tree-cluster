@@ -3,7 +3,7 @@ import sys
 import os
 from datetime import datetime
 from pathlib import Path
-from kl_clustering_analysis.benchmarking import benchmark_cluster_algorithm
+from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
 
 # Ensure project root is in path

@@ -36,7 +36,7 @@ def test_posthoc_merge_respects_significant_pairs_at_lca() -> None:
         # return (test_stat, df, p_value)
         return 0.0, 1.0, p_values[frozenset({a, b})]
 
-    merged = apply_posthoc_merge(
+    merged, _audit = apply_posthoc_merge(
         cluster_roots=cluster_roots,
         alpha=0.05,
         tree=tree,
@@ -65,7 +65,7 @@ def test_posthoc_merge_merges_when_pairs_are_all_similar() -> None:
     def fake_test(a: str, b: str, lca: str) -> tuple[float, float, float]:
         return 0.0, 1.0, 0.2
 
-    merged = apply_posthoc_merge(
+    merged, _audit = apply_posthoc_merge(
         cluster_roots=cluster_roots,
         alpha=0.05,
         tree=tree,
@@ -111,7 +111,7 @@ def test_posthoc_merge_does_not_reintroduce_descendants_after_ancestor_merge() -
     def fake_test(a: str, b: str, lca: str) -> tuple[float, float, float]:
         return 0.0, 1.0, p_values[frozenset({a, b})]
 
-    merged = apply_posthoc_merge(
+    merged, _audit = apply_posthoc_merge(
         cluster_roots=cluster_roots,
         alpha=0.05,
         tree=tree,

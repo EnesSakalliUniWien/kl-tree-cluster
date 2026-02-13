@@ -22,26 +22,10 @@ from __future__ import annotations
 import numpy as np
 from typing import Dict, Tuple, Optional, List
 
-
-def _generate_ancestral_distribution(
-    n_features: int,
-    n_categories: int,
-    concentration: float,
-    random_state: np.random.RandomState,
-) -> np.ndarray:
-    """Generate ancestral distribution using Dirichlet.
-
-    Args:
-        n_features: Number of features/sites
-        n_categories: Number of categories per feature
-        concentration: Dirichlet concentration parameter
-        random_state: Random state
-
-    Returns:
-        (n_features, n_categories) probability array
-    """
-    alpha = np.ones(n_categories) * concentration
-    return random_state.dirichlet(alpha, size=n_features)
+from benchmarks.shared.evolution import (
+    compute_js_divergence_per_feature,
+    generate_dirichlet_distributions,
+)
 
 
 def _evolve_distribution(
@@ -104,9 +88,6 @@ def _sample_from_distribution(
     return samples
 
 
-from benchmarks.shared.evolution import compute_js_divergence_per_feature
-
-
 def _compute_js_divergence(p: np.ndarray, q: np.ndarray, eps: float = 1e-10) -> float:
     """Compute mean Jensen-Shannon divergence between two distributions."""
     return compute_js_divergence_per_feature(p, q, eps)
@@ -158,7 +139,7 @@ def generate_temporal_evolution_data(
     random_state = np.random.RandomState(random_seed)
 
     # Generate ancestral distribution
-    ancestral_dist = _generate_ancestral_distribution(
+    ancestral_dist = generate_dirichlet_distributions(
         n_features, n_categories, root_concentration, random_state
     )
 

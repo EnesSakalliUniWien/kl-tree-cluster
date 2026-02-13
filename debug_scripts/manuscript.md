@@ -65,7 +65,7 @@ We perform a top-down traversal to identify valid clusters. Every internal node 
 - **Denominator**: The expected "noise" for group size $n_{child}$.
 - **Result ($Z_j$)**: A value of $Z=2.0$ means the shift is twice as large as random noise. Squaring and summing yields a total distance representing signal, ignoring random variation.
 
-*Numerical Stability*: Clip Z-scores to $[-100, 100]$ to bounds infinite Z-scores from zero variance.
+*Numerical Stability*: We floor variance terms with a small $\epsilon$ and preserve all finite Z-scores. Only non-finite artifacts (NaN/Inf) are replaced with 0 to keep projection stable.
 
 1. **Random Projection**: Project the Z-vector onto a lower-dimensional subspace ($k \approx \log n_{child}$) using fixed random matrix $R$.
    $$ Y = R \cdot Z $$

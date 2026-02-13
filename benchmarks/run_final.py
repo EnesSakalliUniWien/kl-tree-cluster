@@ -14,13 +14,8 @@ if str(repo_root) not in sys.path:
 
 from benchmarks.shared.cases import get_test_cases_by_category, list_categories
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
-from datetime import datetime, timezone
+from benchmarks.shared.time_utils import format_timestamp_utc
 import pandas as pd
-
-
-def _format_timestamp_utc() -> str:
-    """Return a filesystem-safe UTC timestamp like 20250101_235959Z."""
-    return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
 
 
 def main():
@@ -51,8 +46,9 @@ def main():
 
     print(f"Found {len(test_cases)} test cases across {len(categories)} categories.")
 
-    timestamp = _format_timestamp_utc()
-    output_root = Path(__file__).parent / "full" / "results_aggregated"
+    timestamp = format_timestamp_utc()
+    # Single benchmark results root
+    output_root = Path(__file__).parent / "results"
     run_dir = output_root / f"run_{timestamp}"
     run_dir.mkdir(parents=True, exist_ok=True)
 

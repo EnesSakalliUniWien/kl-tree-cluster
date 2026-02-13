@@ -11,8 +11,8 @@ from scipy.spatial.distance import squareform
 from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.metrics import adjusted_rand_score
 
-from kl_clustering_analysis.benchmarking.generators.generate_sbm import generate_sbm
-from kl_clustering_analysis.benchmarking.test_cases.sbm import SBM_CASES
+from benchmarks.shared.generators.generate_sbm import generate_sbm
+from benchmarks.shared.cases.sbm import SBM_CASES
 
 
 def compute_modularity_distance(A):

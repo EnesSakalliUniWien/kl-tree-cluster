@@ -380,8 +380,8 @@ def main():
     n_replicates = 10
     base_seed = 42
 
-    # Create output directory relative to script
-    output_dir = Path(__file__).parent / "results"
+    # Use a single benchmark results root for all suites
+    output_dir = repo_root / "benchmarks" / "results"
     output_dir.mkdir(exist_ok=True)
 
     print(f"Configuration:")

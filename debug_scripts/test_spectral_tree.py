@@ -25,7 +25,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from kl_clustering_analysis.benchmarking.generators import (
+from benchmarks.shared.generators import (
     generate_random_feature_matrix,
 )
 

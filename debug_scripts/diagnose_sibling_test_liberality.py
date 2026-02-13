@@ -143,7 +143,6 @@ def diagnose_test_sensitivity():
     print(f"\nPROJECTION_EPS = {config.PROJECTION_EPS}")
     print(f"PROJECTION_MIN_K = {config.PROJECTION_MIN_K}")
     print(f"PROJECTION_METHOD = {config.PROJECTION_METHOD}")
-    print(f"USE_RANDOM_PROJECTION = {config.USE_RANDOM_PROJECTION}")
 
 
 def analyze_real_scenario():

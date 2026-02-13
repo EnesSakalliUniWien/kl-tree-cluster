@@ -1,10 +1,10 @@
 import pytest
 from pathlib import Path
 
-from kl_clustering_analysis.benchmarking import pipeline
+from benchmarks.shared import pipeline
 
 
-def test_concat_pdf_forces_no_pngs_and_collects(monkeypatch, tmp_path: Path):
+def test_concat_pdf_ignores_save_individual_and_streams_pdf(monkeypatch, tmp_path: Path):
     called = {}
 
     def fake_generate_benchmark_plots(
@@ -30,7 +30,7 @@ def test_concat_pdf_forces_no_pngs_and_collects(monkeypatch, tmp_path: Path):
         pipeline, "generate_benchmark_plots", fake_generate_benchmark_plots
     )
 
-    # With save_individual_plots=True, pipeline should NOT stream and should not collect figures.
+    # save_individual_plots is ignored in PDF-only mode; pipeline should still stream to PdfPages.
     df, fig = pipeline.benchmark_cluster_algorithm(
         test_cases=[],
         verbose=True,
@@ -39,12 +39,12 @@ def test_concat_pdf_forces_no_pngs_and_collects(monkeypatch, tmp_path: Path):
         methods=[],
     )
 
-    assert called.get("save_png") is True
+    assert called.get("save_png") is False
     assert called.get("collect_figs") is False
-    assert called.get("pdf") is None
+    assert called.get("pdf") is not None
 
 
-def test_concat_pdf_without_request_collects_and_no_pngs(monkeypatch, tmp_path: Path):
+def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
     called = {}
 
     def fake_generate_benchmark_plots(
@@ -68,7 +68,7 @@ def test_concat_pdf_without_request_collects_and_no_pngs(monkeypatch, tmp_path: 
         pipeline, "generate_benchmark_plots", fake_generate_benchmark_plots
     )
 
-    # With concat_plots_pdf=True and save_individual_plots=False (default), pipeline streams to PdfPages.
+    # With concat_plots_pdf=True, pipeline streams to PdfPages and never emits PNGs.
     df, fig = pipeline.benchmark_cluster_algorithm(
         test_cases=[],
         verbose=True,

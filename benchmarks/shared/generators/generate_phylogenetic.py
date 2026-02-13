@@ -21,6 +21,11 @@ import numpy as np
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
 
+from benchmarks.shared.evolution import (
+    jukes_cantor_transition_matrix,
+    generate_dirichlet_distributions,
+)
+
 
 @dataclass
 class PhyloNode:
@@ -81,30 +86,6 @@ def _generate_random_tree(
     return root, leaves
 
 
-def _generate_root_distribution(
-    n_features: int,
-    n_categories: int,
-    concentration: float,
-    random_state: np.random.RandomState,
-) -> np.ndarray:
-    """Generate root distribution for each feature using Dirichlet.
-
-    Args:
-        n_features: Number of features/sites
-        n_categories: Number of categories per feature
-        concentration: Dirichlet concentration (higher = more uniform)
-        random_state: Random state
-
-    Returns:
-        (n_features, n_categories) array of probability distributions
-    """
-    alpha = np.ones(n_categories) * concentration
-    return random_state.dirichlet(alpha, size=n_features)
-
-
-from benchmarks.shared.evolution import jukes_cantor_transition_matrix
-
-
 def _mutate_distribution(
     parent_dist: np.ndarray,
     mutation_rate: float,
@@ -151,7 +132,7 @@ def _evolve_tree(
     Modifies nodes in-place to add distribution attribute.
     """
     # Set root distribution
-    root.distribution = _generate_root_distribution(
+    root.distribution = generate_dirichlet_distributions(
         n_features, n_categories, root_concentration, random_state
     )
 

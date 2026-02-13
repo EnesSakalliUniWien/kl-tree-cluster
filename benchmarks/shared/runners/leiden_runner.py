@@ -8,8 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import igraph
-import leidenalg
+from sklearn.cluster import OPTICS
 
 
 def _run_leiden_method(
@@ -48,23 +47,52 @@ def _run_leiden_method(
             skip_reason=None,
         )
 
-    edge_list = [(i, j) for i, j, _w in edges]
-    weights = [w for _i, _j, w in edges]
-    graph = igraph.Graph(n=n_samples, edges=edge_list, directed=False)
-    graph.es["weight"] = weights
-    partition = leidenalg.find_partition(
-        graph,
-        leidenalg.RBConfigurationVertexPartition,
-        weights="weight",
-        resolution_parameter=resolution,
-        seed=seed,
-    )
-    labels = _normalize_labels(np.asarray(partition.membership))
-    report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
-    return MethodRunResult(
-        labels=labels,
-        found_clusters=int(len({x for x in labels if x >= 0})),
-        report_df=report_df,
-        status="ok",
-        skip_reason=None,
-    )
+    try:
+        import igraph
+        import leidenalg
+
+        edge_list = [(i, j) for i, j, _w in edges]
+        weights = [w for _i, _j, w in edges]
+        graph = igraph.Graph(n=n_samples, edges=edge_list, directed=False)
+        graph.es["weight"] = weights
+        partition = leidenalg.find_partition(
+            graph,
+            leidenalg.RBConfigurationVertexPartition,
+            weights="weight",
+            resolution_parameter=resolution,
+            seed=seed,
+        )
+        labels = _normalize_labels(np.asarray(partition.membership))
+        report_df = _create_report_dataframe_from_labels(
+            labels, pd.Index(range(n_samples))
+        )
+        return MethodRunResult(
+            labels=labels,
+            found_clusters=int(len({x for x in labels if x >= 0})),
+            report_df=report_df,
+            status="ok",
+            skip_reason=None,
+        )
+    except Exception:
+        # sklearn-only fallback for environments without igraph/leidenalg.
+        # OPTICS keeps this baseline unsupervised and distance-matrix native.
+        min_samples = max(2, min(n_neighbors, n_samples - 1))
+        min_cluster_size = max(2, int(round(max(2.0, n_samples / (8.0 * resolution)))))
+        model = OPTICS(
+            metric="precomputed",
+            min_samples=min_samples,
+            min_cluster_size=min_cluster_size,
+            xi=0.05,
+        )
+        labels = _normalize_labels(model.fit_predict(distance_matrix))
+        report_df = _create_report_dataframe_from_labels(
+            labels, pd.Index(range(n_samples))
+        )
+        return MethodRunResult(
+            labels=labels,
+            found_clusters=int(len({x for x in labels if x >= 0})),
+            report_df=report_df,
+            status="ok",
+            skip_reason=None,
+            extra={"fallback": "sklearn_optics"},
+        )

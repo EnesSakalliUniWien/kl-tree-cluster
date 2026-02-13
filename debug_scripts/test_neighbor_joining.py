@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore")
 from skbio import DistanceMatrix
 from skbio.tree import nj
 
-from kl_clustering_analysis.benchmarking.generators import (
+from benchmarks.shared.generators import (
     generate_random_feature_matrix,
 )
 

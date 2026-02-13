@@ -33,14 +33,17 @@ class TreeDecomposition:
     """Annotate a hierarchy with significance tests and carve it into clusters.
 
     The decomposer walks a :class:`~tree.poset_tree.PosetTree` top-down and decides
-    whether to split or merge at each internal node based on two statistical gates:
+    whether to split or merge at each internal node based on three statistical gates:
 
     #. **Binary structure gate** - parent must have exactly two children to split.
+    #. **Child-parent divergence gate** - at least one child must significantly
+       diverge from the parent (projected Wald chi-square test), confirming
+       there is real signal to split on.
     #. **Sibling divergence gate** - siblings must have significantly different
-       distributions according to a Jensen-Shannon divergence permutation test
-       with Benjamini-Hochberg multiple-testing correction. If siblings are
-       significantly different, the split proceeds; otherwise the children are
-       merged into a single cluster.
+       distributions according to a projected Wald chi-square test with
+       Benjamini-Hochberg FDR correction.  If siblings are significantly
+       different, the split proceeds; otherwise the children are merged
+       into a single cluster.
 
     Nodes that pass all gates become cluster boundaries. Leaves under the same
     boundary node are assigned the same cluster identifier. The resulting report
@@ -138,6 +141,19 @@ class TreeDecomposition:
             )
             for node_id in self.tree.nodes
         }
+
+        # ----- mean branch length for Felsenstein normalization -----
+        # Only consider edges that actually carry a branch_length attribute.
+        # Edges without the attribute are NOT treated as zero-length — they
+        # are simply absent.  If no edge has the attribute the Felsenstein
+        # adjustment is disabled entirely (_mean_branch_length = None).
+        _bls = [
+            self.tree.edges[p, c]["branch_length"]
+            for p, c in self.tree.edges()
+            if "branch_length" in self.tree.edges[p, c]
+        ]
+        _mean_bl = float(np.mean(_bls)) if _bls else 0.0
+        self._mean_branch_length: float | None = _mean_bl if _mean_bl > 0 else None
 
         # ----- results_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
@@ -397,10 +413,8 @@ class TreeDecomposition:
             )
 
         if self._sibling_skipped.get(parent, False):
-            raise ValueError(
-                "Sibling divergence test skipped for node "
-                f"{parent!r}; annotations incomplete."
-            )
+            # Cannot confirm separation — conservative: merge
+            return False
 
         # Siblings must be significantly different to justify splitting
         return bool(is_different)
@@ -428,22 +442,24 @@ class TreeDecomposition:
         n_a = float(self._leaf_count(node_a))
         n_b = float(self._leaf_count(node_b))
 
-        # Calculate patristic distances (sum of branch lengths) to LCA
-        lca = self.tree.find_lca(node_a, node_b)
-
-        # nx.shortest_path_length returns sum of 'weight' attribute
-        # For ancestor->descendant path in DiGraph, this works directly.
-        try:
-            dist_path_a = nx.shortest_path_length(
-                self.tree, source=lca, target=node_a, weight="branch_length"
-            )
-            dist_path_b = nx.shortest_path_length(
-                self.tree, source=lca, target=node_b, weight="branch_length"
-            )
-        except nx.NetworkXNoPath:
-            # Should not happen in a valid tree where lca is ancestor
-            dist_path_a = None
-            dist_path_b = None
+        # Calculate patristic distances (sum of branch lengths) to LCA.
+        # Only compute when the tree actually has branch length annotations;
+        # otherwise nx.shortest_path_length defaults missing attributes to 1
+        # (hop count), which is inconsistent with _mean_branch_length=None.
+        dist_path_a = None
+        dist_path_b = None
+        if self._mean_branch_length is not None:
+            lca = self.tree.find_lca(node_a, node_b)
+            try:
+                dist_path_a = nx.shortest_path_length(
+                    self.tree, source=lca, target=node_a, weight="branch_length"
+                )
+                dist_path_b = nx.shortest_path_length(
+                    self.tree, source=lca, target=node_b, weight="branch_length"
+                )
+            except nx.NetworkXNoPath:
+                dist_path_a = None
+                dist_path_b = None
 
         return sibling_divergence_test(
             left_dist=dist_a,
@@ -452,6 +468,8 @@ class TreeDecomposition:
             n_right=n_b,
             branch_length_left=dist_path_a,
             branch_length_right=dist_path_b,
+            mean_branch_length=self._mean_branch_length,
+            test_id=f"nodepair:{node_a}|{node_b}",
         )
 
     def _check_edge_significance(self, node_id: str) -> bool:
@@ -517,9 +535,6 @@ class TreeDecomposition:
         # if the siblings are different from each other.
         both_children_similar_to_parent = not (left_diverges or right_diverges)
 
-        # Check sibling divergence result (needed for the exception case)
-        is_different = self._sibling_different.get(parent)
-
         if both_children_similar_to_parent:
             # STRICT ENFORCEMENT of Child-Parent Gate (Equation 3.3.1 in Manuscript)
             # If children are statistically indistinguishable from parent (noise),
@@ -536,10 +551,8 @@ class TreeDecomposition:
             )
 
         if self._sibling_skipped.get(parent, False):
-            raise ValueError(
-                "Sibling divergence test skipped for node "
-                f"{parent!r}; annotations incomplete."
-            )
+            # Cannot confirm separation — conservative: merge
+            return False, None
 
         # If siblings are not different at aggregate level, merge
         if not is_different:
@@ -598,11 +611,12 @@ class TreeDecomposition:
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
-        cluster_assignments = self._maybe_apply_posthoc_merge(cluster_assignments)
+        cluster_assignments, merge_audit = self._maybe_apply_posthoc_merge_with_audit(cluster_assignments)
 
         return {
             "cluster_assignments": cluster_assignments,
             "num_clusters": len(cluster_assignments),
+            "posthoc_merge_audit": merge_audit,
             "independence_analysis": {
                 "alpha_local": self.alpha_local,
                 "decision_mode": "sibling_divergence",
@@ -664,24 +678,29 @@ class TreeDecomposition:
         dist_a, size_a = self._compute_cluster_distribution(cluster_a)
         dist_b, size_b = self._compute_cluster_distribution(cluster_b)
 
-        # Calculate branch lengths from common_ancestor for Felsenstein adjustment
-        try:
-            branch_len_a = nx.shortest_path_length(
-                self.tree,
-                source=common_ancestor,
-                target=cluster_a,
-                weight="branch_length",
-            )
-            branch_len_b = nx.shortest_path_length(
-                self.tree,
-                source=common_ancestor,
-                target=cluster_b,
-                weight="branch_length",
-            )
-        except nx.NetworkXNoPath:
-            # Should not happen in a valid tree
-            branch_len_a = None
-            branch_len_b = None
+        # Calculate branch lengths from common_ancestor for Felsenstein adjustment.
+        # Only compute when the tree actually has branch length annotations;
+        # otherwise nx.shortest_path_length defaults missing attributes to 1
+        # (hop count), which is inconsistent with _mean_branch_length=None.
+        branch_len_a = None
+        branch_len_b = None
+        if self._mean_branch_length is not None:
+            try:
+                branch_len_a = nx.shortest_path_length(
+                    self.tree,
+                    source=common_ancestor,
+                    target=cluster_a,
+                    weight="branch_length",
+                )
+                branch_len_b = nx.shortest_path_length(
+                    self.tree,
+                    source=common_ancestor,
+                    target=cluster_b,
+                    weight="branch_length",
+                )
+            except nx.NetworkXNoPath:
+                branch_len_a = None
+                branch_len_b = None
 
         test_stat, df, p_value = sibling_divergence_test(
             left_dist=dist_a,
@@ -690,6 +709,8 @@ class TreeDecomposition:
             n_right=float(size_b),
             branch_length_left=branch_len_a,
             branch_length_right=branch_len_b,
+            mean_branch_length=self._mean_branch_length,
+            test_id=f"clusterpair:{cluster_a}|{cluster_b}|ancestor:{common_ancestor}",
         )
 
         return test_stat, df, p_value

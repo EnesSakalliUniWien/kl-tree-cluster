@@ -18,7 +18,7 @@ import sys
 
 sys.path.insert(0, "/Users/berksakalli/Projects/kl-te-cluster")
 
-from kl_clustering_analysis.benchmarking.generators import (
+from benchmarks.shared.generators import (
     generate_random_feature_matrix,
 )
 

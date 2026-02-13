@@ -24,16 +24,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from typing import Dict, List, Optional, Tuple, Any
-from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
-from benchmarks.shared.runners.method_registry import METHOD_SPECS
+from benchmarks.shared.runners.dispatch import run_clustering
 from benchmarks.shared.evolution import (
-    jukes_cantor_transition_matrix,
     generate_ancestral_sequence,
     evolve_sequence,
 )
-from kl_clustering_analysis import config
 
 
 def generate_multi_group_data(
@@ -89,39 +86,6 @@ def generate_multi_group_data(
             cluster_assignments[name] = g
 
     return sample_dict, cluster_assignments
-
-
-def _run_clustering(
-    data_df: pd.DataFrame,
-    method_id: str,
-    params: Dict[str, Any],
-    seed: Optional[int] = None,
-) -> Tuple[Optional[np.ndarray], int, str]:
-    """Run clustering and return (labels, n_clusters, status)."""
-    spec = METHOD_SPECS[method_id]
-    distance_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
-    distance_matrix = squareform(distance_condensed)
-
-    try:
-        if method_id == "kl":
-            result = spec.runner(
-                data_df,
-                distance_condensed,
-                config.SIBLING_ALPHA,
-                tree_linkage_method=params.get(
-                    "tree_linkage_method", config.TREE_LINKAGE_METHOD
-                ),
-            )
-        elif method_id in {"leiden", "louvain"}:
-            result = spec.runner(distance_matrix, params, seed)
-        else:
-            result = spec.runner(distance_matrix, params)
-
-        if result.status == "ok" and result.labels is not None:
-            return result.labels, result.found_clusters, "ok"
-        return None, 0, result.status
-    except Exception as e:
-        return None, 0, f"error: {str(e)}"
 
 
 def run_multi_split_benchmark(
@@ -190,7 +154,7 @@ def run_multi_split_benchmark(
             true_labels = np.array([cluster_assignments[name] for name in sample_names])
 
             # Run clustering
-            pred_labels, n_found, status = _run_clustering(
+            pred_labels, n_found, status = run_clustering(
                 data_df, "kl", {}, base_seed + rep
             )
 
@@ -468,8 +432,8 @@ def main():
     n_replicates = 10
     base_seed = 42
 
-    # Create output directory relative to script
-    output_dir = Path(__file__).parent / "results"
+    # Use a single benchmark results root for all suites
+    output_dir = repo_root / "benchmarks" / "results"
     output_dir.mkdir(exist_ok=True)
 
     print("Configuration:")

@@ -24,13 +24,13 @@ def _run_kl_method(
     significance_level: float,
     tree_linkage_method: str = config.TREE_LINKAGE_METHOD,
 ) -> MethodRunResult:
-    
+
     Z_t = linkage(distance_condensed, method=tree_linkage_method)
 
     tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_df.index.tolist())
     decomp_t = tree_t.decompose(
         leaf_data=data_df,
-        alpha_local=config.ALPHA_LOCAL,
+        alpha_local=significance_level,
         sibling_alpha=significance_level,
     )
     report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))

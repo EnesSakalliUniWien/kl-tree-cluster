@@ -3,7 +3,7 @@
 
 import pandas as pd
 
-df = pd.read_csv("results/full_benchmark_comparison_hamming_vs_rt_with_plots.csv")
+df = pd.read_csv("benchmarks/results/full_benchmark_alpha_0p001_now.csv")
 
 # Remove duplicates (keep last)
 df = df.drop_duplicates(["case_id", "method"], keep="last")

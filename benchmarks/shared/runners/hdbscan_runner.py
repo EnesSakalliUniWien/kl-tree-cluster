@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.cluster import OPTICS
 
 
 def _run_hdbscan_method(
@@ -30,13 +31,7 @@ def _run_hdbscan_method(
     try:
         import hdbscan
     except ImportError:
-        return MethodRunResult(
-            labels=None,
-            found_clusters=0,
-            report_df=pd.DataFrame(),
-            status="error",
-            skip_reason="hdbscan library not installed. Please install with `pip install hdbscan`.",
-        )
+        hdbscan = None
 
     n_samples = distance_matrix.shape[0]
     if n_samples <= 1:
@@ -68,15 +63,35 @@ def _run_hdbscan_method(
     }
 
     try:
-        model = hdbscan.HDBSCAN(
-            min_cluster_size=min_cluster_size,
+        if hdbscan is not None:
+            model = hdbscan.HDBSCAN(
+                min_cluster_size=min_cluster_size,
+                min_samples=min_samples,
+                cluster_selection_epsilon=cluster_selection_epsilon,
+                metric="precomputed",  # Explicitly set metric to precomputed for distance_matrix
+                **hdbscan_kwargs,
+            )
+            model.fit(distance_matrix)
+            labels = _normalize_labels(model.labels_)
+            report_df = _create_report_dataframe_from_labels(
+                labels, pd.Index(range(n_samples))
+            )
+            return MethodRunResult(
+                labels=labels,
+                found_clusters=int(len({x for x in labels if x >= 0})),
+                report_df=report_df,
+                status="ok",
+                skip_reason=None,
+            )
+
+        # sklearn-only fallback when `hdbscan` is unavailable.
+        model = OPTICS(
+            metric="precomputed",
             min_samples=min_samples,
-            cluster_selection_epsilon=cluster_selection_epsilon,
-            metric="precomputed",  # Explicitly set metric to precomputed for distance_matrix
-            **hdbscan_kwargs,
+            min_cluster_size=min_cluster_size,
+            xi=0.05,
         )
-        model.fit(distance_matrix)
-        labels = _normalize_labels(model.labels_)
+        labels = _normalize_labels(model.fit_predict(distance_matrix))
         report_df = _create_report_dataframe_from_labels(
             labels, pd.Index(range(n_samples))
         )
@@ -86,6 +101,7 @@ def _run_hdbscan_method(
             report_df=report_df,
             status="ok",
             skip_reason=None,
+            extra={"fallback": "sklearn_optics"},
         )
     except Exception as e:
         return MethodRunResult(
@@ -93,5 +109,5 @@ def _run_hdbscan_method(
             found_clusters=0,
             report_df=pd.DataFrame(),
             status="error",
-            skip_reason=f"HDBSCAN failed: {e}",
+            skip_reason=f"HDBSCAN/OPTICS fallback failed: {e}",
         )

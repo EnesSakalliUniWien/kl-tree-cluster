@@ -19,12 +19,12 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
 
-from kl_clustering_analysis.benchmarking.generators import generate_random_feature_matrix
+from benchmarks.shared.generators import generate_random_feature_matrix
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
-RESULTS_DIR = PROJECT_ROOT / "results" / "benchmark" / "power"
+RESULTS_DIR = PROJECT_ROOT / "benchmarks" / "results" / "power"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ============================================================

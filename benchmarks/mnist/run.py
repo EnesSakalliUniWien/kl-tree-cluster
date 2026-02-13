@@ -141,8 +141,8 @@ def main():
     print("MNIST Benchmark for KL Divergence Clustering")
     print("=" * 60)
 
-    # Create output directory relative to script
-    output_dir = Path(__file__).parent / "results"
+    # Use a single benchmark results root for all suites
+    output_dir = repo_root / "benchmarks" / "results"
     output_dir.mkdir(exist_ok=True)
 
     # Test key combinations

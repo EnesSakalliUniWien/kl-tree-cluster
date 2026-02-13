@@ -8,7 +8,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from kl_clustering_analysis.benchmarking.generators import generate_random_feature_matrix
+from benchmarks.shared.generators import generate_random_feature_matrix
 from sklearn.metrics import silhouette_score
 
 print("Testing generate_random_feature_matrix data separability")

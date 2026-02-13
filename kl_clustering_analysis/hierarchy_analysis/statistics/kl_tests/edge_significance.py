@@ -19,19 +19,28 @@ Bogomolov et al. (2021). "Hypotheses on a tree: new error rates and
 
 from __future__ import annotations
 
+import logging
+
+import networkx as nx
 import numpy as np
 import pandas as pd
-import networkx as nx
 from scipy.stats import chi2
 
-from ..multiple_testing import apply_multiple_testing_correction
-from ..random_projection import compute_projection_dimension, generate_projection_matrix
+from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
 )
-from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
+
+from ..multiple_testing import apply_multiple_testing_correction
+from ..random_projection import (
+    compute_projection_dimension,
+    derive_projection_seed,
+    generate_projection_matrix,
+)
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -50,7 +59,11 @@ def _compute_mean_branch_length(tree: nx.DiGraph) -> float:
     float
         Mean branch length, or 1.0 if no branch lengths found.
     """
-    branch_lengths = [tree.edges[p, c].get("branch_length", 0) for p, c in tree.edges()]
+    branch_lengths = [
+        tree.edges[p, c]["branch_length"]
+        for p, c in tree.edges()
+        if "branch_length" in tree.edges[p, c]
+    ]
     if not branch_lengths:
         return 1.0
     mean_bl = float(np.mean(branch_lengths))
@@ -105,10 +118,14 @@ def _compute_standardized_z(
     # since child data is included in parent's calculation.
     nested_factor = 1.0 / n_child - 1.0 / n_parent
 
-    # Edge case: if nested_factor <= 0 (shouldn't happen in valid tree),
-    # fall back to naive formula
+    # Child must be a proper subset of parent: n_child < n_parent
+    # If nested_factor <= 0, the tree structure is invalid (child >= parent)
     if nested_factor <= 0:
-        nested_factor = 1.0 / n_child
+        raise ValueError(
+            f"Invalid tree structure: child sample size ({n_child}) must be strictly "
+            f"less than parent sample size ({n_parent}). Got nested_factor={nested_factor:.6f}. "
+            f"This indicates a degenerate or incorrectly constructed tree."
+        )
 
     var = parent_dist * (1 - parent_dist) * nested_factor
 
@@ -116,11 +133,7 @@ def _compute_standardized_z(
     # BL_norm = 1 + BL/mean_BL ensures multiplier ≥ 1
     # - Longer branches → larger variance → smaller z → harder to split
     # - Shorter branches → less extra variance → easier to split
-    if (
-        branch_length is not None
-        and mean_branch_length is not None
-        and mean_branch_length > 0
-    ):
+    if branch_length is not None and mean_branch_length is not None and mean_branch_length > 0:
         bl_normalized = 1.0 + branch_length / mean_branch_length
         var = var * bl_normalized
 
@@ -172,10 +185,27 @@ def _compute_projected_test(
         child_dist, parent_dist, n_child, n_parent, branch_length, mean_branch_length
     )
 
-    # Sanitize z-scores to prevent numerical instability (overflow in projection)
-    z = np.nan_to_num(z, posinf=100.0, neginf=-100.0)
-    z = np.clip(z, -100.0, 100.0)
-    z = z.astype(np.float64)
+    # Preserve all finite z-scores exactly.
+    # Only repair non-finite artifacts (NaN/Inf) to avoid projection crashes.
+    non_finite = ~np.isfinite(z)
+    if np.any(non_finite):
+        logger.warning(
+            "Found %d non-finite z-scores in edge test; replacing with 0.0.",
+            int(np.sum(non_finite)),
+        )
+        z = np.where(non_finite, 0.0, z)
+    z = z.astype(np.float64, copy=False)
+
+    d = len(z)
+
+    # For categorical data, account for simplex constraint (probs sum to 1)
+    # Drop the last category column - only K-1 categories are independent
+    # This properly handles the correlation between categories
+    if child_dist.ndim == 2 and child_dist.shape[1] > 1:
+        n_features = child_dist.shape[0]
+        n_categories = child_dist.shape[1]
+        # Reshape to (n_features, n_categories), drop last column, flatten
+        z = z.reshape(n_features, n_categories)[:, :-1].ravel()
 
     d = len(z)
 
@@ -183,7 +213,8 @@ def _compute_projected_test(
     k = compute_projection_dimension(n_child, d)
 
     # Project to k dimensions
-    R = generate_projection_matrix(d, k, seed)
+    # Per-test projections are one-off; bypass cache to avoid unbounded cache growth.
+    R = generate_projection_matrix(d, k, seed, use_cache=False)
 
     try:
         if hasattr(R, "dot"):
@@ -191,7 +222,7 @@ def _compute_projected_test(
         else:
             projected = R @ z
     except Exception as e:
-        print(
+        logger.error(
             f"Projection failed (Edge): z.shape={z.shape}, R.shape={R.shape}, z_stats={np.min(z)}/{np.max(z)}"
         )
         raise e
@@ -240,8 +271,6 @@ def _compute_p_values_via_projection(
     dfs = np.full(n_edges, np.nan)
     pvals = np.full(n_edges, np.nan)
 
-    seed = config.PROJECTION_RANDOM_SEED
-
     # Compute mean branch length for normalization
     mean_branch_length = _compute_mean_branch_length(tree)
 
@@ -258,12 +287,17 @@ def _compute_p_values_via_projection(
         if tree.has_edge(parent_ids[i], child_ids[i]):
             branch_length = tree.edges[parent_ids[i], child_ids[i]].get("branch_length")
 
+        test_seed = derive_projection_seed(
+            config.PROJECTION_RANDOM_SEED,
+            f"edge:{parent_ids[i]}->{child_ids[i]}",
+        )
+
         stats[i], dfs[i], pvals[i] = _compute_projected_test(
             np.asarray(child_dist, dtype=np.float64),
             np.asarray(parent_dist, dtype=np.float64),
             int(child_leaf_counts[i]),
             int(parent_leaf_counts[i]),
-            seed,
+            test_seed,
             branch_length,
             mean_branch_length,
         )
@@ -321,11 +355,17 @@ def annotate_child_parent_divergence(
     )
 
     if not np.isfinite(p_values).all():
-        bad_ids = [child_ids[i] for i, v in enumerate(p_values) if not np.isfinite(v)]
+        bad_indices = [i for i, v in enumerate(p_values) if not np.isfinite(v)]
+        bad_ids = [child_ids[i] for i in bad_indices]
         preview = ", ".join(map(repr, bad_ids[:5]))
-        raise ValueError(
-            f"Non-finite child-parent divergence p-values for nodes: {preview}."
+        logger.warning(
+            "Non-finite child-parent divergence p-values for nodes: %s. "
+            "Setting invalid tests to conservative defaults (p=1.0, reject=False).",
+            preview,
         )
+        p_values = np.where(np.isfinite(p_values), p_values, 1.0)
+        test_stats = np.where(np.isfinite(test_stats), test_stats, 0.0)
+        degrees_of_freedom = np.where(np.isfinite(degrees_of_freedom), degrees_of_freedom, 1.0)
 
     node_depths = compute_node_depths(tree)
 
@@ -350,4 +390,6 @@ def annotate_child_parent_divergence(
     )
 
 
+__all__ = ["annotate_child_parent_divergence"]
+__all__ = ["annotate_child_parent_divergence"]
 __all__ = ["annotate_child_parent_divergence"]

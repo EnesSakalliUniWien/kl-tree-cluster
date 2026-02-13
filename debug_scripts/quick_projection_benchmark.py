@@ -21,9 +21,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection impo
     _PROJECTION_CACHE,
     _PROJECTOR_CACHE,
 )
-from kl_clustering_analysis.benchmarking import benchmark_cluster_algorithm
-from kl_clustering_analysis.benchmarking.test_cases import SMALL_TEST_CASES
-from kl_clustering_analysis.benchmarking.test_cases.overlapping import (
+from benchmarks.shared.pipeline import benchmark_cluster_algorithm
+from benchmarks.shared.cases import SMALL_TEST_CASES
+from benchmarks.shared.cases.overlapping import (
     OVERLAPPING_BINARY_MODERATE_CASES,
     OVERLAPPING_GAUSSIAN_CASES,
 )

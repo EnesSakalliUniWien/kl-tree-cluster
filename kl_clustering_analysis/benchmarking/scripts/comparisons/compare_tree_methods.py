@@ -18,11 +18,11 @@ from itertools import product
 
 sys.path.insert(0, ".")
 
-from kl_clustering_analysis.benchmarking.generators import generate_random_feature_matrix
+from benchmarks.shared.generators import generate_random_feature_matrix
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
-RESULTS_DIR = PROJECT_ROOT / "results" / "benchmark" / "comparisons"
+RESULTS_DIR = PROJECT_ROOT / "benchmarks" / "results" / "comparisons"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ============================================================

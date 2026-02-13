@@ -10,8 +10,9 @@ raise ImportError with a helpful message if NetworkX is not available.
 
 from __future__ import annotations
 
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
-from typing import List, Tuple, Dict, Any, Optional
 
 
 def _validate_sizes(sizes: List[int]) -> None:
@@ -21,13 +22,8 @@ def _validate_sizes(sizes: List[int]) -> None:
         raise ValueError("All entries of `sizes` must be positive integers")
 
 
-def _build_probability_matrix(
-    n_blocks: int, p_intra: float, p_inter: float
-) -> List[List[float]]:
-    return [
-        [p_intra if i == j else p_inter for j in range(n_blocks)]
-        for i in range(n_blocks)
-    ]
+def _build_probability_matrix(n_blocks: int, p_intra: float, p_inter: float) -> List[List[float]]:
+    return [[p_intra if i == j else p_inter for j in range(n_blocks)] for i in range(n_blocks)]
 
 
 def generate_sbm(
@@ -37,7 +33,7 @@ def generate_sbm(
     seed: Optional[int] = None,
     directed: bool = False,
     allow_self_loops: bool = False,
-) -> Tuple["networkx.Graph", np.ndarray, np.ndarray, Dict[str, Any]]:
+) -> Tuple[Any, np.ndarray, np.ndarray, Dict[str, Any]]:
     """Generate a graph with planted community structure via an SBM.
 
     Parameters

@@ -14,6 +14,13 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
+PDF_PAGE_SIZE_INCHES = (11.0, 8.5)  # Landscape Letter
+
+
+def prepare_pdf_figure(fig: plt.Figure) -> None:
+    """Normalize figure geometry before writing to PDF."""
+    fig.set_size_inches(*PDF_PAGE_SIZE_INCHES, forward=True)
+
 
 def _classify_figure(fig) -> str:
     """Best-effort classifier for a Matplotlib figure.
@@ -97,7 +104,7 @@ def concat_plots_to_pdf(
     with PdfPages(output_pdf) as pdf:
         for case_num in sorted(files_by_case.keys()):
             # Add a separator page for each test case
-            fig = plt.figure(figsize=(8.5, 11))
+            fig = plt.figure(figsize=PDF_PAGE_SIZE_INCHES)
             fig.text(
                 0.5,
                 0.5,
@@ -107,21 +114,20 @@ def concat_plots_to_pdf(
                 fontsize=24,
                 alpha=0.5,
             )
-            pdf.savefig(fig, bbox_inches="tight")
+            prepare_pdf_figure(fig)
+            pdf.savefig(fig)
             plt.close(fig)
 
             for path in sorted(files_by_case[case_num]):
                 try:
                     with Image.open(path) as img:
-                        img_width, img_height = img.size
-                        fig = plt.figure(
-                            figsize=(img_width / dpi, img_height / dpi), dpi=dpi
-                        )
-                        ax = fig.add_axes([0, 0, 1, 1], frameon=False)
-                        ax.imshow(img, aspect="auto", resample=True)
+                        fig = plt.figure(figsize=PDF_PAGE_SIZE_INCHES, dpi=dpi)
+                        ax = fig.add_axes([0.03, 0.03, 0.94, 0.94], frameon=False)
+                        ax.imshow(img, aspect="equal", resample=True)
                         ax.set_xticks([])
                         ax.set_yticks([])
-                        pdf.savefig(fig, bbox_inches="tight")
+                        prepare_pdf_figure(fig)
+                        pdf.savefig(fig)
                         plt.close(fig)
                 except Exception as e:
                     logger.error(f"Failed to process and add image {path} to PDF: {e}")
@@ -200,11 +206,13 @@ def split_collected_figs_to_pdfs(
                     fontsize=24,
                     alpha=0.5,
                 )
+                prepare_pdf_figure(title_fig)
                 pdf.savefig(title_fig)
                 plt.close(title_fig)
 
                 for fig in cases[case_num]:
-                    pdf.savefig(fig, bbox_inches="tight")
+                    prepare_pdf_figure(fig)
+                    pdf.savefig(fig)
                     plt.close(fig)
 
         if verbose:

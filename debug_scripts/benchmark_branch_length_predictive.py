@@ -26,7 +26,7 @@ repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root))
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.benchmarking.generators.generate_phylogenetic import (
+from benchmarks.shared.generators.generate_phylogenetic import (
     generate_phylogenetic_data,
 )
 

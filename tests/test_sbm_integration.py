@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 
-from kl_clustering_analysis.benchmarking.pipeline import benchmark_cluster_algorithm
-from kl_clustering_analysis.benchmarking.test_cases import get_default_test_cases
+from benchmarks.shared.pipeline import benchmark_cluster_algorithm
+from benchmarks.shared.cases import get_default_test_cases
 
 
 def test_sbm_cases_run_through_pipeline_minimal():

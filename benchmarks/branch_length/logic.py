@@ -18,18 +18,16 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Dict, List, Optional, Tuple, Any
-from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.preprocessing import StandardScaler
 
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
+from benchmarks.shared.runners.dispatch import run_clustering
 from benchmarks.shared.evolution import (
-    jukes_cantor_transition_matrix,
     generate_ancestral_sequence,
     evolve_sequence,
     compute_expected_divergence,
 )
-from kl_clustering_analysis import config
 
 
 def generate_two_group_data(
@@ -113,39 +111,6 @@ def generate_two_group_data(
     return sample_dict, cluster_assignments, expected_div
 
 
-def _run_clustering(
-    data_df: pd.DataFrame,
-    method_id: str,
-    params: Dict[str, Any],
-    seed: Optional[int] = None,
-) -> Tuple[Optional[np.ndarray], int, str]:
-    """Run clustering and return (labels, n_clusters, status)."""
-    spec = METHOD_SPECS[method_id]
-    distance_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
-    distance_matrix = squareform(distance_condensed)
-
-    try:
-        if method_id == "kl":
-            result = spec.runner(
-                data_df,
-                distance_condensed,
-                config.SIBLING_ALPHA,
-                tree_linkage_method=params.get(
-                    "tree_linkage_method", config.TREE_LINKAGE_METHOD
-                ),
-            )
-        elif method_id in {"leiden", "louvain"}:
-            result = spec.runner(distance_matrix, params, seed)
-        else:
-            result = spec.runner(distance_matrix, params)
-
-        if result.status == "ok" and result.labels is not None:
-            return result.labels, result.found_clusters, "ok"
-        return None, 0, result.status
-    except Exception as e:
-        return None, 0, f"error: {str(e)}"
-
-
 def run_branch_length_benchmark(
     n_leaves: int = 200,
     n_features: int = 200,
@@ -211,7 +176,7 @@ def run_branch_length_benchmark(
             print(f"Branch length {bl}: {n_leaves} leaves, JS divergence={js_div:.4f}")
 
         # Run clustering
-        pred_labels, n_found, status = _run_clustering(
+        pred_labels, n_found, status = run_clustering(
             data_df, method, method_params, random_seed
         )
 
@@ -460,7 +425,7 @@ def plot_embedding_by_branch_length(
             row_kl = row_true + 1
             ax_kl = axes[row_kl, col]
 
-            pred_labels, n_found, status = _run_clustering(
+            pred_labels, n_found, status = run_clustering(
                 data_df, "kl", {}, random_seed
             )
 

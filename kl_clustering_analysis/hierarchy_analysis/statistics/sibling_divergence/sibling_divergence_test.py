@@ -27,8 +27,12 @@ from kl_clustering_analysis.core_utils.data_utils import (
 
 from ..mi_feature_selection import select_informative_features
 from ..multiple_testing import benjamini_hochberg_correction
-from ..pooled_variance import standardize_proportion_difference
-from ..random_projection import compute_projection_dimension, generate_projection_matrix
+from ..pooled_variance import standardize_proportion_difference, _is_categorical
+from ..random_projection import (
+    compute_projection_dimension,
+    derive_projection_seed,
+    generate_projection_matrix,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +49,7 @@ def _filter_informative_features(
     n_right: float,
 ) -> Tuple[np.ndarray, np.ndarray, int]:
     """Filter to informative features if MI filtering is enabled.
-    
+
     Supports both binary (1D) and categorical (2D) distributions.
     """
     if not config.USE_MI_FEATURE_FILTER:
@@ -83,11 +87,14 @@ def sibling_divergence_test(
     n_right: float,
     branch_length_left: float | None = None,
     branch_length_right: float | None = None,
+    mean_branch_length: float | None = None,
+    *,
+    test_id: str | None = None,
 ) -> Tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence with random projection.
 
     Supports both binary (1D) and categorical (2D) distributions.
-    
+
     Optionally applies Felsenstein's (1985) Phylogenetic Independent Contrasts
     adjustment by scaling variance by the sum of branch lengths.
 
@@ -105,6 +112,8 @@ def sibling_divergence_test(
         Branch length (distance to parent) for left sibling.
     branch_length_right : float, optional
         Branch length (distance to parent) for right sibling.
+    mean_branch_length : float, optional
+        Mean branch length across the tree for Felsenstein normalization.
 
     Returns
     -------
@@ -123,32 +132,67 @@ def sibling_divergence_test(
     if branch_length_left is not None and branch_length_right is not None:
         branch_length_sum = branch_length_left + branch_length_right
         if branch_length_sum <= 0:
-            branch_length_sum = None  # Fall back to unadjusted
+            logger.warning(
+                "Non-positive sibling branch length sum encountered "
+                "(left=%s, right=%s). Disabling branch-length variance adjustment "
+                "for this test.",
+                branch_length_left,
+                branch_length_right,
+            )
+            branch_length_sum = None
 
     # Standardize difference (Wald z-scores) - handles flattening for categorical
     z, _ = standardize_proportion_difference(
-        left, right, n_left, n_right, 
-        branch_length_sum=branch_length_sum
+        left,
+        right,
+        n_left,
+        n_right,
+        branch_length_sum=branch_length_sum,
+        mean_branch_length=mean_branch_length,
     )
-    
+
     # Sanitize Z-scores: Replace Inf/NaN to prevent downstream crashes
     if not np.isfinite(z).all():
-        logging.warning(f"Found {np.sum(~np.isfinite(z))} non-finite values in Z-scores.")
+        logging.warning(
+            f"Found {np.sum(~np.isfinite(z))} non-finite values in Z-scores."
+        )
 
-    # Replace NaN/Inf and CLAMP to avoid overflow in random projection
-    # |z| > 100 implies p approx 0, larger values just cause instability
-    z = np.nan_to_num(z, posinf=100.0, neginf=-100.0)
-    z = np.clip(z, -100.0, 100.0)
-    z = z.astype(np.float64) # Force float64
+    # Preserve all finite z-scores exactly.
+    # Only repair non-finite artifacts (NaN/Inf) to avoid projection crashes.
+    non_finite = ~np.isfinite(z)
+    if np.any(non_finite):
+        logger.warning(
+            "Found %d non-finite z-scores in sibling test; replacing with 0.0.",
+            int(np.sum(non_finite)),
+        )
+        z = np.where(non_finite, 0.0, z)
+    z = z.astype(np.float64, copy=False)  # Force float64
 
-    # Use actual z-score length (may differ from n_features for categorical)
+    # For categorical data, account for simplex constraint (probs sum to 1)
+    # Drop the last category column - only K-1 categories are independent
+    # This properly handles the correlation between categories
+    if _is_categorical(left_dist):
+        n_features = left_dist.shape[0]
+        n_categories = left_dist.shape[1]
+        # Reshape to (n_features, n_categories), drop last column, flatten
+        z = z.reshape(n_features, n_categories)[:, :-1].ravel()
+
+    # Use actual z-score length (after categorical adjustment)
     d = len(z)
-    
+
     # Compute projection dimension
     k = compute_projection_dimension(int(n_eff), d)
 
     # Project and compute test statistic
-    R = generate_projection_matrix(d, k, config.PROJECTION_RANDOM_SEED)
+    if test_id is None:
+        test_id = (
+            f"sibling:shapeL={tuple(np.shape(left_dist))}:shapeR={tuple(np.shape(right_dist))}:"
+            f"nL={float(n_left):.6g}:nR={float(n_right):.6g}"
+        )
+    test_seed = derive_projection_seed(config.PROJECTION_RANDOM_SEED, test_id)
+
+    # Per-test projections are one-off; bypass cache to avoid unbounded cache growth.
+    R = generate_projection_matrix(d, k, test_seed, use_cache=False)
 
     try:
         # Optimize matmul by ensuring arrays are ostensibly aligned (though numpy handles this)
@@ -157,7 +201,9 @@ def sibling_divergence_test(
         else:
             projected = R @ z
     except Exception as e:
-        logging.error(f"Projection failed (Sibling): z.shape={z.shape}, R.shape={R.shape}, z_stats={np.min(z)}/{np.max(z)}")
+        logging.error(
+            f"Projection failed (Sibling): z.shape={z.shape}, R.shape={R.shape}, z_stats={np.min(z)}/{np.max(z)}"
+        )
         raise e
 
     return _compute_chi_square_pvalue(projected, k)
@@ -192,14 +238,22 @@ def _get_sibling_data(
     right: str,
 ) -> Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]:
     """Extract distributions, sample sizes, and branch lengths for sibling pair.
-    
+
     Branch lengths are extracted from the tree edges (parent → child).
     If not available, returns None for the branch lengths.
     """
     # Extract branch lengths from tree edges
-    left_branch = tree.edges[parent, left].get("branch_length") if tree.has_edge(parent, left) else None
-    right_branch = tree.edges[parent, right].get("branch_length") if tree.has_edge(parent, right) else None
-    
+    left_branch = (
+        tree.edges[parent, left].get("branch_length")
+        if tree.has_edge(parent, left)
+        else None
+    )
+    right_branch = (
+        tree.edges[parent, right].get("branch_length")
+        if tree.has_edge(parent, right)
+        else None
+    )
+
     return (
         extract_node_distribution(tree, left),
         extract_node_distribution(tree, right),
@@ -218,8 +272,11 @@ def _get_sibling_data(
 def _collect_test_arguments(
     tree: nx.DiGraph,
     nodes_df: pd.DataFrame,
-    min_samples: int,
-) -> Tuple[List[str], List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]], List[str]]:
+) -> Tuple[
+    List[str],
+    List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]],
+    List[str],
+]:
     """Collect sibling pairs eligible for testing.
 
     Returns (parent_nodes, test_args, skipped_nodes).
@@ -253,11 +310,6 @@ def _collect_test_arguments(
             tree, parent, left, right
         )
 
-        # Skip if insufficient samples
-        if n_left < min_samples or n_right < min_samples:
-            skipped.append(parent)
-            continue
-
         parents.append(parent)
         args.append((left_dist, right_dist, n_left, n_right, bl_left, bl_right))
 
@@ -265,12 +317,27 @@ def _collect_test_arguments(
 
 
 def _run_tests(
+    parents: List[str],
     args: List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]],
+    mean_branch_length: float | None = None,
 ) -> List[Tuple[float, float, float]]:
     """Execute sibling divergence tests for all collected pairs."""
+    if len(parents) != len(args):
+        raise ValueError(
+            f"parents and args length mismatch: {len(parents)} != {len(args)}"
+        )
     return [
-        sibling_divergence_test(left, right, n_l, n_r, bl_l, bl_r)
-        for left, right, n_l, n_r, bl_l, bl_r in args
+        sibling_divergence_test(
+            left,
+            right,
+            n_l,
+            n_r,
+            bl_l,
+            bl_r,
+            mean_branch_length,
+            test_id=f"sibling:{parent}",
+        )
+        for parent, (left, right, n_l, n_r, bl_l, bl_r) in zip(parents, args, strict=False)
     ]
 
 
@@ -300,7 +367,7 @@ def _apply_results(
     df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
     df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
     df.loc[parents, "Sibling_BH_Different"] = reject
-    df["Sibling_BH_Same"] = ~df["Sibling_BH_Different"]
+    df.loc[parents, "Sibling_BH_Same"] = ~reject
 
     return df
 
@@ -315,7 +382,6 @@ def annotate_sibling_divergence(
     nodes_statistics_dataframe: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    min_samples_per_sibling: int = 2,
 ) -> pd.DataFrame:
     """Test sibling divergence and annotate results in dataframe.
 
@@ -327,8 +393,6 @@ def annotate_sibling_divergence(
         Must contain 'Child_Parent_Divergence_Significant' column.
     significance_level_alpha : float
         FDR level for BH correction.
-    min_samples_per_sibling : int
-        Minimum samples required per sibling.
 
     Returns
     -------
@@ -343,16 +407,29 @@ def annotate_sibling_divergence(
     df = nodes_statistics_dataframe.copy()
     df = initialize_sibling_divergence_columns(df)
 
-    parents, args, skipped = _collect_test_arguments(tree, df, min_samples_per_sibling)
+    parents, args, skipped = _collect_test_arguments(tree, df)
 
     if not parents:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
         return df
 
     if skipped:
+        df.loc[skipped, "Sibling_Divergence_Skipped"] = True
         logger.debug(f"Skipped {len(skipped)} nodes")
 
-    results = _run_tests(args)
+    # Compute mean branch length from tree for Felsenstein normalization.
+    # Only consider edges that actually carry the attribute — missing
+    # attributes are not zero-length, they are absent.
+    _branch_lengths = [
+        tree.edges[p, c]["branch_length"]
+        for p, c in tree.edges()
+        if "branch_length" in tree.edges[p, c]
+    ]
+    _mean_bl = float(np.mean(_branch_lengths)) if _branch_lengths else None
+    if _mean_bl is not None and _mean_bl <= 0:
+        _mean_bl = None
+
+    results = _run_tests(parents, args, mean_branch_length=_mean_bl)
     return _apply_results(df, parents, results, significance_level_alpha)
 
 

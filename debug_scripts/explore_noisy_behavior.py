@@ -12,7 +12,7 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
-from kl_clustering_analysis.benchmarking.generators import (
+from benchmarks.shared.generators import (
     generate_random_feature_matrix,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree

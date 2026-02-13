@@ -9,26 +9,48 @@ This is the extraction of `_generate_case_data` previously in
 
 from __future__ import annotations
 
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_blobs
 
-from benchmarks.shared.generators.generate_random_feature_matrix import (
-    generate_random_feature_matrix,
-)
 from benchmarks.shared.generators.generate_categorical_matrix import (
     generate_categorical_feature_matrix,
 )
-from benchmarks.shared.generators.generate_phylogenetic import (
-    generate_phylogenetic_data,
+from benchmarks.shared.generators.generate_phylogenetic import generate_phylogenetic_data
+from benchmarks.shared.generators.generate_random_feature_matrix import (
+    generate_random_feature_matrix,
 )
+from benchmarks.shared.generators.generate_sbm import generate_sbm
 from benchmarks.shared.generators.generate_temporal_evolution import (
     generate_temporal_evolution_data,
 )
-from benchmarks.shared.generators.generate_sbm import generate_sbm
 
 
-from typing import Dict, Any, Tuple, Optional
+def _one_hot_encode_categorical(
+    matrix: np.ndarray,
+    n_categories: int,
+    sample_names: list[str],
+) -> Tuple[pd.DataFrame, int]:
+    """One-hot encode a (n_rows, n_cols) category-index matrix into binary.
+
+    Each original feature with K categories becomes K binary indicator columns.
+    This converts categorical data into a form compatible with the Bernoulli KL
+    pipeline (all values in {0, 1}).
+
+    Returns:
+        (data_df, n_binary_features) where data_df has shape (n_rows, n_cols * K).
+    """
+    n_rows, n_cols = matrix.shape
+    n_binary = n_cols * n_categories
+    binary = np.zeros((n_rows, n_binary), dtype=int)
+    for j in range(n_cols):
+        for k in range(n_categories):
+            binary[:, j * n_categories + k] = (matrix[:, j] == k).astype(int)
+    feature_names = [f"F{j}_c{k}" for j in range(n_cols) for k in range(n_categories)]
+    data_df = pd.DataFrame(binary, index=sample_names, columns=feature_names)
+    return data_df, n_binary
 
 
 def _validate_binary_params(test_case: dict) -> Tuple[int, int]:
@@ -39,9 +61,7 @@ def _validate_binary_params(test_case: dict) -> Tuple[int, int]:
     n_rows = test_case.get("n_rows", test_case.get("n_samples"))
     n_cols = test_case.get("n_cols", test_case.get("n_features"))
     if n_rows is None or n_cols is None:
-        raise ValueError(
-            "Binary generator requires 'n_rows'/'n_cols' or 'n_samples'/'n_features'."
-        )
+        raise ValueError("Binary generator requires 'n_rows'/'n_cols' or 'n_samples'/'n_features'.")
     return int(n_rows), int(n_cols)
 
 
@@ -69,9 +89,7 @@ def _generate_binary_case(
     feature_names = [f"F{j}" for j in range(matrix.shape[1])]
 
     data_df = pd.DataFrame(matrix, index=original_names, columns=feature_names)
-    true_labels = np.array(
-        [cluster_assignments[name] for name in original_names], dtype=int
-    )
+    true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
     metadata = {
         "n_samples": n_rows,
@@ -91,13 +109,15 @@ def _generate_blobs_case(
     """Generate the default 'blobs' style test case (Gaussian blobs -> median binarized)."""
     n_samples = int(test_case["n_samples"])
     n_features = int(test_case["n_features"])
-    X, y = make_blobs(
+    blobs_result = make_blobs(
         n_samples=n_samples,
         n_features=n_features,
         centers=test_case["n_clusters"],
         cluster_std=test_case["cluster_std"],
         random_state=seed,
     )
+    X: np.ndarray = blobs_result[0]
+    y: np.ndarray = blobs_result[1]
     X_bin = (X > np.median(X, axis=0)).astype(int)
     data_df = pd.DataFrame(
         X_bin,
@@ -190,32 +210,29 @@ def _generate_categorical_case(
     balanced = test_case.get("balanced_clusters", True)
     category_sparsity = test_case.get("category_sparsity", None)
 
-    sample_dict, cluster_assignments, distributions = (
-        generate_categorical_feature_matrix(
-            n_rows=n_rows,
-            n_cols=n_cols,
-            n_categories=n_categories,
-            entropy_param=entropy,
-            n_clusters=test_case["n_clusters"],
-            random_seed=seed,
-            balanced_clusters=balanced,
-            category_sparsity=category_sparsity,
-        )
+    sample_dict, cluster_assignments, distributions = generate_categorical_feature_matrix(
+        n_rows=n_rows,
+        n_cols=n_cols,
+        n_categories=n_categories,
+        entropy_param=entropy,
+        n_clusters=test_case["n_clusters"],
+        random_seed=seed,
+        balanced_clusters=balanced,
+        category_sparsity=category_sparsity,
     )
 
     original_names = list(sample_dict.keys())
     # Matrix of sampled categories (n_rows, n_cols)
     matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
-    feature_names = [f"F{j}" for j in range(n_cols)]
 
-    data_df = pd.DataFrame(matrix, index=original_names, columns=feature_names)
-    true_labels = np.array(
-        [cluster_assignments[name] for name in original_names], dtype=int
-    )
+    # One-hot encode: category indices → binary indicators for Bernoulli KL pipeline
+    data_df, n_binary = _one_hot_encode_categorical(matrix, n_categories, original_names)
+    true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
     metadata = {
         "n_samples": n_rows,
-        "n_features": n_cols,
+        "n_features": n_binary,
+        "n_features_original": n_cols,
         "n_categories": n_categories,
         "n_clusters": test_case["n_clusters"],
         "noise": entropy,
@@ -243,30 +260,27 @@ def _generate_phylogenetic_case(
     mutation_rate = test_case.get("mutation_rate", 0.3)
     root_concentration = test_case.get("root_concentration", 1.0)
 
-    sample_dict, cluster_assignments, distributions, phylo_meta = (
-        generate_phylogenetic_data(
-            n_taxa=n_taxa,
-            n_features=n_features,
-            n_categories=n_categories,
-            samples_per_taxon=samples_per_taxon,
-            mutation_rate=mutation_rate,
-            root_concentration=root_concentration,
-            random_seed=seed,
-        )
+    sample_dict, cluster_assignments, distributions, phylo_meta = generate_phylogenetic_data(
+        n_taxa=n_taxa,
+        n_features=n_features,
+        n_categories=n_categories,
+        samples_per_taxon=samples_per_taxon,
+        mutation_rate=mutation_rate,
+        root_concentration=root_concentration,
+        random_seed=seed,
     )
 
     original_names = list(sample_dict.keys())
     matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
-    feature_names = [f"F{j}" for j in range(n_features)]
 
-    data_df = pd.DataFrame(matrix, index=original_names, columns=feature_names)
-    true_labels = np.array(
-        [cluster_assignments[name] for name in original_names], dtype=int
-    )
+    # One-hot encode: category indices → binary indicators for Bernoulli KL pipeline
+    data_df, n_binary = _one_hot_encode_categorical(matrix, n_categories, original_names)
+    true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
     metadata = {
         "n_samples": len(original_names),
-        "n_features": n_features,
+        "n_features": n_binary,
+        "n_features_original": n_features,
         "n_categories": n_categories,
         "n_clusters": n_taxa,
         "n_taxa": n_taxa,
@@ -299,31 +313,28 @@ def _generate_temporal_evolution_case(
     shift_strength = test_case.get("shift_strength", (0.15, 0.5))
     root_concentration = test_case.get("root_concentration", 1.0)
 
-    sample_dict, cluster_assignments, distributions, evo_meta = (
-        generate_temporal_evolution_data(
-            n_time_points=n_time_points,
-            n_features=n_features,
-            n_categories=n_categories,
-            samples_per_time=samples_per_time,
-            mutation_rate=mutation_rate,
-            shift_strength=shift_strength,
-            root_concentration=root_concentration,
-            random_seed=seed,
-        )
+    sample_dict, cluster_assignments, distributions, evo_meta = generate_temporal_evolution_data(
+        n_time_points=n_time_points,
+        n_features=n_features,
+        n_categories=n_categories,
+        samples_per_time=samples_per_time,
+        mutation_rate=mutation_rate,
+        shift_strength=shift_strength,
+        root_concentration=root_concentration,
+        random_seed=seed,
     )
 
     original_names = list(sample_dict.keys())
     matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
-    feature_names = [f"F{j}" for j in range(n_features)]
 
-    data_df = pd.DataFrame(matrix, index=original_names, columns=feature_names)
-    true_labels = np.array(
-        [cluster_assignments[name] for name in original_names], dtype=int
-    )
+    # One-hot encode: category indices → binary indicators for Bernoulli KL pipeline
+    data_df, n_binary = _one_hot_encode_categorical(matrix, n_categories, original_names)
+    true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
     metadata = {
         "n_samples": len(original_names),
-        "n_features": n_features,
+        "n_features": n_binary,
+        "n_features_original": n_features,
         "n_categories": n_categories,
         "n_clusters": n_time_points,
         "n_time_points": n_time_points,
@@ -352,16 +363,23 @@ def generate_case_data(
     seed = test_case.get("seed")
 
     if generator == "binary":
-        return _generate_binary_case(test_case, seed)
+        data_df, y, x_original, metadata = _generate_binary_case(test_case, seed)
     elif generator == "blobs":
-        return _generate_blobs_case(test_case, seed)
+        data_df, y, x_original, metadata = _generate_blobs_case(test_case, seed)
     elif generator == "sbm":
-        return _generate_sbm_case(test_case, seed)
+        data_df, y, x_original, metadata = _generate_sbm_case(test_case, seed)
     elif generator == "categorical":
-        return _generate_categorical_case(test_case, seed)
+        data_df, y, x_original, metadata = _generate_categorical_case(test_case, seed)
     elif generator == "phylogenetic":
-        return _generate_phylogenetic_case(test_case, seed)
+        data_df, y, x_original, metadata = _generate_phylogenetic_case(test_case, seed)
     elif generator == "temporal_evolution":
-        return _generate_temporal_evolution_case(test_case, seed)
+        data_df, y, x_original, metadata = _generate_temporal_evolution_case(test_case, seed)
     else:
         raise ValueError(f"Unknown generator: {generator}")
+
+    # Preserve caller-supplied case metadata for downstream audit/reporting.
+    if "category" in test_case:
+        metadata.setdefault("category", test_case["category"])
+    metadata.setdefault("case_name", metadata.get("name"))
+
+    return data_df, y, x_original, metadata

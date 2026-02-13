@@ -45,6 +45,27 @@ def _flatten_categorical(arr: np.ndarray) -> np.ndarray:
     return arr
 
 
+def compute_categorical_effective_df(n_features: int, n_categories: int) -> int:
+    """Compute effective degrees of freedom for categorical data.
+
+    Each feature with K categories has K-1 degrees of freedom due to
+    the simplex constraint (probabilities sum to 1).
+
+    Parameters
+    ----------
+    n_features : int
+        Number of features (d).
+    n_categories : int
+        Number of categories per feature (K).
+
+    Returns
+    -------
+    int
+        Effective degrees of freedom: d * (K - 1).
+    """
+    return n_features * (n_categories - 1)
+
+
 def compute_pooled_proportion(
     theta_1: NDArray[np.floating],
     theta_2: NDArray[np.floating],
@@ -129,6 +150,7 @@ def standardize_proportion_difference(
     n_2: float,
     eps: float = 1e-10,
     branch_length_sum: float | None = None,
+    mean_branch_length: float | None = None,
 ) -> Tuple[NDArray[np.floating], NDArray[np.floating]]:
     """Compute standardized difference (z-scores) between two proportions.
 
@@ -153,6 +175,10 @@ def standardize_proportion_difference(
         independent contrasts adjustment. If provided, variance is scaled
         by this factor to account for expected divergence over topological
         distance. Longer branches -> more expected variance -> smaller Z.
+    mean_branch_length : float, optional
+        Mean branch length across the tree, used to normalize the
+        Felsenstein adjustment so that average-length branches get a
+        multiplier near 2.0.  When None, falls back to a constant 2.0.
 
     Returns
     -------
@@ -171,11 +197,15 @@ def standardize_proportion_difference(
     # Longer total branch length → more expected divergence → larger variance
     # → smaller z-scores → harder to declare siblings as different.
     if branch_length_sum is not None and branch_length_sum > 0:
-        # Default mean_bl estimate: assume typical BL ~ branch_length_sum/2
-        # This gives BL_norm ~ 2 on average
-        # TODO: Pass actual mean_bl from tree for more accurate normalization
-        mean_bl_estimate = branch_length_sum / 2  # rough estimate
-        bl_normalized = 1.0 + branch_length_sum / (2 * mean_bl_estimate)
+        if mean_branch_length is None or mean_branch_length <= 0:
+            raise ValueError(
+                "mean_branch_length is required when branch_length_sum is provided. "
+                f"Got mean_branch_length={mean_branch_length!r}, "
+                f"branch_length_sum={branch_length_sum!r}. "
+                "Ensure the tree has valid branch lengths before running "
+                "the Felsenstein-adjusted sibling divergence test."
+            )
+        bl_normalized = 1.0 + branch_length_sum / (2 * mean_branch_length)
         variance = variance * bl_normalized
 
     difference = theta_1 - theta_2

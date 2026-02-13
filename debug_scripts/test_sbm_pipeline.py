@@ -6,8 +6,8 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from kl_clustering_analysis.benchmarking.test_cases import get_default_test_cases
-from kl_clustering_analysis.benchmarking.pipeline import benchmark_cluster_algorithm
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
 
 def main():

@@ -31,7 +31,7 @@ def export_decomposition_audit(
         Expected to contain 'test_case_num', 'method_name', 'tree', 'stats',
         and optionally 'posthoc_merge_audit'.
     output_root
-        Base directory for benchmark results (e.g. benchmarks/full/results).
+        Base directory for benchmark results (e.g. benchmarks/results).
         Logs will be saved in [output_root]/audit/.
     verbose
         If True, print status messages for each saved file.

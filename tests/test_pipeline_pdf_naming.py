@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from kl_clustering_analysis.benchmarking.pipeline import _resolve_pdf_output_path
+from benchmarks.shared.pipeline import _resolve_pdf_output_path
 
 
 def test_resolve_pdf_output_path_defaults_to_timestamped_name_under_plots_root():

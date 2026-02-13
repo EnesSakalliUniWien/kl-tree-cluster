@@ -8,22 +8,7 @@ where each feature has K categories (not just binary 0/1).
 import numpy as np
 from typing import Dict, Tuple, Optional, List
 
-
-def _calculate_cluster_sizes(n_rows: int, n_clusters: int, balanced: bool) -> List[int]:
-    """Calculates the number of samples to assign to each cluster."""
-    if balanced or n_clusters == 1:
-        samples_per_cluster, remainder = divmod(n_rows, n_clusters)
-        return [
-            samples_per_cluster + 1 if i < remainder else samples_per_cluster
-            for i in range(n_clusters)
-        ]
-    else:
-        cluster_sizes = [1] * n_clusters
-        remaining = n_rows - n_clusters
-        for _ in range(remaining):
-            idx = np.random.randint(0, n_clusters)
-            cluster_sizes[idx] += 1
-        return cluster_sizes
+from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 
 def _create_categorical_templates(
@@ -144,7 +129,7 @@ def generate_categorical_feature_matrix(
     cluster_assignments: Dict[str, int] = {}
     distributions: List[np.ndarray] = []
 
-    cluster_sizes = _calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters)
+    cluster_sizes = calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters)
 
     # Generate cluster templates
     templates = _create_categorical_templates(

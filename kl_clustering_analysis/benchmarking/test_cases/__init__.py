@@ -6,13 +6,13 @@ Import `get_default_test_cases()` to get all cases, or import specific
 category modules for targeted testing.
 """
 
-from .gaussian import GAUSSIAN_CASES
-from .binary import BINARY_CASES
-from .sbm import SBM_CASES
-from .categorical import CATEGORICAL_CASES
-from .phylogenetic import PHYLOGENETIC_CASES
+from benchmarks.shared.cases.gaussian import GAUSSIAN_CASES
+from benchmarks.shared.cases.binary import BINARY_CASES
+from benchmarks.shared.cases.sbm import SBM_CASES
+from benchmarks.shared.cases.categorical import CATEGORICAL_CASES
+from benchmarks.phylogenetic.cases import PHYLOGENETIC_CASES
 from .temporal import TEMPORAL_CASES
-from .overlapping import OVERLAPPING_CASES
+from benchmarks.shared.cases.overlapping import OVERLAPPING_CASES
 
 # Small test cases for quick smoke tests
 SMALL_TEST_CASES = [

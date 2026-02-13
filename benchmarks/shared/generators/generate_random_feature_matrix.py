@@ -9,40 +9,11 @@ cluster separation (entropy), and feature diversity.
 import numpy as np
 from typing import Dict, Tuple, Optional, List
 
+from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 # ============================================================================
 # HELPER FUNCTIONS - Modularized Logic
 # ============================================================================
-
-
-def _calculate_cluster_sizes(n_rows: int, n_clusters: int, balanced: bool) -> List[int]:
-    """Calculates the number of samples to assign to each cluster.
-
-    Args:
-        n_rows: The total number of samples to generate.
-        n_clusters: The number of clusters to partition the samples into.
-        balanced: If True, distributes samples as evenly as possible. If False,
-            assigns a random number of samples to each cluster.
-
-    Returns:
-        A list where each element is the size of a cluster. The sum of the
-        elements will equal `n_rows`.
-    """
-    if balanced or n_clusters == 1:
-        # Distribute samples as evenly as possible
-        samples_per_cluster, remainder = divmod(n_rows, n_clusters)
-        return [
-            samples_per_cluster + 1 if i < remainder else samples_per_cluster
-            for i in range(n_clusters)
-        ]
-    else:
-        # Assign a random number of samples to each cluster
-        cluster_sizes = [1] * n_clusters
-        remaining = n_rows - n_clusters
-        for _ in range(remaining):
-            idx = np.random.randint(0, n_clusters)
-            cluster_sizes[idx] += 1
-        return cluster_sizes
 
 
 def _create_gradient_templates(n_clusters: int, n_cols: int) -> List[List[int]]:
@@ -264,7 +235,7 @@ def generate_random_feature_matrix(
     cluster_assignments: Dict[str, int] = {}
 
     # Step 1: Calculate cluster sizes
-    cluster_sizes = _calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters)
+    cluster_sizes = calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters)
 
     # Step 2: Choose template generation strategy
     # If feature_sparsity is provided, use sparse templates (low-variance features)

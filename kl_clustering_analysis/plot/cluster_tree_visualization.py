@@ -244,7 +244,8 @@ def plot_tree_with_clusters(
         ax=ax,
     )
     ax.set_title(title, fontsize=font_size)
-    ax.axis("equal")
+    # Do not force equal aspect: trees with many leaves collapse vertically.
+    ax.set_aspect("auto")
     ax.set_axis_off()
 
     leaf_cluster_ids = [

@@ -14,7 +14,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tests.test_cases_config import DEFAULT_TEST_CASES_CONFIG
-from kl_clustering_analysis.benchmarking.generators.generate_random_feature_matrix import (
+from benchmarks.shared.generators.generate_random_feature_matrix import (
     generate_random_feature_matrix,
 )
 

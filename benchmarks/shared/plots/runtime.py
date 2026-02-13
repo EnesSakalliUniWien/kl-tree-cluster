@@ -7,13 +7,12 @@ import logging
 from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
+from benchmarks.shared.pdf_utils import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from .summary import create_validation_plot
 from .export import (
     create_tree_plots_from_results,
-    create_umap_plots_from_results,
     create_tree_then_umap_plots_from_results,
     create_manifold_plots_from_results,
     create_umap_3d_plots_from_results,
@@ -59,13 +58,8 @@ def generate_benchmark_plots(
     *,
     pdf: PdfPages | None = None,
 ):
-    """Generate validation plots; optionally avoid PNGs and collect figs for PDFs."""
-    if df_results.empty:
-        return None, {}
-
-    fig = create_validation_plot(df_results)
-
-    # Prepare per-category collections
+    """Generate benchmark plots in PDF-only mode."""
+    # Prepare per-category collections (for interface compatibility).
     collected_by_category = {
         "validation": [],
         "trees": [],
@@ -73,21 +67,60 @@ def generate_benchmark_plots(
         "manifold": [],
         "umap3d": [],
     }
+    if df_results.empty:
+        return None, collected_by_category
+    if pdf is None:
+        logger.debug("Skipping plot generation because no PdfPages handle was provided.")
+        return None, collected_by_category
 
-    if save_png and verbose:
-        fig.savefig("validation_results.png", dpi=150, bbox_inches="tight")
-        logger.info("Validation plot saved to 'validation_results.png'")
-        log_detailed_results(df_results)
+    _ = save_png
+    _ = collect_figs
 
-    if pdf is not None:
-        pdf.savefig(fig, bbox_inches="tight", pad_inches=0)
-        plt.close(fig)
-        fig = None
-    elif collect_figs:
-        # Pass test case number with the figure for grouping later
-        collected_by_category["validation"].append({"figure": fig, "test_case_num": -1})
-    elif not save_png:
-        plt.close(fig)
+    fig = create_validation_plot(df_results)
+
+    # Add a concise cover page for readability in long benchmark PDFs.
+    cover = plt.figure(figsize=PDF_PAGE_SIZE_INCHES)
+    cover.text(
+        0.5,
+        0.62,
+        "Benchmark Report",
+        ha="center",
+        va="center",
+        fontsize=26,
+        weight="bold",
+    )
+    cover.text(
+        0.5,
+        0.50,
+        f"Cases: {df_results['Test'].nunique() if 'Test' in df_results.columns else len(df_results)}",
+        ha="center",
+        va="center",
+        fontsize=14,
+    )
+    cover.text(
+        0.5,
+        0.43,
+        f"Methods: {df_results['Method'].nunique() if 'Method' in df_results.columns else 'n/a'}",
+        ha="center",
+        va="center",
+        fontsize=14,
+    )
+    cover.text(
+        0.5,
+        0.33,
+        f"Generated: {pd.Timestamp.now(tz='UTC').strftime('%Y-%m-%d %H:%M:%SZ')}",
+        ha="center",
+        va="center",
+        fontsize=11,
+        alpha=0.8,
+    )
+    pdf.savefig(cover)
+    plt.close(cover)
+
+    prepare_pdf_figure(fig)
+    pdf.savefig(fig)
+    plt.close(fig)
+    fig = None
 
     if verbose:
         logger.info("Generating tree plots...")
@@ -99,8 +132,8 @@ def generate_benchmark_plots(
             plots_root,
             timestamp=None,
             verbose=verbose,
-            save=save_png,
-            collect=collect_figs,
+            save=False,
+            collect=False,
             collected=collected_by_category["umap"],
             pdf=pdf,
         )
@@ -110,8 +143,8 @@ def generate_benchmark_plots(
             output_dir=plots_root,
             timestamp=None,
             verbose=False,
-            save=save_png,
-            collect=collect_figs,
+            save=False,
+            collect=False,
             collected=collected_by_category["trees"],
             pdf=pdf,
         )
@@ -124,8 +157,8 @@ def generate_benchmark_plots(
             plots_root,
             timestamp=None,
             verbose=verbose,
-            save=save_png,
-            collect=collect_figs,
+            save=False,
+            collect=False,
             collected=collected_by_category["manifold"],
             pdf=pdf,
         )
@@ -138,8 +171,8 @@ def generate_benchmark_plots(
             plots_root,
             timestamp=None,
             verbose=verbose,
-            save=save_png,
-            collect=collect_figs,
+            save=False,
+            collect=False,
             collected=collected_by_category["umap3d"],
             pdf=pdf,
         )

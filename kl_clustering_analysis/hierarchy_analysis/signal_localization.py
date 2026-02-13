@@ -211,7 +211,15 @@ def localize_divergence_signal(
         right_node: str,
         current_depth: int,
     ) -> None:
-        """Recursive helper to collect all cross-boundary test results."""
+        """Recursive helper to collect leaf-level cross-boundary test results.
+
+        Only the **deepest** (most granular) test results are kept.  When a
+        significant pair is drilled into, the parent-level result is replaced
+        by its child-level results so that the same comparison is never
+        represented at multiple granularities.  This avoids inflating the
+        BH correction denominator with correlated, hierarchically nested
+        tests and prevents contradictory parent-vs-child classifications.
+        """
         nonlocal all_test_results
 
         result.depth_reached = max(result.depth_reached, current_depth)
@@ -256,18 +264,21 @@ def localize_divergence_signal(
 
                 # Test this pair
                 stat, df, pval = test_divergence(l_node, r_node)
-                all_test_results.append((l_node, r_node, stat, df, pval))
                 result.nodes_tested += 1
 
-                # If significant, we must drill down (recurse) if possible
+                # If significant, try to drill down
                 if pval < alpha:
-                    # Check if next level has valid children
                     l_has_valid_children = len(_get_valid_children(l_node)) > 0
                     r_has_valid_children = len(_get_valid_children(r_node)) > 0
 
-                    # Recurse if either side allows deeper drilling
                     if l_has_valid_children or r_has_valid_children:
+                        # Drill deeper — do NOT record this parent-level
+                        # result; the child-level results will replace it.
                         _recurse(l_node, r_node, current_depth + 1)
+                        continue
+
+                # Record this result (leaf-level: no further drilling)
+                all_test_results.append((l_node, r_node, stat, df, pval))
 
     # Start recursion
     _recurse(left_root, right_root, current_depth=0)
@@ -469,12 +480,18 @@ def extract_constrained_clusters(
 
 
 def _get_all_leaves(tree: nx.DiGraph, node: str) -> Set[str]:
-    """Get all leaf nodes under a given node."""
+    """Get all leaf labels under a given node.
+
+    Returns the ``label`` attribute of each leaf (e.g. ``"sample_0"``),
+    falling back to the node id only when no label is stored.  This
+    ensures consistency with ``TreeDecomposition._get_all_leaves``
+    which returns labels, not raw node ids.
+    """
     if _is_leaf(tree, node):
-        return {node}
+        return {tree.nodes[node].get("label", node)}
 
     descendants = nx.descendants(tree, node)
-    return {d for d in descendants if _is_leaf(tree, d)}
+    return {tree.nodes[d].get("label", d) for d in descendants if _is_leaf(tree, d)}
 
 
 # =============================================================================

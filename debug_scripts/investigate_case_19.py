@@ -14,7 +14,7 @@ from scipy.spatial.distance import pdist, cdist
 from scipy.stats import chi2
 from sklearn.metrics import silhouette_score
 
-from kl_clustering_analysis.benchmarking.generators import generate_random_feature_matrix
+from benchmarks.shared.generators import generate_random_feature_matrix
 from kl_clustering_analysis import config
 
 print("=" * 70)

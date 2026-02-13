@@ -7,7 +7,7 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from PIL import Image
 
-from kl_clustering_analysis.benchmarking.pdf_utils import (
+from benchmarks.shared.pdf_utils import (
     concat_plots_to_pdf,
     concat_tree_plots,
     concat_umap_plots,

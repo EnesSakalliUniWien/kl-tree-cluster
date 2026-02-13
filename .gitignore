@@ -1,11 +1,131 @@
-hierarchy_analysis/__pycache__
-misc/__pycache__
-simulation/__pycache__
-tests/__pycache__
-tree/__pycache__
-hierarchy_analysis/statistics/__pycache__
-*.pyc
-results
-cluster_tree_plots
-cluster_validation_failures
-node_modules
+# =============================================================================
+# Python
+# =============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+.env
+
+# =============================================================================
+# IDEs & Editors
+# =============================================================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Spyder
+.spyderproject
+.spyproject
+
+# =============================================================================
+# OS Generated Files
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.nfs*
+
+# =============================================================================
+# Project Specific
+# =============================================================================
+# Results and output directories
+results/
+cluster_tree_plots/
+cluster_validation_failures/
+
+# Benchmark outputs
+benchmarks/**/results/
+benchmarks/**/run_*/
+
+# Debug output
+debug_output/
+*.log
+
+# Node modules (if any frontend tooling)
+node_modules/
+
+# Data files (if large)
+*.h5ad
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.joblib
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~

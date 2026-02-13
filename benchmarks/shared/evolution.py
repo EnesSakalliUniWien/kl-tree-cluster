@@ -45,6 +45,17 @@ def generate_ancestral_sequence(
     return random_state.randint(0, n_categories, size=n_features)
 
 
+def generate_dirichlet_distributions(
+    n_features: int,
+    n_categories: int,
+    concentration: float,
+    random_state: np.random.RandomState,
+) -> np.ndarray:
+    """Sample one categorical distribution per feature from a Dirichlet prior."""
+    alpha = np.ones(n_categories) * concentration
+    return random_state.dirichlet(alpha, size=n_features)
+
+
 def evolve_sequence(
     ancestor: np.ndarray,
     branch_length: float,

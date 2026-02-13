@@ -18,7 +18,7 @@ from scipy.cluster.hierarchy import linkage, fcluster
 from sklearn.metrics import adjusted_rand_score
 from sklearn.manifold import SpectralEmbedding
 
-from kl_clustering_analysis.benchmarking.generators.generate_sbm import generate_sbm
+from benchmarks.shared.generators.generate_sbm import generate_sbm
 
 
 def main():

@@ -10,7 +10,6 @@ from typing import Callable, Dict, List, Set, Tuple
 
 import networkx as nx
 import numpy as np
-
 from .statistics.multiple_testing import benjamini_hochberg_correction
 
 
@@ -146,7 +145,10 @@ def apply_posthoc_merge(
     ]
     mergeable_indices.sort(key=lambda i: -p_values[i])
 
-    # Greedily merge non-overlapping pairs
+    # Greedily merge non-overlapping pairs.
+    # When merging at an LCA, remove ALL descendant cluster roots — the
+    # LCA cluster subsumes its entire subtree.  Stale descendant roots
+    # would otherwise violate the antichain invariant.
     merged_roots_count = 0
     for idx in mergeable_indices:
         lc = pairs[idx]["left_cluster"]
@@ -157,12 +159,9 @@ def apply_posthoc_merge(
         if lc not in cluster_roots or rc not in cluster_roots:
             continue
 
-        # We don't need a `merged` set if we check `cluster_roots`.
-        # Removing descendants from `cluster_roots` effectively handles this.
-
-        cluster_roots.discard(lc)
-        cluster_roots.discard(rc)
+        # Remove all descendant cluster roots — they are subsumed by lca.
         cluster_roots -= nx.descendants(tree, lca)
+        cluster_roots.discard(lca)
         cluster_roots.add(lca)
 
         pairs[idx]["was_merged"] = True

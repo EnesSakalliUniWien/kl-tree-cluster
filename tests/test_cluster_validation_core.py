@@ -7,7 +7,7 @@ Tests basic functionality of the validation framework:
 - Empty case handling
 """
 
-from kl_clustering_analysis.benchmarking import benchmark_cluster_algorithm
+from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
 try:
     from .test_cases_config import SMALL_TEST_CASES
