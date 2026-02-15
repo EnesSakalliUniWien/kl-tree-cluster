@@ -60,7 +60,7 @@ def test_with_different_branch_lengths():
     print("Effect of Branch Length on Significance")
     print("=" * 70)
 
-    # Fixed difference and base variance
+    # ...existing code...
     difference = 0.15  # Observed difference
     base_variance = 0.05  # Var = p(1-p)(1/n1 + 1/n2)
 

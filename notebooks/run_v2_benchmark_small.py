@@ -78,7 +78,6 @@ def run_kl_clustering_v2(X, sample_names=None, verbose=True):
         sibling_alpha=0.05,
         use_signal_localization=True,  # Enable localization
         localization_max_depth=5,  # Set depth limit
-        localization_min_samples=5,  # Min samples
     )
 
     print("Running decompose_tree_v2()...")

@@ -34,6 +34,10 @@ from kl_clustering_analysis.core_utils.data_utils import (
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
 from ..multiple_testing import apply_multiple_testing_correction
+from ..branch_length_utils import (
+    compute_mean_branch_length as _compute_mean_branch_length,
+    sanitize_positive_branch_length as _sanitize_positive_branch_length,
+)
 from ..random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
@@ -46,28 +50,6 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # Core Statistical Functions
 # =============================================================================
-
-
-def _compute_mean_branch_length(tree: nx.DiGraph) -> float:
-    """Compute mean branch length across all edges for normalization.
-
-    Used to normalize branch lengths so that the Felsenstein adjustment
-    doesn't shrink variance (which would cause over-splitting).
-
-    Returns
-    -------
-    float
-        Mean branch length, or 1.0 if no branch lengths found.
-    """
-    branch_lengths = [
-        tree.edges[p, c]["branch_length"]
-        for p, c in tree.edges()
-        if "branch_length" in tree.edges[p, c]
-    ]
-    if not branch_lengths:
-        return 1.0
-    mean_bl = float(np.mean(branch_lengths))
-    return mean_bl if mean_bl > 0 else 1.0
 
 
 def _compute_standardized_z(
@@ -133,7 +115,14 @@ def _compute_standardized_z(
     # BL_norm = 1 + BL/mean_BL ensures multiplier ≥ 1
     # - Longer branches → larger variance → smaller z → harder to split
     # - Shorter branches → less extra variance → easier to split
-    if branch_length is not None and mean_branch_length is not None and mean_branch_length > 0:
+    if (
+        branch_length is not None
+        and np.isfinite(branch_length)
+        and branch_length > 0
+        and mean_branch_length is not None
+        and np.isfinite(mean_branch_length)
+        and mean_branch_length > 0
+    ):
         bl_normalized = 1.0 + branch_length / mean_branch_length
         var = var * bl_normalized
 
@@ -154,7 +143,7 @@ def _compute_projected_test(
     seed: int,
     branch_length: float | None = None,
     mean_branch_length: float | None = None,
-) -> tuple[float, int, float]:
+) -> tuple[float, float, float, bool]:
     """Compute projected Wald test for one edge.
 
     Projects z-scores to k dimensions and computes T = ||R·z||² ~ χ²(k).
@@ -178,22 +167,23 @@ def _compute_projected_test(
 
     Returns
     -------
-    tuple[float, int, float]
-        (test_statistic, degrees_of_freedom, p_value)
+    tuple[float, float, float, bool]
+        (test_statistic, degrees_of_freedom, p_value, invalid_test)
     """
     z = _compute_standardized_z(
         child_dist, parent_dist, n_child, n_parent, branch_length, mean_branch_length
     )
 
-    # Preserve all finite z-scores exactly.
-    # Only repair non-finite artifacts (NaN/Inf) to avoid projection crashes.
+    # Explicit invalid-test path: never coerce non-finite z-scores.
+    # Keep raw statistics as NaN and route p=1.0 only in correction step.
     non_finite = ~np.isfinite(z)
     if np.any(non_finite):
         logger.warning(
-            "Found %d non-finite z-scores in edge test; replacing with 0.0.",
+            "Found %d non-finite z-scores in edge test; marking test invalid "
+            "(raw outputs NaN, conservative p=1.0 for correction).",
             int(np.sum(non_finite)),
         )
-        z = np.where(non_finite, 0.0, z)
+        return np.nan, np.nan, np.nan, True
     z = z.astype(np.float64, copy=False)
 
     d = len(z)
@@ -231,7 +221,7 @@ def _compute_projected_test(
     stat = float(np.sum(projected**2))
     pval = float(chi2.sf(stat, df=k))
 
-    return stat, k, pval
+    return stat, float(k), pval, False
 
 
 def _compute_p_values_via_projection(
@@ -240,7 +230,7 @@ def _compute_p_values_via_projection(
     parent_ids: list[str],
     child_leaf_counts: np.ndarray,
     parent_leaf_counts: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute p-values for all edges via random projection.
 
     Extracts branch lengths from tree edges and applies Felsenstein's (1985)
@@ -263,13 +253,14 @@ def _compute_p_values_via_projection(
 
     Returns
     -------
-    tuple[np.ndarray, np.ndarray, np.ndarray]
-        (test_statistics, degrees_of_freedom, p_values)
+    tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+        (test_statistics, degrees_of_freedom, p_values, invalid_mask)
     """
     n_edges = len(child_ids)
     stats = np.full(n_edges, np.nan)
     dfs = np.full(n_edges, np.nan)
     pvals = np.full(n_edges, np.nan)
+    invalid_mask = np.zeros(n_edges, dtype=bool)
 
     # Compute mean branch length for normalization
     mean_branch_length = _compute_mean_branch_length(tree)
@@ -279,20 +270,22 @@ def _compute_p_values_via_projection(
         parent_dist = tree.nodes[parent_ids[i]].get("distribution")
 
         if child_dist is None or parent_dist is None or child_leaf_counts[i] < 1:
-            stats[i], dfs[i], pvals[i] = 0.0, 0, 1.0
+            stats[i], dfs[i], pvals[i] = 0.0, 0.0, 1.0
             continue
 
         # Extract branch length from tree edge (parent → child)
-        branch_length = None
+        branch_length: float | None = None
         if tree.has_edge(parent_ids[i], child_ids[i]):
-            branch_length = tree.edges[parent_ids[i], child_ids[i]].get("branch_length")
+            branch_length = _sanitize_positive_branch_length(
+                tree.edges[parent_ids[i], child_ids[i]].get("branch_length")
+            )
 
         test_seed = derive_projection_seed(
             config.PROJECTION_RANDOM_SEED,
             f"edge:{parent_ids[i]}->{child_ids[i]}",
         )
 
-        stats[i], dfs[i], pvals[i] = _compute_projected_test(
+        stat_i, df_i, pval_i, invalid_i = _compute_projected_test(
             np.asarray(child_dist, dtype=np.float64),
             np.asarray(parent_dist, dtype=np.float64),
             int(child_leaf_counts[i]),
@@ -301,8 +294,10 @@ def _compute_p_values_via_projection(
             branch_length,
             mean_branch_length,
         )
+        stats[i], dfs[i], pvals[i] = stat_i, df_i, pval_i
+        invalid_mask[i] = bool(invalid_i)
 
-    return stats, dfs, pvals
+    return stats, dfs, pvals, invalid_mask
 
 
 # =============================================================================
@@ -350,35 +345,52 @@ def annotate_child_parent_divergence(
     child_leaf_counts = extract_leaf_counts(nodes_dataframe, child_ids)
     parent_leaf_counts = extract_leaf_counts(nodes_dataframe, parent_ids)
 
-    test_stats, degrees_of_freedom, p_values = _compute_p_values_via_projection(
+    test_stats, degrees_of_freedom, p_values, invalid_mask = _compute_p_values_via_projection(
         tree, child_ids, parent_ids, child_leaf_counts, parent_leaf_counts
     )
 
-    if not np.isfinite(p_values).all():
+    # Preserve raw NaN outputs for invalid tests; use conservative surrogate
+    # p-values only for multiple-testing correction.
+    p_values_for_correction = np.where(np.isfinite(p_values), p_values, 1.0)
+
+    nonfinite_p_mask = ~np.isfinite(p_values)
+    n_invalid = int(np.sum(invalid_mask))
+    n_nonfinite_p = int(np.sum(nonfinite_p_mask))
+    if n_invalid or n_nonfinite_p:
         bad_indices = [i for i, v in enumerate(p_values) if not np.isfinite(v)]
         bad_ids = [child_ids[i] for i in bad_indices]
         preview = ", ".join(map(repr, bad_ids[:5]))
         logger.warning(
-            "Non-finite child-parent divergence p-values for nodes: %s. "
-            "Setting invalid tests to conservative defaults (p=1.0, reject=False).",
+            "Child-parent divergence audit: total_tests=%d, invalid_tests=%d, "
+            "nonfinite_p_values=%d. Conservative correction path applied "
+            "(p=1.0, reject=False) for nodes: %s",
+            len(child_ids),
+            n_invalid,
+            n_nonfinite_p,
             preview,
         )
-        p_values = np.where(np.isfinite(p_values), p_values, 1.0)
-        test_stats = np.where(np.isfinite(test_stats), test_stats, 0.0)
-        degrees_of_freedom = np.where(np.isfinite(degrees_of_freedom), degrees_of_freedom, 1.0)
 
     node_depths = compute_node_depths(tree)
 
     child_depths = np.array([node_depths.get(cid, 0) for cid in child_ids])
 
     reject_null, p_values_corrected = apply_multiple_testing_correction(
-        p_values=p_values,
+        p_values=p_values_for_correction,
         child_ids=child_ids,
         child_depths=child_depths,
         alpha=alpha,
         method=fdr_method,
         tree=tree,
     )
+    reject_null = np.where(nonfinite_p_mask, False, reject_null)
+
+    # Attach run-level audit counters for downstream diagnostics.
+    nodes_dataframe.attrs["child_parent_divergence_audit"] = {
+        "total_tests": int(len(child_ids)),
+        "invalid_tests": n_invalid,
+        "nonfinite_p_values": n_nonfinite_p,
+        "conservative_path_tests": n_nonfinite_p,
+    }
 
     return assign_divergence_results(
         nodes_dataframe=nodes_dataframe,
@@ -387,9 +399,8 @@ def annotate_child_parent_divergence(
         p_values_corrected=p_values_corrected,
         reject_null=reject_null,
         degrees_of_freedom=degrees_of_freedom,
+        invalid_mask=invalid_mask,
     )
 
 
-__all__ = ["annotate_child_parent_divergence"]
-__all__ = ["annotate_child_parent_divergence"]
 __all__ = ["annotate_child_parent_divergence"]

@@ -12,7 +12,7 @@ from scipy.cluster.hierarchy import linkage
 from benchmarks.shared.types import MethodRunResult
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
-from benchmarks.shared.utils_decomp import (
+from benchmarks.shared.util.decomposition import (
     _labels_from_decomposition,
     _create_report_dataframe,
 )

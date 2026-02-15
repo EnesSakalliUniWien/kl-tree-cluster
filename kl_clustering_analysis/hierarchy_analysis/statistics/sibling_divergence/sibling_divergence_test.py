@@ -25,9 +25,10 @@ from kl_clustering_analysis.core_utils.data_utils import (
     initialize_sibling_divergence_columns,
 )
 
-from ..mi_feature_selection import select_informative_features
+from ..branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
+from ..categorical_mahalanobis import categorical_whitened_vector
 from ..multiple_testing import benjamini_hochberg_correction
-from ..pooled_variance import standardize_proportion_difference, _is_categorical
+from ..pooled_variance import _is_categorical, standardize_proportion_difference
 from ..random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
@@ -40,35 +41,6 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # Core Statistical Test
 # =============================================================================
-
-
-def _filter_informative_features(
-    left: np.ndarray,
-    right: np.ndarray,
-    n_left: float,
-    n_right: float,
-) -> Tuple[np.ndarray, np.ndarray, int]:
-    """Filter to informative features if MI filtering is enabled.
-
-    Supports both binary (1D) and categorical (2D) distributions.
-    """
-    if not config.USE_MI_FEATURE_FILTER:
-        # Return flattened length for categorical
-        n_features = left.size if left.ndim == 2 else len(left)
-        return left, right, n_features
-
-    mask, _, n_kept = select_informative_features(
-        left,
-        right,
-        n_left,
-        n_right,
-        quantile_threshold=config.MI_FILTER_QUANTILE,
-        min_fraction=config.MI_FILTER_MIN_FRACTION,
-    )
-    # For categorical (2D), mask applies to features (rows), not categories
-    if left.ndim == 2:
-        return left[mask], right[mask], n_kept * left.shape[1]
-    return left[mask], right[mask], n_kept
 
 
 def _compute_chi_square_pvalue(
@@ -91,9 +63,11 @@ def sibling_divergence_test(
     *,
     test_id: str | None = None,
 ) -> Tuple[float, float, float]:
-    """Two-sample Wald test for sibling divergence with random projection.
+    """Two-sample Wald test for sibling divergence.
 
-    Supports both binary (1D) and categorical (2D) distributions.
+    Uses random projection on standardized vectors for both binary and
+    categorical inputs. For categorical data, the vector is first covariance-
+    whitened via a multinomial Mahalanobis construction (drop-last basis).
 
     Optionally applies Felsenstein's (1985) Phylogenetic Independent Contrasts
     adjustment by scaling variance by the sum of branch lengths.
@@ -120,64 +94,54 @@ def sibling_divergence_test(
     Tuple[float, float, float]
         (test_statistic, degrees_of_freedom, p_value).
     """
-    n_eff = hmean([n_left, n_right])
-
-    # Filter to informative features
-    left, right, n_features = _filter_informative_features(
-        left_dist, right_dist, n_left, n_right
-    )
-
     # Compute branch length sum for Felsenstein adjustment
     branch_length_sum = None
-    if branch_length_left is not None and branch_length_right is not None:
-        branch_length_sum = branch_length_left + branch_length_right
+    bl_left = sanitize_positive_branch_length(branch_length_left)
+    bl_right = sanitize_positive_branch_length(branch_length_right)
+    if bl_left is not None and bl_right is not None:
+        branch_length_sum = bl_left + bl_right
         if branch_length_sum <= 0:
             logger.warning(
                 "Non-positive sibling branch length sum encountered "
                 "(left=%s, right=%s). Disabling branch-length variance adjustment "
                 "for this test.",
-                branch_length_left,
-                branch_length_right,
+                bl_left,
+                bl_right,
             )
             branch_length_sum = None
 
-    # Standardize difference (Wald z-scores) - handles flattening for categorical
-    z, _ = standardize_proportion_difference(
-        left,
-        right,
-        n_left,
-        n_right,
-        branch_length_sum=branch_length_sum,
-        mean_branch_length=mean_branch_length,
-    )
+    n_eff = hmean([n_left, n_right])
 
-    # Sanitize Z-scores: Replace Inf/NaN to prevent downstream crashes
+    if _is_categorical(np.asarray(left_dist)):
+        z = categorical_whitened_vector(
+            np.asarray(left_dist, dtype=np.float64),
+            np.asarray(right_dist, dtype=np.float64),
+            float(n_left),
+            float(n_right),
+            branch_length_sum=branch_length_sum,
+            mean_branch_length=mean_branch_length,
+        )
+    else:
+        z, _ = standardize_proportion_difference(
+            left_dist,
+            right_dist,
+            n_left,
+            n_right,
+            branch_length_sum=branch_length_sum,
+            mean_branch_length=mean_branch_length,
+        )
+
+    # Explicit invalid-test path: never coerce non-finite z-scores.
+    # Keep raw statistics as NaN and route p=1.0 only in correction step.
     if not np.isfinite(z).all():
-        logging.warning(
-            f"Found {np.sum(~np.isfinite(z))} non-finite values in Z-scores."
-        )
-
-    # Preserve all finite z-scores exactly.
-    # Only repair non-finite artifacts (NaN/Inf) to avoid projection crashes.
-    non_finite = ~np.isfinite(z)
-    if np.any(non_finite):
         logger.warning(
-            "Found %d non-finite z-scores in sibling test; replacing with 0.0.",
-            int(np.sum(non_finite)),
+            "Found %d non-finite z-scores in sibling test; marking test invalid "
+            "(raw outputs NaN, conservative p=1.0 for correction).",
+            int(np.sum(~np.isfinite(z))),
         )
-        z = np.where(non_finite, 0.0, z)
+        return np.nan, np.nan, np.nan
     z = z.astype(np.float64, copy=False)  # Force float64
 
-    # For categorical data, account for simplex constraint (probs sum to 1)
-    # Drop the last category column - only K-1 categories are independent
-    # This properly handles the correlation between categories
-    if _is_categorical(left_dist):
-        n_features = left_dist.shape[0]
-        n_categories = left_dist.shape[1]
-        # Reshape to (n_features, n_categories), drop last column, flatten
-        z = z.reshape(n_features, n_categories)[:, :-1].ravel()
-
-    # Use actual z-score length (after categorical adjustment)
     d = len(z)
 
     # Compute projection dimension
@@ -236,7 +200,14 @@ def _get_sibling_data(
     parent: str,
     left: str,
     right: str,
-) -> Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]:
+) -> Tuple[
+    np.ndarray,
+    np.ndarray,
+    int,
+    int,
+    float | None,
+    float | None,
+]:
     """Extract distributions, sample sizes, and branch lengths for sibling pair.
 
     Branch lengths are extracted from the tree edges (parent → child).
@@ -244,14 +215,10 @@ def _get_sibling_data(
     """
     # Extract branch lengths from tree edges
     left_branch = (
-        tree.edges[parent, left].get("branch_length")
-        if tree.has_edge(parent, left)
-        else None
+        tree.edges[parent, left].get("branch_length") if tree.has_edge(parent, left) else None
     )
     right_branch = (
-        tree.edges[parent, right].get("branch_length")
-        if tree.has_edge(parent, right)
-        else None
+        tree.edges[parent, right].get("branch_length") if tree.has_edge(parent, right) else None
     )
 
     return (
@@ -284,8 +251,7 @@ def _collect_test_arguments(
     """
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
         raise ValueError(
-            "Missing 'Child_Parent_Divergence_Significant' column. "
-            "Run child-parent test first."
+            "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
         )
 
     sig_map = nodes_df["Child_Parent_Divergence_Significant"].to_dict()
@@ -323,9 +289,7 @@ def _run_tests(
 ) -> List[Tuple[float, float, float]]:
     """Execute sibling divergence tests for all collected pairs."""
     if len(parents) != len(args):
-        raise ValueError(
-            f"parents and args length mismatch: {len(parents)} != {len(args)}"
-        )
+        raise ValueError(f"parents and args length mismatch: {len(parents)} != {len(args)}")
     return [
         sibling_divergence_test(
             left,
@@ -360,12 +324,25 @@ def _apply_results(
     dfs = np.array([r[1] for r in results])
     pvals = np.array([r[2] for r in results])
 
-    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals, alpha=alpha)
+    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
+    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
+
+    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
+    reject = np.where(invalid_mask, False, reject)
+    n_invalid = int(np.sum(invalid_mask))
+    if n_invalid:
+        logger.warning(
+            "Sibling divergence audit: total_tests=%d, invalid_tests=%d. "
+            "Conservative correction path applied (p=1.0, reject=False).",
+            len(results),
+            n_invalid,
+        )
 
     df.loc[parents, "Sibling_Test_Statistic"] = stats
     df.loc[parents, "Sibling_Degrees_of_Freedom"] = dfs
     df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
     df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
+    df.loc[parents, "Sibling_Divergence_Invalid"] = invalid_mask
     df.loc[parents, "Sibling_BH_Different"] = reject
     df.loc[parents, "Sibling_BH_Same"] = ~reject
 
@@ -417,20 +394,19 @@ def annotate_sibling_divergence(
         df.loc[skipped, "Sibling_Divergence_Skipped"] = True
         logger.debug(f"Skipped {len(skipped)} nodes")
 
-    # Compute mean branch length from tree for Felsenstein normalization.
-    # Only consider edges that actually carry the attribute — missing
-    # attributes are not zero-length, they are absent.
-    _branch_lengths = [
-        tree.edges[p, c]["branch_length"]
-        for p, c in tree.edges()
-        if "branch_length" in tree.edges[p, c]
-    ]
-    _mean_bl = float(np.mean(_branch_lengths)) if _branch_lengths else None
-    if _mean_bl is not None and _mean_bl <= 0:
-        _mean_bl = None
+    # Compute mean branch length from tree for Felsenstein normalization
+    # using the shared sanitization policy.
+    _mean_bl = compute_mean_branch_length(tree)
 
     results = _run_tests(parents, args, mean_branch_length=_mean_bl)
-    return _apply_results(df, parents, results, significance_level_alpha)
+    df = _apply_results(df, parents, results, significance_level_alpha)
+    sibling_invalid = int(df.loc[parents, "Sibling_Divergence_Invalid"].sum())
+    df.attrs["sibling_divergence_audit"] = {
+        "total_tests": int(len(parents)),
+        "invalid_tests": sibling_invalid,
+        "conservative_path_tests": sibling_invalid,
+    }
+    return df
 
 
 __all__ = ["annotate_sibling_divergence", "sibling_divergence_test"]

@@ -2,7 +2,6 @@
 Central configuration for the KL-TE clustering analysis library.
 """
 
-
 # --- Statistical Parameters ---
 
 # Default significance level (alpha) for hypothesis tests.
@@ -68,16 +67,26 @@ PROJECTION_MIN_K: int = 10
 # Random seed for projection reproducibility (None for random)
 PROJECTION_RANDOM_SEED: int | None = 42
 
-# --- MI Feature Filter Parameters ---
+# --- Sibling Test Method ---
 
-# Enable MI-based feature filtering before projection
-USE_MI_FEATURE_FILTER: bool = True
-
-# Quantile threshold for MI filtering (keep features above this quantile)
-MI_FILTER_QUANTILE: float = 0.5
-
-# Minimum fraction of features to retain
-MI_FILTER_MIN_FRACTION: float = 0.1
+# Method for sibling divergence testing.
+# Options:
+#   "wald"                  - Standard projected Wald χ² test (original, known anti-conservative)
+#   "cousin_ftest"          - Cousin-calibrated F-test: uses uncle's sibling split as reference
+#                             to cancel post-selection bias. Falls back to Wald when cousin
+#                             reference is unavailable (uncle is leaf or root's children).
+#                             Empirically calibrated: 5.0% Type I under null, KS p=0.98.
+#   "cousin_adjusted_wald"  - Cousin-adjusted Wald: estimates post-selection inflation c
+#                             from null-like pairs (neither child edge-significant) via
+#                             log-linear regression on (BL_sum, n_parent), then deflates
+#                             focal pair stats: T_adj = T / ĉ ~ χ²(k).
+#                             Preserves power better than F-test for multi-cluster cases.
+#   "cousin_tree_guided"    - Tree-guided cousin: walks up the tree from each focal pair
+#                             to find topologically nearest null-like relatives, uses their
+#                             median T/k as local ĉ. No global regression — adapts to local
+#                             tree structure. Falls back to global median when no local
+#                             null-like pairs are found.
+SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
 
 
 # --- Signal Localization Parameters ---

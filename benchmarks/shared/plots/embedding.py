@@ -15,7 +15,7 @@ from kl_clustering_analysis.plot.cluster_color_mapping import (
     build_cluster_color_spec,
     present_cluster_ids,
 )
-from benchmarks.shared.pdf_utils import PDF_PAGE_SIZE_INCHES
+from benchmarks.shared.util.pdf_layout import PDF_PAGE_SIZE_INCHES
 
 # Reduce noisy but expected warnings emitted during visualization
 warnings.filterwarnings(
@@ -105,6 +105,15 @@ def _fit_embedding_2d(X_scaled: np.ndarray) -> np.ndarray:
 def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> str:
     """Compact long method/param labels for subplot titles."""
     name = str(method_name).strip()
+    metrics_suffix = ""
+    if name.endswith("]") and " [" in name:
+        # Preserve compact metric suffixes like "[A=0.923, N=0.811]" when
+        # shortening long method+param labels.
+        candidate_main, candidate_suffix = name.rsplit(" [", 1)
+        if candidate_suffix.startswith("A=") or candidate_suffix.startswith("ARI="):
+            name = candidate_main
+            metrics_suffix = f" [{candidate_suffix}"
+
     if " (" in name and name.endswith(")"):
         method_part, param_part = name.split(" (", 1)
         param_part = param_part[:-1]
@@ -122,8 +131,14 @@ def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> 
             compact_param_str = compact_param_str[:37] + "..."
         name = f"{method_part} ({compact_param_str})"
 
-    if len(name) > max_line_chars * 2:
-        name = name[: max_line_chars * 2 - 3] + "..."
+    title_len_limit = max_line_chars * 2
+    if metrics_suffix:
+        title_len_limit = max(12, title_len_limit - len(metrics_suffix))
+    if len(name) > title_len_limit:
+        name = name[: title_len_limit - 3] + "..."
+
+    if metrics_suffix:
+        name = f"{name}{metrics_suffix}"
     wrapped = "\n".join(
         textwrap.wrap(name, width=max_line_chars, break_long_words=False)
     )
@@ -169,17 +184,22 @@ def create_clustering_comparison_plots(
 
     labels_to_plot = dict(labels_dict)
 
-    # Add K-Means and Spectral Clustering to the plotted methods.
-    kmeans = KMeans(n_clusters=expected_clusters, random_state=42, n_init=10)
-    labels_to_plot["K-Means"] = kmeans.fit_predict(X_scaled)
+    # Add K-Means and Spectral Clustering as visual baselines only when they
+    # are not already present as benchmarked methods.
+    has_kmeans = any(str(name).startswith("K-Means") for name in labels_to_plot)
+    if not has_kmeans:
+        kmeans = KMeans(n_clusters=expected_clusters, random_state=42, n_init=10)
+        labels_to_plot["K-Means"] = kmeans.fit_predict(X_scaled)
 
-    spectral = SpectralClustering(
-        n_clusters=expected_clusters,
-        random_state=42,
-        affinity="nearest_neighbors",
-        assign_labels="cluster_qr",
-    )
-    labels_to_plot["Spectral"] = spectral.fit_predict(X_scaled)
+    has_spectral = any(str(name).startswith("Spectral") for name in labels_to_plot)
+    if not has_spectral:
+        spectral = SpectralClustering(
+            n_clusters=expected_clusters,
+            random_state=42,
+            affinity="nearest_neighbors",
+            assign_labels="cluster_qr",
+        )
+        labels_to_plot["Spectral"] = spectral.fit_predict(X_scaled)
 
     all_labels = [labels for labels in labels_to_plot.values() if labels is not None]
     color_clusters = _color_cluster_count(expected_clusters, -1, *all_labels)

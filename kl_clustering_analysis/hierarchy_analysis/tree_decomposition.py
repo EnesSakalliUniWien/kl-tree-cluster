@@ -6,18 +6,20 @@ which traverses a hierarchy and decides where to split or merge to form clusters
 
 from __future__ import annotations
 
-from typing import Dict, Iterator, List, Set, Tuple
+from typing import TYPE_CHECKING, Dict, Iterator, List, Set, Tuple
 
 import networkx as nx
+
+if TYPE_CHECKING:
+    from ..tree.poset_tree import PosetTree
+
 import numpy as np
 import pandas as pd
 
 from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
-from .cluster_assignments import (
-    build_cluster_assignments as _build_cluster_assignments_func,
-    build_sample_cluster_assignments,
-)
+from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
+from .cluster_assignments import build_sample_cluster_assignments
 from .posthoc_merge import apply_posthoc_merge
 from .signal_localization import (
     LocalizationResult,
@@ -26,6 +28,7 @@ from .signal_localization import (
     merge_difference_graphs,
     merge_similarity_graphs,
 )
+from .statistics import annotate_child_parent_divergence, annotate_sibling_divergence
 from .statistics.branch_length_utils import (
     compute_mean_branch_length,
     sanitize_positive_branch_length,
@@ -58,17 +61,15 @@ class TreeDecomposition:
 
     def __init__(
         self,
-        tree: nx.DiGraph,
+        tree: PosetTree,
         results_df: pd.DataFrame | None = None,
         *,
         alpha_local: float = config.ALPHA_LOCAL,
         sibling_alpha: float = config.SIBLING_ALPHA,
-        sibling_shortlist_size: int | None = None,
         posthoc_merge: bool = config.POSTHOC_MERGE,
         posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
         use_signal_localization: bool = config.USE_SIGNAL_LOCALIZATION,
         localization_max_depth: int | None = None,
-        localization_min_samples: int | None = None,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
 
@@ -96,17 +97,12 @@ class TreeDecomposition:
             enabling cross-boundary partial merges for soft cluster boundaries.
         localization_max_depth
             Maximum recursion depth for signal localization.
-        localization_min_samples
-            Minimum samples per node for localization testing.
         """
         self.tree = tree
         self.results_df = results_df if results_df is not None else pd.DataFrame()
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
 
-        self.sibling_shortlist_size = (
-            int(sibling_shortlist_size) if sibling_shortlist_size is not None else 0
-        )
         self.posthoc_merge = bool(posthoc_merge)
         self.posthoc_merge_alpha = (
             float(posthoc_merge_alpha) if posthoc_merge_alpha is not None else self.sibling_alpha
@@ -117,9 +113,6 @@ class TreeDecomposition:
         self.localization_max_depth = (
             None if localization_max_depth is None else int(localization_max_depth)
         )
-        self.localization_min_samples = (
-            None if localization_min_samples is None else int(localization_min_samples)
-        )
 
         # ----- root -----
         self._root = next(node_id for node_id, degree in self.tree.in_degree() if degree == 0)
@@ -128,14 +121,7 @@ class TreeDecomposition:
         self._cache_node_metadata()
 
         # ----- leaf partitions & counts (poset view) -----
-        if not hasattr(self.tree, "compute_descendant_sets"):
-            raise TypeError(
-                "TreeDecomposition requires a tree implementation that provides "
-                "`compute_descendant_sets(use_labels=...)` (e.g., PosetTree)."
-            )
-        self._leaf_partition_by_node = self.tree.compute_descendant_sets(  # type: ignore[attr-defined]
-            use_labels=True
-        )
+        self._leaf_partition_by_node = self.tree.compute_descendant_sets(use_labels=True)
 
         self._leaf_count_cache: Dict[str, int] = {
             node_id: self.tree.nodes[node_id].get(
@@ -150,6 +136,9 @@ class TreeDecomposition:
         # are simply absent.  If no edge has the attribute the Felsenstein
         # adjustment is disabled entirely (_mean_branch_length = None).
         self._mean_branch_length = compute_mean_branch_length(self.tree)
+
+        # ----- ensure statistical annotations are present -----
+        self.results_df = self._prepare_annotations(self.results_df)
 
         # ----- results_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
@@ -177,6 +166,75 @@ class TreeDecomposition:
         }
 
     # ---------- initialization helpers ----------
+
+    def _prepare_annotations(self, results_df: pd.DataFrame) -> pd.DataFrame:
+        """Ensure statistical annotation columns are present on *results_df*.
+
+        If the required gate columns (``Child_Parent_Divergence_Significant``,
+        ``Sibling_BH_Different``, ``Sibling_Divergence_Skipped``) already exist,
+        the DataFrame is returned unchanged.  Otherwise the annotation pipeline
+        is executed using the configured alpha levels and sibling test method.
+
+        Parameters
+        ----------
+        results_df
+            DataFrame indexed by node id.  May already contain the annotation
+            columns (pre-annotated path) or only base KL/distribution columns
+            (raw path).
+
+        Returns
+        -------
+        pd.DataFrame
+            The annotated DataFrame, ready for gate evaluation.
+        """
+        required = {
+            "Child_Parent_Divergence_Significant",
+            "Sibling_BH_Different",
+            "Sibling_Divergence_Skipped",
+        }
+        if required.issubset(results_df.columns):
+            return results_df
+
+        # -- Gate 2: child-parent divergence --
+        results_df = annotate_child_parent_divergence(
+            self.tree,
+            results_df,
+            significance_level_alpha=self.alpha_local,
+        )
+
+        # -- Gate 3: sibling divergence (method selected via config) --
+        if config.SIBLING_TEST_METHOD == "cousin_ftest":
+            from .statistics.sibling_divergence import annotate_sibling_divergence_cousin
+
+            results_df = annotate_sibling_divergence_cousin(
+                self.tree,
+                results_df,
+                significance_level_alpha=self.sibling_alpha,
+            )
+        elif config.SIBLING_TEST_METHOD == "cousin_adjusted_wald":
+            from .statistics.sibling_divergence import annotate_sibling_divergence_adjusted
+
+            results_df = annotate_sibling_divergence_adjusted(
+                self.tree,
+                results_df,
+                significance_level_alpha=self.sibling_alpha,
+            )
+        elif config.SIBLING_TEST_METHOD == "cousin_tree_guided":
+            from .statistics.sibling_divergence import annotate_sibling_divergence_tree_guided
+
+            results_df = annotate_sibling_divergence_tree_guided(
+                self.tree,
+                results_df,
+                significance_level_alpha=self.sibling_alpha,
+            )
+        else:
+            results_df = annotate_sibling_divergence(
+                self.tree,
+                results_df,
+                significance_level_alpha=self.sibling_alpha,
+            )
+
+        return results_df
 
     def _cache_node_metadata(self) -> None:
         """Cache node attributes for fast repeated access during decomposition.
@@ -324,9 +382,7 @@ class TreeDecomposition:
 
         Delegates to :func:`.cluster_assignments.build_cluster_assignments`.
         """
-        return _build_cluster_assignments_func(
-            final_leaf_sets, self._find_cluster_root
-        )
+        return _build_cluster_assignments_func(final_leaf_sets, self._find_cluster_root)
 
     def _should_split(self, parent: str) -> bool:
         """Evaluate statistical gates and return ``True`` when parent should split.
@@ -543,63 +599,10 @@ class TreeDecomposition:
             test_divergence=self._test_node_pair_divergence,
             alpha=self.sibling_alpha,
             max_depth=self.localization_max_depth,
-            min_samples=self.localization_min_samples,
             is_edge_significant=self._check_edge_significance,
         )
 
         return True, localization_result
-
-    def _pop_candidate(self, heap: List[str], queued: set[str], processed: set[str]) -> str | None:
-        """Pop the next candidate node for shortlist traversal."""
-
-        while heap:
-            node = heap.pop()
-            if node in processed:
-                continue
-            return node
-        return None
-
-    def _decompose_with_shortlist(self) -> dict[str, object]:
-        """Decomposition that exercises shortlist semantics for testing."""
-
-        heap: List[str] = [self._root]
-        queued: set[str] = {self._root}
-        processed: Set[str] = set()
-        final_leaf_sets: List[set[str]] = []
-
-        while heap:
-            node = self._pop_candidate(heap, queued, processed)
-            if node is None:
-                break
-            if node in processed:
-                continue
-            processed.add(node)
-
-            if self._should_split(node):
-                children = self._children[node]
-                for child in children:
-                    if child not in queued and child not in processed:
-                        heap.append(child)
-                        queued.add(child)
-            else:
-                final_leaf_sets.append(self._get_all_leaves(node))
-
-        cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
-
-        cluster_assignments, merge_audit = self._maybe_apply_posthoc_merge_with_audit(
-            cluster_assignments
-        )
-
-        return {
-            "cluster_assignments": cluster_assignments,
-            "num_clusters": len(cluster_assignments),
-            "posthoc_merge_audit": merge_audit,
-            "independence_analysis": {
-                "alpha_local": self.alpha_local,
-                "decision_mode": "sibling_divergence",
-                "posthoc_merge": self.posthoc_merge,
-            },
-        }
 
     # ---------- post-hoc merge helpers ----------
 
@@ -702,9 +705,6 @@ class TreeDecomposition:
         two children are appended in right-then-left order so that the left child
         is processed first on the next iteration.
         """
-        if self.sibling_shortlist_size:
-            return self._decompose_with_shortlist()
-
         nodes_to_visit: List[str] = [self._root]
         final_leaf_sets: List[set[str]] = []
         processed: Set[str] = set()
@@ -824,7 +824,6 @@ class TreeDecomposition:
                 "posthoc_merge": self.posthoc_merge,
                 "use_signal_localization": True,
                 "localization_max_depth": self.localization_max_depth,
-                "localization_min_samples": self.localization_min_samples,
             },
         }
 

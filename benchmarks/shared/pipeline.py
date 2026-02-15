@@ -52,10 +52,10 @@ from benchmarks.shared.audit_utils import (
 )
 
 # Small utilities (avoid circular imports by keeping them lightweight)
-from benchmarks.shared.utils_decomp import (
+from benchmarks.shared.util.decomposition import (
     _create_report_dataframe_from_labels,
 )
-from benchmarks.shared.time_utils import format_timestamp_utc
+from benchmarks.shared.util.time import format_timestamp_utc
 
 
 # Configure logger (library-friendly: leave handlers/levels to callers)
@@ -64,7 +64,16 @@ if not logger.handlers:
     logger.addHandler(logging.NullHandler())
 
 
-DEFAULT_METHODS = ["kl", "leiden", "louvain", "dbscan", "optics", "hdbscan"]
+DEFAULT_METHODS = [
+    "kl",
+    "leiden",
+    "louvain",
+    "kmeans",
+    "spectral",
+    "dbscan",
+    "optics",
+    "hdbscan",
+]
 
 
 def _format_params(params: dict[str, object]) -> str:
@@ -107,8 +116,7 @@ def _maybe_add_matrix(target: dict[str, object], name: str, value: object) -> No
     target[name] = arr
 
 
-# PDF concatenation helper moved to `benchmarks.shared.pdf_utils`.
-# See that module for the implementation.
+# PDF layout/merge helpers live under `benchmarks.shared.util.pdf_*`.
 def benchmark_cluster_algorithm(
     test_cases=None,
     significance_level=config.SIBLING_ALPHA,
@@ -323,14 +331,24 @@ def benchmark_cluster_algorithm(
                     spec = METHOD_SPECS[method_id]
                     params_list = param_sets[method_id]
                     for params in params_list:
+                        run_params = dict(params)
+                        if method_id in {"kmeans", "spectral"}:
+                            raw_k = run_params.get("n_clusters")
+                            if raw_k is None or str(raw_k).strip().lower() in {
+                                "true",
+                                "expected",
+                                "auto",
+                            }:
+                                run_params["n_clusters"] = int(meta["n_clusters"])
+
                         meta_run = meta.copy()
                         if method_id.startswith("kl"):
                             # KL runner supports per-run linkage/method configuration.
                             # Compute per-run distance_condensed if the metric differs.
-                            metric = params.get(
+                            metric = run_params.get(
                                 "tree_distance_metric", config.TREE_DISTANCE_METRIC
                             )
-                            linkage_method = params.get(
+                            linkage_method = run_params.get(
                                 "tree_linkage_method", config.TREE_LINKAGE_METHOD
                             )
                             # For SBM cases, the pre-computed modularity distance
@@ -357,11 +375,17 @@ def benchmark_cluster_algorithm(
                         elif method_id in {"leiden", "louvain"}:
                             result = spec.runner(
                                 distance_matrix,
-                                params,
+                                run_params,
+                                tc.get("seed"),
+                            )
+                        elif method_id in {"kmeans", "spectral"}:
+                            result = spec.runner(
+                                data_t.values,
+                                run_params,
                                 tc.get("seed"),
                             )
                         else:
-                            result = spec.runner(distance_matrix, params)
+                            result = spec.runner(distance_matrix, run_params)
 
                         if result.status == "ok" and result.labels is not None:
                             labels = result.labels
@@ -384,7 +408,7 @@ def benchmark_cluster_algorithm(
                                 "Case_Name": case_name,
                                 "Case_Category": meta.get("category", "unknown"),
                                 "Method": spec.name,
-                                "Params": _format_params(params),
+                                "Params": _format_params(run_params),
                                 "True": meta["n_clusters"],
                                 "Found": found_clusters,
                                 "Samples": meta["n_samples"],
@@ -405,7 +429,12 @@ def benchmark_cluster_algorithm(
                                 {
                                     "test_case_num": case_idx,
                                     "method_name": spec.name,
-                                    "params": params,
+                                    "params": run_params,
+                                    "ari": float(ari) if np.isfinite(ari) else np.nan,
+                                    "nmi": float(nmi) if np.isfinite(nmi) else np.nan,
+                                    "purity": float(purity)
+                                    if np.isfinite(purity)
+                                    else np.nan,
                                     "labels": result.labels,
                                     "data": data_t,
                                     "meta": meta_run,
@@ -430,7 +459,7 @@ def benchmark_cluster_algorithm(
 
                         if matrix_audit:
                             method_name = _slugify(spec.name)
-                            params_slug = _slugify(_format_params(params))
+                            params_slug = _slugify(_format_params(run_params))
                             method_tag = (
                                 method_name
                                 if not params_slug

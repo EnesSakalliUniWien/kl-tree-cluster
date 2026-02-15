@@ -2,7 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased] - 2025-12-24
+## [Unreleased] - 2026-02-14
+
+### Fixed
+- **Cousin-adjusted Wald regression extrapolation** (`cousin_adjusted_wald.py`): The log-linear calibration regression `log(T/k) = β₀ + β₁·log(BL_sum) + β₂·log(n_parent)` could extrapolate ĉ far beyond observed calibration data at the root node (where `n_parent` is largest). The β₂ coefficient (~1.3–1.5) caused predicted ĉ = 3–17× at the root while the maximum observed T/k ratio from null-like pairs was only ~1.4×. This over-deflation caused the root sibling test to always fail → K=1 collapse in ~30/95 benchmark cases.
+  - **Fix**: `_predict_c()` now clamps the regression prediction at `model.max_observed_ratio` — the maximum T/k ratio actually observed in null-like calibration pairs. This prevents the regression from extrapolating beyond its training domain while preserving calibration within the observed range.
+  - **Impact**: K=1 collapses eliminated for all non-SBM/non-phylogenetic cases. Exact K matches improved from 49/95 to 57/95. Mean ARI improved from 0.63 to 0.75. Zero regressions vs. raw Wald on previously working cases.
+  - `_CalibrationModel` gains `max_observed_ratio: float` field; diagnostics dict includes `max_observed_ratio` key.
 
 ### Changed
 - Remove deprecated `n_permutations` parameter from the decomposition API; callers passing it will no longer be accepted. Tests updated accordingly.

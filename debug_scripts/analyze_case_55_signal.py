@@ -149,7 +149,7 @@ def analyze_case_55_signal():
         print()
         print("OPTIONS:")
         print("1. Accept that high-noise data has limited detectability")
-        print("2. Use MI filtering to focus on informative features")
+        print("2. Use covariance-aware categorical testing (no feature prefiltering)")
         print("3. Increase sample size requirements")
         print("4. Lower significance threshold (more aggressive)")
     else:

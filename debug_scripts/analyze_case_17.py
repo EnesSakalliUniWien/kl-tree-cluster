@@ -221,7 +221,6 @@ def analyze_case_17():
         sibling_alpha=0.05,
         use_signal_localization=True,
         localization_max_depth=5,
-        localization_min_samples=2,
     )
 
     # Run V1 for comparison

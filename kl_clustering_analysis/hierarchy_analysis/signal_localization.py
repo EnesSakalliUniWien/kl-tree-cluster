@@ -128,11 +128,6 @@ def _is_leaf(tree: nx.DiGraph, node: str) -> bool:
     return tree.out_degree(node) == 0
 
 
-def _get_sample_size(tree: nx.DiGraph, node: str) -> int:
-    """Get sample size from node attributes."""
-    return tree.nodes[node].get("sample_size", 0)
-
-
 # =============================================================================
 # Core Localization Algorithm
 # =============================================================================
@@ -145,7 +140,6 @@ def localize_divergence_signal(
     test_divergence: Callable[[str, str], Tuple[float, float, float]],
     alpha: float = 0.05,
     max_depth: int | None = None,
-    min_samples: int | None = None,
     apply_fdr: bool = True,
     is_edge_significant: Callable[[str], bool] | None = None,
 ) -> LocalizationResult:
@@ -233,21 +227,7 @@ def localize_divergence_signal(
 
         # Test all cross-boundary pairs
         for l_node in left_nodes:
-            # Skip if too few samples (if limit set)
-            l_samples = _get_sample_size(tree, l_node)
-            if min_samples is not None and l_samples < min_samples and not _is_leaf(tree, l_node):
-                continue
-
             for r_node in right_nodes:
-                # Skip if too few samples (if limit set)
-                r_samples = _get_sample_size(tree, r_node)
-                if (
-                    min_samples is not None
-                    and r_samples < min_samples
-                    and not _is_leaf(tree, r_node)
-                ):
-                    continue
-
                 # Test this pair
                 stat, df, pval = test_divergence(l_node, r_node)
                 result.nodes_tested += 1
@@ -489,7 +469,6 @@ def build_cross_boundary_similarity(
     test_divergence: Callable[[str, str], Tuple[float, float, float]],
     alpha: float = 0.05,
     max_depth: int = 3,
-    min_samples: int = 5,
 ) -> Dict[str, LocalizationResult]:
     """Build localization results for all split points in the tree.
 
@@ -506,8 +485,6 @@ def build_cross_boundary_similarity(
         Significance level.
     max_depth : int
         Maximum recursion depth for localization.
-    min_samples : int
-        Minimum samples per node.
 
     Returns
     -------
@@ -524,7 +501,6 @@ def build_cross_boundary_similarity(
             test_divergence=test_divergence,
             alpha=alpha,
             max_depth=max_depth,
-            min_samples=min_samples,
         )
         results[parent] = result
 

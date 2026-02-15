@@ -74,6 +74,31 @@ METHOD_SPECS: dict[str, MethodSpec] = {
         ),
         param_grid=[{"n_neighbors": None, "resolution": 1.0}],
     ),
+    "kmeans": MethodSpec(
+        name="K-Means",
+        runner=_safe_import_runner(
+            "benchmarks.shared.runners.kmeans_runner",
+            "_run_kmeans_method",
+        ),
+        # Keep parity with visualization baselines by using true K per case.
+        param_grid=[{"n_clusters": "true", "n_init": 10}],
+    ),
+    "spectral": MethodSpec(
+        name="Spectral",
+        runner=_safe_import_runner(
+            "benchmarks.shared.runners.spectral_runner",
+            "_run_spectral_method",
+        ),
+        # Keep parity with visualization baselines by using true K per case.
+        param_grid=[
+            {
+                "n_clusters": "true",
+                "affinity": "nearest_neighbors",
+                "assign_labels": "cluster_qr",
+                "n_neighbors": None,
+            }
+        ],
+    ),
     "dbscan": MethodSpec(
         name="DBSCAN",
         runner=_safe_import_runner(

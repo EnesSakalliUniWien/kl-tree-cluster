@@ -83,7 +83,6 @@ def main():
         sibling_alpha=0.05,
         use_signal_localization=True,
         localization_max_depth=3,
-        localization_min_samples=2,
     )
 
     print("\nRunning decomposition...")

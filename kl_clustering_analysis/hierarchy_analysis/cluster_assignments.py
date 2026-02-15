@@ -8,7 +8,7 @@ stateless so they can be called from :class:`TreeDecomposition`,
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Set
+from typing import Callable, Set
 
 import pandas as pd
 
@@ -46,7 +46,7 @@ def build_cluster_assignments(
 
 
 def build_sample_cluster_assignments(
-    decomposition_results: Dict[str, object],
+    decomposition_results: dict[str, object],
 ) -> pd.DataFrame:
     """Build per-sample cluster assignments from decomposition output.
 
@@ -66,12 +66,14 @@ def build_sample_cluster_assignments(
         - ``cluster_root``: node identifier that forms the cluster boundary
         - ``cluster_size``: number of samples in the cluster
     """
-    cluster_assignments = decomposition_results.get("cluster_assignments", {})
-    if not cluster_assignments:
+    raw_cluster_assignments = decomposition_results.get("cluster_assignments", {})
+    if not isinstance(raw_cluster_assignments, dict) or not raw_cluster_assignments:
         return pd.DataFrame(columns=["cluster_id", "cluster_root", "cluster_size"])
 
-    rows: Dict[str, Dict[str, object]] = {}
-    for cluster_identifier, info in cluster_assignments.items():
+    rows: dict[str, dict[str, object]] = {}
+    for cluster_identifier, info in raw_cluster_assignments.items():
+        if not isinstance(info, dict):
+            continue
         root = info.get("root_node")
         size = info.get("size", 0)
         for sample_identifier in info.get("leaves", []):

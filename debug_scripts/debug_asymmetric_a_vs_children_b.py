@@ -248,7 +248,7 @@ def demonstrate_with_clear_asymmetric_case():
     print("\nGround truth: {s0, s1, s2} and {s3}")
 
     # Force a specific tree structure for demonstration
-    # We'll use a custom distance to get the "wrong" tree
+    # ...existing code...
     from scipy.cluster.hierarchy import linkage
 
     # Create custom distances that force (s0,s1) and (s2,s3) grouping

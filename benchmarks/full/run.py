@@ -1,173 +1,30 @@
-import sys
-import os
 import gc
-import multiprocessing as mp
-import shutil
-import subprocess
+import os
+import sys
 from pathlib import Path
 
-# Add the project root to the python path
+# Add the project root to the python path BEFORE any benchmarks/kl_clustering imports
+# so that spawn-based subprocesses can resolve the packages.
 repo_root = Path(__file__).resolve().parents[2]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.pipeline import benchmark_cluster_algorithm
-from benchmarks.shared.runners.method_registry import METHOD_SPECS
-from benchmarks.shared.env import get_env_bool, get_env_int
-from benchmarks.shared.time_utils import format_timestamp_utc
 import pandas as pd
-import numpy as np
+
+from benchmarks.calibration.run import run_calibration_suite
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.env import get_env_bool, get_env_int
+from benchmarks.shared.runners.method_registry import METHOD_SPECS
+from benchmarks.shared.util.case_execution import run_case_with_optional_isolation
+from benchmarks.shared.util.method_selection import resolve_methods_from_env
+from benchmarks.shared.util.pdf_merge import merge_existing_pdfs
+from benchmarks.shared.util.time import format_timestamp_utc
+from kl_clustering_analysis import config
 
 try:
     from benchmarks.shared.debug_trace import diagnose_benchmark_failures
 except ImportError:
     diagnose_benchmark_failures = None
-
-def _resolve_methods_to_test() -> list[str]:
-    """Resolve method list from KL_TE_METHODS, defaulting to all registry methods."""
-    raw = (os.getenv("KL_TE_METHODS") or "all").strip()
-    if raw.lower() == "all":
-        return list(METHOD_SPECS.keys())
-
-    selected = [m.strip() for m in raw.split(",") if m.strip()]
-    if not selected:
-        raise ValueError("KL_TE_METHODS is empty. Provide comma-separated method ids or 'all'.")
-
-    unknown = [m for m in selected if m not in METHOD_SPECS]
-    if unknown:
-        available = ", ".join(sorted(METHOD_SPECS.keys()))
-        raise ValueError(
-            f"Unknown methods in KL_TE_METHODS: {unknown}. Available: {available}"
-        )
-    return selected
-
-
-def _concat_case_pdfs(case_pdfs: list[Path], output_pdf: Path) -> bool:
-    """Concatenate case-level PDFs into a single report PDF."""
-    existing = [p for p in case_pdfs if p.exists()]
-    if not existing:
-        print("No case-level PDFs found to concatenate.")
-        return False
-
-    output_pdf.parent.mkdir(parents=True, exist_ok=True)
-
-    if len(existing) == 1:
-        shutil.copyfile(existing[0], output_pdf)
-        print(f"Single PDF report copied to {output_pdf}")
-        return True
-
-    pdfunite = shutil.which("pdfunite")
-    if pdfunite:
-        cmd = [pdfunite, *[str(p) for p in existing], str(output_pdf)]
-        subprocess.run(cmd, check=True)
-        print(f"Concatenated {len(existing)} case PDFs to {output_pdf}")
-        return True
-
-    gs = shutil.which("gs")
-    if gs:
-        cmd = [
-            gs,
-            "-dBATCH",
-            "-dNOPAUSE",
-            "-q",
-            "-sDEVICE=pdfwrite",
-            f"-sOutputFile={output_pdf}",
-            *[str(p) for p in existing],
-        ]
-        subprocess.run(cmd, check=True)
-        print(f"Concatenated {len(existing)} case PDFs to {output_pdf}")
-        return True
-
-    print(
-        "Could not concatenate PDFs automatically (missing 'pdfunite' and 'gs'). "
-        f"Case-level PDFs remain in {existing[0].parent}"
-    )
-    return False
-
-
-def _run_case_worker(
-    queue: "mp.Queue",
-    case: dict,
-    methods_to_test: list[str],
-    case_plot_umap: bool,
-    case_plot_manifold: bool,
-    enable_plots: bool,
-    pdf_path: str | None,
-) -> None:
-    """Execute one case in a fresh process and return rows via a queue."""
-    # Reduce native runtime contention in spawned workers. This materially
-    # lowers intermittent SIGSEGV/SIGBUS failures in heavy numeric workloads.
-    os.environ.setdefault("OMP_NUM_THREADS", "1")
-    os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
-    os.environ.setdefault("MKL_NUM_THREADS", "1")
-    os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
-    os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
-
-    try:
-        df_res, _ = benchmark_cluster_algorithm(
-            test_cases=[case],
-            methods=methods_to_test,
-            verbose=False,
-            plot_umap=case_plot_umap,
-            plot_manifold=case_plot_manifold,
-            concat_plots_pdf=enable_plots,
-            concat_output=pdf_path,
-            save_individual_plots=False,
-            matrix_audit=False,
-        )
-        queue.put({"ok": True, "rows": df_res.to_dict(orient="records")})
-    except Exception as exc:
-        queue.put({"ok": False, "error": str(exc)})
-
-
-def _run_case_isolated(
-    case: dict,
-    methods_to_test: list[str],
-    case_plot_umap: bool,
-    case_plot_manifold: bool,
-    enable_plots: bool,
-    pdf_path: str | None,
-    timeout_sec: int,
-) -> pd.DataFrame:
-    """Run a single benchmark case in an isolated subprocess."""
-    ctx = mp.get_context("spawn")
-    queue: "mp.Queue" = ctx.Queue()
-    proc = ctx.Process(
-        target=_run_case_worker,
-        args=(
-            queue,
-            case,
-            methods_to_test,
-            case_plot_umap,
-            case_plot_manifold,
-            enable_plots,
-            pdf_path,
-        ),
-    )
-    proc.start()
-    proc.join(timeout=timeout_sec)
-
-    if proc.is_alive():
-        proc.terminate()
-        proc.join()
-        raise RuntimeError(
-            f"Case subprocess timed out after {timeout_sec}s (likely plotting memory pressure)."
-        )
-
-    payload = None
-    if not queue.empty():
-        payload = queue.get()
-
-    if proc.exitcode != 0 and payload is None:
-        raise RuntimeError(f"Case subprocess exited with code {proc.exitcode}.")
-    if payload is None:
-        return pd.DataFrame()
-    if not payload.get("ok", False):
-        raise RuntimeError(payload.get("error", "Unknown case subprocess failure."))
-
-    rows = payload.get("rows", [])
-    return pd.DataFrame(rows)
 
 
 def run_benchmarks():
@@ -175,7 +32,7 @@ def run_benchmarks():
     test_cases = get_default_test_cases()
     print(f"Found {len(test_cases)} test cases.")
 
-    methods_to_test = _resolve_methods_to_test()
+    methods_to_test = resolve_methods_from_env(METHOD_SPECS)
     required_tree_methods = ["kl", "kl_rogerstanimoto"]
     added_tree_methods = [m for m in required_tree_methods if m not in methods_to_test]
     if added_tree_methods:
@@ -187,9 +44,7 @@ def run_benchmarks():
     # when plotting is on.
     enable_plots = get_env_bool("KL_TE_ENABLE_PLOTS", default=True)
     enable_umap = enable_plots
-    enable_manifold = (
-        get_env_bool("KL_TE_ENABLE_MANIFOLD", default=False) and enable_plots
-    )
+    enable_manifold = get_env_bool("KL_TE_ENABLE_MANIFOLD", default=False) and enable_plots
     isolate_umap_cases = get_env_bool("KL_TE_UMAP_ISOLATE_CASES", default=enable_umap)
     case_timeout_sec = get_env_int("KL_TE_CASE_TIMEOUT_SEC", 1800)
     case_retry_count = max(0, get_env_int("KL_TE_CASE_RETRY_COUNT", 4))
@@ -199,6 +54,9 @@ def run_benchmarks():
         os.environ["KL_TE_EMBEDDING_BACKEND_3D"] = "umap"
     if enable_umap and "KL_TE_FORCE_UMAP_FOR_LARGE" not in os.environ:
         os.environ["KL_TE_FORCE_UMAP_FOR_LARGE"] = "1"
+    run_calibration = get_env_bool("KL_TE_RUN_CALIBRATION", default=False)
+    calibration_null_reps = get_env_int("KL_TE_CAL_NULL_REPS", 30)
+    calibration_treebh_reps = get_env_int("KL_TE_CAL_TREEBH_REPS", 200)
     if enable_umap:
         try:
             import umap  # noqa: F401
@@ -214,6 +72,11 @@ def run_benchmarks():
         f"isolate_umap_cases={isolate_umap_cases}, "
         f"case_retry_count={case_retry_count}"
     )
+    if run_calibration:
+        print(
+            "Calibration settings: "
+            f"null_reps={calibration_null_reps}, treebh_reps={calibration_treebh_reps}"
+        )
 
     # Single benchmark results root
     timestamp = format_timestamp_utc()
@@ -245,9 +108,7 @@ def run_benchmarks():
                     .astype(int)
                     .tolist()
                 )
-            print(
-                f"Resuming... Found {len(existing_case_keys)} already completed test indices."
-            )
+            print(f"Resuming... Found {len(existing_case_keys)} already completed test indices.")
         except Exception as e:
             print(f"Error reading existing results, starting fresh: {e}")
             all_results = pd.DataFrame()
@@ -276,9 +137,7 @@ def run_benchmarks():
         case["test_case_num"] = case_key
 
         try:
-            pdf_path = (
-                str((pdf_dir / f"{case_id}.pdf").absolute()) if enable_plots else None
-            )
+            pdf_path = str((pdf_dir / f"{case_id}.pdf").absolute()) if enable_plots else None
 
             # Use both *_features/samples and *_cols/rows keys to detect large cases.
             n_features = int(case.get("n_features", case.get("n_cols", 0)) or 0)
@@ -287,60 +146,18 @@ def run_benchmarks():
             case_plot_umap = enable_umap
             case_plot_manifold = enable_manifold and not is_large
 
-            if case_plot_umap and isolate_umap_cases:
-                df_res = None
-                last_err: Exception | None = None
-                for attempt in range(1, case_retry_count + 2):
-                    try:
-                        df_res = _run_case_isolated(
-                            case=case,
-                            methods_to_test=methods_to_test,
-                            case_plot_umap=case_plot_umap,
-                            case_plot_manifold=case_plot_manifold,
-                            enable_plots=enable_plots,
-                            pdf_path=pdf_path,
-                            timeout_sec=case_timeout_sec,
-                        )
-                        break
-                    except RuntimeError as e:
-                        last_err = e
-                        msg = str(e)
-                        if "exited with code -11" in msg:
-                            if attempt <= case_retry_count:
-                                print(
-                                    f"  WARN: isolated subprocess SIGSEGV on '{case_id}' "
-                                    f"(attempt {attempt}/{case_retry_count + 1}); retrying...",
-                                    flush=True,
-                                )
-                                gc.collect()
-                                continue
-                            print(
-                                f"  WARN: isolated subprocess kept SIGSEGV-ing on '{case_id}' "
-                                f"after {case_retry_count + 1} attempts; falling back "
-                                "to in-process execution for this case.",
-                                flush=True,
-                            )
-                            break
-                        raise
-
-                if df_res is None and isinstance(last_err, RuntimeError):
-                    if "exited with code -11" not in str(last_err):
-                        raise last_err
-            else:
-                df_res = None
-
-            if df_res is None:
-                df_res, _ = benchmark_cluster_algorithm(
-                    test_cases=[case],
-                    methods=methods_to_test,
-                    verbose=False,
-                    plot_umap=case_plot_umap,
-                    plot_manifold=case_plot_manifold,
-                    concat_plots_pdf=enable_plots,
-                    concat_output=pdf_path,
-                    save_individual_plots=False,
-                    matrix_audit=False,  # Disable heavy TensorBoard exports to prevent memory crashes
-                )
+            df_res = run_case_with_optional_isolation(
+                case=case,
+                case_id=str(case_id),
+                methods_to_test=methods_to_test,
+                case_plot_umap=case_plot_umap,
+                case_plot_manifold=case_plot_manifold,
+                enable_plots=enable_plots,
+                pdf_path=pdf_path,
+                isolate_umap_cases=isolate_umap_cases,
+                timeout_sec=case_timeout_sec,
+                retry_count=case_retry_count,
+            )
 
             if not df_res.empty:
                 df_res = df_res.rename(
@@ -355,9 +172,7 @@ def run_benchmarks():
                 )
 
                 name_map = {spec.name: method_id for method_id, spec in METHOD_SPECS.items()}
-                df_res["method"] = df_res["method"].map(
-                    lambda x: name_map.get(str(x), str(x))
-                )
+                df_res["method"] = df_res["method"].map(lambda x: name_map.get(str(x), str(x)))
 
                 all_results = pd.concat([all_results, df_res], ignore_index=True)
 
@@ -383,6 +198,22 @@ def run_benchmarks():
     print("-" * 50)
     print("Benchmark Complete.")
 
+    calibration_pdf: Path | None = None
+    if run_calibration:
+        print("\nRunning calibration suite (null/Type-I + TreeBH)...")
+        try:
+            cal_outputs = run_calibration_suite(
+                run_dir=run_dir,
+                alpha=float(config.SIBLING_ALPHA),
+                n_reps_null=max(1, int(calibration_null_reps)),
+                n_reps_treebh=max(1, int(calibration_treebh_reps)),
+            )
+            calibration_pdf = Path(cal_outputs["plots_pdf"])
+            print(f"Calibration report written: {cal_outputs['report_md']}")
+            print(f"Calibration plots written: {cal_outputs['plots_pdf']}")
+        except Exception as e:
+            print(f"Calibration suite failed: {e}")
+
     if enable_plots:
         report_pdf = run_dir / "full_benchmark_report.pdf"
         ordered_case_pdfs = []
@@ -391,7 +222,10 @@ def run_benchmarks():
             if not case_id:
                 continue
             ordered_case_pdfs.append(pdf_dir / f"{case_id}.pdf")
-        _concat_case_pdfs(ordered_case_pdfs, report_pdf)
+        if calibration_pdf is not None and calibration_pdf.exists():
+            ordered_case_pdfs.append(calibration_pdf)
+            print(f"Appending calibration plots to full report: {calibration_pdf}")
+        merge_existing_pdfs(ordered_case_pdfs, report_pdf, verbose=True)
 
     if all_results.empty:
         print("No results collected.")

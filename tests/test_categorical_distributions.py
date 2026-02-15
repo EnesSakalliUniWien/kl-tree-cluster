@@ -17,11 +17,6 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.pooled_variance import
     _is_categorical,
     _flatten_categorical,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.mi_feature_selection import (
-    select_informative_features,
-    _feature_entropy,
-    _compute_feature_mi,
-)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     sibling_divergence_test,
 )
@@ -157,128 +152,6 @@ class TestPooledVarianceCategorical:
         assert variance.shape == (8,)
 
 
-class TestFeatureEntropyBinary:
-    """Tests for feature entropy with binary distributions."""
-
-    def test_entropy_binary_uniform(self):
-        """Uniform binary distribution has maximum entropy."""
-        p = np.array([0.5, 0.5])
-        H = _feature_entropy(p)
-        # H(0.5) = -0.5*log(0.5) - 0.5*log(0.5) = log(2) ≈ 0.693
-        np.testing.assert_array_almost_equal(H, [np.log(2), np.log(2)])
-
-    def test_entropy_binary_deterministic(self):
-        """Deterministic binary distribution has zero entropy."""
-        p = np.array([0.0, 1.0])
-        H = _feature_entropy(p)
-        # Should be close to 0 (clipped to avoid log(0))
-        assert np.all(H < 0.01)
-
-
-class TestFeatureEntropyCategorical:
-    """Tests for feature entropy with categorical distributions."""
-
-    def test_entropy_categorical_uniform(self):
-        """Uniform categorical distribution has maximum entropy."""
-        # 2 features, 4 categories each (uniform)
-        p = np.array([
-            [0.25, 0.25, 0.25, 0.25],
-            [0.25, 0.25, 0.25, 0.25],
-        ])
-        H = _feature_entropy(p)
-        # H(uniform over 4) = log(4) ≈ 1.386
-        np.testing.assert_array_almost_equal(H, [np.log(4), np.log(4)])
-
-    def test_entropy_categorical_deterministic(self):
-        """Deterministic categorical distribution has zero entropy."""
-        p = np.array([
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-        ])
-        H = _feature_entropy(p)
-        assert np.all(H < 0.01)
-
-
-class TestMIFeatureSelectionBinary:
-    """Tests for MI feature selection with binary distributions."""
-
-    def test_mi_identical_distributions_zero(self):
-        """MI should be zero when distributions are identical."""
-        theta = np.array([0.3, 0.5, 0.7])
-        mi = _compute_feature_mi(theta, theta, 100.0, 100.0)
-        np.testing.assert_array_almost_equal(mi, [0.0, 0.0, 0.0])
-
-    def test_mi_different_distributions_positive(self):
-        """MI should be positive when distributions differ."""
-        theta_left = np.array([0.1, 0.5, 0.9])
-        theta_right = np.array([0.9, 0.5, 0.1])
-        mi = _compute_feature_mi(theta_left, theta_right, 100.0, 100.0)
-        # First and third features differ, second is same
-        assert mi[0] > 0.01
-        assert mi[1] < 0.01
-        assert mi[2] > 0.01
-
-    def test_select_informative_features_binary(self):
-        """Feature selection should work for binary distributions."""
-        theta_left = np.array([0.1, 0.5, 0.5, 0.9])
-        theta_right = np.array([0.9, 0.5, 0.5, 0.1])
-        mask, mi, n_selected = select_informative_features(
-            theta_left, theta_right, 100.0, 100.0
-        )
-        assert mask.shape == (4,)
-        assert mi.shape == (4,)
-        assert n_selected >= 1
-
-
-class TestMIFeatureSelectionCategorical:
-    """Tests for MI feature selection with categorical distributions."""
-
-    def test_mi_categorical_identical_zero(self):
-        """MI should be zero when categorical distributions are identical."""
-        theta = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.25, 0.25, 0.25, 0.25],
-        ])
-        mi = _compute_feature_mi(theta, theta, 100.0, 100.0)
-        np.testing.assert_array_almost_equal(mi, [0.0, 0.0])
-
-    def test_mi_categorical_different_positive(self):
-        """MI should be positive when categorical distributions differ."""
-        theta_left = np.array([
-            [0.9, 0.05, 0.025, 0.025],  # Concentrated on first category
-            [0.25, 0.25, 0.25, 0.25],   # Uniform
-        ])
-        theta_right = np.array([
-            [0.025, 0.025, 0.05, 0.9],  # Concentrated on last category
-            [0.25, 0.25, 0.25, 0.25],   # Uniform
-        ])
-        mi = _compute_feature_mi(theta_left, theta_right, 100.0, 100.0)
-        # First feature differs significantly, second is same
-        assert mi[0] > 0.1
-        assert mi[1] < 0.01
-
-    def test_select_informative_features_categorical(self):
-        """Feature selection should work for categorical distributions."""
-        theta_left = np.array([
-            [0.9, 0.05, 0.025, 0.025],
-            [0.25, 0.25, 0.25, 0.25],
-            [0.25, 0.25, 0.25, 0.25],
-        ])
-        theta_right = np.array([
-            [0.025, 0.025, 0.05, 0.9],
-            [0.25, 0.25, 0.25, 0.25],
-            [0.25, 0.25, 0.25, 0.25],
-        ])
-        mask, mi, n_selected = select_informative_features(
-            theta_left, theta_right, 100.0, 100.0
-        )
-        assert mask.shape == (3,)  # 3 features
-        assert mi.shape == (3,)
-        assert n_selected >= 1
-        # First feature should be selected (highest MI)
-        assert mask[0] == True
-
-
 class TestSiblingDivergenceTestBinary:
     """Tests for sibling divergence test with binary distributions."""
 
@@ -366,11 +239,6 @@ class TestShapeConsistency:
         z, var = standardize_proportion_difference(theta_left, theta_right, 100.0, 100.0)
         assert z.shape == (d,)
 
-        # MI feature selection
-        mask, mi, n = select_informative_features(theta_left, theta_right, 100.0, 100.0)
-        assert mask.shape == (d,)
-        assert mi.shape == (d,)
-
     def test_categorical_shape_preserved_through_pipeline(self):
         """Categorical distributions maintain correct shapes through pipeline."""
         d, K = 10, 5
@@ -388,8 +256,3 @@ class TestShapeConsistency:
         # Standardized difference (flattened to 1D)
         z, var = standardize_proportion_difference(theta_left, theta_right, 100.0, 100.0)
         assert z.shape == (d * K,)
-
-        # MI feature selection (operates on features, not categories)
-        mask, mi, n = select_informative_features(theta_left, theta_right, 100.0, 100.0)
-        assert mask.shape == (d,)
-        assert mi.shape == (d,)

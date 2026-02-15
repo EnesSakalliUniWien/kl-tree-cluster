@@ -1,10 +1,10 @@
 # Abstract
 
-We present an information-theoretic clustering approach that decomposes a hierarchical tree into stable partitions through sequential hypothesis testing. The method employs local, data-driven stopping criteria to adapt to the specific structure of each branch, verifying Information Gain and Structural Independence to identify statistically distinct clusters.
+We present an information-theoretic clustering approach that decomposes a hierarchical tree into stable partitions through sequential hypothesis testing. The method employs local, data-driven stopping criteria to adapt to the specific structure of each branch, verifying child-parent divergence and sibling divergence to identify statistically distinct clusters.
 
 ## Introduction
 
-The analysis begins with a hierarchical tree structure derived from the input dataset. While standard hierarchical clustering methods often rely on arbitrary global thresholds (e.g., a fixed cut height) to partition such trees, this approach **dynamically identifies stable partitions using local statistical tests**. It adapts to the specific structure of each branch and utilizes tests on the samples themselves (Chi-square for divergence, Permutation tests for independence) to determine cluster completeness, rather than relying on user-defined parameters. The top-down decision process sequentially evaluates candidate splits—potential subtrees that represent distinct clusters—by verifying two key properties: **Information Gain** (via KL Divergence) to ensure the new subgroup is statistically different from the parent, and **Structural Independence** (via Conditional Mutual Information) to confirm the split separates distinct patterns rather than artificially dividing a homogeneous group.
+The analysis begins with a hierarchical tree structure derived from the input dataset. While standard hierarchical clustering methods often rely on arbitrary global thresholds (e.g., a fixed cut height) to partition such trees, this approach **dynamically identifies stable partitions using local statistical tests**. It adapts to the specific structure of each branch and uses projected Wald chi-square tests for both child-parent and sibling comparisons, rather than relying on user-defined global cut parameters. The top-down decision process sequentially evaluates candidate splits—potential subtrees that represent distinct clusters—by verifying two properties: **Information Gain** (child-parent divergence) and **Sibling Divergence** (whether the two children are statistically separable).
 
 ## Method
 
@@ -14,51 +14,47 @@ The method models the input data ($N$ samples, $D$ **features**) as a probabilis
 
 The algorithm proceeds recursively from the root to the leaves. If a node passes all statistical gates, it is considered a **heterogeneous mixture**, and the splitting process continues to its children to find finer-grained substructures. However, if a node fails any gate, the split is deemed **not significant**, indicating the node represents a single homogeneous group. The splitting process stops at that branch, and the current node is identified as a final **Cluster**. All samples (leaves) within this node are assigned to this cluster, effectively grouping them together. This process naturally prunes the tree, resulting in a final partition of the dataset into statistically stable, homogeneous groups.
 
-A node is split only if it passes two complementary gates. The **Local Divergence Test (Information Gain)** ensures that every split yields a statistically significant gain in information. We first compute probabilistic summaries for each node. Specifically, for a node $u$ containing a set of descendant samples $S_u$, we calculate the mean feature vector to estimate the distribution parameters $\theta_u$:
+A node is split only if it passes two complementary gates. The first gate is a **Local Child-Parent Divergence Test** that checks whether a child node is statistically distinguishable from its parent. We first compute probabilistic summaries for each node. Specifically, for a node $u$ containing a set of descendant samples $S_u$, we calculate the mean feature vector to estimate distribution parameters $\theta_u$:
 $$ \theta_u = \frac{1}{|S_u|} \sum_{i \in S_u} x_i $$
-where $x_i$ represents the feature vector of sample $i$. This defines the parent ($\theta_{parent}$) and child ($\theta_{child}$) probability distributions. The information gain is then captured by the **Kullback-Leibler (KL) Divergence** between them:
-$$ D_{KL}(\theta_{child} || \theta_{parent}) = \sum_{j} \theta_{child, j} \ln \left( \frac{\theta_{child, j}}{\theta_{parent, j}} \right) $$
+where $x_i$ represents the feature vector of sample $i$. This defines the parent ($\theta_{parent}$) and child ($\theta_{child}$) distributions.
 
-We analyze the behavior of this metric in two limiting cases: **Identical Distributions (Lower Bound)**: When the child and parent distributions are identical ($\theta_{child} = \theta_{parent}$), the divergence reaches its strict lower bound of **0**. This result is consistent with **Gibbs' Inequality**. **Completely Different Distributions (Upper Bound)**: When the distributions are completely different (disjoint support), the divergence approaches **$+\infty$**, indicating that the parent model assigns zero probability to events that occur in the child distribution.
+For each edge $e=(p \rightarrow c)$, the implementation uses a nested-sample Wald standardization:
+$$
+z_j = \frac{\theta_{c,j} - \theta_{p,j}}{\sqrt{\theta_{p,j}(1-\theta_{p,j})\left(\frac{1}{n_c}-\frac{1}{n_p}\right)}}
+$$
+where $n_c < n_p$ is required by the tree nesting structure.
 
-Conceptually, since the parent distribution is a weighted mixture of its children's distributions ($\theta_{parent} = \sum_{c \in children} \frac{|S_c|}{|S_{parent}|} \theta_c$), the test determines whether the leaves underlying a child node come from a distinct sub-population or are merely a random subset of the parent. A significant test result implies that the child distribution $\theta_{child}$ diverges statistically from the parent $\theta_{parent}$ (i.e., $D_{KL}(\theta_{child} || \theta_{parent}) \gg 0$), confirming that the child represents a unique distribution distinct from the mixture.
+When branch lengths are available, the edge variance is scaled by a Felsenstein-style normalized factor:
+$$
+\mathrm{Var}_{adj} = \mathrm{Var}\cdot\left(1+\frac{b_e}{\bar b}\right),
+$$
+where $b_e$ is the edge branch length and $\bar b$ is the mean valid branch length in the tree.
 
-To distinguish true signal from sampling noise, we perform a hypothesis test. For an edge $e$ connecting a parent to a child with distribution $\theta_{child}$, we evaluate the significance using the Chi-square approximation:
-$$ H_{0, KL}(e): 2 \cdot |S_u| \cdot D_{KL}(\theta_{child} || \theta_{parent}) \sim \chi^2_D $$
+For categorical features, one category per feature is removed before testing to respect simplex constraints (effective $K-1$ dimensions per feature). The standardized vector is then projected to dimension $k$ (chosen by a Johnson-Lindenstrauss bound), and the edge statistic is:
+$$
+T_{edge} = \|Rz\|_2^2,\qquad T_{edge}\sim\chi^2_k \text{ under } H_0.
+$$
+The p-value is computed as:
+$$
+p_e = \Pr(\chi^2_k \ge T_{edge}).
+$$
 
-**Theoretical Justification (Wilks' Theorem)**: This approximation is grounded in Wilks' Theorem, which states that the test statistic of a Likelihood Ratio Test approaches a Chi-square distribution asymptotically. Here, the quantity $2 \cdot |S_u| \cdot D_{KL}$ corresponds to the log-likelihood ratio statistic, and the feature count $D$ corresponds to the degrees of freedom.
-
-**Moments of the Null Distribution**:
-
-* **Mean (Expected Value)**: The mean of the Chi-square distribution is $D$. This implies that the expected KL divergence due to pure random noise is
-$$\mathbb{E}[D_{KL}] \approx \frac{D}{2 \cdot |S_u|}$$
-This serves as the "noise floor".
-
-* **Variance and Standard Deviation**: The variance is $2D$, and the standard deviation is $\sigma = \sqrt{2D}$.
-A test statistic significantly exceeding the mean (typically by multiple standard deviations) indicates a deviation that cannot be explained by chance alone.
-
-If the divergence is statistically significant for at least one child, it implies that the split captures a meaningful deviation from the parent distribution.
-
-Since the algorithm performs hypothesis tests at many nodes recursively, the probability of making a false discovery accumulates. To account for this, we apply the **Benjamini-Hochberg correction** with a False Discovery Rate (FDR) of $\alpha$. We sort the $m$ p-values (where $m$ is the total number of edges in the tree, calculated as $m = 2N - 2$) in ascending order
+Since the algorithm performs many edge tests recursively, false discoveries can accumulate. To control this, an FDR correction is applied to edge-level p-values (TreeBH by default in the current implementation, with flat BH and level-wise variants also available). For flat BH, we sort the $m$ p-values in ascending order
 $$ p_{(1)} \le p_{(2)} \le \dots \le p_{(m)} $$
 and identify the largest rank $k$ satisfying the condition below. This rank $k$ corresponds to the index of the largest p-value that is considered significant:
 
 $$ p_{(k)} \le \frac{k}{m} \alpha $$
 
-This threshold $\frac{k}{m} \alpha$ acts as the adjusted critical value. If a split's p-value is less than or equal to this threshold (i.e., we reject the null hypothesis of identical distributions), the split is confirmed as **significant**. This confirms that the child node and its underlying leaves are statistically distinct from its parent, ensuring the detected structure is not due to random sampling variation.
+This threshold $\frac{k}{m} \alpha$ acts as the adjusted critical value. If an edge p-value is less than or equal to this threshold, the child-parent divergence is marked **significant**.
 
 Let $\mathcal{E}$ be the set of all edges in the tree. We identify the subset of significant edges $\mathcal{E}_{sig} \subseteq \mathcal{E}$ by evaluating the local divergence hypothesis:
-$$ \mathcal{E}_{sig} = \{ e \in \mathcal{E} \mid \text{Reject } H_{0, KL}(e) \} $$
-We then proceed to the **Sibling Independence Test (Structural Significance)**, which is evaluated conditionally on the structure retained in $\mathcal{E}_{sig}$.
+$$ \mathcal{E}_{sig} = \{ e \in \mathcal{E} \mid \text{Reject } H_{0,\text{edge}}(e) \} $$
+We then proceed to the **Sibling Divergence Test**, which is evaluated conditionally on the structure retained in $\mathcal{E}_{sig}$.
 
-This test evaluates the relationship between the two children ($C_1$ and $C_2$) of the current node $P$ to ensure the split separates distinct sub-populations rather than arbitrarily partitioning a homogeneous group. It relies on **Conditional Mutual Information (CMI)** to measure the dependence between these siblings ($C_1, C_2$) conditioned on their parent ($P$). If the children are statistically dependent (high CMI), it implies they share a common structure not explained by the parent, suggesting the split is artificial. We require the children to be conditionally independent, indicating they represent orthogonal or distinct sub-patterns. The statistical significance of this independence is evaluated using a permutation-based test. To approximate the null distribution of CMI under the assumption of conditional independence ($C_1 \perp C_2 \mid P$), we randomly permute the assignments of one child ($C_2$) *within* the groups defined by the parent ($P$). This shuffling preserves the marginal distributions
-$$ P(C_1|P) $$
-and
-$$ P(C_2|P) $$
-but destroys any conditional dependence between $C_1$ and $C_2$.
-We compute the CMI for $K$ such permuted datasets and calculate the p-value as the fraction of permutations where the randomized CMI exceeds the observed CMI:
-
-$$ p = \frac{1}{K} \sum_{k=1}^{K} \mathbb{I}(I(C_1; C_2^* | P) \ge I_{obs}) $$
+This test evaluates whether the two children ($C_1$ and $C_2$) of the current node $P$ are statistically separable. In the implementation, sibling testing is a two-sample projected Wald test: compute standardized coordinate-wise differences, optionally apply branch-length variance scaling, project to dimension $k$ (chosen via the Johnson-Lindenstrauss bound), and evaluate
+$$ T_{sib} = \|R z\|_2^2 \sim \chi^2_k $$
+under the null of equal sibling distributions. For categorical features, one category per feature is dropped before projection to respect simplex constraints. Sibling p-values across eligible parents are then corrected with BH/FDR at level $\alpha$, and a split is retained only when siblings are significantly different after correction.
 
 ##### Conclusion
-This approach constitutes a statistically grounded pruning of a hierarchical tree. By combining Information Geometry (KL Divergence) for distance and Information Theory (CMI) for structural independence, it ensures that the resulting clusters are both distinct from their neighbors and internally homogeneous, without relying on arbitrary global thresholds.
+
+This approach constitutes a statistically grounded pruning of a hierarchical tree. By combining information-theoretic node summaries with projected Wald divergence tests and FDR control, it ensures that the resulting clusters are both distinct from their neighbors and internally homogeneous, without relying on arbitrary global thresholds.

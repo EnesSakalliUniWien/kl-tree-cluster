@@ -1,12 +1,12 @@
-from typing import Dict, Any, TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Dict
+
+import networkx as nx
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import networkx as nx
 from scipy.special import rel_entr
 
 from ... import config
-from ...tree.distributions import populate_distributions
 
 if TYPE_CHECKING:
     import networkx as nx
@@ -90,11 +90,7 @@ def calculate_kl_divergence_vector(
     np.ndarray
         Vector of KL divergences per feature.
     """
-    return _kl_categorical_general(
-        query_distribution, 
-        reference_distribution, 
-        eps=config.EPSILON
-    )
+    return _kl_categorical_general(query_distribution, reference_distribution, eps=config.EPSILON)
 
 
 def calculate_kl_divergence_per_feature(
@@ -132,19 +128,13 @@ def calculate_kl_divergence_per_feature(
     )
 
 
-def _populate_local_kl(
-    tree: "nx.DiGraph", distribution_type: str = "categorical"
-) -> None:
+def _populate_local_kl(tree: "nx.DiGraph", distribution_type: str = "categorical") -> None:
     """
     Compute LOCAL KL divergence for each edge: KL(child||parent).
     """
     for parent_id, child_id in tree.edges():
-        parent_distribution = np.asarray(
-            tree.nodes[parent_id]["distribution"], dtype=np.float64
-        )
-        child_distribution = np.asarray(
-            tree.nodes[child_id]["distribution"], dtype=np.float64
-        )
+        parent_distribution = np.asarray(tree.nodes[parent_id]["distribution"], dtype=np.float64)
+        child_distribution = np.asarray(tree.nodes[child_id]["distribution"], dtype=np.float64)
         kl_per_feature = calculate_kl_divergence_per_feature(
             child_distribution, parent_distribution, distribution_type=distribution_type
         )
@@ -165,9 +155,7 @@ def _populate_global_kl(
 
     # Calculate KL divergence for each node relative to root
     for node_id in tree.nodes():
-        node_distribution = np.asarray(
-            tree.nodes[node_id]["distribution"], dtype=np.float64
-        )
+        node_distribution = np.asarray(tree.nodes[node_id]["distribution"], dtype=np.float64)
 
         # Compute per-feature KL divergence: KL(node||root) for Bernoulli probabilities.
         kl_divergence_per_feature = calculate_kl_divergence_per_feature(
@@ -175,12 +163,8 @@ def _populate_global_kl(
         )
 
         # Store both per-feature and total divergence
-        tree.nodes[node_id]["kl_divergence_per_column_global"] = (
-            kl_divergence_per_feature
-        )
-        tree.nodes[node_id]["kl_divergence_global"] = float(
-            np.sum(kl_divergence_per_feature)
-        )
+        tree.nodes[node_id]["kl_divergence_per_column_global"] = kl_divergence_per_feature
+        tree.nodes[node_id]["kl_divergence_global"] = float(np.sum(kl_divergence_per_feature))
 
     # Root self-comparison is undefined: set to NaN
     tree.nodes[root]["kl_divergence_per_column_global"] = None
@@ -210,15 +194,10 @@ def _extract_hierarchy_statistics(tree: "nx.DiGraph") -> pd.DataFrame:
                 "kl_divergence_local_composite": node_attrs.get(
                     "kl_divergence_local_composite", np.nan
                 ),
-                "composite_score_weight": node_attrs.get(
-                    "composite_score_weight", np.nan
-                ),
+                "composite_score_weight": node_attrs.get("composite_score_weight", np.nan),
                 "kl_divergence_per_column_local": node_attrs.get(
                     "kl_divergence_per_column_local", None
                 ),
             }
         )
     return pd.DataFrame.from_records(node_records).set_index("node_id", drop=True)
-
-
-

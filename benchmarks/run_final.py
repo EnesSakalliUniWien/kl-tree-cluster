@@ -14,7 +14,7 @@ if str(repo_root) not in sys.path:
 
 from benchmarks.shared.cases import get_test_cases_by_category, list_categories
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
-from benchmarks.shared.time_utils import format_timestamp_utc
+from benchmarks.shared.util.time import format_timestamp_utc
 import pandas as pd
 
 

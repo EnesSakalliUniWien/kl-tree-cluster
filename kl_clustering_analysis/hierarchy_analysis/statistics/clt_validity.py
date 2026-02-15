@@ -24,11 +24,9 @@ References
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
-
 
 # Shevtsova (2011) constant - tightest known upper bound for Berry-Esseen
 # For i.i.d. case with finite third moment
@@ -274,9 +272,7 @@ def check_clt_validity_bernoulli(
     # Compute minimum required sample size for validity
     # Solve: C * rho / (sigma^3 * sqrt(n)) = alpha
     # => n = (C * rho / (sigma^3 * alpha))^2
-    min_n_per_feature = np.ceil(
-        (constant * rho_nd / (sigma_sq_nd**1.5 * alpha)) ** 2
-    ).astype(int)
+    min_n_per_feature = np.ceil((constant * rho_nd / (sigma_sq_nd**1.5 * alpha)) ** 2).astype(int)
     min_required_n = int(np.max(min_n_per_feature))
 
     max_bound = float(np.max(bounds)) if len(bounds) > 0 else 0.0
@@ -361,10 +357,6 @@ def check_split_clt_validity(
     tuple[CLTValidityResult, CLTValidityResult]
         Validity results for left and right children.
     """
-    left_result = check_clt_validity_bernoulli(
-        dist_left, n_left, alpha, min_fraction_valid
-    )
-    right_result = check_clt_validity_bernoulli(
-        dist_right, n_right, alpha, min_fraction_valid
-    )
+    left_result = check_clt_validity_bernoulli(dist_left, n_left, alpha, min_fraction_valid)
+    right_result = check_clt_validity_bernoulli(dist_right, n_right, alpha, min_fraction_valid)
     return left_result, right_result

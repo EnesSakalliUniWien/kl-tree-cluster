@@ -1,42 +1,36 @@
 """
-Generates synthetic phylogenetic data by simulating trait evolution along a tree.
+Generate synthetic phylogenetic sequence data via branch-wise JC evolution.
 
-This module provides `generate_phylogenetic_data` to create datasets that mimic
-how categorical traits (like DNA sequences, amino acids, or discrete phenotypes)
-evolve along a phylogenetic tree.
-
-The simulation:
-1. Generates a random binary tree with specified number of leaves (taxa)
-2. Assigns a root distribution for each feature
-3. Evolves traits down the tree with mutation probability at each branch
-4. Samples observed data at the leaves
-
-This creates hierarchically structured data where closely related taxa
-have more similar trait distributions.
+This generator simulates categorical sequences on a random binary tree:
+1. Sample a root sequence (with per-feature root priors).
+2. Evolve sequences along each branch using Jukes-Cantor substitutions.
+3. Sample observations at leaves (taxa) with optional within-taxon drift.
 """
 
 from __future__ import annotations
 
-import numpy as np
-from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
+from typing import Optional
+
+import numpy as np
 
 from benchmarks.shared.evolution import (
-    jukes_cantor_transition_matrix,
+    evolve_sequence,
     generate_dirichlet_distributions,
 )
 
 
 @dataclass
 class PhyloNode:
-    """A node in the phylogenetic tree."""
+    """A node in the random phylogenetic tree."""
 
     id: str
     parent: Optional["PhyloNode"] = None
     left: Optional["PhyloNode"] = None
     right: Optional["PhyloNode"] = None
-    branch_length: float = 1.0
-    distribution: Optional[np.ndarray] = None  # (n_features, n_categories)
+    # Incoming edge length from parent to this node (root has 0.0).
+    branch_length: float = 0.0
+    sequence: Optional[np.ndarray] = None
     is_leaf: bool = False
     depth: int = 0
 
@@ -45,81 +39,62 @@ def _generate_random_tree(
     n_leaves: int,
     random_state: np.random.RandomState,
     branch_length_mean: float = 1.0,
-) -> Tuple[PhyloNode, List[PhyloNode]]:
-    """Generate a random binary tree with n_leaves taxa.
-
-    Uses a simple coalescent-like process: repeatedly join random pairs.
-
-    Returns:
-        (root_node, list_of_leaf_nodes)
-    """
-    # Create leaf nodes
+) -> tuple[PhyloNode, list[PhyloNode]]:
+    """Generate a random binary tree with branch lengths on edges."""
     leaves = [PhyloNode(id=f"T{i}", is_leaf=True, depth=0) for i in range(n_leaves)]
-
-    # Build tree bottom-up by joining pairs
     nodes = leaves.copy()
     internal_id = 0
 
     while len(nodes) > 1:
-        # Pick two random nodes to join
         idx1, idx2 = random_state.choice(len(nodes), size=2, replace=False)
-        node1, node2 = nodes[idx1], nodes[idx2]
+        child_left, child_right = nodes[idx1], nodes[idx2]
 
-        # Create parent node
-        branch_len = random_state.exponential(branch_length_mean)
+        # Assign branch lengths to child edges from the new parent.
+        child_left.branch_length = float(random_state.exponential(branch_length_mean))
+        child_right.branch_length = float(random_state.exponential(branch_length_mean))
+
         parent = PhyloNode(
             id=f"I{internal_id}",
-            left=node1,
-            right=node2,
-            branch_length=branch_len,
-            depth=max(node1.depth, node2.depth) + 1,
+            left=child_left,
+            right=child_right,
+            branch_length=0.0,
+            depth=max(child_left.depth, child_right.depth) + 1,
         )
-        node1.parent = parent
-        node2.parent = parent
+        child_left.parent = parent
+        child_right.parent = parent
         internal_id += 1
 
-        # Remove children, add parent
-        nodes = [n for i, n in enumerate(nodes) if i not in (idx1, idx2)]
+        nodes = [node for i, node in enumerate(nodes) if i not in (idx1, idx2)]
         nodes.append(parent)
 
     root = nodes[0]
+    root.branch_length = 0.0
     return root, leaves
 
 
-def _mutate_distribution(
-    parent_dist: np.ndarray,
-    mutation_rate: float,
-    branch_length: float,
+def _sample_root_sequence(
+    n_features: int,
     n_categories: int,
+    root_concentration: float,
     random_state: np.random.RandomState,
 ) -> np.ndarray:
-    """Evolve distribution along a branch using Jukes-Cantor model.
-
-    Args:
-        parent_dist: (n_features, n_categories) parent distribution
-        mutation_rate: Base mutation probability per unit branch length
-        branch_length: Length of this branch
-        n_categories: Number of categories
-        random_state: Random state
-
-    Returns:
-        (n_features, n_categories) child distribution
-    """
-    n_features = parent_dist.shape[0]
-
-    # In a proper JC model for distributions, we apply the transition matrix
-    # The 'effective' branch length depends on mutation_rate
-    eff_branch_length = mutation_rate * branch_length
-    P = jukes_cantor_transition_matrix(n_categories, eff_branch_length)
-
-    # Apply transition matrix to each feature's distribution
-    # (n_features, n_categories) @ (n_categories, n_categories) -> (n_features, n_categories)
-    child_dist = parent_dist @ P
-
-    return child_dist
+    """Sample a root sequence using per-feature Dirichlet priors."""
+    root_distributions = generate_dirichlet_distributions(
+        n_features=n_features,
+        n_categories=n_categories,
+        concentration=root_concentration,
+        random_state=random_state,
+    )
+    return np.array(
+        [
+            random_state.choice(n_categories, p=root_distributions[feature_idx])
+            for feature_idx in range(n_features)
+        ],
+        dtype=int,
+    )
 
 
-def _evolve_tree(
+def _evolve_tree_sequences(
     root: PhyloNode,
     n_features: int,
     n_categories: int,
@@ -127,89 +102,105 @@ def _evolve_tree(
     root_concentration: float,
     random_state: np.random.RandomState,
 ) -> None:
-    """Evolve distributions down the tree from root to leaves.
-
-    Modifies nodes in-place to add distribution attribute.
-    """
-    # Set root distribution
-    root.distribution = generate_dirichlet_distributions(
-        n_features, n_categories, root_concentration, random_state
+    """Evolve sequences from root to leaves."""
+    root.sequence = _sample_root_sequence(
+        n_features=n_features,
+        n_categories=n_categories,
+        root_concentration=root_concentration,
+        random_state=random_state,
     )
 
-    # BFS traversal to evolve down the tree
     queue = [root]
     while queue:
         node = queue.pop(0)
+        if node.sequence is None:
+            continue
 
-        for child in [node.left, node.right]:
-            if child is not None:
-                child.distribution = _mutate_distribution(
-                    node.distribution,
-                    mutation_rate,
-                    child.branch_length if hasattr(child, "branch_length") else 1.0,
-                    n_categories,
-                    random_state,
-                )
-                queue.append(child)
+        for child in (node.left, node.right):
+            if child is None:
+                continue
+            effective_branch_length = max(0.0, mutation_rate * float(child.branch_length))
+            child.sequence = evolve_sequence(
+                ancestor=node.sequence,
+                branch_length=effective_branch_length,
+                n_categories=n_categories,
+                random_state=random_state,
+            )
+            queue.append(child)
 
 
 def _sample_from_leaves(
-    leaves: List[PhyloNode],
+    leaves: list[PhyloNode],
     samples_per_leaf: int,
+    n_categories: int,
+    mutation_rate: float,
     random_state: np.random.RandomState,
-) -> Tuple[Dict[str, np.ndarray], Dict[str, int], np.ndarray]:
-    """Sample observed data from leaf distributions.
+    within_taxon_branch_length: float,
+) -> tuple[dict[str, np.ndarray], dict[str, int], np.ndarray, dict[str, np.ndarray]]:
+    """Sample observed sequences from leaves with mild within-taxon drift."""
+    sample_dict: dict[str, np.ndarray] = {}
+    cluster_assignments: dict[str, int] = {}
+    sample_distributions: list[np.ndarray] = []
+    sequences_by_leaf: dict[str, list[np.ndarray]] = {leaf.id: [] for leaf in leaves}
 
-    Args:
-        leaves: List of leaf nodes with distributions
-        samples_per_leaf: Number of samples to draw per leaf
-        random_state: Random state
-
-    Returns:
-        (sample_dict, cluster_assignments, distributions_array)
-    """
-    sample_dict: Dict[str, np.ndarray] = {}
-    cluster_assignments: Dict[str, int] = {}
-    distributions: List[np.ndarray] = []
+    eye = np.eye(n_categories, dtype=np.float32)
+    within_effective = max(0.0, mutation_rate * within_taxon_branch_length)
 
     sample_idx = 0
     for leaf_idx, leaf in enumerate(leaves):
-        dist = leaf.distribution  # (n_features, n_categories)
-        n_features = dist.shape[0]
+        if leaf.sequence is None:
+            raise ValueError(f"Leaf {leaf.id} has no sequence; tree evolution did not complete.")
 
         for _ in range(samples_per_leaf):
-            # Sample categories from distribution
-            sample = np.array(
-                [
-                    random_state.choice(dist.shape[1], p=dist[f])
-                    for f in range(n_features)
-                ]
-            )
+            if within_effective > 0:
+                sample_seq = evolve_sequence(
+                    ancestor=leaf.sequence,
+                    branch_length=within_effective,
+                    n_categories=n_categories,
+                    random_state=random_state,
+                )
+            else:
+                sample_seq = leaf.sequence.copy()
 
             sample_name = f"S{sample_idx}"
-            sample_dict[sample_name] = sample
+            sample_dict[sample_name] = sample_seq
             cluster_assignments[sample_name] = leaf_idx
-            distributions.append(dist)
+            sample_distributions.append(eye[sample_seq])
+            sequences_by_leaf[leaf.id].append(sample_seq)
             sample_idx += 1
 
-    return sample_dict, cluster_assignments, np.array(distributions)
+    leaf_distributions: dict[str, np.ndarray] = {}
+    for leaf_id, seqs in sequences_by_leaf.items():
+        if not seqs:
+            continue
+        stacked = np.stack(seqs, axis=0)  # (n_samples_leaf, n_features)
+        one_hot = eye[stacked]  # (n_samples_leaf, n_features, n_categories)
+        leaf_distributions[leaf_id] = one_hot.mean(axis=0)
+
+    distributions_array = (
+        np.stack(sample_distributions, axis=0)
+        if sample_distributions
+        else np.empty((0, 0, n_categories), dtype=np.float32)
+    )
+    return sample_dict, cluster_assignments, distributions_array, leaf_distributions
 
 
-def _get_tree_structure(root: PhyloNode) -> Dict:
-    """Extract tree structure for metadata."""
+def _get_tree_structure(root: PhyloNode) -> dict:
+    """Extract nested tree structure metadata."""
 
-    def node_to_dict(node):
+    def node_to_dict(node: PhyloNode | None) -> dict | None:
         if node is None:
             return None
         return {
             "id": node.id,
             "is_leaf": node.is_leaf,
             "depth": node.depth,
+            "branch_length": float(node.branch_length),
             "left": node_to_dict(node.left),
             "right": node_to_dict(node.right),
         }
 
-    return node_to_dict(root)
+    return node_to_dict(root) or {}
 
 
 def generate_phylogenetic_data(
@@ -220,53 +211,52 @@ def generate_phylogenetic_data(
     mutation_rate: float = 0.3,
     root_concentration: float = 1.0,
     random_seed: Optional[int] = None,
-) -> Tuple[Dict[str, np.ndarray], Dict[str, int], np.ndarray, Dict]:
-    """Generate synthetic phylogenetic data by simulating evolution along a tree.
-
-    Creates data that mimics how categorical traits evolve along a phylogeny.
-    Closely related taxa (leaves) will have more similar trait distributions.
-
-    Args:
-        n_taxa: Number of taxa (leaves in the tree). Each taxon becomes a cluster.
-        n_features: Number of features/sites to simulate.
-        n_categories: Number of categories per feature (e.g., 4 for DNA, 20 for amino acids).
-        samples_per_taxon: Number of samples to draw from each taxon's distribution.
-        mutation_rate: Probability of distribution shift per unit branch length.
-            Higher = more divergence between taxa.
-        root_concentration: Dirichlet concentration for root distribution.
-            Higher = more uniform root, Lower = more concentrated.
-        random_seed: Optional seed for reproducibility.
+    within_taxon_branch_length: float = 0.2,
+) -> tuple[dict[str, np.ndarray], dict[str, int], np.ndarray, dict]:
+    """Generate phylogenetic categorical sequence data.
 
     Returns:
-        Tuple of:
-        - sample_dict: Dict mapping sample names to category arrays (n_features,)
-        - cluster_assignments: Dict mapping sample names to taxon (cluster) IDs
-        - distributions: (n_samples, n_features, n_categories) probability arrays
-        - metadata: Dict with tree structure and parameters
-
-    Example:
-        >>> samples, labels, dists, meta = generate_phylogenetic_data(
-        ...     n_taxa=8, n_features=100, n_categories=4,
-        ...     samples_per_taxon=20, mutation_rate=0.5
-        ... )
-        >>> print(f"Generated {len(samples)} samples from {meta['n_taxa']} taxa")
+        - sample_dict: sample_id -> sequence array (n_features,)
+        - cluster_assignments: sample_id -> taxon id (0..n_taxa-1)
+        - distributions: (n_samples, n_features, n_categories) one-hot per sample
+        - metadata: tree and generation diagnostics
     """
+    if n_taxa < 2:
+        raise ValueError("n_taxa must be >= 2.")
+    if n_features < 1:
+        raise ValueError("n_features must be >= 1.")
+    if n_categories < 2:
+        raise ValueError("n_categories must be >= 2.")
+    if samples_per_taxon < 1:
+        raise ValueError("samples_per_taxon must be >= 1.")
+
     random_state = np.random.RandomState(random_seed)
 
-    # Generate tree
     root, leaves = _generate_random_tree(n_taxa, random_state)
-
-    # Evolve distributions down the tree
-    _evolve_tree(
-        root, n_features, n_categories, mutation_rate, root_concentration, random_state
+    _evolve_tree_sequences(
+        root=root,
+        n_features=n_features,
+        n_categories=n_categories,
+        mutation_rate=mutation_rate,
+        root_concentration=root_concentration,
+        random_state=random_state,
     )
 
-    # Sample from leaves
-    sample_dict, cluster_assignments, distributions = _sample_from_leaves(
-        leaves, samples_per_taxon, random_state
+    sample_dict, cluster_assignments, distributions, leaf_distributions = _sample_from_leaves(
+        leaves=leaves,
+        samples_per_leaf=samples_per_taxon,
+        n_categories=n_categories,
+        mutation_rate=mutation_rate,
+        random_state=random_state,
+        within_taxon_branch_length=within_taxon_branch_length,
     )
 
-    # Build metadata
+    leaf_sequences = {
+        leaf.id: leaf.sequence.copy()
+        for leaf in leaves
+        if leaf.sequence is not None
+    }
+
     metadata = {
         "n_taxa": n_taxa,
         "n_samples": len(sample_dict),
@@ -274,11 +264,12 @@ def generate_phylogenetic_data(
         "n_categories": n_categories,
         "samples_per_taxon": samples_per_taxon,
         "mutation_rate": mutation_rate,
+        "within_taxon_branch_length": within_taxon_branch_length,
         "root_concentration": root_concentration,
         "tree_structure": _get_tree_structure(root),
-        "leaf_distributions": {leaf.id: leaf.distribution for leaf in leaves},
+        "leaf_sequences": leaf_sequences,
+        "leaf_distributions": leaf_distributions,
     }
-
     return sample_dict, cluster_assignments, distributions, metadata
 
 

@@ -42,9 +42,9 @@ def test_edge_tests_use_distinct_per_edge_seeds(monkeypatch) -> None:
         seed: int,
         branch_length: float | None = None,
         mean_branch_length: float | None = None,
-    ) -> tuple[float, int, float]:
+    ) -> tuple[float, float, float, bool]:
         captured_seeds.append(seed)
-        return 0.0, 1, 1.0
+        return 0.0, 1.0, 1.0, False
 
     monkeypatch.setattr(
         "kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance._compute_projected_test",

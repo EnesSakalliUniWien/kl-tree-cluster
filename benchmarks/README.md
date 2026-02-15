@@ -16,6 +16,9 @@ python benchmarks/phylogenetic/run.py
 
 # Run final curated suite
 python benchmarks/run_final.py
+
+# Run statistical calibration suite (null/Type-I + TreeBH)
+python benchmarks/calibration/run.py
 ```
 
 ## Architecture: Single Shared System
@@ -89,6 +92,13 @@ Evaluates on subset of MNIST handwritten digits.
 
 ### 7. Full Suite ([full/](full/))
 Runs complete test case suite (74-108 cases across multiple data types).
+
+### 8. Calibration ([calibration/](calibration/))
+Runs empirical statistical calibration checks and produces:
+- null/Type-I calibration CSVs
+- TreeBH FDR/power calibration CSVs
+- `calibration_plots.pdf`
+- `calibration_report.md`
 
 ## Test Case Patterns
 
@@ -218,7 +228,6 @@ from kl_clustering_analysis import config
 
 # Adjust thresholds for sensitivity analysis
 config.SIGNIFICANCE_ALPHA = 0.05
-config.USE_MI_FEATURE_FILTER = True
 ```
 
 ## Metrics Reference
@@ -254,3 +263,19 @@ config.SIGNIFICANCE_ALPHA = 0.05
 config.SIBLING_ALPHA = 0.05
 config.TREE_DISTANCE_METRIC = "hamming"  # or "rogerstanimoto"
 ```
+
+## Calibration Integration in Full Benchmark PDF
+
+`benchmarks/full/run.py` can append calibration pages to `full_benchmark_report.pdf`.
+
+Enable with environment flags:
+
+```bash
+KL_TE_RUN_CALIBRATION=1 \
+KL_TE_CAL_NULL_REPS=30 \
+KL_TE_CAL_TREEBH_REPS=200 \
+python benchmarks/full/run.py
+```
+
+Outputs are written under the current run directory:
+`benchmarks/results/run_<timestamp>/calibration/`

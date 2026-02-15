@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 import networkx as nx
 import numpy as np
@@ -71,7 +71,7 @@ def export_decomposition_audit(
         # 2. Export Primary Node Stats
         stats_df = res.get("stats")
         if stats_df is not None:
-            # Cleanup: Remove massive array columns that make CSVs unreadable
+            # ...existing code...
             cols_to_drop = [
                 "distribution",
                 "kl_divergence_per_column_global",
@@ -106,9 +106,7 @@ def export_decomposition_audit(
             p_val_cols = [
                 c
                 for c in export_df.columns
-                if "p_value" in c.lower()
-                or "_bh" in c.lower()
-                or "corrected" in c.lower()
+                if "p_value" in c.lower() or "_bh" in c.lower() or "corrected" in c.lower()
             ]
             numeric_cols = export_df.select_dtypes(include=[np.number]).columns
             round_cols = [c for c in numeric_cols if c not in p_val_cols]
@@ -170,9 +168,7 @@ def _normalize_to_unit(arr: np.ndarray) -> np.ndarray:
     return scaled.astype(np.float32)
 
 
-def _sample_values(
-    values: np.ndarray, max_items: int, rng: np.random.Generator
-) -> np.ndarray:
+def _sample_values(values: np.ndarray, max_items: int, rng: np.random.Generator) -> np.ndarray:
     flat = values.reshape(-1)
     flat = flat[np.isfinite(flat)]
     if flat.size == 0:
@@ -268,9 +264,7 @@ def export_matrix_audit(
                     f"nnz: {safe_int(stats['nnz'])}",
                     f"nnz_ratio: {stats['nnz_ratio']:.6f}",
                 ]
-                tf.summary.text(
-                    f"{tag_prefix}/{name}/summary", "\n".join(summary_lines), step=step
-                )
+                tf.summary.text(f"{tag_prefix}/{name}/summary", "\n".join(summary_lines), step=step)
 
                 for key, val in stats.items():
                     if np.isfinite(val):
@@ -278,9 +272,7 @@ def export_matrix_audit(
 
                 hist_vals = _sample_values(arr2, max_hist_values, rng)
                 if hist_vals.size:
-                    tf.summary.histogram(
-                        f"{tag_prefix}/{name}/histogram", hist_vals, step=step
-                    )
+                    tf.summary.histogram(f"{tag_prefix}/{name}/histogram", hist_vals, step=step)
 
                 # Suppress "Mean of empty slice" warnings for all-NaN blocks
                 with np.errstate(all="ignore"):
@@ -294,9 +286,7 @@ def export_matrix_audit(
                 )
 
                 with np.errstate(all="ignore"):
-                    sparsity = _downsample_2d(
-                        (arr2 != 0).astype(np.float32), max_image_size
-                    )
+                    sparsity = _downsample_2d((arr2 != 0).astype(np.float32), max_image_size)
                 tf.summary.image(
                     f"{tag_prefix}/{name}/sparsity",
                     sparsity[np.newaxis, ..., np.newaxis],

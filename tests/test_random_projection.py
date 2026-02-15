@@ -2,31 +2,24 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from scipy import sparse
 
 from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
     compute_projection_dimension,
     generate_projection_matrix,
-    _PROJECTOR_CACHE,
     _PROJECTION_CACHE,
 )
-from kl_clustering_analysis import config
 
 
 def _to_dense(matrix):
-    """Convert matrix to dense numpy array if sparse."""
-    if sparse.issparse(matrix):
-        return matrix.toarray()
+    """Convert matrix-like object to dense numpy array."""
     return np.asarray(matrix)
 
 
 @pytest.fixture(autouse=True)
 def clear_projector_cache():
     """Fixture to clear the projector cache before each test."""
-    _PROJECTOR_CACHE.clear()
     _PROJECTION_CACHE.clear()
     yield
-    _PROJECTOR_CACHE.clear()
     _PROJECTION_CACHE.clear()
 
 
@@ -115,9 +108,7 @@ def test_generate_projection_matrix_caching():
         generate_projection_matrix(n_features, k, random_state=random_state)
     )
 
-    # Check cache based on current projection method
-    method = getattr(config, "PROJECTION_METHOD", "sparse")
-    cache_key = (method, n_features, k, random_state)
+    cache_key = ("orthonormal", n_features, k, random_state)
     assert cache_key in _PROJECTION_CACHE
 
     # Second call with same parameters, should use cached matrix
@@ -132,35 +123,10 @@ def test_generate_projection_matrix_caching():
     matrix3 = _to_dense(
         generate_projection_matrix(n_features, k_new, random_state=random_state)
     )
-    cache_key_new = (method, n_features, k_new, random_state)
+    cache_key_new = ("orthonormal", n_features, k_new, random_state)
     assert cache_key_new in _PROJECTION_CACHE
 
     assert not np.array_equal(matrix1, matrix3)
-
-
-def test_sparse_random_projection_effect_on_output():
-    """
-    Test that sparse projection output is sparse and usable.
-    """
-    n_features = 1000
-    k = 50
-    random_state = 42
-    # Force sparse method for this test
-    matrix = _to_dense(
-        generate_projection_matrix(
-            n_features, k, random_state=random_state, method="sparse"
-        )
-    )
-
-    # The matrix should contain non-zero elements
-    assert np.any(matrix != 0)
-    # Check that it's not all zeros, and that it contains more than 1% non-zeros
-    assert np.sum(matrix != 0) > (k * n_features) * 0.01  # Expect some non-zeros
-    # Sparse projection should have many zeros (not all values filled)
-    assert np.sum(matrix != 0) < (k * n_features) * 0.5
-
-    # Check that it returns a numpy array
-    assert isinstance(matrix, np.ndarray)
 
 
 def test_orthonormal_projection_is_orthonormal():
@@ -169,9 +135,7 @@ def test_orthonormal_projection_is_orthonormal():
     k = 50
     random_state = 42
 
-    matrix = generate_projection_matrix(
-        n_features, k, random_state=random_state, method="orthonormal"
-    )
+    matrix = generate_projection_matrix(n_features, k, random_state=random_state)
 
     # R @ R.T should be identity (rows are orthonormal)
     RRT = matrix @ matrix.T
@@ -189,9 +153,7 @@ def test_orthonormal_projection_chi_square_distribution():
     random_state = 42
     n_samples = 1000
 
-    R = generate_projection_matrix(
-        n_features, k, random_state=random_state, method="orthonormal"
-    )
+    R = generate_projection_matrix(n_features, k, random_state=random_state)
 
     # Generate standard normal samples
     rng = np.random.default_rng(123)

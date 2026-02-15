@@ -107,7 +107,7 @@ def analyze_branch_metrics(data, labels, sample_names):
             continue
 
         # Get merge_idx for this node
-        node_idx = int(node_id[1:])  # Remove 'N' prefix
+        node_idx = int(node_id[1:])
         merge_idx = node_idx - n_leaves
 
         if merge_idx < 0 or merge_idx >= len(Z):

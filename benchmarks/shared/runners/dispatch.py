@@ -20,11 +20,12 @@ def run_clustering(
 ) -> Tuple[Optional[np.ndarray], int, str]:
     """Run one benchmark method and return ``(labels, n_clusters, status)``."""
     spec = METHOD_SPECS[method_id]
-    distance_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
-    distance_matrix = squareform(distance_condensed)
+    distance_condensed = None
+    distance_matrix = None
 
     try:
         if method_id in {"kl", "kl_rogerstanimoto"}:
+            distance_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
             result = spec.runner(
                 data_df,
                 distance_condensed,
@@ -33,9 +34,15 @@ def run_clustering(
                     "tree_linkage_method", config.TREE_LINKAGE_METHOD
                 ),
             )
+        elif method_id in {"kmeans", "spectral"}:
+            result = spec.runner(data_df.values, params, seed)
         elif method_id in {"leiden", "louvain"}:
+            distance_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
+            distance_matrix = squareform(distance_condensed)
             result = spec.runner(distance_matrix, params, seed)
         else:
+            distance_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
+            distance_matrix = squareform(distance_condensed)
             result = spec.runner(distance_matrix, params)
 
         if result.status == "ok" and result.labels is not None:

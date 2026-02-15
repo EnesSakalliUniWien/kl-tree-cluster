@@ -22,10 +22,10 @@ def _run_leiden_method(
     from benchmarks.shared.types.method_run_result import (
         MethodRunResult,
     )
-    from benchmarks.shared.utils_decomp import (
+    from benchmarks.shared.util.decomposition import (
         _create_report_dataframe_from_labels,
     )
-    from benchmarks.shared.utils import (
+    from benchmarks.shared.util.core import (
         _resolve_n_neighbors,
         _knn_edge_weights,
         _normalize_labels,
@@ -73,7 +73,7 @@ def _run_leiden_method(
             status="ok",
             skip_reason=None,
         )
-    except Exception:
+    except BaseException:
         # sklearn-only fallback for environments without igraph/leidenalg.
         # OPTICS keeps this baseline unsupervised and distance-matrix native.
         min_samples = max(2, min(n_neighbors, n_samples - 1))

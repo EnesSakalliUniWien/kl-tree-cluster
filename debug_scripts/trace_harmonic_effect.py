@@ -16,27 +16,23 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.tree.distributions import populate_distributions
+from benchmarks.shared.generators.generate_phylogenetic import generate_phylogenetic_data
 from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics import (
     compute_node_divergences,
 )
-from benchmarks.shared.generators.generate_phylogenetic import (
-    generate_phylogenetic_data,
-)
+from kl_clustering_analysis.tree.distributions import populate_distributions
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
 def generate_simple_2_cluster_data(seed=42):
     """Generate a simple 2-cluster dataset."""
-    sample_dict, cluster_assignments, distributions, metadata = (
-        generate_phylogenetic_data(
-            n_taxa=2,
-            n_features=20,
-            n_categories=4,
-            samples_per_taxon=10,
-            mutation_rate=0.1,
-            random_seed=seed,
-        )
+    sample_dict, cluster_assignments, distributions, metadata = generate_phylogenetic_data(
+        n_taxa=2,
+        n_features=20,
+        n_categories=4,
+        samples_per_taxon=10,
+        mutation_rate=0.1,
+        random_seed=seed,
     )
     sample_names = list(sample_dict.keys())
     data = np.array([sample_dict[s] for s in sample_names])
@@ -88,9 +84,7 @@ def trace_single_example():
     tree_harm = PosetTree.from_linkage(Z, leaf_names=sample_names)
 
     # Get root
-    root = tree_curr.graph.get("root") or next(
-        n for n, d in tree_curr.in_degree() if d == 0
-    )
+    root = tree_curr.graph.get("root") or next(n for n, d in tree_curr.in_degree() if d == 0)
 
     # Find the TRUE BOUNDARY node - the node where children split cluster 0 from cluster 1
     print("\n" + "-" * 40)
@@ -112,19 +106,13 @@ def trace_single_example():
         right_labels = set(name_to_label.get(l, -1) for l in right_leaves)
 
         is_pure_boundary = (
-            len(left_labels) == 1
-            and len(right_labels) == 1
-            and left_labels != right_labels
+            len(left_labels) == 1 and len(right_labels) == 1 and left_labels != right_labels
         )
 
         if is_pure_boundary:
             print(f"\n*** TRUE BOUNDARY: {node_id} ***")
-            print(
-                f"  Left child {children[0]}: {len(left_leaves)} leaves, labels={left_labels}"
-            )
-            print(
-                f"  Right child {children[1]}: {len(right_leaves)} leaves, labels={right_labels}"
-            )
+            print(f"  Left child {children[0]}: {len(left_leaves)} leaves, labels={left_labels}")
+            print(f"  Right child {children[1]}: {len(right_leaves)} leaves, labels={right_labels}")
 
             # Get branch lengths
             bl_left = tree_curr.edges[node_id, children[0]].get("branch_length", 1.0)
@@ -141,9 +129,7 @@ def trace_single_example():
     populate_distributions(tree_harm, prob_df, use_branch_length=True)
 
     # Compare at a few key internal nodes
-    internal_nodes = [
-        n for n in tree_curr.nodes() if not tree_curr.nodes[n].get("is_leaf", False)
-    ]
+    internal_nodes = [n for n in tree_curr.nodes() if not tree_curr.nodes[n].get("is_leaf", False)]
 
     print(f"\nNumber of internal nodes: {len(internal_nodes)}")
 
@@ -220,12 +206,8 @@ def trace_kl_divergence_changes():
             and len(right_labels) == 1
         )
 
-    internal_curr["is_boundary"] = [
-        is_true_boundary(tree_curr, n) for n in internal_curr.index
-    ]
-    internal_harm["is_boundary"] = [
-        is_true_boundary(tree_harm, n) for n in internal_harm.index
-    ]
+    internal_curr["is_boundary"] = [is_true_boundary(tree_curr, n) for n in internal_curr.index]
+    internal_harm["is_boundary"] = [is_true_boundary(tree_harm, n) for n in internal_harm.index]
 
     print("\n--- BOUNDARY NODES ---")
     boundary_nodes = internal_curr[internal_curr["is_boundary"]].index
@@ -248,12 +230,8 @@ def trace_kl_divergence_changes():
     # Key question: Does harmonic increase KL MORE at boundaries or non-boundaries?
     print("\n--- SUMMARY ---")
 
-    boundary_kl_curr = internal_curr[internal_curr["is_boundary"]][
-        "kl_divergence_local"
-    ].mean()
-    boundary_kl_harm = internal_harm[internal_harm["is_boundary"]][
-        "kl_divergence_local"
-    ].mean()
+    boundary_kl_curr = internal_curr[internal_curr["is_boundary"]]["kl_divergence_local"].mean()
+    boundary_kl_harm = internal_harm[internal_harm["is_boundary"]]["kl_divergence_local"].mean()
 
     non_boundary_kl_curr = internal_curr[~internal_curr["is_boundary"]][
         "kl_divergence_local"
@@ -262,14 +240,14 @@ def trace_kl_divergence_changes():
         "kl_divergence_local"
     ].mean()
 
-    print(f"Boundary nodes:")
+    print("Boundary nodes:")
     print(f"  Current: {boundary_kl_curr:.4f}")
     print(f"  Harmonic: {boundary_kl_harm:.4f}")
     print(
         f"  Change: {boundary_kl_harm - boundary_kl_curr:+.4f} ({(boundary_kl_harm / boundary_kl_curr - 1) * 100:+.1f}%)"
     )
 
-    print(f"\nNon-boundary nodes:")
+    print("\nNon-boundary nodes:")
     print(f"  Current: {non_boundary_kl_curr:.4f}")
     print(f"  Harmonic: {non_boundary_kl_harm:.4f}")
     print(
@@ -280,7 +258,7 @@ def trace_kl_divergence_changes():
     ratio_curr = boundary_kl_curr / non_boundary_kl_curr
     ratio_harm = boundary_kl_harm / non_boundary_kl_harm
 
-    print(f"\nBoundary/Non-boundary KL ratio:")
+    print("\nBoundary/Non-boundary KL ratio:")
     print(f"  Current: {ratio_curr:.4f}")
     print(f"  Harmonic: {ratio_harm:.4f}")
     print(f"  Change: {ratio_harm - ratio_curr:+.4f}")
@@ -316,9 +294,7 @@ def trace_branch_length_correlation():
             if len(children) != 2:
                 continue
 
-            bl_sum = sum(
-                tree.edges[node_id, c].get("branch_length", 1.0) for c in children
-            )
+            bl_sum = sum(tree.edges[node_id, c].get("branch_length", 1.0) for c in children)
 
             left_leaves = get_leaves_under(tree, children[0])
             right_leaves = get_leaves_under(tree, children[1])
@@ -336,12 +312,12 @@ def trace_branch_length_correlation():
             else:
                 non_boundary_bls.append(bl_sum)
 
-    print(f"\nBranch length sum at BOUNDARY nodes:")
+    print("\nBranch length sum at BOUNDARY nodes:")
     print(f"  Mean: {np.mean(boundary_bls):.4f}")
     print(f"  Std: {np.std(boundary_bls):.4f}")
     print(f"  N: {len(boundary_bls)}")
 
-    print(f"\nBranch length sum at NON-BOUNDARY nodes:")
+    print("\nBranch length sum at NON-BOUNDARY nodes:")
     print(f"  Mean: {np.mean(non_boundary_bls):.4f}")
     print(f"  Std: {np.std(non_boundary_bls):.4f}")
     print(f"  N: {len(non_boundary_bls)}")
@@ -353,9 +329,7 @@ def trace_branch_length_correlation():
     print(f"\nt-test: t={t_stat:.4f}, p={p_val:.4f}")
 
     if p_val > 0.05:
-        print(
-            "\n>>> Branch lengths do NOT significantly differ between boundary and non-boundary!"
-        )
+        print("\n>>> Branch lengths do NOT significantly differ between boundary and non-boundary!")
         print(">>> This means harmonic weighting adds NOISE, not signal.")
 
 

@@ -18,10 +18,10 @@ def _run_optics_method(
     """Run OPTICS on a precomputed distance matrix and return a
     `MethodRunResult` (imported lazily to avoid circular imports).
     """
-    from benchmarks.shared.utils_decomp import (
+    from benchmarks.shared.util.decomposition import (
         _create_report_dataframe_from_labels,
     )
-    from benchmarks.shared.utils import (
+    from benchmarks.shared.util.core import (
         _normalize_labels,
     )
 

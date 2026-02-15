@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
-from benchmarks.shared.pdf_utils import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
+from benchmarks.shared.util.pdf_layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from .summary import create_validation_plot
 from .export import (
     create_tree_plots_from_results,

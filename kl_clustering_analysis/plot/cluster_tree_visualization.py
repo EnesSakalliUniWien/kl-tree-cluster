@@ -15,9 +15,116 @@ from typing import Dict, Optional, Tuple
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
 from .cluster_color_mapping import build_cluster_color_spec, present_cluster_ids
+
+CHILD_PARENT_SIGNIFICANT_COL = "Child_Parent_Divergence_Significant"
+SIBLING_DIFFERENT_COL = "Sibling_BH_Different"
+SIBLING_SKIPPED_COL = "Sibling_Divergence_Skipped"
+
+
+def _normalize_optional_bool(value: object) -> Optional[bool]:
+    """Convert heterogeneous truthy/falsy values to bool or None."""
+    if value is None:
+        return None
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    if isinstance(value, (int, np.integer)):
+        if value in (0, 1):
+            return bool(value)
+        return None
+    if isinstance(value, (float, np.floating)):
+        if not np.isfinite(float(value)):
+            return None
+        if value in (0.0, 1.0):
+            return bool(int(value))
+        return None
+    if isinstance(value, str):
+        token = value.strip().lower()
+        if token in {"true", "t", "yes", "y", "1"}:
+            return True
+        if token in {"false", "f", "no", "n", "0"}:
+            return False
+    return None
+
+
+def _lookup_results_value(results_df, node_id: object, column_name: str) -> object | None:
+    """Lookup a per-node value in ``results_df`` with robust id matching."""
+    if results_df is None:
+        return None
+
+    columns = getattr(results_df, "columns", None)
+    index = getattr(results_df, "index", None)
+    if columns is None or index is None or column_name not in columns:
+        return None
+
+    for candidate in (node_id, str(node_id)):
+        try:
+            if candidate in index:
+                return results_df.at[candidate, column_name]
+        except Exception:
+            continue
+    return None
+
+
+def _group_internal_nodes_for_halo(
+    G: nx.DiGraph,
+    leaves: set,
+    results_df,
+) -> tuple[list[object], list[object]]:
+    """Split internal nodes into (significant, tested-not-significant)."""
+    significant: list[object] = []
+    tested_not_significant: list[object] = []
+
+    for node in G.nodes():
+        if node in leaves:
+            continue
+        # Root has no parent; child-parent test is undefined there.
+        if G.in_degree(node) == 0:
+            continue
+
+        flag = _normalize_optional_bool(
+            _lookup_results_value(results_df, node, CHILD_PARENT_SIGNIFICANT_COL)
+        )
+        if flag is True:
+            significant.append(node)
+        elif flag is False:
+            tested_not_significant.append(node)
+
+    return significant, tested_not_significant
+
+
+def _group_edges_for_sibling_style(
+    G: nx.DiGraph, results_df
+) -> dict[str, list[tuple[object, object]]]:
+    """Group edges by sibling-test status of the parent node."""
+    groups: dict[str, list[tuple[object, object]]] = {
+        "different": [],
+        "not_different": [],
+        "missing": [],
+    }
+
+    for parent, child in G.edges():
+        skipped = _normalize_optional_bool(
+            _lookup_results_value(results_df, parent, SIBLING_SKIPPED_COL)
+        )
+        if skipped is True:
+            groups["missing"].append((parent, child))
+            continue
+
+        different = _normalize_optional_bool(
+            _lookup_results_value(results_df, parent, SIBLING_DIFFERENT_COL)
+        )
+        if different is True:
+            groups["different"].append((parent, child))
+        elif different is False:
+            groups["not_different"].append((parent, child))
+        else:
+            groups["missing"].append((parent, child))
+
+    return groups
 
 
 def _map_nodes_to_clusters(
@@ -174,7 +281,6 @@ def plot_tree_with_clusters(
       placeholder (not implemented).
     - Leaf nodes are colored by their cluster ID; internal nodes are gray.
     """
-    _ = results_df
     _ = show_cluster_boundaries
     _ = use_labels
 
@@ -232,17 +338,83 @@ def plot_tree_with_clusters(
         fig, ax = plt.subplots(figsize=figsize)
     else:
         fig = ax.figure
-    nx.draw(
+    edge_groups = _group_edges_for_sibling_style(G, results_df)
+    if edge_groups["missing"]:
+        nx.draw_networkx_edges(
+            G,
+            pos,
+            edgelist=edge_groups["missing"],
+            edge_color="#9E9E9E",
+            width=0.9,
+            style="dashed",
+            arrows=False,
+            ax=ax,
+            alpha=0.95,
+        )
+    if edge_groups["not_different"]:
+        nx.draw_networkx_edges(
+            G,
+            pos,
+            edgelist=edge_groups["not_different"],
+            edge_color="#C8C8C8",
+            width=0.9,
+            style="solid",
+            arrows=False,
+            ax=ax,
+            alpha=0.95,
+        )
+    if edge_groups["different"]:
+        nx.draw_networkx_edges(
+            G,
+            pos,
+            edgelist=edge_groups["different"],
+            edge_color="#2B2B2B",
+            width=1.8,
+            style="solid",
+            arrows=False,
+            ax=ax,
+            alpha=0.98,
+        )
+
+    nx.draw_networkx_nodes(
         G,
         pos,
         node_size=node_size,
-        alpha=0.5,
+        alpha=0.65,
         node_color=node_colors,
-        edge_color="gray",
-        with_labels=False,
-        arrows=False,
+        linewidths=0.0,
         ax=ax,
     )
+
+    halo_significant, halo_tested_not_significant = _group_internal_nodes_for_halo(
+        G, leaves, results_df
+    )
+    halo_size = max(node_size * 2.4, node_size + 12)
+    if halo_tested_not_significant:
+        halo_non_sig = nx.draw_networkx_nodes(
+            G,
+            pos,
+            nodelist=halo_tested_not_significant,
+            node_size=halo_size,
+            node_color="none",
+            edgecolors="#6E6E6E",
+            linewidths=1.0,
+            ax=ax,
+        )
+        halo_non_sig.set_linestyle((0, (1.0, 1.7)))
+
+    if halo_significant:
+        halo_sig = nx.draw_networkx_nodes(
+            G,
+            pos,
+            nodelist=halo_significant,
+            node_size=halo_size,
+            node_color="none",
+            edgecolors="#1C1C1C",
+            linewidths=1.0,
+            ax=ax,
+        )
+        halo_sig.set_linestyle("solid")
     ax.set_title(title, fontsize=font_size)
     # Do not force equal aspect: trees with many leaves collapse vertically.
     ax.set_aspect("auto")
@@ -254,27 +426,85 @@ def plot_tree_with_clusters(
         if n in node_to_cluster and str(node_to_cluster[n]).lstrip("-").isdigit()
     ]
     present_ids = present_cluster_ids(leaf_cluster_ids)
+    style_handles = [
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="#1C1C1C",
+            markerfacecolor="none",
+            markeredgecolor="#1C1C1C",
+            linestyle="solid",
+            linewidth=1.0,
+            markersize=7,
+            label="Node: child-parent significant",
+        ),
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="#6E6E6E",
+            markerfacecolor="none",
+            markeredgecolor="#6E6E6E",
+            linestyle=(0, (1.0, 1.7)),
+            linewidth=1.0,
+            markersize=7,
+            label="Node: tested, not significant",
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="#2B2B2B",
+            linewidth=1.8,
+            linestyle="solid",
+            label="Edge: sibling different",
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="#C8C8C8",
+            linewidth=0.9,
+            linestyle="solid",
+            label="Edge: sibling not different",
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="#9E9E9E",
+            linewidth=0.9,
+            linestyle="dashed",
+            label="Edge: sibling test missing",
+        ),
+    ]
+
     if present_ids:
         handles = [
             Patch(facecolor=cluster_id_to_color[cid], edgecolor="none", label=f"{cid}")
             for cid in present_ids
             if cid in cluster_id_to_color
         ]
-        if handles:
-            ax.legend(
-                handles=handles,
-                title="Cluster",
-                loc="best",
-                frameon=False,
-                fontsize=max(font_size - 1, 6),
-                title_fontsize=max(font_size - 1, 6),
-            )
+    else:
+        handles = []
+
+    handles.extend(style_handles)
+    if handles:
+        ax.legend(
+            handles=handles,
+            title="Legend",
+            loc="best",
+            frameon=False,
+            fontsize=max(font_size - 1, 6),
+            title_fontsize=max(font_size - 1, 6),
+        )
 
     if show:
         import warnings
 
         warnings.warn(
-            "plot_tree_with_clusters: 'show' is deprecated and will be removed; save figures externally instead.",
+            (
+                "plot_tree_with_clusters: 'show' is deprecated and will be removed; "
+                "save figures externally instead."
+            ),
             DeprecationWarning,
         )
 

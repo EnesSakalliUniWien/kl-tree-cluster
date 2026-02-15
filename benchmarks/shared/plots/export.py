@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-from benchmarks.shared.pdf_utils import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
+from benchmarks.shared.util.pdf_layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from kl_clustering_analysis.plot.cluster_tree_visualization import plot_tree_with_clusters
 
 from .embedding import (
@@ -19,6 +19,18 @@ from .embedding import (
 from .manifold import create_manifold_alignment_plot
 
 logger = logging.getLogger(__name__)
+
+
+def _format_ari_nmi(result: dict, *, compact: bool = False) -> str:
+    """Format ARI/NMI when available on a computed result record."""
+    ari = result.get("ari")
+    nmi = result.get("nmi")
+    parts: list[str] = []
+    if isinstance(ari, (int, float, np.floating)) and np.isfinite(float(ari)):
+        parts.append(f"A={float(ari):.3f}" if compact else f"ARI={float(ari):.3f}")
+    if isinstance(nmi, (int, float, np.floating)) and np.isfinite(float(nmi)):
+        parts.append(f"N={float(nmi):.3f}" if compact else f"NMI={float(nmi):.3f}")
+    return ", ".join(parts)
 
 
 def _format_params_for_display(params: dict) -> str:
@@ -75,6 +87,9 @@ def create_umap_plots_from_results(
             param_str = _format_params_for_display(params)
 
             unique_key = f"{method_name} ({param_str})" if param_str else method_name
+            metrics_text = _format_ari_nmi(res, compact=True)
+            if metrics_text:
+                unique_key = f"{unique_key} [{metrics_text}]"
             if res.get("labels") is not None:
                 labels_to_plot[unique_key] = res["labels"]
 
@@ -180,22 +195,28 @@ def _create_tree_figures_for_case(
 
         tree_t = result["tree"]
         decomp_t = result["decomposition"]
+        stats_df = result.get("stats")
+        if stats_df is None:
+            stats_df = getattr(tree_t, "stats_df", None)
         method_name = result.get("method_name", "KL Divergence")
         params = result.get("params", {})
         param_str_display = _format_params_for_display(params)
         found_clusters = result.get("meta", {}).get("found_clusters", "?")
+        metrics_text = _format_ari_nmi(result)
 
         page_tag = f" ({idx}/{n_items})" if n_items > 1 else ""
-        title = (
-            f"{method_name}{page_tag}\n({param_str_display})\nfound={found_clusters}"
-            if param_str_display
-            else f"{method_name}{page_tag}\nfound={found_clusters}"
-        )
+        title_lines = [f"{method_name}{page_tag}"]
+        if param_str_display:
+            title_lines.append(f"({param_str_display})")
+        title_lines.append(f"found={found_clusters}")
+        if metrics_text:
+            title_lines.append(metrics_text)
+        title = "\n".join(title_lines)
 
         plot_tree_with_clusters(
             tree=tree_t,
             decomposition_results=decomp_t,
-            results_df=getattr(tree_t, "stats_df", None),
+            results_df=stats_df,
             use_labels=True,
             node_size=12,
             font_size=9,
@@ -242,6 +263,9 @@ def create_umap_then_tree_plots_from_results(
             params = res.get("params", {})
             param_str = _format_params_for_display(params)
             unique_key = f"{method_name} ({param_str})" if param_str else method_name
+            metrics_text = _format_ari_nmi(res, compact=True)
+            if metrics_text:
+                unique_key = f"{unique_key} [{metrics_text}]"
             if res.get("labels") is not None:
                 labels_to_plot[unique_key] = res["labels"]
 
@@ -362,6 +386,9 @@ def create_tree_then_umap_plots_from_results(
             params = res.get("params", {})
             param_str = _format_params_for_display(params)
             unique_key = f"{method_name} ({param_str})" if param_str else method_name
+            metrics_text = _format_ari_nmi(res, compact=True)
+            if metrics_text:
+                unique_key = f"{unique_key} [{metrics_text}]"
             if res.get("labels") is not None:
                 labels_to_plot[unique_key] = res["labels"]
 
@@ -421,6 +448,7 @@ def create_umap_3d_plots_from_results(
         method_name = result["method_name"]
         params = result.get("params", {})
         param_str_display = _format_params_for_display(params)
+        metrics_text = _format_ari_nmi(result)
 
         method_name_safe = method_name.replace(" ", "_")
         param_str_safe = _format_params_for_filename(params)
@@ -431,6 +459,8 @@ def create_umap_3d_plots_from_results(
         )
 
         title = f"3D UMAP - {method_name} ({param_str_display})\nTest Case {i}"
+        if metrics_text:
+            title = f"{title}\n{metrics_text}"
 
         if verbose:
             print(f"  Creating 3D UMAP plot for {filename}...")
@@ -484,6 +514,7 @@ def create_manifold_plots_from_results(
         method_name = result["method_name"]
         params = result.get("params", {})
         param_str_display = _format_params_for_display(params)
+        metrics_text = _format_ari_nmi(result)
 
         method_name_safe = method_name.replace(" ", "_")
         param_str_safe = _format_params_for_filename(params)
@@ -494,6 +525,8 @@ def create_manifold_plots_from_results(
         )
 
         title = f"Manifold Alignment - {method_name} ({param_str_display})\nTest Case {i}"
+        if metrics_text:
+            title = f"{title}\n{metrics_text}"
 
         if verbose:
             print(f"  Creating manifold plot for {filename}...")

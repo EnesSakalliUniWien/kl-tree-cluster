@@ -16,7 +16,6 @@ Agresti, A. (2013). Categorical Data Analysis (3rd ed.). Wiley.
 
 from __future__ import annotations
 
-from typing import Tuple, Optional
 from dataclasses import dataclass
 
 import numpy as np
@@ -301,9 +300,7 @@ def compute_sibling_power(
     p_right = np.clip(p_left + delta, 0.01, 0.99)
 
     # Compute power
-    power = power_wald_two_sample(
-        n1=n_left, n2=n_right, p1=p_left, p2=p_right, alpha=alpha
-    )
+    power = power_wald_two_sample(n1=n_left, n2=n_right, p1=p_left, p2=p_right, alpha=alpha)
 
     # Required sample size (balanced design)
     z_alpha = stats.norm.ppf(1 - alpha / 2)

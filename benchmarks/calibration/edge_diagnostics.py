@@ -21,7 +21,7 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import kstest
 
-from benchmarks.shared.time_utils import format_timestamp_utc
+from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,

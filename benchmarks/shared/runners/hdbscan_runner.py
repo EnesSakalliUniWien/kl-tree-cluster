@@ -20,10 +20,10 @@ def _run_hdbscan_method(
     from benchmarks.shared.types.method_run_result import (
         MethodRunResult,
     )
-    from benchmarks.shared.utils_decomp import (
+    from benchmarks.shared.util.decomposition import (
         _create_report_dataframe_from_labels,
     )
-    from benchmarks.shared.utils import (
+    from benchmarks.shared.util.core import (
         _normalize_labels,
     )
 

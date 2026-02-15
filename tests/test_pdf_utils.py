@@ -7,11 +7,13 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from PIL import Image
 
-from benchmarks.shared.pdf_utils import (
+from benchmarks.shared.util.pdf_figure_split import (
+    split_collected_figs_to_pdfs,
+)
+from benchmarks.shared.util.pdf_image_concat import (
     concat_plots_to_pdf,
     concat_tree_plots,
     concat_umap_plots,
-    split_collected_figs_to_pdfs,
 )
 
 

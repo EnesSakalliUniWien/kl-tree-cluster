@@ -26,7 +26,7 @@ from benchmarks.calibration.crossfit_permutation_diagnostic import (
 )
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators import generate_case_data
-from benchmarks.shared.time_utils import format_timestamp_utc
+from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 

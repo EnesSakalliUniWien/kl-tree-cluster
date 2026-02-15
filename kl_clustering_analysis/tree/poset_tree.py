@@ -11,10 +11,6 @@ from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments as _build_sample_cluster_assignments,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics import (
-    annotate_child_parent_divergence,
-    annotate_sibling_divergence,
-)
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics import (
     _extract_hierarchy_statistics,
@@ -474,43 +470,6 @@ class PosetTree(nx.DiGraph):
                 self.populate_node_divergences(leaf_data)
             results_df = self.stats_df.copy()
 
-            # Run statistical annotations using user-provided alpha values
-            results_df = annotate_child_parent_divergence(
-                self,
-                results_df,
-                significance_level_alpha=alpha_local,
-            )
-
-            if config.SIBLING_TEST_METHOD == "cousin_ftest":
-                from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
-                    annotate_sibling_divergence_cousin,
-                )
-
-                results_df = annotate_sibling_divergence_cousin(
-                    self,
-                    results_df,
-                    significance_level_alpha=sibling_alpha,
-                )
-            elif config.SIBLING_TEST_METHOD == "cousin_adjusted_wald":
-                from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
-                    annotate_sibling_divergence_adjusted,
-                )
-
-                results_df = annotate_sibling_divergence_adjusted(
-                    self,
-                    results_df,
-                    significance_level_alpha=sibling_alpha,
-                )
-            else:
-                results_df = annotate_sibling_divergence(
-                    self,
-                    results_df,
-                    significance_level_alpha=sibling_alpha,
-                )
-
-            # Update the tree's stats_df with the annotated results so they are available later
-            self.stats_df = results_df
-
         decomposer = TreeDecomposition(
             tree=self,
             results_df=results_df,
@@ -518,6 +477,9 @@ class PosetTree(nx.DiGraph):
             sibling_alpha=sibling_alpha,
             **decomposer_kwargs,
         )
+
+        # Cache annotated results back so stats_df reflects the full pipeline
+        self.stats_df = decomposer.results_df
 
         if decomposer.use_signal_localization:
             return decomposer.decompose_tree_v2()

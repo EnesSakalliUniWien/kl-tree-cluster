@@ -13,10 +13,10 @@ from sklearn.cluster import DBSCAN
 from benchmarks.shared.types.method_run_result import (
     MethodRunResult,
 )
-from benchmarks.shared.utils_decomp import (
+from benchmarks.shared.util.decomposition import (
     _create_report_dataframe_from_labels,
 )
-from benchmarks.shared.utils import (
+from benchmarks.shared.util.core import (
     _normalize_labels,
     _estimate_dbscan_eps,
 )
