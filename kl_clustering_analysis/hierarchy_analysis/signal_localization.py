@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Set, Tuple
 
 import networkx as nx
 import numpy as np
@@ -53,9 +53,7 @@ class SimilarityEdge:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SimilarityEdge):
             return False
-        return frozenset([self.node_a, self.node_b]) == frozenset(
-            [other.node_a, other.node_b]
-        )
+        return frozenset([self.node_a, self.node_b]) == frozenset([other.node_a, other.node_b])
 
 
 @dataclass
@@ -133,14 +131,6 @@ def _is_leaf(tree: nx.DiGraph, node: str) -> bool:
 def _get_sample_size(tree: nx.DiGraph, node: str) -> int:
     """Get sample size from node attributes."""
     return tree.nodes[node].get("sample_size", 0)
-
-
-def _get_leaf_count(tree: nx.DiGraph, node: str) -> int:
-    """Count leaves under a node (including itself if leaf)."""
-    if _is_leaf(tree, node):
-        return 1
-    descendants = nx.descendants(tree, node)
-    return sum(1 for d in descendants if _is_leaf(tree, d))
 
 
 # =============================================================================
@@ -245,11 +235,7 @@ def localize_divergence_signal(
         for l_node in left_nodes:
             # Skip if too few samples (if limit set)
             l_samples = _get_sample_size(tree, l_node)
-            if (
-                min_samples is not None
-                and l_samples < min_samples
-                and not _is_leaf(tree, l_node)
-            ):
+            if min_samples is not None and l_samples < min_samples and not _is_leaf(tree, l_node):
                 continue
 
             for r_node in right_nodes:
@@ -383,9 +369,7 @@ def extract_constrained_clusters(
     """
     # 1. Initialize clusters
     # We must account for all nodes involved in ANY graph + merge points
-    all_nodes = (
-        set(similarity_graph.nodes) | set(difference_graph.nodes) | set(merge_points)
-    )
+    all_nodes = set(similarity_graph.nodes) | set(difference_graph.nodes) | set(merge_points)
 
     # Map node_id -> set of leaf labels
     node_to_leaves: Dict[str, Set[str]] = {}

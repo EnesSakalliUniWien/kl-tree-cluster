@@ -48,23 +48,6 @@ def compute_node_depths(tree: nx.DiGraph) -> Dict[str, int]:
     return depths
 
 
-def get_root_nodes(tree: nx.DiGraph) -> List[str]:
-    """Find root nodes (nodes with no parents).
-
-    Parameters
-    ----------
-    tree
-        Directed acyclic graph representing the hierarchy.
-
-    Returns
-    -------
-    List[str]
-        List of root node IDs.
-    """
-    return [n for n in tree.nodes() if tree.in_degree(n) == 0]
-
-
 __all__ = [
     "compute_node_depths",
-    "get_root_nodes",
 ]

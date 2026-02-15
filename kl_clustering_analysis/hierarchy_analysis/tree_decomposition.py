@@ -8,25 +8,31 @@ from __future__ import annotations
 
 from typing import Dict, Iterator, List, Set, Tuple
 
+import networkx as nx
 import numpy as np
 import pandas as pd
-import networkx as nx
 
-from ..core_utils.data_utils import extract_bool_column_dict
 from .. import config
+from ..core_utils.data_utils import extract_bool_column_dict
+from .cluster_assignments import (
+    build_cluster_assignments as _build_cluster_assignments_func,
+    build_sample_cluster_assignments,
+)
 from .posthoc_merge import apply_posthoc_merge
 from .signal_localization import (
     LocalizationResult,
-    localize_divergence_signal,
-    merge_similarity_graphs,
-    merge_difference_graphs,
     extract_constrained_clusters,
+    localize_divergence_signal,
+    merge_difference_graphs,
+    merge_similarity_graphs,
+)
+from .statistics.branch_length_utils import (
+    compute_mean_branch_length,
+    sanitize_positive_branch_length,
 )
 
 # Statistical sibling test used for pairwise cluster comparisons
-from .statistics.sibling_divergence.sibling_divergence_test import (
-    sibling_divergence_test,
-)
+from .statistics.sibling_divergence.sibling_divergence_test import sibling_divergence_test
 
 
 class TreeDecomposition:
@@ -103,9 +109,7 @@ class TreeDecomposition:
         )
         self.posthoc_merge = bool(posthoc_merge)
         self.posthoc_merge_alpha = (
-            float(posthoc_merge_alpha)
-            if posthoc_merge_alpha is not None
-            else self.sibling_alpha
+            float(posthoc_merge_alpha) if posthoc_merge_alpha is not None else self.sibling_alpha
         )
 
         # Signal localization parameters
@@ -118,9 +122,7 @@ class TreeDecomposition:
         )
 
         # ----- root -----
-        self._root = next(
-            node_id for node_id, degree in self.tree.in_degree() if degree == 0
-        )
+        self._root = next(node_id for node_id, degree in self.tree.in_degree() if degree == 0)
 
         # ----- pre-cache node metadata -----
         self._cache_node_metadata()
@@ -147,22 +149,14 @@ class TreeDecomposition:
         # Edges without the attribute are NOT treated as zero-length — they
         # are simply absent.  If no edge has the attribute the Felsenstein
         # adjustment is disabled entirely (_mean_branch_length = None).
-        _bls = [
-            self.tree.edges[p, c]["branch_length"]
-            for p, c in self.tree.edges()
-            if "branch_length" in self.tree.edges[p, c]
-        ]
-        _mean_bl = float(np.mean(_bls)) if _bls else 0.0
-        self._mean_branch_length: float | None = _mean_bl if _mean_bl > 0 else None
+        self._mean_branch_length = compute_mean_branch_length(self.tree)
 
         # ----- results_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
             self.results_df, "Child_Parent_Divergence_Significant"
         )
         # Sibling divergence test: Sibling_BH_Different = True means siblings differ -> SPLIT
-        self._sibling_different = extract_bool_column_dict(
-            self.results_df, "Sibling_BH_Different"
-        )
+        self._sibling_different = extract_bool_column_dict(self.results_df, "Sibling_BH_Different")
         self._sibling_skipped = extract_bool_column_dict(
             self.results_df, "Sibling_Divergence_Skipped"
         )
@@ -175,9 +169,7 @@ class TreeDecomposition:
             missing = set(self.tree.nodes) - set(mapping.keys())
             if missing:
                 preview = ", ".join(map(repr, list(missing)[:5]))
-                raise ValueError(
-                    f"Missing {column_name!r} values for nodes: {preview}."
-                )
+                raise ValueError(f"Missing {column_name!r} values for nodes: {preview}.")
 
         # Precompute children list (avoids rebuilding generator repeatedly)
         self._children: Dict[str, List[str]] = {
@@ -330,26 +322,11 @@ class TreeDecomposition:
     ) -> dict[int, dict[str, object]]:
         """Build cluster assignment dictionary from collected leaf sets.
 
-        Parameters
-        ----------
-        final_leaf_sets
-            List of leaf sets, one per cluster
-
-        Returns
-        -------
-        dict
-            Cluster assignments mapping cluster_index to cluster metadata
+        Delegates to :func:`.cluster_assignments.build_cluster_assignments`.
         """
-        cluster_assignments: dict[int, dict[str, object]] = {}
-        for cluster_index, leaf_set in enumerate(final_leaf_sets):
-            if not leaf_set:
-                continue
-            cluster_assignments[cluster_index] = {
-                "root_node": self._find_cluster_root(leaf_set),
-                "leaves": sorted(leaf_set),
-                "size": len(leaf_set),
-            }
-        return cluster_assignments
+        return _build_cluster_assignments_func(
+            final_leaf_sets, self._find_cluster_root
+        )
 
     def _should_split(self, parent: str) -> bool:
         """Evaluate statistical gates and return ``True`` when parent should split.
@@ -419,9 +396,7 @@ class TreeDecomposition:
         # Siblings must be significantly different to justify splitting
         return bool(is_different)
 
-    def _test_node_pair_divergence(
-        self, node_a: str, node_b: str
-    ) -> Tuple[float, float, float]:
+    def _test_node_pair_divergence(self, node_a: str, node_b: str) -> Tuple[float, float, float]:
         """Test divergence between two arbitrary tree nodes.
 
         Wrapper for sibling_divergence_test that extracts distributions
@@ -457,6 +432,8 @@ class TreeDecomposition:
                 dist_path_b = nx.shortest_path_length(
                     self.tree, source=lca, target=node_b, weight="branch_length"
                 )
+                dist_path_a = sanitize_positive_branch_length(dist_path_a)
+                dist_path_b = sanitize_positive_branch_length(dist_path_b)
             except nx.NetworkXNoPath:
                 dist_path_a = None
                 dist_path_b = None
@@ -572,9 +549,7 @@ class TreeDecomposition:
 
         return True, localization_result
 
-    def _pop_candidate(
-        self, heap: List[str], queued: set[str], processed: set[str]
-    ) -> str | None:
+    def _pop_candidate(self, heap: List[str], queued: set[str], processed: set[str]) -> str | None:
         """Pop the next candidate node for shortlist traversal."""
 
         while heap:
@@ -611,7 +586,9 @@ class TreeDecomposition:
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
-        cluster_assignments, merge_audit = self._maybe_apply_posthoc_merge_with_audit(cluster_assignments)
+        cluster_assignments, merge_audit = self._maybe_apply_posthoc_merge_with_audit(
+            cluster_assignments
+        )
 
         return {
             "cluster_assignments": cluster_assignments,
@@ -626,9 +603,7 @@ class TreeDecomposition:
 
     # ---------- post-hoc merge helpers ----------
 
-    def _compute_cluster_distribution(
-        self, cluster_root: str
-    ) -> Tuple[np.ndarray, int]:
+    def _compute_cluster_distribution(self, cluster_root: str) -> Tuple[np.ndarray, int]:
         """Compute the distribution for a cluster.
 
         Uses the precomputed distribution from the tree node.
@@ -698,6 +673,8 @@ class TreeDecomposition:
                     target=cluster_b,
                     weight="branch_length",
                 )
+                branch_len_a = sanitize_positive_branch_length(branch_len_a)
+                branch_len_b = sanitize_positive_branch_length(branch_len_b)
             except nx.NetworkXNoPath:
                 branch_len_a = None
                 branch_len_b = None
@@ -897,41 +874,6 @@ class TreeDecomposition:
 
         return self._build_cluster_assignments(merged_leaf_sets), audit_trail
 
-    @staticmethod
-    def build_sample_cluster_assignments(
-        decomposition_results: Dict[str, object],
-    ) -> pd.DataFrame:
-        """Build per-sample cluster assignments from decomposition output.
-
-        Parameters
-        ----------
-        decomposition_results
-            A decomposition result dictionary produced by :meth:`TreeDecomposition.decompose_tree`.
-
-        Returns
-        -------
-        pandas.DataFrame
-            A pandas DataFrame indexed by ``sample_id`` with columns:
-            - ``cluster_id``: integer cluster identifier
-            - ``cluster_root``: node identifier that forms the cluster boundary
-            - ``cluster_size``: number of samples in the cluster
-        """
-
-        cluster_assignments = decomposition_results.get("cluster_assignments", {})
-        if not cluster_assignments:
-            return pd.DataFrame(columns=["cluster_id", "cluster_root", "cluster_size"])
-
-        rows: Dict[str, Dict[str, object]] = {}
-        for cluster_identifier, info in cluster_assignments.items():
-            root = info.get("root_node")
-            size = info.get("size", 0)
-            for sample_identifier in info.get("leaves", []):
-                rows[sample_identifier] = {
-                    "cluster_id": cluster_identifier,
-                    "cluster_root": root,
-                    "cluster_size": size,
-                }
-
-        assignments_table = pd.DataFrame.from_dict(rows, orient="index")
-        assignments_table.index.name = "sample_id"
-        return assignments_table.sort_values("cluster_id")
+    # build_sample_cluster_assignments is the module-level pure function
+    # re-exported as a static method for backward compatibility.
+    build_sample_cluster_assignments = staticmethod(build_sample_cluster_assignments)

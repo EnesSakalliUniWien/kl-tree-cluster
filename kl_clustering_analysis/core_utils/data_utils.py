@@ -41,26 +41,6 @@ def extract_leaf_counts(
     return leaf_counts
 
 
-def extract_parent_distributions(
-    tree: nx.DiGraph, parent_ids: list[str]
-) -> list[np.ndarray | None]:
-    """Extract parent node distributions for variance-weighted degrees of freedom.
-
-    Parameters
-    ----------
-    tree
-        Directed acyclic graph with 'distribution' attribute on nodes
-    parent_ids
-        List of parent node identifiers
-
-    Returns
-    -------
-    list[np.ndarray | None]
-        List of distribution arrays (or None if not available) aligned to parent_ids
-    """
-    return [extract_node_distribution(tree, pid) for pid in parent_ids]
-
-
 def extract_node_distribution(tree: nx.DiGraph, node_id: str) -> np.ndarray:
     """Extract distribution for a single node, converted to float64.
 
@@ -139,13 +119,6 @@ def extract_node_sample_size(tree: nx.DiGraph, node_id: str) -> int:
     return max(1, count)
 
 
-def raise_leaf_only_tree_error(_: pd.DataFrame) -> pd.DataFrame:
-    """Raise error when edge-level statistics cannot be computed for leaf-only tree."""
-    raise ValueError(
-        "Child-parent divergence annotations cannot be computed for a leaf-only tree."
-    )
-
-
 def assign_divergence_results(
     nodes_dataframe: pd.DataFrame,
     child_ids: list[str],
@@ -153,6 +126,7 @@ def assign_divergence_results(
     p_values_corrected: np.ndarray,
     reject_null: np.ndarray,
     degrees_of_freedom: np.ndarray,
+    invalid_mask: np.ndarray | None = None,
 ) -> pd.DataFrame:
     """Assign child-parent divergence test results to the nodes dataframe.
 
@@ -173,6 +147,9 @@ def assign_divergence_results(
         Boolean array indicating significant edges
     degrees_of_freedom
         Effective degrees of freedom for each edge
+    invalid_mask
+        Optional boolean mask (aligned to ``child_ids``) indicating tests
+        that were invalid and routed through the conservative p-value path.
 
     Returns
     -------
@@ -184,6 +161,7 @@ def assign_divergence_results(
     nodes_dataframe["Child_Parent_Divergence_P_Value_BH"] = np.nan
     nodes_dataframe["Child_Parent_Divergence_Significant"] = False
     nodes_dataframe["Child_Parent_Divergence_df"] = np.nan
+    nodes_dataframe["Child_Parent_Divergence_Invalid"] = False
 
     # Assign results to child nodes
     nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_P_Value"] = p_values
@@ -192,6 +170,14 @@ def assign_divergence_results(
     )
     nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null
     nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_df"] = degrees_of_freedom
+    if invalid_mask is not None:
+        invalid_array = np.asarray(invalid_mask, dtype=bool)
+        if invalid_array.shape[0] != len(child_ids):
+            raise ValueError(
+                "invalid_mask must be aligned to child_ids. "
+                f"Got len(invalid_mask)={invalid_array.shape[0]}, len(child_ids)={len(child_ids)}."
+            )
+        nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_Invalid"] = invalid_array
 
     # Validate and convert significance column
     if nodes_dataframe["Child_Parent_Divergence_Significant"].isna().any():
@@ -225,6 +211,7 @@ def initialize_sibling_divergence_columns(df: pd.DataFrame) -> pd.DataFrame:
     df["Sibling_Degrees_of_Freedom"] = np.nan
     df["Sibling_Divergence_P_Value"] = np.nan
     df["Sibling_Divergence_P_Value_Corrected"] = np.nan
+    df["Sibling_Divergence_Invalid"] = False
     df["Sibling_BH_Different"] = False  # Reject H₀: siblings are different
     df["Sibling_BH_Same"] = False  # Fail to reject: siblings are similar
     return df

@@ -1,24 +1,27 @@
 from __future__ import annotations
-from typing import Dict, List, Optional, Tuple, Iterable, TYPE_CHECKING
-import numpy as np
-import networkx as nx
 
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
+
+import networkx as nx
+import numpy as np
 from sklearn.cluster import AgglomerativeClustering
-from kl_clustering_analysis.tree.distributions import populate_distributions
-from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics import (
-    _populate_global_kl,
-    _populate_local_kl,
-    _extract_hierarchy_statistics,
-)
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import (
-    TreeDecomposition,
+
+from kl_clustering_analysis import config
+from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
+from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+    build_sample_cluster_assignments as _build_sample_cluster_assignments,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_child_parent_divergence,
     annotate_sibling_divergence,
 )
-from kl_clustering_analysis import config
-from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics import (
+    _extract_hierarchy_statistics,
+    _populate_global_kl,
+    _populate_local_kl,
+)
+from kl_clustering_analysis.tree.distributions import populate_distributions
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -214,12 +217,8 @@ class PosetTree(nx.DiGraph):
         for merge_idx, (left_idx, right_idx, dist, _) in enumerate(linkage_matrix):
             node_idx = n_leaves + merge_idx
             node_id = f"N{int(node_idx)}"
-            left_id = (
-                f"L{int(left_idx)}" if left_idx < n_leaves else f"N{int(left_idx)}"
-            )
-            right_id = (
-                f"L{int(right_idx)}" if right_idx < n_leaves else f"N{int(right_idx)}"
-            )
+            left_id = f"L{int(left_idx)}" if left_idx < n_leaves else f"N{int(left_idx)}"
+            right_id = f"L{int(right_idx)}" if right_idx < n_leaves else f"N{int(right_idx)}"
 
             # Store merge distance for this node
             merge_distances[node_id] = float(dist)
@@ -278,11 +277,7 @@ class PosetTree(nx.DiGraph):
             else:
                 leaf_nodes = [d for d in nx.descendants(self, node) if self._is_leaf(d)]
 
-        out = (
-            [self.nodes[n].get("label", n) for n in leaf_nodes]
-            if return_labels
-            else leaf_nodes
-        )
+        out = [self.nodes[n].get("label", n) for n in leaf_nodes] if return_labels else leaf_nodes
         return sorted(out) if sort else out
 
     def _is_leaf(self, node_id: str) -> bool:
@@ -486,11 +481,32 @@ class PosetTree(nx.DiGraph):
                 significance_level_alpha=alpha_local,
             )
 
-            results_df = annotate_sibling_divergence(
-                self,
-                results_df,
-                significance_level_alpha=sibling_alpha,
-            )
+            if config.SIBLING_TEST_METHOD == "cousin_ftest":
+                from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+                    annotate_sibling_divergence_cousin,
+                )
+
+                results_df = annotate_sibling_divergence_cousin(
+                    self,
+                    results_df,
+                    significance_level_alpha=sibling_alpha,
+                )
+            elif config.SIBLING_TEST_METHOD == "cousin_adjusted_wald":
+                from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+                    annotate_sibling_divergence_adjusted,
+                )
+
+                results_df = annotate_sibling_divergence_adjusted(
+                    self,
+                    results_df,
+                    significance_level_alpha=sibling_alpha,
+                )
+            else:
+                results_df = annotate_sibling_divergence(
+                    self,
+                    results_df,
+                    significance_level_alpha=sibling_alpha,
+                )
 
             # Update the tree's stats_df with the annotated results so they are available later
             self.stats_df = results_df
@@ -526,4 +542,4 @@ class PosetTree(nx.DiGraph):
             A pandas DataFrame indexed by ``sample_id`` with cluster assignment columns.
         """
 
-        return TreeDecomposition.build_sample_cluster_assignments(decomposition_results)
+        return _build_sample_cluster_assignments(decomposition_results)

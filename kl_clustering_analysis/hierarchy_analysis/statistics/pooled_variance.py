@@ -45,27 +45,6 @@ def _flatten_categorical(arr: np.ndarray) -> np.ndarray:
     return arr
 
 
-def compute_categorical_effective_df(n_features: int, n_categories: int) -> int:
-    """Compute effective degrees of freedom for categorical data.
-
-    Each feature with K categories has K-1 degrees of freedom due to
-    the simplex constraint (probabilities sum to 1).
-
-    Parameters
-    ----------
-    n_features : int
-        Number of features (d).
-    n_categories : int
-        Number of categories per feature (K).
-
-    Returns
-    -------
-    int
-        Effective degrees of freedom: d * (K - 1).
-    """
-    return n_features * (n_categories - 1)
-
-
 def compute_pooled_proportion(
     theta_1: NDArray[np.floating],
     theta_2: NDArray[np.floating],
@@ -178,7 +157,8 @@ def standardize_proportion_difference(
     mean_branch_length : float, optional
         Mean branch length across the tree, used to normalize the
         Felsenstein adjustment so that average-length branches get a
-        multiplier near 2.0.  When None, falls back to a constant 2.0.
+        multiplier near 2.0. Required when ``branch_length_sum`` is
+        provided and positive; otherwise a ``ValueError`` is raised.
 
     Returns
     -------
