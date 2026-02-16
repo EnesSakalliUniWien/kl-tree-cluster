@@ -86,7 +86,7 @@ PROJECTION_RANDOM_SEED: int | None = 42
 #                             median T/k as local ĉ. No global regression — adapts to local
 #                             tree structure. Falls back to global median when no local
 #                             null-like pairs are found.
-SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
+SIBLING_TEST_METHOD: str = "cousin_weighted_wald"
 
 
 # --- Signal Localization Parameters ---

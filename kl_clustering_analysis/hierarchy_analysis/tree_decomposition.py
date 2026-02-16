@@ -227,6 +227,14 @@ class TreeDecomposition:
                 results_df,
                 significance_level_alpha=self.sibling_alpha,
             )
+        elif config.SIBLING_TEST_METHOD == "cousin_weighted_wald":
+            from .statistics.sibling_divergence import annotate_sibling_divergence_weighted
+
+            results_df = annotate_sibling_divergence_weighted(
+                self.tree,
+                results_df,
+                significance_level_alpha=self.sibling_alpha,
+            )
         else:
             results_df = annotate_sibling_divergence(
                 self.tree,
