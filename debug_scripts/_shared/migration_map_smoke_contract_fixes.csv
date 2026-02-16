@@ -1,0 +1,3 @@
+old_path,new_path,status
+debug_scripts/smoke/verify_embedding_cache.py,debug_scripts/smoke/q_embedding_disk_cache_verification__embedding__smoke.py,migrated_active
+debug_scripts/smoke/verify_subprocess_config.py,debug_scripts/smoke/q_subprocess_config_propagation__config__smoke.py,migrated_active
