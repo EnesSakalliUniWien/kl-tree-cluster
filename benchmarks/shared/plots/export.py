@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-from benchmarks.shared.util.pdf_layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
+from benchmarks.shared.results import ComputedResultRecord
+from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
+from benchmarks.shared.util.params import format_params_for_display
 from kl_clustering_analysis.plot.cluster_tree_visualization import plot_tree_with_clusters
 
 from .embedding import (
@@ -21,23 +23,16 @@ from .manifold import create_manifold_alignment_plot
 logger = logging.getLogger(__name__)
 
 
-def _format_ari_nmi(result: dict, *, compact: bool = False) -> str:
+def _format_ari_nmi(result: ComputedResultRecord, *, compact: bool = False) -> str:
     """Format ARI/NMI when available on a computed result record."""
-    ari = result.get("ari")
-    nmi = result.get("nmi")
+    ari = result.ari
+    nmi = result.nmi
     parts: list[str] = []
     if isinstance(ari, (int, float, np.floating)) and np.isfinite(float(ari)):
         parts.append(f"A={float(ari):.3f}" if compact else f"ARI={float(ari):.3f}")
     if isinstance(nmi, (int, float, np.floating)) and np.isfinite(float(nmi)):
         parts.append(f"N={float(nmi):.3f}" if compact else f"NMI={float(nmi):.3f}")
     return ", ".join(parts)
-
-
-def _format_params_for_display(params: dict) -> str:
-    """Creates a human-readable string from a parameter dictionary."""
-    if not params:
-        return ""
-    return ", ".join(f"{k}={v}" for k, v in sorted(params.items()))
 
 
 def _format_params_for_filename(params: dict) -> str:
@@ -52,7 +47,7 @@ def _format_params_for_filename(params: dict) -> str:
 
 
 def create_umap_plots_from_results(
-    test_results: list,
+    test_results: list[ComputedResultRecord],
     output_dir: Path,
     timestamp: str | None = None,
     verbose: bool = True,
@@ -68,7 +63,7 @@ def create_umap_plots_from_results(
 
     results_by_case = {}
     for result in test_results:
-        case_num = result["test_case_num"]
+        case_num = result.test_case_num
         results_by_case.setdefault(case_num, []).append(result)
 
     for case_num, case_results in results_by_case.items():
@@ -76,29 +71,32 @@ def create_umap_plots_from_results(
             continue
 
         first_result = case_results[0]
-        meta = first_result["meta"]
+        meta = first_result.meta
         if verbose:
             print(f"  Creating UMAP comparison plot for test case {case_num}...")
 
-        labels_to_plot = {"Ground Truth": first_result.get("y_true")}
+        labels_to_plot = {"Ground Truth": first_result.y_true}
         for res in case_results:
-            method_name = res["method_name"]
-            params = res.get("params", {})
-            param_str = _format_params_for_display(params)
+            method_name = res.method_name
+            params = res.params
+            param_str = format_params_for_display(params)
 
             unique_key = f"{method_name} ({param_str})" if param_str else method_name
             metrics_text = _format_ari_nmi(res, compact=True)
             if metrics_text:
                 unique_key = f"{unique_key} [{metrics_text}]"
-            if res.get("labels") is not None:
-                labels_to_plot[unique_key] = res["labels"]
+            if res.labels is not None:
+                labels_to_plot[unique_key] = res.labels
+
+        _cache_key = f"{meta.get('case_name', f'case_{case_num}')}_n{meta.get('n_samples', 'x')}"
 
         try:
             umap_figs = create_clustering_comparison_plots(
-                X_original=first_result["X_original"],
+                X_original=first_result.x_original,
                 labels_dict=labels_to_plot,
                 test_case_num=case_num,
                 meta=meta,
+                cache_key=_cache_key,
             )
             n_pages = len(umap_figs)
             for page_idx, fig in enumerate(umap_figs, start=1):
@@ -128,10 +126,12 @@ def create_umap_plots_from_results(
     return figs
 
 
-def _group_results_by_case(test_results: list) -> dict[int, list[dict]]:
-    results_by_case: dict[int, list[dict]] = {}
+def _group_results_by_case(
+    test_results: list[ComputedResultRecord],
+) -> dict[int, list[ComputedResultRecord]]:
+    results_by_case: dict[int, list[ComputedResultRecord]] = {}
     for result in test_results:
-        case_num = int(result.get("test_case_num", 0))
+        case_num = int(result.test_case_num)
         results_by_case.setdefault(case_num, []).append(result)
     return results_by_case
 
@@ -164,16 +164,14 @@ def _save_or_collect_figure(
 def _create_tree_figures_for_case(
     *,
     case_num: int,
-    case_results: list[dict],
+    case_results: list[ComputedResultRecord],
 ) -> list[plt.Figure]:
     # Keep only tree-capable runs.
-    tree_results = [
-        r for r in case_results if r.get("tree") is not None and r.get("decomposition") is not None
-    ]
+    tree_results = [r for r in case_results if r.tree is not None and r.decomposition is not None]
     if not tree_results:
         return []
 
-    meta = tree_results[0].get("meta", {})
+    meta = tree_results[0].meta
     meta_text = (
         f"samples={meta.get('n_samples', '?')}, "
         f"features={meta.get('n_features', '?')}, "
@@ -193,15 +191,15 @@ def _create_tree_figures_for_case(
             y=0.97,
         )
 
-        tree_t = result["tree"]
-        decomp_t = result["decomposition"]
-        stats_df = result.get("stats")
+        tree_t = result.tree
+        decomp_t = result.decomposition
+        stats_df = result.stats
         if stats_df is None:
             stats_df = getattr(tree_t, "stats_df", None)
-        method_name = result.get("method_name", "KL Divergence")
-        params = result.get("params", {})
-        param_str_display = _format_params_for_display(params)
-        found_clusters = result.get("meta", {}).get("found_clusters", "?")
+        method_name = result.method_name
+        params = result.params
+        param_str_display = format_params_for_display(params)
+        found_clusters = result.meta.get("found_clusters", "?")
         metrics_text = _format_ari_nmi(result)
 
         page_tag = f" ({idx}/{n_items})" if n_items > 1 else ""
@@ -231,7 +229,7 @@ def _create_tree_figures_for_case(
 
 
 def create_umap_then_tree_plots_from_results(
-    test_results: list,
+    test_results: list[ComputedResultRecord],
     output_dir: Path,
     timestamp: str | None = None,
     verbose: bool = True,
@@ -253,28 +251,31 @@ def create_umap_then_tree_plots_from_results(
             continue
 
         first_result = case_results[0]
-        meta = first_result.get("meta", {})
+        meta = first_result.meta
         if verbose:
             print(f"  Creating UMAP→Tree plots for test case {case_num}...")
 
-        labels_to_plot = {"Ground Truth": first_result.get("y_true")}
+        labels_to_plot = {"Ground Truth": first_result.y_true}
         for res in case_results:
-            method_name = res.get("method_name", "")
-            params = res.get("params", {})
-            param_str = _format_params_for_display(params)
+            method_name = res.method_name
+            params = res.params
+            param_str = format_params_for_display(params)
             unique_key = f"{method_name} ({param_str})" if param_str else method_name
             metrics_text = _format_ari_nmi(res, compact=True)
             if metrics_text:
                 unique_key = f"{unique_key} [{metrics_text}]"
-            if res.get("labels") is not None:
-                labels_to_plot[unique_key] = res["labels"]
+            if res.labels is not None:
+                labels_to_plot[unique_key] = res.labels
+
+        _cache_key = f"{meta.get('case_name', f'case_{case_num}')}_n{meta.get('n_samples', 'x')}"
 
         try:
             umap_figs = create_clustering_comparison_plots(
-                X_original=first_result["X_original"],
+                X_original=first_result.x_original,
                 labels_dict=labels_to_plot,
                 test_case_num=case_num,
                 meta=meta,
+                cache_key=_cache_key,
             )
             n_pages = len(umap_figs)
             for page_idx, umap_fig in enumerate(umap_figs, start=1):
@@ -329,7 +330,7 @@ def create_umap_then_tree_plots_from_results(
 
 
 def create_tree_then_umap_plots_from_results(
-    test_results: list,
+    test_results: list[ComputedResultRecord],
     output_dir: Path,
     timestamp: str | None = None,
     verbose: bool = True,
@@ -351,7 +352,7 @@ def create_tree_then_umap_plots_from_results(
             continue
 
         first_result = case_results[0]
-        meta = first_result.get("meta", {})
+        meta = first_result.meta
         if verbose:
             print(f"  Creating Tree→UMAP plots for test case {case_num}...")
 
@@ -380,24 +381,27 @@ def create_tree_then_umap_plots_from_results(
                 plt.close("all")
 
         # UMAP grid second (always attempted).
-        labels_to_plot = {"Ground Truth": first_result.get("y_true")}
+        labels_to_plot = {"Ground Truth": first_result.y_true}
         for res in case_results:
-            method_name = res.get("method_name", "")
-            params = res.get("params", {})
-            param_str = _format_params_for_display(params)
+            method_name = res.method_name
+            params = res.params
+            param_str = format_params_for_display(params)
             unique_key = f"{method_name} ({param_str})" if param_str else method_name
             metrics_text = _format_ari_nmi(res, compact=True)
             if metrics_text:
                 unique_key = f"{unique_key} [{metrics_text}]"
-            if res.get("labels") is not None:
-                labels_to_plot[unique_key] = res["labels"]
+            if res.labels is not None:
+                labels_to_plot[unique_key] = res.labels
+
+        _cache_key = f"{meta.get('case_name', f'case_{case_num}')}_n{meta.get('n_samples', 'x')}"
 
         try:
             umap_figs = create_clustering_comparison_plots(
-                X_original=first_result["X_original"],
+                X_original=first_result.x_original,
                 labels_dict=labels_to_plot,
                 test_case_num=case_num,
                 meta=meta,
+                cache_key=_cache_key,
             )
             n_pages = len(umap_figs)
             for page_idx, umap_fig in enumerate(umap_figs, start=1):
@@ -426,7 +430,7 @@ def create_tree_then_umap_plots_from_results(
 
 
 def create_umap_3d_plots_from_results(
-    test_results: list,
+    test_results: list[ComputedResultRecord],
     output_dir: Path,
     timestamp: str | None = None,
     verbose: bool = True,
@@ -441,13 +445,13 @@ def create_umap_3d_plots_from_results(
         output_dir.mkdir(exist_ok=True)
 
     for result in test_results:
-        if result.get("labels") is None:
+        if result.labels is None:
             continue
 
-        i = result["test_case_num"]
-        method_name = result["method_name"]
-        params = result.get("params", {})
-        param_str_display = _format_params_for_display(params)
+        i = result.test_case_num
+        method_name = result.method_name
+        params = result.params
+        param_str_display = format_params_for_display(params)
         metrics_text = _format_ari_nmi(result)
 
         method_name_safe = method_name.replace(" ", "_")
@@ -466,11 +470,11 @@ def create_umap_3d_plots_from_results(
             print(f"  Creating 3D UMAP plot for {filename}...")
         try:
             fig = create_clustering_comparison_plot_3d(
-                result["X_original"],
-                result.get("y_true"),
-                np.asarray(result["labels"]),
+                result.x_original,
+                result.y_true,
+                np.asarray(result.labels),
                 test_case_num=i,
-                meta=result["meta"],
+                meta=result.meta,
                 title=title,
             )
             if pdf is not None:
@@ -493,7 +497,7 @@ def create_umap_3d_plots_from_results(
 
 
 def create_manifold_plots_from_results(
-    test_results: list,
+    test_results: list[ComputedResultRecord],
     output_dir: Path,
     timestamp: str | None = None,
     verbose: bool = True,
@@ -507,13 +511,13 @@ def create_manifold_plots_from_results(
     if save:
         output_dir.mkdir(exist_ok=True)
     for result in test_results:
-        if result.get("labels") is None:
+        if result.labels is None:
             continue
 
-        i = result["test_case_num"]
-        method_name = result["method_name"]
-        params = result.get("params", {})
-        param_str_display = _format_params_for_display(params)
+        i = result.test_case_num
+        method_name = result.method_name
+        params = result.params
+        param_str_display = format_params_for_display(params)
         metrics_text = _format_ari_nmi(result)
 
         method_name_safe = method_name.replace(" ", "_")
@@ -533,11 +537,11 @@ def create_manifold_plots_from_results(
 
         try:
             fig, mantel_r, mantel_p = create_manifold_alignment_plot(
-                result["X_original"],
-                np.asarray(result["labels"]),
+                result.x_original,
+                np.asarray(result.labels),
                 test_case_num=i,
-                meta=result["meta"],
-                y_true=result.get("y_true"),
+                meta=result.meta,
+                y_true=result.y_true,
                 title=title,
             )
             if pdf is not None:
@@ -562,7 +566,7 @@ def create_manifold_plots_from_results(
 
 
 def create_tree_plots_from_results(
-    test_results: list,
+    test_results: list[ComputedResultRecord],
     output_dir: Path,
     timestamp: str | None = None,
     verbose: bool = True,
@@ -577,11 +581,11 @@ def create_tree_plots_from_results(
         output_dir.mkdir(exist_ok=True)
 
     # Group tree-capable runs by test case so we can render one tree per page.
-    results_by_case: dict[int, list[dict]] = {}
+    results_by_case: dict[int, list[ComputedResultRecord]] = {}
     for result in test_results:
-        if not result.get("tree") or not result.get("decomposition"):
+        if result.tree is None or result.decomposition is None:
             continue
-        case_num = int(result.get("test_case_num", 0))
+        case_num = int(result.test_case_num)
         results_by_case.setdefault(case_num, []).append(result)
 
     for case_num, case_results in sorted(results_by_case.items()):

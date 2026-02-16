@@ -12,10 +12,16 @@ Usage:
 import sys
 from pathlib import Path
 
-# Ensure project root is in path
-repo_root = Path(__file__).resolve().parents[2]
-if str(repo_root) not in sys.path:
-    sys.path.insert(0, str(repo_root))
+# Load shared path bootstrap helper from benchmarks root.
+_script_path = Path(__file__).resolve()
+_benchmarks_root = (
+    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
+)
+if str(_benchmarks_root) not in sys.path:
+    sys.path.insert(0, str(_benchmarks_root))
+from _bootstrap import ensure_repo_root_on_path
+
+repo_root = ensure_repo_root_on_path(__file__)
 
 import numpy as np
 import pandas as pd
@@ -26,7 +32,7 @@ import matplotlib.pyplot as plt
 from typing import Dict, List, Optional, Tuple, Any
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
-from benchmarks.shared.runners.dispatch import run_clustering
+from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.evolution import (
     generate_ancestral_sequence,
     evolve_sequence,
@@ -154,9 +160,16 @@ def run_multi_split_benchmark(
             true_labels = np.array([cluster_assignments[name] for name in sample_names])
 
             # Run clustering
-            pred_labels, n_found, status = run_clustering(
-                data_df, "kl", {}, base_seed + rep
+            run_result = run_clustering_result(
+                data_df,
+                "kl",
+                {},
+                base_seed + rep,
             )
+            pred_labels = run_result.labels
+            n_found = int(run_result.found_clusters)
+            status = str(run_result.status)
+            skip_reason = run_result.skip_reason
 
             if pred_labels is not None and status == "ok":
                 ari = adjusted_rand_score(true_labels, pred_labels)
@@ -181,6 +194,7 @@ def run_multi_split_benchmark(
                     "correct_k": correct_k,
                     "replicate": rep,
                     "status": status,
+                    "skip_reason": skip_reason,
                 }
             )
 

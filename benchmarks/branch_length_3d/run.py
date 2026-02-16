@@ -14,10 +14,16 @@ Usage:
 import sys
 from pathlib import Path
 
-# Ensure project root is in path
-repo_root = Path(__file__).resolve().parents[2]
-if str(repo_root) not in sys.path:
-    sys.path.insert(0, str(repo_root))
+# Load shared path bootstrap helper from benchmarks root.
+_script_path = Path(__file__).resolve()
+_benchmarks_root = (
+    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
+)
+if str(_benchmarks_root) not in sys.path:
+    sys.path.insert(0, str(_benchmarks_root))
+from _bootstrap import ensure_repo_root_on_path
+
+repo_root = ensure_repo_root_on_path(__file__)
 
 import numpy as np
 import pandas as pd
@@ -37,8 +43,6 @@ def run_3d_benchmark(
     branch_lengths: list = None,
     feature_counts: list = None,
     n_categories: int = 4,
-    mutation_rate: float = 0.30,
-    shift_strength: tuple = (0.2, 0.5),
     n_replicates: int = 3,
     base_seed: int = 42,
     verbose: bool = True,
@@ -70,8 +74,6 @@ def run_3d_benchmark(
                 n_features=n_features,
                 n_categories=n_categories,
                 branch_lengths=branch_lengths,
-                mutation_rate=mutation_rate,
-                shift_strength=shift_strength,
                 random_seed=base_seed + rep * 1000 + n_features,
                 method="kl",
                 verbose=False,

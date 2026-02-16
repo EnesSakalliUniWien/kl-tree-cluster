@@ -13,10 +13,16 @@ Usage:
 import sys
 from pathlib import Path
 
-# Ensure project root is in path
-repo_root = Path(__file__).resolve().parents[2]
-if str(repo_root) not in sys.path:
-    sys.path.insert(0, str(repo_root))
+# Load shared path bootstrap helper from benchmarks root.
+_script_path = Path(__file__).resolve()
+_benchmarks_root = (
+    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
+)
+if str(_benchmarks_root) not in sys.path:
+    sys.path.insert(0, str(_benchmarks_root))
+from _bootstrap import ensure_repo_root_on_path
+
+repo_root = ensure_repo_root_on_path(__file__)
 
 import numpy as np
 import pandas as pd
@@ -37,8 +43,6 @@ def run_replicated_benchmark(
     n_features: int = 200,
     n_categories: int = 4,
     branch_lengths: list = None,
-    mutation_rate: float = 0.30,
-    shift_strength: tuple = (0.2, 0.5),
     n_replicates: int = 5,
     base_seed: int = 42,
     verbose: bool = True,
@@ -82,8 +86,6 @@ def run_replicated_benchmark(
             n_features=n_features,
             n_categories=n_categories,
             branch_lengths=branch_lengths,
-            mutation_rate=mutation_rate,
-            shift_strength=shift_strength,
             random_seed=base_seed + rep * 1000,
             method="kl",
             verbose=False,
@@ -252,8 +254,6 @@ def main():
         1.50,
         2.00,
     ]
-    mutation_rate = 0.30
-    shift_strength = (0.2, 0.5)
     n_replicates = 5
     base_seed = 42
 
@@ -270,8 +270,6 @@ def main():
         n_features=n_features,
         n_categories=n_categories,
         branch_lengths=branch_lengths,
-        mutation_rate=mutation_rate,
-        shift_strength=shift_strength,
         n_replicates=n_replicates,
         base_seed=base_seed,
         verbose=True,
@@ -320,7 +318,6 @@ def main():
         n_leaves=n_leaves,
         n_features=n_features,
         branch_lengths=[0.01, 0.05, 0.1, 0.2, 0.5, 1.0],
-        mutation_rate=mutation_rate,
         random_seed=base_seed,
         show_kl_clustering=True,
     )
@@ -340,7 +337,6 @@ def main():
     print(f"- Replicates per branch length: {n_replicates}")
     print(f"- Fixed leaves (samples): {n_leaves}")
     print(f"- Features: {n_features}")
-    print(f"- Mutation rate: {mutation_rate}")
     print()
 
     # Key findings

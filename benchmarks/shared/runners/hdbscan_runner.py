@@ -17,15 +17,9 @@ def _run_hdbscan_method(
     """Run HDBSCAN on a precomputed distance matrix and return a
     `MethodRunResult` (imported lazily to avoid circular imports).
     """
-    from benchmarks.shared.types.method_run_result import (
-        MethodRunResult,
-    )
-    from benchmarks.shared.util.decomposition import (
-        _create_report_dataframe_from_labels,
-    )
-    from benchmarks.shared.util.core import (
-        _normalize_labels,
-    )
+    from benchmarks.shared.types.method_run_result import MethodRunResult
+    from benchmarks.shared.util.core import _normalize_labels
+    from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 
     # Lazy import hdbscan model
     try:
@@ -39,9 +33,7 @@ def _run_hdbscan_method(
         return MethodRunResult(
             labels=labels,
             found_clusters=1 if n_samples else 0,
-            report_df=_create_report_dataframe_from_labels(
-                labels, pd.Index(range(n_samples))
-            ),
+            report_df=_create_report_dataframe_from_labels(labels, pd.Index(range(n_samples))),
             status="ok",
             skip_reason=None,
         )
@@ -73,9 +65,7 @@ def _run_hdbscan_method(
             )
             model.fit(distance_matrix)
             labels = _normalize_labels(model.labels_)
-            report_df = _create_report_dataframe_from_labels(
-                labels, pd.Index(range(n_samples))
-            )
+            report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
             return MethodRunResult(
                 labels=labels,
                 found_clusters=int(len({x for x in labels if x >= 0})),
@@ -92,9 +82,7 @@ def _run_hdbscan_method(
             xi=0.05,
         )
         labels = _normalize_labels(model.fit_predict(distance_matrix))
-        report_df = _create_report_dataframe_from_labels(
-            labels, pd.Index(range(n_samples))
-        )
+        report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
         return MethodRunResult(
             labels=labels,
             found_clusters=int(len({x for x in labels if x >= 0})),
@@ -107,7 +95,7 @@ def _run_hdbscan_method(
         return MethodRunResult(
             labels=None,
             found_clusters=0,
-            report_df=pd.DataFrame(),
-            status="error",
+            report_df=None,
+            status="skip",
             skip_reason=f"HDBSCAN/OPTICS fallback failed: {e}",
         )

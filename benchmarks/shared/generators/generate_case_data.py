@@ -13,6 +13,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import squareform
 from sklearn.datasets import make_blobs
 
 from benchmarks.shared.generators.generate_categorical_matrix import (
@@ -169,6 +170,31 @@ def _generate_sbm_case(
         columns=[f"F{j}" for j in range(n_nodes)],
     )
 
+    sbm_expected = None
+    sbm_modularity = None
+    sbm_modularity_shifted = None
+    sbm_modularity_norm = None
+
+    adj = A.astype(float, copy=False)
+    degrees = adj.sum(axis=1)
+    m = adj.sum() / 2.0
+    if m > 0:
+        sbm_expected = np.outer(degrees, degrees) / (2.0 * m)
+        sbm_modularity = adj - sbm_expected
+        sbm_modularity_shifted = sbm_modularity - sbm_modularity.min()
+        sbm_modularity_norm = sbm_modularity_shifted / (sbm_modularity_shifted.max() + 1e-10)
+        precomputed_distance_matrix = 1.0 - sbm_modularity_norm
+    else:
+        # Fallback for empty graphs (no modularity signal): invert adjacency directly.
+        precomputed_distance_matrix = 1.0 - adj
+    np.fill_diagonal(precomputed_distance_matrix, 0.0)
+
+    precomputed_distance_condensed = None
+    try:
+        precomputed_distance_condensed = squareform(precomputed_distance_matrix)
+    except ValueError:
+        precomputed_distance_condensed = None
+
     metadata = {
         "n_samples": n_nodes,
         "n_features": n_nodes,
@@ -177,6 +203,13 @@ def _generate_sbm_case(
         "name": test_case.get("name", f"sbm_{n_nodes}"),
         "generator": "sbm",
         "adjacency": A,
+        "requires_precomputed_kl_distance": True,
+        "precomputed_distance_matrix": precomputed_distance_matrix,
+        "precomputed_distance_condensed": precomputed_distance_condensed,
+        "sbm_expected": sbm_expected,
+        "sbm_modularity": sbm_modularity,
+        "sbm_modularity_shifted": sbm_modularity_shifted,
+        "sbm_modularity_norm": sbm_modularity_norm,
     }
 
     return data_df, ground_truth, A, metadata

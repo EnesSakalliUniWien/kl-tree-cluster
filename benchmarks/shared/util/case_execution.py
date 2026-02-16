@@ -8,7 +8,12 @@ import os
 
 import pandas as pd
 
-from benchmarks.shared.pipeline import benchmark_cluster_algorithm
+
+def _get_benchmark_fn():
+    """Lazy import to break the circular dependency with benchmarks.shared.plots."""
+    from benchmarks.shared.pipeline import benchmark_cluster_algorithm
+
+    return benchmark_cluster_algorithm
 
 
 def _run_case_worker(
@@ -29,8 +34,17 @@ def _run_case_worker(
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
+    # Restore config overrides that were set in the parent process.
+    # With mp.get_context("spawn") the child reimports everything from scratch,
+    # so Python-level config changes are lost.  We propagate them via env vars.
+    from kl_clustering_analysis import config as _cfg
+
+    _sibling_override = os.environ.get("KL_TE_SIBLING_TEST_METHOD", "")
+    if _sibling_override:
+        _cfg.SIBLING_TEST_METHOD = _sibling_override
+
     try:
-        df_res, _ = benchmark_cluster_algorithm(
+        df_res, _ = _get_benchmark_fn()(
             test_cases=[case],
             methods=methods_to_test,
             verbose=False,
@@ -38,7 +52,6 @@ def _run_case_worker(
             plot_manifold=case_plot_manifold,
             concat_plots_pdf=enable_plots,
             concat_output=pdf_path,
-            save_individual_plots=False,
             matrix_audit=False,
         )
         queue.put({"ok": True, "rows": df_res.to_dict(orient="records")})
@@ -155,7 +168,7 @@ def run_case_with_optional_isolation(
     if df_res is not None:
         return df_res
 
-    df_res, _ = benchmark_cluster_algorithm(
+    df_res, _ = _get_benchmark_fn()(
         test_cases=[case],
         methods=methods_to_test,
         verbose=False,
@@ -163,7 +176,6 @@ def run_case_with_optional_isolation(
         plot_manifold=case_plot_manifold,
         concat_plots_pdf=enable_plots,
         concat_output=pdf_path,
-        save_individual_plots=False,
         matrix_audit=False,  # Disable heavy TensorBoard exports to prevent memory crashes
     )
     return df_res

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 
 def resolve_methods_from_env(
@@ -31,4 +32,28 @@ def resolve_methods_from_env(
     return selected
 
 
-__all__ = ["resolve_methods_from_env"]
+def resolve_selected_methods_and_param_sets(
+    *,
+    methods: list[str] | None,
+    method_params: dict[str, list[dict[str, object]]] | None,
+    default_methods: Sequence[str],
+    method_specs: Mapping[str, Any],
+) -> tuple[list[str], dict[str, list[dict[str, object]]]]:
+    """Validate selected methods and resolve each method's parameter grid."""
+    selected_methods = list(methods) if methods is not None else list(default_methods)
+    params_by_method = method_params or {}
+    for method_id in selected_methods:
+        if method_id not in method_specs:
+            raise ValueError(f"Unknown method: {method_id}")
+
+    param_sets = {
+        method_id: (params_by_method.get(method_id) or method_specs[method_id].param_grid)
+        for method_id in selected_methods
+    }
+    return selected_methods, param_sets
+
+
+__all__ = [
+    "resolve_methods_from_env",
+    "resolve_selected_methods_and_param_sets",
+]

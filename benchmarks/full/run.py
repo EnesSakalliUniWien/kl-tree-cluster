@@ -3,11 +3,17 @@ import os
 import sys
 from pathlib import Path
 
-# Add the project root to the python path BEFORE any benchmarks/kl_clustering imports
-# so that spawn-based subprocesses can resolve the packages.
-repo_root = Path(__file__).resolve().parents[2]
-if str(repo_root) not in sys.path:
-    sys.path.insert(0, str(repo_root))
+# Load shared path bootstrap helper from benchmarks root.
+_script_path = Path(__file__).resolve()
+_benchmarks_root = (
+    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
+)
+if str(_benchmarks_root) not in sys.path:
+    sys.path.insert(0, str(_benchmarks_root))
+from _bootstrap import ensure_repo_root_on_path
+
+# Ensure repo root is importable before any benchmarks/kl_clustering imports.
+repo_root = ensure_repo_root_on_path(__file__)
 
 import pandas as pd
 
@@ -17,7 +23,7 @@ from benchmarks.shared.env import get_env_bool, get_env_int
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_execution import run_case_with_optional_isolation
 from benchmarks.shared.util.method_selection import resolve_methods_from_env
-from benchmarks.shared.util.pdf_merge import merge_existing_pdfs
+from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
 from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
 

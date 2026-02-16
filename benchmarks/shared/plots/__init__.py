@@ -14,7 +14,6 @@ mpl.rcParams["ps.fonttype"] = 42
 from .summary import create_validation_plot
 from .embedding import (
     create_clustering_comparison_plots,
-    create_clustering_comparison_plot,
     create_clustering_comparison_plot_3d,
 )
 from .manifold import create_manifold_alignment_plot
@@ -32,7 +31,6 @@ from .runtime import (
 __all__ = [
     "create_validation_plot",
     "create_clustering_comparison_plots",
-    "create_clustering_comparison_plot",
     "create_clustering_comparison_plot_3d",
     "create_manifold_alignment_plot",
     "create_umap_plots_from_results",

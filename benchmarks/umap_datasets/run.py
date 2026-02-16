@@ -15,25 +15,30 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Load shared path bootstrap helper from benchmarks root.
+_script_path = Path(__file__).resolve()
+_benchmarks_root = (
+    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
+)
+if str(_benchmarks_root) not in sys.path:
+    sys.path.insert(0, str(_benchmarks_root))
+from _bootstrap import ensure_repo_root_on_path
+
+repo_root = ensure_repo_root_on_path(__file__)
+
+import matplotlib
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import load_digits
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from sklearn.preprocessing import StandardScaler, KBinsDiscretizer
-import matplotlib
+from sklearn.preprocessing import KBinsDiscretizer, StandardScaler
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# Ensure project root is in path
-repo_root = Path(__file__).resolve().parents[2]
-if str(repo_root) not in sys.path:
-    sys.path.insert(0, str(repo_root))
-
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis import config
 
 
 def load_penguins() -> tuple[np.ndarray, np.ndarray, list[str]]:
@@ -104,9 +109,7 @@ def load_sklearn_digits() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return X, y, images
 
 
-def discretize_continuous(
-    X: np.ndarray, n_bins: int = 5, strategy: str = "quantile"
-) -> np.ndarray:
+def discretize_continuous(X: np.ndarray, n_bins: int = 5, strategy: str = "quantile") -> np.ndarray:
     """Discretize continuous features into bins.
 
     Parameters
@@ -302,9 +305,7 @@ def plot_umap_embedding(
             marker="x",
             label="Unclustered",
         )
-    ax_pred.set_title(
-        f"{title} - KL Clusters ({len(np.unique(labels[mask_clustered]))})"
-    )
+    ax_pred.set_title(f"{title} - KL Clusters ({len(np.unique(labels[mask_clustered]))})")
     ax_pred.set_aspect("equal", "datalim")
 
 
@@ -318,24 +319,23 @@ def create_bokeh_digits_plot(
     """Create interactive Bokeh plot with digit image hover tooltips."""
     try:
         import umap
-        from bokeh.plotting import figure, output_file, save
-        from bokeh.models import HoverTool, ColumnDataSource, CategoricalColorMapper
-        from bokeh.palettes import Spectral10, Category20
         from bokeh.layouts import row
+        from bokeh.models import CategoricalColorMapper, ColumnDataSource, HoverTool
+        from bokeh.palettes import Category20, Spectral10
+        from bokeh.plotting import figure, output_file, save
     except ImportError as e:
         print(f"  Missing dependency for Bokeh visualization: {e}")
         return
 
-    from io import BytesIO
-    from PIL import Image
     import base64
+    from io import BytesIO
+
+    from PIL import Image
 
     def embeddable_image(data):
         """Convert digit array to base64-encoded PNG for embedding in HTML."""
         img_data = 255 - 15 * data.astype(np.uint8)
-        image = Image.fromarray(img_data, mode="L").resize(
-            (64, 64), Image.Resampling.BICUBIC
-        )
+        image = Image.fromarray(img_data, mode="L").resize((64, 64), Image.Resampling.BICUBIC)
         buffer = BytesIO()
         image.save(buffer, format="png")
         for_encoding = buffer.getvalue()
@@ -371,9 +371,7 @@ def create_bokeh_digits_plot(
         # Repeat palette for many clusters
         cluster_palette = (Category20[20] * ((n_clusters // 20) + 1))[:n_clusters]
 
-    cluster_color_mapping = CategoricalColorMapper(
-        factors=unique_clusters, palette=cluster_palette
-    )
+    cluster_color_mapping = CategoricalColorMapper(factors=unique_clusters, palette=cluster_palette)
 
     # Create figure for TRUE labels
     plot_true = figure(
@@ -547,24 +545,18 @@ def main():
     preproc_continuous = [
         {
             "name": "scaled_binarized_median",
-            "transform": lambda X: binarize_data(
-                StandardScaler().fit_transform(X), threshold=0.0
-            ),
+            "transform": lambda X: binarize_data(StandardScaler().fit_transform(X), threshold=0.0),
         },
         {
             "name": "discretized_5bins",
-            "transform": lambda X: discretize_continuous(
-                X, n_bins=5, strategy="quantile"
-            ),
+            "transform": lambda X: discretize_continuous(X, n_bins=5, strategy="quantile"),
         },
     ]
 
     preproc_image = [
         {
             "name": "binarized_0.5",
-            "transform": lambda X: binarize_data(
-                X / 16.0, threshold=0.5
-            ),  # Digits are 0-16
+            "transform": lambda X: binarize_data(X / 16.0, threshold=0.5),  # Digits are 0-16
         },
         {
             "name": "binarized_0.1",
@@ -632,9 +624,7 @@ def main():
 
     for dataset_name, best in best_configs.items():
         print(f"\n{dataset_name}:")
-        print(
-            f"  Best config: {best['preprocessing']} + {best['distance']} + {best['linkage']}"
-        )
+        print(f"  Best config: {best['preprocessing']} + {best['distance']} + {best['linkage']}")
         print(f"  ARI: {best['ari']:.4f}")
         print(f"  NMI: {best['nmi']:.4f}")
         print(f"  Clusters: {best['n_clusters']} (true: {best['n_true_clusters']})")
@@ -652,33 +642,29 @@ def main():
 
         # Penguins visualization
         best_peng = best_configs["Penguins"]
-        X_peng_proc = [
-            p for p in preproc_continuous if p["name"] == best_peng["preprocessing"]
-        ][0]["transform"](X_penguins)
+        X_peng_proc = [p for p in preproc_continuous if p["name"] == best_peng["preprocessing"]][0][
+            "transform"
+        ](X_penguins)
         labels_peng, _ = run_kl_clustering(
             X_peng_proc,
             distance_metric=best_peng["distance"],
             linkage_method=best_peng["linkage"],
             verbose=False,
         )
-        plot_umap_embedding(
-            X_penguins, y_penguins, labels_peng, "Penguins", axes[0, 0], axes[0, 1]
-        )
+        plot_umap_embedding(X_penguins, y_penguins, labels_peng, "Penguins", axes[0, 0], axes[0, 1])
 
         # Digits visualization
         best_dig = best_configs["Digits"]
-        X_dig_proc = [
-            p for p in preproc_image if p["name"] == best_dig["preprocessing"]
-        ][0]["transform"](X_digits)
+        X_dig_proc = [p for p in preproc_image if p["name"] == best_dig["preprocessing"]][0][
+            "transform"
+        ](X_digits)
         labels_dig, _ = run_kl_clustering(
             X_dig_proc,
             distance_metric=best_dig["distance"],
             linkage_method=best_dig["linkage"],
             verbose=False,
         )
-        plot_umap_embedding(
-            X_digits, y_digits, labels_dig, "Digits", axes[1, 0], axes[1, 1]
-        )
+        plot_umap_embedding(X_digits, y_digits, labels_dig, "Digits", axes[1, 0], axes[1, 1])
 
         plt.tight_layout()
 
@@ -712,4 +698,5 @@ def main():
 
 
 if __name__ == "__main__":
+    df_results = main()
     df_results = main()

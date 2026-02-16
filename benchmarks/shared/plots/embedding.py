@@ -2,20 +2,26 @@
 
 from __future__ import annotations
 
+import hashlib
+import logging
 import os
 import textwrap
 import warnings
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
+logger = logging.getLogger(__name__)
+
 from kl_clustering_analysis.plot.cluster_color_mapping import (
     build_cluster_color_spec,
     present_cluster_ids,
 )
-from benchmarks.shared.util.pdf_layout import PDF_PAGE_SIZE_INCHES
+from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES
 
 # Reduce noisy but expected warnings emitted during visualization
 warnings.filterwarnings(
@@ -63,8 +69,77 @@ def _color_cluster_count(expected: int, found: int, *label_arrays: np.ndarray) -
     return base
 
 
-def _fit_embedding_2d(X_scaled: np.ndarray) -> np.ndarray:
-    """Return a 2D embedding with a stability-first backend strategy."""
+def _embedding_cache_dir() -> Path | None:
+    """Return the embedding cache directory, or None if caching is disabled."""
+    env_dir = os.getenv("KL_TE_EMBEDDING_CACHE_DIR", "").strip()
+    if env_dir:
+        p = Path(env_dir)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    return None
+
+
+def _cache_key_for_array(
+    X: np.ndarray, n_components: int, cache_key: str | None,
+) -> str:
+    """Build a deterministic cache filename from the data or a semantic key."""
+    suffix = f"_{n_components}d"
+    if cache_key:
+        return f"embedding_{cache_key}{suffix}"
+    # Content-addressable fallback: hash of shape + first/last bytes.
+    h = hashlib.sha256()
+    h.update(f"{X.shape}".encode())
+    h.update(X.tobytes()[:4096])
+    h.update(X.tobytes()[-4096:])
+    return f"embedding_{h.hexdigest()[:16]}{suffix}"
+
+
+def _load_cached_embedding(
+    cache_dir: Path | None, key: str,
+) -> np.ndarray | None:
+    """Load a cached embedding from disk, or return None."""
+    if cache_dir is None:
+        return None
+    path = cache_dir / f"{key}.npy"
+    if path.exists():
+        try:
+            arr = np.load(path)
+            logger.debug("Loaded cached embedding from %s", path)
+            return arr
+        except Exception:
+            logger.debug("Cache file %s unreadable; will recompute.", path)
+    return None
+
+
+def _save_cached_embedding(
+    cache_dir: Path | None, key: str, embedding: np.ndarray,
+) -> None:
+    """Save an embedding to the disk cache."""
+    if cache_dir is None:
+        return
+    path = cache_dir / f"{key}.npy"
+    try:
+        np.save(path, embedding)
+        logger.debug("Saved embedding cache to %s", path)
+    except Exception as exc:
+        logger.debug("Failed to write embedding cache %s: %s", path, exc)
+
+
+def _fit_embedding_2d(
+    X_scaled: np.ndarray, *, cache_key: str | None = None,
+) -> np.ndarray:
+    """Return a 2D embedding with a stability-first backend strategy.
+
+    When ``cache_key`` is provided (or ``KL_TE_EMBEDDING_CACHE_DIR`` is set),
+    the computed embedding is persisted to disk so subsequent runs can skip
+    the expensive UMAP fit.
+    """
+    cache_dir = _embedding_cache_dir()
+    ck = _cache_key_for_array(X_scaled, 2, cache_key)
+    cached = _load_cached_embedding(cache_dir, ck)
+    if cached is not None:
+        return cached
+
     backend = (os.getenv("KL_TE_EMBEDDING_BACKEND") or "umap").strip().lower()
 
     if backend in {"umap", "auto"}:
@@ -78,7 +153,9 @@ def _fit_embedding_2d(X_scaled: np.ndarray) -> np.ndarray:
                 min_dist=0.1,
                 low_memory=True,
             )
-            return reducer.fit_transform(X_scaled)
+            result = reducer.fit_transform(X_scaled)
+            _save_cached_embedding(cache_dir, ck, result)
+            return result
         except Exception as exc:
             raise RuntimeError(
                 "UMAP embedding was requested but failed to initialize/fit."
@@ -93,13 +170,17 @@ def _fit_embedding_2d(X_scaled: np.ndarray) -> np.ndarray:
                 random_state=42,
                 perplexity=min(30, max(2, len(X_scaled) - 1)),
             )
-            return tsne.fit_transform(X_scaled)
+            result = tsne.fit_transform(X_scaled)
+            _save_cached_embedding(cache_dir, ck, result)
+            return result
         except Exception:
             pass
 
     # Stable fallback: PCA
     pca = PCA(n_components=min(2, X_scaled.shape[1], len(X_scaled)))
-    return pca.fit_transform(X_scaled)
+    result = pca.fit_transform(X_scaled)
+    _save_cached_embedding(cache_dir, ck, result)
+    return result
 
 
 def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> str:
@@ -145,22 +226,6 @@ def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> 
     return f"{wrapped}\nClustering"
 
 
-def create_clustering_comparison_plot(
-    X_original: np.ndarray,
-    labels_dict: dict[str, np.ndarray],
-    test_case_num: int,
-    meta: dict,
-):
-    """Create a single 2D embedding plot page (backward-compatible wrapper)."""
-    figs = create_clustering_comparison_plots(
-        X_original=X_original,
-        labels_dict=labels_dict,
-        test_case_num=test_case_num,
-        meta=meta,
-    )
-    return figs[0]
-
-
 def create_clustering_comparison_plots(
     X_original: np.ndarray,
     labels_dict: dict[str, np.ndarray],
@@ -169,6 +234,7 @@ def create_clustering_comparison_plots(
     *,
     n_cols: int = 3,
     max_panels_per_page: int = 6,
+    cache_key: str | None = None,
 ) -> list[plt.Figure]:
     """Create paginated 2D embedding plots comparing clusterings.
 
@@ -180,7 +246,7 @@ def create_clustering_comparison_plots(
 
     expected_clusters = int(meta["n_clusters"])
 
-    X_embedded = _fit_embedding_2d(X_scaled)
+    X_embedded = _fit_embedding_2d(X_scaled, cache_key=cache_key)
 
     labels_to_plot = dict(labels_dict)
 
@@ -303,14 +369,21 @@ def create_clustering_comparison_plots(
 
 __all__ = [
     "create_clustering_comparison_plots",
-    "create_clustering_comparison_plot",
     "_color_cluster_count",
     "create_clustering_comparison_plot_3d",
 ]
 
 
-def _fit_embedding_3d(X_scaled: np.ndarray) -> np.ndarray:
+def _fit_embedding_3d(
+    X_scaled: np.ndarray, *, cache_key: str | None = None,
+) -> np.ndarray:
     """Return a 3D embedding using UMAP when available, else t-SNE, else PCA."""
+    cache_dir = _embedding_cache_dir()
+    ck = _cache_key_for_array(X_scaled, 3, cache_key)
+    cached = _load_cached_embedding(cache_dir, ck)
+    if cached is not None:
+        return cached
+
     backend = (os.getenv("KL_TE_EMBEDDING_BACKEND_3D") or "umap").strip().lower()
 
     if backend in {"umap", "auto"}:
@@ -324,7 +397,9 @@ def _fit_embedding_3d(X_scaled: np.ndarray) -> np.ndarray:
                 min_dist=0.1,
                 low_memory=True,
             )
-            return reducer.fit_transform(X_scaled)
+            result = reducer.fit_transform(X_scaled)
+            _save_cached_embedding(cache_dir, ck, result)
+            return result
         except Exception as exc:
             raise RuntimeError(
                 "3D UMAP embedding was requested but failed to initialize/fit."
@@ -339,12 +414,16 @@ def _fit_embedding_3d(X_scaled: np.ndarray) -> np.ndarray:
                 random_state=42,
                 perplexity=min(30, max(2, len(X_scaled) - 1)),
             )
-            return tsne.fit_transform(X_scaled)
+            result = tsne.fit_transform(X_scaled)
+            _save_cached_embedding(cache_dir, ck, result)
+            return result
         except Exception:
             pass
 
     pca = PCA(n_components=min(3, X_scaled.shape[1], len(X_scaled)))
-    return pca.fit_transform(X_scaled)
+    result = pca.fit_transform(X_scaled)
+    _save_cached_embedding(cache_dir, ck, result)
+    return result
 
 
 def create_clustering_comparison_plot_3d(

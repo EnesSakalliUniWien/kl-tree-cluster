@@ -22,7 +22,7 @@ from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.preprocessing import StandardScaler
 
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
-from benchmarks.shared.runners.dispatch import run_clustering
+from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.evolution import (
     generate_ancestral_sequence,
     evolve_sequence,
@@ -116,9 +116,6 @@ def run_branch_length_benchmark(
     n_features: int = 200,
     n_categories: int = 4,
     branch_lengths: Optional[List[int]] = None,
-    mutation_rate: float = 0.30,
-    shift_strength: Tuple[float, float] = (0.2, 0.5),
-    root_concentration: float = 1.0,
     random_seed: Optional[int] = None,
     method: str = "kl",
     method_params: Optional[Dict[str, Any]] = None,
@@ -131,9 +128,6 @@ def run_branch_length_benchmark(
         n_features: Number of features/sites
         n_categories: Categories per feature (4 for DNA)
         branch_lengths: List of branch lengths to test (evolution steps)
-        mutation_rate: Probability of mutation per feature per step
-        shift_strength: (min, max) distribution shift on mutation
-        root_concentration: Dirichlet concentration for ancestor
         random_seed: Seed for reproducibility
         method: Clustering method to use
         method_params: Parameters for the clustering method
@@ -145,6 +139,7 @@ def run_branch_length_benchmark(
     if method not in METHOD_SPECS:
         raise ValueError(f"Unknown method: {method}")
 
+    if branch_lengths is None:
         branch_lengths = [0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0]
 
     method_params = method_params or {}
@@ -176,9 +171,16 @@ def run_branch_length_benchmark(
             print(f"Branch length {bl}: {n_leaves} leaves, JS divergence={js_div:.4f}")
 
         # Run clustering
-        pred_labels, n_found, status = run_clustering(
-            data_df, method, method_params, random_seed
+        run_result = run_clustering_result(
+            data_df,
+            method,
+            method_params,
+            random_seed,
         )
+        pred_labels = run_result.labels
+        n_found = int(run_result.found_clusters)
+        status = str(run_result.status)
+        skip_reason = run_result.skip_reason
 
         if pred_labels is not None and status == "ok":
             ari = adjusted_rand_score(true_labels, pred_labels)
@@ -200,6 +202,7 @@ def run_branch_length_benchmark(
                 "nmi": nmi,
                 "js_divergence": js_div,
                 "status": status,
+                "skip_reason": skip_reason,
                 "correct_split": correct_split,
             }
         )
@@ -301,9 +304,6 @@ def plot_embedding_by_branch_length(
     n_features: int = 200,
     n_categories: int = 4,
     branch_lengths: Optional[List[int]] = None,
-    mutation_rate: float = 0.30,
-    shift_strength: Tuple[float, float] = (0.2, 0.5),
-    root_concentration: float = 1.0,
     random_seed: Optional[int] = None,
     show_kl_clustering: bool = True,
 ) -> plt.Figure:
@@ -314,9 +314,6 @@ def plot_embedding_by_branch_length(
         n_features: Number of features/sites
         n_categories: Categories per feature
         branch_lengths: List of branch lengths to visualize
-        mutation_rate: Probability of mutation per feature per step
-        shift_strength: (min, max) distribution shift on mutation
-        root_concentration: Dirichlet concentration for ancestor
         random_seed: Seed for reproducibility
         show_kl_clustering: If True, color by KL clustering results instead of true labels
 
@@ -425,9 +422,16 @@ def plot_embedding_by_branch_length(
             row_kl = row_true + 1
             ax_kl = axes[row_kl, col]
 
-            pred_labels, n_found, status = run_clustering(
-                data_df, "kl", {}, random_seed
+            run_result = run_clustering_result(
+                data_df,
+                "kl",
+                {},
+                random_seed,
             )
+            pred_labels = run_result.labels
+            n_found = int(run_result.found_clusters)
+            status = str(run_result.status)
+            skip_reason = run_result.skip_reason
 
             if pred_labels is not None and status == "ok":
                 unique_labels = np.unique(pred_labels)
@@ -453,7 +457,7 @@ def plot_embedding_by_branch_length(
                 )
             else:
                 ax_kl.set_title(
-                    f"KL Clustering (BL={bl})\nFailed: {status}",
+                    f"KL Clustering (BL={bl})\nFailed: {skip_reason or status}",
                     fontsize=10,
                     weight="bold",
                 )

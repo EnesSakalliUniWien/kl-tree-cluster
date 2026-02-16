@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 import logging
-from pathlib import Path
 import re
+from collections import defaultdict
+from pathlib import Path
 from typing import Dict, List
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from PIL import Image
 
-from .pdf_layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
+from .layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 
 logger = logging.getLogger(__name__)
 

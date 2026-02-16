@@ -9,7 +9,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-from .pdf_layout import prepare_pdf_figure
+from .layout import prepare_pdf_figure
 
 logger = logging.getLogger(__name__)
 

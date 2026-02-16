@@ -7,10 +7,16 @@ Generates a single unified PDF report.
 import sys
 from pathlib import Path
 
-# Add project root to path
-repo_root = Path(__file__).resolve().parents[1]
-if str(repo_root) not in sys.path:
-    sys.path.insert(0, str(repo_root))
+# Load shared path bootstrap helper from benchmarks root.
+_script_path = Path(__file__).resolve()
+_benchmarks_root = (
+    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
+)
+if str(_benchmarks_root) not in sys.path:
+    sys.path.insert(0, str(_benchmarks_root))
+from _bootstrap import ensure_repo_root_on_path
+
+repo_root = ensure_repo_root_on_path(__file__)
 
 from benchmarks.shared.cases import get_test_cases_by_category, list_categories
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
@@ -48,7 +54,7 @@ def main():
 
     timestamp = format_timestamp_utc()
     # Single benchmark results root
-    output_root = Path(__file__).parent / "results"
+    output_root = repo_root / "benchmarks" / "results"
     run_dir = output_root / f"run_{timestamp}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -65,7 +71,6 @@ def main():
             plot_umap=True,
             concat_plots_pdf=True,
             concat_output=str(pdf_path.absolute()),
-            save_individual_plots=False,
         )
 
         if not results_df.empty:

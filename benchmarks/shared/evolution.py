@@ -8,8 +8,8 @@ Features:
 """
 
 from __future__ import annotations
+
 import numpy as np
-from typing import Tuple
 
 
 def jukes_cantor_transition_matrix(
@@ -78,9 +78,7 @@ def compute_expected_divergence(branch_length: float, n_categories: int) -> floa
     return ((k - 1) / k) * (1 - np.exp(-k * branch_length / (k - 1)))
 
 
-def compute_js_divergence_per_feature(
-    p: np.ndarray, q: np.ndarray, eps: float = 1e-10
-) -> float:
+def compute_js_divergence_per_feature(p: np.ndarray, q: np.ndarray, eps: float = 1e-10) -> float:
     """Compute mean Jensen-Shannon divergence between two distributions."""
     p = np.clip(p, eps, 1.0)
     q = np.clip(q, eps, 1.0)

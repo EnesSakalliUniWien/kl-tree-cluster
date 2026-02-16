@@ -19,5 +19,5 @@ def test_sbm_cases_run_through_pipeline_minimal():
     assert "Method" in df.columns
     assert "ARI" in df.columns
     assert df.shape[0] >= len(sbm_cases)
-    # Ensure Status column exists and contains either 'ok' or 'skipped'
-    assert set(df["Status"]).issubset({"ok", "skipped"}) or True
+    # Ensure status contract stays normalized.
+    assert set(df["Status"]).issubset({"ok", "skip"})

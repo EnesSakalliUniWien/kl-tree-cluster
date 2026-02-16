@@ -35,9 +35,7 @@ def _run_kmeans_method(
         return MethodRunResult(
             labels=labels,
             found_clusters=1 if n_samples else 0,
-            report_df=_create_report_dataframe_from_labels(
-                labels, pd.Index(range(n_samples))
-            ),
+            report_df=_create_report_dataframe_from_labels(labels, pd.Index(range(n_samples))),
             status="ok",
             skip_reason=None,
         )
@@ -65,8 +63,7 @@ def _run_kmeans_method(
         return MethodRunResult(
             labels=None,
             found_clusters=0,
-            report_df=pd.DataFrame(),
-            status="error",
+            report_df=None,
+            status="skip",
             skip_reason=f"K-Means failed: {exc}",
         )
-

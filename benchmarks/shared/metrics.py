@@ -11,18 +11,12 @@ from sklearn.metrics import adjusted_rand_score, homogeneity_score, normalized_m
 
 
 def _calculate_ari_nmi_purity_metrics(
-    num_clusters: int,
     report_df: pd.DataFrame | None,
     sample_names: pd.Index,
     true_labels: np.ndarray,
 ) -> tuple[float, float, float]:
     """Calculate clustering metrics (ARI, NMI, Purity).
-
-    This mirrors the implementation that was previously in
-    `benchmarking.pipeline` and is exported with the same name for
-    backward compatibility.
     """
-    _ = num_clusters  # Kept for backward-compatible signature.
 
     if report_df is None or report_df.empty:
         return np.nan, np.nan, np.nan

@@ -32,6 +32,8 @@ from scipy.stats import chi2
 
 from benchmarks.calibration.crossfit_permutation_benchmark_probe import (
     _default_probe_cases as _default_crossfit_probe_cases,
+)
+from benchmarks.calibration.crossfit_permutation_benchmark_probe import (
     run_probe as run_crossfit_benchmark_probe_fn,
 )
 from benchmarks.calibration.crossfit_permutation_diagnostic import (
@@ -39,6 +41,9 @@ from benchmarks.calibration.crossfit_permutation_diagnostic import (
 )
 from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (
+    tree_bh_correction,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
@@ -46,9 +51,6 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection impo
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     sibling_divergence_test,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (
-    tree_bh_correction,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -131,19 +133,29 @@ def _run_one_null_replicate(
 
     edge_tests = int(edge_tested_mask.sum())
     sibling_tests = int(sibling_tested_mask.sum())
-    edge_rejects = int(
-        stats_df.loc[edge_tested_mask, "Child_Parent_Divergence_Significant"].astype(bool).sum()
-    ) if edge_tests > 0 else 0
-    sibling_rejects = int(
-        stats_df.loc[sibling_tested_mask, "Sibling_BH_Different"].astype(bool).sum()
-    ) if sibling_tests > 0 else 0
+    edge_rejects = (
+        int(
+            stats_df.loc[edge_tested_mask, "Child_Parent_Divergence_Significant"].astype(bool).sum()
+        )
+        if edge_tests > 0
+        else 0
+    )
+    sibling_rejects = (
+        int(stats_df.loc[sibling_tested_mask, "Sibling_BH_Different"].astype(bool).sum())
+        if sibling_tests > 0
+        else 0
+    )
 
-    edge_invalid = int(
-        stats_df.loc[edge_tested_mask, "Child_Parent_Divergence_Invalid"].astype(bool).sum()
-    ) if "Child_Parent_Divergence_Invalid" in stats_df.columns and edge_tests > 0 else 0
-    sibling_invalid = int(
-        stats_df.loc[sibling_tested_mask, "Sibling_Divergence_Invalid"].astype(bool).sum()
-    ) if "Sibling_Divergence_Invalid" in stats_df.columns and sibling_tests > 0 else 0
+    edge_invalid = (
+        int(stats_df.loc[edge_tested_mask, "Child_Parent_Divergence_Invalid"].astype(bool).sum())
+        if "Child_Parent_Divergence_Invalid" in stats_df.columns and edge_tests > 0
+        else 0
+    )
+    sibling_invalid = (
+        int(stats_df.loc[sibling_tested_mask, "Sibling_Divergence_Invalid"].astype(bool).sum())
+        if "Sibling_Divergence_Invalid" in stats_df.columns and sibling_tests > 0
+        else 0
+    )
 
     cp_audit = stats_df.attrs.get("child_parent_divergence_audit", {})
     sib_audit = stats_df.attrs.get("sibling_divergence_audit", {})
@@ -316,27 +328,25 @@ def _summarize_binary_covariance_type1(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
 
-    grouped = (
-        df.groupby("scenario", as_index=False).agg(
-            n_samples=("n_samples", "first"),
-            n_features=("n_features", "first"),
-            alpha=("alpha", "first"),
-            projection_tests=("projection_invalid", lambda s: int((~s.astype(bool)).sum())),
-            projection_rejects=("projection_reject", "sum"),
-            projection_invalid=("projection_invalid", "sum"),
-            shrinkage_tests=("shrinkage_invalid", lambda s: int((~s.astype(bool)).sum())),
-            shrinkage_rejects=("shrinkage_reject", "sum"),
-            shrinkage_invalid=("shrinkage_invalid", "sum"),
-            shrinkage_lambda_inferred_mean=("shrinkage_lambda_inferred", "mean"),
-        )
+    grouped = df.groupby("scenario", as_index=False).agg(
+        n_samples=("n_samples", "first"),
+        n_features=("n_features", "first"),
+        alpha=("alpha", "first"),
+        projection_tests=("projection_invalid", lambda s: int((~s.astype(bool)).sum())),
+        projection_rejects=("projection_reject", "sum"),
+        projection_invalid=("projection_invalid", "sum"),
+        shrinkage_tests=("shrinkage_invalid", lambda s: int((~s.astype(bool)).sum())),
+        shrinkage_rejects=("shrinkage_reject", "sum"),
+        shrinkage_invalid=("shrinkage_invalid", "sum"),
+        shrinkage_lambda_inferred_mean=("shrinkage_lambda_inferred", "mean"),
     )
 
     grouped["projection_type1"] = grouped["projection_rejects"] / grouped[
         "projection_tests"
     ].replace(0, np.nan)
-    grouped["shrinkage_type1"] = grouped["shrinkage_rejects"] / grouped[
-        "shrinkage_tests"
-    ].replace(0, np.nan)
+    grouped["shrinkage_type1"] = grouped["shrinkage_rejects"] / grouped["shrinkage_tests"].replace(
+        0, np.nan
+    )
     grouped["projection_invalid_rate"] = grouped["projection_invalid"] / grouped[
         "projection_tests"
     ].replace(0, np.nan)
@@ -363,18 +373,16 @@ def _summarize_null_type1(null_df: pd.DataFrame) -> pd.DataFrame:
     if null_df.empty:
         return pd.DataFrame()
 
-    grouped = (
-        null_df.groupby("scenario", as_index=False).agg(
-            n_samples=("n_samples", "first"),
-            n_features=("n_features", "first"),
-            alpha=("alpha", "first"),
-            edge_tests=("edge_tests", "sum"),
-            edge_rejects=("edge_rejects", "sum"),
-            edge_invalid=("edge_invalid", "sum"),
-            sibling_tests=("sibling_tests", "sum"),
-            sibling_rejects=("sibling_rejects", "sum"),
-            sibling_invalid=("sibling_invalid", "sum"),
-        )
+    grouped = null_df.groupby("scenario", as_index=False).agg(
+        n_samples=("n_samples", "first"),
+        n_features=("n_features", "first"),
+        alpha=("alpha", "first"),
+        edge_tests=("edge_tests", "sum"),
+        edge_rejects=("edge_rejects", "sum"),
+        edge_invalid=("edge_invalid", "sum"),
+        sibling_tests=("sibling_tests", "sum"),
+        sibling_rejects=("sibling_rejects", "sum"),
+        sibling_invalid=("sibling_invalid", "sum"),
     )
 
     grouped["edge_type1"] = grouped["edge_rejects"] / grouped["edge_tests"].replace(0, np.nan)
@@ -384,12 +392,13 @@ def _summarize_null_type1(null_df: pd.DataFrame) -> pd.DataFrame:
     grouped["edge_invalid_rate"] = grouped["edge_invalid"] / grouped["edge_tests"].replace(
         0, np.nan
     )
-    grouped["sibling_invalid_rate"] = grouped["sibling_invalid"] / grouped[
-        "sibling_tests"
-    ].replace(0, np.nan)
+    grouped["sibling_invalid_rate"] = grouped["sibling_invalid"] / grouped["sibling_tests"].replace(
+        0, np.nan
+    )
 
     edge_ci = [
-        _binomial_ci_95(int(r), int(t)) for r, t in zip(grouped["edge_rejects"], grouped["edge_tests"])
+        _binomial_ci_95(int(r), int(t))
+        for r, t in zip(grouped["edge_rejects"], grouped["edge_tests"])
     ]
     sib_ci = [
         _binomial_ci_95(int(r), int(t))
@@ -472,11 +481,7 @@ def _run_treebh_replicates(
             true_reject = int(np.sum(true_alt & reject))
             fdr_value = false_reject / max(n_reject, 1)
             type1_null = false_reject / max(n_null, 1)
-            power = (
-                true_reject / max(n_alt, 1)
-                if n_alt > 0
-                else np.nan
-            )
+            power = true_reject / max(n_alt, 1) if n_alt > 0 else np.nan
 
             rows.append(
                 {
@@ -555,7 +560,13 @@ def _build_calibration_plots_pdf(
                 label="Sibling Type-I",
             )
             alpha_ref = float(null_summary["alpha"].iloc[0])
-            ax.axhline(alpha_ref, color="red", linestyle="--", linewidth=1.5, label=f"alpha={alpha_ref:.2f}")
+            ax.axhline(
+                alpha_ref,
+                color="red",
+                linestyle="--",
+                linewidth=1.5,
+                label=f"alpha={alpha_ref:.2f}",
+            )
             ax.set_xticks(x)
             ax.set_xticklabels(
                 [
@@ -584,7 +595,13 @@ def _build_calibration_plots_pdf(
             alpha_ref = float(treebh_summary["alpha"].iloc[0])
 
             axes[0].bar(x, treebh_summary["fdr"].to_numpy(dtype=float), color="#4C72B0")
-            axes[0].axhline(alpha_ref, color="red", linestyle="--", linewidth=1.5, label=f"alpha={alpha_ref:.2f}")
+            axes[0].axhline(
+                alpha_ref,
+                color="red",
+                linestyle="--",
+                linewidth=1.5,
+                label=f"alpha={alpha_ref:.2f}",
+            )
             axes[0].set_title("TreeBH: Empirical FDR")
             axes[0].set_ylabel("FDR")
             axes[0].set_ylim(0.0, 1.0)
@@ -593,7 +610,9 @@ def _build_calibration_plots_pdf(
             axes[0].legend(frameon=False, loc="upper left")
             axes[0].grid(True, axis="y", alpha=0.25)
 
-            axes[1].bar(x, treebh_summary["power"].fillna(0.0).to_numpy(dtype=float), color="#55A868")
+            axes[1].bar(
+                x, treebh_summary["power"].fillna(0.0).to_numpy(dtype=float), color="#55A868"
+            )
             axes[1].set_title("TreeBH: Empirical Power")
             axes[1].set_ylabel("Power")
             axes[1].set_ylim(0.0, 1.0)
@@ -640,7 +659,13 @@ def _build_calibration_plots_pdf(
                 label="Shrinkage + Projection",
             )
             alpha_ref = float(binary_cov_summary["alpha"].iloc[0])
-            ax.axhline(alpha_ref, color="red", linestyle="--", linewidth=1.5, label=f"alpha={alpha_ref:.2f}")
+            ax.axhline(
+                alpha_ref,
+                color="red",
+                linestyle="--",
+                linewidth=1.5,
+                label=f"alpha={alpha_ref:.2f}",
+            )
             ax.set_xticks(x)
             ax.set_xticklabels(
                 [
@@ -730,7 +755,15 @@ def _write_markdown_report(
         lines.append("```")
         lines.append(
             treebh_summary[
-                ["scenario", "alt_fraction", "alt_beta_a", "fdr", "null_type1", "power", "mean_rejections"]
+                [
+                    "scenario",
+                    "alt_fraction",
+                    "alt_beta_a",
+                    "fdr",
+                    "null_type1",
+                    "power",
+                    "mean_rejections",
+                ]
             ].to_string(index=False)
         )
         lines.append("```")
@@ -823,7 +856,9 @@ def _write_markdown_report(
         lines.append(f"- TreeBH FDR status: {'PASS' if fdr_pass else 'FAIL'}")
     if not binary_cov_summary.empty:
         proj_pass = bool((binary_cov_summary["projection_type1"].fillna(0.0) <= alpha + 0.02).all())
-        shrink_pass = bool((binary_cov_summary["shrinkage_type1"].fillna(0.0) <= alpha + 0.02).all())
+        shrink_pass = bool(
+            (binary_cov_summary["shrinkage_type1"].fillna(0.0) <= alpha + 0.02).all()
+        )
         lines.append(f"- Binary projection status: {'PASS' if proj_pass else 'FAIL'}")
         lines.append(f"- Binary shrinkage+projection status: {'PASS' if shrink_pass else 'FAIL'}")
     if crossfit_perm_summary is not None and not crossfit_perm_summary.empty:
@@ -1037,5 +1072,7 @@ def main() -> None:
         print(f"  {k}: {v}")
 
 
+if __name__ == "__main__":
+    main()
 if __name__ == "__main__":
     main()

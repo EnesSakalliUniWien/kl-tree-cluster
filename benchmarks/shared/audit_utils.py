@@ -14,11 +14,13 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from benchmarks.shared.results import ComputedResultRecord
+
 logger = logging.getLogger(__name__)
 
 
 def export_decomposition_audit(
-    computed_results: List[Dict[str, Any]],
+    computed_results: List[ComputedResultRecord],
     output_root: Path,
     verbose: bool = False,
 ) -> None:
@@ -27,9 +29,7 @@ def export_decomposition_audit(
     Parameters
     ----------
     computed_results
-        List of result dictionaries from benchmark_cluster_algorithm.
-        Expected to contain 'test_case_num', 'method_name', 'tree', 'stats',
-        and optionally 'posthoc_merge_audit'.
+        List of typed result records from benchmark_cluster_algorithm.
     output_root
         Base directory for benchmark results (e.g. benchmarks/results).
         Logs will be saved in [output_root]/audit/.
@@ -40,15 +40,13 @@ def export_decomposition_audit(
     audit_dir.mkdir(parents=True, exist_ok=True)
 
     for res in computed_results:
-        case_id = res.get("test_case_num", "unknown")
-        method = res.get("method_name", "unknown").replace(" ", "_").lower()
-        tree = res.get("tree")
+        case_id = res.test_case_num
+        method = res.method_name.replace(" ", "_").lower()
+        tree = res.tree
 
         # 1. Export Post-hoc Merge Audit
         # Search in root or 'meta' for possible audit trail
-        audit_trail = res.get("posthoc_merge_audit") or res.get("meta", {}).get(
-            "posthoc_merge_audit"
-        )
+        audit_trail = res.posthoc_merge_audit or res.meta.get("posthoc_merge_audit")
 
         if audit_trail:
             audit_df = pd.DataFrame(audit_trail)
@@ -69,7 +67,7 @@ def export_decomposition_audit(
                 print(f"  Audit log saved: {audit_file.name}")
 
         # 2. Export Primary Node Stats
-        stats_df = res.get("stats")
+        stats_df = res.stats
         if stats_df is not None:
             # ...existing code...
             cols_to_drop = [
@@ -117,6 +115,100 @@ def export_decomposition_audit(
             export_df.to_csv(stats_file, index=True)
             if verbose:
                 print(f"  Node stats saved: {stats_file.name}")
+
+
+def _slugify_tag(value: str) -> str:
+    return "".join(ch if ch.isalnum() or ch in "-_." else "_" for ch in value)
+
+
+def _maybe_add_matrix(target: Dict[str, Any], name: str, value: Any) -> None:
+    if value is None:
+        return
+    arr = np.asarray(value)
+    if arr.size == 0:
+        return
+    if arr.dtype == object:
+        return
+    if not np.issubdtype(arr.dtype, np.number):
+        return
+    target[name] = arr
+
+
+def export_case_and_method_matrix_audits(
+    *,
+    case_idx: int,
+    case_name: str,
+    data_matrix: np.ndarray,
+    y_true: np.ndarray,
+    x_original: Any,
+    distance_matrix: Any,
+    distance_condensed: Any,
+    meta: Dict[str, Any],
+    method_audits: List[tuple[str, Dict[str, Any]]],
+    output_root: Path,
+    verbose: bool = False,
+) -> None:
+    """Export case-level and per-method matrix audits for a benchmark case."""
+    case_tag = f"case_{case_idx}_{_slugify_tag(case_name)}"
+    case_matrices: Dict[str, Any] = {
+        "data_matrix": np.asarray(data_matrix).astype(float),
+        "y_true": y_true,
+    }
+    _maybe_add_matrix(case_matrices, "X_original", x_original)
+    _maybe_add_matrix(case_matrices, "distance_matrix", distance_matrix)
+    _maybe_add_matrix(case_matrices, "distance_condensed", distance_condensed)
+
+    _maybe_add_matrix(case_matrices, "adjacency", meta.get("adjacency"))
+    _maybe_add_matrix(case_matrices, "sbm_expected", meta.get("sbm_expected"))
+    _maybe_add_matrix(case_matrices, "sbm_modularity", meta.get("sbm_modularity"))
+    _maybe_add_matrix(case_matrices, "sbm_modularity_shifted", meta.get("sbm_modularity_shifted"))
+    _maybe_add_matrix(case_matrices, "sbm_modularity_norm", meta.get("sbm_modularity_norm"))
+
+    _maybe_add_matrix(case_matrices, "generator_distributions", meta.get("distributions"))
+    _maybe_add_matrix(case_matrices, "generator_divergence_matrix", meta.get("divergence_matrix"))
+    _maybe_add_matrix(
+        case_matrices,
+        "generator_divergence_from_ancestor",
+        meta.get("divergence_from_ancestor"),
+    )
+    _maybe_add_matrix(
+        case_matrices,
+        "generator_distributions_over_time",
+        meta.get("distributions_over_time"),
+    )
+
+    leaf_distributions = meta.get("leaf_distributions")
+    if isinstance(leaf_distributions, dict) and leaf_distributions:
+        keys = sorted(leaf_distributions.keys(), key=str)
+        values = [np.asarray(leaf_distributions[k]) for k in keys]
+        if all(
+            v.size > 0 and v.dtype != object and np.issubdtype(v.dtype, np.number)
+            for v in values
+        ):
+            try:
+                stacked = np.stack(values, axis=0)
+            except ValueError:
+                stacked = None
+            _maybe_add_matrix(case_matrices, "leaf_distributions", stacked)
+
+    export_matrix_audit(
+        matrices=case_matrices,
+        output_root=output_root,
+        tag_prefix=case_tag,
+        step=case_idx,
+        include_products=True,
+        verbose=verbose,
+    )
+
+    for method_tag, matrices in method_audits:
+        export_matrix_audit(
+            matrices=matrices,
+            output_root=output_root,
+            tag_prefix=f"{case_tag}/method_{method_tag}",
+            step=case_idx,
+            include_products=True,
+            verbose=verbose,
+        )
 
 
 def _coerce_2d(arr: np.ndarray) -> np.ndarray:

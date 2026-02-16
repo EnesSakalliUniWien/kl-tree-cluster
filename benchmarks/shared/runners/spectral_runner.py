@@ -34,33 +34,31 @@ def _run_spectral_method(
         return MethodRunResult(
             labels=labels,
             found_clusters=1 if n_samples else 0,
-            report_df=_create_report_dataframe_from_labels(
-                labels, pd.Index(range(n_samples))
-            ),
+            report_df=_create_report_dataframe_from_labels(labels, pd.Index(range(n_samples))),
             status="ok",
             skip_reason=None,
         )
 
-    n_clusters = _resolve_n_clusters(n_samples, params)
-    random_state = 42 if seed is None else int(seed)
-    affinity = str(params.get("affinity", "nearest_neighbors"))
-    assign_labels = str(params.get("assign_labels", "cluster_qr"))
-
-    spectral_kwargs: dict[str, object] = {
-        "n_clusters": n_clusters,
-        "random_state": random_state,
-        "affinity": affinity,
-        "assign_labels": assign_labels,
-    }
-    if affinity == "nearest_neighbors":
-        n_neighbors_raw = params.get("n_neighbors")
-        if n_neighbors_raw is None:
-            n_neighbors = max(2, min(10, n_samples - 1))
-        else:
-            n_neighbors = max(1, min(int(n_neighbors_raw), n_samples - 1))
-        spectral_kwargs["n_neighbors"] = n_neighbors
-
     try:
+        n_clusters = _resolve_n_clusters(n_samples, params)
+        random_state = 42 if seed is None else int(seed)
+        affinity = str(params.get("affinity", "nearest_neighbors"))
+        assign_labels = str(params.get("assign_labels", "cluster_qr"))
+
+        spectral_kwargs: dict[str, object] = {
+            "n_clusters": n_clusters,
+            "random_state": random_state,
+            "affinity": affinity,
+            "assign_labels": assign_labels,
+        }
+        if affinity == "nearest_neighbors":
+            n_neighbors_raw = params.get("n_neighbors")
+            if n_neighbors_raw is None:
+                n_neighbors = max(2, min(10, n_samples - 1))
+            else:
+                n_neighbors = max(1, min(int(n_neighbors_raw), n_samples - 1))
+            spectral_kwargs["n_neighbors"] = n_neighbors
+
         model = SpectralClustering(**spectral_kwargs)
         labels = _normalize_labels(model.fit_predict(X))
         report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
@@ -75,8 +73,7 @@ def _run_spectral_method(
         return MethodRunResult(
             labels=None,
             found_clusters=0,
-            report_df=pd.DataFrame(),
-            status="error",
-            skip_reason=f"Spectral failed: {exc}",
+            report_df=None,
+            status="skip",
+            skip_reason=f"Spectral failed: {type(exc).__name__}: {exc}",
         )
-

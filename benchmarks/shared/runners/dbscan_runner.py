@@ -10,16 +10,10 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
-from benchmarks.shared.types.method_run_result import (
-    MethodRunResult,
-)
-from benchmarks.shared.util.decomposition import (
-    _create_report_dataframe_from_labels,
-)
-from benchmarks.shared.util.core import (
-    _normalize_labels,
-    _estimate_dbscan_eps,
-)
+
+from benchmarks.shared.types.method_run_result import MethodRunResult
+from benchmarks.shared.util.core import _estimate_dbscan_eps, _normalize_labels
+from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 
 
 def _run_dbscan_method(
