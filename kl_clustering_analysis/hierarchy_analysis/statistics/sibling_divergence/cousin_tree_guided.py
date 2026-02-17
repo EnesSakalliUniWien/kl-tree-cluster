@@ -489,7 +489,7 @@ def annotate_sibling_divergence_tree_guided(
     df = nodes_statistics_dataframe.copy()
     df = initialize_sibling_divergence_columns(df)
 
-    mean_bl = compute_mean_branch_length(tree)
+    mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats
     records = _collect_all_pairs(tree, df, mean_bl, spectral_dims, pca_projections)

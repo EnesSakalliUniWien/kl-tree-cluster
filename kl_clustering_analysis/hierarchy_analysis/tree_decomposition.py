@@ -151,7 +151,14 @@ class TreeDecomposition:
         # Edges without the attribute are NOT treated as zero-length — they
         # are simply absent.  If no edge has the attribute the Felsenstein
         # adjustment is disabled entirely (_mean_branch_length = None).
-        self._mean_branch_length = compute_mean_branch_length(self.tree)
+        #
+        # config.FELSENSTEIN_SCALING gates the entire mechanism: when False
+        # (default since 2026-02-17) the mean is forced to None so no
+        # variance inflation is applied anywhere.
+        if config.FELSENSTEIN_SCALING:
+            self._mean_branch_length = compute_mean_branch_length(self.tree)
+        else:
+            self._mean_branch_length = None
 
         # ----- ensure statistical annotations are present -----
         self.results_df = self._prepare_annotations(self.results_df)
@@ -232,14 +239,24 @@ class TreeDecomposition:
             spectral_method=self._spectral_method,
         )
 
-        # Retrieve spectral info stashed by edge annotation for reuse in sibling tests
-        # NOTE: spectral dimensions and PCA projections are NOT passed to sibling tests.
-        # The edge test benefits from spectral dims because child ⊂ parent (subset structure),
-        # but the sibling z-vector represents the DIFFERENCE between children — spectral_k
-        # (effective rank) is much smaller than JL dimension near leaves, giving the sibling
-        # χ² test fewer degrees of freedom and less statistical power. Sibling tests keep
-        # the JL-based projection dimension which provides better power for detecting
-        # differences between siblings.
+        # Retrieve spectral info stashed by edge annotation for reuse in sibling tests.
+        # PCA eigenvectors + eigenvalues enable eigenvalue-whitened projection:
+        #   T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)  (exact under H₀)
+        # This eliminates the need for post-hoc calibration (Gamma GLM),
+        # which over-corrects on sparse real data.
+        _spectral_dims = results_df.attrs.get("_spectral_dims")
+        _pca_projections = results_df.attrs.get("_pca_projections")
+        _pca_eigenvalues = results_df.attrs.get("_pca_eigenvalues")
+
+        # -- Sibling spectral dimensions: use JL-based dimension --
+        # The sibling z-vector z = (θ_L − θ_R)/√Var has d components with
+        # signal spread across many directions.  Power scales as √k, so the
+        # projection dimension should be as large as the data supports.
+        # Both within-cluster erank and parent overall erank give low k
+        # (limited by n ≪ d), destroying power.  The JL-based dimension
+        # k ≈ 8·ln(n)/ε² with information cap gives adequate power while
+        # the calibration model (weighted Wald) corrects any inflation.
+        _sibling_spectral_dims = None  # JL fallback in sibling_divergence_test
 
         # -- Gate 3: sibling divergence (method selected via config) --
         if config.SIBLING_TEST_METHOD == "cousin_ftest":
@@ -273,6 +290,9 @@ class TreeDecomposition:
                 self.tree,
                 results_df,
                 significance_level_alpha=self.sibling_alpha,
+                spectral_dims=_sibling_spectral_dims,
+                pca_projections=None,  # No PCA for siblings — use random projection
+                pca_eigenvalues=None,
             )
         else:
             results_df = annotate_sibling_divergence(

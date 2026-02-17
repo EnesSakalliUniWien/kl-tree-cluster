@@ -429,7 +429,7 @@ def annotate_sibling_divergence_cousin(
         df.loc[skipped, "Sibling_Divergence_Skipped"] = True
         logger.debug("Skipped %d nodes (no child-parent signal)", len(skipped))
 
-    mean_bl = compute_mean_branch_length(tree)
+    mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     results, ftest_flags = _run_cousin_tests(
         tree,

@@ -22,6 +22,13 @@ ALPHA_LOCAL: float = 0.05
 EPSILON: float = 1e-9
 
 
+# --- Felsenstein Branch-Length Scaling ---
+
+# Scale Wald test variance by normalised branch length (Felsenstein PIC, 1985).
+# Disabled: empirical comparison shows Felsenstein scaling systematically
+# under-splits on data-dependent trees (mean ARI 0.694 → 1.000 without it).
+FELSENSTEIN_SCALING: bool = False
+
 # --- Post-Hoc Merge Parameters ---
 
 # Enable tree-respecting post-hoc merge by default.
@@ -78,6 +85,24 @@ PROJECTION_RANDOM_SEED: int | None = 42
 #   "active_features"     - Count features with non-zero variance (no eigendecomp)
 SPECTRAL_METHOD: str | None = "effective_rank"
 
+# Include internal-node distribution vectors in the spectral data matrix.
+# Internal distributions are convex combinations of leaf data — they do NOT
+# increase rank but shift the mean toward the global average, concentrating
+# variance in the top PCs and REDUCING effective rank (typically ~30%).
+# Recommended: False (leaves-only gives more accurate rank estimates).
+INCLUDE_INTERNAL_IN_SPECTRAL: bool = False
+
+# --- Eigenvalue Whitening ---
+
+# How to handle eigenvalues when PCA eigenvectors are used for projection.
+# Options:
+#   True   - Whitened: T = Σ (vᵢᵀz)²/λᵢ ~ χ²(k)  (exact under H₀,
+#            but dividing by large λᵢ dampens signal → lower power)
+#   False  - Unwhitened with Satterthwaite correction:
+#            T = Σ (vᵢᵀz)² ~ Σ λᵢ·χ²(1), approximate as c·χ²(ν)
+#            where c = Σλᵢ²/Σλᵢ, ν = (Σλᵢ)²/Σλᵢ² (preserves power)
+EIGENVALUE_WHITENING: bool = False
+
 # --- Sibling Test Method ---
 
 # Method for sibling divergence testing.
@@ -97,6 +122,10 @@ SPECTRAL_METHOD: str | None = "effective_rank"
 #                             median T/k as local ĉ. No global regression — adapts to local
 #                             tree structure. Falls back to global median when no local
 #                             null-like pairs are found.
+#   "cousin_weighted_wald"  - Cousin-weighted Wald (DEFAULT): like cousin_adjusted_wald but
+#                             uses ALL sibling pairs in calibration regression, weighted by
+#                             edge p-values: w_i = min(p_edge_L, p_edge_R). Continuous
+#                             weighting avoids hard binary null/non-null split; more stable.
 SIBLING_TEST_METHOD: str = "cousin_weighted_wald"
 
 

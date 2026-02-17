@@ -28,10 +28,13 @@ Architecture
 1. Compute all raw Wald stats T_i, k_i for every eligible sibling pair.
 2. Retrieve edge p-values for each child (from Gate 2 results).
 3. Compute weight w_i = min(p_edge_left, p_edge_right) for each pair.
-4. Fit *weighted* log-linear regression:
-       log(r_i) = β₀ + β₁·log(BL_sum_i) + β₂·log(n_parent_i) + ε_i
-   with weights w_i.
-5. Predict ĉ for each pair, deflate: T_adj = T / ĉ, p = χ²_sf(T_adj, k).
+4. Fit *weighted* intercept-only Gamma GLM:
+       E[T_i/k_i] = exp(β₀)   with weights w_i.
+   This gives ĉ = exp(β₀) = weighted mean of T/k, where null-like pairs
+   (high edge p-values) dominate the estimate.
+   Note: covariates log(BL_sum) and log(n_parent) were removed because they
+   confound signal strength with post-selection inflation.
+5. Deflate every focal pair: T_adj = T / ĉ, p = χ²_sf(T_adj, k).
 6. Apply BH correction on adjusted p-values.
 
 Focal / skip distinction
@@ -189,12 +192,7 @@ def _fit_weighted_inflation_model(
     valid_records = [
         r
         for r in records
-        if np.isfinite(r.stat)
-        and r.df > 0
-        and r.stat > 0
-        and r.bl_sum > 0
-        and r.n_parent > 0
-        and r.weight > 0
+        if np.isfinite(r.stat) and r.df > 0 and r.stat > 0 and r.n_parent > 0 and r.weight > 0
     ]
 
     if not valid_records:
@@ -211,8 +209,6 @@ def _fit_weighted_inflation_model(
 
     ratios = np.array([r.stat / r.df for r in valid_records])
     weights = np.array([r.weight for r in valid_records])
-    bl_sums = np.array([r.bl_sum for r in valid_records])
-    n_parents = np.array([r.n_parent for r in valid_records])
 
     # max_observed_ratio from NULL-LIKE pairs only — prevents signal pairs
     # from inflating the extrapolation clamp ceiling.
@@ -251,14 +247,14 @@ def _fit_weighted_inflation_model(
             max_observed_ratio=max_c,
         )
 
-    # --- Design matrix ---
-    X = np.column_stack(
-        [
-            np.ones(n_cal),
-            np.log(bl_sums),
-            np.log(n_parents.astype(float)),
-        ]
-    )
+    # --- Design matrix (intercept-only) ---
+    # Covariates log(BL_sum) and log(n_parent) were removed because they
+    # confound signal strength with post-selection inflation: under H₀
+    # the inflation factor c is constant (independent of n and BL), but
+    # a regression picks up the correlation between larger n → more power
+    # → higher T/k from SIGNAL, not inflation.  Intercept-only Gamma GLM
+    # estimates the weighted mean inflation factor.
+    X = np.ones((n_cal, 1))
 
     # --- Try Gamma GLM with log link (preferred) ---
     beta = None
@@ -293,15 +289,13 @@ def _fit_weighted_inflation_model(
             method = "gamma_glm"
 
             logger.info(
-                "Weighted cousin Wald: fitted Gamma GLM on %d pairs "
-                "(eff. n=%.1f). β = [%.3f, %.3f, %.3f], pseudo-R² = %.3f, "
+                "Weighted cousin Wald: fitted Gamma GLM (intercept-only) on %d pairs "
+                "(eff. n=%.1f). β₀ = %.3f → ĉ = %.3f, "
                 "deviance = %.3f.",
                 n_cal,
                 float(np.sum(weights) ** 2 / np.sum(weights**2)),
                 beta[0],
-                beta[1],
-                beta[2],
-                r_squared,
+                float(np.exp(beta[0])),
                 float(result.deviance),
             )
         except Exception as exc:
@@ -341,13 +335,12 @@ def _fit_weighted_inflation_model(
         method = "weighted_regression"
 
         logger.info(
-            "Weighted cousin Wald: fitted WLS regression on %d pairs "
-            "(effective n=%.1f). β = [%.3f, %.3f, %.3f], R² = %.3f.",
+            "Weighted cousin Wald: fitted WLS regression (intercept-only) on %d pairs "
+            "(effective n=%.1f). β₀ = %.3f → ĉ = %.3f, R² = %.3f.",
             n_cal,
             float(np.sum(weights) ** 2 / np.sum(weights**2)),
             beta[0],
-            beta[1],
-            beta[2],
+            float(np.exp(beta[0])),
             r_squared,
         )
 
@@ -363,20 +356,8 @@ def _fit_weighted_inflation_model(
         **glm_diagnostics,
     }
 
-    if r_squared < 0.05:
-        logger.info(
-            "Weighted cousin Wald: regression R²=%.3f (< 0.05) — "
-            "not informative; using weighted mean ĉ = %.3f.",
-            r_squared,
-            global_c,
-        )
-        return WeightedCalibrationModel(
-            method="weighted_median",
-            n_calibration=n_cal,
-            global_c_hat=global_c,
-            max_observed_ratio=max_c,
-            diagnostics=diagnostics,
-        )
+    # Note: R² gate removed — with intercept-only design, R² is always 0
+    # (no covariates to explain variance), which is expected, not a failure.
 
     return WeightedCalibrationModel(
         method=method,
@@ -390,13 +371,16 @@ def _fit_weighted_inflation_model(
 
 def predict_weighted_inflation_factor(
     model: WeightedCalibrationModel,
-    bl_sum: float,
-    n_parent: int,
+    bl_sum: float = 0.0,
+    n_parent: int = 0,
 ) -> float:
     """Predict inflation factor ĉ for a pair.
 
-    Clamped to [1.0, max_observed_ratio] to prevent extrapolation
-    beyond the range observed in null-like calibration pairs.
+    With intercept-only model, ĉ = exp(β₀) — a single global constant
+    (the weighted mean of T/k).  bl_sum and n_parent are retained in
+    the signature for API compatibility but are not used.
+
+    Clamped to [1.0, max_observed_ratio] to prevent overestimation.
     """
     if model.method == "none":
         return 1.0
@@ -404,25 +388,11 @@ def predict_weighted_inflation_factor(
     if model.method == "weighted_median":
         return max(model.global_c_hat, 1.0)
 
-    # Weighted regression
+    # Intercept-only GLM or WLS: ĉ = exp(β₀)
     if model.beta is None:
         return max(model.global_c_hat, 1.0)
 
-    if bl_sum <= 0 or n_parent <= 0:
-        return max(model.global_c_hat, 1.0)
-
-    if model.method == "gamma_glm":
-        # Gamma GLM with log link: E[r] = exp(X·β)
-        log_c = (
-            model.beta[0] + model.beta[1] * np.log(bl_sum) + model.beta[2] * np.log(float(n_parent))
-        )
-        c_hat = float(np.exp(log_c))
-    else:
-        # WLS fallback: same formula but with Jensen's bias
-        log_c = (
-            model.beta[0] + model.beta[1] * np.log(bl_sum) + model.beta[2] * np.log(float(n_parent))
-        )
-        c_hat = float(np.exp(log_c))
+    c_hat = float(np.exp(model.beta[0]))
     c_hat = min(c_hat, model.max_observed_ratio)
     return max(c_hat, 1.0)
 
@@ -438,6 +408,7 @@ def _collect_weighted_pairs(
     mean_bl: float | None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: dict[str, np.ndarray] | None = None,
 ) -> List[_WeightedRecord]:
     """Collect ALL sibling pairs with continuous weights from edge p-values."""
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
@@ -469,6 +440,7 @@ def _collect_weighted_pairs(
         # Look up spectral info for this parent node
         _spectral_k = spectral_dims.get(parent) if spectral_dims else None
         _pca_proj = pca_projections.get(parent) if pca_projections else None
+        _pca_eig = pca_eigenvalues.get(parent) if pca_eigenvalues else None
 
         # Compute raw Wald stat
         stat, df, pval = sibling_divergence_test(
@@ -482,6 +454,7 @@ def _collect_weighted_pairs(
             test_id=f"sibling:{parent}",
             spectral_k=_spectral_k,
             pca_projection=_pca_proj,
+            pca_eigenvalues=_pca_eig,
         )
 
         # Branch-length sum
@@ -609,6 +582,7 @@ def annotate_sibling_divergence_weighted(
     significance_level_alpha: float = config.SIBLING_ALPHA,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using weighted cousin-adjusted Wald.
 
@@ -637,10 +611,12 @@ def annotate_sibling_divergence_weighted(
     df = nodes_statistics_dataframe.copy()
     df = initialize_sibling_divergence_columns(df)
 
-    mean_bl = compute_mean_branch_length(tree)
+    mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats with continuous weights
-    records = _collect_weighted_pairs(tree, df, mean_bl, spectral_dims, pca_projections)
+    records = _collect_weighted_pairs(
+        tree, df, mean_bl, spectral_dims, pca_projections, pca_eigenvalues
+    )
 
     if not records:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)

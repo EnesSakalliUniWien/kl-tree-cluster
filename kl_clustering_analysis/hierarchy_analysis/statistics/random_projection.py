@@ -12,15 +12,15 @@ Johnson, W. B., & Lindenstrauss, J. (1984). Extensions of Lipschitz
 
 from __future__ import annotations
 
-from typing import Dict, Tuple
+import hashlib
 import os
 from pathlib import Path
-import hashlib
+from typing import Dict, Tuple
 
 import numpy as np
 from sklearn.random_projection import johnson_lindenstrauss_min_dim
-from kl_clustering_analysis import config
 
+from kl_clustering_analysis import config
 
 # Global cache for projection matrices - fitted once, reused everywhere
 # Key: (method, n_features, k, random_state) -> projection matrix (ndarray)
@@ -56,39 +56,52 @@ def compute_projection_dimension(
     eps: float = config.PROJECTION_EPS,
     min_k: int = config.PROJECTION_MIN_K,
 ) -> int:
-    """Compute target dimension for random projection using Johnson-Lindenstrauss lemma.
+    """Compute target projection dimension, capped by data rank.
 
-    Uses sklearn's johnson_lindenstrauss_min_dim for a theoretically-grounded
-    dimension that guarantees pairwise distances are preserved within (1 ± eps).
+    The projection dimension is the minimum of three constraints:
 
-    The JL lemma formula: k >= 4 * ln(n) / (eps^2/2 - eps^3/3)
-    For small eps, this simplifies to approximately: k ≈ 8 * ln(n) / eps^2
+    1. **JL lemma**: ``k_JL = O(log(n) / eps²)`` — preserves pairwise
+       distances among ``n_samples`` points within ``(1 ± eps)``.
+    2. **Information cap** (only when ``d/n ≥ 4``): ``n_samples`` — the
+       data matrix has rank ≤ ``n``, so z-components beyond ``n``
+       carry only estimation noise.  Only activates when ``d`` is
+       at least 4× larger than ``n`` to avoid penalising moderate-
+       dimensional cases.
+    3. **Feature count**: ``n_features`` — cannot exceed input dimension.
+
+    The final ``k = max(min(k_JL, [n if d≥4n], d), min_k)``.
 
     Parameters
     ----------
     n_samples : int
-        Effective sample size (number of points whose pairwise distances
-        need to be preserved).
+        Effective sample size (leaf count for edge tests, harmonic mean
+        for sibling tests).  Also determines the rank cap.
     n_features : int
         Original number of features.
     eps : float
-        Distortion tolerance. Distances are preserved within (1 ± eps).
-        - eps=0.1: Conservative, many dimensions, ±10% distortion
-        - eps=0.3: Balanced, moderate dimensions, ±30% distortion (recommended)
-        - eps=0.5: Aggressive, few dimensions, ±50% distortion
+        JL distortion tolerance.  Distances are preserved within
+        ``(1 ± eps)``.
     min_k : int
         Minimum projected dimension (floor).
 
     Returns
     -------
     int
-        Target dimension k satisfying JL guarantee.
+        Target dimension ``k``.
+
+    Notes
+    -----
+    The information cap is the key change relative to pure-JL dimension
+    selection.  For a subtree with ``n`` leaves and ``d`` features
+    (``n ≪ d``), each proportion is estimated from ``n`` samples.
+    The JL formula ``k ≈ 8 ln(n) / eps²`` ignores this and can return
+    ``k ≫ n``, adding ``k - n`` pure-noise χ² components that
+    absorb degrees of freedom without contributing signal.
 
     References
     ----------
     Johnson, W. B., & Lindenstrauss, J. (1984). Extensions of Lipschitz
         mappings into a Hilbert space. Contemporary Mathematics, 26, 189-206.
-    sklearn.random_projection.johnson_lindenstrauss_min_dim
     """
 
     # Use sklearn's theoretically-grounded JL formula
@@ -96,6 +109,15 @@ def compute_projection_dimension(
     n_samples = max(n_samples, 1)
     k = johnson_lindenstrauss_min_dim(n_samples=n_samples, eps=eps)
 
+    # --- Information cap (only when n ≪ d) ---
+    # When n_samples is much smaller than n_features, the data matrix is
+    # severely rank-deficient: rank ≤ n_samples while d ≫ n. Most of the
+    # d z-components beyond n carry only estimation noise, wasting χ² df.
+    # We only apply this cap when the ratio d/n ≥ 4 to avoid affecting
+    # cases where n and d are comparable (e.g. n=20, d=30 stays k=30).
+    # For n=10, d=2000 (ratio=200) this caps k at 10 instead of 2000.
+    if n_features >= 4 * n_samples:
+        k = min(k, n_samples)
     k = max(k, min_k)
     k = min(k, n_features)  # Never exceed original dimension
     return k
@@ -142,9 +164,8 @@ def _generate_orthonormal_projection(
             # For near full-dimensional projections, dense QR is very expensive
             # and has shown native instability on some stacks. Use a structured
             # orthonormal projection instead (still exactly orthonormal rows).
-            use_structured = (
-                k == n_features
-                or (n_features >= 512 and (k / float(n_features)) >= 0.8)
+            use_structured = k == n_features or (
+                n_features >= 512 and (k / float(n_features)) >= 0.8
             )
             if use_structured:
                 R = _generate_structured_orthonormal_rows(n_features, k, rng)
@@ -168,9 +189,7 @@ def _generate_orthonormal_projection(
 
     # See stability note above about default_rng on this runtime stack.
     rng = np.random.RandomState(random_state)
-    use_structured = (
-        k == n_features or (n_features >= 512 and (k / float(n_features)) >= 0.8)
-    )
+    use_structured = k == n_features or (n_features >= 512 and (k / float(n_features)) >= 0.8)
     if use_structured:
         R = _generate_structured_orthonormal_rows(n_features, k, rng)
     else:
@@ -207,9 +226,7 @@ def generate_projection_matrix(
     np.ndarray
         Orthonormal projection matrix of shape (k, n_features).
     """
-    return _generate_orthonormal_projection(
-        n_features, k, random_state, use_cache=use_cache
-    )
+    return _generate_orthonormal_projection(n_features, k, random_state, use_cache=use_cache)
 
 
 def derive_projection_seed(base_seed: int | None, test_id: str) -> int:

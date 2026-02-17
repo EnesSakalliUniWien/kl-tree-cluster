@@ -48,14 +48,62 @@ def _compute_chi_square_pvalue(
     df: int,
     eigenvalues: np.ndarray | None = None,
 ) -> Tuple[float, float, float]:
-    """Compute χ²(k) test statistic and p-value from projected z-scores.
+    """Compute test statistic and p-value from projected z-scores.
 
-    When *eigenvalues* are provided (from correlation-matrix
-    eigendecomposition), applies whitening: T = Σ wᵢ²/λᵢ.
-    Otherwise uses T = Σ wᵢ².
+    Two modes controlled by ``config.EIGENVALUE_WHITENING``:
+
+    **Whitened** (``True``): T = Σ (vᵢᵀz)²/λᵢ ~ χ²(k).
+    Exact under H₀ but divides signal by large eigenvalues → lower power.
+    Supports split whitening when ``len(eigenvalues) < len(projected)``:
+    the first k_pca components are whitened, remaining (random-padding)
+    use plain sum of squares.
+
+    **Satterthwaite** (``False``): T = Σ (vᵢᵀz)² ~ Σ λᵢ·χ²(1).
+    Approximate as c·χ²(ν) where c = Σλᵢ²/Σλᵢ, ν = (Σλᵢ)²/Σλᵢ².
+    Preserves power because signal in high-eigenvalue directions is not dampened.
+    Any random-padding components contribute plain χ²(1) each.
+
+    When *eigenvalues* is ``None``, the plain sum of squares with χ²(k) is used.
     """
-    if eigenvalues is not None and len(eigenvalues) == len(projected):
-        stat = float(np.sum(projected**2 / eigenvalues))
+    if eigenvalues is not None and len(eigenvalues) > 0:
+        k_pca = len(eigenvalues)
+
+        if config.EIGENVALUE_WHITENING:
+            # --- Whitened mode: T = Σ wᵢ²/λᵢ ~ χ²(k) ---
+            stat_pca = float(np.sum(projected[:k_pca] ** 2 / eigenvalues))
+            if k_pca < len(projected):
+                stat_rand = float(np.sum(projected[k_pca:] ** 2))
+            else:
+                stat_rand = 0.0
+            stat = stat_pca + stat_rand
+            return stat, float(df), float(chi2.sf(stat, df=df))
+        else:
+            # --- Satterthwaite mode: T = Σ wᵢ² ~ Σ λᵢ·χ²(1) ---
+            # PCA part: unwhitened sum of squares
+            sq_pca = projected[:k_pca] ** 2
+            stat_pca = float(np.sum(sq_pca))
+            # Random-padding part (if any): plain χ²(1) per component
+            k_rand = len(projected) - k_pca
+            stat_rand = float(np.sum(projected[k_pca:] ** 2)) if k_rand > 0 else 0.0
+            stat = stat_pca + stat_rand
+
+            # Satterthwaite: T_pca ~ Σ λᵢ·χ²(1), approximate as c·χ²(ν)
+            # c = Σλᵢ²/Σλᵢ,  ν = (Σλᵢ)²/Σλᵢ²
+            eigs = np.asarray(eigenvalues, dtype=np.float64)
+            sum_eig = float(np.sum(eigs))
+            sum_eig2 = float(np.sum(eigs**2))
+
+            if sum_eig2 > 0 and sum_eig > 0:
+                c = sum_eig2 / sum_eig
+                nu_pca = sum_eig**2 / sum_eig2
+                # Combined df: Satterthwaite ν for PCA + k_rand for random padding
+                nu_total = nu_pca + k_rand
+                # Scale only the PCA component; random part is already χ²
+                stat_scaled = stat_pca / c + stat_rand
+                return stat, float(nu_total), float(chi2.sf(stat_scaled, df=nu_total))
+            else:
+                # Degenerate eigenvalues — fall back to plain χ²(k)
+                return stat, float(df), float(chi2.sf(stat, df=df))
     else:
         stat = float(np.sum(projected**2))
     return stat, float(df), float(chi2.sf(stat, df=df))
@@ -106,21 +154,25 @@ def sibling_divergence_test(
     Tuple[float, float, float]
         (test_statistic, degrees_of_freedom, p_value).
     """
-    # Compute branch length sum for Felsenstein adjustment
+    # Compute branch length sum for Felsenstein adjustment.
+    # When mean_branch_length is None (Felsenstein disabled via config),
+    # skip branch-length computation entirely to avoid triggering the
+    # ValueError in standardize_proportion_difference().
     branch_length_sum = None
-    bl_left = sanitize_positive_branch_length(branch_length_left)
-    bl_right = sanitize_positive_branch_length(branch_length_right)
-    if bl_left is not None and bl_right is not None:
-        branch_length_sum = bl_left + bl_right
-        if branch_length_sum <= 0:
-            logger.warning(
-                "Non-positive sibling branch length sum encountered "
-                "(left=%s, right=%s). Disabling branch-length variance adjustment "
-                "for this test.",
-                bl_left,
-                bl_right,
-            )
-            branch_length_sum = None
+    if mean_branch_length is not None:
+        bl_left = sanitize_positive_branch_length(branch_length_left)
+        bl_right = sanitize_positive_branch_length(branch_length_right)
+        if bl_left is not None and bl_right is not None:
+            branch_length_sum = bl_left + bl_right
+            if branch_length_sum <= 0:
+                logger.warning(
+                    "Non-positive sibling branch length sum encountered "
+                    "(left=%s, right=%s). Disabling branch-length variance adjustment "
+                    "for this test.",
+                    bl_left,
+                    bl_right,
+                )
+                branch_length_sum = None
 
     n_eff = hmean([n_left, n_right])
 
@@ -157,11 +209,21 @@ def sibling_divergence_test(
     d = len(z)
 
     # --- Determine projection dimension and matrix ---
+    # spectral_k is the AUTHORITATIVE dimension when available.
+    # PCA projections may have fewer rows (dual-form cap at n_desc);
+    # in that case we pad with random projection vectors.
     if spectral_k is not None and spectral_k > 0:
         k = min(spectral_k, d)
     else:
         # Fallback: JL-based dimension
-        k = compute_projection_dimension(int(n_eff), d)
+        # Use n_left + n_right (total observations) for the information cap,
+        # NOT hmean.  The data matrix spanning the difference has rank ≤ n_L + n_R,
+        # so that many z-components can carry signal.  hmean is the correct
+        # effective sample size for *variance* estimation (pooled_variance.py),
+        # but the rank constraint governs how many projection dimensions are
+        # informative.
+        n_total = int(n_left + n_right)
+        k = compute_projection_dimension(n_total, d)
 
     # Project and compute test statistic
     if test_id is None:
@@ -172,13 +234,21 @@ def sibling_divergence_test(
     test_seed = derive_projection_seed(config.PROJECTION_RANDOM_SEED, test_id)
 
     if pca_projection is not None:
-        # Informed PCA projection — rows are top eigenvectors of local correlation.
-        R = pca_projection
-        k = R.shape[0]
+        k_pca = pca_projection.shape[0]
+        if k_pca >= k:
+            # Truncate PCA projection to the authoritative k rows.
+            R = pca_projection[:k]
+            pca_eigenvalues = pca_eigenvalues[:k] if pca_eigenvalues is not None else None
+        else:
+            # Pad with random projection vectors to reach k rows.
+            R_pad = generate_projection_matrix(d, k - k_pca, test_seed, use_cache=False)
+            R = np.vstack([pca_projection, R_pad])
+            # pca_eigenvalues stays as-is (only covers first k_pca rows)
     else:
         # Random projection (JL or spectral-k driven).
         # Per-test projections are one-off; bypass cache to avoid unbounded cache growth.
         R = generate_projection_matrix(d, k, test_seed, use_cache=False)
+        pca_eigenvalues = None  # no whitening for pure random projection
 
     try:
         # Optimize matmul by ensuring arrays are ostensibly aligned (though numpy handles this)
@@ -431,8 +501,8 @@ def annotate_sibling_divergence(
         logger.debug(f"Skipped {len(skipped)} nodes")
 
     # Compute mean branch length from tree for Felsenstein normalization
-    # using the shared sanitization policy.
-    _mean_bl = compute_mean_branch_length(tree)
+    # using the shared sanitization policy.  Gated by config.
+    _mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     results = _run_tests(
         parents,

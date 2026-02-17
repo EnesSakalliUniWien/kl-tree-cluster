@@ -223,6 +223,9 @@ def _compute_projected_test(
     d = len(z)
 
     # --- Determine projection dimension and matrix ---
+    # spectral_k is the AUTHORITATIVE dimension when available.
+    # PCA projections may have fewer rows (dual-form cap at n_desc);
+    # in that case we pad with random projection vectors.
     if spectral_k is not None and spectral_k > 0:
         k = min(spectral_k, d)
     else:
@@ -230,14 +233,30 @@ def _compute_projected_test(
         k = compute_projection_dimension(n_child, d)
 
     if pca_projection is not None:
-        # Informed PCA projection — rows are top eigenvectors of local correlation.
-        # Adjust k to match the actual projection shape.
-        R = pca_projection
-        k = R.shape[0]
+        k_pca = pca_projection.shape[0]
+        if k_pca >= k:
+            # Truncate PCA projection to the authoritative k rows.
+            R = pca_projection[:k]
+            eig_for_whitening = (
+                np.asarray(pca_eigenvalues[:k], dtype=np.float64)
+                if pca_eigenvalues is not None
+                else None
+            )
+        else:
+            # Pad with random projection vectors to reach k rows.
+            R_pad = generate_projection_matrix(d, k - k_pca, seed, use_cache=False)
+            R = np.vstack([pca_projection, R_pad])
+            # Eigenvalues only cover the first k_pca (PCA) rows.
+            eig_for_whitening = (
+                np.asarray(pca_eigenvalues, dtype=np.float64)
+                if pca_eigenvalues is not None
+                else None
+            )
     else:
         # Random projection (JL or spectral-k driven).
         # Per-test projections are one-off; bypass cache.
         R = generate_projection_matrix(d, k, seed, use_cache=False)
+        eig_for_whitening = None
 
     try:
         if hasattr(R, "dot"):
@@ -250,26 +269,36 @@ def _compute_projected_test(
         )
         raise e
 
-    # Test statistic: whitened or unwhitened depending on available eigenvalues.
-    # When PCA eigenvectors AND eigenvalues from the correlation matrix are
-    # both available, whiten by dividing each squared component by λᵢ:
-    #   T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)  (exact under H₀)
-    # Otherwise fall back to unwhitened sum of squares (approximate χ²).
-    if pca_projection is not None and pca_eigenvalues is not None:
-        eigenvalues = np.asarray(pca_eigenvalues, dtype=np.float64)
-        if len(eigenvalues) == k:
-            stat = float(np.sum(projected**2 / eigenvalues))
+    # Test statistic: whitened or Satterthwaite depending on config.
+    # See sibling_divergence_test._compute_chi_square_pvalue for full docs.
+    if eig_for_whitening is not None and len(eig_for_whitening) > 0:
+        n_eig = len(eig_for_whitening)
+        k_rand = k - n_eig if n_eig < k else 0
+        stat_rand = float(np.sum(projected[n_eig:] ** 2)) if k_rand > 0 else 0.0
+
+        if config.EIGENVALUE_WHITENING:
+            # Whitened: T_pca = Σ w²/λ ~ χ²(k_pca)
+            stat_pca = float(np.sum(projected[:n_eig] ** 2 / eig_for_whitening))
+            stat = stat_pca + stat_rand
+            pval = float(chi2.sf(stat, df=k))
         else:
-            logger.warning(
-                "Eigenvalue length mismatch (got %d, expected %d); "
-                "falling back to unwhitened statistic.",
-                len(eigenvalues),
-                k,
-            )
-            stat = float(np.sum(projected**2))
+            # Satterthwaite: T_pca = Σ w² ~ Σ λᵢ·χ²(1)
+            stat_pca = float(np.sum(projected[:n_eig] ** 2))
+            stat = stat_pca + stat_rand
+            eigs = eig_for_whitening
+            sum_eig = float(np.sum(eigs))
+            sum_eig2 = float(np.sum(eigs**2))
+            if sum_eig2 > 0 and sum_eig > 0:
+                c = sum_eig2 / sum_eig
+                nu_pca = sum_eig**2 / sum_eig2
+                nu_total = nu_pca + k_rand
+                stat_scaled = stat_pca / c + stat_rand
+                pval = float(chi2.sf(stat_scaled, df=nu_total))
+            else:
+                pval = float(chi2.sf(stat, df=k))
     else:
         stat = float(np.sum(projected**2))
-    pval = float(chi2.sf(stat, df=k))
+        pval = float(chi2.sf(stat, df=k))
 
     return stat, float(k), pval, False
 
@@ -315,8 +344,8 @@ def _compute_p_values_via_projection(
     pvals = np.full(n_edges, np.nan)
     invalid_mask = np.zeros(n_edges, dtype=bool)
 
-    # Compute mean branch length for normalization
-    mean_branch_length = _compute_mean_branch_length(tree)
+    # Compute mean branch length for normalization (gated by config)
+    mean_branch_length = _compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     for i in range(n_edges):
         child_dist = tree.nodes[child_ids[i]].get("distribution")
@@ -452,8 +481,10 @@ def annotate_child_parent_divergence(
             leaf_data,
             method=spectral_method,
             min_k=config.PROJECTION_MIN_K,
-            compute_projections=False,
+            compute_projections=True,
         )
+        pca_projections = pca_proj_dict if pca_proj_dict else None
+        pca_eigenvalues = pca_eig_dict if pca_eig_dict else None
 
     # Stash computed spectral info in df.attrs so sibling tests can reuse them
     # without recomputing the eigendecomposition.
