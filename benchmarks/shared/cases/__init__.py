@@ -12,6 +12,7 @@ from .sbm import SBM_CASES
 from .categorical import CATEGORICAL_CASES
 from benchmarks.phylogenetic.cases import PHYLOGENETIC_CASES
 from .overlapping import OVERLAPPING_CASES
+from .real_data import REAL_DATA_CASES
 
 # Small test cases for quick smoke tests
 SMALL_TEST_CASES = [
@@ -49,6 +50,7 @@ ALL_CASE_CATEGORIES = {
     **CATEGORICAL_CASES,
     **PHYLOGENETIC_CASES,
     **OVERLAPPING_CASES,
+    **REAL_DATA_CASES,
 }
 
 

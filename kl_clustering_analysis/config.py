@@ -67,6 +67,17 @@ PROJECTION_MIN_K: int = 10
 # Random seed for projection reproducibility (None for random)
 PROJECTION_RANDOM_SEED: int | None = 42
 
+# --- Spectral Dimension Estimation ---
+
+# Per-node projection dimension method.  When set, replaces JL-based dimension
+# selection with eigendecomposition of the local covariance at each node.
+# Options:
+#   None                  - Legacy JL-based dimension (default)
+#   "effective_rank"      - Shannon entropy of eigenvalue spectrum (Roy & Vetterli 2007)
+#   "marchenko_pastur"    - Count eigenvalues above MP upper bound
+#   "active_features"     - Count features with non-zero variance (no eigendecomp)
+SPECTRAL_METHOD: str | None = "effective_rank"
+
 # --- Sibling Test Method ---
 
 # Method for sibling divergence testing.

@@ -9,6 +9,7 @@ This is the extraction of `_generate_case_data` previously in
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
@@ -385,6 +386,49 @@ def _generate_temporal_evolution_case(
     return data_df, true_labels, matrix.astype(float), metadata
 
 
+def _generate_preloaded_case(
+    test_case: dict,
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Load a pre-existing data file (TSV/CSV) as a benchmark case.
+
+    Required test_case keys:
+        - file_path: path to the data file (absolute or relative to repo root)
+        - sep: separator character (default: '\\t')
+    Optional:
+        - n_clusters: expected number of clusters (for display only; no ground truth)
+    """
+    file_path = test_case["file_path"]
+    sep = test_case.get("sep", "\t")
+
+    # Resolve relative paths against the repo root
+    path = Path(file_path)
+    if not path.is_absolute():
+        repo_root = Path(__file__).resolve().parents[3]
+        path = repo_root / path
+
+    if not path.exists():
+        raise FileNotFoundError(f"Preloaded data file not found: {path}")
+
+    data_df = pd.read_csv(path, sep=sep, index_col=0)
+    n_samples, n_features = data_df.shape
+
+    # No ground truth labels for real data
+    y = np.full(n_samples, np.nan)
+    x_original = data_df.values.copy()
+
+    metadata = {
+        "name": test_case.get("name", path.stem),
+        "n_samples": n_samples,
+        "n_features": n_features,
+        "n_clusters": test_case.get("n_clusters"),
+        "noise": np.nan,
+        "generator": "preloaded",
+        "source_file": str(path),
+        "sparsity": float(1 - data_df.values.mean()),
+    }
+    return data_df, y, x_original, metadata
+
+
 def generate_case_data(
     test_case: dict,
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
@@ -407,6 +451,8 @@ def generate_case_data(
         data_df, y, x_original, metadata = _generate_phylogenetic_case(test_case, seed)
     elif generator == "temporal_evolution":
         data_df, y, x_original, metadata = _generate_temporal_evolution_case(test_case, seed)
+    elif generator == "preloaded":
+        data_df, y, x_original, metadata = _generate_preloaded_case(test_case)
     else:
         raise ValueError(f"Unknown generator: {generator}")
 

@@ -25,9 +25,7 @@ def test_cluster_algorithm_validation():
         methods=["kl"],
     )
 
-    kl_results = df_results[df_results["Method"] == "KL Divergence"].reset_index(
-        drop=True
-    )
+    kl_results = df_results[df_results["Method"] == "KL Divergence"].reset_index(drop=True)
     assert len(kl_results) >= len(SMALL_TEST_CASES)
 
     for case_name in ("clear", "moderate", "noisy"):
@@ -36,7 +34,9 @@ def test_cluster_algorithm_validation():
 
         assert best["Status"] == "ok"
         assert best["Found"] >= 1
-        assert 0 <= best["ARI"] <= 1
+        # ARI ranges from -0.5 to 1.0; negative values indicate assignments
+        # worse than random.  On very small / noisy data this is expected.
+        assert -1 <= best["ARI"] <= 1
         assert 0 <= best["NMI"] <= 1
         assert 0 <= best["Purity"] <= 1
 
@@ -71,7 +71,7 @@ def test_benchmark_cluster_algorithm_expected_columns():
     kl_results = df_results[df_results["Method"] == "KL Divergence"]
     assert len(kl_results) >= 1
     assert fig is None
-    assert (kl_results["ARI"].between(0, 1)).all()
+    assert (kl_results["ARI"].between(-1, 1)).all()
 
 
 def test_benchmark_cluster_algorithm_handles_empty_cases():

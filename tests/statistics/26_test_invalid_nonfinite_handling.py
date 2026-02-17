@@ -71,6 +71,9 @@ def test_child_parent_nonfinite_keeps_nan_and_uses_conservative_correction(
         parent_ids: list[str],
         child_leaf_counts: np.ndarray,
         parent_leaf_counts: np.ndarray,
+        spectral_dims=None,
+        pca_projections=None,
+        pca_eigenvalues=None,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         return (
             np.array([np.nan, 3.0], dtype=float),  # stats
@@ -150,6 +153,9 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
         mean_branch_length: float | None = None,
         *,
         test_id: str | None = None,
+        spectral_k: int | None = None,
+        pca_projection: np.ndarray | None = None,
+        pca_eigenvalues: np.ndarray | None = None,
     ) -> tuple[float, float, float]:
         return np.nan, np.nan, np.nan
 

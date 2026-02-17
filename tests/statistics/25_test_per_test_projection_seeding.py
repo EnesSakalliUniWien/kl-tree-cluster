@@ -3,6 +3,7 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 
+from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
     _compute_p_values_via_projection,
 )
@@ -12,7 +13,6 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection impo
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     _run_tests,
 )
-from kl_clustering_analysis import config
 
 
 def test_derive_projection_seed_is_deterministic_and_unique() -> None:
@@ -42,6 +42,9 @@ def test_edge_tests_use_distinct_per_edge_seeds(monkeypatch) -> None:
         seed: int,
         branch_length: float | None = None,
         mean_branch_length: float | None = None,
+        spectral_k: int | None = None,
+        pca_projection: np.ndarray | None = None,
+        pca_eigenvalues: np.ndarray | None = None,
     ) -> tuple[float, float, float, bool]:
         captured_seeds.append(seed)
         return 0.0, 1.0, 1.0, False
@@ -92,6 +95,9 @@ def test_sibling_run_tests_passes_unique_test_ids(monkeypatch) -> None:
         mean_branch_length: float | None = None,
         *,
         test_id: str | None = None,
+        spectral_k: int | None = None,
+        pca_projection: np.ndarray | None = None,
+        pca_eigenvalues: np.ndarray | None = None,
     ) -> tuple[float, float, float]:
         captured_ids.append(test_id)
         return 0.0, 1.0, 1.0

@@ -45,7 +45,9 @@ def run_single_method_once(
     if method_id in {"kmeans", "spectral"}:
         raw_k = run_params.get("n_clusters")
         if raw_k is None or str(raw_k).strip().lower() in {"true", "expected", "auto"}:
-            run_params["n_clusters"] = int(meta["n_clusters"])
+            true_k = meta.get("n_clusters")
+            if true_k is not None:
+                run_params["n_clusters"] = int(true_k)
 
     meta_run = meta.copy()
     distance_condensed_for_run = None
@@ -84,11 +86,19 @@ def run_single_method_once(
         report_df = result.report_df
         if report_df is None or "cluster_id" not in report_df.columns:
             report_df = _create_report_dataframe_from_labels(labels, data_t.index)
-        elif len(report_df.index) == len(data_t.index) and not report_df.index.equals(data_t.index):
-            # Reuse runner-provided cluster columns but align index to sample ids.
-            report_df = report_df.copy()
-            report_df.index = data_t.index
-            report_df.index.name = "sample_id"
+        elif len(report_df.index) != len(data_t.index):
+            report_df = _create_report_dataframe_from_labels(labels, data_t.index)
+        elif report_df.index.has_duplicates or data_t.index.has_duplicates:
+            report_df = _create_report_dataframe_from_labels(labels, data_t.index)
+        elif not report_df.index.equals(data_t.index):
+            # Reuse runner-provided cluster columns only when row labels are alignable.
+            missing = data_t.index.difference(report_df.index)
+            extras = report_df.index.difference(data_t.index)
+            if missing.empty and extras.empty:
+                report_df = report_df.loc[data_t.index].copy()
+                report_df.index.name = "sample_id"
+            else:
+                report_df = _create_report_dataframe_from_labels(labels, data_t.index)
         found_clusters = result.found_clusters
         labels_len = len(labels)
         ari, nmi, purity = _calculate_ari_nmi_purity_metrics(report_df, data_t.index, y_t)
@@ -103,11 +113,11 @@ def run_single_method_once(
         case_category=meta.get("category", "unknown"),
         method_name=spec.name,
         run_params=run_params,
-        true_clusters=meta["n_clusters"],
+        true_clusters=meta.get("n_clusters") or 0,
         found_clusters=found_clusters,
         samples=meta["n_samples"],
         features=meta["n_features"],
-        noise=meta["noise"],
+        noise=meta.get("noise", np.nan),
         ari=ari,
         nmi=nmi,
         purity=purity,

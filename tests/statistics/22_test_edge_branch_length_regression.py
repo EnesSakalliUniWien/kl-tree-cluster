@@ -45,6 +45,9 @@ def _run_edge_projection_with_capture(
         seed: int,
         branch_length: float | None = None,
         mean_branch_length: float | None = None,
+        spectral_k: int | None = None,
+        pca_projection: np.ndarray | None = None,
+        pca_eigenvalues: np.ndarray | None = None,
     ) -> tuple[float, float, float, bool]:
         captured.append((branch_length, mean_branch_length))
         return 0.0, 1.0, 1.0, False

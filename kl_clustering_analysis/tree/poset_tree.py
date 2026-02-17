@@ -475,6 +475,7 @@ class PosetTree(nx.DiGraph):
             results_df=results_df,
             alpha_local=alpha_local,
             sibling_alpha=sibling_alpha,
+            leaf_data=leaf_data,
             **decomposer_kwargs,
         )
 

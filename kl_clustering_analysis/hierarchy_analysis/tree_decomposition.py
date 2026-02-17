@@ -33,6 +33,12 @@ from .statistics.branch_length_utils import (
     compute_mean_branch_length,
     sanitize_positive_branch_length,
 )
+from .statistics.sibling_divergence import (
+    CalibrationModel,
+    WeightedCalibrationModel,
+    predict_inflation_factor,
+    predict_weighted_inflation_factor,
+)
 
 # Statistical sibling test used for pairwise cluster comparisons
 from .statistics.sibling_divergence.sibling_divergence_test import sibling_divergence_test
@@ -70,6 +76,8 @@ class TreeDecomposition:
         posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
         use_signal_localization: bool = config.USE_SIGNAL_LOCALIZATION,
         localization_max_depth: int | None = None,
+        leaf_data: pd.DataFrame | None = None,
+        spectral_method: str | None = config.SPECTRAL_METHOD,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
 
@@ -97,11 +105,19 @@ class TreeDecomposition:
             enabling cross-boundary partial merges for soft cluster boundaries.
         localization_max_depth
             Maximum recursion depth for signal localization.
+        leaf_data
+            Raw binary data matrix (samples × features).  Required for per-node
+            spectral dimension estimation.  When ``None``, the legacy JL-based
+            projection dimension is used regardless of *spectral_method*.
+        spectral_method
+            Per-node projection dimension estimator.  See ``config.SPECTRAL_METHOD``.
         """
         self.tree = tree
         self.results_df = results_df if results_df is not None else pd.DataFrame()
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
+        self._leaf_data = leaf_data
+        self._spectral_method = spectral_method if leaf_data is not None else None
 
         self.posthoc_merge = bool(posthoc_merge)
         self.posthoc_merge_alpha = (
@@ -139,6 +155,18 @@ class TreeDecomposition:
 
         # ----- ensure statistical annotations are present -----
         self.results_df = self._prepare_annotations(self.results_df)
+
+        # ----- extract calibration model for post-hoc merge symmetry -----
+        # When using cousin-adjusted (or weighted) Wald, the annotation step
+        # stores a CalibrationModel / WeightedCalibrationModel that deflates
+        # raw Wald stats by the estimated post-selection inflation factor ĉ.
+        # We reuse the same model in _test_cluster_pair_divergence so that the
+        # post-hoc merge test has identical calibration to the decomposition —
+        # otherwise the merge uses inflated raw T while the split used
+        # deflated T_adj, making it systematically harder to merge than to split.
+        self._calibration_model: CalibrationModel | WeightedCalibrationModel | None = (
+            self.results_df.attrs.get("_calibration_model")
+        )
 
         # ----- results_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
@@ -200,7 +228,18 @@ class TreeDecomposition:
             self.tree,
             results_df,
             significance_level_alpha=self.alpha_local,
+            leaf_data=self._leaf_data,
+            spectral_method=self._spectral_method,
         )
+
+        # Retrieve spectral info stashed by edge annotation for reuse in sibling tests
+        # NOTE: spectral dimensions and PCA projections are NOT passed to sibling tests.
+        # The edge test benefits from spectral dims because child ⊂ parent (subset structure),
+        # but the sibling z-vector represents the DIFFERENCE between children — spectral_k
+        # (effective rank) is much smaller than JL dimension near leaves, giving the sibling
+        # χ² test fewer degrees of freedom and less statistical power. Sibling tests keep
+        # the JL-based projection dimension which provides better power for detecting
+        # differences between siblings.
 
         # -- Gate 3: sibling divergence (method selected via config) --
         if config.SIBLING_TEST_METHOD == "cousin_ftest":
@@ -700,6 +739,29 @@ class TreeDecomposition:
             mean_branch_length=self._mean_branch_length,
             test_id=f"clusterpair:{cluster_a}|{cluster_b}|ancestor:{common_ancestor}",
         )
+
+        # Deflate by the same calibration model used during annotation so that
+        # the post-hoc merge operates on the same scale as the decomposition.
+        if self._calibration_model is not None:
+            bl_sum = 0.0
+            if branch_len_a is not None:
+                bl_sum += branch_len_a
+            if branch_len_b is not None:
+                bl_sum += branch_len_b
+
+            n_ancestor = self._leaf_count(common_ancestor)
+            # Dispatch to the correct prediction function based on model type
+            if isinstance(self._calibration_model, WeightedCalibrationModel):
+                c_hat = predict_weighted_inflation_factor(
+                    self._calibration_model, bl_sum, n_ancestor
+                )
+            else:
+                c_hat = predict_inflation_factor(self._calibration_model, bl_sum, n_ancestor)
+            if c_hat > 0 and np.isfinite(test_stat) and df > 0:
+                from scipy.stats import chi2 as chi2_dist
+
+                test_stat = test_stat / c_hat
+                p_value = float(chi2_dist.sf(test_stat, df=df))
 
         return test_stat, df, p_value
 

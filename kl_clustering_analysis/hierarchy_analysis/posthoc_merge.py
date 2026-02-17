@@ -127,29 +127,27 @@ def apply_posthoc_merge(
         pairs[i]["is_significant"] = bool(is_rejected)
         pairs[i]["was_merged"] = False  # Initialize
 
-    # Block merges across any boundary that shows a significant difference.
-    # If at least one comparison for a given LCA rejects H0, we should not
-    # merge anything under that ancestor even if other pairs are similar.
-    lca_has_reject: Dict[str, bool] = {}
-    for i, is_rejected in enumerate(reject):
-        lca = pairs[i]["lca"]
-        if is_rejected:
-            lca_has_reject[lca] = True
-
-    # Get mergeable pairs (failed to reject H0 = clusters are similar)
-    # Skip pairs whose LCA already has evidence of a significant difference.
-    # Sort by p-value descending (most similar first)
-    mergeable_indices = [
-        i
-        for i, r in enumerate(reject)
-        if (not r) and (not lca_has_reject.get(pairs[i]["lca"], False))
-    ]
+    # Get mergeable pairs (failed to reject H0 = clusters are similar).
+    # We no longer block ALL merges under an LCA just because one pair
+    # under it is significant — that was overly conservative and prevented
+    # obviously similar pairs from merging (e.g., C≈D blocked because A≠B
+    # under the same LCA).  BH correction already handles multiplicity;
+    # each pair's reject/fail-to-reject decision stands on its own.
+    #
+    # Sort by p-value descending (most similar first) for greedy merge.
+    mergeable_indices = [i for i, r in enumerate(reject) if not r]
     mergeable_indices.sort(key=lambda i: -p_values[i])
 
     # Greedily merge non-overlapping pairs.
-    # ...existing code...
-    # LCA cluster subsumes its entire subtree.  Stale descendant roots
-    # would otherwise violate the antichain invariant.
+    # Use targeted removal: only discard the two merged cluster roots,
+    # then add the LCA.  The old code used `cluster_roots -= nx.descendants(tree, lca)`
+    # which would silently absorb a third unrelated cluster root that happened to
+    # be under the same LCA.
+    #
+    # Antichain guard: before merging, verify that no OTHER cluster root is a
+    # descendant of the proposed LCA.  If it is, the merge would create a
+    # non-partition (ancestor + descendant both in the root set).  Skip the
+    # merge rather than silently absorbing uninvolved clusters.
     merged_roots_count = 0
     for idx in mergeable_indices:
         lc = pairs[idx]["left_cluster"]
@@ -160,9 +158,19 @@ def apply_posthoc_merge(
         if lc not in cluster_roots or rc not in cluster_roots:
             continue
 
-        # ...existing code...
-        cluster_roots -= nx.descendants(tree, lca)
-        cluster_roots.discard(lca)
+        # Antichain check: would other cluster roots end up under the LCA?
+        lca_descendants = nx.descendants(tree, lca)
+        other_roots_under_lca = {
+            r for r in cluster_roots
+            if r in lca_descendants and r != lc and r != rc
+        }
+        if other_roots_under_lca:
+            # Merging here would violate the antichain invariant.
+            # Skip this pair.
+            continue
+
+        cluster_roots.discard(lc)
+        cluster_roots.discard(rc)
         cluster_roots.add(lca)
 
         pairs[idx]["was_merged"] = True

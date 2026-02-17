@@ -46,9 +46,18 @@ logger = logging.getLogger(__name__)
 def _compute_chi_square_pvalue(
     projected: np.ndarray,
     df: int,
+    eigenvalues: np.ndarray | None = None,
 ) -> Tuple[float, float, float]:
-    """Compute χ²(k) test statistic and p-value from projected z-scores."""
-    stat = float(np.sum(projected**2))
+    """Compute χ²(k) test statistic and p-value from projected z-scores.
+
+    When *eigenvalues* are provided (from correlation-matrix
+    eigendecomposition), applies whitening: T = Σ wᵢ²/λᵢ.
+    Otherwise uses T = Σ wᵢ².
+    """
+    if eigenvalues is not None and len(eigenvalues) == len(projected):
+        stat = float(np.sum(projected**2 / eigenvalues))
+    else:
+        stat = float(np.sum(projected**2))
     return stat, float(df), float(chi2.sf(stat, df=df))
 
 
@@ -62,6 +71,9 @@ def sibling_divergence_test(
     mean_branch_length: float | None = None,
     *,
     test_id: str | None = None,
+    spectral_k: int | None = None,
+    pca_projection: np.ndarray | None = None,
+    pca_eigenvalues: np.ndarray | None = None,
 ) -> Tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence.
 
@@ -144,8 +156,12 @@ def sibling_divergence_test(
 
     d = len(z)
 
-    # Compute projection dimension
-    k = compute_projection_dimension(int(n_eff), d)
+    # --- Determine projection dimension and matrix ---
+    if spectral_k is not None and spectral_k > 0:
+        k = min(spectral_k, d)
+    else:
+        # Fallback: JL-based dimension
+        k = compute_projection_dimension(int(n_eff), d)
 
     # Project and compute test statistic
     if test_id is None:
@@ -155,8 +171,14 @@ def sibling_divergence_test(
         )
     test_seed = derive_projection_seed(config.PROJECTION_RANDOM_SEED, test_id)
 
-    # Per-test projections are one-off; bypass cache to avoid unbounded cache growth.
-    R = generate_projection_matrix(d, k, test_seed, use_cache=False)
+    if pca_projection is not None:
+        # Informed PCA projection — rows are top eigenvectors of local correlation.
+        R = pca_projection
+        k = R.shape[0]
+    else:
+        # Random projection (JL or spectral-k driven).
+        # Per-test projections are one-off; bypass cache to avoid unbounded cache growth.
+        R = generate_projection_matrix(d, k, test_seed, use_cache=False)
 
     try:
         # Optimize matmul by ensuring arrays are ostensibly aligned (though numpy handles this)
@@ -170,7 +192,7 @@ def sibling_divergence_test(
         )
         raise e
 
-    return _compute_chi_square_pvalue(projected, k)
+    return _compute_chi_square_pvalue(projected, k, eigenvalues=pca_eigenvalues)
 
 
 # =============================================================================
@@ -286,23 +308,35 @@ def _run_tests(
     parents: List[str],
     args: List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]],
     mean_branch_length: float | None = None,
+    spectral_dims: Dict[str, int] | None = None,
+    pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> List[Tuple[float, float, float]]:
     """Execute sibling divergence tests for all collected pairs."""
     if len(parents) != len(args):
         raise ValueError(f"parents and args length mismatch: {len(parents)} != {len(args)}")
-    return [
-        sibling_divergence_test(
-            left,
-            right,
-            n_l,
-            n_r,
-            bl_l,
-            bl_r,
-            mean_branch_length,
-            test_id=f"sibling:{parent}",
+    results = []
+    for parent, (left, right, n_l, n_r, bl_l, bl_r) in zip(parents, args, strict=False):
+        _spectral_k: int | None = None
+        _pca_proj: np.ndarray | None = None
+        if spectral_dims is not None:
+            _spectral_k = spectral_dims.get(parent)
+        if pca_projections is not None:
+            _pca_proj = pca_projections.get(parent)
+        results.append(
+            sibling_divergence_test(
+                left,
+                right,
+                n_l,
+                n_r,
+                bl_l,
+                bl_r,
+                mean_branch_length,
+                test_id=f"sibling:{parent}",
+                spectral_k=_spectral_k,
+                pca_projection=_pca_proj,
+            )
         )
-        for parent, (left, right, n_l, n_r, bl_l, bl_r) in zip(parents, args, strict=False)
-    ]
+    return results
 
 
 # =============================================================================
@@ -359,6 +393,8 @@ def annotate_sibling_divergence(
     nodes_statistics_dataframe: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: Dict[str, int] | None = None,
+    pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence and annotate results in dataframe.
 
@@ -398,7 +434,13 @@ def annotate_sibling_divergence(
     # using the shared sanitization policy.
     _mean_bl = compute_mean_branch_length(tree)
 
-    results = _run_tests(parents, args, mean_branch_length=_mean_bl)
+    results = _run_tests(
+        parents,
+        args,
+        mean_branch_length=_mean_bl,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+    )
     df = _apply_results(df, parents, results, significance_level_alpha)
     sibling_invalid = int(df.loc[parents, "Sibling_Divergence_Invalid"].sum())
     df.attrs["sibling_divergence_audit"] = {

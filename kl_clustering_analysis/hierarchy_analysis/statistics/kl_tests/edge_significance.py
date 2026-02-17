@@ -33,16 +33,17 @@ from kl_clustering_analysis.core_utils.data_utils import (
 )
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
-from ..multiple_testing import apply_multiple_testing_correction
+from ..branch_length_utils import compute_mean_branch_length as _compute_mean_branch_length
 from ..branch_length_utils import (
-    compute_mean_branch_length as _compute_mean_branch_length,
     sanitize_positive_branch_length as _sanitize_positive_branch_length,
 )
+from ..multiple_testing import apply_multiple_testing_correction
 from ..random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
     generate_projection_matrix,
 )
+from ..spectral_dimension import compute_spectral_decomposition
 
 logger = logging.getLogger(__name__)
 
@@ -143,10 +144,22 @@ def _compute_projected_test(
     seed: int,
     branch_length: float | None = None,
     mean_branch_length: float | None = None,
+    spectral_k: int | None = None,
+    pca_projection: np.ndarray | None = None,
+    pca_eigenvalues: np.ndarray | None = None,
 ) -> tuple[float, float, float, bool]:
     """Compute projected Wald test for one edge.
 
     Projects z-scores to k dimensions and computes T = ||R·z||² ~ χ²(k).
+
+    When *pca_projection* and *pca_eigenvalues* are provided (from correlation-
+    matrix eigendecomposition), the test uses eigenvalue whitening for an exact
+    χ²(k) null:
+        T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)
+    where vᵢ are eigenvectors of Corr(X) and λᵢ the corresponding eigenvalues.
+
+    When *pca_projection* is provided without eigenvalues, or when a random
+    projection is used, falls back to the unwhitened statistic T = ||Rz||².
 
     Parameters
     ----------
@@ -159,11 +172,21 @@ def _compute_projected_test(
     n_parent
         Sample size for parent node.
     seed
-        Random seed for projection matrix.
+        Random seed for projection matrix (used only for random projection fallback).
     branch_length
         Distance from parent to child. Used for Felsenstein adjustment.
     mean_branch_length
         Mean branch length across tree for normalization.
+    spectral_k
+        Per-node projection dimension from spectral decomposition.  If ``None``,
+        the JL formula is used.
+    pca_projection
+        Per-node PCA projection matrix of shape ``(spectral_k, d)``.  If ``None``
+        but *spectral_k* is set, a random projection of dimension *spectral_k*
+        is generated instead.
+    pca_eigenvalues
+        Top-k eigenvalues of the correlation matrix, shape ``(k,)``.
+        Used for whitening when *pca_projection* is also provided.
 
     Returns
     -------
@@ -199,12 +222,22 @@ def _compute_projected_test(
 
     d = len(z)
 
-    # Projection dimension from JL lemma: k = O(log n)
-    k = compute_projection_dimension(n_child, d)
+    # --- Determine projection dimension and matrix ---
+    if spectral_k is not None and spectral_k > 0:
+        k = min(spectral_k, d)
+    else:
+        # Fallback: JL-based dimension
+        k = compute_projection_dimension(n_child, d)
 
-    # Project to k dimensions
-    # Per-test projections are one-off; bypass cache to avoid unbounded cache growth.
-    R = generate_projection_matrix(d, k, seed, use_cache=False)
+    if pca_projection is not None:
+        # Informed PCA projection — rows are top eigenvectors of local correlation.
+        # Adjust k to match the actual projection shape.
+        R = pca_projection
+        k = R.shape[0]
+    else:
+        # Random projection (JL or spectral-k driven).
+        # Per-test projections are one-off; bypass cache.
+        R = generate_projection_matrix(d, k, seed, use_cache=False)
 
     try:
         if hasattr(R, "dot"):
@@ -217,8 +250,25 @@ def _compute_projected_test(
         )
         raise e
 
-    # Test statistic: sum of squared projected z-scores
-    stat = float(np.sum(projected**2))
+    # Test statistic: whitened or unwhitened depending on available eigenvalues.
+    # When PCA eigenvectors AND eigenvalues from the correlation matrix are
+    # both available, whiten by dividing each squared component by λᵢ:
+    #   T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)  (exact under H₀)
+    # Otherwise fall back to unwhitened sum of squares (approximate χ²).
+    if pca_projection is not None and pca_eigenvalues is not None:
+        eigenvalues = np.asarray(pca_eigenvalues, dtype=np.float64)
+        if len(eigenvalues) == k:
+            stat = float(np.sum(projected**2 / eigenvalues))
+        else:
+            logger.warning(
+                "Eigenvalue length mismatch (got %d, expected %d); "
+                "falling back to unwhitened statistic.",
+                len(eigenvalues),
+                k,
+            )
+            stat = float(np.sum(projected**2))
+    else:
+        stat = float(np.sum(projected**2))
     pval = float(chi2.sf(stat, df=k))
 
     return stat, float(k), pval, False
@@ -230,6 +280,9 @@ def _compute_p_values_via_projection(
     parent_ids: list[str],
     child_leaf_counts: np.ndarray,
     parent_leaf_counts: np.ndarray,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: dict[str, np.ndarray] | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute p-values for all edges via random projection.
 
@@ -285,6 +338,20 @@ def _compute_p_values_via_projection(
             f"edge:{parent_ids[i]}->{child_ids[i]}",
         )
 
+        # Per-node spectral dimension and PCA projection (if available).
+        # The parent node determines the local subspace: the child edge
+        # test asks "does this child diverge from its parent?", so the
+        # relevant covariance structure is the parent's descendant data.
+        _spectral_k: int | None = None
+        _pca_proj: np.ndarray | None = None
+        _pca_eig: np.ndarray | None = None
+        if spectral_dims is not None:
+            _spectral_k = spectral_dims.get(parent_ids[i])
+        if pca_projections is not None:
+            _pca_proj = pca_projections.get(parent_ids[i])
+        if pca_eigenvalues is not None:
+            _pca_eig = pca_eigenvalues.get(parent_ids[i])
+
         stat_i, df_i, pval_i, invalid_i = _compute_projected_test(
             np.asarray(child_dist, dtype=np.float64),
             np.asarray(parent_dist, dtype=np.float64),
@@ -293,6 +360,9 @@ def _compute_p_values_via_projection(
             test_seed,
             branch_length,
             mean_branch_length,
+            spectral_k=_spectral_k,
+            pca_projection=_pca_proj,
+            pca_eigenvalues=_pca_eig,
         )
         stats[i], dfs[i], pvals[i] = stat_i, df_i, pval_i
         invalid_mask[i] = bool(invalid_i)
@@ -310,10 +380,18 @@ def annotate_child_parent_divergence(
     nodes_statistics_dataframe: pd.DataFrame,
     significance_level_alpha: float = 0.05,
     fdr_method: str = "tree_bh",
+    leaf_data: pd.DataFrame | None = None,
+    spectral_method: str | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using projected Wald test.
 
     Supports both binary (Bernoulli) and categorical (multinomial) distributions.
+
+    When *leaf_data* and *spectral_method* are provided, per-node
+    eigendecomposition replaces the JL-based projection dimension.
+    The spectral method determines both the projection dimension k_v
+    and (for "effective_rank" / "marchenko_pastur") the PCA-based
+    informed projection at each internal node.
 
     Parameters
     ----------
@@ -326,6 +404,13 @@ def annotate_child_parent_divergence(
         FDR threshold for correction.
     fdr_method
         FDR correction method: "tree_bh", "flat", or "level_wise".
+    leaf_data
+        Raw binary data matrix (samples × features).  Required for
+        per-node spectral dimension estimation.
+    spectral_method
+        Dimension estimator: ``"effective_rank"``, ``"marchenko_pastur"``,
+        or ``"active_features"``.  When ``None`` (default), the legacy
+        JL-based dimension is used.
 
     Returns
     -------
@@ -345,8 +430,46 @@ def annotate_child_parent_divergence(
     child_leaf_counts = extract_leaf_counts(nodes_dataframe, child_ids)
     parent_leaf_counts = extract_leaf_counts(nodes_dataframe, parent_ids)
 
+    # --- Per-node spectral dimension (replaces JL when configured) ---
+    spectral_dims: dict[str, int] | None = None
+    pca_projections: dict[str, np.ndarray] | None = None
+    pca_eigenvalues: dict[str, np.ndarray] | None = None
+
+    if spectral_method is not None:
+        if leaf_data is None:
+            raise ValueError(
+                f"spectral_method={spectral_method!r} requires leaf_data to be provided."
+            )
+        # Only compute DIMENSIONS from the correlation eigendecomposition.
+        # PCA projections are NOT used for the test statistic — random
+        # orthonormal projection with spectral k gives an approximately
+        # valid χ²(k) null via concentration of measure, while preserving
+        # power (no eigenvalue whitening that down-weights signal directions).
+        # Eigenvalues and projections are still available in df.attrs for
+        # downstream consumers that want whitened statistics.
+        spectral_dims, pca_proj_dict, pca_eig_dict = compute_spectral_decomposition(
+            tree,
+            leaf_data,
+            method=spectral_method,
+            min_k=config.PROJECTION_MIN_K,
+            compute_projections=False,
+        )
+
+    # Stash computed spectral info in df.attrs so sibling tests can reuse them
+    # without recomputing the eigendecomposition.
+    nodes_dataframe.attrs["_spectral_dims"] = spectral_dims
+    nodes_dataframe.attrs["_pca_projections"] = pca_projections
+    nodes_dataframe.attrs["_pca_eigenvalues"] = pca_eigenvalues
+
     test_stats, degrees_of_freedom, p_values, invalid_mask = _compute_p_values_via_projection(
-        tree, child_ids, parent_ids, child_leaf_counts, parent_leaf_counts
+        tree,
+        child_ids,
+        parent_ids,
+        child_leaf_counts,
+        parent_leaf_counts,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+        pca_eigenvalues=pca_eigenvalues,
     )
 
     # Preserve raw NaN outputs for invalid tests; use conservative surrogate
@@ -402,5 +525,7 @@ def annotate_child_parent_divergence(
         invalid_mask=invalid_mask,
     )
 
+
+__all__ = ["annotate_child_parent_divergence"]
 
 __all__ = ["annotate_child_parent_divergence"]

@@ -65,6 +65,13 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2
 
+try:
+    import statsmodels.api as sm
+
+    _HAS_STATSMODELS = True
+except ImportError:  # pragma: no cover
+    _HAS_STATSMODELS = False
+
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
     extract_node_sample_size,
@@ -109,14 +116,17 @@ class _WeightedRecord:
 
 
 @dataclass
-class _WeightedCalibrationModel:
-    """Result of fitting the weighted inflation model."""
+class WeightedCalibrationModel:
+    """Result of fitting the weighted inflation model.
 
-    method: str  # "weighted_regression", "weighted_median", "none"
+    Public API — used by both annotation and post-hoc merge deflation.
+    """
+
+    method: str  # "gamma_glm", "weighted_regression", "weighted_median", "none"
     n_calibration: int  # number of pairs used (with weight > 0)
-    global_c_hat: float  # weighted median(r_i)
-    max_observed_ratio: float = 1.0  # upper bound for ĉ predictions
-    beta: Optional[np.ndarray] = None  # [β₀, β₁, β₂]
+    global_c_hat: float  # weighted mean of ratios
+    max_observed_ratio: float = 1.0  # upper bound for ĉ (from null-like pairs only)
+    beta: Optional[np.ndarray] = None  # regression coefficients
     diagnostics: Dict = field(default_factory=dict)
 
 
@@ -160,11 +170,20 @@ def _weighted_median(values: np.ndarray, weights: np.ndarray) -> float:
 
 def _fit_weighted_inflation_model(
     records: List[_WeightedRecord],
-) -> _WeightedCalibrationModel:
-    """Estimate post-selection inflation using weighted regression on ALL pairs.
+) -> WeightedCalibrationModel:
+    """Estimate post-selection inflation using Gamma GLM on ALL pairs.
 
-    Uses min(p_edge_left, p_edge_right) as weights, so high-confidence
+    Uses min(p_edge_left, p_edge_right) as frequency weights, so high-confidence
     null pairs dominate the fit while signal pairs contribute minimally.
+
+    Under H₀, T ~ c·χ²(k), so r = T/k has E[r] = c and Var(r) = 2c²/k.
+    The Gamma family with V(μ) = μ² matches this variance structure.
+    A log link gives: log E[T_i/k_i] = β₀ + β₁·log(BL_i) + β₂·log(n_i).
+
+    This replaces the previous log-normal WLS which had Jensen's bias ≈ -1/k.
+
+    max_observed_ratio is computed from NULL-LIKE pairs only (is_null_like=True)
+    to prevent focal/signal pairs from inflating the extrapolation clamp.
     """
     # Filter to valid records (finite stat, positive df and ratio)
     valid_records = [
@@ -183,7 +202,7 @@ def _fit_weighted_inflation_model(
             "Weighted cousin Wald: 0 valid pairs — "
             "no calibration possible; raw Wald stats will be used."
         )
-        return _WeightedCalibrationModel(
+        return WeightedCalibrationModel(
             method="none",
             n_calibration=0,
             global_c_hat=1.0,
@@ -195,9 +214,13 @@ def _fit_weighted_inflation_model(
     bl_sums = np.array([r.bl_sum for r in valid_records])
     n_parents = np.array([r.n_parent for r in valid_records])
 
+    # max_observed_ratio from NULL-LIKE pairs only — prevents signal pairs
+    # from inflating the extrapolation clamp ceiling.
+    null_like_ratios = np.array([r.stat / r.df for r in valid_records if r.is_null_like])
+    max_c = float(np.max(null_like_ratios)) if len(null_like_ratios) > 0 else float(np.max(ratios))
+
     n_cal = len(ratios)
-    global_c = float(_weighted_median(ratios, weights))
-    max_c = float(np.max(ratios))
+    global_c = float(np.average(ratios, weights=weights))  # weighted arithmetic mean
 
     if n_cal < _MIN_MEDIAN:
         logger.warning(
@@ -206,7 +229,7 @@ def _fit_weighted_inflation_model(
             n_cal,
             _MIN_MEDIAN,
         )
-        return _WeightedCalibrationModel(
+        return WeightedCalibrationModel(
             method="none",
             n_calibration=n_cal,
             global_c_hat=global_c,
@@ -216,22 +239,19 @@ def _fit_weighted_inflation_model(
     if n_cal < _MIN_REGRESSION:
         logger.info(
             "Weighted cousin Wald: %d valid pairs (need ≥%d for regression) — "
-            "using weighted median ĉ = %.3f.",
+            "using weighted mean ĉ = %.3f.",
             n_cal,
             _MIN_REGRESSION,
             global_c,
         )
-        return _WeightedCalibrationModel(
+        return WeightedCalibrationModel(
             method="weighted_median",
             n_calibration=n_cal,
             global_c_hat=global_c,
             max_observed_ratio=max_c,
         )
 
-    # --- Weighted log-linear regression ---
-    # log(r) = β₀ + β₁·log(BL_sum) + β₂·log(n_parent)
-    # with weights w_i = min(p_edge_left, p_edge_right)
-    log_r = np.log(ratios)
+    # --- Design matrix ---
     X = np.column_stack(
         [
             np.ones(n_cal),
@@ -240,51 +260,117 @@ def _fit_weighted_inflation_model(
         ]
     )
 
-    # Weighted least squares: W^{1/2} X β = W^{1/2} y
-    sqrt_w = np.sqrt(weights)
-    Xw = X * sqrt_w[:, np.newaxis]
-    yw = log_r * sqrt_w
+    # --- Try Gamma GLM with log link (preferred) ---
+    beta = None
+    r_squared = 0.0
+    method = "weighted_median"  # fallback default
+    glm_diagnostics: Dict = {}
 
-    try:
-        beta, residuals, rank, sv = np.linalg.lstsq(Xw, yw, rcond=None)
-    except np.linalg.LinAlgError:
-        logger.warning(
-            "Weighted cousin Wald: regression failed — "
-            "falling back to weighted median ĉ = %.3f.",
-            global_c,
-        )
-        return _WeightedCalibrationModel(
-            method="weighted_median",
-            n_calibration=n_cal,
-            global_c_hat=global_c,
-            max_observed_ratio=max_c,
-        )
+    if _HAS_STATSMODELS:
+        try:
+            glm = sm.GLM(
+                ratios,
+                X,
+                family=sm.families.Gamma(link=sm.families.links.Log()),
+                freq_weights=weights,
+            )
+            result = glm.fit()
+            beta = result.params
 
-    # Weighted R²
-    fitted = X @ beta
-    ss_res = float(np.sum(weights * (log_r - fitted) ** 2))
-    weighted_mean = float(np.average(log_r, weights=weights))
-    ss_tot = float(np.sum(weights * (log_r - weighted_mean) ** 2))
-    r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+            # Deviance-based pseudo-R² (1 - deviance/null_deviance)
+            if result.null_deviance > 0:
+                r_squared = 1.0 - result.deviance / result.null_deviance
+            else:
+                r_squared = 0.0
+
+            glm_diagnostics = {
+                "deviance": float(result.deviance),
+                "null_deviance": float(result.null_deviance),
+                "aic": float(result.aic),
+                "scale": float(result.scale),
+                "converged": bool(result.converged),
+            }
+            method = "gamma_glm"
+
+            logger.info(
+                "Weighted cousin Wald: fitted Gamma GLM on %d pairs "
+                "(eff. n=%.1f). β = [%.3f, %.3f, %.3f], pseudo-R² = %.3f, "
+                "deviance = %.3f.",
+                n_cal,
+                float(np.sum(weights) ** 2 / np.sum(weights**2)),
+                beta[0],
+                beta[1],
+                beta[2],
+                r_squared,
+                float(result.deviance),
+            )
+        except Exception as exc:
+            logger.warning(
+                "Weighted cousin Wald: Gamma GLM failed (%s) — " "falling back to WLS.",
+                exc,
+            )
+            beta = None
+
+    # --- Fallback: Weighted log-linear regression (WLS) ---
+    if beta is None:
+        log_r = np.log(ratios)
+        sqrt_w = np.sqrt(weights)
+        Xw = X * sqrt_w[:, np.newaxis]
+        yw = log_r * sqrt_w
+
+        try:
+            beta, _residuals, _rank, _sv = np.linalg.lstsq(Xw, yw, rcond=None)
+        except np.linalg.LinAlgError:
+            logger.warning(
+                "Weighted cousin Wald: WLS regression also failed — "
+                "falling back to weighted mean ĉ = %.3f.",
+                global_c,
+            )
+            return WeightedCalibrationModel(
+                method="weighted_median",
+                n_calibration=n_cal,
+                global_c_hat=global_c,
+                max_observed_ratio=max_c,
+            )
+
+        fitted = X @ beta
+        ss_res = float(np.sum(weights * (log_r - fitted) ** 2))
+        weighted_mean = float(np.average(log_r, weights=weights))
+        ss_tot = float(np.sum(weights * (log_r - weighted_mean) ** 2))
+        r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+        method = "weighted_regression"
+
+        logger.info(
+            "Weighted cousin Wald: fitted WLS regression on %d pairs "
+            "(effective n=%.1f). β = [%.3f, %.3f, %.3f], R² = %.3f.",
+            n_cal,
+            float(np.sum(weights) ** 2 / np.sum(weights**2)),
+            beta[0],
+            beta[1],
+            beta[2],
+            r_squared,
+        )
 
     diagnostics = {
         "r_squared": r_squared,
-        "beta": beta.tolist(),
+        "beta": beta.tolist() if beta is not None else None,
         "n_calibration": n_cal,
-        "weighted_median_ratio": float(global_c),
+        "global_c_hat": float(global_c),
         "max_observed_ratio": float(max_c),
         "total_weight": float(np.sum(weights)),
         "effective_n": float(np.sum(weights) ** 2 / np.sum(weights**2)),
+        "n_null_like": int(len(null_like_ratios)),
+        **glm_diagnostics,
     }
 
     if r_squared < 0.05:
         logger.info(
             "Weighted cousin Wald: regression R²=%.3f (< 0.05) — "
-            "not informative; using weighted median ĉ = %.3f.",
+            "not informative; using weighted mean ĉ = %.3f.",
             r_squared,
             global_c,
         )
-        return _WeightedCalibrationModel(
+        return WeightedCalibrationModel(
             method="weighted_median",
             n_calibration=n_cal,
             global_c_hat=global_c,
@@ -292,35 +378,25 @@ def _fit_weighted_inflation_model(
             diagnostics=diagnostics,
         )
 
-    logger.info(
-        "Weighted cousin Wald: fitted WLS regression on %d pairs "
-        "(effective n=%.1f). β = [%.3f, %.3f, %.3f], R² = %.3f.",
-        n_cal,
-        diagnostics["effective_n"],
-        beta[0],
-        beta[1],
-        beta[2],
-        r_squared,
-    )
-
-    return _WeightedCalibrationModel(
-        method="weighted_regression",
+    return WeightedCalibrationModel(
+        method=method,
         n_calibration=n_cal,
         global_c_hat=global_c,
         max_observed_ratio=max_c,
-        beta=np.asarray(beta),
+        beta=np.asarray(beta) if beta is not None else None,
         diagnostics=diagnostics,
     )
 
 
-def _predict_c(
-    model: _WeightedCalibrationModel,
+def predict_weighted_inflation_factor(
+    model: WeightedCalibrationModel,
     bl_sum: float,
     n_parent: int,
 ) -> float:
     """Predict inflation factor ĉ for a pair.
 
-    Clamped to [1.0, max_observed_ratio] to prevent extrapolation.
+    Clamped to [1.0, max_observed_ratio] to prevent extrapolation
+    beyond the range observed in null-like calibration pairs.
     """
     if model.method == "none":
         return 1.0
@@ -335,8 +411,18 @@ def _predict_c(
     if bl_sum <= 0 or n_parent <= 0:
         return max(model.global_c_hat, 1.0)
 
-    log_c = model.beta[0] + model.beta[1] * np.log(bl_sum) + model.beta[2] * np.log(float(n_parent))
-    c_hat = float(np.exp(log_c))
+    if model.method == "gamma_glm":
+        # Gamma GLM with log link: E[r] = exp(X·β)
+        log_c = (
+            model.beta[0] + model.beta[1] * np.log(bl_sum) + model.beta[2] * np.log(float(n_parent))
+        )
+        c_hat = float(np.exp(log_c))
+    else:
+        # WLS fallback: same formula but with Jensen's bias
+        log_c = (
+            model.beta[0] + model.beta[1] * np.log(bl_sum) + model.beta[2] * np.log(float(n_parent))
+        )
+        c_hat = float(np.exp(log_c))
     c_hat = min(c_hat, model.max_observed_ratio)
     return max(c_hat, 1.0)
 
@@ -350,6 +436,8 @@ def _collect_weighted_pairs(
     tree: nx.DiGraph,
     nodes_df: pd.DataFrame,
     mean_bl: float | None,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
 ) -> List[_WeightedRecord]:
     """Collect ALL sibling pairs with continuous weights from edge p-values."""
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
@@ -378,6 +466,10 @@ def _collect_weighted_pairs(
         left, right = children
         left_dist, right_dist, n_l, n_r, bl_l, bl_r = _get_sibling_data(tree, parent, left, right)
 
+        # Look up spectral info for this parent node
+        _spectral_k = spectral_dims.get(parent) if spectral_dims else None
+        _pca_proj = pca_projections.get(parent) if pca_projections else None
+
         # Compute raw Wald stat
         stat, df, pval = sibling_divergence_test(
             left_dist,
@@ -388,6 +480,8 @@ def _collect_weighted_pairs(
             branch_length_right=bl_r,
             mean_branch_length=mean_bl,
             test_id=f"sibling:{parent}",
+            spectral_k=_spectral_k,
+            pca_projection=_pca_proj,
         )
 
         # Branch-length sum
@@ -429,7 +523,7 @@ def _collect_weighted_pairs(
 
 def _deflate_and_test(
     records: List[_WeightedRecord],
-    model: _WeightedCalibrationModel,
+    model: WeightedCalibrationModel,
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate focal pairs and compute adjusted p-values."""
     focal_parents: List[str] = []
@@ -446,7 +540,7 @@ def _deflate_and_test(
             methods.append("invalid")
             continue
 
-        c_hat = _predict_c(model, rec.bl_sum, rec.n_parent)
+        c_hat = predict_weighted_inflation_factor(model, rec.bl_sum, rec.n_parent)
         t_adj = rec.stat / c_hat
         p_adj = float(chi2.sf(t_adj, df=rec.df))
 
@@ -513,6 +607,8 @@ def annotate_sibling_divergence_weighted(
     nodes_statistics_dataframe: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using weighted cousin-adjusted Wald.
 
@@ -544,7 +640,7 @@ def annotate_sibling_divergence_weighted(
     mean_bl = compute_mean_branch_length(tree)
 
     # Pass 1: compute ALL raw Wald stats with continuous weights
-    records = _collect_weighted_pairs(tree, df, mean_bl)
+    records = _collect_weighted_pairs(tree, df, mean_bl, spectral_dims, pca_projections)
 
     if not records:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
@@ -591,7 +687,15 @@ def annotate_sibling_divergence_weighted(
         "test_method": "cousin_weighted_wald",
     }
 
+    # Store the fitted model so downstream consumers (e.g. post-hoc merge)
+    # can apply the same deflation — ensures symmetric calibration.
+    df.attrs["_calibration_model"] = model
+
     return df
 
 
-__all__ = ["annotate_sibling_divergence_weighted"]
+__all__ = [
+    "WeightedCalibrationModel",
+    "annotate_sibling_divergence_weighted",
+    "predict_weighted_inflation_factor",
+]

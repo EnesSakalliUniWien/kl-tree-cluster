@@ -284,6 +284,8 @@ def _collect_all_pairs(
     tree: nx.DiGraph,
     nodes_df: pd.DataFrame,
     mean_bl: float | None,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
 ) -> List[_SiblingRecord]:
     """Collect ALL binary-child parent nodes and compute raw Wald stats."""
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
@@ -302,6 +304,10 @@ def _collect_all_pairs(
         left, right = children
         left_dist, right_dist, n_l, n_r, bl_l, bl_r = _get_sibling_data(tree, parent, left, right)
 
+        # Look up spectral info for this parent node
+        _spectral_k = spectral_dims.get(parent) if spectral_dims else None
+        _pca_proj = pca_projections.get(parent) if pca_projections else None
+
         # Compute raw Wald stat
         stat, df, pval = sibling_divergence_test(
             left_dist,
@@ -312,6 +318,8 @@ def _collect_all_pairs(
             branch_length_right=bl_r,
             mean_branch_length=mean_bl,
             test_id=f"sibling:{parent}",
+            spectral_k=_spectral_k,
+            pca_projection=_pca_proj,
         )
 
         # Branch-length sum
@@ -447,6 +455,8 @@ def annotate_sibling_divergence_tree_guided(
     nodes_statistics_dataframe: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using tree-guided cousin calibration.
 
@@ -482,7 +492,7 @@ def annotate_sibling_divergence_tree_guided(
     mean_bl = compute_mean_branch_length(tree)
 
     # Pass 1: compute ALL raw Wald stats
-    records = _collect_all_pairs(tree, df, mean_bl)
+    records = _collect_all_pairs(tree, df, mean_bl, spectral_dims, pca_projections)
 
     if not records:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)

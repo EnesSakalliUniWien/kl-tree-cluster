@@ -73,6 +73,8 @@ def _compute_sibling_stat(
     branch_length_right: float | None,
     mean_branch_length: float | None,
     test_id: str,
+    spectral_k: int | None = None,
+    pca_projection: np.ndarray | None = None,
 ) -> Tuple[float, int, float]:
     """Compute projected Wald χ² statistic for a sibling pair.
 
@@ -87,6 +89,8 @@ def _compute_sibling_stat(
         branch_length_right=branch_length_right,
         mean_branch_length=mean_branch_length,
         test_id=test_id,
+        spectral_k=spectral_k,
+        pca_projection=pca_projection,
     )
     return result  # (stat, df, pval)
 
@@ -118,6 +122,8 @@ def _get_cousin_reference(
     tree: nx.DiGraph,
     uncle: str,
     mean_branch_length: float | None,
+    spectral_k: int | None = None,
+    pca_projection: np.ndarray | None = None,
 ) -> Tuple[float, int, bool]:
     """Compute the cousin-level reference statistic T_{UL,UR}.
 
@@ -143,6 +149,8 @@ def _get_cousin_reference(
         bl_ur,
         mean_branch_length,
         test_id=f"cousin_ref:{uncle}",
+        spectral_k=spectral_k,
+        pca_projection=pca_projection,
     )
 
     if not np.isfinite(stat) or stat <= 0:
@@ -162,6 +170,10 @@ def cousin_ftest(
     left: str,
     right: str,
     mean_branch_length: float | None,
+    spectral_k: int | None = None,
+    pca_projection: np.ndarray | None = None,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
 ) -> Tuple[float, float, float, bool]:
     """Cousin-calibrated F-test for sibling divergence.
 
@@ -199,6 +211,8 @@ def cousin_ftest(
         bl_r,
         mean_branch_length,
         test_id=f"sibling:{parent}",
+        spectral_k=spectral_k,
+        pca_projection=pca_projection,
     )
 
     if not np.isfinite(stat_lr):
@@ -215,7 +229,16 @@ def cousin_ftest(
         return stat_lr, k_lr, pval_lr, False
 
     # Get cousin reference T_{UL,UR}
-    stat_uu, k_uu, valid = _get_cousin_reference(tree, uncle, mean_branch_length)
+    # Use uncle's spectral info if available
+    uncle_spectral_k = spectral_dims.get(uncle) if spectral_dims else None
+    uncle_pca_proj = pca_projections.get(uncle) if pca_projections else None
+    stat_uu, k_uu, valid = _get_cousin_reference(
+        tree,
+        uncle,
+        mean_branch_length,
+        spectral_k=uncle_spectral_k,
+        pca_projection=uncle_pca_proj,
+    )
 
     if not valid:
         # Uncle is a leaf or has non-binary children — fallback to Wald
@@ -280,6 +303,8 @@ def _run_cousin_tests(
     parents: List[str],
     child_pairs: List[Tuple[str, str]],
     mean_branch_length: float | None,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
 ) -> Tuple[List[Tuple[float, float, float]], List[bool]]:
     """Execute cousin F-tests for all collected pairs.
 
@@ -289,12 +314,19 @@ def _run_cousin_tests(
     ftest_flags = []
 
     for parent, (left, right) in zip(parents, child_pairs, strict=False):
+        # Look up spectral info for this parent
+        _spectral_k = spectral_dims.get(parent) if spectral_dims else None
+        _pca_proj = pca_projections.get(parent) if pca_projections else None
         stat, df, pval, used_ftest = cousin_ftest(
             tree,
             parent,
             left,
             right,
             mean_branch_length,
+            spectral_k=_spectral_k,
+            pca_projection=_pca_proj,
+            spectral_dims=spectral_dims,
+            pca_projections=pca_projections,
         )
         results.append((stat, df, pval))
         ftest_flags.append(used_ftest)
@@ -356,6 +388,8 @@ def annotate_sibling_divergence_cousin(
     nodes_statistics_dataframe: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-calibrated F-test.
 
@@ -402,6 +436,8 @@ def annotate_sibling_divergence_cousin(
         parents,
         child_pairs,
         mean_bl,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
     )
 
     n_ftest = sum(ftest_flags)

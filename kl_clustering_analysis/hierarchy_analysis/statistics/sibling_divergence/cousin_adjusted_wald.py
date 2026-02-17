@@ -81,8 +81,15 @@ class _SiblingRecord:
 
 
 @dataclass
-class _CalibrationModel:
-    """Result of fitting the inflation model."""
+class CalibrationModel:
+    """Result of fitting the post-selection inflation model.
+
+    Stores the parameters needed to predict the inflation factor ĉ
+    for a focal sibling pair, given its branch-length sum and parent
+    sample size.  Used both during annotation (to deflate sibling
+    test statistics) and during post-hoc merge (to ensure symmetric
+    calibration).
+    """
 
     method: str  # "regression", "median", "none"
     n_calibration: int  # number of null-like pairs used
@@ -99,7 +106,7 @@ class _CalibrationModel:
 
 def _fit_inflation_model(
     records: List[_SiblingRecord],
-) -> _CalibrationModel:
+) -> CalibrationModel:
     """Estimate the post-selection inflation factor from null-like pairs.
 
     Uses log-linear regression on (BL_sum, n_parent) when ≥ 5 null-like pairs
@@ -113,7 +120,9 @@ def _fit_inflation_model(
             "Cousin-adjusted Wald: 0 null-like pairs — "
             "no calibration possible; raw Wald stats will be used."
         )
-        return _CalibrationModel(method="none", n_calibration=0, global_c_hat=1.0, max_observed_ratio=1.0)
+        return CalibrationModel(
+            method="none", n_calibration=0, global_c_hat=1.0, max_observed_ratio=1.0
+        )
 
     # r_i = T_i / k_i  (expected value under H₀ + inflation is c)
     ratios = np.array([r.stat / r.df for r in null_records])
@@ -138,7 +147,9 @@ def _fit_inflation_model(
             n_cal,
             _MIN_MEDIAN,
         )
-        return _CalibrationModel(method="none", n_calibration=n_cal, global_c_hat=global_c, max_observed_ratio=max_c)
+        return CalibrationModel(
+            method="none", n_calibration=n_cal, global_c_hat=global_c, max_observed_ratio=max_c
+        )
 
     if n_cal < _MIN_REGRESSION:
         logger.info(
@@ -148,7 +159,7 @@ def _fit_inflation_model(
             _MIN_REGRESSION,
             global_c,
         )
-        return _CalibrationModel(
+        return CalibrationModel(
             method="median",
             n_calibration=n_cal,
             global_c_hat=global_c,
@@ -158,22 +169,23 @@ def _fit_inflation_model(
     # --- Log-linear regression ---
     # log(r) = β₀ + β₁·log(BL_sum) + β₂·log(n_parent)
     log_r = np.log(ratios)
-    X = np.column_stack([
-        np.ones(n_cal),
-        np.log(bl_sums),
-        np.log(n_parents.astype(float)),
-    ])
+    X = np.column_stack(
+        [
+            np.ones(n_cal),
+            np.log(bl_sums),
+            np.log(n_parents.astype(float)),
+        ]
+    )
 
     # OLS via pseudoinverse (robust to collinearity)
     try:
         beta, residuals, rank, sv = np.linalg.lstsq(X, log_r, rcond=None)
     except np.linalg.LinAlgError:
         logger.warning(
-            "Cousin-adjusted Wald: regression failed — "
-            "falling back to global median ĉ = %.3f.",
+            "Cousin-adjusted Wald: regression failed — " "falling back to global median ĉ = %.3f.",
             global_c,
         )
-        return _CalibrationModel(
+        return CalibrationModel(
             method="median",
             n_calibration=n_cal,
             global_c_hat=global_c,
@@ -200,7 +212,7 @@ def _fit_inflation_model(
             r_squared,
             global_c,
         )
-        return _CalibrationModel(
+        return CalibrationModel(
             method="median",
             n_calibration=n_cal,
             global_c_hat=global_c,
@@ -218,7 +230,7 @@ def _fit_inflation_model(
         r_squared,
     )
 
-    return _CalibrationModel(
+    return CalibrationModel(
         method="regression",
         n_calibration=n_cal,
         global_c_hat=global_c,
@@ -228,8 +240,8 @@ def _fit_inflation_model(
     )
 
 
-def _predict_c(
-    model: _CalibrationModel,
+def predict_inflation_factor(
+    model: CalibrationModel,
     bl_sum: float,
     n_parent: int,
 ) -> float:
@@ -240,6 +252,20 @@ def _predict_c(
     the β₂·log(n_parent) term can over-estimate inflation at the root
     (largest n_parent), deflating T so aggressively that real signal is
     missed and the tree collapses to K=1.
+
+    Parameters
+    ----------
+    model : CalibrationModel
+        Fitted calibration model.
+    bl_sum : float
+        Sum of branch lengths from the two siblings to their parent.
+    n_parent : int
+        Number of leaves under the parent node.
+
+    Returns
+    -------
+    float
+        Predicted inflation factor, clamped to [1.0, max_observed_ratio].
     """
     if model.method == "none":
         return 1.0
@@ -254,11 +280,7 @@ def _predict_c(
     if bl_sum <= 0 or n_parent <= 0:
         return max(model.global_c_hat, 1.0)
 
-    log_c = (
-        model.beta[0]
-        + model.beta[1] * np.log(bl_sum)
-        + model.beta[2] * np.log(float(n_parent))
-    )
+    log_c = model.beta[0] + model.beta[1] * np.log(bl_sum) + model.beta[2] * np.log(float(n_parent))
     c_hat = float(np.exp(log_c))
     # Clamp: never predict more inflation than actually observed in
     # null-like calibration pairs (prevents regression extrapolation),
@@ -276,12 +298,13 @@ def _collect_all_pairs(
     tree: nx.DiGraph,
     nodes_df: pd.DataFrame,
     mean_bl: float | None,
+    spectral_dims: Dict[str, int] | None = None,
+    pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> List[_SiblingRecord]:
     """Collect ALL binary-child parent nodes and compute raw Wald stats."""
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
         raise ValueError(
-            "Missing 'Child_Parent_Divergence_Significant' column. "
-            "Run child-parent test first."
+            "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
         )
 
     sig_map = nodes_df["Child_Parent_Divergence_Significant"].to_dict()
@@ -293,9 +316,15 @@ def _collect_all_pairs(
             continue
 
         left, right = children
-        left_dist, right_dist, n_l, n_r, bl_l, bl_r = _get_sibling_data(
-            tree, parent, left, right
-        )
+        left_dist, right_dist, n_l, n_r, bl_l, bl_r = _get_sibling_data(tree, parent, left, right)
+
+        # Per-node spectral dimension and PCA projection
+        _spectral_k: int | None = None
+        _pca_proj: np.ndarray | None = None
+        if spectral_dims is not None:
+            _spectral_k = spectral_dims.get(parent)
+        if pca_projections is not None:
+            _pca_proj = pca_projections.get(parent)
 
         # Compute raw Wald stat
         stat, df, pval = sibling_divergence_test(
@@ -307,6 +336,8 @@ def _collect_all_pairs(
             branch_length_right=bl_r,
             mean_branch_length=mean_bl,
             test_id=f"sibling:{parent}",
+            spectral_k=_spectral_k,
+            pca_projection=_pca_proj,
         )
 
         # Branch-length sum
@@ -343,7 +374,7 @@ def _collect_all_pairs(
 
 def _deflate_and_test(
     records: List[_SiblingRecord],
-    model: _CalibrationModel,
+    model: CalibrationModel,
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate focal pairs and compute adjusted p-values.
 
@@ -366,7 +397,7 @@ def _deflate_and_test(
             methods.append("invalid")
             continue
 
-        c_hat = _predict_c(model, rec.bl_sum, rec.n_parent)
+        c_hat = predict_inflation_factor(model, rec.bl_sum, rec.n_parent)
         t_adj = rec.stat / c_hat
         p_adj = float(chi2.sf(t_adj, df=rec.df))
 
@@ -433,6 +464,8 @@ def annotate_sibling_divergence_adjusted(
     nodes_statistics_dataframe: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: Dict[str, int] | None = None,
+    pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-adjusted Wald.
 
@@ -468,7 +501,13 @@ def annotate_sibling_divergence_adjusted(
     mean_bl = compute_mean_branch_length(tree)
 
     # Pass 1: compute ALL raw Wald stats
-    records = _collect_all_pairs(tree, df, mean_bl)
+    records = _collect_all_pairs(
+        tree,
+        df,
+        mean_bl,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+    )
 
     if not records:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
@@ -513,7 +552,16 @@ def annotate_sibling_divergence_adjusted(
         "test_method": "cousin_adjusted_wald",
     }
 
+    # Store the fitted model object for downstream use (e.g., post-hoc merge
+    # calibration).  This is stored separately from the human-readable audit
+    # dict so that consumers can call predict_inflation_factor() directly.
+    df.attrs["_calibration_model"] = model
+
     return df
 
 
-__all__ = ["annotate_sibling_divergence_adjusted"]
+__all__ = [
+    "CalibrationModel",
+    "annotate_sibling_divergence_adjusted",
+    "predict_inflation_factor",
+]
