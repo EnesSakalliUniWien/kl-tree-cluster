@@ -22,7 +22,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_signific
     _compute_standardized_z,
     _sanitize_positive_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     derive_projection_seed,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree

@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     compute_projection_dimension,
     generate_projection_matrix,
     _PROJECTION_CACHE,

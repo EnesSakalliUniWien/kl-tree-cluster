@@ -29,7 +29,7 @@ from ..branch_length_utils import compute_mean_branch_length, sanitize_positive_
 from ..categorical_mahalanobis import categorical_whitened_vector
 from ..multiple_testing import benjamini_hochberg_correction
 from ..pooled_variance import _is_categorical, standardize_proportion_difference
-from ..random_projection import (
+from ..projection.random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
     generate_projection_matrix,
@@ -122,6 +122,7 @@ def sibling_divergence_test(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
+    min_k: int | None = None,
 ) -> Tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence.
 
@@ -223,7 +224,7 @@ def sibling_divergence_test(
         # but the rank constraint governs how many projection dimensions are
         # informative.
         n_total = int(n_left + n_right)
-        k = compute_projection_dimension(n_total, d)
+        k = compute_projection_dimension(n_total, d, min_k=min_k)
 
     # Project and compute test statistic
     if test_id is None:

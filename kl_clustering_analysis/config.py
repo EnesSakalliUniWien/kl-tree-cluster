@@ -67,8 +67,14 @@ TREE_LINKAGE_METHOD: str = "average"
 # Uses sklearn's johnson_lindenstrauss_min_dim for theoretically-grounded dimension.
 PROJECTION_EPS: float = 0.3
 
-# Minimum projected dimension
-PROJECTION_MIN_K: int = 10
+# Minimum projected dimension.
+# Set to an integer for a fixed floor, or "auto" to estimate from the data's
+# effective rank (Shannon entropy of eigenvalue spectrum).  When "auto", the
+# floor is computed once per pipeline run as:
+#   min_k = max(2, min(ceil(effective_rank(full_data)), 20))
+# This prevents adding pure-noise χ² components when the data has low
+# intrinsic dimensionality, and avoids under-projecting high-rank data.
+PROJECTION_MIN_K: int | str = "auto"
 
 
 # Random seed for projection reproducibility (None for random)
@@ -91,6 +97,15 @@ SPECTRAL_METHOD: str | None = "effective_rank"
 # variance in the top PCs and REDUCING effective rank (typically ~30%).
 # Recommended: False (leaves-only gives more accurate rank estimates).
 INCLUDE_INTERNAL_IN_SPECTRAL: bool = False
+
+# --- Edge (Gate 2) Calibration ---
+
+# Calibrate edge test statistics via eigenvalue-weighted Gamma GLM.
+# When True, estimates post-selection inflation factor ĉ_edge from
+# null-like edges (high leaf-count ratio × flat eigenvalue spectrum)
+# and deflates all edge statistics: T_adj = T / ĉ_edge.
+# Analogous to the sibling test's cousin-weighted Wald calibration.
+EDGE_CALIBRATION: bool = False
 
 # --- Eigenvalue Whitening ---
 
@@ -134,4 +149,29 @@ SIBLING_TEST_METHOD: str = "cousin_weighted_wald"
 # Enable signal localization for soft cluster boundaries.
 # When True, uses _should_split_v2 which drills down to find WHERE
 # the divergence signal originates, enabling cross-boundary partial merges.
+# WARNING: v2 is experimental. Benchmark (2026-02-17, 74 cases) shows
+# Mean ARI 0.431 vs v1's 0.757 — localization sub-tests lack power
+# (small samples + BH penalty) creating false similarity edges that
+# incorrectly merge clusters. v2 does improve phylogenetic cases
+# (e.g. phylo_divergent_8taxa ARI 1.0 vs v1's over-splitting to K=72).
 USE_SIGNAL_LOCALIZATION: bool = False
+
+# Maximum recursion depth for signal localization.
+# The *primary* stopping criterion is Gate 2 (child-parent divergence):
+# localization only drills into children whose edge to their parent is
+# significant (``is_edge_significant`` callback), so noise branches are
+# pruned automatically.  This depth cap is a *safety backstop* to prevent
+# combinatorial blowup on pathological trees where Gate 2 passes at many
+# consecutive levels.  Each depth level can multiply cross-boundary pairs
+# by up to O(k²), so depth=3 allows at most ~3 levels of sub-pair
+# expansion beyond the initial sibling comparison.
+# Set to None to disable the cap (Gate 2 alone governs recursion).
+LOCALIZATION_MAX_DEPTH: int | None = 3
+
+# Maximum number of cross-boundary pairs to test during localization.
+# Each depth level can multiply pairs by O(k²) where k is the branching
+# factor.  This cap aborts further drilling once enough pairs have been
+# recorded, preventing runaway computation on wide or deep trees.
+# Pairs already tested are kept; only further drilling is stopped.
+# Set to None to disable (depth + Gate 2 alone govern termination).
+LOCALIZATION_MAX_PAIRS: int | None = 50

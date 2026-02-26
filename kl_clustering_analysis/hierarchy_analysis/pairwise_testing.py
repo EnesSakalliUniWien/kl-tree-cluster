@@ -34,6 +34,69 @@ from .statistics.sibling_divergence import (
 from .statistics.sibling_divergence.sibling_divergence_test import sibling_divergence_test
 
 
+def _deflate_by_calibration(
+    test_stat: float,
+    df: float,
+    p_value: float,
+    *,
+    bl_a: float | None,
+    bl_b: float | None,
+    tree: "PosetTree",
+    node_a: str,
+    node_b: str,
+    calibration_model: Union[CalibrationModel, WeightedCalibrationModel],
+    ancestor_override: str | None = None,
+) -> Tuple[float, float, float]:
+    """Deflate a raw Wald statistic by the calibration inflation factor.
+
+    Parameters
+    ----------
+    test_stat, df, p_value
+        Raw test results.
+    bl_a, bl_b
+        Branch lengths from the two nodes to their common ancestor.
+    tree
+        Tree providing ``leaf_count`` node attributes.
+    node_a, node_b
+        Nodes being compared (used to find the ancestor sample size).
+    calibration_model
+        Fitted calibration model.
+    ancestor_override
+        If given, use this node's leaf count as ``n_ancestor`` instead
+        of computing the LCA.  Used by ``test_cluster_pair_divergence``
+        where the ancestor is already known.
+
+    Returns
+    -------
+    Tuple[float, float, float]
+        ``(deflated_test_stat, df, deflated_p_value)``
+    """
+    bl_sum = 0.0
+    if bl_a is not None:
+        bl_sum += bl_a
+    if bl_b is not None:
+        bl_sum += bl_b
+
+    if ancestor_override is not None:
+        n_ancestor = int(tree.nodes[ancestor_override]["leaf_count"])
+    else:
+        lca = tree.find_lca(node_a, node_b)
+        n_ancestor = int(tree.nodes[lca]["leaf_count"])
+
+    if isinstance(calibration_model, WeightedCalibrationModel):
+        c_hat = predict_weighted_inflation_factor(calibration_model, bl_sum, n_ancestor)
+    else:
+        c_hat = predict_inflation_factor(calibration_model, bl_sum, n_ancestor)
+
+    if c_hat > 0 and np.isfinite(test_stat) and df > 0:
+        from scipy.stats import chi2 as chi2_dist
+
+        test_stat = test_stat / c_hat
+        p_value = float(chi2_dist.sf(test_stat, df=df))
+
+    return test_stat, df, p_value
+
+
 def _compute_branch_lengths_to_lca(
     tree: "PosetTree",
     node_a: str,
@@ -131,6 +194,7 @@ def test_node_pair_divergence(
     node_a: str,
     node_b: str,
     mean_branch_length: float | None,
+    calibration_model: Union[CalibrationModel, WeightedCalibrationModel, None] = None,
 ) -> Tuple[float, float, float]:
     """Test divergence between two arbitrary tree nodes.
 
@@ -138,30 +202,42 @@ def test_node_pair_divergence(
     patristic distances to the LCA for Felsenstein adjustment, and
     delegates to :func:`sibling_divergence_test`.
 
+    When a *calibration_model* is provided the raw Wald statistic is
+    deflated by the predicted inflation factor ĉ (same model that was
+    used during the annotation phase).  This ensures that the signal-
+    localization sub-tests in v2 operate on the **same statistical
+    scale** as the Gate 3 decision that triggered localization.
+
     Parameters
     ----------
     tree
-        The hierarchy tree with pre-populated ``distribution_map`` and
-        ``leaf_count_map``.
+        The hierarchy tree with pre-populated ``distribution`` and
+        ``leaf_count`` node attributes.
     node_a, node_b
         Tree node identifiers to compare.
     mean_branch_length
         Pre-computed mean branch length for the tree, or ``None`` to
         disable Felsenstein adjustment.
+    calibration_model
+        Optional calibration model for deflating the raw Wald statistic.
+        When provided, the test statistic is divided by the predicted
+        inflation factor ``ĉ`` and the p-value is recomputed.  This
+        makes localization sub-tests commensurate with the calibrated
+        Gate 3 sibling test.
 
     Returns
     -------
     Tuple[float, float, float]
         ``(test_statistic, degrees_of_freedom, p_value)``
     """
-    dist_a = tree.distribution_map[node_a]
-    dist_b = tree.distribution_map[node_b]
-    n_a = float(tree.leaf_count_map[node_a])
-    n_b = float(tree.leaf_count_map[node_b])
+    dist_a = np.asarray(tree.nodes[node_a]["distribution"], dtype=float)
+    dist_b = np.asarray(tree.nodes[node_b]["distribution"], dtype=float)
+    n_a = float(tree.nodes[node_a]["leaf_count"])
+    n_b = float(tree.nodes[node_b]["leaf_count"])
 
     bl_a, bl_b = _compute_branch_lengths_to_lca(tree, node_a, node_b, mean_branch_length)
 
-    return sibling_divergence_test(
+    test_stat, df, p_value = sibling_divergence_test(
         left_dist=dist_a,
         right_dist=dist_b,
         n_left=n_a,
@@ -171,6 +247,23 @@ def test_node_pair_divergence(
         mean_branch_length=mean_branch_length,
         test_id=f"nodepair:{node_a}|{node_b}",
     )
+
+    # Deflate by the calibration model so that localization sub-tests
+    # operate on the same scale as the Gate 3 sibling test.
+    if calibration_model is not None:
+        test_stat, df, p_value = _deflate_by_calibration(
+            test_stat,
+            df,
+            p_value,
+            bl_a=bl_a,
+            bl_b=bl_b,
+            tree=tree,
+            node_a=node_a,
+            node_b=node_b,
+            calibration_model=calibration_model,
+        )
+
+    return test_stat, df, p_value
 
 
 def test_cluster_pair_divergence(
@@ -191,8 +284,8 @@ def test_cluster_pair_divergence(
     Parameters
     ----------
     tree
-        The hierarchy tree with pre-populated ``distribution_map`` and
-        ``leaf_count_map``.
+        The hierarchy tree with pre-populated ``distribution`` and
+        ``leaf_count`` node attributes.
     cluster_a, cluster_b
         Cluster root node identifiers to compare.
     common_ancestor
@@ -211,10 +304,10 @@ def test_cluster_pair_divergence(
     Tuple[float, float, float]
         ``(test_statistic, degrees_of_freedom, p_value)``
     """
-    dist_a = tree.distribution_map[cluster_a]
-    dist_b = tree.distribution_map[cluster_b]
-    size_a = tree.leaf_count_map[cluster_a]
-    size_b = tree.leaf_count_map[cluster_b]
+    dist_a = np.asarray(tree.nodes[cluster_a]["distribution"], dtype=float)
+    dist_b = np.asarray(tree.nodes[cluster_b]["distribution"], dtype=float)
+    size_a = int(tree.nodes[cluster_a]["leaf_count"])
+    size_b = int(tree.nodes[cluster_b]["leaf_count"])
 
     bl_a, bl_b = _compute_branch_lengths_from_ancestor(
         tree, cluster_a, cluster_b, common_ancestor, mean_branch_length
@@ -234,23 +327,17 @@ def test_cluster_pair_divergence(
     # Deflate by the same calibration model used during annotation so that
     # the post-hoc merge operates on the same scale as the decomposition.
     if calibration_model is not None:
-        bl_sum = 0.0
-        if bl_a is not None:
-            bl_sum += bl_a
-        if bl_b is not None:
-            bl_sum += bl_b
-
-        n_ancestor = tree.leaf_count_map[common_ancestor]
-        # Dispatch to the correct prediction function based on model type
-        if isinstance(calibration_model, WeightedCalibrationModel):
-            c_hat = predict_weighted_inflation_factor(calibration_model, bl_sum, n_ancestor)
-        else:
-            c_hat = predict_inflation_factor(calibration_model, bl_sum, n_ancestor)
-
-        if c_hat > 0 and np.isfinite(test_stat) and df > 0:
-            from scipy.stats import chi2 as chi2_dist
-
-            test_stat = test_stat / c_hat
-            p_value = float(chi2_dist.sf(test_stat, df=df))
+        test_stat, df, p_value = _deflate_by_calibration(
+            test_stat,
+            df,
+            p_value,
+            bl_a=bl_a,
+            bl_b=bl_b,
+            tree=tree,
+            node_a=cluster_a,
+            node_b=cluster_b,
+            calibration_model=calibration_model,
+            ancestor_override=common_ancestor,
+        )
 
     return test_stat, df, p_value

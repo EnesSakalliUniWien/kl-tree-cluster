@@ -23,7 +23,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.pooled_variance import
     _flatten_categorical,
     compute_pooled_proportion,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
     generate_projection_matrix,

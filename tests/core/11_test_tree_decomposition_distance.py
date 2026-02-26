@@ -1,14 +1,14 @@
 """Tests for tree decomposition distance calculations."""
 
-import pytest
+from unittest.mock import MagicMock, patch
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-from unittest.mock import MagicMock, patch
+import pytest
 
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import (
-    TreeDecomposition,
-)
+from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 
 class TestTreeDecompositionDistance:
@@ -36,6 +36,7 @@ class TestTreeDecompositionDistance:
             "distribution": np.array([0.5, 0.5]),
             "is_leaf": False,
             "sample_size": 10,
+            "leaf_count": 10,
         }
 
         nodes = ["root", "A", "B", "A1", "B1"]
@@ -83,50 +84,50 @@ class TestTreeDecompositionDistance:
         return tree
 
     def test_divergence_uses_path_distances(self, weighted_tree):
-        """Test that _test_node_pair_divergence passes correct path lengths."""
+        """Test that _test_node_pair_divergence passes correct path lengths
+        when FELSENSTEIN_SCALING is enabled."""
 
-        # Initialize decomposer with dummy results_df
-        nodes = ["root", "A", "B", "A1", "B1"]
-        dummy_df = pd.DataFrame(index=nodes)
-        dummy_df["Child_Parent_Divergence_Significant"] = True
-        dummy_df["Sibling_BH_Different"] = True
-        dummy_df["Sibling_Divergence_Skipped"] = False
+        # Temporarily enable Felsenstein so branch lengths are computed
+        original = config.FELSENSTEIN_SCALING
+        config.FELSENSTEIN_SCALING = True
+        try:
+            # Initialize decomposer with dummy results_df
+            nodes = ["root", "A", "B", "A1", "B1"]
+            dummy_df = pd.DataFrame(index=nodes)
+            dummy_df["Child_Parent_Divergence_Significant"] = True
+            dummy_df["Sibling_BH_Different"] = True
+            dummy_df["Sibling_Divergence_Skipped"] = False
 
-        decomposer = TreeDecomposition(weighted_tree, results_df=dummy_df)
+            # Bypass annotation pipeline — this test exercises branch-length
+            # threading in _test_node_pair_divergence, not gate annotation.
+            with patch.object(TreeDecomposition, "_prepare_annotations", return_value=dummy_df):
+                decomposer = TreeDecomposition(weighted_tree, results_df=dummy_df)
 
-        # Mock the low-level test function
-        with patch(
-            "kl_clustering_analysis.hierarchy_analysis.tree_decomposition.sibling_divergence_test"
-        ) as mock_test:
-            mock_test.return_value = (1.0, 1.0, 0.05)
+            # Mock the low-level test function
+            with patch(
+                "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            ) as mock_test:
+                mock_test.return_value = (1.0, 1.0, 0.05)
 
-            # Test 1: Siblings A vs B
-            # LCA = root
-            # Dist(A, root) = 1.0
-            # Dist(B, root) = 5.0
-            decomposer._test_node_pair_divergence("A", "B")
+                # Test 1: Siblings A vs B
+                # LCA = root
+                # Dist(A, root) = 1.0
+                # Dist(B, root) = 5.0
+                decomposer._test_node_pair_divergence("A", "B")
 
-            args, kwargs = mock_test.call_args
-            # Check positional args for distributions/samples (not focus here)
-            # Check expected kwarg branch lengths (or if passed as positional, check index)
-            # Signature: (left_dist, right_dist, n_left, n_right, branch_length_left, branch_length_right)
+                args, kwargs = mock_test.call_args
+                assert kwargs.get("branch_length_left") == 1.0
+                assert kwargs.get("branch_length_right") == 5.0
 
-            # Since implementation might pass as kwargs or positional logic in decomposition,
-            # we need to align with how we implement it.
-            # Plan is to pass as named arguments to sibling_divergence_test wrapper?
-            # Actually, sibling_divergence_test signature is:
-            # (left_dist, right_dist, n_left, n_right, branch_length_left=None, branch_length_right=None)
+                # Test 2: Non-siblings A1 vs B1
+                # LCA = root
+                # Dist(A1, root) = Dist(A1, A) + Dist(A, root) = 2.0 + 1.0 = 3.0
+                # Dist(B1, root) = Dist(B1, B) + Dist(B, root) = 3.0 + 5.0 = 8.0
+                decomposer._test_node_pair_divergence("A1", "B1")
 
-            # Let's inspect call args.
-            assert kwargs.get("branch_length_left") == 1.0
-            assert kwargs.get("branch_length_right") == 5.0
-
-            # Test 2: Non-siblings A1 vs B1
-            # LCA = root
-            # Dist(A1, root) = Dist(A1, A) + Dist(A, root) = 2.0 + 1.0 = 3.0
-            # Dist(B1, root) = Dist(B1, B) + Dist(B, root) = 3.0 + 5.0 = 8.0
-            decomposer._test_node_pair_divergence("A1", "B1")
-
-            args, kwargs = mock_test.call_args
-            assert kwargs.get("branch_length_left") == 3.0
-            assert kwargs.get("branch_length_right") == 8.0
+                args, kwargs = mock_test.call_args
+                assert kwargs.get("branch_length_left") == 3.0
+                assert kwargs.get("branch_length_right") == 8.0
+        finally:
+            config.FELSENSTEIN_SCALING = original
+            config.FELSENSTEIN_SCALING = original

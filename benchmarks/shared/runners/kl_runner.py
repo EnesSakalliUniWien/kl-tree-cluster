@@ -48,3 +48,37 @@ def _run_kl_method(
             "linkage_matrix": Z_t,
         },
     )
+
+
+def _run_kl_v2_method(
+    data_df: pd.DataFrame,
+    distance_condensed: np.ndarray,
+    significance_level: float,
+    tree_linkage_method: str = config.TREE_LINKAGE_METHOD,
+) -> MethodRunResult:
+    """KL v2 runner — same as v1 but with signal localization enabled."""
+
+    Z_t = linkage(distance_condensed, method=tree_linkage_method)
+
+    tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_df.index.tolist())
+    decomp_t = tree_t.decompose(
+        leaf_data=data_df,
+        alpha_local=significance_level,
+        sibling_alpha=significance_level,
+        use_signal_localization=True,
+    )
+    report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))
+    labels = np.asarray(_labels_from_decomposition(decomp_t, data_df.index.tolist()))
+    return MethodRunResult(
+        labels=labels,
+        found_clusters=int(decomp_t.get("num_clusters", 0)),
+        report_df=report_t,
+        status="ok",
+        skip_reason=None,
+        extra={
+            "tree": tree_t,
+            "decomposition": decomp_t,
+            "stats": tree_t.stats_df,
+            "linkage_matrix": Z_t,
+        },
+    )

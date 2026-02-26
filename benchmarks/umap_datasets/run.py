@@ -699,4 +699,3 @@ def main():
 
 if __name__ == "__main__":
     df_results = main()
-    df_results = main()

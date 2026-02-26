@@ -12,13 +12,24 @@ from __future__ import annotations
 from collections import deque
 from typing import Dict, Optional, Tuple
 
-import numpy as np
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
 from .cluster_color_mapping import build_cluster_color_spec, present_cluster_ids
+from .config import (
+    EDGE_DRAW_ORDER,
+    EDGE_STYLES,
+    HALO_SIZE_MULTIPLIER,
+    HALO_SIZE_OFFSET,
+    HALO_STYLES,
+    INTERNAL_NODE_STYLE,
+    LEAF_NODE_STYLE,
+    LEGEND_NODE_MARKER_SIZE,
+    UNASSIGNED_NODE_COLOR,
+)
 
 CHILD_PARENT_SIGNIFICANT_COL = "Child_Parent_Divergence_Significant"
 SIBLING_DIFFERENT_COL = "Sibling_BH_Different"
@@ -288,7 +299,7 @@ def plot_tree_with_clusters(
     num_clusters = decomposition_results["num_clusters"]
 
     spec = build_cluster_color_spec(
-        num_clusters, base_cmap=colormap, unassigned_color="#CCCCCC"
+        num_clusters, base_cmap=colormap, unassigned_color=UNASSIGNED_NODE_COLOR
     )
     cluster_id_to_color = spec.id_to_color
     unassigned_color = spec.unassigned_color
@@ -306,25 +317,25 @@ def plot_tree_with_clusters(
     G.add_edges_from(tree.edges())
 
     leaves = {n for n in G.nodes() if G.out_degree(n) == 0}
-    node_colors = []
-    for node in G.nodes():
-        if node in leaves and node in node_to_cluster:
+    leaf_nodes = [n for n in G.nodes() if n in leaves]
+    internal_nodes = [n for n in G.nodes() if n not in leaves]
+    leaf_node_colors: list[str] = []
+    for node in leaf_nodes:
+        if node in node_to_cluster:
             try:
                 cluster_id = int(node_to_cluster[node])
             except Exception:
                 cluster_id = None
-            node_colors.append(cluster_id_to_color.get(cluster_id, unassigned_color))
+            leaf_node_colors.append(cluster_id_to_color.get(cluster_id, unassigned_color))
         else:
-            node_colors.append(unassigned_color)
+            leaf_node_colors.append(unassigned_color)
 
     if layout == "rectangular":
         pos = _rectangular_tree_layout(G)
     elif layout == "radial":
         pos = _graphviz_twopi_layout(G, args="")
     else:
-        raise ValueError(
-            f"Unknown layout={layout!r}; expected 'rectangular' or 'radial'."
-        )
+        raise ValueError(f"Unknown layout={layout!r}; expected 'rectangular' or 'radial'.")
 
     if title is None:
         title = (
@@ -339,82 +350,79 @@ def plot_tree_with_clusters(
     else:
         fig = ax.figure
     edge_groups = _group_edges_for_sibling_style(G, results_df)
-    if edge_groups["missing"]:
+    for edge_group in EDGE_DRAW_ORDER:
+        edgelist = edge_groups[edge_group]
+        if not edgelist:
+            continue
+        edge_style = EDGE_STYLES[edge_group]
         nx.draw_networkx_edges(
             G,
             pos,
-            edgelist=edge_groups["missing"],
-            edge_color="#9E9E9E",
-            width=0.9,
-            style="dashed",
+            edgelist=edgelist,
+            edge_color=edge_style["edge_color"],
+            width=edge_style["width"],
+            style=edge_style["style"],
             arrows=False,
             ax=ax,
-            alpha=0.95,
-        )
-    if edge_groups["not_different"]:
-        nx.draw_networkx_edges(
-            G,
-            pos,
-            edgelist=edge_groups["not_different"],
-            edge_color="#C8C8C8",
-            width=0.9,
-            style="solid",
-            arrows=False,
-            ax=ax,
-            alpha=0.95,
-        )
-    if edge_groups["different"]:
-        nx.draw_networkx_edges(
-            G,
-            pos,
-            edgelist=edge_groups["different"],
-            edge_color="#2B2B2B",
-            width=1.8,
-            style="solid",
-            arrows=False,
-            ax=ax,
-            alpha=0.98,
+            alpha=edge_style["alpha"],
         )
 
-    nx.draw_networkx_nodes(
-        G,
-        pos,
-        node_size=node_size,
-        alpha=0.65,
-        node_color=node_colors,
-        linewidths=0.0,
-        ax=ax,
-    )
+    if internal_nodes:
+        nx.draw_networkx_nodes(
+            G,
+            pos,
+            nodelist=internal_nodes,
+            node_size=node_size,
+            alpha=INTERNAL_NODE_STYLE["alpha"],
+            node_color=INTERNAL_NODE_STYLE["node_color"],
+            linewidths=INTERNAL_NODE_STYLE["linewidths"],
+            ax=ax,
+        )
+
+    if leaf_nodes:
+        nx.draw_networkx_nodes(
+            G,
+            pos,
+            nodelist=leaf_nodes,
+            node_size=node_size,
+            alpha=LEAF_NODE_STYLE["alpha"],
+            node_color=leaf_node_colors,
+            linewidths=LEAF_NODE_STYLE["linewidths"],
+            edgecolors=LEAF_NODE_STYLE["edgecolors"],
+            ax=ax,
+        )
 
     halo_significant, halo_tested_not_significant = _group_internal_nodes_for_halo(
         G, leaves, results_df
     )
-    halo_size = max(node_size * 2.4, node_size + 12)
+    halo_size = max(node_size * HALO_SIZE_MULTIPLIER, node_size + HALO_SIZE_OFFSET)
     if halo_tested_not_significant:
+        halo_non_sig_style = HALO_STYLES["tested_not_significant"]
         halo_non_sig = nx.draw_networkx_nodes(
             G,
             pos,
             nodelist=halo_tested_not_significant,
             node_size=halo_size,
             node_color="none",
-            edgecolors="#6E6E6E",
-            linewidths=1.0,
+            edgecolors=halo_non_sig_style["edgecolors"],
+            linewidths=halo_non_sig_style["linewidths"],
             ax=ax,
         )
-        halo_non_sig.set_linestyle((0, (1.0, 1.7)))
+        halo_non_sig.set_linestyle(halo_non_sig_style["linestyle"])
 
     if halo_significant:
+        halo_sig_style = HALO_STYLES["significant"]
         halo_sig = nx.draw_networkx_nodes(
             G,
             pos,
             nodelist=halo_significant,
             node_size=halo_size,
             node_color="none",
-            edgecolors="#1C1C1C",
-            linewidths=1.0,
+            edgecolors=halo_sig_style["edgecolors"],
+            linewidths=halo_sig_style["linewidths"],
             ax=ax,
         )
-        halo_sig.set_linestyle("solid")
+        halo_sig.set_linestyle(halo_sig_style["linestyle"])
     ax.set_title(title, fontsize=font_size)
     # Do not force equal aspect: trees with many leaves collapse vertically.
     ax.set_aspect("auto")
@@ -426,54 +434,59 @@ def plot_tree_with_clusters(
         if n in node_to_cluster and str(node_to_cluster[n]).lstrip("-").isdigit()
     ]
     present_ids = present_cluster_ids(leaf_cluster_ids)
+    halo_sig_style = HALO_STYLES["significant"]
+    halo_non_sig_style = HALO_STYLES["tested_not_significant"]
+    edge_diff_style = EDGE_STYLES["different"]
+    edge_not_diff_style = EDGE_STYLES["not_different"]
+    edge_missing_style = EDGE_STYLES["missing"]
     style_handles = [
         Line2D(
             [0],
             [0],
             marker="o",
-            color="#1C1C1C",
+            color=halo_sig_style["edgecolors"],
             markerfacecolor="none",
-            markeredgecolor="#1C1C1C",
-            linestyle="solid",
-            linewidth=1.0,
-            markersize=7,
-            label="Node: child-parent significant",
+            markeredgecolor=halo_sig_style["edgecolors"],
+            linestyle=halo_sig_style["linestyle"],
+            linewidth=halo_sig_style["linewidths"],
+            markersize=LEGEND_NODE_MARKER_SIZE,
+            label=halo_sig_style["legend_label"],
         ),
         Line2D(
             [0],
             [0],
             marker="o",
-            color="#6E6E6E",
+            color=halo_non_sig_style["edgecolors"],
             markerfacecolor="none",
-            markeredgecolor="#6E6E6E",
-            linestyle=(0, (1.0, 1.7)),
-            linewidth=1.0,
-            markersize=7,
-            label="Node: tested, not significant",
+            markeredgecolor=halo_non_sig_style["edgecolors"],
+            linestyle=halo_non_sig_style["linestyle"],
+            linewidth=halo_non_sig_style["linewidths"],
+            markersize=LEGEND_NODE_MARKER_SIZE,
+            label=halo_non_sig_style["legend_label"],
         ),
         Line2D(
             [0],
             [0],
-            color="#2B2B2B",
-            linewidth=1.8,
-            linestyle="solid",
-            label="Edge: sibling different",
+            color=edge_diff_style["edge_color"],
+            linewidth=edge_diff_style["width"],
+            linestyle=edge_diff_style["style"],
+            label=edge_diff_style["legend_label"],
         ),
         Line2D(
             [0],
             [0],
-            color="#C8C8C8",
-            linewidth=0.9,
-            linestyle="solid",
-            label="Edge: sibling not different",
+            color=edge_not_diff_style["edge_color"],
+            linewidth=edge_not_diff_style["width"],
+            linestyle=edge_not_diff_style["style"],
+            label=edge_not_diff_style["legend_label"],
         ),
         Line2D(
             [0],
             [0],
-            color="#9E9E9E",
-            linewidth=0.9,
-            linestyle="dashed",
-            label="Edge: sibling test missing",
+            color=edge_missing_style["edge_color"],
+            linewidth=edge_missing_style["width"],
+            linestyle=edge_missing_style["style"],
+            label=edge_missing_style["legend_label"],
         ),
     ]
 

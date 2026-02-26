@@ -6,9 +6,7 @@ which traverses a hierarchy and decides where to split or merge to form clusters
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Iterator, List, Set, Tuple
-
-import networkx as nx
+from typing import TYPE_CHECKING, Dict, List, Set, Tuple
 
 if TYPE_CHECKING:
     from ..tree.poset_tree import PosetTree
@@ -20,28 +18,18 @@ from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
 from .cluster_assignments import build_sample_cluster_assignments
+from .gate_annotations import compute_gate_annotations
+from .gates import GateEvaluator, V2TraversalState, iterate_worklist, process_node, process_node_v2
+from .pairwise_testing import test_cluster_pair_divergence, test_node_pair_divergence
 from .posthoc_merge import apply_posthoc_merge
 from .signal_localization import (
-    LocalizationResult,
     extract_constrained_clusters,
-    localize_divergence_signal,
     merge_difference_graphs,
     merge_similarity_graphs,
 )
-from .statistics import annotate_child_parent_divergence, annotate_sibling_divergence
-from .statistics.branch_length_utils import (
-    compute_mean_branch_length,
-    sanitize_positive_branch_length,
-)
-from .statistics.sibling_divergence import (
-    CalibrationModel,
-    WeightedCalibrationModel,
-    predict_inflation_factor,
-    predict_weighted_inflation_factor,
-)
-
-# Statistical sibling test used for pairwise cluster comparisons
-from .statistics.sibling_divergence.sibling_divergence_test import sibling_divergence_test
+from .statistics.branch_length_utils import compute_mean_branch_length
+from .statistics.projection.random_projection import resolve_min_k
+from .statistics.sibling_divergence import CalibrationModel, WeightedCalibrationModel
 
 
 class TreeDecomposition:
@@ -75,7 +63,8 @@ class TreeDecomposition:
         posthoc_merge: bool = config.POSTHOC_MERGE,
         posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
         use_signal_localization: bool = config.USE_SIGNAL_LOCALIZATION,
-        localization_max_depth: int | None = None,
+        localization_max_depth: int | None = config.LOCALIZATION_MAX_DEPTH,
+        localization_max_pairs: int | None = config.LOCALIZATION_MAX_PAIRS,
         leaf_data: pd.DataFrame | None = None,
         spectral_method: str | None = config.SPECTRAL_METHOD,
     ):
@@ -105,6 +94,10 @@ class TreeDecomposition:
             enabling cross-boundary partial merges for soft cluster boundaries.
         localization_max_depth
             Maximum recursion depth for signal localization.
+        localization_max_pairs
+            Maximum number of terminal cross-boundary pairs to collect per
+            localization call.  Once reached, remaining stack items are
+            recorded at their current granularity without further drilling.
         leaf_data
             Raw binary data matrix (samples × features).  Required for per-node
             spectral dimension estimation.  When ``None``, the legacy JL-based
@@ -119,6 +112,13 @@ class TreeDecomposition:
         self._leaf_data = leaf_data
         self._spectral_method = spectral_method if leaf_data is not None else None
 
+        # --- Resolve adaptive projection floor ---
+        # When config.PROJECTION_MIN_K == "auto", compute the data-driven
+        # minimum from the effective rank of the full dataset.  The resolved
+        # integer is stored and passed through to all annotation / test calls
+        # so that the fixed floor never overrides the data's actual rank.
+        self._resolved_min_k: int = resolve_min_k(config.PROJECTION_MIN_K, leaf_data)
+
         self.posthoc_merge = bool(posthoc_merge)
         self.posthoc_merge_alpha = (
             float(posthoc_merge_alpha) if posthoc_merge_alpha is not None else self.sibling_alpha
@@ -128,6 +128,9 @@ class TreeDecomposition:
         self.use_signal_localization = bool(use_signal_localization)
         self.localization_max_depth = (
             None if localization_max_depth is None else int(localization_max_depth)
+        )
+        self.localization_max_pairs = (
+            None if localization_max_pairs is None else int(localization_max_pairs)
         )
 
         # ----- root -----
@@ -200,108 +203,33 @@ class TreeDecomposition:
             n: list(self.tree.successors(n)) for n in self.tree.nodes
         }
 
+        # ----- construct the GateEvaluator -----
+        self._gate = GateEvaluator(
+            tree=self.tree,
+            local_significant=self._local_significant,
+            sibling_different=self._sibling_different,
+            sibling_skipped=self._sibling_skipped,
+            children_map=self._children,
+            descendant_leaf_sets=self._leaf_partition_by_node,
+            root=self._root,
+        )
+
     # ---------- initialization helpers ----------
 
     def _prepare_annotations(self, results_df: pd.DataFrame) -> pd.DataFrame:
         """Ensure statistical annotation columns are present on *results_df*.
 
-        If the required gate columns (``Child_Parent_Divergence_Significant``,
-        ``Sibling_BH_Different``, ``Sibling_Divergence_Skipped``) already exist,
-        the DataFrame is returned unchanged.  Otherwise the annotation pipeline
-        is executed using the configured alpha levels and sibling test method.
-
-        Parameters
-        ----------
-        results_df
-            DataFrame indexed by node id.  May already contain the annotation
-            columns (pre-annotated path) or only base KL/distribution columns
-            (raw path).
-
-        Returns
-        -------
-        pd.DataFrame
-            The annotated DataFrame, ready for gate evaluation.
+        Delegates to :func:`~.gate_annotations.compute_gate_annotations`.
         """
-        required = {
-            "Child_Parent_Divergence_Significant",
-            "Sibling_BH_Different",
-            "Sibling_Divergence_Skipped",
-        }
-        if required.issubset(results_df.columns):
-            return results_df
-
-        # -- Gate 2: child-parent divergence --
-        results_df = annotate_child_parent_divergence(
+        return compute_gate_annotations(
             self.tree,
             results_df,
-            significance_level_alpha=self.alpha_local,
+            alpha_local=self.alpha_local,
+            sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
             spectral_method=self._spectral_method,
+            min_k=self._resolved_min_k,
         )
-
-        # Retrieve spectral info stashed by edge annotation for reuse in sibling tests.
-        # PCA eigenvectors + eigenvalues enable eigenvalue-whitened projection:
-        #   T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)  (exact under H₀)
-        # This eliminates the need for post-hoc calibration (Gamma GLM),
-        # which over-corrects on sparse real data.
-        _spectral_dims = results_df.attrs.get("_spectral_dims")
-        _pca_projections = results_df.attrs.get("_pca_projections")
-        _pca_eigenvalues = results_df.attrs.get("_pca_eigenvalues")
-
-        # -- Sibling spectral dimensions: use JL-based dimension --
-        # The sibling z-vector z = (θ_L − θ_R)/√Var has d components with
-        # signal spread across many directions.  Power scales as √k, so the
-        # projection dimension should be as large as the data supports.
-        # Both within-cluster erank and parent overall erank give low k
-        # (limited by n ≪ d), destroying power.  The JL-based dimension
-        # k ≈ 8·ln(n)/ε² with information cap gives adequate power while
-        # the calibration model (weighted Wald) corrects any inflation.
-        _sibling_spectral_dims = None  # JL fallback in sibling_divergence_test
-
-        # -- Gate 3: sibling divergence (method selected via config) --
-        if config.SIBLING_TEST_METHOD == "cousin_ftest":
-            from .statistics.sibling_divergence import annotate_sibling_divergence_cousin
-
-            results_df = annotate_sibling_divergence_cousin(
-                self.tree,
-                results_df,
-                significance_level_alpha=self.sibling_alpha,
-            )
-        elif config.SIBLING_TEST_METHOD == "cousin_adjusted_wald":
-            from .statistics.sibling_divergence import annotate_sibling_divergence_adjusted
-
-            results_df = annotate_sibling_divergence_adjusted(
-                self.tree,
-                results_df,
-                significance_level_alpha=self.sibling_alpha,
-            )
-        elif config.SIBLING_TEST_METHOD == "cousin_tree_guided":
-            from .statistics.sibling_divergence import annotate_sibling_divergence_tree_guided
-
-            results_df = annotate_sibling_divergence_tree_guided(
-                self.tree,
-                results_df,
-                significance_level_alpha=self.sibling_alpha,
-            )
-        elif config.SIBLING_TEST_METHOD == "cousin_weighted_wald":
-            from .statistics.sibling_divergence import annotate_sibling_divergence_weighted
-
-            results_df = annotate_sibling_divergence_weighted(
-                self.tree,
-                results_df,
-                significance_level_alpha=self.sibling_alpha,
-                spectral_dims=_sibling_spectral_dims,
-                pca_projections=None,  # No PCA for siblings — use random projection
-                pca_eigenvalues=None,
-            )
-        else:
-            results_df = annotate_sibling_divergence(
-                self.tree,
-                results_df,
-                significance_level_alpha=self.sibling_alpha,
-            )
-
-        return results_df
 
     def _cache_node_metadata(self) -> None:
         """Cache node attributes for fast repeated access during decomposition.
@@ -395,53 +323,6 @@ class TreeDecomposition:
 
     # ---------- core decomposition (iterative, no recursion) ----------
 
-    def _process_node_for_decomposition(
-        self,
-        node_id: str,
-        nodes_to_visit: List[str],
-        final_leaf_sets: List[set[str]],
-    ) -> None:
-        """Apply split-or-merge decision for one node during traversal.
-
-        Parameters
-        ----------
-        node_id
-            Node to process
-        nodes_to_visit
-            Pending nodes list used as a last in, first out worklist.
-        final_leaf_sets
-            Accumulator for cluster leaf sets
-        """
-        if self._should_split(node_id):
-            children = self._children[node_id]
-            left_child, right_child = children
-            # Because this is a last in, first out worklist, pushing right then left
-            # means the left child is processed first (left-first depth-first traversal).
-            nodes_to_visit.append(right_child)
-            nodes_to_visit.append(left_child)
-        else:
-            final_leaf_sets.append(self._get_all_leaves(node_id))
-
-    def _iterate_nodes_to_visit(
-        self, nodes_to_visit: List[str], processed: Set[str]
-    ) -> Iterator[str]:
-        """Yield nodes from a mutable last in, first out list exactly once.
-
-        This is a small readability helper that encapsulates the common:
-        pop → skip processed → mark processed → yield pattern.
-
-        Notes
-        -----
-        The underlying algorithm still relies on mutating ``nodes_to_visit`` during
-        traversal (e.g., pushing children when a node should split).
-        """
-        while nodes_to_visit:
-            node_id = nodes_to_visit.pop()
-            if node_id in processed:
-                continue
-            processed.add(node_id)
-            yield node_id
-
     def _build_cluster_assignments(
         self, final_leaf_sets: List[set[str]]
     ) -> dict[int, dict[str, object]]:
@@ -451,339 +332,39 @@ class TreeDecomposition:
         """
         return _build_cluster_assignments_func(final_leaf_sets, self._find_cluster_root)
 
-    def _should_split(self, parent: str) -> bool:
-        """Evaluate statistical gates and return ``True`` when parent should split.
-
-        Gates evaluated in order:
-
-        1. **Binary structure gate** (always active)
-           - OPEN: parent has exactly 2 children → proceed to statistical tests
-           - CLOSED: parent has <2 or >2 children → merge at parent, form cluster boundary
-
-        2. **Child-parent divergence gate** (child vs parent) - SIGNAL DETECTION
-           - OPEN: at least one child significantly diverges from parent → proceed
-           - CLOSED: neither child diverges from parent → MERGE
-           - Checked FIRST to confirm there's actual signal (not just noise)
-           - This matches the annotation order: child-parent test runs before sibling test
-
-        3. **Sibling divergence gate** (sibling vs sibling) - CLUSTER SEPARATION
-           - OPEN: siblings are significantly different → SPLIT
-           - CLOSED: siblings are not significantly different → MERGE
-           - Only checked if child-parent gate passes (consistent with annotation)
-
-        Outcome Logic:
-        - ALL gates OPEN → return True → children added to traversal stack, split continues recursively
-        - ANY gate CLOSED → return False → collect all leaves under parent as single cluster, stop splitting here
-
-        Rationale for gate order:
-        - Child-parent test detects signal: "Did the children diverge from the parent?"
-        - Sibling test confirms separation: "Did they diverge in different directions?"
-        - This order matches annotation: sibling test is only computed when child-parent passes
-        """
-        # Gate 1: Binary structure requirement
-        children = self._children[parent]
-        if len(children) != 2:
-            return False
-
-        left_child, right_child = children
-
-        # Gate 2: Child-parent divergence requirement (check FIRST - detects signal)
-        # At least one child must significantly diverge from parent to confirm there's real signal
-        left_diverges = self._local_significant.get(left_child)
-        right_diverges = self._local_significant.get(right_child)
-
-        if left_diverges is None or right_diverges is None:
-            raise ValueError(
-                "Missing child-parent divergence annotations for "
-                f"{left_child!r} or {right_child!r}; annotate before decomposing."
-            )
-
-        # If neither child diverges from parent, it's just noise - merge
-        if not (left_diverges or right_diverges):
-            return False
-
-        # Gate 3: Sibling divergence requirement (confirms cluster separation)
-        # Sibling_BH_Different = True means siblings have significantly different distributions
-        is_different = self._sibling_different.get(parent)
-
-        if is_different is None:
-            raise ValueError(
-                "Sibling divergence annotations missing for node "
-                f"{parent!r}; run annotate_sibling_divergence first."
-            )
-
-        if self._sibling_skipped.get(parent, False):
-            # Cannot confirm separation — conservative: merge
-            return False
-
-        # Siblings must be significantly different to justify splitting
-        return bool(is_different)
-
     def _test_node_pair_divergence(self, node_a: str, node_b: str) -> Tuple[float, float, float]:
         """Test divergence between two arbitrary tree nodes.
 
-        Wrapper for sibling_divergence_test that extracts distributions
-        and sample sizes from the tree.
-
-        Parameters
-        ----------
-        node_a, node_b : str
-            Tree node identifiers to compare.
-
-        Returns
-        -------
-        Tuple[float, float, float]
-            (test_statistic, degrees_of_freedom, p_value)
+        Delegates to :func:`~.pairwise_testing.test_node_pair_divergence`.
+        Uses the same calibration model as the Gate 3 sibling test so
+        that signal-localization sub-tests are on the same statistical
+        scale as the decomposition.
         """
-        dist_a = self._distribution_by_node[node_a]
-        dist_b = self._distribution_by_node[node_b]
-        n_a = float(self._leaf_count(node_a))
-        n_b = float(self._leaf_count(node_b))
-
-        # Calculate patristic distances (sum of branch lengths) to LCA.
-        # Only compute when the tree actually has branch length annotations;
-        # otherwise nx.shortest_path_length defaults missing attributes to 1
-        # (hop count), which is inconsistent with _mean_branch_length=None.
-        dist_path_a = None
-        dist_path_b = None
-        if self._mean_branch_length is not None:
-            lca = self.tree.find_lca(node_a, node_b)
-            try:
-                dist_path_a = nx.shortest_path_length(
-                    self.tree, source=lca, target=node_a, weight="branch_length"
-                )
-                dist_path_b = nx.shortest_path_length(
-                    self.tree, source=lca, target=node_b, weight="branch_length"
-                )
-                dist_path_a = sanitize_positive_branch_length(dist_path_a)
-                dist_path_b = sanitize_positive_branch_length(dist_path_b)
-            except nx.NetworkXNoPath:
-                dist_path_a = None
-                dist_path_b = None
-
-        return sibling_divergence_test(
-            left_dist=dist_a,
-            right_dist=dist_b,
-            n_left=n_a,
-            n_right=n_b,
-            branch_length_left=dist_path_a,
-            branch_length_right=dist_path_b,
-            mean_branch_length=self._mean_branch_length,
-            test_id=f"nodepair:{node_a}|{node_b}",
+        return test_node_pair_divergence(
+            self.tree,
+            node_a,
+            node_b,
+            self._mean_branch_length,
+            calibration_model=self._calibration_model,
         )
-
-    def _check_edge_significance(self, node_id: str) -> bool:
-        """Check if a node is significantly different from its parent.
-
-        Wrapper around _local_significant dict for use as callback.
-        """
-        # Root has no parent edge to test, usually treated as significant/base
-        if node_id == self._root:
-            return True
-        return bool(self._local_significant.get(node_id, False))
-
-    def _should_split_v2(self, parent: str) -> Tuple[bool, LocalizationResult | None]:
-        """Enhanced split decision with signal localization.
-
-        Like _should_split but when siblings are "different", drills down
-        to find WHERE the difference originates, enabling cross-boundary
-        partial merges.
-
-        Gates evaluated in order:
-
-        1. **Binary structure gate** - parent must have exactly 2 children
-        2. **Child-parent divergence gate** - at least one child diverges
-        3. **Sibling divergence gate with localization**:
-           - If siblings are "same" → MERGE (return False, None)
-           - If siblings are "different" → LOCALIZE:
-             - If all cross-pairs different → HARD SPLIT (return True, result)
-             - If some cross-pairs similar → SOFT SPLIT (return True, result with edges)
-
-        Parameters
-        ----------
-        parent : str
-            The parent node to evaluate.
-
-        Returns
-        -------
-        Tuple[bool, LocalizationResult | None]
-            (should_split, localization_result)
-            - (False, None): Don't split (merge at parent)
-            - (True, None): Hard split without localization details
-            - (True, LocalizationResult): Split with localization info
-        """
-        # Gate 1: Binary structure requirement
-        children = self._children[parent]
-        if len(children) != 2:
-            return False, None
-
-        left_child, right_child = children
-
-        # Gate 2: Child-parent divergence requirement
-        left_diverges = self._local_significant.get(left_child)
-        right_diverges = self._local_significant.get(right_child)
-
-        if left_diverges is None or right_diverges is None:
-            raise ValueError(
-                "Missing child-parent divergence annotations for "
-                f"{left_child!r} or {right_child!r}; annotate before decomposing."
-            )
-
-        # If neither child diverges from parent, it's USUALLY noise - merge.
-        # EXCEPTION: If the tree is very unbalanced (e.g. 1 vs 1000), the large child
-        # will be statistically identical to the parent. In this case, we MUST check
-        # if the siblings are different from each other.
-        both_children_similar_to_parent = not (left_diverges or right_diverges)
-
-        if both_children_similar_to_parent:
-            # STRICT ENFORCEMENT of Child-Parent Gate (Equation 3.3.1 in Manuscript)
-            # If children are statistically indistinguishable from parent (noise),
-            # we must STOP and merge. Proceeding would split noise.
-            return False, None
-
-        # Gate 3: Sibling divergence with localization
-        is_different = self._sibling_different.get(parent)
-
-        if is_different is None:
-            raise ValueError(
-                "Sibling divergence annotations missing for node "
-                f"{parent!r}; run annotate_sibling_divergence first."
-            )
-
-        if self._sibling_skipped.get(parent, False):
-            # Cannot confirm separation — conservative: merge
-            return False, None
-
-        # If siblings are not different at aggregate level, merge
-        if not is_different:
-            return False, None
-
-        # Siblings ARE different at aggregate level - now LOCALIZE the signal
-        localization_result = localize_divergence_signal(
-            tree=self.tree,
-            left_root=left_child,
-            right_root=right_child,
-            test_divergence=self._test_node_pair_divergence,
-            alpha=self.sibling_alpha,
-            max_depth=self.localization_max_depth,
-            is_edge_significant=self._check_edge_significance,
-        )
-
-        return True, localization_result
 
     # ---------- post-hoc merge helpers ----------
-
-    def _compute_cluster_distribution(self, cluster_root: str) -> Tuple[np.ndarray, int]:
-        """Compute the distribution for a cluster.
-
-        Uses the precomputed distribution from the tree node.
-
-        Parameters
-        ----------
-        cluster_root
-            The root node of the cluster.
-
-        Returns
-        -------
-        Tuple[np.ndarray, int]
-            (distribution, sample_size)
-        """
-        distribution = self._distribution_by_node[cluster_root]
-        sample_size = self._leaf_count(cluster_root)
-        return distribution, sample_size
 
     def _test_cluster_pair_divergence(
         self, cluster_a: str, cluster_b: str, common_ancestor: str
     ) -> Tuple[float, float, float]:
         """Test if two clusters are significantly different.
 
-        Wrapper around :func:`sibling_divergence_test`.
-
-        Notes
-        -----
-        - Computes a Wald χ² statistic (optionally after JL projection) from the
-          standardized difference between the two cluster mean vectors.
-        - The sibling test returns ``(test_statistic, degrees_of_freedom, p_value)``.
-        - The ``common_ancestor`` parameter is accepted for API symmetry but is
-          not used by the current implementation.
-
-        Parameters
-        ----------
-        cluster_a, cluster_b
-            The two cluster root nodes to compare.
-        common_ancestor
-            The lowest common ancestor in the tree (present for API symmetry,
-            not used by this wrapper).
-
-        Returns
-        -------
-        Tuple[float, float, float]
-            (test_statistic, degrees_of_freedom, p_value)
+        Delegates to :func:`~.pairwise_testing.test_cluster_pair_divergence`.
         """
-        dist_a, size_a = self._compute_cluster_distribution(cluster_a)
-        dist_b, size_b = self._compute_cluster_distribution(cluster_b)
-
-        # Calculate branch lengths from common_ancestor for Felsenstein adjustment.
-        # Only compute when the tree actually has branch length annotations;
-        # otherwise nx.shortest_path_length defaults missing attributes to 1
-        # (hop count), which is inconsistent with _mean_branch_length=None.
-        branch_len_a = None
-        branch_len_b = None
-        if self._mean_branch_length is not None:
-            try:
-                branch_len_a = nx.shortest_path_length(
-                    self.tree,
-                    source=common_ancestor,
-                    target=cluster_a,
-                    weight="branch_length",
-                )
-                branch_len_b = nx.shortest_path_length(
-                    self.tree,
-                    source=common_ancestor,
-                    target=cluster_b,
-                    weight="branch_length",
-                )
-                branch_len_a = sanitize_positive_branch_length(branch_len_a)
-                branch_len_b = sanitize_positive_branch_length(branch_len_b)
-            except nx.NetworkXNoPath:
-                branch_len_a = None
-                branch_len_b = None
-
-        test_stat, df, p_value = sibling_divergence_test(
-            left_dist=dist_a,
-            right_dist=dist_b,
-            n_left=float(size_a),
-            n_right=float(size_b),
-            branch_length_left=branch_len_a,
-            branch_length_right=branch_len_b,
-            mean_branch_length=self._mean_branch_length,
-            test_id=f"clusterpair:{cluster_a}|{cluster_b}|ancestor:{common_ancestor}",
+        return test_cluster_pair_divergence(
+            self.tree,
+            cluster_a,
+            cluster_b,
+            common_ancestor,
+            self._mean_branch_length,
+            calibration_model=self._calibration_model,
         )
-
-        # Deflate by the same calibration model used during annotation so that
-        # the post-hoc merge operates on the same scale as the decomposition.
-        if self._calibration_model is not None:
-            bl_sum = 0.0
-            if branch_len_a is not None:
-                bl_sum += branch_len_a
-            if branch_len_b is not None:
-                bl_sum += branch_len_b
-
-            n_ancestor = self._leaf_count(common_ancestor)
-            # Dispatch to the correct prediction function based on model type
-            if isinstance(self._calibration_model, WeightedCalibrationModel):
-                c_hat = predict_weighted_inflation_factor(
-                    self._calibration_model, bl_sum, n_ancestor
-                )
-            else:
-                c_hat = predict_inflation_factor(self._calibration_model, bl_sum, n_ancestor)
-            if c_hat > 0 and np.isfinite(test_stat) and df > 0:
-                from scipy.stats import chi2 as chi2_dist
-
-                test_stat = test_stat / c_hat
-                p_value = float(chi2_dist.sf(test_stat, df=df))
-
-        return test_stat, df, p_value
 
     def decompose_tree(self) -> dict[str, object]:
         """Return cluster assignments by iteratively traversing the hierarchy.
@@ -799,8 +380,8 @@ class TreeDecomposition:
         final_leaf_sets: List[set[str]] = []
         processed: Set[str] = set()
 
-        for node in self._iterate_nodes_to_visit(nodes_to_visit, processed):
-            self._process_node_for_decomposition(node, nodes_to_visit, final_leaf_sets)
+        for node in iterate_worklist(nodes_to_visit, processed):
+            process_node(node, self._gate, nodes_to_visit, final_leaf_sets)
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
@@ -846,34 +427,28 @@ class TreeDecomposition:
         """
         # Phase 1: Standard traversal to collect split points
         nodes_to_visit: List[str] = [self._root]
-        split_points: List[Tuple[str, str, str]] = []  # (parent, left, right)
-        merge_points: List[str] = []  # Nodes where we decided to merge
         processed: Set[str] = set()
-        localization_results: Dict[str, LocalizationResult] = {}
+        state = V2TraversalState(
+            split_points=[],
+            merge_points=[],
+            localization_results={},
+        )
 
-        while nodes_to_visit:
-            node = nodes_to_visit.pop()
-            if node in processed:
-                continue
-            processed.add(node)
+        for node in iterate_worklist(nodes_to_visit, processed):
+            process_node_v2(
+                node,
+                self._gate,
+                nodes_to_visit,
+                state,
+                test_divergence=self._test_node_pair_divergence,
+                sibling_alpha=self.sibling_alpha,
+                localization_max_depth=self.localization_max_depth,
+                localization_max_pairs=self.localization_max_pairs,
+            )
 
-            should_split, loc_result = self._should_split_v2(node)
-
-            if should_split:
-                children = self._children[node]
-                if len(children) == 2:
-                    left_child, right_child = children
-                    split_points.append((node, left_child, right_child))
-
-                    if loc_result is not None:
-                        localization_results[node] = loc_result
-
-                    # Add children to traversal
-                    for child in children:
-                        if child not in processed:
-                            nodes_to_visit.append(child)
-            else:
-                merge_points.append(node)
+        split_points = state.split_points
+        merge_points = state.merge_points
+        localization_results = state.localization_results
 
         # Phase 2: Build combined similarity and difference graphs
         combined_similarity = merge_similarity_graphs(localization_results)
@@ -914,6 +489,7 @@ class TreeDecomposition:
                 "posthoc_merge": self.posthoc_merge,
                 "use_signal_localization": True,
                 "localization_max_depth": self.localization_max_depth,
+                "localization_max_pairs": self.localization_max_pairs,
             },
         }
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from benchmarks.shared.pipeline import _resolve_pdf_output_path
+from benchmarks.shared.util.pdf.session import resolve_pdf_output_path as _resolve_pdf_output_path
 
 
 def test_resolve_pdf_output_path_defaults_to_timestamped_name_under_plots_root():
@@ -25,4 +25,3 @@ def test_resolve_pdf_output_path_preserves_explicit_suffix():
         "custom_name.v1.pdf", plots_root=plots_root, started_at=started_at
     )
     assert out == Path("custom_name.v1.pdf")
-

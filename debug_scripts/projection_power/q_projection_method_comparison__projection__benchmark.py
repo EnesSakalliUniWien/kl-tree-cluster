@@ -22,7 +22,7 @@ if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
 import kl_clustering_analysis.config as cfg
-from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     _PROJECTION_CACHE,
     _PROJECTOR_CACHE,
     generate_projection_matrix,

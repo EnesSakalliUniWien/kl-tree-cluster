@@ -6,8 +6,9 @@ configuration constant.
 
 from __future__ import annotations
 
-from benchmarks.shared.types import MethodSpec, MethodRunResult
 import importlib
+
+from benchmarks.shared.types import MethodRunResult, MethodSpec
 
 
 def _safe_import_runner(module: str, attr: str):
@@ -34,9 +35,7 @@ def _safe_import_runner(module: str, attr: str):
 METHOD_SPECS: dict[str, MethodSpec] = {
     "kl": MethodSpec(
         name="KL Divergence",
-        runner=_safe_import_runner(
-            "benchmarks.shared.runners.kl_runner", "_run_kl_method"
-        ),
+        runner=_safe_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
         param_grid=[
             # Default: Hamming + Average (UPGMA)
             {
@@ -45,19 +44,64 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_rogerstanimoto": MethodSpec(
-        name="KL (Rogers-Tanimoto)",
-        runner=_safe_import_runner(
-            "benchmarks.shared.runners.kl_runner", "_run_kl_method"
-        ),
+    "kl_complete": MethodSpec(
+        name="KL (Complete)",
+        runner=_safe_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
         param_grid=[
-            # Rogers-Tanimoto double-weights mismatches
             {
-                "tree_distance_metric": "rogerstanimoto",
-                "tree_linkage_method": "average",
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "complete",
             },
         ],
     ),
+    "kl_single": MethodSpec(
+        name="KL (Single)",
+        runner=_safe_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "single",
+            },
+        ],
+    ),
+    # "kl_ward": MethodSpec(
+    #     name="KL (Ward)",
+    #     runner=_safe_import_runner(
+    #         "benchmarks.shared.runners.kl_runner", "_run_kl_method"
+    #     ),
+    #     param_grid=[
+    #         {
+    #             # Ward linkage requires Euclidean distance
+    #             "tree_distance_metric": "euclidean",
+    #             "tree_linkage_method": "ward",
+    #         },
+    #     ],
+    # ),
+    # "kl_rogerstanimoto": MethodSpec(
+    #     name="KL (Rogers-Tanimoto)",
+    #     runner=_safe_import_runner(
+    #         "benchmarks.shared.runners.kl_runner", "_run_kl_method"
+    #     ),
+    #     param_grid=[
+    #         # Rogers-Tanimoto double-weights mismatches
+    #         {
+    #             "tree_distance_metric": "rogerstanimoto",
+    #             "tree_linkage_method": "average",
+    #         },
+    #     ],
+    # ),
+    # "kl_v2": MethodSpec(
+    #     name="KL v2 (Signal Localization)",
+    #     runner=_safe_import_runner(
+    #         "benchmarks.shared.runners.kl_runner", "_run_kl_v2_method"
+    #     ),
+    #     param_grid=[
+    #         {
+    #             "tree_distance_metric": "hamming",
+    #             "tree_linkage_method": "average",
+    #         },
+    #     ],
+    # ),
     "leiden": MethodSpec(
         name="Leiden",
         runner=_safe_import_runner(

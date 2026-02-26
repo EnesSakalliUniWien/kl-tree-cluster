@@ -17,7 +17,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.pooled_variance import
     compute_pooled_variance,
     standardize_proportion_difference,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     compute_projection_dimension,
     generate_projection_matrix,
 )

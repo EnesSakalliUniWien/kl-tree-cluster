@@ -38,12 +38,12 @@ from ..branch_length_utils import (
     sanitize_positive_branch_length as _sanitize_positive_branch_length,
 )
 from ..multiple_testing import apply_multiple_testing_correction
-from ..random_projection import (
+from ..projection.random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
     generate_projection_matrix,
 )
-from ..spectral_dimension import compute_spectral_decomposition
+from ..projection.spectral_dimension import compute_spectral_decomposition
 
 logger = logging.getLogger(__name__)
 
@@ -411,6 +411,7 @@ def annotate_child_parent_divergence(
     fdr_method: str = "tree_bh",
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
+    min_k: int | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using projected Wald test.
 
@@ -440,6 +441,9 @@ def annotate_child_parent_divergence(
         Dimension estimator: ``"effective_rank"``, ``"marchenko_pastur"``,
         or ``"active_features"``.  When ``None`` (default), the legacy
         JL-based dimension is used.
+    min_k
+        Minimum projection dimension (floor).  When ``None``, uses
+        ``config.PROJECTION_MIN_K`` (resolved to int at pipeline entry).
 
     Returns
     -------
@@ -480,7 +484,7 @@ def annotate_child_parent_divergence(
             tree,
             leaf_data,
             method=spectral_method,
-            min_k=config.PROJECTION_MIN_K,
+            min_k=min_k if isinstance(min_k, int) else 1,
             compute_projections=True,
         )
         pca_projections = pca_proj_dict if pca_proj_dict else None
@@ -503,6 +507,21 @@ def annotate_child_parent_divergence(
         pca_eigenvalues=pca_eigenvalues,
     )
 
+    # Stash raw test data in attrs so the post-hoc edge calibration
+    # (calibrate_edges_from_sibling_neighborhood) can use them after Gate 3.
+    nodes_dataframe.attrs["_edge_raw_test_data"] = {
+        "child_ids": child_ids,
+        "parent_ids": parent_ids,
+        "test_stats": test_stats.copy(),
+        "degrees_of_freedom": degrees_of_freedom.copy(),
+        "p_values": p_values.copy(),
+        "child_leaf_counts": child_leaf_counts.copy(),
+        "parent_leaf_counts": parent_leaf_counts.copy(),
+    }
+
+    node_depths = compute_node_depths(tree)
+    child_depths = np.array([node_depths.get(cid, 0) for cid in child_ids])
+
     # Preserve raw NaN outputs for invalid tests; use conservative surrogate
     # p-values only for multiple-testing correction.
     p_values_for_correction = np.where(np.isfinite(p_values), p_values, 1.0)
@@ -524,9 +543,7 @@ def annotate_child_parent_divergence(
             preview,
         )
 
-    node_depths = compute_node_depths(tree)
-
-    child_depths = np.array([node_depths.get(cid, 0) for cid in child_ids])
+    # node_depths and child_depths already computed above (before calibration)
 
     reject_null, p_values_corrected = apply_multiple_testing_correction(
         p_values=p_values_for_correction,

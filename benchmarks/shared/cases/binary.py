@@ -1,4 +1,10 @@
-"""Binary cluster test cases."""
+"""Binary cluster test cases.
+
+All cases use sparse (block-diagonal) templates via feature_sparsity,
+where each cluster "owns" a distinct subset of features.  This avoids
+the gradient-template flaw where adjacent clusters differ by only ~1/K
+of features for large K.
+"""
 
 BINARY_CASES = {
     "binary_balanced_low_noise": [
@@ -10,6 +16,7 @@ BINARY_CASES = {
             "n_clusters": 4,
             "entropy_param": 0.25,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 314,
         },
         {
@@ -20,6 +27,7 @@ BINARY_CASES = {
             "n_clusters": 4,
             "entropy_param": 0.25,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 314,
         },
     ],
@@ -56,6 +64,7 @@ BINARY_CASES = {
             "n_clusters": 2,
             "entropy_param": 0.00,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 1000,
         },
         {
@@ -66,6 +75,7 @@ BINARY_CASES = {
             "n_clusters": 4,
             "entropy_param": 0.00,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 1001,
         },
         {
@@ -76,6 +86,7 @@ BINARY_CASES = {
             "n_clusters": 8,
             "entropy_param": 0.00,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 1002,
         },
     ],
@@ -88,6 +99,7 @@ BINARY_CASES = {
             "n_clusters": 2,
             "entropy_param": 0.05,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 2000,
         },
         {
@@ -98,6 +110,7 @@ BINARY_CASES = {
             "n_clusters": 4,
             "entropy_param": 0.05,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 2001,
         },
         {
@@ -108,6 +121,7 @@ BINARY_CASES = {
             "n_clusters": 8,
             "entropy_param": 0.10,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 2002,
         },
         {
@@ -118,6 +132,7 @@ BINARY_CASES = {
             "n_clusters": 12,
             "entropy_param": 0.10,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 2003,
         },
     ],
@@ -130,6 +145,7 @@ BINARY_CASES = {
             "n_clusters": 4,
             "entropy_param": 0.12,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 3000,
         },
         {
@@ -140,6 +156,7 @@ BINARY_CASES = {
             "n_clusters": 6,
             "entropy_param": 0.15,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 3001,
         },
         {
@@ -150,6 +167,7 @@ BINARY_CASES = {
             "n_clusters": 8,
             "entropy_param": 0.12,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 3002,
         },
     ],
@@ -162,6 +180,7 @@ BINARY_CASES = {
             "n_clusters": 4,
             "entropy_param": 0.20,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 4000,
         },
         {
@@ -172,6 +191,7 @@ BINARY_CASES = {
             "n_clusters": 8,
             "entropy_param": 0.15,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 4001,
         },
     ],
@@ -184,6 +204,7 @@ BINARY_CASES = {
             "n_clusters": 4,
             "entropy_param": 0.10,
             "balanced_clusters": False,
+            "feature_sparsity": 0.05,
             "seed": 5000,
         },
         {
@@ -194,6 +215,7 @@ BINARY_CASES = {
             "n_clusters": 6,
             "entropy_param": 0.12,
             "balanced_clusters": False,
+            "feature_sparsity": 0.05,
             "seed": 5001,
         },
     ],
@@ -206,6 +228,7 @@ BINARY_CASES = {
             "n_clusters": 2,
             "entropy_param": 0.10,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 7000,
         },
         {
@@ -216,6 +239,7 @@ BINARY_CASES = {
             "n_clusters": 4,
             "entropy_param": 0.10,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 7002,
         },
         {
@@ -226,7 +250,97 @@ BINARY_CASES = {
             "n_clusters": 15,
             "entropy_param": 0.10,
             "balanced_clusters": True,
+            "feature_sparsity": 0.05,
             "seed": 7003,
+        },
+    ],
+    # ---- Null cases (K=1): no cluster structure, algorithm should return K=1 ----
+    "binary_null": [
+        {
+            "name": "binary_null_small",
+            "generator": "binary",
+            "n_rows": 60,
+            "n_cols": 80,
+            "n_clusters": 1,
+            "entropy_param": 0.0,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.05,
+            "seed": 10000,
+        },
+        {
+            "name": "binary_null_medium",
+            "generator": "binary",
+            "n_rows": 200,
+            "n_cols": 150,
+            "n_clusters": 1,
+            "entropy_param": 0.0,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.05,
+            "seed": 10001,
+        },
+    ],
+    # ---- Multi-scale: clusters with varying separation difficulty ----
+    "binary_multiscale": [
+        {
+            "name": "binary_multiscale_4c",
+            "generator": "binary",
+            "n_rows": 120,
+            "n_cols": 160,
+            "n_clusters": 4,
+            "entropy_param": 0.08,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.03,
+            "seed": 11000,
+        },
+        {
+            "name": "binary_multiscale_6c",
+            "generator": "binary",
+            "n_rows": 180,
+            "n_cols": 240,
+            "n_clusters": 6,
+            "entropy_param": 0.10,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.03,
+            "seed": 11001,
+        },
+    ],
+    # ---- Noise features: informative + pure-noise columns ----
+    "binary_noise_features": [
+        {
+            "name": "binary_noise_feat_50i_200n",
+            "generator": "binary",
+            "n_rows": 120,
+            "n_cols": 250,
+            "n_clusters": 4,
+            "entropy_param": 0.08,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.05,
+            "noise_features": 200,
+            "seed": 12000,
+        },
+        {
+            "name": "binary_noise_feat_80i_400n",
+            "generator": "binary",
+            "n_rows": 160,
+            "n_cols": 480,
+            "n_clusters": 6,
+            "entropy_param": 0.10,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.05,
+            "noise_features": 400,
+            "seed": 12001,
+        },
+        {
+            "name": "binary_noise_feat_30i_500n",
+            "generator": "binary",
+            "n_rows": 100,
+            "n_cols": 530,
+            "n_clusters": 3,
+            "entropy_param": 0.05,
+            "balanced_clusters": True,
+            "feature_sparsity": 0.05,
+            "noise_features": 500,
+            "seed": 12002,
         },
     ],
 }

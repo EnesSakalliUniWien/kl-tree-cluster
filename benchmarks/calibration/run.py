@@ -44,7 +44,7 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (
     tree_bh_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
     generate_projection_matrix,

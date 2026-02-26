@@ -8,9 +8,12 @@ in isolation.
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
+
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
@@ -59,13 +62,16 @@ class TestIndependentClusterValidation(unittest.TestCase):
 
     def test_split_occurs_when_all_gates_pass(self) -> None:
         tree, stats = _make_binary_tree()
-        # Disable post-hoc merge to test base decomposition behavior
-        results = tree.decompose(results_df=stats, posthoc_merge=False)
+        # Bypass annotation pipeline — this test controls gate columns directly.
+        with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
+            # Disable post-hoc merge to test base decomposition behavior
+            results = tree.decompose(
+                results_df=stats, posthoc_merge=False, use_signal_localization=False
+            )
 
         self.assertEqual(results["num_clusters"], 2)
         leaves = sorted(
-            tuple(sorted(cluster["leaves"]))
-            for cluster in results["cluster_assignments"].values()
+            tuple(sorted(cluster["leaves"])) for cluster in results["cluster_assignments"].values()
         )
         self.assertEqual(leaves, [("L",), ("R",)])
         print("Split test clusters:", leaves)
@@ -73,7 +79,9 @@ class TestIndependentClusterValidation(unittest.TestCase):
     def test_merge_when_sibling_divergence_fails(self) -> None:
         tree, stats = _make_binary_tree()
         stats.loc["root", "Sibling_BH_Different"] = False
-        results = tree.decompose(results_df=stats)
+        # Bypass annotation pipeline — this test controls gate columns directly.
+        with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
+            results = tree.decompose(results_df=stats, use_signal_localization=False)
 
         self.assertEqual(results["num_clusters"], 1)
         cluster = next(iter(results["cluster_assignments"].values()))

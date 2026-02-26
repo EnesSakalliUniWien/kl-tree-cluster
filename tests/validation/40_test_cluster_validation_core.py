@@ -39,6 +39,10 @@ def test_cluster_algorithm_validation():
         assert -1 <= best["ARI"] <= 1
         assert 0 <= best["NMI"] <= 1
         assert 0 <= best["Purity"] <= 1
+        assert 0 <= best["Macro_Recall"] <= 1
+        assert 0 <= best["Macro_F1"] <= 1
+        assert 0 <= best["Worst_Cluster_Recall"] <= 1
+        assert best["Cluster_Count_Abs_Error"] >= 0
 
 
 def test_benchmark_cluster_algorithm_expected_columns():
@@ -63,6 +67,12 @@ def test_benchmark_cluster_algorithm_expected_columns():
         "ARI",
         "NMI",
         "Purity",
+        "Macro_Recall",
+        "Macro_F1",
+        "Worst_Cluster_Recall",
+        "Cluster_Count_Abs_Error",
+        "Over_Split",
+        "Under_Split",
         "Status",
         "Skip_Reason",
         "Labels_Length",

@@ -91,7 +91,8 @@ def benchmark_cluster_algorithm(
     -------
     df_results : pd.DataFrame
         Results dataframe with columns: Test, True, Found, Samples, Features,
-        Noise, ARI, NMI, Purity
+        Noise, ARI, NMI, Purity, Macro_Recall, Macro_F1, Worst_Cluster_Recall,
+        Cluster_Count_Abs_Error, Over_Split, Under_Split
     fig : None
         Plotting has been removed; always returns None.
     """

@@ -1,15 +1,26 @@
 """Signal localization for finding where divergence originates in a tree.
 
-This module implements recursive cross-boundary testing to identify
-which subtrees are truly different vs. which could be merged.
+This module implements **depth-1 cross-boundary testing** to identify
+which immediate subtrees are truly different vs. which could be merged.
 
 The key insight is that when two sibling subtrees are "significantly different"
 at the aggregate level, the difference may be localized to specific
-sub-branches. By drilling down, we can identify:
-- Which sub-clusters are truly different (hard boundaries)
-- Which sub-clusters are similar despite being on opposite sides (soft boundaries)
+sub-branches. By expanding one level into the immediate children and testing
+all cross-boundary pairs, we can identify:
+- Which child-level sub-clusters are truly different (hard boundaries)
+- Which child-level sub-clusters are similar despite being on opposite sides
 
-This enables partial merges across traditional cluster boundaries.
+Every cross-product test is **terminal**: its result (similar or different)
+is recorded directly with no further drilling.  Finer structure within each
+child is handled by the main DFS traversal when it visits that child node.
+
+This depth-1 design avoids two failure modes of recursive drill-down:
+1. **Power collapse** — recursive expansion reaches individual leaves
+   (n=1 tests) that have zero discriminative power, producing false
+   similarity edges across true cluster boundaries.
+2. **Multi-level overlap** — nodes from different tree depths enter the
+   same Union-Find graph, creating overlapping leaf sets that fragment
+   the partition.
 
 References
 ----------
@@ -142,15 +153,46 @@ def localize_divergence_signal(
     max_depth: int | None = None,
     apply_fdr: bool = True,
     is_edge_significant: Callable[[str], bool] | None = None,
+    max_pairs: int | None = None,
 ) -> LocalizationResult:
-    """Recursively test cross-boundary pairs to localize divergence.
+    """Localize divergence between two subtrees via depth-1 cross-product tests.
 
-    ...
+    When Gate 3 declares that ``left_root`` and ``right_root`` are
+    significantly different at the aggregate level, this function asks
+    *where* the difference lives by expanding **one level** into the
+    immediate children of each root and testing all cross-boundary pairs.
 
-    is_edge_significant : Callable[[str], bool], optional
-        Function that returns True if a node's edge to its parent is statistically
-        significant (Signal vs Noise). Used to stop recursion into noise branches.
-        If None, assumes all edges are significant (or ignores check).
+    Every cross-product test is **terminal** — its result (similar or
+    different) is recorded directly.  No further drilling occurs.  This
+    avoids the power collapse that happens when recursive drill-down
+    reaches individual leaves (``n = 1`` tests), and eliminates the
+    multi-level overlap problem in the Union-Find graph.
+
+    The internal structure of each child node is handled separately by
+    the main DFS traversal when it visits that node — localization only
+    determines *which sub-parts of the left subtree relate to which
+    sub-parts of the right subtree*.
+
+    Parameters
+    ----------
+    tree
+        Directed hierarchy.
+    left_root, right_root
+        Roots of the two subtrees to compare.
+    test_divergence
+        ``(node_a, node_b) -> (stat, df, p_value)`` pairwise test callable.
+    alpha
+        Significance level for raw comparisons and optional BH correction.
+    max_depth
+        Accepted for API compatibility but not used (depth is always 1).
+    apply_fdr
+        Apply Benjamini-Hochberg correction to the collected terminal tests.
+    is_edge_significant
+        ``node_id -> bool`` callback (Gate 2).  Children whose edge to their
+        parent is NOT significant are treated as atomic (not expanded).
+        ``None`` treats all children as valid.
+    max_pairs
+        Accepted for API compatibility but not used.
     """
     # First, test at aggregate level
     agg_stat, agg_df, agg_pval = test_divergence(left_root, right_root)
@@ -167,7 +209,6 @@ def localize_divergence_signal(
 
     # If not significant at aggregate level, no need to localize
     if not agg_significant:
-        # Add the aggregate pair as a similarity edge
         result.similarity_edges.append(
             SimilarityEdge(
                 node_a=left_root,
@@ -179,75 +220,36 @@ def localize_divergence_signal(
         )
         return result
 
-    # Significant at aggregate → drill down
-    all_test_results: List[Tuple[str, str, float, float, float]] = []
+    # ---- helpers ----
 
     def _get_valid_children(node: str) -> List[str]:
-        """Get children that are significant signal (not noise)."""
+        """Get children whose edge to parent passes Gate 2."""
         children = _get_children(tree, node)
         if is_edge_significant is None:
             return children
-        # Only recurse into children that are significantly different from parent
         return [c for c in children if is_edge_significant(c)]
 
-    def _recurse(
-        left_node: str,
-        right_node: str,
-        current_depth: int,
-    ) -> None:
-        """Recursive helper to collect leaf-level cross-boundary test results.
+    # ---- depth-1 cross-product ----
+    #
+    # Expand each root into its immediate children (filtered by Gate 2).
+    # If a root has no valid children it is kept as-is (atomic node).
+    # Then test every (left_child, right_child) pair.  Each result is
+    # terminal — no further drilling.
 
-        Only the **deepest** (most granular) test results are kept.  When a
-        significant pair is drilled into, the parent-level result is replaced
-        by its child-level results so that the same comparison is never
-        represented at multiple granularities.  This avoids inflating the
-        BH correction denominator with correlated, hierarchically nested
-        tests and prevents contradictory parent-vs-child classifications.
-        """
-        nonlocal all_test_results
+    left_children = _get_valid_children(left_root)
+    right_children = _get_valid_children(right_root)
+    left_nodes = left_children if left_children else [left_root]
+    right_nodes = right_children if right_children else [right_root]
 
-        result.depth_reached = max(result.depth_reached, current_depth)
+    all_test_results: List[Tuple[str, str, float, float, float]] = []
 
-        # Check depth limit (if set)
-        if max_depth is not None and current_depth >= max_depth:
-            # At max depth, just record this pair
-            stat, df, pval = test_divergence(left_node, right_node)
-            all_test_results.append((left_node, right_node, stat, df, pval))
+    for li in left_nodes:
+        for ri in right_nodes:
+            stat, df, pval = test_divergence(li, ri)
             result.nodes_tested += 1
-            return
+            all_test_results.append((li, ri, stat, df, pval))
 
-        # Get valid children (respecting edge significance)
-        left_children = _get_valid_children(left_node)
-        right_children = _get_valid_children(right_node)
-
-        # Determine what nodes to test on each side
-        # If no VALID children, use the node itself (treat as leaf for localization)
-        left_nodes = left_children if left_children else [left_node]
-        right_nodes = right_children if right_children else [right_node]
-
-        # Test all cross-boundary pairs
-        for l_node in left_nodes:
-            for r_node in right_nodes:
-                # Test this pair
-                stat, df, pval = test_divergence(l_node, r_node)
-                result.nodes_tested += 1
-
-                # If significant, try to drill down
-                if pval < alpha:
-                    l_has_valid_children = len(_get_valid_children(l_node)) > 0
-                    r_has_valid_children = len(_get_valid_children(r_node)) > 0
-
-                    if l_has_valid_children or r_has_valid_children:
-                        # Drill deeper — do NOT record this parent-level
-                        # result; the child-level results will replace it.
-                        _recurse(l_node, r_node, current_depth + 1)
-                        continue
-
-                # Record this result (leaf-level: no further drilling)
-                all_test_results.append((l_node, r_node, stat, df, pval))
-
-    # Start recursion
-    _recurse(left_root, right_root, current_depth=0)
+    result.depth_reached = 1 if all_test_results else 0
 
     if not all_test_results:
         return result
@@ -261,7 +263,7 @@ def localize_divergence_signal(
         reject = p_values < alpha
         p_adjusted = p_values
 
-    # Categorize results
+    # Categorize results — every test is terminal
     for i, (l_node, r_node, stat, df, pval) in enumerate(all_test_results):
         if reject[i]:
             result.difference_pairs.append((l_node, r_node))
@@ -348,8 +350,26 @@ def extract_constrained_clusters(
         List of leaf sets, each representing a cluster.
     """
     # 1. Initialize clusters
-    # We must account for all nodes involved in ANY graph + merge points
-    all_nodes = set(similarity_graph.nodes) | set(difference_graph.nodes) | set(merge_points)
+    # We must account for all nodes involved in ANY graph + merge points.
+    # Prune merge_points that are ancestors of nodes already represented
+    # in the similarity/difference graphs.  Those sub-tree leaves are
+    # already tracked at finer granularity by the graph nodes; keeping
+    # the ancestor would produce duplicate leaf assignments across
+    # clusters ("lowest-node-wins" policy).
+    graph_nodes = set(similarity_graph.nodes) | set(difference_graph.nodes)
+    pruned_merge_points: List[str] = []
+    for mp in merge_points:
+        if mp in graph_nodes:
+            # Node itself is in the graph — keep it there, skip as merge_point
+            continue
+        descendants_of_mp = nx.descendants(tree, mp) if not _is_leaf(tree, mp) else set()
+        if descendants_of_mp & graph_nodes:
+            # mp is an ancestor of at least one graph node → skip to avoid
+            # leaf overlap.  The graph-node's leaves are already covered.
+            continue
+        pruned_merge_points.append(mp)
+
+    all_nodes = graph_nodes | set(pruned_merge_points)
 
     # Map node_id -> set of leaf labels
     node_to_leaves: Dict[str, Set[str]] = {}
@@ -440,7 +460,28 @@ def extract_constrained_clusters(
         if cluster_leaf_set:
             final_clusters.append(cluster_leaf_set)
 
-    return final_clusters
+    # 5. Deduplicate overlapping leaves
+    # Nodes at different tree depths (from different localization calls or
+    # merge_points) can share descendant leaves.  When a leaf appears in
+    # multiple clusters, assign it to the *smallest* cluster (most specific
+    # / deepest in the hierarchy).  This is the "lowest-node-wins" policy.
+    leaf_to_cluster: Dict[str, int] = {}  # leaf_label -> best cluster index
+    for idx, cluster_set in enumerate(final_clusters):
+        for leaf in cluster_set:
+            if leaf not in leaf_to_cluster:
+                leaf_to_cluster[leaf] = idx
+            else:
+                # Keep the cluster with fewer leaves (more specific)
+                prev_idx = leaf_to_cluster[leaf]
+                if len(final_clusters[idx]) < len(final_clusters[prev_idx]):
+                    leaf_to_cluster[leaf] = idx
+
+    # Rebuild clusters from the deduplicated mapping
+    deduped: Dict[int, Set[str]] = {}
+    for leaf, idx in leaf_to_cluster.items():
+        deduped.setdefault(idx, set()).add(leaf)
+
+    return [s for s in deduped.values() if s]
 
 
 def _get_all_leaves(tree: nx.DiGraph, node: str) -> Set[str]:
@@ -469,6 +510,7 @@ def build_cross_boundary_similarity(
     test_divergence: Callable[[str, str], Tuple[float, float, float]],
     alpha: float = 0.05,
     max_depth: int = 3,
+    max_pairs: int | None = None,
 ) -> Dict[str, LocalizationResult]:
     """Build localization results for all split points in the tree.
 
@@ -501,6 +543,7 @@ def build_cross_boundary_similarity(
             test_divergence=test_divergence,
             alpha=alpha,
             max_depth=max_depth,
+            max_pairs=max_pairs,
         )
         results[parent] = result
 
@@ -534,9 +577,10 @@ def merge_similarity_graphs(
         for edge in result.similarity_edges:
             # Add edge with metadata
             if G.has_edge(edge.node_a, edge.node_b):
-                # Keep the edge with lower p-value (stronger evidence)
+                # Keep the edge with higher p-value (strongest similarity evidence:
+                # high p-value means we FAIL to reject H₀ of "same distribution")
                 existing_p = G.edges[edge.node_a, edge.node_b].get("p_value", 1.0)
-                if edge.p_value < existing_p:
+                if edge.p_value > existing_p:
                     G.edges[edge.node_a, edge.node_b]["p_value"] = edge.p_value
                     G.edges[edge.node_a, edge.node_b]["split_parent"] = parent
             else:

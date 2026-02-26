@@ -30,7 +30,7 @@ def prepare_case_inputs(
     needs_distance_matrix = any(
         method_id in DISTANCE_MATRIX_METHODS for method_id in selected_methods
     )
-    needs_distance_condensed = "kl" in selected_methods or needs_distance_matrix
+    needs_distance_condensed = any(m.startswith("kl") for m in selected_methods) or needs_distance_matrix
 
     distance_condensed = None
     distance_matrix = None

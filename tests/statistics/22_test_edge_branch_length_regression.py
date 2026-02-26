@@ -3,6 +3,7 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 
+from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
     _compute_mean_branch_length,
     _compute_p_values_via_projection,
@@ -36,6 +37,9 @@ def _run_edge_projection_with_capture(
     monkeypatch,
 ) -> list[tuple[float | None, float | None]]:
     captured: list[tuple[float | None, float | None]] = []
+
+    # Enable Felsenstein scaling so mean_branch_length is computed
+    monkeypatch.setattr(config, "FELSENSTEIN_SCALING", True)
 
     def _fake_projected_test(
         child_dist: np.ndarray,

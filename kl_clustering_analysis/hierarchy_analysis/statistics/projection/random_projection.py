@@ -13,14 +13,18 @@ Johnson, W. B., & Lindenstrauss, J. (1984). Extensions of Lipschitz
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 from pathlib import Path
 from typing import Dict, Tuple
 
 import numpy as np
+import pandas as pd
 from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 from kl_clustering_analysis import config
+
+logger = logging.getLogger(__name__)
 
 # Global cache for projection matrices - fitted once, reused everywhere
 # Key: (method, n_features, k, random_state) -> projection matrix (ndarray)
@@ -28,6 +32,12 @@ _PROJECTION_CACHE: Dict[Tuple[str, int, int, int | None], np.ndarray] = {}
 
 # Audit cache to avoid logging the same projection repeatedly.
 _AUDITED_PROJECTIONS: set[Tuple[str, int, int, int | None]] = set()
+
+# --- Resolved min_k cache (set once per pipeline run) ---
+# When PROJECTION_MIN_K="auto", the resolved integer is stored here
+# so that compute_projection_dimension() can read it without needing
+# the leaf_data parameter.  Set by resolve_min_k() on first call.
+_RESOLVED_MIN_K: int | None = None
 
 
 def _generate_structured_orthonormal_rows(
@@ -50,11 +60,158 @@ def _generate_structured_orthonormal_rows(
     return R
 
 
+# --- Adaptive floor estimation ---
+
+
+def estimate_min_projection_dimension(
+    leaf_data: pd.DataFrame,
+    *,
+    hard_floor: int = 2,
+    hard_cap: int = 20,
+) -> int:
+    """Estimate minimum projection dimension from the global effective rank.
+
+    Computes the effective rank (Shannon entropy of eigenvalue spectrum) of
+    the full dataset's correlation matrix and uses it as a data-driven floor
+    for projection dimension.  This prevents the fixed ``PROJECTION_MIN_K``
+    from adding pure-noise χ² components when the data has low intrinsic
+    dimensionality — and avoids under-projecting high-rank data.
+
+    Parameters
+    ----------
+    leaf_data
+        Binary data matrix (samples × features).
+    hard_floor
+        Absolute minimum — ensures χ²(k) with k ≥ 2 for valid testing.
+    hard_cap
+        Upper clamp — the floor should not be too large; the JL formula
+        and effective-rank estimators determine the actual k above this.
+
+    Returns
+    -------
+    int
+        Data-adaptive minimum projection dimension.
+
+    Notes
+    -----
+    The computation is O(min(n, d)³) via dual-form eigendecomposition,
+    executed once per pipeline run.  For typical binary datasets (n ~ 50-500,
+    d ~ 100-2000) this takes < 100 ms.
+
+    The effective rank of the full data characterises the dataset's global
+    intrinsic dimensionality:
+
+    - Low-rank data (erank ≈ 3): floor = 3, no wasted noise dimensions
+    - Moderate-rank data (erank ≈ 12): floor = 12
+    - High-rank data (erank ≈ 50): clamped to hard_cap (default 20)
+    """
+    from .spectral_dimension import effective_rank as _effective_rank
+
+    X = leaf_data.values.astype(np.float64)
+    n, d = X.shape
+
+    if n < 2 or d < 2:
+        return hard_floor
+
+    # Identify active features (non-constant columns)
+    col_var = np.var(X, axis=0)
+    active_mask = col_var > 0
+    d_active = int(np.sum(active_mask))
+
+    if d_active < 2:
+        return hard_floor
+
+    X_active = X[:, active_mask]
+
+    # Dual-form optimisation: when n < d, compute n×n Gram matrix
+    use_dual = n < d_active
+    if use_dual:
+        col_means = X_active.mean(axis=0)
+        col_stds = X_active.std(axis=0, ddof=0)
+        col_stds[col_stds == 0] = 1.0
+        X_std = (X_active - col_means) / col_stds
+        gram = X_std @ X_std.T / d_active
+        eigenvalues = np.sort(np.linalg.eigvalsh(gram))[::-1]
+    else:
+        corr = np.corrcoef(X_active.T)
+        corr = np.nan_to_num(corr, nan=0.0)
+        np.fill_diagonal(corr, 1.0)
+        eigenvalues = np.sort(np.linalg.eigvalsh(corr))[::-1]
+
+    eigenvalues = np.maximum(eigenvalues, 0.0)
+    erank = _effective_rank(eigenvalues)
+    min_k = int(np.ceil(erank))
+    min_k = max(min_k, hard_floor)
+    min_k = min(min_k, hard_cap)
+
+    logger.info(
+        "Adaptive PROJECTION_MIN_K: effective_rank=%.1f → min_k=%d " "(n=%d, d=%d, d_active=%d)",
+        erank,
+        min_k,
+        n,
+        d,
+        d_active,
+    )
+
+    return min_k
+
+
+def resolve_min_k(
+    min_k_config: int | str,
+    leaf_data: pd.DataFrame | None = None,
+) -> int:
+    """Resolve ``PROJECTION_MIN_K`` to a concrete integer.
+
+    When ``min_k_config`` is ``"auto"``, the effective rank of the full
+    dataset is computed and cached in the module-level ``_RESOLVED_MIN_K``
+    so that downstream calls to :func:`compute_projection_dimension` (which
+    don't receive ``leaf_data``) can read the resolved value automatically.
+
+    Parameters
+    ----------
+    min_k_config
+        Either an integer (used as-is) or ``"auto"`` (estimated from data).
+    leaf_data
+        Required when *min_k_config* is ``"auto"``.
+
+    Returns
+    -------
+    int
+        Resolved minimum projection dimension.
+
+    Raises
+    ------
+    ValueError
+        If ``"auto"`` is requested but *leaf_data* is None.
+    """
+    global _RESOLVED_MIN_K
+
+    if isinstance(min_k_config, int):
+        _RESOLVED_MIN_K = min_k_config
+        return min_k_config
+
+    if min_k_config == "auto":
+        if leaf_data is None:
+            # No data available — fall back to a reasonable hard floor.
+            # This happens when TreeDecomposition is constructed without
+            # leaf_data (e.g. pre-annotated path, or tests).
+            logger.info(
+                "PROJECTION_MIN_K='auto' but leaf_data is None; " "falling back to hard floor of 2."
+            )
+            _RESOLVED_MIN_K = 2
+            return 2
+        resolved = estimate_min_projection_dimension(leaf_data)
+        _RESOLVED_MIN_K = resolved
+        return resolved
+
+    raise ValueError(f"PROJECTION_MIN_K must be an int or 'auto', got {min_k_config!r}")
+
+
 def compute_projection_dimension(
     n_samples: int,
     n_features: int,
     eps: float = config.PROJECTION_EPS,
-    min_k: int = config.PROJECTION_MIN_K,
+    min_k: int | str | None = None,
 ) -> int:
     """Compute target projection dimension, capped by data rank.
 
@@ -81,8 +238,10 @@ def compute_projection_dimension(
     eps : float
         JL distortion tolerance.  Distances are preserved within
         ``(1 ± eps)``.
-    min_k : int
-        Minimum projected dimension (floor).
+    min_k : int or None
+        Minimum projected dimension (floor).  When ``None``, reads from
+        ``config.PROJECTION_MIN_K``.  If the config value is ``"auto"``
+        and no resolved int has been threaded through, falls back to 2.
 
     Returns
     -------
@@ -104,10 +263,24 @@ def compute_projection_dimension(
         mappings into a Hilbert space. Contemporary Mathematics, 26, 189-206.
     """
 
+    # --- Resolve min_k ---
+    # When None, check the module-level resolved cache first (set by
+    # resolve_min_k() at pipeline entry), then fall back to config.
+    # If config is "auto" but hasn't been resolved, use hard floor of 2.
+    if min_k is None:
+        if _RESOLVED_MIN_K is not None:
+            min_k = _RESOLVED_MIN_K
+        else:
+            _cfg_val = config.PROJECTION_MIN_K
+            min_k = _cfg_val if isinstance(_cfg_val, int) else 2
+    elif isinstance(min_k, str):
+        # "auto" passed directly without resolution — safe fallback
+        min_k = 2
+
     # Use sklearn's theoretically-grounded JL formula
     # Ensure n_samples >= 1 to avoid edge cases
     n_samples = max(n_samples, 1)
-    k = johnson_lindenstrauss_min_dim(n_samples=n_samples, eps=eps)
+    k: int = int(johnson_lindenstrauss_min_dim(n_samples=n_samples, eps=eps))
 
     # --- Information cap (only when n ≪ d) ---
     # When n_samples is much smaller than n_features, the data matrix is
@@ -300,5 +473,7 @@ def _maybe_audit_projection(
 __all__ = [
     "compute_projection_dimension",
     "derive_projection_seed",
+    "estimate_min_projection_dimension",
     "generate_projection_matrix",
+    "resolve_min_k",
 ]

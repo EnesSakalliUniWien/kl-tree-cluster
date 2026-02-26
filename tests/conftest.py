@@ -15,6 +15,12 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 
+# Prevent pytest from collecting functions whose names start with ``test_``
+# from the *source* package when they are re-exported into a test module's
+# namespace via ``from ... import test_node_pair_divergence`` etc.
+collect_ignore_glob = ["**/kl_clustering_analysis/**"]
+
+
 @dataclass
 class _ProgressState:
     enabled: bool = False

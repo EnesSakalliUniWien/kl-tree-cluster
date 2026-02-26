@@ -77,7 +77,7 @@ class TestGammaGLMCalibrationDiagnostic:
         # If regression was used, check beta
         if model.method in ("gamma_glm", "weighted_regression"):
             assert model.beta is not None
-            assert len(model.beta) == 3
+            assert len(model.beta) == 1  # intercept-only
             # β coefficients should be finite
             assert all(np.isfinite(b) for b in model.beta)
 

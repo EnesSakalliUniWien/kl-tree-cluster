@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
-from sklearn.cluster import AgglomerativeClustering
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
@@ -66,118 +65,27 @@ class PosetTree(nx.DiGraph):
     ) -> "PosetTree":
         """Construct a tree from an :class:`sklearn.cluster.AgglomerativeClustering` fit.
 
-        Parameters
-        ----------
-        X
-            Feature matrix of shape ``(n_samples, n_features)`` used for hierarchical
-            clustering.
-        leaf_names
-            Optional list of labels; defaults to ``leaf_{i}`` when omitted.
-        linkage, metric, compute_distances
-            Passed straight through to :class:`AgglomerativeClustering` to control the
-            linkage strategy.
-
-        Returns
-        -------
-        PosetTree
-            Directed tree whose leaves correspond to the fitted samples.
+        Delegates to :func:`~kl_clustering_analysis.tree.io.tree_from_agglomerative`.
         """
-        n = int(X.shape[0])
-        if leaf_names is None:
-            leaf_names = [f"leaf_{i}" for i in range(n)]
+        from kl_clustering_analysis.tree.io import tree_from_agglomerative
 
-        model = AgglomerativeClustering(
-            n_clusters=1,
+        return tree_from_agglomerative(
+            X,
+            leaf_names=leaf_names,
             linkage=linkage,
             metric=metric,
             compute_distances=compute_distances,
         )
-        model.fit(X)
-        children = model.children_  # (n-1, 2) merges; indices in [0, 2n-2]
-
-        # Get distances if available (requires compute_distances=True)
-        distances = getattr(model, "distances_", None)
-
-        def _id(idx: int) -> str:
-            return f"L{idx}" if idx < n else f"N{idx}"
-
-        G = cls()
-
-        # Store merge distances for computing branch lengths
-        # Leaves have merge_distance = 0
-        merge_distances = {_id(i): 0.0 for i in range(n)}
-
-        # add leaves
-        for i, name in enumerate(leaf_names):
-            G.add_node(_id(i), is_leaf=True, label=str(name))
-
-        # add internal merges
-        for k, (a, b) in enumerate(children):
-            nid = _id(n + k)
-            G.add_node(nid, is_leaf=False)
-
-            if distances is not None:
-                # Store merge distance for this node
-                merge_distances[nid] = float(distances[k])
-
-                # Compute branch lengths: distance from this node to each child
-                left_branch_length = float(distances[k]) - merge_distances[_id(a)]
-                right_branch_length = float(distances[k]) - merge_distances[_id(b)]
-
-                G.add_edge(nid, _id(a), branch_length=left_branch_length)
-                G.add_edge(nid, _id(b), branch_length=right_branch_length)
-            else:
-                # No distances available, use default branch_length of 1.0
-                G.add_edge(nid, _id(a), branch_length=1.0)
-                G.add_edge(nid, _id(b), branch_length=1.0)
-
-        # annotate root
-        roots = [u for u, d in G.in_degree() if d == 0]
-        if len(roots) != 1:
-            raise ValueError(f"Expected one root, got {roots}")
-        G.graph["root"] = roots[0]
-        return G
 
     @classmethod
     def from_undirected_edges(cls, edges: Iterable[Tuple]) -> "PosetTree":
         """Orient an undirected tree and promote it to :class:`PosetTree`.
 
-        Parameters
-        ----------
-        edges
-            Iterable of ``(u, v, weight)`` tuples describing an undirected weighted
-            tree.
-
-        Returns
-        -------
-        PosetTree
-            Directed version of the input tree with a deterministic root and leaf
-            annotations.
+        Delegates to :func:`~kl_clustering_analysis.tree.io.tree_from_undirected_edges`.
         """
-        U = nx.Graph()
-        U.add_weighted_edges_from(edges)
-        # pick a leaf as root
-        leaves = [n for n, d in U.degree() if d == 1]
-        root = leaves[0] if leaves else next(iter(U.nodes))
+        from kl_clustering_analysis.tree.io import tree_from_undirected_edges
 
-        G = cls()
-        for n in U.nodes():
-            G.add_node(n)
-
-        visited = {root}
-        q = [root]
-        while q:
-            u = q.pop(0)
-            for v, attr in U[u].items():
-                if v not in visited:
-                    visited.add(v)
-                    G.add_edge(u, v, weight=float(attr.get("weight", 1.0)))
-                    q.append(v)
-        # annotate leaves
-        for n in G.nodes:
-            G.nodes[n]["is_leaf"] = G.out_degree(n) == 0
-        G.graph["root"] = root
-        return G
+        return tree_from_undirected_edges(edges)
 
     @classmethod
     def from_linkage(
@@ -185,48 +93,13 @@ class PosetTree(nx.DiGraph):
         linkage_matrix: np.ndarray,
         leaf_names: Optional[List[str]] = None,
     ) -> "PosetTree":
+        """Build a tree from a SciPy linkage matrix.
+
+        Delegates to :func:`~kl_clustering_analysis.tree.io.tree_from_linkage`.
         """
-        Builds a tree from a SciPy linkage matrix.
+        from kl_clustering_analysis.tree.io import tree_from_linkage
 
-        Assumes the input is a valid `(n-1, 4)` linkage matrix.
-
-        Args:
-            linkage_matrix: A NumPy array from `scipy.cluster.hierarchy.linkage`.
-            leaf_names: An optional list of names for the leaf nodes.
-
-        Returns:
-            A `PosetTree` instance.
-        """
-        n_leaves = linkage_matrix.shape[0] + 1
-        if leaf_names is None:
-            leaf_names = [f"leaf_{i}" for i in range(n_leaves)]
-
-        G = cls()
-
-        # Store merge distances for computing branch lengths
-        # Leaves have merge_distance = 0
-        merge_distances = {f"L{i}": 0.0 for i in range(n_leaves)}
-
-        for i, name in enumerate(leaf_names):
-            G.add_node(f"L{i}", label=name, is_leaf=True)
-
-        for merge_idx, (left_idx, right_idx, dist, _) in enumerate(linkage_matrix):
-            node_idx = n_leaves + merge_idx
-            node_id = f"N{int(node_idx)}"
-            left_id = f"L{int(left_idx)}" if left_idx < n_leaves else f"N{int(left_idx)}"
-            right_id = f"L{int(right_idx)}" if right_idx < n_leaves else f"N{int(right_idx)}"
-
-            # Store merge distance for this node
-            merge_distances[node_id] = float(dist)
-
-            # Compute branch lengths: distance from this node to each child
-            left_branch_length = float(dist) - merge_distances[left_id]
-            right_branch_length = float(dist) - merge_distances[right_id]
-
-            G.add_node(node_id, is_leaf=False)
-            G.add_edge(node_id, left_id, branch_length=left_branch_length)
-            G.add_edge(node_id, right_id, branch_length=right_branch_length)
-        return G
+        return tree_from_linkage(linkage_matrix, leaf_names=leaf_names)
 
     # ---------------- Poset helpers ----------------
 
@@ -282,6 +155,36 @@ class PosetTree(nx.DiGraph):
         if is_leaf_attr is not None:
             return bool(is_leaf_attr)
         return self.out_degree(node_id) == 0
+
+    @property
+    def distribution_map(self) -> Dict[str, np.ndarray]:
+        """Map each node to its distribution vector.
+
+        Returns
+        -------
+        dict[str, np.ndarray]
+            Dictionary whose keys are node ids and values are the node
+            distribution arrays (populated by :meth:`populate_node_divergences`).
+        """
+        return {
+            n: np.asarray(self.nodes[n]["distribution"], dtype=float)
+            for n in self.nodes
+            if "distribution" in self.nodes[n]
+        }
+
+    @property
+    def leaf_count_map(self) -> Dict[str, int]:
+        """Map each node to its descendant leaf count.
+
+        Returns
+        -------
+        dict[str, int]
+            Dictionary whose keys are node ids and values are the ``leaf_count``
+            attribute (populated by :meth:`populate_node_divergences`).
+        """
+        return {
+            n: int(self.nodes[n]["leaf_count"]) for n in self.nodes if "leaf_count" in self.nodes[n]
+        }
 
     def compute_descendant_sets(self, use_labels: bool = True) -> Dict[str, frozenset]:
         """Map each node to the set of leaf labels under it.

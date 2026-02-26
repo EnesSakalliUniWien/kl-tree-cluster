@@ -75,6 +75,7 @@ def _generate_binary_case(
     entropy = test_case.get("entropy_param", 0.5)
     balanced = test_case.get("balanced_clusters", True)
     feature_sparsity = test_case.get("feature_sparsity", None)
+    noise_features = int(test_case.get("noise_features", 0))
 
     data_dict, cluster_assignments = generate_random_feature_matrix(
         n_rows=n_rows,
@@ -84,6 +85,7 @@ def _generate_binary_case(
         random_seed=seed,
         balanced_clusters=balanced,
         feature_sparsity=feature_sparsity,
+        noise_features=noise_features,
     )
 
     original_names = list(data_dict.keys())
@@ -93,13 +95,15 @@ def _generate_binary_case(
     data_df = pd.DataFrame(matrix, index=original_names, columns=feature_names)
     true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
+    actual_cols = matrix.shape[1]
     metadata = {
         "n_samples": n_rows,
-        "n_features": n_cols,
+        "n_features": actual_cols,
         "n_clusters": test_case["n_clusters"],
         "noise": entropy,
         "name": test_case.get("name", f"binary_{n_rows}x{n_cols}"),
         "generator": "binary",
+        "noise_features": noise_features,
     }
 
     return data_df, true_labels, matrix.astype(float), metadata

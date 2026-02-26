@@ -12,6 +12,8 @@ These tests verify that:
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -22,6 +24,11 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence imp
 )
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+
+# Context manager to bypass annotation pipeline when gate columns are pre-set.
+_skip_annotations = patch.object(
+    TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df
+)
 
 # =============================================================================
 # CalibrationModel unit tests
@@ -169,19 +176,22 @@ class TestPosthocMergeCalibration:
         tree = _build_4_cluster_tree()
         df = _make_annotations_for_4_cluster_tree(ab_different=True, cd_different=True)
 
-        # Create decomposer WITHOUT calibration model
-        decomposer_raw = TreeDecomposition(tree, df, posthoc_merge=False)
+        with _skip_annotations:
+            # Create decomposer WITHOUT calibration model
+            decomposer_raw = TreeDecomposition(tree, df, posthoc_merge=False)
 
-        # Get raw stat
-        raw_stat, raw_df, raw_pval = decomposer_raw._test_cluster_pair_divergence("A", "B", "M1")
+            # Get raw stat
+            raw_stat, raw_df, raw_pval = decomposer_raw._test_cluster_pair_divergence(
+                "A", "B", "M1"
+            )
 
-        # Now add a calibration model with ĉ > 1
-        df2 = df.copy()
-        model = CalibrationModel(
-            method="median", n_calibration=10, global_c_hat=2.0, max_observed_ratio=3.0
-        )
-        df2.attrs["_calibration_model"] = model
-        decomposer_cal = TreeDecomposition(tree, df2, posthoc_merge=False)
+            # Now add a calibration model with ĉ > 1
+            df2 = df.copy()
+            model = CalibrationModel(
+                method="median", n_calibration=10, global_c_hat=2.0, max_observed_ratio=3.0
+            )
+            df2.attrs["_calibration_model"] = model
+            decomposer_cal = TreeDecomposition(tree, df2, posthoc_merge=False)
 
         # Get calibrated stat
         cal_stat, cal_df, cal_pval = decomposer_cal._test_cluster_pair_divergence("A", "B", "M1")
@@ -205,7 +215,8 @@ class TestPosthocMergeCalibration:
         # No _calibration_model in attrs
         assert "_calibration_model" not in df.attrs
 
-        decomposer = TreeDecomposition(tree, df, posthoc_merge=False)
+        with _skip_annotations:
+            decomposer = TreeDecomposition(tree, df, posthoc_merge=False)
         assert decomposer._calibration_model is None
 
         # Should still return valid results (no error)
@@ -222,8 +233,9 @@ class TestPosthocMergeCalibration:
             method="none", n_calibration=0, global_c_hat=1.0
         )
 
-        dec_raw = TreeDecomposition(tree, df_raw, posthoc_merge=False)
-        dec_cal = TreeDecomposition(tree, df_cal, posthoc_merge=False)
+        with _skip_annotations:
+            dec_raw = TreeDecomposition(tree, df_raw, posthoc_merge=False)
+            dec_cal = TreeDecomposition(tree, df_cal, posthoc_merge=False)
 
         raw_stat, _, raw_pval = dec_raw._test_cluster_pair_divergence("C", "D", "M2")
         cal_stat, _, cal_pval = dec_cal._test_cluster_pair_divergence("C", "D", "M2")
@@ -246,7 +258,10 @@ class TestV1DecomposeTreeIntegration:
         df = _make_annotations_for_4_cluster_tree(
             ab_different=True, cd_different=True, m1m2_different=True
         )
-        result = tree.decompose(results_df=df, posthoc_merge=False)
+        with _skip_annotations:
+            result = tree.decompose(
+                results_df=df, posthoc_merge=False, use_signal_localization=False
+            )
         assert result["num_clusters"] == 4
 
     def test_4_cluster_ab_same_produces_3_clusters(self) -> None:
@@ -255,7 +270,10 @@ class TestV1DecomposeTreeIntegration:
         df = _make_annotations_for_4_cluster_tree(
             ab_different=False, cd_different=True, m1m2_different=True
         )
-        result = tree.decompose(results_df=df, posthoc_merge=False)
+        with _skip_annotations:
+            result = tree.decompose(
+                results_df=df, posthoc_merge=False, use_signal_localization=False
+            )
         assert result["num_clusters"] == 3
 
     def test_4_cluster_all_same_produces_1_cluster(self) -> None:
@@ -264,7 +282,10 @@ class TestV1DecomposeTreeIntegration:
         df = _make_annotations_for_4_cluster_tree(
             ab_different=True, cd_different=True, m1m2_different=False
         )
-        result = tree.decompose(results_df=df, posthoc_merge=False)
+        with _skip_annotations:
+            result = tree.decompose(
+                results_df=df, posthoc_merge=False, use_signal_localization=False
+            )
         assert result["num_clusters"] == 1
 
     def test_leaf_partition_is_exact(self) -> None:
@@ -273,7 +294,10 @@ class TestV1DecomposeTreeIntegration:
         df = _make_annotations_for_4_cluster_tree(
             ab_different=True, cd_different=True, m1m2_different=True
         )
-        result = tree.decompose(results_df=df, posthoc_merge=False)
+        with _skip_annotations:
+            result = tree.decompose(
+                results_df=df, posthoc_merge=False, use_signal_localization=False
+            )
 
         all_leaves = set()
         for cluster_info in result["cluster_assignments"].values():
@@ -292,7 +316,10 @@ class TestV1DecomposeTreeIntegration:
         """decompose_tree should return a (possibly empty) posthoc_merge_audit."""
         tree = _build_4_cluster_tree()
         df = _make_annotations_for_4_cluster_tree()
-        result = tree.decompose(results_df=df, posthoc_merge=True)
+        with _skip_annotations:
+            result = tree.decompose(
+                results_df=df, posthoc_merge=True, use_signal_localization=False
+            )
         assert "posthoc_merge_audit" in result
 
     def test_posthoc_merge_reduces_overclustering(self) -> None:
@@ -308,10 +335,15 @@ class TestV1DecomposeTreeIntegration:
             ab_different=True, cd_different=True, m1m2_different=True
         )
 
-        # Without posthoc merge: 4 clusters
-        result_no_merge = tree.decompose(results_df=df, posthoc_merge=False)
-        assert result_no_merge["num_clusters"] == 4
+        with _skip_annotations:
+            # Without posthoc merge: 4 clusters
+            result_no_merge = tree.decompose(
+                results_df=df, posthoc_merge=False, use_signal_localization=False
+            )
+            assert result_no_merge["num_clusters"] == 4
 
-        # With posthoc merge: may reduce if some pairs are similar
-        result_with_merge = tree.decompose(results_df=df, posthoc_merge=True)
+            # With posthoc merge: may reduce if some pairs are similar
+            result_with_merge = tree.decompose(
+                results_df=df, posthoc_merge=True, use_signal_localization=False
+            )
         assert result_with_merge["num_clusters"] <= result_no_merge["num_clusters"]

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
 
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
@@ -50,10 +53,14 @@ def test_near_threshold_override_merges_borderline_siblings():
     """Test that siblings with low divergence p-value near alpha are NOT split when Sibling_BH_Different=False."""
     tree, df = _simple_tree()
 
-    baseline_result = tree.decompose(results_df=df, posthoc_merge=False)
-    assert baseline_result["num_clusters"] == 2
+    # Bypass annotation pipeline — this test controls gate columns directly.
+    with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
+        baseline_result = tree.decompose(
+            results_df=df, posthoc_merge=False, use_signal_localization=False
+        )
+        assert baseline_result["num_clusters"] == 2
 
-    # Set siblings as NOT significantly different - should merge
-    df.loc["R", "Sibling_BH_Different"] = False
-    merged_result = tree.decompose(results_df=df)
-    assert merged_result["num_clusters"] == 1
+        # Set siblings as NOT significantly different - should merge
+        df.loc["R", "Sibling_BH_Different"] = False
+        merged_result = tree.decompose(results_df=df, use_signal_localization=False)
+        assert merged_result["num_clusters"] == 1

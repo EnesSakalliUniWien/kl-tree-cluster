@@ -6,8 +6,9 @@ to create datasets with controllable properties like the number of clusters,
 cluster separation (entropy), and feature diversity.
 """
 
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
-from typing import Dict, Tuple, Optional, List
 
 from benchmarks.shared.generators.common import calculate_cluster_sizes
 
@@ -16,7 +17,9 @@ from benchmarks.shared.generators.common import calculate_cluster_sizes
 # ============================================================================
 
 
-def _create_gradient_templates(n_clusters: int, n_cols: int) -> List[List[int]]:
+def _create_gradient_templates(
+    n_clusters: int, n_cols: int, rng: np.random.Generator
+) -> List[List[int]]:
     """Creates distinct binary templates for each cluster.
 
     The templates are generated on a gradient. For example, for 3 clusters, the
@@ -25,6 +28,7 @@ def _create_gradient_templates(n_clusters: int, n_cols: int) -> List[List[int]]:
     Args:
         n_clusters: The number of templates to generate.
         n_cols: The number of features (length) of each template.
+        rng: NumPy random Generator instance.
 
     Returns:
         A list of binary template vectors.
@@ -36,15 +40,13 @@ def _create_gradient_templates(n_clusters: int, n_cols: int) -> List[List[int]]:
         templates = []
         for cluster_id in range(n_clusters):
             prob_ones = cluster_id / (n_clusters - 1) if n_clusters > 1 else 0.5
-            template = np.random.choice(
-                [0, 1], size=n_cols, p=[1 - prob_ones, prob_ones]
-            ).tolist()
+            template = rng.choice([0, 1], size=n_cols, p=[1 - prob_ones, prob_ones]).tolist()
             templates.append(template)
         return templates
 
 
 def _create_sparse_templates(
-    n_clusters: int, n_cols: int, sparsity: float
+    n_clusters: int, n_cols: int, sparsity: float, rng: np.random.Generator
 ) -> List[List[int]]:
     """Creates distinct binary templates with sparse (low-variance) features.
 
@@ -58,6 +60,7 @@ def _create_sparse_templates(
         sparsity: Float in [0, 0.5] controlling feature means.
             - 0.0: Features are exactly 0 or 1 (minimum variance)
             - 0.5: Features have θ = 0.5 (maximum variance, like gradient)
+        rng: NumPy random Generator instance.
 
     Returns:
         A list of binary template vectors.
@@ -84,13 +87,15 @@ def _create_sparse_templates(
                 # Other clusters' features are predominantly 0
                 prob_one = sparsity
 
-            template.append(1 if np.random.random() < prob_one else 0)
+            template.append(1 if rng.random() < prob_one else 0)
         templates.append(template)
 
     return templates
 
 
-def _apply_bit_flip_noise(template: List[int], noise_prob: float) -> List[int]:
+def _apply_bit_flip_noise(
+    template: List[int], noise_prob: float, rng: np.random.Generator
+) -> List[int]:
     """Applies bit-flip noise to a binary template.
 
     Each bit in the template is flipped with a probability of `noise_prob`.
@@ -98,20 +103,23 @@ def _apply_bit_flip_noise(template: List[int], noise_prob: float) -> List[int]:
     Args:
         template: The binary template vector (e.g., [0, 1, 0, 1]).
         noise_prob: The probability (0.0 to 1.0) of flipping each bit.
+        rng: NumPy random Generator instance.
 
     Returns:
         A new binary vector with noise applied.
     """
     sample = []
     for bit in template:
-        if np.random.random() < noise_prob:
+        if rng.random() < noise_prob:
             sample.append(1 - bit)  # Flip the bit
         else:
             sample.append(bit)  # Keep the bit
     return sample
 
 
-def _apply_template_following(template: List[int], follow_prob: float) -> List[int]:
+def _apply_template_following(
+    template: List[int], follow_prob: float, rng: np.random.Generator
+) -> List[int]:
     """Generates a sample that probabilistically follows a template.
 
     For each position in the template, the output sample will either copy the
@@ -121,21 +129,22 @@ def _apply_template_following(template: List[int], follow_prob: float) -> List[i
         template: The binary template vector to follow.
         follow_prob: The probability (0.0 to 1.0) of following the template
             at each position.
+        rng: NumPy random Generator instance.
 
     Returns:
         A new, generated binary vector.
     """
     sample = []
     for bit in template:
-        if np.random.random() < follow_prob:
+        if rng.random() < follow_prob:
             sample.append(bit)  # Follow the template
         else:
-            sample.append(np.random.choice([0, 1]))  # Use a random bit
+            sample.append(rng.choice([0, 1]))  # Use a random bit
     return sample
 
 
 def _ensure_feature_coverage(
-    leaf_matrix_dict: Dict[str, List[int]], n_cols: int
+    leaf_matrix_dict: Dict[str, List[int]], n_cols: int, rng: np.random.Generator
 ) -> None:
     """Ensures all features appear at least once by modifying the data in-place.
 
@@ -150,6 +159,7 @@ def _ensure_feature_coverage(
         leaf_matrix_dict: A dictionary mapping sample names to feature vectors.
             This dictionary is modified in-place.
         n_cols: The total number of features.
+        rng: NumPy random Generator instance.
     """
     feature_sums = np.sum(list(leaf_matrix_dict.values()), axis=0)
     missing_features = np.where(feature_sums == 0)[0]
@@ -157,7 +167,7 @@ def _ensure_feature_coverage(
     if len(missing_features) > 0:
         leaf_names = list(leaf_matrix_dict.keys())
         for feature_idx in missing_features:
-            random_sample_name = np.random.choice(leaf_names)
+            random_sample_name = rng.choice(leaf_names)
             leaf_matrix_dict[random_sample_name][feature_idx] = 1
 
 
@@ -174,6 +184,7 @@ def generate_random_feature_matrix(
     random_seed: Optional[int] = None,
     balanced_clusters: bool = True,
     feature_sparsity: Optional[float] = None,
+    noise_features: int = 0,
 ) -> Tuple[Dict[str, list], Dict[str, int]]:
     """Generates a random binary feature matrix with controllable clustering.
 
@@ -198,6 +209,8 @@ def generate_random_feature_matrix(
             θ ∈ [sparsity, 1-sparsity], creating low-variance features when
             sparsity is near 0 (θ near 0 or 1). Default None uses original
             gradient-based templates (θ ≈ 0.5, high variance).
+        noise_features: Number of uninformative Bernoulli(0.5) noise columns
+            to append after the informative features. Default 0.
 
     Returns:
         A tuple containing:
@@ -226,7 +239,9 @@ def generate_random_feature_matrix(
         ... )
     """
     if random_seed is not None:
-        np.random.seed(random_seed)
+        rng = np.random.default_rng(random_seed)
+    else:
+        rng = np.random.default_rng()
 
     # Clamp n_clusters to a valid range [1, n_rows]
     n_clusters = max(1, min(n_clusters, n_rows))
@@ -235,7 +250,7 @@ def generate_random_feature_matrix(
     cluster_assignments: Dict[str, int] = {}
 
     # Step 1: Calculate cluster sizes
-    cluster_sizes = calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters)
+    cluster_sizes = calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters, rng=rng)
 
     # Step 2: Choose template generation strategy
     # If feature_sparsity is provided, use sparse templates (low-variance features)
@@ -252,17 +267,13 @@ def generate_random_feature_matrix(
     elif entropy_param <= 0.0:
         # Strategy B: Maximum separation (pure templates, no noise)
         if use_sparse:
-            cluster_templates = _create_sparse_templates(
-                n_clusters, n_cols, feature_sparsity
-            )
+            cluster_templates = _create_sparse_templates(n_clusters, n_cols, feature_sparsity, rng)
         else:
-            cluster_templates = _create_gradient_templates(n_clusters, n_cols)
+            cluster_templates = _create_gradient_templates(n_clusters, n_cols, rng)
         sample_idx = 0
         for cluster_id, size in enumerate(cluster_sizes):
             for _ in range(size):
-                leaf_matrix_dict[f"L{sample_idx + 1}"] = cluster_templates[
-                    cluster_id
-                ].copy()
+                leaf_matrix_dict[f"L{sample_idx + 1}"] = cluster_templates[cluster_id].copy()
                 cluster_assignments[f"L{sample_idx + 1}"] = cluster_id
                 sample_idx += 1
 
@@ -273,41 +284,46 @@ def generate_random_feature_matrix(
             noise_prob = entropy_param  # Removed * 2 to ensure monotonic scaling
             if use_sparse:
                 cluster_templates = _create_sparse_templates(
-                    n_clusters, n_cols, feature_sparsity
+                    n_clusters, n_cols, feature_sparsity, rng
                 )
             else:
-                cluster_templates = _create_gradient_templates(n_clusters, n_cols)
+                cluster_templates = _create_gradient_templates(n_clusters, n_cols, rng)
             sample_idx = 0
             for cluster_id, size in enumerate(cluster_sizes):
                 base_template = cluster_templates[cluster_id]
                 for _ in range(size):
-                    sample = _apply_bit_flip_noise(base_template, noise_prob)
+                    sample = _apply_bit_flip_noise(base_template, noise_prob, rng)
                     leaf_matrix_dict[f"L{sample_idx + 1}"] = sample
                     cluster_assignments[f"L{sample_idx + 1}"] = cluster_id
                     sample_idx += 1
         else:
             # C.2: High noise -> Converging templates + probabilistic following
             follow_prob = (entropy_param - 0.5) * 2  # Scale [0.5, 1) -> [0, 1)
-            base_template = np.random.choice([0, 1], size=n_cols).tolist()
+            base_template = rng.choice([0, 1], size=n_cols).tolist()
             cluster_templates = []
             for _ in range(n_clusters):
-                if np.random.random() < follow_prob:
+                if rng.random() < follow_prob:
                     cluster_templates.append(base_template.copy())
                 else:
-                    cluster_templates.append(
-                        np.random.choice([0, 1], size=n_cols).tolist()
-                    )
+                    cluster_templates.append(rng.choice([0, 1], size=n_cols).tolist())
 
             sample_idx = 0
             for cluster_id, size in enumerate(cluster_sizes):
                 template = cluster_templates[cluster_id]
                 for _ in range(size):
-                    sample = _apply_template_following(template, follow_prob)
+                    sample = _apply_template_following(template, follow_prob, rng)
                     leaf_matrix_dict[f"L{sample_idx + 1}"] = sample
                     cluster_assignments[f"L{sample_idx + 1}"] = cluster_id
                     sample_idx += 1
 
-    # Step 4: Ensure all features appear at least once
-    _ensure_feature_coverage(leaf_matrix_dict, n_cols)
+    # Step 4: Append uninformative noise features (Bernoulli p=0.5)
+    if noise_features > 0:
+        for name in leaf_matrix_dict:
+            noise_cols = rng.choice([0, 1], size=noise_features).tolist()
+            leaf_matrix_dict[name].extend(noise_cols)
+
+    # Step 5: Ensure all features appear at least once
+    total_cols = n_cols + noise_features
+    _ensure_feature_coverage(leaf_matrix_dict, total_cols, rng)
 
     return leaf_matrix_dict, cluster_assignments

@@ -103,16 +103,17 @@ class TestWeightedCalibrationModel:
         c = predict_weighted_inflation_factor(model, bl_sum=0.5, n_parent=100)
         assert c == pytest.approx(1.7)
 
-    def test_predict_invalid_bl_returns_global_c_hat(self) -> None:
-        """Invalid bl_sum should fall back to global_c_hat."""
+    def test_predict_intercept_only_ignores_bl(self) -> None:
+        """With intercept-only model, bl_sum and n_parent are ignored."""
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
             global_c_hat=1.5,
-            beta=np.array([0.5, 0.1, 0.1]),
+            max_observed_ratio=5.0,
+            beta=np.array([0.5]),  # intercept-only: ĉ = exp(0.5) ≈ 1.649
         )
         c = predict_weighted_inflation_factor(model, bl_sum=0.0, n_parent=100)
-        assert c == pytest.approx(1.5)
+        assert c == pytest.approx(np.exp(0.5), rel=1e-3)
 
 
 # =============================================================================
@@ -244,7 +245,7 @@ class TestGammaGLMFitting:
         # Beta should be populated for regression methods
         if model.method in ("gamma_glm", "weighted_regression"):
             assert model.beta is not None
-            assert len(model.beta) == 3
+            assert len(model.beta) == 1  # intercept-only
 
     def test_gamma_glm_diagnostics_present(self) -> None:
         """Gamma GLM should report deviance-based diagnostics."""
@@ -342,6 +343,8 @@ class TestPosthocMergeDeflationDispatch:
 
     def test_weighted_model_deflates(self) -> None:
         """WeightedCalibrationModel with c_hat > 1 should reduce test_stat."""
+        from unittest.mock import patch
+
         from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
         tree = _build_4_cluster_tree()
@@ -356,7 +359,9 @@ class TestPosthocMergeDeflationDispatch:
         )
         df.attrs["_calibration_model"] = model
 
-        decomposer = TreeDecomposition(tree, df, posthoc_merge=False)
+        # Bypass annotation pipeline — this test controls gate columns directly.
+        with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
+            decomposer = TreeDecomposition(tree, df, posthoc_merge=False)
         # The decomposer should have picked up the model
         assert decomposer._calibration_model is not None
         assert isinstance(decomposer._calibration_model, WeightedCalibrationModel)

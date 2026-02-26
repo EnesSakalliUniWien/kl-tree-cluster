@@ -81,6 +81,9 @@ def run_single_method_once(
         distance_condensed=distance_condensed_for_run,
     )
 
+    true_clusters_raw = meta.get("n_clusters")
+    true_clusters = int(true_clusters_raw) if true_clusters_raw is not None else 0
+
     if result.status == "ok" and result.labels is not None:
         labels = result.labels
         report_df = result.report_df
@@ -101,11 +104,27 @@ def run_single_method_once(
                 report_df = _create_report_dataframe_from_labels(labels, data_t.index)
         found_clusters = result.found_clusters
         labels_len = len(labels)
-        ari, nmi, purity = _calculate_ari_nmi_purity_metrics(report_df, data_t.index, y_t)
+        metrics = _calculate_ari_nmi_purity_metrics(report_df, data_t.index, y_t)
+        ari = metrics.ari
+        nmi = metrics.nmi
+        purity = metrics.purity
+        macro_recall = metrics.macro_recall
+        macro_f1 = metrics.macro_f1
+        worst_cluster_recall = metrics.worst_cluster_recall
     else:
         labels_len = 0
         found_clusters = 0
         ari, nmi, purity = np.nan, np.nan, np.nan
+        macro_recall, macro_f1, worst_cluster_recall = np.nan, np.nan, np.nan
+
+    if result.status == "ok" and true_clusters_raw is not None:
+        cluster_count_abs_error = float(abs(int(found_clusters) - true_clusters))
+        over_split = float(int(found_clusters > true_clusters))
+        under_split = float(int(found_clusters < true_clusters))
+    else:
+        cluster_count_abs_error = np.nan
+        over_split = np.nan
+        under_split = np.nan
 
     result_row = build_benchmark_result_row(
         case_idx=case_idx,
@@ -113,7 +132,7 @@ def run_single_method_once(
         case_category=meta.get("category", "unknown"),
         method_name=spec.name,
         run_params=run_params,
-        true_clusters=meta.get("n_clusters") or 0,
+        true_clusters=true_clusters,
         found_clusters=found_clusters,
         samples=meta["n_samples"],
         features=meta["n_features"],
@@ -121,6 +140,12 @@ def run_single_method_once(
         ari=ari,
         nmi=nmi,
         purity=purity,
+        macro_recall=macro_recall,
+        macro_f1=macro_f1,
+        worst_cluster_recall=worst_cluster_recall,
+        cluster_count_abs_error=cluster_count_abs_error,
+        over_split=over_split,
+        under_split=under_split,
         status=result.status,
         skip_reason=result.skip_reason,
         labels_length=labels_len,

@@ -1,0 +1,392 @@
+#!/usr/bin/env python3
+"""Per-node PCA dimension diagnostic.
+
+For every internal node in the tree, computes:
+  1. d_active   — number of features with variance > 0 among descendants
+  2. erank      — effective rank (Shannon entropy of eigenvalue spectrum)
+  3. k_MP       — Marchenko-Pastur signal eigenvalue count
+
+Shows how k_v varies with n_descendants across the tree,
+and compares to the current JL-based k.
+
+Usage:
+    python scripts/diagnose_per_node_dimension.py [--input feature_matrix.tsv]
+"""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from sklearn.random_projection import johnson_lindenstrauss_min_dim
+
+from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.io import tree_from_linkage
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument("--input", type=Path, default=Path("feature_matrix.tsv"))
+    return p.parse_args()
+
+
+# =====================================================================
+# Dimension estimators
+# =====================================================================
+
+
+def count_active_features(data_sub: np.ndarray) -> int:
+    """Count features with non-zero variance (i.e., not all 0 or all 1)."""
+    if data_sub.shape[0] <= 1:
+        return 0
+    col_var = np.var(data_sub, axis=0)
+    return int(np.sum(col_var > 0))
+
+
+def effective_rank(eigenvalues: np.ndarray) -> float:
+    """Continuous effective rank via Shannon entropy.
+
+    erank(Σ) = exp(-Σ p_i log p_i)  where p_i = λ_i / Σλ
+    """
+    eigs = np.maximum(eigenvalues, 0)
+    total = np.sum(eigs)
+    if total <= 0:
+        return 1.0
+    p = eigs / total
+    p = p[p > 0]
+    entropy = -np.sum(p * np.log(p))
+    return float(np.exp(entropy))
+
+
+def mp_signal_count(eigenvalues: np.ndarray, n: int, d: int) -> int:
+    """Count eigenvalues above the Marchenko-Pastur upper bound.
+
+    σ² estimated from median eigenvalue (robust to outliers).
+    Upper bound = σ² · (1 + √(d/n))².
+    """
+    gamma = d / n
+    sigma2 = float(np.median(eigenvalues))
+    if sigma2 <= 0:
+        return 0
+    upper = sigma2 * (1 + np.sqrt(gamma)) ** 2
+    return int(np.sum(eigenvalues > upper))
+
+
+def jl_k(n_child: int, d: int, eps: float = 0.3) -> int:
+    """Current JL-based dimension for comparison."""
+    k = johnson_lindenstrauss_min_dim(n_samples=max(n_child, 1), eps=eps)
+    return int(min(max(k, config.PROJECTION_MIN_K), d))
+
+
+# =====================================================================
+# Main analysis
+# =====================================================================
+
+
+def main() -> None:
+    args = parse_args()
+
+    # --- Load data ---
+    df = pd.read_csv(args.input, sep="\t", index_col=0)
+    X = df.values.astype(np.float64)
+    n, d = X.shape
+    print(f"Data: {n} × {d}, sparsity = {1 - X.mean():.3f}")
+
+    # --- Build tree ---
+    dist = pdist(X, metric=config.TREE_DISTANCE_METRIC)
+    Z = linkage(dist, method=config.TREE_LINKAGE_METHOD)
+    tree = tree_from_linkage(Z, leaf_names=df.index.tolist())
+    tree.populate_node_divergences(leaf_data=df)
+    print(f"Tree: {tree.number_of_nodes()} nodes, {tree.number_of_edges()} edges\n")
+
+    # Build label → row index map
+    label_to_idx = {label: i for i, label in enumerate(df.index)}
+
+    # --- Collect per-node dimension estimates ---
+    records = []
+    internal_nodes = [n_id for n_id in tree.nodes if not tree._is_leaf(n_id)]
+
+    for node_id in internal_nodes:
+        # Get descendant leaf labels
+        leaf_labels = tree.get_leaves(node=node_id, return_labels=True)
+        n_desc = len(leaf_labels)
+
+        if n_desc < 2:
+            continue
+
+        # Extract local data submatrix
+        row_indices = [label_to_idx[lbl] for lbl in leaf_labels if lbl in label_to_idx]
+        if len(row_indices) < 2:
+            continue
+        data_sub = X[row_indices, :]
+
+        # 1. Active features
+        d_act = count_active_features(data_sub)
+
+        # 2. Eigenvalue-based estimates
+        # Use min(n_desc, d) to be efficient
+        if n_desc <= d:
+            # Compute d×d covariance is wasteful; use n×n Gram trick
+            # But for simplicity just compute column variances and PCA
+            cov = np.cov(data_sub.T)  # d × d
+        else:
+            cov = np.cov(data_sub.T)
+
+        eigenvalues = np.sort(np.linalg.eigvalsh(cov))[::-1]
+
+        erank = effective_rank(eigenvalues)
+        k_mp = mp_signal_count(eigenvalues, n_desc, d)
+
+        # 3. JL baseline
+        k_jl_val = jl_k(n_desc, d)
+
+        # 4. Variance captured at different k
+        total_var = np.sum(eigenvalues)
+        cum_var = np.cumsum(eigenvalues) / total_var if total_var > 0 else np.zeros(d)
+        k_90 = int(np.searchsorted(cum_var, 0.90)) + 1
+        k_95 = int(np.searchsorted(cum_var, 0.95)) + 1
+
+        # Children info
+        children = list(tree.successors(node_id))
+        n_children = len(children)
+
+        records.append(
+            {
+                "node": node_id,
+                "n_desc": n_desc,
+                "n_children": n_children,
+                "d_active": d_act,
+                "erank": round(erank, 1),
+                "k_MP": k_mp,
+                "k_90pct": min(k_90, d),
+                "k_95pct": min(k_95, d),
+                "k_JL": k_jl_val,
+                "d": d,
+                "top_eig_pct": round(100 * eigenvalues[0] / total_var, 1) if total_var > 0 else 0,
+            }
+        )
+
+    results = pd.DataFrame(records).sort_values("n_desc")
+
+    # =====================================================================
+    # SECTION 1: Summary statistics
+    # =====================================================================
+    print("=" * 80)
+    print("SECTION 1: Per-Node Dimension Estimates — Summary")
+    print("=" * 80)
+
+    print(f"\nTotal internal nodes analyzed: {len(results)}")
+    print(f"\nn_descendants range: {results['n_desc'].min()} – {results['n_desc'].max()}")
+    print(f"d_active range:      {results['d_active'].min()} – {results['d_active'].max()}")
+    print(f"erank range:         {results['erank'].min()} – {results['erank'].max()}")
+    print(f"k_MP range:          {results['k_MP'].min()} – {results['k_MP'].max()}")
+
+    print("\n--- Descriptive statistics ---")
+    for col in ["d_active", "erank", "k_MP", "k_JL", "k_90pct"]:
+        vals = results[col]
+        print(
+            f"  {col:12s}:  mean={vals.mean():7.1f}  median={vals.median():7.1f}  "
+            f"std={vals.std():7.1f}  min={vals.min():5}  max={vals.max():5}"
+        )
+
+    # =====================================================================
+    # SECTION 2: Dimension vs n_descendants (binned)
+    # =====================================================================
+    print("\n" + "=" * 80)
+    print("SECTION 2: Dimension vs n_descendants (binned)")
+    print("=" * 80)
+
+    bins = [2, 5, 10, 20, 50, 100, 200, 400, 700]
+    results["n_bin"] = pd.cut(results["n_desc"], bins=bins, right=False)
+
+    grouped = results.groupby("n_bin", observed=True).agg(
+        {
+            "node": "count",
+            "d_active": ["mean", "median", "min", "max"],
+            "erank": ["mean", "median"],
+            "k_MP": ["mean", "median"],
+            "k_JL": ["mean", "median"],
+        }
+    )
+    print(
+        f"\n{'n_desc bin':>15s}  {'cnt':>4s}  {'d_act(med)':>10s}  {'erank(med)':>10s}  "
+        f"{'k_MP(med)':>10s}  {'k_JL(med)':>10s}"
+    )
+    print("-" * 75)
+
+    for interval, row in grouped.iterrows():
+        cnt = int(row[("node", "count")])
+        d_act_med = row[("d_active", "median")]
+        erank_med = row[("erank", "median")]
+        kmp_med = row[("k_MP", "median")]
+        kjl_med = row[("k_JL", "median")]
+        print(
+            f"{str(interval):>15s}  {cnt:4d}  {d_act_med:10.0f}  {erank_med:10.1f}  "
+            f"{kmp_med:10.0f}  {kjl_med:10.0f}"
+        )
+
+    # =====================================================================
+    # SECTION 3: Sample individual nodes (small, medium, large)
+    # =====================================================================
+    print("\n" + "=" * 80)
+    print("SECTION 3: Sample Nodes (small / medium / large)")
+    print("=" * 80)
+
+    # Pick representative nodes
+    quantiles = [0.0, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 1.0]
+    sample_indices = [int(q * (len(results) - 1)) for q in quantiles]
+    sample_indices = sorted(set(sample_indices))
+
+    sample = results.iloc[sample_indices]
+    print(
+        f"\n{'node':>8s}  {'n_desc':>6s}  {'d_active':>8s}  {'erank':>6s}  {'k_MP':>5s}  "
+        f"{'k_90%':>5s}  {'k_95%':>5s}  {'k_JL':>5s}  {'top_eig%':>8s}"
+    )
+    print("-" * 75)
+    for _, row in sample.iterrows():
+        print(
+            f"{row['node']:>8s}  {row['n_desc']:6d}  {row['d_active']:8d}  "
+            f"{row['erank']:6.1f}  {row['k_MP']:5d}  {row['k_90pct']:5d}  "
+            f"{row['k_95pct']:5d}  {row['k_JL']:5d}  {row['top_eig_pct']:8.1f}"
+        )
+
+    # =====================================================================
+    # SECTION 4: Ratio analysis — how much does per-node k differ from JL?
+    # =====================================================================
+    print("\n" + "=" * 80)
+    print("SECTION 4: Ratio Analysis (per-node k vs JL)")
+    print("=" * 80)
+
+    results["ratio_active_jl"] = results["d_active"] / results["k_JL"]
+    results["ratio_erank_jl"] = results["erank"] / results["k_JL"]
+    results["ratio_mp_jl"] = results["k_MP"] / results["k_JL"]
+
+    print("\n--- d_active / k_JL ---")
+    r = results["ratio_active_jl"]
+    print(f"  mean={r.mean():.3f}  median={r.median():.3f}  min={r.min():.3f}  max={r.max():.3f}")
+
+    print("\n--- erank / k_JL ---")
+    r = results["ratio_erank_jl"]
+    print(f"  mean={r.mean():.3f}  median={r.median():.3f}  min={r.min():.3f}  max={r.max():.3f}")
+
+    print("\n--- k_MP / k_JL ---")
+    r = results["ratio_mp_jl"]
+    print(f"  mean={r.mean():.3f}  median={r.median():.3f}  min={r.min():.3f}  max={r.max():.3f}")
+
+    # =====================================================================
+    # SECTION 5: Relationship between n_desc and d_active
+    # =====================================================================
+    print("\n" + "=" * 80)
+    print("SECTION 5: d_active vs n_desc Relationship")
+    print("=" * 80)
+
+    # Fit log-log regression: log(d_active) = a + b*log(n_desc)
+    valid = results[results["d_active"] > 0].copy()
+    if len(valid) > 5:
+        log_n = np.log(valid["n_desc"].values)
+        log_d = np.log(valid["d_active"].values)
+        # Simple OLS
+        A = np.column_stack([np.ones_like(log_n), log_n])
+        beta, _, _, _ = np.linalg.lstsq(A, log_d, rcond=None)
+        predicted = A @ beta
+        ss_res = np.sum((log_d - predicted) ** 2)
+        ss_tot = np.sum((log_d - np.mean(log_d)) ** 2)
+        r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
+
+        print(f"\nLog-log regression: log(d_active) = {beta[0]:.3f} + {beta[1]:.3f} * log(n_desc)")
+        print(f"  => d_active ≈ {np.exp(beta[0]):.1f} * n_desc^{beta[1]:.3f}")
+        print(f"  R² = {r2:.4f}")
+
+        # Show predictions at key n values
+        print("\n  Predicted d_active:")
+        for n_val in [2, 5, 10, 20, 50, 100, 200, 500, 626]:
+            pred = np.exp(beta[0]) * n_val ** beta[1]
+            print(f"    n={n_val:4d} → d_active ≈ {pred:.0f}")
+
+    # Also fit log(erank) ~ log(n_desc)
+    if len(valid) > 5:
+        log_er = np.log(valid["erank"].values)
+        A = np.column_stack([np.ones_like(log_n), log_n])
+        beta_er, _, _, _ = np.linalg.lstsq(A, log_er, rcond=None)
+        predicted_er = A @ beta_er
+        ss_res_er = np.sum((log_er - predicted_er) ** 2)
+        ss_tot_er = np.sum((log_er - np.mean(log_er)) ** 2)
+        r2_er = 1 - ss_res_er / ss_tot_er if ss_tot_er > 0 else 0
+
+        print(
+            f"\nLog-log regression: log(erank) = {beta_er[0]:.3f} + {beta_er[1]:.3f} * log(n_desc)"
+        )
+        print(f"  => erank ≈ {np.exp(beta_er[0]):.1f} * n_desc^{beta_er[1]:.3f}")
+        print(f"  R² = {r2_er:.4f}")
+
+    # =====================================================================
+    # SECTION 6: Implications for the edge test
+    # =====================================================================
+    print("\n" + "=" * 80)
+    print("SECTION 6: Implications for the Edge Test")
+    print("=" * 80)
+
+    # For nodes near leaves (n=2–5), how many features are active?
+    small = results[results["n_desc"] <= 5]
+    medium = results[(results["n_desc"] >= 10) & (results["n_desc"] <= 50)]
+    large = results[results["n_desc"] >= 100]
+
+    print(f"\nNear-leaf nodes (n ≤ 5, count={len(small)}):")
+    if len(small) > 0:
+        print(
+            f"  d_active: median={small['d_active'].median():.0f}, "
+            f"mean={small['d_active'].mean():.0f}, range=[{small['d_active'].min()}, {small['d_active'].max()}]"
+        )
+        print(
+            f"  erank:    median={small['erank'].median():.1f}, "
+            f"mean={small['erank'].mean():.1f}"
+        )
+        print(f"  k_JL:     median={small['k_JL'].median():.0f}")
+        if small["d_active"].median() > 0:
+            print(
+                f"  => JL gives k = {small['k_JL'].median():.0f} but only "
+                f"{small['d_active'].median():.0f} features vary. "
+                f"{'OVER-projected' if small['k_JL'].median() > small['d_active'].median() else 'UNDER-projected'}"
+            )
+
+    print(f"\nMid-tree nodes (10 ≤ n ≤ 50, count={len(medium)}):")
+    if len(medium) > 0:
+        print(
+            f"  d_active: median={medium['d_active'].median():.0f}, "
+            f"mean={medium['d_active'].mean():.0f}"
+        )
+        print(f"  erank:    median={medium['erank'].median():.1f}")
+        print(f"  k_JL:     median={medium['k_JL'].median():.0f}")
+
+    print(f"\nLarge subtrees (n ≥ 100, count={len(large)}):")
+    if len(large) > 0:
+        print(
+            f"  d_active: median={large['d_active'].median():.0f}, "
+            f"mean={large['d_active'].mean():.0f}"
+        )
+        print(f"  erank:    median={large['erank'].median():.1f}")
+        print(f"  k_JL:     median={large['k_JL'].median():.0f}")
+
+    # Overall recommendation
+    print("\n--- Summary ---")
+    cor_n_dact = np.corrcoef(np.log(results["n_desc"]), np.log(np.maximum(results["d_active"], 1)))[
+        0, 1
+    ]
+    print(f"  Correlation log(n_desc) vs log(d_active): {cor_n_dact:.3f}")
+    print(f"  Median ratio d_active/d: {results['d_active'].median() / d:.3f}")
+    print(
+        f"  At n=2: JL gives k={jl_k(2, d)}, active features likely ~{small['d_active'].min() if len(small) > 0 else '?'}"
+    )
+    print(
+        f"  At n=626: JL gives k={jl_k(626, d)}={d}, erank={results[results['n_desc']==626]['erank'].values[0] if len(results[results['n_desc']==626]) > 0 else '?'}"
+    )
+
+
+if __name__ == "__main__":
+    main()

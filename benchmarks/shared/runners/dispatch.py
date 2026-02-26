@@ -66,12 +66,16 @@ def run_clustering_result(
     alpha = config.SIBLING_ALPHA if significance_level is None else float(significance_level)
 
     try:
-        if method_id in {"kl", "kl_rogerstanimoto"}:
-            if distance_condensed is None:
-                metric = params.get("tree_distance_metric", config.TREE_DISTANCE_METRIC)
-                kl_distance_condensed = pdist(data_df.values, metric=metric)
-            else:
+        if method_id in {"kl", "kl_rogerstanimoto", "kl_complete", "kl_single", "kl_ward", "kl_v2"}:
+            metric = params.get("tree_distance_metric", config.TREE_DISTANCE_METRIC)
+            if method_id == "kl_ward":
+                # Ward linkage requires euclidean distance; always recompute.
+                kl_distance_condensed = pdist(data_df.values, metric="euclidean")
+            elif distance_condensed is not None:
+                # Use precomputed distance (e.g. SBM modularity distance).
                 kl_distance_condensed = np.asarray(distance_condensed, dtype=float)
+            else:
+                kl_distance_condensed = pdist(data_df.values, metric=metric)
             result = spec.runner(
                 data_df,
                 kl_distance_condensed,

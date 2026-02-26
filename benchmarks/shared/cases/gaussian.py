@@ -1,68 +1,17 @@
-"""Gaussian cluster test cases."""
+"""Gaussian cluster test cases.
+
+Gaussian blobs are generated via sklearn.make_blobs and then median-binarized
+per feature: (X > median(X, axis=0)).astype(int).
+
+The improved_gaussian series provides a well-structured progressive
+difficulty strategy.  The extreme_noise cases are stress tests where signal
+is deliberately buried in noise.
+"""
 
 GAUSSIAN_CASES = {
-    "gaussian_clear": [
-        {
-            "n_samples": 30,
-            "n_features": 30,
-            "n_clusters": 3,
-            "cluster_std": 0.5,
-            "seed": 100,
-        },
-        {
-            "n_samples": 40,
-            "n_features": 40,
-            "n_clusters": 4,
-            "cluster_std": 0.8,
-            "seed": 101,
-        },
-        {
-            "n_samples": 50,
-            "n_features": 50,
-            "n_clusters": 5,
-            "cluster_std": 1.0,
-            "seed": 102,
-        },
-    ],
-    "gaussian_mixed": [
-        {
-            "n_samples": 35,
-            "n_features": 35,
-            "n_clusters": 3,
-            "cluster_std": 1.2,
-            "seed": 103,
-        },
-        {
-            "n_samples": 45,
-            "n_features": 45,
-            "n_clusters": 4,
-            "cluster_std": 1.5,
-            "seed": 104,
-        },
-        {
-            "n_samples": 55,
-            "n_features": 55,
-            "n_clusters": 5,
-            "cluster_std": 1.8,
-            "seed": 105,
-        },
-        {
-            "n_samples": 25,
-            "n_features": 25,
-            "n_clusters": 2,
-            "cluster_std": 0.7,
-            "seed": 106,
-        },
-        {
-            "n_samples": 65,
-            "n_features": 65,
-            "n_clusters": 6,
-            "cluster_std": 2.0,
-            "seed": 107,
-        },
-    ],
     "gaussian_extreme_noise": [
         {
+            "name": "gauss_extreme_noise_3c",
             "n_samples": 30,
             "n_features": 30,
             "n_clusters": 3,
@@ -70,6 +19,7 @@ GAUSSIAN_CASES = {
             "seed": 42,
         },
         {
+            "name": "gauss_extreme_noise_highd",
             "n_samples": 40,
             "n_features": 20000,
             "n_clusters": 4,
@@ -77,6 +27,7 @@ GAUSSIAN_CASES = {
             "seed": 43,
         },
         {
+            "name": "gauss_extreme_noise_many",
             "n_samples": 300,
             "n_features": 2000,
             "n_clusters": 30,
@@ -143,6 +94,25 @@ GAUSSIAN_CASES = {
             "n_clusters": 8,
             "cluster_std": 2.0,
             "seed": 301,
+        },
+    ],
+    # ---- Null case (K=1): no cluster structure ----
+    "gaussian_null": [
+        {
+            "name": "gauss_null_small",
+            "n_samples": 60,
+            "n_features": 30,
+            "n_clusters": 1,
+            "cluster_std": 1.0,
+            "seed": 400,
+        },
+        {
+            "name": "gauss_null_large",
+            "n_samples": 200,
+            "n_features": 80,
+            "n_clusters": 1,
+            "cluster_std": 1.0,
+            "seed": 401,
         },
     ],
 }

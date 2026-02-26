@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 import kl_clustering_analysis.config as cfg
-from kl_clustering_analysis.hierarchy_analysis.statistics.random_projection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     _PROJECTION_CACHE,
     _PROJECTOR_CACHE,
 )

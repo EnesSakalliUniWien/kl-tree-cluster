@@ -51,7 +51,7 @@ def analyze_pipeline_performance():
     results_df = run_statistical_analysis(tree, X)
 
     # 3) Decomposition
-    result = tree.decompose(results_df=results_df)
+    result = tree.decompose(results_df=results_df, use_signal_localization=False)
     assert isinstance(tree, PosetTree)
     report = tree.build_sample_cluster_assignments(result)
 

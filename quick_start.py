@@ -5,9 +5,10 @@ from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
 
+from kl_clustering_analysis import config
+
 # Import the necessary functions from your library
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis import config
 
 
 def main():
@@ -70,9 +71,7 @@ def main():
     predicted_labels = {}
     if cluster_assignments:
         for cluster_id, info in cluster_assignments.items():
-            print(
-                f"  - Cluster {cluster_id} (root: {info['root_node']}): {info['size']} samples"
-            )
+            print(f"  - Cluster {cluster_id} (root: {info['root_node']}): {info['size']} samples")
             for leaf in info["leaves"]:
                 predicted_labels[leaf] = cluster_id
 

@@ -5,19 +5,22 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
 from benchmarks.shared.results import ComputedResultRecord
 from benchmarks.shared.util.pdf.layout import prepare_pdf_figure
-from .summary import create_validation_plot
+
+from .cover_page import generate_cover_pages
 from .export import (
+    create_manifold_plots_from_results,
     create_tree_plots_from_results,
     create_tree_then_umap_plots_from_results,
-    create_manifold_plots_from_results,
     create_umap_3d_plots_from_results,
 )
+from .summary import create_validation_plot
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +41,12 @@ def log_detailed_results(df_results: pd.DataFrame) -> None:
         "ARI",
         "NMI",
         "Purity",
+        "Macro_Recall",
+        "Macro_F1",
+        "Worst_Cluster_Recall",
+        "Cluster_Count_Abs_Error",
+        "Over_Split",
+        "Under_Split",
         "Status",
     ]
     available = [col for col in columns if col in df_results.columns]
@@ -76,6 +85,14 @@ def generate_benchmark_plots(
 
     _ = save_png
     _ = collect_figs
+
+    # --- Experiment-setup cover pages ---
+    n_cases = df_results["Test"].nunique() if "Test" in df_results.columns else len(df_results)
+    cover_figs = generate_cover_pages(n_cases=n_cases)
+    for cfig in cover_figs:
+        pdf.savefig(cfig)
+        plt.close(cfig)
+    logger.info("Wrote %d cover/setup pages to PDF.", len(cover_figs))
 
     fig = create_validation_plot(df_results)
 

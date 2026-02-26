@@ -6,11 +6,12 @@ from leaf nodes to internal nodes, optionally using branch lengths
 for harmonic weighting.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
+
+import networkx as nx
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import networkx as nx
 
 
 def _calculate_leaf_distribution(
@@ -48,9 +49,7 @@ def _calculate_hierarchy_node_distribution(
 
     for child_id in children:
         child_leaves = int(tree.nodes[child_id]["leaf_count"])
-        child_distribution = np.asarray(
-            tree.nodes[child_id]["distribution"], dtype=np.float64
-        )
+        child_distribution = np.asarray(tree.nodes[child_id]["distribution"], dtype=np.float64)
         total_descendant_leaves += child_leaves
 
         # Original behavior: weight = leaf_count
@@ -83,9 +82,7 @@ def populate_distributions(
     root = tree.graph.get("root") or next(n for n, d in tree.in_degree() if d == 0)
 
     # Convert DataFrame to dict for efficient lookups
-    leaf_feature_data = {
-        idx: row.values.astype(np.float64) for idx, row in leaf_data.iterrows()
-    }
+    leaf_feature_data = {idx: row.values.astype(np.float64) for idx, row in leaf_data.iterrows()}
 
     # Process nodes bottom-up (leaves first, then parents)
     for node_id in nx.dfs_postorder_nodes(tree, source=root):
