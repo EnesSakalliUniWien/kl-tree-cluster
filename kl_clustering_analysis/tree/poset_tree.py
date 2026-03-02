@@ -392,8 +392,6 @@ class PosetTree(nx.DiGraph):
         # Cache annotated results back so stats_df reflects the full pipeline
         self.stats_df = decomposer.results_df
 
-        if decomposer.use_signal_localization:
-            return decomposer.decompose_tree_v2()
         return decomposer.decompose_tree()
 
     def build_sample_cluster_assignments(

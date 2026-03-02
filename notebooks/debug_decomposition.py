@@ -81,12 +81,10 @@ def main():
         results_df=tree.stats_df,
         alpha_local=0.05,
         sibling_alpha=0.05,
-        use_signal_localization=True,
-        localization_max_depth=3,
     )
 
     print("\nRunning decomposition...")
-    results = decomposer.decompose_tree_v2()
+    results = decomposer.decompose_tree()
 
     n_clusters = results["num_clusters"]
     print(f"\nFound {n_clusters} clusters.")

@@ -20,18 +20,12 @@ from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
 from .cluster_assignments import build_sample_cluster_assignments
 from .gate_annotations import compute_gate_annotations
-from .gates import GateEvaluator, V2TraversalState, iterate_worklist, process_node, process_node_v2
+from .gates import GateEvaluator, iterate_worklist, process_node
 from .pairwise_testing import (
     build_branch_distance_cache,
     test_cluster_pair_divergence,
-    test_node_pair_divergence,
 )
 from .posthoc_merge import apply_posthoc_merge
-from .signal_localization import (
-    extract_constrained_clusters,
-    merge_difference_graphs,
-    merge_similarity_graphs,
-)
 from .statistics.branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
 from .statistics.projection.random_projection import resolve_min_k
 from .statistics.sibling_divergence import CalibrationModel, WeightedCalibrationModel
@@ -67,9 +61,6 @@ class TreeDecomposition:
         sibling_alpha: float = config.SIBLING_ALPHA,
         posthoc_merge: bool = config.POSTHOC_MERGE,
         posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
-        use_signal_localization: bool = config.USE_SIGNAL_LOCALIZATION,
-        localization_max_depth: int | None = config.LOCALIZATION_MAX_DEPTH,
-        localization_max_pairs: int | None = config.LOCALIZATION_MAX_PAIRS,
         leaf_data: pd.DataFrame | None = None,
         spectral_method: str | None = config.SPECTRAL_METHOD,
     ):
@@ -94,15 +85,6 @@ class TreeDecomposition:
             significantly different, working bottom-up through the tree.
         posthoc_merge_alpha
             Significance level for post-hoc merge tests. Defaults to sibling_alpha if None.
-        use_signal_localization
-            If True, use signal localization (v2) to find WHERE divergence originates,
-            enabling cross-boundary partial merges for soft cluster boundaries.
-        localization_max_depth
-            Maximum recursion depth for signal localization.
-        localization_max_pairs
-            Maximum number of terminal cross-boundary pairs to collect per
-            localization call.  Once reached, remaining stack items are
-            recorded at their current granularity without further drilling.
         leaf_data
             Raw binary data matrix (samples × features).  Required for per-node
             spectral dimension estimation.  When ``None``, the legacy JL-based
@@ -127,15 +109,6 @@ class TreeDecomposition:
         self.posthoc_merge = bool(posthoc_merge)
         self.posthoc_merge_alpha = (
             float(posthoc_merge_alpha) if posthoc_merge_alpha is not None else self.sibling_alpha
-        )
-
-        # Signal localization parameters
-        self.use_signal_localization = bool(use_signal_localization)
-        self.localization_max_depth = (
-            None if localization_max_depth is None else int(localization_max_depth)
-        )
-        self.localization_max_pairs = (
-            None if localization_max_pairs is None else int(localization_max_pairs)
         )
 
         # ----- root -----
@@ -410,23 +383,6 @@ class TreeDecomposition:
         """
         return _build_cluster_assignments_func(final_leaf_sets, self._find_cluster_root)
 
-    def _test_node_pair_divergence(self, node_a: str, node_b: str) -> Tuple[float, float, float]:
-        """Test divergence between two arbitrary tree nodes.
-
-        Delegates to :func:`~.pairwise_testing.test_node_pair_divergence`.
-        Uses the same calibration model as the Gate 3 sibling test so
-        that signal-localization sub-tests are on the same statistical
-        scale as the decomposition.
-        """
-        return test_node_pair_divergence(
-            self.tree,
-            node_a,
-            node_b,
-            self._mean_branch_length,
-            calibration_model=self._calibration_model,
-            branch_distance_cache=self._branch_distance_cache,
-        )
-
     # ---------- post-hoc merge helpers ----------
 
     def _test_cluster_pair_divergence(
@@ -478,98 +434,6 @@ class TreeDecomposition:
                 "alpha_local": self.alpha_local,
                 "decision_mode": "sibling_divergence",
                 "posthoc_merge": self.posthoc_merge,
-            },
-        }
-
-    def decompose_tree_v2(self) -> dict[str, object]:
-        """Return cluster assignments using signal localization for soft boundaries.
-
-        This enhanced version drills down when siblings are "different" to find
-        WHERE the divergence originates. This enables cross-boundary partial merges
-        when some sub-clusters are similar despite being on opposite sides of a split.
-
-        Algorithm
-        ---------
-        1. Standard top-down traversal collecting split points
-        2. For each split point, run signal localization to find soft boundaries
-        3. Build combined similarity graph from all split points
-        4. Extract final clusters from connected components
-
-        Returns
-        -------
-        dict[str, object]
-            Contains:
-            - cluster_assignments: Mapping from cluster ID to cluster info
-            - num_clusters: Number of clusters
-            - localization_results: Dict of LocalizationResult per split point
-            - similarity_graph: Combined similarity graph (edges = similar pairs)
-            - independence_analysis: Configuration metadata
-        """
-        # Phase 1: Standard traversal to collect split points
-        nodes_to_visit: List[str] = [self._root]
-        processed: Set[str] = set()
-        state = V2TraversalState(
-            split_points=[],
-            merge_points=[],
-            localization_results={},
-        )
-
-        for node in iterate_worklist(nodes_to_visit, processed):
-            process_node_v2(
-                node,
-                self._gate,
-                nodes_to_visit,
-                state,
-                test_divergence=self._test_node_pair_divergence,
-                sibling_alpha=self.sibling_alpha,
-                localization_max_depth=self.localization_max_depth,
-                localization_max_pairs=self.localization_max_pairs,
-            )
-
-        split_points = state.split_points
-        merge_points = state.merge_points
-        localization_results = state.localization_results
-
-        # Phase 2: Build combined similarity and difference graphs
-        combined_similarity = merge_similarity_graphs(localization_results)
-        combined_difference = merge_difference_graphs(localization_results)
-
-        # Phase 3: Extract soft clusters with constraints
-        if combined_similarity.number_of_edges() > 0:
-            # We have soft boundaries - extract clusters using constrained merge
-            soft_clusters = extract_constrained_clusters(
-                similarity_graph=combined_similarity,
-                difference_graph=combined_difference,
-                tree=self.tree,
-                merge_points=merge_points,
-            )
-        else:
-            # No soft boundaries - use standard hard cluster extraction
-            soft_clusters = [self._get_all_leaves(node) for node in merge_points]
-
-        # Build final cluster assignments
-        cluster_assignments = self._build_cluster_assignments(soft_clusters)
-
-        # Apply post-hoc merge and capture audit trail
-        cluster_assignments, merge_audit = self._maybe_apply_posthoc_merge_with_audit(
-            cluster_assignments
-        )
-
-        return {
-            "cluster_assignments": cluster_assignments,
-            "num_clusters": len(cluster_assignments),
-            "localization_results": localization_results,
-            "similarity_graph": combined_similarity,
-            "difference_graph": combined_difference,
-            "split_points": split_points,
-            "posthoc_merge_audit": merge_audit,
-            "independence_analysis": {
-                "alpha_local": self.alpha_local,
-                "decision_mode": "sibling_divergence_v2_localized",
-                "posthoc_merge": self.posthoc_merge,
-                "use_signal_localization": True,
-                "localization_max_depth": self.localization_max_depth,
-                "localization_max_pairs": self.localization_max_pairs,
             },
         }
 

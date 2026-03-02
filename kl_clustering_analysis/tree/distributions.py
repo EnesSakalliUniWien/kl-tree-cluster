@@ -25,9 +25,7 @@ def _calculate_leaf_distribution(
     try:
         row_idx = label_to_row_idx[label]
     except KeyError as exc:
-        raise KeyError(
-            f"Leaf label {label!r} was not found in leaf_data index."
-        ) from exc
+        raise KeyError(f"Leaf label {label!r} was not found in leaf_data index.") from exc
 
     feature_probabilities = np.asarray(leaf_matrix[row_idx], dtype=np.float64).reshape(-1)
     tree.nodes[node_id]["distribution"] = feature_probabilities

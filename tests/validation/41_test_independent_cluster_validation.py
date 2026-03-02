@@ -66,7 +66,7 @@ class TestIndependentClusterValidation(unittest.TestCase):
         with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
             # Disable post-hoc merge to test base decomposition behavior
             results = tree.decompose(
-                results_df=stats, posthoc_merge=False, use_signal_localization=False
+                results_df=stats, posthoc_merge=False
             )
 
         self.assertEqual(results["num_clusters"], 2)
@@ -81,7 +81,7 @@ class TestIndependentClusterValidation(unittest.TestCase):
         stats.loc["root", "Sibling_BH_Different"] = False
         # Bypass annotation pipeline — this test controls gate columns directly.
         with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
-            results = tree.decompose(results_df=stats, use_signal_localization=False)
+            results = tree.decompose(results_df=stats)
 
         self.assertEqual(results["num_clusters"], 1)
         cluster = next(iter(results["cluster_assignments"].values()))

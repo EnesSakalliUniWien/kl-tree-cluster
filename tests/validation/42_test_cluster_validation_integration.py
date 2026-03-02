@@ -26,7 +26,6 @@ def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
         leaf_data=data_df,
         alpha_local=config.ALPHA_LOCAL,
         sibling_alpha=significance_level,
-        use_signal_localization=False,
         **kwargs,
     )
     return decomposition, tree

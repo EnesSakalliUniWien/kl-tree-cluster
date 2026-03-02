@@ -7,17 +7,17 @@ from typing import Literal
 # --- Statistical Parameters ---
 
 # Default significance level (alpha) for hypothesis tests.
-SIGNIFICANCE_ALPHA: float = 0.05
+SIGNIFICANCE_ALPHA: float = 0.01
 
 # Default significance level (alpha) for sibling-divergence gating in clustering.
 # This is intentionally more conservative than SIGNIFICANCE_ALPHA to reduce
 # over-merging at high levels of the tree.
-SIBLING_ALPHA: float = 0.05
+SIBLING_ALPHA: float = 0.01
 
 # --- Decomposition Parameters ---
 
 # Default significance level for local (child-vs-parent) tests in decomposition.
-ALPHA_LOCAL: float = 0.05
+ALPHA_LOCAL: float = 0.01
 
 
 # Epsilon value for numerical stability in KL-divergence and probability calculations.
@@ -29,13 +29,13 @@ EPSILON: float = 1e-9
 # Scale Wald test variance by normalised branch length (Felsenstein PIC, 1985).
 # Disabled: empirical comparison shows Felsenstein scaling systematically
 # under-splits on data-dependent trees (mean ARI 0.694 → 1.000 without it).
-FELSENSTEIN_SCALING: bool = False
+FELSENSTEIN_SCALING: bool = True
 
 # Explicit branch-length semantics for pairwise path distances used by
 # Felsenstein scaling in localization and post-hoc merge:
 # - "phylogeny": use edge ``branch_length`` values as true path lengths.
 # - "topology": ignore edge values and use unit hop-length per edge.
-FELSENSTEIN_BRANCH_LENGTH_MODE: Literal["phylogeny", "topology"] = "phylogeny"
+FELSENSTEIN_BRANCH_LENGTH_MODE: Literal["phylogeny", "topology"] = "topology"
 
 # Behavior when scaling is enabled in phylogeny mode but some edges have
 # missing/invalid branch lengths:
@@ -165,36 +165,3 @@ EIGENVALUE_WHITENING: bool = False
 #                             edge p-values: w_i = min(p_edge_L, p_edge_R). Continuous
 #                             weighting avoids hard binary null/non-null split; more stable.
 SIBLING_TEST_METHOD: str = "cousin_weighted_wald"
-
-
-# --- Signal Localization Parameters ---
-
-# Enable signal localization for soft cluster boundaries.
-# When True, uses _should_split_v2 which drills down to find WHERE
-# the divergence signal originates, enabling cross-boundary partial merges.
-# WARNING: v2 is experimental. Benchmark (2026-02-17, 74 cases) shows
-# Mean ARI 0.431 vs v1's 0.757 — localization sub-tests lack power
-# (small samples + BH penalty) creating false similarity edges that
-# incorrectly merge clusters. v2 does improve phylogenetic cases
-# (e.g. phylo_divergent_8taxa ARI 1.0 vs v1's over-splitting to K=72).
-USE_SIGNAL_LOCALIZATION: bool = False
-
-# Maximum recursion depth for signal localization.
-# The *primary* stopping criterion is Gate 2 (child-parent divergence):
-# localization only drills into children whose edge to their parent is
-# significant (``is_edge_significant`` callback), so noise branches are
-# pruned automatically.  This depth cap is a *safety backstop* to prevent
-# combinatorial blowup on pathological trees where Gate 2 passes at many
-# consecutive levels.  Each depth level can multiply cross-boundary pairs
-# by up to O(k²), so depth=3 allows at most ~3 levels of sub-pair
-# expansion beyond the initial sibling comparison.
-# Set to None to disable the cap (Gate 2 alone governs recursion).
-LOCALIZATION_MAX_DEPTH: int | None = 3
-
-# Maximum number of cross-boundary pairs to test during localization.
-# Each depth level can multiply pairs by O(k²) where k is the branching
-# factor.  This cap aborts further drilling once enough pairs have been
-# recorded, preventing runaway computation on wide or deep trees.
-# Pairs already tested are kept; only further drilling is stopped.
-# Set to None to disable (depth + Gate 2 alone govern termination).
-LOCALIZATION_MAX_PAIRS: int | None = 50

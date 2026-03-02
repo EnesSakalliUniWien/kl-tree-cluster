@@ -2,10 +2,8 @@
 
 Covers:
 - ``iterate_worklist`` — LIFO pop, dedup via processed set
-- ``process_node`` — v1 split/merge dispatch
-- ``process_node_v2`` — v2 split/merge + localization_results + power guard
+- ``process_node`` — split/merge dispatch
 - ``GateEvaluator`` — gate evaluation logic with mocked annotations
-- ``V2TraversalState`` — dataclass defaults
 """
 
 from __future__ import annotations
@@ -18,12 +16,9 @@ import pytest
 
 from kl_clustering_analysis.hierarchy_analysis.gates import (
     GateEvaluator,
-    V2TraversalState,
     iterate_worklist,
     process_node,
-    process_node_v2,
 )
-from kl_clustering_analysis.hierarchy_analysis.signal_localization import LocalizationResult
 
 # =====================================================================
 # Helpers
@@ -117,33 +112,6 @@ def _make_gate(
 def _dummy_test_divergence(node_a: str, node_b: str):
     """Return a fixed (stat, df, p_value) triple."""
     return (1.0, 1.0, 0.5)
-
-
-# =====================================================================
-# V2TraversalState
-# =====================================================================
-
-
-class TestV2TraversalState:
-    def test_default_state(self):
-        state = V2TraversalState(split_points=[], merge_points=[], localization_results={})
-        assert state.split_points == []
-        assert state.merge_points == []
-        assert state.localization_results == {}
-
-    def test_mutability(self):
-        state = V2TraversalState(split_points=[], merge_points=[], localization_results={})
-        state.split_points.append(("root", "L", "R"))
-        state.merge_points.append("X")
-        state.localization_results["root"] = LocalizationResult(
-            left_root="L",
-            right_root="R",
-            aggregate_p_value=0.01,
-            aggregate_significant=True,
-        )
-        assert len(state.split_points) == 1
-        assert len(state.merge_points) == 1
-        assert "root" in state.localization_results
 
 
 # =====================================================================
@@ -279,203 +247,6 @@ class TestProcessNode:
 
 
 # =====================================================================
-# process_node_v2
-# =====================================================================
-
-
-class TestProcessNodeV2:
-    """Tests for the v2 traversal node processor."""
-
-    def _make_state(self) -> V2TraversalState:
-        return V2TraversalState(split_points=[], merge_points=[], localization_results={})
-
-    def test_split_records_split_point(self):
-        """Split records (parent, left, right) in state.split_points."""
-        gate = _make_gate()
-        worklist: list[str] = []
-        state = self._make_state()
-
-        process_node_v2(
-            "root",
-            gate,
-            worklist,
-            state,
-            test_divergence=_dummy_test_divergence,
-            sibling_alpha=0.05,
-        )
-
-        assert len(state.split_points) == 1
-        parent, left, right = state.split_points[0]
-        assert parent == "root"
-        assert left == "L"
-        assert right == "R"
-        assert state.merge_points == []
-
-    def test_split_pushes_children(self):
-        """Split pushes children right-then-left for left-first DFS."""
-        gate = _make_gate()
-        worklist: list[str] = []
-        state = self._make_state()
-
-        process_node_v2(
-            "root",
-            gate,
-            worklist,
-            state,
-            test_divergence=_dummy_test_divergence,
-            sibling_alpha=0.05,
-        )
-
-        assert worklist == ["R", "L"]
-
-    def test_merge_records_merge_point(self):
-        """Merge records the node in state.merge_points."""
-        gate = _make_gate(
-            local_significant={
-                "L": False,
-                "R": False,
-                "L1": False,
-                "L2": False,
-                "R1": False,
-                "R2": False,
-                "root": True,
-            },
-        )
-        worklist: list[str] = []
-        state = self._make_state()
-
-        process_node_v2(
-            "root",
-            gate,
-            worklist,
-            state,
-            test_divergence=_dummy_test_divergence,
-            sibling_alpha=0.05,
-        )
-
-        assert state.merge_points == ["root"]
-        assert state.split_points == []
-        assert worklist == []
-
-    def test_localization_result_stored_when_present(self):
-        """When should_split_v2 returns a localization result, it's stored."""
-        loc = LocalizationResult(
-            left_root="L",
-            right_root="R",
-            aggregate_p_value=0.001,
-            aggregate_significant=True,
-            difference_pairs=[("L1", "R1")],
-        )
-        gate = _make_gate()
-        worklist: list[str] = []
-        state = self._make_state()
-
-        with patch.object(gate, "should_split_v2", return_value=(True, loc)):
-            process_node_v2(
-                "root",
-                gate,
-                worklist,
-                state,
-                test_divergence=_dummy_test_divergence,
-                sibling_alpha=0.05,
-            )
-
-        assert "root" in state.localization_results
-        assert state.localization_results["root"] is loc
-
-    def test_power_guard_no_localization_stored(self):
-        """Power guard: split=True, loc_result=None → no entry in localization_results."""
-        gate = _make_gate()
-        worklist: list[str] = []
-        state = self._make_state()
-
-        # Simulate power guard: should_split_v2 returns (True, None)
-        with patch.object(gate, "should_split_v2", return_value=(True, None)):
-            process_node_v2(
-                "root",
-                gate,
-                worklist,
-                state,
-                test_divergence=_dummy_test_divergence,
-                sibling_alpha=0.05,
-            )
-
-        assert "root" not in state.localization_results
-        # But split still happens:
-        assert len(state.split_points) == 1
-        assert worklist == ["R", "L"]
-
-    def test_passes_params_to_should_split_v2(self):
-        """Verify test_divergence, sibling_alpha, max_depth, and max_pairs are forwarded."""
-        gate = _make_gate()
-        worklist: list[str] = []
-        state = self._make_state()
-
-        mock_divergence = MagicMock(return_value=(1.0, 1.0, 0.5))
-
-        with patch.object(gate, "should_split_v2", return_value=(False, None)) as mock_split:
-            process_node_v2(
-                "root",
-                gate,
-                worklist,
-                state,
-                test_divergence=mock_divergence,
-                sibling_alpha=0.01,
-                localization_max_depth=3,
-                localization_max_pairs=25,
-            )
-
-            mock_split.assert_called_once_with(
-                "root",
-                test_divergence=mock_divergence,
-                sibling_alpha=0.01,
-                localization_max_depth=3,
-                localization_max_pairs=25,
-            )
-
-    def test_multiple_nodes_accumulate(self):
-        """Processing multiple nodes accumulates in state."""
-        gate = _make_gate()
-        state = self._make_state()
-
-        # Process root → split
-        worklist: list[str] = []
-        process_node_v2(
-            "root",
-            gate,
-            worklist,
-            state,
-            test_divergence=_dummy_test_divergence,
-            sibling_alpha=0.05,
-        )
-
-        # Now merge at L (make gate say merge at L)
-        gate_merge_L = _make_gate(
-            sibling_different={
-                "root": True,
-                "L": False,
-                "R": True,
-                "L1": False,
-                "L2": False,
-                "R1": False,
-                "R2": False,
-            },
-        )
-        worklist2: list[str] = []
-        process_node_v2(
-            "L",
-            gate_merge_L,
-            worklist2,
-            state,
-            test_divergence=_dummy_test_divergence,
-            sibling_alpha=0.05,
-        )
-
-        assert len(state.split_points) == 1  # root split
-        assert state.merge_points == ["L"]  # L merged
-
-
-# =====================================================================
 # GateEvaluator
 # =====================================================================
 
@@ -602,130 +373,6 @@ class TestGateEvaluator:
         gate = _make_gate()  # defaults: all significant, all different
         assert gate.should_split("root") is True
 
-    # --- should_split_v2 ---
-
-    def test_v2_gates_12_fail_returns_false_none(self):
-        """When Gates 1&2 fail, v2 returns (False, None)."""
-        gate = _make_gate(
-            local_significant={
-                "L": False,
-                "R": False,
-                "L1": False,
-                "L2": False,
-                "R1": False,
-                "R2": False,
-                "root": True,
-            },
-        )
-        result, loc = gate.should_split_v2(
-            "root",
-            test_divergence=_dummy_test_divergence,
-            sibling_alpha=0.05,
-        )
-        assert result is False
-        assert loc is None
-
-    def test_v2_gate3_fail_returns_false_none(self):
-        """When Gate 3 fails (siblings same), v2 returns (False, None)."""
-        gate = _make_gate(
-            sibling_different={
-                "root": False,
-                "L": False,
-                "R": False,
-                "L1": False,
-                "L2": False,
-                "R1": False,
-                "R2": False,
-            },
-        )
-        result, loc = gate.should_split_v2(
-            "root",
-            test_divergence=_dummy_test_divergence,
-            sibling_alpha=0.05,
-        )
-        assert result is False
-        assert loc is None
-
-    def test_v2_power_guard_discards_empty_diff_pairs(self):
-        """BH correction kills all sub-pairs → (True, None) power guard."""
-        tree = _make_binary_tree()
-        # Give leaves distributions and sample sizes for localization
-        for node in tree.nodes:
-            tree.nodes[node]["distribution"] = np.array([0.5, 0.5])
-            tree.nodes[node]["sample_size"] = 100
-
-        gate = _make_gate(tree=tree)
-
-        # All p-values are borderline non-significant at sub-level (BH kills them)
-        # but aggregate is significant
-        call_count = [0]
-
-        def mock_test(a, b):
-            call_count[0] += 1
-            if call_count[0] == 1:
-                # First call: aggregate (from localize_divergence_signal)
-                return (10.0, 3.0, 0.001)
-            # Sub-pairs: borderline p-values that survive raw but not BH
-            return (2.0, 1.0, 0.04)
-
-        result, loc = gate.should_split_v2(
-            "root",
-            test_divergence=mock_test,
-            sibling_alpha=0.05,
-        )
-
-        assert result is True
-        # Power guard may or may not activate depending on BH outcome;
-        # if loc is None, power guard activated
-        # if loc is not None, difference_pairs must be non-empty
-        if loc is not None:
-            assert len(loc.difference_pairs) > 0
-
-    def test_v2_passes_localization_max_depth(self):
-        """localization_max_depth is forwarded to localize_divergence_signal."""
-        gate = _make_gate()
-
-        with patch(
-            "kl_clustering_analysis.hierarchy_analysis.gates.localize_divergence_signal"
-        ) as mock_loc:
-            mock_loc.return_value = LocalizationResult(
-                left_root="L",
-                right_root="R",
-                aggregate_p_value=0.001,
-                aggregate_significant=True,
-                difference_pairs=[("L1", "R1")],
-            )
-
-            gate.should_split_v2(
-                "root",
-                test_divergence=_dummy_test_divergence,
-                sibling_alpha=0.05,
-                localization_max_depth=2,
-            )
-
-            mock_loc.assert_called_once()
-            call_kwargs = mock_loc.call_args
-            assert call_kwargs.kwargs.get("max_depth") == 2 or call_kwargs[1].get("max_depth") == 2
-
-    # --- _check_edge_significance ---
-
-    def test_check_edge_significance_root(self):
-        """Root is always edge-significant."""
-        gate = _make_gate(local_significant={"root": False})
-        assert gate._check_edge_significance("root") is True
-
-    def test_check_edge_significance_true(self):
-        gate = _make_gate(local_significant={"L": True, "root": True})
-        assert gate._check_edge_significance("L") is True
-
-    def test_check_edge_significance_false(self):
-        gate = _make_gate(local_significant={"L": False, "root": True})
-        assert gate._check_edge_significance("L") is False
-
-    def test_check_edge_significance_missing_defaults_false(self):
-        gate = _make_gate(local_significant={"root": True})
-        assert gate._check_edge_significance("MISSING") is False
-
 
 # =====================================================================
 # Full-traversal integration smoke test
@@ -768,41 +415,6 @@ class TestTraversalIntegration:
 
         assert len(clusters) == 1
         assert clusters[0] == {"L1", "L2", "R1", "R2"}
-
-    def test_v2_full_traversal(self):
-        """V2 full traversal records split/merge points correctly."""
-        gate = _make_gate()
-        worklist = ["root"]
-        processed: set[str] = set()
-        state = V2TraversalState(split_points=[], merge_points=[], localization_results={})
-
-        # Mock should_split_v2 to return (True, None) for root, (False, None) for leaves
-        original_should_split_v2 = gate.should_split_v2
-
-        def mock_v2(node_id, **kwargs):
-            children = gate._children_map.get(node_id, [])
-            if len(children) == 2:
-                return True, None  # all internal nodes split (power guard)
-            return False, None
-
-        with patch.object(gate, "should_split_v2", side_effect=mock_v2):
-            for node in iterate_worklist(worklist, processed):
-                process_node_v2(
-                    node,
-                    gate,
-                    worklist,
-                    state,
-                    test_divergence=_dummy_test_divergence,
-                    sibling_alpha=0.05,
-                )
-
-        # root splits → L, R split → L1, L2, R1, R2 merged (leaves)
-        split_parents = [sp[0] for sp in state.split_points]
-        assert "root" in split_parents
-        assert "L" in split_parents
-        assert "R" in split_parents
-        # Leaves become merge points
-        assert set(state.merge_points) == {"L1", "L2", "R1", "R2"}
 
 
 if __name__ == "__main__":

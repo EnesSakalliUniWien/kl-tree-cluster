@@ -28,7 +28,6 @@ STAGES: tuple[Stage, ...] = (
         "Core structure + decomposition",
         (
             "tests/core/10_test_poset_tree.py",
-            "tests/core/11_test_tree_decomposition_distance.py",
             "tests/core/12_test_cluster_assignments.py",
             "tests/core/13_test_cluster_decomposer_threshold.py",
             "tests/core/14_test_local_kl_utils.py",
@@ -52,7 +51,6 @@ STAGES: tuple[Stage, ...] = (
         3,
         "Localization + post-hoc merge behavior",
         (
-            "tests/localization/30_test_signal_localization.py",
             "tests/localization/31_test_posthoc_merge.py",
             "tests/localization/32_test_posthoc_merge_calibration.py",
             "tests/localization/33_test_skip_reason_propagation_integration.py",
