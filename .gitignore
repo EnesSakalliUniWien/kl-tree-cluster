@@ -130,3 +130,9 @@ temp/
 *.swo
 *~
 data
+
+# IDE/tool specs
+.kiro/
+
+# Standalone analysis pipeline
+analysis/
