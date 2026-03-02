@@ -228,20 +228,28 @@ def pathway_enrichment(
 
     for cid in sorted(assign.cluster_id.unique()):
         cluster_genes = assign[assign.cluster_id == cid].index.tolist()
-        k = len(cluster_genes)
-        if k < min_cluster_size:
+        if len(cluster_genes) < min_cluster_size:
             continue
 
-        cluster_data = fm.loc[cluster_genes]
-        bg_genes = [g for g in fm.index if g not in cluster_genes]
-        bg_data = fm.loc[bg_genes]
+        cluster_idx = fm.index.intersection(pd.Index(cluster_genes), sort=False)
+        if cluster_idx.size < min_cluster_size:
+            continue
+        bg_idx = fm.index.difference(cluster_idx, sort=False)
+        if bg_idx.empty:
+            # K=1 case: no background available for enrichment.
+            continue
+
+        k = int(cluster_idx.size)
+        n_bg = int(bg_idx.size)
+        cluster_data = fm.loc[cluster_idx]
+        bg_data = fm.loc[bg_idx]
 
         pvals, odds_ratios, pathways = [], [], []
         for pw in fm.columns:
             a = int(cluster_data[pw].sum())  # in-cluster & in-pathway
             b = k - a  # in-cluster & NOT in-pathway
             c = int(bg_data[pw].sum())  # NOT in-cluster & in-pathway
-            d = len(bg_genes) - c  # NOT in-cluster & NOT in-pathway
+            d = n_bg - c  # NOT in-cluster & NOT in-pathway
             if a == 0:
                 continue  # skip pathways absent from cluster
             odds, p = fisher_exact([[a, b], [c, d]], alternative="greater")
@@ -264,7 +272,7 @@ def pathway_enrichment(
                     "pathway": pw,
                     "genes_in_pathway": a,
                     "frac_cluster": a / k,
-                    "frac_background": int(bg_data[pw].sum()) / len(bg_genes),
+                    "frac_background": int(bg_data[pw].sum()) / n_bg,
                     "odds_ratio": odds,
                     "p_value": p,
                     "q_value": q,
