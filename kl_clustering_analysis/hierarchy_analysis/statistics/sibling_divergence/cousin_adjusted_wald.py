@@ -40,6 +40,7 @@ from scipy.stats import chi2
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
+    extract_bool_column_dict,
     extract_node_sample_size,
     initialize_sibling_divergence_columns,
 )
@@ -300,19 +301,25 @@ def _collect_all_pairs(
     mean_bl: float | None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
-) -> List[_SiblingRecord]:
-    """Collect ALL binary-child parent nodes and compute raw Wald stats."""
+) -> Tuple[List[_SiblingRecord], List[str]]:
+    """Collect ALL binary-child parent nodes and compute raw Wald stats.
+
+    Returns (records, non_binary_nodes).
+    """
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
         raise ValueError(
             "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
         )
 
-    sig_map = nodes_df["Child_Parent_Divergence_Significant"].to_dict()
+    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
     records: List[_SiblingRecord] = []
+    non_binary: List[str] = []
 
     for parent in tree.nodes:
         children = _get_binary_children(tree, parent)
         if children is None:
+            # Leaves and non-binary nodes are not testable
+            non_binary.append(parent)
             continue
 
         left, right = children
@@ -369,7 +376,7 @@ def _collect_all_pairs(
             )
         )
 
-    return records
+    return records, non_binary
 
 
 def _deflate_and_test(
@@ -501,13 +508,18 @@ def annotate_sibling_divergence_adjusted(
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats
-    records = _collect_all_pairs(
+    records, non_binary = _collect_all_pairs(
         tree,
         df,
         mean_bl,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
+
+    # Mark non-binary/leaf nodes as skipped (never testable)
+    if non_binary:
+        df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
+        logger.debug(f"Non-binary/leaf nodes marked as skipped: {len(non_binary)}")
 
     if not records:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)

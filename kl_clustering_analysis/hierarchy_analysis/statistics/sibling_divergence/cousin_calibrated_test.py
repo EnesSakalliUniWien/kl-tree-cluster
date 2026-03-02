@@ -47,7 +47,10 @@ import pandas as pd
 from scipy.stats import f as f_dist
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.core_utils.data_utils import initialize_sibling_divergence_columns
+from kl_clustering_analysis.core_utils.data_utils import (
+    extract_bool_column_dict,
+    initialize_sibling_divergence_columns,
+)
 
 from ..branch_length_utils import compute_mean_branch_length
 from ..multiple_testing import benjamini_hochberg_correction
@@ -264,25 +267,28 @@ def cousin_ftest(
 def _collect_test_arguments_cousin(
     tree: nx.DiGraph,
     nodes_df: pd.DataFrame,
-) -> Tuple[List[str], List[Tuple[str, str]], List[str]]:
+) -> Tuple[List[str], List[Tuple[str, str]], List[str], List[str]]:
     """Collect sibling pairs eligible for testing.
 
-    Returns (parent_nodes, child_pairs, skipped_nodes).
+    Returns (parent_nodes, child_pairs, skipped_nodes, non_binary_nodes).
     """
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
         raise ValueError(
             "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
         )
 
-    sig_map = nodes_df["Child_Parent_Divergence_Significant"].to_dict()
+    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
 
     parents: List[str] = []
     child_pairs: List[Tuple[str, str]] = []
     skipped: List[str] = []
+    non_binary: List[str] = []
 
     for parent in tree.nodes:
         children = _get_binary_children(tree, parent)
         if children is None:
+            # Leaves and non-binary nodes are not testable
+            non_binary.append(parent)
             continue
 
         left, right = children
@@ -295,7 +301,7 @@ def _collect_test_arguments_cousin(
         parents.append(parent)
         child_pairs.append((left, right))
 
-    return parents, child_pairs, skipped
+    return parents, child_pairs, skipped, non_binary
 
 
 def _run_cousin_tests(
@@ -419,7 +425,12 @@ def annotate_sibling_divergence_cousin(
     df = nodes_statistics_dataframe.copy()
     df = initialize_sibling_divergence_columns(df)
 
-    parents, child_pairs, skipped = _collect_test_arguments_cousin(tree, df)
+    parents, child_pairs, skipped, non_binary = _collect_test_arguments_cousin(tree, df)
+
+    # Mark non-binary/leaf nodes as skipped (never testable)
+    if non_binary:
+        df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
+        logger.debug("Non-binary/leaf nodes marked as skipped: %d", len(non_binary))
 
     if not parents:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)

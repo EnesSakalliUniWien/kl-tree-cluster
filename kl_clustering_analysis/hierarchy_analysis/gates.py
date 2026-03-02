@@ -17,7 +17,7 @@ that are used by :class:`TreeDecomposition` during the DFS walk.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Set, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, Hashable, Iterator, List, Set, Tuple
 
 if TYPE_CHECKING:
     from ..tree.poset_tree import PosetTree
@@ -63,11 +63,11 @@ class GateEvaluator:
     def __init__(
         self,
         tree: "PosetTree",
-        local_significant: Dict[str, bool],
-        sibling_different: Dict[str, bool],
-        sibling_skipped: Dict[str, bool],
-        children_map: Dict[str, List[str]],
-        descendant_leaf_sets: Dict[str, set],
+        local_significant: Dict[Hashable, bool],
+        sibling_different: Dict[Hashable, bool],
+        sibling_skipped: Dict[Hashable, bool],
+        children_map: Dict[Hashable, List[str]],
+        descendant_leaf_sets: Dict[Hashable, set],
         root: str,
     ) -> None:
         self.tree = tree

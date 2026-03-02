@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald as cww
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
     WeightedCalibrationModel,
     predict_weighted_inflation_factor,
@@ -246,6 +247,20 @@ class TestGammaGLMFitting:
         if model.method in ("gamma_glm", "weighted_regression"):
             assert model.beta is not None
             assert len(model.beta) == 1  # intercept-only
+
+    def test_missing_statsmodels_soft_fallback(self, monkeypatch) -> None:
+        """Missing statsmodels should skip GLM and fall back explicitly."""
+        records = self._make_records(n=20)
+        monkeypatch.setattr(cww, "_HAS_STATSMODELS", False)
+        monkeypatch.setattr(cww, "_WARNED_MISSING_STATSMODELS", False)
+        monkeypatch.delattr(cww, "sm", raising=False)
+
+        model = cww._fit_weighted_inflation_model(records)
+
+        assert model.method in ("weighted_regression", "weighted_median")
+        assert model.diagnostics.get("statsmodels_available") is False
+        if model.method == "weighted_regression":
+            assert model.diagnostics.get("gamma_glm_attempted") is False
 
     def test_gamma_glm_diagnostics_present(self) -> None:
         """Gamma GLM should report deviance-based diagnostics."""

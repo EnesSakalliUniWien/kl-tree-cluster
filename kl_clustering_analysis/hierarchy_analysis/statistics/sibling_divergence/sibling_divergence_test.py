@@ -16,10 +16,11 @@ from typing import Dict, List, Optional, Tuple
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2, hmean
+from scipy.stats import hmean
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
+    extract_bool_column_dict,
     extract_node_distribution,
     extract_node_sample_size,
     initialize_sibling_divergence_columns,
@@ -34,6 +35,7 @@ from ..projection.random_projection import (
     derive_projection_seed,
     generate_projection_matrix,
 )
+from ..projection.satterthwaite import compute_projected_pvalue
 
 logger = logging.getLogger(__name__)
 
@@ -50,63 +52,10 @@ def _compute_chi_square_pvalue(
 ) -> Tuple[float, float, float]:
     """Compute test statistic and p-value from projected z-scores.
 
-    Two modes controlled by ``config.EIGENVALUE_WHITENING``:
-
-    **Whitened** (``True``): T = Σ (vᵢᵀz)²/λᵢ ~ χ²(k).
-    Exact under H₀ but divides signal by large eigenvalues → lower power.
-    Supports split whitening when ``len(eigenvalues) < len(projected)``:
-    the first k_pca components are whitened, remaining (random-padding)
-    use plain sum of squares.
-
-    **Satterthwaite** (``False``): T = Σ (vᵢᵀz)² ~ Σ λᵢ·χ²(1).
-    Approximate as c·χ²(ν) where c = Σλᵢ²/Σλᵢ, ν = (Σλᵢ)²/Σλᵢ².
-    Preserves power because signal in high-eigenvalue directions is not dampened.
-    Any random-padding components contribute plain χ²(1) each.
-
-    When *eigenvalues* is ``None``, the plain sum of squares with χ²(k) is used.
+    Delegates to the shared :func:`compute_projected_pvalue` helper.
+    See that function for details on whitened vs Satterthwaite modes.
     """
-    if eigenvalues is not None and len(eigenvalues) > 0:
-        k_pca = len(eigenvalues)
-
-        if config.EIGENVALUE_WHITENING:
-            # --- Whitened mode: T = Σ wᵢ²/λᵢ ~ χ²(k) ---
-            stat_pca = float(np.sum(projected[:k_pca] ** 2 / eigenvalues))
-            if k_pca < len(projected):
-                stat_rand = float(np.sum(projected[k_pca:] ** 2))
-            else:
-                stat_rand = 0.0
-            stat = stat_pca + stat_rand
-            return stat, float(df), float(chi2.sf(stat, df=df))
-        else:
-            # --- Satterthwaite mode: T = Σ wᵢ² ~ Σ λᵢ·χ²(1) ---
-            # PCA part: unwhitened sum of squares
-            sq_pca = projected[:k_pca] ** 2
-            stat_pca = float(np.sum(sq_pca))
-            # Random-padding part (if any): plain χ²(1) per component
-            k_rand = len(projected) - k_pca
-            stat_rand = float(np.sum(projected[k_pca:] ** 2)) if k_rand > 0 else 0.0
-            stat = stat_pca + stat_rand
-
-            # Satterthwaite: T_pca ~ Σ λᵢ·χ²(1), approximate as c·χ²(ν)
-            # c = Σλᵢ²/Σλᵢ,  ν = (Σλᵢ)²/Σλᵢ²
-            eigs = np.asarray(eigenvalues, dtype=np.float64)
-            sum_eig = float(np.sum(eigs))
-            sum_eig2 = float(np.sum(eigs**2))
-
-            if sum_eig2 > 0 and sum_eig > 0:
-                c = sum_eig2 / sum_eig
-                nu_pca = sum_eig**2 / sum_eig2
-                # Combined df: Satterthwaite ν for PCA + k_rand for random padding
-                nu_total = nu_pca + k_rand
-                # Scale only the PCA component; random part is already χ²
-                stat_scaled = stat_pca / c + stat_rand
-                return stat, float(nu_total), float(chi2.sf(stat_scaled, df=nu_total))
-            else:
-                # Degenerate eigenvalues — fall back to plain χ²(k)
-                return stat, float(df), float(chi2.sf(stat, df=df))
-    else:
-        stat = float(np.sum(projected**2))
-    return stat, float(df), float(chi2.sf(stat, df=df))
+    return compute_projected_pvalue(projected, df, eigenvalues=eigenvalues)
 
 
 def sibling_divergence_test(
@@ -336,10 +285,11 @@ def _collect_test_arguments(
     List[str],
     List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]],
     List[str],
+    List[str],
 ]:
     """Collect sibling pairs eligible for testing.
 
-    Returns (parent_nodes, test_args, skipped_nodes).
+    Returns (parent_nodes, test_args, skipped_nodes, non_binary_nodes).
     Each test_args tuple contains: (left_dist, right_dist, n_left, n_right, branch_left, branch_right)
     """
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
@@ -347,15 +297,18 @@ def _collect_test_arguments(
             "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
         )
 
-    sig_map = nodes_df["Child_Parent_Divergence_Significant"].to_dict()
+    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
 
     parents: List[str] = []
     args: List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]] = []
     skipped: List[str] = []
+    non_binary: List[str] = []
 
     for parent in tree.nodes:
         children = _get_binary_children(tree, parent)
         if children is None:
+            # Leaves and non-binary nodes are not testable
+            non_binary.append(parent)
             continue
 
         left, right = children
@@ -372,7 +325,7 @@ def _collect_test_arguments(
         parents.append(parent)
         args.append((left_dist, right_dist, n_left, n_right, bl_left, bl_right))
 
-    return parents, args, skipped
+    return parents, args, skipped, non_binary
 
 
 def _run_tests(
@@ -491,15 +444,22 @@ def annotate_sibling_divergence(
     df = nodes_statistics_dataframe.copy()
     df = initialize_sibling_divergence_columns(df)
 
-    parents, args, skipped = _collect_test_arguments(tree, df)
+    parents, args, skipped, non_binary = _collect_test_arguments(tree, df)
 
     if not parents:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
+        # Still mark non-binary/leaf nodes as skipped before returning
+        if non_binary:
+            df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
         return df
 
     if skipped:
         df.loc[skipped, "Sibling_Divergence_Skipped"] = True
         logger.debug(f"Skipped {len(skipped)} nodes")
+
+    if non_binary:
+        df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
+        logger.debug(f"Non-binary/leaf nodes marked as skipped: {len(non_binary)}")
 
     # Compute mean branch length from tree for Felsenstein normalization
     # using the shared sanitization policy.  Gated by config.

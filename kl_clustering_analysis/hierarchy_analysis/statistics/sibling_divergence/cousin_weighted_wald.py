@@ -77,6 +77,7 @@ except ImportError:  # pragma: no cover
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
+    extract_bool_column_dict,
     extract_node_sample_size,
     initialize_sibling_divergence_columns,
 )
@@ -95,6 +96,7 @@ logger = logging.getLogger(__name__)
 # Minimum pairs for calibration tiers
 _MIN_REGRESSION = 5
 _MIN_MEDIAN = 3
+_WARNED_MISSING_STATSMODELS = False
 
 
 # =============================================================================
@@ -188,6 +190,15 @@ def _fit_weighted_inflation_model(
     max_observed_ratio is computed from NULL-LIKE pairs only (is_null_like=True)
     to prevent focal/signal pairs from inflating the extrapolation clamp.
     """
+    statsmodels_available = bool(_HAS_STATSMODELS and "sm" in globals())
+    global _WARNED_MISSING_STATSMODELS
+    if not statsmodels_available and not _WARNED_MISSING_STATSMODELS:
+        logger.warning(
+            "Weighted cousin Wald: statsmodels is unavailable; "
+            "Gamma GLM calibration disabled. Falling back to weighted log-linear regression."
+        )
+        _WARNED_MISSING_STATSMODELS = True
+
     # Filter to valid records (finite stat, positive df and ratio)
     valid_records = [
         r
@@ -205,6 +216,7 @@ def _fit_weighted_inflation_model(
             n_calibration=0,
             global_c_hat=1.0,
             max_observed_ratio=1.0,
+            diagnostics={"statsmodels_available": statsmodels_available},
         )
 
     ratios = np.array([r.stat / r.df for r in valid_records])
@@ -230,6 +242,7 @@ def _fit_weighted_inflation_model(
             n_calibration=n_cal,
             global_c_hat=global_c,
             max_observed_ratio=max_c,
+            diagnostics={"statsmodels_available": statsmodels_available},
         )
 
     if n_cal < _MIN_REGRESSION:
@@ -245,6 +258,7 @@ def _fit_weighted_inflation_model(
             n_calibration=n_cal,
             global_c_hat=global_c,
             max_observed_ratio=max_c,
+            diagnostics={"statsmodels_available": statsmodels_available},
         )
 
     # --- Design matrix (intercept-only) ---
@@ -261,8 +275,10 @@ def _fit_weighted_inflation_model(
     r_squared = 0.0
     method = "weighted_median"  # fallback default
     glm_diagnostics: Dict = {}
+    glm_attempted = False
 
-    if _HAS_STATSMODELS:
+    if statsmodels_available:
+        glm_attempted = True
         try:
             glm = sm.GLM(
                 ratios,
@@ -325,6 +341,7 @@ def _fit_weighted_inflation_model(
                 n_calibration=n_cal,
                 global_c_hat=global_c,
                 max_observed_ratio=max_c,
+                diagnostics={"statsmodels_available": statsmodels_available},
             )
 
         fitted = X @ beta
@@ -353,6 +370,8 @@ def _fit_weighted_inflation_model(
         "total_weight": float(np.sum(weights)),
         "effective_n": float(np.sum(weights) ** 2 / np.sum(weights**2)),
         "n_null_like": int(len(null_like_ratios)),
+        "statsmodels_available": statsmodels_available,
+        "gamma_glm_attempted": glm_attempted,
         **glm_diagnostics,
     }
 
@@ -409,14 +428,17 @@ def _collect_weighted_pairs(
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
-) -> List[_WeightedRecord]:
-    """Collect ALL sibling pairs with continuous weights from edge p-values."""
+) -> Tuple[List[_WeightedRecord], List[str]]:
+    """Collect ALL sibling pairs with continuous weights from edge p-values.
+
+    Returns (records, non_binary_nodes).
+    """
     if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
         raise ValueError(
             "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
         )
 
-    sig_map = nodes_df["Child_Parent_Divergence_Significant"].to_dict()
+    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
 
     # Build edge p-value map from the BH-corrected column
     pval_col = "Child_Parent_Divergence_P_Value_BH"
@@ -428,10 +450,13 @@ def _collect_weighted_pairs(
         pval_map = nodes_df[pval_col_raw].to_dict() if pval_col_raw in nodes_df.columns else {}
 
     records: List[_WeightedRecord] = []
+    non_binary: List[str] = []
 
     for parent in tree.nodes:
         children = _get_binary_children(tree, parent)
         if children is None:
+            # Leaves and non-binary nodes are not testable
+            non_binary.append(parent)
             continue
 
         left, right = children
@@ -491,7 +516,7 @@ def _collect_weighted_pairs(
             )
         )
 
-    return records
+    return records, non_binary
 
 
 def _deflate_and_test(
@@ -614,9 +639,14 @@ def annotate_sibling_divergence_weighted(
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats with continuous weights
-    records = _collect_weighted_pairs(
+    records, non_binary = _collect_weighted_pairs(
         tree, df, mean_bl, spectral_dims, pca_projections, pca_eigenvalues
     )
+
+    # Mark non-binary/leaf nodes as skipped (never testable)
+    if non_binary:
+        df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
+        logger.debug(f"Non-binary/leaf nodes marked as skipped: {len(non_binary)}")
 
     if not records:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)

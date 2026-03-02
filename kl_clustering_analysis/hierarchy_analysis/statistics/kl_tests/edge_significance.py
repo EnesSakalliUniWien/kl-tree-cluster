@@ -24,7 +24,6 @@ import logging
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
@@ -43,6 +42,7 @@ from ..projection.random_projection import (
     derive_projection_seed,
     generate_projection_matrix,
 )
+from ..projection.satterthwaite import compute_projected_pvalue
 from ..projection.spectral_dimension import compute_spectral_decomposition
 
 logger = logging.getLogger(__name__)
@@ -270,35 +270,10 @@ def _compute_projected_test(
         raise e
 
     # Test statistic: whitened or Satterthwaite depending on config.
-    # See sibling_divergence_test._compute_chi_square_pvalue for full docs.
-    if eig_for_whitening is not None and len(eig_for_whitening) > 0:
-        n_eig = len(eig_for_whitening)
-        k_rand = k - n_eig if n_eig < k else 0
-        stat_rand = float(np.sum(projected[n_eig:] ** 2)) if k_rand > 0 else 0.0
-
-        if config.EIGENVALUE_WHITENING:
-            # Whitened: T_pca = Σ w²/λ ~ χ²(k_pca)
-            stat_pca = float(np.sum(projected[:n_eig] ** 2 / eig_for_whitening))
-            stat = stat_pca + stat_rand
-            pval = float(chi2.sf(stat, df=k))
-        else:
-            # Satterthwaite: T_pca = Σ w² ~ Σ λᵢ·χ²(1)
-            stat_pca = float(np.sum(projected[:n_eig] ** 2))
-            stat = stat_pca + stat_rand
-            eigs = eig_for_whitening
-            sum_eig = float(np.sum(eigs))
-            sum_eig2 = float(np.sum(eigs**2))
-            if sum_eig2 > 0 and sum_eig > 0:
-                c = sum_eig2 / sum_eig
-                nu_pca = sum_eig**2 / sum_eig2
-                nu_total = nu_pca + k_rand
-                stat_scaled = stat_pca / c + stat_rand
-                pval = float(chi2.sf(stat_scaled, df=nu_total))
-            else:
-                pval = float(chi2.sf(stat, df=k))
-    else:
-        stat = float(np.sum(projected**2))
-        pval = float(chi2.sf(stat, df=k))
+    # Delegates to the shared projection p-value helper.
+    stat, effective_df, pval = compute_projected_pvalue(
+        projected, k, eigenvalues=eig_for_whitening
+    )
 
     return stat, float(k), pval, False
 
@@ -473,28 +448,21 @@ def annotate_child_parent_divergence(
             raise ValueError(
                 f"spectral_method={spectral_method!r} requires leaf_data to be provided."
             )
-        # Only compute DIMENSIONS from the correlation eigendecomposition.
-        # PCA projections are NOT used for the test statistic — random
-        # orthonormal projection with spectral k gives an approximately
-        # valid χ²(k) null via concentration of measure, while preserving
-        # power (no eigenvalue whitening that down-weights signal directions).
-        # Eigenvalues and projections are still available in df.attrs for
-        # downstream consumers that want whitened statistics.
+        # Compute spectral dimensions and (when available) PCA projections/
+        # eigenvalues for the current Gate 2 run. These are consumed
+        # immediately below by _compute_p_values_via_projection().
         spectral_dims, pca_proj_dict, pca_eig_dict = compute_spectral_decomposition(
             tree,
             leaf_data,
             method=spectral_method,
-            min_k=min_k if isinstance(min_k, int) else 1,
+            min_k=min_k if isinstance(min_k, int) else 4,
             compute_projections=True,
         )
         pca_projections = pca_proj_dict if pca_proj_dict else None
         pca_eigenvalues = pca_eig_dict if pca_eig_dict else None
 
-    # Stash computed spectral info in df.attrs so sibling tests can reuse them
-    # without recomputing the eigendecomposition.
+    # Keep only lightweight spectral dimensions in attrs for diagnostics.
     nodes_dataframe.attrs["_spectral_dims"] = spectral_dims
-    nodes_dataframe.attrs["_pca_projections"] = pca_projections
-    nodes_dataframe.attrs["_pca_eigenvalues"] = pca_eigenvalues
 
     test_stats, degrees_of_freedom, p_values, invalid_mask = _compute_p_values_via_projection(
         tree,
