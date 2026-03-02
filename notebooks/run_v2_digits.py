@@ -101,8 +101,9 @@ def run_kl_clustering_v2(X, sample_names=None):
         root = tree.root()
         for child in tree.successors(root):
             if tree.has_edge(root, child):
-                bl = tree.edges[root, child].get("branch_length", "N/A")
-                print(f"  Edge {root}->{child}: len={bl}")
+                bl = tree.edges[root, child].get("branch_length")
+                bl_str = f"{float(bl):.6f}" if bl is not None else "N/A"
+                print(f"  Edge {root}->{child}: len={bl_str}")
     else:
         print("  No branch lengths found.")
     print("-" * 60)
