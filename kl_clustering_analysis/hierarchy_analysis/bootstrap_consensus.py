@@ -46,6 +46,8 @@ def bootstrap_consensus(
     random_seed: int = 42,
     verbose: bool = False,
     decompose_kwargs: dict | None = None,
+    include_coassociation_logs: bool = False,
+    coassociation_log_top_n: int | None = 500,
 ) -> Dict[str, Any]:
     """Run bootstrap consensus on a binary DataFrame.
 
@@ -84,6 +86,12 @@ def bootstrap_consensus(
             list[int] — number of clusters found in each replicate.
         ``n_boot``
             Echo of how many replicates were run.
+        ``co_association_present_weight_matrix`` (optional)
+            Pairwise denominator weights used in co-association ratios.
+        ``co_association_same_weight_matrix`` (optional)
+            Pairwise same-cluster weights used in co-association ratios.
+        ``co_association_pair_log`` (optional)
+            Long-format top pair log with co-association and raw weights.
     """
     from kl_clustering_analysis.tree.poset_tree import PosetTree  # local import to avoid cycles
 
@@ -127,16 +135,15 @@ def bootstrap_consensus(
             print(f"  bootstrap {b + 1}/{n_boot}")
 
         # --- resample rows with replacement ---
+        # Keep multiplicities (true bootstrap weighting) by retaining all draws.
+        # Use unique temporary labels so repeated originals can coexist as leaves.
         boot_idx = rng.choice(n, size=n, replace=True)
-        # Which original samples are present?
-        present_set = set(boot_idx)
-        # Deduplicated rows for this bootstrap (unique indices)
-        unique_idx = np.array(sorted(present_set))
+        boot_labels = [f"{sample_ids[i]}__b{j}" for j, i in enumerate(boot_idx)]
+        boot_original_labels = [sample_ids[i] for i in boot_idx]
+        X_boot = data.iloc[boot_idx].copy()
+        X_boot.index = boot_labels
 
-        X_boot = data.iloc[unique_idx]
-        boot_labels = [sample_ids[i] for i in unique_idx]
-
-        if len(unique_idx) < 4:
+        if len(set(boot_original_labels)) < 4:
             # Degenerate bootstrap — skip
             continue
 
@@ -157,21 +164,21 @@ def bootstrap_consensus(
         # --- accumulate co-association ---
         cluster_assignments_b = res_b.get("cluster_assignments", {})
         label_to_cluster = _build_label_map(cluster_assignments_b)
+        present_list, present_idx_list, cluster_count_matrix = _build_original_cluster_count_matrix(
+            boot_labels,
+            boot_original_labels,
+            label_to_cluster,
+            id_to_idx,
+        )
 
-        present_list = [sample_ids[i] for i in unique_idx]
-        present_idx_list = [id_to_idx[sid] for sid in present_list]
+        if len(present_list) > 0 and cluster_count_matrix.size > 0:
+            multiplicities = cluster_count_matrix.sum(axis=1).astype(np.float64, copy=False)
+            same_weights = cluster_count_matrix @ cluster_count_matrix.T
+            present_weights = np.outer(multiplicities, multiplicities)
 
-        # All pairs of present samples: co_count += 1; if same cluster co_same += 1
-        for a_pos in range(len(present_list)):
-            for b_pos in range(a_pos + 1, len(present_list)):
-                i, j = present_idx_list[a_pos], present_idx_list[b_pos]
-                co_count[i, j] += 1
-                co_count[j, i] += 1
-                sid_a = present_list[a_pos]
-                sid_b = present_list[b_pos]
-                if label_to_cluster.get(sid_a) == label_to_cluster.get(sid_b):
-                    co_same[i, j] += 1
-                    co_same[j, i] += 1
+            idx = np.asarray(present_idx_list, dtype=int)
+            co_count[np.ix_(idx, idx)] += present_weights
+            co_same[np.ix_(idx, idx)] += same_weights.astype(np.float64, copy=False)
 
         k_distribution.append(res_b.get("num_clusters", 0))
 
@@ -180,12 +187,18 @@ def bootstrap_consensus(
         # its members present in this bootstrap sample forms a monophyletic
         # group (= appears as a clade) in the bootstrap tree.
         boot_clades = _extract_clades(tree_b)
-        boot_leaf_set = set(boot_labels)
+        boot_leaf_set = set(boot_original_labels)
+        temp_to_original = dict(zip(boot_labels, boot_original_labels))
+        boot_clades_original: Set[FrozenSet[str]] = set()
+        for boot_clade in boot_clades:
+            original_members = {temp_to_original.get(leaf, leaf) for leaf in boot_clade}
+            if len(original_members) > 1:
+                boot_clades_original.add(frozenset(original_members))
         for orig_clade in clade_hits:
             restricted = orig_clade & boot_leaf_set
             if len(restricted) < 2:
                 continue  # trivial — skip
-            if frozenset(restricted) in boot_clades:
+            if frozenset(restricted) in boot_clades_original:
                 clade_hits[orig_clade] += 1
 
     # ---------- 2. aggregate ----------
@@ -203,7 +216,7 @@ def bootstrap_consensus(
         results_orig.get("cluster_assignments", {}), co_assoc_df, id_to_idx
     )
 
-    return {
+    result = {
         "co_association_matrix": co_assoc_df,
         "clade_support": clade_support,
         "cluster_stability": cluster_stability,
@@ -211,6 +224,25 @@ def bootstrap_consensus(
         "k_distribution": k_distribution,
         "n_boot": n_boot,
     }
+
+    if include_coassociation_logs:
+        co_count_df = pd.DataFrame(co_count, index=sample_ids, columns=sample_ids)
+        co_same_df = pd.DataFrame(co_same, index=sample_ids, columns=sample_ids)
+        original_cluster_by_sample = _build_label_map(results_orig.get("cluster_assignments", {}))
+        pair_log_df = _build_coassociation_pair_log(
+            sample_ids,
+            co_assoc=co_assoc,
+            co_count=co_count,
+            co_same=co_same,
+            n_boot=n_boot,
+            original_cluster_by_sample=original_cluster_by_sample,
+            top_n=coassociation_log_top_n,
+        )
+        result["co_association_present_weight_matrix"] = co_count_df
+        result["co_association_same_weight_matrix"] = co_same_df
+        result["co_association_pair_log"] = pair_log_df
+
+    return result
 
 
 # --------------- helpers ---------------
@@ -223,6 +255,97 @@ def _build_label_map(cluster_assignments: Dict) -> Dict[str, int]:
         for leaf in info["leaves"]:
             label_map[leaf] = cid
     return label_map
+
+
+def _build_original_cluster_count_matrix(
+    boot_labels: List[str],
+    boot_original_labels: List[str],
+    label_to_cluster: Dict[str, int],
+    id_to_idx: Dict[str, int],
+) -> tuple[List[str], List[int], np.ndarray]:
+    """Build original-sample × cluster duplicate-count matrix for one bootstrap replicate."""
+    original_to_counts: Dict[str, Dict[int, int]] = {}
+    for temp_label, original_label in zip(boot_labels, boot_original_labels):
+        cluster_id = label_to_cluster.get(temp_label)
+        if cluster_id is None:
+            continue
+        counts = original_to_counts.setdefault(original_label, {})
+        counts[cluster_id] = counts.get(cluster_id, 0) + 1
+
+    if not original_to_counts:
+        return [], [], np.zeros((0, 0), dtype=np.int32)
+
+    present_originals = sorted(original_to_counts.keys(), key=lambda sid: id_to_idx[sid])
+    present_idx = [id_to_idx[sid] for sid in present_originals]
+    cluster_ids = sorted(
+        {cluster_id for counts in original_to_counts.values() for cluster_id in counts},
+        key=repr,
+    )
+    cluster_to_col = {cluster_id: j for j, cluster_id in enumerate(cluster_ids)}
+
+    matrix = np.zeros((len(present_originals), len(cluster_ids)), dtype=np.int32)
+    for i, original_label in enumerate(present_originals):
+        for cluster_id, count in original_to_counts[original_label].items():
+            matrix[i, cluster_to_col[cluster_id]] = int(count)
+    return present_originals, present_idx, matrix
+
+
+def _build_coassociation_pair_log(
+    sample_ids: List[str],
+    *,
+    co_assoc: np.ndarray,
+    co_count: np.ndarray,
+    co_same: np.ndarray,
+    n_boot: int | None = None,
+    original_cluster_by_sample: Dict[str, int] | None = None,
+    top_n: int | None = 500,
+) -> pd.DataFrame:
+    """Create a long-format co-association audit table from pairwise matrices."""
+    n = len(sample_ids)
+    if n < 2:
+        return pd.DataFrame(
+            columns=[
+                "sample_a",
+                "sample_b",
+                "co_association",
+                "present_weight",
+                "same_weight",
+            ]
+        )
+
+    i_idx, j_idx = np.triu_indices(n, k=1)
+    sample_arr = np.asarray(sample_ids, dtype=object)
+    log_df = pd.DataFrame(
+        {
+            "sample_a": sample_arr[i_idx],
+            "sample_b": sample_arr[j_idx],
+            "co_association": co_assoc[i_idx, j_idx],
+            "present_weight": co_count[i_idx, j_idx],
+            "same_weight": co_same[i_idx, j_idx],
+        }
+    )
+    log_df = log_df[log_df["present_weight"] > 0].copy()
+    if n_boot is not None and n_boot > 0:
+        n_boot_f = float(n_boot)
+        log_df["present_weight_per_boot"] = log_df["present_weight"] / n_boot_f
+        log_df["same_weight_per_boot"] = log_df["same_weight"] / n_boot_f
+    log_df["ambiguity_to_half"] = (log_df["co_association"] - 0.5).abs()
+    if original_cluster_by_sample:
+        cluster_a = log_df["sample_a"].map(original_cluster_by_sample)
+        cluster_b = log_df["sample_b"].map(original_cluster_by_sample)
+        log_df["original_cluster_a"] = cluster_a
+        log_df["original_cluster_b"] = cluster_b
+        log_df["same_original_cluster"] = (
+            cluster_a.notna() & cluster_b.notna() & (cluster_a == cluster_b)
+        )
+    log_df.sort_values(
+        by=["co_association", "present_weight", "same_weight", "sample_a", "sample_b"],
+        ascending=[False, False, False, True, True],
+        inplace=True,
+    )
+    if top_n is not None and top_n > 0:
+        log_df = log_df.head(int(top_n))
+    return log_df.reset_index(drop=True)
 
 
 def _extract_clades(tree) -> Set[FrozenSet[str]]:
