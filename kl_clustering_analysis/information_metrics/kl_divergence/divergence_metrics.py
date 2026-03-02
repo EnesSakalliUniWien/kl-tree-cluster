@@ -129,9 +129,7 @@ def calculate_kl_divergence_per_feature(
 
 
 def _populate_local_kl(tree: "nx.DiGraph", distribution_type: str = "categorical") -> None:
-    """
-    Compute LOCAL KL divergence for each edge: KL(child||parent).
-    """
+    """Compute LOCAL KL divergence for each edge: KL(child||parent)."""
     for parent_id, child_id in tree.edges():
         parent_distribution = np.asarray(tree.nodes[parent_id]["distribution"], dtype=np.float64)
         child_distribution = np.asarray(tree.nodes[child_id]["distribution"], dtype=np.float64)
@@ -145,8 +143,7 @@ def _populate_local_kl(tree: "nx.DiGraph", distribution_type: str = "categorical
 def _populate_global_kl(
     tree: "nx.DiGraph", root: str, distribution_type: str = "categorical"
 ) -> None:
-    """
-    Compute GLOBAL KL divergence for all nodes: KL(node||root).
+    """Compute GLOBAL KL divergence for all nodes: KL(node||root).
 
     Root's global KL is set to NaN (self-comparison is meaningless).
     """

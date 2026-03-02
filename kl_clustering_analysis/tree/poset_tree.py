@@ -146,7 +146,11 @@ class PosetTree(nx.DiGraph):
             else:
                 leaf_nodes = [d for d in nx.descendants(self, node) if self._is_leaf(d)]
 
-        out = [self.nodes[n].get("label", n) for n in leaf_nodes] if return_labels else leaf_nodes
+        if return_labels:
+            node_view = self.nodes
+            out = [node_view[n].get("label", n) for n in leaf_nodes]
+        else:
+            out = leaf_nodes
         return sorted(out) if sort else out
 
     def _is_leaf(self, node_id: str) -> bool:
@@ -167,9 +171,9 @@ class PosetTree(nx.DiGraph):
             distribution arrays (populated by :meth:`populate_node_divergences`).
         """
         return {
-            n: np.asarray(self.nodes[n]["distribution"], dtype=float)
-            for n in self.nodes
-            if "distribution" in self.nodes[n]
+            node_id: np.asarray(node_data["distribution"], dtype=float)
+            for node_id, node_data in self.nodes(data=True)
+            if "distribution" in node_data
         }
 
     @property
@@ -183,7 +187,9 @@ class PosetTree(nx.DiGraph):
             attribute (populated by :meth:`populate_node_divergences`).
         """
         return {
-            n: int(self.nodes[n]["leaf_count"]) for n in self.nodes if "leaf_count" in self.nodes[n]
+            node_id: int(node_data["leaf_count"])
+            for node_id, node_data in self.nodes(data=True)
+            if "leaf_count" in node_data
         }
 
     def compute_descendant_sets(self, use_labels: bool = True) -> Dict[str, frozenset]:
@@ -204,8 +210,9 @@ class PosetTree(nx.DiGraph):
         desc_sets: Dict[str, frozenset] = {}
         # process leaves first (reverse topological order)
         for node in nx.topological_sort(self.reverse()):
-            if self.nodes[node].get("is_leaf", False) or self.out_degree(node) == 0:
-                val = self.nodes[node].get("label", node) if use_labels else node
+            node_data = self.nodes[node]
+            if node_data.get("is_leaf", False) or self.out_degree(node) == 0:
+                val = node_data.get("label", node) if use_labels else node
                 desc_sets[node] = frozenset([val])
             else:
                 child_sets = [desc_sets[c] for c in self.successors(node)]

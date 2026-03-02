@@ -17,13 +17,19 @@ import pandas as pd
 def _calculate_leaf_distribution(
     tree: nx.DiGraph,
     node_id: str,
-    leaf_data: Dict[Any, npt.NDArray[np.float64]],
+    leaf_matrix: npt.NDArray[np.float64],
+    label_to_row_idx: Dict[Any, int],
 ) -> None:
-    """
-    Set distribution and leaf count for a leaf node.
-    """
+    """Set distribution and leaf count for a leaf node."""
     label = tree.nodes[node_id].get("label", node_id)
-    feature_probabilities = np.asarray(leaf_data[label], dtype=np.float64).reshape(-1)
+    try:
+        row_idx = label_to_row_idx[label]
+    except KeyError as exc:
+        raise KeyError(
+            f"Leaf label {label!r} was not found in leaf_data index."
+        ) from exc
+
+    feature_probabilities = np.asarray(leaf_matrix[row_idx], dtype=np.float64).reshape(-1)
     tree.nodes[node_id]["distribution"] = feature_probabilities
     tree.nodes[node_id]["leaf_count"] = 1
 
@@ -32,16 +38,7 @@ def _calculate_hierarchy_node_distribution(
     tree: nx.DiGraph,
     node_id: str,
 ) -> None:
-    """
-    Weighted mean of children distributions.
-
-    Parameters
-    ----------
-    tree
-        The tree graph with node distributions populated for children.
-    node_id
-        The internal node to compute distribution for.
-    """
+    """Weighted mean of children distributions."""
     children = list(tree.successors(node_id))
     weighted_distribution_sum = 0.0
     total_weight = 0.0
@@ -81,14 +78,15 @@ def populate_distributions(
     # Find root
     root = tree.graph.get("root") or next(n for n, d in tree.in_degree() if d == 0)
 
-    # Convert DataFrame to dict for efficient lookups
-    leaf_feature_data = {idx: row.values.astype(np.float64) for idx, row in leaf_data.iterrows()}
+    # Vectorized extraction of leaf values; avoids per-row Series allocation from iterrows().
+    leaf_feature_matrix = leaf_data.to_numpy(dtype=np.float64, copy=False)
+    label_to_row_idx = {label: i for i, label in enumerate(leaf_data.index)}
 
     # Process nodes bottom-up (leaves first, then parents)
     for node_id in nx.dfs_postorder_nodes(tree, source=root):
         is_leaf = tree.nodes[node_id].get("is_leaf", False)
 
         if is_leaf:
-            _calculate_leaf_distribution(tree, node_id, leaf_feature_data)
+            _calculate_leaf_distribution(tree, node_id, leaf_feature_matrix, label_to_row_idx)
         else:
             _calculate_hierarchy_node_distribution(tree, node_id)
