@@ -14,32 +14,32 @@ import numpy as np
 from .statistics.multiple_testing import benjamini_hochberg_correction
 
 
-def _get_leaf_clusters_under_node(
-    node: str,
-    cluster_roots: Set[str],
+def _precompute_cluster_roots_under_nodes(
     tree: nx.DiGraph,
-) -> List[str]:
-    """Get all cluster root nodes that are descendants of the given node.
-
-    Parameters
-    ----------
-    node
-        The tree node to search under.
-    cluster_roots
-        Set of current cluster root node IDs.
-    tree
-        The hierarchy tree.
+    cluster_roots: Set[str],
+) -> Dict[str, Set[str]]:
+    """Precompute cluster-root membership under every node.
 
     Returns
     -------
-    List[str]
-        List of cluster root nodes that are descendants of `node`.
+    Dict[str, Set[str]]
+        Mapping ``node -> {cluster roots in node's subtree}``, including ``node``
+        itself when it is a cluster root.
     """
-    if node in cluster_roots:
-        return [node]
+    cluster_roots = set(cluster_roots)
+    roots_under: Dict[str, Set[str]] = {}
 
-    descendants = nx.descendants(tree, node)
-    return [n for n in descendants if n in cluster_roots]
+    for node in reversed(list(nx.topological_sort(tree))):
+        if node in cluster_roots:
+            roots_under[node] = {node}
+            continue
+
+        subtree_roots: Set[str] = set()
+        for child in tree.successors(node):
+            subtree_roots.update(roots_under.get(child, set()))
+        roots_under[node] = subtree_roots
+
+    return roots_under
 
 
 def apply_posthoc_merge(
@@ -81,19 +81,19 @@ def apply_posthoc_merge(
         - Audit trail list of all candidate merges and their outcomes.
     """
     cluster_roots = set(cluster_roots)
+    cluster_roots_under_node = _precompute_cluster_roots_under_nodes(tree, cluster_roots)
 
     # Collect all sibling-boundary pairs
     pairs: List[Dict] = []
 
-    for node in tree.nodes:
-        node_children = children[node]
+    for node, node_children in children.items():
         if len(node_children) != 2:
             continue
 
         left_child, right_child = node_children
 
-        left_clusters = _get_leaf_clusters_under_node(left_child, cluster_roots, tree)
-        right_clusters = _get_leaf_clusters_under_node(right_child, cluster_roots, tree)
+        left_clusters = list(cluster_roots_under_node.get(left_child, set()))
+        right_clusters = list(cluster_roots_under_node.get(right_child, set()))
 
         if not left_clusters or not right_clusters:
             continue
@@ -149,6 +149,7 @@ def apply_posthoc_merge(
     # non-partition (ancestor + descendant both in the root set).  Skip the
     # merge rather than silently absorbing uninvolved clusters.
     merged_roots_count = 0
+    lca_descendants_cache: Dict[str, Set[str]] = {}
     for idx in mergeable_indices:
         lc = pairs[idx]["left_cluster"]
         rc = pairs[idx]["right_cluster"]
@@ -159,7 +160,10 @@ def apply_posthoc_merge(
             continue
 
         # Antichain check: would other cluster roots end up under the LCA?
-        lca_descendants = nx.descendants(tree, lca)
+        lca_descendants = lca_descendants_cache.get(lca)
+        if lca_descendants is None:
+            lca_descendants = nx.descendants(tree, lca)
+            lca_descendants_cache[lca] = lca_descendants
         other_roots_under_lca = {
             r for r in cluster_roots
             if r in lca_descendants and r != lc and r != rc
