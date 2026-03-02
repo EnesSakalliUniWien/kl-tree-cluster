@@ -92,6 +92,7 @@ class _EdgeRecord:
     pval: float  # raw Wald p
     weight: float  # min(n_L, n_R) / n_parent, purely structural [0, 0.5]
     is_null_like: bool  # balanced split (weight > 0.3) used for max_c
+    parent_sibling_different: bool = False  # parent sibling test rejects similarity
 
 
 # =============================================================================
@@ -104,15 +105,17 @@ def _fit_edge_calibration_model(
 ) -> EdgeCalibrationModel:
     """Estimate edge post-selection inflation via weighted Gamma GLM.
 
-    Uses ``w_i = p_sibling_raw(parent_i)`` as frequency weights so that
-    null-like edges (where siblings look the same) dominate the estimate.
-
-    Architecture mirrors ``cousin_weighted_wald._fit_weighted_inflation_model``.
+    Uses descendant-balance weights ``w_i = min(n_L, n_R) / n_parent``.
+    In low-information regimes (small weighted effective sample size), an
+    adaptive sibling-aware filter excludes edges whose parent is already
+    sibling-different from the fit to reduce signal contamination.
 
     ``max_observed_ratio`` is computed from null-like edges only (those
     with ``is_null_like=True``) to prevent signal edges from inflating
     the extrapolation clamp.
     """
+    from kl_clustering_analysis import config as _config
+
     valid = [r for r in records if np.isfinite(r.stat) and r.df > 0 and r.stat > 0 and r.weight > 0]
 
     if not valid:
@@ -124,8 +127,40 @@ def _fit_edge_calibration_model(
             max_observed_ratio=1.0,
         )
 
-    ratios = np.array([r.stat / r.df for r in valid])
-    weights = np.array([r.weight for r in valid])
+    # Effective sample size for weighted estimators.
+    weights_pre = np.array([r.weight for r in valid], dtype=float)
+    effective_n_pre = float(np.sum(weights_pre) ** 2 / np.sum(weights_pre**2))
+
+    # Optional low-information safeguard:
+    # when effective_n is small, exclude edges whose parent already has
+    # significant sibling divergence (likely signal contamination) from the
+    # edge-calibration fit.
+    sib_filter_threshold = float(getattr(_config, "EDGE_CAL_MIN_EFFECTIVE_N_FOR_SIB_FILTER", 0.0))
+    sibling_filter_applied = False
+    n_excluded_sibling_different = 0
+    if sib_filter_threshold > 0.0 and effective_n_pre < sib_filter_threshold:
+        filtered = [r for r in valid if not r.parent_sibling_different]
+        n_excluded_sibling_different = len(valid) - len(filtered)
+        if len(filtered) >= _MIN_MEDIAN:
+            valid = filtered
+            sibling_filter_applied = n_excluded_sibling_different > 0
+            logger.info(
+                "Edge calibration: low effective_n=%.2f (< %.2f), "
+                "excluded %d sibling-different edges from fit.",
+                effective_n_pre,
+                sib_filter_threshold,
+                n_excluded_sibling_different,
+            )
+        elif n_excluded_sibling_different > 0:
+            logger.info(
+                "Edge calibration: low effective_n=%.2f but sibling-based exclusion "
+                "would leave too few records (%d); using unfiltered fit.",
+                effective_n_pre,
+                len(filtered),
+            )
+
+    ratios = np.array([r.stat / r.df for r in valid], dtype=float)
+    weights = np.array([r.weight for r in valid], dtype=float)
 
     # max_observed_ratio from null-like edges only
     null_like_ratios = np.array([r.stat / r.df for r in valid if r.is_null_like])
@@ -133,6 +168,19 @@ def _fit_edge_calibration_model(
 
     n_cal = len(ratios)
     global_c = float(np.average(ratios, weights=weights))
+    effective_n_post = float(np.sum(weights) ** 2 / np.sum(weights**2))
+    common_diagnostics = {
+        "n_calibration": n_cal,
+        "global_c_hat": float(global_c),
+        "max_observed_ratio": float(max_c),
+        "total_weight": float(np.sum(weights)),
+        "effective_n": effective_n_post,
+        "effective_n_pre_filter": effective_n_pre,
+        "sib_filter_threshold": sib_filter_threshold,
+        "sibling_filter_applied": sibling_filter_applied,
+        "n_excluded_sibling_different": int(n_excluded_sibling_different),
+        "n_null_like": int(len(null_like_ratios)),
+    }
 
     if n_cal < _MIN_MEDIAN:
         logger.warning(
@@ -145,6 +193,7 @@ def _fit_edge_calibration_model(
             n_calibration=n_cal,
             global_c_hat=global_c,
             max_observed_ratio=max_c,
+            diagnostics=common_diagnostics,
         )
 
     if n_cal < _MIN_REGRESSION:
@@ -160,6 +209,7 @@ def _fit_edge_calibration_model(
             n_calibration=n_cal,
             global_c_hat=global_c,
             max_observed_ratio=max_c,
+            diagnostics=common_diagnostics,
         )
 
     # --- Intercept-only Gamma GLM ---
@@ -222,6 +272,7 @@ def _fit_edge_calibration_model(
                 n_calibration=n_cal,
                 global_c_hat=global_c,
                 max_observed_ratio=max_c,
+                diagnostics=common_diagnostics,
             )
 
         method = "weighted_regression"
@@ -233,12 +284,7 @@ def _fit_edge_calibration_model(
         )
 
     diagnostics = {
-        "n_calibration": n_cal,
-        "global_c_hat": float(global_c),
-        "max_observed_ratio": float(max_c),
-        "total_weight": float(np.sum(weights)),
-        "effective_n": float(np.sum(weights) ** 2 / np.sum(weights**2)),
-        "n_null_like": int(len(null_like_ratios)),
+        **common_diagnostics,
         **glm_diagnostics,
     }
 
@@ -320,6 +366,7 @@ def calibrate_edges_from_sibling_neighborhood(
     """
     from collections import defaultdict
 
+    from kl_clustering_analysis.core_utils.data_utils import extract_bool_column_dict
     from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
     from ..multiple_testing import apply_multiple_testing_correction
@@ -354,6 +401,14 @@ def calibrate_edges_from_sibling_neighborhood(
     for i in range(n_edges):
         parent_children_leaf_counts[parent_ids[i]].append(int(child_leaf_counts[i]))
 
+    sibling_different_by_parent: dict[str, bool] = {}
+    if "Sibling_BH_Different" in df.columns:
+        sibling_different_by_parent = extract_bool_column_dict(
+            df,
+            "Sibling_BH_Different",
+            null_policy="false",
+        )
+
     # --- Build per-edge records with descendant-balance weights ---
     records: List[_EdgeRecord] = []
 
@@ -385,6 +440,7 @@ def calibrate_edges_from_sibling_neighborhood(
                 pval=float(p_values_raw[i]),
                 weight=weight,
                 is_null_like=is_null_like,
+                parent_sibling_different=bool(sibling_different_by_parent.get(parent_id, False)),
             )
         )
 

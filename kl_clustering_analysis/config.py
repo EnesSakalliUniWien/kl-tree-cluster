@@ -121,6 +121,15 @@ INCLUDE_INTERNAL_IN_SPECTRAL: bool = False
 # Analogous to the sibling test's cousin-weighted Wald calibration.
 EDGE_CALIBRATION: bool = False
 
+# Adaptive sibling-aware filtering for edge calibration.
+# When edge calibration has low effective sample size (effective_n),
+# calibration can be contaminated by a few high-signal edges and massively
+# over-deflate (ĉ >> 1). In that regime we exclude edges whose parent
+# sibling test is already significant (Sibling_BH_Different=True) from the
+# calibration fit. For well-powered calibration (effective_n >= threshold),
+# the filter is not applied.
+EDGE_CAL_MIN_EFFECTIVE_N_FOR_SIB_FILTER: float = 10.0
+
 # --- Eigenvalue Whitening ---
 
 # How to handle eigenvalues when PCA eigenvectors are used for projection.

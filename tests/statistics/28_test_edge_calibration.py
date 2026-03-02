@@ -169,6 +169,103 @@ class TestFitEdgeCalibrationModel:
         c_hat = predict_edge_inflation_factor(model)
         assert 0.7 < c_hat < 1.5, f"ĉ = {c_hat} too far from 1.0 for null data"
 
+    def test_low_effective_n_uses_sibling_filter(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Low effective_n should exclude sibling-different parents from fit."""
+        from kl_clustering_analysis import config
+
+        monkeypatch.setattr(config, "EDGE_CAL_MIN_EFFECTIVE_N_FOR_SIB_FILTER", 10.0)
+
+        records = [
+            # Keepers: moderate ratios, not sibling-different.
+            _EdgeRecord(
+                child_id="C0",
+                parent_id="P0",
+                stat=10.0,
+                df=5.0,
+                pval=0.1,
+                weight=0.5,
+                is_null_like=True,
+                parent_sibling_different=False,
+            ),
+            _EdgeRecord(
+                child_id="C1",
+                parent_id="P1",
+                stat=10.0,
+                df=5.0,
+                pval=0.1,
+                weight=0.5,
+                is_null_like=True,
+                parent_sibling_different=False,
+            ),
+            _EdgeRecord(
+                child_id="C2",
+                parent_id="P2",
+                stat=10.0,
+                df=5.0,
+                pval=0.1,
+                weight=0.5,
+                is_null_like=True,
+                parent_sibling_different=False,
+            ),
+            # Excluded in low-information regime: huge ratios with sibling-different parents.
+            _EdgeRecord(
+                child_id="C3",
+                parent_id="P3",
+                stat=5000.0,
+                df=5.0,
+                pval=1e-12,
+                weight=0.5,
+                is_null_like=True,
+                parent_sibling_different=True,
+            ),
+            _EdgeRecord(
+                child_id="C4",
+                parent_id="P4",
+                stat=5000.0,
+                df=5.0,
+                pval=1e-12,
+                weight=0.5,
+                is_null_like=True,
+                parent_sibling_different=True,
+            ),
+        ]
+
+        model = _fit_edge_calibration_model(records)
+        c_hat = predict_edge_inflation_factor(model)
+
+        assert model.diagnostics.get("sibling_filter_applied") is True
+        assert model.diagnostics.get("n_excluded_sibling_different") == 2
+        assert model.n_calibration == 3
+        assert c_hat < 10.0
+
+    def test_high_effective_n_keeps_sibling_different_records(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """High effective_n should not apply sibling-based exclusion."""
+        from kl_clustering_analysis import config
+
+        monkeypatch.setattr(config, "EDGE_CAL_MIN_EFFECTIVE_N_FOR_SIB_FILTER", 10.0)
+
+        records = [
+            _EdgeRecord(
+                child_id=f"C{i}",
+                parent_id=f"P{i}",
+                stat=10.0 + 0.1 * i,
+                df=5.0,
+                pval=0.1,
+                weight=0.5,
+                is_null_like=True,
+                parent_sibling_different=(i % 2 == 0),
+            )
+            for i in range(20)
+        ]
+
+        model = _fit_edge_calibration_model(records)
+
+        assert model.diagnostics.get("effective_n_pre_filter", 0.0) >= 10.0
+        assert model.diagnostics.get("sibling_filter_applied") is False
+        assert model.n_calibration == 20
+
 
 # =============================================================================
 # Helper: build a small tree + DataFrame for integration tests
