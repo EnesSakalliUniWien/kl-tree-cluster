@@ -53,6 +53,7 @@ def benchmark_cluster_algorithm(
     concat_plots_pdf: bool = False,
     concat_output: str | None = None,
     matrix_audit: bool = False,
+    include_cover_pages: bool = True,
 ):
     """
     Benchmark the cluster decomposition algorithm across multiple test cases.
@@ -86,6 +87,9 @@ def benchmark_cluster_algorithm(
         Output PDF path. Defaults to ``plots_root / f'benchmark_plots_{timestamp}.pdf'`` when omitted.
     matrix_audit : bool, default=False
         If True, export TensorBoard summaries for key matrices per test case.
+    include_cover_pages : bool, default=True
+        When streaming plots to PDF, include global benchmark cover/section pages.
+        Set False for per-case PDFs that will be merged later by an outer runner.
 
     Returns
     -------
@@ -191,6 +195,7 @@ def benchmark_cluster_algorithm(
             verbose,
             plot_umap,
             plot_manifold,
+            include_cover_pages=include_cover_pages,
             **plot_kwargs,
         )
 

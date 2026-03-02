@@ -53,6 +53,7 @@ def _run_case_worker(
             concat_plots_pdf=enable_plots,
             concat_output=pdf_path,
             matrix_audit=False,
+            include_cover_pages=False,
         )
         queue.put({"ok": True, "rows": df_res.to_dict(orient="records")})
     except Exception as exc:
@@ -177,6 +178,7 @@ def run_case_with_optional_isolation(
         concat_plots_pdf=enable_plots,
         concat_output=pdf_path,
         matrix_audit=False,  # Disable heavy TensorBoard exports to prevent memory crashes
+        include_cover_pages=False,
     )
     return df_res
 

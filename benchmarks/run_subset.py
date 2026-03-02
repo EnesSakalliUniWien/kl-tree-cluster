@@ -3,6 +3,7 @@
 Quick subset benchmark — picks ~15 representative cases across categories
 and runs them with plots.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -10,6 +11,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
+
+# Default to single-threaded spectral decomposition workers to avoid
+# thread oversubscription. Users can override by setting KL_TE_N_JOBS.
+spectral_jobs = os.environ.setdefault("KL_TE_N_JOBS", "1")
 
 # Pick a representative subset: mix of easy/hard, different K, different types
 SUBSET_NAMES = {
@@ -41,6 +46,7 @@ SUBSET_NAMES = {
 all_cases = get_default_test_cases()
 subset = [c for c in all_cases if c["name"] in SUBSET_NAMES]
 print(f"Selected {len(subset)}/{len(all_cases)} cases:")
+print(f"Spectral settings: KL_TE_N_JOBS={spectral_jobs}")
 for c in subset:
     print(f"  {c['name']:<35s}  K={c.get('n_clusters', '?')}")
 print()

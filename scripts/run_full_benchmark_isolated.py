@@ -52,14 +52,56 @@ def _make_run_dir(explicit_dir: str | None) -> Path:
     return run_dir
 
 
-def _existing_case_keys(df_existing: pd.DataFrame) -> set[int]:
+def _resume_coverage(
+    df_existing: pd.DataFrame,
+    expected_methods: list[str],
+) -> tuple[set[int], dict[int, list[str]], int]:
     if df_existing.empty:
-        return set()
-    if "test_case" in df_existing.columns:
-        return set(pd.to_numeric(df_existing["test_case"], errors="coerce").dropna().astype(int))
-    if "Test" in df_existing.columns:
-        return set(pd.to_numeric(df_existing["Test"], errors="coerce").dropna().astype(int))
-    return set()
+        return set(), {}, 0
+
+    case_col = "test_case" if "test_case" in df_existing.columns else "Test"
+    if case_col not in df_existing.columns:
+        return set(), {}, 0
+
+    method_col = "method" if "method" in df_existing.columns else "Method"
+    if method_col not in df_existing.columns:
+        return set(), {}, 0
+
+    expected_set = set(expected_methods)
+    name_to_id = {spec.name: method_id for method_id, spec in METHOD_SPECS.items()}
+
+    case_keys = pd.to_numeric(df_existing[case_col], errors="coerce")
+    methods_raw = df_existing[method_col].astype(str)
+
+    def _normalize_method(value: str) -> str | None:
+        if value in expected_set:
+            return value
+        mapped = name_to_id.get(value)
+        if mapped in expected_set:
+            return mapped
+        return None
+
+    methods_norm = methods_raw.map(_normalize_method)
+    progress = pd.DataFrame({"case_key": case_keys, "method_id": methods_norm})
+    progress = progress.dropna(subset=["case_key", "method_id"])
+    if progress.empty:
+        return set(), {}, 0
+
+    progress["case_key"] = progress["case_key"].astype(int)
+    methods_by_case = (
+        progress.groupby("case_key")["method_id"].agg(lambda s: set(s.tolist())).to_dict()
+    )
+
+    completed_cases: set[int] = set()
+    missing_methods_by_case: dict[int, list[str]] = {}
+    for case_key, seen_methods in methods_by_case.items():
+        missing = [method_id for method_id in expected_methods if method_id not in seen_methods]
+        if not missing:
+            completed_cases.add(int(case_key))
+        else:
+            missing_methods_by_case[int(case_key)] = missing
+
+    return completed_cases, missing_methods_by_case, len(methods_by_case)
 
 
 def main() -> None:
@@ -78,11 +120,14 @@ def main() -> None:
 
     if out_csv.exists():
         existing_df = pd.read_csv(out_csv)
-        done = _existing_case_keys(existing_df)
+        done, missing_methods_by_case, tracked_case_count = _resume_coverage(existing_df, methods)
+        partial_case_count = max(0, tracked_case_count - len(done))
         print(f"Resuming existing run: {run_dir}")
-        print(f"Already completed cases: {len(done)}")
+        print(f"Fully completed cases: {len(done)}")
+        print(f"Partial cases to resume: {partial_case_count}")
     else:
         done = set()
+        missing_methods_by_case = {}
         print(f"Starting new isolated run: {run_dir}")
 
     all_rows: list[pd.DataFrame] = []
@@ -94,6 +139,14 @@ def main() -> None:
             print(f"[{i}/{len(test_cases)}] Skip {case_id} (already completed)")
             continue
 
+        methods_for_case = missing_methods_by_case.get(case_key, methods)
+        if case_key in missing_methods_by_case:
+            print(
+                f"[{i}/{len(test_cases)}] Resume partial {case_id} "
+                f"(missing methods: {methods_for_case})",
+                flush=True,
+            )
+
         print(f"[{i}/{len(test_cases)}] Running {case_id}", flush=True)
         case_with_num = dict(case)
         case_with_num["test_case_num"] = case_key
@@ -104,7 +157,7 @@ def main() -> None:
             try:
                 case_df = run_case_isolated(
                     case=case_with_num,
-                    methods_to_test=methods,
+                    methods_to_test=methods_for_case,
                     case_plot_umap=False,
                     case_plot_manifold=False,
                     enable_plots=False,
@@ -125,7 +178,7 @@ def main() -> None:
         case_df.to_csv(out_csv, mode="a", header=write_header, index=False)
 
         if not case_df.empty and "Method" in case_df.columns and "ARI" in case_df.columns:
-            for method_id in methods:
+            for method_id in methods_for_case:
                 method_name = METHOD_SPECS[method_id].name
                 row = case_df[case_df["Method"] == method_name]
                 if not row.empty:

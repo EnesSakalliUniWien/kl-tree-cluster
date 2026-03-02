@@ -41,7 +41,66 @@ except ImportError:
     diagnose_benchmark_failures = None
 
 
+def _compute_resume_coverage(
+    existing_results: pd.DataFrame,
+    expected_methods: list[str],
+) -> tuple[set[int], dict[int, list[str]], int]:
+    """Compute fully-complete and partial case coverage from an existing CSV."""
+    if existing_results.empty:
+        return set(), {}, 0
+
+    case_col = "test_case" if "test_case" in existing_results.columns else "Test"
+    if case_col not in existing_results.columns:
+        return set(), {}, 0
+
+    method_col = "method" if "method" in existing_results.columns else "Method"
+    if method_col not in existing_results.columns:
+        return set(), {}, 0
+
+    expected_set = set(expected_methods)
+    name_to_id = {spec.name: method_id for method_id, spec in METHOD_SPECS.items()}
+
+    case_keys = pd.to_numeric(existing_results[case_col], errors="coerce")
+    methods_raw = existing_results[method_col].astype(str)
+
+    def _normalize_method(value: str) -> str | None:
+        if value in expected_set:
+            return value
+        mapped = name_to_id.get(value)
+        if mapped in expected_set:
+            return mapped
+        return None
+
+    methods_norm = methods_raw.map(_normalize_method)
+    progress = pd.DataFrame({"case_key": case_keys, "method_id": methods_norm})
+    progress = progress.dropna(subset=["case_key", "method_id"])
+    if progress.empty:
+        return set(), {}, 0
+
+    progress["case_key"] = progress["case_key"].astype(int)
+
+    methods_by_case = (
+        progress.groupby("case_key")["method_id"].agg(lambda s: set(s.tolist())).to_dict()
+    )
+
+    completed_cases: set[int] = set()
+    missing_methods_by_case: dict[int, list[str]] = {}
+    for case_key, seen_methods in methods_by_case.items():
+        missing = [method_id for method_id in expected_methods if method_id not in seen_methods]
+        if not missing:
+            completed_cases.add(int(case_key))
+        else:
+            missing_methods_by_case[int(case_key)] = missing
+
+    return completed_cases, missing_methods_by_case, len(methods_by_case)
+
+
 def run_benchmarks():
+    # Default to single-threaded spectral decomposition workers to avoid
+    # thread oversubscription (outer benchmark parallelism + BLAS threads).
+    # Users can still override by setting KL_TE_N_JOBS explicitly.
+    spectral_jobs = os.environ.setdefault("KL_TE_N_JOBS", "1")
+
     print("Fetching default test cases...")
     test_cases = get_default_test_cases()
     print(f"Found {len(test_cases)} test cases.")
@@ -53,6 +112,7 @@ def run_benchmarks():
         methods_to_test.insert(0, "kl")
         print("Added required tree method: kl")
     print(f"Methods: {methods_to_test}")
+    print(f"Spectral settings: KL_TE_N_JOBS={spectral_jobs}")
 
     # Keep plots enabled by default; UMAP comparison pages are always generated
     # when plotting is on.
@@ -107,41 +167,45 @@ def run_benchmarks():
     if output_path.exists():
         try:
             all_results = pd.read_csv(output_path)
-            existing_case_keys: set[int] = set()
-            if "test_case" in all_results.columns:
-                existing_case_keys = set(
-                    pd.to_numeric(all_results["test_case"], errors="coerce")
-                    .dropna()
-                    .astype(int)
-                    .tolist()
-                )
-            elif "Test" in all_results.columns:
-                existing_case_keys = set(
-                    pd.to_numeric(all_results["Test"], errors="coerce")
-                    .dropna()
-                    .astype(int)
-                    .tolist()
-                )
-            print(f"Resuming... Found {len(existing_case_keys)} already completed test indices.")
+            completed_case_keys, missing_methods_by_case, tracked_case_count = _compute_resume_coverage(
+                all_results,
+                methods_to_test,
+            )
+            partial_case_count = max(0, tracked_case_count - len(completed_case_keys))
+            print(
+                "Resuming... "
+                f"Found {len(completed_case_keys)} fully completed test indices "
+                f"and {partial_case_count} partial cases."
+            )
         except Exception as e:
             print(f"Error reading existing results, starting fresh: {e}")
             all_results = pd.DataFrame()
-            existing_case_keys = set()
+            completed_case_keys = set()
+            missing_methods_by_case = {}
     else:
         all_results = pd.DataFrame()
-        existing_case_keys = set()
+        completed_case_keys = set()
+        missing_methods_by_case = {}
 
     for i, case in enumerate(test_cases):
         case_key = i + 1
         case_id = case.get("name", case.get("id", f"case_{i}"))
         case_type = case.get("type", "unknown")
 
-        if case_key in existing_case_keys:
+        if case_key in completed_case_keys:
             print(
                 f"[{i + 1}/{len(test_cases)}] Skipping case: {case_id} "
                 f"(test index {case_key} already done)"
             )
             continue
+
+        methods_for_case = missing_methods_by_case.get(case_key, methods_to_test)
+        if case_key in missing_methods_by_case:
+            print(
+                f"[{i + 1}/{len(test_cases)}] Resuming partial case: {case_id} "
+                f"(missing methods: {methods_for_case})",
+                flush=True,
+            )
 
         print(
             f"[{i + 1}/{len(test_cases)}] Running case: {case_id} (Type: {case_type})",
@@ -163,7 +227,7 @@ def run_benchmarks():
             df_res = run_case_with_optional_isolation(
                 case=case,
                 case_id=str(case_id),
-                methods_to_test=methods_to_test,
+                methods_to_test=methods_for_case,
                 case_plot_umap=case_plot_umap,
                 case_plot_manifold=case_plot_manifold,
                 enable_plots=enable_plots,
@@ -194,7 +258,7 @@ def run_benchmarks():
                 df_res.to_csv(output_path, mode="a", header=write_header, index=False)
 
                 print("  Results:", flush=True)
-                for method in methods_to_test:
+                for method in methods_for_case:
                     row = df_res[df_res["method"] == method]
                     if not row.empty:
                         ari_val = row["ari"].values[0]

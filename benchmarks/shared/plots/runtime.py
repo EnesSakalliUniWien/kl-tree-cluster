@@ -65,6 +65,7 @@ def generate_benchmark_plots(
     plot_umap_3d: bool = False,
     save_png: bool = True,
     collect_figs: bool = False,
+    include_cover_pages: bool = True,
     *,
     pdf: PdfPages | None = None,
 ):
@@ -87,12 +88,16 @@ def generate_benchmark_plots(
     _ = collect_figs
 
     # --- Experiment-setup cover pages ---
-    n_cases = df_results["Test"].nunique() if "Test" in df_results.columns else len(df_results)
-    cover_figs = generate_cover_pages(n_cases=n_cases)
-    for cfig in cover_figs:
-        pdf.savefig(cfig)
-        plt.close(cfig)
-    logger.info("Wrote %d cover/setup pages to PDF.", len(cover_figs))
+    # Full benchmark reports add their own global overview/section pages during
+    # top-level PDF assembly. Allow per-case runs to skip these to avoid
+    # duplicated/misaligned explanation pages in concatenated reports.
+    if include_cover_pages:
+        n_cases = df_results["Test"].nunique() if "Test" in df_results.columns else len(df_results)
+        cover_figs = generate_cover_pages(n_cases=n_cases)
+        for cfig in cover_figs:
+            pdf.savefig(cfig)
+            plt.close(cfig)
+        logger.info("Wrote %d cover/setup pages to PDF.", len(cover_figs))
 
     fig = create_validation_plot(df_results)
 

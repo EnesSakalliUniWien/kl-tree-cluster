@@ -36,11 +36,13 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
         plot_manifold,
         save_png=True,
         collect_figs=False,
+        include_cover_pages=True,
         *,
         pdf=None,
     ):
         called["save_png"] = save_png
         called["collect_figs"] = collect_figs
+        called["include_cover_pages"] = include_cover_pages
         called["pdf"] = pdf
         return None, {"validation": [], "trees": [], "umap": [], "manifold": []}
 
@@ -58,4 +60,5 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
 
     assert called.get("save_png") is False
     assert called.get("collect_figs") is False
+    assert called.get("include_cover_pages") is True
     assert called.get("pdf") is not None
