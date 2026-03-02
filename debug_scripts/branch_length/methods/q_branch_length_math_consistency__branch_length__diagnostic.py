@@ -39,8 +39,13 @@ def analyze_branch_length_scale():
     # Collect branch lengths
     branch_lengths = []
     for parent, child, edge_data in tree.edges(data=True):
-        bl = edge_data.get("branch_length", 0)
-        branch_lengths.append(bl)
+        if "branch_length" not in edge_data:
+            continue
+        branch_lengths.append(float(edge_data["branch_length"]))
+
+    if not branch_lengths:
+        print("\nNo explicit branch_length attributes found.")
+        return branch_lengths, tree
 
     print(f"\nUsing Hamming distance + average linkage:")
     print(f"  Data: {n_samples} samples × {n_features} features (binary)")

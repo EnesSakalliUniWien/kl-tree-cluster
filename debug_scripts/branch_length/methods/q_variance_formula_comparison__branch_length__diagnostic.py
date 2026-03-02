@@ -46,10 +46,13 @@ def analyze_single_case(true_k=2, entropy=0.1, n_rows=200, n_cols=50, seed=42):
     print(f"\nTree: {len(tree.nodes)} nodes, {len(tree.edges)} edges")
 
     # Get branch lengths
-    branch_lengths = [d.get("branch_length", 0) for _, _, d in tree.edges(data=True)]
-    print(
-        f"Branch lengths: min={min(branch_lengths):.4f}, max={max(branch_lengths):.4f}, mean={np.mean(branch_lengths):.4f}"
-    )
+    branch_lengths = [float(d["branch_length"]) for _, _, d in tree.edges(data=True) if "branch_length" in d]
+    if branch_lengths:
+        print(
+            f"Branch lengths: min={min(branch_lengths):.4f}, max={max(branch_lengths):.4f}, mean={np.mean(branch_lengths):.4f}"
+        )
+    else:
+        print("Branch lengths: unavailable (no explicit branch_length attributes)")
 
     # Populate distributions
     tree.populate_node_divergences(df)
@@ -60,8 +63,13 @@ def analyze_single_case(true_k=2, entropy=0.1, n_rows=200, n_cols=50, seed=42):
     print("-" * 70)
 
     edges_with_bl = [
-        (p, c, tree.edges[p, c].get("branch_length", 0)) for p, c in tree.edges()
+        (p, c, float(tree.edges[p, c]["branch_length"]))
+        for p, c in tree.edges()
+        if "branch_length" in tree.edges[p, c]
     ]
+    if not edges_with_bl:
+        print("\nNo explicit branch_length attributes found; skipping edge ranking output.")
+        return {"true_k": true_k, "pred_k": np.nan, "ari": np.nan, "entropy": entropy}
     edges_with_bl.sort(key=lambda x: -x[2])
 
     print(

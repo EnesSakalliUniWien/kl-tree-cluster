@@ -68,6 +68,19 @@ def get_leaves_under(tree, node_id):
     return leaves
 
 
+def _edge_branch_length(tree: PosetTree, parent: str, child: str) -> float | None:
+    edge_data = tree.edges[parent, child]
+    if "branch_length" not in edge_data:
+        return None
+    return float(edge_data["branch_length"])
+
+
+def _format_optional_float(value: float | None, precision: int = 4) -> str:
+    if value is None or not np.isfinite(value):
+        return "N/A"
+    return f"{value:.{precision}f}"
+
+
 def trace_single_example():
     """Trace through a single example in detail."""
     print("=" * 80)
@@ -123,10 +136,15 @@ def trace_single_example():
             print(f"  Right child {children[1]}: {len(right_leaves)} leaves, labels={right_labels}")
 
             # Get branch lengths
-            bl_left = tree_curr.edges[node_id, children[0]].get("branch_length", 1.0)
-            bl_right = tree_curr.edges[node_id, children[1]].get("branch_length", 1.0)
-            print(f"  Branch lengths: left={bl_left:.4f}, right={bl_right:.4f}")
-            print(f"  Ratio: {bl_left / bl_right:.2f}")
+            bl_left = _edge_branch_length(tree_curr, node_id, children[0])
+            bl_right = _edge_branch_length(tree_curr, node_id, children[1])
+            print(
+                f"  Branch lengths: left={_format_optional_float(bl_left)}, right={_format_optional_float(bl_right)}"
+            )
+            if bl_left is not None and bl_right is not None and bl_right != 0:
+                print(f"  Ratio: {bl_left / bl_right:.2f}")
+            else:
+                print("  Ratio: N/A")
 
     # Now compute distributions and compare
     print("\n" + "-" * 40)
@@ -147,8 +165,8 @@ def trace_single_example():
         if len(children) != 2:
             continue
 
-        bl_left = tree_curr.edges[node_id, children[0]].get("branch_length", 1.0)
-        bl_right = tree_curr.edges[node_id, children[1]].get("branch_length", 1.0)
+        bl_left = _edge_branch_length(tree_curr, node_id, children[0])
+        bl_right = _edge_branch_length(tree_curr, node_id, children[1])
 
         # Get leaves to determine if this is a boundary
         left_leaves = get_leaves_under(tree_curr, children[0])
@@ -165,8 +183,12 @@ def trace_single_example():
         diff = np.abs(dist_harm - dist_curr).sum()
 
         print(f"\n{node_id} (boundary={is_boundary}):")
+        if bl_left is not None and bl_right is not None and bl_right != 0:
+            bl_ratio = f"{bl_left / bl_right:.2f}"
+        else:
+            bl_ratio = "N/A"
         print(
-            f"  Branch lengths: L={bl_left:.4f}, R={bl_right:.4f}, ratio={bl_left / bl_right:.2f}"
+            f"  Branch lengths: L={_format_optional_float(bl_left)}, R={_format_optional_float(bl_right)}, ratio={bl_ratio}"
         )
         print(f"  Left: {len(left_leaves)} leaves, labels={left_labels}")
         print(f"  Right: {len(right_leaves)} leaves, labels={right_labels}")
@@ -302,7 +324,10 @@ def trace_branch_length_correlation():
             if len(children) != 2:
                 continue
 
-            bl_sum = sum(tree.edges[node_id, c].get("branch_length", 1.0) for c in children)
+            child_branch_lengths = [_edge_branch_length(tree, node_id, c) for c in children]
+            if any(bl is None for bl in child_branch_lengths):
+                continue
+            bl_sum = float(sum(child_branch_lengths))
 
             left_leaves = get_leaves_under(tree, children[0])
             right_leaves = get_leaves_under(tree, children[1])

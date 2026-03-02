@@ -29,8 +29,15 @@ def analyze_branch_lengths(tree):
 
     branch_lengths = []
     for parent, child in tree.edges():
-        bl = tree.edges[parent, child].get("branch_length", 0)
-        branch_lengths.append(bl)
+        edge_data = tree.edges[parent, child]
+        if "branch_length" not in edge_data:
+            continue
+        branch_lengths.append(float(edge_data["branch_length"]))
+
+    if not branch_lengths:
+        print("  No explicit branch_length attributes found.")
+        print()
+        return np.array([], dtype=float)
 
     bl = np.array(branch_lengths)
     print(f"  Count: {len(bl)}")
@@ -55,7 +62,14 @@ def analyze_variance_components(tree, n_edges=10):
     print("=" * 70)
 
     # Sort edges by branch length to get interesting ones
-    edges = [(p, c, tree.edges[p, c].get("branch_length", 0)) for p, c in tree.edges()]
+    edges = [
+        (p, c, float(tree.edges[p, c]["branch_length"]))
+        for p, c in tree.edges()
+        if "branch_length" in tree.edges[p, c]
+    ]
+    if not edges:
+        print("\nNo explicit branch_length attributes found; skipping variance component analysis.")
+        return []
     edges = sorted(edges, key=lambda x: -x[2])[:n_edges]  # highest BL first
 
     results = []
@@ -65,7 +79,7 @@ def analyze_variance_components(tree, n_edges=10):
         parent_dist = np.array(tree.nodes[parent_id]["distribution"])
         n_child = tree.nodes[child_id]["leaf_count"]
         n_parent = tree.nodes[parent_id]["leaf_count"]
-        bl = tree.edges[parent_id, child_id].get("branch_length", 1.0)
+        bl = float(tree.edges[parent_id, child_id]["branch_length"])
 
         # Bernoulli variance component
         bernoulli_var = parent_dist * (1 - parent_dist)
@@ -118,7 +132,14 @@ def analyze_z_scores_and_pvalues(tree, n_edges=5):
     print("=" * 70)
 
     # Sort edges by branch length to get interesting ones
-    edges = [(p, c, tree.edges[p, c].get("branch_length", 0)) for p, c in tree.edges()]
+    edges = [
+        (p, c, float(tree.edges[p, c]["branch_length"]))
+        for p, c in tree.edges()
+        if "branch_length" in tree.edges[p, c]
+    ]
+    if not edges:
+        print("\nNo explicit branch_length attributes found; skipping z-score comparison.")
+        return
     edges = sorted(edges, key=lambda x: -x[2])[:n_edges]  # highest BL first
 
     for parent_id, child_id, _ in edges:
@@ -126,7 +147,7 @@ def analyze_z_scores_and_pvalues(tree, n_edges=5):
         parent_dist = np.array(tree.nodes[parent_id]["distribution"])
         n_child = tree.nodes[child_id]["leaf_count"]
         n_parent = tree.nodes[parent_id]["leaf_count"]
-        bl = tree.edges[parent_id, child_id].get("branch_length", 1.0)
+        bl = float(tree.edges[parent_id, child_id]["branch_length"])
 
         diff = child_dist - parent_dist
         d = len(diff)  # dimensionality
@@ -176,8 +197,13 @@ def analyze_what_bl_should_be(tree, n_edges=10):
 
     # Sort edges by branch length to get interesting ones
     all_edges = [
-        (p, c, tree.edges[p, c].get("branch_length", 0)) for p, c in tree.edges()
+        (p, c, float(tree.edges[p, c]["branch_length"]))
+        for p, c in tree.edges()
+        if "branch_length" in tree.edges[p, c]
     ]
+    if not all_edges:
+        print("\nNo explicit branch_length attributes found; skipping BL target analysis.")
+        return
     edges = sorted(all_edges, key=lambda x: -x[2])[:n_edges]  # highest BL first
 
     print(
@@ -188,7 +214,7 @@ def analyze_what_bl_should_be(tree, n_edges=10):
     for parent_id, child_id, _ in edges:
         n_child = tree.nodes[child_id]["leaf_count"]
         n_parent = tree.nodes[parent_id]["leaf_count"]
-        bl = tree.edges[parent_id, child_id].get("branch_length", 1.0)
+        bl = float(tree.edges[parent_id, child_id]["branch_length"])
 
         # Nested variance factor: (1/n_child - 1/n_parent)
         # Naive variance factor: 1/n_child

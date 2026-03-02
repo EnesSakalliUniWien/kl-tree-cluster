@@ -30,18 +30,34 @@ def get_tree_height(tree):
         children = list(tree.successors(node))
         if not children:
             return 0
-        return max(
-            tree.edges[node, c].get("branch_length", 0) + height_from(c)
-            for c in children
-        )
+        child_heights = []
+        for c in children:
+            edge_data = tree.edges[node, c]
+            if "branch_length" not in edge_data:
+                continue
+            child_heights.append(float(edge_data["branch_length"]) + height_from(c))
+        if not child_heights:
+            return 0
+        return max(child_heights)
 
     return height_from(root)
 
 
 def analyze_branch_lengths(tree):
     """Analyze branch length distribution."""
-    bls = [tree.edges[p, c].get("branch_length", 0) for p, c in tree.edges()]
-    bls = np.array(bls)
+    bls = [
+        float(tree.edges[p, c]["branch_length"])
+        for p, c in tree.edges()
+        if "branch_length" in tree.edges[p, c]
+    ]
+    bls = np.array(bls, dtype=float)
+
+    if bls.size == 0:
+        print("=" * 70)
+        print("BRANCH LENGTH ANALYSIS")
+        print("=" * 70)
+        print("\nNo explicit branch_length attributes found on edges.")
+        return bls, 0.0
 
     height = get_tree_height(tree)
 
@@ -109,8 +125,13 @@ def simulate_test_with_normalization(tree, df, strategies):
 
     # Find edges with significant branch length (potential cluster boundaries)
     edges_with_bl = [
-        (p, c, tree.edges[p, c].get("branch_length", 0)) for p, c in tree.edges()
+        (p, c, float(tree.edges[p, c]["branch_length"]))
+        for p, c in tree.edges()
+        if "branch_length" in tree.edges[p, c]
     ]
+    if not edges_with_bl:
+        print("\nNo explicit branch_length attributes found; skipping edge-level simulation.")
+        return
     edges_with_bl.sort(key=lambda x: -x[2])
 
     # Take top 5 edges by branch length
@@ -139,9 +160,8 @@ def simulate_test_with_normalization(tree, df, strategies):
         print(f"    Base (no BL):  χ² = {stat_base:8.1f}, p = {p_base:.2e}")
 
         height = get_tree_height(tree)
-        bl_mean = np.mean(
-            [tree.edges[p, c].get("branch_length", 0) for p, c in tree.edges()]
-        )
+        bl_values = [edge_bl for _, _, edge_bl in edges_with_bl]
+        bl_mean = float(np.mean(bl_values))
 
         # Test each normalization
         normalizations = {

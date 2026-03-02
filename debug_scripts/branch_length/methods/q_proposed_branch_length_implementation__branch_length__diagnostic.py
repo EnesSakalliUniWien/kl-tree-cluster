@@ -23,7 +23,7 @@ from benchmarks.shared.generators import (
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
-def compute_normalized_branch_length(bl: float, mean_bl: float) -> float:
+def compute_normalized_branch_length(bl: float | None, mean_bl: float) -> float:
     """Normalize branch length for variance scaling.
 
     Formula: BL_norm = 1 + BL / mean(BL)
@@ -43,7 +43,7 @@ def compute_standardized_z_with_bl(
     parent_dist: np.ndarray,
     n_child: int,
     n_parent: int,
-    branch_length: float,
+    branch_length: float | None,
     mean_branch_length: float,
     use_nested_variance: bool = True,
 ) -> np.ndarray:
@@ -119,8 +119,12 @@ def run_comparison_benchmark():
             tree.populate_node_divergences(df)
 
             # Compute mean branch length
-            bls = [tree.edges[p, c].get("branch_length", 0) for p, c in tree.edges()]
-            mean_bl = np.mean(bls)
+            bls = [
+                float(tree.edges[p, c]["branch_length"])
+                for p, c in tree.edges()
+                if "branch_length" in tree.edges[p, c]
+            ]
+            mean_bl = float(np.mean(bls)) if bls else 1.0
 
             # Test different configurations
             configs = [
@@ -145,14 +149,14 @@ def run_comparison_benchmark():
                     parent_dist = np.array(tree.nodes[parent_id]["distribution"])
                     n_child = tree.nodes[child_id]["leaf_count"]
                     n_parent = tree.nodes[parent_id]["leaf_count"]
-                    bl = tree.edges[parent_id, child_id].get("branch_length", 0)
+                    bl = tree.edges[parent_id, child_id].get("branch_length")
 
                     z = compute_standardized_z_with_bl(
                         child_dist,
                         parent_dist,
                         n_child,
                         n_parent,
-                        bl if use_bl else 0,
+                        bl if use_bl else None,
                         mean_bl if use_bl else 1,
                         use_nested,
                     )
@@ -196,7 +200,7 @@ def show_proposed_implementation():
    
    def _compute_mean_branch_length(tree) -> float:
        '''Compute mean branch length for normalization.'''
-       bls = [tree.edges[p, c].get('branch_length', 0) for p, c in tree.edges()]
+       bls = [tree.edges[p, c]["branch_length"] for p, c in tree.edges() if "branch_length" in tree.edges[p, c]]
        return np.mean(bls) if bls else 1.0
 
 2. MODIFY _compute_standardized_z in edge_significance.py:

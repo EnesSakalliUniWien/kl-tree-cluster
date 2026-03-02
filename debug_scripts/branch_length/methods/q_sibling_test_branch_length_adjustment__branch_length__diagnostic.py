@@ -48,12 +48,11 @@ def test_branch_length_extraction():
     # Check edge attributes
     print("\nEdge branch lengths:")
     for parent, child in tree.edges():
-        branch_length = tree.edges[parent, child].get("branch_length", "NOT FOUND")
-        print(
-            f"  {parent} -> {child}: {branch_length:.4f}"
-            if isinstance(branch_length, float)
-            else f"  {parent} -> {child}: {branch_length}"
-        )
+        branch_length = tree.edges[parent, child].get("branch_length")
+        if branch_length is None:
+            print(f"  {parent} -> {child}: N/A")
+        else:
+            print(f"  {parent} -> {child}: {float(branch_length):.4f}")
 
     # Test _get_sibling_data extraction
     print("\nTesting _get_sibling_data for each internal node:")
@@ -66,16 +65,12 @@ def test_branch_length_extraction():
                 left_dist, right_dist, n_left, n_right, bl_left, bl_right = result
                 print(f"\n  Parent: {node}")
                 print(f"    Children: {left}, {right}")
-                print(
-                    f"    Branch lengths: left={bl_left:.4f}, right={bl_right:.4f}"
-                    if bl_left
-                    else f"    Branch lengths: left={bl_left}, right={bl_right}"
-                )
-                print(
-                    f"    Sum: {bl_left + bl_right:.4f}"
-                    if bl_left and bl_right
-                    else "    Sum: N/A"
-                )
+                if bl_left is not None and bl_right is not None:
+                    print(f"    Branch lengths: left={bl_left:.4f}, right={bl_right:.4f}")
+                    print(f"    Sum: {bl_left + bl_right:.4f}")
+                else:
+                    print(f"    Branch lengths: left={bl_left}, right={bl_right}")
+                    print("    Sum: N/A")
             except Exception as e:
                 print(f"  Error for {node}: {e}")
 

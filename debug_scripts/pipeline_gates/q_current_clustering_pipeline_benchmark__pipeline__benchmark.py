@@ -117,10 +117,13 @@ def run_benchmark(
     print(f"Tree: {len(tree.nodes)} nodes, {len(tree.edges)} edges")
 
     # Check branch lengths
-    branch_lengths = [d.get("branch_length", 0) for _, _, d in tree.edges(data=True)]
-    print(
-        f"Branch lengths: min={min(branch_lengths):.4f}, max={max(branch_lengths):.4f}, mean={np.mean(branch_lengths):.4f}"
-    )
+    branch_lengths = [float(d["branch_length"]) for _, _, d in tree.edges(data=True) if "branch_length" in d]
+    if branch_lengths:
+        print(
+            f"Branch lengths: min={min(branch_lengths):.4f}, max={max(branch_lengths):.4f}, mean={np.mean(branch_lengths):.4f}"
+        )
+    else:
+        print("Branch lengths: unavailable (no explicit branch_length attributes)")
 
     # Run decomposition
     print("\nRunning decomposition...")

@@ -33,6 +33,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cou
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test import (
     annotate_sibling_divergence_cousin,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald import (
+    annotate_sibling_divergence_weighted,
+)
 
 
 # ── Test data ──────────────────────────────────────────────────────────────
@@ -154,6 +157,7 @@ def _format_gate(val):
 
 SIBLING_METHODS = {
     "wald": annotate_sibling_divergence,
+    "cousin_weighted_wald": annotate_sibling_divergence_weighted,
     "cousin_adjusted_wald": annotate_sibling_divergence_adjusted,
     "cousin_ftest": annotate_sibling_divergence_cousin,
 }
@@ -371,7 +375,9 @@ def main():
         from benchmarks.shared.generators import generate_case_data
 
         pick = {"sparse_features_72x72", "binary_perfect_2c", "binary_perfect_4c",
-                "gauss_clear_small", "gauss_moderate_3c"}
+                "gauss_clear_small", "gauss_moderate_3c",
+                "gauss_overlap_3c_small", "overlap_heavy_4c_small_feat",
+                "overlap_mod_4c_small"}
         all_cases = get_default_test_cases()
         for tc in all_cases:
             if tc["name"] in pick:

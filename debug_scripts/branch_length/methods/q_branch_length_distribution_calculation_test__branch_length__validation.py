@@ -14,6 +14,19 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis.tree.distributions import populate_distributions
 
 
+def _format_optional_float(value: object, precision: int = 4) -> str:
+    """Format numeric values safely; return N/A for missing/non-finite values."""
+    if value is None:
+        return "N/A"
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return "N/A"
+    if not np.isfinite(numeric):
+        return "N/A"
+    return f"{numeric:.{precision}f}"
+
+
 def create_simple_two_taxa_tree():
     """Create a simple 2-leaf tree with asymmetric branch lengths."""
     # Two leaves that merge at different distances
@@ -55,7 +68,7 @@ def test_two_taxa_binary():
     # Print branch lengths
     print("\nBranch lengths:")
     for u, v, data in tree.edges(data=True):
-        print(f"  {u} -> {v}: {data.get('branch_length', 'N/A'):.4f}")
+        print(f"  {u} -> {v}: {_format_optional_float(data.get('branch_length'))}")
 
     # Binary leaf data: A=0, B=1 (one-hot encoded)
     leaf_data = pd.DataFrame(
@@ -109,10 +122,13 @@ def test_two_taxa_binary():
     # Show weights
     print("\n--- Weight Analysis ---")
     for child_id in tree_harmonic.successors(root_harmonic):
-        bl = tree_harmonic.edges[root_harmonic, child_id].get("branch_length", 1.0)
+        bl = tree_harmonic.edges[root_harmonic, child_id].get("branch_length")
         lc = tree_harmonic.nodes[child_id].get("leaf_count", 1)
+        conductance = (
+            1.0 / float(bl) if bl is not None and np.isfinite(float(bl)) and float(bl) != 0 else None
+        )
         print(
-            f"  {child_id}: leaf_count={lc}, branch_length={bl:.4f}, conductance={1 / bl:.4f}"
+            f"  {child_id}: leaf_count={lc}, branch_length={_format_optional_float(bl)}, conductance={_format_optional_float(conductance)}"
         )
 
 
@@ -127,7 +143,7 @@ def test_four_taxa_categorical():
     # Print tree structure with branch lengths
     print("\nTree structure (branch lengths):")
     for u, v, data in tree.edges(data=True):
-        print(f"  {u} -> {v}: bl={data.get('branch_length', 'N/A'):.4f}")
+        print(f"  {u} -> {v}: bl={_format_optional_float(data.get('branch_length'))}")
 
     # Leaf data: categorical distributions
     # 3 categories
@@ -179,7 +195,7 @@ def test_asymmetric_branch_lengths():
 
     print("\nBranch lengths (manually set):")
     for u, v, data in tree.edges(data=True):
-        print(f"  {u} -> {v}: bl={data.get('branch_length', 'N/A'):.4f}")
+        print(f"  {u} -> {v}: bl={_format_optional_float(data.get('branch_length'))}")
 
     # A and B have opposite distributions
     leaf_data = pd.DataFrame(
@@ -245,7 +261,7 @@ def test_epsilon_handling():
 
     print("\nBranch lengths (including zero):")
     for u, v, data in tree.edges(data=True):
-        print(f"  {u} -> {v}: bl={data.get('branch_length', 'N/A'):.6f}")
+        print(f"  {u} -> {v}: bl={_format_optional_float(data.get('branch_length'), precision=6)}")
 
     leaf_data = pd.DataFrame({"feature": [1.0, 0.5, 0.0]}, index=["A", "B", "C"])
 

@@ -32,6 +32,19 @@ sys.path.insert(0, str(repo_root))
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
+def _format_optional_float(value: object, precision: int = 4) -> str:
+    """Format numeric values safely; return N/A for missing/non-finite values."""
+    if value is None:
+        return "N/A"
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return "N/A"
+    if not np.isfinite(numeric):
+        return "N/A"
+    return f"{numeric:.{precision}f}"
+
+
 def generate_two_cluster_data(
     n_samples_per_cluster: int = 100,
     n_features: int = 200,
@@ -243,8 +256,8 @@ def main():
 
         if root in results_df.index:
             root_row = results_df.loc[root]
-            print(f"Height: {root_row.get('height', 'N/A'):.4f}")
-            print(f"Branch length: {root_row.get('branch_length', 'N/A'):.4f}")
+            print(f"Height: {_format_optional_float(root_row.get('height'))}")
+            print(f"Branch length: {_format_optional_float(root_row.get('branch_length'))}")
             print(
                 f"Child-Parent Significant: {root_row.get('Child_Parent_Divergence_Significant', 'N/A')}"
             )
@@ -264,14 +277,10 @@ def main():
             )
 
             child_row = results_df.loc[child] if child in results_df.index else None
-            bl = (
-                child_row.get("branch_length", "N/A")
-                if child_row is not None
-                else "N/A"
-            )
+            bl = child_row.get("branch_length") if child_row is not None else None
 
             print(
-                f"  {child}: {len(leaves)} leaves, purity={purity:.1%}, branch_length={bl:.4f}"
+                f"  {child}: {len(leaves)} leaves, purity={purity:.1%}, branch_length={_format_optional_float(bl)}"
             )
 
 

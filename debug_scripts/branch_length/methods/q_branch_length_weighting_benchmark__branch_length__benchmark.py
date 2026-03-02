@@ -180,9 +180,11 @@ def run_single_comparison(
             for child in children:
                 if child in stats_df.index:
                     kl = stats_df.loc[child, "kl_divergence_local"]
-                    bl = tree.edges[node_id, child].get("branch_length", 1.0)
+                    bl = tree.edges[node_id, child].get("branch_length")
+                    if bl is None:
+                        continue
                     kl_vals.append(kl)
-                    bl_vals.append(bl)
+                    bl_vals.append(float(bl))
 
             if len(kl_vals) == 2:
                 # Metric 1: Sum of KL (Standard)

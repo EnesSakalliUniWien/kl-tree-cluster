@@ -172,10 +172,13 @@ def analyze_real_scenario():
     tree.populate_node_divergences(leaf_data=data_df)
 
     # Check branch lengths
-    branch_lengths = [d.get("branch_length", 0) for _, _, d in tree.edges(data=True)]
-    print(
-        f"\nBranch lengths: min={min(branch_lengths):.4f}, max={max(branch_lengths):.4f}, mean={np.mean(branch_lengths):.4f}"
-    )
+    branch_lengths = [float(d["branch_length"]) for _, _, d in tree.edges(data=True) if "branch_length" in d]
+    if branch_lengths:
+        print(
+            f"\nBranch lengths: min={min(branch_lengths):.4f}, max={max(branch_lengths):.4f}, mean={np.mean(branch_lengths):.4f}"
+        )
+    else:
+        print("\nBranch lengths: unavailable (no explicit branch_length attributes)")
 
     # Find root and test siblings
     root = tree.root()
@@ -189,12 +192,19 @@ def analyze_real_scenario():
         n_left = tree.nodes[left].get("n_samples", 1)
         n_right = tree.nodes[right].get("n_samples", 1)
 
-        left_bl = tree.edges[root, left].get("branch_length", 0)
-        right_bl = tree.edges[root, right].get("branch_length", 0)
-        branch_sum = left_bl + right_bl
+        left_bl = tree.edges[root, left].get("branch_length")
+        right_bl = tree.edges[root, right].get("branch_length")
+        branch_sum = (
+            float(left_bl) + float(right_bl)
+            if left_bl is not None and right_bl is not None
+            else None
+        )
 
         print(f"\nRoot children: {left} (n={n_left}), {right} (n={n_right})")
-        print(f"Branch lengths: {left_bl:.4f} + {right_bl:.4f} = {branch_sum:.4f}")
+        if branch_sum is None:
+            print("Branch lengths: unavailable on at least one root edge")
+        else:
+            print(f"Branch lengths: {left_bl:.4f} + {right_bl:.4f} = {branch_sum:.4f}")
 
         # Test WITHOUT branch adjustment
         z_no_bl, _ = standardize_proportion_difference(
@@ -209,29 +219,31 @@ def analyze_real_scenario():
         stat_no_bl = float(np.sum(proj_no_bl**2))
         p_no_bl = chi2.sf(stat_no_bl, df=k)
 
-        # Test WITH branch adjustment
-        z_with_bl, _ = standardize_proportion_difference(
-            left_dist, right_dist, n_left, n_right, branch_length_sum=branch_sum
-        )
-        proj_with_bl = R @ z_with_bl
-        stat_with_bl = float(np.sum(proj_with_bl**2))
-        p_with_bl = chi2.sf(stat_with_bl, df=k)
-
         print(f"\nTest results (k={k}):")
         print(f"  Without branch adjustment: stat={stat_no_bl:.2f}, p={p_no_bl:.6f}")
-        print(
-            f"  With branch adjustment:    stat={stat_with_bl:.2f}, p={p_with_bl:.6f}"
-        )
 
         if p_no_bl < 0.05:
             print("\n✓ Without branch adjustment: would SPLIT (correct!)")
         else:
             print("\n✗ Without branch adjustment: would MERGE (wrong!)")
 
-        if p_with_bl < 0.05:
-            print("✓ With branch adjustment: would SPLIT")
+        if branch_sum is not None:
+            z_with_bl, _ = standardize_proportion_difference(
+                left_dist, right_dist, n_left, n_right, branch_length_sum=branch_sum
+            )
+            proj_with_bl = R @ z_with_bl
+            stat_with_bl = float(np.sum(proj_with_bl**2))
+            p_with_bl = chi2.sf(stat_with_bl, df=k)
+            print(
+                f"  With branch adjustment:    stat={stat_with_bl:.2f}, p={p_with_bl:.6f}"
+            )
+
+            if p_with_bl < 0.05:
+                print("✓ With branch adjustment: would SPLIT")
+            else:
+                print("✗ With branch adjustment: would MERGE")
         else:
-            print("✗ With branch adjustment: would MERGE")
+            print("  With branch adjustment:    skipped (missing branch_length)")
 
 
 def propose_solutions():

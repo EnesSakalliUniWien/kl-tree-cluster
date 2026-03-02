@@ -32,7 +32,10 @@ def analyze_z_scores(tree, stats_df, entropy_label):
     print("=" * 60)
 
     mean_bl = _compute_mean_branch_length(tree)
-    print(f"Mean branch length: {mean_bl:.4f}")
+    if mean_bl is None:
+        print("Mean branch length: unavailable (no explicit branch_length attributes)")
+    else:
+        print(f"Mean branch length: {mean_bl:.4f}")
 
     z_magnitudes = []
     sample_sizes = []
@@ -47,7 +50,7 @@ def analyze_z_scores(tree, stats_df, entropy_label):
 
         n_child = int(stats_df.loc[child, "leaf_count"])
         n_parent = int(stats_df.loc[parent, "leaf_count"])
-        bl = tree.edges[parent, child].get("branch_length", 0)
+        bl = tree.edges[parent, child].get("branch_length")
 
         z = _compute_standardized_z(
             np.asarray(child_dist),
@@ -141,7 +144,7 @@ def analyze_variance_components(tree, stats_df, entropy_label):
 
         n_child = int(stats_df.loc[child, "leaf_count"])
         n_parent = int(stats_df.loc[parent, "leaf_count"])
-        bl = tree.edges[parent, child].get("branch_length", 0)
+        bl = tree.edges[parent, child].get("branch_length")
 
         # Component 1: Nested factor
         nested_factor = 1 / n_child - 1 / n_parent
@@ -152,7 +155,10 @@ def analyze_variance_components(tree, stats_df, entropy_label):
         theta_vars.append(theta_var)
 
         # Component 3: BL multiplier
-        bl_mult = 1.0 + bl / mean_bl
+        if mean_bl is not None and mean_bl > 0 and bl is not None:
+            bl_mult = 1.0 + bl / mean_bl
+        else:
+            bl_mult = np.nan
         bl_multipliers.append(bl_mult)
 
     print(f"  Nested factor (1/n_c - 1/n_p):")
@@ -165,10 +171,15 @@ def analyze_variance_components(tree, stats_df, entropy_label):
     print(f"    Median: {np.median(theta_vars):.4f}")
     print(f"    Max:    {np.max(theta_vars):.4f}")
 
-    print(f"\n  BL multiplier (1 + BL/mean_BL):")
-    print(f"    Min:    {np.min(bl_multipliers):.4f}")
-    print(f"    Median: {np.median(bl_multipliers):.4f}")
-    print(f"    Max:    {np.max(bl_multipliers):.4f}")
+    valid_bl_multipliers = np.asarray(bl_multipliers, dtype=float)
+    valid_bl_multipliers = valid_bl_multipliers[np.isfinite(valid_bl_multipliers)]
+    if valid_bl_multipliers.size > 0:
+        print(f"\n  BL multiplier (1 + BL/mean_BL):")
+        print(f"    Min:    {np.min(valid_bl_multipliers):.4f}")
+        print(f"    Median: {np.median(valid_bl_multipliers):.4f}")
+        print(f"    Max:    {np.max(valid_bl_multipliers):.4f}")
+    else:
+        print("\n  BL multiplier (1 + BL/mean_BL): unavailable")
 
 
 def main():
