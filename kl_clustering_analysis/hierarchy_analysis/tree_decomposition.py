@@ -6,6 +6,7 @@ which traverses a hierarchy and decides where to split or merge to form clusters
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Dict, List, Set, Tuple
 
 if TYPE_CHECKING:
@@ -20,14 +21,18 @@ from .cluster_assignments import build_cluster_assignments as _build_cluster_ass
 from .cluster_assignments import build_sample_cluster_assignments
 from .gate_annotations import compute_gate_annotations
 from .gates import GateEvaluator, V2TraversalState, iterate_worklist, process_node, process_node_v2
-from .pairwise_testing import test_cluster_pair_divergence, test_node_pair_divergence
+from .pairwise_testing import (
+    build_branch_distance_cache,
+    test_cluster_pair_divergence,
+    test_node_pair_divergence,
+)
 from .posthoc_merge import apply_posthoc_merge
 from .signal_localization import (
     extract_constrained_clusters,
     merge_difference_graphs,
     merge_similarity_graphs,
 )
-from .statistics.branch_length_utils import compute_mean_branch_length
+from .statistics.branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
 from .statistics.projection.random_projection import resolve_min_k
 from .statistics.sibling_divergence import CalibrationModel, WeightedCalibrationModel
 
@@ -143,25 +148,21 @@ class TreeDecomposition:
         self._leaf_partition_by_node = self.tree.compute_descendant_sets(use_labels=True)
 
         self._leaf_count_cache: Dict[str, int] = {
-            node_id: self.tree.nodes[node_id].get(
-                "leaf_count", len(self._leaf_partition_by_node.get(node_id, ()))
-            )
-            for node_id in self.tree.nodes
+            node_id: node_data.get("leaf_count", len(self._leaf_partition_by_node.get(node_id, ())))
+            for node_id, node_data in self._node_attrs_by_id.items()
         }
 
-        # ----- mean branch length for Felsenstein normalization -----
-        # Only consider edges that actually carry a branch_length attribute.
-        # Edges without the attribute are NOT treated as zero-length — they
-        # are simply absent.  If no edge has the attribute the Felsenstein
-        # adjustment is disabled entirely (_mean_branch_length = None).
-        #
-        # config.FELSENSTEIN_SCALING gates the entire mechanism: when False
-        # (default since 2026-02-17) the mean is forced to None so no
-        # variance inflation is applied anywhere.
-        if config.FELSENSTEIN_SCALING:
-            self._mean_branch_length = compute_mean_branch_length(self.tree)
-        else:
-            self._mean_branch_length = None
+        # ----- branch-length semantics and Felsenstein normalization -----
+        self._mean_branch_length, branch_distance_mode = self._resolve_branch_length_scaling()
+        self._branch_distance_cache = (
+            build_branch_distance_cache(
+                self.tree,
+                root=self._root,
+                distance_mode=branch_distance_mode,
+            )
+            if self._mean_branch_length is not None
+            else None
+        )
 
         # ----- ensure statistical annotations are present -----
         self.results_df = self._prepare_annotations(self.results_df)
@@ -193,14 +194,14 @@ class TreeDecomposition:
             ("Sibling_BH_Different", self._sibling_different),
             ("Sibling_Divergence_Skipped", self._sibling_skipped),
         ):
-            missing = set(self.tree.nodes) - set(mapping.keys())
+            missing = set(self._node_ids) - set(mapping.keys())
             if missing:
                 preview = ", ".join(map(repr, list(missing)[:5]))
                 raise ValueError(f"Missing {column_name!r} values for nodes: {preview}.")
 
         # Precompute children list (avoids rebuilding generator repeatedly)
         self._children: Dict[str, List[str]] = {
-            n: list(self.tree.successors(n)) for n in self.tree.nodes
+            n: list(self.tree.successors(n)) for n in self._node_ids
         }
 
         # ----- construct the GateEvaluator -----
@@ -215,6 +216,78 @@ class TreeDecomposition:
         )
 
     # ---------- initialization helpers ----------
+
+    def _resolve_branch_length_scaling(self) -> Tuple[float | None, str]:
+        """Resolve branch-length mode and mean normalization for this run.
+
+        Returns
+        -------
+        Tuple[float | None, str]
+            ``(mean_branch_length, distance_mode)`` where *distance_mode* is
+            passed to :func:`build_branch_distance_cache`.
+        """
+        if not config.FELSENSTEIN_SCALING:
+            return None, "phylogeny"
+
+        mode = config.FELSENSTEIN_BRANCH_LENGTH_MODE
+        if mode not in {"phylogeny", "topology"}:
+            raise ValueError(
+                "config.FELSENSTEIN_BRANCH_LENGTH_MODE must be 'phylogeny' "
+                f"or 'topology'. Got {mode!r}."
+            )
+
+        if mode == "topology":
+            # Unit edge lengths by construction, so normalization mean is 1.
+            return 1.0, "topology"
+
+        policy = config.FELSENSTEIN_INCOMPLETE_BRANCH_POLICY
+        if policy not in {"warn_disable", "error"}:
+            raise ValueError(
+                "config.FELSENSTEIN_INCOMPLETE_BRANCH_POLICY must be "
+                f"'warn_disable' or 'error'. Got {policy!r}."
+            )
+
+        invalid_edges: List[Tuple[str, str, object]] = []
+        for parent, child in self.tree.edges():
+            raw_branch_length = self.tree.edges[parent, child].get("branch_length")
+            if sanitize_positive_branch_length(raw_branch_length) is None:
+                invalid_edges.append((parent, child, raw_branch_length))
+
+        if invalid_edges:
+            preview = ", ".join(
+                f"{parent}->{child}:{raw!r}" for parent, child, raw in invalid_edges[:3]
+            )
+            message = (
+                "FELSENSTEIN_SCALING is enabled with phylogeny branch-length mode, "
+                f"but {len(invalid_edges)} of {self.tree.number_of_edges()} edges have "
+                "missing/invalid 'branch_length'. "
+                f"Examples: {preview}."
+            )
+            if policy == "error":
+                raise ValueError(message)
+            warnings.warn(
+                message + " Disabling Felsenstein scaling for this decomposition run.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return None, "phylogeny"
+
+        mean_branch_length = compute_mean_branch_length(self.tree)
+        if mean_branch_length is None:
+            message = (
+                "FELSENSTEIN_SCALING is enabled with phylogeny branch-length mode, "
+                "but no valid positive branch lengths were found."
+            )
+            if policy == "error":
+                raise ValueError(message)
+            warnings.warn(
+                message + " Disabling Felsenstein scaling for this decomposition run.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return None, "phylogeny"
+
+        return mean_branch_length, "phylogeny"
 
     def _prepare_annotations(self, results_df: pd.DataFrame) -> pd.DataFrame:
         """Ensure statistical annotation columns are present on *results_df*.
@@ -237,17 +310,22 @@ class TreeDecomposition:
         Extracts and stores distributions, leaf flags, and labels.
         This one-time preprocessing avoids expensive NetworkX lookups in tight loops.
         """
+        self._node_ids: Tuple[str, ...] = tuple()
+        self._node_attrs_by_id: Dict[str, dict] = {}
         self._distribution_by_node: Dict[str, np.ndarray] = {}
         self._is_leaf: Dict[str, bool] = {}
         self._label: Dict[str, str] = {}
 
-        for node_id in self.tree.nodes:
-            node_data = self.tree.nodes[node_id]
+        node_ids: List[str] = []
+        for node_id, node_data in self.tree.nodes(data=True):
+            node_ids.append(node_id)
+            self._node_attrs_by_id[node_id] = node_data
             # Preserve shape: 1D for binary (Bernoulli), 2D for categorical (multinomial)
             distribution_array = np.asarray(node_data["distribution"], dtype=float)
             self._distribution_by_node[node_id] = distribution_array
             self._is_leaf[node_id] = node_data["is_leaf"]
             self._label[node_id] = node_data.get("label", node_id)
+        self._node_ids = tuple(node_ids)
 
         # n_features is the first dimension (number of features/variables)
         if self._distribution_by_node:
@@ -285,7 +363,7 @@ class TreeDecomposition:
         if not hasattr(self, "_label_to_node_map"):
             # This is a one-time cache population for all leaves.
             self._label_to_node_map = {
-                self._label[n]: n for n in self.tree.nodes if self._is_leaf.get(n)
+                self._label[n]: n for n in self._node_ids if self._is_leaf.get(n)
             }
 
         leaf_nodes = [
@@ -346,6 +424,7 @@ class TreeDecomposition:
             node_b,
             self._mean_branch_length,
             calibration_model=self._calibration_model,
+            branch_distance_cache=self._branch_distance_cache,
         )
 
     # ---------- post-hoc merge helpers ----------
@@ -364,6 +443,7 @@ class TreeDecomposition:
             common_ancestor,
             self._mean_branch_length,
             calibration_model=self._calibration_model,
+            branch_distance_cache=self._branch_distance_cache,
         )
 
     def decompose_tree(self) -> dict[str, object]:

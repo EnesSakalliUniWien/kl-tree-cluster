@@ -2,6 +2,8 @@
 Central configuration for the KL-TE clustering analysis library.
 """
 
+from typing import Literal
+
 # --- Statistical Parameters ---
 
 # Default significance level (alpha) for hypothesis tests.
@@ -28,6 +30,18 @@ EPSILON: float = 1e-9
 # Disabled: empirical comparison shows Felsenstein scaling systematically
 # under-splits on data-dependent trees (mean ARI 0.694 → 1.000 without it).
 FELSENSTEIN_SCALING: bool = False
+
+# Explicit branch-length semantics for pairwise path distances used by
+# Felsenstein scaling in localization and post-hoc merge:
+# - "phylogeny": use edge ``branch_length`` values as true path lengths.
+# - "topology": ignore edge values and use unit hop-length per edge.
+FELSENSTEIN_BRANCH_LENGTH_MODE: Literal["phylogeny", "topology"] = "phylogeny"
+
+# Behavior when scaling is enabled in phylogeny mode but some edges have
+# missing/invalid branch lengths:
+# - "warn_disable": emit a warning and disable Felsenstein scaling for that run.
+# - "error": raise ValueError and fail fast.
+FELSENSTEIN_INCOMPLETE_BRANCH_POLICY: Literal["warn_disable", "error"] = "warn_disable"
 
 # --- Post-Hoc Merge Parameters ---
 

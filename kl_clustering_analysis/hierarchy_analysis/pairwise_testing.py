@@ -16,9 +16,9 @@ These functions are used as callbacks by:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Union
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Dict, Tuple, Union
 
-import networkx as nx
 import numpy as np
 
 if TYPE_CHECKING:
@@ -32,6 +32,177 @@ from .statistics.sibling_divergence import (
     predict_weighted_inflation_factor,
 )
 from .statistics.sibling_divergence.sibling_divergence_test import sibling_divergence_test
+
+
+@dataclass(frozen=True)
+class BranchDistanceCache:
+    """Precomputed ancestry and root-distance data for O(1)-ish queries."""
+
+    root: str
+    root_distance: Dict[str, float | None]
+    entry_time: Dict[str, int]
+    exit_time: Dict[str, int]
+
+
+def build_branch_distance_cache(
+    tree: "PosetTree",
+    *,
+    root: str | None = None,
+    distance_mode: str = "phylogeny",
+) -> BranchDistanceCache | None:
+    """Build branch-distance cache for a rooted tree.
+
+    Distances are cumulative from root:
+    - ``distance_mode="phylogeny"`` uses finite positive ``branch_length`` edge
+      attributes. If any edge on the root->node path is missing/invalid, that
+      node receives ``None`` distance.
+    - ``distance_mode="topology"`` uses unit edge lengths (hop distance), so
+      every root-reachable node gets a finite distance.
+    """
+    if distance_mode not in {"phylogeny", "topology"}:
+        raise ValueError(
+            "distance_mode must be 'phylogeny' or 'topology'. "
+            f"Got {distance_mode!r}."
+        )
+
+    if root is None:
+        root = tree.graph.get("root")
+    if root is None:
+        roots = [n for n, d in tree.in_degree() if d == 0]
+        if len(roots) != 1:
+            return None
+        root = roots[0]
+    if root not in tree:
+        return None
+
+    root_distance: Dict[str, float | None] = {root: 0.0}
+    entry_time: Dict[str, int] = {}
+    exit_time: Dict[str, int] = {}
+    time_counter = 0
+
+    # Iterative DFS to compute Euler tour timestamps and root distances.
+    stack: list[tuple[str, bool]] = [(root, False)]
+    while stack:
+        node, exiting = stack.pop()
+        if not exiting:
+            if node in entry_time:
+                continue
+            entry_time[node] = time_counter
+            time_counter += 1
+            stack.append((node, True))
+            children = list(tree.successors(node))
+            for child in reversed(children):
+                if child in root_distance:
+                    continue
+                parent_dist = root_distance.get(node)
+                if parent_dist is None:
+                    root_distance[child] = None
+                else:
+                    if distance_mode == "topology":
+                        edge_bl = 1.0
+                    else:
+                        edge_bl = sanitize_positive_branch_length(
+                            tree.edges[node, child].get("branch_length")
+                        )
+                    root_distance[child] = None if edge_bl is None else parent_dist + edge_bl
+                stack.append((child, False))
+        else:
+            exit_time[node] = time_counter
+            time_counter += 1
+
+    # Disconnected/non-root-reachable nodes are marked unavailable.
+    for node in tree:
+        if node not in root_distance:
+            root_distance[node] = None
+        entry_time.setdefault(node, -1)
+        exit_time.setdefault(node, -1)
+
+    return BranchDistanceCache(
+        root=root,
+        root_distance=root_distance,
+        entry_time=entry_time,
+        exit_time=exit_time,
+    )
+
+
+def _is_ancestor_cached(cache: BranchDistanceCache, ancestor: str, node: str) -> bool:
+    """Check ancestor relation in O(1) using Euler tour timestamps."""
+    in_ancestor = cache.entry_time.get(ancestor, -1)
+    in_node = cache.entry_time.get(node, -1)
+    out_ancestor = cache.exit_time.get(ancestor, -1)
+    if in_ancestor < 0 or in_node < 0 or out_ancestor < 0:
+        return False
+    return in_ancestor <= in_node <= out_ancestor
+
+
+def _cached_branch_distance_from_ancestor(
+    cache: BranchDistanceCache,
+    ancestor: str,
+    node: str,
+) -> float | None:
+    """Lookup ancestor->node distance via cumulative root distances."""
+    if ancestor == node:
+        return None
+    if not _is_ancestor_cached(cache, ancestor, node):
+        return None
+
+    ancestor_dist = cache.root_distance.get(ancestor)
+    node_dist = cache.root_distance.get(node)
+    if ancestor_dist is None or node_dist is None:
+        return None
+
+    return sanitize_positive_branch_length(node_dist - ancestor_dist)
+
+
+def _strict_branch_distance_from_ancestor(
+    tree: "PosetTree",
+    ancestor: str,
+    node: str,
+) -> float | None:
+    """Sum validated ``branch_length`` values along ancestor -> node path.
+
+    This function intentionally avoids weighted shortest-path calls because
+    NetworkX treats missing edge weights as 1.0 when ``weight="branch_length"``
+    is provided. Here, every traversed edge must carry a finite positive
+    ``branch_length``; otherwise ``None`` is returned so branch-length scaling
+    is disabled for that comparison.
+    """
+    if ancestor not in tree or node not in tree:
+        return None
+    if ancestor == node:
+        return None
+
+    total = 0.0
+    current = node
+
+    while current != ancestor:
+        parents = list(tree.predecessors(current))
+        if len(parents) != 1:
+            return None
+
+        parent = parents[0]
+        branch_length = sanitize_positive_branch_length(
+            tree.edges[parent, current].get("branch_length")
+        )
+        if branch_length is None:
+            return None
+
+        total += branch_length
+        current = parent
+
+    return total if total > 0 else None
+
+
+def _branch_distance_from_ancestor(
+    tree: "PosetTree",
+    ancestor: str,
+    node: str,
+    branch_distance_cache: BranchDistanceCache | None,
+) -> float | None:
+    """Get ancestor->node branch distance using cache when available."""
+    if branch_distance_cache is not None:
+        return _cached_branch_distance_from_ancestor(branch_distance_cache, ancestor, node)
+    return _strict_branch_distance_from_ancestor(tree, ancestor, node)
 
 
 def _deflate_by_calibration(
@@ -102,6 +273,7 @@ def _compute_branch_lengths_to_lca(
     node_a: str,
     node_b: str,
     mean_branch_length: float | None,
+    branch_distance_cache: BranchDistanceCache | None = None,
 ) -> Tuple[float | None, float | None]:
     """Compute patristic distances from two nodes to their LCA.
 
@@ -130,15 +302,9 @@ def _compute_branch_lengths_to_lca(
         return None, None
 
     lca = tree.find_lca(node_a, node_b)
-    try:
-        dist_a = nx.shortest_path_length(tree, source=lca, target=node_a, weight="branch_length")
-        dist_b = nx.shortest_path_length(tree, source=lca, target=node_b, weight="branch_length")
-        return (
-            sanitize_positive_branch_length(dist_a),
-            sanitize_positive_branch_length(dist_b),
-        )
-    except nx.NetworkXNoPath:
-        return None, None
+    dist_a = _branch_distance_from_ancestor(tree, lca, node_a, branch_distance_cache)
+    dist_b = _branch_distance_from_ancestor(tree, lca, node_b, branch_distance_cache)
+    return dist_a, dist_b
 
 
 def _compute_branch_lengths_from_ancestor(
@@ -147,6 +313,7 @@ def _compute_branch_lengths_from_ancestor(
     node_b: str,
     common_ancestor: str,
     mean_branch_length: float | None,
+    branch_distance_cache: BranchDistanceCache | None = None,
 ) -> Tuple[float | None, float | None]:
     """Compute patristic distances from two nodes to a known common ancestor.
 
@@ -174,19 +341,13 @@ def _compute_branch_lengths_from_ancestor(
     if mean_branch_length is None:
         return None, None
 
-    try:
-        dist_a = nx.shortest_path_length(
-            tree, source=common_ancestor, target=node_a, weight="branch_length"
-        )
-        dist_b = nx.shortest_path_length(
-            tree, source=common_ancestor, target=node_b, weight="branch_length"
-        )
-        return (
-            sanitize_positive_branch_length(dist_a),
-            sanitize_positive_branch_length(dist_b),
-        )
-    except nx.NetworkXNoPath:
-        return None, None
+    dist_a = _branch_distance_from_ancestor(
+        tree, common_ancestor, node_a, branch_distance_cache
+    )
+    dist_b = _branch_distance_from_ancestor(
+        tree, common_ancestor, node_b, branch_distance_cache
+    )
+    return dist_a, dist_b
 
 
 def test_node_pair_divergence(
@@ -195,6 +356,7 @@ def test_node_pair_divergence(
     node_b: str,
     mean_branch_length: float | None,
     calibration_model: Union[CalibrationModel, WeightedCalibrationModel, None] = None,
+    branch_distance_cache: BranchDistanceCache | None = None,
 ) -> Tuple[float, float, float]:
     """Test divergence between two arbitrary tree nodes.
 
@@ -235,7 +397,13 @@ def test_node_pair_divergence(
     n_a = float(tree.nodes[node_a]["leaf_count"])
     n_b = float(tree.nodes[node_b]["leaf_count"])
 
-    bl_a, bl_b = _compute_branch_lengths_to_lca(tree, node_a, node_b, mean_branch_length)
+    bl_a, bl_b = _compute_branch_lengths_to_lca(
+        tree,
+        node_a,
+        node_b,
+        mean_branch_length,
+        branch_distance_cache=branch_distance_cache,
+    )
 
     test_stat, df, p_value = sibling_divergence_test(
         left_dist=dist_a,
@@ -273,6 +441,7 @@ def test_cluster_pair_divergence(
     common_ancestor: str,
     mean_branch_length: float | None,
     calibration_model: Union[CalibrationModel, WeightedCalibrationModel, None] = None,
+    branch_distance_cache: BranchDistanceCache | None = None,
 ) -> Tuple[float, float, float]:
     """Test whether two cluster roots are significantly different.
 
@@ -310,7 +479,12 @@ def test_cluster_pair_divergence(
     size_b = int(tree.nodes[cluster_b]["leaf_count"])
 
     bl_a, bl_b = _compute_branch_lengths_from_ancestor(
-        tree, cluster_a, cluster_b, common_ancestor, mean_branch_length
+        tree,
+        cluster_a,
+        cluster_b,
+        common_ancestor,
+        mean_branch_length,
+        branch_distance_cache=branch_distance_cache,
     )
 
     test_stat, df, p_value = sibling_divergence_test(
