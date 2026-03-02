@@ -60,7 +60,7 @@ from .estimators import (  # noqa: F401
     effective_rank,
     marchenko_pastur_signal_count,
 )
-from .tree_helpers import build_subtree_data, is_leaf, precompute_descendants
+from .tree_helpers import is_leaf, precompute_descendants
 
 logger = logging.getLogger(__name__)
 
@@ -96,10 +96,42 @@ def _get_n_jobs(n_tasks: int) -> int:
 # =====================================================================
 
 
-def _process_node(node_id, data_sub, method, min_k, d, need_eigh):
-    """Eigendecompose one node and return (node_id, k, proj, ev)."""
-    if data_sub is None:
+def _process_node(
+    node_id,
+    row_indices,
+    X,
+    internal_vecs,
+    method,
+    min_k,
+    d,
+    need_eigh,
+):
+    """Eigendecompose one node and return (node_id, k, proj, ev).
+
+    Data is sliced lazily here (not pre-materialised by the caller) so that
+    only O(n_threads × n_desc_max × d) bytes are live at any moment, instead
+    of O(n_nodes × n_desc_avg × d) for the full pre-built dict.
+
+    Parameters
+    ----------
+    row_indices
+        Row indices into *X* for the descendant leaves of this node.
+    X
+        Full data matrix shared across threads (read-only view).
+    internal_vecs
+        Optional list of pre-extracted internal-node distribution vectors
+        (each shape (d,)).  ``None`` or empty list when include_internal=False.
+    """
+    if len(row_indices) < 2:
         return (node_id, max(min_k, 1), None, None)
+
+    # Slice on-demand: only this thread's copy is live during the call.
+    leaf_rows = X[row_indices, :]
+
+    if internal_vecs:
+        data_sub = np.vstack([leaf_rows, np.array(internal_vecs, dtype=np.float64)])
+    else:
+        data_sub = leaf_rows
 
     if method == "active_features":
         k = count_active_features(data_sub)
@@ -261,26 +293,37 @@ def compute_spectral_decomposition(
         else:
             internal_nodes.append(node_id)
 
-    # Pre-build subtree data for internal nodes (fast, read-only slicing).
-    node_data = {}
-    for node_id in internal_nodes:
-        data_sub = build_subtree_data(
-            tree,
-            X,
-            desc_indices,
-            desc_internal,
-            node_id,
-            d,
-            include_internal,
-        )
-        node_data[node_id] = data_sub
+    # Pre-extract internal-node distribution vectors (small: just d-dimensional
+    # vectors, not n×d matrices).  Empty when include_internal=False (default).
+    # This avoids passing the tree object into workers.
+    node_internal_vecs: Dict[str, list] = {}
+    if include_internal:
+        for node_id in internal_nodes:
+            vecs = []
+            for inode in desc_internal.get(node_id, []):
+                dist = tree.nodes[inode].get("distribution")
+                if dist is not None:
+                    dist_arr = np.asarray(dist, dtype=np.float64)
+                    if dist_arr.shape == (d,):
+                        vecs.append(dist_arr)
+            node_internal_vecs[node_id] = vecs
 
     # --- Parallel eigendecomposition via joblib ---
-    # eigh / eigvalsh release the GIL (LAPACK), so threads give real
-    # parallelism without process-spawn overhead.
+    # Data is sliced lazily inside each worker (not pre-materialised here).
+    # With prefer="threads" every worker shares the same X array (no copy).
+    # Peak RAM is O(n_jobs × n_desc_max × d) instead of O(n_nodes × n_desc_avg × d).
     n_jobs = _get_n_jobs(len(internal_nodes))
     results = Parallel(n_jobs=n_jobs, prefer="threads")(
-        delayed(_process_node)(nid, node_data[nid], method, min_k, d, need_eigh)
+        delayed(_process_node)(
+            nid,
+            desc_indices.get(nid, []),
+            X,
+            node_internal_vecs.get(nid, []),
+            method,
+            min_k,
+            d,
+            need_eigh,
+        )
         for nid in internal_nodes
     )
 
