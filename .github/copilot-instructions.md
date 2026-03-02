@@ -12,12 +12,16 @@ Binary matrix → linkage → PosetTree → populate_node_divergences() → deco
 
 - **`PosetTree`** ([tree/poset_tree.py](kl_clustering_analysis/tree/poset_tree.py)): NetworkX DiGraph subclass; central data structure holding hierarchy, distributions, and statistical annotations via `stats_df` property. Constructed via `from_linkage()` or `from_agglomerative()`.
 
-- **`TreeDecomposition`** ([hierarchy_analysis/tree_decomposition.py](kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py)): Top-down tree walker applying three statistical gates to determine cluster boundaries:
+- **`TreeDecomposition`** ([hierarchy_analysis/tree_decomposition.py](kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py)): Orchestrator class (~757 lines) that delegates gate logic to `GateEvaluator`. Handles pre-caching node metadata, annotation orchestration, post-hoc merge dispatch, and cluster assignment extraction. `decompose_tree()` and `decompose_tree_v2()` use `iterate_worklist` + `process_node` / `process_node_v2` from `gates.py`.
+
+- **`GateEvaluator`** ([hierarchy_analysis/gates.py](kl_clustering_analysis/hierarchy_analysis/gates.py)): Extracted gate logic (~343 lines) applying three statistical gates to determine cluster boundaries:
   1. **Binary structure gate**: Parent must have exactly two children
   2. **Child-parent divergence gate**: Projected Wald chi-square test on KL(child || parent)
-  3. **Sibling divergence gate**: Configurable via `config.SIBLING_TEST_METHOD` — one of `"wald"`, `"cousin_ftest"`, or `"cousin_adjusted_wald"` (see Sibling Test Methods below)
+  3. **Sibling divergence gate**: Configurable via `config.SIBLING_TEST_METHOD` — one of `"wald"`, `"cousin_ftest"`, `"cousin_adjusted_wald"`, `"cousin_tree_guided"`, or `"cousin_weighted_wald"` (see Sibling Test Methods below)
 
-  Also provides `decompose_tree_v2()` with **signal localization** (`use_signal_localization=True`), which drills into WHERE divergence originates and enables cross-boundary partial merges.
+  Constructor accepts injected `children_map`, `descendant_leaf_sets`, and `root` to avoid coupling to `PosetTree` internals. Also provides `should_split_v2()` with **signal localization** (`use_signal_localization=True`), which drills into WHERE divergence originates and enables cross-boundary partial merges. Includes a **power guard**: when localization finds zero significant difference pairs after BH correction, returns `(True, None)` — trusting the aggregate Gate 3 SPLIT but discarding the powerless localization result.
+
+  Free functions `iterate_worklist`, `process_node`, `process_node_v2`, and dataclass `V2TraversalState` handle the top-down traversal loop.
 
 - **`SignalLocalization`** ([hierarchy_analysis/signal_localization.py](kl_clustering_analysis/hierarchy_analysis/signal_localization.py)): Recursive cross-boundary testing to identify which subtrees are truly different vs. which could be merged, producing `SimilarityEdge` / `LocalizationResult` objects.
 
@@ -25,15 +29,16 @@ Binary matrix → linkage → PosetTree → populate_node_divergences() → deco
   - `SIGNIFICANCE_ALPHA = 0.05` — edge-test (Gate 2) significance level
   - `SIBLING_ALPHA = 0.05` — sibling-test (Gate 3) significance level
   - `ALPHA_LOCAL = 0.05` — local significance level passed to decomposer
-  - `SIBLING_TEST_METHOD = "cousin_adjusted_wald"` — Gate 3 implementation toggle
+  - `SIBLING_TEST_METHOD = "cousin_weighted_wald"` — Gate 3 implementation toggle
   - `TREE_DISTANCE_METRIC = "hamming"` — distance metric for linkage
   - `TREE_LINKAGE_METHOD = "average"` — linkage method
   - `POSTHOC_MERGE = True` — enable/disable bottom-up merge pass
   - `POSTHOC_MERGE_ALPHA = None` — override alpha for post-hoc merge (defaults to `SIBLING_ALPHA`)
   - `USE_SIGNAL_LOCALIZATION = False` — enable v2 decomposition with signal localization
   - `PROJECTION_EPS = 0.3` — JL-lemma epsilon for projection dimension
-  - `PROJECTION_MIN_K = 10` — minimum projection dimension
+  - `PROJECTION_MIN_K = "auto"` — minimum projection dimension; `"auto"` estimates from the data's effective rank (Shannon entropy of eigenvalue spectrum), clamped to `[4, 20]` (floor raised from 1→4 to prevent low-power χ²(1) tests at small clusters); set to an int for a fixed floor
   - `PROJECTION_RANDOM_SEED = 42` — seed for random projection matrix
+  - `SPECTRAL_METHOD = "effective_rank"` — per-node projection dimension via eigendecomposition (Gate 2 only)
   - `EPSILON = 1e-9` — numerical stability constant
 
 ## Key Patterns
@@ -61,6 +66,40 @@ from kl_clustering_analysis import config
 Z = linkage(pdist(data.values, metric=config.TREE_DISTANCE_METRIC), method=config.TREE_LINKAGE_METHOD)
 tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
 results = tree.decompose(leaf_data=data, alpha_local=0.05, sibling_alpha=0.05)
+```
+
+### Decompose Result Accessors
+`tree.decompose()` returns a **dict** with these keys:
+```python
+results["cluster_assignments"]   # dict[int, {"root_node", "leaves", "size"}]
+results["num_clusters"]          # int — number of clusters found
+results["posthoc_merge_audit"]   # list[dict] — merge audit trail
+results["independence_analysis"] # dict — alpha, decision_mode, posthoc_merge flag
+```
+The annotated **stats DataFrame** (with all gate columns) is NOT in the returned dict — it is cached on the tree:
+```python
+stats_df = tree.stats_df  # pd.DataFrame, index = node IDs
+```
+Key gate columns in `stats_df`:
+| Column | Type | Gate | Meaning |
+|--------|------|------|---------|
+| `Child_Parent_Divergence_Significant` | bool | 2 | Child diverges from parent |
+| `Child_Parent_Divergence_P_Value_BH` | float | 2 | BH-corrected edge p-value |
+| `Child_Parent_Divergence_df` | float | 2 | Edge test degrees of freedom |
+| `Sibling_BH_Different` | bool | 3 | Siblings significantly different |
+| `Sibling_Divergence_P_Value` | float | 3 | Raw sibling p-value |
+| `Sibling_Divergence_P_Value_Corrected` | float | 3 | BH-corrected sibling p-value |
+| `Sibling_Test_Statistic` | float | 3 | Raw Wald T (or deflated T_adj) |
+| `Sibling_Degrees_of_Freedom` | float | 3 | Sibling test df |
+| `Sibling_Divergence_Skipped` | bool | 3 | Test skipped (non-binary, leaf, or too few samples) |
+| `Sibling_Test_Method` | str | 3 | Calibration method used |
+| `Sibling_BH_Same` | bool | 3 | Siblings not significantly different |
+
+Calibration audit (weighted Wald):
+```python
+audit = tree.stats_df.attrs.get("sibling_divergence_audit", {})
+# Keys: calibration_method, calibration_n, global_c_hat, max_observed_ratio, diagnostics
+# diagnostics keys: R2, beta, ...
 ```
 
 ### Annotation Flow
@@ -96,7 +135,7 @@ pytest tests/test_poset_tree.py  # specific test file
 pytest --progress                # show test count progress
 ```
 
-The test suite has **138 tests** across 26 test files. Key test files:
+The test suite has **215 tests** across 30+ test files. Key test files:
 - `test_clt_validity.py` (40 tests) — CLT validity checks for statistical tests
 - `test_signal_localization.py` (23 tests) — signal localization correctness
 - `test_categorical_distributions.py` (18 tests) — categorical distribution handling
@@ -117,9 +156,9 @@ df_results, fig = benchmark_cluster_algorithm(test_cases=cases, methods=["kl"])
 | Directory | Purpose |
 |-----------|---------|
 | `tree/` | `PosetTree` (poset_tree.py), distributions, tree utilities |
-| `hierarchy_analysis/` | Tree decomposition, post-hoc merge, signal localization |
-| `hierarchy_analysis/statistics/` | Statistical tests (KL chi-square, sibling divergence, multiple testing, pooled variance, branch_length_utils, CLT validity, power analysis) |
-| `hierarchy_analysis/statistics/sibling_divergence/` | Sibling divergence test implementations: `sibling_divergence_test.py` (Wald), `cousin_calibrated_test.py` (F-test), `cousin_adjusted_wald.py` (adjusted Wald) |
+| `hierarchy_analysis/` | Tree decomposition (orchestrator), gate logic (`gates.py`), post-hoc merge, signal localization |
+| `hierarchy_analysis/statistics/` | Statistical tests (KL chi-square, sibling divergence, multiple testing, pooled variance, branch_length_utils, CLT validity, power analysis, spectral_dimension) |
+| `hierarchy_analysis/statistics/sibling_divergence/` | Sibling divergence test implementations: `sibling_divergence_test.py` (Wald), `cousin_calibrated_test.py` (F-test), `cousin_adjusted_wald.py` (adjusted Wald), `cousin_tree_guided.py` (tree-guided), `cousin_weighted_wald.py` (weighted Wald — current default) |
 | `hierarchy_analysis/statistics/kl_tests/` | Edge significance testing (`edge_significance.py`) |
 | `hierarchy_analysis/statistics/multiple_testing/` | BH correction, tree-aware BH |
 | `information_metrics/kl_divergence/` | KL divergence calculations for Bernoulli/Categorical/Poisson |
@@ -144,7 +183,7 @@ Current shared-stack features include:
 
 ### Running Benchmarks
 ```bash
-# Full benchmark (95 test cases, 2 methods: kl + kl_rogerstanimoto)
+# Full benchmark (96 test cases, 9 methods: kl, kl_rogerstanimoto, leiden, louvain, kmeans, spectral, dbscan, optics, hdbscan)
 python benchmarks/full/run.py
 
 # Specialized overlapping/gaussian cases
@@ -199,9 +238,13 @@ Parent must have exactly 2 children. Non-binary nodes are merged (no split).
 Tests whether children are significantly different from parent using projected Wald chi-square:
 - Nested variance: `Var = θ(1-θ) × (1/n_child - 1/n_parent)` accounts for child being subset of parent
 - Felsenstein scaling: `Var *= 1 + BL/mean_BL`
-- Projection: `T = ||R·z||² ~ χ²(k)`, k from JL lemma
+- Projection dimension: determined by `config.SPECTRAL_METHOD`:
+  - `"effective_rank"` (default): Per-node eigendecomposition of the local **correlation** matrix of descendant data (leaves + internal node distributions). Projection dimension k = round(effective_rank). Uses **PCA-based whitened projection** `T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)` (exact under H₀).
+  - `None`: Legacy JL-based dimension `k ≈ 8·ln(n)/ε²`, with information cap (`k ≤ n` when `d ≥ 4n`), random orthonormal projection.
 - FDR: `tree_bh` (default), `flat`, or `level_wise` correction
 - If **neither** child diverges → MERGE (noise, no signal to split on)
+
+**Note**: Spectral dimensions are NOT passed to the sibling test (Gate 3). The edge test benefits from spectral dims because child ⊂ parent (subset structure), but the sibling z-vector measures the DIFFERENCE between children — spectral_k would give too few degrees of freedom and reduce power. Sibling tests use JL-based dimension with the information cap.
 
 ### Gate 3: Sibling Divergence (Cluster Separation)
 Tests whether siblings differ from each other. The test method is controlled by `config.SIBLING_TEST_METHOD`:
@@ -224,7 +267,7 @@ This is not fixable by adjusting variance formulas, BH correction, or branch-len
 
 ### Sibling Test Methods (`config.SIBLING_TEST_METHOD`)
 
-Three sibling test implementations are available, toggled via `config.SIBLING_TEST_METHOD`:
+Five sibling test implementations are available, toggled via `config.SIBLING_TEST_METHOD`:
 
 #### 1. `"wald"` — Original Wald χ² (anti-conservative)
 - **File**: `sibling_divergence_test.py` → `annotate_sibling_divergence()`
@@ -243,7 +286,7 @@ Three sibling test implementations are available, toggled via `config.SIBLING_TE
 - **Fallback**: When uncle is unavailable (root's children, leaf uncle), falls back to raw Wald. Fallback tracked via `Sibling_Test_Method` column.
 - **Use when**: K is expected to be small (2–3), or calibration is more important than power
 
-#### 3. `"cousin_adjusted_wald"` — Cousin-Adjusted Wald (current default)
+#### 3. `"cousin_adjusted_wald"` — Cousin-Adjusted Wald
 - **File**: `cousin_adjusted_wald.py` → `annotate_sibling_divergence_adjusted()`
 - **Architecture**: Two-pass approach:
   1. Compute raw Wald T for ALL sibling pairs
@@ -255,6 +298,19 @@ Three sibling test implementations are available, toggled via `config.SIBLING_TE
 - **Extrapolation guard**: `_predict_c()` clamps regression predictions at `max_observed_ratio` — the maximum T/k ratio from null-like calibration pairs. This prevents β₂·log(n_parent) from extrapolating ĉ beyond the calibration data range at the root node (where n_parent is largest).
 - **Audit**: `df.attrs["sibling_divergence_audit"]` contains `calibration_method`, `global_c_hat`, `calibration_n`, `diagnostics` (including regression β, R², and `max_observed_ratio`)
 - **Use when**: Trees with many internal nodes provide enough null-like calibration pairs
+
+#### 4. `"cousin_tree_guided"` — Tree-Guided Cousin
+- **File**: `cousin_tree_guided.py` → `annotate_sibling_divergence_tree_guided()`
+- **Architecture**: Walks up the tree from each focal pair to find topologically nearest null-like relatives (neither child edge-significant), uses their median T/k as local ĉ. No global regression — adapts to local tree structure.
+- **Fallback**: When no local null-like pairs found, falls back to global median ĉ.
+- **Use when**: Trees with heterogeneous local structure where a global regression model is a poor fit.
+
+#### 5. `"cousin_weighted_wald"` — Cousin-Weighted Wald (current default)
+- **File**: `cousin_weighted_wald.py` → `annotate_sibling_divergence_weighted()`
+- **Architecture**: Uses ALL sibling pairs with continuous weights `w_i = min(p_edge_L, p_edge_R)`. Fits an **intercept-only** Gamma GLM: `E[T_i/k_i] = exp(β₀)` with weights w_i. This estimates a single global inflation factor `ĉ = exp(β₀)` = weighted mean of T/k. Covariates `log(BL_sum)` and `log(n_parent)` were removed because they confound signal strength with post-selection inflation (under H₀, c is constant and independent of n and BL).
+- **Advantage**: Uses all calibration data (every pair contributes) → stable estimate. Continuous weighting avoids the hard binary null/non-null split. No extrapolation risk since ĉ is a single constant (no covariates).
+- **Prediction**: `predict_weighted_inflation_factor()` returns `exp(β₀)`, clamped to `[1.0, max_observed_ratio]`. `bl_sum` and `n_parent` parameters are retained for API compatibility but are not used.
+- **Use when**: Default for all cases. Better calibration stability than binary-split methods.
 
 ### Diagnostic Script
 `debug_scripts/diagnose_pipeline.py` traces all three gates for all three sibling methods on any test case, showing:
@@ -277,8 +333,10 @@ The previous K=1 failures for `gauss_clear_small` (and ~30 other cases) were cau
 ## Design Invariants
 
 - `Sibling_BH_Same` is only set to `True` for **tested** parent nodes — untested nodes (leaves, skipped) keep the default `False`
-- `Sibling_Divergence_Skipped` is `True` for nodes where the sibling test was skipped (insufficient samples, no child-parent signal) — these nodes are treated as MERGE decisions
-- `_should_split` (v1) and `_should_split_v2` return `False` (not raise) when encountering skipped nodes. Both apply identical gate logic; v2 additionally runs signal localization when Gate 3 passes.
+- `Sibling_Divergence_Skipped` is `True` for nodes where the sibling test was skipped (non-binary parent, leaf node, insufficient samples, no child-parent signal) — these nodes are treated as MERGE decisions. All five sibling annotation methods consistently mark non-binary and leaf nodes as skipped.
+- `GateEvaluator.should_split` (v1) and `GateEvaluator.should_split_v2` return `False` (not raise) when encountering skipped nodes. Both apply identical gate logic; v2 additionally runs signal localization when Gate 3 passes. (Prior to step 3.4, these lived as `_should_split` / `_should_split_v2` inline methods on `TreeDecomposition`.)
+- **FIXED — `should_split_v2` localization power guard** (`gates.py`): When localization finds zero significant difference pairs after BH correction, `should_split_v2` now returns `(True, None)` — trusting the aggregate Gate 3 SPLIT decision but discarding the misleading localization result (which has only similarity edges). This triggers a hard v1-style split. Previously returned `(True, loc_result)` with empty `difference_pairs`, causing false cross-boundary merges via similarity edges.
+- **FIXED — `extract_constrained_clusters` leaf overlap**: Ancestor merge_points are pruned before cluster extraction, and a leaf deduplication pass (smallest-cluster-wins) handles residual overlaps from ancestor-descendant graph nodes at different localization levels.
 - `apply_posthoc_merge()` always returns `Tuple[Set[str], List[Dict]]` — destructure as `merged_roots, audit_trail = ...`
 - `decompose()` dispatches to `decompose_tree_v2()` when `use_signal_localization=True` is passed
 
@@ -319,17 +377,21 @@ The following logic errors were identified and corrected:
 
 8. **`nx.shortest_path_length` Without Guard** (`tree_decomposition.py`): `_test_node_pair_divergence()` and `_test_cluster_pair_divergence()` called `nx.shortest_path_length(weight="branch_length")` even when the tree had no branch lengths. NetworkX defaults missing weights to 1 (hop count), creating `branch_length_sum > 0` with `mean_branch_length = None`, triggering the Felsenstein `ValueError`. Fixed to skip branch length computation when `_mean_branch_length is None`.
 
+9. **`merge_similarity_graphs` p-value direction** (`signal_localization.py`): When duplicate edges existed across localization levels, `merge_similarity_graphs` kept the **lower** p-value. For similarity edges, higher p-value = stronger evidence of similarity (fail to reject H₀). Fixed to keep the **higher** p-value. Previously caused false cross-boundary merges by under-reporting similarity strength.
+
 ## Notes
 
 - **Multiple testing**: Uses Benjamini-Hochberg FDR correction across all edges
-- **Projection**: Random projection is integral to the Wald chi-square test and always applied; dimension k is computed adaptively via the JL lemma (`compute_projection_dimension`). Controlled by `config.PROJECTION_EPS` (JL epsilon, default 0.3), `config.PROJECTION_MIN_K` (floor, default 10), and `config.PROJECTION_RANDOM_SEED` (seed, default 42)
+- **Projection dimension (Gate 2 — edge test)**: When `SPECTRAL_METHOD = "effective_rank"` (default), projection dimension is the per-node effective rank of the local correlation matrix, with PCA-based eigenvector projection and eigenvalue whitening for exact χ²(k). The correlation matrix is built from both leaf rows AND internal descendant node distribution vectors to enrich the covariance estimate. Uses **dual-form eigendecomposition** when `n_desc < d_active`: computes `n×n` Gram matrix instead of `d×d` correlation matrix for O(n²d + n³) vs O(d³) — critical for high-d cases (e.g. n=10, d=2000: 10×10 eigh instead of 2000×2000).
+- **Projection dimension (Gate 3 — sibling test)**: Uses JL-based dimension `k ≈ 8·ln(n)/ε²` with **information cap**: when `d ≥ 4n`, k is capped at n_samples (data matrix rank ≤ n, so z-components beyond n carry only noise). Controlled by `config.PROJECTION_EPS` (default 0.3), `config.PROJECTION_MIN_K` (floor, default 10), and `config.PROJECTION_RANDOM_SEED` (seed, default 42)
 - **Branch lengths**: Felsenstein (1985) adjustment scales variance by normalized branch length to account for phylogenetic distance. `mean_branch_length` is computed once from tree edges and threaded through all test functions.
 - **Post-hoc merge**: Optional bottom-up merge pass (`posthoc_merge=True`) to reduce over-splitting; returns audit trail. Blocked at LCA boundaries where any pair shows significant difference.
-- **Signal localization**: Optional v2 decomposition (`use_signal_localization=True`) that drills down to find WHERE divergence originates, enabling cross-boundary partial merges via constrained greedy merge (respects Cannot-Link edges from significant pairs)
+- **Signal localization**: Optional v2 decomposition (`use_signal_localization=True`, default OFF) that drills down to find WHERE divergence originates, enabling cross-boundary partial merges via constrained greedy merge (respects Cannot-Link edges from significant pairs). **Benchmark (2026-02-17, 74 cases)**: v2 Mean ARI 0.431 vs v1's 0.757 — localization sub-tests lack power (small sub-samples + BH penalty → false similarity edges → incorrect merges). v2 does improve phylogenetic cases (phylo_divergent_8taxa: v2 ARI=1.0, K=8 vs v1 K=72 over-split). v2 also has computational cost issues (combinatorial cross-boundary tests make large K cases very slow). Kept as opt-in experimental feature.
 - **Node naming**: Leaves are `L{idx}`, internal nodes are `N{idx}` in PosetTree
 - **Distance metric**: Default is `"hamming"` (`config.TREE_DISTANCE_METRIC`); `"rogerstanimoto"` available via method registry as `"kl_rogerstanimoto"`
-- **Sibling test toggle**: `config.SIBLING_TEST_METHOD` controls which Gate 3 implementation is used. Default: `"cousin_adjusted_wald"`. Options: `"wald"`, `"cousin_ftest"`, `"cousin_adjusted_wald"`. `PosetTree.decompose()` dispatches to the corresponding annotation function at runtime.
+- **Sibling test toggle**: `config.SIBLING_TEST_METHOD` controls which Gate 3 implementation is used. Default: `"cousin_weighted_wald"`. Options: `"wald"`, `"cousin_ftest"`, `"cousin_adjusted_wald"`, `"cousin_tree_guided"`, `"cousin_weighted_wald"`. `PosetTree.decompose()` dispatches to the corresponding annotation function at runtime.
 - **Branch length utilities**: `branch_length_utils.py` centralizes `compute_mean_branch_length(tree)` and `sanitize_positive_branch_length(value)`. Imported by `tree_decomposition.py` and `edge_significance.py` to avoid duplicated branch-length logic.
+- **Projected p-value helper**: `projection/satterthwaite.py` provides `compute_projected_pvalue(projected, df, eigenvalues)` — the shared implementation of whitened and Satterthwaite χ² approximation. Used by both `edge_significance.py` (Gate 2) and `sibling_divergence_test.py` (Gate 3) to eliminate code duplication.
 
 ## Benchmark Rules (Known Structural Issues)
 
