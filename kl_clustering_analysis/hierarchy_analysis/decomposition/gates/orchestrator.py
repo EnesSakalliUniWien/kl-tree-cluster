@@ -7,6 +7,10 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..core.contracts import GateAnnotationBundle
+from ..core.registry import (
+    normalize_sibling_calibration_method,
+    normalize_spectral_k_method,
+)
 from .edge_gate import annotate_edge_gate
 from .sibling_gate import annotate_sibling_gate
 
@@ -35,12 +39,15 @@ def run_gate_annotation_pipeline(
     edge_calibration: bool | None = None,
 ) -> GateAnnotationBundle:
     """Run Gate 2 -> Gate 3 adapters and return typed legacy-compatible output."""
+    resolved_spectral_method = normalize_spectral_k_method(spectral_method)
+    resolved_sibling_method = normalize_sibling_calibration_method(sibling_method)
+
     edge_bundle = annotate_edge_gate(
         tree,
         results_df,
         significance_level_alpha=alpha_local,
         leaf_data=leaf_data,
-        spectral_method=spectral_method,
+        spectral_method=resolved_spectral_method,
         min_k=min_k,
         fdr_method=fdr_method,
     )
@@ -48,7 +55,7 @@ def run_gate_annotation_pipeline(
         tree,
         edge_bundle.annotated_df,
         significance_level_alpha=sibling_alpha,
-        sibling_method=sibling_method,
+        sibling_method=resolved_sibling_method,
         spectral_dims=sibling_spectral_dims,
         pca_projections=sibling_pca_projections,
         pca_eigenvalues=sibling_pca_eigenvalues,
@@ -79,6 +86,10 @@ def run_gate_annotation_pipeline(
             },
             "edge": edge_bundle.metadata,
             "sibling": sibling_bundle.metadata,
+            "resolved_methods": {
+                "spectral_method": resolved_spectral_method,
+                "sibling_method": resolved_sibling_method,
+            },
             "edge_calibration_enabled": bool(config.EDGE_CALIBRATION),
             "edge_calibration_applied": bool(should_calibrate_edges),
         },

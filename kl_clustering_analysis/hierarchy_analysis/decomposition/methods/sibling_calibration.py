@@ -17,6 +17,44 @@ from ...statistics.sibling_divergence import (
 from ...statistics.sibling_divergence.sibling_divergence_test import annotate_sibling_divergence
 
 
+def fit_wald(
+    tree,
+    nodes_statistics_dataframe: pd.DataFrame,
+    *,
+    significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, object] | None = None,
+    pca_eigenvalues: dict[str, object] | None = None,
+) -> pd.DataFrame:
+    """Run baseline sibling Wald annotation."""
+    _ = pca_eigenvalues
+    return annotate_sibling_divergence(
+        tree,
+        nodes_statistics_dataframe,
+        significance_level_alpha=significance_level_alpha,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+    )
+
+
+def fit_cousin_ftest(
+    tree,
+    nodes_statistics_dataframe: pd.DataFrame,
+    *,
+    significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, object] | None = None,
+    pca_eigenvalues: dict[str, object] | None = None,
+) -> pd.DataFrame:
+    """Run cousin F-test sibling annotation."""
+    _ = (spectral_dims, pca_projections, pca_eigenvalues)
+    return annotate_sibling_divergence_cousin(
+        tree,
+        nodes_statistics_dataframe,
+        significance_level_alpha=significance_level_alpha,
+    )
+
+
 def fit_cousin_weighted_wald(
     tree,
     nodes_statistics_dataframe: pd.DataFrame,
@@ -42,8 +80,12 @@ def fit_cousin_adjusted_wald(
     nodes_statistics_dataframe: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, object] | None = None,
+    pca_eigenvalues: dict[str, object] | None = None,
 ) -> pd.DataFrame:
     """Run adjusted cousin-Wald sibling annotation."""
+    _ = (spectral_dims, pca_projections, pca_eigenvalues)
     return annotate_sibling_divergence_adjusted(
         tree,
         nodes_statistics_dataframe,
@@ -56,8 +98,12 @@ def fit_cousin_tree_guided(
     nodes_statistics_dataframe: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, object] | None = None,
+    pca_eigenvalues: dict[str, object] | None = None,
 ) -> pd.DataFrame:
     """Run tree-guided cousin sibling annotation."""
+    _ = (spectral_dims, pca_projections, pca_eigenvalues)
     return annotate_sibling_divergence_tree_guided(
         tree,
         nodes_statistics_dataframe,
@@ -87,38 +133,51 @@ def apply_sibling_calibration(
             pca_projections=pca_projections,
             pca_eigenvalues=pca_eigenvalues,
         )
+    if name == SiblingCalibrationMethod.COUSIN_FTEST.value:
+        return fit_cousin_ftest(
+            tree,
+            nodes_statistics_dataframe,
+            significance_level_alpha=significance_level_alpha,
+            spectral_dims=spectral_dims,
+            pca_projections=pca_projections,
+            pca_eigenvalues=pca_eigenvalues,
+        )
     if name == SiblingCalibrationMethod.COUSIN_ADJUSTED_WALD.value:
         return fit_cousin_adjusted_wald(
             tree,
             nodes_statistics_dataframe,
             significance_level_alpha=significance_level_alpha,
+            spectral_dims=spectral_dims,
+            pca_projections=pca_projections,
+            pca_eigenvalues=pca_eigenvalues,
         )
     if name == SiblingCalibrationMethod.COUSIN_TREE_GUIDED.value:
         return fit_cousin_tree_guided(
             tree,
             nodes_statistics_dataframe,
             significance_level_alpha=significance_level_alpha,
-        )
-    if name == SiblingCalibrationMethod.COUSIN_FTEST.value:
-        return annotate_sibling_divergence_cousin(
-            tree,
-            nodes_statistics_dataframe,
-            significance_level_alpha=significance_level_alpha,
+            spectral_dims=spectral_dims,
+            pca_projections=pca_projections,
+            pca_eigenvalues=pca_eigenvalues,
         )
     if name == SiblingCalibrationMethod.WALD.value:
-        return annotate_sibling_divergence(
+        return fit_wald(
             tree,
             nodes_statistics_dataframe,
             significance_level_alpha=significance_level_alpha,
+            spectral_dims=spectral_dims,
+            pca_projections=pca_projections,
+            pca_eigenvalues=pca_eigenvalues,
         )
 
     raise DecompositionMethodError(f"Unknown sibling calibration method: {name!r}.")
 
 
 __all__ = [
+    "fit_wald",
+    "fit_cousin_ftest",
     "fit_cousin_weighted_wald",
     "fit_cousin_adjusted_wald",
     "fit_cousin_tree_guided",
     "apply_sibling_calibration",
 ]
-

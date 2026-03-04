@@ -12,8 +12,8 @@ from ..core.contracts import (
     LEGACY_SIBLING_OPTIONAL_COLUMNS,
     GateAnnotationBundle,
 )
+from ..core.registry import normalize_sibling_calibration_method, resolve_sibling_calibrator
 from ..core.errors import DecompositionValidationError
-from ..methods.sibling_calibration import apply_sibling_calibration
 
 _EDGE_PREFIX = "Child_Parent_"
 _SIBLING_PREFIX = "Sibling_"
@@ -69,8 +69,9 @@ def annotate_sibling_gate(
     pca_eigenvalues: dict[str, object] | None = None,
 ) -> GateAnnotationBundle:
     """Run Gate 3 (sibling divergence) and return typed legacy-compatible output."""
-    annotated_df = apply_sibling_calibration(
-        sibling_method,
+    resolved_method_name = normalize_sibling_calibration_method(sibling_method)
+    calibrator = resolve_sibling_calibrator(resolved_method_name)
+    annotated_df = calibrator(
         tree,
         results_df,
         significance_level_alpha=significance_level_alpha,
@@ -87,7 +88,7 @@ def annotate_sibling_gate(
         metadata={
             "gate": "sibling",
             "alpha": float(significance_level_alpha),
-            "sibling_method": str(sibling_method),
+            "sibling_method": resolved_method_name,
             "uses_spectral_dims": spectral_dims is not None,
             "uses_pca_projections": pca_projections is not None,
             "uses_pca_eigenvalues": pca_eigenvalues is not None,
