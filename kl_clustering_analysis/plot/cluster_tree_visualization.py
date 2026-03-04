@@ -61,20 +61,20 @@ def _normalize_optional_bool(value: object) -> Optional[bool]:
     return None
 
 
-def _lookup_results_value(results_df, node_id: object, column_name: str) -> object | None:
-    """Lookup a per-node value in ``results_df`` with robust id matching."""
-    if results_df is None:
+def _lookup_annotation_value(annotations_df, node_id: object, column_name: str) -> object | None:
+    """Lookup a per-node value in ``annotations_df`` with robust id matching."""
+    if annotations_df is None:
         return None
 
-    columns = getattr(results_df, "columns", None)
-    index = getattr(results_df, "index", None)
+    columns = getattr(annotations_df, "columns", None)
+    index = getattr(annotations_df, "index", None)
     if columns is None or index is None or column_name not in columns:
         return None
 
     for candidate in (node_id, str(node_id)):
         try:
             if candidate in index:
-                return results_df.at[candidate, column_name]
+                return annotations_df.at[candidate, column_name]
         except Exception:
             continue
     return None
@@ -83,7 +83,7 @@ def _lookup_results_value(results_df, node_id: object, column_name: str) -> obje
 def _group_internal_nodes_for_halo(
     G: nx.DiGraph,
     leaves: set,
-    results_df,
+    annotations_df,
 ) -> tuple[list[object], list[object]]:
     """Split internal nodes into (significant, tested-not-significant)."""
     significant: list[object] = []
@@ -97,7 +97,7 @@ def _group_internal_nodes_for_halo(
             continue
 
         flag = _normalize_optional_bool(
-            _lookup_results_value(results_df, node, CHILD_PARENT_SIGNIFICANT_COL)
+            _lookup_annotation_value(annotations_df, node, CHILD_PARENT_SIGNIFICANT_COL)
         )
         if flag is True:
             significant.append(node)
@@ -108,7 +108,8 @@ def _group_internal_nodes_for_halo(
 
 
 def _group_edges_for_sibling_style(
-    G: nx.DiGraph, results_df
+    G: nx.DiGraph,
+    annotations_df,
 ) -> dict[str, list[tuple[object, object]]]:
     """Group edges by sibling-test status of the parent node."""
     groups: dict[str, list[tuple[object, object]]] = {
@@ -119,14 +120,14 @@ def _group_edges_for_sibling_style(
 
     for parent, child in G.edges():
         skipped = _normalize_optional_bool(
-            _lookup_results_value(results_df, parent, SIBLING_SKIPPED_COL)
+            _lookup_annotation_value(annotations_df, parent, SIBLING_SKIPPED_COL)
         )
         if skipped is True:
             groups["missing"].append((parent, child))
             continue
 
         different = _normalize_optional_bool(
-            _lookup_results_value(results_df, parent, SIBLING_DIFFERENT_COL)
+            _lookup_annotation_value(annotations_df, parent, SIBLING_DIFFERENT_COL)
         )
         if different is True:
             groups["different"].append((parent, child))
@@ -294,6 +295,7 @@ def plot_tree_with_clusters(
     """
     _ = show_cluster_boundaries
     _ = use_labels
+    annotations_df = results_df
 
     cluster_assignments = decomposition_results["cluster_assignments"]
     num_clusters = decomposition_results["num_clusters"]
@@ -349,7 +351,7 @@ def plot_tree_with_clusters(
         fig, ax = plt.subplots(figsize=figsize)
     else:
         fig = ax.figure
-    edge_groups = _group_edges_for_sibling_style(G, results_df)
+    edge_groups = _group_edges_for_sibling_style(G, annotations_df)
     for edge_group in EDGE_DRAW_ORDER:
         edgelist = edge_groups[edge_group]
         if not edgelist:
@@ -393,7 +395,9 @@ def plot_tree_with_clusters(
         )
 
     halo_significant, halo_tested_not_significant = _group_internal_nodes_for_halo(
-        G, leaves, results_df
+        G,
+        leaves,
+        annotations_df,
     )
     halo_size = max(node_size * HALO_SIZE_MULTIPLIER, node_size + HALO_SIZE_OFFSET)
     if halo_tested_not_significant:

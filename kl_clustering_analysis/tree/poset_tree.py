@@ -371,18 +371,19 @@ class PosetTree(nx.DiGraph):
         alpha_local = decomposer_kwargs.pop("alpha_local", config.ALPHA_LOCAL)
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
 
-        if results_df is None:
+        annotations_df = results_df
+        if annotations_df is None:
             if self.stats_df is None:
                 if leaf_data is None:
                     raise ValueError(
                         "Tree has no stats_df; provide results_df or leaf_data to populate."
                     )
                 self.populate_node_divergences(leaf_data)
-            results_df = self.stats_df.copy()
+            annotations_df = self.stats_df.copy()
 
         decomposer = TreeDecomposition(
             tree=self,
-            annotations_df=results_df,
+            annotations_df=annotations_df,
             alpha_local=alpha_local,
             sibling_alpha=sibling_alpha,
             leaf_data=leaf_data,
