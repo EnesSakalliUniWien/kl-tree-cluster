@@ -66,6 +66,7 @@ def collect_sibling_pair_records(
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
     *,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -103,6 +104,15 @@ def collect_sibling_pair_records(
         pca_projection = pca_projections.get(parent) if pca_projections else None
         pca_eigenvalue = pca_eigenvalues.get(parent) if pca_eigenvalues else None
 
+        sibling_test_kwargs: dict[str, object] = {
+            "test_id": f"sibling:{parent}",
+            "spectral_k": spectral_k,
+            "pca_projection": pca_projection,
+            "pca_eigenvalues": pca_eigenvalue,
+        }
+        if min_k is not None:
+            sibling_test_kwargs["min_k"] = min_k
+
         stat, degrees_of_freedom, p_value = sibling_divergence_test(
             left_dist,
             right_dist,
@@ -111,10 +121,7 @@ def collect_sibling_pair_records(
             branch_length_left=branch_length_left,
             branch_length_right=branch_length_right,
             mean_branch_length=mean_branch_length,
-            test_id=f"sibling:{parent}",
-            spectral_k=spectral_k,
-            pca_projection=pca_projection,
-            pca_eigenvalues=pca_eigenvalue,
+            **sibling_test_kwargs,
         )
 
         is_null = not _either_child_significant(left, right, edge_significance_by_node)

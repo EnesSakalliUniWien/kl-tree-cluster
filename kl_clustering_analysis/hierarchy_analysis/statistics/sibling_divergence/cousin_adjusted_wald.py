@@ -56,6 +56,13 @@ logger = logging.getLogger(__name__)
 _MIN_REGRESSION = 5
 _MIN_MEDIAN = 3
 
+# Self-consistency floor: null-like pairs whose raw sibling p-value is
+# below this threshold are excluded from calibration.  Such pairs carry
+# overwhelming divergence signal that persists under any reasonable
+# post-selection inflation (3–5×).  Including them contaminates the
+# fitted inflation model and causes over-deflation at the root.
+_NULL_LIKE_P_FLOOR: float = 0.001
+
 
 # =============================================================================
 # Data structures
@@ -99,7 +106,12 @@ class _NullLikeCalibrationInputs:
 
 
 def _collect_null_like_records(records: List[SiblingPairRecord]) -> List[SiblingPairRecord]:
-    """Return records that can be considered null-like calibration candidates."""
+    """Return records that can be considered null-like calibration candidates.
+
+    Pairs with overwhelming sibling divergence signal are expected to have
+    been reclassified as focal BEFORE this function is called (see the
+    self-consistency reclassification step in annotate_sibling_divergence_adjusted).
+    """
     return [
         record
         for record in records
@@ -346,6 +358,7 @@ def _collect_all_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
+    min_k: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
@@ -357,6 +370,7 @@ def _collect_all_pairs(
         tree,
         annotations_df,
         mean_branch_length,
+        min_k=min_k,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
@@ -415,6 +429,7 @@ def annotate_sibling_divergence_adjusted(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
@@ -452,6 +467,7 @@ def annotate_sibling_divergence_adjusted(
         tree,
         annotations_df,
         mean_branch_length,
+        min_k=min_k,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
@@ -462,6 +478,28 @@ def annotate_sibling_divergence_adjusted(
     early_annotations_df = early_return_if_no_records(annotations_df, records)
     if early_annotations_df is not None:
         return early_annotations_df
+
+    # Self-consistency reclassification: pairs labelled null-like by the edge
+    # test but with overwhelming raw sibling divergence (p < _NULL_LIKE_P_FLOOR)
+    # are reclassified as focal.  This prevents genuinely different siblings
+    # from being silently merged when the edge test lacks power.
+    n_reclassified = 0
+    for rec in records:
+        if (
+            rec.is_null_like
+            and np.isfinite(rec.stat)
+            and rec.degrees_of_freedom > 0
+            and rec.p_value <= _NULL_LIKE_P_FLOOR
+        ):
+            rec.is_null_like = False
+            n_reclassified += 1
+    if n_reclassified:
+        logger.info(
+            "Cousin-adjusted Wald: reclassified %d null-like pairs as focal "
+            "(raw sibling p < %.1e).",
+            n_reclassified,
+            _NULL_LIKE_P_FLOOR,
+        )
 
     n_null, n_focal = count_null_focal_pairs(records)
     logger.info(

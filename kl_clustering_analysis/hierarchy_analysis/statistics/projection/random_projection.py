@@ -16,13 +16,8 @@ from ...decomposition.backends import random_projection_backend as _backend
 # Keep cache object identity for tests/tools importing this symbol directly.
 _PROJECTION_CACHE = _backend._PROJECTION_CACHE
 
-# Mirror resolved floor for compatibility with tests that assign this module attr.
+# Read-only mirror of backend resolved floor (updated after backend calls).
 _RESOLVED_MIN_K: int | None = _backend.get_resolved_min_k_backend()
-
-
-def _sync_resolved_to_backend() -> None:
-    """Sync local compatibility state to backend global state."""
-    _backend.set_resolved_min_k_backend(_RESOLVED_MIN_K)
 
 
 def _sync_resolved_from_backend() -> None:
@@ -50,7 +45,6 @@ def resolve_min_k(
     leaf_data: pd.DataFrame | None = None,
 ) -> int:
     """Resolve ``PROJECTION_MIN_K`` to an integer and cache the value."""
-    _sync_resolved_to_backend()
     result = _backend.resolve_min_k_backend(min_k_config, leaf_data=leaf_data)
     _sync_resolved_from_backend()
     return result
@@ -63,7 +57,6 @@ def compute_projection_dimension(
     min_k: int | str | None = None,
 ) -> int:
     """Compute target projection dimension, capped by data rank."""
-    _sync_resolved_to_backend()
     result = _backend.compute_projection_dimension_backend(
         n_samples=n_samples,
         n_features=n_features,

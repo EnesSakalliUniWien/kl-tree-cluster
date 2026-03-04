@@ -26,6 +26,7 @@ def fit_wald(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, object] | None = None,
     pca_eigenvalues: dict[str, object] | None = None,
@@ -36,6 +37,7 @@ def fit_wald(
         tree,
         annotations_df,
         significance_level_alpha=significance_level_alpha,
+        min_k=min_k,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
@@ -46,6 +48,7 @@ def fit_cousin_ftest(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, object] | None = None,
     pca_eigenvalues: dict[str, object] | None = None,
@@ -56,6 +59,9 @@ def fit_cousin_ftest(
         tree,
         annotations_df,
         significance_level_alpha=significance_level_alpha,
+        min_k=min_k,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
     )
 
 
@@ -64,6 +70,7 @@ def fit_cousin_weighted_wald(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, object] | None = None,
     pca_eigenvalues: dict[str, object] | None = None,
@@ -73,6 +80,7 @@ def fit_cousin_weighted_wald(
         tree,
         annotations_df,
         significance_level_alpha=significance_level_alpha,
+        min_k=min_k,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
@@ -84,6 +92,7 @@ def fit_cousin_adjusted_wald(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, object] | None = None,
     pca_eigenvalues: dict[str, object] | None = None,
@@ -94,6 +103,9 @@ def fit_cousin_adjusted_wald(
         tree,
         annotations_df,
         significance_level_alpha=significance_level_alpha,
+        min_k=min_k,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
     )
 
 
@@ -102,6 +114,7 @@ def fit_cousin_tree_guided(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, object] | None = None,
     pca_eigenvalues: dict[str, object] | None = None,
@@ -112,6 +125,9 @@ def fit_cousin_tree_guided(
         tree,
         annotations_df,
         significance_level_alpha=significance_level_alpha,
+        min_k=min_k,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
     )
 
 
@@ -121,6 +137,7 @@ def apply_sibling_calibration(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, object] | None = None,
     pca_eigenvalues: dict[str, object] | None = None,
@@ -144,6 +161,7 @@ def apply_sibling_calibration(
             tree,
             annotations_df,
             significance_level_alpha=significance_level_alpha,
+            min_k=min_k,
             spectral_dims=spectral_dims,
             pca_projections=pca_projections,
             pca_eigenvalues=pca_eigenvalues,
@@ -153,6 +171,7 @@ def apply_sibling_calibration(
             tree,
             annotations_df,
             significance_level_alpha=significance_level_alpha,
+            min_k=min_k,
             spectral_dims=spectral_dims,
             pca_projections=pca_projections,
             pca_eigenvalues=pca_eigenvalues,
@@ -162,6 +181,7 @@ def apply_sibling_calibration(
             tree,
             annotations_df,
             significance_level_alpha=significance_level_alpha,
+            min_k=min_k,
             spectral_dims=spectral_dims,
             pca_projections=pca_projections,
             pca_eigenvalues=pca_eigenvalues,
@@ -171,6 +191,7 @@ def apply_sibling_calibration(
             tree,
             annotations_df,
             significance_level_alpha=significance_level_alpha,
+            min_k=min_k,
             spectral_dims=spectral_dims,
             pca_projections=pca_projections,
             pca_eigenvalues=pca_eigenvalues,
@@ -180,6 +201,7 @@ def apply_sibling_calibration(
             tree,
             annotations_df,
             significance_level_alpha=significance_level_alpha,
+            min_k=min_k,
             spectral_dims=spectral_dims,
             pca_projections=pca_projections,
             pca_eigenvalues=pca_eigenvalues,

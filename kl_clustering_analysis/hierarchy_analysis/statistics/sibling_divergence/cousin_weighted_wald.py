@@ -515,6 +515,7 @@ def _collect_weighted_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -527,6 +528,7 @@ def _collect_weighted_pairs(
         tree,
         annotations_df,
         mean_branch_length,
+        min_k=min_k,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
@@ -618,6 +620,7 @@ def annotate_sibling_divergence_weighted(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -649,7 +652,13 @@ def annotate_sibling_divergence_weighted(
 
     # Pass 1: compute ALL raw Wald stats with continuous weights
     records, non_binary = _collect_weighted_pairs(
-        tree, annotations_df, mean_branch_length, spectral_dims, pca_projections, pca_eigenvalues
+        tree,
+        annotations_df,
+        mean_branch_length,
+        min_k=min_k,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+        pca_eigenvalues=pca_eigenvalues,
     )
 
     # Mark non-binary/leaf nodes as skipped (never testable)

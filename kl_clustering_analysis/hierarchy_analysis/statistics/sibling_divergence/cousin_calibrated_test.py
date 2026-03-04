@@ -77,11 +77,20 @@ def _compute_sibling_stat(
     test_id: str,
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
+    min_k: int | None = None,
 ) -> Tuple[float, int, float]:
     """Compute projected Wald χ² statistic for a sibling pair.
 
     Returns (statistic, degrees_of_freedom, p_value).
     """
+    sibling_test_kwargs: dict[str, object] = {
+        "test_id": test_id,
+        "spectral_k": spectral_k,
+        "pca_projection": pca_projection,
+    }
+    if min_k is not None:
+        sibling_test_kwargs["min_k"] = min_k
+
     result = sibling_divergence_test(
         left_dist,
         right_dist,
@@ -90,9 +99,7 @@ def _compute_sibling_stat(
         branch_length_left=branch_length_left,
         branch_length_right=branch_length_right,
         mean_branch_length=mean_branch_length,
-        test_id=test_id,
-        spectral_k=spectral_k,
-        pca_projection=pca_projection,
+        **sibling_test_kwargs,
     )
     return result  # (statistic, degrees_of_freedom, p_value)
 
@@ -126,6 +133,7 @@ def _get_cousin_reference(
     mean_branch_length: float | None,
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
+    min_k: int | None = None,
 ) -> Tuple[float, int, bool]:
     """Compute the cousin-level reference statistic T_{UL,UR}.
 
@@ -153,6 +161,7 @@ def _get_cousin_reference(
         test_id=f"cousin_ref:{uncle}",
         spectral_k=spectral_k,
         pca_projection=pca_projection,
+        min_k=min_k,
     )
 
     if not np.isfinite(statistic) or statistic <= 0:
@@ -176,6 +185,7 @@ def cousin_ftest(
     pca_projection: np.ndarray | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
+    min_k: int | None = None,
 ) -> Tuple[float, float, float, bool]:
     """Cousin-calibrated F-test for sibling divergence.
 
@@ -222,6 +232,7 @@ def cousin_ftest(
         test_id=f"sibling:{parent}",
         spectral_k=spectral_k,
         pca_projection=pca_projection,
+        min_k=min_k,
     )
 
     if not np.isfinite(statistic_left_right):
@@ -247,6 +258,7 @@ def cousin_ftest(
         mean_branch_length,
         spectral_k=uncle_spectral_k,
         pca_projection=uncle_pca_proj,
+        min_k=min_k,
     )
 
     if not valid:
@@ -299,6 +311,7 @@ def _run_cousin_tests(
     parents: List[str],
     child_pairs: List[Tuple[str, str]],
     mean_branch_length: float | None,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
 ) -> Tuple[List[Tuple[float, float, float]], List[bool]]:
@@ -321,6 +334,7 @@ def _run_cousin_tests(
             mean_branch_length,
             spectral_k=_spectral_k,
             pca_projection=_pca_proj,
+            min_k=min_k,
             spectral_dims=spectral_dims,
             pca_projections=pca_projections,
         )
@@ -360,6 +374,7 @@ def annotate_sibling_divergence_cousin(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
@@ -413,6 +428,7 @@ def annotate_sibling_divergence_cousin(
         parents,
         child_pairs,
         mean_branch_length,
+        min_k=min_k,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )

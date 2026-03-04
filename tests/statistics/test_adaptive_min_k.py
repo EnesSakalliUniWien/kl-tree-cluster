@@ -17,6 +17,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_proj
     estimate_min_projection_dimension,
     resolve_min_k,
 )
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
+    set_resolved_min_k_backend,
+)
 
 # Fixtures
 # -----------------------------------------------------------------------
@@ -25,8 +28,10 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_proj
 @pytest.fixture(autouse=True)
 def _reset_resolved_cache():
     """Reset module-level _RESOLVED_MIN_K before and after each test."""
+    set_resolved_min_k_backend(None)
     random_projection._RESOLVED_MIN_K = None
     yield
+    set_resolved_min_k_backend(None)
     random_projection._RESOLVED_MIN_K = None
 
 
@@ -163,7 +168,7 @@ class TestComputeProjectionDimensionAdaptive:
 
     def test_uses_cached_value(self):
         """When _RESOLVED_MIN_K is set, compute_projection_dimension should use it."""
-        random_projection._RESOLVED_MIN_K = 5
+        resolve_min_k(5)
 
         # With n_samples=3, d=100, info cap kicks in (d >= 4n):
         # k_JL = big, capped to n=3, then floored to min_k=5
@@ -180,6 +185,6 @@ class TestComputeProjectionDimensionAdaptive:
 
     def test_explicit_min_k_overrides_cache(self):
         """Explicit min_k parameter should override the cache."""
-        random_projection._RESOLVED_MIN_K = 5
+        resolve_min_k(5)
         k = compute_projection_dimension(3, 100, min_k=8)
         assert k == 8  # explicit 8 overrides cached 5

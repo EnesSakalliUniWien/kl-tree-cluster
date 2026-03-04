@@ -272,6 +272,7 @@ def _run_tests(
         Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]
     ],
     mean_branch_length: float | None = None,
+    min_k: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> List[Tuple[float, float, float]]:
@@ -293,6 +294,13 @@ def _run_tests(
             _spectral_k = spectral_dims.get(parent)
         if pca_projections is not None:
             _pca_proj = pca_projections.get(parent)
+        sibling_test_kwargs: dict[str, object] = {
+            "test_id": f"sibling:{parent}",
+            "spectral_k": _spectral_k,
+            "pca_projection": _pca_proj,
+        }
+        if min_k is not None:
+            sibling_test_kwargs["min_k"] = min_k
         results.append(
             sibling_divergence_test(
                 left,
@@ -302,9 +310,7 @@ def _run_tests(
                 branch_length_left,
                 branch_length_right,
                 mean_branch_length,
-                test_id=f"sibling:{parent}",
-                spectral_k=_spectral_k,
-                pca_projection=_pca_proj,
+                **sibling_test_kwargs,
             )
         )
     return results
@@ -342,6 +348,7 @@ def annotate_sibling_divergence(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    min_k: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
@@ -397,6 +404,7 @@ def annotate_sibling_divergence(
         parents,
         sibling_test_arguments,
         mean_branch_length=mean_branch_length,
+        min_k=min_k,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )

@@ -49,6 +49,7 @@ def run_gate_annotation_pipeline(
         edge_bundle.annotated_df,
         significance_level_alpha=sibling_alpha,
         sibling_method=resolved_sibling_method,
+        min_k=min_k,
         spectral_dims=sibling_spectral_dims,
         pca_projections=sibling_pca_projections,
         pca_eigenvalues=sibling_pca_eigenvalues,
