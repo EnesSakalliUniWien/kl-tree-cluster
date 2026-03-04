@@ -17,9 +17,11 @@ __all__ = [
     "build_projection_basis_with_padding",
     "run_projected_wald_kernel",
     "compute_projected_pvalue",
-    "fit_cousin_weighted_wald",
-    "fit_cousin_adjusted_wald",
-    "fit_cousin_tree_guided",
+    "annotate_wald",
+    "annotate_cousin_ftest",
+    "annotate_cousin_weighted_wald",
+    "annotate_cousin_adjusted_wald",
+    "annotate_cousin_tree_guided",
 ]
 
 _NAME_TO_MODULE = {
@@ -34,9 +36,11 @@ _NAME_TO_MODULE = {
     "build_projection_basis_with_padding": ".projection_basis",
     "run_projected_wald_kernel": ".projected_wald",
     "compute_projected_pvalue": ".projected_wald",
-    "fit_cousin_weighted_wald": ".sibling_calibration",
-    "fit_cousin_adjusted_wald": ".sibling_calibration",
-    "fit_cousin_tree_guided": ".sibling_calibration",
+    "annotate_wald": ".sibling_calibration",
+    "annotate_cousin_ftest": ".sibling_calibration",
+    "annotate_cousin_weighted_wald": ".sibling_calibration",
+    "annotate_cousin_adjusted_wald": ".sibling_calibration",
+    "annotate_cousin_tree_guided": ".sibling_calibration",
 }
 
 

@@ -368,7 +368,7 @@ class PosetTree(nx.DiGraph):
             Decomposition output from ``TreeDecomposition.decompose_tree``.
         """
         # Extract alpha values from kwargs (with defaults from config)
-        alpha_local = decomposer_kwargs.pop("alpha_local", config.ALPHA_LOCAL)
+        alpha_local = decomposer_kwargs.pop("alpha_local", config.EDGE_ALPHA)
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
 
         if annotations_df is None:

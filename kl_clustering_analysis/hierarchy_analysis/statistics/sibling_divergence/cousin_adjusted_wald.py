@@ -299,14 +299,14 @@ def _fit_inflation_model(
 def predict_inflation_factor(
     model: CalibrationModel,
     branch_length_sum: float,
-    n_parent: int,
+    n_reference: int,
 ) -> float:
     """Predict inflation factor ĉ for a focal pair.
 
     The prediction is clamped to [1.0, max_observed_ratio] to prevent
     extrapolation beyond the calibration data.  Without the upper cap,
-    the β₂·log(n_parent) term can over-estimate inflation at the root
-    (largest n_parent), deflating T so aggressively that real signal is
+    the β₂·log(n_reference) term can over-estimate inflation at the root
+    (largest reference sample size), deflating T so aggressively that real signal is
     missed and the tree collapses to K=1.
 
     Parameters
@@ -315,8 +315,10 @@ def predict_inflation_factor(
         Fitted calibration model.
     branch_length_sum : float
         Sum of branch lengths from the two siblings to their parent.
-    n_parent : int
-        Number of leaves under the parent node.
+    n_reference : int
+        Reference leaf count used for calibration prediction.
+        In sibling annotation this is parent leaf count; in post-hoc
+        pairwise testing this can be ancestor leaf count.
 
     Returns
     -------
@@ -333,13 +335,13 @@ def predict_inflation_factor(
     if model.beta is None:
         return max(model.global_inflation_factor, 1.0)
 
-    if branch_length_sum <= 0 or n_parent <= 0:
+    if branch_length_sum <= 0 or n_reference <= 0:
         return max(model.global_inflation_factor, 1.0)
 
     log_inflation = (
         model.beta[0]
         + model.beta[1] * np.log(branch_length_sum)
-        + model.beta[2] * np.log(float(n_parent))
+        + model.beta[2] * np.log(float(n_reference))
     )
     inflation_factor = float(np.exp(log_inflation))
     # Clamp: never predict more inflation than actually observed in
@@ -358,7 +360,7 @@ def _collect_all_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
@@ -370,7 +372,7 @@ def _collect_all_pairs(
         tree,
         annotations_df,
         mean_branch_length,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
@@ -389,7 +391,11 @@ def _deflate_and_test(
     """
 
     def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]:
-        inflation_factor = predict_inflation_factor(model, rec.branch_length_sum, rec.n_parent)
+        inflation_factor = predict_inflation_factor(
+            model,
+            rec.branch_length_sum,
+            n_reference=rec.n_parent,
+        )
         return inflation_factor, f"adjusted_{model.method}"
 
     return deflate_focal_pairs(
@@ -429,7 +435,7 @@ def annotate_sibling_divergence_adjusted(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
@@ -467,7 +473,7 @@ def annotate_sibling_divergence_adjusted(
         tree,
         annotations_df,
         mean_branch_length,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )

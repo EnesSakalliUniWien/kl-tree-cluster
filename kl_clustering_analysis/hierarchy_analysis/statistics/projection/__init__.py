@@ -34,7 +34,7 @@ from .random_projection import (
     derive_projection_seed,
     estimate_min_projection_dimension,
     generate_projection_matrix,
-    resolve_min_k,
+    resolve_minimum_projection_dimension,
 )
 from .satterthwaite import compute_projected_pvalue
 from .sibling_spectral_dimension import compute_sibling_spectral_dimensions
@@ -68,7 +68,7 @@ __all__ = [
     "derive_projection_seed",
     "estimate_min_projection_dimension",
     "generate_projection_matrix",
-    "resolve_min_k",
+    "resolve_minimum_projection_dimension",
     # satterthwaite
     "compute_projected_pvalue",
     # spectral_dimension (orchestrators)

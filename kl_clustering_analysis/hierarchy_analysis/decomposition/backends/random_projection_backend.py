@@ -23,18 +23,18 @@ _PROJECTION_CACHE: Dict[Tuple[str, int, int, int | None], np.ndarray] = {}
 _AUDITED_PROJECTIONS: set[Tuple[str, int, int, int | None]] = set()
 
 # Resolved adaptive floor.
-_RESOLVED_MIN_K: int | None = None
+_RESOLVED_MINIMUM_PROJECTION_DIMENSION: int | None = None
 
 
-def set_resolved_min_k_backend(value: int | None) -> None:
+def set_resolved_minimum_projection_dimension_backend(value: int | None) -> None:
     """Set backend resolved minimum dimension cache."""
-    global _RESOLVED_MIN_K
-    _RESOLVED_MIN_K = value
+    global _RESOLVED_MINIMUM_PROJECTION_DIMENSION
+    _RESOLVED_MINIMUM_PROJECTION_DIMENSION = value
 
 
-def get_resolved_min_k_backend() -> int | None:
+def get_resolved_minimum_projection_dimension_backend() -> int | None:
     """Get backend resolved minimum dimension cache."""
-    return _RESOLVED_MIN_K
+    return _RESOLVED_MINIMUM_PROJECTION_DIMENSION
 
 
 def _generate_structured_orthonormal_rows_backend(
@@ -90,41 +90,46 @@ def estimate_min_projection_dimension_backend(
 
     eigenvalues = np.maximum(eigenvalues, 0.0)
     erank = _effective_rank(eigenvalues)
-    min_k = int(np.ceil(erank))
-    min_k = max(min_k, hard_floor)
-    min_k = min(min_k, hard_cap)
+    minimum_projection_dimension = int(np.ceil(erank))
+    minimum_projection_dimension = max(minimum_projection_dimension, hard_floor)
+    minimum_projection_dimension = min(minimum_projection_dimension, hard_cap)
 
     logger.info(
-        "Adaptive PROJECTION_MIN_K: effective_rank=%.1f -> min_k=%d (n=%d, d=%d, d_active=%d)",
+        "Adaptive PROJECTION_MINIMUM_DIMENSION: effective_rank=%.1f -> minimum_projection_dimension=%d (n=%d, d=%d, d_active=%d)",
         erank,
-        min_k,
+        minimum_projection_dimension,
         n,
         d,
         d_active,
     )
-    return min_k
+    return minimum_projection_dimension
 
 
-def resolve_min_k_backend(
-    min_k_config: int | str,
+def resolve_minimum_projection_dimension_backend(
+    minimum_projection_dimension_config: int | str,
     *,
     leaf_data: pd.DataFrame | None = None,
 ) -> int:
     """Resolve configured minimum k to an integer and cache the result."""
-    if isinstance(min_k_config, int):
-        set_resolved_min_k_backend(min_k_config)
-        return min_k_config
+    if isinstance(minimum_projection_dimension_config, int):
+        set_resolved_minimum_projection_dimension_backend(minimum_projection_dimension_config)
+        return minimum_projection_dimension_config
 
-    if min_k_config == "auto":
+    if minimum_projection_dimension_config == "auto":
         if leaf_data is None:
-            logger.info("PROJECTION_MIN_K='auto' but leaf_data is None; falling back to 2.")
-            set_resolved_min_k_backend(2)
+            logger.info(
+                "PROJECTION_MINIMUM_DIMENSION='auto' but leaf_data is None; falling back to 2."
+            )
+            set_resolved_minimum_projection_dimension_backend(2)
             return 2
         resolved = estimate_min_projection_dimension_backend(leaf_data)
-        set_resolved_min_k_backend(resolved)
+        set_resolved_minimum_projection_dimension_backend(resolved)
         return resolved
 
-    raise ValueError(f"PROJECTION_MIN_K must be an int or 'auto', got {min_k_config!r}")
+    raise ValueError(
+        "PROJECTION_MINIMUM_DIMENSION must be an int or 'auto', "
+        f"got {minimum_projection_dimension_config!r}"
+    )
 
 
 def compute_projection_dimension_backend(
@@ -132,24 +137,24 @@ def compute_projection_dimension_backend(
     n_features: int,
     *,
     eps: float = config.PROJECTION_EPS,
-    min_k: int | str | None = None,
+    minimum_projection_dimension: int | str | None = None,
 ) -> int:
     """Compute target projection dimension with JL + information cap."""
-    if min_k is None:
-        if _RESOLVED_MIN_K is not None:
-            min_k = _RESOLVED_MIN_K
+    if minimum_projection_dimension is None:
+        if _RESOLVED_MINIMUM_PROJECTION_DIMENSION is not None:
+            minimum_projection_dimension = _RESOLVED_MINIMUM_PROJECTION_DIMENSION
         else:
-            cfg_val = config.PROJECTION_MIN_K
-            min_k = cfg_val if isinstance(cfg_val, int) else 2
-    elif isinstance(min_k, str):
-        min_k = 2
+            cfg_val = config.PROJECTION_MINIMUM_DIMENSION
+            minimum_projection_dimension = cfg_val if isinstance(cfg_val, int) else 2
+    elif isinstance(minimum_projection_dimension, str):
+        minimum_projection_dimension = 2
 
     n_samples = max(n_samples, 1)
     k: int = int(johnson_lindenstrauss_min_dim(n_samples=n_samples, eps=eps))
 
     if n_features >= 4 * n_samples:
         k = min(k, n_samples)
-    k = max(k, min_k)
+    k = max(k, minimum_projection_dimension)
     k = min(k, n_features)
     return k
 
@@ -260,11 +265,11 @@ def derive_projection_seed_backend(base_seed: int | None, test_id: str) -> int:
 
 __all__ = [
     "_PROJECTION_CACHE",
-    "_RESOLVED_MIN_K",
-    "get_resolved_min_k_backend",
-    "set_resolved_min_k_backend",
+    "_RESOLVED_MINIMUM_PROJECTION_DIMENSION",
+    "get_resolved_minimum_projection_dimension_backend",
+    "set_resolved_minimum_projection_dimension_backend",
     "estimate_min_projection_dimension_backend",
-    "resolve_min_k_backend",
+    "resolve_minimum_projection_dimension_backend",
     "compute_projection_dimension_backend",
     "generate_projection_matrix_backend",
     "derive_projection_seed_backend",

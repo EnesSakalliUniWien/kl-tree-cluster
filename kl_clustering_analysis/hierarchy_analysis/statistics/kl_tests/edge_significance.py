@@ -354,7 +354,7 @@ def annotate_child_parent_divergence(
     fdr_method: str = "tree_bh",
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using projected Wald test.
 
@@ -384,9 +384,9 @@ def annotate_child_parent_divergence(
         Dimension estimator: ``"effective_rank"``, ``"marchenko_pastur"``,
         or ``"active_features"``.  When ``None`` (default), the legacy
         JL-based dimension is used.
-    min_k
+    minimum_projection_dimension
         Minimum projection dimension (floor).  When ``None``, uses
-        ``config.PROJECTION_MIN_K`` (resolved to int at pipeline entry).
+        ``config.PROJECTION_MINIMUM_DIMENSION`` (resolved to int at pipeline entry).
 
     Returns
     -------
@@ -420,18 +420,22 @@ def annotate_child_parent_divergence(
         # eigenvalues for the current Gate 2 run. These are consumed
         # immediately below by _compute_p_values_via_projection().
         #
-        # The spectral path uses its own small floor (SPECTRAL_MIN_K=2)
-        # instead of the global JL-derived min_k.  The per-node effective
+        # The spectral path uses its own small floor (SPECTRAL_MINIMUM_DIMENSION=2)
+        # instead of the global JL-derived minimum_projection_dimension.  The per-node effective
         # rank IS the signal dimensionality; flooring it with the global
         # erank inflates df with noise-only χ² components and kills power.
         from kl_clustering_analysis import config as _config
 
-        spectral_min_k = getattr(_config, "SPECTRAL_MIN_K", 2)
+        spectral_minimum_projection_dimension = getattr(
+            _config,
+            "SPECTRAL_MINIMUM_DIMENSION",
+            2,
+        )
         spectral_dims, pca_proj_dict, pca_eig_dict = compute_spectral_decomposition(
             tree,
             leaf_data,
             method=spectral_method,
-            min_k=spectral_min_k,
+            minimum_projection_dimension=spectral_minimum_projection_dimension,
             compute_projections=True,
         )
         pca_projections = pca_proj_dict if pca_proj_dict else None
@@ -508,7 +512,7 @@ def annotate_child_parent_divergence(
     }
 
     return assign_divergence_results(
-        nodes_dataframe=annotations_df,
+        annotations_df=annotations_df,
         child_ids=child_ids,
         p_values=p_values,
         p_values_corrected=p_values_corrected,

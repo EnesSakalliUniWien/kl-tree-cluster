@@ -66,7 +66,7 @@ def collect_sibling_pair_records(
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
     *,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -102,16 +102,16 @@ def collect_sibling_pair_records(
 
         spectral_k = spectral_dims.get(parent) if spectral_dims else None
         pca_projection = pca_projections.get(parent) if pca_projections else None
-        pca_eigenvalue = pca_eigenvalues.get(parent) if pca_eigenvalues else None
+        node_pca_eigenvalues = pca_eigenvalues.get(parent) if pca_eigenvalues else None
 
         sibling_test_kwargs: dict[str, object] = {
             "test_id": f"sibling:{parent}",
             "spectral_k": spectral_k,
             "pca_projection": pca_projection,
-            "pca_eigenvalues": pca_eigenvalue,
+            "pca_eigenvalues": node_pca_eigenvalues,
         }
-        if min_k is not None:
-            sibling_test_kwargs["min_k"] = min_k
+        if minimum_projection_dimension is not None:
+            sibling_test_kwargs["minimum_projection_dimension"] = minimum_projection_dimension
 
         stat, degrees_of_freedom, p_value = sibling_divergence_test(
             left_dist,
@@ -180,8 +180,7 @@ def init_sibling_annotation_df(annotations_df: pd.DataFrame) -> pd.DataFrame:
     if len(annotations_df) == 0:
         raise ValueError("Empty dataframe")
 
-    annotations_dataframe = annotations_df.copy()
-    return initialize_sibling_divergence_columns(annotations_dataframe)
+    return initialize_sibling_divergence_columns(annotations_df.copy())
 
 
 def mark_non_binary_as_skipped(

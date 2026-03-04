@@ -104,14 +104,14 @@ class TestGammaGLMCalibrationDiagnostic:
         """Predictions must be in [1.0, max_observed_ratio]."""
         row, model, records = self._run_pipeline("clear")
 
-        # Test predictions at various n_parent values
-        for n_parent in [5, 10, 20, 50, 100, 500]:
+        # Test predictions at various reference sample sizes
+        for n_reference in [5, 10, 20, 50, 100, 500]:
             for bl_sum in [0.1, 0.3, 0.5, 1.0]:
-                c = predict_weighted_inflation_factor(model, bl_sum, n_parent)
-                assert c >= 1.0, f"c_hat={c} < 1.0 at n={n_parent}, bl={bl_sum}"
+                c = predict_weighted_inflation_factor(model, bl_sum, n_reference=n_reference)
+                assert c >= 1.0, f"c_hat={c} < 1.0 at n={n_reference}, bl={bl_sum}"
                 assert c <= model.max_observed_ratio + 1e-9, (
                     f"c_hat={c} > max_observed_ratio={model.max_observed_ratio} "
-                    f"at n={n_parent}, bl={bl_sum}"
+                    f"at n={n_reference}, bl={bl_sum}"
                 )
 
     def test_clear_case_finds_clusters(self):

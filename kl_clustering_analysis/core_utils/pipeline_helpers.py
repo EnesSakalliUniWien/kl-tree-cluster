@@ -94,7 +94,7 @@ def run_statistical_analysis(tree, X):
     annotations_df = annotate_child_parent_divergence(
         tree,
         annotations_df,
-        significance_level_alpha=config.SIGNIFICANCE_ALPHA,
+        significance_level_alpha=config.EDGE_ALPHA,
     )
     annotations_df = annotate_sibling_divergence(
         tree,

@@ -270,7 +270,7 @@ def _collect_all_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
@@ -282,7 +282,7 @@ def _collect_all_pairs(
         tree,
         annotations_df,
         mean_branch_length,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
@@ -350,7 +350,7 @@ def annotate_sibling_divergence_tree_guided(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
@@ -388,7 +388,7 @@ def annotate_sibling_divergence_tree_guided(
         tree,
         annotations_df,
         mean_branch_length,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )

@@ -45,20 +45,20 @@ def normalize_spectral_k_method(method: SpectralKMethod | str | None) -> str | N
 def resolve_sibling_calibrator(method: SiblingCalibrationMethod | str) -> Callable:
     """Resolve a sibling calibration callable."""
     from ..methods.sibling_calibration import (
-        fit_cousin_ftest,
-        fit_cousin_adjusted_wald,
-        fit_cousin_tree_guided,
-        fit_wald,
-        fit_cousin_weighted_wald,
+        annotate_cousin_ftest,
+        annotate_cousin_adjusted_wald,
+        annotate_cousin_tree_guided,
+        annotate_wald,
+        annotate_cousin_weighted_wald,
     )
 
     name = method.value if isinstance(method, SiblingCalibrationMethod) else str(method)
     mapping = {
-        SiblingCalibrationMethod.WALD.value: fit_wald,
-        SiblingCalibrationMethod.COUSIN_FTEST.value: fit_cousin_ftest,
-        SiblingCalibrationMethod.COUSIN_ADJUSTED_WALD.value: fit_cousin_adjusted_wald,
-        SiblingCalibrationMethod.COUSIN_TREE_GUIDED.value: fit_cousin_tree_guided,
-        SiblingCalibrationMethod.COUSIN_WEIGHTED_WALD.value: fit_cousin_weighted_wald,
+        SiblingCalibrationMethod.WALD.value: annotate_wald,
+        SiblingCalibrationMethod.COUSIN_FTEST.value: annotate_cousin_ftest,
+        SiblingCalibrationMethod.COUSIN_ADJUSTED_WALD.value: annotate_cousin_adjusted_wald,
+        SiblingCalibrationMethod.COUSIN_TREE_GUIDED.value: annotate_cousin_tree_guided,
+        SiblingCalibrationMethod.COUSIN_WEIGHTED_WALD.value: annotate_cousin_weighted_wald,
     }
     if name not in mapping:
         raise DecompositionMethodError(f"Unknown sibling calibration method: {name!r}.")

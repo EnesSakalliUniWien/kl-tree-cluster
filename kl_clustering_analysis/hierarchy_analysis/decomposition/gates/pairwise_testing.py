@@ -233,7 +233,7 @@ def _deflate_by_calibration(
     calibration_model
         Fitted calibration model.
     ancestor_override
-        If given, use this node's leaf count as ``n_ancestor`` instead
+        If given, use this node's leaf count as ``n_reference`` instead
         of computing the LCA.  Used by ``test_cluster_pair_divergence``
         where the ancestor is already known.
 
@@ -249,22 +249,22 @@ def _deflate_by_calibration(
         branch_length_sum += bl_b
 
     if ancestor_override is not None:
-        n_ancestor = int(tree.nodes[ancestor_override]["leaf_count"])
+        n_reference = int(tree.nodes[ancestor_override]["leaf_count"])
     else:
         lca = tree.find_lca(node_a, node_b)
-        n_ancestor = int(tree.nodes[lca]["leaf_count"])
+        n_reference = int(tree.nodes[lca]["leaf_count"])
 
     if isinstance(calibration_model, WeightedCalibrationModel):
         inflation_factor = predict_weighted_inflation_factor(
             calibration_model,
             branch_length_sum,
-            n_ancestor,
+            n_reference=n_reference,
         )
     else:
         inflation_factor = predict_inflation_factor(
             calibration_model,
             branch_length_sum,
-            n_ancestor,
+            n_reference=n_reference,
         )
 
     if inflation_factor > 0 and np.isfinite(test_stat) and degrees_of_freedom > 0:

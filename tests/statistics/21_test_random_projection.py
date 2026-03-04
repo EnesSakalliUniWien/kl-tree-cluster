@@ -31,21 +31,21 @@ def test_compute_projection_dimension_basic():
     # k = 8 * ln(n) / eps^2 = 8 * ln(1000) / (0.3^2) approx 8 * 6.907 / 0.09 = 55.256 / 0.09 approx 613
     # sklearn's johnson_lindenstrauss_min_dim formula is k >= (4 * log(n_samples)) / (eps ** 2 / 2 - eps ** 3 / 3)
     # For n_samples=1000, eps=0.3, this gives k >= 383
-    # Our config.PROJECTION_MIN_K is 10
-    k = compute_projection_dimension(n_samples, n_features, eps=eps, min_k=10)
+    # Our config.PROJECTION_MINIMUM_DIMENSION is 10
+    k = compute_projection_dimension(n_samples, n_features, eps=eps, minimum_projection_dimension=10)
     assert k >= 10
     assert k <= n_features
     # Verify it's in the expected range for these parameters
     assert 760 <= k <= 770
 
 
-def test_compute_projection_dimension_min_k():
-    """Test min_k constraint."""
+def test_compute_projection_dimension_minimum_projection_dimension():
+    """Test minimum_projection_dimension constraint."""
     n_samples = 5
     n_features = 10
     eps = 0.5
-    # For n_samples=5, eps=0.5, k is very small, capped by n_features=10, not min_k=50.
-    k = compute_projection_dimension(n_samples, n_features, eps=eps, min_k=50)
+    # For n_samples=5, eps=0.5, k is very small, capped by n_features=10, not minimum_projection_dimension=50.
+    k = compute_projection_dimension(n_samples, n_features, eps=eps, minimum_projection_dimension=50)
     assert k == n_features
 
 
@@ -54,7 +54,7 @@ def test_compute_projection_dimension_max_k_n_features():
     n_samples = 1000
     n_features = 50
     eps = 0.1  # Very low eps, would usually result in k > 50
-    k = compute_projection_dimension(n_samples, n_features, eps=eps, min_k=10)
+    k = compute_projection_dimension(n_samples, n_features, eps=eps, minimum_projection_dimension=10)
     assert k == n_features
 
 

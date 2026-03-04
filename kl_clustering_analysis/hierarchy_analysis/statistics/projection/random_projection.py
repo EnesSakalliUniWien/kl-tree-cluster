@@ -17,13 +17,13 @@ from ...decomposition.backends import random_projection_backend as _backend
 _PROJECTION_CACHE = _backend._PROJECTION_CACHE
 
 # Read-only mirror of backend resolved floor (updated after backend calls).
-_RESOLVED_MIN_K: int | None = _backend.get_resolved_min_k_backend()
+_RESOLVED_MINIMUM_PROJECTION_DIMENSION: int | None = _backend.get_resolved_minimum_projection_dimension_backend()
 
 
 def _sync_resolved_from_backend() -> None:
     """Sync backend global state back into local compatibility variable."""
-    global _RESOLVED_MIN_K
-    _RESOLVED_MIN_K = _backend.get_resolved_min_k_backend()
+    global _RESOLVED_MINIMUM_PROJECTION_DIMENSION
+    _RESOLVED_MINIMUM_PROJECTION_DIMENSION = _backend.get_resolved_minimum_projection_dimension_backend()
 
 
 def estimate_min_projection_dimension(
@@ -40,12 +40,15 @@ def estimate_min_projection_dimension(
     )
 
 
-def resolve_min_k(
-    min_k_config: int | str,
+def resolve_minimum_projection_dimension(
+    minimum_projection_dimension_config: int | str,
     leaf_data: pd.DataFrame | None = None,
 ) -> int:
-    """Resolve ``PROJECTION_MIN_K`` to an integer and cache the value."""
-    result = _backend.resolve_min_k_backend(min_k_config, leaf_data=leaf_data)
+    """Resolve ``PROJECTION_MINIMUM_DIMENSION`` to an integer and cache the value."""
+    result = _backend.resolve_minimum_projection_dimension_backend(
+        minimum_projection_dimension_config,
+        leaf_data=leaf_data,
+    )
     _sync_resolved_from_backend()
     return result
 
@@ -54,14 +57,14 @@ def compute_projection_dimension(
     n_samples: int,
     n_features: int,
     eps: float = config.PROJECTION_EPS,
-    min_k: int | str | None = None,
+    minimum_projection_dimension: int | str | None = None,
 ) -> int:
     """Compute target projection dimension, capped by data rank."""
     result = _backend.compute_projection_dimension_backend(
         n_samples=n_samples,
         n_features=n_features,
         eps=eps,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
     )
     _sync_resolved_from_backend()
     return result
@@ -93,7 +96,7 @@ __all__ = [
     "derive_projection_seed",
     "estimate_min_projection_dimension",
     "generate_projection_matrix",
-    "resolve_min_k",
+    "resolve_minimum_projection_dimension",
     "_PROJECTION_CACHE",
-    "_RESOLVED_MIN_K",
+    "_RESOLVED_MINIMUM_PROJECTION_DIMENSION",
 ]

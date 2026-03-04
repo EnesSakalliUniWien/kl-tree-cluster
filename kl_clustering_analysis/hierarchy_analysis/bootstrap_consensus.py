@@ -59,7 +59,7 @@ def bootstrap_consensus(
         Number of bootstrap replicates.
     alpha_local, sibling_alpha
         Significance levels forwarded to ``PosetTree.decompose()``.
-        Defaults to ``config.ALPHA_LOCAL`` / ``config.SIBLING_ALPHA``.
+        Defaults to ``config.EDGE_ALPHA`` / ``config.SIBLING_ALPHA``.
     metric
         Distance metric for ``pdist``.  Defaults to ``config.TREE_DISTANCE_METRIC``.
     linkage_method
@@ -95,7 +95,7 @@ def bootstrap_consensus(
     """
     from kl_clustering_analysis.tree.poset_tree import PosetTree  # local import to avoid cycles
 
-    alpha_local = alpha_local or config.ALPHA_LOCAL
+    alpha_local = alpha_local or config.EDGE_ALPHA
     sibling_alpha = sibling_alpha or config.SIBLING_ALPHA
     metric = metric or config.TREE_DISTANCE_METRIC
     linkage_method = linkage_method or config.TREE_LINKAGE_METHOD

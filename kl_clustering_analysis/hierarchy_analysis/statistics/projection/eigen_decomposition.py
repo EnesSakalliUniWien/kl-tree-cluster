@@ -31,7 +31,7 @@ def estimate_spectral_k(
     method: str,
     n_desc: int,
     d_active: int,
-    min_k: int,
+    minimum_projection_dimension: int,
 ) -> int:
     """Estimate projection dimension from eigenvalues."""
     return estimate_spectral_k_backend(
@@ -39,7 +39,7 @@ def estimate_spectral_k(
         method=method,
         n_desc=n_desc,
         d_active=d_active,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
     )
 
 

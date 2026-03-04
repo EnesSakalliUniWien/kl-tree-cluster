@@ -97,7 +97,7 @@ def estimate_spectral_k_backend(
     method: str,
     n_desc: int,
     d_active: int,
-    min_k: int,
+    minimum_projection_dimension: int,
 ) -> int:
     """Estimate projection dimension from eigenvalues."""
     if method == "effective_rank":
@@ -105,7 +105,7 @@ def estimate_spectral_k_backend(
     else:  # marchenko_pastur
         k = int(marchenko_pastur_signal_count(eigenvalues, n_desc, d_active))
 
-    k = max(k, int(min_k))
+    k = max(k, int(minimum_projection_dimension))
     k = min(k, int(d_active))
     return k
 

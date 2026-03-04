@@ -7,6 +7,7 @@ Runs the existing MNIST KL clustering pipeline and maps digit labels
 Usage:
     python benchmarks/mnist/run_higher_categories.py
     python benchmarks/mnist/run_higher_categories.py --scheme parity_2
+    python benchmarks/mnist/run_higher_categories.py --pixel-categorization bayesian_gmm
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from __future__ import annotations
 import argparse
 import base64
 import sys
+import warnings
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -31,13 +33,17 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
 from sklearn.metrics import (
     accuracy_score,
     adjusted_rand_score,
     normalized_mutual_info_score,
 )
+from sklearn.mixture import BayesianGaussianMixture
 
 from run import load_mnist_subset, run_kl_clustering
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
 HIGHER_CATEGORY_SCHEMES: dict[str, dict[int, str]] = {
@@ -102,6 +108,37 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="Create interactive UMAP HTML visualization",
     )
+    parser.add_argument(
+        "--pixel-categorization",
+        type=str,
+        default="binary_threshold",
+        choices=["binary_threshold", "bayesian_gmm"],
+        help="Per-pixel categorization strategy before tree decomposition",
+    )
+    parser.add_argument(
+        "--bgm-max-components",
+        type=int,
+        default=8,
+        help="Max mixture components per pixel for BayesianGaussianMixture",
+    )
+    parser.add_argument(
+        "--bgm-weight-threshold",
+        type=float,
+        default=1e-3,
+        help="Component weight threshold used to count active categories",
+    )
+    parser.add_argument(
+        "--bgm-fit-samples",
+        type=int,
+        default=1500,
+        help="Subsample size used to fit per-pixel mixture models (0 uses all samples)",
+    )
+    parser.add_argument(
+        "--bgm-max-iter",
+        type=int,
+        default=400,
+        help="Max iterations for per-pixel BayesianGaussianMixture fits",
+    )
     return parser.parse_args()
 
 
@@ -133,6 +170,187 @@ def map_clusters_to_categories(
         dominant_category_id = int(category_ids_in_cluster[np.argmax(category_counts)])
         cluster_to_higher_category_id[int(cluster_id)] = dominant_category_id
     return cluster_to_higher_category_id
+
+
+def run_tree_decomposition_on_preprocessed_data(
+    preprocessed_matrix: np.ndarray,
+    *,
+    distance_metric: str,
+    linkage_method: str,
+    significance_level: float,
+    verbose: bool,
+) -> np.ndarray:
+    """Run tree decomposition from a preprocessed integer feature matrix."""
+    sample_names = [f"Sample_{sample_index}" for sample_index in range(preprocessed_matrix.shape[0])]
+    annotations_df = pd.DataFrame(preprocessed_matrix, index=sample_names)
+
+    if verbose:
+        print(f"  Building hierarchy with {distance_metric} + {linkage_method}")
+
+    linkage_matrix = linkage(
+        pdist(annotations_df.values, metric=distance_metric),
+        method=linkage_method,
+    )
+    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=sample_names)
+    decomposition_results = tree.decompose(
+        leaf_data=annotations_df,
+        alpha_local=significance_level,
+        sibling_alpha=significance_level,
+    )
+
+    cluster_assignments = decomposition_results.get("cluster_assignments", {})
+    label_map: dict[str, int] = {}
+    for cluster_identifier, cluster_metadata in cluster_assignments.items():
+        for leaf_name in cluster_metadata["leaves"]:
+            label_map[leaf_name] = int(cluster_identifier)
+    return np.array([label_map.get(sample_name, -1) for sample_name in sample_names], dtype=int)
+
+
+def _fit_bayesian_gmm_for_pixel(
+    pixel_values_all_samples: np.ndarray,
+    pixel_values_fit_subset: np.ndarray,
+    *,
+    random_seed: int,
+    max_components: int,
+    max_iter: int,
+    weight_threshold: float,
+) -> tuple[np.ndarray, int, list[float], list[float]]:
+    """Fit Bayesian GMM on one pixel and return ordinal category IDs."""
+    if np.allclose(pixel_values_fit_subset, pixel_values_fit_subset[0]):
+        constant_category_ids = np.zeros(pixel_values_all_samples.shape[0], dtype=np.int16)
+        constant_value = float(pixel_values_fit_subset[0, 0])
+        return constant_category_ids, 1, [1.0], [constant_value]
+
+    model = BayesianGaussianMixture(
+        n_components=max_components,
+        weight_concentration_prior_type="dirichlet_process",
+        covariance_type="full",
+        random_state=random_seed,
+        max_iter=max_iter,
+    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
+        warnings.filterwarnings("ignore", category=UserWarning)
+        model.fit(pixel_values_fit_subset)
+
+    component_weights = np.asarray(model.weights_, dtype=float)
+    component_means = np.asarray(model.means_, dtype=float).reshape(-1)
+
+    active_component_indices = np.flatnonzero(component_weights > weight_threshold)
+    if active_component_indices.size == 0:
+        active_component_indices = np.array([int(np.argmax(component_weights))], dtype=int)
+
+    sorted_active_component_indices = active_component_indices[
+        np.argsort(component_means[active_component_indices])
+    ]
+
+    predicted_component_indices = model.predict(pixel_values_all_samples)
+    active_component_set = set(int(index) for index in sorted_active_component_indices.tolist())
+    if len(active_component_set) < component_weights.shape[0]:
+        component_means_active = component_means[sorted_active_component_indices]
+        for sample_index, predicted_component in enumerate(predicted_component_indices.tolist()):
+            if int(predicted_component) in active_component_set:
+                continue
+            nearest_active_index = int(
+                sorted_active_component_indices[
+                    int(np.argmin(np.abs(component_means_active - component_means[int(predicted_component)])))
+                ]
+            )
+            predicted_component_indices[sample_index] = nearest_active_index
+
+    component_index_to_category_id = np.full(component_weights.shape[0], fill_value=-1, dtype=np.int16)
+    for category_id, component_index in enumerate(sorted_active_component_indices.tolist()):
+        component_index_to_category_id[int(component_index)] = int(category_id)
+
+    category_ids = component_index_to_category_id[predicted_component_indices]
+    if (category_ids < 0).any():
+        category_ids = np.maximum(category_ids, 0)
+
+    return (
+        category_ids.astype(np.int16, copy=False),
+        int(sorted_active_component_indices.size),
+        [float(component_weights[index]) for index in sorted_active_component_indices.tolist()],
+        [float(component_means[index]) for index in sorted_active_component_indices.tolist()],
+    )
+
+
+def infer_pixel_categories_with_bayesian_gmm(
+    feature_matrix: np.ndarray,
+    *,
+    random_seed: int,
+    max_components: int,
+    weight_threshold: float,
+    fit_samples: int,
+    max_iter: int,
+) -> tuple[np.ndarray, pd.DataFrame]:
+    """Infer per-pixel category IDs and category-count summary via Bayesian GMM."""
+    n_samples, n_pixels = feature_matrix.shape
+    random_generator = np.random.default_rng(random_seed)
+
+    if fit_samples > 0 and fit_samples < n_samples:
+        fit_sample_indices = np.sort(random_generator.choice(n_samples, size=fit_samples, replace=False))
+    else:
+        fit_sample_indices = np.arange(n_samples)
+
+    categorical_feature_matrix = np.zeros((n_samples, n_pixels), dtype=np.int16)
+    summary_rows: list[dict[str, object]] = []
+
+    print(
+        "Inferring per-pixel categories with BayesianGaussianMixture "
+        f"(max_components={max_components}, fit_samples={len(fit_sample_indices)})..."
+    )
+
+    for pixel_index in range(n_pixels):
+        if pixel_index % 64 == 0 or pixel_index == n_pixels - 1:
+            print(f"  Pixel {pixel_index + 1}/{n_pixels}")
+
+        pixel_values_all_samples = feature_matrix[:, pixel_index].reshape(-1, 1)
+        pixel_values_fit_subset = pixel_values_all_samples[fit_sample_indices]
+
+        (
+            category_ids,
+            inferred_category_count,
+            active_component_weights,
+            active_component_means,
+        ) = _fit_bayesian_gmm_for_pixel(
+            pixel_values_all_samples=pixel_values_all_samples,
+            pixel_values_fit_subset=pixel_values_fit_subset,
+            random_seed=random_seed,
+            max_components=max_components,
+            max_iter=max_iter,
+            weight_threshold=weight_threshold,
+        )
+
+        categorical_feature_matrix[:, pixel_index] = category_ids
+        summary_rows.append(
+            {
+                "pixel_index": pixel_index,
+                "inferred_category_count": inferred_category_count,
+                "realized_category_count": int(np.unique(category_ids).size),
+                "active_component_weights": ";".join(f"{weight:.6f}" for weight in active_component_weights),
+                "active_component_means": ";".join(f"{mean:.6f}" for mean in active_component_means),
+            }
+        )
+
+    category_summary_dataframe = pd.DataFrame(summary_rows)
+    return categorical_feature_matrix, category_summary_dataframe
+
+
+def expand_pixel_categories_to_one_hot(
+    categorical_feature_matrix: np.ndarray,
+) -> np.ndarray:
+    """Expand per-pixel category IDs to binary one-hot indicator features."""
+    n_samples, n_pixels = categorical_feature_matrix.shape
+    one_hot_feature_blocks: list[np.ndarray] = []
+
+    for pixel_index in range(n_pixels):
+        pixel_category_ids = categorical_feature_matrix[:, pixel_index].astype(int, copy=False)
+        n_pixel_categories = int(pixel_category_ids.max()) + 1
+        one_hot_block = np.zeros((n_samples, n_pixel_categories), dtype=np.int8)
+        one_hot_block[np.arange(n_samples), pixel_category_ids] = 1
+        one_hot_feature_blocks.append(one_hot_block)
+
+    return np.concatenate(one_hot_feature_blocks, axis=1)
 
 
 def create_bokeh_higher_category_plot(
@@ -331,6 +549,7 @@ def main() -> None:
     print("MNIST Higher-Category Benchmark")
     print("=" * 72)
     print(f"scheme={arguments.scheme}")
+    print(f"pixel_categorization={arguments.pixel_categorization}")
     print(
         f"clustering={arguments.distance_metric}+{arguments.linkage_method}, "
         f"binarize_threshold={arguments.binarize_threshold}"
@@ -342,13 +561,40 @@ def main() -> None:
         use_pca=False,
     )
 
-    cluster_labels = run_kl_clustering(
-        feature_matrix,
-        verbose=True,
-        binarize_threshold=arguments.binarize_threshold,
-        distance_metric=arguments.distance_metric,
-        linkage_method=arguments.linkage_method,
-    )
+    pixel_category_summary_dataframe: pd.DataFrame | None = None
+    clustering_distance_metric = arguments.distance_metric
+
+    if arguments.pixel_categorization == "binary_threshold":
+        cluster_labels = run_kl_clustering(
+            feature_matrix,
+            verbose=True,
+            binarize_threshold=arguments.binarize_threshold,
+            distance_metric=arguments.distance_metric,
+            linkage_method=arguments.linkage_method,
+        )
+    else:
+        categorical_feature_matrix, pixel_category_summary_dataframe = infer_pixel_categories_with_bayesian_gmm(
+            feature_matrix,
+            random_seed=arguments.seed,
+            max_components=arguments.bgm_max_components,
+            weight_threshold=arguments.bgm_weight_threshold,
+            fit_samples=arguments.bgm_fit_samples,
+            max_iter=arguments.bgm_max_iter,
+        )
+
+        one_hot_feature_matrix = expand_pixel_categories_to_one_hot(categorical_feature_matrix)
+        print(
+            "Expanded pixel categories to one-hot binary features: "
+            f"{categorical_feature_matrix.shape[1]} pixels -> {one_hot_feature_matrix.shape[1]} features"
+        )
+
+        cluster_labels = run_tree_decomposition_on_preprocessed_data(
+            one_hot_feature_matrix,
+            distance_metric=clustering_distance_metric,
+            linkage_method=arguments.linkage_method,
+            significance_level=0.05,
+            verbose=True,
+        )
 
     digit_to_category_name = HIGHER_CATEGORY_SCHEMES[arguments.scheme]
     true_higher_category_ids, higher_category_names = encode_higher_categories(
@@ -402,6 +648,12 @@ def main() -> None:
     output_csv_file = output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.csv"
     output_dataframe.to_csv(output_csv_file, index=False)
     output_html_file = output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.html"
+    pixel_summary_file = None
+    if pixel_category_summary_dataframe is not None:
+        pixel_summary_file = (
+            output_directory / f"mnist_pixel_categories_bayesian_gmm_{timestamp}.csv"
+        )
+        pixel_category_summary_dataframe.to_csv(pixel_summary_file, index=False)
 
     print("\n" + "=" * 72)
     print("RESULTS")
@@ -411,6 +663,17 @@ def main() -> None:
     print(f"ARI vs higher categories: {ari_against_higher_categories:.4f}")
     print(f"NMI vs higher categories: {nmi_against_higher_categories:.4f}")
     print(f"Majority-vote higher-category accuracy: {majority_vote_accuracy:.4f}")
+    print(f"distance_metric_used: {clustering_distance_metric}")
+
+    if pixel_category_summary_dataframe is not None:
+        inferred_categories_per_pixel = pixel_category_summary_dataframe["inferred_category_count"]
+        print(
+            "Per-pixel inferred categories (Bayesian GMM): "
+            f"min={int(inferred_categories_per_pixel.min())}, "
+            f"median={float(inferred_categories_per_pixel.median()):.1f}, "
+            f"mean={float(inferred_categories_per_pixel.mean()):.2f}, "
+            f"max={int(inferred_categories_per_pixel.max())}"
+        )
 
     print("\nHigher-category distribution:")
     for category_id, category_name in enumerate(higher_category_names):
@@ -421,6 +684,8 @@ def main() -> None:
     print(confusion_matrix.to_string())
 
     print(f"\nSaved assignments: {output_csv_file}")
+    if pixel_summary_file is not None:
+        print(f"Saved per-pixel category summary: {pixel_summary_file}")
 
     if arguments.with_umap_html:
         create_bokeh_higher_category_plot(

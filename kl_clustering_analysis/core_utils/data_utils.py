@@ -119,12 +119,12 @@ def normalize_bool_series(
     return pd.Series(normalized, index=series.index, dtype=bool, name=series.name)
 
 
-def extract_leaf_counts(nodes_dataframe: pd.DataFrame, node_ids: list[str]) -> np.ndarray:
+def extract_leaf_counts(annotations_df: pd.DataFrame, node_ids: list[str]) -> np.ndarray:
     """Extract leaf counts for specified nodes.
 
     Parameters
     ----------
-    nodes_dataframe
+    annotations_df
         DataFrame with node statistics including 'leaf_count' column
     node_ids
         List of node identifiers
@@ -141,10 +141,10 @@ def extract_leaf_counts(nodes_dataframe: pd.DataFrame, node_ids: list[str]) -> n
     ValueError
         If any nodes have missing leaf counts
     """
-    if "leaf_count" not in nodes_dataframe.columns:
-        raise KeyError("Missing required column 'leaf_count' in nodes dataframe.")
+    if "leaf_count" not in annotations_df.columns:
+        raise KeyError("Missing required column 'leaf_count' in annotations dataframe.")
 
-    leaf_counts = nodes_dataframe["leaf_count"].reindex(node_ids).to_numpy()
+    leaf_counts = annotations_df["leaf_count"].reindex(node_ids).to_numpy()
     if np.isnan(leaf_counts).any():
         missing = [node_ids[i] for i, v in enumerate(leaf_counts) if np.isnan(v)]
         preview = ", ".join(map(repr, missing[:5]))
@@ -232,7 +232,7 @@ def extract_node_sample_size(tree: nx.DiGraph, node_id: str) -> int:
 
 
 def assign_divergence_results(
-    nodes_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     child_ids: list[str],
     p_values: np.ndarray,
     p_values_corrected: np.ndarray,
@@ -240,14 +240,14 @@ def assign_divergence_results(
     degrees_of_freedom: np.ndarray,
     invalid_mask: np.ndarray | None = None,
 ) -> pd.DataFrame:
-    """Assign child-parent divergence test results to the nodes dataframe.
+    """Assign child-parent divergence test results to the annotations dataframe.
 
     Initializes result columns with default values, then assigns the computed
     test results to the appropriate child node rows.
 
     Parameters
     ----------
-    nodes_dataframe
+    annotations_df
         DataFrame to update (modified in place)
     child_ids
         List of child node identifiers
@@ -266,20 +266,20 @@ def assign_divergence_results(
     Returns
     -------
     pd.DataFrame
-        The updated nodes dataframe with divergence columns
+        The updated annotations dataframe with divergence columns
     """
     # Initialize columns with default values
-    nodes_dataframe["Child_Parent_Divergence_P_Value"] = np.nan
-    nodes_dataframe["Child_Parent_Divergence_P_Value_BH"] = np.nan
-    nodes_dataframe["Child_Parent_Divergence_Significant"] = False
-    nodes_dataframe["Child_Parent_Divergence_df"] = np.nan
-    nodes_dataframe["Child_Parent_Divergence_Invalid"] = False
+    annotations_df["Child_Parent_Divergence_P_Value"] = np.nan
+    annotations_df["Child_Parent_Divergence_P_Value_BH"] = np.nan
+    annotations_df["Child_Parent_Divergence_Significant"] = False
+    annotations_df["Child_Parent_Divergence_df"] = np.nan
+    annotations_df["Child_Parent_Divergence_Invalid"] = False
 
     # Assign results to child nodes
-    nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_P_Value"] = p_values
-    nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_P_Value_BH"] = p_values_corrected
-    nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null
-    nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_df"] = degrees_of_freedom
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value"] = p_values
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value_BH"] = p_values_corrected
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_df"] = degrees_of_freedom
     if invalid_mask is not None:
         invalid_array = np.asarray(invalid_mask, dtype=bool)
         if invalid_array.shape[0] != len(child_ids):
@@ -287,15 +287,15 @@ def assign_divergence_results(
                 "invalid_mask must be aligned to child_ids. "
                 f"Got len(invalid_mask)={invalid_array.shape[0]}, len(child_ids)={len(child_ids)}."
             )
-        nodes_dataframe.loc[child_ids, "Child_Parent_Divergence_Invalid"] = invalid_array
+        annotations_df.loc[child_ids, "Child_Parent_Divergence_Invalid"] = invalid_array
 
-    nodes_dataframe["Child_Parent_Divergence_Significant"] = normalize_bool_series(
-        nodes_dataframe["Child_Parent_Divergence_Significant"],
+    annotations_df["Child_Parent_Divergence_Significant"] = normalize_bool_series(
+        annotations_df["Child_Parent_Divergence_Significant"],
         column_name="Child_Parent_Divergence_Significant",
         null_policy="raise",
     )
 
-    return nodes_dataframe
+    return annotations_df
 
 
 def initialize_sibling_divergence_columns(df: pd.DataFrame) -> pd.DataFrame:

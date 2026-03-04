@@ -79,7 +79,7 @@ def _run_single_case_index(case_idx: int) -> list[dict]:
             tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
             result = tree.decompose(
                 leaf_data=data_df,
-                alpha_local=config.ALPHA_LOCAL,
+                alpha_local=config.EDGE_ALPHA,
                 sibling_alpha=config.SIBLING_ALPHA,
             )
             k_found = int(result.get("num_clusters", 1))

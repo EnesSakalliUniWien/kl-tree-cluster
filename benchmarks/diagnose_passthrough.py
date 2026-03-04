@@ -246,7 +246,7 @@ def run_diagnostic_for_case(tc):
         # Run decomposition (this populates stats_df)
         decomp = tree.decompose(
             leaf_data=data_t,
-            alpha_local=config.ALPHA_LOCAL,
+            alpha_local=config.EDGE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
         )
 

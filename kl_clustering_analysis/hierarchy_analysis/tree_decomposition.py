@@ -19,7 +19,7 @@ from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
 from .cluster_assignments import build_sample_cluster_assignments
-from .decomposition.backends.random_projection_backend import resolve_min_k_backend
+from .decomposition.backends.random_projection_backend import resolve_minimum_projection_dimension_backend
 from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
 from .decomposition.gates.pairwise_testing import (
     build_branch_distance_cache,
@@ -60,7 +60,7 @@ class TreeDecomposition:
         tree: PosetTree,
         annotations_df: pd.DataFrame | None = None,
         *,
-        alpha_local: float = config.ALPHA_LOCAL,
+        alpha_local: float = config.EDGE_ALPHA,
         sibling_alpha: float = config.SIBLING_ALPHA,
         posthoc_merge: bool = config.POSTHOC_MERGE,
         posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
@@ -104,12 +104,12 @@ class TreeDecomposition:
         self._spectral_method = spectral_method if leaf_data is not None else None
 
         # --- Resolve adaptive projection floor ---
-        # When config.PROJECTION_MIN_K == "auto", compute the data-driven
+        # When config.PROJECTION_MINIMUM_DIMENSION == "auto", compute the data-driven
         # minimum from the effective rank of the full dataset.  The resolved
         # integer is stored and passed through to all annotation / test calls
         # so that the fixed floor never overrides the data's actual rank.
-        self._resolved_min_k: int = resolve_min_k_backend(
-            config.PROJECTION_MIN_K,
+        self._resolved_minimum_projection_dimension: int = resolve_minimum_projection_dimension_backend(
+            config.PROJECTION_MINIMUM_DIMENSION,
             leaf_data=leaf_data,
         )
 
@@ -125,10 +125,10 @@ class TreeDecomposition:
         self._cache_node_metadata()
 
         # ----- leaf partitions & counts (poset view) -----
-        self._leaf_partition_by_node = self.tree.compute_descendant_sets(use_labels=True)
+        self._descendant_leaf_sets = self.tree.compute_descendant_sets(use_labels=True)
 
         self._leaf_count_cache: Dict[str, int] = {
-            node_id: node_data.get("leaf_count", len(self._leaf_partition_by_node.get(node_id, ())))
+            node_id: node_data.get("leaf_count", len(self._descendant_leaf_sets.get(node_id, ())))
             for node_id, node_data in self._node_attrs_by_id.items()
         }
 
@@ -199,7 +199,7 @@ class TreeDecomposition:
             sibling_different=self._sibling_different,
             sibling_skipped=self._sibling_skipped,
             children_map=self._children,
-            descendant_leaf_sets=self._leaf_partition_by_node,
+            descendant_leaf_sets=self._descendant_leaf_sets,
             has_descendant_split=self._has_descendant_split,
             passthrough=self._passthrough,
         )
@@ -335,7 +335,7 @@ class TreeDecomposition:
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
             spectral_method=self._spectral_method,
-            min_k=self._resolved_min_k,
+            minimum_projection_dimension=self._resolved_minimum_projection_dimension,
             sibling_method=config.SIBLING_TEST_METHOD,
             # Preserve existing decomposition semantics.
             fdr_method="tree_bh",
@@ -383,7 +383,7 @@ class TreeDecomposition:
         set
             Set of leaf labels in the node's partition
         """
-        return set(self._leaf_partition_by_node[node_id])
+        return set(self._descendant_leaf_sets[node_id])
 
     # ---------- LCA ----------
 

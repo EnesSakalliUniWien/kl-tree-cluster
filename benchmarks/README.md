@@ -455,7 +455,7 @@ from benchmarks.shared.generators import generate_gaussian
 from kl_clustering_analysis import config
 
 # Adjust thresholds for sensitivity analysis
-config.SIGNIFICANCE_ALPHA = 0.05
+config.EDGE_ALPHA = 0.05
 ```
 
 ## Latest Results (2026-02-14, 95 cases × 2 methods)
@@ -477,7 +477,7 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
 
 # Adjust config for benchmark runs
-config.SIGNIFICANCE_ALPHA = 0.05
+config.EDGE_ALPHA = 0.05
 config.SIBLING_ALPHA = 0.05
 config.TREE_DISTANCE_METRIC = "hamming"  # or "rogerstanimoto"
 ```

@@ -14,11 +14,10 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 # Print current config
 print(f"SIBLING_TEST_METHOD: {config.SIBLING_TEST_METHOD}")
-print(f"SIGNIFICANCE_ALPHA: {config.SIGNIFICANCE_ALPHA}")
+print(f"EDGE_ALPHA: {config.EDGE_ALPHA}")
 print(f"SIBLING_ALPHA: {config.SIBLING_ALPHA}")
-print(f"ALPHA_LOCAL: {config.ALPHA_LOCAL}")
 print(f"SPECTRAL_METHOD: {config.SPECTRAL_METHOD}")
-print(f"PROJECTION_MIN_K: {config.PROJECTION_MIN_K}")
+print(f"PROJECTION_MINIMUM_DIMENSION: {config.PROJECTION_MINIMUM_DIMENSION}")
 print(f"POSTHOC_MERGE: {config.POSTHOC_MERGE}")
 print(f"FELSENSTEIN_SCALING: {config.FELSENSTEIN_SCALING}")
 print()
@@ -45,7 +44,7 @@ print(f"Tree: {tree.number_of_nodes()} nodes, root={root}")
 # Decompose
 results = tree.decompose(
     leaf_data=data,
-    alpha_local=config.ALPHA_LOCAL,
+    alpha_local=config.EDGE_ALPHA,
     sibling_alpha=config.SIBLING_ALPHA,
 )
 K = results["num_clusters"]

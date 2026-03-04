@@ -143,7 +143,7 @@ def _process_node(
     if dimension_method == "active_features":
         projection_dimension = estimate_k_active_features(
             descendant_feature_matrix,
-            min_k=minimum_projection_dimension,
+            minimum_projection_dimension=minimum_projection_dimension,
         )
         projection_dimension = min(projection_dimension, feature_count)
         return NodeSpectralResult(
@@ -169,7 +169,7 @@ def _process_node(
     if dimension_method == "effective_rank":
         projection_dimension = estimate_k_effective_rank(
             eigendecomposition_result.eigenvalues,
-            min_k=minimum_projection_dimension,
+            minimum_projection_dimension=minimum_projection_dimension,
             d_active=eigendecomposition_result.d_active,
         )
     else:  # marchenko_pastur
@@ -177,7 +177,7 @@ def _process_node(
             eigendecomposition_result.eigenvalues,
             n_desc=descendant_feature_matrix.shape[0],
             d_active=eigendecomposition_result.d_active,
-            min_k=minimum_projection_dimension,
+            minimum_projection_dimension=minimum_projection_dimension,
         )
 
     projection_matrix, pca_eigenvalues = None, None
@@ -259,13 +259,13 @@ def _run_spectral_tasks_parallel(
 def _aggregate_spectral_results(
     spectral_results: list[NodeSpectralResult],
     *,
-    spectral_dimensions: dict[str, int],
+    spectral_dims: dict[str, int],
     pca_projections: dict[str, np.ndarray],
     pca_eigenvalues: dict[str, np.ndarray],
 ) -> None:
     """Write per-node worker outputs into decomposition result dicts."""
     for node_result in spectral_results:
-        spectral_dimensions[node_result.node_id] = node_result.projection_dimension
+        spectral_dims[node_result.node_id] = node_result.projection_dimension
         if node_result.projection_matrix is not None and node_result.eigenvalues is not None:
             pca_projections[node_result.node_id] = node_result.projection_matrix
             pca_eigenvalues[node_result.node_id] = node_result.eigenvalues
@@ -281,7 +281,7 @@ def compute_node_spectral_dimensions(
     leaf_data: pd.DataFrame,
     *,
     method: str = "effective_rank",
-    min_k: int = 1,
+    minimum_projection_dimension: int = 1,
 ) -> Dict[str, int]:
     """Compute per-node projection dimension via eigendecomposition.
 
@@ -289,14 +289,14 @@ def compute_node_spectral_dimensions(
     only the dimension dict. Use ``compute_spectral_decomposition`` directly
     if you also need PCA projections (avoids a redundant eigendecomposition).
     """
-    spectral_dimensions, _, _ = compute_spectral_decomposition(
+    spectral_dims, _, _ = compute_spectral_decomposition(
         tree,
         leaf_data,
         method=method,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         compute_projections=False,
     )
-    return spectral_dimensions
+    return spectral_dims
 
 
 def compute_node_pca_projections(
@@ -313,7 +313,7 @@ def compute_node_pca_projections(
         tree,
         leaf_data,
         method="effective_rank",
-        min_k=1,
+        minimum_projection_dimension=1,
         compute_projections=True,
     )
     return pca_projections
@@ -324,7 +324,7 @@ def compute_spectral_decomposition(
     leaf_data: pd.DataFrame,
     *,
     method: str = "effective_rank",
-    min_k: int = 1,
+    minimum_projection_dimension: int = 1,
     compute_projections: bool = True,
     include_internal: bool | None = None,
 ) -> Tuple[Dict[str, int], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
@@ -351,7 +351,7 @@ def compute_spectral_decomposition(
     method
         Dimension estimator: ``"effective_rank"`` (default),
         ``"marchenko_pastur"``, or ``"active_features"``.
-    min_k
+    minimum_projection_dimension
         Floor on the returned dimension.
     compute_projections
         If True, also returns PCA projection matrices (k_v × d) and
@@ -397,7 +397,7 @@ def compute_spectral_decomposition(
         "marchenko_pastur",
     )
 
-    spectral_dimensions: Dict[str, int] = {}
+    spectral_dims: Dict[str, int] = {}
     pca_projections: Dict[str, np.ndarray] = {}
     pca_eigenvalues: Dict[str, np.ndarray] = {}
 
@@ -405,7 +405,7 @@ def compute_spectral_decomposition(
     internal_node_ids: list[str] = []
     for node_id in tree.nodes:
         if is_leaf(tree, node_id):
-            spectral_dimensions[node_id] = 0
+            spectral_dims[node_id] = 0
         else:
             internal_node_ids.append(node_id)
 
@@ -425,13 +425,13 @@ def compute_spectral_decomposition(
         spectral_tasks,
         leaf_feature_matrix,
         dimension_method=method,
-        minimum_projection_dimension=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         feature_count=feature_count,
         compute_eigendecomposition_outputs=compute_eigendecomposition_outputs,
     )
     _aggregate_spectral_results(
         spectral_results,
-        spectral_dimensions=spectral_dimensions,
+        spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
     )
@@ -441,7 +441,7 @@ def compute_spectral_decomposition(
     # Log summary statistics
     internal_projection_dimensions = [
         projection_dimension
-        for node_id, projection_dimension in spectral_dimensions.items()
+        for node_id, projection_dimension in spectral_dims.items()
         if not is_leaf(tree, node_id)
     ]
     if internal_projection_dimensions:
@@ -465,7 +465,7 @@ def compute_spectral_decomposition(
             elapsed,
         )
 
-    return spectral_dimensions, pca_projections, pca_eigenvalues
+    return spectral_dims, pca_projections, pca_eigenvalues
 
 
 __all__ = [

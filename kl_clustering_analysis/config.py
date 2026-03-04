@@ -6,18 +6,15 @@ from typing import Literal
 
 # --- Statistical Parameters ---
 
-# Default significance level (alpha) for hypothesis tests.
-SIGNIFICANCE_ALPHA: float = 0.01
-
 # Default significance level (alpha) for sibling-divergence gating in clustering.
-# This is intentionally more conservative than SIGNIFICANCE_ALPHA to reduce
-# over-merging at high levels of the tree.
-SIBLING_ALPHA: float = 0.01
+# This is intentionally conservative to reduce over-merging at high levels
+# of the tree.
+SIBLING_ALPHA: float = 0.001
 
 # --- Decomposition Parameters ---
 
-# Default significance level for local (child-vs-parent) tests in decomposition.
-ALPHA_LOCAL: float = 0.01
+# Default significance level for Gate 2 edge (child-vs-parent) tests.
+EDGE_ALPHA: float = 0.01
 
 
 # Epsilon value for numerical stability in KL-divergence and probability calculations.
@@ -85,10 +82,10 @@ PROJECTION_EPS: float = 0.3
 # Set to an integer for a fixed floor, or "auto" to estimate from the data's
 # effective rank (Shannon entropy of eigenvalue spectrum).  When "auto", the
 # floor is computed once per pipeline run as:
-#   min_k = max(2, min(ceil(effective_rank(full_data)), 20))
+#   minimum_projection_dimension = max(2, min(ceil(effective_rank(full_data)), 20))
 # This prevents adding pure-noise χ² components when the data has low
 # intrinsic dimensionality, and avoids under-projecting high-rank data.
-PROJECTION_MIN_K: int | str = "auto"
+PROJECTION_MINIMUM_DIMENSION: int | str = "auto"
 
 
 # Random seed for projection reproducibility (None for random)
@@ -106,13 +103,13 @@ PROJECTION_RANDOM_SEED: int | None = 42
 SPECTRAL_METHOD: str | None = "effective_rank"
 
 # Minimum projection dimension for the SPECTRAL (Gate 2) path only.
-# Unlike PROJECTION_MIN_K (the global JL floor), this is a small safety
+# Unlike PROJECTION_MINIMUM_DIMENSION (the global JL floor), this is a small safety
 # floor to avoid pathological χ²(1) tests.  The per-node effective rank
 # from eigendecomposition IS the signal dimensionality — a high floor
 # inflates df with noise-only χ² components and destroys test power.
 # Set to 2 (not 1) because χ²(1) has a singularity at 0 that can cause
 # numerical instability.  This value should rarely need changing.
-SPECTRAL_MIN_K: int = 2
+SPECTRAL_MINIMUM_DIMENSION: int = 2
 
 # Include internal-node distribution vectors in the spectral data matrix.
 # Internal distributions are convex combinations of leaf data — they do NOT

@@ -129,10 +129,10 @@ class TestComputeProjectedPvalue:
 
 
 class TestSpectralKFloor:
-    """Verify the spectral path uses its own small floor (SPECTRAL_MIN_K)."""
+    """Verify the spectral path uses its own small floor (SPECTRAL_MINIMUM_DIMENSION)."""
 
-    def test_spectral_min_k_decoupled_from_global(self):
-        """The spectral path should use config.SPECTRAL_MIN_K, not the global JL min_k."""
+    def test_spectral_minimum_projection_dimension_decoupled_from_global(self):
+        """The spectral path should use config.SPECTRAL_MINIMUM_DIMENSION, not the global JL minimum_projection_dimension."""
         import inspect
 
         from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
@@ -140,21 +140,21 @@ class TestSpectralKFloor:
         )
 
         source = inspect.getsource(annotate_child_parent_divergence)
-        # The spectral path reads SPECTRAL_MIN_K from config instead of
-        # forwarding the global JL-derived min_k.
-        assert "SPECTRAL_MIN_K" in source
-        # The old pattern that forwarded the global min_k should be gone.
-        assert "min_k if isinstance(min_k, int) else 4" not in source
-        assert "min_k if isinstance(min_k, int) else 1" not in source
+        # The spectral path reads SPECTRAL_MINIMUM_DIMENSION from config instead of
+        # forwarding the global JL-derived minimum_projection_dimension.
+        assert "SPECTRAL_MINIMUM_DIMENSION" in source
+        # The old pattern that forwarded the global minimum_projection_dimension should be gone.
+        assert "minimum_projection_dimension if isinstance(minimum_projection_dimension, int) else 4" not in source
+        assert "minimum_projection_dimension if isinstance(minimum_projection_dimension, int) else 1" not in source
 
-    def test_spectral_min_k_config_exists(self):
-        """config.SPECTRAL_MIN_K must exist and be a small integer."""
+    def test_spectral_minimum_projection_dimension_config_exists(self):
+        """config.SPECTRAL_MINIMUM_DIMENSION must exist and be a small integer."""
         from kl_clustering_analysis import config
 
-        assert hasattr(config, "SPECTRAL_MIN_K")
-        assert isinstance(config.SPECTRAL_MIN_K, int)
-        assert config.SPECTRAL_MIN_K >= 1
-        assert config.SPECTRAL_MIN_K <= 4  # must be small — the whole point
+        assert hasattr(config, "SPECTRAL_MINIMUM_DIMENSION")
+        assert isinstance(config.SPECTRAL_MINIMUM_DIMENSION, int)
+        assert config.SPECTRAL_MINIMUM_DIMENSION >= 1
+        assert config.SPECTRAL_MINIMUM_DIMENSION <= 4  # must be small — the whole point
 
 
 # =============================================================================

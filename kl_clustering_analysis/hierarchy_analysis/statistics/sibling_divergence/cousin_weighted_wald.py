@@ -481,12 +481,12 @@ def _fit_weighted_inflation_model(
 def predict_weighted_inflation_factor(
     model: WeightedCalibrationModel,
     branch_length_sum: float = 0.0,
-    n_parent: int = 0,
+    n_reference: int = 0,
 ) -> float:
     """Predict inflation factor ĉ for a pair.
 
     With intercept-only model, ĉ = exp(β₀) — a single global constant
-    (the weighted mean of T/k).  branch_length_sum and n_parent are retained in
+    (the weighted mean of T/k).  branch_length_sum and n_reference are retained in
     the signature for API compatibility but are not used.
 
     Clamped to [1.0, max_observed_ratio] to prevent overestimation.
@@ -515,7 +515,7 @@ def _collect_weighted_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -528,7 +528,7 @@ def _collect_weighted_pairs(
         tree,
         annotations_df,
         mean_branch_length,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
@@ -579,7 +579,9 @@ def _deflate_and_test(
     """Deflate focal pairs and compute adjusted p-values."""
     def _resolve_calibration(rec: _WeightedRecord) -> tuple[float, str]:
         inflation_factor = predict_weighted_inflation_factor(
-            model, rec.branch_length_sum, rec.n_parent
+            model,
+            rec.branch_length_sum,
+            n_reference=rec.n_parent,
         )
         return inflation_factor, f"weighted_{model.method}"
 
@@ -620,7 +622,7 @@ def annotate_sibling_divergence_weighted(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -655,7 +657,7 @@ def annotate_sibling_divergence_weighted(
         tree,
         annotations_df,
         mean_branch_length,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,

@@ -24,7 +24,7 @@ def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
     tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
     decomposition = tree.decompose(
         leaf_data=data_df,
-        alpha_local=config.ALPHA_LOCAL,
+        alpha_local=config.EDGE_ALPHA,
         sibling_alpha=significance_level,
         **kwargs,
     )

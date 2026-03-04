@@ -69,7 +69,7 @@ def test_compute_gate_annotations_legacy_shim_warns_and_runs(monkeypatch) -> Non
             alpha_local=0.01,
             sibling_alpha=0.01,
             spectral_method=None,
-            min_k=4,
+            minimum_projection_dimension=4,
         )
 
     assert "Child_Parent_Divergence_Significant" in out.columns
@@ -91,7 +91,7 @@ def test_legacy_gate_shim_wrappers_warn_and_return_dataframes(monkeypatch) -> No
             base_df.copy(),
             significance_level_alpha=0.01,
             spectral_method=None,
-            min_k=4,
+            minimum_projection_dimension=4,
         )
     assert isinstance(edge_df, pd.DataFrame)
     assert "Child_Parent_Divergence_Significant" in edge_df.columns

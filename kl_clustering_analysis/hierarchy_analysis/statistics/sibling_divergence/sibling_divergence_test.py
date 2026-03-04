@@ -51,7 +51,7 @@ def sibling_divergence_test(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
 ) -> Tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence.
 
@@ -155,7 +155,7 @@ def sibling_divergence_test(
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalues,
-            k_fallback=lambda dim: compute_projection_dimension(n_total, dim, min_k=min_k),
+            k_fallback=lambda dim: compute_projection_dimension(n_total, dim, minimum_projection_dimension=minimum_projection_dimension),
         )
     except Exception as e:
         logging.error(
@@ -272,7 +272,7 @@ def _run_tests(
         Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]
     ],
     mean_branch_length: float | None = None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> List[Tuple[float, float, float]]:
@@ -299,8 +299,8 @@ def _run_tests(
             "spectral_k": _spectral_k,
             "pca_projection": _pca_proj,
         }
-        if min_k is not None:
-            sibling_test_kwargs["min_k"] = min_k
+        if minimum_projection_dimension is not None:
+            sibling_test_kwargs["minimum_projection_dimension"] = minimum_projection_dimension
         results.append(
             sibling_divergence_test(
                 left,
@@ -348,7 +348,7 @@ def annotate_sibling_divergence(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
@@ -404,7 +404,7 @@ def annotate_sibling_divergence(
         parents,
         sibling_test_arguments,
         mean_branch_length=mean_branch_length,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )

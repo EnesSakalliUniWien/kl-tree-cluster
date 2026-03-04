@@ -36,7 +36,7 @@ def _process_sibling_node(
     right_idx: List[int],
     X: np.ndarray,
     method: str,
-    min_k: int,
+    minimum_projection_dimension: int,
 ) -> Tuple[str, int | None]:
     """Compute pooled within-cluster spectral dim for one sibling pair."""
     left_rows = X[left_idx, :]
@@ -57,7 +57,7 @@ def _process_sibling_node(
             method,
             pooled_resid.shape[0],
             eig.d_active,
-            min_k,
+            minimum_projection_dimension,
         )
     return (node_id, k)
 
@@ -72,7 +72,7 @@ def compute_sibling_spectral_dimensions(
     leaf_data: pd.DataFrame,
     *,
     method: str = "effective_rank",
-    min_k: int = 1,
+    minimum_projection_dimension: int = 1,
 ) -> Dict[str, int]:
     """Compute pooled within-cluster effective rank for each binary parent.
 
@@ -102,7 +102,7 @@ def compute_sibling_spectral_dimensions(
         DataFrame with leaf labels as index and features as columns.
     method
         Dimension estimator (``"effective_rank"`` recommended).
-    min_k
+    minimum_projection_dimension
         Floor on the returned dimension.
 
     Returns
@@ -125,7 +125,7 @@ def compute_sibling_spectral_dimensions(
         tree,
         leaf_data,
         method=method,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         compute_projections=False,
     )
 
@@ -140,7 +140,7 @@ def compute_sibling_spectral_dimensions(
 
         children = list(tree.successors(node_id))
         if len(children) != 2:
-            sibling_dims[node_id] = parent_dims.get(node_id, max(min_k, 1))
+            sibling_dims[node_id] = parent_dims.get(node_id, max(minimum_projection_dimension, 1))
             continue
 
         left, right = children[0], children[1]
@@ -148,20 +148,20 @@ def compute_sibling_spectral_dimensions(
         right_idx = desc_indices.get(right, [])
 
         if len(left_idx) < 2 or len(right_idx) < 2:
-            sibling_dims[node_id] = parent_dims.get(node_id, max(min_k, 1))
+            sibling_dims[node_id] = parent_dims.get(node_id, max(minimum_projection_dimension, 1))
             continue
 
         eligible_nodes.append((node_id, left_idx, right_idx))
 
     n_jobs = _get_n_jobs(len(eligible_nodes))
     results = Parallel(n_jobs=n_jobs, prefer="threads")(
-        delayed(_process_sibling_node)(nid, li, ri, X, method, min_k)
+        delayed(_process_sibling_node)(nid, li, ri, X, method, minimum_projection_dimension)
         for nid, li, ri in eligible_nodes
     )
 
     for node_id, k in results:
         if k is None:
-            sibling_dims[node_id] = parent_dims.get(node_id, max(min_k, 1))
+            sibling_dims[node_id] = parent_dims.get(node_id, max(minimum_projection_dimension, 1))
         else:
             sibling_dims[node_id] = k
 

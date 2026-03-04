@@ -18,10 +18,10 @@ def annotate_edge_gate(
     tree,
     annotations_df: pd.DataFrame,
     *,
-    significance_level_alpha: float = config.ALPHA_LOCAL,
+    significance_level_alpha: float = config.EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     fdr_method: str = "tree_bh",
 ) -> GateAnnotationBundle:
     """Run Gate 2 (edge divergence) and return typed legacy-compatible output."""
@@ -32,7 +32,7 @@ def annotate_edge_gate(
         fdr_method=fdr_method,
         leaf_data=leaf_data,
         spectral_method=spectral_method,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
     )
     edge_columns = validate_legacy_edge_columns(annotated_df)
     sibling_columns = sibling_gate_columns(annotated_df)
@@ -45,7 +45,7 @@ def annotate_edge_gate(
             "alpha": float(significance_level_alpha),
             "fdr_method": str(fdr_method),
             "spectral_method": spectral_method,
-            "min_k": min_k,
+            "minimum_projection_dimension": minimum_projection_dimension,
             "column_names": {
                 "edge": list(edge_columns),
                 "sibling": list(sibling_columns),

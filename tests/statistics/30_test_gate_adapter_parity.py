@@ -59,7 +59,7 @@ def test_gate_adapter_pipeline_matches_legacy_annotations(monkeypatch, sibling_m
         alpha_local=0.01,
         sibling_alpha=0.01,
         spectral_method=None,
-        min_k=4,
+        minimum_projection_dimension=4,
     )
     bundle = run_gate_annotation_pipeline(
         tree,
@@ -67,7 +67,7 @@ def test_gate_adapter_pipeline_matches_legacy_annotations(monkeypatch, sibling_m
         alpha_local=0.01,
         sibling_alpha=0.01,
         spectral_method=None,
-        min_k=4,
+        minimum_projection_dimension=4,
         sibling_method=sibling_method,
         edge_calibration=False,
     )
@@ -124,7 +124,7 @@ def test_compute_gate_annotations_delegates_to_orchestrator(monkeypatch) -> None
         sibling_alpha=0.03,
         leaf_data=None,
         spectral_method="effective_rank",
-        min_k=7,
+        minimum_projection_dimension=7,
     )
 
     assert out is sentinel_df
@@ -134,7 +134,7 @@ def test_compute_gate_annotations_delegates_to_orchestrator(monkeypatch) -> None
         "sibling_alpha": 0.03,
         "leaf_data": None,
         "spectral_method": "effective_rank",
-        "min_k": 7,
+        "minimum_projection_dimension": 7,
         "sibling_method": "cousin_tree_guided",
         "fdr_method": "tree_bh",
         "sibling_spectral_dims": None,

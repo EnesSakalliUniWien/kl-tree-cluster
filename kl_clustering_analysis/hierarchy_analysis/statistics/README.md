@@ -73,7 +73,7 @@ JL-lemma random projection for dimension reduction.
 
 | Function                                     | What it does                                                                                                                          |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `compute_projection_dimension(n, d, eps)`    | Target dimension k from JL lemma: `k ≈ 8·ln(n)/ε²`, floored at `min_k`, capped at `d`.                                                |
+| `compute_projection_dimension(n, d, eps)`    | Target dimension k from JL lemma: `k ≈ 8·ln(n)/ε²`, floored at `minimum_projection_dimension`, capped at `d`.                                                |
 | `generate_projection_matrix(d, k, seed)`     | Orthonormal R via QR decomposition of Gaussian matrix. Guarantees `R·Rᵀ = I_k` so `‖R·z‖² ~ χ²(k)` exactly. Cached by `(d, k, seed)`. |
 | `derive_projection_seed(base_seed, test_id)` | Deterministic per-test seed via BLAKE2b hash of `"{base_seed}                                                                         | {test_id}"`. |
 

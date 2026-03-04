@@ -84,7 +84,7 @@ def test_pipeline_supports_current_config_method_combinations(
         sibling_alpha=0.01,
         leaf_data=leaf_data if needs_leaf_data else None,
         spectral_method=spectral_method,
-        min_k=4,
+        minimum_projection_dimension=4,
         sibling_method=sibling_method,
         edge_calibration=False,
     )

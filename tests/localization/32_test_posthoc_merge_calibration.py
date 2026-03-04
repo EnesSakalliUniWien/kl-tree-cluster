@@ -41,18 +41,18 @@ class TestCalibrationModel:
     def test_predict_no_calibration_returns_1(self) -> None:
         """Method 'none' should return 1.0 (no deflation)."""
         model = CalibrationModel(method="none", n_calibration=0, global_inflation_factor=1.0)
-        assert predict_inflation_factor(model, branch_length_sum=0.5, n_parent=100) == 1.0
+        assert predict_inflation_factor(model, branch_length_sum=0.5, n_reference=100) == 1.0
 
     def test_predict_median_returns_global_inflation_factor(self) -> None:
         """Method 'median' should return global_inflation_factor (clamped ≥ 1)."""
         model = CalibrationModel(method="median", n_calibration=5, global_inflation_factor=1.8)
-        c = predict_inflation_factor(model, branch_length_sum=0.5, n_parent=100)
+        c = predict_inflation_factor(model, branch_length_sum=0.5, n_reference=100)
         assert c == pytest.approx(1.8)
 
     def test_predict_median_clamps_below_1(self) -> None:
         """Inflation factor must be ≥ 1 (never deflate below raw)."""
         model = CalibrationModel(method="median", n_calibration=5, global_inflation_factor=0.5)
-        c = predict_inflation_factor(model, branch_length_sum=0.5, n_parent=100)
+        c = predict_inflation_factor(model, branch_length_sum=0.5, n_reference=100)
         assert c >= 1.0
 
     def test_predict_regression_clamps_at_max_observed(self) -> None:
@@ -65,8 +65,8 @@ class TestCalibrationModel:
             max_observed_ratio=2.0,
             beta=beta,
         )
-        # Large n_parent should extrapolate but be clamped
-        c = predict_inflation_factor(model, branch_length_sum=0.1, n_parent=10000)
+        # Large reference sample size should extrapolate but be clamped
+        c = predict_inflation_factor(model, branch_length_sum=0.1, n_reference=10000)
         assert c <= 2.0
 
     def test_predict_regression_positive(self) -> None:
@@ -79,7 +79,7 @@ class TestCalibrationModel:
             max_observed_ratio=3.0,
             beta=beta,
         )
-        c = predict_inflation_factor(model, branch_length_sum=0.5, n_parent=50)
+        c = predict_inflation_factor(model, branch_length_sum=0.5, n_reference=50)
         assert c >= 1.0
         assert np.isfinite(c)
 

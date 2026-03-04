@@ -38,11 +38,11 @@ def compute_gate_annotations(
     tree: "PosetTree",
     annotations_df: pd.DataFrame,
     *,
-    alpha_local: float = config.ALPHA_LOCAL,
+    alpha_local: float = config.EDGE_ALPHA,
     sibling_alpha: float = config.SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
 ) -> pd.DataFrame:
     """Deprecated compatibility entrypoint for full gate annotation flow."""
     _warn_legacy_entrypoint_once(
@@ -56,7 +56,7 @@ def compute_gate_annotations(
         sibling_alpha=sibling_alpha,
         leaf_data=leaf_data,
         spectral_method=spectral_method,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         sibling_method=config.SIBLING_TEST_METHOD,
         # Preserve legacy Gate 2 correction default.
         fdr_method="tree_bh",
@@ -74,10 +74,10 @@ def annotate_edge_gate(
     tree: "PosetTree",
     annotations_df: pd.DataFrame,
     *,
-    significance_level_alpha: float = config.ALPHA_LOCAL,
+    significance_level_alpha: float = config.EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     fdr_method: str = "tree_bh",
 ) -> pd.DataFrame:
     """Deprecated compatibility shim for edge-gate annotation imports."""
@@ -91,7 +91,7 @@ def annotate_edge_gate(
         significance_level_alpha=significance_level_alpha,
         leaf_data=leaf_data,
         spectral_method=spectral_method,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         fdr_method=fdr_method,
     ).annotated_df
 
@@ -102,7 +102,7 @@ def annotate_sibling_gate(
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     sibling_method: str = config.SIBLING_TEST_METHOD,
-    min_k: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, object] | None = None,
     pca_eigenvalues: dict[str, object] | None = None,
@@ -117,7 +117,7 @@ def annotate_sibling_gate(
         annotations_df,
         significance_level_alpha=significance_level_alpha,
         sibling_method=sibling_method,
-        min_k=min_k,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
