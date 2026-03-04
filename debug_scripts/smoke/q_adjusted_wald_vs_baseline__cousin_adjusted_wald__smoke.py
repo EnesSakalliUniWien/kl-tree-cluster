@@ -119,7 +119,7 @@ def run_case(name, data, true_labels, method):
 
 def _print_row(name, true_k, k_w, ari_w, k_a, ari_a, audit):
     cal_method = audit.get("calibration_method", "?")
-    c_hat = audit.get("global_c_hat", float("nan"))
+    c_hat = audit.get("global_inflation_factor", float("nan"))
     n_cal = audit.get("calibration_n", 0)
 
     ari_w_s = f"{ari_w:.3f}"

@@ -79,7 +79,7 @@ for case in cases:
     print(f"  wald K={decomp_w['num_clusters']}, adj_wald K={decomp['num_clusters']}")
     print(f"  Pairs: {len(records)} total, {n_null} null-like, {n_focal} focal")
     print(
-        f"  Calib: method={model.method}, n={model.n_calibration}, median_c={model.global_c_hat:.3f}"
+        f"  Calib: method={model.method}, n={model.n_calibration}, median_c={model.global_inflation_factor:.3f}"
     )
     if model.beta is not None:
         print(
@@ -98,7 +98,7 @@ for case in cases:
             p_raw = float(chi2.sf(rec.stat, df=rec.df))
             p_adj = float(chi2.sf(t_adj, df=rec.df))
             # Simulated fixes
-            c_cap = min(c_hat, model.global_c_hat * 3) if model.beta is not None else c_hat
+            c_cap = min(c_hat, model.global_inflation_factor * 3) if model.beta is not None else c_hat
             c_cap = max(c_cap, 1.0)
             c_noB2 = 1.0
             if model.beta is not None and rec.bl_sum > 0:

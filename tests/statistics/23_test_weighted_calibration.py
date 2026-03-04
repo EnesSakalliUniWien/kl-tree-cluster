@@ -35,23 +35,23 @@ class TestWeightedCalibrationModel:
 
     def test_predict_no_calibration_returns_1(self) -> None:
         """Method 'none' should return 1.0 (no deflation)."""
-        model = WeightedCalibrationModel(method="none", n_calibration=0, global_c_hat=1.0)
-        assert predict_weighted_inflation_factor(model, bl_sum=0.5, n_parent=100) == 1.0
+        model = WeightedCalibrationModel(method="none", n_calibration=0, global_inflation_factor=1.0)
+        assert predict_weighted_inflation_factor(model, branch_length_sum=0.5, n_parent=100) == 1.0
 
-    def test_predict_weighted_median_returns_global_c_hat(self) -> None:
-        """Method 'weighted_median' should return global_c_hat (clamped >= 1)."""
+    def test_predict_weighted_median_returns_global_inflation_factor(self) -> None:
+        """Method 'weighted_median' should return global_inflation_factor (clamped >= 1)."""
         model = WeightedCalibrationModel(
-            method="weighted_median", n_calibration=5, global_c_hat=1.8
+            method="weighted_median", n_calibration=5, global_inflation_factor=1.8
         )
-        c = predict_weighted_inflation_factor(model, bl_sum=0.5, n_parent=100)
+        c = predict_weighted_inflation_factor(model, branch_length_sum=0.5, n_parent=100)
         assert c == pytest.approx(1.8)
 
     def test_predict_weighted_median_clamps_below_1(self) -> None:
         """Inflation factor must be >= 1 (never deflate below raw)."""
         model = WeightedCalibrationModel(
-            method="weighted_median", n_calibration=5, global_c_hat=0.5
+            method="weighted_median", n_calibration=5, global_inflation_factor=0.5
         )
-        c = predict_weighted_inflation_factor(model, bl_sum=0.5, n_parent=100)
+        c = predict_weighted_inflation_factor(model, branch_length_sum=0.5, n_parent=100)
         assert c >= 1.0
 
     def test_predict_gamma_glm_clamps_at_max_observed(self) -> None:
@@ -60,11 +60,11 @@ class TestWeightedCalibrationModel:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             max_observed_ratio=2.0,
             beta=beta,
         )
-        c = predict_weighted_inflation_factor(model, bl_sum=1.0, n_parent=10000)
+        c = predict_weighted_inflation_factor(model, branch_length_sum=1.0, n_parent=10000)
         assert c <= 2.0
 
     def test_predict_regression_clamps_at_max_observed(self) -> None:
@@ -73,11 +73,11 @@ class TestWeightedCalibrationModel:
         model = WeightedCalibrationModel(
             method="weighted_regression",
             n_calibration=10,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             max_observed_ratio=2.0,
             beta=beta,
         )
-        c = predict_weighted_inflation_factor(model, bl_sum=1.0, n_parent=10000)
+        c = predict_weighted_inflation_factor(model, branch_length_sum=1.0, n_parent=10000)
         assert c <= 2.0
 
     def test_predict_always_positive(self) -> None:
@@ -86,22 +86,22 @@ class TestWeightedCalibrationModel:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=0.5,
+            global_inflation_factor=0.5,
             max_observed_ratio=3.0,
             beta=beta,
         )
-        c = predict_weighted_inflation_factor(model, bl_sum=1.0, n_parent=10)
+        c = predict_weighted_inflation_factor(model, branch_length_sum=1.0, n_parent=10)
         assert c >= 1.0
 
-    def test_predict_no_beta_returns_global_c_hat(self) -> None:
-        """If beta is None in regression/glm method, fall back to global_c_hat."""
+    def test_predict_no_beta_returns_global_inflation_factor(self) -> None:
+        """If beta is None in regression/glm method, fall back to global_inflation_factor."""
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=1.7,
+            global_inflation_factor=1.7,
             beta=None,
         )
-        c = predict_weighted_inflation_factor(model, bl_sum=0.5, n_parent=100)
+        c = predict_weighted_inflation_factor(model, branch_length_sum=0.5, n_parent=100)
         assert c == pytest.approx(1.7)
 
     def test_predict_intercept_only_ignores_bl(self) -> None:
@@ -109,11 +109,11 @@ class TestWeightedCalibrationModel:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             max_observed_ratio=5.0,
             beta=np.array([0.5]),  # intercept-only: ĉ = exp(0.5) ≈ 1.649
         )
-        c = predict_weighted_inflation_factor(model, bl_sum=0.0, n_parent=100)
+        c = predict_weighted_inflation_factor(model, branch_length_sum=0.0, n_parent=100)
         assert c == pytest.approx(np.exp(0.5), rel=1e-3)
 
 
@@ -162,8 +162,8 @@ class TestMaxObservedRatioFix:
             right="R",
             stat=stat,
             degrees_of_freedom=degrees_of_freedom,
-            pval=0.5,
-            bl_sum=bl_sum,
+            p_value=0.5,
+            branch_length_sum=bl_sum,
             n_parent=n_parent,
             weight=weight,
             is_null_like=is_null_like,
@@ -228,8 +228,8 @@ class TestGammaGLMFitting:
                     right=f"R{i}",
                     stat=stat,
                     degrees_of_freedom=k,
-                    pval=0.5,
-                    bl_sum=bl,
+                    p_value=0.5,
+                    branch_length_sum=bl,
                     n_parent=int(n_par),
                     weight=weight,
                     is_null_like=(i % 3 == 0),  # some null-like
@@ -290,7 +290,7 @@ class TestGammaGLMFitting:
         records = self._make_records(n=30, seed=123)
         model = _fit_weighted_inflation_model(records)
         # True c ≈ 1.5; global c_hat should be in [0.5, 4.0]
-        assert 0.5 < model.global_c_hat < 4.0
+        assert 0.5 < model.global_inflation_factor < 4.0
 
     def test_max_observed_from_null_like_only(self) -> None:
         """max_observed_ratio comes from null-like subset."""
@@ -342,7 +342,7 @@ class TestModelStorage:
         model = result.attrs["_calibration_model"]
         assert hasattr(model, "method")
         assert hasattr(model, "n_calibration")
-        assert hasattr(model, "global_c_hat")
+        assert hasattr(model, "global_inflation_factor")
         assert hasattr(model, "max_observed_ratio")
         assert hasattr(model, "beta")
 
@@ -369,7 +369,7 @@ class TestPosthocMergeDeflationDispatch:
         model = WeightedCalibrationModel(
             method="weighted_median",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
         )
         df.attrs["_calibration_model"] = model

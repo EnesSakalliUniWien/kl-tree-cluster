@@ -75,7 +75,7 @@ class CalibrationModel:
 
     method: str  # "regression", "median", "none"
     n_calibration: int  # number of null-like pairs used
-    global_c_hat: float  # median(r_i) across null-like pairs (always computed)
+    global_inflation_factor: float  # median(r_i) across null-like pairs (always computed)
     max_observed_ratio: float = 1.0  # max(r_i) — upper bound for ĉ predictions
     beta: Optional[np.ndarray] = None  # [β₀, β₁, β₂] for regression
     diagnostics: Dict = field(default_factory=dict)
@@ -114,7 +114,7 @@ def _build_null_like_calibration_inputs(
     ratio_values = np.array(
         [record.stat / record.degrees_of_freedom for record in null_like_records]
     )
-    branch_length_sum_values = np.array([record.bl_sum for record in null_like_records])
+    branch_length_sum_values = np.array([record.branch_length_sum for record in null_like_records])
     parent_sample_size_values = np.array([record.n_parent for record in null_like_records])
 
     valid_mask = (
@@ -193,7 +193,7 @@ def _fit_inflation_model(
             "no calibration possible; raw Wald stats will be used."
         )
         return CalibrationModel(
-            method="none", n_calibration=0, global_c_hat=1.0, max_observed_ratio=1.0
+            method="none", n_calibration=0, global_inflation_factor=1.0, max_observed_ratio=1.0
         )
 
     calibration_inputs = _build_null_like_calibration_inputs(null_like_records)
@@ -208,7 +208,7 @@ def _fit_inflation_model(
         return CalibrationModel(
             method="none",
             n_calibration=calibration_inputs.calibration_pair_count,
-            global_c_hat=calibration_inputs.median_ratio,
+            global_inflation_factor=calibration_inputs.median_ratio,
             max_observed_ratio=calibration_inputs.max_observed_ratio,
         )
 
@@ -223,7 +223,7 @@ def _fit_inflation_model(
         return CalibrationModel(
             method="median",
             n_calibration=calibration_inputs.calibration_pair_count,
-            global_c_hat=calibration_inputs.median_ratio,
+            global_inflation_factor=calibration_inputs.median_ratio,
             max_observed_ratio=calibration_inputs.max_observed_ratio,
         )
 
@@ -238,7 +238,7 @@ def _fit_inflation_model(
         return CalibrationModel(
             method="median",
             n_calibration=calibration_inputs.calibration_pair_count,
-            global_c_hat=calibration_inputs.median_ratio,
+            global_inflation_factor=calibration_inputs.median_ratio,
         )
 
     diagnostics = {
@@ -259,7 +259,7 @@ def _fit_inflation_model(
         return CalibrationModel(
             method="median",
             n_calibration=calibration_inputs.calibration_pair_count,
-            global_c_hat=calibration_inputs.median_ratio,
+            global_inflation_factor=calibration_inputs.median_ratio,
             max_observed_ratio=calibration_inputs.max_observed_ratio,
             diagnostics=diagnostics,
         )
@@ -277,7 +277,7 @@ def _fit_inflation_model(
     return CalibrationModel(
         method="regression",
         n_calibration=calibration_inputs.calibration_pair_count,
-        global_c_hat=calibration_inputs.median_ratio,
+        global_inflation_factor=calibration_inputs.median_ratio,
         max_observed_ratio=calibration_inputs.max_observed_ratio,
         beta=np.asarray(coefficient_vector),
         diagnostics=diagnostics,
@@ -286,7 +286,7 @@ def _fit_inflation_model(
 
 def predict_inflation_factor(
     model: CalibrationModel,
-    bl_sum: float,
+    branch_length_sum: float,
     n_parent: int,
 ) -> float:
     """Predict inflation factor ĉ for a focal pair.
@@ -301,7 +301,7 @@ def predict_inflation_factor(
     ----------
     model : CalibrationModel
         Fitted calibration model.
-    bl_sum : float
+    branch_length_sum : float
         Sum of branch lengths from the two siblings to their parent.
     n_parent : int
         Number of leaves under the parent node.
@@ -315,22 +315,26 @@ def predict_inflation_factor(
         return 1.0
 
     if model.method == "median":
-        return max(model.global_c_hat, 1.0)  # ĉ ≥ 1 (inflation, never deflation)
+        return max(model.global_inflation_factor, 1.0)  # ĉ ≥ 1 (inflation, never deflation)
 
     # Regression
     if model.beta is None:
-        return max(model.global_c_hat, 1.0)
+        return max(model.global_inflation_factor, 1.0)
 
-    if bl_sum <= 0 or n_parent <= 0:
-        return max(model.global_c_hat, 1.0)
+    if branch_length_sum <= 0 or n_parent <= 0:
+        return max(model.global_inflation_factor, 1.0)
 
-    log_c = model.beta[0] + model.beta[1] * np.log(bl_sum) + model.beta[2] * np.log(float(n_parent))
-    c_hat = float(np.exp(log_c))
+    log_inflation = (
+        model.beta[0]
+        + model.beta[1] * np.log(branch_length_sum)
+        + model.beta[2] * np.log(float(n_parent))
+    )
+    inflation_factor = float(np.exp(log_inflation))
     # Clamp: never predict more inflation than actually observed in
     # null-like calibration pairs (prevents regression extrapolation),
     # and never deflate below 1 (that would inflate the test statistic).
-    c_hat = min(c_hat, model.max_observed_ratio)
-    return max(c_hat, 1.0)
+    inflation_factor = min(inflation_factor, model.max_observed_ratio)
+    return max(inflation_factor, 1.0)
 
 
 # =============================================================================
@@ -341,7 +345,7 @@ def predict_inflation_factor(
 def _collect_all_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
-    mean_bl: float | None,
+    mean_branch_length: float | None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
@@ -352,7 +356,7 @@ def _collect_all_pairs(
     return collect_sibling_pair_records(
         tree,
         annotations_df,
-        mean_bl,
+        mean_branch_length,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
@@ -371,8 +375,8 @@ def _deflate_and_test(
     """
 
     def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]:
-        c_hat = predict_inflation_factor(model, rec.bl_sum, rec.n_parent)
-        return c_hat, f"adjusted_{model.method}"
+        inflation_factor = predict_inflation_factor(model, rec.branch_length_sum, rec.n_parent)
+        return inflation_factor, f"adjusted_{model.method}"
 
     return deflate_focal_pairs(
         records,
@@ -441,13 +445,13 @@ def annotate_sibling_divergence_adjusted(
     """
     annotations_df = init_sibling_annotation_df(annotations_df)
 
-    mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
+    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats
     records, non_binary = _collect_all_pairs(
         tree,
         annotations_df,
-        mean_bl,
+        mean_branch_length,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
@@ -492,7 +496,7 @@ def annotate_sibling_divergence_adjusted(
         "focal_pairs": n_focal,
         "calibration_method": model.method,
         "calibration_n": model.n_calibration,
-        "global_c_hat": model.global_c_hat,
+        "global_inflation_factor": model.global_inflation_factor,
         "diagnostics": model.diagnostics,
         "test_method": "cousin_adjusted_wald",
     }

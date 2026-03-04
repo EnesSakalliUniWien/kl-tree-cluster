@@ -37,7 +37,7 @@ class SiblingPairRecord:
     stat: float
     degrees_of_freedom: int
     p_value: float
-    bl_sum: float
+    branch_length_sum: float
     n_parent: int
     is_null_like: bool
 
@@ -128,7 +128,7 @@ def collect_sibling_pair_records(
                 if np.isfinite(degrees_of_freedom)
                 else 0,
                 p_value=p_value,
-                bl_sum=_branch_length_sum(branch_length_left, branch_length_right),
+                branch_length_sum=_branch_length_sum(branch_length_left, branch_length_right),
                 n_parent=extract_node_sample_size(tree, parent),
                 is_null_like=is_null,
             )
@@ -157,8 +157,8 @@ def deflate_focal_pairs(
             methods.append("invalid")
             continue
 
-        c_hat, method = calibration_resolver(pair_record)
-        t_adj = pair_record.stat / c_hat
+        inflation_factor, method = calibration_resolver(pair_record)
+        t_adj = pair_record.stat / inflation_factor
         p_adj = float(chi2.sf(t_adj, df=pair_record.degrees_of_freedom))
 
         focal_parents.append(pair_record.parent)

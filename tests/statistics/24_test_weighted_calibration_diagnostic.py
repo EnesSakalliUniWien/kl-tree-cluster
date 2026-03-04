@@ -156,7 +156,7 @@ class TestGammaGLMCalibrationDiagnostic:
                     "n_cal": model.n_calibration,
                     "n_null": n_null,
                     "n_focal": n_focal,
-                    "c_hat": model.global_c_hat,
+                    "c_hat": model.global_inflation_factor,
                     "max_ratio": model.max_observed_ratio,
                     "beta": model.beta.tolist() if model.beta is not None else None,
                     "K_true": row["True"],

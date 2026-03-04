@@ -220,7 +220,7 @@ def _compute_local_c_hat(
     tree: nx.DiGraph,
     focal_parent: str,
     null_index: Dict[str, SiblingPairRecord],
-    global_c_hat: float,
+    global_inflation_factor: float,
 ) -> Tuple[float, str]:
     """Compute the inflation factor ĉ for a focal pair using tree-guided search.
 
@@ -232,13 +232,13 @@ def _compute_local_c_hat(
         Parent node of the focal sibling pair.
     null_index
         Index of null-like pairs by parent node.
-    global_c_hat
+    global_inflation_factor
         Fallback global median from all null-like pairs.
 
     Returns
     -------
     Tuple[float, str]
-        (c_hat, method) where method describes what calibration was used:
+        (inflation_factor, method) where method describes what calibration was used:
         "local_up_L{n}" for upward tree-guided (n = levels walked),
         "local_down" for descendant-based, "global_median"
         for fallback, "none" when no calibration is available.
@@ -246,17 +246,17 @@ def _compute_local_c_hat(
     ratios, levels, direction = _find_nearest_null_cousin(tree, focal_parent, null_index)
 
     if ratios:
-        c_hat = float(np.median(ratios))
+        inflation_factor = float(np.median(ratios))
         # ĉ must be ≥ 1 (inflation, never deflation)
-        c_hat = max(c_hat, 1.0)
+        inflation_factor = max(inflation_factor, 1.0)
         if direction == "up":
-            return c_hat, f"local_up_L{levels}"
+            return inflation_factor, f"local_up_L{levels}"
         else:
-            return c_hat, "local_down"
+            return inflation_factor, "local_down"
 
     # Fallback: global median
-    if global_c_hat > 0:
-        return max(global_c_hat, 1.0), "global_median"
+    if global_inflation_factor > 0:
+        return max(global_inflation_factor, 1.0), "global_median"
 
     return 1.0, "none"
 
@@ -269,7 +269,7 @@ def _compute_local_c_hat(
 def _collect_all_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
-    mean_bl: float | None,
+    mean_branch_length: float | None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
@@ -280,7 +280,7 @@ def _collect_all_pairs(
     return collect_sibling_pair_records(
         tree,
         annotations_df,
-        mean_bl,
+        mean_branch_length,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
@@ -290,7 +290,7 @@ def _deflate_and_test(
     records: List[SiblingPairRecord],
     tree: nx.DiGraph,
     null_index: Dict[str, SiblingPairRecord],
-    global_c_hat: float,
+    global_inflation_factor: float,
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate focal pairs using tree-guided cousin search.
 
@@ -303,13 +303,13 @@ def _deflate_and_test(
         (focal_parents, focal_results, calibration_methods)
     """
     def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]:
-        c_hat, method = _compute_local_c_hat(
+        inflation_factor, method = _compute_local_c_hat(
             tree,
             rec.parent,
             null_index,
-            global_c_hat,
+            global_inflation_factor,
         )
-        return c_hat, f"tree_guided_{method}"
+        return inflation_factor, f"tree_guided_{method}"
 
     return deflate_focal_pairs(
         records,
@@ -378,13 +378,13 @@ def annotate_sibling_divergence_tree_guided(
     """
     annotations_df = init_sibling_annotation_df(annotations_df)
 
-    mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
+    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats
     records, non_binary = _collect_all_pairs(
         tree,
         annotations_df,
-        mean_bl,
+        mean_branch_length,
         spectral_dims,
         pca_projections,
     )
@@ -415,13 +415,13 @@ def annotate_sibling_divergence_tree_guided(
             len(null_ratios),
             _MIN_GLOBAL_MEDIAN,
         )
-        global_c_hat = 1.0
+        global_inflation_factor = 1.0
     else:
-        global_c_hat = float(np.median(null_ratios))
+        global_inflation_factor = float(np.median(null_ratios))
         logger.info(
             "Tree-guided cousin: global median ĉ = %.3f from %d null-like pairs "
             "(used as fallback only).",
-            global_c_hat,
+            global_inflation_factor,
             len(null_ratios),
         )
 
@@ -430,7 +430,7 @@ def annotate_sibling_divergence_tree_guided(
         records,
         tree,
         null_index,
-        global_c_hat,
+        global_inflation_factor,
     )
 
     # Null-like parents are skipped (they are noise splits)
@@ -474,7 +474,7 @@ def annotate_sibling_divergence_tree_guided(
         "calibration_global_fallback": n_global_fallback,
         "calibration_none": n_none,
         "calibration_invalid": n_invalid,
-        "global_c_hat": global_c_hat,
+        "global_inflation_factor": global_inflation_factor,
         "null_index_size": len(null_index),
         "test_method": "cousin_tree_guided",
     }

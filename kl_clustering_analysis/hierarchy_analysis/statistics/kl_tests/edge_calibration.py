@@ -75,7 +75,7 @@ class EdgeCalibrationModel:
 
     method: str  # "gamma_glm", "weighted_mean", "none"
     n_calibration: int  # total edges used (with weight > 0)
-    global_c_hat: float  # weighted mean of T/k ratios
+    global_inflation_factor: float  # weighted mean of T/k ratios
     max_observed_ratio: float = 1.0  # upper clamp for ĉ
     beta: Optional[np.ndarray] = None  # GLM coefficients
     diagnostics: Dict = field(default_factory=dict)
@@ -89,7 +89,7 @@ class _EdgeRecord:
     parent_id: str
     stat: float  # raw Wald T
     degrees_of_freedom: float  # projection dimension k
-    pval: float  # raw Wald p
+    p_value: float  # raw Wald p
     weight: float  # min(n_L, n_R) / n_parent, purely structural [0, 0.5]
     is_null_like: bool  # balanced split (weight > 0.3) used for max_c
     parent_sibling_different: bool = False  # parent sibling test rejects similarity
@@ -352,7 +352,7 @@ def _fit_edge_calibration_model(
         return EdgeCalibrationModel(
             method="none",
             n_calibration=0,
-            global_c_hat=1.0,
+            global_inflation_factor=1.0,
             max_observed_ratio=1.0,
         )
 
@@ -379,7 +379,7 @@ def _fit_edge_calibration_model(
 
     common_diagnostics = {
         "n_calibration": calibration_inputs.calibration_edge_count,
-        "global_c_hat": float(calibration_inputs.global_weighted_ratio),
+        "global_inflation_factor": float(calibration_inputs.global_weighted_ratio),
         "max_observed_ratio": float(calibration_inputs.max_observed_ratio),
         "total_weight": calibration_inputs.total_weight,
         "effective_n": calibration_inputs.effective_sample_size,
@@ -399,7 +399,7 @@ def _fit_edge_calibration_model(
         return EdgeCalibrationModel(
             method="none",
             n_calibration=calibration_inputs.calibration_edge_count,
-            global_c_hat=calibration_inputs.global_weighted_ratio,
+            global_inflation_factor=calibration_inputs.global_weighted_ratio,
             max_observed_ratio=calibration_inputs.max_observed_ratio,
             diagnostics=common_diagnostics,
         )
@@ -415,7 +415,7 @@ def _fit_edge_calibration_model(
         return EdgeCalibrationModel(
             method="weighted_mean",
             n_calibration=calibration_inputs.calibration_edge_count,
-            global_c_hat=calibration_inputs.global_weighted_ratio,
+            global_inflation_factor=calibration_inputs.global_weighted_ratio,
             max_observed_ratio=calibration_inputs.max_observed_ratio,
             diagnostics=common_diagnostics,
         )
@@ -445,7 +445,7 @@ def _fit_edge_calibration_model(
             return EdgeCalibrationModel(
                 method="weighted_mean",
                 n_calibration=calibration_inputs.calibration_edge_count,
-                global_c_hat=calibration_inputs.global_weighted_ratio,
+                global_inflation_factor=calibration_inputs.global_weighted_ratio,
                 max_observed_ratio=calibration_inputs.max_observed_ratio,
                 diagnostics=common_diagnostics,
             )
@@ -459,7 +459,7 @@ def _fit_edge_calibration_model(
     return EdgeCalibrationModel(
         method=calibration_method,
         n_calibration=calibration_inputs.calibration_edge_count,
-        global_c_hat=calibration_inputs.global_weighted_ratio,
+        global_inflation_factor=calibration_inputs.global_weighted_ratio,
         max_observed_ratio=calibration_inputs.max_observed_ratio,
         beta=np.asarray(coefficient_vector) if coefficient_vector is not None else None,
         diagnostics=diagnostics,
@@ -480,15 +480,15 @@ def predict_edge_inflation_factor(
         return 1.0
 
     if model.method == "weighted_mean":
-        return max(model.global_c_hat, 1.0)
+        return max(model.global_inflation_factor, 1.0)
 
     # Intercept-only GLM or WLS: ĉ = exp(β₀)
     if model.beta is None:
-        return max(model.global_c_hat, 1.0)
+        return max(model.global_inflation_factor, 1.0)
 
-    c_hat = float(np.exp(model.beta[0]))
-    c_hat = min(c_hat, model.max_observed_ratio)
-    return max(c_hat, 1.0)
+    inflation_factor = float(np.exp(model.beta[0]))
+    inflation_factor = min(inflation_factor, model.max_observed_ratio)
+    return max(inflation_factor, 1.0)
 
 
 def _extract_raw_edge_calibration_data(
@@ -571,7 +571,7 @@ def _build_edge_records_for_calibration(
                 parent_id=parent_identifier,
                 stat=float(raw_test_statistic),
                 degrees_of_freedom=float(raw_degrees_of_freedom),
-                pval=float(raw_edge_data.raw_p_values[edge_index]),
+                p_value=float(raw_edge_data.raw_p_values[edge_index]),
                 weight=split_balance_weight,
                 is_null_like=is_null_like_split,
                 parent_sibling_different=bool(
@@ -658,7 +658,7 @@ def _attach_edge_calibration_metadata(
         annotations_df.attrs["edge_calibration_audit"] = calibration_model.diagnostics
         return
     annotations_df.attrs["edge_calibration_audit"] = {
-        "c_hat": calibration_factor,
+        "inflation_factor": calibration_factor,
         **calibration_model.diagnostics,
     }
 

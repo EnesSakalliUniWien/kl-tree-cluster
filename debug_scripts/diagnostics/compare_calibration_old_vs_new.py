@@ -186,7 +186,7 @@ def main():
     new_model = _fit_weighted_inflation_model(records)
     print("\nNEW calibration (Gamma GLM, null-like max_c, weighted mean global_c):")
     print(f"  method:   {new_model.method}")
-    print(f"  global_c: {new_model.global_c_hat:.6f}")
+    print(f"  global_c: {new_model.global_inflation_factor:.6f}")
     print(f"  max_c:    {new_model.max_observed_ratio:.6f}")
     if new_model.beta is not None:
         print(

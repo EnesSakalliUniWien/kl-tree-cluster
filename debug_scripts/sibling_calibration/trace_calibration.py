@@ -91,7 +91,7 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
     # --- Fit model ---
     model = _fit_weighted_inflation_model(records)
     print(f"\nModel method: {model.method}")
-    print(f"Global c-hat (weighted mean of r): {model.global_c_hat:.4f}")
+    print(f"Global c-hat (weighted mean of r): {model.global_inflation_factor:.4f}")
     print(f"Max observed ratio (null-like): {model.max_observed_ratio:.4f}")
     if model.beta is not None:
         print(f"Beta: {model.beta.tolist()}")

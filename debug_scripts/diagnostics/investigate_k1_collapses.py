@@ -86,7 +86,7 @@ def trace_sibling_calibration(stats_df: pd.DataFrame, label: str):
     if not audit:
         print(f"    [{label}] Sibling calibration: NO AUDIT DATA")
         return
-    c_hat = audit.get("global_c_hat", "?")
+    c_hat = audit.get("global_inflation_factor", "?")
     method = audit.get("calibration_method", "?")
     n_cal = audit.get("calibration_n", "?")
     max_ratio = audit.get("max_observed_ratio", "?")
@@ -183,7 +183,7 @@ def trace_calibration_detail(tree: PosetTree, stats_df: pd.DataFrame):
 
     print(
         f"    Calibration model: method={cal_model.method}, n_cal={cal_model.n_calibration}, "
-        f"global_c_hat={cal_model.global_c_hat:.4f}, max_ratio={cal_model.max_observed_ratio:.4f}"
+        f"global_inflation_factor={cal_model.global_inflation_factor:.4f}, max_ratio={cal_model.max_observed_ratio:.4f}"
     )
     if cal_model.depth_c_hats:
         for depth, c in sorted(cal_model.depth_c_hats.items()):
@@ -210,7 +210,7 @@ def trace_calibration_detail(tree: PosetTree, stats_df: pd.DataFrame):
             spectral_k=parent_k,
         )
 
-        c_level = cal_model.depth_c_hats.get(depth, cal_model.global_c_hat)
+        c_level = cal_model.depth_c_hats.get(depth, cal_model.global_inflation_factor)
         c_soft = 1.0 + w * (c_level - 1.0)
 
         # Compute leaf ratio and eigenvalue ratio components
@@ -370,7 +370,7 @@ def investigate_case(case_name: str):
     cal_model = calibrated["stats_df"].attrs.get("edge_calibration_model", None)
     if cal_model is not None and cal_model.diagnostics:
         diag = cal_model.diagnostics
-        print(f"    Global ĉ (weighted mean)  = {diag.get('global_c_hat', '?'):.4f}")
+        print(f"    Global ĉ (weighted mean)  = {diag.get('global_inflation_factor', '?'):.4f}")
         print(f"    Global ĉ (GLM)            = {diag.get('global_c_glm', '?'):.4f}")
         print(f"    Max observed ratio (clamp) = {diag.get('max_observed_ratio', '?'):.4f}")
         print(f"    N calibration edges        = {diag.get('n_calibration', '?')}")

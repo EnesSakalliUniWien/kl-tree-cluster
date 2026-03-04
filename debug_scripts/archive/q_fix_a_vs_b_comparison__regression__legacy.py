@@ -62,7 +62,7 @@ def _predict_c_fix_b(model, bl_sum, n_parent):
         return _predict_c(model, bl_sum, n_parent)
 
     if bl_sum <= 0:
-        return max(model.global_c_hat, 1.0)
+        return max(model.global_inflation_factor, 1.0)
 
     # Only β₀ + β₁·log(BL)
     log_c = model.beta[0] + model.beta[1] * np.log(bl_sum)

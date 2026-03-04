@@ -75,7 +75,7 @@ def diagnose_adjusted_wald(tree, data_df):
     print(f"  Calibration method: {audit.get('calibration_method', 'N/A')}")
     print(f"  Null-like pairs:    {audit.get('null_like_pairs', 'N/A')}")
     print(f"  Focal pairs:        {audit.get('focal_pairs', 'N/A')}")
-    print(f"  Global ĉ (median):  {audit.get('global_c_hat', 'N/A')}")
+    print(f"  Global ĉ (median):  {audit.get('global_inflation_factor', 'N/A')}")
     print(f"  R²:                 {diag.get('r_squared', 'N/A')}")
     print(f"  β coefficients:     {diag.get('beta', 'N/A')}")
 
@@ -139,7 +139,7 @@ def diagnose_adjusted_wald(tree, data_df):
                     log_c_noB2 = model.beta[0] + model.beta[1] * np.log(rec.bl_sum)
                     c_noB2 = max(float(np.exp(log_c_noB2)), 1.0)
                 else:
-                    c_noB2 = max(model.global_c_hat, 1.0)
+                    c_noB2 = max(model.global_inflation_factor, 1.0)
 
                 t_reg = rec.stat / c_reg
                 t_cap = rec.stat / c_cap

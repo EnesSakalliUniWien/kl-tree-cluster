@@ -110,7 +110,7 @@ def run_single_case(case, method_name):
         "k_match": k_found == n_clusters_true,
         "calibration_method": audit.get("calibration_method", ""),
         "calibration_n": audit.get("calibration_n", ""),
-        "global_c_hat": audit.get("global_c_hat", ""),
+        "global_inflation_factor": audit.get("global_inflation_factor", ""),
     }
 
 
@@ -160,7 +160,7 @@ def main():
                         "k_match": False,
                         "calibration_method": "",
                         "calibration_n": "",
-                        "global_c_hat": "",
+                        "global_inflation_factor": "",
                     }
                 )
             gc.collect()

@@ -239,7 +239,7 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
         audit = df_m.attrs.get("sibling_divergence_audit", {})
         if audit:
             cal_m = audit.get("calibration_method", audit.get("test_method", "?"))
-            c_hat = audit.get("global_c_hat", None)
+            c_hat = audit.get("global_inflation_factor", None)
             n_cal = audit.get("calibration_n", audit.get("total_tests", 0))
             null_pairs = audit.get("null_like_pairs", "")
             focal = audit.get("focal_pairs", "")

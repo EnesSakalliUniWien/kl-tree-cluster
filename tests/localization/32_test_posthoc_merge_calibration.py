@@ -40,19 +40,19 @@ class TestCalibrationModel:
 
     def test_predict_no_calibration_returns_1(self) -> None:
         """Method 'none' should return 1.0 (no deflation)."""
-        model = CalibrationModel(method="none", n_calibration=0, global_c_hat=1.0)
-        assert predict_inflation_factor(model, bl_sum=0.5, n_parent=100) == 1.0
+        model = CalibrationModel(method="none", n_calibration=0, global_inflation_factor=1.0)
+        assert predict_inflation_factor(model, branch_length_sum=0.5, n_parent=100) == 1.0
 
-    def test_predict_median_returns_global_c_hat(self) -> None:
-        """Method 'median' should return global_c_hat (clamped ≥ 1)."""
-        model = CalibrationModel(method="median", n_calibration=5, global_c_hat=1.8)
-        c = predict_inflation_factor(model, bl_sum=0.5, n_parent=100)
+    def test_predict_median_returns_global_inflation_factor(self) -> None:
+        """Method 'median' should return global_inflation_factor (clamped ≥ 1)."""
+        model = CalibrationModel(method="median", n_calibration=5, global_inflation_factor=1.8)
+        c = predict_inflation_factor(model, branch_length_sum=0.5, n_parent=100)
         assert c == pytest.approx(1.8)
 
     def test_predict_median_clamps_below_1(self) -> None:
         """Inflation factor must be ≥ 1 (never deflate below raw)."""
-        model = CalibrationModel(method="median", n_calibration=5, global_c_hat=0.5)
-        c = predict_inflation_factor(model, bl_sum=0.5, n_parent=100)
+        model = CalibrationModel(method="median", n_calibration=5, global_inflation_factor=0.5)
+        c = predict_inflation_factor(model, branch_length_sum=0.5, n_parent=100)
         assert c >= 1.0
 
     def test_predict_regression_clamps_at_max_observed(self) -> None:
@@ -61,12 +61,12 @@ class TestCalibrationModel:
         model = CalibrationModel(
             method="regression",
             n_calibration=10,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             max_observed_ratio=2.0,
             beta=beta,
         )
         # Large n_parent should extrapolate but be clamped
-        c = predict_inflation_factor(model, bl_sum=0.1, n_parent=10000)
+        c = predict_inflation_factor(model, branch_length_sum=0.1, n_parent=10000)
         assert c <= 2.0
 
     def test_predict_regression_positive(self) -> None:
@@ -75,11 +75,11 @@ class TestCalibrationModel:
         model = CalibrationModel(
             method="regression",
             n_calibration=10,
-            global_c_hat=1.3,
+            global_inflation_factor=1.3,
             max_observed_ratio=3.0,
             beta=beta,
         )
-        c = predict_inflation_factor(model, bl_sum=0.5, n_parent=50)
+        c = predict_inflation_factor(model, branch_length_sum=0.5, n_parent=50)
         assert c >= 1.0
         assert np.isfinite(c)
 
@@ -188,7 +188,7 @@ class TestPosthocMergeCalibration:
             # Now add a calibration model with ĉ > 1
             df2 = df.copy()
             model = CalibrationModel(
-                method="median", n_calibration=10, global_c_hat=2.0, max_observed_ratio=3.0
+                method="median", n_calibration=10, global_inflation_factor=2.0, max_observed_ratio=3.0
             )
             df2.attrs["_calibration_model"] = model
             decomposer_cal = TreeDecomposition(tree, df2, posthoc_merge=False)
@@ -230,7 +230,7 @@ class TestPosthocMergeCalibration:
         df_raw = _make_annotations_for_4_cluster_tree()
         df_cal = df_raw.copy()
         df_cal.attrs["_calibration_model"] = CalibrationModel(
-            method="none", n_calibration=0, global_c_hat=1.0
+            method="none", n_calibration=0, global_inflation_factor=1.0
         )
 
         with _skip_annotations:
@@ -277,16 +277,28 @@ class TestV1DecomposeTreeIntegration:
         assert result["num_clusters"] == 3
 
     def test_4_cluster_all_same_produces_1_cluster(self) -> None:
-        """When root siblings are not different, everything merges to 1."""
+        """When root siblings are not different AND passthrough is off, everything merges to 1."""
         tree = _build_4_cluster_tree()
         df = _make_annotations_for_4_cluster_tree(
             ab_different=True, cd_different=True, m1m2_different=False
         )
         with _skip_annotations:
             result = tree.decompose(
-                results_df=df, posthoc_merge=False
+                results_df=df, posthoc_merge=False, passthrough=False
             )
         assert result["num_clusters"] == 1
+
+    def test_4_cluster_all_same_passthrough_finds_deep_splits(self) -> None:
+        """When root siblings are not different but descendants differ, passthrough finds 4."""
+        tree = _build_4_cluster_tree()
+        df = _make_annotations_for_4_cluster_tree(
+            ab_different=True, cd_different=True, m1m2_different=False
+        )
+        with _skip_annotations:
+            result = tree.decompose(
+                results_df=df, posthoc_merge=False, passthrough=True
+            )
+        assert result["num_clusters"] == 4
 
     def test_leaf_partition_is_exact(self) -> None:
         """Every leaf appears in exactly one cluster (partition property)."""

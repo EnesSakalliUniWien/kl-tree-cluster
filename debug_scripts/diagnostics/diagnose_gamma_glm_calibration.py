@@ -86,7 +86,7 @@ def main():
         print(f"    n_calibration:    {model.n_calibration}")
         print(f"    null-like pairs:  {n_null}")
         print(f"    focal pairs:      {n_focal}")
-        print(f"    global_c_hat:     {model.global_c_hat:.4f}")
+        print(f"    global_inflation_factor:     {model.global_inflation_factor:.4f}")
         print(f"    max_observed_ratio (null-like): {model.max_observed_ratio:.4f}")
         print(f"    max T/k (null-like):            {null_max:.4f}")
         print(f"    max T/k (all pairs):            {all_max:.4f}")

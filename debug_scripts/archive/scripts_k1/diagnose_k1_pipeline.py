@@ -126,7 +126,7 @@ for _, brow in k1_rows.iterrows():
     audit = sdf.attrs.get("sibling_divergence_audit", {})
     cal_method = audit.get("calibration_method", audit.get("test_method", "?"))
     cal_n = audit.get("calibration_n", "?")
-    global_c = audit.get("global_c_hat", "?")
+    global_c = audit.get("global_inflation_factor", "?")
     n_null = audit.get("null_like_pairs", "?")
     n_focal = audit.get("focal_pairs", "?")
     diag = audit.get("diagnostics", {})

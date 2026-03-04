@@ -108,8 +108,8 @@ class _WeightedRecord:
     right: str
     stat: float  # raw Wald T
     degrees_of_freedom: int  # projection dimension k
-    pval: float  # raw Wald p
-    bl_sum: float  # branch-length sum (left + right)
+    p_value: float  # raw Wald p
+    branch_length_sum: float  # branch-length sum (left + right)
     n_parent: int  # number of leaves under parent
     weight: float  # min(p_edge_left, p_edge_right), continuous [0, 1]
     is_null_like: bool  # neither child edge-significant (for skip/test decision)
@@ -124,7 +124,7 @@ class WeightedCalibrationModel:
 
     method: str  # "gamma_glm", "weighted_regression", "weighted_median", "none"
     n_calibration: int  # number of pairs used (with weight > 0)
-    global_c_hat: float  # weighted mean of ratios
+    global_inflation_factor: float  # weighted mean of ratios
     max_observed_ratio: float = 1.0  # upper bound for ĉ (from null-like pairs only)
     beta: Optional[np.ndarray] = None  # regression coefficients
     diagnostics: Dict = field(default_factory=dict)
@@ -150,14 +150,14 @@ class _WeightedCalibrationInputs:
 
 def _get_edge_pvalue(
     node: str,
-    pval_map: Dict[str, float],
+    edge_pvalue_by_node: Dict[str, float],
 ) -> float:
     """Get the BH-corrected edge p-value for a node.
 
     Returns 1.0 if the node has no edge p-value (e.g. root, non-tested).
     A return of 1.0 means "maximally null-like" for weighting purposes.
     """
-    val = pval_map.get(node, np.nan)
+    val = edge_pvalue_by_node.get(node, np.nan)
     if np.isfinite(val):
         return float(val)
     return 1.0
@@ -374,7 +374,7 @@ def _fit_weighted_inflation_model(
         return WeightedCalibrationModel(
             method="none",
             n_calibration=0,
-            global_c_hat=1.0,
+            global_inflation_factor=1.0,
             max_observed_ratio=1.0,
             diagnostics={"statsmodels_available": statsmodels_available},
         )
@@ -391,7 +391,7 @@ def _fit_weighted_inflation_model(
         return WeightedCalibrationModel(
             method="none",
             n_calibration=calibration_inputs.calibration_pair_count,
-            global_c_hat=calibration_inputs.global_weighted_ratio,
+            global_inflation_factor=calibration_inputs.global_weighted_ratio,
             max_observed_ratio=calibration_inputs.max_observed_ratio,
             diagnostics={"statsmodels_available": statsmodels_available},
         )
@@ -407,7 +407,7 @@ def _fit_weighted_inflation_model(
         return WeightedCalibrationModel(
             method="weighted_median",
             n_calibration=calibration_inputs.calibration_pair_count,
-            global_c_hat=calibration_inputs.global_weighted_ratio,
+            global_inflation_factor=calibration_inputs.global_weighted_ratio,
             max_observed_ratio=calibration_inputs.max_observed_ratio,
             diagnostics={"statsmodels_available": statsmodels_available},
         )
@@ -445,7 +445,7 @@ def _fit_weighted_inflation_model(
             return WeightedCalibrationModel(
                 method="weighted_median",
                 n_calibration=calibration_inputs.calibration_pair_count,
-                global_c_hat=calibration_inputs.global_weighted_ratio,
+                global_inflation_factor=calibration_inputs.global_weighted_ratio,
                 max_observed_ratio=calibration_inputs.max_observed_ratio,
                 diagnostics={"statsmodels_available": statsmodels_available},
             )
@@ -455,7 +455,7 @@ def _fit_weighted_inflation_model(
         "r_squared": coefficient_of_determination,
         "beta": coefficient_vector.tolist() if coefficient_vector is not None else None,
         "n_calibration": calibration_inputs.calibration_pair_count,
-        "global_c_hat": float(calibration_inputs.global_weighted_ratio),
+        "global_inflation_factor": float(calibration_inputs.global_weighted_ratio),
         "max_observed_ratio": float(calibration_inputs.max_observed_ratio),
         "total_weight": float(np.sum(calibration_inputs.weight_values)),
         "effective_n": calibration_inputs.effective_sample_size,
@@ -471,7 +471,7 @@ def _fit_weighted_inflation_model(
     return WeightedCalibrationModel(
         method=calibration_method,
         n_calibration=calibration_inputs.calibration_pair_count,
-        global_c_hat=calibration_inputs.global_weighted_ratio,
+        global_inflation_factor=calibration_inputs.global_weighted_ratio,
         max_observed_ratio=calibration_inputs.max_observed_ratio,
         beta=np.asarray(coefficient_vector) if coefficient_vector is not None else None,
         diagnostics=diagnostics,
@@ -480,13 +480,13 @@ def _fit_weighted_inflation_model(
 
 def predict_weighted_inflation_factor(
     model: WeightedCalibrationModel,
-    bl_sum: float = 0.0,
+    branch_length_sum: float = 0.0,
     n_parent: int = 0,
 ) -> float:
     """Predict inflation factor ĉ for a pair.
 
     With intercept-only model, ĉ = exp(β₀) — a single global constant
-    (the weighted mean of T/k).  bl_sum and n_parent are retained in
+    (the weighted mean of T/k).  branch_length_sum and n_parent are retained in
     the signature for API compatibility but are not used.
 
     Clamped to [1.0, max_observed_ratio] to prevent overestimation.
@@ -495,15 +495,15 @@ def predict_weighted_inflation_factor(
         return 1.0
 
     if model.method == "weighted_median":
-        return max(model.global_c_hat, 1.0)
+        return max(model.global_inflation_factor, 1.0)
 
     # Intercept-only GLM or WLS: ĉ = exp(β₀)
     if model.beta is None:
-        return max(model.global_c_hat, 1.0)
+        return max(model.global_inflation_factor, 1.0)
 
-    c_hat = float(np.exp(model.beta[0]))
-    c_hat = min(c_hat, model.max_observed_ratio)
-    return max(c_hat, 1.0)
+    inflation_factor = float(np.exp(model.beta[0]))
+    inflation_factor = min(inflation_factor, model.max_observed_ratio)
+    return max(inflation_factor, 1.0)
 
 
 # =============================================================================
@@ -514,7 +514,7 @@ def predict_weighted_inflation_factor(
 def _collect_weighted_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
-    mean_bl: float | None,
+    mean_branch_length: float | None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -526,28 +526,30 @@ def _collect_weighted_pairs(
     base_records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
-        mean_bl,
+        mean_branch_length,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
     )
 
     # Build edge p-value map from the BH-corrected column
-    pval_col = "Child_Parent_Divergence_P_Value_BH"
-    if pval_col in annotations_df.columns:
-        pval_map = annotations_df[pval_col].to_dict()
+    p_value_column = "Child_Parent_Divergence_P_Value_BH"
+    if p_value_column in annotations_df.columns:
+        edge_pvalue_by_node = annotations_df[p_value_column].to_dict()
     else:
         # Fallback to raw p-values if BH not available
-        pval_col_raw = "Child_Parent_Divergence_P_Value"
-        pval_map = (
-            annotations_df[pval_col_raw].to_dict() if pval_col_raw in annotations_df.columns else {}
+        raw_p_value_column = "Child_Parent_Divergence_P_Value"
+        edge_pvalue_by_node = (
+            annotations_df[raw_p_value_column].to_dict()
+            if raw_p_value_column in annotations_df.columns
+            else {}
         )
 
     records: List[_WeightedRecord] = []
     for rec in base_records:
         # Continuous weight: min(p_edge_left, p_edge_right)
-        p_left = _get_edge_pvalue(rec.left, pval_map)
-        p_right = _get_edge_pvalue(rec.right, pval_map)
+        p_left = _get_edge_pvalue(rec.left, edge_pvalue_by_node)
+        p_right = _get_edge_pvalue(rec.right, edge_pvalue_by_node)
         weight = min(p_left, p_right)
 
         records.append(
@@ -557,8 +559,8 @@ def _collect_weighted_pairs(
                 right=rec.right,
                 stat=rec.stat,
                 degrees_of_freedom=rec.degrees_of_freedom,
-                pval=rec.p_value,
-                bl_sum=rec.bl_sum,
+                p_value=rec.p_value,
+                branch_length_sum=rec.branch_length_sum,
                 n_parent=rec.n_parent,
                 weight=weight,
                 is_null_like=rec.is_null_like,
@@ -574,8 +576,10 @@ def _deflate_and_test(
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate focal pairs and compute adjusted p-values."""
     def _resolve_calibration(rec: _WeightedRecord) -> tuple[float, str]:
-        c_hat = predict_weighted_inflation_factor(model, rec.bl_sum, rec.n_parent)
-        return c_hat, f"weighted_{model.method}"
+        inflation_factor = predict_weighted_inflation_factor(
+            model, rec.branch_length_sum, rec.n_parent
+        )
+        return inflation_factor, f"weighted_{model.method}"
 
     return deflate_focal_pairs(
         records,
@@ -641,11 +645,11 @@ def annotate_sibling_divergence_weighted(
     """
     annotations_df = init_sibling_annotation_df(annotations_df)
 
-    mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
+    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats with continuous weights
     records, non_binary = _collect_weighted_pairs(
-        tree, annotations_df, mean_bl, spectral_dims, pca_projections, pca_eigenvalues
+        tree, annotations_df, mean_branch_length, spectral_dims, pca_projections, pca_eigenvalues
     )
 
     # Mark non-binary/leaf nodes as skipped (never testable)
@@ -690,7 +694,7 @@ def annotate_sibling_divergence_weighted(
         "focal_pairs": n_focal,
         "calibration_method": model.method,
         "calibration_n": model.n_calibration,
-        "global_c_hat": model.global_c_hat,
+        "global_inflation_factor": model.global_inflation_factor,
         "diagnostics": model.diagnostics,
         "test_method": "cousin_weighted_wald",
     }

@@ -289,7 +289,7 @@ def diagnose_case(name: str, data: pd.DataFrame, true_labels: np.ndarray):
         if audit:
             print(
                 f"    Audit: method={audit.get('calibration_method', '?')}, "
-                f"ĉ={audit.get('global_c_hat', '?')}, "
+                f"ĉ={audit.get('global_inflation_factor', '?')}, "
                 f"n_cal={audit.get('calibration_n', '?')}"
             )
             diag = audit.get("diagnostics", {})

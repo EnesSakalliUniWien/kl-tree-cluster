@@ -212,7 +212,7 @@ class TestDeflateByCalibration:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
             beta=np.array([np.log(2.0)]),
         )
@@ -244,7 +244,7 @@ class TestDeflateByCalibration:
         model = CalibrationModel(
             method="median",
             n_calibration=5,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             max_observed_ratio=2.0,
         )
         tree = self._make_tree_for_deflation()
@@ -275,7 +275,7 @@ class TestDeflateByCalibration:
         model = WeightedCalibrationModel(
             method="none",
             n_calibration=0,
-            global_c_hat=1.0,
+            global_inflation_factor=1.0,
         )
         tree = self._make_tree_for_deflation()
         raw_T, df = 12.0, 6.0
@@ -302,7 +302,7 @@ class TestDeflateByCalibration:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
             beta=np.array([np.log(2.0)]),
         )
@@ -329,7 +329,7 @@ class TestDeflateByCalibration:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
             beta=np.array([np.log(2.0)]),
         )
@@ -355,7 +355,7 @@ class TestDeflateByCalibration:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
             beta=np.array([np.log(2.0)]),
         )
@@ -380,7 +380,7 @@ class TestDeflateByCalibration:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
             beta=np.array([np.log(2.0)]),
         )
@@ -407,7 +407,7 @@ class TestDeflateByCalibration:
         model = CalibrationModel(
             method="regression",
             n_calibration=10,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             max_observed_ratio=3.0,
             beta=np.array([np.log(1.2), 0.1, 0.05]),  # β₀ + β₁ log(bl) + β₂ log(n)
         )
@@ -505,7 +505,7 @@ class TestTestNodePairDivergence:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=c_hat,
+            global_inflation_factor=c_hat,
             max_observed_ratio=3.0,
             beta=np.array([np.log(c_hat)]),
         )
@@ -533,7 +533,7 @@ class TestTestNodePairDivergence:
         model = CalibrationModel(
             method="median",
             n_calibration=5,
-            global_c_hat=1.8,
+            global_inflation_factor=1.8,
             max_observed_ratio=2.5,
         )
 
@@ -559,7 +559,7 @@ class TestTestNodePairDivergence:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=3.0,
+            global_inflation_factor=3.0,
             max_observed_ratio=4.0,
             beta=np.array([np.log(3.0)]),
         )
@@ -636,7 +636,7 @@ class TestTestClusterPairDivergence:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=c_hat,
+            global_inflation_factor=c_hat,
             max_observed_ratio=4.0,
             beta=np.array([np.log(c_hat)]),
         )
@@ -663,7 +663,7 @@ class TestTestClusterPairDivergence:
         model = CalibrationModel(
             method="median",
             n_calibration=5,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             max_observed_ratio=2.0,
         )
 
@@ -692,7 +692,7 @@ class TestTestClusterPairDivergence:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
             beta=np.array([np.log(2.0)]),
         )
@@ -734,7 +734,7 @@ class TestTestClusterPairDivergence:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
             beta=np.array([np.log(2.0)]),
         )
@@ -769,7 +769,7 @@ class TestCalibrationSymmetry:
         model = WeightedCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=c_hat,
+            global_inflation_factor=c_hat,
             max_observed_ratio=3.0,
             beta=np.array([np.log(c_hat)]),
         )
@@ -811,7 +811,7 @@ class TestCalibrationSymmetry:
         model = CalibrationModel(
             method="regression",
             n_calibration=10,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             max_observed_ratio=5.0,
             beta=np.array([np.log(1.0), 0.3, 0.0]),  # β₀=0, β₁=0.3, β₂=0
         )
@@ -820,7 +820,7 @@ class TestCalibrationSymmetry:
         raw_p = float(chi2_dist.sf(raw_T, df=raw_df))
 
         # With bl=None (no branch lengths): bl_sum=0 → regression can't use log(0)
-        # Should fall back to global_c_hat
+        # Should fall back to global_inflation_factor
         with patch(
             "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
@@ -829,6 +829,6 @@ class TestCalibrationSymmetry:
                 tree, "A", "B", mean_branch_length=None, calibration_model=model
             )
 
-        # stat_no_bl should be deflated by global_c_hat=1.5
+        # stat_no_bl should be deflated by global_inflation_factor=1.5
         expected_no_bl = raw_T / 1.5
         assert stat_no_bl == pytest.approx(expected_no_bl, rel=1e-10)

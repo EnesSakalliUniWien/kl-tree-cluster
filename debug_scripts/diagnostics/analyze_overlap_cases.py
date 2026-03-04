@@ -109,7 +109,7 @@ def analyze_case(tc: dict) -> None:
     # --- Calibration audit ---
     if hasattr(df, "attrs") and "sibling_divergence_audit" in df.attrs:
         audit = df.attrs["sibling_divergence_audit"]
-        c_hat = audit.get("global_c_hat", "?")
+        c_hat = audit.get("global_inflation_factor", "?")
         c_hat_str = f"{c_hat:.3f}" if isinstance(c_hat, (int, float)) else str(c_hat)
         print(
             f"\nCalibration: method={audit.get('calibration_method', '?')}, "

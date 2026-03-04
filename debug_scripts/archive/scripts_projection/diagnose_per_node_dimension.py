@@ -644,7 +644,7 @@ def section_gate_trace(
         if audit:
             method = audit.get("calibration_method", "?")
             n_cal = audit.get("calibration_n", "?")
-            c_hat = audit.get("global_c_hat", "?")
+            c_hat = audit.get("global_inflation_factor", "?")
             max_r = audit.get("max_observed_ratio", "?")
             diag = audit.get("diagnostics", {})
             r2 = diag.get("R2", "?")

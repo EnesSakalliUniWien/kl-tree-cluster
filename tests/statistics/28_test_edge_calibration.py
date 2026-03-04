@@ -35,15 +35,15 @@ class TestEdgeCalibrationModel:
     """Unit tests for EdgeCalibrationModel and predict_edge_inflation_factor."""
 
     def test_predict_no_calibration_returns_1(self) -> None:
-        model = EdgeCalibrationModel(method="none", n_calibration=0, global_c_hat=1.0)
+        model = EdgeCalibrationModel(method="none", n_calibration=0, global_inflation_factor=1.0)
         assert predict_edge_inflation_factor(model) == 1.0
 
     def test_predict_weighted_mean_returns_global_c(self) -> None:
-        model = EdgeCalibrationModel(method="weighted_mean", n_calibration=5, global_c_hat=1.8)
+        model = EdgeCalibrationModel(method="weighted_mean", n_calibration=5, global_inflation_factor=1.8)
         assert predict_edge_inflation_factor(model) == pytest.approx(1.8)
 
     def test_predict_clamps_below_1(self) -> None:
-        model = EdgeCalibrationModel(method="weighted_mean", n_calibration=5, global_c_hat=0.5)
+        model = EdgeCalibrationModel(method="weighted_mean", n_calibration=5, global_inflation_factor=0.5)
         assert predict_edge_inflation_factor(model) >= 1.0
 
     def test_predict_gamma_glm_uses_beta(self) -> None:
@@ -51,7 +51,7 @@ class TestEdgeCalibrationModel:
         model = EdgeCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=2.0,
+            global_inflation_factor=2.0,
             max_observed_ratio=3.0,
             beta=beta,
         )
@@ -62,7 +62,7 @@ class TestEdgeCalibrationModel:
         model = EdgeCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=3.0,
+            global_inflation_factor=3.0,
             max_observed_ratio=3.0,
             beta=beta,
         )
@@ -72,7 +72,7 @@ class TestEdgeCalibrationModel:
         model = EdgeCalibrationModel(
             method="gamma_glm",
             n_calibration=10,
-            global_c_hat=1.5,
+            global_inflation_factor=1.5,
             beta=None,
         )
         assert predict_edge_inflation_factor(model) == pytest.approx(1.5)
@@ -100,7 +100,7 @@ class TestFitEdgeCalibrationModel:
                 parent_id=f"P{i}",
                 stat=base_stat + np.random.randn() * 0.5,
                 degrees_of_freedom=base_df,
-                pval=0.1,
+                p_value=0.1,
                 weight=weight,
                 is_null_like=is_null_like,
             )
@@ -110,7 +110,7 @@ class TestFitEdgeCalibrationModel:
     def test_no_records_returns_none_method(self) -> None:
         model = _fit_edge_calibration_model([])
         assert model.method == "none"
-        assert model.global_c_hat == 1.0
+        assert model.global_inflation_factor == 1.0
 
     def test_too_few_records_returns_none(self) -> None:
         records = self._make_records(2)
@@ -122,7 +122,7 @@ class TestFitEdgeCalibrationModel:
         records = self._make_records(4)
         model = _fit_edge_calibration_model(records)
         assert model.method == "weighted_mean"
-        assert model.global_c_hat >= 1.0
+        assert model.global_inflation_factor >= 1.0
 
     def test_enough_records_fits_glm(self) -> None:
         np.random.seed(42)
@@ -130,7 +130,7 @@ class TestFitEdgeCalibrationModel:
         model = _fit_edge_calibration_model(records)
         assert model.method in ("gamma_glm", "weighted_regression")
         assert model.n_calibration == 10
-        assert model.global_c_hat > 0
+        assert model.global_inflation_factor > 0
 
     def test_zero_weight_records_excluded(self) -> None:
         records = self._make_records(10, weight=0.0)
@@ -159,7 +159,7 @@ class TestFitEdgeCalibrationModel:
                 parent_id=f"P{i}",
                 stat=float(chi2.rvs(df=k)),
                 degrees_of_freedom=k,
-                pval=0.5,
+                p_value=0.5,
                 weight=0.45,  # balanced split → null-like
                 is_null_like=True,
             )
@@ -182,7 +182,7 @@ class TestFitEdgeCalibrationModel:
                 parent_id="P0",
                 stat=10.0,
                 degrees_of_freedom=5.0,
-                pval=0.1,
+                p_value=0.1,
                 weight=0.5,
                 is_null_like=True,
                 parent_sibling_different=False,
@@ -192,7 +192,7 @@ class TestFitEdgeCalibrationModel:
                 parent_id="P1",
                 stat=10.0,
                 degrees_of_freedom=5.0,
-                pval=0.1,
+                p_value=0.1,
                 weight=0.5,
                 is_null_like=True,
                 parent_sibling_different=False,
@@ -202,7 +202,7 @@ class TestFitEdgeCalibrationModel:
                 parent_id="P2",
                 stat=10.0,
                 degrees_of_freedom=5.0,
-                pval=0.1,
+                p_value=0.1,
                 weight=0.5,
                 is_null_like=True,
                 parent_sibling_different=False,
@@ -213,7 +213,7 @@ class TestFitEdgeCalibrationModel:
                 parent_id="P3",
                 stat=5000.0,
                 degrees_of_freedom=5.0,
-                pval=1e-12,
+                p_value=1e-12,
                 weight=0.5,
                 is_null_like=True,
                 parent_sibling_different=True,
@@ -223,7 +223,7 @@ class TestFitEdgeCalibrationModel:
                 parent_id="P4",
                 stat=5000.0,
                 degrees_of_freedom=5.0,
-                pval=1e-12,
+                p_value=1e-12,
                 weight=0.5,
                 is_null_like=True,
                 parent_sibling_different=True,
@@ -252,7 +252,7 @@ class TestFitEdgeCalibrationModel:
                 parent_id=f"P{i}",
                 stat=10.0 + 0.1 * i,
                 degrees_of_freedom=5.0,
-                pval=0.1,
+                p_value=0.1,
                 weight=0.5,
                 is_null_like=True,
                 parent_sibling_different=(i % 2 == 0),

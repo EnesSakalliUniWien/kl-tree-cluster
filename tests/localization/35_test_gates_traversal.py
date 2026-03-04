@@ -61,6 +61,8 @@ def _make_gate(
     sibling_skipped: dict | None = None,
     children_map: dict | None = None,
     descendant_leaf_sets: dict | None = None,
+    has_descendant_split: dict | None = None,
+    passthrough: bool = False,
 ) -> GateEvaluator:
     """Build a GateEvaluator with explicit overrides."""
     if tree is None:
@@ -104,6 +106,8 @@ def _make_gate(
         sibling_skipped=sibling_skipped,
         children_map=children_map,
         descendant_leaf_sets=descendant_leaf_sets,
+        has_descendant_split=has_descendant_split or {},
+        passthrough=passthrough,
     )
 
 
@@ -413,6 +417,243 @@ class TestTraversalIntegration:
 
         assert len(clusters) == 1
         assert clusters[0] == {"L1", "L2", "R1", "R2"}
+
+
+# =====================================================================
+# Pass-through traversal
+# =====================================================================
+
+
+def _make_deep_tree() -> nx.DiGraph:
+    """Deeper tree for pass-through tests.
+
+    Structure::
+
+            root
+           /    \\
+          A      B
+         / \\   / \\
+        A1  A2 C   D
+              / \\ / \\
+             C1 C2 D1 D2
+
+    Gate 3 fails at root (A and B look "same"), but
+    Gate 3 passes at B (C and D are different).
+    """
+    tree = nx.DiGraph()
+    tree.add_edges_from([
+        ("root", "A"), ("root", "B"),
+        ("A", "A1"), ("A", "A2"),
+        ("B", "C"), ("B", "D"),
+        ("C", "C1"), ("C", "C2"),
+        ("D", "D1"), ("D", "D2"),
+    ])
+    leaves = {"A1", "A2", "C1", "C2", "D1", "D2"}
+    for node in tree.nodes:
+        tree.nodes[node]["is_leaf"] = node in leaves
+        tree.nodes[node]["label"] = node
+    return tree
+
+
+class TestShouldPassThrough:
+    """Unit tests for GateEvaluator.should_pass_through."""
+
+    def test_passthrough_disabled_returns_false(self):
+        """When passthrough=False, should_pass_through is always False."""
+        gate = _make_gate(
+            passthrough=False,
+            has_descendant_split={"root": True},
+            # Gate 3 fails at root
+            sibling_different={n: False for n in ["root", "L", "R", "L1", "L2", "R1", "R2"]},
+        )
+        assert gate.should_pass_through("root") is False
+
+    def test_passthrough_when_gate3_fails_with_descendant_signal(self):
+        """Gates 1+2 pass, Gate 3 fails, descendant has split → pass-through."""
+        gate = _make_gate(
+            passthrough=True,
+            has_descendant_split={"root": True, "L": False, "R": False},
+            # Gate 3 fails at root (siblings "same")
+            sibling_different={n: False for n in ["root", "L", "R", "L1", "L2", "R1", "R2"]},
+        )
+        assert gate.should_pass_through("root") is True
+
+    def test_no_passthrough_when_gate3_passes(self):
+        """When Gate 3 passes (should_split=True), pass-through is not triggered."""
+        gate = _make_gate(
+            passthrough=True,
+            has_descendant_split={"root": True},
+        )
+        # Gate 3 passes → should_split True, should_pass_through False
+        assert gate.should_split("root") is True
+        assert gate.should_pass_through("root") is False
+
+    def test_no_passthrough_when_gates_1_2_fail(self):
+        """When Gates 1+2 fail, no pass-through even with descendant signal."""
+        gate = _make_gate(
+            passthrough=True,
+            has_descendant_split={"root": True},
+            # Gate 2 fails
+            local_significant={n: False for n in ["root", "L", "R", "L1", "L2", "R1", "R2"]},
+        )
+        assert gate.should_pass_through("root") is False
+
+    def test_no_passthrough_when_no_descendant_signal(self):
+        """Gate 3 fails but no descendant has a split → merge, no pass-through."""
+        gate = _make_gate(
+            passthrough=True,
+            has_descendant_split={"root": False},
+            sibling_different={n: False for n in ["root", "L", "R", "L1", "L2", "R1", "R2"]},
+        )
+        assert gate.should_pass_through("root") is False
+
+
+class TestProcessNodePassthrough:
+    """process_node with pass-through enabled."""
+
+    def test_passthrough_pushes_children(self):
+        """Pass-through pushes children even though Gate 3 fails."""
+        gate = _make_gate(
+            passthrough=True,
+            has_descendant_split={"root": True, "L": False, "R": False},
+            sibling_different={n: False for n in ["root", "L", "R", "L1", "L2", "R1", "R2"]},
+        )
+        worklist: list[str] = []
+        clusters: list[set[str]] = []
+
+        process_node("root", gate, worklist, clusters)
+
+        assert worklist == ["R", "L"]
+        assert clusters == []
+
+    def test_merge_when_no_descendant_signal(self):
+        """Without descendant signal, pass-through doesn't fire → merge."""
+        gate = _make_gate(
+            passthrough=True,
+            has_descendant_split={"root": False, "L": False, "R": False},
+            sibling_different={n: False for n in ["root", "L", "R", "L1", "L2", "R1", "R2"]},
+        )
+        worklist: list[str] = []
+        clusters: list[set[str]] = []
+
+        process_node("root", gate, worklist, clusters)
+
+        assert worklist == []
+        assert len(clusters) == 1
+        assert clusters[0] == {"L1", "L2", "R1", "R2"}
+
+
+class TestPassthroughTraversalIntegration:
+    """Full traversal with pass-through on the deep tree."""
+
+    def test_passthrough_reaches_deep_split(self):
+        """Pass-through drills past root to find the split at B.
+
+        Tree:  root → A, B;  A → A1, A2;  B → C, D;  C → C1, C2;  D → D1, D2
+
+        Gate 3 fails at root (A vs B "same") but passes at B (C vs D "different").
+        Without pass-through: 1 cluster {A1, A2, C1, C2, D1, D2}.
+        With pass-through: root passes through → A merges (no signal below),
+        B splits → C merges, D merges → 3 clusters.
+        """
+        tree = _make_deep_tree()
+        all_nodes = list(tree.nodes)
+        leaves = {"A1", "A2", "C1", "C2", "D1", "D2"}
+
+        # All children diverge from parent (Gate 2 passes everywhere)
+        local_sig = {n: True for n in all_nodes}
+
+        # Gate 3 fails at root, passes at B, fails elsewhere
+        sib_diff = {n: False for n in all_nodes}
+        sib_diff["B"] = True  # C and D are different
+
+        sib_skip = {n: False for n in all_nodes}
+
+        children_map = {n: list(tree.successors(n)) for n in all_nodes}
+
+        desc_sets = {}
+        for n in all_nodes:
+            if n in leaves:
+                desc_sets[n] = {n}
+            else:
+                desc_sets[n] = {d for d in nx.descendants(tree, n) if d in leaves}
+
+        # has_descendant_split: root=True (B has split below), A=False,
+        # B=False (B itself is the split, but its children C/D have no further split)
+        has_desc = {
+            "root": True,
+            "A": False,
+            "B": False,
+            "C": False,
+            "D": False,
+            "A1": False, "A2": False,
+            "C1": False, "C2": False,
+            "D1": False, "D2": False,
+        }
+
+        gate = GateEvaluator(
+            tree=tree,
+            local_significant=local_sig,
+            sibling_different=sib_diff,
+            sibling_skipped=sib_skip,
+            children_map=children_map,
+            descendant_leaf_sets=desc_sets,
+            has_descendant_split=has_desc,
+            passthrough=True,
+        )
+
+        worklist = ["root"]
+        processed: set[str] = set()
+        clusters: list[set[str]] = []
+
+        for node in iterate_worklist(worklist, processed):
+            process_node(node, gate, worklist, clusters)
+
+        # Expected: A merges → {A1, A2}
+        #           B splits → C merges {C1, C2}, D merges {D1, D2}
+        assert len(clusters) == 3
+        cluster_contents = sorted(clusters, key=lambda s: min(s))
+        assert cluster_contents[0] == {"A1", "A2"}
+        assert cluster_contents[1] == {"C1", "C2"}
+        assert cluster_contents[2] == {"D1", "D2"}
+
+    def test_without_passthrough_merges_at_root(self):
+        """Same tree but passthrough=False → one big cluster."""
+        tree = _make_deep_tree()
+        all_nodes = list(tree.nodes)
+        leaves = {"A1", "A2", "C1", "C2", "D1", "D2"}
+
+        local_sig = {n: True for n in all_nodes}
+        sib_diff = {n: False for n in all_nodes}
+        sib_diff["B"] = True
+        sib_skip = {n: False for n in all_nodes}
+        children_map = {n: list(tree.successors(n)) for n in all_nodes}
+        desc_sets = {}
+        for n in all_nodes:
+            if n in leaves:
+                desc_sets[n] = {n}
+            else:
+                desc_sets[n] = {d for d in nx.descendants(tree, n) if d in leaves}
+
+        gate = GateEvaluator(
+            tree=tree,
+            local_significant=local_sig,
+            sibling_different=sib_diff,
+            sibling_skipped=sib_skip,
+            children_map=children_map,
+            descendant_leaf_sets=desc_sets,
+            passthrough=False,
+        )
+
+        worklist = ["root"]
+        processed: set[str] = set()
+        clusters: list[set[str]] = []
+
+        for node in iterate_worklist(worklist, processed):
+            process_node(node, gate, worklist, clusters)
+
+        assert len(clusters) == 1
+        assert clusters[0] == leaves
 
 
 if __name__ == "__main__":
