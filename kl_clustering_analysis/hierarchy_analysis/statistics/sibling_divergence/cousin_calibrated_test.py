@@ -94,7 +94,7 @@ def _compute_sibling_stat(
         spectral_k=spectral_k,
         pca_projection=pca_projection,
     )
-    return result  # (stat, df, pval)
+    return result  # (statistic, degrees_of_freedom, p_value)
 
 
 # =============================================================================
@@ -129,7 +129,7 @@ def _get_cousin_reference(
 ) -> Tuple[float, int, bool]:
     """Compute the cousin-level reference statistic T_{UL,UR}.
 
-    Returns (stat, df, valid). If the uncle doesn't have binary children
+    Returns (statistic, degrees_of_freedom, valid). If the uncle doesn't have binary children
     or another issue prevents testing, returns (nan, nan, False).
     """
     uncle_children = _get_binary_children(tree, uncle)
@@ -142,7 +142,7 @@ def _get_cousin_reference(
     if n_ul < 2 or n_ur < 2:
         return np.nan, 0, False
 
-    stat, df, pval = _compute_sibling_stat(
+    statistic, degrees_of_freedom, p_value = _compute_sibling_stat(
         ul_dist,
         ur_dist,
         n_ul,
@@ -155,10 +155,10 @@ def _get_cousin_reference(
         pca_projection=pca_projection,
     )
 
-    if not np.isfinite(stat) or stat <= 0:
+    if not np.isfinite(statistic) or statistic <= 0:
         return np.nan, 0, False
 
-    return stat, int(df), True
+    return statistic, int(degrees_of_freedom), True
 
 
 # =============================================================================
@@ -194,9 +194,9 @@ def cousin_ftest(
     -------
     stat : float
         F-statistic (or Wald χ² if fallback).
-    df : float
+    degrees_of_freedom : float
         Degrees of freedom (or tuple encoded as float for F-test).
-    pval : float
+    p_value : float
         p-value.
     used_ftest : bool
         True if cousin F-test was used, False if fell back to Wald.
@@ -298,7 +298,7 @@ def _run_cousin_tests(
         # Look up spectral info for this parent
         _spectral_k = spectral_dims.get(parent) if spectral_dims else None
         _pca_proj = pca_projections.get(parent) if pca_projections else None
-        stat, df, pval, used_ftest = cousin_ftest(
+        statistic, degrees_of_freedom, p_value, used_ftest = cousin_ftest(
             tree,
             parent,
             left,
@@ -309,7 +309,7 @@ def _run_cousin_tests(
             spectral_dims=spectral_dims,
             pca_projections=pca_projections,
         )
-        results.append((stat, df, pval))
+        results.append((statistic, degrees_of_freedom, p_value))
         ftest_flags.append(used_ftest)
 
     return results, ftest_flags
