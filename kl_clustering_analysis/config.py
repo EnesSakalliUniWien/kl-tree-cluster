@@ -110,7 +110,7 @@ SPECTRAL_METHOD: str | None = "effective_rank"
 # increase rank but shift the mean toward the global average, concentrating
 # variance in the top PCs and REDUCING effective rank (typically ~30%).
 # Recommended: False (leaves-only gives more accurate rank estimates).
-INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
+INCLUDE_INTERNAL_IN_SPECTRAL: bool = False
 
 # --- Edge (Gate 2) Calibration ---
 
@@ -139,7 +139,9 @@ EDGE_CAL_MIN_EFFECTIVE_N_FOR_SIB_FILTER: float = 10.0
 #   False  - Unwhitened with Satterthwaite correction:
 #            T = Σ (vᵢᵀz)² ~ Σ λᵢ·χ²(1), approximate as c·χ²(ν)
 #            where c = Σλᵢ²/Σλᵢ, ν = (Σλᵢ)²/Σλᵢ² (preserves power)
-EIGENVALUE_WHITENING: bool = True
+# Satterthwaite preserves power because signal in high-eigenvalue
+# directions is not dampened by dividing by λᵢ.
+EIGENVALUE_WHITENING: bool = False
 
 # --- Sibling Test Method ---
 

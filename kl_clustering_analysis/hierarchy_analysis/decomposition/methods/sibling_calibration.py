@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 import pandas as pd
 
 from kl_clustering_analysis import config
@@ -15,6 +17,8 @@ from ...statistics.sibling_divergence import (
     annotate_sibling_divergence_weighted,
 )
 from ...statistics.sibling_divergence.sibling_divergence_test import annotate_sibling_divergence
+
+_APPLY_CALIBRATION_WARNING_EMITTED = False
 
 
 def fit_wald(
@@ -122,6 +126,17 @@ def apply_sibling_calibration(
     pca_eigenvalues: dict[str, object] | None = None,
 ) -> pd.DataFrame:
     """Dispatch sibling calibration by method name/enum."""
+    global _APPLY_CALIBRATION_WARNING_EMITTED
+    if not _APPLY_CALIBRATION_WARNING_EMITTED:
+        warnings.warn(
+            "apply_sibling_calibration is deprecated; use "
+            "decomposition.core.registry.resolve_sibling_calibrator + direct callable execution "
+            "or decomposition.gates.sibling_gate.annotate_sibling_gate.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        _APPLY_CALIBRATION_WARNING_EMITTED = True
+
     name = method.value if isinstance(method, SiblingCalibrationMethod) else str(method)
 
     if name == SiblingCalibrationMethod.COUSIN_WEIGHTED_WALD.value:
