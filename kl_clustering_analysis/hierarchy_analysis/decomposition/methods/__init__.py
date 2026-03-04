@@ -1,28 +1,14 @@
-"""Pluggable decomposition methods (k, basis, tests, calibration)."""
+"""Method namespace with lazy exports to keep import side-effects minimal."""
 
-from .k_estimators import (
-    estimate_k_active_features,
-    estimate_k_effective_rank,
-    estimate_k_marchenko_pastur,
-)
-from .projection_basis import (
-    build_pca_projection_basis,
-    build_projection_basis_with_padding,
-    build_random_orthonormal_basis,
-)
-from .projected_wald import (
-    compute_projected_pvalue,
-    run_projected_wald_kernel,
-    run_projected_wald_test,
-)
-from .sibling_calibration import (
-    apply_sibling_calibration,
-    fit_cousin_adjusted_wald,
-    fit_cousin_tree_guided,
-    fit_cousin_weighted_wald,
-)
+from __future__ import annotations
+
+from importlib import import_module
+from typing import Any
 
 __all__ = [
+    "effective_rank",
+    "marchenko_pastur_signal_count",
+    "count_active_features",
     "estimate_k_effective_rank",
     "estimate_k_marchenko_pastur",
     "estimate_k_active_features",
@@ -37,3 +23,31 @@ __all__ = [
     "fit_cousin_tree_guided",
     "apply_sibling_calibration",
 ]
+
+_NAME_TO_MODULE = {
+    "effective_rank": ".k_estimators",
+    "marchenko_pastur_signal_count": ".k_estimators",
+    "count_active_features": ".k_estimators",
+    "estimate_k_effective_rank": ".k_estimators",
+    "estimate_k_marchenko_pastur": ".k_estimators",
+    "estimate_k_active_features": ".k_estimators",
+    "build_pca_projection_basis": ".projection_basis",
+    "build_random_orthonormal_basis": ".projection_basis",
+    "build_projection_basis_with_padding": ".projection_basis",
+    "run_projected_wald_kernel": ".projected_wald",
+    "run_projected_wald_test": ".projected_wald",
+    "compute_projected_pvalue": ".projected_wald",
+    "fit_cousin_weighted_wald": ".sibling_calibration",
+    "fit_cousin_adjusted_wald": ".sibling_calibration",
+    "fit_cousin_tree_guided": ".sibling_calibration",
+    "apply_sibling_calibration": ".sibling_calibration",
+}
+
+
+def __getattr__(name: str) -> Any:
+    module_name = _NAME_TO_MODULE.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module = import_module(module_name, __name__)
+    return getattr(module, name)
+

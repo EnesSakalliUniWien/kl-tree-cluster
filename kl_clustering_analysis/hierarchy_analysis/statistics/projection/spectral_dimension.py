@@ -50,14 +50,14 @@ from joblib import Parallel, delayed
 from .eigen_decomposition import (
     build_pca_projection,
     eigendecompose_correlation,
-    estimate_spectral_k,
 )
 
-# Re-export estimators so existing ``from spectral_dimension import …``
-# continues to work without changes.
-from .estimators import (  # noqa: F401
+from ...decomposition.methods.k_estimators import (  # noqa: F401
     count_active_features,
     effective_rank,
+    estimate_k_active_features,
+    estimate_k_effective_rank,
+    estimate_k_marchenko_pastur,
     marchenko_pastur_signal_count,
 )
 from .tree_helpers import is_leaf, precompute_descendants
@@ -134,8 +134,7 @@ def _process_node(
         data_sub = leaf_rows
 
     if method == "active_features":
-        k = count_active_features(data_sub)
-        k = max(k, min_k)
+        k = estimate_k_active_features(data_sub, min_k=min_k)
         k = min(k, d)
         return (node_id, k, None, None)
 
@@ -143,13 +142,19 @@ def _process_node(
     if eig is None:
         return (node_id, max(min_k, 1), None, None)
 
-    k = estimate_spectral_k(
-        eig.eigenvalues,
-        method,
-        data_sub.shape[0],
-        eig.d_active,
-        min_k,
-    )
+    if method == "effective_rank":
+        k = estimate_k_effective_rank(
+            eig.eigenvalues,
+            min_k=min_k,
+            d_active=eig.d_active,
+        )
+    else:  # marchenko_pastur
+        k = estimate_k_marchenko_pastur(
+            eig.eigenvalues,
+            n_desc=data_sub.shape[0],
+            d_active=eig.d_active,
+            min_k=min_k,
+        )
 
     proj, ev = None, None
     if need_eigh:

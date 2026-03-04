@@ -7,7 +7,10 @@ from typing import Callable
 import numpy as np
 
 from ..core.contracts import ProjectedTestResult
-from .projection_basis import build_random_orthonormal_basis
+from .projection_basis import (
+    build_projection_basis_with_padding,
+    build_random_orthonormal_basis,
+)
 from ...statistics.projection.satterthwaite import compute_projected_pvalue as _compute_projected_pvalue
 
 
@@ -51,38 +54,14 @@ def run_projected_wald_kernel(
             raise ValueError("k_fallback must be provided when spectral_k is None.")
         k = min(int(k_fallback(d)), d)
 
-    eig_for_whitening: np.ndarray | None = None
-
-    if pca_projection is not None:
-        pca_projection = np.asarray(pca_projection, dtype=np.float64)
-        k_pca = int(pca_projection.shape[0])
-        if k_pca >= k:
-            R = pca_projection[:k]
-            eig_for_whitening = (
-                np.asarray(pca_eigenvalues[:k], dtype=np.float64)
-                if pca_eigenvalues is not None
-                else None
-            )
-        else:
-            R_pad = build_random_orthonormal_basis(
-                n_features=d,
-                k=k - k_pca,
-                random_state=seed,
-                use_cache=False,
-            )
-            R = np.vstack([pca_projection, R_pad])
-            eig_for_whitening = (
-                np.asarray(pca_eigenvalues, dtype=np.float64)
-                if pca_eigenvalues is not None
-                else None
-            )
-    else:
-        R = build_random_orthonormal_basis(
-            n_features=d,
-            k=k,
-            random_state=seed,
-            use_cache=False,
-        )
+    # Projection basis policy is centralized in projection_basis.py.
+    R, eig_for_whitening = build_projection_basis_with_padding(
+        n_features=d,
+        k=k,
+        pca_projection=pca_projection,
+        pca_eigenvalues=pca_eigenvalues,
+        random_state=seed,
+    )
 
     try:
         if hasattr(R, "dot"):
