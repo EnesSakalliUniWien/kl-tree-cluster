@@ -492,10 +492,10 @@ def predict_edge_inflation_factor(
 
 
 def _extract_raw_edge_calibration_data(
-    results_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
 ) -> _RawEdgeCalibrationData | None:
     """Load raw edge test arrays stored by Gate-2 annotation."""
-    raw_data = results_dataframe.attrs.get("_edge_raw_test_data")
+    raw_data = annotations_df.attrs.get("_edge_raw_test_data")
     if raw_data is None:
         logger.warning(
             "Edge calibration: no raw test data in attrs — "
@@ -528,14 +528,14 @@ def _build_parent_children_leaf_count_map(
     return parent_children_leaf_counts
 
 
-def _extract_parent_sibling_difference_map(results_dataframe: pd.DataFrame) -> dict[str, bool]:
+def _extract_parent_sibling_difference_map(annotations_df: pd.DataFrame) -> dict[str, bool]:
     """Build per-parent sibling-difference flags from Gate-3 output, if available."""
     from kl_clustering_analysis.core_utils.data_utils import extract_bool_column_dict
 
-    if "Sibling_BH_Different" not in results_dataframe.columns:
+    if "Sibling_BH_Different" not in annotations_df.columns:
         return {}
     return extract_bool_column_dict(
-        results_dataframe,
+        annotations_df,
         "Sibling_BH_Different",
         null_policy="false",
     )
@@ -635,29 +635,29 @@ def _apply_edge_multiple_testing_correction(
 
 
 def _write_edge_calibration_results(
-    results_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     child_ids: list[str],
     calibrated_p_values: np.ndarray,
     corrected_p_values: np.ndarray,
     reject_null_hypothesis: np.ndarray,
 ) -> None:
     """Write calibrated p-values and significance calls back to DataFrame."""
-    results_dataframe.loc[child_ids, "Child_Parent_Divergence_P_Value"] = calibrated_p_values
-    results_dataframe.loc[child_ids, "Child_Parent_Divergence_P_Value_BH"] = corrected_p_values
-    results_dataframe.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null_hypothesis
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value"] = calibrated_p_values
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value_BH"] = corrected_p_values
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null_hypothesis
 
 
 def _attach_edge_calibration_metadata(
-    results_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     calibration_model: EdgeCalibrationModel,
     calibration_factor: float | None = None,
 ) -> None:
     """Attach calibration model and audit metadata to DataFrame attrs."""
-    results_dataframe.attrs["edge_calibration_model"] = calibration_model
+    annotations_df.attrs["edge_calibration_model"] = calibration_model
     if calibration_factor is None:
-        results_dataframe.attrs["edge_calibration_audit"] = calibration_model.diagnostics
+        annotations_df.attrs["edge_calibration_audit"] = calibration_model.diagnostics
         return
-    results_dataframe.attrs["edge_calibration_audit"] = {
+    annotations_df.attrs["edge_calibration_audit"] = {
         "c_hat": calibration_factor,
         **calibration_model.diagnostics,
     }
@@ -704,16 +704,15 @@ def calibrate_edges_from_sibling_neighborhood(
     pd.DataFrame
         Updated DataFrame with calibrated edge statistics.
     """
-    results_dataframe = annotations_df
-    raw_edge_data = _extract_raw_edge_calibration_data(results_dataframe)
+    raw_edge_data = _extract_raw_edge_calibration_data(annotations_df)
     if raw_edge_data is None:
-        return results_dataframe
+        return annotations_df
 
     if raw_edge_data.edge_count == 0:
-        return results_dataframe
+        return annotations_df
 
     parent_children_leaf_count_map = _build_parent_children_leaf_count_map(raw_edge_data)
-    parent_sibling_difference_map = _extract_parent_sibling_difference_map(results_dataframe)
+    parent_sibling_difference_map = _extract_parent_sibling_difference_map(annotations_df)
     records = _build_edge_records_for_calibration(
         raw_edge_data,
         parent_children_leaf_count_map,
@@ -722,14 +721,14 @@ def calibrate_edges_from_sibling_neighborhood(
 
     if not records:
         logger.warning("Edge calibration: no valid edges to calibrate.")
-        return results_dataframe
+        return annotations_df
 
     model = _fit_edge_calibration_model(records)
 
     if model.method == "none":
         logger.info("Edge calibration: model is 'none' — no deflation applied.")
-        _attach_edge_calibration_metadata(results_dataframe, model)
-        return results_dataframe
+        _attach_edge_calibration_metadata(annotations_df, model)
+        return annotations_df
 
     calibration_factor = predict_edge_inflation_factor(model)
     logger.info("Edge calibration: ĉ = %.3f (method=%s).", calibration_factor, model.method)
@@ -743,14 +742,14 @@ def calibrate_edges_from_sibling_neighborhood(
         fdr_method=fdr_method,
     )
     _write_edge_calibration_results(
-        results_dataframe=results_dataframe,
+        annotations_df=annotations_df,
         child_ids=raw_edge_data.child_ids,
         calibrated_p_values=deflated_p_values,
         corrected_p_values=corrected_p_values,
         reject_null_hypothesis=reject_null_hypothesis,
     )
     _attach_edge_calibration_metadata(
-        results_dataframe=results_dataframe,
+        annotations_df=annotations_df,
         calibration_model=model,
         calibration_factor=calibration_factor,
     )
@@ -763,4 +762,4 @@ def calibrate_edges_from_sibling_neighborhood(
         model.diagnostics.get("n_null_like", 0),
     )
 
-    return results_dataframe
+    return annotations_df

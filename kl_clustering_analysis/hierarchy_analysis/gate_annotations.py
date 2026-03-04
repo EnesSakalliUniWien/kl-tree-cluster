@@ -36,7 +36,7 @@ def _warn_legacy_entrypoint_once(name: str, replacement: str) -> None:
 
 def compute_gate_annotations(
     tree: "PosetTree",
-    results_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     alpha_local: float = config.ALPHA_LOCAL,
     sibling_alpha: float = config.SIBLING_ALPHA,
@@ -51,7 +51,7 @@ def compute_gate_annotations(
     )
     bundle = run_gate_annotation_pipeline(
         tree,
-        results_df,
+        annotations_df,
         alpha_local=alpha_local,
         sibling_alpha=sibling_alpha,
         leaf_data=leaf_data,
@@ -72,7 +72,7 @@ def compute_gate_annotations(
 
 def annotate_edge_gate(
     tree: "PosetTree",
-    results_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.ALPHA_LOCAL,
     leaf_data: pd.DataFrame | None = None,
@@ -87,7 +87,7 @@ def annotate_edge_gate(
     )
     return _annotate_edge_gate_bundle(
         tree,
-        results_df,
+        annotations_df,
         significance_level_alpha=significance_level_alpha,
         leaf_data=leaf_data,
         spectral_method=spectral_method,
@@ -98,7 +98,7 @@ def annotate_edge_gate(
 
 def annotate_sibling_gate(
     tree: "PosetTree",
-    results_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     sibling_method: str = config.SIBLING_TEST_METHOD,
@@ -113,7 +113,7 @@ def annotate_sibling_gate(
     )
     return _annotate_sibling_gate_bundle(
         tree,
-        results_df,
+        annotations_df,
         significance_level_alpha=significance_level_alpha,
         sibling_method=sibling_method,
         spectral_dims=spectral_dims,
