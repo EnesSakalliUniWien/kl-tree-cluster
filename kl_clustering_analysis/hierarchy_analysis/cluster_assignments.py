@@ -71,12 +71,12 @@ def build_sample_cluster_assignments(
         return pd.DataFrame(columns=["cluster_id", "cluster_root", "cluster_size"])
 
     rows: dict[str, dict[str, object]] = {}
-    for cluster_identifier, info in raw_cluster_assignments.items():
-        if not isinstance(info, dict):
+    for cluster_identifier, cluster_metadata in raw_cluster_assignments.items():
+        if not isinstance(cluster_metadata, dict):
             continue
-        root = info.get("root_node")
-        size = info.get("size", 0)
-        for sample_identifier in info.get("leaves", []):
+        root = cluster_metadata.get("root_node")
+        size = cluster_metadata.get("size", 0)
+        for sample_identifier in cluster_metadata.get("leaves", []):
             rows[sample_identifier] = {
                 "cluster_id": cluster_identifier,
                 "cluster_root": root,

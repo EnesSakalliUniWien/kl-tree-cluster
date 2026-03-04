@@ -497,8 +497,8 @@ class TreeDecomposition:
             return cluster_assignments, []
 
         cluster_roots: Set[str] = set()
-        for info in cluster_assignments.values():
-            root_node = info.get("root_node")
+        for cluster_metadata in cluster_assignments.values():
+            root_node = cluster_metadata.get("root_node")
             if isinstance(root_node, str) and root_node:
                 cluster_roots.add(root_node)
 

@@ -251,9 +251,9 @@ def bootstrap_consensus(
 def _build_label_map(cluster_assignments: Dict) -> Dict[str, int]:
     """Map sample_label → cluster_id from decompose output."""
     label_map: Dict[str, int] = {}
-    for cid, info in cluster_assignments.items():
-        for leaf in info["leaves"]:
-            label_map[leaf] = cid
+    for cluster_identifier, cluster_metadata in cluster_assignments.items():
+        for leaf in cluster_metadata["leaves"]:
+            label_map[leaf] = cluster_identifier
     return label_map
 
 
@@ -381,10 +381,10 @@ def _compute_cluster_stability(
 ) -> Dict[int, float]:
     """Mean pairwise co-association within each original cluster."""
     stability: Dict[int, float] = {}
-    for cid, info in cluster_assignments.items():
-        leaves = info["leaves"]
+    for cluster_identifier, cluster_metadata in cluster_assignments.items():
+        leaves = cluster_metadata["leaves"]
         if len(leaves) < 2:
-            stability[cid] = 1.0
+            stability[cluster_identifier] = 1.0
             continue
         vals = []
         for a_pos in range(len(leaves)):
@@ -392,5 +392,5 @@ def _compute_cluster_stability(
                 sid_a, sid_b = leaves[a_pos], leaves[b_pos]
                 if sid_a in co_assoc_df.index and sid_b in co_assoc_df.columns:
                     vals.append(co_assoc_df.loc[sid_a, sid_b])
-        stability[cid] = float(np.mean(vals)) if vals else 0.0
+        stability[cluster_identifier] = float(np.mean(vals)) if vals else 0.0
     return stability
