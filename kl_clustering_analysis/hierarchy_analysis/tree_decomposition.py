@@ -19,7 +19,7 @@ from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
 from .cluster_assignments import build_sample_cluster_assignments
-from .gate_annotations import compute_gate_annotations
+from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
 from .gates import GateEvaluator, iterate_worklist, process_node
 from .pairwise_testing import (
     build_branch_distance_cache,
@@ -265,9 +265,9 @@ class TreeDecomposition:
     def _prepare_annotations(self, results_df: pd.DataFrame) -> pd.DataFrame:
         """Ensure statistical annotation columns are present on *results_df*.
 
-        Delegates to :func:`~.gate_annotations.compute_gate_annotations`.
+        Delegates directly to canonical gate orchestrator.
         """
-        return compute_gate_annotations(
+        return run_gate_annotation_pipeline(
             self.tree,
             results_df,
             alpha_local=self.alpha_local,
@@ -275,7 +275,14 @@ class TreeDecomposition:
             leaf_data=self._leaf_data,
             spectral_method=self._spectral_method,
             min_k=self._resolved_min_k,
-        )
+            sibling_method=config.SIBLING_TEST_METHOD,
+            # Preserve existing decomposition semantics.
+            fdr_method="tree_bh",
+            sibling_spectral_dims=None,
+            sibling_pca_projections=None,
+            sibling_pca_eigenvalues=None,
+            edge_calibration=None,
+        ).annotated_df
 
     def _cache_node_metadata(self) -> None:
         """Cache node attributes for fast repeated access during decomposition.

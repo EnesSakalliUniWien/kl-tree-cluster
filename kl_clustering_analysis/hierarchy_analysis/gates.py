@@ -16,10 +16,11 @@ that are used by :class:`TreeDecomposition` during the DFS walk.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Dict, Hashable, Iterator, List, Set, Tuple
+from typing import TYPE_CHECKING, Dict, Hashable, Iterator, List, Set, Tuple
 
 if TYPE_CHECKING:
     from ..tree.poset_tree import PosetTree
+
 
 class GateEvaluator:
     """Evaluate split-or-merge gates at each internal node.
@@ -140,7 +141,6 @@ class GateEvaluator:
         return self._evaluate_gate_3(parent)
 
 
-
 # ======================================================================
 # Traversal helpers (stateless functions)
 # ======================================================================
@@ -194,5 +194,3 @@ def iterate_worklist(
             continue
         processed.add(node_id)
         yield node_id
-
-
