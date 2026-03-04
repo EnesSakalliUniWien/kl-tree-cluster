@@ -19,8 +19,6 @@ sys.path.insert(0, ".")
 warnings.filterwarnings("ignore")
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
     annotate_child_parent_divergence,
 )
@@ -36,7 +34,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cou
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald import (
     annotate_sibling_divergence_weighted,
 )
-
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 # ── Test data ──────────────────────────────────────────────────────────────
 
@@ -44,13 +43,16 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cou
 def make_trivial_2c(n_per=50, p=100, seed=42):
     """Trivially separable: cluster A ≈ all 1s, cluster B ≈ all 0s."""
     rng = np.random.default_rng(seed)
-    X = np.vstack([
-        rng.binomial(1, 0.9, size=(n_per, p)),
-        rng.binomial(1, 0.1, size=(n_per, p)),
-    ])
+    X = np.vstack(
+        [
+            rng.binomial(1, 0.9, size=(n_per, p)),
+            rng.binomial(1, 0.1, size=(n_per, p)),
+        ]
+    )
     labels = np.array([0] * n_per + [1] * n_per)
-    df = pd.DataFrame(X, index=[f"S{i}" for i in range(2 * n_per)],
-                       columns=[f"F{j}" for j in range(p)])
+    df = pd.DataFrame(
+        X, index=[f"S{i}" for i in range(2 * n_per)], columns=[f"F{j}" for j in range(p)]
+    )
     return df, labels
 
 
@@ -61,14 +63,13 @@ def make_block_4c(n_per=50, p=200, seed=42):
     rows, labels = [], []
     for c in range(4):
         X_c = rng.binomial(1, 0.1, size=(n_per, p))
-        X_c[:, c * block : (c + 1) * block] = rng.binomial(
-            1, 0.9, size=(n_per, block)
-        )
+        X_c[:, c * block : (c + 1) * block] = rng.binomial(1, 0.9, size=(n_per, block))
         rows.append(X_c)
         labels.extend([c] * n_per)
     X = np.vstack(rows)
-    df = pd.DataFrame(X, index=[f"S{i}" for i in range(4 * n_per)],
-                       columns=[f"F{j}" for j in range(p)])
+    df = pd.DataFrame(
+        X, index=[f"S{i}" for i in range(4 * n_per)], columns=[f"F{j}" for j in range(p)]
+    )
     return df, np.array(labels)
 
 
@@ -105,7 +106,9 @@ def trace_should_split_v1(decomp: TreeDecomposition, node: str) -> dict:
     right_div = decomp._local_significant.get(right)
     result["gate2_edge_left"] = left_div
     result["gate2_edge_right"] = right_div
-    result["gate2_pass"] = bool(left_div or right_div) if left_div is not None and right_div is not None else None
+    result["gate2_pass"] = (
+        bool(left_div or right_div) if left_div is not None and right_div is not None else None
+    )
 
     if not result["gate2_pass"]:
         result["final"] = False
@@ -190,15 +193,19 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
         if "branch_length" in tree.edges[u, v]
     ]
     if bl_edges:
-        print(f"  BL: n={len(bl_edges)}, min={min(bl_edges):.4f}, "
-              f"med={np.median(bl_edges):.4f}, max={max(bl_edges):.4f}, "
-              f"mean={np.mean(bl_edges):.4f}")
+        print(
+            f"  BL: n={len(bl_edges)}, min={min(bl_edges):.4f}, "
+            f"med={np.median(bl_edges):.4f}, max={max(bl_edges):.4f}, "
+            f"mean={np.mean(bl_edges):.4f}"
+        )
     else:
         print("  BL: NONE")
 
     # 3. Edge test (shared across all sibling methods)
     # Use tree.stats_df which has leaf_count and other required columns
-    results_df = tree.stats_df.copy() if tree.stats_df is not None else pd.DataFrame(index=list(tree.nodes))
+    results_df = (
+        tree.stats_df.copy() if tree.stats_df is not None else pd.DataFrame(index=list(tree.nodes))
+    )
     results_df = annotate_child_parent_divergence(
         tree, results_df, significance_level_alpha=config.SIGNIFICANCE_ALPHA
     )
@@ -218,7 +225,7 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
     # Top 5 smallest edge p-values
     if "Child_Parent_Divergence_P_Value" in results_df.columns:
         edge_pvals = results_df["Child_Parent_Divergence_P_Value"].dropna().sort_values()
-        print(f"  Top 5 edge p-values:")
+        print("  Top 5 edge p-values:")
         for node, pval in edge_pvals.head(5).items():
             print(f"    {node}: p={pval:.4e}, sig={edge_sig.get(node, '?')}")
 
@@ -241,8 +248,10 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
             print(f"    Audit: {cal_m}, n={n_cal} {c_str}{extra}")
             diag = audit.get("diagnostics", {})
             if diag.get("beta"):
-                print(f"    Regression: β={[f'{b:.3f}' for b in diag['beta']]}, "
-                      f"R²={diag.get('r_squared', 0):.3f}")
+                print(
+                    f"    Regression: β={[f'{b:.3f}' for b in diag['beta']]}, "
+                    f"R²={diag.get('r_squared', 0):.3f}"
+                )
 
         # Sibling summary
         _print_sibling_summary(df_m, method_name)
@@ -257,7 +266,7 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
         )
 
         # Trace gates on root and its children (top 2 levels)
-        print(f"    Gate trace (v1 = _should_split, v2 = _should_split_v2):")
+        print("    Gate trace (v1 = _should_split, v2 = _should_split_v2):")
         nodes_to_trace = [root]
         for ch in root_children:
             if list(tree.successors(ch)):
@@ -265,13 +274,15 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
 
         for node in nodes_to_trace:
             g1 = trace_should_split_v1(decomp, node)
-            print(f"      {node} [v1]: "
-                  f"G1(binary)={_format_gate(g1['gate1_binary'])} "
-                  f"G2(edge L={_format_gate(g1['gate2_edge_left'])}, "
-                  f"R={_format_gate(g1['gate2_edge_right'])})={_format_gate(g1['gate2_pass'])} "
-                  f"G3(sib_diff={_format_gate(g1['gate3_sibling_different'])}, "
-                  f"skip={_format_gate(g1['gate3_sibling_skipped'])})={_format_gate(g1['gate3_pass'])} "
-                  f"=> SPLIT={_format_gate(g1['final'])}")
+            print(
+                f"      {node} [v1]: "
+                f"G1(binary)={_format_gate(g1['gate1_binary'])} "
+                f"G2(edge L={_format_gate(g1['gate2_edge_left'])}, "
+                f"R={_format_gate(g1['gate2_edge_right'])})={_format_gate(g1['gate2_pass'])} "
+                f"G3(sib_diff={_format_gate(g1['gate3_sibling_different'])}, "
+                f"skip={_format_gate(g1['gate3_sibling_skipped'])})={_format_gate(g1['gate3_pass'])} "
+                f"=> SPLIT={_format_gate(g1['final'])}"
+            )
 
         # Also show v2 localization toggle
         decomp_v2 = TreeDecomposition(
@@ -343,10 +354,11 @@ def _print_sibling_summary(df: pd.DataFrame, label: str):
                 stat = df.loc[node].get("Sibling_Test_Statistic", "?")
                 dof = df.loc[node].get("Sibling_Degrees_of_Freedom", "?")
                 meth = df.loc[node].get("Sibling_Test_Method", "")
-                print(f"      {node}: T={stat:.2f}, k={dof}, p={pval:.4e}, "
-                      f"diff={diff} [{meth}]"
-                      if isinstance(stat, float) else
-                      f"      {node}: T={stat}, k={dof}, p={pval:.4e}, diff={diff}")
+                print(
+                    f"      {node}: T={stat:.2f}, k={dof}, p={pval:.4e}, " f"diff={diff} [{meth}]"
+                    if isinstance(stat, float)
+                    else f"      {node}: T={stat}, k={dof}, p={pval:.4e}, diff={diff}"
+                )
 
 
 # ── Main ────────────────────────────────────────────────────────────────────
@@ -354,12 +366,11 @@ def _print_sibling_summary(df: pd.DataFrame, label: str):
 
 def main():
     import logging
+
     logging.basicConfig(level=logging.WARNING, format="%(name)s | %(message)s")
 
-    print(f"Config: metric={config.TREE_DISTANCE_METRIC}, "
-          f"linkage={config.TREE_LINKAGE_METHOD}")
-    print(f"Config: sig_alpha={config.SIGNIFICANCE_ALPHA}, "
-          f"sib_alpha={config.SIBLING_ALPHA}")
+    print(f"Config: metric={config.TREE_DISTANCE_METRIC}, " f"linkage={config.TREE_LINKAGE_METHOD}")
+    print(f"Config: sig_alpha={config.SIGNIFICANCE_ALPHA}, " f"sib_alpha={config.SIBLING_ALPHA}")
 
     data_2c, labels_2c = make_trivial_2c()
     diagnose("trivial_2c", data_2c, labels_2c)
@@ -372,10 +383,16 @@ def main():
         from benchmarks.shared.cases import get_default_test_cases
         from benchmarks.shared.generators import generate_case_data
 
-        pick = {"sparse_features_72x72", "binary_perfect_2c", "binary_perfect_4c",
-                "gauss_clear_small", "gauss_moderate_3c",
-                "gauss_overlap_3c_small", "overlap_heavy_4c_small_feat",
-                "overlap_mod_4c_small"}
+        pick = {
+            "sparse_features_72x72",
+            "binary_perfect_2c",
+            "binary_perfect_4c",
+            "gauss_clear_small",
+            "gauss_moderate_3c",
+            "gauss_overlap_3c_small",
+            "overlap_heavy_4c_small_feat",
+            "overlap_mod_4c_small",
+        }
         all_cases = get_default_test_cases()
         for tc in all_cases:
             if tc["name"] in pick:

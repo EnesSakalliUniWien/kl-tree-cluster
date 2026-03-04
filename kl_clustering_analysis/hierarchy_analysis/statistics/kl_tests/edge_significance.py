@@ -509,5 +509,3 @@ def annotate_child_parent_divergence(
 
 
 __all__ = ["annotate_child_parent_divergence"]
-
-__all__ = ["annotate_child_parent_divergence"]

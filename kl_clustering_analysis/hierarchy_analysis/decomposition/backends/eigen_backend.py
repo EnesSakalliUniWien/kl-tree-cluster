@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from ...statistics.projection.estimators import effective_rank, marchenko_pastur_signal_count
+from ..methods.k_estimators import effective_rank, marchenko_pastur_signal_count
 
 
 @dataclass
@@ -155,4 +155,3 @@ __all__ = [
     "estimate_spectral_k_backend",
     "build_pca_projection_backend",
 ]
-

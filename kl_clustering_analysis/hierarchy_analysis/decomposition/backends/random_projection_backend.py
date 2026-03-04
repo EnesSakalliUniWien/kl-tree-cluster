@@ -14,7 +14,7 @@ from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 from kl_clustering_analysis import config
 
-from ...statistics.projection.estimators import effective_rank as _effective_rank
+from ..methods.k_estimators import effective_rank as _effective_rank
 
 logger = logging.getLogger(__name__)
 
@@ -269,4 +269,3 @@ __all__ = [
     "generate_projection_matrix_backend",
     "derive_projection_seed_backend",
 ]
-

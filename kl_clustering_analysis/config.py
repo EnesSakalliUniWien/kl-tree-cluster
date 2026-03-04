@@ -109,8 +109,11 @@ SPECTRAL_METHOD: str | None = "effective_rank"
 # Internal distributions are convex combinations of leaf data — they do NOT
 # increase rank but shift the mean toward the global average, concentrating
 # variance in the top PCs and REDUCING effective rank (typically ~30%).
-# Recommended: False (leaves-only gives more accurate rank estimates).
-INCLUDE_INTERNAL_IN_SPECTRAL: bool = False
+# WARNING: Setting to False catastrophically inflates Gate 2 false positives
+# on null data (edge_T1 goes from 2% to 89% on large null, FPR 0%→83%).
+# The internal nodes act as a beneficial regularizer for effective rank
+# under the null — removing them inflates df and causes spurious splits.
+INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 
 # --- Edge (Gate 2) Calibration ---
 
@@ -141,7 +144,10 @@ EDGE_CAL_MIN_EFFECTIVE_N_FOR_SIB_FILTER: float = 10.0
 #            where c = Σλᵢ²/Σλᵢ, ν = (Σλᵢ)²/Σλᵢ² (preserves power)
 # Satterthwaite preserves power because signal in high-eigenvalue
 # directions is not dampened by dividing by λᵢ.
-EIGENVALUE_WHITENING: bool = False
+# WARNING: Satterthwaite (False) is anti-conservative on null Gaussian data —
+# the approximate χ²(ν) calibration breaks down when the eigenspectrum is flat,
+# causing massive Gate 2 false positive inflation (e.g. gauss_null K=1 → K=18).
+EIGENVALUE_WHITENING: bool = True
 
 # --- Sibling Test Method ---
 

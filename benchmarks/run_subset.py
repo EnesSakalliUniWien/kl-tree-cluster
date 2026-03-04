@@ -68,12 +68,12 @@ kl = kl.sort_values("Case_Name")
 print(f"\n{'Case':<36s} {'True':>4s} {'Found':>5s} {'ARI':>7s} {'NMI':>7s} {'Status'}")
 print("-" * 70)
 for _, row in kl.iterrows():
-    ari_val = row['ARI']
-    nmi_val = row['NMI']
+    ari_val = row["ARI"]
+    nmi_val = row["NMI"]
     ari_str = f"{ari_val:.3f}" if not (ari_val != ari_val) else "  N/A"
     nmi_str = f"{nmi_val:.3f}" if not (nmi_val != nmi_val) else "  N/A"
-    true_str = f"{row['True']:>4.0f}" if row['True'] > 0 else " N/A"
-    marker = " ✓" if row['True'] > 0 and row["Found"] == row["True"] else ""
+    true_str = f"{row['True']:>4.0f}" if row["True"] > 0 else " N/A"
+    marker = " ✓" if row["True"] > 0 and row["Found"] == row["True"] else ""
     print(
         f"{row['Case_Name']:<36s} {true_str} {row['Found']:>5.0f} {ari_str:>7s} {nmi_str:>7s} {row['Status']}{marker}"
     )

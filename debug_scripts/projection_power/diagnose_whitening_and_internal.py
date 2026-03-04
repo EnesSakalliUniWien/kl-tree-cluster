@@ -20,6 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import numpy as np
@@ -28,9 +29,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
 
+import kl_clustering_analysis.config as config
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators.generate_case_data import generate_case_data
-import kl_clustering_analysis.config as config
+from benchmarks.shared.generators.generate_case_data import generate_case_data
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 # Representative cases covering: easy, moderate, hard, null, many-cluster, sparse
@@ -56,9 +58,9 @@ TARGET_CASES = [
 
 # The 4 config combinations to test
 CONFIGS = [
-    {"whitening": True,  "include_internal": True,  "label": "W=T I=T (old default)"},
-    {"whitening": True,  "include_internal": False, "label": "W=T I=F"},
-    {"whitening": False, "include_internal": True,  "label": "W=F I=T"},
+    {"whitening": True, "include_internal": True, "label": "W=T I=T (old default)"},
+    {"whitening": True, "include_internal": False, "label": "W=T I=F"},
+    {"whitening": False, "include_internal": True, "label": "W=F I=T"},
     {"whitening": False, "include_internal": False, "label": "W=F I=F (new default)"},
 ]
 
@@ -81,11 +83,13 @@ def run_case(case_config: dict, whitening: bool, include_internal: bool):
         df = data
     else:
         n, p = data.shape
-        df = pd.DataFrame(data, index=[f"S{i}" for i in range(n)],
-                          columns=[f"F{j}" for j in range(p)])
+        df = pd.DataFrame(
+            data, index=[f"S{i}" for i in range(n)], columns=[f"F{j}" for j in range(p)]
+        )
 
-    Z = linkage(pdist(df.values, metric=config.TREE_DISTANCE_METRIC),
-                method=config.TREE_LINKAGE_METHOD)
+    Z = linkage(
+        pdist(df.values, metric=config.TREE_DISTANCE_METRIC), method=config.TREE_LINKAGE_METHOD
+    )
     tree = PosetTree.from_linkage(Z, leaf_names=df.index.tolist())
     tree.populate_node_divergences(df)
 
@@ -124,8 +128,10 @@ def run_case(case_config: dict, whitening: bool, include_internal: bool):
 def main():
     print("=" * 110)
     print("WHITENING × INCLUDE_INTERNAL A/B DIAGNOSIS")
-    print(f"SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
-          f"SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}")
+    print(
+        f"SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
+        f"SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}"
+    )
     print("=" * 110)
 
     # Collect all case configs first
@@ -150,7 +156,7 @@ def main():
                 all_results[name][cfg["label"]] = r
             except Exception as e:
                 all_results[name][cfg["label"]] = {
-                    "found_k": f"ERR",
+                    "found_k": "ERR",
                     "ari": float("nan"),
                     "root_k": None,
                     "n_edge_sig": 0,
@@ -288,8 +294,10 @@ def main():
                 new_err = abs(new_k - true_k)
                 if new_err > old_err:
                     found_any = True
-                    print(f"  {cfg['label']:>18}: {name:<30} true_k={true_k}, "
-                          f"old K={old_k} (err={old_err}), new K={new_k} (err={new_err})")
+                    print(
+                        f"  {cfg['label']:>18}: {name:<30} true_k={true_k}, "
+                        f"old K={old_k} (err={old_err}), new K={new_k} (err={new_err})"
+                    )
     if not found_any:
         print("  None — all configs are equal or better than old default.")
 

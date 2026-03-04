@@ -52,13 +52,10 @@ from .eigen_decomposition import (
     eigendecompose_correlation,
 )
 
-from ...decomposition.methods.k_estimators import (  # noqa: F401
-    count_active_features,
-    effective_rank,
+from ...decomposition.methods.k_estimators import (
     estimate_k_active_features,
     estimate_k_effective_rank,
     estimate_k_marchenko_pastur,
-    marchenko_pastur_signal_count,
 )
 from .tree_helpers import is_leaf, precompute_descendants
 
