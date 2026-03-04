@@ -105,6 +105,15 @@ PROJECTION_RANDOM_SEED: int | None = 42
 #   "active_features"     - Count features with non-zero variance (no eigendecomp)
 SPECTRAL_METHOD: str | None = "effective_rank"
 
+# Minimum projection dimension for the SPECTRAL (Gate 2) path only.
+# Unlike PROJECTION_MIN_K (the global JL floor), this is a small safety
+# floor to avoid pathological χ²(1) tests.  The per-node effective rank
+# from eigendecomposition IS the signal dimensionality — a high floor
+# inflates df with noise-only χ² components and destroys test power.
+# Set to 2 (not 1) because χ²(1) has a singularity at 0 that can cause
+# numerical instability.  This value should rarely need changing.
+SPECTRAL_MIN_K: int = 2
+
 # Include internal-node distribution vectors in the spectral data matrix.
 # Internal distributions are convex combinations of leaf data — they do NOT
 # increase rank but shift the mean toward the global average, concentrating

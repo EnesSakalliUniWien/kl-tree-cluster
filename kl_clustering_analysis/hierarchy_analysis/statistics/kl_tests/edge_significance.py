@@ -32,17 +32,19 @@ from kl_clustering_analysis.core_utils.data_utils import (
 )
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
+from ...decomposition.backends.random_projection_backend import (
+    compute_projection_dimension_backend as compute_projection_dimension,
+)
+from ...decomposition.backends.random_projection_backend import (
+    derive_projection_seed_backend as derive_projection_seed,
+)
+from ...decomposition.methods.projected_wald import run_projected_wald_kernel
 from ..branch_length_utils import compute_mean_branch_length as _compute_mean_branch_length
 from ..branch_length_utils import (
     sanitize_positive_branch_length as _sanitize_positive_branch_length,
 )
 from ..multiple_testing import apply_multiple_testing_correction
-from ...decomposition.backends.random_projection_backend import (
-    compute_projection_dimension_backend as compute_projection_dimension,
-    derive_projection_seed_backend as derive_projection_seed,
-)
 from ..projection.spectral_dimension import compute_spectral_decomposition
-from ...decomposition.methods.projected_wald import run_projected_wald_kernel
 
 logger = logging.getLogger(__name__)
 
@@ -417,11 +419,19 @@ def annotate_child_parent_divergence(
         # Compute spectral dimensions and (when available) PCA projections/
         # eigenvalues for the current Gate 2 run. These are consumed
         # immediately below by _compute_p_values_via_projection().
+        #
+        # The spectral path uses its own small floor (SPECTRAL_MIN_K=2)
+        # instead of the global JL-derived min_k.  The per-node effective
+        # rank IS the signal dimensionality; flooring it with the global
+        # erank inflates df with noise-only χ² components and kills power.
+        from kl_clustering_analysis import config as _config
+
+        spectral_min_k = getattr(_config, "SPECTRAL_MIN_K", 2)
         spectral_dims, pca_proj_dict, pca_eig_dict = compute_spectral_decomposition(
             tree,
             leaf_data,
             method=spectral_method,
-            min_k=min_k if isinstance(min_k, int) else 4,
+            min_k=spectral_min_k,
             compute_projections=True,
         )
         pca_projections = pca_proj_dict if pca_proj_dict else None

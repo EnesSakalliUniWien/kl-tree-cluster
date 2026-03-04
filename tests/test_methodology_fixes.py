@@ -129,12 +129,10 @@ class TestComputeProjectedPvalue:
 
 
 class TestSpectralKFloor:
-    """Verify the spectral_k floor was raised from 1 to 4."""
+    """Verify the spectral path uses its own small floor (SPECTRAL_MIN_K)."""
 
-    def test_min_k_default_is_4(self):
-        """When min_k is 'auto', the fallback should be 4, not 1."""
-        # We can't easily test the full pipeline, but we can verify
-        # the code path by reading the source
+    def test_spectral_min_k_decoupled_from_global(self):
+        """The spectral path should use config.SPECTRAL_MIN_K, not the global JL min_k."""
         import inspect
 
         from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
@@ -142,8 +140,21 @@ class TestSpectralKFloor:
         )
 
         source = inspect.getsource(annotate_child_parent_divergence)
-        assert "min_k if isinstance(min_k, int) else 4" in source
+        # The spectral path reads SPECTRAL_MIN_K from config instead of
+        # forwarding the global JL-derived min_k.
+        assert "SPECTRAL_MIN_K" in source
+        # The old pattern that forwarded the global min_k should be gone.
+        assert "min_k if isinstance(min_k, int) else 4" not in source
         assert "min_k if isinstance(min_k, int) else 1" not in source
+
+    def test_spectral_min_k_config_exists(self):
+        """config.SPECTRAL_MIN_K must exist and be a small integer."""
+        from kl_clustering_analysis import config
+
+        assert hasattr(config, "SPECTRAL_MIN_K")
+        assert isinstance(config.SPECTRAL_MIN_K, int)
+        assert config.SPECTRAL_MIN_K >= 1
+        assert config.SPECTRAL_MIN_K <= 4  # must be small — the whole point
 
 
 # =============================================================================

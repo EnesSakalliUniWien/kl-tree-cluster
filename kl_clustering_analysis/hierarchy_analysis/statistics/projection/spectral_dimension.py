@@ -40,7 +40,7 @@ from __future__ import annotations
 import logging
 import os
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, cast
 
 import networkx as nx
 import numpy as np
@@ -79,10 +79,10 @@ def _get_n_jobs(n_tasks: int) -> int:
     Returns 1 (sequential) when the number of tasks is small or the user
     explicitly sets ``KL_TE_N_JOBS=1``.
     """
-    env = os.environ.get("KL_TE_N_JOBS")
-    if env is not None:
+    configured_jobs = os.environ.get("KL_TE_N_JOBS")
+    if configured_jobs is not None:
         try:
-            return max(int(env), 1)
+            return max(int(configured_jobs), 1)
         except ValueError:
             pass
     if n_tasks < _DEFAULT_MIN_NODES_FOR_PARALLEL:
@@ -96,13 +96,13 @@ def _get_n_jobs(n_tasks: int) -> int:
 
 
 def _process_node(
-    task: NodeSpectralTask,
-    X,
-    method,
-    min_k,
-    d,
-    need_eigh,
-):
+    spectral_task: NodeSpectralTask,
+    full_feature_matrix: np.ndarray,
+    dimension_method: str,
+    minimum_projection_dimension: int,
+    feature_count: int,
+    compute_eigendecomposition_outputs: bool,
+) -> NodeSpectralResult:
     """Eigendecompose one node and return a typed result payload.
 
     Data is sliced lazily here (not pre-materialised by the caller) so that
@@ -111,75 +111,164 @@ def _process_node(
 
     Parameters
     ----------
-    task
+    spectral_task
         Per-node task payload with descendants and optional internal vectors.
-    X
+    full_feature_matrix
         Full data matrix shared across threads (read-only view).
     """
-    row_indices = task.row_indices
-    internal_vecs = task.internal_distributions
+    descendant_leaf_row_indices = spectral_task.row_indices
+    internal_distribution_vectors = spectral_task.internal_distributions
 
-    if len(row_indices) < 2:
+    if len(descendant_leaf_row_indices) < 2:
         return NodeSpectralResult(
-            node_id=task.node_id,
-            projection_dimension=max(min_k, 1),
+            node_id=spectral_task.node_id,
+            projection_dimension=max(minimum_projection_dimension, 1),
             projection_matrix=None,
             eigenvalues=None,
         )
 
     # Slice on-demand: only this thread's copy is live during the call.
-    leaf_rows = X[row_indices, :]
+    descendant_leaf_feature_rows = full_feature_matrix[descendant_leaf_row_indices, :]
 
-    if internal_vecs:
-        data_sub = np.vstack([leaf_rows, np.array(internal_vecs, dtype=np.float64)])
+    if internal_distribution_vectors:
+        descendant_feature_matrix = np.vstack(
+            [
+                descendant_leaf_feature_rows,
+                np.array(internal_distribution_vectors, dtype=np.float64),
+            ]
+        )
     else:
-        data_sub = leaf_rows
+        descendant_feature_matrix = descendant_leaf_feature_rows
 
-    if method == "active_features":
-        k = estimate_k_active_features(data_sub, min_k=min_k)
-        k = min(k, d)
+    if dimension_method == "active_features":
+        projection_dimension = estimate_k_active_features(
+            descendant_feature_matrix,
+            min_k=minimum_projection_dimension,
+        )
+        projection_dimension = min(projection_dimension, feature_count)
         return NodeSpectralResult(
-            node_id=task.node_id,
-            projection_dimension=k,
+            node_id=spectral_task.node_id,
+            projection_dimension=projection_dimension,
             projection_matrix=None,
             eigenvalues=None,
         )
 
-    eig = eigendecompose_correlation(data_sub, need_eigh=need_eigh)
-    if eig is None:
+    eigendecomposition_result = eigendecompose_correlation(
+        descendant_feature_matrix,
+        need_eigh=compute_eigendecomposition_outputs,
+    )
+
+    if eigendecomposition_result is None:
         return NodeSpectralResult(
-            node_id=task.node_id,
-            projection_dimension=max(min_k, 1),
+            node_id=spectral_task.node_id,
+            projection_dimension=max(minimum_projection_dimension, 1),
             projection_matrix=None,
             eigenvalues=None,
         )
 
-    if method == "effective_rank":
-        k = estimate_k_effective_rank(
-            eig.eigenvalues,
-            min_k=min_k,
-            d_active=eig.d_active,
+    if dimension_method == "effective_rank":
+        projection_dimension = estimate_k_effective_rank(
+            eigendecomposition_result.eigenvalues,
+            min_k=minimum_projection_dimension,
+            d_active=eigendecomposition_result.d_active,
         )
     else:  # marchenko_pastur
-        k = estimate_k_marchenko_pastur(
-            eig.eigenvalues,
-            n_desc=data_sub.shape[0],
-            d_active=eig.d_active,
-            min_k=min_k,
+        projection_dimension = estimate_k_marchenko_pastur(
+            eigendecomposition_result.eigenvalues,
+            n_desc=descendant_feature_matrix.shape[0],
+            d_active=eigendecomposition_result.d_active,
+            min_k=minimum_projection_dimension,
         )
 
-    proj, ev = None, None
-    if need_eigh:
-        proj, ev = build_pca_projection(eig, k=k, d=d)
-        if proj is None or ev is None:
-            proj, ev = None, None
+    projection_matrix, pca_eigenvalues = None, None
+    if compute_eigendecomposition_outputs:
+        projection_matrix, pca_eigenvalues = build_pca_projection(
+            eigendecomposition_result,
+            k=projection_dimension,
+            d=feature_count,
+        )
+        if projection_matrix is None or pca_eigenvalues is None:
+            projection_matrix, pca_eigenvalues = None, None
 
     return NodeSpectralResult(
-        node_id=task.node_id,
-        projection_dimension=k,
-        projection_matrix=proj,
-        eigenvalues=ev,
+        node_id=spectral_task.node_id,
+        projection_dimension=projection_dimension,
+        projection_matrix=projection_matrix,
+        eigenvalues=pca_eigenvalues,
     )
+
+
+def _build_spectral_tasks(
+    tree: nx.DiGraph,
+    internal_node_ids: list[str],
+    descendant_leaf_indices_by_node: dict[str, list[int]],
+    descendant_internal_nodes_by_node: dict[str, list[str]],
+    *,
+    include_internal: bool,
+    feature_count: int,
+) -> list[NodeSpectralTask]:
+    """Build per-node spectral tasks from precomputed descendant metadata."""
+    internal_distributions_by_node: Dict[str, tuple[np.ndarray, ...]] = {}
+    if include_internal:
+        for node_id in internal_node_ids:
+            node_internal_distributions: list[np.ndarray] = []
+            for internal_node_id in descendant_internal_nodes_by_node.get(node_id, []):
+                distribution = tree.nodes[internal_node_id].get("distribution")
+                if distribution is None:
+                    continue
+                distribution_array = np.asarray(distribution, dtype=np.float64)
+                if distribution_array.shape == (feature_count,):
+                    node_internal_distributions.append(distribution_array)
+            internal_distributions_by_node[node_id] = tuple(node_internal_distributions)
+
+    return [
+        NodeSpectralTask(
+            node_id=node_id,
+            row_indices=tuple(descendant_leaf_indices_by_node.get(node_id, [])),
+            internal_distributions=internal_distributions_by_node.get(node_id, ()),
+        )
+        for node_id in internal_node_ids
+    ]
+
+
+def _run_spectral_tasks_parallel(
+    node_spectral_tasks: list[NodeSpectralTask],
+    full_feature_matrix: np.ndarray,
+    *,
+    dimension_method: str,
+    minimum_projection_dimension: int,
+    feature_count: int,
+    compute_eigendecomposition_outputs: bool,
+) -> list[NodeSpectralResult]:
+    """Execute node spectral tasks in parallel (or sequentially for small workloads)."""
+    n_jobs = _get_n_jobs(len(node_spectral_tasks))
+    parallel_results = Parallel(n_jobs=n_jobs, prefer="threads")(
+        delayed(_process_node)(
+            task,
+            full_feature_matrix,
+            dimension_method,
+            minimum_projection_dimension,
+            feature_count,
+            compute_eigendecomposition_outputs,
+        )
+        for task in node_spectral_tasks
+    )
+    return cast(list[NodeSpectralResult], parallel_results)
+
+
+def _aggregate_spectral_results(
+    spectral_results: list[NodeSpectralResult],
+    *,
+    spectral_dimensions: dict[str, int],
+    pca_projections: dict[str, np.ndarray],
+    pca_eigenvalues: dict[str, np.ndarray],
+) -> None:
+    """Write per-node worker outputs into decomposition result dicts."""
+    for node_result in spectral_results:
+        spectral_dimensions[node_result.node_id] = node_result.projection_dimension
+        if node_result.projection_matrix is not None and node_result.eigenvalues is not None:
+            pca_projections[node_result.node_id] = node_result.projection_matrix
+            pca_eigenvalues[node_result.node_id] = node_result.eigenvalues
 
 
 # =====================================================================
@@ -200,14 +289,14 @@ def compute_node_spectral_dimensions(
     only the dimension dict. Use ``compute_spectral_decomposition`` directly
     if you also need PCA projections (avoids a redundant eigendecomposition).
     """
-    dims, _, _ = compute_spectral_decomposition(
+    spectral_dimensions, _, _ = compute_spectral_decomposition(
         tree,
         leaf_data,
         method=method,
         min_k=min_k,
         compute_projections=False,
     )
-    return dims
+    return spectral_dimensions
 
 
 def compute_node_pca_projections(
@@ -220,14 +309,14 @@ def compute_node_pca_projections(
     Thin wrapper — prefer ``compute_spectral_decomposition`` with
     ``compute_projections=True`` to avoid a redundant eigendecomposition.
     """
-    _, projs, _ = compute_spectral_decomposition(
+    _, pca_projections, _ = compute_spectral_decomposition(
         tree,
         leaf_data,
         method="effective_rank",
         min_k=1,
         compute_projections=True,
     )
-    return projs
+    return pca_projections
 
 
 def compute_spectral_decomposition(
@@ -284,7 +373,7 @@ def compute_spectral_decomposition(
     """
     from kl_clustering_analysis import config as _config
 
-    t0 = time.perf_counter()
+    start_time = time.perf_counter()
 
     if include_internal is None:
         include_internal = _config.INCLUDE_INTERNAL_IN_SPECTRAL
@@ -295,99 +384,88 @@ def compute_spectral_decomposition(
             f"Choose from 'effective_rank', 'marchenko_pastur', 'active_features'."
         )
 
-    d = leaf_data.shape[1]
-    label_to_idx = {label: i for i, label in enumerate(leaf_data.index)}
-    X = leaf_data.values.astype(np.float64)
+    feature_count = leaf_data.shape[1]
+    leaf_label_to_index = {label: i for i, label in enumerate(leaf_data.index)}
+    leaf_feature_matrix = leaf_data.values.astype(np.float64)
 
-    desc_indices, desc_internal = precompute_descendants(tree, label_to_idx)
+    descendant_leaf_indices_by_node, descendant_internal_nodes_by_node = precompute_descendants(
+        tree, leaf_label_to_index
+    )
 
-    need_eigh = compute_projections and method in ("effective_rank", "marchenko_pastur")
+    compute_eigendecomposition_outputs = compute_projections and method in (
+        "effective_rank",
+        "marchenko_pastur",
+    )
 
-    dims: Dict[str, int] = {}
-    projs: Dict[str, np.ndarray] = {}
-    eig_vals: Dict[str, np.ndarray] = {}
+    spectral_dimensions: Dict[str, int] = {}
+    pca_projections: Dict[str, np.ndarray] = {}
+    pca_eigenvalues: Dict[str, np.ndarray] = {}
 
     # Separate leaves (trivial) from internal nodes (expensive).
-    internal_nodes = []
+    internal_node_ids: list[str] = []
     for node_id in tree.nodes:
         if is_leaf(tree, node_id):
-            dims[node_id] = 0
+            spectral_dimensions[node_id] = 0
         else:
-            internal_nodes.append(node_id)
+            internal_node_ids.append(node_id)
 
-    # Pre-extract internal-node distribution vectors (small: just d-dimensional
-    # vectors, not n×d matrices).  Empty when include_internal=False (default).
-    # This avoids passing the tree object into workers.
-    node_internal_vecs: Dict[str, tuple[np.ndarray, ...]] = {}
-    if include_internal:
-        for node_id in internal_nodes:
-            vecs: list[np.ndarray] = []
-            for inode in desc_internal.get(node_id, []):
-                dist = tree.nodes[inode].get("distribution")
-                if dist is not None:
-                    dist_arr = np.asarray(dist, dtype=np.float64)
-                    if dist_arr.shape == (d,):
-                        vecs.append(dist_arr)
-            node_internal_vecs[node_id] = tuple(vecs)
+    spectral_tasks = _build_spectral_tasks(
+        tree,
+        internal_node_ids,
+        descendant_leaf_indices_by_node,
+        descendant_internal_nodes_by_node,
+        include_internal=bool(include_internal),
+        feature_count=feature_count,
+    )
 
-    spectral_tasks = [
-        NodeSpectralTask(
-            node_id=node_id,
-            row_indices=tuple(desc_indices.get(node_id, [])),
-            internal_distributions=node_internal_vecs.get(node_id, ()),
-        )
-        for node_id in internal_nodes
-    ]
-
-    # --- Parallel eigendecomposition via joblib ---
     # Data is sliced lazily inside each worker (not pre-materialised here).
     # With prefer="threads" every worker shares the same X array (no copy).
     # Peak RAM is O(n_jobs × n_desc_max × d) instead of O(n_nodes × n_desc_avg × d).
-    n_jobs = _get_n_jobs(len(spectral_tasks))
-    results = Parallel(n_jobs=n_jobs, prefer="threads")(
-        delayed(_process_node)(
-            task,
-            X,
-            method,
-            min_k,
-            d,
-            need_eigh,
-        )
-        for task in spectral_tasks
+    spectral_results = _run_spectral_tasks_parallel(
+        spectral_tasks,
+        leaf_feature_matrix,
+        dimension_method=method,
+        minimum_projection_dimension=min_k,
+        feature_count=feature_count,
+        compute_eigendecomposition_outputs=compute_eigendecomposition_outputs,
+    )
+    _aggregate_spectral_results(
+        spectral_results,
+        spectral_dimensions=spectral_dimensions,
+        pca_projections=pca_projections,
+        pca_eigenvalues=pca_eigenvalues,
     )
 
-    for node_result in results:
-        dims[node_result.node_id] = node_result.projection_dimension
-        if node_result.projection_matrix is not None and node_result.eigenvalues is not None:
-            projs[node_result.node_id] = node_result.projection_matrix
-            eig_vals[node_result.node_id] = node_result.eigenvalues
-
-    elapsed = time.perf_counter() - t0
+    elapsed = time.perf_counter() - start_time
 
     # Log summary statistics
-    internal_ks = [v for nid, v in dims.items() if not is_leaf(tree, nid)]
-    if internal_ks:
+    internal_projection_dimensions = [
+        projection_dimension
+        for node_id, projection_dimension in spectral_dimensions.items()
+        if not is_leaf(tree, node_id)
+    ]
+    if internal_projection_dimensions:
         logger.info(
             "Spectral dimensions (%s): median=%d, mean=%.1f, min=%d, max=%d "
             "(across %d internal nodes, d=%d) [%.2fs]",
             method,
-            int(np.median(internal_ks)),
-            float(np.mean(internal_ks)),
-            min(internal_ks),
-            max(internal_ks),
-            len(internal_ks),
-            d,
+            int(np.median(internal_projection_dimensions)),
+            float(np.mean(internal_projection_dimensions)),
+            min(internal_projection_dimensions),
+            max(internal_projection_dimensions),
+            len(internal_projection_dimensions),
+            feature_count,
             elapsed,
         )
 
     if compute_projections:
         logger.info(
             "Computed PCA projections for %d internal nodes [%.2fs total]",
-            len(projs),
+            len(pca_projections),
             elapsed,
         )
 
-    return dims, projs, eig_vals
+    return spectral_dimensions, pca_projections, pca_eigenvalues
 
 
 __all__ = [
