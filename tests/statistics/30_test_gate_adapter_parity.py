@@ -97,3 +97,48 @@ def test_gate_adapter_pipeline_matches_legacy_annotations(monkeypatch, sibling_m
     assert bundle.sibling_gate_columns == tuple(col for col in legacy_gate_cols if col.startswith("Sibling_"))
     assert bundle.metadata["column_names"]["edge"] == list(bundle.local_gate_columns)
     assert bundle.metadata["column_names"]["sibling"] == list(bundle.sibling_gate_columns)
+
+
+def test_compute_gate_annotations_delegates_to_orchestrator(monkeypatch) -> None:
+    tree, base_df = _build_small_binary_tree()
+    sentinel_df = base_df.copy()
+    sentinel_df["sentinel"] = 1
+
+    captured: dict[str, object] = {}
+
+    def _fake_pipeline(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return GateAnnotationBundle(annotated_df=sentinel_df)
+
+    monkeypatch.setattr(
+        "kl_clustering_analysis.hierarchy_analysis.gate_annotations.run_gate_annotation_pipeline",
+        _fake_pipeline,
+    )
+    monkeypatch.setattr(config, "SIBLING_TEST_METHOD", "cousin_tree_guided")
+
+    out = compute_gate_annotations(
+        tree,
+        base_df,
+        alpha_local=0.02,
+        sibling_alpha=0.03,
+        leaf_data=None,
+        spectral_method="effective_rank",
+        min_k=7,
+    )
+
+    assert out is sentinel_df
+    assert captured["args"] == (tree, base_df)
+    assert captured["kwargs"] == {
+        "alpha_local": 0.02,
+        "sibling_alpha": 0.03,
+        "leaf_data": None,
+        "spectral_method": "effective_rank",
+        "min_k": 7,
+        "sibling_method": "cousin_tree_guided",
+        "fdr_method": "tree_bh",
+        "sibling_spectral_dims": None,
+        "sibling_pca_projections": None,
+        "sibling_pca_eigenvalues": None,
+        "edge_calibration": None,
+    }

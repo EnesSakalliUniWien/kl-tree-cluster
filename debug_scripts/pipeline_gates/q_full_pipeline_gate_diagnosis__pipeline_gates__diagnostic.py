@@ -254,7 +254,6 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
             results_df=df_m,
             alpha_local=config.SIGNIFICANCE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
-            use_signal_localization=False,
         )
 
         # Trace gates on root and its children (top 2 levels)
@@ -280,7 +279,6 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
             results_df=df_m,
             alpha_local=config.SIGNIFICANCE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
-            use_signal_localization=True,
         )
         for node in nodes_to_trace:
             g2 = trace_should_split_v2(decomp_v2, node)

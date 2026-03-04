@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 from .. import config
-from .statistics import annotate_child_parent_divergence, annotate_sibling_divergence
+from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
 
 if TYPE_CHECKING:
     from ..tree.poset_tree import PosetTree
@@ -36,9 +36,8 @@ def compute_gate_annotations(
 ) -> pd.DataFrame:
     """Compute Gate 2 and Gate 3 statistical annotations on *results_df*.
 
-    Annotations are always recomputed from scratch using the current alpha
-    levels and sibling test method (``config.SIBLING_TEST_METHOD``).  Any
-    pre-existing gate columns are overwritten.
+    Compatibility entrypoint that delegates to the decomposition orchestrator.
+    The public signature is intentionally stable for external callers.
 
     Parameters
     ----------
@@ -67,91 +66,22 @@ def compute_gate_annotations(
     pd.DataFrame
         The annotated DataFrame, ready for gate evaluation.
     """
-    # Always recompute annotations from scratch.  Previous versions had an
-    # early-return guard that skipped recomputation when the gate columns
-    # already existed — this caused stale results when alpha levels,
-    # SIBLING_TEST_METHOD, or other config values changed between calls.
-    # The annotation functions initialise their output columns from scratch,
-    # so rerunning them on a DataFrame that already has those columns is safe.
-
-    # -- Gate 2: child-parent divergence --
-    results_df = annotate_child_parent_divergence(
+    bundle = run_gate_annotation_pipeline(
         tree,
         results_df,
-        significance_level_alpha=alpha_local,
+        alpha_local=alpha_local,
+        sibling_alpha=sibling_alpha,
         leaf_data=leaf_data,
         spectral_method=spectral_method,
         min_k=min_k,
+        sibling_method=config.SIBLING_TEST_METHOD,
+        # Preserve legacy Gate 2 correction default.
+        fdr_method="tree_bh",
+        # Preserve legacy sibling behavior: JL fallback, no PCA siblings.
+        sibling_spectral_dims=None,
+        sibling_pca_projections=None,
+        sibling_pca_eigenvalues=None,
+        # Preserve legacy config-controlled edge calibration behavior.
+        edge_calibration=None,
     )
-
-    # -- Sibling spectral dimensions: use JL-based dimension --
-    # The sibling z-vector z = (θ_L − θ_R)/√Var has d components with
-    # signal spread across many directions.  Power scales as √k, so the
-    # projection dimension should be as large as the data supports.
-    # Both within-cluster erank and parent overall erank give low k
-    # (limited by n ≪ d), destroying power.  The JL-based dimension
-    # k ≈ 8·ln(n)/ε² with information cap gives adequate power while
-    # the calibration model (weighted Wald) corrects any inflation.
-    #
-    # NOTE: spectral dimensions and PCA projections are NOT passed to sibling
-    # tests.  The edge test benefits from spectral dims because child ⊂ parent
-    # (subset structure), but the sibling z-vector represents the DIFFERENCE
-    # between children — spectral_k (effective rank) is much smaller than JL
-    # dimension near leaves, giving the sibling χ² test fewer degrees of
-    # freedom and less statistical power.
-    _sibling_spectral_dims = None  # JL fallback in sibling_divergence_test
-
-    # -- Gate 3: sibling divergence (method selected via config) --
-    if config.SIBLING_TEST_METHOD == "cousin_ftest":
-        from .statistics.sibling_divergence import annotate_sibling_divergence_cousin
-
-        results_df = annotate_sibling_divergence_cousin(
-            tree,
-            results_df,
-            significance_level_alpha=sibling_alpha,
-        )
-    elif config.SIBLING_TEST_METHOD == "cousin_adjusted_wald":
-        from .statistics.sibling_divergence import annotate_sibling_divergence_adjusted
-
-        results_df = annotate_sibling_divergence_adjusted(
-            tree,
-            results_df,
-            significance_level_alpha=sibling_alpha,
-        )
-    elif config.SIBLING_TEST_METHOD == "cousin_tree_guided":
-        from .statistics.sibling_divergence import annotate_sibling_divergence_tree_guided
-
-        results_df = annotate_sibling_divergence_tree_guided(
-            tree,
-            results_df,
-            significance_level_alpha=sibling_alpha,
-        )
-    elif config.SIBLING_TEST_METHOD == "cousin_weighted_wald":
-        from .statistics.sibling_divergence import annotate_sibling_divergence_weighted
-
-        results_df = annotate_sibling_divergence_weighted(
-            tree,
-            results_df,
-            significance_level_alpha=sibling_alpha,
-            spectral_dims=_sibling_spectral_dims,
-            pca_projections=None,  # No PCA for siblings — use random projection
-            pca_eigenvalues=None,
-        )
-    else:
-        results_df = annotate_sibling_divergence(
-            tree,
-            results_df,
-            significance_level_alpha=sibling_alpha,
-        )
-
-    # -- Post-hoc Edge Calibration (uses sibling p-values as weights) --
-    if config.EDGE_CALIBRATION:
-        from .statistics.kl_tests.edge_calibration import calibrate_edges_from_sibling_neighborhood
-
-        results_df = calibrate_edges_from_sibling_neighborhood(
-            tree,
-            results_df,
-            alpha=alpha_local,
-        )
-
-    return results_df
+    return bundle.annotated_df

@@ -160,8 +160,10 @@ EIGENVALUE_WHITENING: bool = True
 #                             median T/k as local ĉ. No global regression — adapts to local
 #                             tree structure. Falls back to global median when no local
 #                             null-like pairs are found.
-#   "cousin_weighted_wald"  - Cousin-weighted Wald (DEFAULT): like cousin_adjusted_wald but
+#   "cousin_weighted_wald"  - Cousin-weighted Wald: like cousin_adjusted_wald but
 #                             uses ALL sibling pairs in calibration regression, weighted by
 #                             edge p-values: w_i = min(p_edge_L, p_edge_R). Continuous
 #                             weighting avoids hard binary null/non-null split; more stable.
-SIBLING_TEST_METHOD: str = "cousin_weighted_wald"
+#                             NOTE: empirical null FPR ≈ 68–100% — does NOT correct
+#                             post-selection inflation. Kept for comparison only.
+SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
