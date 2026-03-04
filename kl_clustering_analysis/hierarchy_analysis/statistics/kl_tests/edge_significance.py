@@ -37,9 +37,9 @@ from ..branch_length_utils import (
     sanitize_positive_branch_length as _sanitize_positive_branch_length,
 )
 from ..multiple_testing import apply_multiple_testing_correction
-from ..projection.random_projection import (
-    compute_projection_dimension,
-    derive_projection_seed,
+from ...decomposition.backends.random_projection_backend import (
+    compute_projection_dimension_backend as compute_projection_dimension,
+    derive_projection_seed_backend as derive_projection_seed,
 )
 from ..projection.spectral_dimension import compute_spectral_decomposition
 from ...decomposition.methods.projected_wald import run_projected_wald_kernel

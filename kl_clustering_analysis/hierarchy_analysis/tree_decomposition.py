@@ -26,8 +26,8 @@ from .pairwise_testing import (
     test_cluster_pair_divergence,
 )
 from .posthoc_merge import apply_posthoc_merge
+from .decomposition.backends.random_projection_backend import resolve_min_k_backend
 from .statistics.branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
-from .statistics.projection.random_projection import resolve_min_k
 from .statistics.sibling_divergence import CalibrationModel, WeightedCalibrationModel
 
 
@@ -104,7 +104,10 @@ class TreeDecomposition:
         # minimum from the effective rank of the full dataset.  The resolved
         # integer is stored and passed through to all annotation / test calls
         # so that the fixed floor never overrides the data's actual rank.
-        self._resolved_min_k: int = resolve_min_k(config.PROJECTION_MIN_K, leaf_data)
+        self._resolved_min_k: int = resolve_min_k_backend(
+            config.PROJECTION_MIN_K,
+            leaf_data=leaf_data,
+        )
 
         self.posthoc_merge = bool(posthoc_merge)
         self.posthoc_merge_alpha = (

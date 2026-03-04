@@ -21,7 +21,6 @@ __all__ = [
     "fit_cousin_weighted_wald",
     "fit_cousin_adjusted_wald",
     "fit_cousin_tree_guided",
-    "apply_sibling_calibration",
 ]
 
 _NAME_TO_MODULE = {
@@ -40,7 +39,6 @@ _NAME_TO_MODULE = {
     "fit_cousin_weighted_wald": ".sibling_calibration",
     "fit_cousin_adjusted_wald": ".sibling_calibration",
     "fit_cousin_tree_guided": ".sibling_calibration",
-    "apply_sibling_calibration": ".sibling_calibration",
 }
 
 
@@ -50,4 +48,3 @@ def __getattr__(name: str) -> Any:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     module = import_module(module_name, __name__)
     return getattr(module, name)
-

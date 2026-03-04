@@ -47,9 +47,9 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from .eigen_decomposition import (
-    build_pca_projection,
-    eigendecompose_correlation,
+from ...decomposition.backends.eigen_backend import (
+    build_pca_projection_backend as build_pca_projection,
+    eigendecompose_correlation_backend as eigendecompose_correlation,
 )
 
 from ...decomposition.methods.k_estimators import (
@@ -135,7 +135,7 @@ def _process_node(
         k = min(k, d)
         return (node_id, k, None, None)
 
-    eig = eigendecompose_correlation(data_sub, need_eigh)
+    eig = eigendecompose_correlation(data_sub, need_eigh=need_eigh)
     if eig is None:
         return (node_id, max(min_k, 1), None, None)
 
@@ -155,7 +155,7 @@ def _process_node(
 
     proj, ev = None, None
     if need_eigh:
-        proj, ev = build_pca_projection(eig, k, d)
+        proj, ev = build_pca_projection(eig, k=k, d=d)
         if proj is None or ev is None:
             proj, ev = None, None
 

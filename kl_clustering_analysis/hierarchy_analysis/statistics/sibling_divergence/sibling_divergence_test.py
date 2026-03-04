@@ -30,9 +30,9 @@ from ..branch_length_utils import compute_mean_branch_length, sanitize_positive_
 from ..categorical_mahalanobis import categorical_whitened_vector
 from ..multiple_testing import benjamini_hochberg_correction
 from ..pooled_variance import _is_categorical, standardize_proportion_difference
-from ..projection.random_projection import (
-    compute_projection_dimension,
-    derive_projection_seed,
+from ...decomposition.backends.random_projection_backend import (
+    compute_projection_dimension_backend as compute_projection_dimension,
+    derive_projection_seed_backend as derive_projection_seed,
 )
 from ...decomposition.methods.projected_wald import (
     compute_projected_pvalue,
