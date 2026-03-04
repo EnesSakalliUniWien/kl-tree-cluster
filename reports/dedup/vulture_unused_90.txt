@@ -1,0 +1,8 @@
+tests/conftest.py:82: unused variable 'exitstatus' (100% confidence)
+tests/pipeline/57_test_pdf_utils.py:3: unused import 'tempfile' (90% confidence)
+tests/pipeline/57_test_pdf_utils.py:13: unused import 'concat_plots_to_pdf' (90% confidence)
+tests/pipeline/57_test_pdf_utils.py:13: unused import 'concat_tree_plots' (90% confidence)
+tests/pipeline/57_test_pdf_utils.py:13: unused import 'concat_umap_plots' (90% confidence)
+tests/pipeline/58_test_pipeline_pdf_behavior.py:32: unused variable 'computed_results' (100% confidence)
+tests/pipeline/58_test_pipeline_pdf_behavior.py:35: unused variable 'plot_umap' (100% confidence)
+tests/pipeline/58_test_pipeline_pdf_behavior.py:36: unused variable 'plot_manifold' (100% confidence)

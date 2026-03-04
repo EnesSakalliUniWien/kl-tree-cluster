@@ -1,0 +1,587 @@
+************* Module kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_backend
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald:[416:433]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[580:597]
+        df,
+        focal_parents,
+        focal_results,
+        cal_methods,
+        skipped_parents,
+        significance_level_alpha,
+    )
+
+    # Audit metadata
+    df.attrs["sibling_divergence_audit"] = {
+        "total_pairs": len(records),
+        "null_like_pairs": n_null,
+        "focal_pairs": n_focal,
+        "calibration_method": model.method,
+        "calibration_n": model.n_calibration,
+        "global_c_hat": model.global_c_hat,
+        "diagnostics": model.diagnostics, (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald:[313:336]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_tree_guided:[308:331]
+    return deflate_focal_pairs(
+        records,
+        calibration_resolver=_resolve_calibration,
+    )
+
+
+def _apply_results(
+    df: pd.DataFrame,
+    focal_parents: List[str],
+    focal_results: List[Tuple[float, float, float]],
+    calibration_methods: List[str],
+    skipped_parents: List[str],
+    alpha: float,
+) -> pd.DataFrame:
+    """Apply deflated results with BH correction to DataFrame."""
+    return apply_calibrated_results(
+        df,
+        focal_parents,
+        focal_results,
+        calibration_methods,
+        skipped_parents,
+        alpha,
+        logger=logger, (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test:[350:366]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test:[332:347]
+    if not results:
+        return df
+
+    stats = np.array([r[0] for r in results])
+    dfs = np.array([r[1] for r in results])
+    pvals = np.array([r[2] for r in results])
+
+    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
+    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
+
+    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
+    reject = np.where(invalid_mask, False, reject)
+    n_invalid = int(np.sum(invalid_mask))
+    if n_invalid:
+        logger.warning( (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_calibration:[251:266]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[314:329]
+                exc,
+            )
+            beta = None
+
+    # --- Fallback: Weighted log-linear regression (WLS) ---
+    if beta is None:
+        log_r = np.log(ratios)
+        sqrt_w = np.sqrt(weights)
+        Xw = X * sqrt_w[:, np.newaxis]
+        yw = log_r * sqrt_w
+
+        try:
+            beta, _residuals, _rank, _sv = np.linalg.lstsq(Xw, yw, rcond=None)
+        except np.linalg.LinAlgError:
+            logger.warning( (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test:[283:300]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test:[258:275]
+    skipped: List[str] = []
+    non_binary: List[str] = []
+
+    for parent in tree.nodes:
+        children = _get_binary_children(tree, parent)
+        if children is None:
+            # Leaves and non-binary nodes are not testable
+            non_binary.append(parent)
+            continue
+
+        left, right = children
+
+        # Skip if neither child diverged from parent
+        if not _either_child_significant(left, right, sig_map):
+            skipped.append(parent)
+            continue
+ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test:[367:379]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test:[348:361]
+            "Conservative correction path applied (p=1.0, reject=False).",
+            len(results),
+            n_invalid,
+        )
+
+    df.loc[parents, "Sibling_Test_Statistic"] = stats
+    df.loc[parents, "Sibling_Degrees_of_Freedom"] = dfs
+    df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
+    df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
+    df.loc[parents, "Sibling_Divergence_Invalid"] = invalid_mask
+    df.loc[parents, "Sibling_BH_Different"] = reject
+    df.loc[parents, "Sibling_BH_Same"] = ~reject (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.projection.sibling_spectral_dimension:[173:184]
+==kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral_dimension:[344:355]
+            "(across %d internal nodes, d=%d) [%.2fs]",
+            method,
+            int(np.median(internal_ks)),
+            float(np.mean(internal_ks)),
+            min(internal_ks),
+            max(internal_ks),
+            len(internal_ks),
+            d,
+            elapsed,
+        )
+ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_tree_guided:[425:438]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[577:589]
+    skipped_parents = [r.parent for r in records if r.is_null_like]
+
+    df = _apply_results(
+        df,
+        focal_parents,
+        focal_results,
+        cal_methods,
+        skipped_parents,
+        significance_level_alpha,
+    )
+
+    # Audit metadata (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_calibration:[221:231]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[276:287]
+        try:
+            glm = sm.GLM(
+                ratios,
+                X,
+                family=sm.families.Gamma(link=sm.families.links.Log()),
+                freq_weights=weights,
+            )
+            result = glm.fit()
+            beta = result.params
+ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_calibration:[231:241]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[292:302]
+            glm_diagnostics = {
+                "deviance": float(result.deviance),
+                "null_deviance": float(result.null_deviance),
+                "aic": float(result.aic),
+                "scale": float(result.scale),
+                "converged": bool(result.converged),
+            }
+            method = "gamma_glm"
+
+            logger.info( (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_calibration:[291:313]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[376:401]
+        method=method,
+        n_calibration=n_cal,
+        global_c_hat=global_c,
+        max_observed_ratio=max_c,
+        beta=np.asarray(beta) if beta is not None else None,
+        diagnostics=diagnostics,
+    )
+
+
+def predict_weighted_inflation_factor(
+    model: WeightedCalibrationModel,
+    bl_sum: float = 0.0,
+    n_parent: int = 0,
+) -> float:
+    """Predict inflation factor ĉ for a pair.
+
+    With intercept-only model, ĉ = exp(β₀) — a single global constant
+    (the weighted mean of T/k).  bl_sum and n_parent are retained in
+    the signature for API compatibility but are not used.
+
+    Clamped to [1.0, max_observed_ratio] to prevent overestimation.
+    """
+    if model.method == "none":
+        return 1.0
+ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_calibration:[481:492]
+==kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance:[481:492]
+    reject_null, p_values_corrected = apply_multiple_testing_correction(
+        p_values=p_values_for_correction,
+        child_ids=child_ids,
+        child_depths=child_depths,
+        alpha=alpha,
+        method=fdr_method,
+        tree=tree,
+    )
+    reject_null = np.where(nonfinite_p_mask, False, reject_null)
+
+    # Attach run-level audit counters for downstream diagnostics. (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.decomposition.__init__:[11:20]
+==kl_clustering_analysis.hierarchy_analysis.decomposition.core.__init__:[12:21]
+__all__ = [
+    "LEGACY_EDGE_COLUMNS",
+    "LEGACY_SIBLING_COLUMNS",
+    "LEGACY_SIBLING_OPTIONAL_COLUMNS",
+    "GateAnnotationBundle",
+    "ProjectedTestResult",
+    "SpectralKMethod",
+    "ProjectionBasisKind",
+    "SiblingCalibrationMethod", (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_pipeline_helpers:[33:41]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[105:113]
+    parent: str
+    left: str
+    right: str
+    stat: float
+    df: int
+    pval: float
+    bl_sum: float
+    n_parent: int (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test:[357:366]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_pipeline_helpers:[225:234]
+    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
+    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
+
+    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
+    reject = np.where(invalid_mask, False, reject)
+
+    n_invalid = int(np.sum(invalid_mask))
+    if n_invalid:
+        logger.warning( (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald:[289:310]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_tree_guided:[274:300]
+    return collect_sibling_pair_records(
+        tree,
+        nodes_df,
+        mean_bl,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+    )
+
+
+def _deflate_and_test(
+    records: List[SiblingPairRecord],
+    model: CalibrationModel,
+) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
+    """Deflate focal pairs and compute adjusted p-values.
+
+    Returns:
+        focal_parents: parent node IDs for focal (edge-significant) pairs
+        focal_results: (T_adj, k, p_adj) per focal pair
+        calibration_methods: method string per focal pair
+    """
+    def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]: (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald:[416:425]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_tree_guided:[428:438]
+        df,
+        focal_parents,
+        focal_results,
+        cal_methods,
+        skipped_parents,
+        significance_level_alpha,
+    )
+
+    # Audit metadata
+    # Count how many focal pairs used local-up, local-down, global, or none (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_calibration:[49:68]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[68:93]
+try:
+    import statsmodels.api as sm
+
+    _HAS_STATSMODELS = True
+except ImportError:  # pragma: no cover
+    _HAS_STATSMODELS = False
+
+logger = logging.getLogger(__name__)
+
+# Minimum edges for calibration tiers
+_MIN_REGRESSION = 5
+_MIN_MEDIAN = 3
+
+
+# =============================================================================
+# Data structures
+# =============================================================================
+
+ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.decomposition.methods.__init__:[7:14]
+==kl_clustering_analysis.hierarchy_analysis.decomposition.methods.k_estimators:[92:99]
+__all__ = [
+    "effective_rank",
+    "marchenko_pastur_signal_count",
+    "count_active_features",
+    "estimate_k_effective_rank",
+    "estimate_k_marchenko_pastur",
+    "estimate_k_active_features", (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.gate_annotations:[59:68]
+==kl_clustering_analysis.hierarchy_analysis.tree_decomposition:[282:289]
+            sibling_method=config.SIBLING_TEST_METHOD,
+            # Preserve existing decomposition semantics.
+            fdr_method="tree_bh",
+            sibling_spectral_dims=None,
+            sibling_pca_projections=None,
+            sibling_pca_eigenvalues=None,
+            edge_calibration=None, (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.__init__:[35:42]
+==kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.__init__:[27:35]
+    "benjamini_hochberg_correction",
+    # Correction methods
+    "flat_bh_correction",
+    "level_wise_bh_correction",
+    "tree_bh_correction",
+    "TreeBHResult",
+    # Dispatcher
+    "apply_multiple_testing_correction", (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test:[286:296]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_pipeline_helpers:[82:89]
+    for parent in tree.nodes:
+        children = _get_binary_children(tree, parent)
+        if children is None:
+            # Leaves and non-binary nodes are not testable
+            non_binary.append(parent)
+            continue
+
+        left, right = children
+
+        # Skip if neither child diverged from parent (same gating as current) (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald:[392:400]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_tree_guided:[381:389]
+    mark_non_binary_as_skipped(df, non_binary, logger=logger)
+
+    early_df = early_return_if_no_records(df, records)
+    if early_df is not None:
+        return early_df
+
+    n_null, n_focal = count_null_focal_pairs(records)
+    logger.info( (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test:[274:282]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test:[249:257]
+    if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
+        raise ValueError(
+            "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
+        )
+
+    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
+
+    parents: List[str] = [] (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test:[210:216]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test:[307:313]
+                n_l,
+                n_r,
+                bl_l,
+                bl_r,
+                mean_branch_length,
+                test_id=f"sibling:{parent}", (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald:[75:97]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[124:146]
+    method: str  # "gamma_glm", "weighted_regression", "weighted_median", "none"
+    n_calibration: int  # number of pairs used (with weight > 0)
+    global_c_hat: float  # weighted mean of ratios
+    max_observed_ratio: float = 1.0  # upper bound for ĉ (from null-like pairs only)
+    beta: Optional[np.ndarray] = None  # regression coefficients
+    diagnostics: Dict = field(default_factory=dict)
+
+
+# =============================================================================
+# Edge p-value retrieval
+# =============================================================================
+
+
+def _get_edge_pvalue(
+    node: str,
+    pval_map: Dict[str, float],
+) -> float:
+    """Get the BH-corrected edge p-value for a node.
+
+    Returns 1.0 if the node has no edge p-value (e.g. root, non-tested).
+    A return of 1.0 means "maximally null-like" for weighting purposes.
+    """ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald:[389:399]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[551:561]
+    )
+
+    # Mark non-binary/leaf nodes as skipped (never testable)
+    mark_non_binary_as_skipped(df, non_binary, logger=logger)
+
+    early_df = early_return_if_no_records(df, records)
+    if early_df is not None:
+        return early_df
+
+    n_null, n_focal = count_null_focal_pairs(records) (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_calibration:[314:373]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[402:430]
+        return max(model.global_c_hat, 1.0)
+
+    # Intercept-only GLM or WLS: ĉ = exp(β₀)
+    if model.beta is None:
+        return max(model.global_c_hat, 1.0)
+
+    c_hat = float(np.exp(model.beta[0]))
+    c_hat = min(c_hat, model.max_observed_ratio)
+    return max(c_hat, 1.0)
+
+
+# =============================================================================
+# Public API
+# =============================================================================
+
+
+def calibrate_edges_from_sibling_neighborhood(
+    tree: nx.DiGraph,
+    results_df: pd.DataFrame,
+    alpha: float = 0.05,
+    fdr_method: str = "tree_bh",
+) -> pd.DataFrame:
+    """Calibrate edge statistics using descendant-balance weights.
+
+    This is a post-hoc calibration step that runs AFTER Gate 2 (raw).
+    It uses purely structural information (descendant leaf counts) to
+    identify null-like edges for calibration.
+
+    For each edge P→C at parent P with children L, R:
+
+    1. Retrieves the raw test statistic T and projection dimension k.
+    2. Computes weight ``w = min(n_L, n_R) / n_parent``.
+    3. Fits an intercept-only Gamma GLM to estimate ĉ_edge.
+    4. Deflates: ``T_adj = T / ĉ``, recomputes p-values.
+    5. Re-applies BH correction and updates the DataFrame.
+
+    Parameters
+    ----------
+    tree
+        Directed hierarchy.
+    results_df
+        DataFrame indexed by node id, with Gate 2 columns populated.
+    alpha
+        Significance level for re-BH correction.
+    fdr_method
+        FDR correction method: ``"tree_bh"``, ``"flat"``, or ``"level_wise"``.
+
+    Returns
+    -------
+    pd.DataFrame
+        Updated DataFrame with calibrated edge statistics.
+    """
+    from collections import defaultdict
+
+    from kl_clustering_analysis.core_utils.data_utils import extract_bool_column_dict
+    from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
+
+    from ..multiple_testing import apply_multiple_testing_correction
+ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.projection.sibling_spectral_dimension:[124:131]
+==kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral_dimension:[183:189]
+        tree,
+        leaf_data,
+        method=method,
+        min_k=min_k,
+        compute_projections=False,
+    ) (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate:[37:43]
+==kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator:[68:74]
+    sibling_columns = sibling_gate_columns(annotated_df)
+    return GateAnnotationBundle(
+        annotated_df=annotated_df,
+        local_gate_columns=edge_columns,
+        sibling_gate_columns=sibling_columns,
+        metadata={ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_tree_guided:[275:280]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[431:436]
+        tree,
+        nodes_df,
+        mean_bl,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections, (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_tree_guided:[381:388]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald:[554:561]
+    mark_non_binary_as_skipped(df, non_binary, logger=logger)
+
+    early_df = early_return_if_no_records(df, records)
+    if early_df is not None:
+        return early_df
+
+    n_null, n_focal = count_null_focal_pairs(records) (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test:[383:427]
+==kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test:[361:401]
+    return df
+
+
+# =============================================================================
+# Public API
+# =============================================================================
+
+
+def annotate_sibling_divergence_cousin(
+    tree: nx.DiGraph,
+    nodes_statistics_dataframe: pd.DataFrame,
+    *,
+    significance_level_alpha: float = config.SIBLING_ALPHA,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
+) -> pd.DataFrame:
+    """Test sibling divergence using cousin-calibrated F-test.
+
+    This is a drop-in replacement for ``annotate_sibling_divergence`` that uses
+    the cousin F-test for calibrated p-values. Falls back to standard Wald χ²
+    when the cousin reference is unavailable (uncle is leaf or root's children).
+
+    Parameters
+    ----------
+    tree : nx.DiGraph
+        Hierarchical tree with 'distribution' attribute on nodes.
+    nodes_statistics_dataframe : pd.DataFrame
+        Must contain 'Child_Parent_Divergence_Significant' column.
+    significance_level_alpha : float
+        FDR level for BH correction.
+
+    Returns
+    -------
+    pd.DataFrame
+        Updated with sibling divergence columns (same schema as standard test)
+        plus ``Sibling_Test_Method`` column indicating "cousin_ftest" or
+        "wald_fallback" per node.
+    """
+    if len(nodes_statistics_dataframe) == 0:
+        raise ValueError("Empty dataframe")
+
+    df = nodes_statistics_dataframe.copy()
+    df = initialize_sibling_divergence_columns(df)
+ (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.statistics.projection.__init__:[66:72]
+==kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection:[98:103]
+    "compute_projection_dimension",
+    "derive_projection_seed",
+    "estimate_min_projection_dimension",
+    "generate_projection_matrix",
+    "resolve_min_k", (duplicate-code)
+kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py:1:0: R0801: Similar lines in 2 files
+==kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate:[38:43]
+==kl_clustering_analysis.hierarchy_analysis.decomposition.gates.sibling_gate:[42:47]
+    return GateAnnotationBundle(
+        annotated_df=annotated_df,
+        local_gate_columns=edge_columns,
+        sibling_gate_columns=sibling_columns,
+        metadata={ (duplicate-code)
+
+-----------------------------------
+Your code has been rated at 9.88/10
+

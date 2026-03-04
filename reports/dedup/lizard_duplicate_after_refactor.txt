@@ -1,0 +1,318 @@
+================================================
+  NLOC    CCN   token  PARAM  length  location  
+------------------------------------------------
+       8      5     61      2       8 _branch_length_sum@54-61@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+      54      8    343      6      62 collect_sibling_pair_records@64-125@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+      23      5    219      2      29 deflate_focal_pairs@128-156@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+       5      2     39      1       7 init_sibling_annotation_df@159-165@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+      11      3     67      3      13 mark_non_binary_as_skipped@168-180@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+      10      2     47      3      12 early_return_if_no_records@183-194@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+       4      3     44      1       5 count_null_focal_pairs@197-201@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+      40      7    326      8      48 apply_calibrated_results@204-251@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+       8      6     71      1      13 _build_null_index@86-98@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+      14      4     98      3      24 _collect_null_ratios_in_subtree@101-124@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+      33     10    218      3      85 _find_nearest_null_cousin@127-211@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+      17      4    111      4      43 _compute_local_c_hat@214-256@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+      14      1     82      5      18 _collect_all_pairs@264-281@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+       8      1     36      1       8 _deflate_and_test._resolve_calibration@300-307@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+      11      1     68      4      29 _deflate_and_test@284-312@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+      18      1     78      6      19 _apply_results@315-333@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+      74     17    407      5     119 annotate_sibling_divergence_tree_guided@341-459@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+      25      1    119     10      29 _compute_sibling_stat@70-98@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+      10      4     97      2      16 _get_uncle@106-121@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+      29      6    179      5      39 _get_cousin_reference@124-162@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+      52      6    312      9      90 cousin_ftest@170-259@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+      25      5    182      2      38 _collect_test_arguments_cousin@267-304@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+      27      4    195      6      34 _run_cousin_tests@307-340@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+      35      8    302      5      42 _apply_results_cousin@343-384@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+      52      6    309      5      87 annotate_sibling_divergence_cousin@392-478@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+      82      9    436     12     129 sibling_divergence_test@42-170@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+       5      2     55      2       6 _get_binary_children@178-183@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+       6      2     42      3       7 _either_child_significant@186-192@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+      12      1     44      4      12 _get_sibling_data@195-206@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+       8      1     59      2       8 _collect_test_arguments@236-243@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+      32      5    218      5      33 _run_tests@286-318@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+      31      6    275      4      37 _apply_results@326-362@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+      40      7    257      5      68 annotate_sibling_divergence@370-437@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+     109     18    607      1     134 _fit_inflation_model@89-222@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+      17      6    155      3      47 predict_inflation_factor@225-271@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+      14      1     82      5      18 _collect_all_pairs@279-296@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+       3      1     33      1       3 _deflate_and_test._resolve_calibration@310-312@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+       9      1     53      2      19 _deflate_and_test@299-317@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+      18      1     78      6      19 _apply_results_adjusted@320-338@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+      51      5    260      5      97 annotate_sibling_divergence_adjusted@346-442@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+       8      2     49      2      13 _get_edge_pvalue@138-150@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+      10      2     97      2      11 _weighted_median@158-168@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+     164     26    946      1     213 _fit_weighted_inflation_model@171-383@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+      14      4    107      3      26 predict_weighted_inflation_factor@386-411@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+      42      4    260      6      53 _collect_weighted_pairs@419-471@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+       3      1     33      1       3 _deflate_and_test._resolve_calibration@479-481@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+       9      1     53      2      13 _deflate_and_test@474-486@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+      18      1     78      6      19 _apply_results@489-507@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+      50      6    287      6      91 annotate_sibling_divergence_weighted@515-605@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+      22      5    129      6      67 apply_multiple_testing_correction@19-85@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/dispatcher.py
+      27      7    191      3      70 level_wise_bh_correction@17-86@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/level_wise_correction.py
+       2      3     36      1       3 _get_root_nodes@52-54@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/tree_bh_correction.py
+      10      3     87      2      18 _get_families_by_parent@57-74@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/tree_bh_correction.py
+      21      5    108      5      51 _compute_family_threshold@77-127@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/tree_bh_correction.py
+      88     21    523      5     169 tree_bh_correction@130-298@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/tree_bh_correction.py
+       9      2     77      2      33 flat_bh_correction@16-48@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/flat_correction.py
+      20      2    145      2      59 benjamini_hochberg_correction@21-79@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/base.py
+      13      1     95      4      56 kl_divergence_chi_square_test@15-70@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/chi_square_test.py
+      12      2     95      4      44 kl_divergence_chi_square_test_batch@73-116@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/chi_square_test.py
+     159     26    907      1     196 _fit_edge_calibration_model@103-298@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_calibration.py
+      12      4     93      1      23 predict_edge_inflation_factor@301-323@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_calibration.py
+     111     17    758      4     182 calibrate_edges_from_sibling_neighborhood@331-512@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_calibration.py
+       9      4     85      1      24 get_local_kl_series@8-31@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/utils.py
+      29      8    165      6      81 _compute_standardized_z@55-135@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_significance.py
+      48      5    314     10     107 _compute_projected_test@138-244@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_significance.py
+      55     10    491      8      94 _compute_p_values_via_projection@247-340@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_significance.py
+      98     15    593      7     161 annotate_child_parent_divergence@348-508@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_significance.py
+       5      2     49      2       6 is_leaf@15-20@kl_clustering_analysis/hierarchy_analysis/statistics/projection/tree_helpers.py
+      22      6    212      2      43 precompute_descendants@23-65@kl_clustering_analysis/hierarchy_analysis/statistics/projection/tree_helpers.py
+      24      7    163      7      54 build_subtree_data@68-121@kl_clustering_analysis/hierarchy_analysis/statistics/projection/tree_helpers.py
+       2      1     13      0       3 _sync_resolved_to_backend@23-25@kl_clustering_analysis/hierarchy_analysis/statistics/projection/random_projection.py
+       3      1     16      0       4 _sync_resolved_from_backend@28-31@kl_clustering_analysis/hierarchy_analysis/statistics/projection/random_projection.py
+      11      1     43      3      12 estimate_min_projection_dimension@34-45@kl_clustering_analysis/hierarchy_analysis/statistics/projection/random_projection.py
+       8      1     43      2       9 resolve_min_k@48-56@kl_clustering_analysis/hierarchy_analysis/statistics/projection/random_projection.py
+      15      1     64      4      16 compute_projection_dimension@59-74@kl_clustering_analysis/hierarchy_analysis/statistics/projection/random_projection.py
+      13      1     55      4      14 generate_projection_matrix@77-90@kl_clustering_analysis/hierarchy_analysis/statistics/projection/random_projection.py
+       2      1     25      2       3 derive_projection_seed@93-95@kl_clustering_analysis/hierarchy_analysis/statistics/projection/random_projection.py
+      27      3    161      6      30 _process_sibling_node@33-62@kl_clustering_analysis/hierarchy_analysis/statistics/projection/sibling_spectral_dimension.py
+      63     13    447      4     116 compute_sibling_spectral_dimensions@70-185@kl_clustering_analysis/hierarchy_analysis/statistics/projection/sibling_spectral_dimension.py
+       2      1     28      1       3 effective_rank@22-24@kl_clustering_analysis/hierarchy_analysis/statistics/projection/estimators.py
+      10      1     52      3      11 marchenko_pastur_signal_count@27-37@kl_clustering_analysis/hierarchy_analysis/statistics/projection/estimators.py
+       2      1     28      1       3 count_active_features@40-42@kl_clustering_analysis/hierarchy_analysis/statistics/projection/estimators.py
+      10      4     52      1      15 _get_n_jobs@74-88@kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral_dimension.py
+      43      9    252      8      67 _process_node@96-162@kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral_dimension.py
+      15      1     65      4      21 compute_node_spectral_dimensions@170-190@kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral_dimension.py
+      13      1     62      3      18 compute_node_pca_projections@193-210@kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral_dimension.py
+      84     20    548      6     151 compute_spectral_decomposition@213-363@kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral_dimension.py
+       5      1     29      2       6 eigendecompose_correlation@21-26@kl_clustering_analysis/hierarchy_analysis/statistics/projection/eigen_decomposition.py
+      14      1     51      5      15 estimate_spectral_k@29-43@kl_clustering_analysis/hierarchy_analysis/statistics/projection/eigen_decomposition.py
+       6      1     47      3       7 build_pca_projection@46-52@kl_clustering_analysis/hierarchy_analysis/statistics/projection/eigen_decomposition.py
+      31      8    339      3      61 compute_projected_pvalue@30-90@kl_clustering_analysis/hierarchy_analysis/statistics/projection/satterthwaite.py
+       6      1     49      1      21 compute_third_absolute_moment@67-87@kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py
+       7      1     60      1      29 compute_third_absolute_moment_categorical@90-118@kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py
+       4      1     29      1      18 compute_variance_bernoulli@121-138@kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py
+      10      2     83      4      42 berry_esseen_bound@141-182@kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py
+      49      4    336      5     105 check_clt_validity_bernoulli@185-289@kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py
+      14      2    117      3      40 compute_minimum_n_berry_esseen@292-331@kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py
+      11      1     82      6      29 check_split_clt_validity@334-362@kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py
+      10      5     53      1      11 sanitize_positive_branch_length@14-24@kl_clustering_analysis/hierarchy_analysis/statistics/branch_length_utils.py
+      13      5     92      1      18 compute_mean_branch_length@27-44@kl_clustering_analysis/hierarchy_analysis/statistics/branch_length_utils.py
+      48     13    406      7      64 categorical_whitened_vector@13-76@kl_clustering_analysis/hierarchy_analysis/statistics/categorical_mahalanobis.py
+      26      2    163      7      50 mahalanobis_wald_categorical@79-128@kl_clustering_analysis/hierarchy_analysis/statistics/categorical_mahalanobis.py
+       2      2     27      1       3 _is_categorical@32-34@kl_clustering_analysis/hierarchy_analysis/statistics/pooled_variance.py
+       4      2     28      1       9 _flatten_categorical@37-45@kl_clustering_analysis/hierarchy_analysis/statistics/pooled_variance.py
+      10      1     79      5      33 compute_pooled_proportion@48-80@kl_clustering_analysis/hierarchy_analysis/statistics/pooled_variance.py
+      10      1     94      5      40 compute_pooled_variance@83-122@kl_clustering_analysis/hierarchy_analysis/statistics/pooled_variance.py
+      26      5    165      7      74 standardize_proportion_difference@125-198@kl_clustering_analysis/hierarchy_analysis/statistics/pooled_variance.py
+       4      1     78      2      26 cohens_h@47-72@kl_clustering_analysis/hierarchy_analysis/statistics/power_analysis.py
+      23      4    178      6      64 power_wald_two_sample@75-138@kl_clustering_analysis/hierarchy_analysis/statistics/power_analysis.py
+      19      3    129      5      50 power_wald_nested@141-190@kl_clustering_analysis/hierarchy_analysis/statistics/power_analysis.py
+      34      3    196      5      69 compute_child_parent_power@193-261@kl_clustering_analysis/hierarchy_analysis/statistics/power_analysis.py
+      29      3    204      5      56 compute_sibling_power@264-319@kl_clustering_analysis/hierarchy_analysis/statistics/power_analysis.py
+      28      2    135      6      51 check_power_sufficient@322-372@kl_clustering_analysis/hierarchy_analysis/statistics/power_analysis.py
+      42      1    202      7      43 annotate_sibling_gate@17-59@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/sibling_gate.py
+      15      1     90      7      15 __init__@49-63@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/traversal.py
+      15      6    106      2      28 _evaluate_gates_1_and_2@69-96@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/traversal.py
+      10      3     53      2      18 _evaluate_gate_3@98-115@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/traversal.py
+       5      2     37      2      17 should_split@121-137@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/traversal.py
+      13      2     81      4      30 process_node@145-174@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/traversal.py
+      10      3     48      2      16 iterate_worklist@177-192@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/traversal.py
+       2      3     39      2       3 prefixed_columns@18-20@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/column_contracts.py
+       2      1     23      1       2 edge_gate_columns@23-24@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/column_contracts.py
+       2      1     23      1       2 sibling_gate_columns@27-28@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/column_contracts.py
+       7      3     55      2       7 _format_contract_detail@31-37@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/column_contracts.py
+      12      7     80      2      12 validate_legacy_edge_columns@40-51@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/column_contracts.py
+      13      7     91      2      13 validate_legacy_sibling_columns@54-66@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/column_contracts.py
+      37      1    164      7      38 annotate_edge_gate@17-54@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/edge_gate.py
+      67      3    330     13      72 run_gate_annotation_pipeline@18-89@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
+      63     18    378      3      79 build_branch_distance_cache@47-125@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+       7      4     78      3       8 _is_ancestor_cached@128-135@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      14      5     79      3      17 _cached_branch_distance_from_ancestor@138-154@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      24      8    120      3      37 _strict_branch_distance_from_ancestor@157-193@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+       9      2     51      4      10 _branch_distance_from_ancestor@196-205@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      32      8    218     10      61 _deflate_by_calibration@208-268@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      13      2     89      5      37 _compute_branch_lengths_to_lca@271-307@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      17      2     83      6      41 _compute_branch_lengths_from_ancestor@310-350@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      42      2    233      6      82 test_node_pair_divergence@353-434@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      45      2    249      7      81 test_cluster_pair_divergence@437-517@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      15      4    121      2      26 _precompute_cluster_roots_under_nodes@17-42@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/posthoc_merge.py
+      62     21    465      5     134 apply_posthoc_merge@45-178@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/posthoc_merge.py
+       6      2     43      1       6 __getattr__@43-48@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/__init__.py
+      12      3    110      3      13 build_pca_projection_basis@14-26@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/projection_basis.py
+      13      1     55      4      14 build_random_orthonormal_basis@29-42@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/projection_basis.py
+      33      5    232      5      46 build_projection_basis_with_padding@45-90@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/projection_basis.py
+      11      3    108      1      13 effective_rank@8-20@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/k_estimators.py
+      15      5    131      3      18 marchenko_pastur_signal_count@23-40@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/k_estimators.py
+       6      3     73      1       7 count_active_features@43-49@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/k_estimators.py
+      12      2     87      3      13 estimate_k_effective_rank@52-64@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/k_estimators.py
+      12      1     84      4      13 estimate_k_marchenko_pastur@67-79@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/k_estimators.py
+       8      1     54      2       9 estimate_k_active_features@82-90@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/k_estimators.py
+      11      1     62      3      12 compute_projected_pvalue@13-24@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/projected_wald.py
+      40      6    247      7      52 run_projected_wald_kernel@27-78@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/projected_wald.py
+      17      1     89      6      18 fit_wald@24-41@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py
+      15      1     87      6      16 fit_cousin_ftest@44-59@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py
+      17      1     90      6      18 fit_cousin_weighted_wald@62-79@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py
+      15      1     87      6      16 fit_cousin_adjusted_wald@82-97@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py
+      15      1     87      6      16 fit_cousin_tree_guided@100-115@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py
+      67      8    284      7      71 apply_sibling_calibration@118-188@kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py
+      15      3     89      1      17 resolve_k_estimator@11-27@kl_clustering_analysis/hierarchy_analysis/decomposition/core/registry.py
+       8      4     61      1      13 normalize_spectral_k_method@30-42@kl_clustering_analysis/hierarchy_analysis/decomposition/core/registry.py
+      19      3    109      1      21 resolve_sibling_calibrator@45-65@kl_clustering_analysis/hierarchy_analysis/decomposition/core/registry.py
+       4      2     39      1       5 normalize_sibling_calibration_method@68-72@kl_clustering_analysis/hierarchy_analysis/decomposition/core/registry.py
+       3      1     17      1       4 set_resolved_min_k_backend@29-32@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+       2      1     11      0       3 get_resolved_min_k_backend@35-37@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+      12      3    138      3      14 _generate_structured_orthonormal_rows_backend@40-53@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+      43      5    300      3      50 estimate_min_projection_dimension_backend@56-105@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+      17      4     79      2      20 resolve_min_k_backend@108-127@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+      22      6    137      4      25 compute_projection_dimension_backend@130-154@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+      31      6    152      2      37 _maybe_audit_projection_backend@157-193@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+      33      9    249      4      37 _generate_orthonormal_projection_backend@196-232@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+      13      1     53      4      14 generate_projection_matrix_backend@235-248@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+       7      3     82      2       8 derive_projection_seed_backend@251-258@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+      54      5    373      2      66 eigendecompose_correlation_backend@26-91@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py
+      15      2     89      5      17 estimate_spectral_k_backend@94-110@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py
+      30      9    281      3      37 build_pca_projection_backend@113-149@kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py
+     121     25    934     11     208 bootstrap_consensus@38-245@kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+       6      3     53      1       7 _build_label_map@251-257@kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+      27     10    290      4      31 _build_original_cluster_count_matrix@260-290@kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+      54      7    372      7      56 _build_coassociation_pair_log@293-348@kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+       9      4     74      1      14 _extract_clades@351-364@kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+       7      3     71      2       8 _descendant_leaves@367-374@kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+      19      8    167      3      20 _compute_cluster_stability@377-396@kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+      14      3    102      2      30 build_cluster_assignments@16-45@kl_clustering_analysis/hierarchy_analysis/cluster_assignments.py
+      21      6    171      1      41 build_sample_cluster_assignments@48-88@kl_clustering_analysis/hierarchy_analysis/cluster_assignments.py
+      74     11    535      9     137 __init__@58-194@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+      55     12    261      1      71 _resolve_branch_length_scaling@198-268@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+      16      1     84      2      21 _prepare_annotations@270-290@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+      15      2    172      1      22 _cache_node_metadata@292-313@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+       2      1     25      2      14 _get_all_leaves@317-330@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+      13      7     90      2      24 _find_cluster_root@334-357@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+       4      1     37      2       8 _build_cluster_assignments@361-368@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+      12      1     57      4      16 _test_cluster_pair_divergence@372-387@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+      20      2    126      1      34 decompose_tree@389-422@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+      25      9    193      2      44 _maybe_apply_posthoc_merge_with_audit@424-467@kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+      10      2     41      2      10 _warn_legacy_entrypoint_once@25-34@kl_clustering_analysis/hierarchy_analysis/gate_annotations.py
+      30      1    129      7      34 compute_gate_annotations@37-70@kl_clustering_analysis/hierarchy_analysis/gate_annotations.py
+      23      1     98      7      24 annotate_edge_gate@73-96@kl_clustering_analysis/hierarchy_analysis/gate_annotations.py
+      23      1    113      7      24 annotate_sibling_gate@99-122@kl_clustering_analysis/hierarchy_analysis/gate_annotations.py
+59 file analyzed.
+==============================================================
+NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
+--------------------------------------------------------------
+    203      19.4     4.4      143.2         8     kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_pipeline_helpers.py
+    217      21.9     5.0      129.9         9     kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+     24       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/__init__.py
+    278      31.9     5.0      211.9         8     kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_calibrated_test.py
+    282      27.0     4.1      173.2         8     kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/sibling_divergence_test.py
+    255      31.6     4.7      181.1         7     kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+    369      35.3     5.2      212.2         9     kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+     30      22.0     5.0      129.0         1     kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/dispatcher.py
+     33      27.0     7.0      191.0         1     kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/level_wise_correction.py
+    136      30.2     8.0      188.5         4     kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/tree_bh_correction.py
+     14       9.0     2.0       77.0         1     kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/flat_correction.py
+     13       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/__init__.py
+     25      20.0     2.0      145.0         1     kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/base.py
+     33      12.5     1.5       95.0         2     kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/chi_square_test.py
+     20       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/__init__.py
+    316      94.0    15.7      586.0         3     kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_calibration.py
+     12       9.0     4.0       85.0         1     kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/utils.py
+    254      57.5     9.5      390.8         4     kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_significance.py
+     60      17.0     5.0      141.3         3     kl_clustering_analysis/hierarchy_analysis/statistics/projection/tree_helpers.py
+     70       7.7     1.0       37.0         7     kl_clustering_analysis/hierarchy_analysis/statistics/projection/random_projection.py
+     52       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/statistics/projection/__init__.py
+    105      45.0     8.0      304.0         2     kl_clustering_analysis/hierarchy_analysis/statistics/projection/sibling_spectral_dimension.py
+     30       4.7     1.0       36.0         3     kl_clustering_analysis/hierarchy_analysis/statistics/projection/estimators.py
+    194      33.0     7.0      195.8         5     kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral_dimension.py
+     40       8.3     1.0       42.3         3     kl_clustering_analysis/hierarchy_analysis/statistics/projection/eigen_decomposition.py
+     37      31.0     8.0      339.0         1     kl_clustering_analysis/hierarchy_analysis/statistics/projection/satterthwaite.py
+    115      14.4     1.7      108.0         7     kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py
+     44       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/statistics/__init__.py
+     27      11.5     5.0       72.5         2     kl_clustering_analysis/hierarchy_analysis/statistics/branch_length_utils.py
+     79      37.0     7.5      284.5         2     kl_clustering_analysis/hierarchy_analysis/statistics/categorical_mahalanobis.py
+     61      10.4     2.2       78.6         5     kl_clustering_analysis/hierarchy_analysis/statistics/pooled_variance.py
+    156      22.8     2.7      153.3         6     kl_clustering_analysis/hierarchy_analysis/statistics/power_analysis.py
+     52      42.0     1.0      202.0         1     kl_clustering_analysis/hierarchy_analysis/decomposition/gates/sibling_gate.py
+     73      11.3     2.8       69.2         6     kl_clustering_analysis/hierarchy_analysis/decomposition/gates/traversal.py
+     57       6.3     3.7       51.8         6     kl_clustering_analysis/hierarchy_analysis/decomposition/gates/column_contracts.py
+     17       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/decomposition/gates/__init__.py
+     47      37.0     1.0      164.0         1     kl_clustering_analysis/hierarchy_analysis/decomposition/gates/edge_gate.py
+     79      67.0     3.0      330.0         1     kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
+    286      26.6     5.3      157.8        10     kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+     82      38.5    12.5      293.0         2     kl_clustering_analysis/hierarchy_analysis/decomposition/gates/posthoc_merge.py
+     41       6.0     2.0       43.0         1     kl_clustering_analysis/hierarchy_analysis/decomposition/methods/__init__.py
+     70      19.3     3.0      132.3         3     kl_clustering_analysis/hierarchy_analysis/decomposition/methods/projection_basis.py
+     74      10.7     2.5       89.5         6     kl_clustering_analysis/hierarchy_analysis/decomposition/methods/k_estimators.py
+     60      25.5     3.5      154.5         2     kl_clustering_analysis/hierarchy_analysis/decomposition/methods/projected_wald.py
+    168      24.3     2.2      120.7         6     kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py
+     17       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/decomposition/core/enums.py
+     50      11.5     3.0       74.5         4     kl_clustering_analysis/hierarchy_analysis/decomposition/core/registry.py
+     21       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/decomposition/core/__init__.py
+     36       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/decomposition/core/contracts.py
+      2       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/decomposition/core/errors.py
+     20       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/decomposition/backends/__init__.py
+    209      18.3     3.9      121.8        10     kl_clustering_analysis/hierarchy_analysis/decomposition/backends/random_projection_backend.py
+    119      33.0     5.3      247.7         3     kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen_backend.py
+     18       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/decomposition/__init__.py
+    250      34.7     8.6      280.1         7     kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+     38      17.5     4.5      136.5         2     kl_clustering_analysis/hierarchy_analysis/cluster_assignments.py
+    262      23.6     4.7      158.0        10     kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+     22       0.0     0.0        0.0         0     kl_clustering_analysis/hierarchy_analysis/__init__.py
+    102      21.5     1.2       95.2         4     kl_clustering_analysis/hierarchy_analysis/gate_annotations.py
+
+===========================================================================================================
+!!!! Warnings (cyclomatic_complexity > 15 or length > 1000 or nloc > 1000000 or parameter_count > 100) !!!!
+================================================
+  NLOC    CCN   token  PARAM  length  location  
+------------------------------------------------
+      74     17    407      5     119 annotate_sibling_divergence_tree_guided@341-459@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_tree_guided.py
+     109     18    607      1     134 _fit_inflation_model@89-222@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py
+     164     26    946      1     213 _fit_weighted_inflation_model@171-383@kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py
+      88     21    523      5     169 tree_bh_correction@130-298@kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/tree_bh_correction.py
+     159     26    907      1     196 _fit_edge_calibration_model@103-298@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_calibration.py
+     111     17    758      4     182 calibrate_edges_from_sibling_neighborhood@331-512@kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_calibration.py
+      84     20    548      6     151 compute_spectral_decomposition@213-363@kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral_dimension.py
+      63     18    378      3      79 build_branch_distance_cache@47-125@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/pairwise_testing.py
+      62     21    465      5     134 apply_posthoc_merge@45-178@kl_clustering_analysis/hierarchy_analysis/decomposition/gates/posthoc_merge.py
+     121     25    934     11     208 bootstrap_consensus@38-245@kl_clustering_analysis/hierarchy_analysis/bootstrap_consensus.py
+==========================================================================================
+Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
+------------------------------------------------------------------------------------------
+      5856      24.1     4.4      157.3      198           10      0.05    0.22
+Duplicates
+===================================
+Duplicate block:
+--------------------------
+kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_adjusted_wald.py:320 ~ 337
+kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/cousin_weighted_wald.py:489 ~ 506
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Duplicate block:
+--------------------------
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:24 ~ 33
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:44 ~ 53
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:62 ~ 71
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:82 ~ 91
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:100 ~ 109
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Duplicate block:
+--------------------------
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:24 ~ 34
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:44 ~ 54
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:82 ~ 92
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:100 ~ 110
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Duplicate block:
+--------------------------
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:44 ~ 62
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:82 ~ 100
+kl_clustering_analysis/hierarchy_analysis/decomposition/methods/sibling_calibration.py:100 ~ 118
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Total duplicate rate: 2.79%
+Total unique rate: 98.76%
