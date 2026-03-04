@@ -81,7 +81,7 @@ def apply_posthoc_merge(
     cluster_roots_under_node = _precompute_cluster_roots_under_nodes(tree, cluster_roots)
 
     # Collect all sibling-boundary pairs
-    pairs: List[Dict] = []
+    merge_candidates: List[Dict] = []
 
     for node, node_children in children.items():
         if len(node_children) != 2:
@@ -101,7 +101,7 @@ def apply_posthoc_merge(
                 test_stat, degrees_of_freedom, p_value = test_divergence(lc, rc, node)
                 # For any lc under left_child and rc under right_child in a tree,
                 # the lowest common ancestor is the current boundary node.
-                pairs.append(
+                merge_candidates.append(
                     {
                         "left_cluster": lc,
                         "right_cluster": rc,
@@ -112,17 +112,17 @@ def apply_posthoc_merge(
                     }
                 )
 
-    if not pairs:
+    if not merge_candidates:
         return cluster_roots, []
 
     # Single FDR correction on all pairs
-    p_values = np.array([p["p_value"] for p in pairs])
+    p_values = np.array([candidate["p_value"] for candidate in merge_candidates])
     reject, _, _ = benjamini_hochberg_correction(p_values, alpha=alpha)
 
     # Update pairs with significance status
     for i, is_rejected in enumerate(reject):
-        pairs[i]["is_significant"] = bool(is_rejected)
-        pairs[i]["was_merged"] = False  # Initialize
+        merge_candidates[i]["is_significant"] = bool(is_rejected)
+        merge_candidates[i]["was_merged"] = False  # Initialize
 
     # Get mergeable pairs (failed to reject H0 = clusters are similar).
     # We no longer block ALL merges under an LCA just because one pair
@@ -147,9 +147,9 @@ def apply_posthoc_merge(
     # merge rather than silently absorbing uninvolved clusters.
     lca_descendants_cache: Dict[str, Set[str]] = {}
     for idx in mergeable_indices:
-        lc = pairs[idx]["left_cluster"]
-        rc = pairs[idx]["right_cluster"]
-        lca = pairs[idx]["lca"]
+        lc = merge_candidates[idx]["left_cluster"]
+        rc = merge_candidates[idx]["right_cluster"]
+        lca = merge_candidates[idx]["lca"]
 
         # Only merge "live" cluster roots.
         if lc not in cluster_roots or rc not in cluster_roots:
@@ -173,6 +173,6 @@ def apply_posthoc_merge(
         cluster_roots.discard(rc)
         cluster_roots.add(lca)
 
-        pairs[idx]["was_merged"] = True
+        merge_candidates[idx]["was_merged"] = True
 
-    return cluster_roots, pairs
+    return cluster_roots, merge_candidates

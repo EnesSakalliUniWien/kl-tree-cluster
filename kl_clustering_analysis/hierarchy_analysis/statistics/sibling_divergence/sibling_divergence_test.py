@@ -243,8 +243,9 @@ def _collect_test_arguments(
 ]:
     """Collect sibling pairs eligible for testing.
 
-    Returns (parent_nodes, test_args, skipped_nodes, non_binary_nodes).
-    Each test_args tuple contains: (left_dist, right_dist, n_left, n_right, branch_left, branch_right)
+    Returns (parent_nodes, sibling_test_arguments, skipped_nodes, non_binary_nodes).
+    Each tuple in sibling_test_arguments contains:
+    (left_dist, right_dist, n_left, n_right, branch_left, branch_right)
     """
     parents, child_pairs, skipped, non_binary = collect_significant_sibling_pairs(
         tree,
@@ -253,30 +254,37 @@ def _collect_test_arguments(
         either_child_significant=_either_child_significant,
     )
 
-    args: List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]] = []
+    sibling_test_arguments: List[
+        Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]
+    ] = []
     for parent, (left, right) in zip(parents, child_pairs, strict=False):
         left_dist, right_dist, n_left, n_right, bl_left, bl_right = _get_sibling_data(
             tree, parent, left, right
         )
-        args.append((left_dist, right_dist, n_left, n_right, bl_left, bl_right))
+        sibling_test_arguments.append((left_dist, right_dist, n_left, n_right, bl_left, bl_right))
 
-    return parents, args, skipped, non_binary
+    return parents, sibling_test_arguments, skipped, non_binary
 
 
 def _run_tests(
     parents: List[str],
-    args: List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]],
+    sibling_test_arguments: List[
+        Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]
+    ],
     mean_branch_length: float | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
 ) -> List[Tuple[float, float, float]]:
     """Execute sibling divergence tests for all collected pairs."""
-    if len(parents) != len(args):
-        raise ValueError(f"parents and args length mismatch: {len(parents)} != {len(args)}")
+    if len(parents) != len(sibling_test_arguments):
+        raise ValueError(
+            "parents and sibling_test_arguments length mismatch: "
+            f"{len(parents)} != {len(sibling_test_arguments)}"
+        )
     results = []
     for parent, (left, right, n_left, n_right, branch_length_left, branch_length_right) in zip(
         parents,
-        args,
+        sibling_test_arguments,
         strict=False,
     ):
         _spectral_k: int | None = None
@@ -361,7 +369,10 @@ def annotate_sibling_divergence(
     annotations_df = annotations_df.copy()
     annotations_df = initialize_sibling_divergence_columns(annotations_df)
 
-    parents, args, skipped, non_binary = _collect_test_arguments(tree, annotations_df)
+    parents, sibling_test_arguments, skipped, non_binary = _collect_test_arguments(
+        tree,
+        annotations_df,
+    )
 
     if not parents:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
@@ -384,7 +395,7 @@ def annotate_sibling_divergence(
 
     results = _run_tests(
         parents,
-        args,
+        sibling_test_arguments,
         mean_branch_length=mean_branch_length,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
