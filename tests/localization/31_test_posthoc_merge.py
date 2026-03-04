@@ -280,4 +280,4 @@ def test_posthoc_merge_audit_trail_records_all_pairs() -> None:
     assert "is_significant" in pair
     assert "was_merged" in pair
     assert pair["test_stat"] == 5.0
-    assert pair["df"] == 2.0
+    assert pair["degrees_of_freedom"] == 2.0

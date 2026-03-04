@@ -127,6 +127,90 @@ def _compute_family_threshold(
     return adjusted_alpha
 
 
+def _initialize_tree_bh_outputs(total_hypothesis_count: int) -> tuple[np.ndarray, np.ndarray]:
+    """Initialize rejection mask and adjusted p-value array."""
+    rejection_mask = np.zeros(total_hypothesis_count, dtype=bool)
+    adjusted_p_values = np.ones(total_hypothesis_count, dtype=float)
+    return rejection_mask, adjusted_p_values
+
+
+def _compute_child_depths(tree: nx.DiGraph, child_ids: List[str]) -> np.ndarray:
+    """Map each child id to its depth in the tree."""
+    node_depths = compute_node_depths(tree)
+    return np.array([node_depths.get(child_id, 0) for child_id in child_ids])
+
+
+def _collect_testable_families_at_level(
+    families_by_parent: Dict[str, List[int]],
+    child_depths: np.ndarray,
+    level: int,
+    rejected_parent_nodes: Set[str],
+) -> List[Tuple[str, List[int]]]:
+    """Collect families at a level whose parent node was rejected."""
+    families_to_test: List[Tuple[str, List[int]]] = []
+    for parent_id, child_indices in families_by_parent.items():
+        level_child_indices = [index for index in child_indices if child_depths[index] == level]
+        if level_child_indices and parent_id in rejected_parent_nodes:
+            families_to_test.append((parent_id, level_child_indices))
+    return families_to_test
+
+
+def _apply_bh_within_family(
+    family_p_values: np.ndarray,
+    adjusted_alpha: float,
+) -> tuple[np.ndarray, np.ndarray] | None:
+    """Apply BH correction within one family."""
+    if len(family_p_values) == 0 or adjusted_alpha <= 0:
+        return None
+
+    family_reject, family_adjusted, _, _ = multipletests(
+        family_p_values,
+        alpha=adjusted_alpha,
+        method="fdr_bh",
+        is_sorted=False,
+        returnsorted=False,
+    )
+    return family_reject, family_adjusted
+
+
+def _record_family_bh_outcome(
+    *,
+    parent_id: str,
+    level: int,
+    family_child_indices: List[int],
+    family_p_values: np.ndarray,
+    family_reject_mask: np.ndarray,
+    family_adjusted_p_values: np.ndarray,
+    child_ids: List[str],
+    rejection_mask: np.ndarray,
+    adjusted_p_values: np.ndarray,
+    rejected_parent_nodes: Set[str],
+    family_rejection_counts: Dict[str, Tuple[int, int]],
+    family_results: Dict[str, Dict],
+    adjusted_alpha: float,
+) -> tuple[int, int]:
+    """Store one family's BH outcome in all TreeBH tracking structures."""
+    for within_family_index, global_index in enumerate(family_child_indices):
+        rejection_mask[global_index] = family_reject_mask[within_family_index]
+        adjusted_p_values[global_index] = family_adjusted_p_values[within_family_index]
+        if family_reject_mask[within_family_index]:
+            rejected_parent_nodes.add(child_ids[global_index])
+
+    rejection_count = int(np.sum(family_reject_mask))
+    test_count = len(family_p_values)
+    family_rejection_counts[parent_id] = (rejection_count, test_count)
+    family_results[parent_id] = {
+        "level": level,
+        "n_tests": test_count,
+        "n_rejections": rejection_count,
+        "adjusted_alpha": adjusted_alpha,
+        "child_ids": [child_ids[index] for index in family_child_indices],
+        "p_values": family_p_values.tolist(),
+        "rejected": family_reject_mask.tolist(),
+    }
+    return rejection_count, test_count
+
+
 def tree_bh_correction(
     tree: nx.DiGraph,
     p_values: np.ndarray,
@@ -174,125 +258,97 @@ def tree_bh_correction(
     >>> result.reject
     array([ True,  True,  True])
     """
-    n = len(p_values)
-    reject = np.zeros(n, dtype=bool)
-    adjusted_p = np.ones(n, dtype=float)
+    total_hypothesis_count = len(p_values)
+    rejection_mask, adjusted_p_values = _initialize_tree_bh_outputs(total_hypothesis_count)
 
-    if n == 0:
+    if total_hypothesis_count == 0:
         return TreeBHResult(
-            reject=reject,
-            adjusted_p=adjusted_p,
+            reject=rejection_mask,
+            adjusted_p=adjusted_p_values,
             level_thresholds={},
             family_results={},
         )
 
-    # Compute node depths
-    node_depths = compute_node_depths(tree)
-
-    # Map child_ids to their depths
-    child_depths = np.array([node_depths.get(cid, 0) for cid in child_ids])
-
-    # Group children by parent (family)
-    families = _get_families_by_parent(tree, child_ids)
-
-    # Track which parents have been "rejected" (their edge was significant)
-    # Initially, root is always considered "rejected" (we always test level 1)
-    roots = set(_get_root_nodes(tree))
-    rejected_parents: Set[str] = roots.copy()
-
-    # Track rejection proportions for threshold adjustment
-    # Key: parent_id, Value: (n_rejections, n_tests)
+    child_depths = _compute_child_depths(tree, child_ids)
+    families_by_parent = _get_families_by_parent(tree, child_ids)
+    root_nodes = set(_get_root_nodes(tree))
+    rejected_parent_nodes: Set[str] = root_nodes.copy()
     family_rejection_counts: Dict[str, Tuple[int, int]] = {}
-
-    # Process levels in order
     levels = sorted(set(child_depths))
     level_thresholds: Dict[int, float] = {}
     family_results: Dict[str, Dict] = {}
 
     if verbose:
-        print(f"TreeBH: {n} edges, {len(levels)} levels, {len(families)} families")
-        print(f"Roots: {roots}")
+        print(
+            f"TreeBH: {total_hypothesis_count} edges, {len(levels)} levels, "
+            f"{len(families_by_parent)} families"
+        )
+        print(f"Roots: {root_nodes}")
 
     for level in levels:
         if verbose:
             print(f"\n--- Level {level} ---")
 
-        # Find families to test at this level
-        # A family is tested if its parent was rejected
-        families_at_level = []
-        for parent_id, child_indices in families.items():
-            # Check if any child is at this level
-            level_children = [i for i in child_indices if child_depths[i] == level]
-            if level_children and parent_id in rejected_parents:
-                families_at_level.append((parent_id, level_children))
+        families_at_level = _collect_testable_families_at_level(
+            families_by_parent,
+            child_depths,
+            level,
+            rejected_parent_nodes,
+        )
 
         if not families_at_level:
             if verbose:
                 print(f"  No families to test at level {level}")
             continue
 
-        # Process each family at this level
-        for parent_id, child_indices in families_at_level:
-            # Compute adjusted threshold for this family
+        for parent_id, family_child_indices in families_at_level:
             adjusted_alpha = _compute_family_threshold(
-                tree, parent_id, family_rejection_counts, alpha, roots
+                tree,
+                parent_id,
+                family_rejection_counts,
+                alpha,
+                root_nodes,
             )
 
             if verbose:
                 print(
-                    f"  Family under {parent_id}: {len(child_indices)} children, "
+                    f"  Family under {parent_id}: {len(family_child_indices)} children, "
                     f"α_adj = {adjusted_alpha:.6f}"
                 )
 
-            # Extract p-values for this family
-            family_p_values = p_values[child_indices]
+            family_p_values = p_values[family_child_indices]
+            family_bh_result = _apply_bh_within_family(family_p_values, adjusted_alpha)
+            if family_bh_result is None:
+                continue
 
-            # Apply BH within this family
-            if len(family_p_values) > 0 and adjusted_alpha > 0:
-                family_reject, family_adjusted, _, _ = multipletests(
-                    family_p_values,
-                    alpha=adjusted_alpha,
-                    method="fdr_bh",
-                    is_sorted=False,
-                    returnsorted=False,
+            family_reject_mask, family_adjusted_p_values = family_bh_result
+            rejection_count, test_count = _record_family_bh_outcome(
+                parent_id=parent_id,
+                level=level,
+                family_child_indices=family_child_indices,
+                family_p_values=family_p_values,
+                family_reject_mask=family_reject_mask,
+                family_adjusted_p_values=family_adjusted_p_values,
+                child_ids=child_ids,
+                rejection_mask=rejection_mask,
+                adjusted_p_values=adjusted_p_values,
+                rejected_parent_nodes=rejected_parent_nodes,
+                family_rejection_counts=family_rejection_counts,
+                family_results=family_results,
+                adjusted_alpha=adjusted_alpha,
+            )
+
+            if verbose:
+                print(
+                    f"    Rejected {rejection_count}/{test_count} "
+                    f"(proportion: {rejection_count / test_count:.2%})"
                 )
 
-                # Store results
-                for j, idx in enumerate(child_indices):
-                    reject[idx] = family_reject[j]
-                    adjusted_p[idx] = family_adjusted[j]
-
-                    # If rejected, add this child as a potential parent for next level
-                    if family_reject[j]:
-                        rejected_parents.add(child_ids[idx])
-
-                # Record rejection counts for this family
-                n_rejections = int(np.sum(family_reject))
-                n_tests = len(family_p_values)
-                family_rejection_counts[parent_id] = (n_rejections, n_tests)
-
-                family_results[parent_id] = {
-                    "level": level,
-                    "n_tests": n_tests,
-                    "n_rejections": n_rejections,
-                    "adjusted_alpha": adjusted_alpha,
-                    "child_ids": [child_ids[i] for i in child_indices],
-                    "p_values": family_p_values.tolist(),
-                    "rejected": family_reject.tolist(),
-                }
-
-                if verbose:
-                    print(
-                        f"    Rejected {n_rejections}/{n_tests} "
-                        f"(proportion: {n_rejections / n_tests:.2%})"
-                    )
-
-        # Store the base threshold for this level (just α for reference)
         level_thresholds[level] = alpha
 
     return TreeBHResult(
-        reject=reject,
-        adjusted_p=adjusted_p,
+        reject=rejection_mask,
+        adjusted_p=adjusted_p_values,
         level_thresholds=level_thresholds,
         family_results=family_results,
     )

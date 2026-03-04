@@ -107,7 +107,7 @@ class _WeightedRecord:
     left: str
     right: str
     stat: float  # raw Wald T
-    df: int  # projection dimension k
+    degrees_of_freedom: int  # projection dimension k
     pval: float  # raw Wald p
     bl_sum: float  # branch-length sum (left + right)
     n_parent: int  # number of leaves under parent
@@ -200,7 +200,7 @@ def _filter_valid_weighted_records(records: List[_WeightedRecord]) -> List[_Weig
         record
         for record in records
         if np.isfinite(record.stat)
-        and record.df > 0
+        and record.degrees_of_freedom > 0
         and record.stat > 0
         and record.n_parent > 0
         and record.weight > 0
@@ -211,10 +211,10 @@ def _build_weighted_calibration_inputs(
     valid_records: List[_WeightedRecord],
 ) -> _WeightedCalibrationInputs:
     """Convert valid records into numeric vectors used by calibration models."""
-    ratio_values = np.array([record.stat / record.df for record in valid_records])
+    ratio_values = np.array([record.stat / record.degrees_of_freedom for record in valid_records])
     weight_values = np.array([record.weight for record in valid_records])
     null_like_ratio_values = np.array(
-        [record.stat / record.df for record in valid_records if record.is_null_like]
+        [record.stat / record.degrees_of_freedom for record in valid_records if record.is_null_like]
     )
 
     if len(null_like_ratio_values) > 0:
@@ -513,7 +513,7 @@ def predict_weighted_inflation_factor(
 
 def _collect_weighted_pairs(
     tree: nx.DiGraph,
-    nodes_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     mean_bl: float | None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
@@ -525,7 +525,7 @@ def _collect_weighted_pairs(
     """
     base_records, non_binary = collect_sibling_pair_records(
         tree,
-        nodes_df,
+        annotations_df,
         mean_bl,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
@@ -534,12 +534,14 @@ def _collect_weighted_pairs(
 
     # Build edge p-value map from the BH-corrected column
     pval_col = "Child_Parent_Divergence_P_Value_BH"
-    if pval_col in nodes_df.columns:
-        pval_map = nodes_df[pval_col].to_dict()
+    if pval_col in annotations_df.columns:
+        pval_map = annotations_df[pval_col].to_dict()
     else:
         # Fallback to raw p-values if BH not available
         pval_col_raw = "Child_Parent_Divergence_P_Value"
-        pval_map = nodes_df[pval_col_raw].to_dict() if pval_col_raw in nodes_df.columns else {}
+        pval_map = (
+            annotations_df[pval_col_raw].to_dict() if pval_col_raw in annotations_df.columns else {}
+        )
 
     records: List[_WeightedRecord] = []
     for rec in base_records:
@@ -554,7 +556,7 @@ def _collect_weighted_pairs(
                 left=rec.left,
                 right=rec.right,
                 stat=rec.stat,
-                df=rec.df,
+                degrees_of_freedom=rec.degrees_of_freedom,
                 pval=rec.pval,
                 bl_sum=rec.bl_sum,
                 n_parent=rec.n_parent,
@@ -582,7 +584,7 @@ def _deflate_and_test(
 
 
 def _apply_results(
-    df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     focal_parents: List[str],
     focal_results: List[Tuple[float, float, float]],
     calibration_methods: List[str],
@@ -591,7 +593,7 @@ def _apply_results(
 ) -> pd.DataFrame:
     """Apply deflated results with BH correction to DataFrame."""
     return apply_calibrated_results(
-        df,
+        annotations_df,
         focal_parents,
         focal_results,
         calibration_methods,
@@ -609,7 +611,7 @@ def _apply_results(
 
 def annotate_sibling_divergence_weighted(
     tree: nx.DiGraph,
-    nodes_statistics_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     spectral_dims: dict[str, int] | None = None,
@@ -626,7 +628,7 @@ def annotate_sibling_divergence_weighted(
     ----------
     tree : nx.DiGraph
         Hierarchical tree with 'distribution' attribute on nodes.
-    nodes_statistics_dataframe : pd.DataFrame
+    annotations_df : pd.DataFrame
         Must contain 'Child_Parent_Divergence_Significant' and
         'Child_Parent_Divergence_P_Value_BH' columns.
     significance_level_alpha : float
@@ -637,21 +639,21 @@ def annotate_sibling_divergence_weighted(
     pd.DataFrame
         Updated with sibling divergence columns plus ``Sibling_Test_Method``.
     """
-    df = init_sibling_annotation_df(nodes_statistics_dataframe)
+    annotations_df = init_sibling_annotation_df(annotations_df)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats with continuous weights
     records, non_binary = _collect_weighted_pairs(
-        tree, df, mean_bl, spectral_dims, pca_projections, pca_eigenvalues
+        tree, annotations_df, mean_bl, spectral_dims, pca_projections, pca_eigenvalues
     )
 
     # Mark non-binary/leaf nodes as skipped (never testable)
-    mark_non_binary_as_skipped(df, non_binary, logger=logger)
+    mark_non_binary_as_skipped(annotations_df, non_binary, logger=logger)
 
-    early_df = early_return_if_no_records(df, records)
-    if early_df is not None:
-        return early_df
+    early_annotations_df = early_return_if_no_records(annotations_df, records)
+    if early_annotations_df is not None:
+        return early_annotations_df
 
     n_null, n_focal = count_null_focal_pairs(records)
     total_weight = sum(r.weight for r in records)
@@ -672,8 +674,8 @@ def annotate_sibling_divergence_weighted(
     # Null-like parents are skipped (merge)
     skipped_parents = [r.parent for r in records if r.is_null_like]
 
-    df = _apply_results(
-        df,
+    annotations_df = _apply_results(
+        annotations_df,
         focal_parents,
         focal_results,
         cal_methods,
@@ -682,7 +684,7 @@ def annotate_sibling_divergence_weighted(
     )
 
     # Audit metadata
-    df.attrs["sibling_divergence_audit"] = {
+    annotations_df.attrs["sibling_divergence_audit"] = {
         "total_pairs": len(records),
         "null_like_pairs": n_null,
         "focal_pairs": n_focal,
@@ -695,9 +697,9 @@ def annotate_sibling_divergence_weighted(
 
     # Store the fitted model so downstream consumers (e.g. post-hoc merge)
     # can apply the same deflation — ensures symmetric calibration.
-    df.attrs["_calibration_model"] = model
+    annotations_df.attrs["_calibration_model"] = model
 
-    return df
+    return annotations_df
 
 
 __all__ = [

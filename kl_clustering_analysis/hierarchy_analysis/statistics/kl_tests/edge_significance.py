@@ -347,7 +347,7 @@ def _compute_p_values_via_projection(
 
 def annotate_child_parent_divergence(
     tree: nx.DiGraph,
-    nodes_statistics_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     significance_level_alpha: float = 0.05,
     fdr_method: str = "tree_bh",
     leaf_data: pd.DataFrame | None = None,
@@ -369,7 +369,7 @@ def annotate_child_parent_divergence(
     tree
         Directed acyclic graph representing the hierarchy. Nodes must have
         'distribution' attribute containing feature parameters.
-    nodes_statistics_dataframe
+    annotations_df
         DataFrame indexed by node_id with 'leaf_count' column.
     significance_level_alpha
         FDR threshold for correction.
@@ -391,7 +391,7 @@ def annotate_child_parent_divergence(
     pd.DataFrame
         Input DataFrame augmented with divergence test results.
     """
-    nodes_dataframe = nodes_statistics_dataframe.copy()
+    annotations_df = annotations_df.copy()
     alpha = float(significance_level_alpha)
 
     edge_list = list(tree.edges())
@@ -401,8 +401,8 @@ def annotate_child_parent_divergence(
     if not child_ids:
         raise ValueError("Tree has no edges. Cannot compute child-parent divergence.")
 
-    child_leaf_counts = extract_leaf_counts(nodes_dataframe, child_ids)
-    parent_leaf_counts = extract_leaf_counts(nodes_dataframe, parent_ids)
+    child_leaf_counts = extract_leaf_counts(annotations_df, child_ids)
+    parent_leaf_counts = extract_leaf_counts(annotations_df, parent_ids)
 
     # --- Per-node spectral dimension (replaces JL when configured) ---
     spectral_dims: dict[str, int] | None = None
@@ -428,7 +428,7 @@ def annotate_child_parent_divergence(
         pca_eigenvalues = pca_eig_dict if pca_eig_dict else None
 
     # Keep only lightweight spectral dimensions in attrs for diagnostics.
-    nodes_dataframe.attrs["_spectral_dims"] = spectral_dims
+    annotations_df.attrs["_spectral_dims"] = spectral_dims
 
     test_stats, degrees_of_freedom, p_values, invalid_mask = _compute_p_values_via_projection(
         tree,
@@ -443,7 +443,7 @@ def annotate_child_parent_divergence(
 
     # Stash raw test data in attrs so the post-hoc edge calibration
     # (calibrate_edges_from_sibling_neighborhood) can use them after Gate 3.
-    nodes_dataframe.attrs["_edge_raw_test_data"] = {
+    annotations_df.attrs["_edge_raw_test_data"] = {
         "child_ids": child_ids,
         "parent_ids": parent_ids,
         "test_stats": test_stats.copy(),
@@ -490,7 +490,7 @@ def annotate_child_parent_divergence(
     reject_null = np.where(nonfinite_p_mask, False, reject_null)
 
     # Attach run-level audit counters for downstream diagnostics.
-    nodes_dataframe.attrs["child_parent_divergence_audit"] = {
+    annotations_df.attrs["child_parent_divergence_audit"] = {
         "total_tests": int(len(child_ids)),
         "invalid_tests": n_invalid,
         "nonfinite_p_values": n_nonfinite_p,
@@ -498,7 +498,7 @@ def annotate_child_parent_divergence(
     }
 
     return assign_divergence_results(
-        nodes_dataframe=nodes_dataframe,
+        nodes_dataframe=annotations_df,
         child_ids=child_ids,
         p_values=p_values,
         p_values_corrected=p_values_corrected,

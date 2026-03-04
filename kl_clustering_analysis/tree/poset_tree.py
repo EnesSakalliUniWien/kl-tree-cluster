@@ -382,7 +382,7 @@ class PosetTree(nx.DiGraph):
 
         decomposer = TreeDecomposition(
             tree=self,
-            results_df=results_df,
+            annotations_df=results_df,
             alpha_local=alpha_local,
             sibling_alpha=sibling_alpha,
             leaf_data=leaf_data,
@@ -390,7 +390,7 @@ class PosetTree(nx.DiGraph):
         )
 
         # Cache annotated results back so stats_df reflects the full pipeline
-        self.stats_df = decomposer.results_df
+        self.stats_df = decomposer.annotations_df
 
         return decomposer.decompose_tree()
 

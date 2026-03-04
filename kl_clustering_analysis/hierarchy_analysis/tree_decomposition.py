@@ -58,7 +58,7 @@ class TreeDecomposition:
     def __init__(
         self,
         tree: PosetTree,
-        results_df: pd.DataFrame | None = None,
+        annotations_df: pd.DataFrame | None = None,
         *,
         alpha_local: float = config.ALPHA_LOCAL,
         sibling_alpha: float = config.SIBLING_ALPHA,
@@ -73,7 +73,7 @@ class TreeDecomposition:
         ----------
         tree
             Directed hierarchy (typically a :class:`~tree.poset_tree.PosetTree`).
-        results_df
+        annotations_df
             DataFrame of statistical annotations (e.g., columns produced by
             ``hierarchy_analysis.statistics`` helpers). May be ``None`` if the caller
             plans to rely on on-the-fly calculations.
@@ -96,7 +96,7 @@ class TreeDecomposition:
             Per-node projection dimension estimator.  See ``config.SPECTRAL_METHOD``.
         """
         self.tree = tree
-        self.results_df = results_df if results_df is not None else pd.DataFrame()
+        self.annotations_df = annotations_df if annotations_df is not None else pd.DataFrame()
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
@@ -144,7 +144,7 @@ class TreeDecomposition:
         )
 
         # ----- ensure statistical annotations are present -----
-        self.results_df = self._prepare_annotations(self.results_df)
+        self.annotations_df = self._prepare_annotations(self.annotations_df)
 
         # ----- extract calibration model for post-hoc merge symmetry -----
         # When using cousin-adjusted (or weighted) Wald, the annotation step
@@ -155,17 +155,17 @@ class TreeDecomposition:
         # otherwise the merge uses inflated raw T while the split used
         # deflated T_adj, making it systematically harder to merge than to split.
         self._calibration_model: CalibrationModel | WeightedCalibrationModel | None = (
-            self.results_df.attrs.get("_calibration_model")
+            self.annotations_df.attrs.get("_calibration_model")
         )
 
-        # ----- results_df → fast dictionary lookups (no .loc in hot paths) -----
+        # ----- annotations_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
-            self.results_df, "Child_Parent_Divergence_Significant"
+            self.annotations_df, "Child_Parent_Divergence_Significant"
         )
         # Sibling divergence test: Sibling_BH_Different = True means siblings differ -> SPLIT
-        self._sibling_different = extract_bool_column_dict(self.results_df, "Sibling_BH_Different")
+        self._sibling_different = extract_bool_column_dict(self.annotations_df, "Sibling_BH_Different")
         self._sibling_skipped = extract_bool_column_dict(
-            self.results_df, "Sibling_Divergence_Skipped"
+            self.annotations_df, "Sibling_Divergence_Skipped"
         )
 
         for column_name, mapping in (
@@ -267,14 +267,14 @@ class TreeDecomposition:
 
         return mean_branch_length, "phylogeny"
 
-    def _prepare_annotations(self, results_df: pd.DataFrame) -> pd.DataFrame:
-        """Ensure statistical annotation columns are present on *results_df*.
+    def _prepare_annotations(self, annotations_df: pd.DataFrame) -> pd.DataFrame:
+        """Ensure statistical annotation columns are present on *annotations_df*.
 
         Delegates directly to canonical gate orchestrator.
         """
         return run_gate_annotation_pipeline(
             self.tree,
-            results_df,
+            annotations_df,
             alpha_local=self.alpha_local,
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,

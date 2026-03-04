@@ -234,7 +234,7 @@ def _get_sibling_data(
 
 def _collect_test_arguments(
     tree: nx.DiGraph,
-    nodes_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
 ) -> Tuple[
     List[str],
     List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]],
@@ -248,7 +248,7 @@ def _collect_test_arguments(
     """
     parents, child_pairs, skipped, non_binary = collect_significant_sibling_pairs(
         tree,
-        nodes_df,
+        annotations_df,
         get_binary_children=_get_binary_children,
         either_child_significant=_either_child_significant,
     )
@@ -304,14 +304,14 @@ def _run_tests(
 
 
 def _apply_results(
-    df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     parents: List[str],
     results: List[Tuple[float, float, float]],
     alpha: float,
 ) -> pd.DataFrame:
     """Apply test results with BH correction to dataframe."""
     return apply_sibling_bh_results(
-        df,
+        annotations_df,
         parents,
         results,
         alpha,
@@ -327,7 +327,7 @@ def _apply_results(
 
 def annotate_sibling_divergence(
     tree: nx.DiGraph,
-    nodes_statistics_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     spectral_dims: Dict[str, int] | None = None,
@@ -339,7 +339,7 @@ def annotate_sibling_divergence(
     ----------
     tree : nx.DiGraph
         Hierarchical tree with 'distribution' attribute on nodes.
-    nodes_statistics_dataframe : pd.DataFrame
+    annotations_df : pd.DataFrame
         Must contain 'Child_Parent_Divergence_Significant' column.
     significance_level_alpha : float
         FDR level for BH correction.
@@ -351,27 +351,27 @@ def annotate_sibling_divergence(
         Sibling_Divergence_P_Value, Sibling_Divergence_P_Value_Corrected,
         Sibling_BH_Different, Sibling_BH_Same columns.
     """
-    if len(nodes_statistics_dataframe) == 0:
+    if len(annotations_df) == 0:
         raise ValueError("Empty dataframe")
 
-    df = nodes_statistics_dataframe.copy()
-    df = initialize_sibling_divergence_columns(df)
+    annotations_df = annotations_df.copy()
+    annotations_df = initialize_sibling_divergence_columns(annotations_df)
 
-    parents, args, skipped, non_binary = _collect_test_arguments(tree, df)
+    parents, args, skipped, non_binary = _collect_test_arguments(tree, annotations_df)
 
     if not parents:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
         # Still mark non-binary/leaf nodes as skipped before returning
         if non_binary:
-            df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
-        return df
+            annotations_df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
+        return annotations_df
 
     if skipped:
-        df.loc[skipped, "Sibling_Divergence_Skipped"] = True
+        annotations_df.loc[skipped, "Sibling_Divergence_Skipped"] = True
         logger.debug(f"Skipped {len(skipped)} nodes")
 
     if non_binary:
-        df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
+        annotations_df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
         logger.debug(f"Non-binary/leaf nodes marked as skipped: {len(non_binary)}")
 
     # Compute mean branch length from tree for Felsenstein normalization
@@ -385,14 +385,14 @@ def annotate_sibling_divergence(
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
-    df = _apply_results(df, parents, results, significance_level_alpha)
-    sibling_invalid = int(df.loc[parents, "Sibling_Divergence_Invalid"].sum())
-    df.attrs["sibling_divergence_audit"] = {
+    annotations_df = _apply_results(annotations_df, parents, results, significance_level_alpha)
+    sibling_invalid = int(annotations_df.loc[parents, "Sibling_Divergence_Invalid"].sum())
+    annotations_df.attrs["sibling_divergence_audit"] = {
         "total_tests": int(len(parents)),
         "invalid_tests": sibling_invalid,
         "conservative_path_tests": sibling_invalid,
     }
-    return df
+    return annotations_df
 
 
 __all__ = ["annotate_sibling_divergence", "sibling_divergence_test"]

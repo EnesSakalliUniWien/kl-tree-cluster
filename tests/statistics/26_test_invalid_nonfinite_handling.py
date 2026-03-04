@@ -89,7 +89,7 @@ def test_child_parent_nonfinite_keeps_nan_and_uses_conservative_correction(
 
     out = annotate_child_parent_divergence(
         tree=tree,
-        nodes_statistics_dataframe=nodes_df,
+        annotations_df=nodes_df,
         significance_level_alpha=0.05,
         fdr_method="flat",
     )
@@ -166,7 +166,7 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
 
     out = annotate_sibling_divergence(
         tree=tree,
-        nodes_statistics_dataframe=nodes_df,
+        annotations_df=nodes_df,
         significance_level_alpha=0.05,
     )
 

@@ -11,23 +11,18 @@ from unittest.mock import MagicMock, patch
 import networkx as nx
 import numpy as np
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.pairwise_testing import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing import (
     _compute_branch_lengths_from_ancestor,
     _compute_branch_lengths_to_lca,
     _deflate_by_calibration,
 )
-from kl_clustering_analysis.hierarchy_analysis.pairwise_testing import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing import (
     test_cluster_pair_divergence as cluster_pair_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.pairwise_testing import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing import (
     test_node_pair_divergence as node_pair_divergence,
 )
 from scipy.stats import chi2 as chi2_dist
-
-)
-from kl_clustering_analysis.hierarchy_analysis.pairwise_testing import (
-    test_node_pair_divergence as node_pair_divergence,
-)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
     CalibrationModel,
     WeightedCalibrationModel,
@@ -449,7 +444,7 @@ class TestTestNodePairDivergence:
         tree = _simple_tree()
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (5.0, 2.0, 0.08)
 
@@ -463,7 +458,7 @@ class TestTestNodePairDivergence:
         tree = _simple_tree()
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (1.0, 1.0, 0.5)
             node_pair_divergence(tree, "A", "B", mean_branch_length=None)
@@ -479,7 +474,7 @@ class TestTestNodePairDivergence:
         tree = _simple_tree()
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (1.0, 1.0, 0.5)
             node_pair_divergence(tree, "A", "B", mean_branch_length=None)
@@ -495,7 +490,7 @@ class TestTestNodePairDivergence:
         raw = (12.0, 5.0, 0.03)
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = raw
             stat, df, pval = node_pair_divergence(
@@ -519,7 +514,7 @@ class TestTestNodePairDivergence:
         raw_p = float(chi2_dist.sf(raw_T, df=raw_df))
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
             stat, df, pval = node_pair_divergence(
@@ -546,7 +541,7 @@ class TestTestNodePairDivergence:
         raw_p = float(chi2_dist.sf(raw_T, df=raw_df))
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
             stat, df, pval = node_pair_divergence(
@@ -573,7 +568,7 @@ class TestTestNodePairDivergence:
         raw_p = float(chi2_dist.sf(raw_T, df=raw_df))
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
             _, _, pval = node_pair_divergence(
@@ -587,7 +582,7 @@ class TestTestNodePairDivergence:
         tree = _simple_tree()
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (1.0, 1.0, 0.5)
             node_pair_divergence(tree, "A1", "B2", mean_branch_length=None)
@@ -609,7 +604,7 @@ class TestTestClusterPairDivergence:
         tree = _simple_tree()
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (10.0, 4.0, 0.04)
 
@@ -626,7 +621,7 @@ class TestTestClusterPairDivergence:
         raw = (15.0, 6.0, 0.02)
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = raw
             stat, df, pval = cluster_pair_divergence(
@@ -650,7 +645,7 @@ class TestTestClusterPairDivergence:
         raw_p = float(chi2_dist.sf(raw_T, df=raw_df))
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
             stat, df, pval = cluster_pair_divergence(
@@ -676,7 +671,7 @@ class TestTestClusterPairDivergence:
         raw_p = float(chi2_dist.sf(raw_T, df=raw_df))
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
             stat, df, pval = cluster_pair_divergence(
@@ -703,7 +698,7 @@ class TestTestClusterPairDivergence:
         )
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (20.0, 10.0, 0.01)
 
@@ -723,7 +718,7 @@ class TestTestClusterPairDivergence:
         tree = _simple_tree()
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (1.0, 1.0, 0.5)
             cluster_pair_divergence(tree, "A", "B", "root", mean_branch_length=None)
@@ -748,7 +743,7 @@ class TestTestClusterPairDivergence:
         raw_p = float(chi2_dist.sf(raw_T, df=raw_df))
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
             _, _, pval = cluster_pair_divergence(
@@ -783,7 +778,7 @@ class TestCalibrationSymmetry:
         raw_p = float(chi2_dist.sf(raw_T, df=raw_df))
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
 
@@ -792,7 +787,7 @@ class TestCalibrationSymmetry:
             )
 
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
 
@@ -827,7 +822,7 @@ class TestCalibrationSymmetry:
         # With bl=None (no branch lengths): bl_sum=0 → regression can't use log(0)
         # Should fall back to global_c_hat
         with patch(
-            "kl_clustering_analysis.hierarchy_analysis.pairwise_testing.sibling_divergence_test"
+            "kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_testing.sibling_divergence_test"
         ) as mock_test:
             mock_test.return_value = (raw_T, raw_df, raw_p)
             stat_no_bl, _, _ = node_pair_divergence(

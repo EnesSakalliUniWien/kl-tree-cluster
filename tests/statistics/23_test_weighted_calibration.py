@@ -150,7 +150,7 @@ class TestMaxObservedRatioFix:
     def _make_record(
         self,
         stat: float,
-        df: int,
+        degrees_of_freedom: int,
         weight: float,
         is_null_like: bool,
         bl_sum: float = 0.5,
@@ -161,7 +161,7 @@ class TestMaxObservedRatioFix:
             left="L",
             right="R",
             stat=stat,
-            df=df,
+            degrees_of_freedom=degrees_of_freedom,
             pval=0.5,
             bl_sum=bl_sum,
             n_parent=n_parent,
@@ -173,15 +173,15 @@ class TestMaxObservedRatioFix:
         """Focal (signal) pairs with high T/k must NOT inflate max_observed_ratio."""
         records = [
             # Null-like pairs with moderate T/k
-            self._make_record(stat=10.0, df=10, weight=0.8, is_null_like=True),
-            self._make_record(stat=12.0, df=10, weight=0.7, is_null_like=True),
-            self._make_record(stat=15.0, df=10, weight=0.6, is_null_like=True),
+            self._make_record(stat=10.0, degrees_of_freedom=10, weight=0.8, is_null_like=True),
+            self._make_record(stat=12.0, degrees_of_freedom=10, weight=0.7, is_null_like=True),
+            self._make_record(stat=15.0, degrees_of_freedom=10, weight=0.6, is_null_like=True),
             # Focal pair with very high T/k (signal)
-            self._make_record(stat=100.0, df=10, weight=0.01, is_null_like=False),
-            self._make_record(stat=80.0, df=10, weight=0.02, is_null_like=False),
+            self._make_record(stat=100.0, degrees_of_freedom=10, weight=0.01, is_null_like=False),
+            self._make_record(stat=80.0, degrees_of_freedom=10, weight=0.02, is_null_like=False),
             # Need >= 5 for regression
-            self._make_record(stat=11.0, df=10, weight=0.5, is_null_like=True),
-            self._make_record(stat=13.0, df=10, weight=0.4, is_null_like=True),
+            self._make_record(stat=11.0, degrees_of_freedom=10, weight=0.5, is_null_like=True),
+            self._make_record(stat=13.0, degrees_of_freedom=10, weight=0.4, is_null_like=True),
         ]
         model = _fit_weighted_inflation_model(records)
 
@@ -193,9 +193,9 @@ class TestMaxObservedRatioFix:
     def test_no_null_like_falls_back_to_all_pairs(self) -> None:
         """When there are no null-like pairs, fall back to all pairs for max ratio."""
         records = [
-            self._make_record(stat=10.0, df=10, weight=0.3, is_null_like=False),
-            self._make_record(stat=20.0, df=10, weight=0.2, is_null_like=False),
-            self._make_record(stat=15.0, df=10, weight=0.1, is_null_like=False),
+            self._make_record(stat=10.0, degrees_of_freedom=10, weight=0.3, is_null_like=False),
+            self._make_record(stat=20.0, degrees_of_freedom=10, weight=0.2, is_null_like=False),
+            self._make_record(stat=15.0, degrees_of_freedom=10, weight=0.1, is_null_like=False),
         ]
         model = _fit_weighted_inflation_model(records)
         # Should use all pairs' max: 20/10 = 2.0
@@ -227,7 +227,7 @@ class TestGammaGLMFitting:
                     left=f"L{i}",
                     right=f"R{i}",
                     stat=stat,
-                    df=k,
+                    degrees_of_freedom=k,
                     pval=0.5,
                     bl_sum=bl,
                     n_parent=int(n_par),
@@ -296,7 +296,7 @@ class TestGammaGLMFitting:
         """max_observed_ratio comes from null-like subset."""
         records = self._make_records(n=20)
         null_like_ratios = [
-            r.stat / r.df for r in records if r.is_null_like and r.stat > 0 and r.df > 0
+            r.stat / r.degrees_of_freedom for r in records if r.is_null_like and r.stat > 0 and r.degrees_of_freedom > 0
         ]
         model = _fit_weighted_inflation_model(records)
         if null_like_ratios:

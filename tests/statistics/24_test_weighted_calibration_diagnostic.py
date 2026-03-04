@@ -34,12 +34,16 @@ class TestGammaGLMCalibrationDiagnostic:
     """End-to-end diagnostic: run SMALL_TEST_CASES and inspect calibration."""
 
     @pytest.fixture(autouse=True)
-    def _capture_models(self):
+    def _capture_models(self, monkeypatch):
         """Patch _fit_weighted_inflation_model to capture all fitted models."""
         self.captured_models: list[WeightedCalibrationModel] = []
         self.captured_records: list[list] = []
 
         original_fit = _fit_weighted_inflation_model
+        monkeypatch.setattr(
+            "kl_clustering_analysis.config.SIBLING_TEST_METHOD",
+            "cousin_weighted_wald",
+        )
 
         def capturing_fit(records):
             model = original_fit(records)
@@ -83,14 +87,14 @@ class TestGammaGLMCalibrationDiagnostic:
 
         # max_observed_ratio must come from null-like pairs only
         null_like_ratios = [
-            r.stat / r.df for r in records if r.is_null_like and r.stat > 0 and r.df > 0
+            r.stat / r.degrees_of_freedom for r in records if r.is_null_like and r.stat > 0 and r.degrees_of_freedom > 0
         ]
-        all_ratios = [r.stat / r.df for r in records if r.stat > 0 and r.df > 0 and r.weight > 0]
+        all_ratios = [r.stat / r.degrees_of_freedom for r in records if r.stat > 0 and r.degrees_of_freedom > 0 and r.weight > 0]
         if null_like_ratios:
             assert model.max_observed_ratio == pytest.approx(max(null_like_ratios))
             # Must NOT equal max of all ratios if focal has higher
             focal_max = max(
-                (r.stat / r.df for r in records if not r.is_null_like and r.stat > 0 and r.df > 0),
+                (r.stat / r.degrees_of_freedom for r in records if not r.is_null_like and r.stat > 0 and r.degrees_of_freedom > 0),
                 default=0.0,
             )
             if focal_max > max(null_like_ratios):

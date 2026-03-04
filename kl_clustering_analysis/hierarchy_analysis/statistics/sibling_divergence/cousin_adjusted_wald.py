@@ -103,7 +103,7 @@ def _collect_null_like_records(records: List[SiblingPairRecord]) -> List[Sibling
     return [
         record
         for record in records
-        if record.is_null_like and np.isfinite(record.stat) and record.df > 0
+        if record.is_null_like and np.isfinite(record.stat) and record.degrees_of_freedom > 0
     ]
 
 
@@ -111,7 +111,9 @@ def _build_null_like_calibration_inputs(
     null_like_records: List[SiblingPairRecord],
 ) -> _NullLikeCalibrationInputs:
     """Convert null-like records into validated numeric vectors for fitting."""
-    ratio_values = np.array([record.stat / record.df for record in null_like_records])
+    ratio_values = np.array(
+        [record.stat / record.degrees_of_freedom for record in null_like_records]
+    )
     branch_length_sum_values = np.array([record.bl_sum for record in null_like_records])
     parent_sample_size_values = np.array([record.n_parent for record in null_like_records])
 
@@ -338,7 +340,7 @@ def predict_inflation_factor(
 
 def _collect_all_pairs(
     tree: nx.DiGraph,
-    nodes_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     mean_bl: float | None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
@@ -349,7 +351,7 @@ def _collect_all_pairs(
     """
     return collect_sibling_pair_records(
         tree,
-        nodes_df,
+        annotations_df,
         mean_bl,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
@@ -379,7 +381,7 @@ def _deflate_and_test(
 
 
 def _apply_results_adjusted(
-    df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     focal_parents: List[str],
     focal_results: List[Tuple[float, float, float]],
     calibration_methods: List[str],
@@ -388,7 +390,7 @@ def _apply_results_adjusted(
 ) -> pd.DataFrame:
     """Apply deflated results with BH correction to DataFrame."""
     return apply_calibrated_results(
-        df,
+        annotations_df,
         focal_parents,
         focal_results,
         calibration_methods,
@@ -406,7 +408,7 @@ def _apply_results_adjusted(
 
 def annotate_sibling_divergence_adjusted(
     tree: nx.DiGraph,
-    nodes_statistics_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     spectral_dims: Dict[str, int] | None = None,
@@ -426,7 +428,7 @@ def annotate_sibling_divergence_adjusted(
     ----------
     tree : nx.DiGraph
         Hierarchical tree with 'distribution' attribute on nodes.
-    nodes_statistics_dataframe : pd.DataFrame
+    annotations_df : pd.DataFrame
         Must contain 'Child_Parent_Divergence_Significant' column.
     significance_level_alpha : float
         FDR level for BH correction.
@@ -437,25 +439,25 @@ def annotate_sibling_divergence_adjusted(
         Updated with sibling divergence columns (same schema as standard test)
         plus ``Sibling_Test_Method`` column.
     """
-    df = init_sibling_annotation_df(nodes_statistics_dataframe)
+    annotations_df = init_sibling_annotation_df(annotations_df)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats
     records, non_binary = _collect_all_pairs(
         tree,
-        df,
+        annotations_df,
         mean_bl,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
 
     # Mark non-binary/leaf nodes as skipped (never testable)
-    mark_non_binary_as_skipped(df, non_binary, logger=logger)
+    mark_non_binary_as_skipped(annotations_df, non_binary, logger=logger)
 
-    early_df = early_return_if_no_records(df, records)
-    if early_df is not None:
-        return early_df
+    early_annotations_df = early_return_if_no_records(annotations_df, records)
+    if early_annotations_df is not None:
+        return early_annotations_df
 
     n_null, n_focal = count_null_focal_pairs(records)
     logger.info(
@@ -474,8 +476,8 @@ def annotate_sibling_divergence_adjusted(
     # Null-like parents are skipped (they are noise splits)
     skipped_parents = [r.parent for r in records if r.is_null_like]
 
-    df = _apply_results_adjusted(
-        df,
+    annotations_df = _apply_results_adjusted(
+        annotations_df,
         focal_parents,
         focal_results,
         cal_methods,
@@ -484,7 +486,7 @@ def annotate_sibling_divergence_adjusted(
     )
 
     # Audit metadata
-    df.attrs["sibling_divergence_audit"] = {
+    annotations_df.attrs["sibling_divergence_audit"] = {
         "total_pairs": len(records),
         "null_like_pairs": n_null,
         "focal_pairs": n_focal,
@@ -498,9 +500,9 @@ def annotate_sibling_divergence_adjusted(
     # Store the fitted model object for downstream use (e.g., post-hoc merge
     # calibration).  This is stored separately from the human-readable audit
     # dict so that consumers can call predict_inflation_factor() directly.
-    df.attrs["_calibration_model"] = model
+    annotations_df.attrs["_calibration_model"] = model
 
-    return df
+    return annotations_df
 
 
 __all__ = [

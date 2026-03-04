@@ -12,14 +12,14 @@ from ...statistics.projection.satterthwaite import compute_projected_pvalue as _
 
 def compute_projected_pvalue(
     projected: np.ndarray,
-    df: int,
+    degrees_of_freedom: int,
     *,
     eigenvalues: np.ndarray | None = None,
 ) -> tuple[float, float, float]:
     """Compute projected test statistic and p-value."""
     return _compute_projected_pvalue(
         np.asarray(projected, dtype=np.float64),
-        int(df),
+        int(degrees_of_freedom),
         eigenvalues=eigenvalues,
     )
 

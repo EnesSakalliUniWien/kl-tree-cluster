@@ -97,8 +97,8 @@ def apply_posthoc_merge(
 
         for lc in left_clusters:
             for rc in right_clusters:
-                # test_divergence returns (test_statistic, df, p_value)
-                test_stat, df, p_value = test_divergence(lc, rc, node)
+                # test_divergence returns (test_statistic, degrees_of_freedom, p_value)
+                test_stat, degrees_of_freedom, p_value = test_divergence(lc, rc, node)
                 # For any lc under left_child and rc under right_child in a tree,
                 # the lowest common ancestor is the current boundary node.
                 pairs.append(
@@ -108,7 +108,7 @@ def apply_posthoc_merge(
                         "lca": node,
                         "p_value": float(p_value),
                         "test_stat": float(test_stat),
-                        "df": float(df),
+                        "degrees_of_freedom": float(degrees_of_freedom),
                     }
                 )
 

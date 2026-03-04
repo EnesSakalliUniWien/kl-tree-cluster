@@ -93,7 +93,12 @@ def _build_null_index(
     """
     null_index: Dict[str, SiblingPairRecord] = {}
     for rec in records:
-        if rec.is_null_like and np.isfinite(rec.stat) and rec.df > 0 and rec.stat > 0:
+        if (
+            rec.is_null_like
+            and np.isfinite(rec.stat)
+            and rec.degrees_of_freedom > 0
+            and rec.stat > 0
+        ):
             null_index[rec.parent] = rec
     return null_index
 
@@ -113,13 +118,13 @@ def _collect_null_ratios_in_subtree(
     # Check the subtree root itself
     if subtree_root in null_index:
         rec = null_index[subtree_root]
-        ratios.append(rec.stat / rec.df)
+        ratios.append(rec.stat / rec.degrees_of_freedom)
 
     # Check all descendants
     for desc in nx.descendants(tree, subtree_root):
         if desc in null_index:
             rec = null_index[desc]
-            ratios.append(rec.stat / rec.df)
+            ratios.append(rec.stat / rec.degrees_of_freedom)
 
     return ratios
 
@@ -192,7 +197,7 @@ def _find_nearest_null_cousin(
         # Also check if the ancestor itself is a null-like pair
         if ancestor in null_index:
             rec = null_index[ancestor]
-            return [rec.stat / rec.df], levels, "up"
+            return [rec.stat / rec.degrees_of_freedom], levels, "up"
 
         # Continue walking up
         current = ancestor
@@ -395,7 +400,7 @@ def annotate_sibling_divergence_tree_guided(
 
     # Pass 2: build null-like index and compute global fallback
     null_index = _build_null_index(records)
-    null_ratios = [rec.stat / rec.df for rec in null_index.values()]
+    null_ratios = [rec.stat / rec.degrees_of_freedom for rec in null_index.values()]
 
     if len(null_ratios) < _MIN_GLOBAL_MEDIAN:
         logger.warning(

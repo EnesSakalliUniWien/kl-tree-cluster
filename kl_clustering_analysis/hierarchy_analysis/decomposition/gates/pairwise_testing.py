@@ -207,7 +207,7 @@ def _branch_distance_from_ancestor(
 
 def _deflate_by_calibration(
     test_stat: float,
-    df: float,
+    degrees_of_freedom: float,
     p_value: float,
     *,
     bl_a: float | None,
@@ -222,7 +222,7 @@ def _deflate_by_calibration(
 
     Parameters
     ----------
-    test_stat, df, p_value
+    test_stat, degrees_of_freedom, p_value
         Raw test results.
     bl_a, bl_b
         Branch lengths from the two nodes to their common ancestor.
@@ -240,7 +240,7 @@ def _deflate_by_calibration(
     Returns
     -------
     Tuple[float, float, float]
-        ``(deflated_test_stat, df, deflated_p_value)``
+        ``(deflated_test_stat, degrees_of_freedom, deflated_p_value)``
     """
     bl_sum = 0.0
     if bl_a is not None:
@@ -259,13 +259,13 @@ def _deflate_by_calibration(
     else:
         c_hat = predict_inflation_factor(calibration_model, bl_sum, n_ancestor)
 
-    if c_hat > 0 and np.isfinite(test_stat) and df > 0:
+    if c_hat > 0 and np.isfinite(test_stat) and degrees_of_freedom > 0:
         from scipy.stats import chi2 as chi2_dist
 
         test_stat = test_stat / c_hat
-        p_value = float(chi2_dist.sf(test_stat, df=df))
+        p_value = float(chi2_dist.sf(test_stat, df=degrees_of_freedom))
 
-    return test_stat, df, p_value
+    return test_stat, degrees_of_freedom, p_value
 
 
 def _compute_branch_lengths_to_lca(
@@ -405,7 +405,7 @@ def test_node_pair_divergence(
         branch_distance_cache=branch_distance_cache,
     )
 
-    test_stat, df, p_value = sibling_divergence_test(
+    test_stat, degrees_of_freedom, p_value = sibling_divergence_test(
         left_dist=dist_a,
         right_dist=dist_b,
         n_left=n_a,
@@ -419,9 +419,9 @@ def test_node_pair_divergence(
     # Deflate by the calibration model so that localization sub-tests
     # operate on the same scale as the Gate 3 sibling test.
     if calibration_model is not None:
-        test_stat, df, p_value = _deflate_by_calibration(
+        test_stat, degrees_of_freedom, p_value = _deflate_by_calibration(
             test_stat,
-            df,
+            degrees_of_freedom,
             p_value,
             bl_a=bl_a,
             bl_b=bl_b,
@@ -431,7 +431,7 @@ def test_node_pair_divergence(
             calibration_model=calibration_model,
         )
 
-    return test_stat, df, p_value
+    return test_stat, degrees_of_freedom, p_value
 
 
 def test_cluster_pair_divergence(
@@ -487,7 +487,7 @@ def test_cluster_pair_divergence(
         branch_distance_cache=branch_distance_cache,
     )
 
-    test_stat, df, p_value = sibling_divergence_test(
+    test_stat, degrees_of_freedom, p_value = sibling_divergence_test(
         left_dist=dist_a,
         right_dist=dist_b,
         n_left=float(size_a),
@@ -501,9 +501,9 @@ def test_cluster_pair_divergence(
     # Deflate by the same calibration model used during annotation so that
     # the post-hoc merge operates on the same scale as the decomposition.
     if calibration_model is not None:
-        test_stat, df, p_value = _deflate_by_calibration(
+        test_stat, degrees_of_freedom, p_value = _deflate_by_calibration(
             test_stat,
-            df,
+            degrees_of_freedom,
             p_value,
             bl_a=bl_a,
             bl_b=bl_b,
@@ -514,4 +514,4 @@ def test_cluster_pair_divergence(
             ancestor_override=common_ancestor,
         )
 
-    return test_stat, df, p_value
+    return test_stat, degrees_of_freedom, p_value

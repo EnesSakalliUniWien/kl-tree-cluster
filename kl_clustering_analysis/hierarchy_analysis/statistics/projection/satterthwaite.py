@@ -29,7 +29,7 @@ from kl_clustering_analysis import config
 
 def compute_projected_pvalue(
     projected: np.ndarray,
-    df: int,
+    degrees_of_freedom: int,
     eigenvalues: np.ndarray | None = None,
 ) -> Tuple[float, float, float]:
     """Compute test statistic and p-value from a projected z-score vector.
@@ -38,7 +38,7 @@ def compute_projected_pvalue(
     ----------
     projected
         The projected vector ``R @ z`` of length ``k``.
-    df
+    degrees_of_freedom
         Nominal degrees of freedom (projection dimension ``k``).
     eigenvalues
         PCA eigenvalues for the first ``k_pca ≤ k`` components.  When
@@ -60,7 +60,7 @@ def compute_projected_pvalue(
             stat_pca = float(np.sum(projected[:k_pca] ** 2 / eigenvalues))
             stat_rand = float(np.sum(projected[k_pca:] ** 2)) if k_pca < len(projected) else 0.0
             stat = stat_pca + stat_rand
-            return stat, float(df), float(chi2.sf(stat, df=df))
+            return stat, float(degrees_of_freedom), float(chi2.sf(stat, df=degrees_of_freedom))
         else:
             # --- Satterthwaite mode: T_pca = Σ wᵢ² ~ Σ λᵢ·χ²(1) ---
             stat_pca = float(np.sum(projected[:k_pca] ** 2))
@@ -84,10 +84,12 @@ def compute_projected_pvalue(
                 return stat, float(nu_total), float(chi2.sf(stat_scaled, df=nu_total))
             else:
                 # Degenerate eigenvalues — fall back to plain χ²(k)
-                return stat, float(df), float(chi2.sf(stat, df=df))
+                return stat, float(degrees_of_freedom), float(
+                    chi2.sf(stat, df=degrees_of_freedom)
+                )
     else:
         stat = float(np.sum(projected**2))
-        return stat, float(df), float(chi2.sf(stat, df=df))
+        return stat, float(degrees_of_freedom), float(chi2.sf(stat, df=degrees_of_freedom))
 
 
 __all__ = ["compute_projected_pvalue"]
