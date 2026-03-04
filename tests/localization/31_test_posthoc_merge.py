@@ -43,7 +43,6 @@ def test_posthoc_merge_respects_significant_pairs_at_lca() -> None:
         alpha=0.05,
         tree=tree,
         children=children,
-        root="root",
         test_divergence=fake_test,
     )
 
@@ -72,7 +71,6 @@ def test_posthoc_merge_merges_when_pairs_are_all_similar() -> None:
         alpha=0.05,
         tree=tree,
         children=children,
-        root="root",
         test_divergence=fake_test,
     )
 
@@ -139,7 +137,6 @@ def test_posthoc_merge_does_not_reintroduce_descendants_after_ancestor_merge() -
         alpha=0.05,
         tree=tree,
         children=children,
-        root="R",
         test_divergence=fake_test,
     )
 
@@ -189,7 +186,6 @@ def test_posthoc_merge_targeted_removal_preserves_third_cluster() -> None:
         alpha=0.05,
         tree=tree,
         children=children,
-        root="R",
         test_divergence=fake_test,
     )
 
@@ -245,7 +241,6 @@ def test_posthoc_merge_independent_merges_at_different_boundaries() -> None:
         alpha=0.05,
         tree=tree,
         children=children,
-        root="R",
         test_divergence=fake_test,
     )
 
@@ -274,7 +269,6 @@ def test_posthoc_merge_audit_trail_records_all_pairs() -> None:
         alpha=0.05,
         tree=tree,
         children=children,
-        root="R",
         test_divergence=fake_test,
     )
 

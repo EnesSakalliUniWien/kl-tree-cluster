@@ -47,7 +47,6 @@ def apply_posthoc_merge(
     alpha: float,
     tree: nx.DiGraph,
     children: Dict[str, List[str]],
-    root: str,
     test_divergence: Callable[[str, str, str], Tuple[float, float, float]],
 ) -> Tuple[Set[str], List[Dict]]:
     """Apply tree-respecting post-hoc merging to reduce over-splitting.
@@ -68,8 +67,6 @@ def apply_posthoc_merge(
         The hierarchy tree (nx.DiGraph).
     children
         Pre-computed mapping from node ID to list of child node IDs.
-    root
-        The root node ID of the tree.
     test_divergence
         Callable that takes (cluster_a, cluster_b, common_ancestor) and returns
         (test_statistic, degrees_of_freedom, p_value).
@@ -148,7 +145,6 @@ def apply_posthoc_merge(
     # descendant of the proposed LCA.  If it is, the merge would create a
     # non-partition (ancestor + descendant both in the root set).  Skip the
     # merge rather than silently absorbing uninvolved clusters.
-    merged_roots_count = 0
     lca_descendants_cache: Dict[str, Set[str]] = {}
     for idx in mergeable_indices:
         lc = pairs[idx]["left_cluster"]
@@ -178,6 +174,5 @@ def apply_posthoc_merge(
         cluster_roots.add(lca)
 
         pairs[idx]["was_merged"] = True
-        merged_roots_count += 1
 
     return cluster_roots, pairs

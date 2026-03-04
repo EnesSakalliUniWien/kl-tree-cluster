@@ -48,7 +48,7 @@ FELSENSTEIN_INCOMPLETE_BRANCH_POLICY: Literal["warn_disable", "error"] = "warn_d
 # Enable tree-respecting post-hoc merge by default.
 # This iteratively merges clusters whose underlying distributions are NOT
 # significantly different, working bottom-up through the tree to reduce over-splitting.
-POSTHOC_MERGE: bool = True
+POSTHOC_MERGE: bool = False
 
 # Significance level for post-hoc merge tests.
 # If None, defaults to SIBLING_ALPHA at runtime.

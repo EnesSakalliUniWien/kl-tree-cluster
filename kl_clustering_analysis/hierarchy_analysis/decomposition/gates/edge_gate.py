@@ -6,34 +6,12 @@ import pandas as pd
 
 from kl_clustering_analysis import config
 
-from ..core.contracts import (
-    LEGACY_EDGE_COLUMNS,
-    GateAnnotationBundle,
-)
-from ..core.errors import DecompositionValidationError
+from ..core.contracts import GateAnnotationBundle
 from ...statistics.kl_tests.edge_significance import annotate_child_parent_divergence
-
-_EDGE_PREFIX = "Child_Parent_"
-_SIBLING_PREFIX = "Sibling_"
-
-
-def _prefix_columns(df: pd.DataFrame, prefix: str) -> tuple[str, ...]:
-    return tuple(col for col in df.columns if col.startswith(prefix))
-
-
-def _validate_legacy_edge_columns(df: pd.DataFrame) -> tuple[str, ...]:
-    produced = _prefix_columns(df, _EDGE_PREFIX)
-    missing = [col for col in LEGACY_EDGE_COLUMNS if col not in produced]
-    extras = [col for col in produced if col not in LEGACY_EDGE_COLUMNS]
-    if missing or extras:
-        detail_parts: list[str] = []
-        if missing:
-            detail_parts.append(f"missing={missing}")
-        if extras:
-            detail_parts.append(f"unexpected={extras}")
-        detail = "; ".join(detail_parts)
-        raise DecompositionValidationError(f"Edge gate columns differ from legacy contract: {detail}.")
-    return produced
+from .column_contracts import (
+    sibling_gate_columns,
+    validate_legacy_edge_columns,
+)
 
 
 def annotate_edge_gate(
@@ -56,8 +34,8 @@ def annotate_edge_gate(
         spectral_method=spectral_method,
         min_k=min_k,
     )
-    edge_columns = _validate_legacy_edge_columns(annotated_df)
-    sibling_columns = _prefix_columns(annotated_df, _SIBLING_PREFIX)
+    edge_columns = validate_legacy_edge_columns(annotated_df)
+    sibling_columns = sibling_gate_columns(annotated_df)
     return GateAnnotationBundle(
         annotated_df=annotated_df,
         local_gate_columns=edge_columns,

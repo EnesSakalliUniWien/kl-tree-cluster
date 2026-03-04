@@ -59,14 +59,12 @@ Toggle via ``config.SIBLING_TEST_METHOD = "cousin_weighted_wald"``.
 from __future__ import annotations
 
 import logging
-import warnings
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2
 
 try:
     import statsmodels.api as sm
@@ -76,19 +74,16 @@ except ImportError:  # pragma: no cover
     _HAS_STATSMODELS = False
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.core_utils.data_utils import (
-    extract_bool_column_dict,
-    extract_node_sample_size,
-    initialize_sibling_divergence_columns,
-)
 
 from ..branch_length_utils import compute_mean_branch_length
-from ..multiple_testing import benjamini_hochberg_correction
-from .sibling_divergence_test import (
-    _either_child_significant,
-    _get_binary_children,
-    _get_sibling_data,
-    sibling_divergence_test,
+from .cousin_pipeline_helpers import (
+    apply_calibrated_results,
+    count_null_focal_pairs,
+    collect_sibling_pair_records,
+    deflate_focal_pairs,
+    early_return_if_no_records,
+    init_sibling_annotation_df,
+    mark_non_binary_as_skipped,
 )
 
 logger = logging.getLogger(__name__)
@@ -433,12 +428,14 @@ def _collect_weighted_pairs(
 
     Returns (records, non_binary_nodes).
     """
-    if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
-        raise ValueError(
-            "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
-        )
-
-    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
+    base_records, non_binary = collect_sibling_pair_records(
+        tree,
+        nodes_df,
+        mean_bl,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+        pca_eigenvalues=pca_eigenvalues,
+    )
 
     # Build edge p-value map from the BH-corrected column
     pval_col = "Child_Parent_Divergence_P_Value_BH"
@@ -450,69 +447,24 @@ def _collect_weighted_pairs(
         pval_map = nodes_df[pval_col_raw].to_dict() if pval_col_raw in nodes_df.columns else {}
 
     records: List[_WeightedRecord] = []
-    non_binary: List[str] = []
-
-    for parent in tree.nodes:
-        children = _get_binary_children(tree, parent)
-        if children is None:
-            # Leaves and non-binary nodes are not testable
-            non_binary.append(parent)
-            continue
-
-        left, right = children
-        left_dist, right_dist, n_l, n_r, bl_l, bl_r = _get_sibling_data(tree, parent, left, right)
-
-        # Look up spectral info for this parent node
-        _spectral_k = spectral_dims.get(parent) if spectral_dims else None
-        _pca_proj = pca_projections.get(parent) if pca_projections else None
-        _pca_eig = pca_eigenvalues.get(parent) if pca_eigenvalues else None
-
-        # Compute raw Wald stat
-        stat, df, pval = sibling_divergence_test(
-            left_dist,
-            right_dist,
-            float(n_l),
-            float(n_r),
-            branch_length_left=bl_l,
-            branch_length_right=bl_r,
-            mean_branch_length=mean_bl,
-            test_id=f"sibling:{parent}",
-            spectral_k=_spectral_k,
-            pca_projection=_pca_proj,
-            pca_eigenvalues=_pca_eig,
-        )
-
-        # Branch-length sum
-        bl_sum = 0.0
-        if bl_l is not None and bl_r is not None:
-            bl_sum = bl_l + bl_r
-        elif bl_l is not None:
-            bl_sum = bl_l
-        elif bl_r is not None:
-            bl_sum = bl_r
-
-        n_parent = extract_node_sample_size(tree, parent)
-
+    for rec in base_records:
         # Continuous weight: min(p_edge_left, p_edge_right)
-        p_left = _get_edge_pvalue(left, pval_map)
-        p_right = _get_edge_pvalue(right, pval_map)
+        p_left = _get_edge_pvalue(rec.left, pval_map)
+        p_right = _get_edge_pvalue(rec.right, pval_map)
         weight = min(p_left, p_right)
-
-        # Binary label still needed for skip/test decision
-        is_null = not _either_child_significant(left, right, sig_map)
 
         records.append(
             _WeightedRecord(
-                parent=parent,
-                left=left,
-                right=right,
-                stat=stat,
-                df=int(df) if np.isfinite(df) else 0,
-                pval=pval,
-                bl_sum=bl_sum,
-                n_parent=n_parent,
+                parent=rec.parent,
+                left=rec.left,
+                right=rec.right,
+                stat=rec.stat,
+                df=rec.df,
+                pval=rec.pval,
+                bl_sum=rec.bl_sum,
+                n_parent=rec.n_parent,
                 weight=weight,
-                is_null_like=is_null,
+                is_null_like=rec.is_null_like,
             )
         )
 
@@ -524,29 +476,14 @@ def _deflate_and_test(
     model: WeightedCalibrationModel,
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate focal pairs and compute adjusted p-values."""
-    focal_parents: List[str] = []
-    focal_results: List[Tuple[float, float, float]] = []
-    methods: List[str] = []
-
-    for rec in records:
-        if rec.is_null_like:
-            continue  # null-like pairs are skipped (merge)
-
-        if not np.isfinite(rec.stat) or rec.df <= 0:
-            focal_parents.append(rec.parent)
-            focal_results.append((np.nan, np.nan, np.nan))
-            methods.append("invalid")
-            continue
-
+    def _resolve_calibration(rec: _WeightedRecord) -> tuple[float, str]:
         c_hat = predict_weighted_inflation_factor(model, rec.bl_sum, rec.n_parent)
-        t_adj = rec.stat / c_hat
-        p_adj = float(chi2.sf(t_adj, df=rec.df))
+        return c_hat, f"weighted_{model.method}"
 
-        focal_parents.append(rec.parent)
-        focal_results.append((t_adj, float(rec.df), p_adj))
-        methods.append(f"weighted_{model.method}")
-
-    return focal_parents, focal_results, methods
+    return deflate_focal_pairs(
+        records,
+        calibration_resolver=_resolve_calibration,
+    )
 
 
 def _apply_results(
@@ -558,41 +495,16 @@ def _apply_results(
     alpha: float,
 ) -> pd.DataFrame:
     """Apply deflated results with BH correction to DataFrame."""
-    if skipped_parents:
-        df.loc[skipped_parents, "Sibling_Divergence_Skipped"] = True
-
-    if not focal_results:
-        return df
-
-    stats = np.array([r[0] for r in focal_results])
-    dfs = np.array([r[1] for r in focal_results])
-    pvals = np.array([r[2] for r in focal_results])
-
-    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
-    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
-
-    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
-    reject = np.where(invalid_mask, False, reject)
-
-    n_invalid = int(np.sum(invalid_mask))
-    if n_invalid:
-        logger.warning(
-            "Weighted cousin Wald audit: total_tests=%d, invalid_tests=%d. "
-            "Conservative correction path applied (p=1.0, reject=False).",
-            len(focal_results),
-            n_invalid,
-        )
-
-    df.loc[focal_parents, "Sibling_Test_Statistic"] = stats
-    df.loc[focal_parents, "Sibling_Degrees_of_Freedom"] = dfs
-    df.loc[focal_parents, "Sibling_Divergence_P_Value"] = pvals
-    df.loc[focal_parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
-    df.loc[focal_parents, "Sibling_Divergence_Invalid"] = invalid_mask
-    df.loc[focal_parents, "Sibling_BH_Different"] = reject
-    df.loc[focal_parents, "Sibling_BH_Same"] = ~reject
-    df.loc[focal_parents, "Sibling_Test_Method"] = calibration_methods
-
-    return df
+    return apply_calibrated_results(
+        df,
+        focal_parents,
+        focal_results,
+        calibration_methods,
+        skipped_parents,
+        alpha,
+        logger=logger,
+        audit_label="Weighted cousin Wald",
+    )
 
 
 # =============================================================================
@@ -630,11 +542,7 @@ def annotate_sibling_divergence_weighted(
     pd.DataFrame
         Updated with sibling divergence columns plus ``Sibling_Test_Method``.
     """
-    if len(nodes_statistics_dataframe) == 0:
-        raise ValueError("Empty dataframe")
-
-    df = nodes_statistics_dataframe.copy()
-    df = initialize_sibling_divergence_columns(df)
+    df = init_sibling_annotation_df(nodes_statistics_dataframe)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
@@ -644,16 +552,13 @@ def annotate_sibling_divergence_weighted(
     )
 
     # Mark non-binary/leaf nodes as skipped (never testable)
-    if non_binary:
-        df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
-        logger.debug(f"Non-binary/leaf nodes marked as skipped: {len(non_binary)}")
+    mark_non_binary_as_skipped(df, non_binary, logger=logger)
 
-    if not records:
-        warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
-        return df
+    early_df = early_return_if_no_records(df, records)
+    if early_df is not None:
+        return early_df
 
-    n_null = sum(1 for r in records if r.is_null_like)
-    n_focal = sum(1 for r in records if not r.is_null_like)
+    n_null, n_focal = count_null_focal_pairs(records)
     total_weight = sum(r.weight for r in records)
     logger.info(
         "Weighted cousin Wald: %d total pairs (%d null-like, %d focal), " "total weight = %.2f.",

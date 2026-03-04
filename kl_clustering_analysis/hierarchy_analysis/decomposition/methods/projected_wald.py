@@ -6,11 +6,7 @@ from typing import Callable
 
 import numpy as np
 
-from ..core.contracts import ProjectedTestResult
-from .projection_basis import (
-    build_projection_basis_with_padding,
-    build_random_orthonormal_basis,
-)
+from .projection_basis import build_projection_basis_with_padding
 from ...statistics.projection.satterthwaite import compute_projected_pvalue as _compute_projected_pvalue
 
 
@@ -19,7 +15,7 @@ def compute_projected_pvalue(
     df: int,
     *,
     eigenvalues: np.ndarray | None = None,
-    ) -> tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """Compute projected test statistic and p-value."""
     return _compute_projected_pvalue(
         np.asarray(projected, dtype=np.float64),
@@ -82,50 +78,7 @@ def run_projected_wald_kernel(
     return float(stat), int(k), float(effective_df), float(pval)
 
 
-def run_projected_wald_test(
-    z: np.ndarray,
-    *,
-    k: int,
-    seed: int | None = None,
-    random_state: int | None = None,
-    projection: np.ndarray | None = None,
-    eigenvalues: np.ndarray | None = None,
-) -> ProjectedTestResult:
-    """Run projected Wald test from a pre-standardized z vector.
-
-    Compatibility helper for callers that already preselect ``k``.
-    """
-    z_vec = np.asarray(z, dtype=np.float64)
-    if not np.isfinite(z_vec).all():
-        return ProjectedTestResult(np.nan, np.nan, np.nan, invalid=True)
-
-    if projection is None:
-        seed_value = seed if seed is not None else random_state
-        R = build_random_orthonormal_basis(
-            n_features=int(z_vec.shape[0]),
-            k=int(k),
-            random_state=seed_value,
-            use_cache=False,
-        )
-    else:
-        R = np.asarray(projection, dtype=np.float64)
-
-    projected = R @ z_vec
-    stat, effective_df, pval = compute_projected_pvalue(
-        projected,
-        int(k),
-        eigenvalues=eigenvalues,
-    )
-    return ProjectedTestResult(
-        statistic=float(stat),
-        degrees_of_freedom=float(effective_df),
-        p_value=float(pval),
-        invalid=False,
-    )
-
-
 __all__ = [
-    "run_projected_wald_test",
     "run_projected_wald_kernel",
     "compute_projected_pvalue",
 ]

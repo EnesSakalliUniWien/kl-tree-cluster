@@ -11,16 +11,9 @@ from ..core.registry import (
     normalize_sibling_calibration_method,
     normalize_spectral_k_method,
 )
+from .column_contracts import edge_gate_columns, sibling_gate_columns
 from .edge_gate import annotate_edge_gate
 from .sibling_gate import annotate_sibling_gate
-
-_EDGE_PREFIX = "Child_Parent_"
-_SIBLING_PREFIX = "Sibling_"
-
-
-def _prefix_columns(df: pd.DataFrame, prefix: str) -> tuple[str, ...]:
-    return tuple(col for col in df.columns if col.startswith(prefix))
-
 
 def run_gate_annotation_pipeline(
     tree,
@@ -72,8 +65,8 @@ def run_gate_annotation_pipeline(
             alpha=alpha_local,
         )
 
-    edge_columns = _prefix_columns(annotated_df, _EDGE_PREFIX)
-    sibling_columns = _prefix_columns(annotated_df, _SIBLING_PREFIX)
+    edge_columns = edge_gate_columns(annotated_df)
+    sibling_columns = sibling_gate_columns(annotated_df)
     return GateAnnotationBundle(
         annotated_df=annotated_df,
         local_gate_columns=edge_columns,

@@ -19,15 +19,18 @@ from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
 from .cluster_assignments import build_sample_cluster_assignments
+from .decomposition.backends.random_projection_backend import resolve_min_k_backend
+from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
 from .decomposition.gates.pairwise_testing import (
     build_branch_distance_cache,
     test_cluster_pair_divergence,
 )
 from .decomposition.gates.posthoc_merge import apply_posthoc_merge
 from .decomposition.gates.traversal import GateEvaluator, iterate_worklist, process_node
-from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
-from .decomposition.backends.random_projection_backend import resolve_min_k_backend
-from .statistics.branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
+from .statistics.branch_length_utils import (
+    compute_mean_branch_length,
+    sanitize_positive_branch_length,
+)
 from .statistics.sibling_divergence import CalibrationModel, WeightedCalibrationModel
 
 
@@ -188,7 +191,6 @@ class TreeDecomposition:
             sibling_skipped=self._sibling_skipped,
             children_map=self._children,
             descendant_leaf_sets=self._leaf_partition_by_node,
-            root=self._root,
         )
 
     # ---------- initialization helpers ----------
@@ -310,13 +312,6 @@ class TreeDecomposition:
             self._label[node_id] = node_data.get("label", node_id)
         self._node_ids = tuple(node_ids)
 
-        # n_features is the first dimension (number of features/variables)
-        if self._distribution_by_node:
-            first_dist = next(iter(self._distribution_by_node.values()))
-            self._n_features = first_dist.shape[0] if first_dist.ndim >= 1 else 0
-        else:
-            self._n_features = 0
-
     # ---------- utilities ----------
 
     def _get_all_leaves(self, node_id: str) -> set[str]:
@@ -360,27 +355,6 @@ class TreeDecomposition:
 
         # The `self.tree` object is a PosetTree, which has `find_lca_for_set`.
         return self.tree.find_lca_for_set(leaf_nodes)
-
-    # ---------- local KL (child vs parent) ----------
-
-    def _leaf_count(self, node_id: str) -> int:
-        return self._leaf_count_cache[node_id]
-
-    def _child_diverges_from_parent(self, child: str, parent: str) -> bool:
-        """Determine whether the local divergence test flags ``child`` as divergent.
-
-        Relies on precomputed ``Child_Parent_Divergence_Significant`` annotations from
-        :func:`~kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance.annotate_child_parent_divergence`.
-        No fallback computation is performed; missing annotations raise to signal
-        a misconfigured pipeline.
-        """
-        annotated = self._local_significant.get(child)
-        if annotated is None:
-            raise ValueError(
-                "Local divergence annotations missing for node "
-                f"{child!r}; run annotate_child_parent_divergence first."
-            )
-        return bool(annotated)
 
     # ---------- core decomposition (iterative, no recursion) ----------
 
@@ -480,7 +454,6 @@ class TreeDecomposition:
             alpha=self.posthoc_merge_alpha,
             tree=self.tree,
             children=self._children,
-            root=self._root,
             test_divergence=self._test_cluster_pair_divergence,
         )
 

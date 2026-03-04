@@ -45,8 +45,6 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cou
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 # ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def compare_sig_maps(results_df: pd.DataFrame):

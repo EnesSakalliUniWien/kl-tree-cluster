@@ -34,30 +34,9 @@ from ...decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_projection_dimension,
     derive_projection_seed_backend as derive_projection_seed,
 )
-from ...decomposition.methods.projected_wald import (
-    compute_projected_pvalue,
-    run_projected_wald_kernel,
-)
+from ...decomposition.methods.projected_wald import run_projected_wald_kernel
 
 logger = logging.getLogger(__name__)
-
-
-# =============================================================================
-# Core Statistical Test
-# =============================================================================
-
-
-def _compute_chi_square_pvalue(
-    projected: np.ndarray,
-    df: int,
-    eigenvalues: np.ndarray | None = None,
-) -> Tuple[float, float, float]:
-    """Compute test statistic and p-value from projected z-scores.
-
-    Delegates to the shared :func:`compute_projected_pvalue` helper.
-    See that function for details on whitened vs Satterthwaite modes.
-    """
-    return compute_projected_pvalue(projected, df, eigenvalues=eigenvalues)
 
 
 def sibling_divergence_test(

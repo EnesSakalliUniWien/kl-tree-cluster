@@ -47,29 +47,24 @@ Toggle via ``config.SIBLING_TEST_METHOD = "cousin_tree_guided"``.
 from __future__ import annotations
 
 import logging
-import warnings
-from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.core_utils.data_utils import (
-    extract_bool_column_dict,
-    extract_node_sample_size,
-    initialize_sibling_divergence_columns,
-)
 
 from ..branch_length_utils import compute_mean_branch_length
-from ..multiple_testing import benjamini_hochberg_correction
-from .sibling_divergence_test import (
-    _either_child_significant,
-    _get_binary_children,
-    _get_sibling_data,
-    sibling_divergence_test,
+from .cousin_pipeline_helpers import (
+    SiblingPairRecord,
+    apply_calibrated_results,
+    count_null_focal_pairs,
+    collect_sibling_pair_records,
+    deflate_focal_pairs,
+    early_return_if_no_records,
+    init_sibling_annotation_df,
+    mark_non_binary_as_skipped,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,35 +78,20 @@ _MIN_GLOBAL_MEDIAN = 3
 # =============================================================================
 
 
-@dataclass
-class _SiblingRecord:
-    """Per–sibling-pair record for calibration pipeline."""
-
-    parent: str
-    left: str
-    right: str
-    stat: float  # raw Wald T
-    df: int  # projection dimension k
-    pval: float  # raw Wald p
-    bl_sum: float  # branch-length sum (left + right)
-    n_parent: int  # number of leaves under parent
-    is_null_like: bool  # neither child edge-significant
-
-
 # =============================================================================
 # Tree-guided cousin search
 # =============================================================================
 
 
 def _build_null_index(
-    records: List[_SiblingRecord],
-) -> Dict[str, _SiblingRecord]:
+    records: List[SiblingPairRecord],
+) -> Dict[str, SiblingPairRecord]:
     """Index null-like pairs by their parent node for O(1) lookup.
 
-    Returns a dict mapping parent node id → _SiblingRecord for that pair.
+    Returns a dict mapping parent node id → SiblingPairRecord for that pair.
     Only includes records with valid (finite, positive) T/k ratios.
     """
-    null_index: Dict[str, _SiblingRecord] = {}
+    null_index: Dict[str, SiblingPairRecord] = {}
     for rec in records:
         if rec.is_null_like and np.isfinite(rec.stat) and rec.df > 0 and rec.stat > 0:
             null_index[rec.parent] = rec
@@ -121,7 +101,7 @@ def _build_null_index(
 def _collect_null_ratios_in_subtree(
     tree: nx.DiGraph,
     subtree_root: str,
-    null_index: Dict[str, _SiblingRecord],
+    null_index: Dict[str, SiblingPairRecord],
 ) -> List[float]:
     """Collect T/k ratios from null-like pairs within a subtree.
 
@@ -147,7 +127,7 @@ def _collect_null_ratios_in_subtree(
 def _find_nearest_null_cousin(
     tree: nx.DiGraph,
     focal_parent: str,
-    null_index: Dict[str, _SiblingRecord],
+    null_index: Dict[str, SiblingPairRecord],
 ) -> Tuple[List[float], int, str]:
     """Walk the tree bidirectionally from the focal parent to find nearest null-like relatives.
 
@@ -174,7 +154,7 @@ def _find_nearest_null_cousin(
     focal_parent
         The parent node of the focal sibling pair being calibrated.
     null_index
-        Mapping from parent node → _SiblingRecord for null-like pairs.
+        Mapping from parent node → SiblingPairRecord for null-like pairs.
 
     Returns
     -------
@@ -234,7 +214,7 @@ def _find_nearest_null_cousin(
 def _compute_local_c_hat(
     tree: nx.DiGraph,
     focal_parent: str,
-    null_index: Dict[str, _SiblingRecord],
+    null_index: Dict[str, SiblingPairRecord],
     global_c_hat: float,
 ) -> Tuple[float, str]:
     """Compute the inflation factor ĉ for a focal pair using tree-guided search.
@@ -287,83 +267,24 @@ def _collect_all_pairs(
     mean_bl: float | None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
-) -> Tuple[List[_SiblingRecord], List[str]]:
+) -> Tuple[List[SiblingPairRecord], List[str]]:
     """Collect ALL binary-child parent nodes and compute raw Wald stats.
 
     Returns (records, non_binary_nodes).
     """
-    if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
-        raise ValueError(
-            "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
-        )
-
-    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
-    records: List[_SiblingRecord] = []
-    non_binary: List[str] = []
-
-    for parent in tree.nodes:
-        children = _get_binary_children(tree, parent)
-        if children is None:
-            # Leaves and non-binary nodes are not testable
-            non_binary.append(parent)
-            continue
-
-        left, right = children
-        left_dist, right_dist, n_l, n_r, bl_l, bl_r = _get_sibling_data(tree, parent, left, right)
-
-        # Look up spectral info for this parent node
-        _spectral_k = spectral_dims.get(parent) if spectral_dims else None
-        _pca_proj = pca_projections.get(parent) if pca_projections else None
-
-        # Compute raw Wald stat
-        stat, df, pval = sibling_divergence_test(
-            left_dist,
-            right_dist,
-            float(n_l),
-            float(n_r),
-            branch_length_left=bl_l,
-            branch_length_right=bl_r,
-            mean_branch_length=mean_bl,
-            test_id=f"sibling:{parent}",
-            spectral_k=_spectral_k,
-            pca_projection=_pca_proj,
-        )
-
-        # Branch-length sum
-        bl_sum = 0.0
-        if bl_l is not None and bl_r is not None:
-            bl_sum = bl_l + bl_r
-        elif bl_l is not None:
-            bl_sum = bl_l
-        elif bl_r is not None:
-            bl_sum = bl_r
-
-        n_parent = extract_node_sample_size(tree, parent)
-
-        # Is this a null-like pair?  Neither child edge-significant.
-        is_null = not _either_child_significant(left, right, sig_map)
-
-        records.append(
-            _SiblingRecord(
-                parent=parent,
-                left=left,
-                right=right,
-                stat=stat,
-                df=int(df) if np.isfinite(df) else 0,
-                pval=pval,
-                bl_sum=bl_sum,
-                n_parent=n_parent,
-                is_null_like=is_null,
-            )
-        )
-
-    return records, non_binary
+    return collect_sibling_pair_records(
+        tree,
+        nodes_df,
+        mean_bl,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+    )
 
 
 def _deflate_and_test(
-    records: List[_SiblingRecord],
+    records: List[SiblingPairRecord],
     tree: nx.DiGraph,
-    null_index: Dict[str, _SiblingRecord],
+    null_index: Dict[str, SiblingPairRecord],
     global_c_hat: float,
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate focal pairs using tree-guided cousin search.
@@ -376,34 +297,19 @@ def _deflate_and_test(
     Tuple[List[str], List[Tuple[float, float, float]], List[str]]
         (focal_parents, focal_results, calibration_methods)
     """
-    focal_parents: List[str] = []
-    focal_results: List[Tuple[float, float, float]] = []
-    methods: List[str] = []
-
-    for rec in records:
-        if rec.is_null_like:
-            continue  # null-like pairs are skipped (treated as no-split)
-
-        if not np.isfinite(rec.stat) or rec.df <= 0:
-            focal_parents.append(rec.parent)
-            focal_results.append((np.nan, np.nan, np.nan))
-            methods.append("invalid")
-            continue
-
+    def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]:
         c_hat, method = _compute_local_c_hat(
             tree,
             rec.parent,
             null_index,
             global_c_hat,
         )
-        t_adj = rec.stat / c_hat
-        p_adj = float(chi2.sf(t_adj, df=rec.df))
+        return c_hat, f"tree_guided_{method}"
 
-        focal_parents.append(rec.parent)
-        focal_results.append((t_adj, float(rec.df), p_adj))
-        methods.append(f"tree_guided_{method}")
-
-    return focal_parents, focal_results, methods
+    return deflate_focal_pairs(
+        records,
+        calibration_resolver=_resolve_calibration,
+    )
 
 
 def _apply_results(
@@ -415,41 +321,16 @@ def _apply_results(
     alpha: float,
 ) -> pd.DataFrame:
     """Apply deflated results with BH correction to DataFrame."""
-    if skipped_parents:
-        df.loc[skipped_parents, "Sibling_Divergence_Skipped"] = True
-
-    if not focal_results:
-        return df
-
-    stats = np.array([r[0] for r in focal_results])
-    dfs = np.array([r[1] for r in focal_results])
-    pvals = np.array([r[2] for r in focal_results])
-
-    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
-    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
-
-    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
-    reject = np.where(invalid_mask, False, reject)
-
-    n_invalid = int(np.sum(invalid_mask))
-    if n_invalid:
-        logger.warning(
-            "Tree-guided cousin audit: total_tests=%d, invalid_tests=%d. "
-            "Conservative correction path applied (p=1.0, reject=False).",
-            len(focal_results),
-            n_invalid,
-        )
-
-    df.loc[focal_parents, "Sibling_Test_Statistic"] = stats
-    df.loc[focal_parents, "Sibling_Degrees_of_Freedom"] = dfs
-    df.loc[focal_parents, "Sibling_Divergence_P_Value"] = pvals
-    df.loc[focal_parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
-    df.loc[focal_parents, "Sibling_Divergence_Invalid"] = invalid_mask
-    df.loc[focal_parents, "Sibling_BH_Different"] = reject
-    df.loc[focal_parents, "Sibling_BH_Same"] = ~reject
-    df.loc[focal_parents, "Sibling_Test_Method"] = calibration_methods
-
-    return df
+    return apply_calibrated_results(
+        df,
+        focal_parents,
+        focal_results,
+        calibration_methods,
+        skipped_parents,
+        alpha,
+        logger=logger,
+        audit_label="Tree-guided cousin",
+    )
 
 
 # =============================================================================
@@ -490,11 +371,7 @@ def annotate_sibling_divergence_tree_guided(
         Updated with sibling divergence columns (same schema as standard test)
         plus ``Sibling_Test_Method`` column indicating calibration source.
     """
-    if len(nodes_statistics_dataframe) == 0:
-        raise ValueError("Empty dataframe")
-
-    df = nodes_statistics_dataframe.copy()
-    df = initialize_sibling_divergence_columns(df)
+    df = init_sibling_annotation_df(nodes_statistics_dataframe)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
@@ -502,16 +379,13 @@ def annotate_sibling_divergence_tree_guided(
     records, non_binary = _collect_all_pairs(tree, df, mean_bl, spectral_dims, pca_projections)
 
     # Mark non-binary/leaf nodes as skipped (never testable)
-    if non_binary:
-        df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
-        logger.debug("Non-binary/leaf nodes marked as skipped: %d", len(non_binary))
+    mark_non_binary_as_skipped(df, non_binary, logger=logger)
 
-    if not records:
-        warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
-        return df
+    early_df = early_return_if_no_records(df, records)
+    if early_df is not None:
+        return early_df
 
-    n_null = sum(1 for r in records if r.is_null_like)
-    n_focal = sum(1 for r in records if not r.is_null_like)
+    n_null, n_focal = count_null_focal_pairs(records)
     logger.info(
         "Tree-guided cousin: %d total pairs (%d null-like, %d focal).",
         len(records),

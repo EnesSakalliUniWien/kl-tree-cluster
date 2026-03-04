@@ -2,20 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Callable
 
-from .enums import ProjectionBasisKind, SiblingCalibrationMethod, SpectralKMethod
+from .enums import SiblingCalibrationMethod, SpectralKMethod
 from .errors import DecompositionMethodError
-
-
-@dataclass
-class MethodRegistry:
-    """Typed registry for method callables used by decomposition."""
-
-    k_estimators: dict[str, Callable] = field(default_factory=dict)
-    projection_builders: dict[str, Callable] = field(default_factory=dict)
-    sibling_calibrators: dict[str, Callable] = field(default_factory=dict)
 
 
 def resolve_k_estimator(method: SpectralKMethod | str) -> Callable:
@@ -50,25 +40,6 @@ def normalize_spectral_k_method(method: SpectralKMethod | str | None) -> str | N
         return None
     resolve_k_estimator(name)
     return name
-
-
-def resolve_projection_builder(kind: ProjectionBasisKind | str) -> Callable:
-    """Resolve a projection-basis builder callable."""
-    from ..methods.projection_basis import (
-        build_pca_projection_basis,
-        build_projection_basis_with_padding,
-        build_random_orthonormal_basis,
-    )
-
-    name = kind.value if isinstance(kind, ProjectionBasisKind) else str(kind)
-    mapping = {
-        ProjectionBasisKind.PCA.value: build_pca_projection_basis,
-        ProjectionBasisKind.RANDOM_ORTHONORMAL.value: build_random_orthonormal_basis,
-        ProjectionBasisKind.PCA_WITH_RANDOM_PADDING.value: build_projection_basis_with_padding,
-    }
-    if name not in mapping:
-        raise DecompositionMethodError(f"Unknown projection basis kind: {name!r}.")
-    return mapping[name]
 
 
 def resolve_sibling_calibrator(method: SiblingCalibrationMethod | str) -> Callable:

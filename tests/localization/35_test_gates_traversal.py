@@ -61,7 +61,6 @@ def _make_gate(
     sibling_skipped: dict | None = None,
     children_map: dict | None = None,
     descendant_leaf_sets: dict | None = None,
-    root: str = "root",
 ) -> GateEvaluator:
     """Build a GateEvaluator with explicit overrides."""
     if tree is None:
@@ -105,7 +104,6 @@ def _make_gate(
         sibling_skipped=sibling_skipped,
         children_map=children_map,
         descendant_leaf_sets=descendant_leaf_sets,
-        root=root,
     )
 
 

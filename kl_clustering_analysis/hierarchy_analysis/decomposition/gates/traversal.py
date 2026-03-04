@@ -44,8 +44,6 @@ class GateEvaluator:
         ``{node_id: [child_1, child_2, ...]}`` — pre-computed children list.
     descendant_leaf_sets
         ``{node_id: set_of_leaf_labels}`` — pre-computed leaf partitions.
-    root
-        The root node identifier.
     """
 
     def __init__(
@@ -56,7 +54,6 @@ class GateEvaluator:
         sibling_skipped: Dict[Hashable, bool],
         children_map: Dict[Hashable, List[str]],
         descendant_leaf_sets: Dict[Hashable, set],
-        root: str,
     ) -> None:
         self.tree = tree
         self._local_significant = local_significant
@@ -64,7 +61,6 @@ class GateEvaluator:
         self._sibling_skipped = sibling_skipped
         self._children_map = children_map
         self._descendant_leaf_sets = descendant_leaf_sets
-        self._root = root
 
     # ------------------------------------------------------------------
     # Shared gate logic

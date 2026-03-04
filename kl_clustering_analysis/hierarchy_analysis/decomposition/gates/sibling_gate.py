@@ -6,56 +6,12 @@ import pandas as pd
 
 from kl_clustering_analysis import config
 
-from ..core.contracts import (
-    LEGACY_EDGE_COLUMNS,
-    LEGACY_SIBLING_COLUMNS,
-    LEGACY_SIBLING_OPTIONAL_COLUMNS,
-    GateAnnotationBundle,
-)
+from ..core.contracts import GateAnnotationBundle
 from ..core.registry import normalize_sibling_calibration_method, resolve_sibling_calibrator
-from ..core.errors import DecompositionValidationError
-
-_EDGE_PREFIX = "Child_Parent_"
-_SIBLING_PREFIX = "Sibling_"
-
-
-def _prefix_columns(df: pd.DataFrame, prefix: str) -> tuple[str, ...]:
-    return tuple(col for col in df.columns if col.startswith(prefix))
-
-
-def _validate_legacy_edge_columns(df: pd.DataFrame) -> tuple[str, ...]:
-    produced = _prefix_columns(df, _EDGE_PREFIX)
-    missing = [col for col in LEGACY_EDGE_COLUMNS if col not in produced]
-    extras = [col for col in produced if col not in LEGACY_EDGE_COLUMNS]
-    if missing or extras:
-        detail_parts: list[str] = []
-        if missing:
-            detail_parts.append(f"missing={missing}")
-        if extras:
-            detail_parts.append(f"unexpected={extras}")
-        detail = "; ".join(detail_parts)
-        raise DecompositionValidationError(
-            f"Sibling gate input/output edge columns differ from legacy contract: {detail}."
-        )
-    return produced
-
-
-def _validate_legacy_sibling_columns(df: pd.DataFrame) -> tuple[str, ...]:
-    produced = _prefix_columns(df, _SIBLING_PREFIX)
-    missing = [col for col in LEGACY_SIBLING_COLUMNS if col not in produced]
-    allowed = set(LEGACY_SIBLING_COLUMNS) | set(LEGACY_SIBLING_OPTIONAL_COLUMNS)
-    extras = [col for col in produced if col not in allowed]
-    if missing or extras:
-        detail_parts: list[str] = []
-        if missing:
-            detail_parts.append(f"missing={missing}")
-        if extras:
-            detail_parts.append(f"unexpected={extras}")
-        detail = "; ".join(detail_parts)
-        raise DecompositionValidationError(
-            f"Sibling gate columns differ from legacy contract: {detail}."
-        )
-    return produced
+from .column_contracts import (
+    validate_legacy_edge_columns,
+    validate_legacy_sibling_columns,
+)
 
 
 def annotate_sibling_gate(
@@ -79,8 +35,11 @@ def annotate_sibling_gate(
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
     )
-    edge_columns = _validate_legacy_edge_columns(annotated_df)
-    sibling_columns = _validate_legacy_sibling_columns(annotated_df)
+    edge_columns = validate_legacy_edge_columns(
+        annotated_df,
+        error_context="Sibling gate input/output edge columns differ from legacy contract",
+    )
+    sibling_columns = validate_legacy_sibling_columns(annotated_df)
     return GateAnnotationBundle(
         annotated_df=annotated_df,
         local_gate_columns=edge_columns,
