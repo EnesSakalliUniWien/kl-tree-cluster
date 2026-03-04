@@ -29,7 +29,7 @@ EPSILON: float = 1e-9
 # Scale Wald test variance by normalised branch length (Felsenstein PIC, 1985).
 # Disabled: empirical comparison shows Felsenstein scaling systematically
 # under-splits on data-dependent trees (mean ARI 0.694 → 1.000 without it).
-FELSENSTEIN_SCALING: bool = True
+FELSENSTEIN_SCALING: bool = False
 
 # Explicit branch-length semantics for pairwise path distances used by
 # Felsenstein scaling in localization and post-hoc merge:
@@ -110,7 +110,7 @@ SPECTRAL_METHOD: str | None = "effective_rank"
 # increase rank but shift the mean toward the global average, concentrating
 # variance in the top PCs and REDUCING effective rank (typically ~30%).
 # Recommended: False (leaves-only gives more accurate rank estimates).
-INCLUDE_INTERNAL_IN_SPECTRAL: bool = False
+INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 
 # --- Edge (Gate 2) Calibration ---
 
@@ -139,7 +139,7 @@ EDGE_CAL_MIN_EFFECTIVE_N_FOR_SIB_FILTER: float = 10.0
 #   False  - Unwhitened with Satterthwaite correction:
 #            T = Σ (vᵢᵀz)² ~ Σ λᵢ·χ²(1), approximate as c·χ²(ν)
 #            where c = Σλᵢ²/Σλᵢ, ν = (Σλᵢ)²/Σλᵢ² (preserves power)
-EIGENVALUE_WHITENING: bool = False
+EIGENVALUE_WHITENING: bool = True
 
 # --- Sibling Test Method ---
 

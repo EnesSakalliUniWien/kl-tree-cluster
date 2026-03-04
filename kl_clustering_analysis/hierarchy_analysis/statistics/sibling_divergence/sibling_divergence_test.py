@@ -33,9 +33,11 @@ from ..pooled_variance import _is_categorical, standardize_proportion_difference
 from ..projection.random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
-    generate_projection_matrix,
 )
-from ..projection.satterthwaite import compute_projected_pvalue
+from ...decomposition.methods.projected_wald import (
+    compute_projected_pvalue,
+    run_projected_wald_kernel,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -156,24 +158,9 @@ def sibling_divergence_test(
         return np.nan, np.nan, np.nan
     z = z.astype(np.float64, copy=False)  # Force float64
 
-    d = len(z)
-
-    # --- Determine projection dimension and matrix ---
-    # spectral_k is the AUTHORITATIVE dimension when available.
-    # PCA projections may have fewer rows (dual-form cap at n_desc);
-    # in that case we pad with random projection vectors.
-    if spectral_k is not None and spectral_k > 0:
-        k = min(spectral_k, d)
-    else:
-        # Fallback: JL-based dimension
-        # Use n_left + n_right (total observations) for the information cap,
-        # NOT hmean.  The data matrix spanning the difference has rank ≤ n_L + n_R,
-        # so that many z-components can carry signal.  hmean is the correct
-        # effective sample size for *variance* estimation (pooled_variance.py),
-        # but the rank constraint governs how many projection dimensions are
-        # informative.
-        n_total = int(n_left + n_right)
-        k = compute_projection_dimension(n_total, d, min_k=min_k)
+    # Use n_left + n_right (total observations) for the fallback JL cap.
+    # The difference vector spans both sibling samples.
+    n_total = int(n_left + n_right)
 
     # Project and compute test statistic
     if test_id is None:
@@ -183,36 +170,25 @@ def sibling_divergence_test(
         )
     test_seed = derive_projection_seed(config.PROJECTION_RANDOM_SEED, test_id)
 
-    if pca_projection is not None:
-        k_pca = pca_projection.shape[0]
-        if k_pca >= k:
-            # Truncate PCA projection to the authoritative k rows.
-            R = pca_projection[:k]
-            pca_eigenvalues = pca_eigenvalues[:k] if pca_eigenvalues is not None else None
-        else:
-            # Pad with random projection vectors to reach k rows.
-            R_pad = generate_projection_matrix(d, k - k_pca, test_seed, use_cache=False)
-            R = np.vstack([pca_projection, R_pad])
-            # pca_eigenvalues stays as-is (only covers first k_pca rows)
-    else:
-        # Random projection (JL or spectral-k driven).
-        # Per-test projections are one-off; bypass cache to avoid unbounded cache growth.
-        R = generate_projection_matrix(d, k, test_seed, use_cache=False)
-        pca_eigenvalues = None  # no whitening for pure random projection
-
     try:
-        # Optimize matmul by ensuring arrays are ostensibly aligned (though numpy handles this)
-        if hasattr(R, "dot"):
-            projected = R.dot(z)
-        else:
-            projected = R @ z
+        stat, _k_nominal, effective_df, p_value = run_projected_wald_kernel(
+            z,
+            seed=test_seed,
+            spectral_k=spectral_k,
+            pca_projection=pca_projection,
+            pca_eigenvalues=pca_eigenvalues,
+            k_fallback=lambda dim: compute_projection_dimension(n_total, dim, min_k=min_k),
+        )
     except Exception as e:
         logging.error(
-            f"Projection failed (Sibling): z.shape={z.shape}, R.shape={R.shape}, z_stats={np.min(z)}/{np.max(z)}"
+            "Projection failed (Sibling): z.shape=%s, z_stats=%s/%s",
+            z.shape,
+            np.min(z),
+            np.max(z),
         )
         raise e
 
-    return _compute_chi_square_pvalue(projected, k, eigenvalues=pca_eigenvalues)
+    return stat, effective_df, p_value
 
 
 # =============================================================================

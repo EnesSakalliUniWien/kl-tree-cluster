@@ -90,6 +90,7 @@ ALL_SIBLING_METHODS = [
     "cousin_ftest",
     "cousin_adjusted_wald",
     "cousin_tree_guided",
+    "cousin_weighted_wald",
 ]
 
 

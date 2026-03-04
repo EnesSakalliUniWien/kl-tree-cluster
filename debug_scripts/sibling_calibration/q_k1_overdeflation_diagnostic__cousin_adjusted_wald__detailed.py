@@ -29,7 +29,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald import (
     _collect_all_pairs,
     _fit_inflation_model,
-    _predict_c,
+    predict_inflation_factor,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -81,7 +81,7 @@ def diagnose_adjusted_wald(tree, data_df):
 
     # Re-collect pairs to inspect per-node predictions
     mean_bl = compute_mean_branch_length(tree)
-    records = _collect_all_pairs(tree, sdf, mean_bl)
+    records, _non_binary = _collect_all_pairs(tree, sdf, mean_bl)
     model = _fit_inflation_model(records)
 
     print("\n  --- Per-node ĉ predictions (regression model) ---")
@@ -93,7 +93,7 @@ def diagnose_adjusted_wald(tree, data_df):
     # Sort by n_parent descending (root first)
     records_sorted = sorted(records, key=lambda r: r.n_parent, reverse=True)
     for rec in records_sorted:
-        c_hat = _predict_c(model, rec.bl_sum, rec.n_parent)
+        c_hat = predict_inflation_factor(model, rec.bl_sum, rec.n_parent)
         t_adj = rec.stat / c_hat if c_hat > 0 else rec.stat
         p_adj = float(chi2.sf(t_adj, df=rec.df)) if rec.df > 0 else np.nan
         marker = "NULL" if rec.is_null_like else ""
@@ -128,7 +128,7 @@ def diagnose_adjusted_wald(tree, data_df):
                     continue
 
                 # Original regression ĉ
-                c_reg = _predict_c(model, rec.bl_sum, rec.n_parent)
+                c_reg = predict_inflation_factor(model, rec.bl_sum, rec.n_parent)
 
                 # Fix 1: Cap ĉ at max observed
                 c_cap = min(c_reg, max_observed_c)

@@ -40,10 +40,9 @@ from ..multiple_testing import apply_multiple_testing_correction
 from ..projection.random_projection import (
     compute_projection_dimension,
     derive_projection_seed,
-    generate_projection_matrix,
 )
-from ..projection.satterthwaite import compute_projected_pvalue
 from ..projection.spectral_dimension import compute_spectral_decomposition
+from ...decomposition.methods.projected_wald import run_projected_wald_kernel
 
 logger = logging.getLogger(__name__)
 
@@ -222,58 +221,25 @@ def _compute_projected_test(
 
     d = len(z)
 
-    # --- Determine projection dimension and matrix ---
-    # spectral_k is the AUTHORITATIVE dimension when available.
-    # PCA projections may have fewer rows (dual-form cap at n_desc);
-    # in that case we pad with random projection vectors.
-    if spectral_k is not None and spectral_k > 0:
-        k = min(spectral_k, d)
-    else:
-        # Fallback: JL-based dimension
-        k = compute_projection_dimension(n_child, d)
-
-    if pca_projection is not None:
-        k_pca = pca_projection.shape[0]
-        if k_pca >= k:
-            # Truncate PCA projection to the authoritative k rows.
-            R = pca_projection[:k]
-            eig_for_whitening = (
-                np.asarray(pca_eigenvalues[:k], dtype=np.float64)
-                if pca_eigenvalues is not None
-                else None
-            )
-        else:
-            # Pad with random projection vectors to reach k rows.
-            R_pad = generate_projection_matrix(d, k - k_pca, seed, use_cache=False)
-            R = np.vstack([pca_projection, R_pad])
-            # Eigenvalues only cover the first k_pca (PCA) rows.
-            eig_for_whitening = (
-                np.asarray(pca_eigenvalues, dtype=np.float64)
-                if pca_eigenvalues is not None
-                else None
-            )
-    else:
-        # Random projection (JL or spectral-k driven).
-        # Per-test projections are one-off; bypass cache.
-        R = generate_projection_matrix(d, k, seed, use_cache=False)
-        eig_for_whitening = None
-
+    # Shared projected-test kernel.  Keep edge return semantics unchanged:
+    # return nominal df=k (not the Satterthwaite effective df).
     try:
-        if hasattr(R, "dot"):
-            projected = R.dot(z)
-        else:
-            projected = R @ z
+        stat, k, _effective_df, pval = run_projected_wald_kernel(
+            z,
+            seed=seed,
+            spectral_k=spectral_k,
+            pca_projection=pca_projection,
+            pca_eigenvalues=pca_eigenvalues,
+            k_fallback=lambda dim: compute_projection_dimension(n_child, dim),
+        )
     except Exception as e:
         logger.error(
-            f"Projection failed (Edge): z.shape={z.shape}, R.shape={R.shape}, z_stats={np.min(z)}/{np.max(z)}"
+            "Projection failed (Edge): z.shape=%s, z_stats=%s/%s",
+            z.shape,
+            np.min(z),
+            np.max(z),
         )
         raise e
-
-    # Test statistic: whitened or Satterthwaite depending on config.
-    # Delegates to the shared projection p-value helper.
-    stat, effective_df, pval = compute_projected_pvalue(
-        projected, k, eigenvalues=eig_for_whitening
-    )
 
     return stat, float(k), pval, False
 

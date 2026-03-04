@@ -27,7 +27,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald import (
     _collect_all_pairs,
     _fit_inflation_model,
-    _predict_c,
+    predict_inflation_factor,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -68,7 +68,7 @@ for case in cases:
     audit = sdf.attrs.get("sibling_divergence_audit", {})
     diag = audit.get("diagnostics", {})
     mean_bl = compute_mean_branch_length(tree)
-    records = _collect_all_pairs(tree, sdf, mean_bl)
+    records, _non_binary = _collect_all_pairs(tree, sdf, mean_bl)
     model = _fit_inflation_model(records)
 
     n_null = sum(1 for r in records if r.is_null_like)
@@ -93,7 +93,7 @@ for case in cases:
     if focal_recs:
         print("  --- Top focal nodes ---")
         for rec in focal_recs[:5]:
-            c_hat = _predict_c(model, rec.bl_sum, rec.n_parent)
+            c_hat = predict_inflation_factor(model, rec.bl_sum, rec.n_parent)
             t_adj = rec.stat / c_hat
             p_raw = float(chi2.sf(rec.stat, df=rec.df))
             p_adj = float(chi2.sf(t_adj, df=rec.df))

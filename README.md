@@ -32,6 +32,7 @@ hierarchy should stop splitting and which sibling branches stay merged.
 - Local KL chi-square helpers and statistical utilities: `hierarchy_analysis/statistics/kl_tests/utils.py`.
 - Sibling independence via conditional mutual information: `hierarchy_analysis/statistics/conditional_sibling_independence.py`.
 - Decomposition logic that applies the statistical gates: `hierarchy_analysis/tree_decomposition.py`.
+- Current method wiring + modularization target map: `docs/decomposition_method_maps.md`.
 
 ### Pipeline Workflow
 

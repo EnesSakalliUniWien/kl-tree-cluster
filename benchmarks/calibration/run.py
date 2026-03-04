@@ -30,15 +30,6 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import chi2
 
-from benchmarks.calibration.crossfit_permutation_benchmark_probe import (
-    _default_probe_cases as _default_crossfit_probe_cases,
-)
-from benchmarks.calibration.crossfit_permutation_benchmark_probe import (
-    run_probe as run_crossfit_benchmark_probe_fn,
-)
-from benchmarks.calibration.crossfit_permutation_diagnostic import (
-    run_crossfit_permutation_diagnostic,
-)
 from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (
@@ -700,11 +691,6 @@ def _write_markdown_report(
     binary_cov_summary: pd.DataFrame,
     n_reps_null: int,
     n_reps_treebh: int,
-    crossfit_perm_summary: pd.DataFrame | None = None,
-    crossfit_probe_df: pd.DataFrame | None = None,
-    n_reps_crossfit: int | None = None,
-    n_perms_crossfit: int | None = None,
-    n_perms_probe: int | None = None,
 ) -> Path:
     output_md.parent.mkdir(parents=True, exist_ok=True)
     now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
@@ -715,12 +701,6 @@ def _write_markdown_report(
     lines.append(f"- alpha: `{alpha:.4f}`")
     lines.append(f"- null replicates per scenario: `{n_reps_null}`")
     lines.append(f"- TreeBH replicates per scenario: `{n_reps_treebh}`")
-    if n_reps_crossfit is not None and n_perms_crossfit is not None:
-        lines.append(
-            f"- cross-fit permutation reps/perms: `{n_reps_crossfit}` / `{n_perms_crossfit}`"
-        )
-    if n_perms_probe is not None:
-        lines.append(f"- cross-fit benchmark probe perms: `{n_perms_probe}`")
     lines.append("")
 
     lines.append("## Null / Type-I Summary")
@@ -794,51 +774,6 @@ def _write_markdown_report(
         lines.append("```")
     lines.append("")
 
-    lines.append("## Cross-Fit + Permutation Diagnostic (Null)")
-    lines.append("")
-    if crossfit_perm_summary is None or crossfit_perm_summary.empty:
-        lines.append("Not run.")
-    else:
-        lines.append("```")
-        lines.append(
-            crossfit_perm_summary[
-                [
-                    "scenario",
-                    "edge_hypotheses",
-                    "edge_rejects",
-                    "edge_type1",
-                    "sibling_hypotheses",
-                    "sibling_rejects",
-                    "sibling_type1",
-                ]
-            ].to_string(index=False)
-        )
-        lines.append("```")
-    lines.append("")
-
-    lines.append("## Cross-Fit + Permutation Benchmark Probe")
-    lines.append("")
-    if crossfit_probe_df is None or crossfit_probe_df.empty:
-        lines.append("Not run.")
-    else:
-        lines.append("```")
-        _probe_cols = [
-            "case_name",
-            "generator",
-            "edge_reject_rate_in_sample",
-            "edge_reject_rate_crossfit_perm",
-            "sibling_reject_rate_in_sample",
-            "sibling_reject_rate_crossfit_perm",
-            "edge_tests_in_sample",
-            "edge_hypotheses_crossfit_perm",
-            "sibling_tests_in_sample",
-            "sibling_hypotheses_crossfit_perm",
-        ]
-        keep_cols = [c for c in _probe_cols if c in crossfit_probe_df.columns]
-        lines.append(crossfit_probe_df[keep_cols].to_string(index=False))
-        lines.append("```")
-    lines.append("")
-
     lines.append("## Pass/Fail Heuristic")
     lines.append("")
     lines.append("- Target: empirical Type-I and FDR should stay close to alpha.")
@@ -861,13 +796,6 @@ def _write_markdown_report(
         )
         lines.append(f"- Binary projection status: {'PASS' if proj_pass else 'FAIL'}")
         lines.append(f"- Binary shrinkage+projection status: {'PASS' if shrink_pass else 'FAIL'}")
-    if crossfit_perm_summary is not None and not crossfit_perm_summary.empty:
-        crossfit_pass = bool(
-            (crossfit_perm_summary["edge_type1"].fillna(0.0) <= alpha + 0.02).all()
-            and (crossfit_perm_summary["sibling_type1"].fillna(0.0) <= alpha + 0.02).all()
-        )
-        lines.append(f"- Cross-fit permutation null status: {'PASS' if crossfit_pass else 'FAIL'}")
-
     output_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return output_md
 
@@ -879,12 +807,6 @@ def run_calibration_suite(
     n_reps_null: int = 30,
     n_reps_treebh: int = 200,
     seed: int = 42,
-    run_crossfit_perm_diag: bool = False,
-    crossfit_diag_reps: int = 8,
-    crossfit_diag_perms: int = 50,
-    run_crossfit_benchmark_probe: bool = False,
-    crossfit_probe_perms: int = 40,
-    crossfit_probe_case_names: list[str] | None = None,
 ) -> dict[str, str]:
     """Run null/Type-I and TreeBH calibration, saving CSV/MD/PDF artifacts."""
     run_dir = Path(run_dir)
@@ -928,43 +850,6 @@ def run_calibration_suite(
     )
     treebh_summary = _summarize_treebh(treebh_df)
 
-    # Optional: cross-fit + permutation diagnostics
-    crossfit_perm_outputs: dict[str, str] = {}
-    crossfit_probe_outputs: dict[str, str] = {}
-    crossfit_perm_summary: pd.DataFrame | None = None
-    crossfit_probe_df: pd.DataFrame | None = None
-
-    if run_crossfit_perm_diag:
-        crossfit_perm_dir = calibration_dir / "crossfit_permutation_diagnostic"
-        crossfit_perm_outputs = run_crossfit_permutation_diagnostic(
-            output_dir=crossfit_perm_dir,
-            alpha=alpha_eff,
-            n_reps=int(crossfit_diag_reps),
-            n_perms=int(crossfit_diag_perms),
-            seed=int(seed + 12345),
-        )
-        summary_csv = Path(crossfit_perm_outputs["summary_csv"])
-        if summary_csv.exists():
-            crossfit_perm_summary = pd.read_csv(summary_csv)
-
-    if run_crossfit_benchmark_probe:
-        crossfit_probe_dir = calibration_dir / "crossfit_benchmark_probe"
-        probe_cases = (
-            list(crossfit_probe_case_names)
-            if crossfit_probe_case_names
-            else _default_crossfit_probe_cases()
-        )
-        crossfit_probe_outputs = run_crossfit_benchmark_probe_fn(
-            case_names=probe_cases,
-            alpha=alpha_eff,
-            n_perms=int(crossfit_probe_perms),
-            seed=int(seed + 54321),
-            output_dir=crossfit_probe_dir,
-        )
-        probe_csv = Path(crossfit_probe_outputs["csv"])
-        if probe_csv.exists():
-            crossfit_probe_df = pd.read_csv(probe_csv)
-
     # Persist artifacts
     null_csv = calibration_dir / "null_replicate_level.csv"
     null_summary_csv = calibration_dir / "null_type1_summary.csv"
@@ -995,11 +880,6 @@ def run_calibration_suite(
         binary_cov_summary=binary_diag_summary,
         n_reps_null=int(n_reps_null),
         n_reps_treebh=int(n_reps_treebh),
-        crossfit_perm_summary=crossfit_perm_summary,
-        crossfit_probe_df=crossfit_probe_df,
-        n_reps_crossfit=int(crossfit_diag_reps) if run_crossfit_perm_diag else None,
-        n_perms_crossfit=int(crossfit_diag_perms) if run_crossfit_perm_diag else None,
-        n_perms_probe=int(crossfit_probe_perms) if run_crossfit_benchmark_probe else None,
     )
 
     outputs = {
@@ -1013,32 +893,15 @@ def run_calibration_suite(
         "plots_pdf": str(plots_pdf),
         "report_md": str(report_md),
     }
-    outputs.update(crossfit_perm_outputs)
-    outputs.update(crossfit_probe_outputs)
     return outputs
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Run calibration suite with optional cross-fit diagnostics."
-    )
+    parser = argparse.ArgumentParser(description="Run calibration suite.")
     parser.add_argument("--alpha", type=float, default=None)
     parser.add_argument("--n-reps-null", type=int, default=30)
     parser.add_argument("--n-reps-treebh", type=int, default=200)
     parser.add_argument("--seed", type=int, default=42)
-
-    parser.add_argument("--run-crossfit-perm-diag", action="store_true")
-    parser.add_argument("--crossfit-diag-reps", type=int, default=8)
-    parser.add_argument("--crossfit-diag-perms", type=int, default=50)
-
-    parser.add_argument("--run-crossfit-benchmark-probe", action="store_true")
-    parser.add_argument("--crossfit-probe-perms", type=int, default=40)
-    parser.add_argument(
-        "--crossfit-probe-cases",
-        type=str,
-        default="",
-        help="Comma-separated benchmark case names for probe. Uses default set if empty.",
-    )
     return parser.parse_args()
 
 
@@ -1049,30 +912,17 @@ def main() -> None:
     run_dir = project_root / "benchmarks" / "results" / f"run_{timestamp}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    probe_cases = (
-        [c.strip() for c in args.crossfit_probe_cases.split(",") if c.strip()]
-        if args.crossfit_probe_cases
-        else None
-    )
     outputs = run_calibration_suite(
         run_dir,
         alpha=args.alpha,
         n_reps_null=int(args.n_reps_null),
         n_reps_treebh=int(args.n_reps_treebh),
         seed=int(args.seed),
-        run_crossfit_perm_diag=bool(args.run_crossfit_perm_diag),
-        crossfit_diag_reps=int(args.crossfit_diag_reps),
-        crossfit_diag_perms=int(args.crossfit_diag_perms),
-        run_crossfit_benchmark_probe=bool(args.run_crossfit_benchmark_probe),
-        crossfit_probe_perms=int(args.crossfit_probe_perms),
-        crossfit_probe_case_names=probe_cases,
     )
     print("Calibration complete:")
     for k, v in outputs.items():
         print(f"  {k}: {v}")
 
 
-if __name__ == "__main__":
-    main()
 if __name__ == "__main__":
     main()
