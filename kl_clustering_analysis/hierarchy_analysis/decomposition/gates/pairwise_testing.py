@@ -242,11 +242,11 @@ def _deflate_by_calibration(
     Tuple[float, float, float]
         ``(deflated_test_stat, degrees_of_freedom, deflated_p_value)``
     """
-    bl_sum = 0.0
+    branch_length_sum = 0.0
     if bl_a is not None:
-        bl_sum += bl_a
+        branch_length_sum += bl_a
     if bl_b is not None:
-        bl_sum += bl_b
+        branch_length_sum += bl_b
 
     if ancestor_override is not None:
         n_ancestor = int(tree.nodes[ancestor_override]["leaf_count"])
@@ -255,14 +255,22 @@ def _deflate_by_calibration(
         n_ancestor = int(tree.nodes[lca]["leaf_count"])
 
     if isinstance(calibration_model, WeightedCalibrationModel):
-        c_hat = predict_weighted_inflation_factor(calibration_model, bl_sum, n_ancestor)
+        inflation_factor = predict_weighted_inflation_factor(
+            calibration_model,
+            branch_length_sum,
+            n_ancestor,
+        )
     else:
-        c_hat = predict_inflation_factor(calibration_model, bl_sum, n_ancestor)
+        inflation_factor = predict_inflation_factor(
+            calibration_model,
+            branch_length_sum,
+            n_ancestor,
+        )
 
-    if c_hat > 0 and np.isfinite(test_stat) and degrees_of_freedom > 0:
+    if inflation_factor > 0 and np.isfinite(test_stat) and degrees_of_freedom > 0:
         from scipy.stats import chi2 as chi2_dist
 
-        test_stat = test_stat / c_hat
+        test_stat = test_stat / inflation_factor
         p_value = float(chi2_dist.sf(test_stat, df=degrees_of_freedom))
 
     return test_stat, degrees_of_freedom, p_value

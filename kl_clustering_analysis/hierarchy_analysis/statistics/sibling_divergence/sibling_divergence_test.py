@@ -185,10 +185,10 @@ def _get_binary_children(tree: nx.DiGraph, parent: str) -> Optional[Tuple[str, s
 def _either_child_significant(
     left: str,
     right: str,
-    sig_map: Dict[str, bool],
+    edge_significance_by_node: Dict[str, bool],
 ) -> bool:
     """Check if at least one child has significant child-parent divergence."""
-    return sig_map.get(left, False) or sig_map.get(right, False)
+    return edge_significance_by_node.get(left, False) or edge_significance_by_node.get(right, False)
 
 
 def _get_sibling_data(
@@ -274,7 +274,11 @@ def _run_tests(
     if len(parents) != len(args):
         raise ValueError(f"parents and args length mismatch: {len(parents)} != {len(args)}")
     results = []
-    for parent, (left, right, n_l, n_r, bl_l, bl_r) in zip(parents, args, strict=False):
+    for parent, (left, right, n_left, n_right, branch_length_left, branch_length_right) in zip(
+        parents,
+        args,
+        strict=False,
+    ):
         _spectral_k: int | None = None
         _pca_proj: np.ndarray | None = None
         if spectral_dims is not None:
@@ -285,10 +289,10 @@ def _run_tests(
             sibling_divergence_test(
                 left,
                 right,
-                n_l,
-                n_r,
-                bl_l,
-                bl_r,
+                n_left,
+                n_right,
+                branch_length_left,
+                branch_length_right,
                 mean_branch_length,
                 test_id=f"sibling:{parent}",
                 spectral_k=_spectral_k,
@@ -376,12 +380,12 @@ def annotate_sibling_divergence(
 
     # Compute mean branch length from tree for Felsenstein normalization
     # using the shared sanitization policy.  Gated by config.
-    _mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
+    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     results = _run_tests(
         parents,
         args,
-        mean_branch_length=_mean_bl,
+        mean_branch_length=mean_branch_length,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )

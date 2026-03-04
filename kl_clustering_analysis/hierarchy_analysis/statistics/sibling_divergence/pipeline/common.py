@@ -70,12 +70,15 @@ def apply_sibling_bh_results(
 
     stats = np.array([r[0] for r in results])
     dfs = np.array([r[1] for r in results])
-    pvals = np.array([r[2] for r in results])
+    p_values = np.array([r[2] for r in results])
 
-    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
-    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
+    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(p_values))
+    p_values_for_correction = np.where(np.isfinite(p_values), p_values, 1.0)
 
-    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
+    reject, corrected_p_values, _ = benjamini_hochberg_correction(
+        p_values_for_correction,
+        alpha=alpha,
+    )
     reject = np.where(invalid_mask, False, reject)
 
     n_invalid = int(np.sum(invalid_mask))
@@ -90,8 +93,8 @@ def apply_sibling_bh_results(
 
     annotations_df.loc[parents, "Sibling_Test_Statistic"] = stats
     annotations_df.loc[parents, "Sibling_Degrees_of_Freedom"] = dfs
-    annotations_df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
-    annotations_df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
+    annotations_df.loc[parents, "Sibling_Divergence_P_Value"] = p_values
+    annotations_df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = corrected_p_values
     annotations_df.loc[parents, "Sibling_Divergence_Invalid"] = invalid_mask
     annotations_df.loc[parents, "Sibling_BH_Different"] = reject
     annotations_df.loc[parents, "Sibling_BH_Same"] = ~reject

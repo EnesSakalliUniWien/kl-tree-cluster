@@ -54,6 +54,9 @@ class GateEvaluator:
         sibling_skipped: Dict[Hashable, bool],
         children_map: Dict[Hashable, List[str]],
         descendant_leaf_sets: Dict[Hashable, set],
+        *,
+        has_descendant_split: Dict[Hashable, bool] | None = None,
+        passthrough: bool = False,
     ) -> None:
         self.tree = tree
         self._local_significant = local_significant
@@ -61,6 +64,8 @@ class GateEvaluator:
         self._sibling_skipped = sibling_skipped
         self._children_map = children_map
         self._descendant_leaf_sets = descendant_leaf_sets
+        self._has_descendant_split = has_descendant_split or {}
+        self._passthrough = passthrough
 
     # ------------------------------------------------------------------
     # Shared gate logic
@@ -136,6 +141,30 @@ class GateEvaluator:
             return False
         return self._evaluate_gate_3(parent)
 
+    def should_pass_through(self, parent: str) -> bool:
+        """Return ``True`` when the DFS should continue past a Gate 3 failure.
+
+        This is checked only when :meth:`should_split` returns ``False`` and
+        ``passthrough`` mode is enabled.  The conditions are:
+
+        1. Gates 1 and 2 **pass** (binary structure + edge signal).
+        2. Gate 3 **fails** (siblings declared same or test skipped).
+        3. At least one descendant has ``Sibling_BH_Different == True``
+           (precomputed in ``has_descendant_split``).
+
+        When all conditions hold, the traversal continues into both children
+        instead of merging — eventually reaching the deeper split.
+        """
+        if not self._passthrough:
+            return False
+        passed, _, _ = self._evaluate_gates_1_and_2(parent)
+        if not passed:
+            return False
+        # Gate 3 must be failing (if it passed, should_split would be True)
+        if self._evaluate_gate_3(parent):
+            return False
+        return self._has_descendant_split.get(parent, False)
+
 
 # ======================================================================
 # Traversal helpers (stateless functions)
@@ -148,11 +177,15 @@ def process_node(
     nodes_to_visit: List[str],
     final_leaf_sets: List[set[str]],
 ) -> None:
-    """Apply split-or-merge decision for one node during DFS traversal.
+    """Apply split, pass-through, or merge decision for one node during DFS.
 
-    If the gate says SPLIT, the two children are pushed onto *nodes_to_visit*
-    (right-then-left so left is processed first).  Otherwise, all descendant
-    leaves are collected as a single cluster.
+    Decision order:
+
+    1. **SPLIT** — all three gates pass → push both children.
+    2. **PASS-THROUGH** — Gates 1+2 pass, Gate 3 fails, but a descendant
+       has a significant sibling split → push both children so the DFS
+       can reach the deeper structure.
+    3. **MERGE** — otherwise, collect all descendant leaves as one cluster.
 
     Parameters
     ----------
@@ -166,6 +199,11 @@ def process_node(
         Accumulator for cluster leaf sets.
     """
     if gate.should_split(node_id):
+        children = gate._children_map[node_id]
+        left_child, right_child = children
+        nodes_to_visit.append(right_child)
+        nodes_to_visit.append(left_child)
+    elif gate.should_pass_through(node_id):
         children = gate._children_map[node_id]
         left_child, right_child = children
         nodes_to_visit.append(right_child)

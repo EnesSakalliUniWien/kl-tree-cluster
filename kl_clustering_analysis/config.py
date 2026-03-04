@@ -175,3 +175,14 @@ EIGENVALUE_WHITENING: bool = True
 #                             NOTE: empirical null FPR ≈ 68–100% — does NOT correct
 #                             post-selection inflation. Kept for comparison only.
 SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
+
+# --- Pass-Through Traversal ---
+
+# When True, the DFS traversal continues past nodes where Gate 3 fails
+# (siblings declared "same") IF any descendant has a significant sibling
+# split (Sibling_BH_Different == True).  This prevents deep structure from
+# being masked by a non-significant split at a higher level.  The descendant-
+# signal flag is precomputed bottom-up in O(n) so it adds no cost to the
+# hot path.  When False, the original greedy behaviour is used: Gate 3
+# failure immediately merges all descendants into one cluster.
+PASSTHROUGH: bool = True

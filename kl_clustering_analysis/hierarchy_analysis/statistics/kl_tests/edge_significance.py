@@ -224,7 +224,7 @@ def _compute_projected_test(
     # Shared projected-test kernel.  Keep edge return semantics unchanged:
     # return nominal df=k (not the Satterthwaite effective df).
     try:
-        stat, k, _effective_df, pval = run_projected_wald_kernel(
+        stat, k, _effective_df, p_value = run_projected_wald_kernel(
             z,
             seed=seed,
             spectral_k=spectral_k,
@@ -241,7 +241,7 @@ def _compute_projected_test(
         )
         raise e
 
-    return stat, float(k), pval, False
+    return stat, float(k), p_value, False
 
 
 def _compute_p_values_via_projection(
@@ -282,7 +282,7 @@ def _compute_p_values_via_projection(
     n_edges = len(child_ids)
     stats = np.full(n_edges, np.nan)
     dfs = np.full(n_edges, np.nan)
-    pvals = np.full(n_edges, np.nan)
+    p_values = np.full(n_edges, np.nan)
     invalid_mask = np.zeros(n_edges, dtype=bool)
 
     # Compute mean branch length for normalization (gated by config)
@@ -293,7 +293,7 @@ def _compute_p_values_via_projection(
         parent_dist = tree.nodes[parent_ids[i]].get("distribution")
 
         if child_dist is None or parent_dist is None or child_leaf_counts[i] < 1:
-            stats[i], dfs[i], pvals[i] = 0.0, 0.0, 1.0
+            stats[i], dfs[i], p_values[i] = 0.0, 0.0, 1.0
             continue
 
         # Extract branch length from tree edge (parent → child)
@@ -322,7 +322,7 @@ def _compute_p_values_via_projection(
         if pca_eigenvalues is not None:
             _pca_eig = pca_eigenvalues.get(parent_ids[i])
 
-        stat_i, df_i, pval_i, invalid_i = _compute_projected_test(
+        stat_i, df_i, p_value_i, invalid_i = _compute_projected_test(
             np.asarray(child_dist, dtype=np.float64),
             np.asarray(parent_dist, dtype=np.float64),
             int(child_leaf_counts[i]),
@@ -334,10 +334,10 @@ def _compute_p_values_via_projection(
             pca_projection=_pca_proj,
             pca_eigenvalues=_pca_eig,
         )
-        stats[i], dfs[i], pvals[i] = stat_i, df_i, pval_i
+        stats[i], dfs[i], p_values[i] = stat_i, df_i, p_value_i
         invalid_mask[i] = bool(invalid_i)
 
-    return stats, dfs, pvals, invalid_mask
+    return stats, dfs, p_values, invalid_mask
 
 
 # =============================================================================

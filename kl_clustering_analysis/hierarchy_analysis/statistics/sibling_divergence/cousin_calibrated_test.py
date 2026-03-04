@@ -202,22 +202,29 @@ def cousin_ftest(
         True if cousin F-test was used, False if fell back to Wald.
     """
     # Compute T_LR (sibling stat at parent)
-    left_dist, right_dist, n_l, n_r, bl_l, bl_r = _get_sibling_data(tree, parent, left, right)
-
-    stat_lr, k_lr, pval_lr = _compute_sibling_stat(
+    (
         left_dist,
         right_dist,
-        n_l,
-        n_r,
-        bl_l,
-        bl_r,
+        n_left,
+        n_right,
+        branch_length_left,
+        branch_length_right,
+    ) = _get_sibling_data(tree, parent, left, right)
+
+    statistic_left_right, degrees_of_freedom_left_right, p_value_left_right = _compute_sibling_stat(
+        left_dist,
+        right_dist,
+        n_left,
+        n_right,
+        branch_length_left,
+        branch_length_right,
         mean_branch_length,
         test_id=f"sibling:{parent}",
         spectral_k=spectral_k,
         pca_projection=pca_projection,
     )
 
-    if not np.isfinite(stat_lr):
+    if not np.isfinite(statistic_left_right):
         return np.nan, np.nan, np.nan, False
 
     # Find uncle
@@ -228,13 +235,13 @@ def cousin_ftest(
             "No uncle available for %s (root child); falling back to Wald χ²",
             parent,
         )
-        return stat_lr, k_lr, pval_lr, False
+        return statistic_left_right, degrees_of_freedom_left_right, p_value_left_right, False
 
     # Get cousin reference T_{UL,UR}
     # Use uncle's spectral info if available
     uncle_spectral_k = spectral_dims.get(uncle) if spectral_dims else None
     uncle_pca_proj = pca_projections.get(uncle) if pca_projections else None
-    stat_uu, k_uu, valid = _get_cousin_reference(
+    statistic_uncle, degrees_of_freedom_uncle, valid = _get_cousin_reference(
         tree,
         uncle,
         mean_branch_length,
@@ -249,13 +256,21 @@ def cousin_ftest(
             uncle,
             parent,
         )
-        return stat_lr, k_lr, pval_lr, False
+        return statistic_left_right, degrees_of_freedom_left_right, p_value_left_right, False
 
     # F-test: ratio of mean chi-square values
-    f_stat = (stat_lr / k_lr) / (stat_uu / k_uu)
-    f_pval = float(f_dist.sf(f_stat, dfn=k_lr, dfd=k_uu))
+    f_stat = (statistic_left_right / degrees_of_freedom_left_right) / (
+        statistic_uncle / degrees_of_freedom_uncle
+    )
+    f_p_value = float(
+        f_dist.sf(
+            f_stat,
+            dfn=degrees_of_freedom_left_right,
+            dfd=degrees_of_freedom_uncle,
+        )
+    )
 
-    return f_stat, float(k_lr), f_pval, True
+    return f_stat, float(degrees_of_freedom_left_right), f_p_value, True
 
 
 # =============================================================================
@@ -391,13 +406,13 @@ def annotate_sibling_divergence_cousin(
         annotations_df.loc[skipped, "Sibling_Divergence_Skipped"] = True
         logger.debug("Skipped %d nodes (no child-parent signal)", len(skipped))
 
-    mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
+    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     results, ftest_flags = _run_cousin_tests(
         tree,
         parents,
         child_pairs,
-        mean_bl,
+        mean_branch_length,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )

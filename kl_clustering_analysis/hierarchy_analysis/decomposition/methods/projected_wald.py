@@ -70,12 +70,12 @@ def run_projected_wald_kernel(
             f"z_stats={np.min(z_vec)}/{np.max(z_vec)}"
         ) from exc
 
-    stat, effective_df, pval = compute_projected_pvalue(
+    statistic, effective_degrees_of_freedom, p_value = compute_projected_pvalue(
         projected,
         k,
         eigenvalues=eig_for_whitening,
     )
-    return float(stat), int(k), float(effective_df), float(pval)
+    return float(statistic), int(k), float(effective_degrees_of_freedom), float(p_value)
 
 
 __all__ = [

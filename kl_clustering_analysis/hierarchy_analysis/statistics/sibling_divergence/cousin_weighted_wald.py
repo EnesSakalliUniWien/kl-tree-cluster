@@ -557,7 +557,7 @@ def _collect_weighted_pairs(
                 right=rec.right,
                 stat=rec.stat,
                 degrees_of_freedom=rec.degrees_of_freedom,
-                pval=rec.pval,
+                pval=rec.p_value,
                 bl_sum=rec.bl_sum,
                 n_parent=rec.n_parent,
                 weight=weight,

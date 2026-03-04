@@ -66,6 +66,7 @@ class TreeDecomposition:
         posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
         leaf_data: pd.DataFrame | None = None,
         spectral_method: str | None = config.SPECTRAL_METHOD,
+        passthrough: bool = config.PASSTHROUGH,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
 
@@ -163,7 +164,9 @@ class TreeDecomposition:
             self.annotations_df, "Child_Parent_Divergence_Significant"
         )
         # Sibling divergence test: Sibling_BH_Different = True means siblings differ -> SPLIT
-        self._sibling_different = extract_bool_column_dict(self.annotations_df, "Sibling_BH_Different")
+        self._sibling_different = extract_bool_column_dict(
+            self.annotations_df, "Sibling_BH_Different"
+        )
         self._sibling_skipped = extract_bool_column_dict(
             self.annotations_df, "Sibling_Divergence_Skipped"
         )
@@ -183,6 +186,12 @@ class TreeDecomposition:
             n: list(self.tree.successors(n)) for n in self._node_ids
         }
 
+        # ----- precompute has_descendant_split (bottom-up O(n)) -----
+        self._passthrough = bool(passthrough)
+        self._has_descendant_split: Dict[str, bool] = {}
+        if self._passthrough:
+            self._has_descendant_split = self._compute_has_descendant_split()
+
         # ----- construct the GateEvaluator -----
         self._gate = GateEvaluator(
             tree=self.tree,
@@ -191,6 +200,8 @@ class TreeDecomposition:
             sibling_skipped=self._sibling_skipped,
             children_map=self._children,
             descendant_leaf_sets=self._leaf_partition_by_node,
+            has_descendant_split=self._has_descendant_split,
+            passthrough=self._passthrough,
         )
 
     # ---------- initialization helpers ----------
@@ -266,6 +277,51 @@ class TreeDecomposition:
             return None, "phylogeny"
 
         return mean_branch_length, "phylogeny"
+
+    def _compute_has_descendant_split(self) -> Dict[str, bool]:
+        """Precompute bottom-up flag: does any descendant have a significant sibling split?
+
+        For each internal node, ``has_descendant_split[node]`` is ``True``
+        when at least one descendant (not the node itself) has
+        ``Sibling_BH_Different == True`` and was not skipped.
+
+        Computed in a single reverse-topological pass (O(n)):
+
+        - Leaves → ``False``
+        - Internal node → ``True`` if any child is itself a split node or
+          has ``has_descendant_split == True``.
+
+        Returns
+        -------
+        Dict[str, bool]
+            Mapping from node ID to boolean flag.
+        """
+        import networkx as nx
+
+        has_split: Dict[str, bool] = {}
+
+        # Reverse topological order = leaves first, root last
+        for node in reversed(list(nx.topological_sort(self.tree))):
+            children = self._children.get(node, [])
+            if not children:
+                # Leaf node
+                has_split[node] = False
+                continue
+
+            # Check if any child is itself a split point or has a descendant split
+            found = False
+            for child in children:
+                # Child itself is a significant split point
+                child_is_split = self._sibling_different.get(
+                    child, False
+                ) and not self._sibling_skipped.get(child, True)
+                if child_is_split or has_split.get(child, False):
+                    found = True
+                    break
+
+            has_split[node] = found
+
+        return has_split
 
     def _prepare_annotations(self, annotations_df: pd.DataFrame) -> pd.DataFrame:
         """Ensure statistical annotation columns are present on *annotations_df*.

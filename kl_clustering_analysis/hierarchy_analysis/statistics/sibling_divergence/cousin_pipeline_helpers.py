@@ -36,7 +36,7 @@ class SiblingPairRecord:
     right: str
     stat: float
     degrees_of_freedom: int
-    pval: float
+    p_value: float
     bl_sum: float
     n_parent: int
     is_null_like: bool
@@ -64,7 +64,7 @@ def _branch_length_sum(branch_length_left: float | None, branch_length_right: fl
 def collect_sibling_pair_records(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
-    mean_bl: float | None,
+    mean_branch_length: float | None,
     *,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
@@ -76,7 +76,10 @@ def collect_sibling_pair_records(
             "Missing 'Child_Parent_Divergence_Significant' column. Run child-parent test first."
         )
 
-    sig_map = extract_bool_column_dict(annotations_df, "Child_Parent_Divergence_Significant")
+    edge_significance_by_node = extract_bool_column_dict(
+        annotations_df,
+        "Child_Parent_Divergence_Significant",
+    )
     records: list[SiblingPairRecord] = []
     non_binary: list[str] = []
 
@@ -87,27 +90,34 @@ def collect_sibling_pair_records(
             continue
 
         left, right = children
-        left_dist, right_dist, n_l, n_r, bl_l, bl_r = _get_sibling_data(tree, parent, left, right)
+        (
+            left_dist,
+            right_dist,
+            n_left,
+            n_right,
+            branch_length_left,
+            branch_length_right,
+        ) = _get_sibling_data(tree, parent, left, right)
 
         spectral_k = spectral_dims.get(parent) if spectral_dims else None
         pca_projection = pca_projections.get(parent) if pca_projections else None
         pca_eigenvalue = pca_eigenvalues.get(parent) if pca_eigenvalues else None
 
-        stat, degrees_of_freedom, pval = sibling_divergence_test(
+        stat, degrees_of_freedom, p_value = sibling_divergence_test(
             left_dist,
             right_dist,
-            float(n_l),
-            float(n_r),
-            branch_length_left=bl_l,
-            branch_length_right=bl_r,
-            mean_branch_length=mean_bl,
+            float(n_left),
+            float(n_right),
+            branch_length_left=branch_length_left,
+            branch_length_right=branch_length_right,
+            mean_branch_length=mean_branch_length,
             test_id=f"sibling:{parent}",
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalue,
         )
 
-        is_null = not _either_child_significant(left, right, sig_map)
+        is_null = not _either_child_significant(left, right, edge_significance_by_node)
         records.append(
             SiblingPairRecord(
                 parent=parent,
@@ -117,8 +127,8 @@ def collect_sibling_pair_records(
                 degrees_of_freedom=int(degrees_of_freedom)
                 if np.isfinite(degrees_of_freedom)
                 else 0,
-                pval=pval,
-                bl_sum=_branch_length_sum(bl_l, bl_r),
+                p_value=p_value,
+                bl_sum=_branch_length_sum(branch_length_left, branch_length_right),
                 n_parent=extract_node_sample_size(tree, parent),
                 is_null_like=is_null,
             )
@@ -137,22 +147,22 @@ def deflate_focal_pairs(
     focal_results: list[tuple[float, float, float]] = []
     methods: list[str] = []
 
-    for rec in records:
-        if rec.is_null_like:
+    for pair_record in records:
+        if pair_record.is_null_like:
             continue
 
-        if not np.isfinite(rec.stat) or rec.degrees_of_freedom <= 0:
-            focal_parents.append(rec.parent)
+        if not np.isfinite(pair_record.stat) or pair_record.degrees_of_freedom <= 0:
+            focal_parents.append(pair_record.parent)
             focal_results.append((np.nan, np.nan, np.nan))
             methods.append("invalid")
             continue
 
-        c_hat, method = calibration_resolver(rec)
-        t_adj = rec.stat / c_hat
-        p_adj = float(chi2.sf(t_adj, df=rec.degrees_of_freedom))
+        c_hat, method = calibration_resolver(pair_record)
+        t_adj = pair_record.stat / c_hat
+        p_adj = float(chi2.sf(t_adj, df=pair_record.degrees_of_freedom))
 
-        focal_parents.append(rec.parent)
-        focal_results.append((t_adj, float(rec.degrees_of_freedom), p_adj))
+        focal_parents.append(pair_record.parent)
+        focal_results.append((t_adj, float(pair_record.degrees_of_freedom), p_adj))
         methods.append(method)
 
     return focal_parents, focal_results, methods
@@ -198,7 +208,7 @@ def early_return_if_no_records(
 
 def count_null_focal_pairs(records: Sequence[DeflatableSiblingRecord]) -> tuple[int, int]:
     """Count (null-like, focal) record totals."""
-    n_null = sum(1 for rec in records if rec.is_null_like)
+    n_null = sum(1 for pair_record in records if pair_record.is_null_like)
     n_focal = len(records) - n_null
     return n_null, n_focal
 
@@ -223,12 +233,15 @@ def apply_calibrated_results(
 
     stats = np.array([r[0] for r in focal_results])
     dfs = np.array([r[1] for r in focal_results])
-    pvals = np.array([r[2] for r in focal_results])
+    p_values = np.array([r[2] for r in focal_results])
 
-    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
-    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
+    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(p_values))
+    p_values_for_correction = np.where(np.isfinite(p_values), p_values, 1.0)
 
-    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
+    reject, corrected_p_values, _ = benjamini_hochberg_correction(
+        p_values_for_correction,
+        alpha=alpha,
+    )
     reject = np.where(invalid_mask, False, reject)
 
     n_invalid = int(np.sum(invalid_mask))
@@ -243,8 +256,8 @@ def apply_calibrated_results(
 
     annotations_df.loc[focal_parents, "Sibling_Test_Statistic"] = stats
     annotations_df.loc[focal_parents, "Sibling_Degrees_of_Freedom"] = dfs
-    annotations_df.loc[focal_parents, "Sibling_Divergence_P_Value"] = pvals
-    annotations_df.loc[focal_parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
+    annotations_df.loc[focal_parents, "Sibling_Divergence_P_Value"] = p_values
+    annotations_df.loc[focal_parents, "Sibling_Divergence_P_Value_Corrected"] = corrected_p_values
     annotations_df.loc[focal_parents, "Sibling_Divergence_Invalid"] = invalid_mask
     annotations_df.loc[focal_parents, "Sibling_BH_Different"] = reject
     annotations_df.loc[focal_parents, "Sibling_BH_Same"] = ~reject
