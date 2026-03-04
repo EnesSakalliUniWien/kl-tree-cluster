@@ -8,8 +8,6 @@ import pandas as pd
 
 from kl_clustering_analysis import config
 
-from ..core.enums import SiblingCalibrationMethod
-from ..core.errors import DecompositionMethodError
 from ...statistics.sibling_divergence import (
     annotate_sibling_divergence_adjusted,
     annotate_sibling_divergence_cousin,
@@ -17,6 +15,8 @@ from ...statistics.sibling_divergence import (
     annotate_sibling_divergence_weighted,
 )
 from ...statistics.sibling_divergence.sibling_divergence_test import annotate_sibling_divergence
+from ..core.enums import SiblingCalibrationMethod
+from ..core.errors import DecompositionMethodError
 
 _APPLY_CALIBRATION_WARNING_EMITTED = False
 

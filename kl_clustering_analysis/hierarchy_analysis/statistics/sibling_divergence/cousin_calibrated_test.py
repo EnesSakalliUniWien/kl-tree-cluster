@@ -48,18 +48,17 @@ from scipy.stats import f as f_dist
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
-    extract_bool_column_dict,
     initialize_sibling_divergence_columns,
 )
 
 from ..branch_length_utils import compute_mean_branch_length
-from ..multiple_testing import benjamini_hochberg_correction
 from .sibling_divergence_test import (
     _either_child_significant,
     _get_binary_children,
     _get_sibling_data,
     sibling_divergence_test,
 )
+from .pipeline import apply_sibling_bh_results, collect_significant_sibling_pairs
 
 logger = logging.getLogger(__name__)
 
@@ -272,36 +271,12 @@ def _collect_test_arguments_cousin(
 
     Returns (parent_nodes, child_pairs, skipped_nodes, non_binary_nodes).
     """
-    if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
-        raise ValueError(
-            "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
-        )
-
-    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
-
-    parents: List[str] = []
-    child_pairs: List[Tuple[str, str]] = []
-    skipped: List[str] = []
-    non_binary: List[str] = []
-
-    for parent in tree.nodes:
-        children = _get_binary_children(tree, parent)
-        if children is None:
-            # Leaves and non-binary nodes are not testable
-            non_binary.append(parent)
-            continue
-
-        left, right = children
-
-        # Skip if neither child diverged from parent (same gating as current)
-        if not _either_child_significant(left, right, sig_map):
-            skipped.append(parent)
-            continue
-
-        parents.append(parent)
-        child_pairs.append((left, right))
-
-    return parents, child_pairs, skipped, non_binary
+    return collect_significant_sibling_pairs(
+        tree,
+        nodes_df,
+        get_binary_children=_get_binary_children,
+        either_child_significant=_either_child_significant,
+    )
 
 
 def _run_cousin_tests(
@@ -348,40 +323,16 @@ def _apply_results_cousin(
     alpha: float,
 ) -> pd.DataFrame:
     """Apply test results with BH correction to dataframe."""
-    if not results:
-        return df
-
-    stats = np.array([r[0] for r in results])
-    dfs = np.array([r[1] for r in results])
-    pvals = np.array([r[2] for r in results])
-
-    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
-    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
-
-    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
-    reject = np.where(invalid_mask, False, reject)
-
-    n_invalid = int(np.sum(invalid_mask))
-    if n_invalid:
-        logger.warning(
-            "Cousin F-test audit: total_tests=%d, invalid_tests=%d. "
-            "Conservative correction path applied (p=1.0, reject=False).",
-            len(results),
-            n_invalid,
-        )
-
-    df.loc[parents, "Sibling_Test_Statistic"] = stats
-    df.loc[parents, "Sibling_Degrees_of_Freedom"] = dfs
-    df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
-    df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
-    df.loc[parents, "Sibling_Divergence_Invalid"] = invalid_mask
-    df.loc[parents, "Sibling_BH_Different"] = reject
-    df.loc[parents, "Sibling_BH_Same"] = ~reject
-    df.loc[parents, "Sibling_Test_Method"] = [
-        "cousin_ftest" if f else "wald_fallback" for f in ftest_flags
-    ]
-
-    return df
+    method_labels = ["cousin_ftest" if f else "wald_fallback" for f in ftest_flags]
+    return apply_sibling_bh_results(
+        df,
+        parents,
+        results,
+        alpha,
+        logger=logger,
+        audit_label="Cousin F-test",
+        method_labels=method_labels,
+    )
 
 
 # =============================================================================

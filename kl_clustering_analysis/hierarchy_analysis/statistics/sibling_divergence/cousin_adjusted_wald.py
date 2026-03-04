@@ -42,8 +42,8 @@ from ..branch_length_utils import compute_mean_branch_length
 from .cousin_pipeline_helpers import (
     SiblingPairRecord,
     apply_calibrated_results,
-    count_null_focal_pairs,
     collect_sibling_pair_records,
+    count_null_focal_pairs,
     deflate_focal_pairs,
     early_return_if_no_records,
     init_sibling_annotation_df,
@@ -307,6 +307,7 @@ def _deflate_and_test(
         focal_results: (T_adj, k, p_adj) per focal pair
         calibration_methods: method string per focal pair
     """
+
     def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]:
         c_hat = predict_inflation_factor(model, rec.bl_sum, rec.n_parent)
         return c_hat, f"adjusted_{model.method}"

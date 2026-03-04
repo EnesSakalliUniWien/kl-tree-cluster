@@ -20,7 +20,6 @@ from scipy.stats import hmean
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
-    extract_bool_column_dict,
     extract_node_distribution,
     extract_node_sample_size,
     initialize_sibling_divergence_columns,
@@ -28,7 +27,7 @@ from kl_clustering_analysis.core_utils.data_utils import (
 
 from ..branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
 from ..categorical_mahalanobis import categorical_whitened_vector
-from ..multiple_testing import benjamini_hochberg_correction
+from .pipeline import apply_sibling_bh_results, collect_significant_sibling_pairs
 from ..pooled_variance import _is_categorical, standardize_proportion_difference
 from ...decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_projection_dimension,
@@ -247,37 +246,18 @@ def _collect_test_arguments(
     Returns (parent_nodes, test_args, skipped_nodes, non_binary_nodes).
     Each test_args tuple contains: (left_dist, right_dist, n_left, n_right, branch_left, branch_right)
     """
-    if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
-        raise ValueError(
-            "Missing 'Child_Parent_Divergence_Significant' column. " "Run child-parent test first."
-        )
+    parents, child_pairs, skipped, non_binary = collect_significant_sibling_pairs(
+        tree,
+        nodes_df,
+        get_binary_children=_get_binary_children,
+        either_child_significant=_either_child_significant,
+    )
 
-    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
-
-    parents: List[str] = []
     args: List[Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]] = []
-    skipped: List[str] = []
-    non_binary: List[str] = []
-
-    for parent in tree.nodes:
-        children = _get_binary_children(tree, parent)
-        if children is None:
-            # Leaves and non-binary nodes are not testable
-            non_binary.append(parent)
-            continue
-
-        left, right = children
-
-        # Skip if neither child diverged from parent
-        if not _either_child_significant(left, right, sig_map):
-            skipped.append(parent)
-            continue
-
+    for parent, (left, right) in zip(parents, child_pairs, strict=False):
         left_dist, right_dist, n_left, n_right, bl_left, bl_right = _get_sibling_data(
             tree, parent, left, right
         )
-
-        parents.append(parent)
         args.append((left_dist, right_dist, n_left, n_right, bl_left, bl_right))
 
     return parents, args, skipped, non_binary
@@ -330,36 +310,14 @@ def _apply_results(
     alpha: float,
 ) -> pd.DataFrame:
     """Apply test results with BH correction to dataframe."""
-    if not results:
-        return df
-
-    stats = np.array([r[0] for r in results])
-    dfs = np.array([r[1] for r in results])
-    pvals = np.array([r[2] for r in results])
-
-    invalid_mask = (~np.isfinite(stats)) | (~np.isfinite(dfs)) | (~np.isfinite(pvals))
-    pvals_for_correction = np.where(np.isfinite(pvals), pvals, 1.0)
-
-    reject, pvals_adj, _ = benjamini_hochberg_correction(pvals_for_correction, alpha=alpha)
-    reject = np.where(invalid_mask, False, reject)
-    n_invalid = int(np.sum(invalid_mask))
-    if n_invalid:
-        logger.warning(
-            "Sibling divergence audit: total_tests=%d, invalid_tests=%d. "
-            "Conservative correction path applied (p=1.0, reject=False).",
-            len(results),
-            n_invalid,
-        )
-
-    df.loc[parents, "Sibling_Test_Statistic"] = stats
-    df.loc[parents, "Sibling_Degrees_of_Freedom"] = dfs
-    df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
-    df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
-    df.loc[parents, "Sibling_Divergence_Invalid"] = invalid_mask
-    df.loc[parents, "Sibling_BH_Different"] = reject
-    df.loc[parents, "Sibling_BH_Same"] = ~reject
-
-    return df
+    return apply_sibling_bh_results(
+        df,
+        parents,
+        results,
+        alpha,
+        logger=logger,
+        audit_label="Sibling divergence",
+    )
 
 
 # =============================================================================
