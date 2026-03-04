@@ -11,7 +11,7 @@ from typing import Callable, Dict, List, Set, Tuple
 import networkx as nx
 import numpy as np
 
-from .statistics.multiple_testing import benjamini_hochberg_correction
+from ...statistics.multiple_testing import benjamini_hochberg_correction
 
 
 def _precompute_cluster_roots_under_nodes(

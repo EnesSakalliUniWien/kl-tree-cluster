@@ -1,6 +1,8 @@
 import networkx as nx
 
-from kl_clustering_analysis.hierarchy_analysis.posthoc_merge import apply_posthoc_merge
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.posthoc_merge import (
+    apply_posthoc_merge,
+)
 
 
 def test_posthoc_merge_respects_significant_pairs_at_lca() -> None:

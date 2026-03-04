@@ -22,16 +22,16 @@ from typing import TYPE_CHECKING, Dict, Tuple, Union
 import numpy as np
 
 if TYPE_CHECKING:
-    from ..tree.poset_tree import PosetTree
+    from kl_clustering_analysis.tree.poset_tree import PosetTree
 
-from .statistics.branch_length_utils import sanitize_positive_branch_length
-from .statistics.sibling_divergence import (
+from ...statistics.branch_length_utils import sanitize_positive_branch_length
+from ...statistics.sibling_divergence import (
     CalibrationModel,
     WeightedCalibrationModel,
     predict_inflation_factor,
     predict_weighted_inflation_factor,
 )
-from .statistics.sibling_divergence.sibling_divergence_test import sibling_divergence_test
+from ...statistics.sibling_divergence.sibling_divergence_test import sibling_divergence_test
 
 
 @dataclass(frozen=True)

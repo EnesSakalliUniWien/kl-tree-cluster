@@ -1,4 +1,4 @@
-"""Unit tests for gates.py traversal helpers and GateEvaluator.
+"""Unit tests for decomposition gate-traversal helpers and GateEvaluator.
 
 Covers:
 - ``iterate_worklist`` — LIFO pop, dedup via processed set
@@ -14,7 +14,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from kl_clustering_analysis.hierarchy_analysis.gates import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.traversal import (
     GateEvaluator,
     iterate_worklist,
     process_node,

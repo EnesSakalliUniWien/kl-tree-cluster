@@ -8,8 +8,7 @@ This document maps the current decomposition architecture after the gate-adapter
 
 ```mermaid
 flowchart TD
-    TD[TreeDecomposition._prepare_annotations] --> GA[gate_annotations.compute_gate_annotations shim]
-    GA --> ORCH[decomposition.gates.orchestrator.run_gate_annotation_pipeline]
+    TD[TreeDecomposition._prepare_annotations] --> ORCH[decomposition.gates.orchestrator.run_gate_annotation_pipeline]
 
     ORCH --> EG[decomposition.gates.edge_gate.annotate_edge_gate]
     ORCH --> SG[decomposition.gates.sibling_gate.annotate_sibling_gate]
@@ -55,20 +54,17 @@ Not directly wired: SVD, Schur, Jordan, generalized eigen, Fourier.
 
 ```text
 TreeDecomposition
-  -> gate_annotations (compat shim)
-     -> decomposition.gates.orchestrator
-        -> decomposition.gates.edge_gate
-           -> edge_significance
-              -> decomposition.methods.projected_wald
-                 -> decomposition.methods.projection_basis
-                    -> decomposition.backends.{eigen_backend, random_projection_backend}
-              -> spectral_dimension
-                 -> statistics.projection.eigen_decomposition (compat)
-                    -> decomposition.backends.eigen_backend
-        -> decomposition.gates.sibling_gate
-           -> decomposition.methods.sibling_calibration
-              -> sibling_divergence_test
-                 -> decomposition.methods.projected_wald
+  -> decomposition.gates.orchestrator
+     -> decomposition.gates.{edge_gate,sibling_gate}
+        -> edge_significance / sibling_divergence_test
+           -> decomposition.methods.projected_wald
+              -> decomposition.methods.projection_basis
+                 -> decomposition.backends.{eigen_backend, random_projection_backend}
+        -> spectral_dimension
+           -> decomposition.backends.eigen_backend
+  -> decomposition.gates.traversal (GateEvaluator + worklist traversal)
+  -> decomposition.gates.pairwise_testing (post-hoc pair tests)
+  -> decomposition.gates.posthoc_merge (merge policy)
 ```
 
 ## 5) Cleanup Outcome

@@ -19,13 +19,13 @@ from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
 from .cluster_assignments import build_sample_cluster_assignments
-from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
-from .gates import GateEvaluator, iterate_worklist, process_node
-from .pairwise_testing import (
+from .decomposition.gates.pairwise_testing import (
     build_branch_distance_cache,
     test_cluster_pair_divergence,
 )
-from .posthoc_merge import apply_posthoc_merge
+from .decomposition.gates.posthoc_merge import apply_posthoc_merge
+from .decomposition.gates.traversal import GateEvaluator, iterate_worklist, process_node
+from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
 from .decomposition.backends.random_projection_backend import resolve_min_k_backend
 from .statistics.branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
 from .statistics.sibling_divergence import CalibrationModel, WeightedCalibrationModel

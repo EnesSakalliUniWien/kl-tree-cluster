@@ -19,7 +19,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, Hashable, Iterator, List, Set, Tuple
 
 if TYPE_CHECKING:
-    from ..tree.poset_tree import PosetTree
+    from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
 class GateEvaluator:
