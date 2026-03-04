@@ -138,7 +138,61 @@ def _generate_blobs_case(
         "name": test_case.get("name", f"blobs_{n_samples}x{n_features}"),
         "generator": "blobs",
     }
-    return data_df, y, X, metadata
+    # Return binarized data as x_original so UMAP and baseline methods
+    # (K-Means, Spectral) operate on the same feature space as the KL pipeline.
+    return data_df, y, X_bin, metadata
+
+
+def _generate_blobs_quantile_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Generate Gaussian blobs discretized into quantile categories, then one-hot encoded.
+
+    Instead of harsh median binarization (2 bins), this discretizes each feature
+    into ``n_categories`` equal-frequency quantile bins.  The resulting category
+    indices are one-hot encoded into binary indicators compatible with the
+    Bernoulli KL pipeline.
+
+    More categories preserve more of the continuous overlap structure, reducing
+    artificial sub-cluster signal that causes over-splitting.
+    """
+    n_samples = int(test_case["n_samples"])
+    n_features = int(test_case["n_features"])
+    n_categories = int(test_case.get("n_categories", 4))
+    blobs_result = make_blobs(
+        n_samples=n_samples,
+        n_features=n_features,
+        centers=test_case["n_clusters"],
+        cluster_std=test_case["cluster_std"],
+        random_state=seed,
+    )
+    X: np.ndarray = blobs_result[0]
+    y: np.ndarray = blobs_result[1]
+
+    # Quantile-discretize each feature into n_categories bins
+    quantiles = np.linspace(0, 1, n_categories + 1)[1:-1]  # e.g. [0.25, 0.5, 0.75] for 4 bins
+    thresholds = np.quantile(X, quantiles, axis=0)  # shape (n_categories-1, n_features)
+    X_cat = np.zeros_like(X, dtype=int)
+    for q_idx in range(len(quantiles)):
+        X_cat += (X > thresholds[q_idx]).astype(int)
+    # X_cat now contains category indices 0..n_categories-1
+
+    sample_names = [f"S{j}" for j in range(n_samples)]
+    data_df, n_binary = _one_hot_encode_categorical(X_cat, n_categories, sample_names)
+
+    metadata = {
+        "n_samples": n_samples,
+        "n_features": n_binary,
+        "n_features_original": n_features,
+        "n_categories": n_categories,
+        "n_clusters": test_case["n_clusters"],
+        "noise": test_case["cluster_std"],
+        "name": test_case.get("name", f"blobs_q{n_categories}_{n_samples}x{n_features}"),
+        "generator": "blobs_quantile",
+    }
+    # Return one-hot encoded data as x_original so UMAP and baseline methods
+    # (K-Means, Spectral) operate on the same feature space as the KL pipeline.
+    return data_df, y, data_df.values.astype(float), metadata
 
 
 def _generate_sbm_case(
@@ -447,6 +501,8 @@ def generate_case_data(
         data_df, y, x_original, metadata = _generate_binary_case(test_case, seed)
     elif generator == "blobs":
         data_df, y, x_original, metadata = _generate_blobs_case(test_case, seed)
+    elif generator == "blobs_quantile":
+        data_df, y, x_original, metadata = _generate_blobs_quantile_case(test_case, seed)
     elif generator == "sbm":
         data_df, y, x_original, metadata = _generate_sbm_case(test_case, seed)
     elif generator == "categorical":

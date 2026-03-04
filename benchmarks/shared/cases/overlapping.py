@@ -324,6 +324,48 @@ OVERLAPPING_GAUSSIAN_CASES = [
     },
 ]
 
+# Gaussian overlap cases discretized via quantile binning instead of median
+# binarization.  More categories preserve the continuous overlap structure and
+# reduce artificial sub-cluster signal.
+OVERLAPPING_GAUSSIAN_QUANTILE_CASES = [
+    # gauss_overlap_3c_small with 3 quantile categories (tertiles)
+    {
+        "name": "gauss_overlap_3c_small_q3",
+        "generator": "blobs_quantile",
+        "n_samples": 300,
+        "n_features": 30,
+        "n_clusters": 3,
+        "cluster_std": 3.5,
+        "n_categories": 3,
+        "seed": 9000,
+        "category": "overlapping_gaussian_quantile",
+    },
+    # gauss_overlap_3c_small with 4 quantile categories (quartiles)
+    {
+        "name": "gauss_overlap_3c_small_q4",
+        "generator": "blobs_quantile",
+        "n_samples": 300,
+        "n_features": 30,
+        "n_clusters": 3,
+        "cluster_std": 3.5,
+        "n_categories": 4,
+        "seed": 9000,
+        "category": "overlapping_gaussian_quantile",
+    },
+    # gauss_overlap_3c_small with 5 quantile categories (quintiles)
+    {
+        "name": "gauss_overlap_3c_small_q5",
+        "generator": "blobs_quantile",
+        "n_samples": 300,
+        "n_features": 30,
+        "n_clusters": 3,
+        "cluster_std": 3.5,
+        "n_categories": 5,
+        "seed": 9000,
+        "category": "overlapping_gaussian_quantile",
+    },
+]
+
 
 def get_overlapping_cases():
     """Get all overlapping test cases as a flat list."""
@@ -334,6 +376,7 @@ def get_overlapping_cases():
         + [c.copy() for c in OVERLAPPING_BINARY_HIGHD_CASES]
         + [c.copy() for c in OVERLAPPING_BINARY_UNBALANCED_CASES]
         + [c.copy() for c in OVERLAPPING_GAUSSIAN_CASES]
+        + [c.copy() for c in OVERLAPPING_GAUSSIAN_QUANTILE_CASES]
     )
 
 
@@ -345,4 +388,5 @@ OVERLAPPING_CASES = {
     "overlapping_binary_highd": OVERLAPPING_BINARY_HIGHD_CASES,
     "overlapping_binary_unbalanced": OVERLAPPING_BINARY_UNBALANCED_CASES,
     "overlapping_gaussian": OVERLAPPING_GAUSSIAN_CASES,
+    "overlapping_gaussian_quantile": OVERLAPPING_GAUSSIAN_QUANTILE_CASES,
 }
