@@ -46,10 +46,10 @@ def analyze_cluster_assignments_label_invariant():
         n_samples=30, n_features=30, n_clusters=3, noise_level=1.0, seed=42
     )
     tree, _ = build_hierarchical_tree(X)
-    results_df = run_statistical_analysis(tree, X)
+    annotations_df = run_statistical_analysis(tree, X)
 
     # 2) Decomposition
-    result = tree.decompose(results_df=results_df)
+    result = tree.decompose(annotations_df=annotations_df)
     assert isinstance(tree, PosetTree)
     report = tree.build_sample_cluster_assignments(result)
 

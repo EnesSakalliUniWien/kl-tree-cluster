@@ -48,10 +48,10 @@ def analyze_pipeline_performance():
     tree, _ = build_hierarchical_tree(X)
 
     # 2) Statistical annotations (no attention rates)
-    results_df = run_statistical_analysis(tree, X)
+    annotations_df = run_statistical_analysis(tree, X)
 
     # 3) Decomposition
-    result = tree.decompose(results_df=results_df)
+    result = tree.decompose(annotations_df=annotations_df)
     assert isinstance(tree, PosetTree)
     report = tree.build_sample_cluster_assignments(result)
 

@@ -260,7 +260,7 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
         config.SIBLING_TEST_METHOD = method_name
         decomp = TreeDecomposition(
             tree=tree,
-            results_df=df_m,
+            annotations_df=df_m,
             alpha_local=config.SIGNIFICANCE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
         )
@@ -287,7 +287,7 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
         # Also show v2 localization toggle
         decomp_v2 = TreeDecomposition(
             tree=tree,
-            results_df=df_m,
+            annotations_df=df_m,
             alpha_local=config.SIGNIFICANCE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
         )

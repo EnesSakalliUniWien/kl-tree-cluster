@@ -354,7 +354,7 @@ def plot_tree(
     plot_tree_with_clusters(
         tree,
         result,
-        results_df=tree.stats_df,
+        annotations_df=tree.stats_df,
         layout="rectangular",
         title=f"KL Tree — {n_clusters} clusters (α={alpha})",
         ax=ax,

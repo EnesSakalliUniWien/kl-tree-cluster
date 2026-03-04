@@ -222,7 +222,7 @@ def analyze_case_17():
     # 2. Run V2
     decomposer = TreeDecomposition(
         tree=tree,
-        results_df=tree.stats_df,
+        annotations_df=tree.stats_df,
         alpha_local=0.05,
         sibling_alpha=0.05,
         use_signal_localization=True,

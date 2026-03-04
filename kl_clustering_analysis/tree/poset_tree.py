@@ -343,7 +343,7 @@ class PosetTree(nx.DiGraph):
 
     def decompose(
         self,
-        results_df: Optional["pd.DataFrame"] = None,
+        annotations_df: Optional["pd.DataFrame"] = None,
         leaf_data: Optional["pd.DataFrame"] = None,
         **decomposer_kwargs,
     ) -> Dict[str, object]:
@@ -351,11 +351,11 @@ class PosetTree(nx.DiGraph):
 
         Parameters
         ----------
-        results_df
+        annotations_df
             Optional statistics/annotations DataFrame. When omitted, falls back to
             ``self.stats_df`` (populated by :meth:`populate_node_divergences`).
         leaf_data
-            Optional leaf-level probability DataFrame. When provided and ``results_df``
+            Optional leaf-level probability DataFrame. When provided and ``annotations_df``
             is not supplied, ``populate_node_divergences`` will be invoked to
             initialize node distributions/KL metrics prior to decomposition.
         **decomposer_kwargs
@@ -371,12 +371,11 @@ class PosetTree(nx.DiGraph):
         alpha_local = decomposer_kwargs.pop("alpha_local", config.ALPHA_LOCAL)
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
 
-        annotations_df = results_df
         if annotations_df is None:
             if self.stats_df is None:
                 if leaf_data is None:
                     raise ValueError(
-                        "Tree has no stats_df; provide results_df or leaf_data to populate."
+                        "Tree has no stats_df; provide annotations_df or leaf_data to populate."
                     )
                 self.populate_node_divergences(leaf_data)
             annotations_df = self.stats_df.copy()

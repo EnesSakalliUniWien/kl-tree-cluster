@@ -38,7 +38,7 @@ def test_plot_tree_with_significance_legend():
     fig, ax = plot_tree_with_clusters(
         tree=G,
         decomposition_results=decomposition,
-        results_df=stats_df,
+        annotations_df=stats_df,
         show=False,
     )
 

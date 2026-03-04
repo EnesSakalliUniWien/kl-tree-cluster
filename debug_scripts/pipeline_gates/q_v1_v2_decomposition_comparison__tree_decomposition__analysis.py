@@ -168,7 +168,7 @@ def run_comparison(X, y_true, y_optimal, dataset_name):
         # Use existing stats_df from the tree (populated by V1 run)
         decomposer = TreeDecomposition(
             tree=tree,
-            results_df=tree.stats_df,
+            annotations_df=tree.stats_df,
             alpha_local=0.05,
             sibling_alpha=0.05,
             use_signal_localization=True,

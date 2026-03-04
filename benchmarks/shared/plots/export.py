@@ -214,7 +214,7 @@ def _create_tree_figures_for_case(
         plot_tree_with_clusters(
             tree=tree_t,
             decomposition_results=decomp_t,
-            results_df=stats_df,
+            annotations_df=stats_df,
             use_labels=True,
             node_size=12,
             font_size=9,

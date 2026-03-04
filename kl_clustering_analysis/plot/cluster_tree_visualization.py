@@ -270,7 +270,7 @@ def _graphviz_twopi_layout(G: nx.Graph, args: str = "") -> Dict:
 def plot_tree_with_clusters(
     tree,
     decomposition_results: Dict,
-    results_df=None,
+    annotations_df=None,
     use_labels: bool = True,
     width: int = 900,
     height: int = 600,
@@ -295,7 +295,6 @@ def plot_tree_with_clusters(
     """
     _ = show_cluster_boundaries
     _ = use_labels
-    annotations_df = results_df
 
     cluster_assignments = decomposition_results["cluster_assignments"]
     num_clusters = decomposition_results["num_clusters"]

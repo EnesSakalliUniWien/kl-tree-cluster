@@ -49,9 +49,10 @@ from joblib import Parallel, delayed
 
 from ...decomposition.backends.eigen_backend import (
     build_pca_projection_backend as build_pca_projection,
+)
+from ...decomposition.backends.eigen_backend import (
     eigendecompose_correlation_backend as eigendecompose_correlation,
 )
-
 from ...decomposition.methods.k_estimators import (
     estimate_k_active_features,
     estimate_k_effective_rank,

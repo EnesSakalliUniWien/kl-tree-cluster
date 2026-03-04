@@ -260,7 +260,7 @@ class TestV1DecomposeTreeIntegration:
         )
         with _skip_annotations:
             result = tree.decompose(
-                results_df=df, posthoc_merge=False
+                annotations_df=df, posthoc_merge=False
             )
         assert result["num_clusters"] == 4
 
@@ -272,7 +272,7 @@ class TestV1DecomposeTreeIntegration:
         )
         with _skip_annotations:
             result = tree.decompose(
-                results_df=df, posthoc_merge=False
+                annotations_df=df, posthoc_merge=False
             )
         assert result["num_clusters"] == 3
 
@@ -284,7 +284,7 @@ class TestV1DecomposeTreeIntegration:
         )
         with _skip_annotations:
             result = tree.decompose(
-                results_df=df, posthoc_merge=False, passthrough=False
+                annotations_df=df, posthoc_merge=False, passthrough=False
             )
         assert result["num_clusters"] == 1
 
@@ -296,7 +296,7 @@ class TestV1DecomposeTreeIntegration:
         )
         with _skip_annotations:
             result = tree.decompose(
-                results_df=df, posthoc_merge=False, passthrough=True
+                annotations_df=df, posthoc_merge=False, passthrough=True
             )
         assert result["num_clusters"] == 4
 
@@ -308,7 +308,7 @@ class TestV1DecomposeTreeIntegration:
         )
         with _skip_annotations:
             result = tree.decompose(
-                results_df=df, posthoc_merge=False
+                annotations_df=df, posthoc_merge=False
             )
 
         all_leaves = set()
@@ -330,7 +330,7 @@ class TestV1DecomposeTreeIntegration:
         df = _make_annotations_for_4_cluster_tree()
         with _skip_annotations:
             result = tree.decompose(
-                results_df=df, posthoc_merge=True
+                annotations_df=df, posthoc_merge=True
             )
         assert "posthoc_merge_audit" in result
 
@@ -350,12 +350,12 @@ class TestV1DecomposeTreeIntegration:
         with _skip_annotations:
             # Without posthoc merge: 4 clusters
             result_no_merge = tree.decompose(
-                results_df=df, posthoc_merge=False
+                annotations_df=df, posthoc_merge=False
             )
             assert result_no_merge["num_clusters"] == 4
 
             # With posthoc merge: may reduce if some pairs are similar
             result_with_merge = tree.decompose(
-                results_df=df, posthoc_merge=True
+                annotations_df=df, posthoc_merge=True
             )
         assert result_with_merge["num_clusters"] <= result_no_merge["num_clusters"]
