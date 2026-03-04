@@ -81,9 +81,97 @@ class CalibrationModel:
     diagnostics: Dict = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class _NullLikeCalibrationInputs:
+    """Prepared numeric inputs for null-like calibration fitting."""
+
+    ratio_values: np.ndarray
+    branch_length_sum_values: np.ndarray
+    parent_sample_size_values: np.ndarray
+    calibration_pair_count: int
+    median_ratio: float
+    max_observed_ratio: float
+
+
 # =============================================================================
 # Inflation estimation
 # =============================================================================
+
+
+def _collect_null_like_records(records: List[SiblingPairRecord]) -> List[SiblingPairRecord]:
+    """Return records that can be considered null-like calibration candidates."""
+    return [
+        record
+        for record in records
+        if record.is_null_like and np.isfinite(record.stat) and record.df > 0
+    ]
+
+
+def _build_null_like_calibration_inputs(
+    null_like_records: List[SiblingPairRecord],
+) -> _NullLikeCalibrationInputs:
+    """Convert null-like records into validated numeric vectors for fitting."""
+    ratio_values = np.array([record.stat / record.df for record in null_like_records])
+    branch_length_sum_values = np.array([record.bl_sum for record in null_like_records])
+    parent_sample_size_values = np.array([record.n_parent for record in null_like_records])
+
+    valid_mask = (
+        (branch_length_sum_values > 0)
+        & (parent_sample_size_values > 0)
+        & np.isfinite(ratio_values)
+        & (ratio_values > 0)
+    )
+    ratio_values = ratio_values[valid_mask]
+    branch_length_sum_values = branch_length_sum_values[valid_mask]
+    parent_sample_size_values = parent_sample_size_values[valid_mask]
+
+    calibration_pair_count = len(ratio_values)
+    if calibration_pair_count > 0:
+        median_ratio = float(np.median(ratio_values))
+        max_observed_ratio = float(np.max(ratio_values))
+    else:
+        median_ratio = 1.0
+        max_observed_ratio = 1.0
+
+    return _NullLikeCalibrationInputs(
+        ratio_values=ratio_values,
+        branch_length_sum_values=branch_length_sum_values,
+        parent_sample_size_values=parent_sample_size_values,
+        calibration_pair_count=calibration_pair_count,
+        median_ratio=median_ratio,
+        max_observed_ratio=max_observed_ratio,
+    )
+
+
+def _fit_log_linear_inflation_regression(
+    calibration_inputs: _NullLikeCalibrationInputs,
+) -> tuple[np.ndarray | None, float]:
+    """Fit log(ratio) regression against branch length and parent sample size."""
+    log_ratio_values = np.log(calibration_inputs.ratio_values)
+    design_matrix = np.column_stack(
+        [
+            np.ones(calibration_inputs.calibration_pair_count),
+            np.log(calibration_inputs.branch_length_sum_values),
+            np.log(calibration_inputs.parent_sample_size_values.astype(float)),
+        ]
+    )
+
+    try:
+        coefficient_vector, _residuals, _rank, _singular_values = np.linalg.lstsq(
+            design_matrix,
+            log_ratio_values,
+            rcond=None,
+        )
+    except np.linalg.LinAlgError:
+        return None, 0.0
+
+    fitted_log_ratios = design_matrix @ coefficient_vector
+    sum_squared_residuals = float(np.sum((log_ratio_values - fitted_log_ratios) ** 2))
+    sum_squared_total = float(np.sum((log_ratio_values - np.mean(log_ratio_values)) ** 2))
+    coefficient_of_determination = (
+        1.0 - sum_squared_residuals / sum_squared_total if sum_squared_total > 0 else 0.0
+    )
+    return np.asarray(coefficient_vector), coefficient_of_determination
 
 
 def _fit_inflation_model(
@@ -95,9 +183,9 @@ def _fit_inflation_model(
     are available, otherwise falls back to global median, and finally to no
     calibration.
     """
-    null_records = [r for r in records if r.is_null_like and np.isfinite(r.stat) and r.df > 0]
+    null_like_records = _collect_null_like_records(records)
 
-    if not null_records:
+    if not null_like_records:
         logger.warning(
             "Cousin-adjusted Wald: 0 null-like pairs — "
             "no calibration possible; raw Wald stats will be used."
@@ -106,118 +194,90 @@ def _fit_inflation_model(
             method="none", n_calibration=0, global_c_hat=1.0, max_observed_ratio=1.0
         )
 
-    # r_i = T_i / k_i  (expected value under H₀ + inflation is c)
-    ratios = np.array([r.stat / r.df for r in null_records])
-    bl_sums = np.array([r.bl_sum for r in null_records])
-    n_parents = np.array([r.n_parent for r in null_records])
+    calibration_inputs = _build_null_like_calibration_inputs(null_like_records)
 
-    # Guard: remove any zero/negative BL or n_parent (can't take log)
-    valid = (bl_sums > 0) & (n_parents > 0) & np.isfinite(ratios) & (ratios > 0)
-    ratios = ratios[valid]
-    bl_sums = bl_sums[valid]
-    n_parents = n_parents[valid]
-    null_records = [r for r, v in zip(null_records, valid) if v]
-
-    n_cal = len(ratios)
-    global_c = float(np.median(ratios)) if n_cal > 0 else 1.0
-    max_c = float(np.max(ratios)) if n_cal > 0 else 1.0
-
-    if n_cal < _MIN_MEDIAN:
+    if calibration_inputs.calibration_pair_count < _MIN_MEDIAN:
         logger.warning(
             "Cousin-adjusted Wald: only %d null-like pairs (need ≥%d) — "
             "raw Wald stats will be used (ĉ = 1.0).",
-            n_cal,
+            calibration_inputs.calibration_pair_count,
             _MIN_MEDIAN,
         )
         return CalibrationModel(
-            method="none", n_calibration=n_cal, global_c_hat=global_c, max_observed_ratio=max_c
+            method="none",
+            n_calibration=calibration_inputs.calibration_pair_count,
+            global_c_hat=calibration_inputs.median_ratio,
+            max_observed_ratio=calibration_inputs.max_observed_ratio,
         )
 
-    if n_cal < _MIN_REGRESSION:
+    if calibration_inputs.calibration_pair_count < _MIN_REGRESSION:
         logger.info(
             "Cousin-adjusted Wald: %d null-like pairs (need ≥%d for regression) — "
             "using global median ĉ = %.3f.",
-            n_cal,
+            calibration_inputs.calibration_pair_count,
             _MIN_REGRESSION,
-            global_c,
+            calibration_inputs.median_ratio,
         )
         return CalibrationModel(
             method="median",
-            n_calibration=n_cal,
-            global_c_hat=global_c,
-            max_observed_ratio=max_c,
+            n_calibration=calibration_inputs.calibration_pair_count,
+            global_c_hat=calibration_inputs.median_ratio,
+            max_observed_ratio=calibration_inputs.max_observed_ratio,
         )
 
-    # --- Log-linear regression ---
-    # log(r) = β₀ + β₁·log(BL_sum) + β₂·log(n_parent)
-    log_r = np.log(ratios)
-    X = np.column_stack(
-        [
-            np.ones(n_cal),
-            np.log(bl_sums),
-            np.log(n_parents.astype(float)),
-        ]
+    coefficient_vector, coefficient_of_determination = _fit_log_linear_inflation_regression(
+        calibration_inputs
     )
-
-    # OLS via pseudoinverse (robust to collinearity)
-    try:
-        beta, residuals, rank, sv = np.linalg.lstsq(X, log_r, rcond=None)
-    except np.linalg.LinAlgError:
+    if coefficient_vector is None:
         logger.warning(
             "Cousin-adjusted Wald: regression failed — " "falling back to global median ĉ = %.3f.",
-            global_c,
+            calibration_inputs.median_ratio,
         )
         return CalibrationModel(
             method="median",
-            n_calibration=n_cal,
-            global_c_hat=global_c,
+            n_calibration=calibration_inputs.calibration_pair_count,
+            global_c_hat=calibration_inputs.median_ratio,
         )
 
-    # Sanity: if R² is very low, regression is not informative → use median
-    fitted = X @ beta
-    ss_res = float(np.sum((log_r - fitted) ** 2))
-    ss_tot = float(np.sum((log_r - np.mean(log_r)) ** 2))
-    r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
-
     diagnostics = {
-        "r_squared": r_squared,
-        "beta": beta.tolist(),
-        "n_calibration": n_cal,
-        "median_ratio": float(global_c),
-        "max_observed_ratio": float(max_c),
+        "r_squared": coefficient_of_determination,
+        "beta": coefficient_vector.tolist(),
+        "n_calibration": calibration_inputs.calibration_pair_count,
+        "median_ratio": float(calibration_inputs.median_ratio),
+        "max_observed_ratio": float(calibration_inputs.max_observed_ratio),
     }
 
-    if r_squared < 0.05:
+    if coefficient_of_determination < 0.05:
         logger.info(
             "Cousin-adjusted Wald: regression R²=%.3f (< 0.05) — "
             "not informative; using global median ĉ = %.3f.",
-            r_squared,
-            global_c,
+            coefficient_of_determination,
+            calibration_inputs.median_ratio,
         )
         return CalibrationModel(
             method="median",
-            n_calibration=n_cal,
-            global_c_hat=global_c,
-            max_observed_ratio=max_c,
+            n_calibration=calibration_inputs.calibration_pair_count,
+            global_c_hat=calibration_inputs.median_ratio,
+            max_observed_ratio=calibration_inputs.max_observed_ratio,
             diagnostics=diagnostics,
         )
 
     logger.info(
         "Cousin-adjusted Wald: fitted regression on %d null-like pairs. "
         "β = [%.3f, %.3f, %.3f], R² = %.3f.",
-        n_cal,
-        beta[0],
-        beta[1],
-        beta[2],
-        r_squared,
+        calibration_inputs.calibration_pair_count,
+        coefficient_vector[0],
+        coefficient_vector[1],
+        coefficient_vector[2],
+        coefficient_of_determination,
     )
 
     return CalibrationModel(
         method="regression",
-        n_calibration=n_cal,
-        global_c_hat=global_c,
-        max_observed_ratio=max_c,
-        beta=np.asarray(beta),
+        n_calibration=calibration_inputs.calibration_pair_count,
+        global_c_hat=calibration_inputs.median_ratio,
+        max_observed_ratio=calibration_inputs.max_observed_ratio,
+        beta=np.asarray(coefficient_vector),
         diagnostics=diagnostics,
     )
 

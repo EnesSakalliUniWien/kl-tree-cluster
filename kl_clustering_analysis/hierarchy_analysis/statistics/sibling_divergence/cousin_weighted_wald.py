@@ -130,6 +130,19 @@ class WeightedCalibrationModel:
     diagnostics: Dict = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class _WeightedCalibrationInputs:
+    """Prepared numeric inputs for weighted calibration fitting."""
+
+    ratio_values: np.ndarray
+    weight_values: np.ndarray
+    null_like_ratio_values: np.ndarray
+    max_observed_ratio: float
+    calibration_pair_count: int
+    global_weighted_ratio: float
+    effective_sample_size: float
+
+
 # =============================================================================
 # Edge p-value retrieval
 # =============================================================================
@@ -168,6 +181,171 @@ def _weighted_median(values: np.ndarray, weights: np.ndarray) -> float:
     return float(sorted_vals[min(idx, len(sorted_vals) - 1)])
 
 
+def _resolve_statsmodels_availability() -> bool:
+    """Return whether statsmodels-backed Gamma GLM can be used."""
+    statsmodels_available = bool(_HAS_STATSMODELS and "sm" in globals())
+    global _WARNED_MISSING_STATSMODELS
+    if not statsmodels_available and not _WARNED_MISSING_STATSMODELS:
+        logger.warning(
+            "Weighted cousin Wald: statsmodels is unavailable; "
+            "Gamma GLM calibration disabled. Falling back to weighted log-linear regression."
+        )
+        _WARNED_MISSING_STATSMODELS = True
+    return statsmodels_available
+
+
+def _filter_valid_weighted_records(records: List[_WeightedRecord]) -> List[_WeightedRecord]:
+    """Keep records that are numerically valid for calibration fitting."""
+    return [
+        record
+        for record in records
+        if np.isfinite(record.stat)
+        and record.df > 0
+        and record.stat > 0
+        and record.n_parent > 0
+        and record.weight > 0
+    ]
+
+
+def _build_weighted_calibration_inputs(
+    valid_records: List[_WeightedRecord],
+) -> _WeightedCalibrationInputs:
+    """Convert valid records into numeric vectors used by calibration models."""
+    ratio_values = np.array([record.stat / record.df for record in valid_records])
+    weight_values = np.array([record.weight for record in valid_records])
+    null_like_ratio_values = np.array(
+        [record.stat / record.df for record in valid_records if record.is_null_like]
+    )
+
+    if len(null_like_ratio_values) > 0:
+        max_observed_ratio = float(np.max(null_like_ratio_values))
+    else:
+        max_observed_ratio = float(np.max(ratio_values))
+
+    calibration_pair_count = len(ratio_values)
+    global_weighted_ratio = float(np.average(ratio_values, weights=weight_values))
+
+    total_weight = float(np.sum(weight_values))
+    squared_weight_sum = float(np.sum(weight_values**2))
+    if squared_weight_sum > 0.0:
+        effective_sample_size = float((total_weight**2) / squared_weight_sum)
+    else:
+        effective_sample_size = 0.0
+
+    return _WeightedCalibrationInputs(
+        ratio_values=ratio_values,
+        weight_values=weight_values,
+        null_like_ratio_values=null_like_ratio_values,
+        max_observed_ratio=max_observed_ratio,
+        calibration_pair_count=calibration_pair_count,
+        global_weighted_ratio=global_weighted_ratio,
+        effective_sample_size=effective_sample_size,
+    )
+
+
+def _fit_intercept_only_gamma_glm(
+    ratio_values: np.ndarray,
+    weight_values: np.ndarray,
+    calibration_pair_count: int,
+    effective_sample_size: float,
+) -> tuple[np.ndarray | None, float, Dict]:
+    """Fit intercept-only Gamma GLM and return coefficients and diagnostics."""
+    design_matrix = np.ones((calibration_pair_count, 1))
+
+    try:
+        gamma_glm = sm.GLM(
+            ratio_values,
+            design_matrix,
+            family=sm.families.Gamma(link=sm.families.links.Log()),
+            freq_weights=weight_values,
+        )
+        gamma_glm_result = gamma_glm.fit()
+        coefficient_vector = np.asarray(gamma_glm_result.params)
+
+        if gamma_glm_result.null_deviance > 0:
+            coefficient_of_determination = (
+                1.0 - gamma_glm_result.deviance / gamma_glm_result.null_deviance
+            )
+        else:
+            coefficient_of_determination = 0.0
+
+        glm_diagnostics = {
+            "deviance": float(gamma_glm_result.deviance),
+            "null_deviance": float(gamma_glm_result.null_deviance),
+            "aic": float(gamma_glm_result.aic),
+            "scale": float(gamma_glm_result.scale),
+            "converged": bool(gamma_glm_result.converged),
+        }
+
+        logger.info(
+            "Weighted cousin Wald: fitted Gamma GLM (intercept-only) on %d pairs "
+            "(eff. n=%.1f). β₀ = %.3f → ĉ = %.3f, "
+            "deviance = %.3f.",
+            calibration_pair_count,
+            effective_sample_size,
+            coefficient_vector[0],
+            float(np.exp(coefficient_vector[0])),
+            float(gamma_glm_result.deviance),
+        )
+        return coefficient_vector, coefficient_of_determination, glm_diagnostics
+    except Exception as exception:  # pragma: no cover - exercised by tests via monkeypatch
+        logger.warning(
+            "Weighted cousin Wald: Gamma GLM failed (%s) — falling back to WLS.",
+            exception,
+        )
+        return None, 0.0, {}
+
+
+def _fit_intercept_only_weighted_log_regression(
+    ratio_values: np.ndarray,
+    weight_values: np.ndarray,
+    calibration_pair_count: int,
+    effective_sample_size: float,
+    global_weighted_ratio: float,
+) -> tuple[np.ndarray | None, float]:
+    """Fit intercept-only weighted log-linear regression as fallback."""
+    log_ratio_values = np.log(ratio_values)
+    square_root_weights = np.sqrt(weight_values)
+
+    design_matrix = np.ones((calibration_pair_count, 1))
+    weighted_design_matrix = design_matrix * square_root_weights[:, np.newaxis]
+    weighted_targets = log_ratio_values * square_root_weights
+
+    try:
+        coefficient_vector, _residuals, _rank, _singular_values = np.linalg.lstsq(
+            weighted_design_matrix,
+            weighted_targets,
+            rcond=None,
+        )
+    except np.linalg.LinAlgError:
+        logger.warning(
+            "Weighted cousin Wald: WLS regression also failed — "
+            "falling back to weighted mean ĉ = %.3f.",
+            global_weighted_ratio,
+        )
+        return None, 0.0
+
+    fitted_log_ratios = design_matrix @ coefficient_vector
+    sum_squared_residuals = float(np.sum(weight_values * (log_ratio_values - fitted_log_ratios) ** 2))
+    weighted_log_ratio_mean = float(np.average(log_ratio_values, weights=weight_values))
+    sum_squared_total = float(np.sum(weight_values * (log_ratio_values - weighted_log_ratio_mean) ** 2))
+    coefficient_of_determination = (
+        1.0 - sum_squared_residuals / sum_squared_total if sum_squared_total > 0 else 0.0
+    )
+
+    logger.info(
+        "Weighted cousin Wald: fitted WLS regression (intercept-only) on %d pairs "
+        "(effective n=%.1f). β₀ = %.3f → ĉ = %.3f, R² = %.3f.",
+        calibration_pair_count,
+        effective_sample_size,
+        coefficient_vector[0],
+        float(np.exp(coefficient_vector[0])),
+        coefficient_of_determination,
+    )
+
+    return np.asarray(coefficient_vector), coefficient_of_determination
+
+
 def _fit_weighted_inflation_model(
     records: List[_WeightedRecord],
 ) -> WeightedCalibrationModel:
@@ -185,21 +363,8 @@ def _fit_weighted_inflation_model(
     max_observed_ratio is computed from NULL-LIKE pairs only (is_null_like=True)
     to prevent focal/signal pairs from inflating the extrapolation clamp.
     """
-    statsmodels_available = bool(_HAS_STATSMODELS and "sm" in globals())
-    global _WARNED_MISSING_STATSMODELS
-    if not statsmodels_available and not _WARNED_MISSING_STATSMODELS:
-        logger.warning(
-            "Weighted cousin Wald: statsmodels is unavailable; "
-            "Gamma GLM calibration disabled. Falling back to weighted log-linear regression."
-        )
-        _WARNED_MISSING_STATSMODELS = True
-
-    # Filter to valid records (finite stat, positive df and ratio)
-    valid_records = [
-        r
-        for r in records
-        if np.isfinite(r.stat) and r.df > 0 and r.stat > 0 and r.n_parent > 0 and r.weight > 0
-    ]
+    statsmodels_available = _resolve_statsmodels_availability()
+    valid_records = _filter_valid_weighted_records(records)
 
     if not valid_records:
         logger.warning(
@@ -214,171 +379,101 @@ def _fit_weighted_inflation_model(
             diagnostics={"statsmodels_available": statsmodels_available},
         )
 
-    ratios = np.array([r.stat / r.df for r in valid_records])
-    weights = np.array([r.weight for r in valid_records])
+    calibration_inputs = _build_weighted_calibration_inputs(valid_records)
 
-    # max_observed_ratio from NULL-LIKE pairs only — prevents signal pairs
-    # from inflating the extrapolation clamp ceiling.
-    null_like_ratios = np.array([r.stat / r.df for r in valid_records if r.is_null_like])
-    max_c = float(np.max(null_like_ratios)) if len(null_like_ratios) > 0 else float(np.max(ratios))
-
-    n_cal = len(ratios)
-    global_c = float(np.average(ratios, weights=weights))  # weighted arithmetic mean
-
-    if n_cal < _MIN_MEDIAN:
+    if calibration_inputs.calibration_pair_count < _MIN_MEDIAN:
         logger.warning(
             "Weighted cousin Wald: only %d valid pairs (need ≥%d) — "
             "raw Wald stats will be used (ĉ = 1.0).",
-            n_cal,
+            calibration_inputs.calibration_pair_count,
             _MIN_MEDIAN,
         )
         return WeightedCalibrationModel(
             method="none",
-            n_calibration=n_cal,
-            global_c_hat=global_c,
-            max_observed_ratio=max_c,
+            n_calibration=calibration_inputs.calibration_pair_count,
+            global_c_hat=calibration_inputs.global_weighted_ratio,
+            max_observed_ratio=calibration_inputs.max_observed_ratio,
             diagnostics={"statsmodels_available": statsmodels_available},
         )
 
-    if n_cal < _MIN_REGRESSION:
+    if calibration_inputs.calibration_pair_count < _MIN_REGRESSION:
         logger.info(
             "Weighted cousin Wald: %d valid pairs (need ≥%d for regression) — "
             "using weighted mean ĉ = %.3f.",
-            n_cal,
+            calibration_inputs.calibration_pair_count,
             _MIN_REGRESSION,
-            global_c,
+            calibration_inputs.global_weighted_ratio,
         )
         return WeightedCalibrationModel(
             method="weighted_median",
-            n_calibration=n_cal,
-            global_c_hat=global_c,
-            max_observed_ratio=max_c,
+            n_calibration=calibration_inputs.calibration_pair_count,
+            global_c_hat=calibration_inputs.global_weighted_ratio,
+            max_observed_ratio=calibration_inputs.max_observed_ratio,
             diagnostics={"statsmodels_available": statsmodels_available},
         )
 
-    # --- Design matrix (intercept-only) ---
-    # Covariates log(BL_sum) and log(n_parent) were removed because they
-    # confound signal strength with post-selection inflation: under H₀
-    # the inflation factor c is constant (independent of n and BL), but
-    # a regression picks up the correlation between larger n → more power
-    # → higher T/k from SIGNAL, not inflation.  Intercept-only Gamma GLM
-    # estimates the weighted mean inflation factor.
-    X = np.ones((n_cal, 1))
-
-    # --- Try Gamma GLM with log link (preferred) ---
-    beta = None
-    r_squared = 0.0
-    method = "weighted_median"  # fallback default
-    glm_diagnostics: Dict = {}
-    glm_attempted = False
+    coefficient_vector = None
+    coefficient_of_determination = 0.0
+    calibration_method = "weighted_median"
+    gamma_glm_diagnostics: Dict = {}
+    gamma_glm_attempted = False
 
     if statsmodels_available:
-        glm_attempted = True
-        try:
-            glm = sm.GLM(
-                ratios,
-                X,
-                family=sm.families.Gamma(link=sm.families.links.Log()),
-                freq_weights=weights,
-            )
-            result = glm.fit()
-            beta = result.params
+        gamma_glm_attempted = True
+        (
+            coefficient_vector,
+            coefficient_of_determination,
+            gamma_glm_diagnostics,
+        ) = _fit_intercept_only_gamma_glm(
+            calibration_inputs.ratio_values,
+            calibration_inputs.weight_values,
+            calibration_inputs.calibration_pair_count,
+            calibration_inputs.effective_sample_size,
+        )
+        if coefficient_vector is not None:
+            calibration_method = "gamma_glm"
 
-            # Deviance-based pseudo-R² (1 - deviance/null_deviance)
-            if result.null_deviance > 0:
-                r_squared = 1.0 - result.deviance / result.null_deviance
-            else:
-                r_squared = 0.0
-
-            glm_diagnostics = {
-                "deviance": float(result.deviance),
-                "null_deviance": float(result.null_deviance),
-                "aic": float(result.aic),
-                "scale": float(result.scale),
-                "converged": bool(result.converged),
-            }
-            method = "gamma_glm"
-
-            logger.info(
-                "Weighted cousin Wald: fitted Gamma GLM (intercept-only) on %d pairs "
-                "(eff. n=%.1f). β₀ = %.3f → ĉ = %.3f, "
-                "deviance = %.3f.",
-                n_cal,
-                float(np.sum(weights) ** 2 / np.sum(weights**2)),
-                beta[0],
-                float(np.exp(beta[0])),
-                float(result.deviance),
-            )
-        except Exception as exc:
-            logger.warning(
-                "Weighted cousin Wald: Gamma GLM failed (%s) — " "falling back to WLS.",
-                exc,
-            )
-            beta = None
-
-    # --- Fallback: Weighted log-linear regression (WLS) ---
-    if beta is None:
-        log_r = np.log(ratios)
-        sqrt_w = np.sqrt(weights)
-        Xw = X * sqrt_w[:, np.newaxis]
-        yw = log_r * sqrt_w
-
-        try:
-            beta, _residuals, _rank, _sv = np.linalg.lstsq(Xw, yw, rcond=None)
-        except np.linalg.LinAlgError:
-            logger.warning(
-                "Weighted cousin Wald: WLS regression also failed — "
-                "falling back to weighted mean ĉ = %.3f.",
-                global_c,
-            )
+    if coefficient_vector is None:
+        coefficient_vector, coefficient_of_determination = _fit_intercept_only_weighted_log_regression(
+            calibration_inputs.ratio_values,
+            calibration_inputs.weight_values,
+            calibration_inputs.calibration_pair_count,
+            calibration_inputs.effective_sample_size,
+            calibration_inputs.global_weighted_ratio,
+        )
+        if coefficient_vector is None:
             return WeightedCalibrationModel(
                 method="weighted_median",
-                n_calibration=n_cal,
-                global_c_hat=global_c,
-                max_observed_ratio=max_c,
+                n_calibration=calibration_inputs.calibration_pair_count,
+                global_c_hat=calibration_inputs.global_weighted_ratio,
+                max_observed_ratio=calibration_inputs.max_observed_ratio,
                 diagnostics={"statsmodels_available": statsmodels_available},
             )
-
-        fitted = X @ beta
-        ss_res = float(np.sum(weights * (log_r - fitted) ** 2))
-        weighted_mean = float(np.average(log_r, weights=weights))
-        ss_tot = float(np.sum(weights * (log_r - weighted_mean) ** 2))
-        r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
-        method = "weighted_regression"
-
-        logger.info(
-            "Weighted cousin Wald: fitted WLS regression (intercept-only) on %d pairs "
-            "(effective n=%.1f). β₀ = %.3f → ĉ = %.3f, R² = %.3f.",
-            n_cal,
-            float(np.sum(weights) ** 2 / np.sum(weights**2)),
-            beta[0],
-            float(np.exp(beta[0])),
-            r_squared,
-        )
+        calibration_method = "weighted_regression"
 
     diagnostics = {
-        "r_squared": r_squared,
-        "beta": beta.tolist() if beta is not None else None,
-        "n_calibration": n_cal,
-        "global_c_hat": float(global_c),
-        "max_observed_ratio": float(max_c),
-        "total_weight": float(np.sum(weights)),
-        "effective_n": float(np.sum(weights) ** 2 / np.sum(weights**2)),
-        "n_null_like": int(len(null_like_ratios)),
+        "r_squared": coefficient_of_determination,
+        "beta": coefficient_vector.tolist() if coefficient_vector is not None else None,
+        "n_calibration": calibration_inputs.calibration_pair_count,
+        "global_c_hat": float(calibration_inputs.global_weighted_ratio),
+        "max_observed_ratio": float(calibration_inputs.max_observed_ratio),
+        "total_weight": float(np.sum(calibration_inputs.weight_values)),
+        "effective_n": calibration_inputs.effective_sample_size,
+        "n_null_like": int(len(calibration_inputs.null_like_ratio_values)),
         "statsmodels_available": statsmodels_available,
-        "gamma_glm_attempted": glm_attempted,
-        **glm_diagnostics,
+        "gamma_glm_attempted": gamma_glm_attempted,
+        **gamma_glm_diagnostics,
     }
 
     # Note: R² gate removed — with intercept-only design, R² is always 0
     # (no covariates to explain variance), which is expected, not a failure.
 
     return WeightedCalibrationModel(
-        method=method,
-        n_calibration=n_cal,
-        global_c_hat=global_c,
-        max_observed_ratio=max_c,
-        beta=np.asarray(beta) if beta is not None else None,
+        method=calibration_method,
+        n_calibration=calibration_inputs.calibration_pair_count,
+        global_c_hat=calibration_inputs.global_weighted_ratio,
+        max_observed_ratio=calibration_inputs.max_observed_ratio,
+        beta=np.asarray(coefficient_vector) if coefficient_vector is not None else None,
         diagnostics=diagnostics,
     )
 
