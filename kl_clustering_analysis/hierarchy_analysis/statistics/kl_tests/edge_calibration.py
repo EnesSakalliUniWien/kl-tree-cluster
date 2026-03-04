@@ -88,7 +88,7 @@ class _EdgeRecord:
     child_id: str
     parent_id: str
     stat: float  # raw Wald T
-    df: float  # projection dimension k
+    degrees_of_freedom: float  # projection dimension k
     pval: float  # raw Wald p
     weight: float  # min(n_L, n_R) / n_parent, purely structural [0, 0.5]
     is_null_like: bool  # balanced split (weight > 0.3) used for max_c
@@ -160,7 +160,12 @@ def _filter_valid_edge_records(records: List[_EdgeRecord]) -> List[_EdgeRecord]:
     return [
         record
         for record in records
-        if np.isfinite(record.stat) and record.df > 0 and record.stat > 0 and record.weight > 0
+        if (
+            np.isfinite(record.stat)
+            and record.degrees_of_freedom > 0
+            and record.stat > 0
+            and record.weight > 0
+        )
     ]
 
 
@@ -213,10 +218,13 @@ def _build_edge_calibration_inputs(
     excluded_sibling_different_count: int,
 ) -> _EdgeCalibrationInputs:
     """Build numeric inputs and summaries used by calibration model fitting."""
-    ratio_values = np.array([record.stat / record.df for record in valid_records], dtype=float)
+    ratio_values = np.array(
+        [record.stat / record.degrees_of_freedom for record in valid_records],
+        dtype=float,
+    )
     weight_values = np.array([record.weight for record in valid_records], dtype=float)
     null_like_ratio_values = np.array(
-        [record.stat / record.df for record in valid_records if record.is_null_like]
+        [record.stat / record.degrees_of_freedom for record in valid_records if record.is_null_like]
     )
 
     if len(null_like_ratio_values) > 0:
@@ -562,7 +570,7 @@ def _build_edge_records_for_calibration(
                 child_id=raw_edge_data.child_ids[edge_index],
                 parent_id=parent_identifier,
                 stat=float(raw_test_statistic),
-                df=float(raw_degrees_of_freedom),
+                degrees_of_freedom=float(raw_degrees_of_freedom),
                 pval=float(raw_edge_data.raw_p_values[edge_index]),
                 weight=split_balance_weight,
                 is_null_like=is_null_like_split,
@@ -662,7 +670,7 @@ def _attach_edge_calibration_metadata(
 
 def calibrate_edges_from_sibling_neighborhood(
     tree: nx.DiGraph,
-    results_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     alpha: float = 0.05,
     fdr_method: str = "tree_bh",
 ) -> pd.DataFrame:
@@ -684,7 +692,7 @@ def calibrate_edges_from_sibling_neighborhood(
     ----------
     tree
         Directed hierarchy.
-    results_df
+    annotations_df
         DataFrame indexed by node id, with Gate 2 columns populated.
     alpha
         Significance level for re-BH correction.
@@ -696,7 +704,7 @@ def calibrate_edges_from_sibling_neighborhood(
     pd.DataFrame
         Updated DataFrame with calibrated edge statistics.
     """
-    results_dataframe = results_df
+    results_dataframe = annotations_df
     raw_edge_data = _extract_raw_edge_calibration_data(results_dataframe)
     if raw_edge_data is None:
         return results_dataframe

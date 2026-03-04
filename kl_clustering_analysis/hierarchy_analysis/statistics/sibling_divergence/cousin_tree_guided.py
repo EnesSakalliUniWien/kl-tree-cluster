@@ -268,7 +268,7 @@ def _compute_local_c_hat(
 
 def _collect_all_pairs(
     tree: nx.DiGraph,
-    nodes_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     mean_bl: float | None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
@@ -279,7 +279,7 @@ def _collect_all_pairs(
     """
     return collect_sibling_pair_records(
         tree,
-        nodes_df,
+        annotations_df,
         mean_bl,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
@@ -318,7 +318,7 @@ def _deflate_and_test(
 
 
 def _apply_results(
-    df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     focal_parents: List[str],
     focal_results: List[Tuple[float, float, float]],
     calibration_methods: List[str],
@@ -327,7 +327,7 @@ def _apply_results(
 ) -> pd.DataFrame:
     """Apply deflated results with BH correction to DataFrame."""
     return apply_calibrated_results(
-        df,
+        annotations_df,
         focal_parents,
         focal_results,
         calibration_methods,
@@ -345,7 +345,7 @@ def _apply_results(
 
 def annotate_sibling_divergence_tree_guided(
     tree: nx.DiGraph,
-    nodes_statistics_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     spectral_dims: dict[str, int] | None = None,
@@ -365,7 +365,7 @@ def annotate_sibling_divergence_tree_guided(
     ----------
     tree : nx.DiGraph
         Hierarchical tree with 'distribution' attribute on nodes.
-    nodes_statistics_dataframe : pd.DataFrame
+    annotations_df : pd.DataFrame
         Must contain 'Child_Parent_Divergence_Significant' column.
     significance_level_alpha : float
         FDR level for BH correction.
@@ -376,19 +376,25 @@ def annotate_sibling_divergence_tree_guided(
         Updated with sibling divergence columns (same schema as standard test)
         plus ``Sibling_Test_Method`` column indicating calibration source.
     """
-    df = init_sibling_annotation_df(nodes_statistics_dataframe)
+    annotations_df = init_sibling_annotation_df(annotations_df)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute ALL raw Wald stats
-    records, non_binary = _collect_all_pairs(tree, df, mean_bl, spectral_dims, pca_projections)
+    records, non_binary = _collect_all_pairs(
+        tree,
+        annotations_df,
+        mean_bl,
+        spectral_dims,
+        pca_projections,
+    )
 
     # Mark non-binary/leaf nodes as skipped (never testable)
-    mark_non_binary_as_skipped(df, non_binary, logger=logger)
+    mark_non_binary_as_skipped(annotations_df, non_binary, logger=logger)
 
-    early_df = early_return_if_no_records(df, records)
-    if early_df is not None:
-        return early_df
+    early_annotations_df = early_return_if_no_records(annotations_df, records)
+    if early_annotations_df is not None:
+        return early_annotations_df
 
     n_null, n_focal = count_null_focal_pairs(records)
     logger.info(
@@ -420,7 +426,7 @@ def annotate_sibling_divergence_tree_guided(
         )
 
     # Pass 3: deflate focals using tree-guided search
-    focal_parents, focal_results, cal_methods = _deflate_and_test(
+    focal_parents, focal_results, calibration_methods = _deflate_and_test(
         records,
         tree,
         null_index,
@@ -430,24 +436,36 @@ def annotate_sibling_divergence_tree_guided(
     # Null-like parents are skipped (they are noise splits)
     skipped_parents = [r.parent for r in records if r.is_null_like]
 
-    df = _apply_results(
-        df,
+    annotations_df = _apply_results(
+        annotations_df,
         focal_parents,
         focal_results,
-        cal_methods,
+        calibration_methods,
         skipped_parents,
         significance_level_alpha,
     )
 
     # Audit metadata
     # Count how many focal pairs used local-up, local-down, global, or none
-    n_local_up = sum(1 for m in cal_methods if m.startswith("tree_guided_local_up"))
-    n_local_down = sum(1 for m in cal_methods if m == "tree_guided_local_down")
-    n_global_fallback = sum(1 for m in cal_methods if m == "tree_guided_global_median")
-    n_none = sum(1 for m in cal_methods if m == "tree_guided_none")
-    n_invalid = sum(1 for m in cal_methods if m == "invalid")
+    n_local_up = sum(
+        1 for calibration_method in calibration_methods if calibration_method.startswith("tree_guided_local_up")
+    )
+    n_local_down = sum(
+        1 for calibration_method in calibration_methods if calibration_method == "tree_guided_local_down"
+    )
+    n_global_fallback = sum(
+        1
+        for calibration_method in calibration_methods
+        if calibration_method == "tree_guided_global_median"
+    )
+    n_none = sum(
+        1 for calibration_method in calibration_methods if calibration_method == "tree_guided_none"
+    )
+    n_invalid = sum(
+        1 for calibration_method in calibration_methods if calibration_method == "invalid"
+    )
 
-    df.attrs["sibling_divergence_audit"] = {
+    annotations_df.attrs["sibling_divergence_audit"] = {
         "total_pairs": len(records),
         "null_like_pairs": n_null,
         "focal_pairs": n_focal,
@@ -461,7 +479,7 @@ def annotate_sibling_divergence_tree_guided(
         "test_method": "cousin_tree_guided",
     }
 
-    return df
+    return annotations_df
 
 
 __all__ = ["annotate_sibling_divergence_tree_guided"]

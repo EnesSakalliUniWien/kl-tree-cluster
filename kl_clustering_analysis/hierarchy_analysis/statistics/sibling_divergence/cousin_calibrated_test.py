@@ -265,7 +265,7 @@ def cousin_ftest(
 
 def _collect_test_arguments_cousin(
     tree: nx.DiGraph,
-    nodes_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
 ) -> Tuple[List[str], List[Tuple[str, str]], List[str], List[str]]:
     """Collect sibling pairs eligible for testing.
 
@@ -273,7 +273,7 @@ def _collect_test_arguments_cousin(
     """
     return collect_significant_sibling_pairs(
         tree,
-        nodes_df,
+        annotations_df,
         get_binary_children=_get_binary_children,
         either_child_significant=_either_child_significant,
     )
@@ -316,7 +316,7 @@ def _run_cousin_tests(
 
 
 def _apply_results_cousin(
-    df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     parents: List[str],
     results: List[Tuple[float, float, float]],
     ftest_flags: List[bool],
@@ -325,7 +325,7 @@ def _apply_results_cousin(
     """Apply test results with BH correction to dataframe."""
     method_labels = ["cousin_ftest" if f else "wald_fallback" for f in ftest_flags]
     return apply_sibling_bh_results(
-        df,
+        annotations_df,
         parents,
         results,
         alpha,
@@ -342,7 +342,7 @@ def _apply_results_cousin(
 
 def annotate_sibling_divergence_cousin(
     tree: nx.DiGraph,
-    nodes_statistics_dataframe: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     spectral_dims: dict[str, int] | None = None,
@@ -358,7 +358,7 @@ def annotate_sibling_divergence_cousin(
     ----------
     tree : nx.DiGraph
         Hierarchical tree with 'distribution' attribute on nodes.
-    nodes_statistics_dataframe : pd.DataFrame
+    annotations_df : pd.DataFrame
         Must contain 'Child_Parent_Divergence_Significant' column.
     significance_level_alpha : float
         FDR level for BH correction.
@@ -370,25 +370,25 @@ def annotate_sibling_divergence_cousin(
         plus ``Sibling_Test_Method`` column indicating "cousin_ftest" or
         "wald_fallback" per node.
     """
-    if len(nodes_statistics_dataframe) == 0:
+    if len(annotations_df) == 0:
         raise ValueError("Empty dataframe")
 
-    df = nodes_statistics_dataframe.copy()
-    df = initialize_sibling_divergence_columns(df)
+    annotations_df = annotations_df.copy()
+    annotations_df = initialize_sibling_divergence_columns(annotations_df)
 
-    parents, child_pairs, skipped, non_binary = _collect_test_arguments_cousin(tree, df)
+    parents, child_pairs, skipped, non_binary = _collect_test_arguments_cousin(tree, annotations_df)
 
     # Mark non-binary/leaf nodes as skipped (never testable)
     if non_binary:
-        df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
+        annotations_df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
         logger.debug("Non-binary/leaf nodes marked as skipped: %d", len(non_binary))
 
     if not parents:
         warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
-        return df
+        return annotations_df
 
     if skipped:
-        df.loc[skipped, "Sibling_Divergence_Skipped"] = True
+        annotations_df.loc[skipped, "Sibling_Divergence_Skipped"] = True
         logger.debug("Skipped %d nodes (no child-parent signal)", len(skipped))
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
@@ -411,13 +411,19 @@ def annotate_sibling_divergence_cousin(
         n_fallback,
     )
 
-    df = _apply_results_cousin(df, parents, results, ftest_flags, significance_level_alpha)
+    annotations_df = _apply_results_cousin(
+        annotations_df,
+        parents,
+        results,
+        ftest_flags,
+        significance_level_alpha,
+    )
 
     ftest_count = sum(ftest_flags)
     fallback_count = len(ftest_flags) - ftest_count
-    invalid_count = int(df.loc[parents, "Sibling_Divergence_Invalid"].sum())
+    invalid_count = int(annotations_df.loc[parents, "Sibling_Divergence_Invalid"].sum())
 
-    df.attrs["sibling_divergence_audit"] = {
+    annotations_df.attrs["sibling_divergence_audit"] = {
         "total_tests": len(parents),
         "invalid_tests": invalid_count,
         "conservative_path_tests": invalid_count,
@@ -426,7 +432,7 @@ def annotate_sibling_divergence_cousin(
         "test_method": "cousin_ftest",
     }
 
-    return df
+    return annotations_df
 
 
 __all__ = ["annotate_sibling_divergence_cousin", "cousin_ftest"]

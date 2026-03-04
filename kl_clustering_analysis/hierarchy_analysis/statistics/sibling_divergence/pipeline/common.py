@@ -16,18 +16,21 @@ from ...multiple_testing import benjamini_hochberg_correction
 
 def collect_significant_sibling_pairs(
     tree: nx.DiGraph,
-    nodes_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     get_binary_children: Callable[[nx.DiGraph, str], tuple[str, str] | None],
     either_child_significant: Callable[[str, str, dict[str, bool]], bool],
 ) -> tuple[list[str], list[tuple[str, str]], list[str], list[str]]:
     """Collect binary-child parent nodes and flag skipped/non-binary nodes."""
-    if "Child_Parent_Divergence_Significant" not in nodes_df.columns:
+    if "Child_Parent_Divergence_Significant" not in annotations_df.columns:
         raise ValueError(
             "Missing 'Child_Parent_Divergence_Significant' column. Run child-parent test first."
         )
 
-    sig_map = extract_bool_column_dict(nodes_df, "Child_Parent_Divergence_Significant")
+    edge_significance_by_node = extract_bool_column_dict(
+        annotations_df,
+        "Child_Parent_Divergence_Significant",
+    )
 
     parents: list[str] = []
     child_pairs: list[tuple[str, str]] = []
@@ -41,7 +44,7 @@ def collect_significant_sibling_pairs(
             continue
 
         left, right = children
-        if not either_child_significant(left, right, sig_map):
+        if not either_child_significant(left, right, edge_significance_by_node):
             skipped.append(parent)
             continue
 
@@ -52,7 +55,7 @@ def collect_significant_sibling_pairs(
 
 
 def apply_sibling_bh_results(
-    df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     parents: list[str],
     results: list[tuple[float, float, float]],
     alpha: float,
@@ -63,7 +66,7 @@ def apply_sibling_bh_results(
 ) -> pd.DataFrame:
     """Apply sibling test results and BH correction onto the dataframe."""
     if not results:
-        return df
+        return annotations_df
 
     stats = np.array([r[0] for r in results])
     dfs = np.array([r[1] for r in results])
@@ -85,18 +88,18 @@ def apply_sibling_bh_results(
             n_invalid,
         )
 
-    df.loc[parents, "Sibling_Test_Statistic"] = stats
-    df.loc[parents, "Sibling_Degrees_of_Freedom"] = dfs
-    df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
-    df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
-    df.loc[parents, "Sibling_Divergence_Invalid"] = invalid_mask
-    df.loc[parents, "Sibling_BH_Different"] = reject
-    df.loc[parents, "Sibling_BH_Same"] = ~reject
+    annotations_df.loc[parents, "Sibling_Test_Statistic"] = stats
+    annotations_df.loc[parents, "Sibling_Degrees_of_Freedom"] = dfs
+    annotations_df.loc[parents, "Sibling_Divergence_P_Value"] = pvals
+    annotations_df.loc[parents, "Sibling_Divergence_P_Value_Corrected"] = pvals_adj
+    annotations_df.loc[parents, "Sibling_Divergence_Invalid"] = invalid_mask
+    annotations_df.loc[parents, "Sibling_BH_Different"] = reject
+    annotations_df.loc[parents, "Sibling_BH_Same"] = ~reject
 
     if method_labels is not None:
-        df.loc[parents, "Sibling_Test_Method"] = method_labels
+        annotations_df.loc[parents, "Sibling_Test_Method"] = method_labels
 
-    return df
+    return annotations_df
 
 
 __all__ = [

@@ -16,7 +16,7 @@ from .column_contracts import (
 
 def annotate_sibling_gate(
     tree,
-    results_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     sibling_method: str = config.SIBLING_TEST_METHOD,
@@ -29,7 +29,7 @@ def annotate_sibling_gate(
     calibrator = resolve_sibling_calibrator(resolved_method_name)
     annotated_df = calibrator(
         tree,
-        results_df,
+        annotations_df,
         significance_level_alpha=significance_level_alpha,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,

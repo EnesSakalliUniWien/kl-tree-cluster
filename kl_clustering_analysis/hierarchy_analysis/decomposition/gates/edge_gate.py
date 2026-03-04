@@ -16,7 +16,7 @@ from .column_contracts import (
 
 def annotate_edge_gate(
     tree,
-    results_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.ALPHA_LOCAL,
     leaf_data: pd.DataFrame | None = None,
@@ -27,7 +27,7 @@ def annotate_edge_gate(
     """Run Gate 2 (edge divergence) and return typed legacy-compatible output."""
     annotated_df = annotate_child_parent_divergence(
         tree,
-        results_df,
+        annotations_df,
         significance_level_alpha=significance_level_alpha,
         fdr_method=fdr_method,
         leaf_data=leaf_data,

@@ -17,7 +17,7 @@ from .sibling_gate import annotate_sibling_gate
 
 def run_gate_annotation_pipeline(
     tree,
-    results_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     alpha_local: float = config.ALPHA_LOCAL,
     sibling_alpha: float = config.SIBLING_ALPHA,
@@ -37,7 +37,7 @@ def run_gate_annotation_pipeline(
 
     edge_bundle = annotate_edge_gate(
         tree,
-        results_df,
+        annotations_df,
         significance_level_alpha=alpha_local,
         leaf_data=leaf_data,
         spectral_method=resolved_spectral_method,
