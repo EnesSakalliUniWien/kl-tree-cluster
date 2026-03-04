@@ -11,6 +11,28 @@ import pandas as pd
 from .enums import ProjectionBasisKind, SiblingCalibrationMethod, SpectralKMethod
 
 
+LEGACY_EDGE_COLUMNS: tuple[str, ...] = (
+    "Child_Parent_Divergence_P_Value",
+    "Child_Parent_Divergence_P_Value_BH",
+    "Child_Parent_Divergence_Significant",
+    "Child_Parent_Divergence_df",
+    "Child_Parent_Divergence_Invalid",
+)
+
+LEGACY_SIBLING_COLUMNS: tuple[str, ...] = (
+    "Sibling_Divergence_Skipped",
+    "Sibling_Test_Statistic",
+    "Sibling_Degrees_of_Freedom",
+    "Sibling_Divergence_P_Value",
+    "Sibling_Divergence_P_Value_Corrected",
+    "Sibling_Divergence_Invalid",
+    "Sibling_BH_Different",
+    "Sibling_BH_Same",
+)
+
+LEGACY_SIBLING_OPTIONAL_COLUMNS: tuple[str, ...] = ("Sibling_Test_Method",)
+
+
 @dataclass(frozen=True)
 class DecompositionRunConfig:
     """Top-level immutable run configuration for decomposition orchestration."""
@@ -51,5 +73,6 @@ class GateAnnotationBundle:
     annotated_df: pd.DataFrame
     local_gate_column: str = "Child_Parent_Divergence_Significant"
     sibling_gate_column: str = "Sibling_BH_Different"
+    local_gate_columns: tuple[str, ...] = LEGACY_EDGE_COLUMNS
+    sibling_gate_columns: tuple[str, ...] = LEGACY_SIBLING_COLUMNS
     metadata: dict[str, Any] = field(default_factory=dict)
-
