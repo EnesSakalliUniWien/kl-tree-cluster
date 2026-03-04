@@ -104,4 +104,3 @@ __all__ = [
     "_PROJECTION_CACHE",
     "_RESOLVED_MIN_K",
 ]
-

@@ -58,6 +58,7 @@ from ...decomposition.methods.k_estimators import (
     estimate_k_effective_rank,
     estimate_k_marchenko_pastur,
 )
+from .spectral_types import NodeSpectralResult, NodeSpectralTask
 from .tree_helpers import is_leaf, precompute_descendants
 
 logger = logging.getLogger(__name__)
@@ -95,16 +96,14 @@ def _get_n_jobs(n_tasks: int) -> int:
 
 
 def _process_node(
-    node_id,
-    row_indices,
+    task: NodeSpectralTask,
     X,
-    internal_vecs,
     method,
     min_k,
     d,
     need_eigh,
 ):
-    """Eigendecompose one node and return (node_id, k, proj, ev).
+    """Eigendecompose one node and return a typed result payload.
 
     Data is sliced lazily here (not pre-materialised by the caller) so that
     only O(n_threads × n_desc_max × d) bytes are live at any moment, instead
@@ -112,16 +111,21 @@ def _process_node(
 
     Parameters
     ----------
-    row_indices
-        Row indices into *X* for the descendant leaves of this node.
+    task
+        Per-node task payload with descendants and optional internal vectors.
     X
         Full data matrix shared across threads (read-only view).
-    internal_vecs
-        Optional list of pre-extracted internal-node distribution vectors
-        (each shape (d,)).  ``None`` or empty list when include_internal=False.
     """
+    row_indices = task.row_indices
+    internal_vecs = task.internal_distributions
+
     if len(row_indices) < 2:
-        return (node_id, max(min_k, 1), None, None)
+        return NodeSpectralResult(
+            node_id=task.node_id,
+            projection_dimension=max(min_k, 1),
+            projection_matrix=None,
+            eigenvalues=None,
+        )
 
     # Slice on-demand: only this thread's copy is live during the call.
     leaf_rows = X[row_indices, :]
@@ -134,11 +138,21 @@ def _process_node(
     if method == "active_features":
         k = estimate_k_active_features(data_sub, min_k=min_k)
         k = min(k, d)
-        return (node_id, k, None, None)
+        return NodeSpectralResult(
+            node_id=task.node_id,
+            projection_dimension=k,
+            projection_matrix=None,
+            eigenvalues=None,
+        )
 
     eig = eigendecompose_correlation(data_sub, need_eigh=need_eigh)
     if eig is None:
-        return (node_id, max(min_k, 1), None, None)
+        return NodeSpectralResult(
+            node_id=task.node_id,
+            projection_dimension=max(min_k, 1),
+            projection_matrix=None,
+            eigenvalues=None,
+        )
 
     if method == "effective_rank":
         k = estimate_k_effective_rank(
@@ -160,7 +174,12 @@ def _process_node(
         if proj is None or ev is None:
             proj, ev = None, None
 
-    return (node_id, k, proj, ev)
+    return NodeSpectralResult(
+        node_id=task.node_id,
+        projection_dimension=k,
+        projection_matrix=proj,
+        eigenvalues=ev,
+    )
 
 
 # =====================================================================
@@ -299,42 +318,49 @@ def compute_spectral_decomposition(
     # Pre-extract internal-node distribution vectors (small: just d-dimensional
     # vectors, not n×d matrices).  Empty when include_internal=False (default).
     # This avoids passing the tree object into workers.
-    node_internal_vecs: Dict[str, list] = {}
+    node_internal_vecs: Dict[str, tuple[np.ndarray, ...]] = {}
     if include_internal:
         for node_id in internal_nodes:
-            vecs = []
+            vecs: list[np.ndarray] = []
             for inode in desc_internal.get(node_id, []):
                 dist = tree.nodes[inode].get("distribution")
                 if dist is not None:
                     dist_arr = np.asarray(dist, dtype=np.float64)
                     if dist_arr.shape == (d,):
                         vecs.append(dist_arr)
-            node_internal_vecs[node_id] = vecs
+            node_internal_vecs[node_id] = tuple(vecs)
+
+    spectral_tasks = [
+        NodeSpectralTask(
+            node_id=node_id,
+            row_indices=tuple(desc_indices.get(node_id, [])),
+            internal_distributions=node_internal_vecs.get(node_id, ()),
+        )
+        for node_id in internal_nodes
+    ]
 
     # --- Parallel eigendecomposition via joblib ---
     # Data is sliced lazily inside each worker (not pre-materialised here).
     # With prefer="threads" every worker shares the same X array (no copy).
     # Peak RAM is O(n_jobs × n_desc_max × d) instead of O(n_nodes × n_desc_avg × d).
-    n_jobs = _get_n_jobs(len(internal_nodes))
+    n_jobs = _get_n_jobs(len(spectral_tasks))
     results = Parallel(n_jobs=n_jobs, prefer="threads")(
         delayed(_process_node)(
-            nid,
-            desc_indices.get(nid, []),
+            task,
             X,
-            node_internal_vecs.get(nid, []),
             method,
             min_k,
             d,
             need_eigh,
         )
-        for nid in internal_nodes
+        for task in spectral_tasks
     )
 
-    for node_id, k, proj, ev in results:
-        dims[node_id] = k
-        if proj is not None and ev is not None:
-            projs[node_id] = proj
-            eig_vals[node_id] = ev
+    for node_result in results:
+        dims[node_result.node_id] = node_result.projection_dimension
+        if node_result.projection_matrix is not None and node_result.eigenvalues is not None:
+            projs[node_result.node_id] = node_result.projection_matrix
+            eig_vals[node_result.node_id] = node_result.eigenvalues
 
     elapsed = time.perf_counter() - t0
 
