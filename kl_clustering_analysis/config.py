@@ -9,7 +9,7 @@ from typing import Literal
 # Default significance level (alpha) for sibling-divergence gating in clustering.
 # This is intentionally conservative to reduce over-merging at high levels
 # of the tree.
-SIBLING_ALPHA: float = 0.001
+SIBLING_ALPHA: float = 0.01
 
 # --- Decomposition Parameters ---
 

@@ -6,8 +6,8 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.methods.k_estimator
     estimate_k_effective_rank,
     estimate_k_marchenko_pastur,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.eigen_decomposition import (
-    estimate_spectral_k,
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_backend import (
+    estimate_spectral_k_backend as estimate_spectral_k,
 )
 
 
@@ -54,4 +54,3 @@ def test_marchenko_pastur_k_parity_fixed_fixture() -> None:
         minimum_projection_dimension=minimum_projection_dimension,
     )
     assert k_legacy == k_method
-

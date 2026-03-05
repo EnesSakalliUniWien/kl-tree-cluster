@@ -11,7 +11,6 @@ This package provides functions for hierarchical clustering analysis including:
 from kl_clustering_analysis.information_metrics import (
     calculate_kl_divergence_vector,
 )
-from .gate_annotations import annotate_edge_gate, annotate_sibling_gate, compute_gate_annotations
 from .tree_decomposition import TreeDecomposition
 from .statistics import (
     annotate_child_parent_divergence,
@@ -27,7 +26,4 @@ __all__ = [
     "kl_divergence_chi_square_test",
     "annotate_child_parent_divergence",
     "annotate_sibling_divergence",
-    "compute_gate_annotations",
-    "annotate_edge_gate",
-    "annotate_sibling_gate",
 ]

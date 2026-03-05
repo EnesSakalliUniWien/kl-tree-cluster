@@ -4,11 +4,11 @@ import networkx as nx
 import numpy as np
 
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
+    derive_projection_seed_backend as derive_projection_seed,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
     _compute_p_values_via_projection,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
-    derive_projection_seed,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     _run_tests,

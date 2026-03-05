@@ -7,7 +7,7 @@ single-vector projected Wald test.
 
 Using the **correlation matrix** (not the covariance) is essential because
 the projected Wald z-vector is standardised per-feature:
-    z_i = (θ̂_child_i − θ̂_parent_i) / √Var_i
+    z_i = (θ̂_child_i - θ̂_parent_i) / √Var_i
 so Cov(z) under H₀ equals the Pearson correlation matrix C of the data.
 Eigendecomposing C and whitening by its eigenvalues gives an exact χ²(k)
 null: T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k).
@@ -271,54 +271,6 @@ def _aggregate_spectral_results(
             pca_eigenvalues[node_result.node_id] = node_result.eigenvalues
 
 
-# =====================================================================
-# Per-node computation
-# =====================================================================
-
-
-def compute_node_spectral_dimensions(
-    tree: nx.DiGraph,
-    leaf_data: pd.DataFrame,
-    *,
-    method: str = "effective_rank",
-    minimum_projection_dimension: int = 1,
-) -> Dict[str, int]:
-    """Compute per-node projection dimension via eigendecomposition.
-
-    Thin wrapper around ``compute_spectral_decomposition`` that returns
-    only the dimension dict. Use ``compute_spectral_decomposition`` directly
-    if you also need PCA projections (avoids a redundant eigendecomposition).
-    """
-    spectral_dims, _, _ = compute_spectral_decomposition(
-        tree,
-        leaf_data,
-        method=method,
-        minimum_projection_dimension=minimum_projection_dimension,
-        compute_projections=False,
-    )
-    return spectral_dims
-
-
-def compute_node_pca_projections(
-    tree: nx.DiGraph,
-    leaf_data: pd.DataFrame,
-    spectral_dims: Dict[str, int],
-) -> Dict[str, np.ndarray]:
-    """Compute PCA projection matrices for each internal node.
-
-    Thin wrapper — prefer ``compute_spectral_decomposition`` with
-    ``compute_projections=True`` to avoid a redundant eigendecomposition.
-    """
-    _, pca_projections, _ = compute_spectral_decomposition(
-        tree,
-        leaf_data,
-        method="effective_rank",
-        minimum_projection_dimension=1,
-        compute_projections=True,
-    )
-    return pca_projections
-
-
 def compute_spectral_decomposition(
     tree: nx.DiGraph,
     leaf_data: pd.DataFrame,
@@ -429,6 +381,7 @@ def compute_spectral_decomposition(
         feature_count=feature_count,
         compute_eigendecomposition_outputs=compute_eigendecomposition_outputs,
     )
+
     _aggregate_spectral_results(
         spectral_results,
         spectral_dims=spectral_dims,
@@ -444,6 +397,7 @@ def compute_spectral_decomposition(
         for node_id, projection_dimension in spectral_dims.items()
         if not is_leaf(tree, node_id)
     ]
+
     if internal_projection_dimensions:
         logger.info(
             "Spectral dimensions (%s): median=%d, mean=%.1f, min=%d, max=%d "
@@ -472,7 +426,5 @@ __all__ = [
     "effective_rank",
     "marchenko_pastur_signal_count",
     "count_active_features",
-    "compute_node_spectral_dimensions",
-    "compute_node_pca_projections",
     "compute_spectral_decomposition",
 ]

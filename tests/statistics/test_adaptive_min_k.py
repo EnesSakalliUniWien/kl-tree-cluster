@@ -1,7 +1,7 @@
 """Tests for data-adaptive PROJECTION_MINIMUM_DIMENSION estimation.
 
 Verifies that the effective-rank-based floor estimation in
-``random_projection.py`` returns sensible values for different data
+the projection backend returns sensible values for different data
 characteristics, and that the resolution/caching pipeline works correctly.
 """
 
@@ -11,13 +11,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection import random_projection
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
-    compute_projection_dimension,
-    estimate_min_projection_dimension,
-    resolve_minimum_projection_dimension,
-)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
+    compute_projection_dimension_backend as compute_projection_dimension,
+    estimate_min_projection_dimension_backend as estimate_min_projection_dimension,
+    get_resolved_minimum_projection_dimension_backend,
+    resolve_minimum_projection_dimension_backend as resolve_minimum_projection_dimension,
     set_resolved_minimum_projection_dimension_backend,
 )
 
@@ -29,10 +27,8 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 def _reset_resolved_cache():
     """Reset module-level _RESOLVED_MINIMUM_PROJECTION_DIMENSION before and after each test."""
     set_resolved_minimum_projection_dimension_backend(None)
-    random_projection._RESOLVED_MINIMUM_PROJECTION_DIMENSION = None
     yield
     set_resolved_minimum_projection_dimension_backend(None)
-    random_projection._RESOLVED_MINIMUM_PROJECTION_DIMENSION = None
 
 
 def _make_low_rank_data(n: int = 50, d: int = 200, true_rank: int = 3, seed: int = 42):
@@ -148,14 +144,14 @@ class TestResolveMinK:
 
     def test_resolved_value_cached(self):
         """resolve_minimum_projection_dimension should populate _RESOLVED_MINIMUM_PROJECTION_DIMENSION."""
-        assert random_projection._RESOLVED_MINIMUM_PROJECTION_DIMENSION is None
+        assert get_resolved_minimum_projection_dimension_backend() is None
         data = _make_low_rank_data()
         result = resolve_minimum_projection_dimension("auto", leaf_data=data)
-        assert random_projection._RESOLVED_MINIMUM_PROJECTION_DIMENSION == result
+        assert get_resolved_minimum_projection_dimension_backend() == result
 
     def test_int_also_caches(self):
         resolve_minimum_projection_dimension(7)
-        assert random_projection._RESOLVED_MINIMUM_PROJECTION_DIMENSION == 7
+        assert get_resolved_minimum_projection_dimension_backend() == 7
 
 
 # -----------------------------------------------------------------------

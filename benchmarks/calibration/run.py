@@ -35,10 +35,10 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (
     tree_bh_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
-    compute_projection_dimension,
-    derive_projection_seed,
-    generate_projection_matrix,
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
+    compute_projection_dimension_backend as compute_projection_dimension,
+    derive_projection_seed_backend as derive_projection_seed,
+    generate_projection_matrix_backend as generate_projection_matrix,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     sibling_divergence_test,

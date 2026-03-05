@@ -8,10 +8,13 @@ import pytest
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import GateAnnotationBundle
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate import annotate_edge_gate
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.gate_annotations import compute_gate_annotations
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.sibling_gate import (
+    annotate_sibling_gate,
+)
 
 
 def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
@@ -46,21 +49,32 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
 
 
 @pytest.mark.parametrize("sibling_method", ["wald", "cousin_weighted_wald"])
-def test_gate_adapter_pipeline_matches_legacy_annotations(monkeypatch, sibling_method: str) -> None:
+def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
+    monkeypatch,
+    sibling_method: str,
+) -> None:
     tree, base_df = _build_small_binary_tree()
 
     monkeypatch.setattr(config, "SIBLING_TEST_METHOD", sibling_method)
     monkeypatch.setattr(config, "EDGE_CALIBRATION", False)
     monkeypatch.setattr(config, "PROJECTION_RANDOM_SEED", 123)
 
-    legacy_df = compute_gate_annotations(
+    edge_bundle = annotate_edge_gate(
         tree,
         base_df.copy(),
-        alpha_local=0.01,
-        sibling_alpha=0.01,
+        significance_level_alpha=0.01,
         spectral_method=None,
         minimum_projection_dimension=4,
+        fdr_method="tree_bh",
     )
+    sequential_bundle = annotate_sibling_gate(
+        tree,
+        edge_bundle.annotated_df,
+        significance_level_alpha=0.01,
+        sibling_method=sibling_method,
+        minimum_projection_dimension=4,
+    )
+
     bundle = run_gate_annotation_pipeline(
         tree,
         base_df.copy(),
@@ -74,10 +88,11 @@ def test_gate_adapter_pipeline_matches_legacy_annotations(monkeypatch, sibling_m
 
     assert isinstance(bundle, GateAnnotationBundle)
     adapter_df = bundle.annotated_df
+    sequential_df = sequential_bundle.annotated_df
 
-    legacy_gate_cols = [
+    sequential_gate_cols = [
         col
-        for col in legacy_df.columns
+        for col in sequential_df.columns
         if col.startswith("Child_Parent_") or col.startswith("Sibling_")
     ]
     adapter_gate_cols = [
@@ -86,59 +101,20 @@ def test_gate_adapter_pipeline_matches_legacy_annotations(monkeypatch, sibling_m
         if col.startswith("Child_Parent_") or col.startswith("Sibling_")
     ]
 
-    assert adapter_gate_cols == legacy_gate_cols
-    pdt.assert_frame_equal(adapter_df[legacy_gate_cols], legacy_df[legacy_gate_cols], check_dtype=False)
+    assert adapter_gate_cols == sequential_gate_cols
+    pdt.assert_frame_equal(
+        adapter_df[sequential_gate_cols],
+        sequential_df[sequential_gate_cols],
+        check_dtype=False,
+    )
 
     assert bundle.local_gate_column == "Child_Parent_Divergence_Significant"
     assert bundle.sibling_gate_column == "Sibling_BH_Different"
     assert bundle.local_gate_columns == tuple(
-        col for col in legacy_gate_cols if col.startswith("Child_Parent_")
+        col for col in sequential_gate_cols if col.startswith("Child_Parent_")
     )
-    assert bundle.sibling_gate_columns == tuple(col for col in legacy_gate_cols if col.startswith("Sibling_"))
+    assert bundle.sibling_gate_columns == tuple(
+        col for col in sequential_gate_cols if col.startswith("Sibling_")
+    )
     assert bundle.metadata["column_names"]["edge"] == list(bundle.local_gate_columns)
     assert bundle.metadata["column_names"]["sibling"] == list(bundle.sibling_gate_columns)
-
-
-def test_compute_gate_annotations_delegates_to_orchestrator(monkeypatch) -> None:
-    tree, base_df = _build_small_binary_tree()
-    sentinel_df = base_df.copy()
-    sentinel_df["sentinel"] = 1
-
-    captured: dict[str, object] = {}
-
-    def _fake_pipeline(*args, **kwargs):
-        captured["args"] = args
-        captured["kwargs"] = kwargs
-        return GateAnnotationBundle(annotated_df=sentinel_df)
-
-    monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.gate_annotations.run_gate_annotation_pipeline",
-        _fake_pipeline,
-    )
-    monkeypatch.setattr(config, "SIBLING_TEST_METHOD", "cousin_tree_guided")
-
-    out = compute_gate_annotations(
-        tree,
-        base_df,
-        alpha_local=0.02,
-        sibling_alpha=0.03,
-        leaf_data=None,
-        spectral_method="effective_rank",
-        minimum_projection_dimension=7,
-    )
-
-    assert out is sentinel_df
-    assert captured["args"] == (tree, base_df)
-    assert captured["kwargs"] == {
-        "alpha_local": 0.02,
-        "sibling_alpha": 0.03,
-        "leaf_data": None,
-        "spectral_method": "effective_rank",
-        "minimum_projection_dimension": 7,
-        "sibling_method": "cousin_tree_guided",
-        "fdr_method": "tree_bh",
-        "sibling_spectral_dims": None,
-        "sibling_pca_projections": None,
-        "sibling_pca_eigenvalues": None,
-        "edge_calibration": None,
-    }

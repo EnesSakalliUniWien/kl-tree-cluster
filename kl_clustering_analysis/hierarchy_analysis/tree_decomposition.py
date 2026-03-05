@@ -521,7 +521,3 @@ class TreeDecomposition:
                 merged_leaf_sets.append(set(leaf_labels))
 
         return self._build_cluster_assignments(merged_leaf_sets), audit_trail
-
-    # build_sample_cluster_assignments is the module-level pure function
-    # re-exported as a static method for backward compatibility.
-    build_sample_cluster_assignments = staticmethod(build_sample_cluster_assignments)
