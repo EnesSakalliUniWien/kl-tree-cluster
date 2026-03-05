@@ -6,8 +6,10 @@ from typing import Callable
 
 import numpy as np
 
+from ...statistics.projection.satterthwaite import (
+    compute_projected_pvalue as _compute_projected_pvalue,
+)
 from .projection_basis import build_projection_basis_with_padding
-from ...statistics.projection.satterthwaite import compute_projected_pvalue as _compute_projected_pvalue
 
 
 def compute_projected_pvalue(

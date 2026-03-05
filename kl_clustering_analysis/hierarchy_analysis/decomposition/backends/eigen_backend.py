@@ -45,6 +45,7 @@ def eigendecompose_correlation_backend(
     use_dual = n_desc < d_active
 
     if use_dual:
+
         col_means = data_active.mean(axis=0)
         col_stds = data_active.std(axis=0, ddof=0)
         col_stds[col_stds == 0] = 1.0
@@ -60,6 +61,7 @@ def eigendecompose_correlation_backend(
             gram_vecs = None
 
         eigenvalues = np.maximum(eigenvalues, 0.0)
+
         return EigenResult(
             eigenvalues=eigenvalues,
             active_mask=active_mask,

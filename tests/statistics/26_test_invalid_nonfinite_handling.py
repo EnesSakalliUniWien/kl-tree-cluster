@@ -138,6 +138,46 @@ def test_edge_projected_test_nonfinite_z_returns_invalid(monkeypatch) -> None:
     assert np.isnan(pval)
 
 
+def test_child_parent_forwards_minimum_projection_dimension(monkeypatch) -> None:
+    tree, nodes_df = _make_two_edge_tree()
+    observed_minimum_projection_dimension: dict[str, int | None] = {"value": None}
+
+    def _fake_compute_p_values_via_projection(
+        tree: nx.DiGraph,
+        child_ids: list[str],
+        parent_ids: list[str],
+        child_leaf_counts: np.ndarray,
+        parent_leaf_counts: np.ndarray,
+        spectral_dims=None,
+        pca_projections=None,
+        pca_eigenvalues=None,
+        minimum_projection_dimension: int | None = None,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        observed_minimum_projection_dimension["value"] = minimum_projection_dimension
+        n_tests = len(child_ids)
+        return (
+            np.zeros(n_tests, dtype=float),
+            np.ones(n_tests, dtype=float),
+            np.ones(n_tests, dtype=float),
+            np.zeros(n_tests, dtype=bool),
+        )
+
+    monkeypatch.setattr(
+        "kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance._compute_p_values_via_projection",
+        _fake_compute_p_values_via_projection,
+    )
+
+    annotate_child_parent_divergence(
+        tree=tree,
+        annotations_df=nodes_df,
+        significance_level_alpha=0.05,
+        fdr_method="flat",
+        minimum_projection_dimension=7,
+    )
+
+    assert observed_minimum_projection_dimension["value"] == 7
+
+
 def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
     monkeypatch,
 ) -> None:

@@ -148,6 +148,7 @@ def _compute_projected_test(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
+    minimum_projection_dimension: int | None = None,
 ) -> tuple[float, float, float, bool]:
     """Compute projected Wald test for one edge.
 
@@ -188,6 +189,9 @@ def _compute_projected_test(
     pca_eigenvalues
         Top-k eigenvalues of the correlation matrix, shape ``(k,)``.
         Used for whitening when *pca_projection* is also provided.
+    minimum_projection_dimension
+        Minimum projection dimension floor used by the JL fallback path when
+        *spectral_k* is ``None``.
 
     Returns
     -------
@@ -232,7 +236,11 @@ def _compute_projected_test(
                 spectral_k=spectral_k,
                 pca_projection=pca_projection,
                 pca_eigenvalues=pca_eigenvalues,
-                k_fallback=lambda dim: compute_projection_dimension(n_child, dim),
+                k_fallback=lambda dim: compute_projection_dimension(
+                    n_child,
+                    dim,
+                    minimum_projection_dimension=minimum_projection_dimension,
+                ),
             )
         )
     except Exception as e:
@@ -256,6 +264,7 @@ def _compute_p_values_via_projection(
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
+    minimum_projection_dimension: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute p-values for all edges via random projection.
 
@@ -329,6 +338,16 @@ def _compute_p_values_via_projection(
         if pca_eigenvalues is not None:
             node_pca_eigenvalues = pca_eigenvalues.get(parent_ids[edge_index])
 
+        projected_test_kwargs: dict[str, object] = {
+            "spectral_k": node_spectral_dimension,
+            "pca_projection": node_pca_projection,
+            "pca_eigenvalues": node_pca_eigenvalues,
+        }
+        if minimum_projection_dimension is not None:
+            projected_test_kwargs["minimum_projection_dimension"] = int(
+                minimum_projection_dimension
+            )
+
         (
             edge_test_statistic,
             edge_degrees_of_freedom,
@@ -342,9 +361,7 @@ def _compute_p_values_via_projection(
             test_seed,
             branch_length,
             mean_branch_length,
-            spectral_k=node_spectral_dimension,
-            pca_projection=node_pca_projection,
-            pca_eigenvalues=node_pca_eigenvalues,
+            **projected_test_kwargs,
         )
         test_statistics[edge_index], degrees_of_freedom[edge_index], p_values[edge_index] = (
             edge_test_statistic,
@@ -399,8 +416,9 @@ def annotate_child_parent_divergence(
         or ``"active_features"``.  When ``None`` (default), the legacy
         JL-based dimension is used.
     minimum_projection_dimension
-        Minimum projection dimension (floor).  When ``None``, uses
-        ``config.PROJECTION_MINIMUM_DIMENSION`` (resolved to int at pipeline entry).
+        Minimum projection dimension (floor) used by the JL fallback path.
+        When ``None``, uses ``config.PROJECTION_MINIMUM_DIMENSION`` via backend
+        defaulting. Spectral decomposition still uses ``SPECTRAL_MINIMUM_DIMENSION``.
 
     Returns
     -------
@@ -467,21 +485,27 @@ def annotate_child_parent_divergence(
     # Keep only lightweight spectral dimensions in attrs for diagnostics.
     annotations_df.attrs["_spectral_dims"] = node_spectral_dimensions
 
+    projection_test_kwargs: dict[str, object] = {
+        "tree": tree,
+        "child_ids": child_ids,
+        "parent_ids": parent_ids,
+        "child_leaf_counts": child_leaf_counts,
+        "parent_leaf_counts": parent_leaf_counts,
+        "spectral_dims": node_spectral_dimensions,
+        "pca_projections": node_pca_projections,
+        "pca_eigenvalues": node_pca_eigenvalues,
+    }
+    if minimum_projection_dimension is not None:
+        projection_test_kwargs["minimum_projection_dimension"] = int(
+            minimum_projection_dimension
+        )
+
     (
         edge_test_statistics,
         edge_degrees_of_freedom,
         edge_p_values,
         invalid_test_mask,
-    ) = _compute_p_values_via_projection(
-        tree,
-        child_ids,
-        parent_ids,
-        child_leaf_counts,
-        parent_leaf_counts,
-        spectral_dims=node_spectral_dimensions,
-        pca_projections=node_pca_projections,
-        pca_eigenvalues=node_pca_eigenvalues,
-    )
+    ) = _compute_p_values_via_projection(**projection_test_kwargs)
 
     # Stash raw test data in attrs so the post-hoc edge calibration
     # (calibrate_edges_from_sibling_neighborhood) can use them after Gate 3.
@@ -511,7 +535,9 @@ def annotate_child_parent_divergence(
             for edge_index, p_value in enumerate(edge_p_values)
             if not np.isfinite(p_value)
         ]
-        nonfinite_p_value_node_ids = [child_ids[edge_index] for edge_index in nonfinite_p_value_indices]
+        nonfinite_p_value_node_ids = [
+            child_ids[edge_index] for edge_index in nonfinite_p_value_indices
+        ]
         preview_node_ids = ", ".join(map(repr, nonfinite_p_value_node_ids[:5]))
         logger.warning(
             "Child-parent divergence audit: total_tests=%d, invalid_tests=%d, "
