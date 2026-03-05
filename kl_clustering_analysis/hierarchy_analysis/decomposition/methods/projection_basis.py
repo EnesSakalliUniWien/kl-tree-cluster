@@ -57,37 +57,49 @@ def build_projection_basis_with_padding(
     tuple[np.ndarray, np.ndarray | None]
         ``(projection_matrix, eigenvalues_for_whitening)``.
         The returned eigenvalue array aligns with the leading PCA rows only:
-        - PCA-only/truncated: ``eig[:k]``
-        - PCA+random padding: full ``eig`` (padding rows unwhitened)
+        - PCA-only/truncated: ``pca_eigenvalues[:k]``
+        - PCA+random padding: full ``pca_eigenvalues`` (padding rows unwhitened)
         - Random-only: ``None``
     """
+    target_projection_dim = int(k)
+
     if pca_projection is None:
-        R = build_random_orthonormal_basis(
+        random_projection_basis = build_random_orthonormal_basis(
             n_features=n_features,
-            k=k,
+            k=target_projection_dim,
             random_state=random_state,
             use_cache=False,
         )
-        return R, None
+        return random_projection_basis, None
 
-    pca = np.asarray(pca_projection, dtype=np.float64)
-    k_pca = min(int(pca.shape[0]), int(k))
-    if k_pca >= int(k):
-        eig = (
-            np.asarray(pca_eigenvalues[: int(k)], dtype=np.float64)
+    pca_basis = np.asarray(pca_projection, dtype=np.float64)
+    n_available_pca_rows = int(pca_basis.shape[0])
+    n_pca_rows_used = min(n_available_pca_rows, target_projection_dim)
+
+    if n_pca_rows_used >= target_projection_dim:
+        eigenvalues_for_whitening = (
+            np.asarray(pca_eigenvalues[:target_projection_dim], dtype=np.float64)
             if pca_eigenvalues is not None
             else None
         )
-        return pca[: int(k)], eig
+        return pca_basis[:target_projection_dim], eigenvalues_for_whitening
 
-    R_pad = build_random_orthonormal_basis(
+    n_padding_rows = target_projection_dim - n_pca_rows_used
+
+    random_padding_basis = build_random_orthonormal_basis(
         n_features=n_features,
-        k=int(k) - k_pca,
+        k=n_padding_rows,
         random_state=random_state,
         use_cache=False,
     )
-    eig = np.asarray(pca_eigenvalues, dtype=np.float64) if pca_eigenvalues is not None else None
-    return np.vstack([pca[:k_pca], R_pad]), eig
+
+    eigenvalues_for_whitening = (
+        np.asarray(pca_eigenvalues, dtype=np.float64) if pca_eigenvalues is not None else None
+    )
+
+    padded_projection_basis = np.vstack([pca_basis[:n_pca_rows_used], random_padding_basis])
+
+    return padded_projection_basis, eigenvalues_for_whitening
 
 
 __all__ = [

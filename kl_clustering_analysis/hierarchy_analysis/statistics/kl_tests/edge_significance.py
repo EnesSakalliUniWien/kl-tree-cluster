@@ -111,7 +111,7 @@ def _compute_standardized_z(
             f"This indicates a degenerate or incorrectly constructed tree."
         )
 
-    var = parent_dist * (1 - parent_dist) * nested_factor
+    variance = parent_dist * (1 - parent_dist) * nested_factor
 
     # Felsenstein (1985) branch-length adjustment with normalization:
     # BL_norm = 1 + BL/mean_BL ensures multiplier ≥ 1
@@ -125,16 +125,16 @@ def _compute_standardized_z(
         and np.isfinite(mean_branch_length)
         and mean_branch_length > 0
     ):
-        bl_normalized = 1.0 + branch_length / mean_branch_length
-        var = var * bl_normalized
+        normalized_branch_length_multiplier = 1.0 + branch_length / mean_branch_length
+        variance = variance * normalized_branch_length_multiplier
 
-    var = np.maximum(var, 1e-10)
-    z = (child_dist - parent_dist) / np.sqrt(var)
+    variance = np.maximum(variance, 1e-10)
+    z_scores = (child_dist - parent_dist) / np.sqrt(variance)
 
     # [0.25, 0.75] -  [0.1, 0.9] / 2
 
     # Flatten if categorical (2D -> 1D)
-    return z.ravel()
+    return z_scores.ravel()
 
 
 def _compute_projected_test(
@@ -194,23 +194,22 @@ def _compute_projected_test(
     tuple[float, float, float, bool]
         (test_statistic, degrees_of_freedom, p_value, invalid_test)
     """
-    z = _compute_standardized_z(
+    standardized_z_scores = _compute_standardized_z(
         child_dist, parent_dist, n_child, n_parent, branch_length, mean_branch_length
     )
 
     # Explicit invalid-test path: never coerce non-finite z-scores.
     # Keep raw statistics as NaN and route p=1.0 only in correction step.
-    non_finite = ~np.isfinite(z)
-    if np.any(non_finite):
+    nonfinite_z_score_mask = ~np.isfinite(standardized_z_scores)
+    if np.any(nonfinite_z_score_mask):
         logger.warning(
             "Found %d non-finite z-scores in edge test; marking test invalid "
             "(raw outputs NaN, conservative p=1.0 for correction).",
-            int(np.sum(non_finite)),
+            int(np.sum(nonfinite_z_score_mask)),
         )
         return np.nan, np.nan, np.nan, True
-    z = z.astype(np.float64, copy=False)
 
-    d = len(z)
+    standardized_z_scores = standardized_z_scores.astype(np.float64, copy=False)
 
     # For categorical data, account for simplex constraint (probs sum to 1)
     # Drop the last category column - only K-1 categories are independent
@@ -219,31 +218,33 @@ def _compute_projected_test(
         n_features = child_dist.shape[0]
         n_categories = child_dist.shape[1]
         # Reshape to (n_features, n_categories), drop last column, flatten
-        z = z.reshape(n_features, n_categories)[:, :-1].ravel()
-
-    d = len(z)
+        standardized_z_scores = standardized_z_scores.reshape(n_features, n_categories)[
+            :, :-1
+        ].ravel()
 
     # Shared projected-test kernel.  Keep edge return semantics unchanged:
     # return nominal df=k (not the Satterthwaite effective df).
     try:
-        stat, k, _effective_df, p_value = run_projected_wald_kernel(
-            z,
-            seed=seed,
-            spectral_k=spectral_k,
-            pca_projection=pca_projection,
-            pca_eigenvalues=pca_eigenvalues,
-            k_fallback=lambda dim: compute_projection_dimension(n_child, dim),
+        test_statistic, projection_dim, _effective_degrees_of_freedom, p_value = (
+            run_projected_wald_kernel(
+                standardized_z_scores,
+                seed=seed,
+                spectral_k=spectral_k,
+                pca_projection=pca_projection,
+                pca_eigenvalues=pca_eigenvalues,
+                k_fallback=lambda dim: compute_projection_dimension(n_child, dim),
+            )
         )
     except Exception as e:
         logger.error(
             "Projection failed (Edge): z.shape=%s, z_stats=%s/%s",
-            z.shape,
-            np.min(z),
-            np.max(z),
+            standardized_z_scores.shape,
+            np.min(standardized_z_scores),
+            np.max(standardized_z_scores),
         )
         raise e
 
-    return stat, float(k), p_value, False
+    return test_statistic, float(projection_dim), p_value, False
 
 
 def _compute_p_values_via_projection(
@@ -281,65 +282,78 @@ def _compute_p_values_via_projection(
     tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
         (test_statistics, degrees_of_freedom, p_values, invalid_mask)
     """
-    n_edges = len(child_ids)
-    stats = np.full(n_edges, np.nan)
-    dfs = np.full(n_edges, np.nan)
-    p_values = np.full(n_edges, np.nan)
-    invalid_mask = np.zeros(n_edges, dtype=bool)
+    n_edge_tests = len(child_ids)
+    test_statistics = np.full(n_edge_tests, np.nan)
+    degrees_of_freedom = np.full(n_edge_tests, np.nan)
+    p_values = np.full(n_edge_tests, np.nan)
+    invalid_test_mask = np.zeros(n_edge_tests, dtype=bool)
 
     # Compute mean branch length for normalization (gated by config)
     mean_branch_length = _compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
-    for i in range(n_edges):
-        child_dist = tree.nodes[child_ids[i]].get("distribution")
-        parent_dist = tree.nodes[parent_ids[i]].get("distribution")
+    for edge_index in range(n_edge_tests):
+        child_dist = tree.nodes[child_ids[edge_index]].get("distribution")
+        parent_dist = tree.nodes[parent_ids[edge_index]].get("distribution")
 
-        if child_dist is None or parent_dist is None or child_leaf_counts[i] < 1:
-            stats[i], dfs[i], p_values[i] = 0.0, 0.0, 1.0
+        if child_dist is None or parent_dist is None or child_leaf_counts[edge_index] < 1:
+            test_statistics[edge_index], degrees_of_freedom[edge_index], p_values[edge_index] = (
+                0.0,
+                0.0,
+                1.0,
+            )
             continue
 
         # Extract branch length from tree edge (parent → child)
         branch_length: float | None = None
-        if tree.has_edge(parent_ids[i], child_ids[i]):
+        if tree.has_edge(parent_ids[edge_index], child_ids[edge_index]):
             branch_length = _sanitize_positive_branch_length(
-                tree.edges[parent_ids[i], child_ids[i]].get("branch_length")
+                tree.edges[parent_ids[edge_index], child_ids[edge_index]].get("branch_length")
             )
 
         test_seed = derive_projection_seed(
             config.PROJECTION_RANDOM_SEED,
-            f"edge:{parent_ids[i]}->{child_ids[i]}",
+            f"edge:{parent_ids[edge_index]}->{child_ids[edge_index]}",
         )
 
         # Per-node spectral dimension and PCA projection (if available).
         # The parent node determines the local subspace: the child edge
         # test asks "does this child diverge from its parent?", so the
         # relevant covariance structure is the parent's descendant data.
-        _spectral_k: int | None = None
-        _pca_proj: np.ndarray | None = None
-        _pca_eig: np.ndarray | None = None
+        node_spectral_dimension: int | None = None
+        node_pca_projection: np.ndarray | None = None
+        node_pca_eigenvalues: np.ndarray | None = None
         if spectral_dims is not None:
-            _spectral_k = spectral_dims.get(parent_ids[i])
+            node_spectral_dimension = spectral_dims.get(parent_ids[edge_index])
         if pca_projections is not None:
-            _pca_proj = pca_projections.get(parent_ids[i])
+            node_pca_projection = pca_projections.get(parent_ids[edge_index])
         if pca_eigenvalues is not None:
-            _pca_eig = pca_eigenvalues.get(parent_ids[i])
+            node_pca_eigenvalues = pca_eigenvalues.get(parent_ids[edge_index])
 
-        stat_i, df_i, p_value_i, invalid_i = _compute_projected_test(
+        (
+            edge_test_statistic,
+            edge_degrees_of_freedom,
+            edge_p_value,
+            edge_test_invalid,
+        ) = _compute_projected_test(
             np.asarray(child_dist, dtype=np.float64),
             np.asarray(parent_dist, dtype=np.float64),
-            int(child_leaf_counts[i]),
-            int(parent_leaf_counts[i]),
+            int(child_leaf_counts[edge_index]),
+            int(parent_leaf_counts[edge_index]),
             test_seed,
             branch_length,
             mean_branch_length,
-            spectral_k=_spectral_k,
-            pca_projection=_pca_proj,
-            pca_eigenvalues=_pca_eig,
+            spectral_k=node_spectral_dimension,
+            pca_projection=node_pca_projection,
+            pca_eigenvalues=node_pca_eigenvalues,
         )
-        stats[i], dfs[i], p_values[i] = stat_i, df_i, p_value_i
-        invalid_mask[i] = bool(invalid_i)
+        test_statistics[edge_index], degrees_of_freedom[edge_index], p_values[edge_index] = (
+            edge_test_statistic,
+            edge_degrees_of_freedom,
+            edge_p_value,
+        )
+        invalid_test_mask[edge_index] = bool(edge_test_invalid)
 
-    return stats, dfs, p_values, invalid_mask
+    return test_statistics, degrees_of_freedom, p_values, invalid_test_mask
 
 
 # =============================================================================
@@ -394,11 +408,11 @@ def annotate_child_parent_divergence(
         Input DataFrame augmented with divergence test results.
     """
     annotations_df = annotations_df.copy()
-    alpha = float(significance_level_alpha)
+    edge_alpha = float(significance_level_alpha)
 
-    edge_list = list(tree.edges())
-    parent_ids = [parent_id for parent_id, _ in edge_list]
-    child_ids = [child_id for _, child_id in edge_list]
+    tree_edges = list(tree.edges())
+    parent_ids = [parent_id for parent_id, _ in tree_edges]
+    child_ids = [child_id for _, child_id in tree_edges]
 
     if not child_ids:
         raise ValueError("Tree has no edges. Cannot compute child-parent divergence.")
@@ -407,9 +421,9 @@ def annotate_child_parent_divergence(
     parent_leaf_counts = extract_leaf_counts(annotations_df, parent_ids)
 
     # --- Per-node spectral dimension (replaces JL when configured) ---
-    spectral_dims: dict[str, int] | None = None
-    pca_projections: dict[str, np.ndarray] | None = None
-    pca_eigenvalues: dict[str, np.ndarray] | None = None
+    node_spectral_dimensions: dict[str, int] | None = None
+    node_pca_projections: dict[str, np.ndarray] | None = None
+    node_pca_eigenvalues: dict[str, np.ndarray] | None = None
 
     if spectral_method is not None:
         if leaf_data is None:
@@ -431,28 +445,42 @@ def annotate_child_parent_divergence(
             "SPECTRAL_MINIMUM_DIMENSION",
             2,
         )
-        spectral_dims, pca_proj_dict, pca_eig_dict = compute_spectral_decomposition(
+
+        (
+            node_spectral_dimensions,
+            computed_node_pca_projections,
+            computed_node_pca_eigenvalues,
+        ) = compute_spectral_decomposition(
             tree,
             leaf_data,
             method=spectral_method,
             minimum_projection_dimension=spectral_minimum_projection_dimension,
             compute_projections=True,
         )
-        pca_projections = pca_proj_dict if pca_proj_dict else None
-        pca_eigenvalues = pca_eig_dict if pca_eig_dict else None
+        node_pca_projections = (
+            computed_node_pca_projections if computed_node_pca_projections else None
+        )
+        node_pca_eigenvalues = (
+            computed_node_pca_eigenvalues if computed_node_pca_eigenvalues else None
+        )
 
     # Keep only lightweight spectral dimensions in attrs for diagnostics.
-    annotations_df.attrs["_spectral_dims"] = spectral_dims
+    annotations_df.attrs["_spectral_dims"] = node_spectral_dimensions
 
-    test_stats, degrees_of_freedom, p_values, invalid_mask = _compute_p_values_via_projection(
+    (
+        edge_test_statistics,
+        edge_degrees_of_freedom,
+        edge_p_values,
+        invalid_test_mask,
+    ) = _compute_p_values_via_projection(
         tree,
         child_ids,
         parent_ids,
         child_leaf_counts,
         parent_leaf_counts,
-        spectral_dims=spectral_dims,
-        pca_projections=pca_projections,
-        pca_eigenvalues=pca_eigenvalues,
+        spectral_dims=node_spectral_dimensions,
+        pca_projections=node_pca_projections,
+        pca_eigenvalues=node_pca_eigenvalues,
     )
 
     # Stash raw test data in attrs so the post-hoc edge calibration
@@ -460,65 +488,70 @@ def annotate_child_parent_divergence(
     annotations_df.attrs["_edge_raw_test_data"] = {
         "child_ids": child_ids,
         "parent_ids": parent_ids,
-        "test_stats": test_stats.copy(),
-        "degrees_of_freedom": degrees_of_freedom.copy(),
-        "p_values": p_values.copy(),
+        "test_stats": edge_test_statistics.copy(),
+        "degrees_of_freedom": edge_degrees_of_freedom.copy(),
+        "p_values": edge_p_values.copy(),
         "child_leaf_counts": child_leaf_counts.copy(),
         "parent_leaf_counts": parent_leaf_counts.copy(),
     }
 
     node_depths = compute_node_depths(tree)
-    child_depths = np.array([node_depths.get(cid, 0) for cid in child_ids])
+    child_depths_for_correction = np.array([node_depths.get(cid, 0) for cid in child_ids])
 
     # Preserve raw NaN outputs for invalid tests; use conservative surrogate
     # p-values only for multiple-testing correction.
-    p_values_for_correction = np.where(np.isfinite(p_values), p_values, 1.0)
+    p_values_for_correction = np.where(np.isfinite(edge_p_values), edge_p_values, 1.0)
 
-    nonfinite_p_mask = ~np.isfinite(p_values)
-    n_invalid = int(np.sum(invalid_mask))
-    n_nonfinite_p = int(np.sum(nonfinite_p_mask))
-    if n_invalid or n_nonfinite_p:
-        bad_indices = [i for i, v in enumerate(p_values) if not np.isfinite(v)]
-        bad_ids = [child_ids[i] for i in bad_indices]
-        preview = ", ".join(map(repr, bad_ids[:5]))
+    nonfinite_p_value_mask = ~np.isfinite(edge_p_values)
+    invalid_test_count = int(np.sum(invalid_test_mask))
+    nonfinite_p_value_count = int(np.sum(nonfinite_p_value_mask))
+    if invalid_test_count or nonfinite_p_value_count:
+        nonfinite_p_value_indices = [
+            edge_index
+            for edge_index, p_value in enumerate(edge_p_values)
+            if not np.isfinite(p_value)
+        ]
+        nonfinite_p_value_node_ids = [child_ids[edge_index] for edge_index in nonfinite_p_value_indices]
+        preview_node_ids = ", ".join(map(repr, nonfinite_p_value_node_ids[:5]))
         logger.warning(
             "Child-parent divergence audit: total_tests=%d, invalid_tests=%d, "
             "nonfinite_p_values=%d. Conservative correction path applied "
             "(p=1.0, reject=False) for nodes: %s",
             len(child_ids),
-            n_invalid,
-            n_nonfinite_p,
-            preview,
+            invalid_test_count,
+            nonfinite_p_value_count,
+            preview_node_ids,
         )
 
-    # node_depths and child_depths already computed above (before calibration)
+    # node_depths and child_depths_for_correction already computed above (before calibration)
 
-    reject_null, p_values_corrected = apply_multiple_testing_correction(
+    reject_null_hypothesis, corrected_p_values = apply_multiple_testing_correction(
         p_values=p_values_for_correction,
         child_ids=child_ids,
-        child_depths=child_depths,
-        alpha=alpha,
+        child_depths=child_depths_for_correction,
+        alpha=edge_alpha,
         method=fdr_method,
         tree=tree,
     )
-    reject_null = np.where(nonfinite_p_mask, False, reject_null)
+
+    reject_null_hypothesis = np.where(nonfinite_p_value_mask, False, reject_null_hypothesis)
 
     # Attach run-level audit counters for downstream diagnostics.
     annotations_df.attrs["child_parent_divergence_audit"] = {
         "total_tests": int(len(child_ids)),
-        "invalid_tests": n_invalid,
-        "nonfinite_p_values": n_nonfinite_p,
-        "conservative_path_tests": n_nonfinite_p,
+        "invalid_tests": invalid_test_count,
+        "nonfinite_p_values": nonfinite_p_value_count,
+        "conservative_path_tests": nonfinite_p_value_count,
     }
 
     return assign_divergence_results(
         annotations_df=annotations_df,
         child_ids=child_ids,
-        p_values=p_values,
-        p_values_corrected=p_values_corrected,
-        reject_null=reject_null,
-        degrees_of_freedom=degrees_of_freedom,
-        invalid_mask=invalid_mask,
+        p_values=edge_p_values,
+        p_values_corrected=corrected_p_values,
+        reject_null=reject_null_hypothesis,
+        degrees_of_freedom=edge_degrees_of_freedom,
+        invalid_mask=invalid_test_mask,
     )
 
 

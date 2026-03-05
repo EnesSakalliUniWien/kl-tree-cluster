@@ -9,13 +9,13 @@ Key improvements over a plain ``cmap="tab10"`` approach:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import colorsys
+from dataclasses import dataclass
 from typing import Dict, Iterable, List
 
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.colors import BoundaryNorm, ListedColormap
 
 
@@ -48,10 +48,7 @@ def _discrete_colors_from_matplotlib_cmap(name: str, n: int) -> List[str]:
         if len(base) >= n:
             return [mcolors.to_hex(base[i]) for i in range(n)]
     # Fall back to sampling (may interpolate for ListedColormap with small LUT)
-    return [
-        mcolors.to_hex(cmap(i / max(n - 1, 1)))
-        for i in range(n)
-    ]
+    return [mcolors.to_hex(cmap(i / max(n - 1, 1))) for i in range(n)]
 
 
 def build_cluster_color_spec(
@@ -123,6 +120,16 @@ def build_cluster_color_spec(
 
 def present_cluster_ids(labels: Iterable[int]) -> List[int]:
     """Sorted unique cluster IDs from label sequence (excludes -1)."""
-    unique = {int(x) for x in labels if x is not None}
+    unique: set[int] = set()
+    for label in labels:
+        if label is None:
+            continue
+        try:
+            label_value = float(label)
+        except (TypeError, ValueError):
+            continue
+        if not np.isfinite(label_value):
+            continue
+        unique.add(int(label_value))
     unique.discard(-1)
     return sorted(unique)

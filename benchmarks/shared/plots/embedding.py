@@ -9,19 +9,19 @@ import textwrap
 import warnings
 from pathlib import Path
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
+from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES
 from kl_clustering_analysis.plot.cluster_color_mapping import (
     build_cluster_color_spec,
     present_cluster_ids,
 )
-from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES
 
 # Reduce noisy but expected warnings emitted during visualization
 warnings.filterwarnings(
@@ -69,6 +69,56 @@ def _color_cluster_count(expected: int, found: int, *label_arrays: np.ndarray) -
     return base
 
 
+def _coerce_nonnegative_cluster_count(raw_count: object) -> int | None:
+    """Convert a raw cluster-count value to a non-negative integer, if possible."""
+    if raw_count is None:
+        return None
+    try:
+        parsed = int(raw_count)
+    except (TypeError, ValueError):
+        return None
+    if parsed < 0:
+        return None
+    return parsed
+
+
+def _infer_cluster_count_from_labels(*label_arrays: np.ndarray | None) -> int | None:
+    """Infer cluster count from labels by counting unique non-negative assignments."""
+    inferred_count = 0
+    for labels in label_arrays:
+        if labels is None:
+            continue
+        labels_array = np.asarray(labels)
+        if labels_array.size == 0:
+            continue
+        try:
+            labels_numeric = labels_array.astype(float, copy=False)
+        except (TypeError, ValueError):
+            continue
+        assigned_labels = labels_numeric[np.isfinite(labels_numeric)]
+        assigned_labels = assigned_labels[assigned_labels >= 0]
+        if assigned_labels.size == 0:
+            continue
+        inferred_count = max(inferred_count, int(np.unique(assigned_labels).size))
+    return inferred_count if inferred_count > 0 else None
+
+
+def _resolve_expected_cluster_count(
+    meta: dict,
+    *label_arrays: np.ndarray | None,
+) -> tuple[int | None, str]:
+    """Resolve expected cluster count from metadata, else infer from available labels."""
+    explicit_count = _coerce_nonnegative_cluster_count(meta.get("n_clusters"))
+    if explicit_count is not None and explicit_count > 0:
+        return explicit_count, str(explicit_count)
+
+    inferred_count = _infer_cluster_count_from_labels(*label_arrays)
+    if inferred_count is not None:
+        return inferred_count, f"{inferred_count} (inferred)"
+
+    return None, "unknown"
+
+
 def _embedding_cache_dir() -> Path | None:
     """Return the embedding cache directory, or None if caching is disabled."""
     env_dir = os.getenv("KL_TE_EMBEDDING_CACHE_DIR", "").strip()
@@ -80,7 +130,9 @@ def _embedding_cache_dir() -> Path | None:
 
 
 def _cache_key_for_array(
-    X: np.ndarray, n_components: int, cache_key: str | None,
+    X: np.ndarray,
+    n_components: int,
+    cache_key: str | None,
 ) -> str:
     """Build a deterministic cache filename from the data or a semantic key."""
     suffix = f"_{n_components}d"
@@ -95,7 +147,8 @@ def _cache_key_for_array(
 
 
 def _load_cached_embedding(
-    cache_dir: Path | None, key: str,
+    cache_dir: Path | None,
+    key: str,
 ) -> np.ndarray | None:
     """Load a cached embedding from disk, or return None."""
     if cache_dir is None:
@@ -112,7 +165,9 @@ def _load_cached_embedding(
 
 
 def _save_cached_embedding(
-    cache_dir: Path | None, key: str, embedding: np.ndarray,
+    cache_dir: Path | None,
+    key: str,
+    embedding: np.ndarray,
 ) -> None:
     """Save an embedding to the disk cache."""
     if cache_dir is None:
@@ -126,7 +181,9 @@ def _save_cached_embedding(
 
 
 def _fit_embedding_2d(
-    X_scaled: np.ndarray, *, cache_key: str | None = None,
+    X_scaled: np.ndarray,
+    *,
+    cache_key: str | None = None,
 ) -> np.ndarray:
     """Return a 2D embedding with a stability-first backend strategy.
 
@@ -220,9 +277,7 @@ def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> 
 
     if metrics_suffix:
         name = f"{name}{metrics_suffix}"
-    wrapped = "\n".join(
-        textwrap.wrap(name, width=max_line_chars, break_long_words=False)
-    )
+    wrapped = "\n".join(textwrap.wrap(name, width=max_line_chars, break_long_words=False))
     return f"{wrapped}\nClustering"
 
 
@@ -244,21 +299,23 @@ def create_clustering_comparison_plots(
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    expected_clusters = int(meta["n_clusters"])
-
     X_embedded = _fit_embedding_2d(X_scaled, cache_key=cache_key)
 
     labels_to_plot = dict(labels_dict)
+    expected_clusters, expected_clusters_label = _resolve_expected_cluster_count(
+        meta,
+        *labels_to_plot.values(),
+    )
 
     # Add K-Means and Spectral Clustering as visual baselines only when they
     # are not already present as benchmarked methods.
     has_kmeans = any(str(name).startswith("K-Means") for name in labels_to_plot)
-    if not has_kmeans:
+    if not has_kmeans and expected_clusters is not None:
         kmeans = KMeans(n_clusters=expected_clusters, random_state=42, n_init=10)
         labels_to_plot["K-Means"] = kmeans.fit_predict(X_scaled)
 
     has_spectral = any(str(name).startswith("Spectral") for name in labels_to_plot)
-    if not has_spectral:
+    if not has_spectral and expected_clusters is not None:
         spectral = SpectralClustering(
             n_clusters=expected_clusters,
             random_state=42,
@@ -268,7 +325,7 @@ def create_clustering_comparison_plots(
         labels_to_plot["Spectral"] = spectral.fit_predict(X_scaled)
 
     all_labels = [labels for labels in labels_to_plot.values() if labels is not None]
-    color_clusters = _color_cluster_count(expected_clusters, -1, *all_labels)
+    color_clusters = _color_cluster_count(expected_clusters or 0, -1, *all_labels)
     spec = build_cluster_color_spec(color_clusters, unassigned_color="#CCCCCC")
     colors = spec.colors
 
@@ -301,7 +358,7 @@ def create_clustering_comparison_plots(
 
         page_suffix = f" (page {page_idx + 1}/{n_pages})" if n_pages > 1 else ""
         fig.suptitle(
-            f"Test Case {test_case_num}: expected {expected_clusters} clusters{page_suffix}",
+            f"Test Case {test_case_num}: expected {expected_clusters_label} clusters{page_suffix}",
             fontsize=17,
             weight="bold",
             y=0.985,
@@ -375,7 +432,9 @@ __all__ = [
 
 
 def _fit_embedding_3d(
-    X_scaled: np.ndarray, *, cache_key: str | None = None,
+    X_scaled: np.ndarray,
+    *,
+    cache_key: str | None = None,
 ) -> np.ndarray:
     """Return a 3D embedding using UMAP when available, else t-SNE, else PCA."""
     cache_dir = _embedding_cache_dir()
@@ -438,16 +497,24 @@ def create_clustering_comparison_plot_3d(
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    expected_clusters = int(meta["n_clusters"])
-    found_clusters = int(meta.get("found_clusters", expected_clusters))
-
     embedding = _fit_embedding_3d(X_scaled)
 
-    kmeans = KMeans(n_clusters=expected_clusters, random_state=42, n_init=10)
+    expected_clusters, expected_clusters_label = _resolve_expected_cluster_count(
+        meta,
+        y_true,
+        y_kl,
+    )
+    baseline_cluster_count = expected_clusters if expected_clusters is not None else 1
+    found_clusters = _coerce_nonnegative_cluster_count(meta.get("found_clusters"))
+    if found_clusters is None:
+        inferred_found_clusters = _infer_cluster_count_from_labels(y_kl)
+        found_clusters = inferred_found_clusters if inferred_found_clusters is not None else 0
+
+    kmeans = KMeans(n_clusters=baseline_cluster_count, random_state=42, n_init=10)
     y_kmeans = kmeans.fit_predict(X_scaled)
 
     spectral = SpectralClustering(
-        n_clusters=expected_clusters,
+        n_clusters=baseline_cluster_count,
         random_state=42,
         affinity="nearest_neighbors",
         assign_labels="cluster_qr",
@@ -463,7 +530,7 @@ def create_clustering_comparison_plot_3d(
     )
     fig.suptitle(
         (
-            f"3D Embedding – Test {test_case_num}: expected {expected_clusters} clusters "
+            f"3D Embedding – Test {test_case_num}: expected {expected_clusters_label} clusters "
             f"(KL found {found_clusters})\n{meta_text}"
         ),
         fontsize=16,
@@ -479,7 +546,12 @@ def create_clustering_comparison_plot_3d(
     ]
 
     color_clusters = _color_cluster_count(
-        expected_clusters, found_clusters, y_true, y_kl, y_kmeans, y_spectral
+        expected_clusters or 0,
+        found_clusters,
+        y_true,
+        y_kl,
+        y_kmeans,
+        y_spectral,
     )
     spec = build_cluster_color_spec(color_clusters, unassigned_color="#CCCCCC")
     colors = spec.colors

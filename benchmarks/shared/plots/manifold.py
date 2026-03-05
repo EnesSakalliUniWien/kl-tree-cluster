@@ -11,7 +11,12 @@ from sklearn.preprocessing import StandardScaler
 from skbio.stats.distance import mantel
 
 from kl_clustering_analysis.plot.cluster_color_mapping import build_cluster_color_spec
-from .embedding import _color_cluster_count
+from .embedding import (
+    _coerce_nonnegative_cluster_count,
+    _color_cluster_count,
+    _infer_cluster_count_from_labels,
+    _resolve_expected_cluster_count,
+)
 
 
 def _pad_to_three_dims(embedding: np.ndarray) -> np.ndarray:
@@ -86,14 +91,22 @@ def create_manifold_alignment_plot(
 
     upper_idx = np.triu_indices_from(dist_umap, k=1)
 
-    found_clusters = int(meta.get("found_clusters", meta["n_clusters"]))
+    expected_clusters, expected_clusters_label = _resolve_expected_cluster_count(
+        meta,
+        labels_array,
+        y_true,
+    )
+    found_clusters = _coerce_nonnegative_cluster_count(meta.get("found_clusters"))
+    if found_clusters is None:
+        inferred_found_clusters = _infer_cluster_count_from_labels(labels_array)
+        found_clusters = inferred_found_clusters if inferred_found_clusters is not None else 0
     fig = plt.figure(figsize=(18, 6))
     header = (
         title
         if title is not None
         else (
             f"Test Case {test_case_num}: Manifold Alignment "
-            f"(expected={meta['n_clusters']}, KL found={found_clusters})"
+            f"(expected={expected_clusters_label}, KL found={found_clusters})"
         )
     )
     fig.suptitle(
@@ -102,9 +115,7 @@ def create_manifold_alignment_plot(
         weight="bold",
     )
 
-    color_clusters = _color_cluster_count(
-        int(meta["n_clusters"]), found_clusters, labels_array
-    )
+    color_clusters = _color_cluster_count(expected_clusters or 0, found_clusters, labels_array)
     cluster_spec = build_cluster_color_spec(color_clusters, unassigned_color="#CCCCCC")
 
     def _scatter3d(ax, embedding, title: str) -> None:
