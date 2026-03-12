@@ -62,14 +62,11 @@ _Generated on 2026-02-16 09:19 UTC_
 - `kl_clustering_analysis.hierarchy_analysis.cluster_assignments` -> (none)
 - `kl_clustering_analysis.hierarchy_analysis.posthoc_merge` -> `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing`
 - `kl_clustering_analysis.hierarchy_analysis.signal_localization` -> `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing`
-- `kl_clustering_analysis.hierarchy_analysis.statistics.__init__` -> `kl_clustering_analysis.hierarchy_analysis.statistics.clt_validity`, `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing`, `kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence`
+- `kl_clustering_analysis.hierarchy_analysis.statistics.__init__` -> `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing`, `kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence`
 - `kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils` -> (none)
 - `kl_clustering_analysis.hierarchy_analysis.statistics.categorical_mahalanobis` -> (none)
-- `kl_clustering_analysis.hierarchy_analysis.statistics.clt_validity` -> (none)
-- `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.__init__` -> `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.chi_square_test`, `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance`, `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.utils`
-- `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.chi_square_test` -> (none)
+- `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.__init__` -> `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance`
 - `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance` -> `kl_clustering_analysis`, `kl_clustering_analysis.core_utils.data_utils`, `kl_clustering_analysis.core_utils.tree_utils`, `kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing`, `kl_clustering_analysis.hierarchy_analysis.statistics.random_projection`
-- `kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.utils` -> (none)
 - `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.__init__` -> `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.dispatcher`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.flat_correction`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.level_wise_correction`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction`
 - `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base` -> (none)
 - `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.dispatcher` -> `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.flat_correction`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.level_wise_correction`, `kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction`
@@ -95,7 +92,6 @@ _Generated on 2026-02-16 09:19 UTC_
 - `kl_clustering_analysis.tree.distributions` -> (none)
 - `kl_clustering_analysis.tree.poset_tree` -> `kl_clustering_analysis`, `kl_clustering_analysis.core_utils.tree_utils`, `kl_clustering_analysis.hierarchy_analysis.cluster_assignments`, `kl_clustering_analysis.hierarchy_analysis.tree_decomposition`, `kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics`, `kl_clustering_analysis.tree.distributions`
 - `kl_clustering_analysis.tree.util.__init__` -> (none)
-- `kl_clustering_analysis.tree.util.tree_construct_helpers` -> (none)
 
 ## Development Timeline (Git)
 
@@ -178,32 +174,12 @@ _Generated on 2026-02-16 09:19 UTC_
 - Line 13: `function categorical_whitened_vector` -> Build a covariance-whitened categorical difference vector.. `def-history: 2026-02-15 bf7c1e7d feat: add tree-guided cousin calibration, null-pipeline FPR benchmark, module READMEs`
 - Line 79: `function mahalanobis_wald_categorical` -> Compute multinomial Wald statistic with drop-last parametrization.. `def-history: 2026-02-15 bf7c1e7d feat: add tree-guided cousin calibration, null-pipeline FPR benchmark, module READMEs`
 
-### `kl_clustering_analysis/hierarchy_analysis/statistics/clt_validity.py`
-- File history: 2 commits, first `2026-02-13 c87a6f13` (Fixes for branchlengths, and benchmark dedup), last `2026-02-15 bf7c1e7d` (feat: add tree-guided cousin calibration, null-pipeline FPR benchmark, module READMEs).
-- Line 40: `class CLTValidityResult` -> Result of CLT validity check for a node.. `def-history: 2026-02-13 c87a6f13 Fixes for branchlengths, and benchmark dedup`
-- Line 67: `function compute_third_absolute_moment` -> Compute third absolute central moment for Bernoulli distribution.. `def-history: 2026-02-13 c87a6f13 Fixes for branchlengths, and benchmark dedup`
-- Line 90: `function compute_third_absolute_moment_categorical` -> Compute third absolute central moment for Categorical distribution.. `def-history: 2026-02-13 c87a6f13 Fixes for branchlengths, and benchmark dedup`
-- Line 121: `function compute_variance_bernoulli` -> Compute variance for Bernoulli distribution.. `def-history: 2026-02-13 c87a6f13 Fixes for branchlengths, and benchmark dedup`
-- Line 141: `function berry_esseen_bound` -> Compute Berry-Esseen upper bound on normal approximation error.. `def-history: 2026-02-13 c87a6f13 Fixes for branchlengths, and benchmark dedup`
-- Line 185: `function check_clt_validity_bernoulli` -> Check if CLT approximation is valid for Bernoulli features.. `def-history: 2026-02-13 c87a6f13 Fixes for branchlengths, and benchmark dedup`
-- Line 292: `function compute_minimum_n_berry_esseen` -> Compute minimum sample size required for CLT validity.. `def-history: 2026-02-13 c87a6f13 Fixes for branchlengths, and benchmark dedup`
-- Line 334: `function check_split_clt_validity` -> Check CLT validity for both children of a split.. `def-history: 2026-02-13 c87a6f13 Fixes for branchlengths, and benchmark dedup`
-
-### `kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/chi_square_test.py`
-- File history: 4 commits, first `2025-11-30 97c6d9ba` (Removed and clean up code environment), last `2025-12-24 3cbdaf91` (Add global divergence weighting and refactor multiple testing).
-- Line 15: `function kl_divergence_chi_square_test` -> Test KL divergence significance using chi-square approximation.. `def-history: 2025-11-30 97c6d9ba Removed and clean up code environment`
-- Line 73: `function kl_divergence_chi_square_test_batch` -> Vectorized chi-square test for multiple KL divergence values.. `def-history: 2025-12-24 3cbdaf91 Add global divergence weighting and refactor multiple testing`
-
 ### `kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/edge_significance.py`
 - File history: 9 commits, first `2025-11-30 97c6d9ba` (Removed and clean up code environment), last `2026-02-15 bf7c1e7d` (feat: add tree-guided cousin calibration, null-pipeline FPR benchmark, module READMEs).
 - Line 55: `function _compute_standardized_z` -> Compute standardized z-scores for child vs parent.. `def-history: 2025-12-24 e3d229d1 Tree decomposition: centralize post-hoc merge application, make merged cluster IDs deterministic, and fix LCA handling in post-hoc merge`
 - Line 138: `function _compute_projected_test` -> Compute projected Wald test for one edge.. `def-history: 2025-12-24 e3d229d1 Tree decomposition: centralize post-hoc merge application, make merged cluster IDs deterministic, and fix LCA handling in post-hoc merge`
 - Line 227: `function _compute_p_values_via_projection` -> Compute p-values for all edges via random projection.. `def-history: 2025-12-24 e3d229d1 Tree decomposition: centralize post-hoc merge application, make merged cluster IDs deterministic, and fix LCA handling in post-hoc merge`
 - Line 308: `function annotate_child_parent_divergence` -> Test child-parent divergence using projected Wald test.. `def-history: 2025-11-30 97c6d9ba Removed and clean up code environment`
-
-### `kl_clustering_analysis/hierarchy_analysis/statistics/kl_tests/utils.py`
-- File history: 2 commits, first `2025-11-30 97c6d9ba` (Removed and clean up code environment), last `2025-12-20 375f08a9` (feat: implement TreeBH hierarchical FDR correction and refactor statistics pipeline).
-- Line 8: `function get_local_kl_series` -> Extract the local KL divergence column as a float Series.. `def-history: 2025-11-30 97c6d9ba Removed and clean up code environment`
 
 ### `kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/base.py`
 - File history: 2 commits, first `2025-11-30 97c6d9ba` (Removed and clean up code environment), last `2025-12-24 3cbdaf91` (Add global divergence weighting and refactor multiple testing).
@@ -395,12 +371,6 @@ _Generated on 2026-02-16 09:19 UTC_
 - Line 403: `method PosetTree.populate_node_divergences` -> Populate tree nodes with distributions and KL divergences.. `def-history: 2025-11-30 97c6d9ba Removed and clean up code environment`
 - Line 434: `method PosetTree.decompose` -> Run ``TreeDecomposition`` directly from the tree.. `def-history: 2025-11-30 97c6d9ba Removed and clean up code environment`
 - Line 488: `method PosetTree.build_sample_cluster_assignments` -> Build a per-sample cluster assignment table from decomposition output.. `def-history: 2025-12-17 8111d55f Updated and Restructured Projects.`
-
-### `kl_clustering_analysis/tree/util/tree_construct_helpers.py`
-- File history: 3 commits, first `2025-10-29 fc3a4b0c` (Kl-Te-Cluster), last `2026-02-07 ea21bff4` (Branch Length Test).
-- Line 6: `function count_cluster_leaves` -> (no docstring; infer from name/context). `def-history: 2025-10-29 fc3a4b0c Kl-Te-Cluster`
-- Line 14: `function add_cluster_node_recursive` -> (no docstring; infer from name/context). `def-history: 2025-10-29 fc3a4b0c Kl-Te-Cluster`
-- Line 32: `function add_nested_tuple_recursive` -> (no docstring; infer from name/context). `def-history: 2025-10-29 fc3a4b0c Kl-Te-Cluster`
 
 ## Debug Scripts Index
 

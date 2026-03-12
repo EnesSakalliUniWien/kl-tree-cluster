@@ -30,14 +30,12 @@ STAGES: tuple[Stage, ...] = (
             "tests/core/10_test_poset_tree.py",
             "tests/core/12_test_cluster_assignments.py",
             "tests/core/13_test_cluster_decomposer_threshold.py",
-            "tests/core/14_test_local_kl_utils.py",
         ),
     ),
     Stage(
         2,
         "Statistical engines + calibration",
         (
-            "tests/statistics/20_test_clt_validity.py",
             "tests/statistics/21_test_random_projection.py",
             "tests/statistics/22_test_edge_branch_length_regression.py",
             "tests/statistics/23_test_weighted_calibration.py",

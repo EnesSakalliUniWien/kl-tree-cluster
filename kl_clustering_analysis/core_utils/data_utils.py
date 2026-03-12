@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Hashable, Literal
+from typing import Literal
 
 import networkx as nx
 import numpy as np
@@ -327,7 +327,7 @@ def extract_bool_column_dict(
     column_name: str,
     *,
     null_policy: Literal["raise", "false", "true"] = "raise",
-) -> dict[Hashable, bool]:
+) -> dict[str, bool]:
     """Extract a boolean column from DataFrame as a dictionary.
 
     Parameters
@@ -352,4 +352,4 @@ def extract_bool_column_dict(
     series = normalize_bool_series(
         df[column_name], column_name=column_name, null_policy=null_policy
     )
-    return {node_id: bool(value) for node_id, value in series.items()}
+    return {str(node_id): bool(value) for node_id, value in series.items()}

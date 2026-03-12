@@ -40,17 +40,6 @@ FELSENSTEIN_BRANCH_LENGTH_MODE: Literal["phylogeny", "topology"] = "topology"
 # - "error": raise ValueError and fail fast.
 FELSENSTEIN_INCOMPLETE_BRANCH_POLICY: Literal["warn_disable", "error"] = "warn_disable"
 
-# --- Post-Hoc Merge Parameters ---
-
-# Enable tree-respecting post-hoc merge by default.
-# This iteratively merges clusters whose underlying distributions are NOT
-# significantly different, working bottom-up through the tree to reduce over-splitting.
-POSTHOC_MERGE: bool = False
-
-# Significance level for post-hoc merge tests.
-# If None, defaults to SIBLING_ALPHA at runtime.
-POSTHOC_MERGE_ALPHA: float | None = None
-
 # --- Tree Inference Parameters ---
 
 # Distance metric for hierarchical clustering
@@ -94,31 +83,33 @@ PROJECTION_RANDOM_SEED: int | None = 42
 # --- Spectral Dimension Estimation ---
 
 # Per-node projection dimension method.  When set, replaces JL-based dimension
-# selection with eigendecomposition of the local covariance at each node.
+# selection with eigendecomposition of the local correlation matrix at each node.
 # Options:
-#   None                  - Legacy JL-based dimension (default)
+#   None                  - Legacy JL-based dimension
 #   "effective_rank"      - Shannon entropy of eigenvalue spectrum (Roy & Vetterli 2007)
-#   "marchenko_pastur"    - Count eigenvalues above MP upper bound
+#   "marchenko_pastur"    - Count eigenvalues above MP upper bound (default)
 #   "active_features"     - Count features with non-zero variance (no eigendecomp)
-SPECTRAL_METHOD: str | None = "effective_rank"
+# Marchenko-Pastur is the default: it uses random matrix theory to separate
+# signal eigenvalues from the noise bulk.  For the correlation matrix σ²=1
+# exactly, so the MP bounds are (1±√(d/n))².  Empirically, MP has MAE 1.3
+# vs effective_rank's MAE 16+ when compared to true signal rank.
+SPECTRAL_METHOD: str | None = "marchenko_pastur"
 
 # Minimum projection dimension for the SPECTRAL (Gate 2) path only.
-# Unlike PROJECTION_MINIMUM_DIMENSION (the global JL floor), this is a small safety
-# floor to avoid pathological χ²(1) tests.  The per-node effective rank
-# from eigendecomposition IS the signal dimensionality — a high floor
-# inflates df with noise-only χ² components and destroys test power.
-# Set to 2 (not 1) because χ²(1) has a singularity at 0 that can cause
-# numerical instability.  This value should rarely need changing.
+# With Marchenko-Pastur, noise nodes get k=1 (no signal eigenvalues above
+# the MP bound).  The floor of 2 prevents χ²(1) tests, which have a
+# singularity at 0 that can cause numerical instability.  At pure-noise
+# subtrees, the χ²(2) test correctly fails to reject.
 SPECTRAL_MINIMUM_DIMENSION: int = 2
 
 # Include internal-node distribution vectors in the spectral data matrix.
 # Internal distributions are convex combinations of leaf data — they do NOT
-# increase rank but shift the mean toward the global average, concentrating
-# variance in the top PCs and REDUCING effective rank (typically ~30%).
+# increase rank but inflate n_desc, which tightens the MP noise bounds
+# (smaller √(d/n)) and makes signal detection slightly more sensitive.
 # WARNING: Setting to False catastrophically inflates Gate 2 false positives
-# on null data (edge_T1 goes from 2% to 89% on large null, FPR 0%→83%).
-# The internal nodes act as a beneficial regularizer for effective rank
-# under the null — removing them inflates df and causes spurious splits.
+# on null data with effective_rank (edge_T1 goes from 2% to 89%).
+# With Marchenko-Pastur the effect is milder but keeping True is still
+# recommended for consistency.
 INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 
 # --- Edge (Gate 2) Calibration ---

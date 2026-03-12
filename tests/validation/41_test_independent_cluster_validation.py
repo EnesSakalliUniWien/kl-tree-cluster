@@ -66,7 +66,7 @@ class TestIndependentClusterValidation(unittest.TestCase):
         with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
             # Disable post-hoc merge to test base decomposition behavior
             results = tree.decompose(
-                annotations_df=stats, posthoc_merge=False
+                annotations_df=stats
             )
 
         self.assertEqual(results["num_clusters"], 2)

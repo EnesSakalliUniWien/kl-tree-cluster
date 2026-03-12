@@ -135,7 +135,6 @@ _OVERVIEW_TEXT = dedent(
       Linkage method:               average
       Significance level (alpha):   0.05  (edge and sibling)
       Sibling test method:          cousin_weighted_wald
-      Post-hoc merge:               enabled
       Felsenstein branch-length adjustment: enabled
 """
 )

@@ -273,17 +273,6 @@ def diagnose_case(case_name: str) -> None:
             else:
                 print(f"  {k}: {v}")
 
-    # ── Post-hoc merge audit ──
-    merge_audit = decomp.get("posthoc_merge_audit", [])
-    if merge_audit:
-        merged = [m for m in merge_audit if m.get("action") == "merged"]
-        blocked = [m for m in merge_audit if m.get("action") != "merged"]
-        print(f"\n--- Post-hoc merge audit: {len(merged)} merged, {len(blocked)} blocked ---")
-        for m in merge_audit[:8]:
-            print(f"  {m.get('action', '?')}: {m.get('pair', '?')}, p={m.get('p_value', '?')}")
-    else:
-        print("\n  No post-hoc merges attempted.")
-
     # ── DFS tree trace (top 3 levels) ──
     print("\n--- DFS decision tree (first 3 levels from root) ---")
     _print_dfs_tree(tree, stats, root, depth=0, max_depth=3)

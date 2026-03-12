@@ -169,7 +169,6 @@ def run_single_method_once(
             tree=result.extra.get("tree") if result.extra else None,
             decomposition=result.extra.get("decomposition") if result.extra else None,
             stats=result.extra.get("stats") if result.extra else None,
-            posthoc_merge_audit=result.extra.get("posthoc_merge_audit") if result.extra else None,
         )
 
     method_audit = None

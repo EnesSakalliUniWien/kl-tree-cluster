@@ -1,0 +1,12 @@
+build/
+main.aux
+main.bbl
+main.blg
+main.fdb_latexmk
+main.fls
+main.log
+main.out
+main.pdf
+main.synctex.gz
+tools/tectonic
+tools/*.tar.gz

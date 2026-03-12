@@ -6,7 +6,6 @@ which traverses a hierarchy and decides where to split or merge to form clusters
 
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Dict, List, Set, Tuple
 
 if TYPE_CHECKING:
@@ -18,20 +17,11 @@ import pandas as pd
 from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
-from .cluster_assignments import build_sample_cluster_assignments
-from .decomposition.backends.random_projection_backend import resolve_minimum_projection_dimension_backend
+from .decomposition.backends.random_projection_backend import (
+    resolve_minimum_projection_dimension_backend,
+)
 from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
-from .decomposition.gates.pairwise_testing import (
-    build_branch_distance_cache,
-    test_cluster_pair_divergence,
-)
-from .decomposition.gates.posthoc_merge import apply_posthoc_merge
 from .decomposition.gates.traversal import GateEvaluator, iterate_worklist, process_node
-from .statistics.branch_length_utils import (
-    compute_mean_branch_length,
-    sanitize_positive_branch_length,
-)
-from .statistics.sibling_divergence import CalibrationModel, WeightedCalibrationModel
 
 
 class TreeDecomposition:
@@ -62,8 +52,6 @@ class TreeDecomposition:
         *,
         alpha_local: float = config.EDGE_ALPHA,
         sibling_alpha: float = config.SIBLING_ALPHA,
-        posthoc_merge: bool = config.POSTHOC_MERGE,
-        posthoc_merge_alpha: float | None = config.POSTHOC_MERGE_ALPHA,
         leaf_data: pd.DataFrame | None = None,
         spectral_method: str | None = config.SPECTRAL_METHOD,
         passthrough: bool = config.PASSTHROUGH,
@@ -83,12 +71,6 @@ class TreeDecomposition:
             falls back to raw chi-square tests.
         sibling_alpha
             Significance level used by sibling-independence annotations and gating.
-        posthoc_merge
-            If True, apply tree-respecting post-hoc merging after initial decomposition.
-            This iteratively merges clusters whose underlying leaf clusters are NOT
-            significantly different, working bottom-up through the tree.
-        posthoc_merge_alpha
-            Significance level for post-hoc merge tests. Defaults to sibling_alpha if None.
         leaf_data
             Raw binary data matrix (samples × features).  Required for per-node
             spectral dimension estimation.  When ``None``, the legacy JL-based
@@ -108,14 +90,11 @@ class TreeDecomposition:
         # minimum from the effective rank of the full dataset.  The resolved
         # integer is stored and passed through to all annotation / test calls
         # so that the fixed floor never overrides the data's actual rank.
-        self._resolved_minimum_projection_dimension: int = resolve_minimum_projection_dimension_backend(
-            config.PROJECTION_MINIMUM_DIMENSION,
-            leaf_data=leaf_data,
-        )
-
-        self.posthoc_merge = bool(posthoc_merge)
-        self.posthoc_merge_alpha = (
-            float(posthoc_merge_alpha) if posthoc_merge_alpha is not None else self.sibling_alpha
+        self._resolved_minimum_projection_dimension: int = (
+            resolve_minimum_projection_dimension_backend(
+                config.PROJECTION_MINIMUM_DIMENSION,
+                leaf_data=leaf_data,
+            )
         )
 
         # ----- root -----
@@ -132,32 +111,8 @@ class TreeDecomposition:
             for node_id, node_data in self._node_attrs_by_id.items()
         }
 
-        # ----- branch-length semantics and Felsenstein normalization -----
-        self._mean_branch_length, branch_distance_mode = self._resolve_branch_length_scaling()
-        self._branch_distance_cache = (
-            build_branch_distance_cache(
-                self.tree,
-                root=self._root,
-                distance_mode=branch_distance_mode,
-            )
-            if self._mean_branch_length is not None
-            else None
-        )
-
         # ----- ensure statistical annotations are present -----
         self.annotations_df = self._prepare_annotations(self.annotations_df)
-
-        # ----- extract calibration model for post-hoc merge symmetry -----
-        # When using cousin-adjusted (or weighted) Wald, the annotation step
-        # stores a CalibrationModel / WeightedCalibrationModel that deflates
-        # raw Wald stats by the estimated post-selection inflation factor ĉ.
-        # We reuse the same model in _test_cluster_pair_divergence so that the
-        # post-hoc merge test has identical calibration to the decomposition —
-        # otherwise the merge uses inflated raw T while the split used
-        # deflated T_adj, making it systematically harder to merge than to split.
-        self._calibration_model: CalibrationModel | WeightedCalibrationModel | None = (
-            self.annotations_df.attrs.get("_calibration_model")
-        )
 
         # ----- annotations_df → fast dictionary lookups (no .loc in hot paths) -----
         self._local_significant = extract_bool_column_dict(
@@ -205,78 +160,6 @@ class TreeDecomposition:
         )
 
     # ---------- initialization helpers ----------
-
-    def _resolve_branch_length_scaling(self) -> Tuple[float | None, str]:
-        """Resolve branch-length mode and mean normalization for this run.
-
-        Returns
-        -------
-        Tuple[float | None, str]
-            ``(mean_branch_length, distance_mode)`` where *distance_mode* is
-            passed to :func:`build_branch_distance_cache`.
-        """
-        if not config.FELSENSTEIN_SCALING:
-            return None, "phylogeny"
-
-        mode = config.FELSENSTEIN_BRANCH_LENGTH_MODE
-        if mode not in {"phylogeny", "topology"}:
-            raise ValueError(
-                "config.FELSENSTEIN_BRANCH_LENGTH_MODE must be 'phylogeny' "
-                f"or 'topology'. Got {mode!r}."
-            )
-
-        if mode == "topology":
-            # Unit edge lengths by construction, so normalization mean is 1.
-            return 1.0, "topology"
-
-        policy = config.FELSENSTEIN_INCOMPLETE_BRANCH_POLICY
-        if policy not in {"warn_disable", "error"}:
-            raise ValueError(
-                "config.FELSENSTEIN_INCOMPLETE_BRANCH_POLICY must be "
-                f"'warn_disable' or 'error'. Got {policy!r}."
-            )
-
-        invalid_edges: List[Tuple[str, str, object]] = []
-        for parent, child in self.tree.edges():
-            raw_branch_length = self.tree.edges[parent, child].get("branch_length")
-            if sanitize_positive_branch_length(raw_branch_length) is None:
-                invalid_edges.append((parent, child, raw_branch_length))
-
-        if invalid_edges:
-            preview = ", ".join(
-                f"{parent}->{child}:{raw!r}" for parent, child, raw in invalid_edges[:3]
-            )
-            message = (
-                "FELSENSTEIN_SCALING is enabled with phylogeny branch-length mode, "
-                f"but {len(invalid_edges)} of {self.tree.number_of_edges()} edges have "
-                "missing/invalid 'branch_length'. "
-                f"Examples: {preview}."
-            )
-            if policy == "error":
-                raise ValueError(message)
-            warnings.warn(
-                message + " Disabling Felsenstein scaling for this decomposition run.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            return None, "phylogeny"
-
-        mean_branch_length = compute_mean_branch_length(self.tree)
-        if mean_branch_length is None:
-            message = (
-                "FELSENSTEIN_SCALING is enabled with phylogeny branch-length mode, "
-                "but no valid positive branch lengths were found."
-            )
-            if policy == "error":
-                raise ValueError(message)
-            warnings.warn(
-                message + " Disabling Felsenstein scaling for this decomposition run.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            return None, "phylogeny"
-
-        return mean_branch_length, "phylogeny"
 
     def _compute_has_descendant_split(self) -> Dict[str, bool]:
         """Precompute bottom-up flag: does any descendant have a significant sibling split?
@@ -423,25 +306,6 @@ class TreeDecomposition:
         """
         return _build_cluster_assignments_func(final_leaf_sets, self._find_cluster_root)
 
-    # ---------- post-hoc merge helpers ----------
-
-    def _test_cluster_pair_divergence(
-        self, cluster_a: str, cluster_b: str, common_ancestor: str
-    ) -> Tuple[float, float, float]:
-        """Test if two clusters are significantly different.
-
-        Delegates to :func:`~.pairwise_testing.test_cluster_pair_divergence`.
-        """
-        return test_cluster_pair_divergence(
-            self.tree,
-            cluster_a,
-            cluster_b,
-            common_ancestor,
-            self._mean_branch_length,
-            calibration_model=self._calibration_model,
-            branch_distance_cache=self._branch_distance_cache,
-        )
-
     def decompose_tree(self) -> dict[str, object]:
         """Return cluster assignments by iteratively traversing the hierarchy.
 
@@ -461,63 +325,11 @@ class TreeDecomposition:
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
-        # Apply post-hoc merge and capture audit trail
-        cluster_assignments, merge_audit = self._maybe_apply_posthoc_merge_with_audit(
-            cluster_assignments
-        )
-
         return {
             "cluster_assignments": cluster_assignments,
             "num_clusters": len(cluster_assignments),
-            "posthoc_merge_audit": merge_audit,
             "independence_analysis": {
                 "alpha_local": self.alpha_local,
                 "decision_mode": "sibling_divergence",
-                "posthoc_merge": self.posthoc_merge,
             },
         }
-
-    def _maybe_apply_posthoc_merge_with_audit(
-        self, cluster_assignments: dict[int, dict[str, object]]
-    ) -> Tuple[dict[int, dict[str, object]], List[Dict]]:
-        """Optionally apply tree-respecting post-hoc merge and return audit trail.
-
-        Parameters
-        ----------
-        cluster_assignments
-            Mapping from cluster id to cluster metadata, including ``root_node``.
-
-        Returns
-        -------
-        Tuple[dict[int, dict[str, object]], List[Dict]]
-            - Updated cluster assignments after optional post-hoc merging.
-            - Audit trail of merges tested.
-        """
-        if not (self.posthoc_merge and self._distribution_by_node):
-            return cluster_assignments, []
-
-        cluster_roots: Set[str] = set()
-        for cluster_metadata in cluster_assignments.values():
-            root_node = cluster_metadata.get("root_node")
-            if isinstance(root_node, str) and root_node:
-                cluster_roots.add(root_node)
-
-        if not cluster_roots:
-            return cluster_assignments, []
-
-        merged_roots, audit_trail = apply_posthoc_merge(
-            cluster_roots=cluster_roots,
-            alpha=self.posthoc_merge_alpha,
-            tree=self.tree,
-            children=self._children,
-            test_divergence=self._test_cluster_pair_divergence,
-        )
-
-        # Deterministic cluster ids: avoid iterating an unordered set.
-        merged_leaf_sets: List[set[str]] = []
-        for root_node in sorted(merged_roots):
-            leaf_labels = self._get_all_leaves(root_node)
-            if leaf_labels:
-                merged_leaf_sets.append(set(leaf_labels))
-
-        return self._build_cluster_assignments(merged_leaf_sets), audit_trail

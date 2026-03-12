@@ -1,0 +1,369 @@
+\section{Method}
+
+\subsection{Data representation and notation}
+
+Let $X$ denote the working sample representation after any preprocessing. In
+the direct binary or indicator case,
+$X \in \{0,1\}^{n \times p}$ with rows $X_i \in \{0,1\}^p$. Categorical and
+continuous inputs are handled through the representation maps described later
+in this section. The method builds a rooted agglomerative tree
+$\mathcal{T} = (V,E)$ using Hamming distance between samples and average
+linkage. Leaves are in one-to-one correspondence with the original samples.
+
+For each node $u \in V$, let $L(u)$ denote its descendant leaf set and let
+$n_u = |L(u)|$. For binary or indicator coordinates, the node distribution is
+the feature-wise mean vector
+\begin{equation}
+\theta_u = \frac{1}{n_u}\sum_{i \in L(u)} X_i \in [0,1]^p.
+\end{equation}
+If $u$ has children $l$ and $r$, then
+\begin{equation}
+n_u = n_l + n_r,
+\qquad
+\theta_u = \frac{n_l \theta_l + n_r \theta_r}{n_u}.
+\end{equation}
+The decomposition goal is to identify a set of terminal tree nodes whose leaf
+sets partition the samples and whose defining splits are supported by the two
+statistical gates below. These formulas cover binary data directly and also the
+indicator representations used for categorical and discretized continuous data.
+
+\subsection{Gate 2: child-parent divergence test}
+
+For each edge $(u,c) \in E$, Gate 2 tests whether child $c$ carries signal
+beyond its parent $u$. The coordinate-wise null is
+$H_{0,j}^{\mathrm{edge}}(u,c): \theta_{c,j} = \theta_{u,j}$. Because $c$ is
+nested inside $u$, the child and parent estimators are not independent. In the
+binary or indicator representation,
+\begin{equation}
+\mathrm{Var}(\hat{\theta}_{c,j} - \hat{\theta}_{u,j})
+=
+\theta_{u,j}(1-\theta_{u,j})
+\left(\frac{1}{n_c} - \frac{1}{n_u}\right),
+\end{equation}
+which is the variance expression used in the code. The standardized edge vector
+is therefore
+\begin{equation}
+z_{u \to c,j}^{\mathrm{edge}}
+=
+\frac{\theta_{c,j} - \theta_{u,j}}
+{\sqrt{\theta_{u,j}(1-\theta_{u,j})\left(\frac{1}{n_c} - \frac{1}{n_u}\right)}}.
+\end{equation}
+In the current parameterization there is no Felsenstein branch-length
+rescaling, so the variance above is used as written.
+
+Gate 2 uses a parent-local spectral projection. For each parent node $u$, the
+implementation forms a local matrix $M_u$ whose rows are:
+\begin{enumerate}[leftmargin=1.5em]
+  \item all descendant leaf vectors $X_i$ for $i \in L(u)$, and
+  \item all descendant internal-node distributions $\theta_v$ for proper
+  descendants $v$ of $u$.
+\end{enumerate}
+This second block is included because internal distributions are part of the
+current spectral construction. After removing constant features, let $d_u$ be
+the number of active coordinates and let $m_u$ be the number of rows in $M_u$.
+The code computes the correlation matrix
+$C_u \in \mathbb{R}^{d_u \times d_u}$ and its eigen-decomposition
+\begin{equation}
+C_u = V_u \Lambda_u V_u^\top,
+\qquad
+\Lambda_u = \mathrm{diag}(\lambda_{u,1},\dots,\lambda_{u,d_u}),
+\qquad
+\lambda_{u,1} \ge \cdots \ge \lambda_{u,d_u} \ge 0.
+\end{equation}
+
+The spectral dimension is the Marchenko--Pastur signal count
+\citep{marchenko1967distribution}. With
+\begin{equation}
+\hat{\sigma}_u^2 = \mathrm{median}\{\lambda_{u,i} : \lambda_{u,i} > 0\},
+\qquad
+b_u^{\mathrm{MP}} = \hat{\sigma}_u^2 \left(1 + \sqrt{\frac{d_u}{m_u}}\right)^2,
+\end{equation}
+the projection dimension is
+\begin{equation}
+k_u^{\mathrm{edge}}
+=
+\max\left\{
+2,\;
+\#\{i : \lambda_{u,i} > b_u^{\mathrm{MP}}\}
+\right\},
+\end{equation}
+followed by the implementation cap $k_u^{\mathrm{edge}} \le d_u$. The floor of
+$2$ is part of the current parameterization.
+
+Let $v_{u,1},\dots,v_{u,k_u^{\mathrm{edge}}}$ denote the leading eigenvectors.
+Because eigenvalue whitening is enabled, the Gate 2 test statistic is
+\begin{equation}
+T_{u \to c}^{\mathrm{edge}}
+=
+\sum_{i=1}^{k_u^{\mathrm{edge}}}
+\frac{(v_{u,i}^\top z_{u \to c}^{\mathrm{edge}})^2}{\lambda_{u,i}}.
+\end{equation}
+Under the local correlation-model approximation used by the implementation,
+\begin{equation}
+T_{u \to c}^{\mathrm{edge}} \sim \chi^2_{k_u^{\mathrm{edge}}},
+\qquad
+p_{u \to c}^{\mathrm{edge}}
+=
+\Pr\!\left(
+\chi^2_{k_u^{\mathrm{edge}}}
+\ge
+T_{u \to c}^{\mathrm{edge}}
+\right).
+\end{equation}
+These $p$-values are computed for every edge in the tree.
+
+\subsection{Tree-aware multiple testing for Gate 2}
+
+Gate 2 is not used edge-by-edge in isolation. The pipeline applies the
+TreeBH procedure \citep{bogomolov2021hypotheses} at level
+$\alpha_{\mathrm{edge}} = 0.01$. Edge hypotheses are grouped into families by
+parent node. If $F(u)$ denotes the family of edges from parent $u$ to its
+children, then the family-specific level used by the implementation is
+\begin{equation}
+\alpha_u
+=
+\alpha_{\mathrm{edge}}
+\prod_{a \in \mathrm{Anc}(u)}
+\frac{R_a}{|F(a)|},
+\end{equation}
+where $R_a$ is the number of rejections already made in the ancestor family
+$F(a)$. Root families start at $\alpha_{\mathrm{edge}}$. Within each family,
+ordinary Benjamini--Hochberg is applied at level $\alpha_u$. Let
+$S^{\mathrm{edge}}(c) \in \{0,1\}$ denote the resulting significance indicator
+for child $c$.
+
+\subsection{Gate 3: cousin-adjusted sibling test}
+
+For each parent $u$ with exactly two children $l(u)$ and $r(u)$, Gate 3 tests
+the sibling null
+\begin{equation}
+H_0^{\mathrm{sib}}(u): \theta_{l(u)} = \theta_{r(u)}.
+\end{equation}
+For binary or indicator coordinates, the pooled null proportion is
+\begin{equation}
+\bar{\theta}_{u,j}
+=
+\frac{n_{l(u)}\theta_{l(u),j} + n_{r(u)}\theta_{r(u),j}}
+{n_{l(u)} + n_{r(u)}}.
+\end{equation}
+The standardized sibling vector is
+\begin{equation}
+z_{u,j}^{\mathrm{sib}}
+=
+\frac{\theta_{l(u),j} - \theta_{r(u),j}}
+{\sqrt{
+\bar{\theta}_{u,j}(1-\bar{\theta}_{u,j})
+\left(\frac{1}{n_{l(u)}} + \frac{1}{n_{r(u)}}\right)
+}}.
+\end{equation}
+Again, the current parameterization does not apply Felsenstein variance
+inflation.
+
+Unlike Gate 2, Gate 3 does not use spectral decomposition. Instead it uses an
+orthonormal random projection with a Johnson--Lindenstrauss-style dimension
+rule \citep{johnson1984extensions}. Let $k_{\min}$ be the run-level minimum
+projection dimension computed once from the global effective rank of the full
+dataset,
+\begin{equation}
+k_{\min}
+=
+\max\left\{
+2,\;
+\min\left(\left\lceil \mathrm{erank}(C_{\mathrm{full}}) \right\rceil, 20\right)
+\right\},
+\end{equation}
+where $\mathrm{erank}(C_{\mathrm{full}})=
+\exp\!\left(-\sum_i p_i \log p_i\right)$ for
+$p_i = \lambda_i / \sum_j \lambda_j$. For sibling pair $u$, the projection
+dimension is
+\begin{equation}
+k_u^{\mathrm{sib}}
+=
+\min\left\{
+p,\;
+\max\left(\mathrm{JL}(n_{l(u)} + n_{r(u)}, p; \varepsilon=0.3),\; k_{\min}\right)
+\right\},
+\end{equation}
+with the additional implementation cap
+$k_u^{\mathrm{sib}} \le n_{l(u)} + n_{r(u)}$ when $p \ge 4(n_{l(u)} + n_{r(u)})$.
+If $R_u \in \mathbb{R}^{k_u^{\mathrm{sib}} \times p}$ has orthonormal rows,
+the raw sibling statistic is
+\begin{equation}
+T_u^{\mathrm{raw}}
+=
+\|R_u z_u^{\mathrm{sib}}\|_2^2,
+\qquad
+p_u^{\mathrm{raw}}
+=
+\Pr\!\left(\chi^2_{k_u^{\mathrm{sib}}} \ge T_u^{\mathrm{raw}}\right).
+\end{equation}
+
+The sibling calibration is the cousin-adjusted Wald model. The code computes
+raw sibling statistics for every parent with exactly two children, then splits
+them into two groups:
+\begin{enumerate}[leftmargin=1.5em]
+  \item \emph{null-like pairs}, where neither child is Gate 2 significant, and
+  \item \emph{focal pairs}, where at least one child is Gate 2 significant.
+\end{enumerate}
+A null-like pair is reclassified as focal if its raw sibling
+$p$-value satisfies $p_u^{\mathrm{raw}} \le 10^{-3}$. This is an explicit
+self-consistency rule in the current implementation.
+
+For each calibration pair $q$, define the inflation ratio
+\begin{equation}
+r_q = \frac{T_q^{\mathrm{raw}}}{k_q^{\mathrm{sib}}}.
+\end{equation}
+Let $b_q$ denote the sum of the two child branch lengths under parent $q$, and
+let $n_q$ denote the parent leaf count. The post-selection inflation model is
+\begin{equation}
+\log r_q = \beta_0 + \beta_1 \log b_q + \beta_2 \log n_q + \varepsilon_q.
+\end{equation}
+The fitting rule is exactly tiered:
+\begin{enumerate}[leftmargin=1.5em]
+  \item if fewer than $3$ valid null-like pairs are available, no calibration
+  is applied and $\hat{c}_u = 1$;
+  \item if $3$ or $4$ valid null-like pairs are available, the method uses the
+  global median $\hat{c}_u = \mathrm{median}(r_q)$;
+  \item if at least $5$ valid null-like pairs are available, the regression is
+  fit, but the method still falls back to the global median if the fitted
+  $R^2 < 0.05$.
+\end{enumerate}
+For a focal pair $u$, the predicted inflation factor is
+\begin{equation}
+\hat{c}_u
+=
+\exp(\beta_0 + \beta_1 \log b_u + \beta_2 \log n_u),
+\end{equation}
+then clamped to the interval
+$[1,\max_q r_q]$. If $b_u \le 0$, the code falls back to the global median
+inflation factor rather than extrapolating. The adjusted sibling test is
+\begin{equation}
+T_u^{\mathrm{adj}} = \frac{T_u^{\mathrm{raw}}}{\hat{c}_u},
+\qquad
+p_u^{\mathrm{sib}}
+=
+\Pr\!\left(\chi^2_{k_u^{\mathrm{sib}}} \ge T_u^{\mathrm{adj}}\right).
+\end{equation}
+
+The sibling multiplicity correction is ordinary
+Benjamini--Hochberg \citep{benjamini1995controlling} at
+$\alpha_{\mathrm{sib}} = 0.01$, applied only across focal sibling pairs. Let
+$S^{\mathrm{sib}}(u) \in \{0,1\}$ denote the resulting indicator that parent
+$u$ supports a significant sibling split.
+
+\subsection{Categorical and continuous representations}
+
+Our method is not limited to direct Bernoulli features. A categorical feature
+with values $C_{ij} \in \{0,\dots,K-1\}$ can be represented through one-hot
+indicators
+\begin{equation}
+\tilde{X}_{i,j,k} = \mathbf{1}\{C_{ij} = k\},
+\qquad
+k = 0,\dots,K-1,
+\end{equation}
+so that the Bernoulli/indicator formulas above apply directly on the expanded
+feature space. This is the practical route used by much of the benchmark and
+data-generation code.
+
+The gate code also supports native categorical node distributions
+$\Theta_u \in [0,1]^{d \times K}$ with row sums equal to one. In Gate 2, the
+current implementation forms elementwise standardized scores
+\begin{equation}
+z_{u \to c,jk}^{\mathrm{cat}}
+=
+\frac{\Theta_{c,jk} - \Theta_{u,jk}}
+{\sqrt{
+\Theta_{u,jk}(1-\Theta_{u,jk})
+\left(\frac{1}{n_c} - \frac{1}{n_u}\right)
+}},
+\end{equation}
+then drops the last category of each feature before projection so that only
+$K-1$ coordinates per feature remain. This is a simplex-aware reduction, but it
+still uses a diagonal variance approximation in Gate 2.
+
+In Gate 3, native categorical inputs are handled with a stronger multinomial
+covariance model. Let
+$\bar{\Theta}_{u,j}^{-} \in \mathbb{R}^{K-1}$ be the pooled sibling proportion
+for feature $j$ after dropping the last category, and let
+$\Delta_{u,j}^{-} \in \mathbb{R}^{K-1}$ be the corresponding left-right
+difference. With effective sample size
+\begin{equation}
+n_{\mathrm{eff}} = \frac{n_{l(u)} n_{r(u)}}{n_{l(u)} + n_{r(u)}},
+\end{equation}
+the per-feature covariance block is
+\begin{equation}
+\Sigma_{u,j}
+=
+\frac{
+\mathrm{diag}(\bar{\Theta}_{u,j}^{-})
+-
+\bar{\Theta}_{u,j}^{-}(\bar{\Theta}_{u,j}^{-})^\top
+}{n_{\mathrm{eff}}}
+\;+\;
+\lambda I,
+\end{equation}
+where $\lambda$ is a small ridge term for numerical stability. If
+$L_{u,j}L_{u,j}^\top = \Sigma_{u,j}$ is the Cholesky factorization, the
+whitened categorical sibling vector is built featurewise as
+\begin{equation}
+z_{u,j}^{\mathrm{cat}} = L_{u,j}^{-1}\Delta_{u,j}^{-},
+\end{equation}
+then concatenated across features and passed through the same projected
+Wald, cousin-adjusted, and BH-corrected sibling pipeline described above.
+
+Continuous inputs enter through an explicit preprocessing map into a discrete
+representation. The two current routes are median binarization,
+\begin{equation}
+X_{ij}^{\mathrm{bin}}
+=
+\mathbf{1}\!\left\{
+W_{ij} > \mathrm{median}(W_{\cdot j})
+\right\},
+\end{equation}
+and quantile discretization followed by one-hot expansion,
+\begin{equation}
+C_{ij}
+=
+\sum_{q=1}^{K-1} \mathbf{1}\{W_{ij} > t_{jq}\},
+\qquad
+t_{jq} = Q_{q/K}(W_{\cdot j}),
+\end{equation}
+with the same indicator map
+$\tilde{X}_{i,j,k} = \mathbf{1}\{C_{ij} = k\}$. After this representation step,
+the same hierarchy construction and gate logic are used.
+
+\subsection{Recursive decomposition rule}
+
+The final clusters are produced by a top-down traversal that reads the two gate
+annotation tables. For an internal node $u$ with children $l(u)$ and $r(u)$,
+the split rule is
+\begin{equation}
+\mathrm{Split}(u) = 1
+\end{equation}
+if and only if all three conditions hold:
+\begin{enumerate}[leftmargin=1.5em]
+  \item $u$ has exactly two children;
+  \item $S^{\mathrm{edge}}(l(u)) = 1$ or $S^{\mathrm{edge}}(r(u)) = 1$;
+  \item $S^{\mathrm{sib}}(u) = 1$.
+\end{enumerate}
+If these conditions hold, traversal continues into both children. Otherwise the
+method would ordinarily stop and declare $u$ a terminal cluster.
+
+However, the implementation also enables passthrough traversal. Let
+$D^{\mathrm{sib}}(u)$ be the indicator that some proper descendant of $u$ has a
+significant non-skipped sibling split. Then the traversal still descends into
+both children when
+\begin{equation}
+\mathrm{Split}(u) = 0,
+\qquad
+u \text{ has exactly two children},
+\qquad
+S^{\mathrm{edge}}(l(u)) \vee S^{\mathrm{edge}}(r(u)) = 1,
+\qquad
+D^{\mathrm{sib}}(u) = 1.
+\end{equation}
+This is the passthrough rule used to prevent a shallow Gate 3 failure from
+masking deeper structure. Because post-hoc merge is off, the terminal nodes
+returned by this traversal define the final cluster partition directly. Because
+edge calibration is off, Gate 2 uses only the TreeBH-corrected projected Wald
+evidence described above.

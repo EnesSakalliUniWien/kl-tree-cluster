@@ -34,9 +34,7 @@ def compute_mean_branch_length(tree: nx.DiGraph) -> float | None:
     for parent, child in tree.edges():
         if "branch_length" not in tree.edges[parent, child]:
             continue
-        branch_length = sanitize_positive_branch_length(
-            tree.edges[parent, child]["branch_length"]
-        )
+        branch_length = sanitize_positive_branch_length(tree.edges[parent, child]["branch_length"])
         if branch_length is not None:
             branch_lengths.append(branch_length)
     if not branch_lengths:
@@ -45,4 +43,3 @@ def compute_mean_branch_length(tree: nx.DiGraph) -> float | None:
 
 
 __all__ = ["sanitize_positive_branch_length", "compute_mean_branch_length"]
-

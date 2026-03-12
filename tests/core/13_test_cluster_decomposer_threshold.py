@@ -56,7 +56,7 @@ def test_near_threshold_override_merges_borderline_siblings():
     # Bypass annotation pipeline — this test controls gate columns directly.
     with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
         baseline_result = tree.decompose(
-            annotations_df=df, posthoc_merge=False
+            annotations_df=df
         )
         assert baseline_result["num_clusters"] == 2
 

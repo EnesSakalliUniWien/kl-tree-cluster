@@ -268,7 +268,7 @@ Tier 0 (Critical — Gate 2)     Tier 1 (Correctness)       Tier 2 (Statistics) 
 | 1.1 ✅ Calibrate post-hoc merge     | ✅ Done                      | ✅ 14 tests in `32_test_posthoc_merge_calibration.py`       |
 | 1.2 ✅ Targeted descendant removal  | ✅ Done                      | ✅ 6 tests in `31_test_posthoc_merge.py`                    |
 | 1.3 ✅ Remove LCA-blocking          | ✅ Done                      | ✅ Covered in `31_test_posthoc_merge.py`                    |
-| 2.1 ✅ Gamma GLM                    | `test_clt_validity.py`      | ✅ Done                                                     |
+| 2.1 ✅ Gamma GLM                    | Removed with CLT module     | ✅ Done                                                     |
 | 3.1 ✅ Extract CalibrationModel     | ✅ Done                      | ✅ Imports tested in `32_test_posthoc_merge_calibration.py` |
 | 3.2 ✅ Annotation dispatch          | Mock path in distance test  | No logic changes; 215 pass                                 |
 | 3.3 ✅ Pairwise testing extraction  | Mock path in distance test  | No logic changes; 215 pass                                 |

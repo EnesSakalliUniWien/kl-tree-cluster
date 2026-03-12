@@ -102,6 +102,5 @@ FDR correction implementations.
 
 | Module                       | What it does                                                                  |
 | ---------------------------- | ----------------------------------------------------------------------------- |
-| `clt_validity.py`            | Berry-Esseen bounds, CLT validity checks, minimum sample size computation.    |
 | `power_analysis.py`          | Power calculations for Wald tests (Cohen's h, two-sample, nested).            |
 | `categorical_mahalanobis.py` | Mahalanobis-whitened vectors for categorical distributions (drop-last basis). |

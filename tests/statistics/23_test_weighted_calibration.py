@@ -376,10 +376,9 @@ class TestPosthocMergeDeflationDispatch:
 
         # Bypass annotation pipeline — this test controls gate columns directly.
         with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
-            decomposer = TreeDecomposition(tree, df, posthoc_merge=False)
-        # The decomposer should have picked up the model
-        assert decomposer._calibration_model is not None
-        assert isinstance(decomposer._calibration_model, WeightedCalibrationModel)
+            decomposer = TreeDecomposition(tree, df)
+        # The model should be stored in annotations_df attrs
+        assert decomposer.annotations_df.attrs.get("_calibration_model") is not None
 
 
 # =============================================================================

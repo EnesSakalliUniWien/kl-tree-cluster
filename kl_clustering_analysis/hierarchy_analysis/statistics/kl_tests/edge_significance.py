@@ -496,9 +496,7 @@ def annotate_child_parent_divergence(
         "pca_eigenvalues": node_pca_eigenvalues,
     }
     if minimum_projection_dimension is not None:
-        projection_test_kwargs["minimum_projection_dimension"] = int(
-            minimum_projection_dimension
-        )
+        projection_test_kwargs["minimum_projection_dimension"] = int(minimum_projection_dimension)
 
     (
         edge_test_statistics,

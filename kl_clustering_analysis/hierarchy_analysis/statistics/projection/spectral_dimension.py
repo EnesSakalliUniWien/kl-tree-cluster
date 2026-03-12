@@ -208,10 +208,14 @@ def _build_spectral_tasks(
     feature_count: int,
 ) -> list[NodeSpectralTask]:
     """Build per-node spectral tasks from precomputed descendant metadata."""
+
     internal_distributions_by_node: Dict[str, tuple[np.ndarray, ...]] = {}
+
     if include_internal:
         for node_id in internal_node_ids:
+
             node_internal_distributions: list[np.ndarray] = []
+
             for internal_node_id in descendant_internal_nodes_by_node.get(node_id, []):
                 distribution = tree.nodes[internal_node_id].get("distribution")
                 if distribution is None:

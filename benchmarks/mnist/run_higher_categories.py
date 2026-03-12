@@ -109,6 +109,11 @@ def parse_arguments() -> argparse.Namespace:
         help="Create interactive UMAP HTML visualization",
     )
     parser.add_argument(
+        "--with-umap-html-3d",
+        action="store_true",
+        help="Create interactive 3D UMAP HTML visualization",
+    )
+    parser.add_argument(
         "--pixel-categorization",
         type=str,
         default="binary_threshold",
@@ -542,6 +547,181 @@ def create_bokeh_higher_category_plot(
     print(f"Saved interactive HTML: {output_path}")
 
 
+def create_plotly_higher_category_plot_3d(
+    feature_matrix: np.ndarray,
+    digit_labels: np.ndarray,
+    cluster_labels: np.ndarray,
+    true_higher_category_names: np.ndarray,
+    predicted_higher_category_names: np.ndarray,
+    output_path: Path,
+) -> None:
+    """Create interactive 3D UMAP HTML with panels for true/predicted/cluster labels."""
+    try:
+        import umap
+        import plotly.graph_objects as go
+        import plotly.offline as plotly_offline
+        from plotly.subplots import make_subplots
+    except ImportError as import_error:
+        print(f"Skipping 3D UMAP HTML output: missing dependency ({import_error})")
+        return
+
+    print("\nCreating interactive 3D UMAP HTML...")
+    umap_reducer = umap.UMAP(
+        n_components=3,
+        random_state=42,
+        n_neighbors=15,
+        min_dist=0.1,
+    )
+    embedding_3d = umap_reducer.fit_transform(feature_matrix)
+
+    plot_dataframe = pd.DataFrame(
+        {
+            "x": embedding_3d[:, 0],
+            "y": embedding_3d[:, 1],
+            "z": embedding_3d[:, 2],
+            "digit": [str(digit_label) for digit_label in digit_labels],
+            "cluster": [str(cluster_label) for cluster_label in cluster_labels],
+            "true_higher_category": [str(name) for name in true_higher_category_names],
+            "pred_higher_category": [str(name) for name in predicted_higher_category_names],
+        }
+    )
+
+    def palette_for_count(category_count: int) -> list[str]:
+        base_palette = [
+            "#1f77b4",
+            "#ff7f0e",
+            "#2ca02c",
+            "#d62728",
+            "#9467bd",
+            "#8c564b",
+            "#e377c2",
+            "#7f7f7f",
+            "#bcbd22",
+            "#17becf",
+            "#393b79",
+            "#637939",
+            "#8c6d31",
+            "#843c39",
+            "#7b4173",
+            "#3182bd",
+            "#31a354",
+            "#756bb1",
+            "#636363",
+            "#e6550d",
+        ]
+        if category_count <= len(base_palette):
+            return base_palette[:category_count]
+        repeats = (category_count // len(base_palette)) + 1
+        return (base_palette * repeats)[:category_count]
+
+    def add_colored_panel(
+        figure: go.Figure,
+        *,
+        row: int,
+        col: int,
+        color_column: str,
+        panel_title: str,
+    ) -> None:
+        factors = sorted(plot_dataframe[color_column].unique().tolist(), key=str)
+        panel_palette = palette_for_count(len(factors))
+        color_by_factor = {factor: panel_palette[index] for index, factor in enumerate(factors)}
+
+        for factor in factors:
+            factor_mask = plot_dataframe[color_column] == factor
+            panel_points = plot_dataframe[factor_mask]
+            hover_text = [
+                (
+                    f"Digit: {digit}<br>"
+                    f"Tree Cluster: {cluster}<br>"
+                    f"True Higher Category: {true_category}<br>"
+                    f"Pred Higher Category: {pred_category}"
+                )
+                for digit, cluster, true_category, pred_category in zip(
+                    panel_points["digit"],
+                    panel_points["cluster"],
+                    panel_points["true_higher_category"],
+                    panel_points["pred_higher_category"],
+                )
+            ]
+            figure.add_trace(
+                go.Scatter3d(
+                    x=panel_points["x"],
+                    y=panel_points["y"],
+                    z=panel_points["z"],
+                    mode="markers",
+                    name=factor,
+                    legendgroup=f"{color_column}_{factor}",
+                    showlegend=(col == 1),
+                    marker={
+                        "size": 3,
+                        "opacity": 0.78,
+                        "color": color_by_factor[factor],
+                    },
+                    hovertemplate="%{text}<extra></extra>",
+                    text=hover_text,
+                ),
+                row=row,
+                col=col,
+            )
+
+        scene_key = "scene" if col == 1 else f"scene{col}"
+        figure.update_layout(
+            **{
+                scene_key: {
+                    "xaxis_title": "UMAP-1",
+                    "yaxis_title": "UMAP-2",
+                    "zaxis_title": "UMAP-3",
+                }
+            }
+        )
+        figure.layout.annotations[col - 1].text = panel_title
+
+    figure = make_subplots(
+        rows=1,
+        cols=3,
+        specs=[[{"type": "scene"}, {"type": "scene"}, {"type": "scene"}]],
+        subplot_titles=(
+            "3D UMAP - True Higher Categories",
+            "3D UMAP - Predicted Higher Categories",
+            f"3D UMAP - Raw Tree Clusters ({plot_dataframe['cluster'].nunique()})",
+        ),
+        horizontal_spacing=0.02,
+    )
+
+    add_colored_panel(
+        figure,
+        row=1,
+        col=1,
+        color_column="true_higher_category",
+        panel_title="3D UMAP - True Higher Categories",
+    )
+    add_colored_panel(
+        figure,
+        row=1,
+        col=2,
+        color_column="pred_higher_category",
+        panel_title="3D UMAP - Predicted Higher Categories",
+    )
+    add_colored_panel(
+        figure,
+        row=1,
+        col=3,
+        color_column="cluster",
+        panel_title=f"3D UMAP - Raw Tree Clusters ({plot_dataframe['cluster'].nunique()})",
+    )
+
+    figure.update_layout(
+        title="MNIST Higher Categories - Interactive 3D UMAP",
+        width=2100,
+        height=720,
+        legend_title="Panel 1 Categories",
+        margin={"l": 10, "r": 10, "t": 60, "b": 10},
+    )
+
+    plotly_offline.plot(figure, filename=str(output_path), auto_open=False, include_plotlyjs="inline")
+    print(f"Saved interactive 3D HTML: {output_path}")
+
+
 def main() -> None:
     arguments = parse_arguments()
 
@@ -648,6 +828,7 @@ def main() -> None:
     output_csv_file = output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.csv"
     output_dataframe.to_csv(output_csv_file, index=False)
     output_html_file = output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.html"
+    output_html_3d_file = output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}_3d.html"
     pixel_summary_file = None
     if pixel_category_summary_dataframe is not None:
         pixel_summary_file = (
@@ -695,6 +876,16 @@ def main() -> None:
             true_higher_category_names=output_dataframe["true_higher_category"].to_numpy(),
             predicted_higher_category_names=output_dataframe["pred_higher_category"].to_numpy(),
             output_path=output_html_file,
+        )
+
+    if arguments.with_umap_html_3d:
+        create_plotly_higher_category_plot_3d(
+            feature_matrix=feature_matrix,
+            digit_labels=digit_labels,
+            cluster_labels=cluster_labels,
+            true_higher_category_names=output_dataframe["true_higher_category"].to_numpy(),
+            predicted_higher_category_names=output_dataframe["pred_higher_category"].to_numpy(),
+            output_path=output_html_3d_file,
         )
 
 

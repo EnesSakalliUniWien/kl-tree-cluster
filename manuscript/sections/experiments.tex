@@ -1,0 +1,59 @@
+\section{Experimental Plan}
+
+This section is a forward-looking placeholder. Before the method can support
+publication-quality inferential claims, the manuscript should cover at least
+the following empirical blocks.
+
+\subsection{Null calibration}
+
+The first requirement is a null calibration study on binary data with no true
+cluster structure. The goal is to measure how often Gate 2 and Gate 3 reject
+under scenarios where they should not. This should be reported both at the
+individual-test level and at the resulting number-of-clusters level. The latter
+is critical because a method can have mild per-test inflation yet still produce
+severe over-splitting once the tree walk is applied.
+
+\subsection{Power under planted structure}
+
+The second requirement is a controlled power study with planted binary subtrees.
+This should vary:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item sample size per cluster,
+  \item effect size in feature rates,
+  \item number of informative features,
+  \item tree imbalance, and
+  \item background noise level.
+\end{itemize}
+
+Power should be measured both for edge recovery and for final cluster recovery.
+Adjusted Rand Index and exact split recovery are both useful endpoints.
+
+\subsection{Ablations}
+
+The current codebase makes several choices that can be ablated directly:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item sibling calibration method,
+  \item projection-dimension rule,
+  \item edge multiple-testing correction,
+  \item passthrough traversal on versus off, and
+  \item optional post-hoc merge.
+\end{itemize}
+
+This section should eventually explain not only which configuration performs
+best, but also which choices are required for stable Type I error and which are
+mostly about power or cluster granularity.
+
+\subsection{Real-data benchmarks}
+
+The repository already contains benchmark infrastructure and reporting code. A
+manuscript-quality benchmark section should align those experiments with the
+method claims in the text, focusing on:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item synthetic binary benchmarks with known labels,
+  \item sensitivity to over-splitting and under-splitting,
+  \item comparison to standard clustering baselines, and
+  \item qualitative inspection of annotated trees.
+\end{itemize}

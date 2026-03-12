@@ -1,0 +1,49 @@
+\section{Introduction}
+
+Hierarchical clustering is attractive when the analyst wants more than a flat
+partition. A tree exposes coarse-to-fine structure, keeps near-miss cluster
+boundaries visible, and provides a natural substrate for downstream
+localization or merge decisions. In practice, however, most hierarchical
+workflows still cut the tree using geometric heuristics such as a fixed height,
+an inconsistency threshold, or a manually chosen number of clusters. Those
+choices are often difficult to defend when the goal is not only descriptive
+grouping but also reproducible statistical claims.
+
+The method implemented in this repository takes a different view: an internal
+node is not merely a merge artifact but a hypothesis-testing checkpoint. A
+split is retained only if the child distributions meaningfully deviate from the
+parent and the sibling subtrees are distinguishable from one another after
+multiple-testing correction. This produces a decomposition rule that is local,
+tree-aware, and interpretable at the level of specific internal nodes.
+
+The implementation works on a discrete feature representation. Binary data
+enter directly. Categorical data can be handled as indicator-expanded binary
+features and, in the lower-level gate code, also through multinomial
+probability arrays with simplex-aware corrections. Continuous data enter
+through an explicit preprocessing map such as thresholding or quantile
+discretization before the same tree-and-gate pipeline is applied. Once the
+representation is fixed, each node carries a feature-wise distribution
+estimated from its descendant leaves. Statistical gate annotations are
+computed before the actual tree walk that creates cluster assignments. This
+separation between annotation and traversal is useful both computationally and
+scientifically: the statistical evidence for each potential split is
+explicitly stored and can be audited independently of the final partition.
+
+The manuscript describes the present KL-TE stack as it is currently used in
+the repository. The key ingredients are:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Hamming-distance average-linkage tree construction,
+  \item a Marchenko--Pastur, eigenvalue-whitened Gate 2 child-parent test with
+  TreeBH correction,
+  \item a cousin-adjusted Gate 3 sibling test with Johnson--Lindenstrauss
+  projection dimension and flat BH correction,
+  \item passthrough traversal enabled, and
+  \item Felsenstein scaling, edge calibration, and post-hoc merge disabled.
+\end{itemize}
+
+At this stage the writing goal is to capture the statistical structure of the
+method cleanly enough that the later experimental section can be attached
+without rethinking the exposition. The immediate next step after this draft is
+to add calibration and power studies that quantify when the inferential claims
+made by the gates are empirically trustworthy.

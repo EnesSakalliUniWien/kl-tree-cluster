@@ -1,0 +1,60 @@
+\documentclass[11pt]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\fi
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage[numbers]{natbib}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{enumitem}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\title{KL-TE: Statistically Gated Hierarchical Clustering with Projected Wald Tests}
+\author{Draft workspace}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We describe KL-TE as a statistically gated hierarchical clustering method for
+binary, categorical, and discretized continuous sample-feature data. The
+pipeline builds an average-linkage Hamming tree on a working discrete
+representation, assigns each internal node feature-wise distributions, and
+then evaluates every candidate split with two statistical gates. Gate 2 is a
+child-parent projected Wald test with nested variance, parent-local
+Marchenko--Pastur dimension selection, eigenvalue whitening, and TreeBH
+correction across edges. Gate 3 is a sibling projected Wald test with
+Johnson--Lindenstrauss dimension selection and a cousin-adjusted calibration
+model that deflates post-selection inflation before Benjamini--Hochberg
+correction across focal sibling pairs. Categorical inputs are handled either
+through indicator expansion or through simplex-aware gate formulas, while
+continuous inputs enter through explicit discretization maps used by the
+current pipeline. The corrected gate annotations are converted into clusters by
+a top-down traversal with passthrough enabled. This draft provides the
+manuscript scaffold and the mathematical description needed for the empirical
+sections that still have to be added.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/method}
+\input{sections/implementation}
+\input{sections/experiments}
+\input{sections/discussion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

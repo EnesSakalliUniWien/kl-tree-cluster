@@ -16,14 +16,12 @@ from .statistics import (
     annotate_child_parent_divergence,
     annotate_sibling_divergence,
     benjamini_hochberg_correction,
-    kl_divergence_chi_square_test,
 )
 
 __all__ = [
     "calculate_kl_divergence_vector",
     "TreeDecomposition",
     "benjamini_hochberg_correction",
-    "kl_divergence_chi_square_test",
     "annotate_child_parent_divergence",
     "annotate_sibling_divergence",
 ]

@@ -135,8 +135,7 @@ pytest tests/test_poset_tree.py  # specific test file
 pytest --progress                # show test count progress
 ```
 
-The test suite has **215 tests** across 30+ test files. Key test files:
-- `test_clt_validity.py` (40 tests) — CLT validity checks for statistical tests
+The test suite spans 30+ test files. Key test files:
 - `test_signal_localization.py` (23 tests) — signal localization correctness
 - `test_categorical_distributions.py` (18 tests) — categorical distribution handling
 - `test_cluster_validation_integration.py` (2 tests) — end-to-end K recovery and ARI validation
@@ -157,7 +156,7 @@ df_results, fig = benchmark_cluster_algorithm(test_cases=cases, methods=["kl"])
 |-----------|---------|
 | `tree/` | `PosetTree` (poset_tree.py), distributions, tree utilities |
 | `hierarchy_analysis/` | Tree decomposition (orchestrator), gate logic (`gates.py`), post-hoc merge, signal localization |
-| `hierarchy_analysis/statistics/` | Statistical tests (KL chi-square, sibling divergence, multiple testing, pooled variance, branch_length_utils, CLT validity, power analysis, spectral_dimension) |
+| `hierarchy_analysis/statistics/` | Statistical tests (KL chi-square, sibling divergence, multiple testing, pooled variance, branch_length_utils, power analysis, spectral_dimension) |
 | `hierarchy_analysis/statistics/sibling_divergence/` | Sibling divergence test implementations: `sibling_divergence_test.py` (Wald), `cousin_calibrated_test.py` (F-test), `cousin_adjusted_wald.py` (adjusted Wald), `cousin_tree_guided.py` (tree-guided), `cousin_weighted_wald.py` (weighted Wald — current default) |
 | `hierarchy_analysis/statistics/kl_tests/` | Edge significance testing (`edge_significance.py`) |
 | `hierarchy_analysis/statistics/multiple_testing/` | BH correction, tree-aware BH |

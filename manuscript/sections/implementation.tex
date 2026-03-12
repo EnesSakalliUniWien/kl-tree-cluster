@@ -1,0 +1,49 @@
+\section{Implementation Choices and Current Parameterization}
+
+Table~\ref{tab:defaults} records the current parameterization of the method in
+the repository. These settings matter because they determine the exact tree
+construction, projection rules, multiplicity corrections, and traversal logic
+used in the present code path.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ll}
+\toprule
+Component & Current setting \\
+\midrule
+Tree distance & Hamming \\
+Linkage & Average linkage \\
+Edge significance level & $\alpha_{\mathrm{edge}} = 0.01$ \\
+Sibling significance level & $\alpha_{\mathrm{sib}} = 0.01$ \\
+Edge test & Spectral projected Wald with eigenvalue whitening \\
+Edge dimension rule & Marchenko--Pastur signal count \\
+Sibling test & Cousin-adjusted projected Wald \\
+Sibling dimension rule & JL rule with $\varepsilon = 0.3$ and auto floor \\
+Minimum spectral dimension & 2 \\
+Include internal spectral rows & On \\
+Edge multiple-testing correction & TreeBH \\
+Sibling multiple-testing correction & Flat BH on focal pairs \\
+Edge calibration & Off \\
+Post-hoc merge & Off \\
+Passthrough traversal & On \\
+Felsenstein scaling & Off \\
+\bottomrule
+\end{tabular}
+\caption{Current method configuration in the repository.}
+\label{tab:defaults}
+\end{table}
+
+Two aspects of the current parameterization deserve explicit emphasis in the
+text. First, the two gates do not use the same projection rule: Gate 2 uses parent-local
+spectral whitening, whereas Gate 3 uses a random orthonormal projection with a
+Johnson--Lindenstrauss dimension cap and then corrects post-selection inflation
+through cousin adjustment. Second, the final clustering stage is intentionally
+lightweight once the gate tables exist: passthrough is on, but both edge
+calibration and post-hoc merge are off, so the reported partition is driven
+almost entirely by the two inferential gates and the top-down traversal.
+
+The representation layer should also be read as part of the method. Binary data
+enter directly, categorical data may enter through one-hot indicator expansion
+or native multinomial node distributions, and continuous data currently enter
+through thresholding or quantile discretization before the same gate pipeline
+is applied.

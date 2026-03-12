@@ -31,10 +31,8 @@ tests/
 - `11_test_tree_decomposition_distance.py`
 - `12_test_cluster_assignments.py`
 - `13_test_cluster_decomposer_threshold.py`
-- `14_test_local_kl_utils.py`
 
 ### 3) Statistical validity & calibration internals (`statistics/`)
-- `20_test_clt_validity.py`
 - `21_test_random_projection.py`
 - `22_test_edge_branch_length_regression.py`
 - `23_test_weighted_calibration.py`
@@ -43,10 +41,8 @@ tests/
 - `26_test_invalid_nonfinite_handling.py`
 - `27_test_categorical_distributions.py`
 
-### 4) Signal localization & merge behavior (`localization/`)
+### 4) Signal localization (`localization/`)
 - `30_test_signal_localization.py`
-- `31_test_posthoc_merge.py`
-- `32_test_posthoc_merge_calibration.py`
 - `33_test_skip_reason_propagation_integration.py`
 
 ### 5) Cluster validation stack (`validation/`)

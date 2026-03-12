@@ -1,0 +1,31 @@
+\section{Discussion and Immediate Next Steps}
+
+The current repository state is strong enough to support a focused method
+manuscript, but not yet strong enough to skip the calibration evidence. The
+core narrative is already clear:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item build a hierarchy,
+  \item annotate it with edge and sibling significance tests,
+  \item correct for multiplicity, and
+  \item translate the annotated tree into cluster assignments.
+\end{enumerate}
+
+What remains is to show that these steps jointly behave well when used as an
+end-to-end inferential pipeline.
+
+For the next writing iteration, the most useful additions would be:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item a diagram of the gate pipeline,
+  \item one worked numerical example on a tiny binary tree,
+  \item a calibration figure for null data,
+  \item an ablation table over sibling-calibration methods, and
+  \item a benchmark table tied to the exact current configuration reported in
+  Table~\ref{tab:defaults}.
+\end{itemize}
+
+In other words, the manuscript environment is now ready for two parallel
+streams of work: continued drafting of the prose and deliberate generation of
+results that are specific to the method variant represented in the current
+code path.

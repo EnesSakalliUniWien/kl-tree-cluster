@@ -1,17 +1,12 @@
-"""Pairwise divergence testing between tree nodes and cluster roots.
+"""Pairwise divergence testing between tree nodes.
 
-This module provides stateless functions that compare two nodes (or two
-cluster roots) in a :class:`~tree.poset_tree.PosetTree` using the projected
-Wald chi-square sibling divergence test, with optional Felsenstein branch-
-length adjustment and calibration-model deflation.
+This module provides stateless functions that compare two nodes in a
+:class:`~tree.poset_tree.PosetTree` using the projected Wald chi-square
+sibling divergence test, with optional Felsenstein branch-length adjustment
+and calibration-model deflation.
 
-These functions are used as callbacks by:
-
-* **Signal localization** — ``test_node_pair_divergence`` compares arbitrary
-  subtree pairs during recursive cross-boundary testing.
-* **Post-hoc merge** — ``test_cluster_pair_divergence`` compares cluster roots
-  across sibling boundaries, deflating by the calibration model used during
-  annotation so that merge and split decisions are on the same scale.
+Used by **signal localization** — ``test_node_pair_divergence`` compares
+arbitrary subtree pairs during recursive cross-boundary testing.
 """
 
 from __future__ import annotations
@@ -234,8 +229,7 @@ def _deflate_by_calibration(
         Fitted calibration model.
     ancestor_override
         If given, use this node's leaf count as ``n_reference`` instead
-        of computing the LCA.  Used by ``test_cluster_pair_divergence``
-        where the ancestor is already known.
+        of computing the LCA.
 
     Returns
     -------
@@ -312,49 +306,6 @@ def _compute_branch_lengths_to_lca(
     lca = tree.find_lca(node_a, node_b)
     dist_a = _branch_distance_from_ancestor(tree, lca, node_a, branch_distance_cache)
     dist_b = _branch_distance_from_ancestor(tree, lca, node_b, branch_distance_cache)
-    return dist_a, dist_b
-
-
-def _compute_branch_lengths_from_ancestor(
-    tree: "PosetTree",
-    node_a: str,
-    node_b: str,
-    common_ancestor: str,
-    mean_branch_length: float | None,
-    branch_distance_cache: BranchDistanceCache | None = None,
-) -> Tuple[float | None, float | None]:
-    """Compute patristic distances from two nodes to a known common ancestor.
-
-    Same logic as :func:`_compute_branch_lengths_to_lca` but the ancestor
-    is provided explicitly (e.g. the sibling-boundary node found by the
-    post-hoc merge traversal).
-
-    Parameters
-    ----------
-    tree
-        The hierarchy tree.
-    node_a, node_b
-        Nodes whose distances to *common_ancestor* are needed.
-    common_ancestor
-        A known common ancestor of *node_a* and *node_b*.
-    mean_branch_length
-        Pre-computed mean branch length for the tree, or ``None``.
-
-    Returns
-    -------
-    Tuple[float | None, float | None]
-        ``(dist_a, dist_b)`` — patristic distances, or ``(None, None)``
-        when branch lengths are unavailable.
-    """
-    if mean_branch_length is None:
-        return None, None
-
-    dist_a = _branch_distance_from_ancestor(
-        tree, common_ancestor, node_a, branch_distance_cache
-    )
-    dist_b = _branch_distance_from_ancestor(
-        tree, common_ancestor, node_b, branch_distance_cache
-    )
     return dist_a, dist_b
 
 
@@ -437,89 +388,6 @@ def test_node_pair_divergence(
             node_a=node_a,
             node_b=node_b,
             calibration_model=calibration_model,
-        )
-
-    return test_stat, degrees_of_freedom, p_value
-
-
-def test_cluster_pair_divergence(
-    tree: "PosetTree",
-    cluster_a: str,
-    cluster_b: str,
-    common_ancestor: str,
-    mean_branch_length: float | None,
-    calibration_model: Union[CalibrationModel, WeightedCalibrationModel, None] = None,
-    branch_distance_cache: BranchDistanceCache | None = None,
-) -> Tuple[float, float, float]:
-    """Test whether two cluster roots are significantly different.
-
-    Computes a Wald chi-square statistic (optionally after JL projection)
-    from the standardized difference between the two cluster mean vectors,
-    then optionally deflates by a calibration model so that the post-hoc
-    merge test operates on the same scale as the decomposition.
-
-    Parameters
-    ----------
-    tree
-        The hierarchy tree with pre-populated ``distribution`` and
-        ``leaf_count`` node attributes.
-    cluster_a, cluster_b
-        Cluster root node identifiers to compare.
-    common_ancestor
-        The lowest common ancestor in the tree (used for branch-length
-        computation).
-    mean_branch_length
-        Pre-computed mean branch length for the tree, or ``None``.
-    calibration_model
-        Optional calibration model for deflating the raw Wald statistic.
-        When provided, the test statistic is divided by the predicted
-        inflation factor ``ĉ`` and the p-value is recomputed from the
-        deflated statistic.
-
-    Returns
-    -------
-    Tuple[float, float, float]
-        ``(test_statistic, degrees_of_freedom, p_value)``
-    """
-    dist_a = np.asarray(tree.nodes[cluster_a]["distribution"], dtype=float)
-    dist_b = np.asarray(tree.nodes[cluster_b]["distribution"], dtype=float)
-    size_a = int(tree.nodes[cluster_a]["leaf_count"])
-    size_b = int(tree.nodes[cluster_b]["leaf_count"])
-
-    bl_a, bl_b = _compute_branch_lengths_from_ancestor(
-        tree,
-        cluster_a,
-        cluster_b,
-        common_ancestor,
-        mean_branch_length,
-        branch_distance_cache=branch_distance_cache,
-    )
-
-    test_stat, degrees_of_freedom, p_value = sibling_divergence_test(
-        left_dist=dist_a,
-        right_dist=dist_b,
-        n_left=float(size_a),
-        n_right=float(size_b),
-        branch_length_left=bl_a,
-        branch_length_right=bl_b,
-        mean_branch_length=mean_branch_length,
-        test_id=f"clusterpair:{cluster_a}|{cluster_b}|ancestor:{common_ancestor}",
-    )
-
-    # Deflate by the same calibration model used during annotation so that
-    # the post-hoc merge operates on the same scale as the decomposition.
-    if calibration_model is not None:
-        test_stat, degrees_of_freedom, p_value = _deflate_by_calibration(
-            test_stat,
-            degrees_of_freedom,
-            p_value,
-            bl_a=bl_a,
-            bl_b=bl_b,
-            tree=tree,
-            node_a=cluster_a,
-            node_b=cluster_b,
-            calibration_model=calibration_model,
-            ancestor_override=common_ancestor,
         )
 
     return test_stat, degrees_of_freedom, p_value

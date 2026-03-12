@@ -44,29 +44,7 @@ def export_decomposition_audit(
         method = res.method_name.replace(" ", "_").lower()
         tree = res.tree
 
-        # 1. Export Post-hoc Merge Audit
-        # Search in root or 'meta' for possible audit trail
-        audit_trail = res.posthoc_merge_audit or res.meta.get("posthoc_merge_audit")
-
-        if audit_trail:
-            audit_df = pd.DataFrame(audit_trail)
-
-            # Enrich merge audit with human-readable labels if tree is available
-            if tree is not None:
-                node_labels = nx.get_node_attributes(tree, "label")
-                for col in ["left_cluster", "right_cluster", "lca"]:
-                    if col in audit_df.columns:
-                        # Fallback to ID if label is missing
-                        audit_df[f"{col}_label"] = audit_df[col].apply(
-                            lambda x: node_labels.get(x, x) if pd.notna(x) else ""
-                        )
-
-            audit_file = audit_dir / f"case_{case_id}_{method}_merges.csv"
-            audit_df.to_csv(audit_file, index=False)
-            if verbose:
-                print(f"  Audit log saved: {audit_file.name}")
-
-        # 2. Export Primary Node Stats
+        # 1. Export Primary Node Stats
         stats_df = res.stats
         if stats_df is not None:
             # ...existing code...
