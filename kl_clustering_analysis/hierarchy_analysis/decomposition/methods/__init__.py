@@ -8,39 +8,27 @@ from typing import Any
 __all__ = [
     "effective_rank",
     "marchenko_pastur_signal_count",
-    "count_active_features",
-    "estimate_k_effective_rank",
     "estimate_k_marchenko_pastur",
-    "estimate_k_active_features",
     "build_pca_projection_basis",
     "build_random_orthonormal_basis",
     "build_projection_basis_with_padding",
     "run_projected_wald_kernel",
     "compute_projected_pvalue",
     "annotate_wald",
-    "annotate_cousin_ftest",
-    "annotate_cousin_weighted_wald",
     "annotate_cousin_adjusted_wald",
-    "annotate_cousin_tree_guided",
 ]
 
 _NAME_TO_MODULE = {
     "effective_rank": ".k_estimators",
     "marchenko_pastur_signal_count": ".k_estimators",
-    "count_active_features": ".k_estimators",
-    "estimate_k_effective_rank": ".k_estimators",
     "estimate_k_marchenko_pastur": ".k_estimators",
-    "estimate_k_active_features": ".k_estimators",
     "build_pca_projection_basis": ".projection_basis",
     "build_random_orthonormal_basis": ".projection_basis",
     "build_projection_basis_with_padding": ".projection_basis",
     "run_projected_wald_kernel": ".projected_wald",
     "compute_projected_pvalue": ".projected_wald",
     "annotate_wald": ".sibling_calibration",
-    "annotate_cousin_ftest": ".sibling_calibration",
-    "annotate_cousin_weighted_wald": ".sibling_calibration",
     "annotate_cousin_adjusted_wald": ".sibling_calibration",
-    "annotate_cousin_tree_guided": ".sibling_calibration",
 }
 
 

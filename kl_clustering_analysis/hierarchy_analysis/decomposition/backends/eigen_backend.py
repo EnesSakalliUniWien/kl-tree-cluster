@@ -7,7 +7,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from ..methods.k_estimators import effective_rank, marchenko_pastur_signal_count
+from ..methods.k_estimators import marchenko_pastur_signal_count
 
 
 @dataclass
@@ -102,10 +102,7 @@ def estimate_spectral_k_backend(
     minimum_projection_dimension: int,
 ) -> int:
     """Estimate projection dimension from eigenvalues."""
-    if method == "effective_rank":
-        k = int(np.round(effective_rank(eigenvalues)))
-    else:  # marchenko_pastur
-        k = int(marchenko_pastur_signal_count(eigenvalues, n_desc, d_active))
+    k = int(marchenko_pastur_signal_count(eigenvalues, n_desc, d_active))
 
     k = max(k, int(minimum_projection_dimension))
     k = min(k, int(d_active))

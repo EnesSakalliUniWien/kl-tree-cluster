@@ -228,29 +228,20 @@ def _compute_projected_test(
 
     # Shared projected-test kernel.  Keep edge return semantics unchanged:
     # return nominal df=k (not the Satterthwaite effective df).
-    try:
-        test_statistic, projection_dim, _effective_degrees_of_freedom, p_value = (
-            run_projected_wald_kernel(
-                standardized_z_scores,
-                seed=seed,
-                spectral_k=spectral_k,
-                pca_projection=pca_projection,
-                pca_eigenvalues=pca_eigenvalues,
-                k_fallback=lambda dim: compute_projection_dimension(
-                    n_child,
-                    dim,
-                    minimum_projection_dimension=minimum_projection_dimension,
-                ),
-            )
+    test_statistic, projection_dim, _effective_degrees_of_freedom, p_value = (
+        run_projected_wald_kernel(
+            standardized_z_scores,
+            seed=seed,
+            spectral_k=spectral_k,
+            pca_projection=pca_projection,
+            pca_eigenvalues=pca_eigenvalues,
+            k_fallback=lambda dim: compute_projection_dimension(
+                n_child,
+                dim,
+                minimum_projection_dimension=minimum_projection_dimension,
+            ),
         )
-    except Exception as e:
-        logger.error(
-            "Projection failed (Edge): z.shape=%s, z_stats=%s/%s",
-            standardized_z_scores.shape,
-            np.min(standardized_z_scores),
-            np.max(standardized_z_scores),
-        )
-        raise e
+    )
 
     return test_statistic, float(projection_dim), p_value, False
 
@@ -394,7 +385,7 @@ def annotate_child_parent_divergence(
     When *leaf_data* and *spectral_method* are provided, per-node
     eigendecomposition replaces the JL-based projection dimension.
     The spectral method determines both the projection dimension k_v
-    and (for "effective_rank" / "marchenko_pastur") the PCA-based
+    and (for "marchenko_pastur") the PCA-based
     informed projection at each internal node.
 
     Parameters
@@ -412,8 +403,8 @@ def annotate_child_parent_divergence(
         Raw binary data matrix (samples × features).  Required for
         per-node spectral dimension estimation.
     spectral_method
-        Dimension estimator: ``"effective_rank"``, ``"marchenko_pastur"``,
-        or ``"active_features"``.  When ``None`` (default), the legacy
+        Dimension estimator: ``"marchenko_pastur"``.
+        When ``None`` (default), the legacy
         JL-based dimension is used.
     minimum_projection_dimension
         Minimum projection dimension (floor) used by the JL fallback path.

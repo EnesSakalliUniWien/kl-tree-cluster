@@ -148,23 +148,14 @@ def sibling_divergence_test(
         )
     test_seed = derive_projection_seed(config.PROJECTION_RANDOM_SEED, test_id)
 
-    try:
-        stat, _k_nominal, effective_df, p_value = run_projected_wald_kernel(
-            z,
-            seed=test_seed,
-            spectral_k=spectral_k,
-            pca_projection=pca_projection,
-            pca_eigenvalues=pca_eigenvalues,
-            k_fallback=lambda dim: compute_projection_dimension(n_total, dim, minimum_projection_dimension=minimum_projection_dimension),
-        )
-    except Exception as e:
-        logging.error(
-            "Projection failed (Sibling): z.shape=%s, z_stats=%s/%s",
-            z.shape,
-            np.min(z),
-            np.max(z),
-        )
-        raise e
+    stat, _k_nominal, effective_df, p_value = run_projected_wald_kernel(
+        z,
+        seed=test_seed,
+        spectral_k=spectral_k,
+        pca_projection=pca_projection,
+        pca_eigenvalues=pca_eigenvalues,
+        k_fallback=lambda dim: compute_projection_dimension(n_total, dim, minimum_projection_dimension=minimum_projection_dimension),
+    )
 
     return stat, effective_df, p_value
 

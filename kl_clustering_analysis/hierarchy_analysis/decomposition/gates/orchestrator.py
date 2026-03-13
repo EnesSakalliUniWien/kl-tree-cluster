@@ -29,7 +29,6 @@ def run_gate_annotation_pipeline(
     sibling_spectral_dims: dict[str, int] | None = None,
     sibling_pca_projections: dict[str, object] | None = None,
     sibling_pca_eigenvalues: dict[str, object] | None = None,
-    edge_calibration: bool | None = None,
 ) -> GateAnnotationBundle:
     """Run Gate 2 -> Gate 3 adapters and return typed legacy-compatible output."""
     resolved_spectral_method = normalize_spectral_k_method(spectral_method)
@@ -56,16 +55,6 @@ def run_gate_annotation_pipeline(
     )
     annotated_df = sibling_bundle.annotated_df
 
-    should_calibrate_edges = config.EDGE_CALIBRATION if edge_calibration is None else edge_calibration
-    if should_calibrate_edges:
-        from ...statistics.kl_tests.edge_calibration import calibrate_edges_from_sibling_neighborhood
-
-        annotated_df = calibrate_edges_from_sibling_neighborhood(
-            tree,
-            annotated_df,
-            alpha=alpha_local,
-        )
-
     edge_columns = edge_gate_columns(annotated_df)
     sibling_columns = sibling_gate_columns(annotated_df)
     return GateAnnotationBundle(
@@ -84,8 +73,6 @@ def run_gate_annotation_pipeline(
                 "spectral_method": resolved_spectral_method,
                 "sibling_method": resolved_sibling_method,
             },
-            "edge_calibration_enabled": bool(config.EDGE_CALIBRATION),
-            "edge_calibration_applied": bool(should_calibrate_edges),
         },
     )
 

@@ -22,9 +22,7 @@ if TYPE_CHECKING:
 from ...statistics.branch_length_utils import sanitize_positive_branch_length
 from ...statistics.sibling_divergence import (
     CalibrationModel,
-    WeightedCalibrationModel,
     predict_inflation_factor,
-    predict_weighted_inflation_factor,
 )
 from ...statistics.sibling_divergence.sibling_divergence_test import sibling_divergence_test
 
@@ -210,7 +208,7 @@ def _deflate_by_calibration(
     tree: "PosetTree",
     node_a: str,
     node_b: str,
-    calibration_model: Union[CalibrationModel, WeightedCalibrationModel],
+    calibration_model: CalibrationModel,
     ancestor_override: str | None = None,
 ) -> Tuple[float, float, float]:
     """Deflate a raw Wald statistic by the calibration inflation factor.
@@ -248,18 +246,11 @@ def _deflate_by_calibration(
         lca = tree.find_lca(node_a, node_b)
         n_reference = int(tree.nodes[lca]["leaf_count"])
 
-    if isinstance(calibration_model, WeightedCalibrationModel):
-        inflation_factor = predict_weighted_inflation_factor(
-            calibration_model,
-            branch_length_sum,
-            n_reference=n_reference,
-        )
-    else:
-        inflation_factor = predict_inflation_factor(
-            calibration_model,
-            branch_length_sum,
-            n_reference=n_reference,
-        )
+    inflation_factor = predict_inflation_factor(
+        calibration_model,
+        branch_length_sum,
+        n_reference=n_reference,
+    )
 
     if inflation_factor > 0 and np.isfinite(test_stat) and degrees_of_freedom > 0:
         from scipy.stats import chi2 as chi2_dist
@@ -314,7 +305,7 @@ def test_node_pair_divergence(
     node_a: str,
     node_b: str,
     mean_branch_length: float | None,
-    calibration_model: Union[CalibrationModel, WeightedCalibrationModel, None] = None,
+    calibration_model: CalibrationModel | None = None,
     branch_distance_cache: BranchDistanceCache | None = None,
 ) -> Tuple[float, float, float]:
     """Test divergence between two arbitrary tree nodes.

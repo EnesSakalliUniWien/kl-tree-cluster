@@ -4,9 +4,13 @@ import numpy as np
 import pytest
 
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
-    compute_projection_dimension_backend as compute_projection_dimension,
-    generate_projection_matrix_backend as generate_projection_matrix,
     _PROJECTION_CACHE,
+)
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
+    compute_projection_dimension_backend as compute_projection_dimension,
+)
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
+    generate_projection_matrix_backend as generate_projection_matrix,
 )
 
 
@@ -32,7 +36,9 @@ def test_compute_projection_dimension_basic():
     # sklearn's johnson_lindenstrauss_min_dim formula is k >= (4 * log(n_samples)) / (eps ** 2 / 2 - eps ** 3 / 3)
     # For n_samples=1000, eps=0.3, this gives k >= 383
     # Our config.PROJECTION_MINIMUM_DIMENSION is 10
-    k = compute_projection_dimension(n_samples, n_features, eps=eps, minimum_projection_dimension=10)
+    k = compute_projection_dimension(
+        n_samples, n_features, eps=eps, minimum_projection_dimension=10
+    )
     assert k >= 10
     assert k <= n_features
     # Verify it's in the expected range for these parameters
@@ -45,7 +51,9 @@ def test_compute_projection_dimension_minimum_projection_dimension():
     n_features = 10
     eps = 0.5
     # For n_samples=5, eps=0.5, k is very small, capped by n_features=10, not minimum_projection_dimension=50.
-    k = compute_projection_dimension(n_samples, n_features, eps=eps, minimum_projection_dimension=50)
+    k = compute_projection_dimension(
+        n_samples, n_features, eps=eps, minimum_projection_dimension=50
+    )
     assert k == n_features
 
 
@@ -54,7 +62,9 @@ def test_compute_projection_dimension_max_k_n_features():
     n_samples = 1000
     n_features = 50
     eps = 0.1  # Very low eps, would usually result in k > 50
-    k = compute_projection_dimension(n_samples, n_features, eps=eps, minimum_projection_dimension=10)
+    k = compute_projection_dimension(
+        n_samples, n_features, eps=eps, minimum_projection_dimension=10
+    )
     assert k == n_features
 
 
@@ -72,12 +82,8 @@ def test_generate_projection_matrix_determinism():
     k = 100
     random_state = 42
 
-    matrix1 = _to_dense(
-        generate_projection_matrix(n_features, k, random_state=random_state)
-    )
-    matrix2 = _to_dense(
-        generate_projection_matrix(n_features, k, random_state=random_state)
-    )
+    matrix1 = _to_dense(generate_projection_matrix(n_features, k, random_state=random_state))
+    matrix2 = _to_dense(generate_projection_matrix(n_features, k, random_state=random_state))
     assert np.array_equal(matrix1, matrix2)
 
 
@@ -88,12 +94,8 @@ def test_generate_projection_matrix_different_random_state_different_matrices():
     random_state1 = 42
     random_state2 = 43
 
-    matrix1 = _to_dense(
-        generate_projection_matrix(n_features, k, random_state=random_state1)
-    )
-    matrix2 = _to_dense(
-        generate_projection_matrix(n_features, k, random_state=random_state2)
-    )
+    matrix1 = _to_dense(generate_projection_matrix(n_features, k, random_state=random_state1))
+    matrix2 = _to_dense(generate_projection_matrix(n_features, k, random_state=random_state2))
     assert not np.array_equal(matrix1, matrix2)
 
 
@@ -104,25 +106,19 @@ def test_generate_projection_matrix_caching():
     random_state = 123
 
     # First call, should populate cache
-    matrix1 = _to_dense(
-        generate_projection_matrix(n_features, k, random_state=random_state)
-    )
+    matrix1 = _to_dense(generate_projection_matrix(n_features, k, random_state=random_state))
 
     cache_key = ("orthonormal", n_features, k, random_state)
     assert cache_key in _PROJECTION_CACHE
 
     # Second call with same parameters, should use cached matrix
-    matrix2 = _to_dense(
-        generate_projection_matrix(n_features, k, random_state=random_state)
-    )
+    matrix2 = _to_dense(generate_projection_matrix(n_features, k, random_state=random_state))
 
     assert np.array_equal(matrix1, matrix2)
 
     # Call with different k, should create new entry in cache
     k_new = 25
-    matrix3 = _to_dense(
-        generate_projection_matrix(n_features, k_new, random_state=random_state)
-    )
+    matrix3 = _to_dense(generate_projection_matrix(n_features, k_new, random_state=random_state))
     cache_key_new = ("orthonormal", n_features, k_new, random_state)
     assert cache_key_new in _PROJECTION_CACHE
 
@@ -141,9 +137,9 @@ def test_orthonormal_projection_is_orthonormal():
     RRT = matrix @ matrix.T
     expected = np.eye(k)
 
-    assert np.allclose(RRT, expected, atol=1e-10), (
-        "Orthonormal projection should satisfy R @ R.T = I"
-    )
+    assert np.allclose(
+        RRT, expected, atol=1e-10
+    ), "Orthonormal projection should satisfy R @ R.T = I"
 
 
 def test_orthonormal_projection_chi_square_distribution():
@@ -164,9 +160,13 @@ def test_orthonormal_projection_chi_square_distribution():
     test_stats = np.sum(projected**2, axis=1)  # Sum of squared projected components
 
     # Test statistics should have mean ≈ k and variance ≈ 2k (chi-square properties)
-    assert np.abs(np.mean(test_stats) - k) < 3, (
-        f"Mean should be ~{k}, got {np.mean(test_stats):.2f}"
-    )
-    assert np.abs(np.var(test_stats) - 2 * k) < 20, (
-        f"Variance should be ~{2 * k}, got {np.var(test_stats):.2f}"
-    )
+    assert (
+        np.abs(np.mean(test_stats) - k) < 3
+    ), f"Mean should be ~{k}, got {np.mean(test_stats):.2f}"
+    assert (
+        np.abs(np.var(test_stats) - 2 * k) < 20
+    ), f"Variance should be ~{2 * k}, got {np.var(test_stats):.2f}"
+
+    assert (
+        np.abs(np.var(test_stats) - 2 * k) < 20
+    ), f"Variance should be ~{2 * k}, got {np.var(test_stats):.2f}"

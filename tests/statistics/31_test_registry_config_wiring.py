@@ -10,7 +10,9 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts impo
     LEGACY_EDGE_COLUMNS,
     LEGACY_SIBLING_COLUMNS,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.errors import DecompositionMethodError
+from kl_clustering_analysis.hierarchy_analysis.decomposition.core.errors import (
+    DecompositionMethodError,
+)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -59,21 +61,17 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
     "sibling_method",
     [
         "wald",
-        "cousin_ftest",
         "cousin_adjusted_wald",
-        "cousin_tree_guided",
-        "cousin_weighted_wald",
     ],
 )
 @pytest.mark.parametrize(
     "spectral_method",
-    [None, "none", "effective_rank", "marchenko_pastur", "active_features"],
+    [None, "none", "marchenko_pastur"],
 )
 def test_pipeline_supports_current_config_method_combinations(
     monkeypatch, sibling_method: str, spectral_method: str | None
 ) -> None:
     tree, stats_df, leaf_data = _build_small_tree_with_leaf_data()
-    monkeypatch.setattr(config, "EDGE_CALIBRATION", False)
     monkeypatch.setattr(config, "PROJECTION_RANDOM_SEED", 123)
 
     needs_leaf_data = spectral_method not in (None, "none")
@@ -86,7 +84,6 @@ def test_pipeline_supports_current_config_method_combinations(
         spectral_method=spectral_method,
         minimum_projection_dimension=4,
         sibling_method=sibling_method,
-        edge_calibration=False,
     )
     out = bundle.annotated_df
     for col in LEGACY_EDGE_COLUMNS:
@@ -107,7 +104,6 @@ def test_pipeline_rejects_unknown_sibling_method() -> None:
             tree,
             stats_df.copy(),
             sibling_method="not_a_real_method",
-            edge_calibration=False,
         )
 
 
@@ -119,5 +115,4 @@ def test_pipeline_rejects_unknown_spectral_method() -> None:
             stats_df.copy(),
             leaf_data=leaf_data,
             spectral_method="not_a_real_method",
-            edge_calibration=False,
         )

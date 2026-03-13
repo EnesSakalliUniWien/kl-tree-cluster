@@ -39,6 +39,19 @@ Supported build paths:
 If no engine is installed, `build.sh` exits with a clear error message and the
 source tree remains ready to compile once TeX tooling is added.
 
+## VS Code / LaTeX Workshop
+
+If you use VS Code with LaTeX Workshop, open the repository root rather than
+only the `manuscript/` directory. The workspace settings in
+`../.vscode/settings.json` configure LaTeX Workshop to:
+
+- build through `manuscript/build.sh`
+- use `manuscript/build` as the output directory
+- resolve section files back to `main.tex`
+
+With that setup, building from `main.tex` or from any file in `sections/`
+should target the same manuscript PDF.
+
 ## Draft Status
 
 The current draft is intentionally front-loaded toward method description.

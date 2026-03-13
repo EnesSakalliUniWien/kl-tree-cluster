@@ -38,7 +38,7 @@ Binary matrix → linkage → PosetTree → populate_node_divergences() → deco
   - `PROJECTION_EPS = 0.3` — JL-lemma epsilon for projection dimension
   - `PROJECTION_MIN_K = "auto"` — minimum projection dimension; `"auto"` estimates from the data's effective rank (Shannon entropy of eigenvalue spectrum), clamped to `[4, 20]` (floor raised from 1→4 to prevent low-power χ²(1) tests at small clusters); set to an int for a fixed floor
   - `PROJECTION_RANDOM_SEED = 42` — seed for random projection matrix
-  - `SPECTRAL_METHOD = "effective_rank"` — per-node projection dimension via eigendecomposition (Gate 2 only)
+  - `SPECTRAL_METHOD = "marchenko_pastur"` — per-node projection dimension via eigendecomposition (Gate 2 only)
   - `EPSILON = 1e-9` — numerical stability constant
 
 ## Key Patterns
@@ -238,7 +238,7 @@ Tests whether children are significantly different from parent using projected W
 - Nested variance: `Var = θ(1-θ) × (1/n_child - 1/n_parent)` accounts for child being subset of parent
 - Felsenstein scaling: `Var *= 1 + BL/mean_BL`
 - Projection dimension: determined by `config.SPECTRAL_METHOD`:
-  - `"effective_rank"` (default): Per-node eigendecomposition of the local **correlation** matrix of descendant data (leaves + internal node distributions). Projection dimension k = round(effective_rank). Uses **PCA-based whitened projection** `T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)` (exact under H₀).
+  - `"marchenko_pastur"` (default): Per-node eigendecomposition of the local **correlation** matrix of descendant data (leaves + internal node distributions). Projection dimension k = count of eigenvalues above the Marchenko-Pastur upper bound. Uses **PCA-based whitened projection** `T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)` (exact under H₀).
   - `None`: Legacy JL-based dimension `k ≈ 8·ln(n)/ε²`, with information cap (`k ≤ n` when `d ≥ 4n`), random orthonormal projection.
 - FDR: `tree_bh` (default), `flat`, or `level_wise` correction
 - If **neither** child diverges → MERGE (noise, no signal to split on)
@@ -381,7 +381,7 @@ The following logic errors were identified and corrected:
 ## Notes
 
 - **Multiple testing**: Uses Benjamini-Hochberg FDR correction across all edges
-- **Projection dimension (Gate 2 — edge test)**: When `SPECTRAL_METHOD = "effective_rank"` (default), projection dimension is the per-node effective rank of the local correlation matrix, with PCA-based eigenvector projection and eigenvalue whitening for exact χ²(k). The correlation matrix is built from both leaf rows AND internal descendant node distribution vectors to enrich the covariance estimate. Uses **dual-form eigendecomposition** when `n_desc < d_active`: computes `n×n` Gram matrix instead of `d×d` correlation matrix for O(n²d + n³) vs O(d³) — critical for high-d cases (e.g. n=10, d=2000: 10×10 eigh instead of 2000×2000).
+- **Projection dimension (Gate 2 — edge test)**: When `SPECTRAL_METHOD = "marchenko_pastur"` (default), projection dimension is the per-node count of eigenvalues above the Marchenko-Pastur upper bound, with PCA-based eigenvector projection and eigenvalue whitening for exact χ²(k). The correlation matrix is built from both leaf rows AND internal descendant node distribution vectors to enrich the covariance estimate. Uses **dual-form eigendecomposition** when `n_desc < d_active`: computes `n×n` Gram matrix instead of `d×d` correlation matrix for O(n²d + n³) vs O(d³) — critical for high-d cases (e.g. n=10, d=2000: 10×10 eigh instead of 2000×2000).
 - **Projection dimension (Gate 3 — sibling test)**: Uses JL-based dimension `k ≈ 8·ln(n)/ε²` with **information cap**: when `d ≥ 4n`, k is capped at n_samples (data matrix rank ≤ n, so z-components beyond n carry only noise). Controlled by `config.PROJECTION_EPS` (default 0.3), `config.PROJECTION_MIN_K` (floor, default 10), and `config.PROJECTION_RANDOM_SEED` (seed, default 42)
 - **Branch lengths**: Felsenstein (1985) adjustment scales variance by normalized branch length to account for phylogenetic distance. `mean_branch_length` is computed once from tree edges and threaded through all test functions.
 - **Post-hoc merge**: Optional bottom-up merge pass (`posthoc_merge=True`) to reduce over-splitting; returns audit trail. Blocked at LCA boundaries where any pair shows significant difference.

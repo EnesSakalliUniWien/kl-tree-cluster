@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Analyze the impact of switching SPECTRAL_METHOD from effective_rank to marchenko_pastur.
+"""Analyze the impact of switching SPECTRAL_METHOD to marchenko_pastur.
 
-Compares the most recent full benchmark run (MP) against the prior baseline run
-(effective_rank) across all cases and methods.
+Compares benchmark runs across all cases and methods. Originally used to
+compare the legacy effective_rank baseline against the Marchenko-Pastur
+default.
 
 Usage:
     python benchmarks/analyze_mp_switch.py [--baseline RUN_DIR] [--mp RUN_DIR]

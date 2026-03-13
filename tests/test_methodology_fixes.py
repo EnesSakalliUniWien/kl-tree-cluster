@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2
 
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.satterthwaite import (
     compute_projected_pvalue,
 )
@@ -47,80 +46,13 @@ class TestComputeProjectedPvalue:
 
     def test_whitened_mode(self):
         """Eigenvalue whitening: T = Σ w²/λ ~ χ²(k)."""
-        old_val = config.EIGENVALUE_WHITENING
-        try:
-            config.EIGENVALUE_WHITENING = True
-            projected = np.array([1.0, 2.0, 3.0])
-            eigenvalues = np.array([2.0, 1.0, 0.5])
-            stat, df, pval = compute_projected_pvalue(projected, 3, eigenvalues=eigenvalues)
-            expected_stat = 1.0 / 2.0 + 4.0 / 1.0 + 9.0 / 0.5
-            assert abs(stat - expected_stat) < 1e-10
-            assert df == 3.0
-            assert abs(pval - float(chi2.sf(expected_stat, df=3))) < 1e-10
-        finally:
-            config.EIGENVALUE_WHITENING = old_val
-
-    def test_satterthwaite_mode(self):
-        """Satterthwaite: T_pca = Σ w², approximated as c·χ²(ν)."""
-        old_val = config.EIGENVALUE_WHITENING
-        try:
-            config.EIGENVALUE_WHITENING = False
-            projected = np.array([1.0, 2.0, 3.0])
-            eigenvalues = np.array([2.0, 1.0, 0.5])
-            stat, df, pval = compute_projected_pvalue(projected, 3, eigenvalues=eigenvalues)
-
-            # stat should be raw sum of squares
-            expected_stat = 1.0 + 4.0 + 9.0
-            assert abs(stat - expected_stat) < 1e-10
-
-            # Satterthwaite: c = Σλ²/Σλ, ν = (Σλ)²/Σλ²
-            eigs = np.array([2.0, 1.0, 0.5])
-            sum_eig = np.sum(eigs)
-            sum_eig2 = np.sum(eigs**2)
-            c = sum_eig2 / sum_eig
-            nu = sum_eig**2 / sum_eig2
-            assert abs(df - nu) < 1e-10
-            stat_scaled = stat / c
-            expected_pval = float(chi2.sf(stat_scaled, df=nu))
-            assert abs(pval - expected_pval) < 1e-10
-        finally:
-            config.EIGENVALUE_WHITENING = old_val
-
-    def test_split_mode_with_padding(self):
-        """When eigenvalues cover fewer components, random-padding gets χ²(1)."""
-        old_val = config.EIGENVALUE_WHITENING
-        try:
-            config.EIGENVALUE_WHITENING = False
-            # 5 projected components, only 2 eigenvalues (3 random-padding)
-            projected = np.array([1.0, 2.0, 0.5, 0.3, 0.1])
-            eigenvalues = np.array([3.0, 1.5])
-            stat, df, pval = compute_projected_pvalue(projected, 5, eigenvalues=eigenvalues)
-
-            expected_stat = np.sum(projected**2)
-            assert abs(stat - expected_stat) < 1e-10
-            # df should be Satterthwaite(2 PCA) + 3 random
-            eigs = np.array([3.0, 1.5])
-            sum_eig = np.sum(eigs)
-            sum_eig2 = np.sum(eigs**2)
-            nu_pca = sum_eig**2 / sum_eig2
-            expected_df = nu_pca + 3  # 3 random padding components
-            assert abs(df - expected_df) < 1e-10
-        finally:
-            config.EIGENVALUE_WHITENING = old_val
-
-    def test_degenerate_eigenvalues_fallback(self):
-        """All-zero eigenvalues should fall back to plain χ²(k)."""
-        old_val = config.EIGENVALUE_WHITENING
-        try:
-            config.EIGENVALUE_WHITENING = False
-            projected = np.array([1.0, 2.0])
-            eigenvalues = np.array([0.0, 0.0])
-            stat, df, pval = compute_projected_pvalue(projected, 2, eigenvalues=eigenvalues)
-            assert df == 2.0
-            expected_stat = 5.0
-            assert abs(stat - expected_stat) < 1e-10
-        finally:
-            config.EIGENVALUE_WHITENING = old_val
+        projected = np.array([1.0, 2.0, 3.0])
+        eigenvalues = np.array([2.0, 1.0, 0.5])
+        stat, df, pval = compute_projected_pvalue(projected, 3, eigenvalues=eigenvalues)
+        expected_stat = 1.0 / 2.0 + 4.0 / 1.0 + 9.0 / 0.5
+        assert abs(stat - expected_stat) < 1e-10
+        assert df == 3.0
+        assert abs(pval - float(chi2.sf(expected_stat, df=3))) < 1e-10
 
 
 # =============================================================================
@@ -223,22 +155,6 @@ class TestNonBinarySkippedFlag:
         result = annotate_sibling_divergence(tree, df)
 
         # Leaves should be skipped (they have no children to test)
-        for leaf in ["L0", "L1", "L2", "L3"]:
-            assert (
-                result.loc[leaf, "Sibling_Divergence_Skipped"] is True
-                or result.loc[leaf, "Sibling_Divergence_Skipped"] == True
-            ), f"Leaf {leaf} should be marked as Sibling_Divergence_Skipped"
-
-    def test_weighted_wald_marks_leaves_as_skipped(self):
-        """Weighted Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald import (
-            annotate_sibling_divergence_weighted,
-        )
-
-        tree = self._build_simple_tree()
-        df = self._make_base_df(tree)
-        result = annotate_sibling_divergence_weighted(tree, df)
-
         for leaf in ["L0", "L1", "L2", "L3"]:
             assert (
                 result.loc[leaf, "Sibling_Divergence_Skipped"] is True

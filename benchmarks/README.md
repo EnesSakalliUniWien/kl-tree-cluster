@@ -16,9 +16,6 @@ python benchmarks/multi_split/run.py
 # Quick subset for fast iteration (~15 cases)
 python benchmarks/run_subset.py
 
-# Compare sibling test methods head-to-head
-python benchmarks/compare_sibling_methods.py
-
 # Real-world datasets (MNIST, Penguins, Digits)
 python benchmarks/mnist/run.py
 python benchmarks/umap_datasets/run.py
@@ -160,23 +157,7 @@ benchmarks/full/results/run_YYYYMMDD_HHMMSSZ/
 
 ---
 
-### 6. Compare Sibling Methods ([compare_sibling_methods.py](compare_sibling_methods.py))
-
-**Purpose**: Head-to-head comparison of Gate 3 (sibling divergence) calibration methods — `cousin_adjusted_wald` vs. `cousin_weighted_wald`.
-
-**Data generation**: Uses the full 96-case suite. Cases with >700 samples are skipped for runtime.
-
-**Experiment setup**:
-
-- Runs each case in a subprocess for crash isolation (120 s timeout per case).
-- For each case, toggles `config.SIBLING_TEST_METHOD` between the two methods and runs the full KL pipeline from scratch (distance → linkage → tree → decompose).
-- All other config parameters held constant.
-
-**Evaluation**: Per-case K-recovered and ARI for each method. Summary statistics (mean ARI, exact K, win/loss count) printed as a comparison table. Identifies cases where the two methods disagree.
-
----
-
-### 7. MNIST ([mnist/](mnist/))
+### 6. MNIST ([mnist/](mnist/))
 
 **Purpose**: Real-world benchmark on handwritten digit images (10 classes).
 
@@ -192,7 +173,7 @@ benchmarks/full/results/run_YYYYMMDD_HHMMSSZ/
 
 ---
 
-### 8. UMAP Datasets ([umap_datasets/](umap_datasets/))
+### 7. UMAP Datasets ([umap_datasets/](umap_datasets/))
 
 **Purpose**: Benchmarks on the standard datasets featured in the UMAP documentation — Palmer Penguins and Sklearn Digits.
 
@@ -211,7 +192,7 @@ benchmarks/full/results/run_YYYYMMDD_HHMMSSZ/
 
 ---
 
-### 9. Calibration ([calibration/](calibration/))
+### 8. Calibration ([calibration/](calibration/))
 
 **Purpose**: Empirical statistical calibration — verifies that the edge and sibling tests maintain correct Type I error rates under the null hypothesis, and that TreeBH FDR control is valid.
 

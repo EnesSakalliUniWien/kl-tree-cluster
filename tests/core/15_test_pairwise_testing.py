@@ -21,7 +21,6 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.pairwise_test
 from scipy.stats import chi2 as chi2_dist
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
     CalibrationModel,
-    WeightedCalibrationModel,
 )
 
 # =============================================================================
@@ -189,14 +188,12 @@ class TestDeflateByCalibration:
         return tree
 
     def test_weighted_model_deflation(self):
-        """WeightedCalibrationModel with known ĉ should deflate T by ĉ."""
-        # ĉ = exp(β₀) = exp(ln(2)) = 2.0
-        model = WeightedCalibrationModel(
-            method="gamma_glm",
+        """CalibrationModel with known ĉ should deflate T by ĉ."""
+        model = CalibrationModel(
+            method="median",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
-            beta=np.array([np.log(2.0)]),
         )
         tree = self._make_tree_for_deflation()
         raw_T, df = 20.0, 10.0
@@ -254,7 +251,7 @@ class TestDeflateByCalibration:
 
     def test_no_calibration_model_returns_identity(self):
         """When method='none', ĉ=1 so T is unchanged."""
-        model = WeightedCalibrationModel(
+        model = CalibrationModel(
             method="none",
             n_calibration=0,
             global_inflation_factor=1.0,
@@ -281,12 +278,11 @@ class TestDeflateByCalibration:
 
     def test_ancestor_override_uses_given_node(self):
         """When ancestor_override is given, find_lca should NOT be called."""
-        model = WeightedCalibrationModel(
-            method="gamma_glm",
+        model = CalibrationModel(
+            method="median",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
-            beta=np.array([np.log(2.0)]),
         )
         tree = self._make_tree_for_deflation()
         tree._graph.add_node("custom_ancestor", leaf_count=100)
@@ -308,12 +304,11 @@ class TestDeflateByCalibration:
 
     def test_lca_lookup_when_no_ancestor_override(self):
         """When ancestor_override is None, find_lca IS called."""
-        model = WeightedCalibrationModel(
-            method="gamma_glm",
+        model = CalibrationModel(
+            method="median",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
-            beta=np.array([np.log(2.0)]),
         )
         tree = self._make_tree_for_deflation()
 
@@ -334,12 +329,11 @@ class TestDeflateByCalibration:
 
     def test_non_finite_stat_skips_deflation(self):
         """If test_stat is NaN, deflation is skipped."""
-        model = WeightedCalibrationModel(
-            method="gamma_glm",
+        model = CalibrationModel(
+            method="median",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
-            beta=np.array([np.log(2.0)]),
         )
         tree = self._make_tree_for_deflation()
 
@@ -359,12 +353,11 @@ class TestDeflateByCalibration:
 
     def test_zero_df_skips_deflation(self):
         """If df == 0, deflation is skipped (guard condition)."""
-        model = WeightedCalibrationModel(
-            method="gamma_glm",
+        model = CalibrationModel(
+            method="median",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
-            beta=np.array([np.log(2.0)]),
         )
         tree = self._make_tree_for_deflation()
 
@@ -481,15 +474,14 @@ class TestTestNodePairDivergence:
             assert (stat, df, pval) == raw
 
     def test_calibration_deflates_statistic(self):
-        """With a WeightedCalibrationModel, T is divided by ĉ and p recomputed."""
+        """With a CalibrationModel, T is divided by ĉ and p recomputed."""
         tree = _simple_tree()
         c_hat = 2.0
-        model = WeightedCalibrationModel(
-            method="gamma_glm",
+        model = CalibrationModel(
+            method="median",
             n_calibration=10,
             global_inflation_factor=c_hat,
             max_observed_ratio=3.0,
-            beta=np.array([np.log(c_hat)]),
         )
 
         raw_T, raw_df = 20.0, 10.0
@@ -538,12 +530,11 @@ class TestTestNodePairDivergence:
     def test_deflation_increases_p_value(self):
         """Deflating T should always increase (or maintain) the p-value."""
         tree = _simple_tree()
-        model = WeightedCalibrationModel(
-            method="gamma_glm",
+        model = CalibrationModel(
+            method="median",
             n_calibration=10,
             global_inflation_factor=3.0,
             max_observed_ratio=4.0,
-            beta=np.array([np.log(3.0)]),
         )
 
         raw_T, raw_df = 25.0, 10.0

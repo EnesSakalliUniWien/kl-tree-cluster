@@ -10,17 +10,11 @@ from .errors import DecompositionMethodError
 
 def resolve_k_estimator(method: SpectralKMethod | str) -> Callable:
     """Resolve a spectral-k estimator callable."""
-    from ..methods.k_estimators import (
-        estimate_k_active_features,
-        estimate_k_effective_rank,
-        estimate_k_marchenko_pastur,
-    )
+    from ..methods.k_estimators import estimate_k_marchenko_pastur
 
     name = method.value if isinstance(method, SpectralKMethod) else str(method)
     mapping = {
-        SpectralKMethod.EFFECTIVE_RANK.value: estimate_k_effective_rank,
         SpectralKMethod.MARCHENKO_PASTUR.value: estimate_k_marchenko_pastur,
-        SpectralKMethod.ACTIVE_FEATURES.value: estimate_k_active_features,
     }
     if name not in mapping:
         raise DecompositionMethodError(f"Unknown spectral k estimator: {name!r}.")
@@ -45,20 +39,14 @@ def normalize_spectral_k_method(method: SpectralKMethod | str | None) -> str | N
 def resolve_sibling_calibrator(method: SiblingCalibrationMethod | str) -> Callable:
     """Resolve a sibling calibration callable."""
     from ..methods.sibling_calibration import (
-        annotate_cousin_ftest,
         annotate_cousin_adjusted_wald,
-        annotate_cousin_tree_guided,
         annotate_wald,
-        annotate_cousin_weighted_wald,
     )
 
     name = method.value if isinstance(method, SiblingCalibrationMethod) else str(method)
     mapping = {
         SiblingCalibrationMethod.WALD.value: annotate_wald,
-        SiblingCalibrationMethod.COUSIN_FTEST.value: annotate_cousin_ftest,
         SiblingCalibrationMethod.COUSIN_ADJUSTED_WALD.value: annotate_cousin_adjusted_wald,
-        SiblingCalibrationMethod.COUSIN_TREE_GUIDED.value: annotate_cousin_tree_guided,
-        SiblingCalibrationMethod.COUSIN_WEIGHTED_WALD.value: annotate_cousin_weighted_wald,
     }
     if name not in mapping:
         raise DecompositionMethodError(f"Unknown sibling calibration method: {name!r}.")

@@ -12,14 +12,8 @@ so Cov(z) under H₀ equals the Pearson correlation matrix C of the data.
 Eigendecomposing C and whitening by its eigenvalues gives an exact χ²(k)
 null: T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k).
 
-Two estimators are provided:
-
-1. **Effective rank** (Roy & Vetterli, 2007): continuous dimensionality
-   from the Shannon entropy of the normalised eigenvalue spectrum.
-   ``erank(C) = exp(−Σ pᵢ log pᵢ)``  where ``pᵢ = λᵢ / Σλⱼ``.
-
-2. **Marchenko-Pastur signal count**: number of eigenvalues exceeding the
-   MP upper bound ``σ² (1 + √(d/n))²``; σ² estimated from the bulk median.
+**Marchenko-Pastur signal count**: number of eigenvalues exceeding the
+MP upper bound ``σ² (1 + √(d/n))²``; σ² estimated from the bulk median.
 
 The chosen dimension ``k_v`` is used:
   - to set the degrees of freedom of the χ²(k) null for the projected Wald test,
@@ -29,8 +23,6 @@ The chosen dimension ``k_v`` is used:
 
 References
 ----------
-Roy, O. & Vetterli, M. (2007). "The effective rank: A measure of effective
-    dimensionality". EUSIPCO.
 Marchenko, V. A. & Pastur, L. A. (1967). "Distribution of eigenvalues for
     some sets of random matrices". Mathematics of the USSR-Sbornik.
 """
@@ -53,11 +45,7 @@ from ...decomposition.backends.eigen_backend import (
 from ...decomposition.backends.eigen_backend import (
     eigendecompose_correlation_backend as eigendecompose_correlation,
 )
-from ...decomposition.methods.k_estimators import (
-    estimate_k_active_features,
-    estimate_k_effective_rank,
-    estimate_k_marchenko_pastur,
-)
+from ...decomposition.methods.k_estimators import estimate_k_marchenko_pastur
 from .spectral_types import NodeSpectralResult, NodeSpectralTask
 from .tree_helpers import is_leaf, precompute_descendants
 
@@ -140,19 +128,6 @@ def _process_node(
     else:
         descendant_feature_matrix = descendant_leaf_feature_rows
 
-    if dimension_method == "active_features":
-        projection_dimension = estimate_k_active_features(
-            descendant_feature_matrix,
-            minimum_projection_dimension=minimum_projection_dimension,
-        )
-        projection_dimension = min(projection_dimension, feature_count)
-        return NodeSpectralResult(
-            node_id=spectral_task.node_id,
-            projection_dimension=projection_dimension,
-            projection_matrix=None,
-            eigenvalues=None,
-        )
-
     eigendecomposition_result = eigendecompose_correlation(
         descendant_feature_matrix,
         need_eigh=compute_eigendecomposition_outputs,
@@ -166,19 +141,12 @@ def _process_node(
             eigenvalues=None,
         )
 
-    if dimension_method == "effective_rank":
-        projection_dimension = estimate_k_effective_rank(
-            eigendecomposition_result.eigenvalues,
-            minimum_projection_dimension=minimum_projection_dimension,
-            d_active=eigendecomposition_result.d_active,
-        )
-    else:  # marchenko_pastur
-        projection_dimension = estimate_k_marchenko_pastur(
-            eigendecomposition_result.eigenvalues,
-            n_desc=descendant_feature_matrix.shape[0],
-            d_active=eigendecomposition_result.d_active,
-            minimum_projection_dimension=minimum_projection_dimension,
-        )
+    projection_dimension = estimate_k_marchenko_pastur(
+        eigendecomposition_result.eigenvalues,
+        n_desc=descendant_feature_matrix.shape[0],
+        d_active=eigendecomposition_result.d_active,
+        minimum_projection_dimension=minimum_projection_dimension,
+    )
 
     projection_matrix, pca_eigenvalues = None, None
     if compute_eigendecomposition_outputs:
@@ -279,7 +247,7 @@ def compute_spectral_decomposition(
     tree: nx.DiGraph,
     leaf_data: pd.DataFrame,
     *,
-    method: str = "effective_rank",
+    method: str = "marchenko_pastur",
     minimum_projection_dimension: int = 1,
     compute_projections: bool = True,
     include_internal: bool | None = None,
@@ -305,14 +273,12 @@ def compute_spectral_decomposition(
     leaf_data
         DataFrame with leaf labels as index and features as columns.
     method
-        Dimension estimator: ``"effective_rank"`` (default),
-        ``"marchenko_pastur"``, or ``"active_features"``.
+        Dimension estimator: ``"marchenko_pastur"`` (default).
     minimum_projection_dimension
         Floor on the returned dimension.
     compute_projections
         If True, also returns PCA projection matrices (k_v × d) and
-        eigenvalue arrays for eigenvalue-based methods. For
-        ``"active_features"`` these are always empty.
+        eigenvalue arrays.
     include_internal
         If True, include internal node distribution vectors in the data
         matrix used for eigendecomposition.  If None, reads from
@@ -334,10 +300,9 @@ def compute_spectral_decomposition(
     if include_internal is None:
         include_internal = _config.INCLUDE_INTERNAL_IN_SPECTRAL
 
-    if method not in ("effective_rank", "marchenko_pastur", "active_features"):
+    if method != "marchenko_pastur":
         raise ValueError(
-            f"Unknown spectral dimension method {method!r}. "
-            f"Choose from 'effective_rank', 'marchenko_pastur', 'active_features'."
+            f"Unknown spectral dimension method {method!r}. " f"Choose 'marchenko_pastur'."
         )
 
     feature_count = leaf_data.shape[1]
@@ -348,10 +313,7 @@ def compute_spectral_decomposition(
         tree, leaf_label_to_index
     )
 
-    compute_eigendecomposition_outputs = compute_projections and method in (
-        "effective_rank",
-        "marchenko_pastur",
-    )
+    compute_eigendecomposition_outputs = compute_projections
 
     spectral_dims: Dict[str, int] = {}
     pca_projections: Dict[str, np.ndarray] = {}
@@ -427,8 +389,5 @@ def compute_spectral_decomposition(
 
 
 __all__ = [
-    "effective_rank",
-    "marchenko_pastur_signal_count",
-    "count_active_features",
     "compute_spectral_decomposition",
 ]

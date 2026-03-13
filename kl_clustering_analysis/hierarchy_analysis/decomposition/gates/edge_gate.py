@@ -6,12 +6,9 @@ import pandas as pd
 
 from kl_clustering_analysis import config
 
-from ..core.contracts import GateAnnotationBundle
 from ...statistics.kl_tests.edge_significance import annotate_child_parent_divergence
-from .column_contracts import (
-    sibling_gate_columns,
-    validate_legacy_edge_columns,
-)
+from ..core.contracts import GateAnnotationBundle
+from .column_contracts import sibling_gate_columns, validate_legacy_edge_columns
 
 
 def annotate_edge_gate(

@@ -31,7 +31,7 @@ Standalone::
 
     python -m benchmarks.calibration.null_pipeline_fpr
     python -m benchmarks.calibration.null_pipeline_fpr --n-reps 100 --seed 42
-    python -m benchmarks.calibration.null_pipeline_fpr --methods wald,cousin_tree_guided
+    python -m benchmarks.calibration.null_pipeline_fpr --methods wald,cousin_adjusted_wald
 
 Programmatic::
 
@@ -87,10 +87,7 @@ def _default_scenarios() -> list[dict[str, Any]]:
 
 ALL_SIBLING_METHODS = [
     "wald",
-    "cousin_ftest",
     "cousin_adjusted_wald",
-    "cousin_tree_guided",
-    "cousin_weighted_wald",
 ]
 
 

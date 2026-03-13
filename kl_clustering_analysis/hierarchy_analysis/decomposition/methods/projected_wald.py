@@ -52,7 +52,6 @@ def run_projected_wald_kernel(
             raise ValueError("k_fallback must be provided when spectral_k is None.")
         k = min(int(k_fallback(d)), d)
 
-    # Projection basis policy is centralized in projection_basis.py.
     R, eig_for_whitening = build_projection_basis_with_padding(
         n_features=d,
         k=k,
@@ -61,16 +60,7 @@ def run_projected_wald_kernel(
         random_state=seed,
     )
 
-    try:
-        if hasattr(R, "dot"):
-            projected = R.dot(z_vec)
-        else:
-            projected = R @ z_vec
-    except Exception as exc:  # pragma: no cover - preserves context for callers
-        raise RuntimeError(
-            f"Projection failed: z.shape={z_vec.shape}, R.shape={R.shape}, "
-            f"z_stats={np.min(z_vec)}/{np.max(z_vec)}"
-        ) from exc
+    projected = R @ z_vec
 
     statistic, effective_degrees_of_freedom, p_value = compute_projected_pvalue(
         projected,

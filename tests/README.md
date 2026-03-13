@@ -35,8 +35,6 @@ tests/
 ### 3) Statistical validity & calibration internals (`statistics/`)
 - `21_test_random_projection.py`
 - `22_test_edge_branch_length_regression.py`
-- `23_test_weighted_calibration.py`
-- `24_test_weighted_calibration_diagnostic.py`
 - `25_test_per_test_projection_seeding.py`
 - `26_test_invalid_nonfinite_handling.py`
 - `27_test_categorical_distributions.py`

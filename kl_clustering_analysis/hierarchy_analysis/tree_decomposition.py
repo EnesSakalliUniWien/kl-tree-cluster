@@ -225,7 +225,6 @@ class TreeDecomposition:
             sibling_spectral_dims=None,
             sibling_pca_projections=None,
             sibling_pca_eigenvalues=None,
-            edge_calibration=None,
         ).annotated_df
 
     def _cache_node_metadata(self) -> None:

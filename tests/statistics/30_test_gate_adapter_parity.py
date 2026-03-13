@@ -48,7 +48,7 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
     return tree, base_df
 
 
-@pytest.mark.parametrize("sibling_method", ["wald", "cousin_weighted_wald"])
+@pytest.mark.parametrize("sibling_method", ["wald", "cousin_adjusted_wald"])
 def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
     monkeypatch,
     sibling_method: str,
@@ -56,7 +56,6 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
     tree, base_df = _build_small_binary_tree()
 
     monkeypatch.setattr(config, "SIBLING_TEST_METHOD", sibling_method)
-    monkeypatch.setattr(config, "EDGE_CALIBRATION", False)
     monkeypatch.setattr(config, "PROJECTION_RANDOM_SEED", 123)
 
     edge_bundle = annotate_edge_gate(
@@ -83,7 +82,6 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
         spectral_method=None,
         minimum_projection_dimension=4,
         sibling_method=sibling_method,
-        edge_calibration=False,
     )
 
     assert isinstance(bundle, GateAnnotationBundle)

@@ -20,8 +20,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Dict, List, Set, Tuple
 
-import numpy as np
 import networkx as nx
+import numpy as np
 from statsmodels.stats.multitest import multipletests
 
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
@@ -54,9 +54,7 @@ def _get_root_nodes(tree: nx.DiGraph) -> List[str]:
     return [n for n in tree.nodes() if tree.in_degree(n) == 0]
 
 
-def _get_families_by_parent(
-    tree: nx.DiGraph, child_ids: List[str]
-) -> Dict[str, List[int]]:
+def _get_families_by_parent(tree: nx.DiGraph, child_ids: List[str]) -> Dict[str, List[int]]:
     """Group child indices by their parent node.
 
     Returns a dict mapping parent_id -> list of indices into child_ids

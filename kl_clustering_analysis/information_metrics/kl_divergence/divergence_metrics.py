@@ -46,22 +46,9 @@ def _kl_categorical_general(
     return np.sum(rel_entr(q_full, p_full), axis=-1)
 
 
-def _kl_poisson(
-    q_params: npt.NDArray[np.float64],
-    p_params: npt.NDArray[np.float64],
-    eps: float,
-) -> npt.NDArray[np.float64]:
-    """KL divergence for Poisson distributions."""
-    lam1 = np.maximum(q_params, eps)
-    lam2 = np.maximum(p_params, eps)
-    # KL(Poi(lam1) || Poi(lam2)) = lam1 * log(lam1/lam2) + lam2 - lam1
-    return rel_entr(lam1, lam2) + lam2 - lam1
-
-
 # Registry of available KL divergence implementations
 _KL_REGISTRY: Dict[str, Callable] = {
     "categorical": _kl_categorical_general,
-    "poisson": _kl_poisson,
 }
 
 
@@ -188,10 +175,6 @@ def _extract_hierarchy_statistics(tree: "nx.DiGraph") -> pd.DataFrame:
                     "kl_divergence_per_column_global", None
                 ),
                 "kl_divergence_local": node_attrs.get("kl_divergence_local", np.nan),
-                "kl_divergence_local_composite": node_attrs.get(
-                    "kl_divergence_local_composite", np.nan
-                ),
-                "composite_score_weight": node_attrs.get("composite_score_weight", np.nan),
                 "kl_divergence_per_column_local": node_attrs.get(
                     "kl_divergence_per_column_local", None
                 ),

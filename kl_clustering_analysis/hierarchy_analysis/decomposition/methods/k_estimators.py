@@ -40,30 +40,6 @@ def marchenko_pastur_signal_count(
     return max(k, 1)
 
 
-def count_active_features(data_sub: np.ndarray) -> int:
-    """Count non-constant feature columns."""
-    data = np.asarray(data_sub, dtype=np.float64)
-    if data.ndim != 2 or data.shape[1] == 0:
-        return 1
-    col_var = np.var(data, axis=0)
-    return max(int(np.sum(col_var > 0)), 1)
-
-
-def estimate_k_effective_rank(
-    eigenvalues: np.ndarray,
-    *,
-    minimum_projection_dimension: int = 1,
-    d_active: int | None = None,
-) -> int:
-    """Estimate k from effective rank with optional floor and cap."""
-    eigs = np.asarray(eigenvalues, dtype=np.float64)
-    k = int(np.round(effective_rank(eigs)))
-    k = max(k, int(minimum_projection_dimension))
-    if d_active is not None:
-        k = min(k, int(d_active))
-    return k
-
-
 def estimate_k_marchenko_pastur(
     eigenvalues: np.ndarray,
     *,
@@ -79,22 +55,8 @@ def estimate_k_marchenko_pastur(
     return k
 
 
-def estimate_k_active_features(
-    data_sub: np.ndarray,
-    *,
-    minimum_projection_dimension: int = 1,
-) -> int:
-    """Estimate k as active-feature count with a hard floor."""
-    data = np.asarray(data_sub, dtype=np.float64)
-    k = int(count_active_features(data))
-    return max(k, int(minimum_projection_dimension))
-
-
 __all__ = [
     "effective_rank",
     "marchenko_pastur_signal_count",
-    "count_active_features",
-    "estimate_k_effective_rank",
     "estimate_k_marchenko_pastur",
-    "estimate_k_active_features",
 ]

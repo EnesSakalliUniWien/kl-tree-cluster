@@ -127,14 +127,14 @@ _OVERVIEW_TEXT = dedent(
       Gate 2 -- Child-parent divergence:
         Projected Wald chi-squared test on KL(child || parent).
       Gate 3 -- Sibling divergence:
-        Calibrated Wald test (cousin-weighted) on KL(left || right)
+        Calibrated Wald test (cousin-adjusted) on KL(left || right)
         with Benjamini-Hochberg false discovery rate correction.
 
     Default configuration:
       Distance metric:              Hamming
       Linkage method:               average
       Significance level (alpha):   0.05  (edge and sibling)
-      Sibling test method:          cousin_weighted_wald
+      Sibling test method:          cousin_adjusted_wald
       Felsenstein branch-length adjustment: enabled
 """
 )
