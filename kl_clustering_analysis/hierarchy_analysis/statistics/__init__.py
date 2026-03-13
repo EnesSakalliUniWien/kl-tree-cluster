@@ -1,6 +1,4 @@
-from .kl_tests import (
-    annotate_child_parent_divergence,
-)
+from .child_parent_divergence import annotate_child_parent_divergence
 from .sibling_divergence import annotate_sibling_divergence
 
 # Import from new package structure

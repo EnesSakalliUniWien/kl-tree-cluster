@@ -4,9 +4,9 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
-    _compute_projected_test,
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
+    run_child_parent_projected_wald_test,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     annotate_sibling_divergence,
@@ -74,6 +74,7 @@ def test_child_parent_nonfinite_keeps_nan_and_uses_conservative_correction(
         spectral_dims=None,
         pca_projections=None,
         pca_eigenvalues=None,
+        minimum_projection_dimension: int | None = None,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         return (
             np.array([np.nan, 3.0], dtype=float),  # stats
@@ -83,7 +84,7 @@ def test_child_parent_nonfinite_keeps_nan_and_uses_conservative_correction(
         )
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance._compute_p_values_via_projection",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence.run_child_parent_tests_across_tree",
         _fake_compute_p_values_via_projection,
     )
 
@@ -120,11 +121,11 @@ def test_edge_projected_test_nonfinite_z_returns_invalid(monkeypatch) -> None:
         return np.array([np.nan, 0.0], dtype=float)
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance._compute_standardized_z",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald.compute_child_parent_standardized_z_scores",
         _fake_standardized_z,
     )
 
-    stat, df, pval, invalid = _compute_projected_test(
+    stat, df, pval, invalid = run_child_parent_projected_wald_test(
         child_dist=np.array([0.4, 0.6], dtype=float),
         parent_dist=np.array([0.5, 0.5], dtype=float),
         n_child=5,
@@ -163,7 +164,7 @@ def test_child_parent_forwards_minimum_projection_dimension(monkeypatch) -> None
         )
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance._compute_p_values_via_projection",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence.run_child_parent_tests_across_tree",
         _fake_compute_p_values_via_projection,
     )
 

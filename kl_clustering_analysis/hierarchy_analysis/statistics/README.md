@@ -2,16 +2,17 @@
 
 Statistical tests, variance estimation, projections, and corrections.
 
-## kl_tests/edge_significance.py — Gate 2
+## child_parent_divergence/ — Gate 2
 
 Child-parent divergence testing (projected Wald χ²).
 
 | Function                                                              | What it does                                                                                                                                                                                                                        |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `annotate_child_parent_divergence(tree, df, alpha, fdr_method)`       | **Public API.** Tests every edge. Extracts distributions and branch lengths, computes projected Wald T = ‖R·z‖² ~ χ²(k), applies FDR correction (tree_bh / flat / level_wise). Writes `Child_Parent_Divergence_Significant` column. |
-| `_compute_standardized_z(child, parent, n_c, n_p, bl, mean_bl)`       | Nested variance z-scores: `z = (θ_child − θ_parent) / √(Var)` with `Var = θ(1−θ)(1/n_c − 1/n_p)` and Felsenstein scaling `Var *= 1 + BL/mean_BL`.                                                                                   |
-| `_compute_projected_test(child, parent, n_c, n_p, seed, bl, mean_bl)` | Project z to k dims via orthonormal R, compute T = ‖R·z‖², p = χ²_sf(T, k). Returns `(stat, df, pval, invalid)`.                                                                                                                    |
-| `_compute_p_values_via_projection(tree, children, parents, ...)`      | Batch wrapper: loops all edges, extracts branch lengths, calls `_compute_projected_test`.                                                                                                                                           |
+| `child_parent_divergence.annotate_child_parent_divergence(...)` | **Public API.** Orchestrates Gate 2: collects edges, prepares optional spectral context, runs projected Wald tests across the tree, applies FDR correction, and writes `Child_Parent_Divergence_*` columns. |
+| `child_parent_projected_wald.compute_child_parent_standardized_z_scores(...)` | Nested variance z-scores: `z = (θ_child − θ_parent) / √(Var)` with `Var = θ(1−θ)(1/n_c − 1/n_p)` and Felsenstein scaling `Var *= 1 + BL/mean_BL`. |
+| `child_parent_projected_wald.run_child_parent_projected_wald_test(...)` | Project z to k dims via the shared projected-Wald kernel, compute T = ‖R·z‖², and return `(stat, df, pval, invalid)`. |
+| `child_parent_tree_testing.run_child_parent_tests_across_tree(...)` | Tree-wide execution wrapper: iterates edges, extracts branch lengths, derives per-edge seeds, and calls the single-edge projected Wald helper. |
+| `child_parent_spectral_decomposition.compute_child_parent_spectral_context(...)` | Computes per-node spectral dimensions, PCA projections, and PCA eigenvalues for the Gate 2 spectral path. |
 
 ## sibling_divergence/ — Gate 3
 

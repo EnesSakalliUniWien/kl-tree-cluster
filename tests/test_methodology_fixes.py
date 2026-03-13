@@ -67,11 +67,11 @@ class TestSpectralKFloor:
         """The spectral path should use config.SPECTRAL_MINIMUM_DIMENSION, not the global JL minimum_projection_dimension."""
         import inspect
 
-        from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
-            annotate_child_parent_divergence,
+        from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+            compute_child_parent_spectral_context,
         )
 
-        source = inspect.getsource(annotate_child_parent_divergence)
+        source = inspect.getsource(compute_child_parent_spectral_context)
         # The spectral path reads SPECTRAL_MINIMUM_DIMENSION from config instead of
         # forwarding the global JL-derived minimum_projection_dimension.
         assert "SPECTRAL_MINIMUM_DIMENSION" in source

@@ -13,7 +13,7 @@ flowchart TD
     ORCH --> EG[decomposition.gates.edge_gate.annotate_edge_gate]
     ORCH --> SG[decomposition.gates.sibling_gate.annotate_sibling_gate]
 
-    EG --> CP[statistics.kl_tests.edge_significance.annotate_child_parent_divergence]
+    EG --> CP[statistics.child_parent_divergence.annotate_child_parent_divergence]
     CP --> SD[statistics.projection.spectral_dimension.compute_spectral_decomposition]
     SD --> EWRAP[statistics.projection.eigen_decomposition wrappers]
     EWRAP --> EBACK[decomposition.backends.eigen_backend]
@@ -56,7 +56,7 @@ Not directly wired: SVD, Schur, Jordan, generalized eigen, Fourier.
 TreeDecomposition
   -> decomposition.gates.orchestrator
      -> decomposition.gates.{edge_gate,sibling_gate}
-        -> edge_significance / sibling_divergence_test
+        -> child_parent_divergence / sibling_divergence_test
            -> decomposition.methods.projected_wald
               -> decomposition.methods.projection_basis
                  -> decomposition.backends.{eigen_backend, random_projection_backend}

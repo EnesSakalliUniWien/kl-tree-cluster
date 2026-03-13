@@ -4,9 +4,11 @@ import networkx as nx
 import numpy as np
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
-    _compute_mean_branch_length,
-    _compute_p_values_via_projection,
+from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
+    compute_mean_branch_length,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+    run_child_parent_tests_across_tree,
 )
 
 
@@ -57,11 +59,11 @@ def _run_edge_projection_with_capture(
         return 0.0, 1.0, 1.0, False
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance._compute_projected_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_tree_testing.run_child_parent_projected_wald_test",
         _fake_projected_test,
     )
 
-    _compute_p_values_via_projection(
+    run_child_parent_tests_across_tree(
         tree=tree,
         child_ids=["A", "B"],
         parent_ids=["root", "root"],
@@ -75,7 +77,7 @@ def test_no_branch_lengths_have_no_arbitrary_mean_normalization(monkeypatch) -> 
     tree = _make_two_edge_tree(left_branch_length=None, right_branch_length=None)
 
     # Regression contract: no branch lengths => no normalization constant fallback.
-    assert _compute_mean_branch_length(tree) is None
+    assert compute_mean_branch_length(tree) is None
 
     captured = _run_edge_projection_with_capture(tree, monkeypatch)
     assert captured == [(None, None), (None, None)]
@@ -84,7 +86,7 @@ def test_no_branch_lengths_have_no_arbitrary_mean_normalization(monkeypatch) -> 
 def test_mixed_missing_and_present_branch_lengths_use_only_valid_edges(monkeypatch) -> None:
     tree = _make_two_edge_tree(left_branch_length=2.0, right_branch_length=None)
 
-    assert _compute_mean_branch_length(tree) == 2.0
+    assert compute_mean_branch_length(tree) == 2.0
 
     captured = _run_edge_projection_with_capture(tree, monkeypatch)
     assert captured == [(2.0, 2.0), (None, 2.0)]
@@ -93,7 +95,7 @@ def test_mixed_missing_and_present_branch_lengths_use_only_valid_edges(monkeypat
 def test_positive_branch_lengths_apply_tree_mean_normalization(monkeypatch) -> None:
     tree = _make_two_edge_tree(left_branch_length=1.0, right_branch_length=3.0)
 
-    assert _compute_mean_branch_length(tree) == 2.0
+    assert compute_mean_branch_length(tree) == 2.0
 
     captured = _run_edge_projection_with_capture(tree, monkeypatch)
     assert captured == [(1.0, 2.0), (3.0, 2.0)]
@@ -110,7 +112,7 @@ def test_non_positive_branch_lengths_disable_adjustment(monkeypatch) -> None:
     tree = _make_two_edge_tree(left_branch_length=0.0, right_branch_length=-2.0)
 
     # Regression contract: no positive branch lengths => no BL normalization.
-    assert _compute_mean_branch_length(tree) is None
+    assert compute_mean_branch_length(tree) is None
 
     captured = _run_edge_projection_with_capture(tree, monkeypatch)
     assert captured == [(None, None), (None, None)]
@@ -121,7 +123,7 @@ def test_mixed_positive_and_invalid_branch_lengths_use_only_positive(monkeypatch
     tree = _make_two_edge_tree(left_branch_length=-1.0, right_branch_length=3.0)
 
     # Regression contract: mean is computed from valid positive edges only.
-    assert _compute_mean_branch_length(tree) == 3.0
+    assert compute_mean_branch_length(tree) == 3.0
 
     captured = _run_edge_projection_with_capture(tree, monkeypatch)
     assert captured == [(None, 3.0), (3.0, 3.0)]
@@ -132,7 +134,7 @@ def test_non_finite_branch_length_values_are_ignored_for_adjustment(monkeypatch)
     tree = _make_two_edge_tree(left_branch_length=float("nan"), right_branch_length=4.0)
 
     # Regression contract: non-finite values do not contribute to mean BL.
-    assert _compute_mean_branch_length(tree) == 4.0
+    assert compute_mean_branch_length(tree) == 4.0
 
     captured = _run_edge_projection_with_capture(tree, monkeypatch)
     assert captured == [(None, 4.0), (4.0, 4.0)]

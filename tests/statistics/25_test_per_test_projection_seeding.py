@@ -7,8 +7,8 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     derive_projection_seed_backend as derive_projection_seed,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
-    _compute_p_values_via_projection,
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+    run_child_parent_tests_across_tree,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     _run_tests,
@@ -50,7 +50,7 @@ def test_edge_tests_use_distinct_per_edge_seeds(monkeypatch) -> None:
         return 0.0, 1.0, 1.0, False
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance._compute_projected_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_tree_testing.run_child_parent_projected_wald_test",
         _fake_projected_test,
     )
 
@@ -59,7 +59,7 @@ def test_edge_tests_use_distinct_per_edge_seeds(monkeypatch) -> None:
     child_leaf_counts = np.array([5, 5], dtype=float)
     parent_leaf_counts = np.array([10, 10], dtype=float)
 
-    _compute_p_values_via_projection(
+    run_child_parent_tests_across_tree(
         tree,
         child_ids,
         parent_ids,
