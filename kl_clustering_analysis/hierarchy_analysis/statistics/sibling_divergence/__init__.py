@@ -1,9 +1,6 @@
-from .cousin_adjusted_wald import (
-    CalibrationModel,
-    annotate_sibling_divergence_adjusted,
-    predict_inflation_factor,
-)
-from .sibling_divergence_test import annotate_sibling_divergence
+from .adjusted_wald import annotate_sibling_divergence_adjusted
+from .calibration import CalibrationModel, predict_inflation_factor
+from .standard_wald import annotate_sibling_divergence
 
 __all__ = [
     "CalibrationModel",

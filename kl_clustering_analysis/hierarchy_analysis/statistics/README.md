@@ -9,14 +9,14 @@ Child-parent divergence testing (projected Wald χ²).
 | Function                                                              | What it does                                                                                                                                                                                                                        |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `child_parent_divergence.annotate_child_parent_divergence(...)` | **Public API.** Orchestrates Gate 2: collects edges, prepares optional spectral context, runs projected Wald tests across the tree, applies FDR correction, and writes `Child_Parent_Divergence_*` columns. |
-| `child_parent_projected_wald.compute_child_parent_standardized_z_scores(...)` | Nested variance z-scores: `z = (θ_child − θ_parent) / √(Var)` with `Var = θ(1−θ)(1/n_c − 1/n_p)` and Felsenstein scaling `Var *= 1 + BL/mean_BL`. |
+| `child_parent_projected_wald.compute_child_parent_standardized_z_scores(...)` | Nested variance z-scores: `z = (θ_child − θ_parent) / √(Var)` with `Var = θ(1−θ)(1/n_c − 1/n_p)`. |
 | `child_parent_projected_wald.run_child_parent_projected_wald_test(...)` | Project z to k dims via the shared projected-Wald kernel, compute T = ‖R·z‖², and return `(stat, df, pval, invalid)`. |
 | `child_parent_tree_testing.run_child_parent_tests_across_tree(...)` | Tree-wide execution wrapper: iterates edges, extracts branch lengths, derives per-edge seeds, and calls the single-edge projected Wald helper. |
 | `child_parent_spectral_decomposition.compute_child_parent_spectral_context(...)` | Computes per-node spectral dimensions, PCA projections, and PCA eigenvalues for the Gate 2 spectral path. |
 
 ## sibling_divergence/ — Gate 3
 
-Three interchangeable sibling test implementations. Selected by `config.SIBLING_TEST_METHOD`.
+Production Gate 3 path plus its underlying raw Wald kernel.
 
 ### sibling_divergence_test.py — `"wald"` (raw Wald)
 
@@ -39,24 +39,12 @@ Deflates raw Wald T by estimated post-selection inflation factor ĉ.
 | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `_SiblingRecord`                                        | Dataclass: `(parent, left, right, stat, df, pval, bl_sum, n_parent, is_null_like)`.                                                                                                                 |
 | `CalibrationModel`                                      | Dataclass: fitted inflation model — method, coefficients, max_observed_ratio. (Public API.)                                                                                                         |
-| `_fit_inflation_model(records)`                         | From null-like pairs (neither child passed Gate 2), compute `r_i = T_i/k_i`. ≥5 pairs → OLS regression `log(r) = β₀ + β₁·log(BL_sum) + β₂·log(n_parent)`. 3–4 → global median. <3 → no calibration. |
+| `_fit_inflation_model(records)`                         | From null-like pairs (neither child passed Gate 2), compute `r_i = T_i/k_i` and fit one log-linear regression `log(r) = β₀ + β₁·log(BL_sum) + β₂·log(n_parent)`. If no valid calibration rows exist, use neutral coefficients so `ĉ = 1`. |
 | `predict_inflation_factor(model, bl_sum, n_parent)`     | Predict ĉ for a focal pair. Clamped to `[1.0, max_observed_ratio]`. (Public API.)                                                                                                                   |
 | `_collect_all_pairs(tree, df, mean_bl)`                 | Compute raw Wald stats for ALL binary-child parents. Label each null-like or focal.                                                                                                                 |
 | `_deflate_and_test(records, model)`                     | For each focal pair: `T_adj = T / ĉ`, `p = χ²_sf(T_adj, k)`.                                                                                                                                        |
 | `_apply_results_adjusted(df, ...)`                      | BH-correct deflated p-values, write columns + `Sibling_Test_Method`.                                                                                                                                |
 | `annotate_sibling_divergence_adjusted(tree, df, alpha)` | **Public API.** Orchestrates: collect → fit → deflate → correct → audit.                                                                                                                            |
-
-### cousin_calibrated_test.py — `"cousin_ftest"` (alternative)
-
-F-test using the uncle's sibling stat as denominator (inflation cancels).
-
-| Function                                                    | What it does                                                                                                                                                                                        |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cousin_ftest(tree, parent, left, right, mean_bl)`          | Find uncle (parent's sibling under grandparent). Compute `F = (T_LR/k_LR) / (T_UL_UR/k_UU) ~ F(k_LR, k_UU)`. Falls back to raw Wald when uncle unavailable. Returns `(stat, df, pval, used_ftest)`. |
-| `_get_uncle(tree, parent)`                                  | Walk up to grandparent → return grandparent's other child.                                                                                                                                          |
-| `_get_cousin_reference(tree, uncle, mean_bl)`               | Compute Wald T for uncle's two children (the denominator).                                                                                                                                          |
-| `_compute_sibling_stat(tree, parent, left, right, mean_bl)` | Compute raw Wald T for a sibling pair (helper shared with F-test).                                                                                                                                  |
-| `annotate_sibling_divergence_cousin(tree, df, alpha)`       | **Public API.** Collect → run cousin F-tests → BH correct → write columns.                                                                                                                          |
 
 ## pooled_variance.py
 
@@ -66,7 +54,7 @@ Variance estimation for the Wald test.
 | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `compute_pooled_proportion(θ₁, θ₂, n₁, n₂)`                          | Pooled estimate under H₀: `(n₁θ₁ + n₂θ₂) / (n₁+n₂)`.                                                      |
 | `compute_pooled_variance(θ₁, θ₂, n₁, n₂)`                            | `Var = p(1−p)(1/n₁ + 1/n₂)` using pooled proportion.                                                      |
-| `standardize_proportion_difference(θ₁, θ₂, n₁, n₂, bl_sum, mean_bl)` | `z = (θ₁ − θ₂) / √Var` with Felsenstein scaling `Var *= 1 + BL_sum/(2·mean_BL)`. Returns `(z, variance)`. |
+| `standardize_proportion_difference(θ₁, θ₂, n₁, n₂, bl_sum, mean_bl)` | `z = (θ₁ − θ₂) / √Var`. The optional branch-length arguments are passed through to the variance helper. Returns `(z, variance)`. |
 
 ## random_projection.py
 
@@ -75,7 +63,7 @@ JL-lemma random projection for dimension reduction.
 | Function                                     | What it does                                                                                                                          |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `compute_projection_dimension(n, d, eps)`    | Target dimension k from JL lemma: `k ≈ 8·ln(n)/ε²`, floored at `minimum_projection_dimension`, capped at `d`.                                                |
-| `generate_projection_matrix(d, k, seed)`     | Orthonormal R via QR decomposition of Gaussian matrix. Guarantees `R·Rᵀ = I_k` so `‖R·z‖² ~ χ²(k)` exactly. Cached by `(d, k, seed)`. |
+| `generate_projection_matrix(d, k, seed)`     | Orthonormal R via QR decomposition of Gaussian matrix. Guarantees `R·Rᵀ = I_k`; the projected Wald kernels then calibrate `‖R·z‖²` against a `χ²(k)` reference law. Cached by `(d, k, seed)`. |
 | `derive_projection_seed(base_seed, test_id)` | Deterministic per-test seed via BLAKE2b hash of `"{base_seed}                                                                         | {test_id}"`. |
 
 ## branch_length_utils.py

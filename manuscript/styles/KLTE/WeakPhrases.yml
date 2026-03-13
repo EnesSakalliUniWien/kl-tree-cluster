@@ -1,0 +1,14 @@
+extends: existence
+message: "Consider removing or tightening '%s'."
+level: suggestion
+ignorecase: true
+tokens:
+  - obviously
+  - clearly
+  - note that
+  - in order to
+  - simply
+  - just
+  - various
+  - several
+  - very

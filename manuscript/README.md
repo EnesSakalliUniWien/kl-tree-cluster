@@ -36,6 +36,36 @@ Supported build paths:
 - `tectonic`
 - `pdflatex` + `bibtex`
 
+## Prose Lint
+
+This workspace also supports manuscript-only prose linting with Vale.
+
+To install a repo-local Vale binary:
+
+```bash
+cd manuscript
+./install_vale.sh
+```
+
+To sync styles and lint the manuscript prose:
+
+```bash
+cd manuscript
+make prose-lint
+```
+
+The current starter setup uses:
+
+- `write-good`
+- `alex`
+- local `KLTE` terminology and weak-phrase rules
+
+The local `KLTE` rules intentionally flag repository-internal labels such as
+`Gate 2`, `Gate 3`, `TreeBH`, `JL`, and `erank` so the manuscript can replace
+them with clearer prose. The packaged styles are intentionally narrowed for
+LaTeX math writing, so the lint output focuses on terminology and weak phrasing
+instead of generic passive-voice or spelling noise.
+
 If no engine is installed, `build.sh` exits with a clear error message and the
 source tree remains ready to compile once TeX tooling is added.
 

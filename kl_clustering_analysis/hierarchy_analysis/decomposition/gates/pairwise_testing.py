@@ -2,8 +2,8 @@
 
 This module provides stateless functions that compare two nodes in a
 :class:`~tree.poset_tree.PosetTree` using the projected Wald chi-square
-sibling divergence test, with optional Felsenstein branch-length adjustment
-and calibration-model deflation.
+sibling divergence test, with optional branch-length variance scaling and
+calibration-model deflation.
 
 Used by **signal localization** — ``test_node_pair_divergence`` compares
 arbitrary subtree pairs during recursive cross-boundary testing.
@@ -157,7 +157,7 @@ def _strict_branch_distance_from_ancestor(
     This function intentionally avoids weighted shortest-path calls because
     NetworkX treats missing edge weights as 1.0 when ``weight="branch_length"``
     is provided. Here, every traversed edge must carry a finite positive
-    ``branch_length``; otherwise ``None`` is returned so branch-length scaling
+    ``branch_length``; otherwise ``None`` is returned so variance scaling
     is disabled for that comparison.
     """
     if ancestor not in tree or node not in tree:
@@ -311,7 +311,7 @@ def test_node_pair_divergence(
     """Test divergence between two arbitrary tree nodes.
 
     Extracts distributions and sample sizes from the tree, computes
-    patristic distances to the LCA for Felsenstein adjustment, and
+    patristic distances to the LCA for the optional variance-scaling hook, and
     delegates to :func:`sibling_divergence_test`.
 
     When a *calibration_model* is provided the raw Wald statistic is
@@ -329,7 +329,7 @@ def test_node_pair_divergence(
         Tree node identifiers to compare.
     mean_branch_length
         Pre-computed mean branch length for the tree, or ``None`` to
-        disable Felsenstein adjustment.
+        disable branch-length variance scaling.
     calibration_model
         Optional calibration model for deflating the raw Wald statistic.
         When provided, the test statistic is divided by the predicted

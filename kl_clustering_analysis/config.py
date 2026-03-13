@@ -16,27 +16,34 @@ SIBLING_ALPHA: float = 0.01
 # Default significance level for Gate 2 edge (child-vs-parent) tests.
 EDGE_ALPHA: float = 0.01
 
+# Post-selection inflation calibration for the edge (child-parent) test.
+# When True, raw Wald T is deflated by an estimated inflation factor ĉ
+# before BH correction.  Null-like edges are identified via the spectral
+# oracle (k_spectral == SPECTRAL_MINIMUM_DIMENSION ≈ no signal).
+# Requires SPECTRAL_METHOD to be non-None.
+EDGE_CALIBRATION: bool = False
+
 
 # Epsilon value for numerical stability in KL-divergence and probability calculations.
 EPSILON: float = 1e-9
 
 
-# --- Felsenstein Branch-Length Scaling ---
+# --- Legacy Branch-Length Variance Scaling ---
 
-# Scale Wald test variance by normalised branch length (Felsenstein PIC, 1985).
-# Disabled: empirical comparison shows Felsenstein scaling systematically
+# Scale Wald test variance by normalized branch length.
+# Disabled: empirical comparison shows branch-length scaling systematically
 # under-splits on data-dependent trees (mean ARI 0.694 → 1.000 without it).
 FELSENSTEIN_SCALING: bool = False
 
 # Explicit branch-length semantics for pairwise path distances used by
-# Felsenstein scaling in localization and post-hoc merge:
+# branch-length scaling in localization and post-hoc merge:
 # - "phylogeny": use edge ``branch_length`` values as true path lengths.
 # - "topology": ignore edge values and use unit hop-length per edge.
 FELSENSTEIN_BRANCH_LENGTH_MODE: Literal["phylogeny", "topology"] = "topology"
 
-# Behavior when scaling is enabled in phylogeny mode but some edges have
+# Behavior when branch-length scaling is enabled in phylogeny mode but some edges have
 # missing/invalid branch lengths:
-# - "warn_disable": emit a warning and disable Felsenstein scaling for that run.
+# - "warn_disable": emit a warning and disable branch-length scaling for that run.
 # - "error": raise ValueError and fail fast.
 FELSENSTEIN_INCOMPLETE_BRANCH_POLICY: Literal["warn_disable", "error"] = "warn_disable"
 
@@ -115,9 +122,9 @@ INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 #   "wald"                  - Standard projected Wald χ² test (original, known anti-conservative)
 #   "cousin_adjusted_wald"  - Cousin-adjusted Wald: estimates post-selection inflation c
 #                             from null-like pairs (neither child edge-significant) via
-#                             log-linear regression on (BL_sum, n_parent), then deflates
+#                             one log-linear regression on (BL_sum, n_parent), then deflates
 #                             focal pair stats: T_adj = T / ĉ ~ χ²(k).
-#                             Preserves power better than F-test for multi-cluster cases.
+#                             Production default.
 SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
 
 # --- Pass-Through Traversal ---

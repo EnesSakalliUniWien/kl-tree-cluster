@@ -190,10 +190,11 @@ class TestDeflateByCalibration:
     def test_weighted_model_deflation(self):
         """CalibrationModel with known ĉ should deflate T by ĉ."""
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
+            beta=np.array([np.log(2.0), 0.0, 0.0]),
         )
         tree = self._make_tree_for_deflation()
         raw_T, df = 20.0, 10.0
@@ -219,12 +220,13 @@ class TestDeflateByCalibration:
         assert deflated_p == pytest.approx(expected_p, rel=1e-10)
 
     def test_adjusted_wald_model_deflation(self):
-        """CalibrationModel (median fallback, ĉ=1.5) deflates correctly."""
+        """Intercept-only regression model with known ĉ=1.5 deflates correctly."""
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=5,
             global_inflation_factor=1.5,
             max_observed_ratio=2.0,
+            beta=np.array([np.log(1.5), 0.0, 0.0]),
         )
         tree = self._make_tree_for_deflation()
         raw_T, df = 15.0, 8.0
@@ -250,11 +252,13 @@ class TestDeflateByCalibration:
         assert deflated_p == pytest.approx(expected_p, rel=1e-10)
 
     def test_no_calibration_model_returns_identity(self):
-        """When method='none', ĉ=1 so T is unchanged."""
+        """Neutral regression coefficients yield ĉ=1 so T is unchanged."""
         model = CalibrationModel(
-            method="none",
+            method="regression",
             n_calibration=0,
             global_inflation_factor=1.0,
+            max_observed_ratio=1.0,
+            beta=np.zeros(3),
         )
         tree = self._make_tree_for_deflation()
         raw_T, df = 12.0, 6.0
@@ -272,17 +276,18 @@ class TestDeflateByCalibration:
             calibration_model=model,
         )
 
-        # method="none" → c_hat=1.0 → T/1 = T
+        # Neutral regression coefficients → c_hat=1.0 → T/1 = T
         assert deflated_T == pytest.approx(raw_T, rel=1e-10)
         assert deflated_p == pytest.approx(raw_p, rel=1e-10)
 
     def test_ancestor_override_uses_given_node(self):
         """When ancestor_override is given, find_lca should NOT be called."""
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
+            beta=np.array([np.log(2.0), 0.0, 0.0]),
         )
         tree = self._make_tree_for_deflation()
         tree._graph.add_node("custom_ancestor", leaf_count=100)
@@ -305,10 +310,11 @@ class TestDeflateByCalibration:
     def test_lca_lookup_when_no_ancestor_override(self):
         """When ancestor_override is None, find_lca IS called."""
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
+            beta=np.array([np.log(2.0), 0.0, 0.0]),
         )
         tree = self._make_tree_for_deflation()
 
@@ -330,10 +336,11 @@ class TestDeflateByCalibration:
     def test_non_finite_stat_skips_deflation(self):
         """If test_stat is NaN, deflation is skipped."""
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
+            beta=np.array([np.log(2.0), 0.0, 0.0]),
         )
         tree = self._make_tree_for_deflation()
 
@@ -354,10 +361,11 @@ class TestDeflateByCalibration:
     def test_zero_df_skips_deflation(self):
         """If df == 0, deflation is skipped (guard condition)."""
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=10,
             global_inflation_factor=2.0,
             max_observed_ratio=3.0,
+            beta=np.array([np.log(2.0), 0.0, 0.0]),
         )
         tree = self._make_tree_for_deflation()
 
@@ -478,10 +486,11 @@ class TestTestNodePairDivergence:
         tree = _simple_tree()
         c_hat = 2.0
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=10,
             global_inflation_factor=c_hat,
             max_observed_ratio=3.0,
+            beta=np.array([np.log(c_hat), 0.0, 0.0]),
         )
 
         raw_T, raw_df = 20.0, 10.0
@@ -502,13 +511,14 @@ class TestTestNodePairDivergence:
         assert pval == pytest.approx(expected_p, rel=1e-10)
 
     def test_calibration_with_adjusted_wald_model(self):
-        """CalibrationModel (cousin-adjusted Wald) deflation also works."""
+        """Regression calibration for cousin-adjusted Wald deflation also works."""
         tree = _simple_tree()
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=5,
             global_inflation_factor=1.8,
             max_observed_ratio=2.5,
+            beta=np.array([np.log(1.8), 0.0, 0.0]),
         )
 
         raw_T, raw_df = 18.0, 8.0
@@ -531,10 +541,11 @@ class TestTestNodePairDivergence:
         """Deflating T should always increase (or maintain) the p-value."""
         tree = _simple_tree()
         model = CalibrationModel(
-            method="median",
+            method="regression",
             n_calibration=10,
             global_inflation_factor=3.0,
             max_observed_ratio=4.0,
+            beta=np.array([np.log(3.0), 0.0, 0.0]),
         )
 
         raw_T, raw_df = 25.0, 10.0

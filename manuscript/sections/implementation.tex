@@ -1,17 +1,17 @@
 % !TEX root = ../main.tex
 
-\section{Implementation Choices and Current Parameterization}
+\section{Implemented Method Specification}
 
-Table~\ref{tab:defaults} records the current parameterization of the method in
-the repository. These settings matter because they determine the exact tree
-construction, projection rules, multiplicity corrections, and traversal logic
-used in the present code path.
+Table~\ref{tab:defaults} records the implemented method specification used by
+the repository. These entries determine the exact tree construction,
+projection rules, multiplicity corrections, and traversal logic described in
+this manuscript.
 
 \begin{table}[ht]
 \centering
 \begin{tabular}{ll}
 \toprule
-Component & Current setting \\
+Component & Implemented choice \\
 \midrule
 Tree distance & Hamming \\
 Linkage & Average linkage \\
@@ -20,32 +20,27 @@ Sibling significance level & $\alpha_{\mathrm{sib}} = 0.01$ \\
 Edge test & Spectral projected Wald with eigenvalue whitening \\
 Edge dimension rule & Marchenko--Pastur signal count \\
 Sibling test & Cousin-adjusted projected Wald \\
-Sibling dimension rule & JL rule with $\varepsilon = 0.3$ and auto floor \\
+Sibling dimension rule & Johnson--Lindenstrauss rule with $\varepsilon = 0.3$ and global floor \\
 Minimum spectral dimension & 2 \\
 Include internal spectral rows & On \\
-Edge multiple-testing correction & TreeBH \\
+Edge multiple-testing correction & Hierarchical BH correction on the tree \\
 Sibling multiple-testing correction & Flat BH on focal pairs \\
-Edge calibration & Off \\
-Post-hoc merge & Off \\
-Passthrough traversal & On \\
-Felsenstein scaling & Off \\
+Pass-through traversal & On \\
 \bottomrule
 \end{tabular}
-\caption{Current method configuration in the repository.}
+\caption{Implemented method specification in the repository.}
 \label{tab:defaults}
 \end{table}
 
-Two aspects of the current parameterization deserve explicit emphasis in the
-text. First, the two gates do not use the same projection rule: Gate 2 uses parent-local
-spectral whitening, whereas Gate 3 uses a random orthonormal projection with a
-Johnson--Lindenstrauss dimension cap and then corrects post-selection inflation
-through cousin adjustment. Second, the final clustering stage is intentionally
-lightweight once the gate tables exist: passthrough is on, but both edge
-calibration and post-hoc merge are off, so the reported partition is driven
-almost entirely by the two inferential gates and the top-down traversal.
+Two aspects of the implemented method deserve explicit emphasis. First, the
+two tests do not use the same projection rule: the child-parent edge test uses
+parent-local spectral whitening, whereas the sibling test uses a random
+orthonormal projection with a Johnson--Lindenstrauss dimension cap and then
+corrects post-selection inflation through cousin adjustment. Second, the final
+clustering stage is intentionally lightweight once the test tables exist:
+pass-through traversal is on, so the reported partition is driven directly by
+these two inferential tests and the top-down traversal.
 
 The representation layer should also be read as part of the method. Binary data
-enter directly, categorical data may enter through one-hot indicator expansion
-or native multinomial node distributions, and continuous data currently enter
-through thresholding or quantile discretization before the same gate pipeline
-is applied.
+enter directly, categorical data enter through one-hot indicator expansion, and
+continuous data are discretized before the same testing pipeline is applied.

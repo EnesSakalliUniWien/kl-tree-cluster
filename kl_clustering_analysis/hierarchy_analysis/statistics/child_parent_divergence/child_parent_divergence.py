@@ -8,12 +8,21 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from kl_clustering_analysis.core_utils.data_utils import assign_divergence_results, extract_leaf_counts
+from kl_clustering_analysis import config
+from kl_clustering_analysis.core_utils.data_utils import (
+    assign_divergence_results,
+    extract_leaf_counts,
+)
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
 from ..multiple_testing import apply_multiple_testing_correction
 from .child_parent_spectral_decomposition import compute_child_parent_spectral_context
 from .child_parent_tree_testing import run_child_parent_tests_across_tree
+from .edge_calibration import (
+    deflate_edge_tests,
+    fit_edge_inflation_model,
+    _identify_null_like_edges,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +87,32 @@ def annotate_child_parent_divergence(
         "parent_leaf_counts": parent_leaf_counts.copy(),
     }
 
+    # --- Edge calibration: deflate post-selection inflation before BH ---
+    if config.EDGE_CALIBRATION and node_spectral_dimensions is not None:
+        null_like_mask = _identify_null_like_edges(
+            parent_ids, node_spectral_dimensions, invalid_test_mask,
+        )
+        edge_cal_model = fit_edge_inflation_model(
+            edge_test_statistics,
+            edge_degrees_of_freedom,
+            parent_leaf_counts,
+            null_like_mask,
+        )
+        edge_test_statistics, edge_p_values = deflate_edge_tests(
+            edge_test_statistics,
+            edge_degrees_of_freedom,
+            edge_p_values,
+            parent_leaf_counts,
+            edge_cal_model,
+            invalid_test_mask,
+        )
+        annotations_df.attrs["edge_calibration_audit"] = {
+            "n_calibration": edge_cal_model.n_calibration,
+            "global_inflation_factor": edge_cal_model.global_inflation_factor,
+            "max_observed_ratio": edge_cal_model.max_observed_ratio,
+            "diagnostics": edge_cal_model.diagnostics,
+        }
+
     node_depths = compute_node_depths(tree)
     child_depths_for_correction = np.array([node_depths.get(cid, 0) for cid in child_ids])
 
@@ -91,7 +126,9 @@ def annotate_child_parent_divergence(
             for edge_index, p_value in enumerate(edge_p_values)
             if not np.isfinite(p_value)
         ]
-        nonfinite_p_value_node_ids = [child_ids[edge_index] for edge_index in nonfinite_p_value_indices]
+        nonfinite_p_value_node_ids = [
+            child_ids[edge_index] for edge_index in nonfinite_p_value_indices
+        ]
         preview_node_ids = ", ".join(map(repr, nonfinite_p_value_node_ids[:5]))
         logger.warning(
             "Child-parent divergence audit: total_tests=%d, invalid_tests=%d, "

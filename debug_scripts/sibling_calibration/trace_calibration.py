@@ -14,13 +14,15 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_weighted_wald import (
-    _collect_weighted_pairs,
-    _fit_weighted_inflation_model,
-    predict_weighted_inflation_factor,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.calibration import (
+    fit_inflation_model,
+    predict_inflation_factor,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.tree_traversal import (
+    collect_sibling_pair_records,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -55,9 +57,14 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
     pca_eigenvalues = results_df.attrs.get("_pca_eigenvalues")
     mean_bl = compute_mean_branch_length(tree)
 
-    # Collect all sibling pairs
-    records = _collect_weighted_pairs(
-        tree, results_df, mean_bl, spectral_dims, pca_projections, pca_eigenvalues
+    # Collect all sibling pairs (null-like + focal)
+    records, _non_binary = collect_sibling_pair_records(
+        tree,
+        results_df,
+        mean_bl,
+        spectral_dims=spectral_dims,
+        pca_projections=pca_projections,
+        pca_eigenvalues=pca_eigenvalues,
     )
 
     n_null = sum(1 for r in records if r.is_null_like)
@@ -68,7 +75,6 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
     print(f"  n={n_samples}, p={n_features}, K={n_clusters}, noise={noise}")
     print(f"  Config: SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}")
     print(f"  Config: SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
-    print(f"  Config: EIGENVALUE_WHITENING={config.EIGENVALUE_WHITENING}")
     print(f"  Config: FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}")
     print("=" * 90)
     print(f"Total pairs: {len(records)}  (null-like: {n_null}, focal: {n_focal})")
@@ -77,19 +83,19 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
     # --- Per-pair table ---
     print(
         f"{'Parent':>8} {'T':>10} {'k':>4} {'raw_p':>10} "
-        f"{'w':>8} {'r=T/k':>8} {'null':>5} {'bl_sum':>8} {'n_par':>6}"
+        f"{'r=T/k':>8} {'null':>5} {'bl_sum':>8} {'n_par':>6}"
     )
-    print("-" * 90)
-    for r in sorted(records, key=lambda x: x.weight, reverse=True):
-        ratio = r.stat / r.df if r.df > 0 else float("nan")
+    print("-" * 80)
+    for r in sorted(records, key=lambda x: x.n_parent, reverse=True):
+        ratio = r.stat / r.degrees_of_freedom if r.degrees_of_freedom > 0 else float("nan")
         print(
-            f"{r.parent:>8} {r.stat:10.4f} {r.df:4d} {r.pval:10.6f} "
-            f"{r.weight:8.4f} {ratio:8.4f} {str(r.is_null_like):>5} "
-            f"{r.bl_sum:8.4f} {r.n_parent:6d}"
+            f"{r.parent:>8} {r.stat:10.4f} {r.degrees_of_freedom:4d} {r.p_value:10.6f} "
+            f"{ratio:8.4f} {str(r.is_null_like):>5} "
+            f"{r.branch_length_sum:8.4f} {r.n_parent:6d}"
         )
 
     # --- Fit model ---
-    model = _fit_weighted_inflation_model(records)
+    model = fit_inflation_model(records)
     print(f"\nModel method: {model.method}")
     print(f"Global c-hat (weighted mean of r): {model.global_inflation_factor:.4f}")
     print(f"Max observed ratio (null-like): {model.max_observed_ratio:.4f}")
@@ -106,26 +112,30 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
     root_rec = [r for r in records if r.parent == root]
     if root_rec:
         rr = root_rec[0]
-        c_hat = predict_weighted_inflation_factor(model, rr.bl_sum, rr.n_parent)
-        ratio = rr.stat / rr.df if rr.df > 0 else float("nan")
-        p_adj = chi2.sf(rr.stat / c_hat, rr.df) if c_hat > 0 and rr.df > 0 else float("nan")
+        c_hat = predict_inflation_factor(model, rr.branch_length_sum, rr.n_parent)
+        ratio = rr.stat / rr.degrees_of_freedom if rr.degrees_of_freedom > 0 else float("nan")
+        p_adj = (
+            chi2.sf(rr.stat / c_hat, rr.degrees_of_freedom)
+            if c_hat > 0 and rr.degrees_of_freedom > 0
+            else float("nan")
+        )
 
         print(f"\n--- ROOT NODE ({root}) ---")
         print(f"  Children: {list(tree.successors(root))}")
-        print(f"  T = {rr.stat:.4f},  k = {rr.df},  raw p = {rr.pval:.6f}")
+        print(f"  T = {rr.stat:.4f},  k = {rr.degrees_of_freedom},  raw p = {rr.p_value:.6f}")
         print(f"  r = T/k = {ratio:.4f}")
-        print(f"  bl_sum = {rr.bl_sum:.4f},  n_parent = {rr.n_parent}")
-        print(f"  weight = {rr.weight:.4f},  is_null_like = {rr.is_null_like}")
+        print(f"  bl_sum = {rr.branch_length_sum:.4f},  n_parent = {rr.n_parent}")
+        print(f"  is_null_like = {rr.is_null_like}")
         print(f"  c-hat (predicted) = {c_hat:.4f}")
         print(f"  T_adj = T / c-hat = {rr.stat / c_hat:.4f}")
         print(f"  p_adj (pre-BH)    = {p_adj:.6f}")
         print(f"  Reject at alpha=0.05? {p_adj < 0.05}")
         print()
         print("  WITHOUT calibration (raw Wald):")
-        print(f"    p = {rr.pval:.6f}, reject? {rr.pval < 0.05}")
+        print(f"    p = {rr.p_value:.6f}, reject? {rr.p_value < 0.05}")
         print(f"    DEFLATION FACTOR: T was divided by {c_hat:.2f}x")
         if c_hat > 1:
-            print(f"    >>> Over-deflation: raw p={rr.pval:.4f} -> adj p={p_adj:.4f}")
+            print(f"    >>> Over-deflation: raw p={rr.p_value:.4f} -> adj p={p_adj:.4f}")
     else:
         print(f"\nRoot {root} has no sibling pair record (non-binary?)")
 

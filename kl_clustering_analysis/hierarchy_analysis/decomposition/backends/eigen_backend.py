@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import numpy as np
+from scipy import linalg
 
 from ..methods.k_estimators import marchenko_pastur_signal_count
 
@@ -53,11 +54,11 @@ def eigendecompose_correlation_backend(
         gram = X_std @ X_std.T / d_active
 
         if need_eigh:
-            eigenvalues, gram_vecs = np.linalg.eigh(gram)
+            eigenvalues, gram_vecs = linalg.eigh(gram, check_finite=False)
             eigenvalues = eigenvalues[::-1]
             gram_vecs = gram_vecs[:, ::-1]
         else:
-            eigenvalues = np.sort(np.linalg.eigvalsh(gram))[::-1]
+            eigenvalues = np.sort(linalg.eigvalsh(gram, check_finite=False))[::-1]
             gram_vecs = None
 
         eigenvalues = np.maximum(eigenvalues, 0.0)
@@ -76,11 +77,11 @@ def eigendecompose_correlation_backend(
     np.fill_diagonal(corr, 1.0)
 
     if need_eigh:
-        eigenvalues, eigenvectors_active = np.linalg.eigh(corr)
+        eigenvalues, eigenvectors_active = linalg.eigh(corr, check_finite=False)
         eigenvalues = eigenvalues[::-1]
         eigenvectors_active = eigenvectors_active[:, ::-1]
     else:
-        eigenvalues = np.sort(np.linalg.eigvalsh(corr))[::-1]
+        eigenvalues = np.sort(linalg.eigvalsh(corr, check_finite=False))[::-1]
         eigenvectors_active = None
 
     eigenvalues = np.maximum(eigenvalues, 0.0)

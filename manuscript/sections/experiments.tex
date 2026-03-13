@@ -9,8 +9,9 @@ the following empirical blocks.
 \subsection{Null calibration}
 
 The first requirement is a null calibration study on binary data with no true
-cluster structure. The goal is to measure how often Gate 2 and Gate 3 reject
-under scenarios where they should not. This should be reported both at the
+cluster structure. The goal is to measure how often the child-parent edge test
+and the sibling test reject under scenarios where they should not. This should
+be reported both at the
 individual-test level and at the resulting number-of-clusters level. The latter
 is critical because a method can have mild per-test inflation yet still produce
 severe over-splitting once the tree walk is applied.
@@ -31,21 +32,22 @@ This should vary:
 Power should be measured both for edge recovery and for final cluster recovery.
 Adjusted Rand Index and exact split recovery are both useful endpoints.
 
-\subsection{Ablations}
+\subsection{Robustness analyses}
 
-The current codebase makes several choices that can be ablated directly:
+Because the manuscript now presents a single implemented method, the relevant
+empirical question is robustness of that pipeline. The most useful stress tests
+are:
 
 \begin{itemize}[leftmargin=1.5em]
-  \item sibling calibration method,
-  \item projection-dimension rule,
-  \item edge multiple-testing correction,
-  \item passthrough traversal on versus off, and
-  \item optional post-hoc merge.
+  \item sensitivity to small child leaf counts in the child-parent edge test,
+  \item sensitivity to sparse high-dimensional feature matrices,
+  \item sensitivity to tree imbalance and shallow-versus-deep signal placement, and
+  \item sensitivity of the final partition to the pass-through rule.
 \end{itemize}
 
-This section should eventually explain not only which configuration performs
-best, but also which choices are required for stable Type I error and which are
-mostly about power or cluster granularity.
+This section should eventually explain where the implemented method is well
+calibrated, where it becomes under-powered, and where it tends to over-split or
+under-split.
 
 \subsection{Real-data benchmarks}
 

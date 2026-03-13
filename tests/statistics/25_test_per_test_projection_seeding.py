@@ -103,7 +103,7 @@ def test_sibling_run_tests_passes_unique_test_ids(monkeypatch) -> None:
         return 0.0, 1.0, 1.0
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test.sibling_divergence_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald.sibling_divergence_test",
         _fake_sibling_test,
     )
 

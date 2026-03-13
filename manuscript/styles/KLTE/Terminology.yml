@@ -1,0 +1,13 @@
+extends: substitution
+message: "Prefer '%s' over '%s' in the manuscript, or explain the term explicitly."
+level: warning
+ignorecase: false
+swap:
+  statistical gates: statistical tests
+  gate annotations: test annotations
+  passthrough: pass-through
+  Gate 2: edge test
+  Gate 3: sibling test
+  TreeBH: hierarchical BH correction
+  JL: Johnson-Lindenstrauss
+  erank: effective rank
