@@ -8,7 +8,7 @@ import pandas as pd
 
 from kl_clustering_analysis import config
 
-from ..projection.spectral_dimension import compute_spectral_decomposition
+from ..projection.spectral import compute_spectral_decomposition
 
 
 def compute_child_parent_spectral_context(

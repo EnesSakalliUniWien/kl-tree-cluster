@@ -12,7 +12,7 @@ whether to split or merge at each internal node during top-down traversal:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -45,13 +45,13 @@ class GateEvaluator:
     def __init__(
         self,
         tree: "PosetTree",
-        local_significant: Dict[str, bool],
-        sibling_different: Dict[str, bool],
-        sibling_skipped: Dict[str, bool],
-        children_map: Dict[str, List[str]],
-        descendant_leaf_sets: Dict[str, frozenset],
+        local_significant: dict[str, bool],
+        sibling_different: dict[str, bool],
+        sibling_skipped: dict[str, bool],
+        children_map: dict[str, list[str]],
+        descendant_leaf_sets: dict[str, frozenset],
         *,
-        has_descendant_split: Dict[str, bool] | None = None,
+        has_descendant_split: dict[str, bool] | None = None,
         passthrough: bool = False,
     ) -> None:
         self.tree = tree
@@ -67,7 +67,7 @@ class GateEvaluator:
     # Shared gate logic
     # ------------------------------------------------------------------
 
-    def _evaluate_gates_1_and_2(self, parent: str) -> Tuple[bool, str | None, str | None]:
+    def _evaluate_gates_1_and_2(self, parent: str) -> tuple[bool, str | None, str | None]:
         """Run Gates 1 (binary structure) and 2 (child-parent divergence).
 
         Returns

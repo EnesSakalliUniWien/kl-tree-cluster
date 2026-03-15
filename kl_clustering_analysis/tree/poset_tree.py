@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 import networkx as nx
 import numpy as np
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
+from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes, compute_node_depths
 from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments as _build_sample_cluster_assignments,
 )
@@ -46,14 +47,14 @@ class PosetTree(nx.DiGraph):
     def __init__(self, *args, **kwargs):
         """Initialize PosetTree with stats_df property."""
         super().__init__(*args, **kwargs)
-        self.stats_df: Optional["pd.DataFrame"] = None
-        self._depths: Optional[Dict[str, int]] = None
+        self.stats_df: pd.DataFrame | None = None
+        self._depths: dict[str, int] | None = None
 
     @classmethod
     def from_agglomerative(
         cls,
         X: np.ndarray,
-        leaf_names: Optional[List[str]] = None,
+        leaf_names: list[str] | None = None,
         linkage: str = "average",
         metric: str = "euclidean",
         compute_distances: bool = True,
@@ -73,7 +74,7 @@ class PosetTree(nx.DiGraph):
         )
 
     @classmethod
-    def from_undirected_edges(cls, edges: Iterable[Tuple]) -> "PosetTree":
+    def from_undirected_edges(cls, edges: Iterable[tuple]) -> "PosetTree":
         """Orient an undirected tree and promote it to :class:`PosetTree`.
 
         Delegates to :func:`~kl_clustering_analysis.tree.io.tree_from_undirected_edges`.
@@ -86,7 +87,7 @@ class PosetTree(nx.DiGraph):
     def from_linkage(
         cls,
         linkage_matrix: np.ndarray,
-        leaf_names: Optional[List[str]] = None,
+        leaf_names: list[str] | None = None,
     ) -> "PosetTree":
         """Build a tree from a SciPy linkage matrix.
 
@@ -111,10 +112,10 @@ class PosetTree(nx.DiGraph):
 
     def get_leaves(
         self,
-        node: Optional[str] = None,
+        node: str | None = None,
         return_labels: bool = True,
         sort: bool = True,
-    ) -> List[str]:
+    ) -> list[str]:
         """Collect leaf nodes globally or within a subtree.
 
         Parameters
@@ -156,7 +157,7 @@ class PosetTree(nx.DiGraph):
         return self.out_degree(node_id) == 0
 
     @property
-    def distribution_map(self) -> Dict[str, np.ndarray]:
+    def distribution_map(self) -> dict[str, np.ndarray]:
         """Map each node to its distribution vector.
 
         Returns
@@ -172,7 +173,7 @@ class PosetTree(nx.DiGraph):
         }
 
     @property
-    def leaf_count_map(self) -> Dict[str, int]:
+    def leaf_count_map(self) -> dict[str, int]:
         """Map each node to its descendant leaf count.
 
         Returns
@@ -187,7 +188,7 @@ class PosetTree(nx.DiGraph):
             if "leaf_count" in node_data
         }
 
-    def compute_descendant_sets(self, use_labels: bool = True) -> Dict[str, frozenset]:
+    def compute_descendant_sets(self, use_labels: bool = True) -> dict[str, frozenset]:
         """Map each node to the set of leaf labels under it.
 
         Parameters
@@ -204,7 +205,7 @@ class PosetTree(nx.DiGraph):
         """
         desc_sets: Dict[str, frozenset] = {}
         # process leaves first (reverse topological order)
-        for node in nx.topological_sort(self.reverse()):
+        for node in bottom_up_nodes(self):
             node_data = self.nodes[node]
             if node_data.get("is_leaf", False) or self.out_degree(node) == 0:
                 val = node_data.get("label", node) if use_labels else node
@@ -214,7 +215,7 @@ class PosetTree(nx.DiGraph):
                 desc_sets[node] = frozenset.union(*child_sets)
         return desc_sets
 
-    def _get_depths(self) -> Dict[str, int]:
+    def _get_depths(self) -> dict[str, int]:
         """Computes and caches node depths from the root."""
         if self._depths is None:
             self._depths = compute_node_depths(self)
@@ -337,18 +338,16 @@ class PosetTree(nx.DiGraph):
                     "is_leaf": node_attrs.get("is_leaf", False),
                 }
             )
-        self.stats_df = pd.DataFrame.from_records(node_records).set_index(
-            "node_id", drop=True
-        )
+        self.stats_df = pd.DataFrame.from_records(node_records).set_index("node_id", drop=True)
 
     # ---------------- Decomposition helper ----------------
 
     def decompose(
         self,
-        annotations_df: Optional["pd.DataFrame"] = None,
-        leaf_data: Optional["pd.DataFrame"] = None,
+        annotations_df: pd.DataFrame | None = None,
+        leaf_data: pd.DataFrame | None = None,
         **decomposer_kwargs,
-    ) -> Dict[str, object]:
+    ) -> dict[str, object]:
         """Run ``TreeDecomposition`` directly from the tree.
 
         Parameters
@@ -398,8 +397,8 @@ class PosetTree(nx.DiGraph):
         return decomposer.decompose_tree()
 
     def build_sample_cluster_assignments(
-        self, decomposition_results: Dict[str, object]
-    ) -> "pd.DataFrame":
+        self, decomposition_results: dict[str, object]
+    ) -> pd.DataFrame:
         """Build a per-sample cluster assignment table from decomposition output.
 
         This method is a convenience wrapper around

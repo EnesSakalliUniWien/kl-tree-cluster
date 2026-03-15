@@ -6,7 +6,7 @@ from typing import Callable
 
 import numpy as np
 
-from ...statistics.projection.satterthwaite import (
+from .chi2_pvalue import (
     compute_projected_pvalue as _compute_projected_pvalue,
 )
 from .projection_basis import build_projection_basis_with_padding
@@ -42,30 +42,30 @@ def run_projected_wald_kernel(
     tuple[float, int, float, float]
         ``(statistic, nominal_k, effective_df, p_value)``
     """
-    z_vec = np.asarray(z, dtype=np.float64)
-    d = int(z_vec.shape[0])
+    standardized_diff = np.asarray(z, dtype=np.float64)
+    n_features = int(standardized_diff.shape[0])
 
     if spectral_k is not None and spectral_k > 0:
-        k = min(int(spectral_k), d)
+        projection_dim = min(int(spectral_k), n_features)
     else:
-        k = min(int(k_fallback(d)), d)
+        projection_dim = min(int(k_fallback(n_features)), n_features)
 
-    R, eig_for_whitening = build_projection_basis_with_padding(
-        n_features=d,
-        k=k,
+    projection_matrix, whitening_eigenvalues = build_projection_basis_with_padding(
+        n_features=n_features,
+        k=projection_dim,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
         random_state=seed,
     )
 
-    projected = R @ z_vec
+    projected_diff = projection_matrix @ standardized_diff
 
-    statistic, effective_degrees_of_freedom, p_value = compute_projected_pvalue(
-        projected,
-        k,
-        eigenvalues=eig_for_whitening,
+    test_statistic, effective_df, p_value = compute_projected_pvalue(
+        projected_diff,
+        projection_dim,
+        eigenvalues=whitening_eigenvalues,
     )
-    return float(statistic), int(k), float(effective_degrees_of_freedom), float(p_value)
+    return float(test_statistic), int(projection_dim), float(effective_df), float(p_value)
 
 
 __all__ = [

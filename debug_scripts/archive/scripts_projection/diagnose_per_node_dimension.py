@@ -45,13 +45,13 @@ from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 sys.path.insert(0, ".")
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
-    sibling_divergence_test,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral_dimension import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
     compute_sibling_spectral_dimensions,
     compute_spectral_decomposition,
     effective_rank,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
+    sibling_divergence_test,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 

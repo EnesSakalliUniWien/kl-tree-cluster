@@ -6,7 +6,7 @@ which traverses a hierarchy and decides where to split or merge to form clusters
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Set, Tuple
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..tree.poset_tree import PosetTree
@@ -107,7 +107,7 @@ class TreeDecomposition:
         # ----- leaf partitions & counts (poset view) -----
         self._descendant_leaf_sets = self.tree.compute_descendant_sets(use_labels=True)
 
-        self._leaf_count_cache: Dict[str, int] = {
+        self._leaf_count_cache: dict[str, int] = {
             node_id: node_data.get("leaf_count", len(self._descendant_leaf_sets.get(node_id, ())))
             for node_id, node_data in self._node_attrs_by_id.items()
         }
@@ -138,13 +138,13 @@ class TreeDecomposition:
                 raise ValueError(f"Missing {column_name!r} values for nodes: {preview}.")
 
         # Precompute children list (avoids rebuilding generator repeatedly)
-        self._children: Dict[str, List[str]] = {
+        self._children: dict[str, list[str]] = {
             n: list(self.tree.successors(n)) for n in self._node_ids
         }
 
         # ----- precompute has_descendant_split (bottom-up O(n)) -----
         self._passthrough = bool(passthrough)
-        self._has_descendant_split: Dict[str, bool] = {}
+        self._has_descendant_split: dict[str, bool] = {}
         if self._passthrough:
             self._has_descendant_split = self._compute_has_descendant_split()
 
@@ -162,7 +162,7 @@ class TreeDecomposition:
 
     # ---------- initialization helpers ----------
 
-    def _compute_has_descendant_split(self) -> Dict[str, bool]:
+    def _compute_has_descendant_split(self) -> dict[str, bool]:
         """Precompute bottom-up flag: does any descendant have a significant sibling split?
 
         For each internal node, ``has_descendant_split[node]`` is ``True``
@@ -177,15 +177,14 @@ class TreeDecomposition:
 
         Returns
         -------
-        Dict[str, bool]
+        dict[str, bool]
             Mapping from node ID to boolean flag.
         """
-        import networkx as nx
+        from ..core_utils.tree_utils import bottom_up_nodes
 
-        has_split: Dict[str, bool] = {}
+        has_split: dict[str, bool] = {}
 
-        # Reverse topological order = leaves first, root last
-        for node in reversed(list(nx.topological_sort(self.tree))):
+        for node in bottom_up_nodes(self.tree):
             children = self._children.get(node, [])
             if not children:
                 # Leaf node
@@ -234,13 +233,13 @@ class TreeDecomposition:
         Extracts and stores distributions, leaf flags, and labels.
         This one-time preprocessing avoids expensive NetworkX lookups in tight loops.
         """
-        self._node_ids: Tuple[str, ...] = tuple()
-        self._node_attrs_by_id: Dict[str, dict] = {}
-        self._distribution_by_node: Dict[str, np.ndarray] = {}
-        self._is_leaf: Dict[str, bool] = {}
-        self._label: Dict[str, str] = {}
+        self._node_ids: tuple[str, ...] = tuple()
+        self._node_attrs_by_id: dict[str, dict] = {}
+        self._distribution_by_node: dict[str, np.ndarray] = {}
+        self._is_leaf: dict[str, bool] = {}
+        self._label: dict[str, str] = {}
 
-        node_ids: List[str] = []
+        node_ids: list[str] = []
         for node_id, node_data in self.tree.nodes(data=True):
             node_ids.append(node_id)
             self._node_attrs_by_id[node_id] = node_data
@@ -270,7 +269,7 @@ class TreeDecomposition:
 
     # ---------- LCA ----------
 
-    def _find_cluster_root(self, leaf_labels: Set[str]) -> str:
+    def _find_cluster_root(self, leaf_labels: set[str]) -> str:
         """Identify the lowest common ancestor for a collection of leaf labels.
 
         This implementation delegates the LCA calculation to the tree object, which is
@@ -298,7 +297,7 @@ class TreeDecomposition:
     # ---------- core decomposition (iterative, no recursion) ----------
 
     def _build_cluster_assignments(
-        self, final_leaf_sets: List[set[str]]
+        self, final_leaf_sets: list[set[str]]
     ) -> dict[int, dict[str, object]]:
         """Build cluster assignment dictionary from collected leaf sets.
 
@@ -316,9 +315,9 @@ class TreeDecomposition:
         two children are appended in right-then-left order so that the left child
         is processed first on the next iteration.
         """
-        nodes_to_visit: List[str] = [self._root]
-        final_leaf_sets: List[set[str]] = []
-        processed: Set[str] = set()
+        nodes_to_visit: list[str] = [self._root]
+        final_leaf_sets: list[set[str]] = []
+        processed: set[str] = set()
 
         for node in iterate_worklist(nodes_to_visit, processed):
             process_node(node, self._gate, nodes_to_visit, final_leaf_sets)

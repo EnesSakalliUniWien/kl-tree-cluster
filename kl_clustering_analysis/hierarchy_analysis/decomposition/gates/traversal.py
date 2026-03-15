@@ -9,7 +9,7 @@ here for backward compatibility.
 
 from __future__ import annotations
 
-from typing import Iterator, List, Set
+from collections.abc import Iterator
 
 from .gate_evaluator import GateEvaluator  # re-export
 
@@ -21,8 +21,8 @@ from .gate_evaluator import GateEvaluator  # re-export
 def process_node(
     node_id: str,
     gate: GateEvaluator,
-    nodes_to_visit: List[str],
-    final_leaf_sets: List[set[str]],
+    nodes_to_visit: list[str],
+    final_leaf_sets: list[set[str]],
 ) -> None:
     """Apply split, pass-through, or merge decision for one node during DFS.
 
@@ -60,8 +60,8 @@ def process_node(
 
 
 def iterate_worklist(
-    nodes_to_visit: List[str],
-    processed: Set[str],
+    nodes_to_visit: list[str],
+    processed: set[str],
 ) -> Iterator[str]:
     """Yield nodes from a mutable LIFO list exactly once.
 

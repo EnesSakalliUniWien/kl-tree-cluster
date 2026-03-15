@@ -40,26 +40,26 @@ os.environ.setdefault("KL_TE_N_JOBS", "1")
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_backend import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends import (
     EigenResult,
     build_pca_projection_backend,
     eigendecompose_correlation_backend,
     estimate_spectral_k_backend,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.methods.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     effective_rank,
     marchenko_pastur_signal_count,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.satterthwaite import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.chi2_pvalue import (
     compute_projected_pvalue,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.sibling_spectral_dimension import (
     compute_sibling_spectral_dimensions,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral_dimension import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
     compute_spectral_decomposition,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.tree_helpers import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_helpers import (
     precompute_descendants,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree

@@ -44,7 +44,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
     standardize_proportion_difference,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.tree_helpers import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_helpers import (
     precompute_descendants,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (

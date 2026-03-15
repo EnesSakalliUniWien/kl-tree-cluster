@@ -22,7 +22,7 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     compute_projection_dimension,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral_dimension import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
     compute_spectral_decomposition,
 )
 from kl_clustering_analysis.tree.io import tree_from_linkage

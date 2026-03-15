@@ -136,3 +136,4 @@ data
 
 # Standalone analysis pipeline
 analysis/
+.github

@@ -27,7 +27,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pai
     compute_projection_dimension,
     sibling_divergence_test,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral_dimension import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
     compute_sibling_spectral_dimensions,
     compute_spectral_decomposition,
     effective_rank,

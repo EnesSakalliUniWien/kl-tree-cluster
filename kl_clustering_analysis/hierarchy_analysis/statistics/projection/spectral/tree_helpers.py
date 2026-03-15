@@ -11,6 +11,8 @@ from typing import Dict, Optional, Tuple
 import networkx as nx
 import numpy as np
 
+from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes
+
 
 def is_leaf(tree: nx.DiGraph, node_id: str) -> bool:
     """Check whether *node_id* is a leaf in *tree*."""
@@ -46,7 +48,7 @@ def precompute_descendants(
     desc_indices: Dict[str, list] = {}
     desc_internal: Dict[str, list] = {}
 
-    for node_id in reversed(list(nx.topological_sort(tree))):
+    for node_id in bottom_up_nodes(tree):
         if is_leaf(tree, node_id):
             lbl = tree.nodes[node_id].get("label", node_id)
             desc_indices[node_id] = [label_to_idx[lbl]] if lbl in label_to_idx else []

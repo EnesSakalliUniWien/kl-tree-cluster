@@ -7,10 +7,29 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..core.contracts import GateAnnotationBundle
-from ..core.registry import normalize_sibling_calibration_method, normalize_spectral_k_method
+from ..core.errors import DecompositionMethodError
 from .column_contracts import edge_gate_columns, sibling_gate_columns
 from .edge_gate import annotate_edge_gate
 from .sibling_gate import annotate_sibling_gate
+
+_VALID_SPECTRAL_METHODS = {"marchenko_pastur"}
+_VALID_SIBLING_METHODS = {"wald", "cousin_adjusted_wald"}
+
+
+def _normalize_spectral_method(method: str | None) -> str | None:
+    if method is None or method == "none":
+        return None
+    name = str(method).strip()
+    if name not in _VALID_SPECTRAL_METHODS:
+        raise DecompositionMethodError(f"Unknown spectral k estimator: {name!r}.")
+    return name
+
+
+def _normalize_sibling_method(method: str) -> str:
+    name = str(method).strip()
+    if name not in _VALID_SIBLING_METHODS:
+        raise DecompositionMethodError(f"Unknown sibling calibration method: {name!r}.")
+    return name
 
 
 def run_gate_annotation_pipeline(
@@ -29,8 +48,8 @@ def run_gate_annotation_pipeline(
     sibling_pca_eigenvalues: dict[str, object] | None = None,
 ) -> GateAnnotationBundle:
     """Run Gate 2 -> Gate 3 adapters and return typed legacy-compatible output."""
-    resolved_spectral_method = normalize_spectral_k_method(spectral_method)
-    resolved_sibling_method = normalize_sibling_calibration_method(sibling_method)
+    resolved_spectral_method = _normalize_spectral_method(spectral_method)
+    resolved_sibling_method = _normalize_sibling_method(sibling_method)
 
     edge_bundle = annotate_edge_gate(
         tree,

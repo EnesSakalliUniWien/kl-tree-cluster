@@ -23,7 +23,7 @@ from ....decomposition.backends.random_projection_backend import (
 from ....decomposition.backends.random_projection_backend import (
     derive_projection_seed_backend as derive_projection_seed,
 )
-from ....decomposition.methods.projected_wald import run_projected_wald_kernel
+from ...projection.projected_wald import run_projected_wald_kernel
 from ...branch_length_utils import sanitize_positive_branch_length
 from ...categorical_mahalanobis import categorical_whitened_vector
 from .pooled_variance import _is_categorical, standardize_proportion_difference

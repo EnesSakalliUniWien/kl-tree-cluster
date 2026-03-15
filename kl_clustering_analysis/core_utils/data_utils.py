@@ -1,122 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import networkx as nx
 import numpy as np
 import pandas as pd
-
-_TRUE_BOOL_TOKENS = {"1", "true"}
-_FALSE_BOOL_TOKENS = {"0", "false"}
-_BOOL_NULL_POLICIES = {"raise", "false", "true"}
-
-
-def _normalize_strict_bool(
-    value: object,
-    *,
-    null_policy: Literal["raise", "false", "true"] = "raise",
-) -> bool | None:
-    """Normalize strict boolean-like values to bool, otherwise ``None``.
-
-    Accepted values are:
-    - bool / np.bool_
-    - integers 0 or 1
-    - finite floats 0.0 or 1.0
-    - case-insensitive strings in {_TRUE_BOOL_TOKENS, _FALSE_BOOL_TOKENS}
-
-    Parameters
-    ----------
-    value
-        Value to normalize.
-    null_policy
-        How to handle nulls (None/NaN):
-        - ``"raise"``: return None (caller should raise)
-        - ``"false"``: coerce null to False
-        - ``"true"``: coerce null to True
-    """
-    if null_policy not in _BOOL_NULL_POLICIES:
-        raise ValueError(
-            f"Invalid null_policy {null_policy!r}. " "Expected one of {'raise', 'false', 'true'}."
-        )
-
-    if pd.isna(value):
-        if null_policy == "false":
-            return False
-        if null_policy == "true":
-            return True
-        return None
-
-    if isinstance(value, (bool, np.bool_)):
-        return bool(value)
-
-    if isinstance(value, (int, np.integer)):
-        if value in (0, 1):
-            return bool(value)
-        return None
-
-    if isinstance(value, (float, np.floating)):
-        if not np.isfinite(float(value)):
-            return None
-        if float(value) in (0.0, 1.0):
-            return bool(int(value))
-        return None
-
-    if isinstance(value, str):
-        token = value.strip().lower()
-        if token in _TRUE_BOOL_TOKENS:
-            return True
-        if token in _FALSE_BOOL_TOKENS:
-            return False
-
-    return None
-
-
-def normalize_bool_series(
-    series: pd.Series,
-    *,
-    column_name: str,
-    null_policy: Literal["raise", "false", "true"] = "raise",
-) -> pd.Series:
-    """Normalize a pandas Series to strict boolean values.
-
-    Returns a boolean-dtype series with the same index as the input.
-    """
-    if null_policy not in _BOOL_NULL_POLICIES:
-        raise ValueError(
-            f"Invalid null_policy {null_policy!r}. " "Expected one of {'raise', 'false', 'true'}."
-        )
-
-    normalized: dict[object, bool] = {}
-    invalid_entries: list[tuple[object, object]] = []
-    null_entries: list[object] = []
-
-    for row_id, raw_value in series.items():
-        normalized_value = _normalize_strict_bool(raw_value, null_policy=null_policy)
-        if normalized_value is None:
-            if pd.isna(raw_value):
-                null_entries.append(row_id)
-            else:
-                invalid_entries.append((row_id, raw_value))
-            continue
-        normalized[row_id] = normalized_value
-
-    if null_entries and null_policy == "raise":
-        preview = ", ".join(map(repr, null_entries[:5]))
-        raise ValueError(
-            f"Column {column_name!r} contains missing values for nodes: {preview}. "
-            "Set null_policy to 'false' or 'true' to coerce missing values."
-        )
-
-    if invalid_entries:
-        preview = ", ".join(
-            f"{node_id!r}={raw_value!r}" for node_id, raw_value in invalid_entries[:5]
-        )
-        raise ValueError(
-            f"Column {column_name!r} contains non-boolean values for nodes: {preview}. "
-            "Accepted values: bool, 0/1, 0.0/1.0, or string tokens {'true','false','1','0'}."
-        )
-
-    return pd.Series(normalized, index=series.index, dtype=bool, name=series.name)
 
 
 def extract_leaf_counts(annotations_df: pd.DataFrame, node_ids: list[str]) -> np.ndarray:
@@ -293,12 +179,6 @@ def assign_divergence_results(
 
         annotations_df.loc[child_ids, "Child_Parent_Divergence_Invalid"] = invalid_array
 
-    annotations_df["Child_Parent_Divergence_Significant"] = normalize_bool_series(
-        annotations_df["Child_Parent_Divergence_Significant"],
-        column_name="Child_Parent_Divergence_Significant",
-        null_policy="raise",
-    )
-
     return annotations_df
 
 
@@ -329,8 +209,6 @@ def initialize_sibling_divergence_columns(df: pd.DataFrame) -> pd.DataFrame:
 def extract_bool_column_dict(
     df: object,
     column_name: str,
-    *,
-    null_policy: Literal["raise", "false", "true"] = "raise",
 ) -> dict[str, bool]:
     """Extract a boolean column from DataFrame as a dictionary.
 
@@ -353,7 +231,10 @@ def extract_bool_column_dict(
     if column_name not in df.columns:
         raise KeyError(f"Missing required column {column_name!r} in dataframe.")
 
-    series = normalize_bool_series(
-        df[column_name], column_name=column_name, null_policy=null_policy
-    )
+    series = df[column_name]
+    if series.isna().any():
+        raise ValueError(
+            f"Column {column_name!r} contains missing values. "
+            "Ensure all nodes are annotated before extraction."
+        )
     return {str(node_id): bool(value) for node_id, value in series.items()}

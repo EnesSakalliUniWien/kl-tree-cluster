@@ -7,7 +7,6 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..core.contracts import GateAnnotationBundle
-from ..core.registry import resolve_sibling_calibrator
 from .column_contracts import validate_legacy_edge_columns, validate_legacy_sibling_columns
 
 
@@ -23,7 +22,16 @@ def annotate_sibling_gate(
     pca_eigenvalues: dict[str, object] | None = None,
 ) -> GateAnnotationBundle:
     """Run Gate 3 (sibling divergence) and return typed legacy-compatible output."""
-    calibrator = resolve_sibling_calibrator(sibling_method)
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+        annotate_sibling_divergence,
+        annotate_sibling_divergence_adjusted,
+    )
+
+    calibrators = {
+        "wald": annotate_sibling_divergence,
+        "cousin_adjusted_wald": annotate_sibling_divergence_adjusted,
+    }
+    calibrator = calibrators[sibling_method]
     annotated_df = calibrator(
         tree,
         annotations_df,

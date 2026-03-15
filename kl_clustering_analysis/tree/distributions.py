@@ -13,6 +13,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
+from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes
+
 
 def _calculate_leaf_distribution(
     tree: nx.DiGraph,
@@ -73,15 +75,12 @@ def populate_distributions(
     leaf_data
         DataFrame where index matches leaf labels and columns are features.
     """
-    # Find root
-    root = tree.graph.get("root") or next(n for n, d in tree.in_degree() if d == 0)
-
     # Vectorized extraction of leaf values; avoids per-row Series allocation from iterrows().
     leaf_feature_matrix = leaf_data.to_numpy(dtype=np.float64, copy=False)
     label_to_row_idx = {label: i for i, label in enumerate(leaf_data.index)}
 
     # Process nodes bottom-up (leaves first, then parents)
-    for node_id in nx.dfs_postorder_nodes(tree, source=root):
+    for node_id in bottom_up_nodes(tree):
         is_leaf = tree.nodes[node_id].get("is_leaf", False)
 
         if is_leaf:

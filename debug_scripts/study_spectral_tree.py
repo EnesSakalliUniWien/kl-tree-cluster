@@ -32,11 +32,11 @@ from scipy.stats import norm as sp_norm
 
 from benchmarks.shared.generators import generate_random_feature_matrix
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_backend import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends import (
     build_pca_projection_backend,
     eigendecompose_correlation_backend,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.methods.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     count_active_features,
     effective_rank,
     marchenko_pastur_signal_count,

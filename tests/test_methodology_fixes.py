@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.satterthwaite import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.chi2_pvalue import (
     compute_projected_pvalue,
 )
 

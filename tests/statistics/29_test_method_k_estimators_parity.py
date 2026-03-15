@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from kl_clustering_analysis.hierarchy_analysis.decomposition.methods.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     estimate_k_marchenko_pastur,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_backend import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends import (
     estimate_spectral_k_backend as estimate_spectral_k,
 )
 

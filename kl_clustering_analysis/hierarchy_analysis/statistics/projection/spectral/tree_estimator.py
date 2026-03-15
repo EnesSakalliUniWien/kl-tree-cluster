@@ -1,36 +1,13 @@
-"""Per-node spectral dimension estimation.
+"""Tree-level spectral decomposition orchestrator.
 
-Computes the projection dimension for each internal node by eigendecomposing
-the local **correlation** matrix of descendant leaf data. This replaces the
-Johnson-Lindenstrauss-based dimension selection which is misapplied to the
-single-vector projected Wald test.
-
-Using the **correlation matrix** (not the covariance) is essential because
-the projected Wald z-vector is standardised per-feature:
-    z_i = (θ̂_child_i - θ̂_parent_i) / √Var_i
-so Cov(z) under H₀ equals the Pearson correlation matrix C of the data.
-Eigendecomposing C and whitening by its eigenvalues gives an exact χ²(k)
-null: T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k).
-
-**Marchenko-Pastur signal count**: number of eigenvalues exceeding the
-MP upper bound ``σ² (1 + √(d/n))²``; σ² estimated from the bulk median.
-
-The chosen dimension ``k_v`` is used:
-  - to set the degrees of freedom of the χ²(k) null for the projected Wald test,
-  - to build the PCA projection that concentrates signal while discarding
-    noise-only directions,
-  - together with the top-k eigenvalues for whitening (exact χ² calibration).
-
-References
-----------
-Marchenko, V. A. & Pastur, L. A. (1967). "Distribution of eigenvalues for
-    some sets of random matrices". Mathematics of the USSR-Sbornik.
+Builds per-node spectral tasks, dispatches them in parallel (or
+sequentially for small trees), and assembles results into the three
+output dicts consumed by the rest of the pipeline.
 """
 
 from __future__ import annotations
 
 import logging
-import os
 from typing import Dict, Tuple, cast
 
 import networkx as nx
@@ -38,135 +15,11 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from ...decomposition.backends.eigen_backend import (
-    build_pca_projection_backend as build_pca_projection,
-)
-from ...decomposition.backends.eigen_backend import (
-    eigendecompose_correlation_backend as eigendecompose_correlation,
-)
-from ...decomposition.methods.k_estimators import estimate_k_marchenko_pastur
-from .spectral_types import NodeSpectralResult, NodeSpectralTask
+from .marchenko_pastur import _get_n_jobs, _process_node
 from .tree_helpers import is_leaf, precompute_descendants
+from .types import NodeSpectralResult, NodeSpectralTask
 
 logger = logging.getLogger(__name__)
-
-
-# =====================================================================
-# Parallelism control
-# =====================================================================
-
-# Default thread count for joblib.Parallel eigendecomposition.
-# Set KL_TE_N_JOBS env var to override (e.g. "1" to disable parallelism).
-_DEFAULT_MIN_NODES_FOR_PARALLEL = 8
-
-
-def _get_n_jobs(n_tasks: int) -> int:
-    """Resolve the number of parallel workers.
-
-    Returns 1 (sequential) when the number of tasks is small or the user
-    explicitly sets ``KL_TE_N_JOBS=1``.
-    """
-    configured_jobs = os.environ.get("KL_TE_N_JOBS")
-    if configured_jobs is not None:
-        try:
-            return max(int(configured_jobs), 1)
-        except ValueError:
-            pass
-    if n_tasks < _DEFAULT_MIN_NODES_FOR_PARALLEL:
-        return 1
-    return -1  # joblib: use all available cores
-
-
-# =====================================================================
-# Per-node workers (module-level for joblib pickling / clarity)
-# =====================================================================
-
-
-def _process_node(
-    spectral_task: NodeSpectralTask,
-    full_feature_matrix: np.ndarray,
-    dimension_method: str,
-    minimum_projection_dimension: int,
-    feature_count: int,
-    compute_eigendecomposition_outputs: bool,
-) -> NodeSpectralResult:
-    """Eigendecompose one node and return a typed result payload.
-
-    Data is sliced lazily here (not pre-materialised by the caller) so that
-    only O(n_threads × n_desc_max × d) bytes are live at any moment, instead
-    of O(n_nodes × n_desc_avg × d) for the full pre-built dict.
-
-    Parameters
-    ----------
-    spectral_task
-        Per-node task payload with descendants and optional internal vectors.
-    full_feature_matrix
-        Full data matrix shared across threads (read-only view).
-    """
-    descendant_leaf_row_indices = spectral_task.row_indices
-    internal_distribution_vectors = spectral_task.internal_distributions
-
-    if len(descendant_leaf_row_indices) < 2:
-        return NodeSpectralResult(
-            node_id=spectral_task.node_id,
-            projection_dimension=max(minimum_projection_dimension, 1),
-            projection_matrix=None,
-            eigenvalues=None,
-        )
-
-    # Slice on-demand: only this thread's copy is live during the call.
-    descendant_leaf_feature_rows = full_feature_matrix[descendant_leaf_row_indices, :]
-
-    if internal_distribution_vectors:
-        descendant_feature_matrix = np.vstack(
-            [
-                descendant_leaf_feature_rows,
-                np.array(internal_distribution_vectors, dtype=np.float64),
-            ]
-        )
-    else:
-        descendant_feature_matrix = descendant_leaf_feature_rows
-
-    eigendecomposition_result = eigendecompose_correlation(
-        descendant_feature_matrix,
-        need_eigh=compute_eigendecomposition_outputs,
-    )
-
-    if eigendecomposition_result is None:
-
-        return NodeSpectralResult(
-            node_id=spectral_task.node_id,
-            projection_dimension=max(minimum_projection_dimension, 1),
-            projection_matrix=None,
-            eigenvalues=None,
-        )
-
-    projection_dimension = estimate_k_marchenko_pastur(
-        eigendecomposition_result.eigenvalues,
-        n_samples=descendant_feature_matrix.shape[0],
-        n_features=eigendecomposition_result.d_active,
-        minimum_projection_dimension=minimum_projection_dimension,
-    )
-
-    projection_matrix, pca_eigenvalues = None, None
-
-    if compute_eigendecomposition_outputs:
-
-        projection_matrix, pca_eigenvalues = build_pca_projection(
-            eigendecomposition_result,
-            projection_dimension=projection_dimension,
-            n_features_total=feature_count,
-        )
-
-        if projection_matrix is None or pca_eigenvalues is None:
-            projection_matrix, pca_eigenvalues = None, None
-
-    return NodeSpectralResult(
-        node_id=spectral_task.node_id,
-        projection_dimension=projection_dimension,
-        projection_matrix=projection_matrix,
-        eigenvalues=pca_eigenvalues,
-    )
 
 
 def _build_spectral_tasks(
@@ -362,7 +215,6 @@ def compute_spectral_decomposition(
     ]
 
     if internal_projection_dimensions:
-
         logger.info(
             "Spectral dimensions (%s): median=%d, mean=%.1f, min=%d, max=%d "
             "(across %d internal nodes, d=%d) [%.2fs]",

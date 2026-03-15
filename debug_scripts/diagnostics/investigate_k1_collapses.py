@@ -211,7 +211,7 @@ def trace_calibration_detail(tree: PosetTree, stats_df: pd.DataFrame):
 
         # Compute leaf ratio and eigenvalue ratio components
         leaf_ratio = n_child / n_parent if n_parent > 0 else 0.0
-        from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral_dimension import (
+        from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
             effective_rank,
         )
 

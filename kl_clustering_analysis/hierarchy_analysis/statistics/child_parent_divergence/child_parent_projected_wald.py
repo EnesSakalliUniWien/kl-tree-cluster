@@ -9,7 +9,7 @@ import numpy as np
 from ...decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_projection_dimension,
 )
-from ...decomposition.methods.projected_wald import run_projected_wald_kernel
+from ..projection.projected_wald import run_projected_wald_kernel
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..backends.random_projection_backend import generate_projection_matrix_backend
+from ...decomposition.backends.random_projection_backend import generate_projection_matrix_backend
 
 
 def _build_random_orthonormal_basis(

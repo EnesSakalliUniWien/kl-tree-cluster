@@ -1,4 +1,4 @@
-"""Core contracts, enums, errors, and registry for decomposition."""
+"""Core contracts, errors, and result types for decomposition."""
 
 from .contracts import (
     LEGACY_EDGE_COLUMNS,
@@ -7,18 +7,16 @@ from .contracts import (
     GateAnnotationBundle,
     ProjectedTestResult,
 )
-from .enums import ProjectionBasisKind, SiblingCalibrationMethod, SpectralKMethod
+from .eigen_result import EigenResult
 from .errors import DecompositionMethodError, DecompositionValidationError
 
 __all__ = [
+    "EigenResult",
     "LEGACY_EDGE_COLUMNS",
     "LEGACY_SIBLING_COLUMNS",
     "LEGACY_SIBLING_OPTIONAL_COLUMNS",
     "GateAnnotationBundle",
     "ProjectedTestResult",
-    "SpectralKMethod",
-    "ProjectionBasisKind",
-    "SiblingCalibrationMethod",
     "DecompositionValidationError",
     "DecompositionMethodError",
 ]
