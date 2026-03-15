@@ -13,14 +13,14 @@ from .projection_basis import build_projection_basis_with_padding
 
 
 def compute_projected_pvalue(
-    projected: np.ndarray,
+    projected_vector: np.ndarray,
     degrees_of_freedom: int,
     *,
     eigenvalues: np.ndarray | None = None,
 ) -> tuple[float, float, float]:
     """Compute projected test statistic and p-value."""
     return _compute_projected_pvalue(
-        np.asarray(projected, dtype=np.float64),
+        np.asarray(projected_vector, dtype=np.float64),
         int(degrees_of_freedom),
         eigenvalues=eigenvalues,
     )
@@ -33,7 +33,7 @@ def run_projected_wald_kernel(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
-    k_fallback: Callable[[int], int] | None = None,
+    k_fallback: Callable[[int], int],
 ) -> tuple[float, int, float, float]:
     """Project a standardized vector and compute Wald statistic/p-value.
 
@@ -48,8 +48,6 @@ def run_projected_wald_kernel(
     if spectral_k is not None and spectral_k > 0:
         k = min(int(spectral_k), d)
     else:
-        if k_fallback is None:
-            raise ValueError("k_fallback must be provided when spectral_k is None.")
         k = min(int(k_fallback(d)), d)
 
     R, eig_for_whitening = build_projection_basis_with_padding(

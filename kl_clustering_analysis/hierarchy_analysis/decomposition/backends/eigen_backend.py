@@ -25,72 +25,73 @@ class EigenResult:
 
 
 def eigendecompose_correlation_backend(
-    data_sub: np.ndarray,
+    data_matrix: np.ndarray,
     *,
     need_eigh: bool,
 ) -> Optional[EigenResult]:
     """Eigendecompose a correlation matrix in primal or dual form.
 
-    Uses the dual n×n Gram matrix when ``n_desc < d_active``.
+    Uses the dual n×n Gram matrix when ``n_samples < n_active_features``.
     """
-    data_sub = np.asarray(data_sub, dtype=np.float64)
-    col_var = np.var(data_sub, axis=0)
-    active_mask = col_var > 0
-    d_active = int(np.sum(active_mask))
+    data_matrix = np.asarray(data_matrix, dtype=np.float64)
+    column_variances = np.var(data_matrix, axis=0)
+    active_mask = column_variances > 0
+    n_active_features = int(np.sum(active_mask))
 
-    if d_active < 2:
+    if n_active_features < 2:
         return None
 
-    data_active = data_sub[:, active_mask]
-    n_desc = data_sub.shape[0]
-    use_dual = n_desc < d_active
+    active_data = data_matrix[:, active_mask]
+    n_samples = data_matrix.shape[0]
+    use_dual = n_samples < n_active_features
 
     if use_dual:
 
-        col_means = data_active.mean(axis=0)
-        col_stds = data_active.std(axis=0, ddof=0)
-        col_stds[col_stds == 0] = 1.0
-        X_std = (data_active - col_means) / col_stds
-        gram = X_std @ X_std.T / d_active
+        column_means = active_data.mean(axis=0)
+        column_stds = active_data.std(axis=0, ddof=0)
+        column_stds[column_stds == 0] = 1.0
+        standardized_data = (active_data - column_means) / column_stds
+        gram_matrix = standardized_data @ standardized_data.T / n_active_features
 
         if need_eigh:
-            eigenvalues, gram_vecs = linalg.eigh(gram, check_finite=False)
+            eigenvalues, gram_eigenvectors = linalg.eigh(gram_matrix, check_finite=False)
             eigenvalues = eigenvalues[::-1]
-            gram_vecs = gram_vecs[:, ::-1]
+            gram_eigenvectors = gram_eigenvectors[:, ::-1]
         else:
-            eigenvalues = np.sort(linalg.eigvalsh(gram, check_finite=False))[::-1]
-            gram_vecs = None
+            eigenvalues = np.sort(linalg.eigvalsh(gram_matrix, check_finite=False))[::-1]
+            gram_eigenvectors = None
 
         eigenvalues = np.maximum(eigenvalues, 0.0)
 
         return EigenResult(
             eigenvalues=eigenvalues,
             active_mask=active_mask,
-            d_active=d_active,
+            d_active=n_active_features,
             use_dual=True,
-            gram_vecs=gram_vecs,
-            X_std=X_std,
+            gram_vecs=gram_eigenvectors,
+            X_std=standardized_data,
         )
 
-    corr = np.corrcoef(data_active.T)
-    corr = np.nan_to_num(corr, nan=0.0)
-    np.fill_diagonal(corr, 1.0)
+    correlation_matrix = np.corrcoef(active_data.T)
+    correlation_matrix = np.nan_to_num(correlation_matrix, nan=0.0)
+    np.fill_diagonal(correlation_matrix, 1.0)
 
     if need_eigh:
-        eigenvalues, eigenvectors_active = linalg.eigh(corr, check_finite=False)
+        eigenvalues, active_eigenvectors = linalg.eigh(correlation_matrix, check_finite=False)
         eigenvalues = eigenvalues[::-1]
-        eigenvectors_active = eigenvectors_active[:, ::-1]
+        active_eigenvectors = active_eigenvectors[:, ::-1]
     else:
-        eigenvalues = np.sort(linalg.eigvalsh(corr, check_finite=False))[::-1]
-        eigenvectors_active = None
+        eigenvalues = np.sort(linalg.eigvalsh(correlation_matrix, check_finite=False))[::-1]
+        active_eigenvectors = None
 
     eigenvalues = np.maximum(eigenvalues, 0.0)
+
     return EigenResult(
         eigenvalues=eigenvalues,
         active_mask=active_mask,
-        d_active=d_active,
+        d_active=n_active_features,
         use_dual=False,
-        eigenvectors_active=eigenvectors_active,
+        eigenvectors_active=active_eigenvectors,
     )
 
 
@@ -98,55 +99,64 @@ def estimate_spectral_k_backend(
     eigenvalues: np.ndarray,
     *,
     method: str,
-    n_desc: int,
-    d_active: int,
+    n_samples: int,
+    n_features: int,
     minimum_projection_dimension: int,
 ) -> int:
     """Estimate projection dimension from eigenvalues."""
-    k = int(marchenko_pastur_signal_count(eigenvalues, n_desc, d_active))
+    k = int(marchenko_pastur_signal_count(eigenvalues, n_samples, n_features))
 
     k = max(k, int(minimum_projection_dimension))
-    k = min(k, int(d_active))
+    k = min(k, int(n_features))
     return k
 
 
 def build_pca_projection_backend(
     eig: EigenResult,
     *,
-    k: int,
-    d: int,
+    projection_dimension: int,
+    n_features_total: int,
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
-    """Build a ``(k_avail × d)`` PCA projection matrix and eigenvalue array."""
-    n_desc = (
+    """Build a PCA projection matrix and eigenvalue array.
+
+    Returns a ``(effective_dimension × n_features_total)`` projection matrix
+    and the corresponding top eigenvalues.
+    """
+    n_samples = (
         eig.X_std.shape[0]
         if eig.X_std is not None
         else eig.eigenvectors_active.shape[0] if eig.eigenvectors_active is not None else 0
     )
-    k_avail = min(k, n_desc) if eig.use_dual else k
 
-    if k_avail <= 0:
+    effective_dimension = (
+        min(projection_dimension, n_samples) if eig.use_dual else projection_dimension
+    )
+
+    if effective_dimension <= 0:
         return None, None
 
-    eigenvectors_active = eig.eigenvectors_active
+    active_eigenvectors = eig.eigenvectors_active
 
-    # Recover d-space eigenvectors for dual form.
+    # Recover d-space eigenvectors from dual (n×n) Gram eigenvectors:
+    #   v_i = X_std^T @ u_i / (sqrt(λ_i) * sqrt(d_active))
     if eig.use_dual and eig.gram_vecs is not None and eig.X_std is not None:
-        top_eigs = np.maximum(eig.eigenvalues[:k_avail], 1e-12)
-        eigenvectors_active = (
-            eig.X_std.T @ eig.gram_vecs[:, :k_avail] / (np.sqrt(top_eigs) * np.sqrt(eig.d_active))
-        )
-        norms = np.linalg.norm(eigenvectors_active, axis=0)
-        norms[norms == 0] = 1.0
-        eigenvectors_active = eigenvectors_active / norms
+        top_gram_vectors = eig.gram_vecs[:, :effective_dimension]
+        floored_eigenvalues = np.maximum(eig.eigenvalues[:effective_dimension], 1e-12)
+        normalization_scale = np.sqrt(floored_eigenvalues) * np.sqrt(eig.d_active)
+        active_eigenvectors = eig.X_std.T @ top_gram_vectors / normalization_scale
+        column_norms = np.linalg.norm(active_eigenvectors, axis=0)
+        column_norms[column_norms == 0] = 1.0
+        active_eigenvectors = active_eigenvectors / column_norms
 
-    if eigenvectors_active is None:
+    if active_eigenvectors is None:
         return None, None
 
-    full_eigvecs = np.zeros((d, k_avail), dtype=np.float64)
-    full_eigvecs[eig.active_mask, :] = eigenvectors_active[:, :k_avail]
-    projection = full_eigvecs.T
-    eigenvalues = np.maximum(eig.eigenvalues[:k_avail], 1e-12).astype(np.float64)
-    return projection, eigenvalues
+    full_projection = np.zeros((n_features_total, effective_dimension), dtype=np.float64)
+    full_projection[eig.active_mask, :] = active_eigenvectors[:, :effective_dimension]
+    projection_matrix = full_projection.T
+    top_eigenvalues = np.maximum(eig.eigenvalues[:effective_dimension], 1e-12).astype(np.float64)
+
+    return projection_matrix, top_eigenvalues
 
 
 __all__ = [

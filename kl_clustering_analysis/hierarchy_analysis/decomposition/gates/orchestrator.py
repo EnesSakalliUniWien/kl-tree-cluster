@@ -7,13 +7,11 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..core.contracts import GateAnnotationBundle
-from ..core.registry import (
-    normalize_sibling_calibration_method,
-    normalize_spectral_k_method,
-)
+from ..core.registry import normalize_sibling_calibration_method, normalize_spectral_k_method
 from .column_contracts import edge_gate_columns, sibling_gate_columns
 from .edge_gate import annotate_edge_gate
 from .sibling_gate import annotate_sibling_gate
+
 
 def run_gate_annotation_pipeline(
     tree,

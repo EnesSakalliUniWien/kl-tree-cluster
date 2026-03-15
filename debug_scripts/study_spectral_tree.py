@@ -432,14 +432,14 @@ def main():
         if corr_result is not None:
             k_avail = min(TOP_K, len(corr_result.eigenvalues))
             proj, evals = build_pca_projection_backend(
-                corr_result, k=len(corr_result.eigenvalues), d=args.d
+                corr_result, projection_dimension=len(corr_result.eigenvalues), n_features_total=args.d
             )
             if proj is not None and evals is not None:
                 corr_evals = evals
                 corr_evecs_full = proj  # (k × d), rows = eigenvectors
                 corr_erank = effective_rank(corr_evals)
                 k_mp_corr = marchenko_pastur_signal_count(
-                    corr_evals, n_desc=n_leaves, d_active=d_active_node
+                    corr_evals, n_samples=n_leaves, n_features=d_active_node
                 )
 
         # ── Covariance eigendecomposition ─────────────────────────────
@@ -452,7 +452,7 @@ def main():
             cov_evecs_full = cov_evecs_raw.T  # Convert to (k × d) row format
             cov_erank = effective_rank(cov_evals)
             k_mp_cov = marchenko_pastur_signal_count(
-                cov_evals, n_desc=n_leaves, d_active=d_active_node
+                cov_evals, n_samples=n_leaves, n_features=d_active_node
             )
 
         # ── KAK-inspired estimators ─────────────────────────────────

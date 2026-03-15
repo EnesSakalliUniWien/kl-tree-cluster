@@ -20,14 +20,14 @@ def test_marchenko_pastur_k_parity_fixed_fixture() -> None:
     k_legacy = estimate_spectral_k(
         eigenvalues,
         method="marchenko_pastur",
-        n_desc=n_desc,
-        d_active=d_active,
+        n_samples=n_desc,
+        n_features=d_active,
         minimum_projection_dimension=minimum_projection_dimension,
     )
     k_method = estimate_k_marchenko_pastur(
         eigenvalues,
-        n_desc=n_desc,
-        d_active=d_active,
+        n_samples=n_desc,
+        n_features=d_active,
         minimum_projection_dimension=minimum_projection_dimension,
     )
     assert k_legacy == k_method

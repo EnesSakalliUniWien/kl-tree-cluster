@@ -20,8 +20,9 @@ from .cluster_assignments import build_cluster_assignments as _build_cluster_ass
 from .decomposition.backends.random_projection_backend import (
     resolve_minimum_projection_dimension_backend,
 )
+from .decomposition.gates.gate_evaluator import GateEvaluator
 from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
-from .decomposition.gates.traversal import GateEvaluator, iterate_worklist, process_node
+from .decomposition.gates.traversal import iterate_worklist, process_node
 
 
 class TreeDecomposition:

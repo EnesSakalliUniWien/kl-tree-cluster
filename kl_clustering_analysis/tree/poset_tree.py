@@ -11,11 +11,6 @@ from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments as _build_sample_cluster_assignments,
 )
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
-from kl_clustering_analysis.information_metrics.kl_divergence.divergence_metrics import (
-    _extract_hierarchy_statistics,
-    _populate_global_kl,
-    _populate_local_kl,
-)
 from kl_clustering_analysis.tree.distributions import populate_distributions
 
 if TYPE_CHECKING:
@@ -311,18 +306,13 @@ class PosetTree(nx.DiGraph):
         return lca
 
     def populate_node_divergences(self, leaf_data: "pd.DataFrame") -> None:
-        """Populate tree nodes with distributions and KL divergences.
+        """Populate tree nodes with distributions and build stats DataFrame.
 
         Populates each node with:
         - distribution: weighted mean of leaf/child distributions
         - leaf_count: number of descendant leaves
-        - kl_divergence_global: KL(node||root)
-        - kl_divergence_local: KL(child||parent)
-        - per-column versions of both KL metrics
 
         Assumes each feature is a Bernoulli probability in [0,1].
-
-        Note: Root's global KL is set to NaN (self-comparison is meaningless).
 
         Parameters
         ----------
@@ -333,11 +323,23 @@ class PosetTree(nx.DiGraph):
         -----
         Results are stored in tree.stats_df for later access.
         """
-        root = self.root()
+        import pandas as pd
+
         populate_distributions(self, leaf_data)
-        _populate_global_kl(self, root)
-        _populate_local_kl(self)
-        self.stats_df = _extract_hierarchy_statistics(self)
+        node_records = []
+        for node_id in self.nodes():
+            node_attrs = self.nodes[node_id]
+            node_records.append(
+                {
+                    "node_id": node_id,
+                    "distribution": node_attrs.get("distribution", None),
+                    "leaf_count": node_attrs.get("leaf_count", 0),
+                    "is_leaf": node_attrs.get("is_leaf", False),
+                }
+            )
+        self.stats_df = pd.DataFrame.from_records(node_records).set_index(
+            "node_id", drop=True
+        )
 
     # ---------------- Decomposition helper ----------------
 
@@ -378,6 +380,7 @@ class PosetTree(nx.DiGraph):
                         "Tree has no stats_df; provide annotations_df or leaf_data to populate."
                     )
                 self.populate_node_divergences(leaf_data)
+            assert self.stats_df is not None
             annotations_df = self.stats_df.copy()
 
         decomposer = TreeDecomposition(

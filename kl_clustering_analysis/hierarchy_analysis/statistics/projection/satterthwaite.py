@@ -19,7 +19,7 @@ from scipy.stats import chi2
 
 
 def compute_projected_pvalue(
-    projected: np.ndarray,
+    projected_vector: np.ndarray,
     degrees_of_freedom: int,
     eigenvalues: np.ndarray | None = None,
 ) -> Tuple[float, float, float]:
@@ -27,7 +27,7 @@ def compute_projected_pvalue(
 
     Parameters
     ----------
-    projected
+    projected_vector
         The projected vector ``R @ z`` of length ``k``.
     degrees_of_freedom
         Nominal degrees of freedom (projection dimension ``k``).
@@ -43,15 +43,23 @@ def compute_projected_pvalue(
         ``(test_statistic, effective_df, p_value)``
     """
     if eigenvalues is not None and len(eigenvalues) > 0:
-        k_pca = len(eigenvalues)
+        n_pca_components = len(eigenvalues)
         # Whitened: T = Σ wᵢ²/λᵢ ~ χ²(k)
-        stat_pca = float(np.sum(projected[:k_pca] ** 2 / eigenvalues))
-        stat_rand = float(np.sum(projected[k_pca:] ** 2)) if k_pca < len(projected) else 0.0
-        stat = stat_pca + stat_rand
-        return stat, float(degrees_of_freedom), float(chi2.sf(stat, df=degrees_of_freedom))
+        whitened_statistic = float(
+            np.sum(projected_vector[:n_pca_components] ** 2 / eigenvalues)
+        )
+        random_padding_statistic = (
+            float(np.sum(projected_vector[n_pca_components:] ** 2))
+            if n_pca_components < len(projected_vector)
+            else 0.0
+        )
+        test_statistic = whitened_statistic + random_padding_statistic
+        p_value = float(chi2.sf(test_statistic, df=degrees_of_freedom))
+        return test_statistic, float(degrees_of_freedom), p_value
     else:
-        stat = float(np.sum(projected**2))
-        return stat, float(degrees_of_freedom), float(chi2.sf(stat, df=degrees_of_freedom))
+        test_statistic = float(np.sum(projected_vector**2))
+        p_value = float(chi2.sf(test_statistic, df=degrees_of_freedom))
+        return test_statistic, float(degrees_of_freedom), p_value
 
 
 __all__ = ["compute_projected_pvalue"]

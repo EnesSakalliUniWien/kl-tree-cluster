@@ -4,10 +4,4 @@ This subpackage provides KL divergence metrics for analyzing
 cluster hierarchies and tree structures.
 """
 
-from .divergence_metrics import (
-    calculate_kl_divergence_vector,
-)
-
-__all__ = [
-    "calculate_kl_divergence_vector",
-]
+__all__: list[str] = []

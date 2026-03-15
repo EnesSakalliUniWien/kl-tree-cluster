@@ -161,13 +161,13 @@ def analyze_root_gate2(
 
     # Effective rank
     erank = effective_rank(eig.eigenvalues)
-    mp_count = marchenko_pastur_signal_count(eig.eigenvalues, len(root_idx), eig.d_active)
+    mp_count = marchenko_pastur_signal_count(eig.eigenvalues, len(root_idx), eig.d_active)  # positional: eigenvalues, n_samples, n_features
     k_used = estimate_spectral_k_backend(
         eig.eigenvalues,
         method="effective_rank",
-        n_desc=len(root_idx),
-        d_active=eig.d_active,
-        min_k=config.PROJECTION_MIN_K if isinstance(config.PROJECTION_MIN_K, int) else 4,
+        n_samples=len(root_idx),
+        n_features=eig.d_active,
+        minimum_projection_dimension=config.PROJECTION_MIN_K if isinstance(config.PROJECTION_MIN_K, int) else 4,
     )
 
     print(f"  Effective rank: {erank:.2f}")
@@ -240,9 +240,9 @@ def analyze_root_gate3(
     k_pooled = estimate_spectral_k_backend(
         eig_pooled.eigenvalues,
         method="effective_rank",
-        n_desc=pooled_resid.shape[0],
-        d_active=eig_pooled.d_active,
-        min_k=config.PROJECTION_MIN_K if isinstance(config.PROJECTION_MIN_K, int) else 4,
+        n_samples=pooled_resid.shape[0],
+        n_features=eig_pooled.d_active,
+        minimum_projection_dimension=config.PROJECTION_MIN_K if isinstance(config.PROJECTION_MIN_K, int) else 4,
     )
 
     print(f"  Form: {'DUAL' if eig_pooled.use_dual else 'PRIMAL'}")
@@ -329,7 +329,7 @@ def analyze_z_vector_and_wald(
     k = max(int(np.round(erank_pooled)), 4)
     k = min(k, eig_pooled.d_active)
 
-    proj, ev = build_pca_projection_backend(eig_pooled, k=k, d=len(z))
+    proj, ev = build_pca_projection_backend(eig_pooled, projection_dimension=k, n_features_total=len(z))
     if proj is None:
         print("  PCA projection matrix unavailable.")
         return

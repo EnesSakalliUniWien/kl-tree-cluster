@@ -55,11 +55,28 @@ def _collect_test_arguments(
     sibling_test_arguments: List[
         Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]
     ] = []
+
     for parent, (left, right) in zip(parents, child_pairs, strict=False):
-        left_dist, right_dist, n_left, n_right, bl_left, bl_right = get_sibling_data(
-            tree, parent, left, right
+
+        (
+            left_distribution,
+            right_distribution,
+            n_left,
+            n_right,
+            branch_length_left,
+            branch_length_right,
+        ) = get_sibling_data(tree, parent, left, right)
+
+        sibling_test_arguments.append(
+            (
+                left_distribution,
+                right_distribution,
+                n_left,
+                n_right,
+                branch_length_left,
+                branch_length_right,
+            )
         )
-        sibling_test_arguments.append((left_dist, right_dist, n_left, n_right, bl_left, bl_right))
 
     return parents, sibling_test_arguments, skipped, non_binary
 
@@ -81,24 +98,12 @@ def _run_tests(
             f"{len(parents)} != {len(sibling_test_arguments)}"
         )
     results = []
+
     for parent, (left, right, n_left, n_right, branch_length_left, branch_length_right) in zip(
         parents,
         sibling_test_arguments,
         strict=False,
     ):
-        _spectral_k: int | None = None
-        _pca_proj: np.ndarray | None = None
-        if spectral_dims is not None:
-            _spectral_k = spectral_dims.get(parent)
-        if pca_projections is not None:
-            _pca_proj = pca_projections.get(parent)
-        sibling_test_kwargs: dict[str, object] = {
-            "test_id": f"sibling:{parent}",
-            "spectral_k": _spectral_k,
-            "pca_projection": _pca_proj,
-        }
-        if minimum_projection_dimension is not None:
-            sibling_test_kwargs["minimum_projection_dimension"] = minimum_projection_dimension
         results.append(
             sibling_divergence_test(
                 left,
@@ -108,9 +113,13 @@ def _run_tests(
                 branch_length_left,
                 branch_length_right,
                 mean_branch_length,
-                **sibling_test_kwargs,
+                test_id=f"sibling:{parent}",
+                spectral_k=spectral_dims.get(parent) if spectral_dims is not None else None,
+                pca_projection=pca_projections.get(parent) if pca_projections is not None else None,
+                minimum_projection_dimension=minimum_projection_dimension,
             )
         )
+
     return results
 
 
@@ -206,13 +215,17 @@ def annotate_sibling_divergence(
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
     )
+
     annotations_df = _apply_results(annotations_df, parents, results, significance_level_alpha)
+
     sibling_invalid = int(annotations_df.loc[parents, "Sibling_Divergence_Invalid"].sum())
+
     annotations_df.attrs["sibling_divergence_audit"] = {
         "total_tests": int(len(parents)),
         "invalid_tests": sibling_invalid,
         "conservative_path_tests": sibling_invalid,
     }
+
     return annotations_df
 
 

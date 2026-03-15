@@ -11,7 +11,7 @@ cousin-adjusted Wald orchestrator (``adjusted_wald``).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Dict, Iterable, List, Optional, Protocol, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Protocol, Tuple, TypeVar
 
 import networkx as nx
 import numpy as np
@@ -54,6 +54,9 @@ class DeflatableSiblingRecord(Protocol):
     stat: float
     degrees_of_freedom: int
     is_null_like: bool
+
+
+_R = TypeVar("_R", bound=DeflatableSiblingRecord)
 
 
 # =============================================================================
@@ -200,26 +203,30 @@ def collect_sibling_pair_records(
 
     # Extract BH-corrected edge p-values for continuous calibration weights.
     # Missing values default to 1.0 (maximally null-like).
-    edge_pval_col = "Child_Parent_Divergence_P_Value_BH"
-    edge_pval_by_node: Dict[str, float] = {}
-    if edge_pval_col in annotations_df.columns:
+    edge_p_value_column = "Child_Parent_Divergence_P_Value_BH"
+    edge_p_value_by_node: Dict[str, float] = {}
+
+    if edge_p_value_column in annotations_df.columns:
+        edge_p_value_series = annotations_df[edge_p_value_column].astype(float)
         for node_id in annotations_df.index:
-            val = annotations_df.at[node_id, edge_pval_col]
-            edge_pval_by_node[node_id] = float(val) if np.isfinite(val) else 1.0
+            raw_p_value = float(edge_p_value_series[node_id])
+            edge_p_value_by_node[node_id] = raw_p_value if np.isfinite(raw_p_value) else 1.0
 
     records: List[SiblingPairRecord] = []
-    non_binary: List[str] = []
+    non_binary_nodes: List[str] = []
 
     for parent in tree.nodes:
+
         children = get_binary_children(tree, parent)
+
         if children is None:
-            non_binary.append(parent)
+            non_binary_nodes.append(parent)
             continue
 
         left, right = children
         (
-            left_dist,
-            right_dist,
+            left_distribution,
+            right_distribution,
             n_left,
             n_right,
             branch_length_left,
@@ -230,52 +237,48 @@ def collect_sibling_pair_records(
         pca_projection = pca_projections.get(parent) if pca_projections else None
         node_pca_eigenvalues = pca_eigenvalues.get(parent) if pca_eigenvalues else None
 
-        sibling_test_kwargs: dict[str, object] = {
-            "test_id": f"sibling:{parent}",
-            "spectral_k": spectral_k,
-            "pca_projection": pca_projection,
-            "pca_eigenvalues": node_pca_eigenvalues,
-        }
-        if minimum_projection_dimension is not None:
-            sibling_test_kwargs["minimum_projection_dimension"] = minimum_projection_dimension
-
-        stat, degrees_of_freedom, p_value = sibling_divergence_test(
-            left_dist,
-            right_dist,
+        test_statistic, degrees_of_freedom, p_value = sibling_divergence_test(
+            left_distribution,
+            right_distribution,
             float(n_left),
             float(n_right),
             branch_length_left=branch_length_left,
             branch_length_right=branch_length_right,
             mean_branch_length=mean_branch_length,
-            **sibling_test_kwargs,
+            test_id=f"sibling:{parent}",
+            spectral_k=spectral_k,
+            pca_projection=pca_projection,
+            pca_eigenvalues=node_pca_eigenvalues,
+            minimum_projection_dimension=minimum_projection_dimension,
         )
 
-        is_null = not either_child_significant(left, right, edge_significance_by_node)
+        is_null_like = not either_child_significant(left, right, edge_significance_by_node)
         # Continuous weight: min(p_edge_left, p_edge_right).
         # High weight → both children look null-like (high edge p-values).
         # Low weight → at least one child has strong edge signal.
-        edge_w = min(
-            edge_pval_by_node.get(left, 1.0),
-            edge_pval_by_node.get(right, 1.0),
+        edge_calibration_weight = min(
+            edge_p_value_by_node.get(left, 1.0),
+            edge_p_value_by_node.get(right, 1.0),
         )
+
         records.append(
             SiblingPairRecord(
                 parent=parent,
                 left=left,
                 right=right,
-                stat=stat,
+                stat=test_statistic,
                 degrees_of_freedom=(
                     int(degrees_of_freedom) if np.isfinite(degrees_of_freedom) else 0
                 ),
                 p_value=p_value,
                 branch_length_sum=_branch_length_sum(branch_length_left, branch_length_right),
                 n_parent=extract_node_sample_size(tree, parent),
-                is_null_like=is_null,
-                edge_weight=edge_w,
+                is_null_like=is_null_like,
+                edge_weight=edge_calibration_weight,
             )
         )
 
-    return records, non_binary
+    return records, non_binary_nodes
 
 
 # =============================================================================
@@ -284,9 +287,9 @@ def collect_sibling_pair_records(
 
 
 def deflate_focal_pairs(
-    records: Iterable[DeflatableSiblingRecord],
+    records: Iterable[_R],
     *,
-    calibration_resolver: Callable[[DeflatableSiblingRecord], Tuple[float, str]],
+    calibration_resolver: Callable[[_R], Tuple[float, str]],
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate all focal records and return parent IDs, adjusted triples, and methods."""
     focal_parents: List[str] = []
@@ -294,6 +297,7 @@ def deflate_focal_pairs(
     methods: List[str] = []
 
     for pair_record in records:
+
         if pair_record.is_null_like:
             continue
 
@@ -308,7 +312,9 @@ def deflate_focal_pairs(
         p_adj = float(chi2.sf(t_adj, df=pair_record.degrees_of_freedom))
 
         focal_parents.append(pair_record.parent)
+
         focal_results.append((t_adj, float(pair_record.degrees_of_freedom), p_adj))
+
         methods.append(method)
 
     return focal_parents, focal_results, methods

@@ -1,11 +1,11 @@
 """Wald chi-square kernel for sibling divergence testing.
 
- Tests whether two sibling distributions differ significantly using a
- projected Wald chi-square statistic calibrated against a χ²(k) reference law.
+Tests whether two sibling distributions differ significantly using a
+projected Wald chi-square statistic calibrated against a χ²(k) reference law.
 
- For binary data, z is the standardised proportion difference.
- For categorical data, z is first covariance-whitened via a multinomial
- Mahalanobis construction (drop-last basis).
+For binary data, z is the standardised proportion difference.
+For categorical data, z is first covariance-whitened via a multinomial
+Mahalanobis construction (drop-last basis).
 """
 
 from __future__ import annotations
@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 
 def sibling_divergence_test(
-    left_dist: np.ndarray,
-    right_dist: np.ndarray,
+    left_distribution: np.ndarray,
+    right_distribution: np.ndarray,
     n_left: float,
     n_right: float,
     branch_length_left: float | None = None,
@@ -50,7 +50,7 @@ def sibling_divergence_test(
 
     Parameters
     ----------
-    left_dist, right_dist : np.ndarray
+    left_distribution, right_distribution : np.ndarray
         Distributions of left and right siblings.
     n_left, n_right : float
         Sample sizes.
@@ -71,33 +71,33 @@ def sibling_divergence_test(
     # ValueError in standardize_proportion_difference().
     branch_length_sum = None
     if mean_branch_length is not None:
-        bl_left = sanitize_positive_branch_length(branch_length_left)
-        bl_right = sanitize_positive_branch_length(branch_length_right)
-        if bl_left is not None and bl_right is not None:
-            branch_length_sum = bl_left + bl_right
+        sanitized_left = sanitize_positive_branch_length(branch_length_left)
+        sanitized_right = sanitize_positive_branch_length(branch_length_right)
+        if sanitized_left is not None and sanitized_right is not None:
+            branch_length_sum = sanitized_left + sanitized_right
             if branch_length_sum <= 0:
                 logger.warning(
                     "Non-positive sibling branch length sum encountered "
                     "(left=%s, right=%s). Disabling branch-length variance adjustment "
                     "for this test.",
-                    bl_left,
-                    bl_right,
+                    sanitized_left,
+                    sanitized_right,
                 )
                 branch_length_sum = None
 
-    if _is_categorical(np.asarray(left_dist)):
-        z = categorical_whitened_vector(
-            np.asarray(left_dist, dtype=np.float64),
-            np.asarray(right_dist, dtype=np.float64),
+    if _is_categorical(np.asarray(left_distribution)):
+        z_scores = categorical_whitened_vector(
+            np.asarray(left_distribution, dtype=np.float64),
+            np.asarray(right_distribution, dtype=np.float64),
             float(n_left),
             float(n_right),
             branch_length_sum=branch_length_sum,
             mean_branch_length=mean_branch_length,
         )
     else:
-        z, _ = standardize_proportion_difference(
-            left_dist,
-            right_dist,
+        z_scores, _ = standardize_proportion_difference(
+            left_distribution,
+            right_distribution,
             n_left,
             n_right,
             branch_length_sum=branch_length_sum,
@@ -105,38 +105,39 @@ def sibling_divergence_test(
         )
 
     # Explicit invalid-test path: never coerce non-finite z-scores.
-    if not np.isfinite(z).all():
+    if not np.isfinite(z_scores).all():
         logger.warning(
             "Found %d non-finite z-scores in sibling test; marking test invalid "
             "(raw outputs NaN, conservative p=1.0 for correction).",
-            int(np.sum(~np.isfinite(z))),
+            int(np.sum(~np.isfinite(z_scores))),
         )
         return np.nan, np.nan, np.nan
-    z = z.astype(np.float64, copy=False)
+    z_scores = z_scores.astype(np.float64, copy=False)
 
     # Use n_left + n_right (total observations) for the fallback JL cap.
-    n_total = int(n_left + n_right)
+    total_sample_size = int(n_left + n_right)
 
     # Project and compute test statistic
     if test_id is None:
         test_id = (
-            f"sibling:shapeL={tuple(np.shape(left_dist))}:shapeR={tuple(np.shape(right_dist))}:"
+            f"sibling:shapeL={tuple(np.shape(left_distribution))}:"
+            f"shapeR={tuple(np.shape(right_distribution))}:"
             f"nL={float(n_left):.6g}:nR={float(n_right):.6g}"
         )
     test_seed = derive_projection_seed(config.PROJECTION_RANDOM_SEED, test_id)
 
-    stat, _k_nominal, effective_df, p_value = run_projected_wald_kernel(
-        z,
+    test_statistic, _k_nominal, effective_df, p_value = run_projected_wald_kernel(
+        z_scores,
         seed=test_seed,
         spectral_k=spectral_k,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
         k_fallback=lambda dim: compute_projection_dimension(
-            n_total, dim, minimum_projection_dimension=minimum_projection_dimension
+            total_sample_size, dim, minimum_projection_dimension=minimum_projection_dimension
         ),
     )
 
-    return stat, effective_df, p_value
+    return test_statistic, effective_df, p_value
 
 
 __all__ = ["sibling_divergence_test"]

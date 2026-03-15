@@ -6,29 +6,26 @@ This module provides functions to generate synthetic data, build hierarchical tr
 statistical analysis. It is used by tests and notebooks.
 """
 
-import pandas as pd
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import pandas as pd
 
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis.statistics import (
-    annotate_child_parent_divergence,
-)
+from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics import annotate_child_parent_divergence
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     annotate_sibling_divergence,
 )
-from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
-def create_test_case_data(
-    n_samples=50, n_features=20, n_clusters=3, noise_level=1.0, seed=42
-):
+def create_test_case_data(n_samples=50, n_features=20, n_clusters=3, noise_level=1.0, seed=42):
     """Create synthetic test data using the same method as the validation suite."""
-    from sklearn.datasets import make_blobs
     import numpy as np
+    from sklearn.datasets import make_blobs
 
     print(
         f"Generating test data: {n_samples} samples, {n_features} features, {n_clusters} clusters"

@@ -39,18 +39,18 @@ def get_resolved_minimum_projection_dimension_backend() -> int | None:
 
 def _generate_structured_orthonormal_rows_backend(
     n_features: int,
-    k: int,
+    n_components: int,
     rng: np.random.RandomState,
 ) -> np.ndarray:
     """Generate sparse signed-coordinate orthonormal rows."""
-    if k <= 0 or n_features <= 0:
-        return np.zeros((max(k, 0), max(n_features, 0)), dtype=np.float64)
+    if n_components <= 0 or n_features <= 0:
+        return np.zeros((max(n_components, 0), max(n_features, 0)), dtype=np.float64)
 
-    cols = rng.permutation(n_features)[:k]
-    signs = rng.choice(np.array([-1.0, 1.0], dtype=np.float64), size=k)
-    R = np.zeros((k, n_features), dtype=np.float64)
-    R[np.arange(k), cols] = signs
-    return R
+    selected_columns = rng.permutation(n_features)[:n_components]
+    random_signs = rng.choice(np.array([-1.0, 1.0], dtype=np.float64), size=n_components)
+    projection_matrix = np.zeros((n_components, n_features), dtype=np.float64)
+    projection_matrix[np.arange(n_components), selected_columns] = random_signs
+    return projection_matrix
 
 
 def estimate_min_projection_dimension_backend(
@@ -60,48 +60,49 @@ def estimate_min_projection_dimension_backend(
     hard_cap: int = 20,
 ) -> int:
     """Estimate adaptive projection floor from global effective rank."""
-    X = leaf_data.values.astype(np.float64)
-    n, d = X.shape
+    feature_matrix = leaf_data.values.astype(np.float64)
+    n_samples, n_features = feature_matrix.shape
 
-    if n < 2 or d < 2:
+    if n_samples < 2 or n_features < 2:
         return hard_floor
 
-    col_var = np.var(X, axis=0)
-    active_mask = col_var > 0
-    d_active = int(np.sum(active_mask))
+    column_variance = np.var(feature_matrix, axis=0)
+    active_feature_mask = column_variance > 0
+    n_active_features = int(np.sum(active_feature_mask))
 
-    if d_active < 2:
+    if n_active_features < 2:
         return hard_floor
 
-    X_active = X[:, active_mask]
-    use_dual = n < d_active
+    active_feature_matrix = feature_matrix[:, active_feature_mask]
+    use_dual = n_samples < n_active_features
     if use_dual:
-        col_means = X_active.mean(axis=0)
-        col_stds = X_active.std(axis=0, ddof=0)
-        col_stds[col_stds == 0] = 1.0
-        X_std = (X_active - col_means) / col_stds
-        gram = X_std @ X_std.T / d_active
-        eigenvalues = np.sort(np.linalg.eigvalsh(gram))[::-1]
+        column_means = active_feature_matrix.mean(axis=0)
+        column_stds = active_feature_matrix.std(axis=0, ddof=0)
+        column_stds[column_stds == 0] = 1.0
+        standardized_features = (active_feature_matrix - column_means) / column_stds
+        gram_matrix = standardized_features @ standardized_features.T / n_active_features
+        eigenvalues = np.sort(np.linalg.eigvalsh(gram_matrix))[::-1]
     else:
-        corr = np.corrcoef(X_active.T)
-        corr = np.nan_to_num(corr, nan=0.0)
-        np.fill_diagonal(corr, 1.0)
-        eigenvalues = np.sort(np.linalg.eigvalsh(corr))[::-1]
+        correlation_matrix = np.corrcoef(active_feature_matrix.T)
+        correlation_matrix = np.nan_to_num(correlation_matrix, nan=0.0)
+        np.fill_diagonal(correlation_matrix, 1.0)
+        eigenvalues = np.sort(np.linalg.eigvalsh(correlation_matrix))[::-1]
 
     eigenvalues = np.maximum(eigenvalues, 0.0)
-    erank = _effective_rank(eigenvalues)
-    minimum_projection_dimension = int(np.ceil(erank))
+    estimated_effective_rank = _effective_rank(eigenvalues)
+    minimum_projection_dimension = int(np.ceil(estimated_effective_rank))
     minimum_projection_dimension = max(minimum_projection_dimension, hard_floor)
     minimum_projection_dimension = min(minimum_projection_dimension, hard_cap)
 
     logger.info(
         "Adaptive PROJECTION_MINIMUM_DIMENSION: effective_rank=%.1f -> minimum_projection_dimension=%d (n=%d, d=%d, d_active=%d)",
-        erank,
+        estimated_effective_rank,
         minimum_projection_dimension,
-        n,
-        d,
-        d_active,
+        n_samples,
+        n_features,
+        n_active_features,
     )
+
     return minimum_projection_dimension
 
 
@@ -144,19 +145,21 @@ def compute_projection_dimension_backend(
         if _RESOLVED_MINIMUM_PROJECTION_DIMENSION is not None:
             minimum_projection_dimension = _RESOLVED_MINIMUM_PROJECTION_DIMENSION
         else:
-            cfg_val = config.PROJECTION_MINIMUM_DIMENSION
-            minimum_projection_dimension = cfg_val if isinstance(cfg_val, int) else 2
+            configured_value = config.PROJECTION_MINIMUM_DIMENSION
+            minimum_projection_dimension = (
+                configured_value if isinstance(configured_value, int) else 2
+            )
     elif isinstance(minimum_projection_dimension, str):
         minimum_projection_dimension = 2
 
     n_samples = max(n_samples, 1)
-    k: int = int(johnson_lindenstrauss_min_dim(n_samples=n_samples, eps=eps))
+    projection_dimension: int = int(johnson_lindenstrauss_min_dim(n_samples=n_samples, eps=eps))
 
     if n_features >= 4 * n_samples:
-        k = min(k, n_samples)
-    k = max(k, minimum_projection_dimension)
-    k = min(k, n_features)
-    return k
+        projection_dimension = min(projection_dimension, n_samples)
+    projection_dimension = max(projection_dimension, minimum_projection_dimension)
+    projection_dimension = min(projection_dimension, n_features)
+    return projection_dimension
 
 
 def _maybe_audit_projection_backend(
@@ -164,19 +167,19 @@ def _maybe_audit_projection_backend(
     matrix: np.ndarray,
 ) -> None:
     """Optionally export projection matrix audits."""
-    root = os.getenv("KL_TE_MATRIX_AUDIT_ROOT")
-    if not root:
+    audit_root = os.getenv("KL_TE_MATRIX_AUDIT_ROOT")
+    if not audit_root:
         return
 
     if cache_key in _AUDITED_PROJECTIONS:
         return
 
-    max_logs_env = os.getenv("KL_TE_MATRIX_AUDIT_MAX", "50")
+    max_audit_logs_env = os.getenv("KL_TE_MATRIX_AUDIT_MAX", "50")
     try:
-        max_logs = int(max_logs_env)
+        max_audit_logs = int(max_audit_logs_env)
     except ValueError:
-        max_logs = 50
-    if len(_AUDITED_PROJECTIONS) >= max_logs:
+        max_audit_logs = 50
+    if len(_AUDITED_PROJECTIONS) >= max_audit_logs:
         return
 
     try:
@@ -185,13 +188,13 @@ def _maybe_audit_projection_backend(
         return
 
     _AUDITED_PROJECTIONS.add(cache_key)
-    method, n_features, k, random_state = cache_key
-    tag = f"random_projection/{method}_d{n_features}_k{k}_seed{random_state}"
+    method_name, n_features, n_components, random_state = cache_key
+    audit_tag = f"random_projection/{method_name}_d{n_features}_k{n_components}_seed{random_state}"
 
     export_matrix_audit(
         matrices={"projection_matrix": np.asarray(matrix)},
-        output_root=Path(root),
-        tag_prefix=tag,
+        output_root=Path(audit_root),
+        tag_prefix=audit_tag,
         step=0,
         include_products=True,
         verbose=False,
@@ -200,46 +203,60 @@ def _maybe_audit_projection_backend(
 
 def _generate_orthonormal_projection_backend(
     n_features: int,
-    k: int,
+    n_components: int,
     random_state: int | None = None,
     *,
     use_cache: bool = True,
 ) -> np.ndarray:
     """Generate orthonormal projection via QR or structured rows."""
-    cache_key = ("orthonormal", n_features, k, random_state)
+    cache_key = ("orthonormal", n_features, n_components, random_state)
 
     if use_cache:
         if cache_key not in _PROJECTION_CACHE:
+
             rng = np.random.RandomState(random_state)
-            use_structured = k == n_features or (
-                n_features >= 512 and (k / float(n_features)) >= 0.8
+
+            use_structured = n_components == n_features or (
+                n_features >= 512 and (n_components / float(n_features)) >= 0.8
             )
+
             if use_structured:
-                R = _generate_structured_orthonormal_rows_backend(n_features, k, rng)
+                projection_matrix = _generate_structured_orthonormal_rows_backend(
+                    n_features, n_components, rng
+                )
             else:
-                G = rng.standard_normal((k, n_features))
-                Q, _ = np.linalg.qr(G.T, mode="reduced")
-                R = Q.T
-            _PROJECTION_CACHE[cache_key] = R
+                gaussian_matrix = rng.standard_normal((n_components, n_features))
+                orthogonal_basis, _ = np.linalg.qr(gaussian_matrix.T, mode="reduced")
+                projection_matrix = orthogonal_basis.T
+
+            _PROJECTION_CACHE[cache_key] = projection_matrix
 
         _maybe_audit_projection_backend(cache_key, _PROJECTION_CACHE[cache_key])
         return _PROJECTION_CACHE[cache_key]
 
     rng = np.random.RandomState(random_state)
-    use_structured = k == n_features or (n_features >= 512 and (k / float(n_features)) >= 0.8)
+
+    use_structured = n_components == n_features or (
+        n_features >= 512 and (n_components / float(n_features)) >= 0.8
+    )
+
     if use_structured:
-        R = _generate_structured_orthonormal_rows_backend(n_features, k, rng)
+        projection_matrix = _generate_structured_orthonormal_rows_backend(
+            n_features, n_components, rng
+        )
     else:
-        G = rng.standard_normal((k, n_features))
-        Q, _ = np.linalg.qr(G.T, mode="reduced")
-        R = Q.T
-    _maybe_audit_projection_backend(cache_key, R)
-    return R
+        gaussian_matrix = rng.standard_normal((n_components, n_features))
+        orthogonal_basis, _ = np.linalg.qr(gaussian_matrix.T, mode="reduced")
+        projection_matrix = orthogonal_basis.T
+
+    _maybe_audit_projection_backend(cache_key, projection_matrix)
+
+    return projection_matrix
 
 
 def generate_projection_matrix_backend(
     n_features: int,
-    k: int,
+    n_components: int,
     *,
     random_state: int | None = None,
     use_cache: bool = True,
@@ -247,7 +264,7 @@ def generate_projection_matrix_backend(
     """Generate orthonormal random projection matrix."""
     return _generate_orthonormal_projection_backend(
         n_features=n_features,
-        k=k,
+        n_components=n_components,
         random_state=random_state,
         use_cache=use_cache,
     )
@@ -258,9 +275,9 @@ def derive_projection_seed_backend(base_seed: int | None, test_id: str) -> int:
     if not test_id:
         raise ValueError("test_id must be a non-empty string.")
     base = "none" if base_seed is None else str(int(base_seed))
-    payload = f"{base}|{test_id}".encode("utf-8")
-    digest = hashlib.blake2b(payload, digest_size=8).digest()
-    return int.from_bytes(digest, byteorder="big", signed=False) & 0xFFFFFFFF
+    seed_payload = f"{base}|{test_id}".encode("utf-8")
+    seed_digest = hashlib.blake2b(seed_payload, digest_size=8).digest()
+    return int.from_bytes(seed_digest, byteorder="big", signed=False) & 0xFFFFFFFF
 
 
 __all__ = [

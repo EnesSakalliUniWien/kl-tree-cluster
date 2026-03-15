@@ -6,7 +6,6 @@ import pandas as pd
 
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
-    run_child_parent_projected_wald_test,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
     annotate_sibling_divergence,
@@ -109,36 +108,6 @@ def test_child_parent_nonfinite_keeps_nan_and_uses_conservative_correction(
     assert audit.get("conservative_path_tests") == 1
 
 
-def test_edge_projected_test_nonfinite_z_returns_invalid(monkeypatch) -> None:
-    def _fake_standardized_z(
-        child_dist: np.ndarray,
-        parent_dist: np.ndarray,
-        n_child: int,
-        n_parent: int,
-        branch_length: float | None = None,
-        mean_branch_length: float | None = None,
-    ) -> np.ndarray:
-        return np.array([np.nan, 0.0], dtype=float)
-
-    monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald.compute_child_parent_standardized_z_scores",
-        _fake_standardized_z,
-    )
-
-    stat, df, pval, invalid = run_child_parent_projected_wald_test(
-        child_dist=np.array([0.4, 0.6], dtype=float),
-        parent_dist=np.array([0.5, 0.5], dtype=float),
-        n_child=5,
-        n_parent=10,
-        seed=123,
-    )
-
-    assert bool(invalid) is True
-    assert np.isnan(stat)
-    assert np.isnan(df)
-    assert np.isnan(pval)
-
-
 def test_child_parent_forwards_minimum_projection_dimension(monkeypatch) -> None:
     tree, nodes_df = _make_two_edge_tree()
     observed_minimum_projection_dimension: dict[str, int | None] = {"value": None}
@@ -185,8 +154,8 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
     tree, nodes_df = _make_sibling_tree()
 
     def _fake_sibling_test(
-        left_dist: np.ndarray,
-        right_dist: np.ndarray,
+        left_distribution: np.ndarray,
+        right_distribution: np.ndarray,
         n_left: float,
         n_right: float,
         branch_length_left: float | None = None,
@@ -197,6 +166,7 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
         spectral_k: int | None = None,
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
+        minimum_projection_dimension: int | None = None,
     ) -> tuple[float, float, float]:
         return np.nan, np.nan, np.nan
 
@@ -240,8 +210,8 @@ def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
     )
 
     stat, df, pval = sibling_divergence_test(
-        left_dist=np.array([0.4, 0.6], dtype=float),
-        right_dist=np.array([0.5, 0.5], dtype=float),
+        left_distribution=np.array([0.4, 0.6], dtype=float),
+        right_distribution=np.array([0.5, 0.5], dtype=float),
         n_left=10.0,
         n_right=10.0,
     )

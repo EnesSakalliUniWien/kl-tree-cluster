@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import List, Optional, Tuple
 
-import numpy as np
 import networkx as nx
+import numpy as np
 
 from .flat_correction import flat_bh_correction
 from .level_wise_correction import level_wise_bh_correction

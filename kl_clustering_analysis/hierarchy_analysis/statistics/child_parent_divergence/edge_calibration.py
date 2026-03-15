@@ -25,8 +25,6 @@ from typing import Dict, Optional
 import numpy as np
 from scipy.stats import chi2
 
-from kl_clustering_analysis import config
-
 logger = logging.getLogger(__name__)
 
 
@@ -84,21 +82,22 @@ def fit_edge_inflation_model(
         log(T_i / k_i) = β₀ + β₁ · log(n_parent_i)
     on null-like edges only.
     """
-    valid = (
+    valid_edge_mask = (
         null_like_mask
         & np.isfinite(test_statistics)
         & (degrees_of_freedom > 0)
         & (test_statistics > 0)
         & (parent_leaf_counts > 0)
     )
-    T_null = test_statistics[valid]
-    k_null = degrees_of_freedom[valid]
-    n_null = parent_leaf_counts[valid]
-    n_cal = int(valid.sum())
 
-    diagnostics: dict = {"n_calibration": n_cal}
+    null_test_statistics = test_statistics[valid_edge_mask]
+    null_degrees_of_freedom = degrees_of_freedom[valid_edge_mask]
+    null_parent_leaf_counts = parent_leaf_counts[valid_edge_mask]
+    n_calibration_edges = int(valid_edge_mask.sum())
 
-    if n_cal == 0:
+    diagnostics: dict = {"n_calibration": n_calibration_edges}
+
+    if n_calibration_edges == 0:
         logger.info("Edge calibration: 0 null-like edges — using ĉ = 1.0 (no deflation).")
         diagnostics["fit_status"] = "neutral_no_data"
         return EdgeCalibrationModel(
@@ -109,34 +108,41 @@ def fit_edge_inflation_model(
             diagnostics=diagnostics,
         )
 
-    ratios = T_null / k_null
-    median_ratio = float(np.median(ratios))
-    max_ratio = float(np.max(ratios))
+    observed_ratios = null_test_statistics / null_degrees_of_freedom
+    median_observed_ratio = float(np.median(observed_ratios))
+    max_observed_ratio = float(np.max(observed_ratios))
 
-    diagnostics["median_ratio"] = median_ratio
-    diagnostics["max_observed_ratio"] = max_ratio
+    diagnostics["median_ratio"] = median_observed_ratio
+    diagnostics["max_observed_ratio"] = max_observed_ratio
 
     # Fit log-linear: log(r) = β₀ + β₁·log(n)
-    log_r = np.log(ratios)
-    X = np.column_stack([np.ones(n_cal), np.log(n_null.astype(float))])
+    log_ratios = np.log(observed_ratios)
+    design_matrix = np.column_stack(
+        [
+            np.ones(n_calibration_edges),
+            np.log(null_parent_leaf_counts.astype(float)),
+        ]
+    )
 
     try:
-        beta, _res, _rank, _sv = np.linalg.lstsq(X, log_r, rcond=None)
+        beta, _res, _rank, _sv = np.linalg.lstsq(design_matrix, log_ratios, rcond=None)
     except np.linalg.LinAlgError:
         logger.warning("Edge calibration: regression failed — using median ratio.")
         diagnostics["fit_status"] = "neutral_fit_failure"
         return EdgeCalibrationModel(
-            n_calibration=n_cal,
-            global_inflation_factor=median_ratio,
-            max_observed_ratio=max_ratio,
+            n_calibration=n_calibration_edges,
+            global_inflation_factor=median_observed_ratio,
+            max_observed_ratio=max_observed_ratio,
             beta=np.zeros(2, dtype=np.float64),
             diagnostics=diagnostics,
         )
 
-    fitted = X @ beta
-    ss_res = float(np.sum((log_r - fitted) ** 2))
-    ss_tot = float(np.sum((log_r - np.mean(log_r)) ** 2))
-    r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+    fitted_log_ratios = design_matrix @ beta
+    residual_sum_of_squares = float(np.sum((log_ratios - fitted_log_ratios) ** 2))
+    total_sum_of_squares = float(np.sum((log_ratios - np.mean(log_ratios)) ** 2))
+    r_squared = (
+        1.0 - residual_sum_of_squares / total_sum_of_squares if total_sum_of_squares > 0 else 0.0
+    )
 
     diagnostics["fit_status"] = "regression"
     diagnostics["r_squared"] = r_squared
@@ -145,17 +151,17 @@ def fit_edge_inflation_model(
     logger.info(
         "Edge calibration: fitted on %d null-like edges. "
         "β = [%.3f, %.3f], R² = %.3f, median T/k = %.3f.",
-        n_cal,
+        n_calibration_edges,
         beta[0],
         beta[1],
         r_squared,
-        median_ratio,
+        median_observed_ratio,
     )
 
     return EdgeCalibrationModel(
-        n_calibration=n_cal,
-        global_inflation_factor=median_ratio,
-        max_observed_ratio=max_ratio,
+        n_calibration=n_calibration_edges,
+        global_inflation_factor=median_observed_ratio,
+        max_observed_ratio=max_observed_ratio,
         beta=np.asarray(beta),
         diagnostics=diagnostics,
     )

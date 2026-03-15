@@ -280,13 +280,17 @@ def assign_divergence_results(
     annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value_BH"] = p_values_corrected
     annotations_df.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null
     annotations_df.loc[child_ids, "Child_Parent_Divergence_df"] = degrees_of_freedom
+
     if invalid_mask is not None:
         invalid_array = np.asarray(invalid_mask, dtype=bool)
+
         if invalid_array.shape[0] != len(child_ids):
+
             raise ValueError(
                 "invalid_mask must be aligned to child_ids. "
                 f"Got len(invalid_mask)={invalid_array.shape[0]}, len(child_ids)={len(child_ids)}."
             )
+
         annotations_df.loc[child_ids, "Child_Parent_Divergence_Invalid"] = invalid_array
 
     annotations_df["Child_Parent_Divergence_Significant"] = normalize_bool_series(

@@ -6,7 +6,7 @@ modules, avoiding circular import issues.
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict
 
 import networkx as nx
 

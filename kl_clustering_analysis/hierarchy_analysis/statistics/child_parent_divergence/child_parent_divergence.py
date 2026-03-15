@@ -19,9 +19,9 @@ from ..multiple_testing import apply_multiple_testing_correction
 from .child_parent_spectral_decomposition import compute_child_parent_spectral_context
 from .child_parent_tree_testing import run_child_parent_tests_across_tree
 from .edge_calibration import (
+    _identify_null_like_edges,
     deflate_edge_tests,
     fit_edge_inflation_model,
-    _identify_null_like_edges,
 )
 
 logger = logging.getLogger(__name__)
@@ -90,7 +90,9 @@ def annotate_child_parent_divergence(
     # --- Edge calibration: deflate post-selection inflation before BH ---
     if config.EDGE_CALIBRATION and node_spectral_dimensions is not None:
         null_like_mask = _identify_null_like_edges(
-            parent_ids, node_spectral_dimensions, invalid_test_mask,
+            parent_ids,
+            node_spectral_dimensions,
+            invalid_test_mask,
         )
         edge_cal_model = fit_edge_inflation_model(
             edge_test_statistics,
@@ -117,26 +119,31 @@ def annotate_child_parent_divergence(
     child_depths_for_correction = np.array([node_depths.get(cid, 0) for cid in child_ids])
 
     p_values_for_correction = np.where(np.isfinite(edge_p_values), edge_p_values, 1.0)
-    nonfinite_p_value_mask = ~np.isfinite(edge_p_values)
+    non_finite_p_value_mask = ~np.isfinite(edge_p_values)
     invalid_test_count = int(np.sum(invalid_test_mask))
-    nonfinite_p_value_count = int(np.sum(nonfinite_p_value_mask))
-    if invalid_test_count or nonfinite_p_value_count:
-        nonfinite_p_value_indices = [
+    non_finite_p_value_count = int(np.sum(non_finite_p_value_mask))
+
+    if invalid_test_count or non_finite_p_value_count:
+
+        non_finite_p_value_indices = [
             edge_index
             for edge_index, p_value in enumerate(edge_p_values)
             if not np.isfinite(p_value)
         ]
-        nonfinite_p_value_node_ids = [
-            child_ids[edge_index] for edge_index in nonfinite_p_value_indices
+
+        non_finite_p_value_node_ids = [
+            child_ids[edge_index] for edge_index in non_finite_p_value_indices
         ]
-        preview_node_ids = ", ".join(map(repr, nonfinite_p_value_node_ids[:5]))
+
+        preview_node_ids = ", ".join(map(repr, non_finite_p_value_node_ids[:5]))
+
         logger.warning(
             "Child-parent divergence audit: total_tests=%d, invalid_tests=%d, "
-            "nonfinite_p_values=%d. Conservative correction path applied "
+            "non_finite_p_values=%d. Conservative correction path applied "
             "(p=1.0, reject=False) for nodes: %s",
             len(child_ids),
             invalid_test_count,
-            nonfinite_p_value_count,
+            non_finite_p_value_count,
             preview_node_ids,
         )
 
@@ -149,13 +156,13 @@ def annotate_child_parent_divergence(
         tree=tree,
     )
 
-    reject_null_hypothesis = np.where(nonfinite_p_value_mask, False, reject_null_hypothesis)
+    reject_null_hypothesis = np.where(non_finite_p_value_mask, False, reject_null_hypothesis)
 
     annotations_df.attrs["child_parent_divergence_audit"] = {
         "total_tests": int(len(child_ids)),
         "invalid_tests": invalid_test_count,
-        "nonfinite_p_values": nonfinite_p_value_count,
-        "conservative_path_tests": nonfinite_p_value_count,
+        "non_finite_p_values": non_finite_p_value_count,
+        "conservative_path_tests": non_finite_p_value_count,
     }
 
     return assign_divergence_results(

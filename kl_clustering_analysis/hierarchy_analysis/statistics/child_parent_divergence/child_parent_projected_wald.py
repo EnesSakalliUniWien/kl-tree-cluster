@@ -72,21 +72,7 @@ def run_child_parent_projected_wald_test(
         mean_branch_length,
     )
 
-    nonfinite_z_score_mask = ~np.isfinite(standardized_z_scores)
-    if np.any(nonfinite_z_score_mask):
-        logger.warning(
-            "Found %d non-finite z-scores in edge test; marking test invalid "
-            "(raw outputs NaN, conservative p=1.0 for correction).",
-            int(np.sum(nonfinite_z_score_mask)),
-        )
-        return np.nan, np.nan, np.nan, True
-
     standardized_z_scores = standardized_z_scores.astype(np.float64, copy=False)
-
-    if child_dist.ndim == 2 and child_dist.shape[1] > 1:
-        n_features = child_dist.shape[0]
-        n_categories = child_dist.shape[1]
-        standardized_z_scores = standardized_z_scores.reshape(n_features, n_categories)[:, :-1].ravel()
 
     test_statistic, projection_dim, _effective_degrees_of_freedom, p_value = (
         run_projected_wald_kernel(

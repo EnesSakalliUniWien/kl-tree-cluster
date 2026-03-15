@@ -58,8 +58,10 @@ def _compute_weighted_inflation(
     The model is intercept-only: c-hat is constant across all pairs.
     """
     # Collect valid pairs: finite stat, positive df
-    valid = [r for r in records if np.isfinite(r.stat) and r.degrees_of_freedom > 0]
-    if not valid:
+    valid_records = [
+        record for record in records if np.isfinite(record.stat) and record.degrees_of_freedom > 0
+    ]
+    if not valid_records:
         logger.warning(
             "Continuous-weight calibration: 0 valid pairs — " "using neutral c-hat = 1.0."
         )
@@ -72,15 +74,15 @@ def _compute_weighted_inflation(
             diagnostics={"fit_status": "neutral_no_data"},
         )
 
-    ratios = np.array([r.stat / r.degrees_of_freedom for r in valid])
-    weights = np.array([r.edge_weight for r in valid])
+    stat_df_ratios = np.array([record.stat / record.degrees_of_freedom for record in valid_records])
+    edge_weights = np.array([record.edge_weight for record in valid_records])
 
     # Filter out non-positive ratios (can happen with degenerate pairs)
-    pos_mask = ratios > 0
-    ratios = ratios[pos_mask]
-    weights = weights[pos_mask]
+    positive_ratio_mask = stat_df_ratios > 0
+    stat_df_ratios = stat_df_ratios[positive_ratio_mask]
+    edge_weights = edge_weights[positive_ratio_mask]
 
-    if len(ratios) == 0 or weights.sum() == 0:
+    if len(stat_df_ratios) == 0 or edge_weights.sum() == 0:
         logger.warning(
             "Continuous-weight calibration: no positive-ratio pairs — " "using neutral c-hat = 1.0."
         )
@@ -93,46 +95,49 @@ def _compute_weighted_inflation(
             diagnostics={"fit_status": "neutral_no_positive_ratios"},
         )
 
-    max_observed_ratio = float(np.max(ratios))
-    c_hat = float(np.average(ratios, weights=weights))
+    max_observed_ratio = float(np.max(stat_df_ratios))
+
+    inflation_factor = float(np.average(stat_df_ratios, weights=edge_weights))
 
     # Clamp: at least 1.0 (never inflate the statistic), at most max observed
-    c_hat = max(c_hat, 1.0)
-    c_hat = min(c_hat, max_observed_ratio)
+    inflation_factor = max(inflation_factor, 1.0)
+    inflation_factor = min(inflation_factor, max_observed_ratio)
 
-    n_contributing = int(np.sum(weights > 0))
-    effective_n = (
-        float(np.sum(weights) ** 2 / np.sum(weights**2)) if np.sum(weights**2) > 0 else 0.0
+    contributing_pair_count = int(np.sum(edge_weights > 0))
+
+    effective_sample_size = (
+        float(np.sum(edge_weights) ** 2 / np.sum(edge_weights**2))
+        if np.sum(edge_weights**2) > 0
+        else 0.0
     )
 
     diagnostics = {
         "fit_status": "weighted_mean",
-        "n_valid_pairs": len(ratios),
-        "n_contributing": n_contributing,
-        "effective_n": effective_n,
+        "n_valid_pairs": len(stat_df_ratios),
+        "n_contributing": contributing_pair_count,
+        "effective_n": effective_sample_size,
         "max_observed_ratio": max_observed_ratio,
-        "median_ratio": float(np.median(ratios)),
-        "mean_weight": float(np.mean(weights)),
-        "max_weight": float(np.max(weights)),
-        "min_weight": float(np.min(weights)),
+        "median_ratio": float(np.median(stat_df_ratios)),
+        "mean_weight": float(np.mean(edge_weights)),
+        "max_weight": float(np.max(edge_weights)),
+        "min_weight": float(np.min(edge_weights)),
     }
 
     logger.info(
         "Continuous-weight calibration: c-hat = %.4f from %d pairs "
         "(effective n = %.1f, max ratio = %.4f).",
-        c_hat,
-        len(ratios),
-        effective_n,
+        inflation_factor,
+        len(stat_df_ratios),
+        effective_sample_size,
         max_observed_ratio,
     )
 
     return CalibrationModel(
         method="weighted_mean",
-        n_calibration=n_contributing,
-        global_inflation_factor=c_hat,
+        n_calibration=contributing_pair_count,
+        global_inflation_factor=inflation_factor,
         max_observed_ratio=max_observed_ratio,
-        # Store as [log(c_hat), 0, 0] for backward compat with predict_inflation_factor
-        beta=np.array([np.log(c_hat), 0.0, 0.0], dtype=np.float64),
+        beta=np.array([np.log(inflation_factor), 0.0, 0.0], dtype=np.float64),
         diagnostics=diagnostics,
     )
 

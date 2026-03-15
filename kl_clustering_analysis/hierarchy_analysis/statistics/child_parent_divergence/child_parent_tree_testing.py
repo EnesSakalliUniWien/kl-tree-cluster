@@ -35,19 +35,13 @@ def run_child_parent_tests_across_tree(
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     for edge_index in range(n_edge_tests):
-        child_dist = tree.nodes[child_ids[edge_index]].get("distribution")
-        parent_dist = tree.nodes[parent_ids[edge_index]].get("distribution")
-
-        if child_dist is None or parent_dist is None or child_leaf_counts[edge_index] < 1:
-            test_statistics[edge_index], degrees_of_freedom[edge_index], p_values[edge_index] = (
-                0.0,
-                0.0,
-                1.0,
-            )
-            continue
+        child_dist = tree.nodes[child_ids[edge_index]]["distribution"]
+        parent_dist = tree.nodes[parent_ids[edge_index]]["distribution"]
 
         branch_length: float | None = None
+
         if tree.has_edge(parent_ids[edge_index], child_ids[edge_index]):
+
             branch_length = sanitize_positive_branch_length(
                 tree.edges[parent_ids[edge_index], child_ids[edge_index]].get("branch_length")
             )
@@ -58,22 +52,17 @@ def run_child_parent_tests_across_tree(
         )
 
         node_spectral_dimension: int | None = None
+
         node_pca_projection: np.ndarray | None = None
+
         node_pca_eigenvalues: np.ndarray | None = None
+
         if spectral_dims is not None:
             node_spectral_dimension = spectral_dims.get(parent_ids[edge_index])
         if pca_projections is not None:
             node_pca_projection = pca_projections.get(parent_ids[edge_index])
         if pca_eigenvalues is not None:
             node_pca_eigenvalues = pca_eigenvalues.get(parent_ids[edge_index])
-
-        projected_test_kwargs: dict[str, object] = {
-            "spectral_k": node_spectral_dimension,
-            "pca_projection": node_pca_projection,
-            "pca_eigenvalues": node_pca_eigenvalues,
-        }
-        if minimum_projection_dimension is not None:
-            projected_test_kwargs["minimum_projection_dimension"] = int(minimum_projection_dimension)
 
         (
             edge_test_statistic,
@@ -88,13 +77,22 @@ def run_child_parent_tests_across_tree(
             test_seed,
             branch_length,
             mean_branch_length,
-            **projected_test_kwargs,
+            spectral_k=node_spectral_dimension,
+            pca_projection=node_pca_projection,
+            pca_eigenvalues=node_pca_eigenvalues,
+            minimum_projection_dimension=(
+                int(minimum_projection_dimension)
+                if minimum_projection_dimension is not None
+                else None
+            ),
         )
+
         test_statistics[edge_index], degrees_of_freedom[edge_index], p_values[edge_index] = (
             edge_test_statistic,
             edge_degrees_of_freedom,
             edge_p_value,
         )
+
         invalid_test_mask[edge_index] = bool(edge_test_invalid)
 
     return test_statistics, degrees_of_freedom, p_values, invalid_test_mask

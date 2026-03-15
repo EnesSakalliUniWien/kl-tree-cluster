@@ -43,6 +43,7 @@ def compute_child_parent_spectral_context(
 
     node_pca_projections = computed_node_pca_projections if computed_node_pca_projections else None
     node_pca_eigenvalues = computed_node_pca_eigenvalues if computed_node_pca_eigenvalues else None
+
     return node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues
 
 

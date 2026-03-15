@@ -31,7 +31,6 @@ from __future__ import annotations
 
 import logging
 import os
-import time
 from typing import Dict, Tuple, cast
 
 import networkx as nx
@@ -134,6 +133,7 @@ def _process_node(
     )
 
     if eigendecomposition_result is None:
+
         return NodeSpectralResult(
             node_id=spectral_task.node_id,
             projection_dimension=max(minimum_projection_dimension, 1),
@@ -143,18 +143,21 @@ def _process_node(
 
     projection_dimension = estimate_k_marchenko_pastur(
         eigendecomposition_result.eigenvalues,
-        n_desc=descendant_feature_matrix.shape[0],
-        d_active=eigendecomposition_result.d_active,
+        n_samples=descendant_feature_matrix.shape[0],
+        n_features=eigendecomposition_result.d_active,
         minimum_projection_dimension=minimum_projection_dimension,
     )
 
     projection_matrix, pca_eigenvalues = None, None
+
     if compute_eigendecomposition_outputs:
+
         projection_matrix, pca_eigenvalues = build_pca_projection(
             eigendecomposition_result,
-            k=projection_dimension,
-            d=feature_count,
+            projection_dimension=projection_dimension,
+            n_features_total=feature_count,
         )
+
         if projection_matrix is None or pca_eigenvalues is None:
             projection_matrix, pca_eigenvalues = None, None
 
@@ -181,9 +184,7 @@ def _build_spectral_tasks(
 
     if include_internal:
         for node_id in internal_node_ids:
-
             node_internal_distributions: list[np.ndarray] = []
-
             for internal_node_id in descendant_internal_nodes_by_node.get(node_id, []):
                 distribution = tree.nodes[internal_node_id].get("distribution")
                 if distribution is None:
@@ -295,8 +296,6 @@ def compute_spectral_decomposition(
     """
     from kl_clustering_analysis import config as _config
 
-    start_time = time.perf_counter()
-
     if include_internal is None:
         include_internal = _config.INCLUDE_INTERNAL_IN_SPECTRAL
 
@@ -355,8 +354,6 @@ def compute_spectral_decomposition(
         pca_eigenvalues=pca_eigenvalues,
     )
 
-    elapsed = time.perf_counter() - start_time
-
     # Log summary statistics
     internal_projection_dimensions = [
         projection_dimension
@@ -365,6 +362,7 @@ def compute_spectral_decomposition(
     ]
 
     if internal_projection_dimensions:
+
         logger.info(
             "Spectral dimensions (%s): median=%d, mean=%.1f, min=%d, max=%d "
             "(across %d internal nodes, d=%d) [%.2fs]",
@@ -375,14 +373,12 @@ def compute_spectral_decomposition(
             max(internal_projection_dimensions),
             len(internal_projection_dimensions),
             feature_count,
-            elapsed,
         )
 
     if compute_projections:
         logger.info(
             "Computed PCA projections for %d internal nodes [%.2fs total]",
             len(pca_projections),
-            elapsed,
         )
 
     return spectral_dims, pca_projections, pca_eigenvalues

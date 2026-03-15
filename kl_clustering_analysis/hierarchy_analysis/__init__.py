@@ -8,18 +8,14 @@ This package provides functions for hierarchical clustering analysis including:
 - Visualization and correlation analysis helpers
 """
 
-from kl_clustering_analysis.information_metrics import (
-    calculate_kl_divergence_vector,
-)
-from .tree_decomposition import TreeDecomposition
 from .statistics import (
     annotate_child_parent_divergence,
     annotate_sibling_divergence,
     benjamini_hochberg_correction,
 )
+from .tree_decomposition import TreeDecomposition
 
 __all__ = [
-    "calculate_kl_divergence_vector",
     "TreeDecomposition",
     "benjamini_hochberg_correction",
     "annotate_child_parent_divergence",

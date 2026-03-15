@@ -45,6 +45,7 @@ def test_edge_tests_use_distinct_per_edge_seeds(monkeypatch) -> None:
         spectral_k: int | None = None,
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
+        minimum_projection_dimension: int | None = None,
     ) -> tuple[float, float, float, bool]:
         captured_seeds.append(seed)
         return 0.0, 1.0, 1.0, False
@@ -98,6 +99,7 @@ def test_sibling_run_tests_passes_unique_test_ids(monkeypatch) -> None:
         spectral_k: int | None = None,
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
+        minimum_projection_dimension: int | None = None,
     ) -> tuple[float, float, float]:
         captured_ids.append(test_id)
         return 0.0, 1.0, 1.0

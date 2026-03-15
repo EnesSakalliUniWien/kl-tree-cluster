@@ -23,7 +23,7 @@ def build_pca_projection_basis(
     eig = eigendecompose_correlation_backend(X, need_eigh=True)
     if eig is None:
         return None, None
-    return build_pca_projection_backend(eig, k=int(k), d=d)
+    return build_pca_projection_backend(eig, projection_dimension=int(k), n_features_total=d)
 
 
 def build_random_orthonormal_basis(

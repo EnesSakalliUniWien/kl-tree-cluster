@@ -21,4 +21,3 @@ __all__ = [
     "derive_projection_seed_backend",
     "resolve_minimum_projection_dimension_backend",
 ]
-
