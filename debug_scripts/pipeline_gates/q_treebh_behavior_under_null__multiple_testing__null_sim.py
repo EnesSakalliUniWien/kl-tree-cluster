@@ -28,7 +28,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_
     _get_families_by_parent,
     tree_bh_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald_annotation import (
     _collect_test_arguments,
     annotate_sibling_divergence,
 )

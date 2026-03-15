@@ -146,7 +146,7 @@ class TestNonBinarySkippedFlag:
 
     def test_base_wald_marks_leaves_as_skipped(self):
         """Base Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
             annotate_sibling_divergence,
         )
 
@@ -163,7 +163,7 @@ class TestNonBinarySkippedFlag:
 
     def test_adjusted_wald_marks_leaves_as_skipped(self):
         """Adjusted Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald import (
+        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
             annotate_sibling_divergence_adjusted,
         )
 
@@ -179,7 +179,7 @@ class TestNonBinarySkippedFlag:
 
     def test_collect_test_arguments_returns_non_binary(self):
         """_collect_test_arguments should return non-binary nodes separately."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald_annotation import (
             _collect_test_arguments,
         )
 

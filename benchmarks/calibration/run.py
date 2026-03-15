@@ -40,7 +40,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
     derive_projection_seed_backend as derive_projection_seed,
     generate_projection_matrix_backend as generate_projection_matrix,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
     sibling_divergence_test,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree

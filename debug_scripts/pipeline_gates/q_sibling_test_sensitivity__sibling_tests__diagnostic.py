@@ -12,7 +12,7 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
     sibling_divergence_test,
 )
 
@@ -226,7 +226,7 @@ def check_sibling_test_implementation():
     print("Checking sibling_divergence_test Implementation")
     print("=" * 70)
 
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
         sibling_divergence_test,
     )
 

@@ -41,15 +41,17 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.pooled_variance import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
     standardize_proportion_difference,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.tree_helpers import (
     precompute_descendants,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
-    _get_binary_children,
-    _get_sibling_data,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+    get_binary_children as _get_binary_children,
+    get_sibling_data as _get_sibling_data,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
     sibling_divergence_test,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -216,7 +218,7 @@ def main():
 
     # CRITICAL: Also patch the direct-import reference in sibling_divergence_test
     # (it does `from ...backends import compute_projection_dimension_backend as compute_projection_dimension`)
-    import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test as _sdt
+    import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic as _sdt
 
     def _traced_sdt_cpd(n_samples, n_features, *, eps=config.PROJECTION_EPS, min_k=None):
         result = _orig_cpd(n_samples=n_samples, n_features=n_features, eps=eps, min_k=min_k)
@@ -251,17 +253,17 @@ def main():
 
     _edge_sig.compute_projection_dimension = _traced_edge_cpd
 
-    # ── Instrument _fit_inflation_model to capture raw records ──
-    import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald as _caw
+    # ── Instrument fit_inflation_model to capture raw records ──
+    import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation as _caw
 
-    _orig_fit = _caw._fit_inflation_model
+    _orig_fit = _caw.fit_inflation_model
     _pipeline_records: list = []
 
     def _traced_fit(records):
         _pipeline_records.extend(records)  # capture the raw records
         return _orig_fit(records)
 
-    _caw._fit_inflation_model = _traced_fit
+    _caw.fit_inflation_model = _traced_fit
 
     # Run decomposition to get stats
     decomp = tree.decompose(
@@ -277,7 +279,7 @@ def main():
     _rp_compat.compute_projection_dimension = _orig_compat_cpd
     _sdt.compute_projection_dimension = _orig_cpd  # was aliased from backend
     _edge_sig.compute_projection_dimension = _orig_cpd
-    _caw._fit_inflation_model = _orig_fit
+    _caw.fit_inflation_model = _orig_fit
 
     print(f"  K found: {decomp['num_clusters']}")
     print(f"  Mean branch length: {mean_bl:.6f}" if mean_bl else "  No branch lengths")
@@ -329,7 +331,7 @@ def main():
             from kl_clustering_analysis.core_utils.data_utils import extract_node_sample_size
 
             n_par_root = extract_node_sample_size(tree, root)
-            from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald import (
+            from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
                 predict_inflation_factor,
             )
 
@@ -355,7 +357,7 @@ def main():
     from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
         compute_mean_branch_length as _compute_mean_bl,
     )
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_pipeline_helpers import (
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
         collect_sibling_pair_records as _collect,
     )
 
@@ -418,10 +420,10 @@ def main():
     for n_par, tk, t, k_val, bl in tk_pairs:
         print(f"  {n_par:>5} {tk:>8.4f} {t:>10.4f} {k_val:>4} {bl:>10.6f}")
     # Refit model from replay records
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald import (
-        _fit_inflation_model,
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
+        fit_inflation_model as _fit_inflation_model,
     )
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald import (
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
         predict_inflation_factor as pif,
     )
 

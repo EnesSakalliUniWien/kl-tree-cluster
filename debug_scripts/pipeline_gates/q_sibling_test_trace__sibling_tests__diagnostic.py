@@ -9,7 +9,7 @@ How to run: python debug_scripts/pipeline_gates/q_sibling_test_trace__sibling_te
 import numpy as np
 from scipy.stats import chi2
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.pooled_variance import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
     compute_pooled_proportion,
     compute_pooled_variance,
     standardize_proportion_difference,

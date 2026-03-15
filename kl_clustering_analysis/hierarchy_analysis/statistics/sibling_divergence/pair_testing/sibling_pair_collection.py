@@ -10,8 +10,7 @@ cousin-adjusted Wald orchestrator (``adjusted_wald``).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Dict, Iterable, List, Optional, Protocol, Tuple, TypeVar
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
@@ -24,40 +23,8 @@ from kl_clustering_analysis.core_utils.data_utils import (
     extract_node_sample_size,
 )
 
-from .wald_kernel import sibling_divergence_test
-
-# =============================================================================
-# Data structures
-# =============================================================================
-
-
-@dataclass
-class SiblingPairRecord:
-    """Raw per-parent sibling-test record used by calibration pipelines."""
-
-    parent: str
-    left: str
-    right: str
-    stat: float
-    degrees_of_freedom: int
-    p_value: float
-    branch_length_sum: float
-    n_parent: int
-    is_null_like: bool
-    edge_weight: float = 0.0  # min(p_edge_left, p_edge_right) for continuous calibration
-
-
-class DeflatableSiblingRecord(Protocol):
-    """Structural type for per-node records that can be focal-deflated."""
-
-    parent: str
-    stat: float
-    degrees_of_freedom: int
-    is_null_like: bool
-
-
-_R = TypeVar("_R", bound=DeflatableSiblingRecord)
-
+from .types import _R, DeflatableSiblingRecord, SiblingPairRecord
+from .wald_statistic import sibling_divergence_test
 
 # =============================================================================
 # Tree helpers
@@ -92,12 +59,8 @@ def get_sibling_data(
     Branch lengths are extracted from the tree edges (parent → child).
     If not available, returns None for the branch lengths.
     """
-    left_branch = (
-        tree.edges[parent, left].get("branch_length") if tree.has_edge(parent, left) else None
-    )
-    right_branch = (
-        tree.edges[parent, right].get("branch_length") if tree.has_edge(parent, right) else None
-    )
+    left_branch = tree.edges[parent, left].get("branch_length")
+    right_branch = tree.edges[parent, right].get("branch_length")
 
     return (
         extract_node_distribution(tree, left),
@@ -202,15 +165,20 @@ def collect_sibling_pair_records(
     )
 
     # Extract BH-corrected edge p-values for continuous calibration weights.
-    # Missing values default to 1.0 (maximally null-like).
+    # NaN values (e.g. skipped leaf nodes) default to 1.0 (maximally null-like).
     edge_p_value_column = "Child_Parent_Divergence_P_Value_BH"
-    edge_p_value_by_node: Dict[str, float] = {}
+    if edge_p_value_column not in annotations_df.columns:
+        raise ValueError(f"Missing '{edge_p_value_column}' column. Run child-parent test first.")
 
-    if edge_p_value_column in annotations_df.columns:
-        edge_p_value_series = annotations_df[edge_p_value_column].astype(float)
-        for node_id in annotations_df.index:
-            raw_p_value = float(edge_p_value_series[node_id])
-            edge_p_value_by_node[node_id] = raw_p_value if np.isfinite(raw_p_value) else 1.0
+    edge_p_value_series = annotations_df[edge_p_value_column].astype(float)
+    edge_p_value_by_node: Dict[str, float] = {
+        node_id: (
+            float(edge_p_value_series[node_id])
+            if np.isfinite(edge_p_value_series[node_id])
+            else 1.0
+        )
+        for node_id in annotations_df.index
+    }
 
     records: List[SiblingPairRecord] = []
     non_binary_nodes: List[str] = []

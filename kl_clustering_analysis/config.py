@@ -16,13 +16,6 @@ SIBLING_ALPHA: float = 0.01
 # Default significance level for Gate 2 edge (child-vs-parent) tests.
 EDGE_ALPHA: float = 0.01
 
-# Post-selection inflation calibration for the edge (child-parent) test.
-# When True, raw Wald T is deflated by an estimated inflation factor ĉ
-# before BH correction.  Null-like edges are identified via the spectral
-# oracle (k_spectral == SPECTRAL_MINIMUM_DIMENSION ≈ no signal).
-# Requires SPECTRAL_METHOD to be non-None.
-EDGE_CALIBRATION: bool = False
-
 
 # Epsilon value for numerical stability in KL-divergence and probability calculations.
 EPSILON: float = 1e-9

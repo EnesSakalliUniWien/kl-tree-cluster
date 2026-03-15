@@ -7,8 +7,10 @@ import pandas as pd
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
     annotate_sibling_divergence,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
     sibling_divergence_test,
 )
 
@@ -171,7 +173,7 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
         return np.nan, np.nan, np.nan
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald.sibling_divergence_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald_annotation.sibling_divergence_test",
         _fake_sibling_test,
     )
 
@@ -205,7 +207,7 @@ def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
         return np.array([np.nan, 0.0], dtype=float), np.array([1.0, 1.0], dtype=float)
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.wald_kernel.standardize_proportion_difference",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.standardize_proportion_difference",
         _fake_standardize_proportion_difference,
     )
 

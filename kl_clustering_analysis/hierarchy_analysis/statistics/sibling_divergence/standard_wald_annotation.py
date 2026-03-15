@@ -9,7 +9,6 @@ The core statistical kernel lives in ``wald_kernel.py``.
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import Dict, List, Tuple
 
 import networkx as nx
@@ -17,12 +16,16 @@ import numpy as np
 import pandas as pd
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.core_utils.data_utils import initialize_sibling_divergence_columns
 
 from ..branch_length_utils import compute_mean_branch_length
-from .bh_application import apply_sibling_bh_results
-from .tree_traversal import collect_significant_sibling_pairs, get_sibling_data
-from .wald_kernel import sibling_divergence_test
+from .bh_annotation import (
+    apply_sibling_bh_results,
+    early_return_if_no_records,
+    init_sibling_annotation_df,
+    mark_non_binary_as_skipped,
+)
+from .pair_testing.sibling_pair_collection import collect_significant_sibling_pairs, get_sibling_data
+from .pair_testing.wald_statistic import sibling_divergence_test
 
 logger = logging.getLogger(__name__)
 
@@ -158,6 +161,7 @@ def annotate_sibling_divergence(
     minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: Dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence and annotate results in dataframe.
 
@@ -177,32 +181,22 @@ def annotate_sibling_divergence(
         Sibling_Divergence_P_Value, Sibling_Divergence_P_Value_Corrected,
         Sibling_BH_Different, Sibling_BH_Same columns.
     """
-    if len(annotations_df) == 0:
-        raise ValueError("Empty dataframe")
+    annotations_df = init_sibling_annotation_df(annotations_df)
 
-    annotations_df = annotations_df.copy()
-    annotations_df = initialize_sibling_divergence_columns(annotations_df)
+    _ = pca_eigenvalues  # not used by standard Wald; accepted for uniform dispatcher interface
 
     parents, sibling_test_arguments, skipped, non_binary = _collect_test_arguments(
         tree,
         annotations_df,
     )
 
-    if not parents:
-        warnings.warn("No eligible parent nodes for sibling tests", UserWarning)
-        # Still mark non-binary/leaf nodes as skipped before returning
-        if non_binary:
-            annotations_df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
-        return annotations_df
+    # Mark non-testable nodes before potential early return
+    mark_non_binary_as_skipped(annotations_df, non_binary, logger=logger)
+    mark_non_binary_as_skipped(annotations_df, skipped, logger=logger)
 
-    if skipped:
-        annotations_df.loc[skipped, "Sibling_Divergence_Skipped"] = True
-        logger.debug(f"Skipped {len(skipped)} nodes")
-
-    if non_binary:
-        annotations_df.loc[non_binary, "Sibling_Divergence_Skipped"] = True
-        logger.debug(f"Non-binary/leaf nodes marked as skipped: {len(non_binary)}")
-
+    early_annotations_df = early_return_if_no_records(annotations_df, parents)
+    if early_annotations_df is not None:
+        return early_annotations_df
     # Compute mean branch length from tree for Felsenstein normalization
     # using the shared sanitization policy.  Gated by config.
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None

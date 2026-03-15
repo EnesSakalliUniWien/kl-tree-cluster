@@ -10,7 +10,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     run_child_parent_tests_across_tree,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald_annotation import (
     _run_tests,
 )
 
@@ -105,7 +105,7 @@ def test_sibling_run_tests_passes_unique_test_ids(monkeypatch) -> None:
         return 0.0, 1.0, 1.0
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald.sibling_divergence_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald_annotation.sibling_divergence_test",
         _fake_sibling_test,
     )
 

@@ -17,11 +17,11 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.calibration import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
     predict_inflation_factor,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.tree_traversal import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
     collect_sibling_pair_records,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree

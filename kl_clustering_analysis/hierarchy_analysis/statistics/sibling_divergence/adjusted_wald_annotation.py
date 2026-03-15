@@ -19,14 +19,14 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..branch_length_utils import compute_mean_branch_length
-from .bh_application import (
+from .bh_annotation import (
     apply_sibling_bh_results,
     early_return_if_no_records,
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
 )
-from .calibration import CalibrationModel, fit_inflation_model, predict_inflation_factor
-from .tree_traversal import (
+from .inflation_correction.inflation_estimation import CalibrationModel, fit_inflation_model, predict_inflation_factor
+from .pair_testing.sibling_pair_collection import (
     SiblingPairRecord,
     collect_sibling_pair_records,
     count_null_focal_pairs,
@@ -126,6 +126,7 @@ def annotate_sibling_divergence_adjusted(
     minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: Dict[str, np.ndarray] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-adjusted Wald.
 
@@ -152,6 +153,8 @@ def annotate_sibling_divergence_adjusted(
         Updated with sibling divergence columns plus ``Sibling_Test_Method``.
     """
     annotations_df = init_sibling_annotation_df(annotations_df)
+
+    _ = pca_eigenvalues  # not used by adjusted Wald; accepted for uniform dispatcher interface
 
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 

@@ -34,10 +34,6 @@ from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
-from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_calibration import (
-    EdgeCalibrationModel,
-    compute_edge_null_weight,
-)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 # The 7 cases that collapse to K=1 under soft_local calibration

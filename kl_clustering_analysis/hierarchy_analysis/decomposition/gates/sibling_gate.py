@@ -7,11 +7,8 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..core.contracts import GateAnnotationBundle
-from ..core.registry import normalize_sibling_calibration_method, resolve_sibling_calibrator
-from .column_contracts import (
-    validate_legacy_edge_columns,
-    validate_legacy_sibling_columns,
-)
+from ..core.registry import resolve_sibling_calibrator
+from .column_contracts import validate_legacy_edge_columns, validate_legacy_sibling_columns
 
 
 def annotate_sibling_gate(
@@ -26,8 +23,7 @@ def annotate_sibling_gate(
     pca_eigenvalues: dict[str, object] | None = None,
 ) -> GateAnnotationBundle:
     """Run Gate 3 (sibling divergence) and return typed legacy-compatible output."""
-    resolved_method_name = normalize_sibling_calibration_method(sibling_method)
-    calibrator = resolve_sibling_calibrator(resolved_method_name)
+    calibrator = resolve_sibling_calibrator(sibling_method)
     annotated_df = calibrator(
         tree,
         annotations_df,
@@ -49,7 +45,7 @@ def annotate_sibling_gate(
         metadata={
             "gate": "sibling",
             "alpha": float(significance_level_alpha),
-            "sibling_method": resolved_method_name,
+            "sibling_method": sibling_method,
             "minimum_projection_dimension": minimum_projection_dimension,
             "uses_spectral_dims": spectral_dims is not None,
             "uses_pca_projections": pca_projections is not None,

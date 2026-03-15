@@ -13,7 +13,7 @@ from scipy.spatial.distance import pdist
 from scipy.stats import chi2
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis.statistics.pooled_variance import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
     compute_pooled_variance,
     standardize_proportion_difference,
 )

@@ -10,14 +10,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.pooled_variance import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
     compute_pooled_proportion,
     compute_pooled_variance,
     standardize_proportion_difference,
     _is_categorical,
     _flatten_categorical,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
     sibling_divergence_test,
 )
 

@@ -4,29 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..backends.eigen_backend import (
-    build_pca_projection_backend,
-    eigendecompose_correlation_backend,
-)
 from ..backends.random_projection_backend import generate_projection_matrix_backend
 
 
-def build_pca_projection_basis(
-    data_sub: np.ndarray,
-    *,
-    k: int,
-    d_full: int | None = None,
-) -> tuple[np.ndarray | None, np.ndarray | None]:
-    """Build a PCA basis and associated eigenvalues for whitening."""
-    X = np.asarray(data_sub, dtype=np.float64)
-    d = int(d_full) if d_full is not None else int(X.shape[1])
-    eig = eigendecompose_correlation_backend(X, need_eigh=True)
-    if eig is None:
-        return None, None
-    return build_pca_projection_backend(eig, projection_dimension=int(k), n_features_total=d)
-
-
-def build_random_orthonormal_basis(
+def _build_random_orthonormal_basis(
     n_features: int,
     k: int,
     *,
@@ -40,6 +21,26 @@ def build_random_orthonormal_basis(
         random_state=random_state,
         use_cache=use_cache,
     )
+
+
+def _resolve_pca_component(
+    pca_projection: np.ndarray,
+    pca_eigenvalues: np.ndarray | None,
+    target_dim: int,
+) -> tuple[np.ndarray, np.ndarray | None, int]:
+    """Truncate PCA basis to target_dim rows.
+
+    Returns (basis[:n_used], eigenvalues[:n_used], n_padding_rows).
+    n_padding_rows == 0 means PCA fully covers the target — no random padding needed.
+    """
+    pca_basis = np.asarray(pca_projection, dtype=np.float64)
+    n_used = min(int(pca_basis.shape[0]), target_dim)
+    eigenvalues = (
+        np.asarray(pca_eigenvalues[:n_used], dtype=np.float64)
+        if pca_eigenvalues is not None
+        else None
+    )
+    return pca_basis[:n_used], eigenvalues, target_dim - n_used
 
 
 def build_projection_basis_with_padding(
@@ -64,7 +65,7 @@ def build_projection_basis_with_padding(
     target_projection_dim = int(k)
 
     if pca_projection is None:
-        random_projection_basis = build_random_orthonormal_basis(
+        random_projection_basis = _build_random_orthonormal_basis(
             n_features=n_features,
             k=target_projection_dim,
             random_state=random_state,
@@ -72,38 +73,25 @@ def build_projection_basis_with_padding(
         )
         return random_projection_basis, None
 
-    pca_basis = np.asarray(pca_projection, dtype=np.float64)
-    n_available_pca_rows = int(pca_basis.shape[0])
-    n_pca_rows_used = min(n_available_pca_rows, target_projection_dim)
+    pca_basis, eigenvalues_for_whitening, n_padding_rows = _resolve_pca_component(
+        pca_projection, pca_eigenvalues, target_projection_dim
+    )
 
-    if n_pca_rows_used >= target_projection_dim:
-        eigenvalues_for_whitening = (
-            np.asarray(pca_eigenvalues[:target_projection_dim], dtype=np.float64)
-            if pca_eigenvalues is not None
-            else None
-        )
-        return pca_basis[:target_projection_dim], eigenvalues_for_whitening
+    if n_padding_rows == 0:
+        return pca_basis, eigenvalues_for_whitening
 
-    n_padding_rows = target_projection_dim - n_pca_rows_used
-
-    random_padding_basis = build_random_orthonormal_basis(
+    random_padding_basis = _build_random_orthonormal_basis(
         n_features=n_features,
         k=n_padding_rows,
         random_state=random_state,
         use_cache=False,
     )
 
-    eigenvalues_for_whitening = (
-        np.asarray(pca_eigenvalues, dtype=np.float64) if pca_eigenvalues is not None else None
-    )
-
-    padded_projection_basis = np.vstack([pca_basis[:n_pca_rows_used], random_padding_basis])
+    padded_projection_basis = np.vstack([pca_basis, random_padding_basis])
 
     return padded_projection_basis, eigenvalues_for_whitening
 
 
 __all__ = [
-    "build_pca_projection_basis",
-    "build_random_orthonormal_basis",
     "build_projection_basis_with_padding",
 ]

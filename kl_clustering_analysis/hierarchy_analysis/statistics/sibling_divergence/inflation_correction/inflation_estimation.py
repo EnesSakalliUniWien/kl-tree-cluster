@@ -10,36 +10,14 @@ which fails on null data when the edge test passes everything.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import List
 
 import numpy as np
 
-from .tree_traversal import SiblingPairRecord
+from ..pair_testing.sibling_pair_collection import SiblingPairRecord
+from .types import CalibrationModel
 
 logger = logging.getLogger(__name__)
-
-# =============================================================================
-# Data structures
-# =============================================================================
-
-
-@dataclass
-class CalibrationModel:
-    """Result of fitting the post-selection inflation model.
-
-    Stores the global inflation factor c-hat estimated via continuous
-    edge-weight calibration.  The model is intercept-only: a single
-    constant c-hat applied uniformly to all focal sibling pairs.
-    """
-
-    method: str
-    n_calibration: int  # number of pairs that contributed (weight > 0)
-    global_inflation_factor: float  # the estimated c-hat
-    max_observed_ratio: float = 1.0  # max(r_i) — upper bound for c-hat
-    beta: Optional[np.ndarray] = None  # kept for API compat; [log(c-hat), 0, 0]
-    diagnostics: Dict = field(default_factory=dict)
-
 
 # =============================================================================
 # Inflation estimation — continuous edge-weight calibration

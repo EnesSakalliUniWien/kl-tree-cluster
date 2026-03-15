@@ -24,9 +24,11 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation import (
     _collect_all_pairs,
-    _fit_inflation_model,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
+    fit_inflation_model as _fit_inflation_model,
     predict_inflation_factor,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree

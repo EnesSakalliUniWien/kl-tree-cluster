@@ -25,7 +25,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_signific
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
     annotate_sibling_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_adjusted_wald import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation import (
     annotate_sibling_divergence_adjusted,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.cousin_calibrated_test import (

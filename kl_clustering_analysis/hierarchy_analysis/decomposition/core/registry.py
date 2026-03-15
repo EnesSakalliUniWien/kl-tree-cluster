@@ -38,15 +38,15 @@ def normalize_spectral_k_method(method: SpectralKMethod | str | None) -> str | N
 
 def resolve_sibling_calibrator(method: SiblingCalibrationMethod | str) -> Callable:
     """Resolve a sibling calibration callable."""
-    from ..methods.sibling_calibration import (
-        annotate_cousin_adjusted_wald,
-        annotate_wald,
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+        annotate_sibling_divergence,
+        annotate_sibling_divergence_adjusted,
     )
 
     name = method.value if isinstance(method, SiblingCalibrationMethod) else str(method)
     mapping = {
-        SiblingCalibrationMethod.WALD.value: annotate_wald,
-        SiblingCalibrationMethod.COUSIN_ADJUSTED_WALD.value: annotate_cousin_adjusted_wald,
+        SiblingCalibrationMethod.WALD.value: annotate_sibling_divergence,
+        SiblingCalibrationMethod.COUSIN_ADJUSTED_WALD.value: annotate_sibling_divergence_adjusted,
     }
     if name not in mapping:
         raise DecompositionMethodError(f"Unknown sibling calibration method: {name!r}.")

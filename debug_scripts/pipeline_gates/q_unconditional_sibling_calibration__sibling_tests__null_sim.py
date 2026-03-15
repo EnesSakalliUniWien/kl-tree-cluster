@@ -23,11 +23,15 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_signific
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (
     benjamini_hochberg_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
-    _get_binary_children,
-    _get_sibling_data,
-    annotate_sibling_divergence,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+    get_binary_children as _get_binary_children,
+    get_sibling_data as _get_sibling_data,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
     sibling_divergence_test,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald_annotation import (
+    annotate_sibling_divergence,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 

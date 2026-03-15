@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics import annotate_child_parent_divergence
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_divergence_test import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
     annotate_sibling_divergence,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
