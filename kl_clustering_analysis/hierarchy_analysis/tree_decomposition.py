@@ -220,11 +220,9 @@ class TreeDecomposition:
             spectral_method=self._spectral_method,
             minimum_projection_dimension=self._resolved_minimum_projection_dimension,
             sibling_method=config.SIBLING_TEST_METHOD,
-            # Preserve existing decomposition semantics.
             fdr_method="tree_bh",
-            sibling_spectral_dims=None,
-            sibling_pca_projections=None,
-            sibling_pca_eigenvalues=None,
+            # sibling_spectral_dims=None → orchestrator auto-derives min-child
+            # spectral k from Gate 2 output.
         ).annotated_df
 
     def _cache_node_metadata(self) -> None:

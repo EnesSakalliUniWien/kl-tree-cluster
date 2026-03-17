@@ -25,7 +25,11 @@ from .bh_annotation import (
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
 )
-from .inflation_correction.inflation_estimation import CalibrationModel, fit_inflation_model, predict_inflation_factor
+from .inflation_correction.inflation_estimation import (
+    CalibrationModel,
+    fit_inflation_model,
+    predict_inflation_factor,
+)
 from .pair_testing.sibling_pair_collection import (
     SiblingPairRecord,
     collect_sibling_pair_records,

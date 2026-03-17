@@ -14,7 +14,7 @@ SIBLING_ALPHA: float = 0.01
 # --- Decomposition Parameters ---
 
 # Default significance level for Gate 2 edge (child-vs-parent) tests.
-EDGE_ALPHA: float = 0.01
+EDGE_ALPHA: float = 0.001
 
 
 # Epsilon value for numerical stability in KL-divergence and probability calculations.
@@ -75,7 +75,6 @@ PROJECTION_EPS: float = 0.3
 # This prevents adding pure-noise χ² components when the data has low
 # intrinsic dimensionality, and avoids under-projecting high-rank data.
 PROJECTION_MINIMUM_DIMENSION: int | str = "auto"
-
 
 # Random seed for projection reproducibility (None for random)
 PROJECTION_RANDOM_SEED: int | None = 42

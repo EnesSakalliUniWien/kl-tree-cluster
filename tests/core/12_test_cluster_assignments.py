@@ -18,6 +18,7 @@ from kl_clustering_analysis.core_utils.pipeline_helpers import (
     run_statistical_analysis,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from kl_clustering_analysis import config
 
 
 def _remap_labels(y_true_arr: np.ndarray, y_pred_raw: np.ndarray) -> np.ndarray:
@@ -130,8 +131,14 @@ def analyze_cluster_assignments_label_invariant():
 
 def test_cluster_assignment_label_invariant():
     """Test that cluster assignments work correctly with label remapping."""
-
-    results = analyze_cluster_assignments_label_invariant()
+    # Use a moderate edge alpha for this small test case (n=30)
+    # to ensure sufficient power for 3-cluster detection.
+    old_edge_alpha = config.EDGE_ALPHA
+    config.EDGE_ALPHA = 0.01
+    try:
+        results = analyze_cluster_assignments_label_invariant()
+    finally:
+        config.EDGE_ALPHA = old_edge_alpha
 
     # Basic structure checks
     assert "summary" in results

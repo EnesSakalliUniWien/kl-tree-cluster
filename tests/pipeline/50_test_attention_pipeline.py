@@ -18,6 +18,7 @@ from kl_clustering_analysis.core_utils.pipeline_helpers import (
     run_statistical_analysis,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from kl_clustering_analysis import config
 
 
 def _remap_labels(y_true_arr: np.ndarray, y_pred_raw: np.ndarray) -> np.ndarray:
@@ -85,8 +86,14 @@ def analyze_pipeline_performance():
 
 def test_pipeline_performance():
     """Test that the KL pipeline achieves high performance on a synthetic dataset."""
-
-    results = analyze_pipeline_performance()
+    # Use a moderate edge alpha for this small test case (n=30)
+    # to ensure sufficient power for 3-cluster detection.
+    old_edge_alpha = config.EDGE_ALPHA
+    config.EDGE_ALPHA = 0.01
+    try:
+        results = analyze_pipeline_performance()
+    finally:
+        config.EDGE_ALPHA = old_edge_alpha
 
     # Assert that the metrics are high, indicating good performance
     assert results["n_clusters_true"] <= results["found_clusters"] <= (

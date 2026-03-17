@@ -45,9 +45,7 @@ def compute_projected_pvalue(
     if eigenvalues is not None and len(eigenvalues) > 0:
         n_pca_components = len(eigenvalues)
         # Whitened: T = Σ wᵢ²/λᵢ ~ χ²(k)
-        whitened_statistic = float(
-            np.sum(projected_vector[:n_pca_components] ** 2 / eigenvalues)
-        )
+        whitened_statistic = float(np.sum(projected_vector[:n_pca_components] ** 2 / eigenvalues))
         random_padding_statistic = (
             float(np.sum(projected_vector[n_pca_components:] ** 2))
             if n_pca_components < len(projected_vector)

@@ -37,7 +37,7 @@ def test_compute_projection_dimension_basic():
     # For n_samples=1000, eps=0.3, this gives k >= 383
     # Our config.PROJECTION_MINIMUM_DIMENSION is 10
     k = compute_projection_dimension(
-        n_samples, n_features, eps=eps, minimum_projection_dimension=10
+        n_samples, n_features, eps=eps, minimum_projection_dimension=10,
     )
     assert k >= 10
     assert k <= n_features
@@ -63,7 +63,7 @@ def test_compute_projection_dimension_max_k_n_features():
     n_features = 50
     eps = 0.1  # Very low eps, would usually result in k > 50
     k = compute_projection_dimension(
-        n_samples, n_features, eps=eps, minimum_projection_dimension=10
+        n_samples, n_features, eps=eps, minimum_projection_dimension=10,
     )
     assert k == n_features
 

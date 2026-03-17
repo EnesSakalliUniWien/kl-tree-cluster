@@ -32,6 +32,46 @@ def _normalize_sibling_method(method: str) -> str:
     return name
 
 
+def _derive_sibling_spectral_dims(
+    tree,
+    annotated_df: pd.DataFrame,
+) -> dict[str, int] | None:
+    """Compute min-child spectral k for each binary parent from Gate 2 output.
+
+    For each binary parent, takes the minimum of the two children's spectral
+    dimensions (from Marchenko-Pastur eigendecomposition in the edge test).
+
+    Children with spectral k = 0 (leaves, no signal eigenvalues) are excluded
+    from the minimum.  Parents where no child has a positive spectral k are
+    omitted — the sibling test falls back to JL-based dimension for those.
+    """
+    edge_spectral_dims = annotated_df.attrs.get("_spectral_dims")
+    if not edge_spectral_dims:
+        return None
+
+    sibling_dims: dict[str, int] = {}
+
+    for parent in tree.nodes:
+        children = list(tree.successors(parent))
+        if len(children) != 2:
+            continue
+        left, right = children
+        child_ks = [
+            k
+            for k in (
+                edge_spectral_dims.get(left, 0),
+                edge_spectral_dims.get(right, 0),
+            )
+            if k > 0
+        ]
+        if not child_ks:
+            continue
+        sibling_k = min(child_ks)
+        sibling_dims[parent] = sibling_k
+
+    return sibling_dims if sibling_dims else None
+
+
 def run_gate_annotation_pipeline(
     tree,
     annotations_df: pd.DataFrame,
@@ -60,6 +100,14 @@ def run_gate_annotation_pipeline(
         minimum_projection_dimension=minimum_projection_dimension,
         fdr_method=fdr_method,
     )
+
+    # Auto-derive sibling spectral dims from Gate 2 output when not provided.
+    # Uses min-child strategy: min(k_left, k_right).
+    if sibling_spectral_dims is None:
+        sibling_spectral_dims = _derive_sibling_spectral_dims(
+            tree, edge_bundle.annotated_df
+        )
+
     sibling_bundle = annotate_sibling_gate(
         tree,
         edge_bundle.annotated_df,

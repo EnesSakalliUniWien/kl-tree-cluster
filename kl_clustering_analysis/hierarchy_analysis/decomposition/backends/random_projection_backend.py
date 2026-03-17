@@ -137,10 +137,12 @@ def compute_projection_dimension_backend(
     n_samples: int,
     n_features: int,
     *,
-    eps: float = config.PROJECTION_EPS,
+    eps: float | None = None,
     minimum_projection_dimension: int | str | None = None,
 ) -> int:
     """Compute target projection dimension with JL + information cap."""
+    if eps is None:
+        eps = config.PROJECTION_EPS
     if minimum_projection_dimension is None:
         if _RESOLVED_MINIMUM_PROJECTION_DIMENSION is not None:
             minimum_projection_dimension = _RESOLVED_MINIMUM_PROJECTION_DIMENSION
@@ -157,6 +159,7 @@ def compute_projection_dimension_backend(
 
     if n_features >= 4 * n_samples:
         projection_dimension = min(projection_dimension, n_samples)
+
     projection_dimension = max(projection_dimension, minimum_projection_dimension)
     projection_dimension = min(projection_dimension, n_features)
     return projection_dimension

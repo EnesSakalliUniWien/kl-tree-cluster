@@ -22,11 +22,10 @@ from benchmarks.calibration.run import run_calibration_suite
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.env import get_env_bool, get_env_int
 from benchmarks.shared.plots.cover_page import (
+    GROUP_ORDER,
     category_group,
     generate_overview_page,
-    write_cover_pages_to_pdf,
     write_section_page_to_pdf,
-    GROUP_ORDER,
 )
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_execution import run_case_with_optional_isolation
@@ -167,9 +166,11 @@ def run_benchmarks():
     if output_path.exists():
         try:
             all_results = pd.read_csv(output_path)
-            completed_case_keys, missing_methods_by_case, tracked_case_count = _compute_resume_coverage(
-                all_results,
-                methods_to_test,
+            completed_case_keys, missing_methods_by_case, tracked_case_count = (
+                _compute_resume_coverage(
+                    all_results,
+                    methods_to_test,
+                )
             )
             partial_case_count = max(0, tracked_case_count - len(completed_case_keys))
             print(
@@ -298,6 +299,7 @@ def run_benchmarks():
         # --- Overview cover page ---
         cover_pdf = run_dir / "_cover_overview.pdf"
         from matplotlib.backends.backend_pdf import PdfPages as _PP
+
         overview_fig = generate_overview_page(n_cases=len(test_cases), timestamp=timestamp)
         with _PP(str(cover_pdf)) as _pp:
             _pp.savefig(overview_fig)
