@@ -12,6 +12,12 @@
 | 11  | Symmetric power                                | Gate 2 + Gate 3 both underpowered at small n  |
 | 12  | Deflation diagnostics                          | Deflation is not the bottleneck (see below)   |
 | 13  | Power loss trace                               | Complete gate-by-gate attribution (see below) |
+| 14  | SNN distance                                   | Alternative distance metric                   |
+| 15  | Spectral dim regression                        | min-child k ≈ 2 confirmed as regression cause |
+| 16  | Spectral dim strategies (8)                    | **jl_floor_qrt wins** (ARI=0.991)            |
+| 17  | Literature strategies (12)                     | No literature method beat jl_floor_qrt        |
+| 18  | Eigenvector relationships                      | Parent gains extra dims at SPLIT boundaries   |
+| 19  | Spectral equations (16)                        | JL/4 floor is the essential ingredient        |
 
 ## Implementation (from exp7–9)
 
@@ -91,3 +97,72 @@ The current approach is **sound** for well-separated clusters where HAC produces
 2. **Soft clustering**: Allow probabilistic membership instead of hard binary splits
 3. **Pre-filtering overlapping features**: Dimensionality reduction before tree construction
 4. **Hybrid approach**: Use KL decomposition for clear structure, fall back to another method for ambiguous regions
+
+---
+
+## Exp 15–19 — Spectral Dimension for Gate 3 (Projection Power Investigation)
+
+### Background
+
+The introduction of Marchenko-Pastur spectral dimensions for Gate 2 created a regression
+when those per-node dimensions were forwarded to Gate 3 via `_derive_sibling_spectral_dims()`.
+The function computes `k = min(k_left, k_right)` — but MP on small within-child data
+almost always yields k ≈ 0–2, collapsing the χ² test to near-zero power.
+
+### Exp 15 — Root Cause Confirmation
+
+Per-node tracing showed nodes that SPLIT under JL (k ≈ 12) instead MERGE under spectral (k = 2).
+Five cases collapsed from ARI=1.0 (JL) to ARI=0.0–0.7 (min-child spectral).
+
+### Exp 16 — Strategy Comparison (8 strategies, winner: `jl_floor_qrt`)
+
+Tested 8 k-derivation strategies across 15 sentinel cases:
+
+| Strategy | Mean ARI | Notes |
+|----------|----------|-------|
+| **jl_floor_qrt** | **0.991** | max(spectral_min, JL/4) — **best** |
+| jl_floor_half | 0.988 | max(spectral_min, JL/2) |
+| sum_child_2x | 0.981 | 2 × (k_L + k_R) |
+| none (pure JL) | 0.979 | ⌈8·ln(n)/ε²⌉ |
+| min_child | 0.815 | min(k_L, k_R) ← regression |
+
+### Exp 17 — Literature Strategies (no improvement)
+
+Added 6 literature-inspired strategies (Lopes 2011, Srivastava 2016, Chen & Qin 2010) plus
+`k_parent` and `k_parent_jl`. None beat `jl_floor_qrt`:
+- `pooled_mp`, `effective_rank`, `ncp_power_opt` → 0.968
+- `k_parent` → 0.815 (same floor problem)
+- `k_parent_jl` → 0.991 (ties, JL/4 does the work)
+
+### Exp 18 — Eigenvector Relationship Mapping
+
+Mapped eigenspace structure at all binary parents. Key findings:
+- **SPLIT nodes**: Parent gains extra signal dims (k_P / k_sum = 1.39), children near-orthogonal (67°)
+- **MERGE nodes**: Children account for parent's variance (k_P / k_sum = 0.66), high overlap
+- λ₁ of parent is the best single SPLIT/MERGE predictor (separation = 1.524)
+
+### Exp 19 — Spectral Equation Laboratory (16 equations)
+
+Three-phase analysis: spectral feature distributions → equation evaluation → benchmark.
+
+**Phase C benchmark rankings (15 cases)**:
+
+| Rank | Strategy | Mean ARI | Formula |
+|------|----------|----------|---------|
+| 1 | **jl_floor_qrt** | **0.991** | max(spectral_min, JL/4) |
+| 2 | knee_jl | 0.989 | max(elbow_k, JL/4) |
+| 3 | er_jl / var90_jl | 0.984 | max(eff_rank or var90, JL/4) |
+| 5 | none (pure JL) | 0.979 | ⌈8·ln(n)/ε²⌉ |
+| 6–11 | Pure spectral | 0.968 | er_parent, var90, etc. |
+| 16 | k_parent | 0.815 | MP of parent (no floor) |
+| 17 | knee_parent | 0.743 | Elbow k only |
+
+### Conclusion
+
+**`jl_floor_qrt` = max(min(k_L, k_R), ⌈8·ln(n)/ε²⌉/4) is the optimal strategy.**
+
+The JL/4 floor provides minimum statistical power; spectral caps prevent noise dilution.
+All hybrid `max(X, JL/4)` forms cluster at 0.984–0.991; the JL/4 component dominates.
+Pure spectral equations top out at 0.968 due to small-sample MP underestimation.
+
+Full details in [SPECTRAL_DIM_REPORT.md](SPECTRAL_DIM_REPORT.md).

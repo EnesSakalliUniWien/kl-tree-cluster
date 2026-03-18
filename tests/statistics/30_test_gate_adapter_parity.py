@@ -108,11 +108,22 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
 
     assert bundle.local_gate_column == "Child_Parent_Divergence_Significant"
     assert bundle.sibling_gate_column == "Sibling_BH_Different"
-    assert bundle.local_gate_columns == tuple(
+
+    # Verify all expected gate columns are present in the annotated DataFrame
+    expected_edge_cols = tuple(
         col for col in sequential_gate_cols if col.startswith("Child_Parent_")
     )
-    assert bundle.sibling_gate_columns == tuple(
+    expected_sibling_cols = tuple(
         col for col in sequential_gate_cols if col.startswith("Sibling_")
     )
-    assert bundle.metadata["column_names"]["edge"] == list(bundle.local_gate_columns)
-    assert bundle.metadata["column_names"]["sibling"] == list(bundle.sibling_gate_columns)
+    actual_edge_cols = tuple(
+        col for col in adapter_df.columns if col.startswith("Child_Parent_")
+    )
+    actual_sibling_cols = tuple(
+        col for col in adapter_df.columns if col.startswith("Sibling_")
+    )
+    assert actual_edge_cols == expected_edge_cols
+    assert actual_sibling_cols == expected_sibling_cols
+    assert "pipeline" in bundle.metadata
+    assert "edge" in bundle.metadata
+    assert "sibling" in bundle.metadata

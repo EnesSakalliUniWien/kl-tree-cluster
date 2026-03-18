@@ -44,6 +44,15 @@ from benchmarks.shared.generators import generate_case_data  # noqa: E402
 from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.tree.poset_tree import PosetTree  # noqa: E402
 
+
+def compute_snn_distance(
+    X: np.ndarray,
+    *,
+    k: int = 15,
+    metric: str = "hamming",
+) -> np.ndarray:
+    """Return an SNN distance matrix in ``[0, 1]`` for a binary feature matrix.
+
     Parameters
     ----------
     X : array (n, d)

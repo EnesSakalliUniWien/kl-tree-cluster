@@ -27,6 +27,7 @@ from benchmarks.shared.plots.cover_page import (
     generate_overview_page,
     write_section_page_to_pdf,
 )
+from benchmarks.shared.relationship_analysis import analyze_benchmark_relationships
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_execution import run_case_with_optional_isolation
 from benchmarks.shared.util.method_selection import resolve_methods_from_env
@@ -130,6 +131,11 @@ def run_benchmarks():
     run_calibration = get_env_bool("KL_TE_RUN_CALIBRATION", default=False)
     calibration_null_reps = get_env_int("KL_TE_CAL_NULL_REPS", 30)
     calibration_treebh_reps = get_env_int("KL_TE_CAL_TREEBH_REPS", 200)
+    run_relationship_analysis = get_env_bool("KL_TE_RUN_RELATIONSHIP_ANALYSIS", default=True)
+    enable_relationship_plots = get_env_bool(
+        "KL_TE_ENABLE_RELATIONSHIP_PLOTS",
+        default=enable_plots,
+    )
     if enable_umap:
         try:
             import umap  # noqa: F401
@@ -150,6 +156,10 @@ def run_benchmarks():
             "Calibration settings: "
             f"null_reps={calibration_null_reps}, treebh_reps={calibration_treebh_reps}"
         )
+    print(
+        "Relationship analysis settings: "
+        f"enabled={run_relationship_analysis}, plots={enable_relationship_plots}"
+    )
 
     # Single benchmark results root
     timestamp = format_timestamp_utc()
@@ -293,6 +303,68 @@ def run_benchmarks():
         except Exception as e:
             print(f"Calibration suite failed: {e}")
 
+    relationship_outputs = None
+    relationship_pdf: Path | None = None
+    if all_results.empty:
+        print("No results collected.")
+    else:
+        df = all_results[all_results["method"].isin(methods_to_test)].copy()
+
+        if run_relationship_analysis:
+            print("\nRunning benchmark relationship analysis...")
+            try:
+                relationship_outputs = analyze_benchmark_relationships(
+                    df,
+                    run_dir,
+                    source_path=output_path,
+                    include_plots=enable_relationship_plots,
+                )
+                relationship_pdf = (
+                    Path(relationship_outputs.plots_pdf)
+                    if relationship_outputs.plots_pdf is not None
+                    else None
+                )
+                print(f"Relationship report written: {relationship_outputs.report_md}")
+                if relationship_pdf is not None:
+                    print(f"Relationship plots written: {relationship_pdf}")
+            except Exception as e:
+                print(f"Relationship analysis failed: {e}")
+
+        summary = df.groupby(["method"])["ari"].mean()
+        print("\nMean ARI by Method:")
+        print(summary)
+
+        if "test_case" in df.columns:
+            pivot = df.pivot(index="test_case", columns="method", values="ari")
+            if "kl" in pivot.columns and "kl_rogerstanimoto" in pivot.columns:
+                pivot["diff"] = pivot["kl"] - pivot["kl_rogerstanimoto"]
+
+                diff_cases = pivot[pivot["diff"].abs() > 1e-6]
+                if len(diff_cases) > 0:
+                    print(f"\nFound {len(diff_cases)} cases with different ARI scores:")
+                    print(diff_cases[["kl", "kl_rogerstanimoto", "diff"]])
+                else:
+                    print(
+                        "\nNo significant differences found between 'kl' (hamming) and 'kl_rogerstanimoto'."
+                    )
+
+            print(f"\nDetailed results are saved to {output_path}")
+
+            # Run failure diagnosis when available.
+            if diagnose_benchmark_failures is not None:
+                print("\nRunning failure diagnosis...")
+                actual_audit_dir = run_dir / "audit"
+                diagnose_benchmark_failures(
+                    str(output_path),
+                    str(actual_audit_dir),
+                    str(run_dir / "failure_report.md"),
+                )
+            else:
+                print("\nSkipping failure diagnosis: benchmarks.shared.debug_trace not found.")
+        else:
+            print("Could not pivot results: 'case_id' column missing.")
+            print(df.head())
+
     if enable_plots:
         report_pdf = run_dir / "full_benchmark_report.pdf"
 
@@ -338,49 +410,13 @@ def run_benchmarks():
             if group not in seen_groups and group in section_pdfs:
                 ordered_case_pdfs.append(section_pdfs[group])
 
+        if relationship_pdf is not None and relationship_pdf.exists():
+            ordered_case_pdfs.append(relationship_pdf)
+            print(f"Appending relationship plots to full report: {relationship_pdf}")
         if calibration_pdf is not None and calibration_pdf.exists():
             ordered_case_pdfs.append(calibration_pdf)
             print(f"Appending calibration plots to full report: {calibration_pdf}")
         merge_existing_pdfs(ordered_case_pdfs, report_pdf, verbose=True)
-
-    if all_results.empty:
-        print("No results collected.")
-        return
-
-    df = all_results[all_results["method"].isin(methods_to_test)].copy()
-
-    summary = df.groupby(["method"])["ari"].mean()
-    print("\nMean ARI by Method:")
-    print(summary)
-
-    if "test_case" in df.columns:
-        pivot = df.pivot(index="test_case", columns="method", values="ari")
-        if "kl" in pivot.columns and "kl_rogerstanimoto" in pivot.columns:
-            pivot["diff"] = pivot["kl"] - pivot["kl_rogerstanimoto"]
-
-            diff_cases = pivot[pivot["diff"].abs() > 1e-6]
-            if len(diff_cases) > 0:
-                print(f"\nFound {len(diff_cases)} cases with different ARI scores:")
-                print(diff_cases[["kl", "kl_rogerstanimoto", "diff"]])
-            else:
-                print(
-                    "\nNo significant differences found between 'kl' (hamming) and 'kl_rogerstanimoto'."
-                )
-
-        print(f"\nDetailed results are saved to {output_path}")
-
-        # Run failure diagnosis when available.
-        if diagnose_benchmark_failures is not None:
-            print("\nRunning failure diagnosis...")
-            actual_audit_dir = run_dir / "audit"
-            diagnose_benchmark_failures(
-                str(output_path), str(actual_audit_dir), str(run_dir / "failure_report.md")
-            )
-        else:
-            print("\nSkipping failure diagnosis: benchmarks.shared.debug_trace not found.")
-    else:
-        print("Could not pivot results: 'case_id' column missing.")
-        print(df.head())
 
 
 if __name__ == "__main__":

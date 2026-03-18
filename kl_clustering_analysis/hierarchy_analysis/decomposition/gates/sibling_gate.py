@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from kl_clustering_analysis import config
 
+from ...statistics.projection.chi2_pvalue import WhiteningMode
 from ..core.contracts import GateAnnotationBundle
 from .column_contracts import validate_legacy_edge_columns, validate_legacy_sibling_columns
 
@@ -18,8 +20,9 @@ def annotate_sibling_gate(
     sibling_method: str = config.SIBLING_TEST_METHOD,
     minimum_projection_dimension: int | None = None,
     spectral_dims: dict[str, int] | None = None,
-    pca_projections: dict[str, object] | None = None,
-    pca_eigenvalues: dict[str, object] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: dict[str, np.ndarray] | None = None,
+    whitening: WhiteningMode = "per_component",
 ) -> GateAnnotationBundle:
     """Run Gate 3 (sibling divergence) and return typed legacy-compatible output."""
     from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
@@ -40,6 +43,7 @@ def annotate_sibling_gate(
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
+        whitening=whitening,
     )
     edge_columns = validate_legacy_edge_columns(
         annotated_df,

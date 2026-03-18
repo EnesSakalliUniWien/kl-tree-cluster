@@ -92,6 +92,7 @@ _register(
     "overlapping_binary_highd",
     "overlapping_binary_unbalanced",
     "overlapping_gaussian",
+    "overlapping_gaussian_quantile",
 )
 _register("real_data", "real_data")
 

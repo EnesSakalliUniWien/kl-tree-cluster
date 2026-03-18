@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import sys
 import warnings
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,99 @@ os.environ.setdefault("KL_TE_N_JOBS", "1")
 from benchmarks.shared.cases import get_default_test_cases  # noqa: E402
 from benchmarks.shared.generators import generate_case_data  # noqa: E402
 from kl_clustering_analysis import config  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (  # noqa: E402
+    marchenko_pastur as mp_module,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree  # noqa: E402
+
+_MISSING = object()
+
+
+@contextmanager
+def temporary_attr(obj: Any, attr: str, value: Any):
+    """Temporarily set ``obj.attr`` and restore the previous value on exit."""
+    had_attr = hasattr(obj, attr)
+    old_value = getattr(obj, attr) if had_attr else _MISSING
+    setattr(obj, attr, value)
+    try:
+        yield
+    finally:
+        if old_value is _MISSING:
+            delattr(obj, attr)
+        else:
+            setattr(obj, attr, old_value)
+
+
+@contextmanager
+def temporary_attrs(*patches: tuple[Any, str, Any]):
+    """Apply multiple temporary attribute overrides at once."""
+    with ExitStack() as stack:
+        for obj, attr, value in patches:
+            stack.enter_context(temporary_attr(obj, attr, value))
+        yield
+
+
+@contextmanager
+def temporary_config(**overrides: Any):
+    """Temporarily override ``kl_clustering_analysis.config`` values."""
+    patches = tuple((config, name, value) for name, value in overrides.items())
+    with temporary_attrs(*patches):
+        yield
+
+
+@contextmanager
+def temporary_dict_values(mapping: dict[str, Any], **updates: Any):
+    """Temporarily set dictionary entries and restore prior values on exit."""
+    previous = {key: mapping.get(key, _MISSING) for key in updates}
+    mapping.update(updates)
+    try:
+        yield
+    finally:
+        for key, old_value in previous.items():
+            if old_value is _MISSING:
+                mapping.pop(key, None)
+            else:
+                mapping[key] = old_value
+
+
+@contextmanager
+def temporary_experiment_overrides(
+    *,
+    leaf_data_cache: dict[str, Any] | None = None,
+    leaf_data: pd.DataFrame | None = None,
+    sibling_dims: Any = _MISSING,
+    sibling_pca: Any = _MISSING,
+    gate2_estimator: Any = _MISSING,
+    config_overrides: dict[str, Any] | None = None,
+):
+    """Temporarily apply the common enhancement-lab runtime overrides."""
+    with ExitStack() as stack:
+        if leaf_data_cache is not None and leaf_data is not None:
+            stack.enter_context(temporary_dict_values(leaf_data_cache, leaf_data=leaf_data))
+        if sibling_dims is not _MISSING:
+            stack.enter_context(
+                temporary_attr(orchestrator, "_derive_sibling_spectral_dims", sibling_dims)
+            )
+        if sibling_pca is not _MISSING:
+            stack.enter_context(
+                temporary_attr(
+                    orchestrator,
+                    "_derive_sibling_pca_projections",
+                    sibling_pca,
+                )
+            )
+        if gate2_estimator is not _MISSING:
+            stack.enter_context(
+                temporary_attr(
+                    mp_module,
+                    "estimate_k_marchenko_pastur",
+                    gate2_estimator,
+                )
+            )
+        if config_overrides:
+            stack.enter_context(temporary_config(**config_overrides))
+        yield
 
 
 # --- Auto-generated from full_benchmark_comparison.csv ---

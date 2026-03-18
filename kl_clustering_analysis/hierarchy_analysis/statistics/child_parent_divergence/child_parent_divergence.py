@@ -53,6 +53,8 @@ def annotate_child_parent_divergence(
     )
 
     annotations_df.attrs["_spectral_dims"] = node_spectral_dimensions
+    annotations_df.attrs["_pca_projections"] = node_pca_projections
+    annotations_df.attrs["_pca_eigenvalues"] = node_pca_eigenvalues
 
     (
         edge_test_statistics,

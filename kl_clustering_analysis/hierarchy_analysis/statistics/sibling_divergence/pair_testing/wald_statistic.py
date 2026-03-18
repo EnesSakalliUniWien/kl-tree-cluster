@@ -24,6 +24,7 @@ from ....decomposition.backends.random_projection_backend import (
     derive_projection_seed_backend as derive_projection_seed,
 )
 from ...projection.projected_wald import run_projected_wald_kernel
+from ...projection.chi2_pvalue import WhiteningMode
 from ...branch_length_utils import sanitize_positive_branch_length
 from ...categorical_mahalanobis import categorical_whitened_vector
 from .pooled_variance import _is_categorical, standardize_proportion_difference
@@ -45,6 +46,7 @@ def sibling_divergence_test(
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
     minimum_projection_dimension: int | None = None,
+    whitening: WhiteningMode = "per_component",
 ) -> Tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence.
 
@@ -135,6 +137,7 @@ def sibling_divergence_test(
         k_fallback=lambda dim: compute_projection_dimension(
             total_sample_size, dim, minimum_projection_dimension=minimum_projection_dimension
         ),
+        whitening=whitening,
     )
 
     return test_statistic, effective_df, p_value

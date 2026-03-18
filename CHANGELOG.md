@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased] - 2026-03-17
+
+### Investigated
+- **Gate 3 projection dimension regression** (exp15–exp19): Systematic investigation of the power regression caused by forwarding Marchenko-Pastur spectral dimensions from Gate 2 to Gate 3 via `_derive_sibling_spectral_dims()`. The min-child strategy `k = min(k_L, k_R)` yields k ≈ 0–2 on small within-child data, collapsing χ²(k) power. Mean ARI drops from 0.979 (JL baseline) to 0.815 (min-child spectral) across 15 sentinel cases. Optimal strategy identified: `jl_floor_qrt` = `max(min(k_L, k_R), ⌈8·ln(n)/ε²⌉/4)` achieves ARI 0.991. Full analysis: 30+ strategies tested across 5 experiments, 16 spectral equations benchmarked. See `debug_scripts/enhancement_lab/SPECTRAL_DIM_REPORT.md`.
+
+### Added
+- **Enhancement lab experiments 15–19** (`debug_scripts/enhancement_lab/`):
+  - `exp15_spectral_dim_regression.py`: Per-node regression diagnosis
+  - `exp16_spectral_dim_strategies.py`: 8-strategy comparison
+  - `exp17_literature_strategies.py`: 12 literature-inspired strategies
+  - `exp18_eigenvector_relationships.py`: Eigenvector/eigenvalue parent-child mapping
+  - `exp19_spectral_equations.py`: 16 spectral equations, 3-phase laboratory
+- **Spectral dimension report** (`SPECTRAL_DIM_REPORT.md`): Comprehensive documentation of the Gate 3 projection dimension investigation, findings, and recommendations.
+
 ## [Unreleased] - 2026-02-17
 
 ### Added

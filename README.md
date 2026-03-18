@@ -28,11 +28,11 @@ hierarchy should stop splitting and which sibling branches stay merged.
 
 ### Implementation Map
 
-- Tree construction, distribution propagation, and KL metrics: `hierarchy_analysis/divergence_metrics.py`.
-- Local KL chi-square helpers and statistical utilities: `hierarchy_analysis/statistics/kl_tests/utils.py`.
-- Sibling independence via conditional mutual information: `hierarchy_analysis/statistics/conditional_sibling_independence.py`.
-- Decomposition logic that applies the statistical gates: `hierarchy_analysis/tree_decomposition.py`.
-- Current method wiring + modularization target map: `docs/decomposition_method_maps.md`.
+- Core tree structure, node distributions, and I/O: `kl_clustering_analysis/tree/`.
+- Decomposition entrypoint and traversal: `kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py`.
+- Gate orchestration and split/merge evaluation: `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/`.
+- Statistical tests, projection helpers, and FDR correction: `kl_clustering_analysis/hierarchy_analysis/statistics/`.
+- Benchmark harness and report generation: `benchmarks/`.
 
 ### Pipeline Workflow
 
@@ -116,6 +116,16 @@ converts it into a chi-square p-value, and applies Benjamini–Hochberg correcti
 
 See [worked_example.md](worked_example.md) for a detailed step-by-step numerical example of the KL-divergence hierarchical clustering process.
 
+### Documentation
+
+The repository keeps the durable entrypoint docs in a small set of files:
+
+- `README.md` for installation and the end-to-end workflow.
+- `worked_example.md` for a numeric walk-through.
+- `tests/README.md` and `benchmarks/README.md` for the validation and benchmark harnesses.
+- Package READMEs under `kl_clustering_analysis/` for module-level maps.
+- `manuscript/README.md` for the paper workspace and build tooling.
+
 ## Highlights
 
 - Build a hierarchy from binary data using SciPy linkage and NetworkX-backed `PosetTree` (a directed tree structure that
@@ -187,7 +197,7 @@ performed without cleanup.
 ## Validation & Testing
 
 - Run the automated tests with `pytest`.
-- Inspect `tests/test_cluster_validation.py` for examples of how to assert cluster quality in custom scenarios.
+- Use `tests/README.md` for the current suite layout and staged execution order.
 - Consider recording ARI or other metrics alongside your experiments to compare runs.
 
 ## Benchmark Methods (Optional)

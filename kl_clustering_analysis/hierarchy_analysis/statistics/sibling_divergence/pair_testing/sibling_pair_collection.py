@@ -1,4 +1,4 @@
-"""Tree traversal and sibling pair collection for divergence testing.
+"""Tree traversal and pair collection for divergence testing.
 
 Provides the shared infrastructure for walking a hierarchical tree,
 identifying eligible sibling pairs, running the Wald kernel on each,
@@ -144,6 +144,7 @@ def collect_sibling_pair_records(
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    whitening: WhiteningMode = "per_component",
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
     """Collect raw sibling-test records for ALL binary-child parent nodes.
 
@@ -218,6 +219,7 @@ def collect_sibling_pair_records(
             pca_projection=pca_projection,
             pca_eigenvalues=node_pca_eigenvalues,
             minimum_projection_dimension=minimum_projection_dimension,
+            whitening=whitening,
         )
 
         is_null_like = not either_child_significant(left, right, edge_significance_by_node)

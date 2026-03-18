@@ -100,6 +100,7 @@ def test_sibling_run_tests_passes_unique_test_ids(monkeypatch) -> None:
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
         minimum_projection_dimension: int | None = None,
+        whitening: str = "per_component",
     ) -> tuple[float, float, float]:
         captured_ids.append(test_id)
         return 0.0, 1.0, 1.0

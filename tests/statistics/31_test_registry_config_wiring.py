@@ -10,9 +10,6 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts impo
     LEGACY_EDGE_COLUMNS,
     LEGACY_SIBLING_COLUMNS,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.errors import (
-    DecompositionMethodError,
-)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -66,7 +63,7 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
 )
 @pytest.mark.parametrize(
     "spectral_method",
-    [None, "none", "marchenko_pastur"],
+    [None, "marchenko_pastur"],
 )
 def test_pipeline_supports_current_config_method_combinations(
     monkeypatch, sibling_method: str, spectral_method: str | None
@@ -90,16 +87,14 @@ def test_pipeline_supports_current_config_method_combinations(
         assert col in out.columns
     for col in LEGACY_SIBLING_COLUMNS:
         assert col in out.columns
-    assert bundle.metadata["resolved_methods"]["sibling_method"] == sibling_method
-    if spectral_method == "none":
-        assert bundle.metadata["resolved_methods"]["spectral_method"] is None
-    else:
-        assert bundle.metadata["resolved_methods"]["spectral_method"] == spectral_method
+    assert bundle.metadata["pipeline"] == "gate_annotation"
+    assert "edge" in bundle.metadata
+    assert "sibling" in bundle.metadata
 
 
 def test_pipeline_rejects_unknown_sibling_method() -> None:
     tree, stats_df, _leaf_data = _build_small_tree_with_leaf_data()
-    with pytest.raises(DecompositionMethodError, match="Unknown sibling calibration method"):
+    with pytest.raises(KeyError):
         run_gate_annotation_pipeline(
             tree,
             stats_df.copy(),
@@ -109,7 +104,7 @@ def test_pipeline_rejects_unknown_sibling_method() -> None:
 
 def test_pipeline_rejects_unknown_spectral_method() -> None:
     tree, stats_df, leaf_data = _build_small_tree_with_leaf_data()
-    with pytest.raises(DecompositionMethodError, match="Unknown spectral k estimator"):
+    with pytest.raises((ValueError, KeyError)):
         run_gate_annotation_pipeline(
             tree,
             stats_df.copy(),

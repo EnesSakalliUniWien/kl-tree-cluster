@@ -93,6 +93,8 @@ def _run_tests(
     minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    whitening: str = "per_component",
 ) -> List[Tuple[float, float, float]]:
     """Execute sibling divergence tests for all collected pairs."""
     if len(parents) != len(sibling_test_arguments):
@@ -119,7 +121,9 @@ def _run_tests(
                 test_id=f"sibling:{parent}",
                 spectral_k=spectral_dims.get(parent) if spectral_dims is not None else None,
                 pca_projection=pca_projections.get(parent) if pca_projections is not None else None,
+                pca_eigenvalues=pca_eigenvalues.get(parent) if pca_eigenvalues is not None else None,
                 minimum_projection_dimension=minimum_projection_dimension,
+                whitening=whitening,
             )
         )
 
@@ -162,6 +166,7 @@ def annotate_sibling_divergence(
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    whitening: str = "per_component",
 ) -> pd.DataFrame:
     """Test sibling divergence and annotate results in dataframe.
 
@@ -182,8 +187,6 @@ def annotate_sibling_divergence(
         Sibling_BH_Different, Sibling_BH_Same columns.
     """
     annotations_df = init_sibling_annotation_df(annotations_df)
-
-    _ = pca_eigenvalues  # not used by standard Wald; accepted for uniform dispatcher interface
 
     parents, sibling_test_arguments, skipped, non_binary = _collect_test_arguments(
         tree,
@@ -208,6 +211,8 @@ def annotate_sibling_divergence(
         minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
+        pca_eigenvalues=pca_eigenvalues,
+        whitening=whitening,
     )
 
     annotations_df = _apply_results(annotations_df, parents, results, significance_level_alpha)

@@ -7,6 +7,7 @@ from typing import Callable
 import numpy as np
 
 from .chi2_pvalue import (
+    WhiteningMode,
     compute_projected_pvalue as _compute_projected_pvalue,
 )
 from .projection_basis import build_projection_basis_with_padding
@@ -17,12 +18,14 @@ def compute_projected_pvalue(
     degrees_of_freedom: int,
     *,
     eigenvalues: np.ndarray | None = None,
+    whitening: WhiteningMode = "per_component",
 ) -> tuple[float, float, float]:
     """Compute projected test statistic and p-value."""
     return _compute_projected_pvalue(
         np.asarray(projected_vector, dtype=np.float64),
         int(degrees_of_freedom),
         eigenvalues=eigenvalues,
+        whitening=whitening,
     )
 
 
@@ -34,6 +37,7 @@ def run_projected_wald_kernel(
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
     k_fallback: Callable[[int], int],
+    whitening: WhiteningMode = "per_component",
 ) -> tuple[float, int, float, float]:
     """Project a standardized vector and compute Wald statistic/p-value.
 
@@ -64,6 +68,7 @@ def run_projected_wald_kernel(
         projected_diff,
         projection_dim,
         eigenvalues=whitening_eigenvalues,
+        whitening=whitening,
     )
     return float(test_statistic), int(projection_dim), float(effective_df), float(p_value)
 

@@ -52,6 +52,8 @@ def _collect_all_pairs(
     minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    whitening: str = "per_component",
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
     """Collect ALL binary-child parent nodes and compute raw Wald stats.
 
@@ -67,6 +69,8 @@ def _collect_all_pairs(
         minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
+        pca_eigenvalues=pca_eigenvalues,
+        whitening=whitening,
     )
 
 
@@ -131,6 +135,7 @@ def annotate_sibling_divergence_adjusted(
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    whitening: str = "per_component",
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-adjusted Wald.
 
@@ -158,8 +163,6 @@ def annotate_sibling_divergence_adjusted(
     """
     annotations_df = init_sibling_annotation_df(annotations_df)
 
-    _ = pca_eigenvalues  # not used by adjusted Wald; accepted for uniform dispatcher interface
-
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute raw Wald stats for ALL pairs (needed for calibration)
@@ -170,6 +173,8 @@ def annotate_sibling_divergence_adjusted(
         minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
+        pca_eigenvalues=pca_eigenvalues,
+        whitening=whitening,
     )
 
     # Mark non-binary/leaf nodes as skipped (never testable)
