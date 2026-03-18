@@ -48,13 +48,11 @@ def _run_edge_projection_with_capture(
         parent_dist: np.ndarray,
         n_child: int,
         n_parent: int,
-        seed: int,
         branch_length: float | None = None,
         mean_branch_length: float | None = None,
         spectral_k: int | None = None,
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
-        minimum_projection_dimension: int | None = None,
     ) -> tuple[float, float, float, bool]:
         captured.append((branch_length, mean_branch_length))
         return 0.0, 1.0, 1.0, False

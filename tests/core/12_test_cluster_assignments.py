@@ -44,13 +44,13 @@ def analyze_cluster_assignments_label_invariant():
 
     # 1) Data + tree + stats
     X, y_true = create_test_case_data(
-        n_samples=30, n_features=30, n_clusters=3, noise_level=1.0, seed=42
+        n_samples=90, n_features=60, n_clusters=3, noise_level=1.0, seed=42
     )
     tree, _ = build_hierarchical_tree(X)
     annotations_df = run_statistical_analysis(tree, X)
 
     # 2) Decomposition
-    result = tree.decompose(annotations_df=annotations_df)
+    result = tree.decompose(annotations_df=annotations_df, leaf_data=X)
     assert isinstance(tree, PosetTree)
     report = tree.build_sample_cluster_assignments(result)
 
@@ -151,8 +151,8 @@ def test_cluster_assignment_label_invariant():
     assignments = results["sample_assignments"]
 
     # Summary checks
-    assert summary["n_samples"] == 30
-    assert summary["n_features"] == 30
+    assert summary["n_samples"] == 90
+    assert summary["n_features"] == 60
     assert summary["n_clusters_true"] == 3
     assert summary["n_clusters_kl"] >= summary["n_clusters_true"]
     assert summary["n_clusters_kl"] <= summary["n_clusters_true"] + 1
@@ -168,7 +168,7 @@ def test_cluster_assignment_label_invariant():
     )
 
     # Sample assignments checks
-    assert len(assignments) == 30  # Should have one assignment per sample
+    assert len(assignments) == 90  # Should have one assignment per sample
     for assignment in assignments:
         assert "sample_id" in assignment
         assert "true_cluster" in assignment
@@ -206,7 +206,7 @@ def test_cluster_assignment_label_invariant():
             f"Cluster {cluster_key} purity too low: {cluster_purity}"
         )
 
-    assert total_samples_in_composition == 30  # All samples accounted for
+    assert total_samples_in_composition == 90  # All samples accounted for
 
 
 def test_cluster_assignment_consistency():

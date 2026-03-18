@@ -64,7 +64,7 @@ def test_complex_random_feature_matrix_balanced_clusters():
 def test_complex_random_feature_matrix_unbalanced_clusters():
     """Moderately higher entropy and unbalanced clusters should stay informative."""
     data_dict, true_clusters = generate_random_feature_matrix(
-        n_rows=96,
+        n_rows=150,
         n_cols=36,
         entropy_param=0.25,
         n_clusters=4,

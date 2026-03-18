@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
     LEGACY_EDGE_COLUMNS,
     LEGACY_SIBLING_COLUMNS,
@@ -66,10 +65,9 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
     [None, "marchenko_pastur"],
 )
 def test_pipeline_supports_current_config_method_combinations(
-    monkeypatch, sibling_method: str, spectral_method: str | None
+    sibling_method: str, spectral_method: str | None
 ) -> None:
     tree, stats_df, leaf_data = _build_small_tree_with_leaf_data()
-    monkeypatch.setattr(config, "PROJECTION_RANDOM_SEED", 123)
 
     needs_leaf_data = spectral_method not in (None, "none")
     bundle = run_gate_annotation_pipeline(
@@ -79,7 +77,6 @@ def test_pipeline_supports_current_config_method_combinations(
         sibling_alpha=0.01,
         leaf_data=leaf_data if needs_leaf_data else None,
         spectral_method=spectral_method,
-        minimum_projection_dimension=4,
         sibling_method=sibling_method,
     )
     out = bundle.annotated_df

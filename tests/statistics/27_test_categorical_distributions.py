@@ -8,17 +8,16 @@ Verifies that the statistical pipeline correctly handles both:
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
+    sibling_divergence_test,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
+    _flatten_categorical,
+    _is_categorical,
     compute_pooled_proportion,
     compute_pooled_variance,
     standardize_proportion_difference,
-    _is_categorical,
-    _flatten_categorical,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
-    sibling_divergence_test,
 )
 
 
@@ -79,7 +78,7 @@ class TestPooledVarianceBinary:
 
         variance = compute_pooled_variance(theta_1, theta_2, n_1, n_2)
         pooled = compute_pooled_proportion(theta_1, theta_2, n_1, n_2)
-        expected = pooled * (1 - pooled) * (1/n_1 + 1/n_2)
+        expected = pooled * (1 - pooled) * (1 / n_1 + 1 / n_2)
         np.testing.assert_array_almost_equal(variance, expected)
 
     def test_standardize_binary_returns_1d(self):
@@ -100,16 +99,20 @@ class TestPooledVarianceCategorical:
     def test_pooled_proportion_categorical(self):
         """Pooled proportion for categorical distributions."""
         # 3 features, 4 categories each
-        theta_1 = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.25, 0.25, 0.25, 0.25],
-            [0.4, 0.3, 0.2, 0.1],
-        ])
-        theta_2 = np.array([
-            [0.2, 0.3, 0.3, 0.2],
-            [0.1, 0.4, 0.4, 0.1],
-            [0.3, 0.3, 0.2, 0.2],
-        ])
+        theta_1 = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.25, 0.25, 0.25, 0.25],
+                [0.4, 0.3, 0.2, 0.1],
+            ]
+        )
+        theta_2 = np.array(
+            [
+                [0.2, 0.3, 0.3, 0.2],
+                [0.1, 0.4, 0.4, 0.1],
+                [0.3, 0.3, 0.2, 0.2],
+            ]
+        )
         n_1, n_2 = 50.0, 150.0
 
         pooled = compute_pooled_proportion(theta_1, theta_2, n_1, n_2)
@@ -119,14 +122,18 @@ class TestPooledVarianceCategorical:
 
     def test_pooled_variance_categorical(self):
         """Pooled variance for categorical distributions."""
-        theta_1 = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.25, 0.25, 0.25, 0.25],
-        ])
-        theta_2 = np.array([
-            [0.2, 0.3, 0.3, 0.2],
-            [0.1, 0.4, 0.4, 0.1],
-        ])
+        theta_1 = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.25, 0.25, 0.25, 0.25],
+            ]
+        )
+        theta_2 = np.array(
+            [
+                [0.2, 0.3, 0.3, 0.2],
+                [0.1, 0.4, 0.4, 0.1],
+            ]
+        )
         n_1, n_2 = 100.0, 100.0
 
         variance = compute_pooled_variance(theta_1, theta_2, n_1, n_2)
@@ -136,14 +143,18 @@ class TestPooledVarianceCategorical:
 
     def test_standardize_categorical_flattens(self):
         """Standardized difference for categorical should flatten to 1D."""
-        theta_1 = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.25, 0.25, 0.25, 0.25],
-        ])
-        theta_2 = np.array([
-            [0.2, 0.3, 0.3, 0.2],
-            [0.1, 0.4, 0.4, 0.1],
-        ])
+        theta_1 = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.25, 0.25, 0.25, 0.25],
+            ]
+        )
+        theta_2 = np.array(
+            [
+                [0.2, 0.3, 0.3, 0.2],
+                [0.1, 0.4, 0.4, 0.1],
+            ]
+        )
         n_1, n_2 = 100.0, 100.0
 
         z_scores, variance = standardize_proportion_difference(theta_1, theta_2, n_1, n_2)
@@ -158,15 +169,31 @@ class TestSiblingDivergenceTestBinary:
     def test_sibling_test_binary_identical(self):
         """Identical binary distributions should have high p-value."""
         theta = np.array([0.3, 0.5, 0.7])
-        stat, df, p_value = sibling_divergence_test(theta, theta, 100.0, 100.0)
+        d = theta.shape[0]
+        stat, df, p_value = sibling_divergence_test(
+            theta,
+            theta,
+            100.0,
+            100.0,
+            spectral_k=d,
+            pca_projection=np.eye(d),
+            pca_eigenvalues=np.ones(d),
+        )
         assert p_value > 0.05
 
     def test_sibling_test_binary_different(self):
         """Very different binary distributions should have low p-value."""
         theta_left = np.array([0.1, 0.1, 0.1, 0.1, 0.1])
         theta_right = np.array([0.9, 0.9, 0.9, 0.9, 0.9])
+        d = theta_left.shape[0]
         stat, df, p_value = sibling_divergence_test(
-            theta_left, theta_right, 500.0, 500.0
+            theta_left,
+            theta_right,
+            500.0,
+            500.0,
+            spectral_k=d,
+            pca_projection=np.eye(d),
+            pca_eigenvalues=np.ones(d),
         )
         assert p_value < 0.05
 
@@ -176,43 +203,78 @@ class TestSiblingDivergenceTestCategorical:
 
     def test_sibling_test_categorical_identical(self):
         """Identical categorical distributions should have high p-value."""
-        theta = np.array([
-            [0.1, 0.2, 0.3, 0.4],
-            [0.25, 0.25, 0.25, 0.25],
-            [0.4, 0.3, 0.2, 0.1],
-        ])
-        stat, df, p_value = sibling_divergence_test(theta, theta, 100.0, 100.0)
+        theta = np.array(
+            [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.25, 0.25, 0.25, 0.25],
+                [0.4, 0.3, 0.2, 0.1],
+            ]
+        )
+        # categorical whitening: d*(K-1) = 3*3 = 9 z-score dimensions
+        z_dim = theta.shape[0] * (theta.shape[1] - 1)
+        stat, df, p_value = sibling_divergence_test(
+            theta,
+            theta,
+            100.0,
+            100.0,
+            spectral_k=z_dim,
+            pca_projection=np.eye(z_dim),
+            pca_eigenvalues=np.ones(z_dim),
+        )
         assert p_value > 0.05
 
     def test_sibling_test_categorical_different(self):
         """Very different categorical distributions should have low p-value."""
-        theta_left = np.array([
-            [0.9, 0.05, 0.025, 0.025],
-            [0.9, 0.05, 0.025, 0.025],
-            [0.9, 0.05, 0.025, 0.025],
-        ])
-        theta_right = np.array([
-            [0.025, 0.025, 0.05, 0.9],
-            [0.025, 0.025, 0.05, 0.9],
-            [0.025, 0.025, 0.05, 0.9],
-        ])
+        theta_left = np.array(
+            [
+                [0.9, 0.05, 0.025, 0.025],
+                [0.9, 0.05, 0.025, 0.025],
+                [0.9, 0.05, 0.025, 0.025],
+            ]
+        )
+        theta_right = np.array(
+            [
+                [0.025, 0.025, 0.05, 0.9],
+                [0.025, 0.025, 0.05, 0.9],
+                [0.025, 0.025, 0.05, 0.9],
+            ]
+        )
+        z_dim = theta_left.shape[0] * (theta_left.shape[1] - 1)
         stat, df, p_value = sibling_divergence_test(
-            theta_left, theta_right, 500.0, 500.0
+            theta_left,
+            theta_right,
+            500.0,
+            500.0,
+            spectral_k=z_dim,
+            pca_projection=np.eye(z_dim),
+            pca_eigenvalues=np.ones(z_dim),
         )
         assert p_value < 0.05
 
     def test_sibling_test_categorical_returns_valid_stats(self):
         """Sibling test should return valid statistics for categorical."""
-        theta_left = np.array([
-            [0.3, 0.3, 0.2, 0.2],
-            [0.1, 0.4, 0.4, 0.1],
-        ])
-        theta_right = np.array([
-            [0.2, 0.2, 0.3, 0.3],
-            [0.4, 0.1, 0.1, 0.4],
-        ])
+        theta_left = np.array(
+            [
+                [0.3, 0.3, 0.2, 0.2],
+                [0.1, 0.4, 0.4, 0.1],
+            ]
+        )
+        theta_right = np.array(
+            [
+                [0.2, 0.2, 0.3, 0.3],
+                [0.4, 0.1, 0.1, 0.4],
+            ]
+        )
+        # categorical whitening: d*(K-1) = 2*3 = 6 z-score dimensions
+        z_dim = theta_left.shape[0] * (theta_left.shape[1] - 1)
         stat, df, p_value = sibling_divergence_test(
-            theta_left, theta_right, 100.0, 100.0
+            theta_left,
+            theta_right,
+            100.0,
+            100.0,
+            spectral_k=z_dim,
+            pca_projection=np.eye(z_dim),
+            pca_eigenvalues=np.ones(z_dim),
         )
         assert stat >= 0
         assert df > 0

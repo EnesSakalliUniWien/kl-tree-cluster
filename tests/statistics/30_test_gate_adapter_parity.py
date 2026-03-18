@@ -56,14 +56,12 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
     tree, base_df = _build_small_binary_tree()
 
     monkeypatch.setattr(config, "SIBLING_TEST_METHOD", sibling_method)
-    monkeypatch.setattr(config, "PROJECTION_RANDOM_SEED", 123)
 
     edge_bundle = annotate_edge_gate(
         tree,
         base_df.copy(),
         significance_level_alpha=0.01,
         spectral_method=None,
-        minimum_projection_dimension=4,
         fdr_method="tree_bh",
     )
     sequential_bundle = annotate_sibling_gate(
@@ -71,7 +69,6 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
         edge_bundle.annotated_df,
         significance_level_alpha=0.01,
         sibling_method=sibling_method,
-        minimum_projection_dimension=4,
     )
 
     bundle = run_gate_annotation_pipeline(
@@ -80,7 +77,6 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
         alpha_local=0.01,
         sibling_alpha=0.01,
         spectral_method=None,
-        minimum_projection_dimension=4,
         sibling_method=sibling_method,
     )
 

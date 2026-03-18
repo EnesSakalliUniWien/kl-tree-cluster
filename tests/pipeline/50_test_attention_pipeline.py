@@ -44,7 +44,7 @@ def analyze_pipeline_performance():
 
     # 1) Data + tree
     X, y_true = create_test_case_data(
-        n_samples=30, n_features=30, n_clusters=3, noise_level=1.0, seed=42
+        n_samples=90, n_features=60, n_clusters=3, noise_level=1.0, seed=42
     )
     tree, _ = build_hierarchical_tree(X)
 
@@ -52,7 +52,7 @@ def analyze_pipeline_performance():
     annotations_df = run_statistical_analysis(tree, X)
 
     # 3) Decomposition
-    result = tree.decompose(annotations_df=annotations_df)
+    result = tree.decompose(annotations_df=annotations_df, leaf_data=X)
     assert isinstance(tree, PosetTree)
     report = tree.build_sample_cluster_assignments(result)
 
