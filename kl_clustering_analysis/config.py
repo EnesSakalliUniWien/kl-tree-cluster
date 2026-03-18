@@ -17,10 +17,6 @@ SIBLING_ALPHA: float = 0.01
 EDGE_ALPHA: float = 0.001
 
 
-# Epsilon value for numerical stability in KL-divergence and probability calculations.
-EPSILON: float = 1e-9
-
-
 # --- Legacy Branch-Length Variance Scaling ---
 
 # Scale Wald test variance by normalized branch length.
@@ -52,43 +48,16 @@ TREE_DISTANCE_METRIC: str = "hamming"
 # Average (UPGMA) produces more balanced trees than complete linkage
 TREE_LINKAGE_METHOD: str = "average"
 
-# --- Random Projection Parameters ---
-
-# Random projection is integral to the Wald chi-square test and always applied.
-# The projection dimension k is computed adaptively via the JL lemma:
-# k = compute_projection_dimension(n_samples, n_features).
-# When n_features <= k, no effective dimensionality reduction occurs.
-
-# Distortion tolerance for Johnson-Lindenstrauss projection.
-# Controls the trade-off between dimension reduction and distance preservation:
-#   eps=0.1 -> ±10% distortion, many dimensions (conservative)
-#   eps=0.3 -> ±30% distortion, moderate dimensions (good for hypothesis testing)
-#   eps=0.5 -> ±50% distortion, few dimensions (aggressive)
-# Uses sklearn's johnson_lindenstrauss_min_dim for theoretically-grounded dimension.
-PROJECTION_EPS: float = 0.3
-
-# Minimum projected dimension.
-# Set to an integer for a fixed floor, or "auto" to estimate from the data's
-# effective rank (Shannon entropy of eigenvalue spectrum).  When "auto", the
-# floor is computed once per pipeline run as:
-#   minimum_projection_dimension = max(2, min(ceil(effective_rank(full_data)), 20))
-# This prevents adding pure-noise χ² components when the data has low
-# intrinsic dimensionality, and avoids under-projecting high-rank data.
-PROJECTION_MINIMUM_DIMENSION: int | str = "auto"
-
-# Random seed for projection reproducibility (None for random)
-PROJECTION_RANDOM_SEED: int | None = 42
-
 # --- Spectral Dimension Estimation ---
 
-# Per-node projection dimension method.  When set, replaces JL-based dimension
-# selection with eigendecomposition of the local correlation matrix at each node.
+# Per-node projection dimension method.  Uses eigendecomposition of the local
+# correlation matrix at each node to determine signal rank.
 # Options:
-#   None                  - Legacy JL-based dimension
 #   "marchenko_pastur"    - Count eigenvalues above MP upper bound (default)
-# Marchenko-Pastur is the default: it uses random matrix theory to separate
-# signal eigenvalues from the noise bulk.  For the correlation matrix σ²=1
-# exactly, so the MP bounds are (1±√(d/n))².
+# Marchenko-Pastur uses random matrix theory to separate signal eigenvalues
+# from the noise bulk.  For the correlation matrix σ²=1 exactly, so the
+# MP bounds are (1±√(d/n))².  When MP yields k=0 (no signal eigenvalues),
+# the test is skipped and the node is treated as a merge.
 SPECTRAL_METHOD: str | None = "marchenko_pastur"
 
 # Minimum projection dimension for the SPECTRAL (Gate 2) path only.

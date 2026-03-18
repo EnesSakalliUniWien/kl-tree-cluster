@@ -49,10 +49,10 @@ def _collect_all_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
-    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
     whitening: str = "per_component",
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
     """Collect ALL binary-child parent nodes and compute raw Wald stats.
@@ -66,10 +66,10 @@ def _collect_all_pairs(
         tree,
         annotations_df,
         mean_branch_length,
-        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
+        child_pca_projections=child_pca_projections,
         whitening=whitening,
     )
 
@@ -131,10 +131,10 @@ def annotate_sibling_divergence_adjusted(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
     whitening: str = "per_component",
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-adjusted Wald.
@@ -170,10 +170,10 @@ def annotate_sibling_divergence_adjusted(
         tree,
         annotations_df,
         mean_branch_length,
-        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
+        child_pca_projections=child_pca_projections,
         whitening=whitening,
     )
 

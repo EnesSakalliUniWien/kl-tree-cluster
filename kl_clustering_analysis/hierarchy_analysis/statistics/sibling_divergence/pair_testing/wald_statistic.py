@@ -15,14 +15,6 @@ from typing import Tuple
 
 import numpy as np
 
-from kl_clustering_analysis import config
-
-from ....decomposition.backends.random_projection_backend import (
-    compute_projection_dimension_backend as compute_projection_dimension,
-)
-from ....decomposition.backends.random_projection_backend import (
-    derive_projection_seed_backend as derive_projection_seed,
-)
 from ...projection.projected_wald import run_projected_wald_kernel
 from ...projection.chi2_pvalue import WhiteningMode
 from ...branch_length_utils import sanitize_positive_branch_length
@@ -41,11 +33,10 @@ def sibling_divergence_test(
     branch_length_right: float | None = None,
     mean_branch_length: float | None = None,
     *,
-    test_id: str | None = None,
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
-    minimum_projection_dimension: int | None = None,
+    child_pca_projections: list[np.ndarray] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> Tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence.
@@ -116,27 +107,12 @@ def sibling_divergence_test(
         return np.nan, np.nan, np.nan
     z_scores = z_scores.astype(np.float64, copy=False)
 
-    # Use n_left + n_right (total observations) for the fallback JL cap.
-    total_sample_size = int(n_left + n_right)
-
-    # Project and compute test statistic
-    if test_id is None:
-        test_id = (
-            f"sibling:shapeL={tuple(np.shape(left_distribution))}:"
-            f"shapeR={tuple(np.shape(right_distribution))}:"
-            f"nL={float(n_left):.6g}:nR={float(n_right):.6g}"
-        )
-    test_seed = derive_projection_seed(config.PROJECTION_RANDOM_SEED, test_id)
-
     test_statistic, _k_nominal, effective_df, p_value = run_projected_wald_kernel(
         z_scores,
-        seed=test_seed,
         spectral_k=spectral_k,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
-        k_fallback=lambda dim: compute_projection_dimension(
-            total_sample_size, dim, minimum_projection_dimension=minimum_projection_dimension
-        ),
+        child_pca_projections=child_pca_projections,
         whitening=whitening,
     )
 

@@ -90,10 +90,10 @@ def _run_tests(
         Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]
     ],
     mean_branch_length: float | None = None,
-    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
     whitening: str = "per_component",
 ) -> List[Tuple[float, float, float]]:
     """Execute sibling divergence tests for all collected pairs."""
@@ -118,11 +118,10 @@ def _run_tests(
                 branch_length_left,
                 branch_length_right,
                 mean_branch_length,
-                test_id=f"sibling:{parent}",
                 spectral_k=spectral_dims.get(parent) if spectral_dims is not None else None,
                 pca_projection=pca_projections.get(parent) if pca_projections is not None else None,
                 pca_eigenvalues=pca_eigenvalues.get(parent) if pca_eigenvalues is not None else None,
-                minimum_projection_dimension=minimum_projection_dimension,
+                child_pca_projections=child_pca_projections.get(parent) if child_pca_projections is not None else None,
                 whitening=whitening,
             )
         )
@@ -162,10 +161,10 @@ def annotate_sibling_divergence(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
     whitening: str = "per_component",
 ) -> pd.DataFrame:
     """Test sibling divergence and annotate results in dataframe.
@@ -208,10 +207,10 @@ def annotate_sibling_divergence(
         parents,
         sibling_test_arguments,
         mean_branch_length=mean_branch_length,
-        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
+        child_pca_projections=child_pca_projections,
         whitening=whitening,
     )
 

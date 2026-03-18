@@ -20,16 +20,17 @@ def run_gate_annotation_pipeline(
     sibling_alpha: float = config.SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
-    minimum_projection_dimension: int | None = None,
     sibling_method: str = config.SIBLING_TEST_METHOD,
     fdr_method: str = "tree_bh",
     sibling_spectral_dims: dict[str, int] | None = None,
     sibling_pca_projections: dict[str, np.ndarray] | None = None,
     sibling_pca_eigenvalues: dict[str, np.ndarray] | None = None,
+    sibling_child_pca_projections: dict[str, list[np.ndarray]] | None = None,
     sibling_whitening: str = config.SIBLING_WHITENING,
 ) -> GateAnnotationBundle:
     """Run Gate 2 (edge) and Gate 3 (sibling) annotation pipeline."""
     from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
+        derive_sibling_child_pca_projections,
         derive_sibling_pca_projections,
         derive_sibling_spectral_dims,
     )
@@ -41,7 +42,6 @@ def run_gate_annotation_pipeline(
         significance_level_alpha=alpha_local,
         leaf_data=leaf_data,
         spectral_method=spectral_method,
-        minimum_projection_dimension=minimum_projection_dimension,
         fdr_method=fdr_method,
     )
 
@@ -54,16 +54,21 @@ def run_gate_annotation_pipeline(
             edge_bundle.annotated_df, sibling_spectral_dims
         )
 
+    if sibling_child_pca_projections is None:
+        sibling_child_pca_projections = derive_sibling_child_pca_projections(
+            tree, edge_bundle.annotated_df, sibling_spectral_dims
+        )
+
     # Run Gate 3: sibling divergence tests
     sibling_bundle = annotate_sibling_gate(
         tree,
         edge_bundle.annotated_df,
         significance_level_alpha=sibling_alpha,
         sibling_method=sibling_method,
-        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=sibling_spectral_dims,
         pca_projections=sibling_pca_projections,
         pca_eigenvalues=sibling_pca_eigenvalues,
+        child_pca_projections=sibling_child_pca_projections,
         whitening=sibling_whitening,
     )
 

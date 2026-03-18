@@ -17,9 +17,6 @@ import pandas as pd
 from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
-from .decomposition.backends.random_projection_backend import (
-    resolve_minimum_projection_dimension_backend,
-)
 from .decomposition.gates.gate_evaluator import GateEvaluator
 from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
 from .decomposition.gates.traversal import iterate_worklist, process_node
@@ -74,8 +71,8 @@ class TreeDecomposition:
             Significance level used by sibling-independence annotations and gating.
         leaf_data
             Raw binary data matrix (samples × features).  Required for per-node
-            spectral dimension estimation.  When ``None``, the legacy JL-based
-            projection dimension is used regardless of *spectral_method*.
+            spectral dimension estimation.  When ``None``, spectral projection
+            is disabled and tests are skipped (treated as merge).
         spectral_method
             Per-node projection dimension estimator.  See ``config.SPECTRAL_METHOD``.
         """
@@ -85,18 +82,6 @@ class TreeDecomposition:
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
         self._spectral_method = spectral_method if leaf_data is not None else None
-
-        # --- Resolve adaptive projection floor ---
-        # When config.PROJECTION_MINIMUM_DIMENSION == "auto", compute the data-driven
-        # minimum from the effective rank of the full dataset.  The resolved
-        # integer is stored and passed through to all annotation / test calls
-        # so that the fixed floor never overrides the data's actual rank.
-        self._resolved_minimum_projection_dimension: int = (
-            resolve_minimum_projection_dimension_backend(
-                config.PROJECTION_MINIMUM_DIMENSION,
-                leaf_data=leaf_data,
-            )
-        )
 
         # ----- root -----
         self._root = next(node_id for node_id, degree in self.tree.in_degree() if degree == 0)
@@ -218,7 +203,6 @@ class TreeDecomposition:
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
             spectral_method=self._spectral_method,
-            minimum_projection_dimension=self._resolved_minimum_projection_dimension,
             sibling_method=config.SIBLING_TEST_METHOD,
             sibling_whitening=config.SIBLING_WHITENING,
             fdr_method="tree_bh",

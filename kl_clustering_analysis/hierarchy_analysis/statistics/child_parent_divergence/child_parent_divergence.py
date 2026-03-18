@@ -28,7 +28,6 @@ def annotate_child_parent_divergence(
     fdr_method: str = "tree_bh",
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
-    minimum_projection_dimension: int | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using the projected Wald pipeline."""
     annotations_df = annotations_df.copy()
@@ -70,7 +69,6 @@ def annotate_child_parent_divergence(
         spectral_dims=node_spectral_dimensions,
         pca_projections=node_pca_projections,
         pca_eigenvalues=node_pca_eigenvalues,
-        minimum_projection_dimension=minimum_projection_dimension,
     )
 
     annotations_df.attrs["_edge_raw_test_data"] = {

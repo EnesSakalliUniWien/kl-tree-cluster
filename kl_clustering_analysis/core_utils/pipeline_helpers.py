@@ -92,6 +92,8 @@ def run_statistical_analysis(tree, X):
         tree,
         annotations_df,
         significance_level_alpha=config.EDGE_ALPHA,
+        leaf_data=X,
+        spectral_method=config.SPECTRAL_METHOD,
     )
     annotations_df = annotate_sibling_divergence(
         tree,

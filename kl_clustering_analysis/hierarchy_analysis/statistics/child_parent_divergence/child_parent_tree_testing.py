@@ -7,9 +7,6 @@ import numpy as np
 
 from kl_clustering_analysis import config
 
-from ...decomposition.backends.random_projection_backend import (
-    derive_projection_seed_backend as derive_projection_seed,
-)
 from ..branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
 from .child_parent_projected_wald import run_child_parent_projected_wald_test
 
@@ -23,7 +20,6 @@ def run_child_parent_tests_across_tree(
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
-    minimum_projection_dimension: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute projected Wald results for all child-parent edges in the tree."""
     n_edge_tests = len(child_ids)
@@ -45,11 +41,6 @@ def run_child_parent_tests_across_tree(
             branch_length = sanitize_positive_branch_length(
                 tree.edges[parent_ids[edge_index], child_ids[edge_index]].get("branch_length")
             )
-
-        test_seed = derive_projection_seed(
-            config.PROJECTION_RANDOM_SEED,
-            f"edge:{parent_ids[edge_index]}->{child_ids[edge_index]}",
-        )
 
         node_spectral_dimension: int | None = None
 
@@ -74,17 +65,11 @@ def run_child_parent_tests_across_tree(
             np.asarray(parent_dist, dtype=np.float64),
             int(child_leaf_counts[edge_index]),
             int(parent_leaf_counts[edge_index]),
-            test_seed,
             branch_length,
             mean_branch_length,
             spectral_k=node_spectral_dimension,
             pca_projection=node_pca_projection,
             pca_eigenvalues=node_pca_eigenvalues,
-            minimum_projection_dimension=(
-                int(minimum_projection_dimension)
-                if minimum_projection_dimension is not None
-                else None
-            ),
         )
 
         test_statistics[edge_index], degrees_of_freedom[edge_index], p_values[edge_index] = (

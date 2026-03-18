@@ -18,10 +18,10 @@ def annotate_sibling_gate(
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
     sibling_method: str = config.SIBLING_TEST_METHOD,
-    minimum_projection_dimension: int | None = None,
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
+    child_pca_projections: dict[str, list[np.ndarray]] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> GateAnnotationBundle:
     """Run Gate 3 (sibling divergence) and return typed legacy-compatible output."""
@@ -39,10 +39,10 @@ def annotate_sibling_gate(
         tree,
         annotations_df,
         significance_level_alpha=significance_level_alpha,
-        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
+        child_pca_projections=child_pca_projections,
         whitening=whitening,
     )
     edge_columns = validate_legacy_edge_columns(
@@ -58,7 +58,6 @@ def annotate_sibling_gate(
             "gate": "sibling",
             "alpha": float(significance_level_alpha),
             "sibling_method": sibling_method,
-            "minimum_projection_dimension": minimum_projection_dimension,
             "uses_spectral_dims": spectral_dims is not None,
             "uses_pca_projections": pca_projections is not None,
             "uses_pca_eigenvalues": pca_eigenvalues is not None,

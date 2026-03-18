@@ -25,6 +25,7 @@ from kl_clustering_analysis.core_utils.data_utils import (
 
 from .types import _R, DeflatableSiblingRecord, SiblingPairRecord
 from .wald_statistic import sibling_divergence_test
+from ...projection.chi2_pvalue import WhiteningMode
 
 # =============================================================================
 # Tree helpers
@@ -140,10 +141,10 @@ def collect_sibling_pair_records(
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
     *,
-    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
     """Collect raw sibling-test records for ALL binary-child parent nodes.
@@ -214,11 +215,10 @@ def collect_sibling_pair_records(
             branch_length_left=branch_length_left,
             branch_length_right=branch_length_right,
             mean_branch_length=mean_branch_length,
-            test_id=f"sibling:{parent}",
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=node_pca_eigenvalues,
-            minimum_projection_dimension=minimum_projection_dimension,
+            child_pca_projections=child_pca_projections.get(parent) if child_pca_projections else None,
             whitening=whitening,
         )
 

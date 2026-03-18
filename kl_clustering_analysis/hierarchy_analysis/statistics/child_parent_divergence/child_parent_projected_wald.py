@@ -6,9 +6,6 @@ import logging
 
 import numpy as np
 
-from ...decomposition.backends.random_projection_backend import (
-    compute_projection_dimension_backend as compute_projection_dimension,
-)
 from ..projection.projected_wald import run_projected_wald_kernel
 
 logger = logging.getLogger(__name__)
@@ -54,13 +51,11 @@ def run_child_parent_projected_wald_test(
     parent_dist: np.ndarray,
     n_child: int,
     n_parent: int,
-    seed: int,
     branch_length: float | None = None,
     mean_branch_length: float | None = None,
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
-    minimum_projection_dimension: int | None = None,
 ) -> tuple[float, float, float, bool]:
     """Compute projected Wald test for one child-parent edge."""
     standardized_z_scores = compute_child_parent_standardized_z_scores(
@@ -77,19 +72,14 @@ def run_child_parent_projected_wald_test(
     test_statistic, projection_dim, _effective_degrees_of_freedom, p_value = (
         run_projected_wald_kernel(
             standardized_z_scores,
-            seed=seed,
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalues,
-            k_fallback=lambda dim: compute_projection_dimension(
-                n_child,
-                dim,
-                minimum_projection_dimension=minimum_projection_dimension,
-            ),
         )
     )
 
-    return test_statistic, float(projection_dim), p_value, False
+    is_invalid = np.isnan(test_statistic)
+    return test_statistic, float(projection_dim), p_value, is_invalid
 
 
 __all__ = [
