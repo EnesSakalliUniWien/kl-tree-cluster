@@ -1,10 +1,8 @@
 % !TEX root = ../main.tex
 
-\section{Experimental Plan}
+\section{Evaluation Plan}
 
-This section is a forward-looking placeholder. Before the method can support
-publication-quality inferential claims, the manuscript should cover at least
-the following empirical blocks.
+An empirical evaluation of KL-TE should cover four main blocks.
 
 \subsection{Null calibration}
 
@@ -29,14 +27,14 @@ This should vary:
   \item background noise level.
 \end{itemize}
 
-Power should be measured both for edge recovery and for final cluster recovery.
-Adjusted Rand Index and exact split recovery are both useful endpoints.
+Power should be measured both for recovery of important tree splits and for the
+final clustering outcome. Adjusted Rand Index and exact split recovery are both
+useful endpoints.
 
 \subsection{Robustness analyses}
 
-Because the manuscript now presents a single implemented method, the relevant
-empirical question is robustness of that pipeline. The most useful stress tests
-are:
+For a paper centered on one implemented method, the key empirical question is
+robustness. The most useful stress tests are:
 
 \begin{itemize}[leftmargin=1.5em]
   \item sensitivity to small child leaf counts in the child-parent edge test,
@@ -45,8 +43,8 @@ are:
   \item sensitivity of the final partition to the pass-through rule.
 \end{itemize}
 
-This section should eventually explain where the implemented method is well
-calibrated, where it becomes under-powered, and where it tends to over-split or
+These analyses should show where the implemented method is well calibrated,
+where it becomes under-powered, and where it tends to over-split or
 under-split.
 
 \subsection{Real-data benchmarks}

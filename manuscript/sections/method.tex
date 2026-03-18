@@ -2,7 +2,7 @@
 
 \section{Method}
 
-\subsection{Pipeline overview}
+\subsection{Method overview}
 
 The central question at every internal node can be stated directly: should this split
 survive in the final partition? The hierarchy alone cannot answer it. A linkage
@@ -15,7 +15,7 @@ KL-TE answers that node-level question with two tests and one final traversal
 rule. The child-parent edge test asks whether at least one branch departs from
 its ancestral context. The sibling test asks whether the two children under the
 same parent are distinct enough to justify keeping the split. Around those two
-questions sit four inferential complications that drive the rest of the method:
+questions sit four practical complications that drive the rest of the method:
 nested child-parent sampling, correlated high-dimensional edge evidence, many
 tests across the tree, and post-selection inflation in sibling testing.
 
@@ -35,10 +35,11 @@ the code executes it:
   annotations support it.
 \end{enumerate}
 The rest of this section follows that same logic rather than only the code
-path: first define the subtree-level objects being tested, then explain why the
-child-parent comparison needs nested variance and spectral whitening, then show
-why the sibling comparison requires a separate post-selection correction, and
-finally describe how the resulting evidence tables are turned into clusters.
+path. We first define the subtree-level objects being tested, then explain why
+the child-parent comparison needs nested variance and spectral whitening, then
+show why the sibling comparison requires a separate post-selection correction,
+and finally describe how the resulting evidence tables are turned into
+clusters.
 
 \begin{figure}[p]
 \centering
@@ -126,12 +127,14 @@ types.
 The child-parent edge test is the first inferential step. For each edge
 $(u,c) \in E$, it asks whether child $c$ carries signal beyond its parent $u$.
 This is the method's first guard against keeping a split just because the
-linkage algorithm happened to create one. A child branch should survive only if
-it genuinely departs from the ancestral background defined by its parent. The
-raw difference $\theta_c-\theta_u$ is not enough on its own: some coordinates
-are naturally more variable than others, and small child subtrees are noisier
-than large ones. The test therefore begins by converting the raw child-parent
-difference into featurewise standardized scores. The coordinate-wise null is
+linkage algorithm happened to create one. In plain terms, the question is:
+does this child really move away from the background defined by its parent, or
+is the observed difference small enough to be explained by sampling noise?
+
+The raw difference $\theta_c-\theta_u$ is not enough on its own. Some features
+are naturally more variable than others, and very small child subtrees are
+noisier than large ones. The test therefore begins by converting the raw
+child-parent difference into standardized feature scores. The coordinate-wise null is
 $H_{0,j}^{\mathrm{edge}}(u,c): \theta_{c,j} = \theta_{u,j}$. Because $c$ is
 nested inside $u$, the child and parent estimators are not independent. In the
 binary or indicator representation,
@@ -149,9 +152,9 @@ z_{u \to c,j}^{\mathrm{edge}}
 \frac{\theta_{c,j} - \theta_{u,j}}
 {\sqrt{\theta_{u,j}(1-\theta_{u,j})\left(\frac{1}{n_c} - \frac{1}{n_u}\right)}}.
 \end{equation}
-This standardization is applied \emph{coordinatewise}. For a parent-child edge
-with $p$ binary or indicator coordinates, the implementation first computes
-$p$ scalar standardized scores
+This standardization is applied \emph{coordinatewise}. Each feature first gets
+its own z-like score before the method combines evidence across features. For a
+parent-child edge with $p$ binary or indicator coordinates, the implementation first computes $p$ scalar standardized scores
 $z_{u \to c,1}^{\mathrm{edge}},\dots,z_{u \to c,p}^{\mathrm{edge}}$, one for
 each feature, then stacks them into the vector
 \begin{equation}
@@ -166,31 +169,28 @@ z_{u \to c,p}^{\mathrm{edge}}
 \end{equation}
 The subtraction term
 $\frac{1}{n_c} - \frac{1}{n_u}$ is the signature of the nested tree setting.
-In an ordinary two-sample Wald test for independent groups, the variance factor
-would have the form $\frac{1}{n_1} + \frac{1}{n_2}$. Here the parent already
-contains the child, so the covariance between the two estimators removes part
-of the variance and yields the nested factor
-$\frac{1}{n_c} - \frac{1}{n_u} > 0$. This is why very small children need a
-larger raw deviation $\theta_{c,j} - \theta_{u,j}$ to generate the same
-standardized score.
+In an ordinary two-sample test for independent groups, the variance factor
+would look like $\frac{1}{n_1} + \frac{1}{n_2}$. Here the parent already
+contains the child, so part of the uncertainty cancels out, which yields the
+nested factor $\frac{1}{n_c} - \frac{1}{n_u} > 0$. This is why very small
+children need a larger raw deviation $\theta_{c,j} - \theta_{u,j}$ to generate
+the same standardized score.
 
 Coordinatewise standardization fixes heteroskedasticity, but it does not solve
 the second problem: the edge evidence is high-dimensional and correlated.
 Summing $z_{u \to c,j}^2$ directly would overcount redundant coordinates and let
 noisy directions dominate just because they contribute many small correlated
-terms. The method therefore estimates a parent-local correlation geometry and
-measures the edge deviation inside that geometry. For each parent node $u$, the
-implementation forms a local matrix
-$M_u$ whose rows are:
+terms. The method therefore looks for a smaller set of parent-local directions
+that summarize the main variation seen below the parent, and it measures the
+edge deviation in that reduced space. For each parent node $u$, the
+implementation forms a local matrix $M_u$ whose rows are:
 \begin{enumerate}[leftmargin=1.5em]
   \item all descendant leaf vectors $X_i$ for $i \in L(u)$, and
   \item all descendant internal-node distributions $\theta_v$ for proper
   descendants $v$ of $u$.
 \end{enumerate}
-This second block is included because internal distributions are part of the
-implemented spectral construction. After removing constant features, let $d_u$ be
-the number of active coordinates and let $m_u$ be the number of rows in $M_u$.
-The code computes the correlation matrix
+After removing constant features, let $d_u$ be the number of active
+coordinates and let $m_u$ be the number of rows in $M_u$. The code computes the correlation matrix
 $C_u \in \mathbb{R}^{d_u \times d_u}$ and its eigen-decomposition
 \begin{equation}
 C_u = V_u \Lambda_u V_u^\top,
@@ -206,16 +206,14 @@ active feature to mean zero and scaling it to unit variance, then
 C_u = \frac{1}{m_u}\widetilde{M}_u^\top \widetilde{M}_u,
 \end{equation}
 up to the standard Pearson-correlation normalization already enforced by the
-column standardization. The eigenvalues used by the edge test are therefore the
-eigenvalues of this parent-local feature-feature correlation matrix, not of the
-tree distance matrix and not of the edge vector
-$z_{u \to c}^{\mathrm{edge}}$ itself. When $m_u < d_u$, the implementation
+column standardization. In practice, this matrix identifies the main patterns
+of co-variation visible below the parent. When $m_u < d_u$, the implementation
 switches to the dual standardized Gram matrix
 \begin{equation}
 G_u = \frac{1}{d_u}\widetilde{M}_u \widetilde{M}_u^\top,
 \end{equation}
-whose nonzero eigenvalues coincide with those of $C_u$, so the whitening
-eigenvalues still represent the same local correlation geometry.
+whose nonzero eigenvalues coincide with those of $C_u$, so the same local
+summary is recovered in a computationally cheaper form.
 
 The spectral dimension is the Marchenko--Pastur signal count
 \citep{marchenko1967distribution}. With
@@ -239,8 +237,9 @@ $2$.
 Let $v_{u,1},\dots,v_{u,k_u^{\mathrm{edge}}}$ denote the leading eigenvectors.
 After the coordinatewise standardization step, the vector
 $z_{u \to c}^{\mathrm{edge}} \in \mathbb{R}^p$ is projected onto these
-parent-local directions. The edge test always applies eigenvalue whitening after this
-projection, so the test statistic is
+parent-local directions. The edge test then rescales those projected
+coordinates so that noisy directions do not automatically count more than
+stable ones. The resulting test statistic is
 \begin{equation}
 T_{u \to c}^{\mathrm{edge}}
 =
@@ -253,13 +252,10 @@ coordinate along the $i$th parent-local spectral direction, each summand is
 \begin{equation}
 \frac{w_{u \to c,i}^2}{\lambda_{u,i}}.
 \end{equation}
-This is the motivation for the projection-and-whitening step. The projection
+This is the practical role of the projection-and-whitening step. The projection
 rewrites the edge deviation in directions that are actually present in the
 subtree below $u$, and the whitening step stops high-variance background
-directions from dominating the test merely because they are noisy. A fixed
-projected score contributes less when it lies along a high-variance local
-direction (large $\lambda_{u,i}$) and more when it lies along a low-variance
-direction (small $\lambda_{u,i}$).
+directions from dominating the test merely because they are noisy.
 Under the local correlation-model approximation used by the implementation, the
 resulting statistic is calibrated against a $\chi^2_{k_u^{\mathrm{edge}}}$
 reference law:
@@ -275,10 +271,9 @@ T_{u \to c}^{\mathrm{edge}}
 \right).
 \end{equation}
 This calibration is exact in the pure PCA-whitened case. In the implemented
-mixed-basis path, if the minimum projection dimension forces additional padded
-rows beyond the available spectral directions, the leading PCA rows are
-whitened by $\lambda_{u,i}$ and any padded rows are left unwhitened before the
-same $\chi^2_{k_u^{\mathrm{edge}}}$ reference comparison is applied.
+mixed-basis path, if fewer usable PCA directions are available than the
+nominal target dimension, the implementation simply uses the available
+parent-local rows rather than padding with unrelated random directions.
 \paragraph{Worked child-parent example.}
 The worked example below is intended to show the logic of the edge test, not
 just the algebra. It starts with a parent-child comparison that is visibly
@@ -379,26 +374,22 @@ Therefore the first whitened contribution to the edge-test statistic is
 =
 4.
 \end{equation}
-The runtime implementation uses the floor
-$k_R^{\mathrm{edge}} \ge 2$, so in this toy node a second basis row is padded
-after the single nonzero spectral direction. Because that padded row can be
-chosen orthogonal to $z_{R \to U_1}^{\mathrm{edge}}$, its projected coordinate
-is $0$ and the total statistic remains $4$. This example shows the full logic
-of the child-parent edge test in the same order as the formulas: first standardize the raw
-child-parent difference to account for nested sampling uncertainty, then rotate
-that deviation into the parent-local correlation basis, and finally whiten by
-the local eigenvalues so that noisy directions do not count more than stable
-ones. These $p$-values are computed for every edge in the tree.
+This example shows the full logic of the child-parent edge test in the same
+order as the formulas: standardize the raw difference, express it in the main
+parent-level directions, and then down-weight directions that are mostly noise.
+In larger real subtrees the implementation can use more than one such
+direction, but the core interpretation is already visible in this toy example.
+These $p$-values are computed for every edge in the tree.
 
 \subsection{Hierarchical multiple testing across edges}
 
 Even a well-calibrated edge test would over-split the hierarchy if it were
 applied independently to every edge and thresholded at a fixed level. The tree
 contains many overlapping candidate splits, and the final partition depends on
-reading those edge decisions jointly. The pipeline therefore applies a
+reading those edge decisions jointly. The method therefore applies a
 hierarchical Benjamini--Hochberg correction on the tree
 \citep{bogomolov2021hypotheses} at level
-$\alpha_{\mathrm{edge}} = 0.01$. Edge hypotheses are grouped into families by
+$\alpha_{\mathrm{edge}} = 0.001$. Edge hypotheses are grouped into families by
 parent node. If $F(u)$ denotes the family of edges from parent $u$ to its
 children, then the family-specific level used by the implementation is
 \begin{equation}
@@ -409,12 +400,14 @@ children, then the family-specific level used by the implementation is
 \frac{R_a}{|F(a)|},
 \end{equation}
 where $R_a$ is the number of rejections already made in the ancestor family
-$F(a)$. Root families start at $\alpha_{\mathrm{edge}}$. Within each family,
-ordinary Benjamini--Hochberg is applied at level $\alpha_u$. Let
+$F(a)$. Intuitively, evidence is allowed to propagate downward only after
+earlier parts of the tree have already shown signal. Root families start at
+$\alpha_{\mathrm{edge}}$. Within each family, ordinary Benjamini--Hochberg is
+applied at level $\alpha_u$. Let
 $S^{\mathrm{edge}}(c) \in \{0,1\}$ denote the resulting significance indicator
 for child $c$.
 
-\subsection{Sibling test with cousin adjustment}
+\subsection{Sibling test with post-selection adjustment}
 
 The sibling test is the second inferential step. For each parent $u$ with
 exactly two children $l(u)$ and $r(u)$, it asks whether the two children are
@@ -445,58 +438,52 @@ z_{u,j}^{\mathrm{sib}}
 \left(\frac{1}{n_{l(u)}} + \frac{1}{n_{r(u)}}\right)
 }}.
 \end{equation}
-
-Unlike the edge test, the sibling test does not use spectral decomposition. Instead it uses an
-orthonormal random projection with a Johnson--Lindenstrauss-style dimension
-rule \citep{johnson1984extensions}. The main dimension choice is therefore the
-Johnson--Lindenstrauss bound itself. The implementation also imposes a small
-run-level lower bound $k_{\min}$ so that the projection does not become too
-aggressive on very small sibling problems. In the current code, this lower
-bound is computed once from
-the global effective rank of the full dataset,
-\begin{equation}
-k_{\min}
-=
-\max\left\{
-2,\;
-\min\left(\left\lceil \operatorname{rank}_{\mathrm{eff}}(C_{\mathrm{full}}) \right\rceil, 20\right)
-\right\},
-\end{equation}
-where $\operatorname{rank}_{\mathrm{eff}}(C_{\mathrm{full}})=
-\exp\!\left(-\sum_i p_i \log p_i\right)$ for
-$p_i = \lambda_i / \sum_j \lambda_j$. For sibling pair $u$, the actual
-projection dimension is
+The sibling test then asks how to combine this multi-feature contrast into one
+summary score. Unlike older versions of the method, the current implementation
+does not choose a fresh random projection here. Instead it reuses the spectral
+information already computed during the child-parent stage. For a binary
+parent $u$ with children $l(u)$ and
+$r(u)$, let $k_{l(u)}^{\mathrm{edge}}$ and $k_{r(u)}^{\mathrm{edge}}$ denote
+the positive edge-stage spectral dimensions of the two children. The sibling
+dimension is then
 \begin{equation}
 k_u^{\mathrm{sib}}
 =
 \min\left\{
-p,\;
-\max\left(k_{\mathrm{bound}}(n_{l(u)} + n_{r(u)}, p; \varepsilon=0.3),\; k_{\min}\right)
-\right\},
+k_{l(u)}^{\mathrm{edge}},\; k_{r(u)}^{\mathrm{edge}}
+\right\}
 \end{equation}
-where $k_{\mathrm{bound}}$ denotes the Johnson--Lindenstrauss dimension bound,
-with the additional implementation cap
-$k_u^{\mathrm{sib}} \le n_{l(u)} + n_{r(u)}$ when $p \ge 4(n_{l(u)} + n_{r(u)})$.
-If $R_u \in \mathbb{R}^{k_u^{\mathrm{sib}} \times p}$ has orthonormal rows,
-the raw sibling statistic is
+after excluding any child with zero detected signal dimension. This
+deliberately conservative rule means that a sibling split is judged only in
+dimensions that both child subtrees appear to support. If neither child has a
+positive edge-stage dimension, the sibling test is skipped and the node is
+treated conservatively as a merge.
+
+The projection basis itself comes from the parent node, not from a random draw.
+This choice is easier to interpret for the reader and the analyst: the parent
+PCA directions summarize the dominant axes of variation visible at the level
+where the sibling split is being judged. In the common case, the first
+$k_u^{\mathrm{sib}}$ parent PCA directions are used directly. When the
+requested sibling dimension exceeds the number of usable parent directions, the
+implementation may append additional directions taken from the parts of the
+child PCA spaces that are orthogonal to the parent basis. If such extra
+directions are unavailable, the test simply uses the parent directions that
+exist.
+
+If $P_u \in \mathbb{R}^{k_u^{\mathrm{sib}} \times p}$ denotes this sibling
+projection basis, the raw sibling statistic is
 \begin{equation}
 T_u^{\mathrm{raw}}
 =
-\|R_u z_u^{\mathrm{sib}}\|_2^2,
-\qquad
-p_u^{\mathrm{raw}}
-=
-\Pr\!\left(\chi^2_{k_u^{\mathrm{sib}}} \ge T_u^{\mathrm{raw}}\right).
+\|P_u z_u^{\mathrm{sib}}\|_2^2.
 \end{equation}
-As in the edge test, this is the reference-law calibration used by the implementation
-rather than a claim of finite-sample exactness for every subtree.
-Thus the raw sibling test follows the same general logic as the edge test but with a
-different projection mechanism. It first constructs the standardized sibling
-difference vector $z_u^{\mathrm{sib}}$, then projects that vector onto a random
-orthonormal $k_u^{\mathrm{sib}}$-dimensional basis, and finally tests the
-squared projected norm against a $\chi^2_{k_u^{\mathrm{sib}}}$ null. The raw
-sibling-test $p$-value therefore asks whether the two children differ more than would
-be expected from within-parent sampling variation alone.
+The default p-value calculation is deliberately conservative. After
+projection, the method asks whether the observed squared contrast is larger
+than would be expected from ordinary within-parent sampling noise, while still
+allowing different projected directions to have different variances. In the
+current implementation, this is done with a Satterthwaite moment match for the
+PCA-derived part of the test and plain $\chi^2(1)$ contributions for any added
+orthogonal-complement directions.
 
 Raw sibling $p$-values are still not enough on their own. The same data are
 used to build the hierarchy, choose which nodes matter, and evaluate sibling
@@ -508,10 +495,12 @@ Empirical null simulations confirm that the uncorrected Wald sibling test
 produces Type~I error rates of approximately 39\% at $\alpha = 0.05$.
 
 \paragraph{Calibration via continuous edge-weight deflation.}
-The sibling calibration corrects for this inflation by estimating a global
-deflation factor $\hat{c}$ from the sibling statistics themselves, using the
-edge-test $p$-values as continuous weights.  For every parent $q$ with exactly
-two children, define the inflation ratio
+The sibling calibration then corrects for this extra optimism by estimating one
+global adjustment factor $\hat{c}$ from the sibling statistics themselves,
+using the edge-test $p$-values as continuous weights. Intuitively, sibling
+pairs that already look noisy receive more weight when estimating the
+correction, while pairs that look strongly structured receive less. For every
+parent $q$ with exactly two children, define the inflation ratio
 \begin{equation}
 r_q = \frac{T_q^{\mathrm{raw}}}{k_q^{\mathrm{sib}}}.
 \end{equation}
@@ -524,10 +513,10 @@ w_q = \min\!\left(p^{\mathrm{edge}}_{l(q)},\;
                     p^{\mathrm{edge}}_{r(q)}\right),
 \end{equation}
 where $p^{\mathrm{edge}}_{l(q)}$ and $p^{\mathrm{edge}}_{r(q)}$ are the
-BH-corrected edge-test $p$-values of the two children.  Pairs where neither
+BH-corrected edge-test $p$-values of the two children. Pairs where neither
 child is edge-significant receive large weights and dominate the estimate,
 while pairs with genuine cluster signal receive small weights and are
-effectively down-weighted.  The global inflation factor is then the
+effectively down-weighted. The global inflation factor is then the
 weighted mean
 \begin{equation}\label{eq:chat-global}
 \hat{c}
@@ -546,20 +535,17 @@ bias and declares essentially every edge significant---leaving zero null-like
 calibration pairs and forcing $\hat{c}=1$ (no correction).  Empirical tracing
 on pure-noise data ($n=100$, $p=50$, $K_{\mathrm{true}}=1$) confirmed this
 failure: the edge test marked 198 of 199 edges significant, the calibration
-received zero null-like pairs, and the pipeline returned $K=17$.  Continuous
+received zero null-like pairs, and the method returned $K=17$. Continuous
 weighting avoids this dead zone: even when all edge $p$-values are similarly
 small, the weights are approximately equal, and the weighted mean of $r_q$
 still recovers the true inflation $\hat{c} \approx 3$.
 
-\paragraph{Intercept-only model.}
-Branch-length and sample-size covariates ($\log b_q$, $\log n_q$) were removed
-from the calibration regression.  Under $H_0$, the inflation factor $c$ is a
-structural constant determined by the post-selection coupling between tree
-construction and hypothesis testing; it does not depend on $n$ or branch
-length.  Retaining covariates risks confounding signal strength with inflation
-and, more critically, enables extrapolation beyond the calibration range at the
-root node (the largest $n$), which caused catastrophic over-deflation in early
-experiments.
+\paragraph{Single global correction.}
+The current implementation uses one global correction rather than a different
+correction at every node. This keeps the adjustment simple, avoids unstable
+extrapolation at large nodes, and separates the question of post-selection bias
+from the separate question of how strong the signal is in a particular part of
+the tree.
 
 For each focal pair $u$, the adjusted sibling test is
 \begin{equation}
@@ -567,11 +553,13 @@ T_u^{\mathrm{adj}} = \frac{T_u^{\mathrm{raw}}}{\hat{c}},
 \qquad
 p_u^{\mathrm{sib}}
 =
-\Pr\!\left(\chi^2_{k_u^{\mathrm{sib}}} \ge T_u^{\mathrm{adj}}\right).
+\Pr\!\left(\widetilde{\chi}^2_u \ge T_u^{\mathrm{adj}}\right),
 \end{equation}
-This should be read as a plug-in calibration model for post-selection
-inflation, not as a separate finite-sample exact theorem for the adjusted
-sibling statistic.
+where $\widetilde{\chi}^2_u$ denotes the same sibling reference law used for the
+raw test: by default, the Satterthwaite moment match induced by the parent PCA
+eigenvalues and any added padding directions.
+This is a practical calibration model for post-selection inflation, not a
+separate finite-sample exact theorem for the adjusted sibling statistic.
 
 The sibling multiplicity correction is ordinary
 Benjamini--Hochberg \citep{benjamini1995controlling} at

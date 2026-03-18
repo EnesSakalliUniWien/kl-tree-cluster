@@ -32,25 +32,27 @@
 
 \begin{abstract}
 A hierarchical tree proposes many candidate splits, but geometric tree cuts do
-not say which of those splits are statistically credible. We describe KL-TE as
-a statistically filtered hierarchical clustering method for binary,
-categorical, and discretized continuous sample-feature data. The pipeline
+not say which of those splits are statistically credible. KL-TE is a
+statistically filtered hierarchical clustering method for binary,
+categorical, and discretized continuous sample-feature data. The method
 builds an average-linkage Hamming tree on a working discrete representation,
 assigns each internal node feature-wise distributions, and then answers the
 node-level split question with two statistical tests. The child-parent edge
-test asks whether at least one child departs from its ancestral context; it
-uses nested variance, parent-local Marchenko--Pastur dimension selection,
-eigenvalue whitening, and hierarchical Benjamini--Hochberg correction across
+test asks whether at least one child truly differs from its parent; it uses a
+variance formula that respects the nested parent-child relationship, a
+parent-specific summary step, and false-discovery correction across
 edges. The sibling test asks whether the two children are genuinely distinct
-from one another; it uses Johnson--Lindenstrauss dimension selection and a
-cousin-adjusted calibration model to deflate post-selection inflation before
-Benjamini--Hochberg correction across focal sibling pairs. Categorical inputs
+from one another; it reuses information from the edge stage, compares the
+siblings along the main directions of variation seen at the parent, and
+applies one global correction for the bias created by testing on a tree built
+from the same data before false-discovery correction across focal sibling
+pairs. Categorical inputs
 are handled through indicator expansion, while continuous inputs enter through
-explicit discretization before the same tree-and-test pipeline is applied. The
+explicit discretization before the same tree-and-test procedure is applied. The
 corrected test annotations are converted into clusters by a top-down
-pass-through traversal. This draft records the implemented method in its
-present form and provides the mathematical description needed for the
-empirical sections that still have to be added.
+pass-through traversal. The manuscript records the implemented method in its
+current form and provides the mathematical description needed for empirical
+evaluation.
 \end{abstract}
 
 \input{sections/introduction}

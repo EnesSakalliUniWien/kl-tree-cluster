@@ -6,13 +6,13 @@ Hierarchical clustering is attractive when the analyst wants more than a flat
 partition. A tree exposes coarse-to-fine structure, keeps near-miss cluster
 boundaries visible, and provides a natural substrate for interpretable cluster
 decisions. In practice, however, most hierarchical
-workflows still cut the tree using geometric heuristics such as a fixed height,
+workflows still cut the tree using simple geometric rules such as a fixed height,
 an inconsistency threshold, or a manually chosen number of clusters. Those
 choices are often difficult to defend when the goal is not only descriptive
 grouping but also reproducible statistical claims.
 
 KL-TE takes a different view of the tree. An internal node is not merely a
-merge artifact; it is a decision point. For a parent node $u$ with children
+merge produced by the algorithm; it is a decision point. For a parent node $u$ with children
 $l(u)$ and $r(u)$, the core question is: should this split survive in the final
 partition? A linkage tree alone cannot answer that question. It proposes
 candidate splits, but it does not tell us whether at least one child genuinely
@@ -31,18 +31,17 @@ multiple-testing correction.
 
 Four inferential complications shape the design. The child is a subset of its
 parent, so the edge comparison is nested rather than an ordinary two-sample
-test. The edge evidence is high-dimensional and correlated, so naive quadratic
-aggregation would overcount redundant or noisy directions. Many candidate edges
-are examined across the tree, so valid local $p$-values still require
-multiplicity control. Finally, sibling comparisons are evaluated on a hierarchy
+test. The edge evidence is high-dimensional and correlated, so a simple sum of
+squared feature scores would overcount repeated or noisy directions. Many candidate edges
+are examined across the tree, so valid local $p$-values still require control
+for many tests. Finally, sibling comparisons are evaluated on a hierarchy
 constructed from the same data, so the raw sibling statistics are selected and
-inflated. The implemented method should be read as one response to these four
-problems.
+inflated. KL-TE is one response to these four problems.
 
 The implementation works on a discrete feature representation. Binary data
-enter directly. Categorical data are represented through indicator-expanded
+enter directly. Categorical data are represented through one-hot or indicator-expanded
 binary features. Continuous data are discretized before the same tree-and-test
-pipeline is applied. Once the representation is fixed, the inferential objects
+procedure is applied. Once the representation is fixed, the inferential objects
 are no longer individual samples but subtrees, so each node carries a
 feature-wise distribution estimated from its descendant leaves. Statistical
 test annotations are computed before the actual tree walk that creates cluster
@@ -51,17 +50,11 @@ is useful both computationally and scientifically: the statistical support for
 each potential split is stored explicitly and can be audited independently of
 the resulting partition.
 
-The manuscript follows that decision problem in order. It first constructs the
+The presentation follows that decision problem in order. It first constructs the
 tree and node distributions that define the candidate splits. It then asks
 whether a child departs from its parent, explains why that test needs nested
-variance and spectral whitening, and applies hierarchical multiple-testing
+variance and a parent-local summary of the feature space, and applies hierarchical multiple-testing
 control across the tree. It next asks whether the two children under the same
 parent are genuinely distinct, and explains why that sibling comparison needs a
 post-selection calibration step. Only after both evidence tables are in place
 does the final tree traversal convert them into clusters.
-
-At this stage the writing goal is to capture the statistical structure of the
-method cleanly enough that the later experimental section can be attached
-without rethinking the exposition. The immediate next step after this draft is
-to add calibration and power studies that quantify when the inferential claims
-made by these tests are empirically trustworthy.

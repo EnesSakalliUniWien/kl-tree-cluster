@@ -1,33 +1,29 @@
 % !TEX root = ../main.tex
 
-\section{Discussion and Immediate Next Steps}
+\section{Discussion}
 
-The current repository state is strong enough to support a focused method
-manuscript, but not yet strong enough to skip the calibration evidence. The
-core narrative is already clear:
+The method has a clear inferential structure: build a hierarchy, annotate it
+with child-parent and sibling tests, control for multiple testing, and convert
+the annotated tree into a final partition. What remains essential is empirical
+characterization of how this method behaves in practice.
 
-\begin{enumerate}[leftmargin=1.5em]
-  \item build a hierarchy,
-  \item annotate it with edge and sibling significance tests,
-  \item correct for multiplicity, and
-  \item translate the annotated tree into cluster assignments.
-\end{enumerate}
+Several questions matter for the paper. Under the null, the edge and
+sibling tests should control false discoveries not only at the test level but
+also at the level of the final number of clusters. Under planted structure,
+the method should recover true splits often enough to be useful, especially as
+sample size, signal strength, sparsity, and tree imbalance vary. On real and
+synthetic benchmarks, the method should also show where it tends to over-split,
+under-split, or lose power.
 
-What remains is to show that these steps jointly behave well when used as an
-end-to-end inferential pipeline.
+These empirical checks are particularly important here because the method is
+not a single test applied in isolation. Tree construction, local testing,
+multiple-testing correction, and top-down traversal interact. A convincing
+evaluation therefore needs to describe the operating behavior of the full
+method rather than only the calibration of one component.
 
-For the next writing iteration, the most useful additions would be:
-
-\begin{itemize}[leftmargin=1.5em]
-  \item a diagram of the full testing pipeline,
-  \item one worked numerical example on a tiny binary tree,
-  \item a calibration figure for null data,
-  \item a robustness figure for the implemented pipeline under sparse and
-  imbalanced regimes, and
-  \item a benchmark table tied to the exact implemented method reported in
-  Table~\ref{tab:defaults}.
-\end{itemize}
-
-In other words, the manuscript environment is now ready for two parallel
-streams of work: continued drafting of the prose and deliberate generation of
-results that are specific to the implemented KL-TE pipeline.
+The most informative empirical additions are null calibration, power under
+known structure, robustness analyses under sparse and imbalanced regimes, and
+benchmark comparisons tied directly to the exact implementation summarized in
+Table~\ref{tab:defaults}. Together, these studies would show where the method
+is well calibrated, where it remains powerful, and where its practical limits
+begin.

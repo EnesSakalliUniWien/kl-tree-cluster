@@ -1,26 +1,26 @@
 % !TEX root = ../main.tex
 
-\section{Implemented Method Specification}
+\section{Practical Setup}
 
-Table~\ref{tab:defaults} records the implemented method specification used by
-the repository. These entries determine the exact tree construction,
-projection rules, multiplicity corrections, and traversal logic described in
-this manuscript.
+Table~\ref{tab:defaults} summarizes the main settings used in the current
+implementation. These settings define how the tree is built, how evidence is
+combined across the tree, and how final cluster decisions are made.
 
 \begin{table}[ht]
 \centering
 \begin{tabular}{ll}
 \toprule
-Component & Implemented choice \\
+Component & Current choice \\
 \midrule
 Tree distance & Hamming \\
 Linkage & Average linkage \\
-Edge significance level & $\alpha_{\mathrm{edge}} = 0.01$ \\
+Edge significance level & $\alpha_{\mathrm{edge}} = 0.001$ \\
 Sibling significance level & $\alpha_{\mathrm{sib}} = 0.01$ \\
-Edge test & Spectral projected Wald with eigenvalue whitening \\
-Edge dimension rule & Marchenko--Pastur signal count \\
-Sibling test & Cousin-adjusted projected Wald \\
-Sibling dimension rule & Johnson--Lindenstrauss rule with $\varepsilon = 0.3$ and global floor \\
+Edge test & Projected Wald test with parent-specific whitening \\
+Edge dimension rule & Signal count from the parent's local spectrum \\
+Sibling test & Projected Wald test with edge-weight adjustment \\
+Sibling dimension rule & Smallest positive child signal dimension \\
+Sibling basis / calibration & Parent PCA basis, Satterthwaite default \\
 Minimum spectral dimension & 2 \\
 Include internal spectral rows & On \\
 Edge multiple-testing correction & Hierarchical BH correction on the tree \\
@@ -28,19 +28,18 @@ Sibling multiple-testing correction & Flat BH on focal pairs \\
 Pass-through traversal & On \\
 \bottomrule
 \end{tabular}
-\caption{Implemented method specification in the repository.}
+\caption{Main settings used in the current implementation.}
 \label{tab:defaults}
 \end{table}
 
-Two aspects of the implemented method deserve explicit emphasis. First, the
-two tests do not use the same projection rule: the child-parent edge test uses
-parent-local spectral whitening, whereas the sibling test uses a random
-orthonormal projection with a Johnson--Lindenstrauss dimension cap and then
-corrects post-selection inflation through cousin adjustment. Second, the final
-clustering stage is intentionally lightweight once the test tables exist:
-pass-through traversal is on, so the reported partition is driven directly by
-these two inferential tests and the top-down traversal.
+Two aspects of the setup deserve special emphasis. First, the two tests do not
+combine information in the same way. The child-parent edge test asks whether a
+child leaves the background defined by its parent. The sibling test then asks
+whether the two children are different enough from one another to justify
+keeping the split. Second, once those test tables exist, the final clustering
+step is simple: the method walks down the tree and keeps only the splits that
+remain supported after correction.
 
 The representation layer should also be read as part of the method. Binary data
 enter directly, categorical data enter through one-hot indicator expansion, and
-continuous data are discretized before the same testing pipeline is applied.
+continuous data are discretized before the same testing procedure is applied.
