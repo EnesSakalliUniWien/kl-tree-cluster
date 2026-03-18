@@ -19,7 +19,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -29,21 +29,84 @@ from matplotlib.backends.backend_pdf import PdfPages
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import chi2
+from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
+    derive_projection_seed_backend as derive_projection_seed,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (
     tree_bh_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
-    compute_projection_dimension_backend as compute_projection_dimension,
-    derive_projection_seed_backend as derive_projection_seed,
-    generate_projection_matrix_backend as generate_projection_matrix,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
-    sibling_divergence_test,
-)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+
+_JL_MIN_DIMENSION = 2
+_JL_EPSILON = 0.3
+_PROJECTION_RANDOM_SEED = 42
+
+
+def _compute_projection_dimension(n_samples: int, n_features: int) -> int:
+    """Compute JL projection dimension for diagnostic calibration tests."""
+    if n_features <= 0:
+        raise ValueError("n_features must be positive.")
+    if n_samples <= 0:
+        raise ValueError("n_samples must be positive.")
+
+    k_jl = int(johnson_lindenstrauss_min_dim(n_samples=max(int(n_samples), 2), eps=_JL_EPSILON))
+    return min(max(k_jl, _JL_MIN_DIMENSION), int(n_features))
+
+
+def _generate_projection_matrix(n_features: int, projection_dim: int, seed: int) -> np.ndarray:
+    """Generate a deterministic orthonormal random projection matrix."""
+    if n_features <= 0:
+        raise ValueError("n_features must be positive.")
+    if projection_dim <= 0:
+        raise ValueError("projection_dim must be positive.")
+
+    effective_dim = min(int(projection_dim), int(n_features))
+    rng = np.random.default_rng(int(seed))
+    gaussian_matrix = rng.standard_normal((int(n_features), effective_dim))
+    orthonormal_columns, _ = np.linalg.qr(gaussian_matrix, mode="reduced")
+    return orthonormal_columns.T.astype(np.float64, copy=False)
+
+
+def _binary_projection_wald_from_samples(
+    left: np.ndarray,
+    right: np.ndarray,
+    *,
+    test_id: str,
+) -> tuple[float, float, float]:
+    """Diagnostic-only binary projected Wald test using JL projection."""
+    left = np.asarray(left, dtype=np.float64)
+    right = np.asarray(right, dtype=np.float64)
+    n_left, d = left.shape
+    n_right = right.shape[0]
+    if right.shape[1] != d:
+        raise ValueError(f"Feature mismatch: left has d={d}, right has d={right.shape[1]}.")
+    if n_left <= 0 or n_right <= 0:
+        return np.nan, np.nan, np.nan
+
+    theta_left = np.mean(left, axis=0)
+    theta_right = np.mean(right, axis=0)
+    theta_pooled = (n_left * theta_left + n_right * theta_right) / float(n_left + n_right)
+    variance = theta_pooled * (1.0 - theta_pooled) * (1.0 / n_left + 1.0 / n_right)
+    variance = np.maximum(variance, 1e-10)
+    z_scores = (theta_left - theta_right) / np.sqrt(variance)
+
+    if not np.all(np.isfinite(z_scores)):
+        return np.nan, np.nan, np.nan
+
+    n_eff = max(int(round((2.0 * n_left * n_right) / (n_left + n_right))), 1)
+    projection_dim = _compute_projection_dimension(n_eff, d)
+    seed = derive_projection_seed(_PROJECTION_RANDOM_SEED, test_id)
+    projection = _generate_projection_matrix(d, projection_dim, seed)
+    projected = projection @ z_scores
+
+    stat = float(np.sum(projected**2))
+    df = float(projection_dim)
+    pval = float(chi2.sf(stat, df=projection_dim))
+    return stat, df, pval
 
 
 def _binomial_ci_95(successes: int, trials: int) -> tuple[float, float]:
@@ -101,7 +164,10 @@ def _run_one_null_replicate(
     )
 
     # Build hierarchy and run full annotation/decomposition path.
-    distance_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
+    distance_condensed = pdist(
+        data_df.values,
+        metric=cast(Any, config.TREE_DISTANCE_METRIC),
+    )
     linkage_matrix = linkage(distance_condensed, method=config.TREE_LINKAGE_METHOD)
     tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
     tree.decompose(
@@ -109,7 +175,9 @@ def _run_one_null_replicate(
         alpha_local=float(alpha),
         sibling_alpha=float(alpha),
     )
-    stats_df = tree.stats_df if tree.stats_df is not None else pd.DataFrame(index=tree.nodes())
+    stats_df = (
+        tree.stats_df if tree.stats_df is not None else pd.DataFrame(index=list(tree.nodes()))
+    )
 
     edge_tested_mask = (
         stats_df["Child_Parent_Divergence_P_Value_BH"].notna()
@@ -240,9 +308,9 @@ def _binary_shrinkage_wald_from_samples(
 
     z = np.asarray(z, dtype=np.float64)
     n_eff = max(int(round((2.0 * n_left * n_right) / (n_left + n_right))), 1)
-    k = compute_projection_dimension(n_eff, d)
-    seed = derive_projection_seed(config.PROJECTION_RANDOM_SEED, test_id)
-    R = generate_projection_matrix(d, k, seed, use_cache=False)
+    k = _compute_projection_dimension(n_eff, d)
+    seed = derive_projection_seed(_PROJECTION_RANDOM_SEED, test_id)
+    R = _generate_projection_matrix(d, k, seed)
     projected = R.dot(z) if hasattr(R, "dot") else (R @ z)
 
     stat = float(np.sum(projected**2))
@@ -273,13 +341,9 @@ def _run_one_binary_covariance_replicate(
     left = X[perm[:n_left], :]
     right = X[perm[n_left:], :]
 
-    theta_left = np.mean(left, axis=0)
-    theta_right = np.mean(right, axis=0)
-    proj_stat, proj_df, proj_p = sibling_divergence_test(
-        theta_left,
-        theta_right,
-        float(n_left),
-        float(n_right),
+    proj_stat, proj_df, proj_p = _binary_projection_wald_from_samples(
+        left,
+        right,
         test_id=f"binary_cov_diag:{scenario['scenario']}:rep={rep}",
     )
     proj_invalid = not (np.isfinite(proj_stat) and np.isfinite(proj_df) and np.isfinite(proj_p))
