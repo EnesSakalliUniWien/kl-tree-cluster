@@ -31,7 +31,9 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_jl_dim,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
+    derive_sibling_spectral_dims as current_derive_sibling_spectral_dims,
+)
 
 # Sentinel cases: 5 improving, 2 going the other direction
 CASES = [
@@ -52,7 +54,7 @@ CASES = [
     "gauss_noisy_many",  # intermediate
 ]
 
-orig_derive = orchestrator._derive_sibling_spectral_dims
+orig_derive = current_derive_sibling_spectral_dims
 
 
 # ── Strategy derivation functions ──────────────────────────────────────────

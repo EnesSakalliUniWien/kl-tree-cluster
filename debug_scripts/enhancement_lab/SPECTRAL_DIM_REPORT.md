@@ -4,6 +4,8 @@
 **Experiments**: exp15–exp19  
 **Scope**: Determine optimal projection dimension (k) derivation for the Gate 3 sibling divergence test  
 
+> Update (2026-03-20): This report contains stale winner claims from before the enhancement-lab harness was repaired against the current `sibling_config` API. The repaired live reruns no longer support `jl_floor_qrt` as the best strategy. Current live results: repaired `exp16` gives mean ARI `0.998` for `min_child`, `0.994` for `jl_floor_qrt`, and `0.979` for pure JL; repaired `exp19` ranks `jl_floor_qrt` at `0.994`, below several alternatives at `0.998`. Treat the original ranking sections below as historical unless explicitly marked otherwise.
+
 ---
 
 ## 1. Problem Statement
@@ -42,7 +44,7 @@ when k drops from 12 to 2.
 | binary_perfect_8c            | 0.757           | 1.000           |
 | binary_hard_4c               | 0.708           | 0.950           |
 
-### Exp 16 — Strategy Comparison (8 strategies)
+### Exp 16 — Strategy Comparison (8 strategies, historical section)
 
 **Goal**: Find a better k derivation than both min-child and raw JL.  
 **Strategies tested**:
@@ -58,9 +60,7 @@ when k drops from 12 to 2.
 | max_child         | max(k_L, k_R)              | 0.949                  |
 | **min_child**     | min(k_L, k_R)              | **0.815** ← regression |
 
-**Finding**: `jl_floor_qrt` = max(spectral_min, JL/4) achieves 0.991, outperforming both
-pure JL (0.979) and all pure spectral strategies. The JL/4 floor provides minimum power
-while spectral caps prevent noise dilution on high-dimensional data.
+**Historical finding**: The original harness reported `jl_floor_qrt` = 0.991. This no longer reproduces after the 2026-03-20 harness repair; the current live rerun gives `min_child = 0.998`, `jl_floor_qrt = 0.994`, and pure JL = `0.979`.
 
 ### Exp 17 — Literature Strategies (12 additional)
 
@@ -78,9 +78,7 @@ while spectral caps prevent noise dilution on high-dimensional data.
 | jl_floor_8th    | max(spectral_min, JL/8)                   | 0.976    |
 | jl_spectral_geo | √(JL × spectral_min)                      | 0.968    |
 
-**Finding**: No literature strategy beat `jl_floor_qrt`. Even `k_parent_jl` only ties it —
-the JL/4 floor again does the heavy lifting. Pure spectral strategies (pooled_mp,
-effective_rank, diff_signal) all land at 0.968, a ceiling for non-floored approaches.
+**Historical finding**: This section has not been rerun after the harness repair and should not be treated as current evidence.
 
 ### Exp 18 — Eigenvector Relationship Mapping
 
@@ -136,31 +134,31 @@ Best SPLIT/MERGE separators (standardized):
 
 | Rank | Strategy         | Mean ARI  | Wins/15 | Formula                 |
 | ---- | ---------------- | --------- | ------- | ----------------------- |
-| 1    | **jl_floor_qrt** | **0.991** | 11      | max(spectral_min, JL/4) |
-| 2    | knee_jl          | 0.989     | 11      | max(knee_P, JL/4)       |
-| 3    | er_jl            | 0.984     | 12      | max(er_P, JL/4)         |
-| 3    | var90_jl         | 0.984     | 12      | max(var90_P, JL/4)      |
-| 5    | none (pure JL)   | 0.979     | 11      | ⌈8·ln(n)/ε²⌉            |
-| 6    | er_parent        | 0.968     | 11      | round(er_P)             |
-| 6    | var90 / var95    | 0.968     | 11      | 90%/95% variance dims   |
-| 6    | er_child_sum     | 0.968     | 11      | round(er_L + er_R)      |
-| 6    | harm_jl_er       | 0.968     | 11      | 2·JL·er/(JL+er)         |
-| 12   | geom_jl_knee     | 0.963     | 10      | √(JL × knee)            |
-| 13   | log_n_d          | 0.965     | 10      | log(n)·log(d)/2         |
-| 14   | sqrt_n           | 0.952     | 9       | √n_parent               |
-| 15   | gap_weighted     | 0.907     | 7       | k_P × spectral_gap      |
-| 16   | lam_ratio        | 0.845     | 6       | λ₁ / MP_bound           |
-| 17   | k_parent         | 0.815     | 8       | MP count (parent)       |
-| 18   | knee_parent      | 0.743     | 5       | elbow k only            |
+| 1    | knee_parent      | 0.998     | 13      | elbow k only            |
+| 1    | gap_weighted     | 0.998     | 13      | k_P × spectral_gap      |
+| 1    | log_n_d          | 0.998     | 13      | log(n)·log(d)/2         |
+| 1    | knee_jl          | 0.998     | 13      | max(knee_P, JL/4)       |
+| 1    | er_jl            | 0.998     | 13      | max(er_P, JL/4)         |
+| 1    | var90_jl         | 0.998     | 13      | max(var90_P, JL/4)      |
+| 1    | geom_jl_knee     | 0.998     | 13      | √(JL × knee)            |
+| 8    | jl_floor_qrt     | 0.994     | 11      | max(spectral_min, JL/4) |
+| 9    | none (pure JL)   | 0.979     | 11      | ⌈8·ln(n)/ε²⌉            |
+| 10   | k_parent         | 0.932     | 12      | MP count (parent)       |
+| 10   | er_parent        | 0.932     | 12      | round(er_P)             |
+| 10   | var90            | 0.932     | 12      | 90% variance dims       |
+| 10   | var95            | 0.932     | 12      | 95% variance dims       |
+| 10   | sqrt_n           | 0.932     | 12      | √n_parent               |
+| 10   | er_child_sum     | 0.932     | 12      | round(er_L + er_R)      |
+| 10   | lam_ratio        | 0.932     | 12      | λ₁ / MP_bound           |
+| 10   | harm_jl_er       | 0.932     | 12      | 2·JL·er/(JL+er)         |
 
 ---
 
 ## 3. Conclusions
 
-### Why `jl_floor_qrt` is optimal
+### Why the earlier `jl_floor_qrt` winner claim is no longer reliable
 
-The JL quarter-floor `max(spectral_min, ⌈8·ln(n)/ε²⌉/4)` works because it solves two
-failure modes simultaneously:
+The JL quarter-floor `max(spectral_min, ⌈8·ln(n)/ε²⌉/4)` remains a plausible hybrid because it solves two conceptual failure modes simultaneously:
 
 1. **Power floor** (JL/4): Prevents k from falling below the minimum needed for
    statistical power. At small nodes (n < 20), MP spectral counts are unreliable
@@ -187,15 +185,7 @@ but even parent MP counts are too conservative for the power requirements of the
 
 ### Recommendation
 
-**Keep `jl_floor_qrt` as the production strategy.** No pure spectral or hybrid equation
-improves on it. The alternatives `knee_jl` (0.989) and `er_jl/var90_jl` (0.984) are
-marginally worse and add computational overhead (eigendecomposition at every node for
-elbow detection / variance explained estimation).
-
-If a more "principled" strategy is desired for theoretical motivation, `knee_jl`
-(max of elbow-point-k and JL/4) is essentially equivalent and has a clear interpretation:
-use the data-driven elbow of the scree plot when it's informative, fall back to JL/4
-when the sample is too small for reliable elbow detection.
+Do **not** treat `jl_floor_qrt` as the production recommendation. After the repaired 2026-03-20 reruns, it is merely one competitive hybrid at `0.994`, not the winner. Current evidence says the earlier deployment recommendation was overstated; Gate 3 k-selection needs broader reruns before any production change.
 
 ---
 
@@ -221,8 +211,7 @@ All experiments use common infrastructure from `lab_helpers.py`:
 ## 5. Open Questions
 
 1. **Production integration**: `_derive_sibling_spectral_dims()` still implements min-child.
-   Applying `jl_floor_qrt` requires modifying the orchestrator to combine the spectral
-   estimate with a JL/4 floor before passing to the sibling gate.
+   There is no current rerun-backed justification to replace it with `jl_floor_qrt`.
 
 2. **Full benchmark validation**: The 15 sentinel cases are representative but not exhaustive.
    A full 95-case benchmark run should confirm no regressions before production deployment.

@@ -44,13 +44,15 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_back
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_jl_dim,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     effective_rank as compute_effective_rank,
     marchenko_pastur_signal_count,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
+    derive_sibling_spectral_dims as current_derive_sibling_spectral_dims,
+)
 
-orig_derive = orchestrator._derive_sibling_spectral_dims
+orig_derive = current_derive_sibling_spectral_dims
 
 
 # ── Sentinel cases ──────────────────────────────────────────────────────────

@@ -16,7 +16,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-from scipy.cluster.hierarchy import linkage
+from scipy.cluster.hierarchy import cophenet, linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
 
@@ -94,17 +94,82 @@ def diagnose_case(case_name: str) -> None:
     Z = linkage(dist, method=config.TREE_LINKAGE_METHOD)
     tree = PosetTree.from_linkage(Z, leaf_names=data_t.index.tolist())
 
+    # ── Tree quality diagnostics ──
+    print("\n--- Tree Quality ---")
+    # Cophenetic correlation
+    c_coph, coph_dists = cophenet(Z, dist)
+    quality = (
+        "excellent"
+        if c_coph > 0.9
+        else "good" if c_coph > 0.7 else "poor" if c_coph > 0.5 else "very poor"
+    )
+    print(f"  Cophenetic correlation: {c_coph:.4f} ({quality})")
+
+    # Merge height profile
+    heights = Z[:, 2]
+    sorted_h = np.sort(heights)
+    gaps = np.diff(sorted_h)
+    top_gaps = np.sort(gaps)[-min(5, len(gaps)) :][::-1]
+    print(
+        f"  Merge heights: min={heights.min():.4f}, max={heights.max():.4f}, "
+        f"CV={heights.std() / heights.mean():.3f}"
+    )
+    print(f"  Top {len(top_gaps)} merge-height gaps: {np.array2string(top_gaps, precision=4)}")
+
+    # Root imbalance
+    root_idx = len(Z) - 1
+    left_child, right_child = int(Z[root_idx, 0]), int(Z[root_idx, 1])
+
+    def _count_leaves(idx: int) -> int:
+        if idx < n:
+            return 1
+        return int(Z[idx - n, 3])
+
+    n_left = _count_leaves(left_child)
+    n_right = _count_leaves(right_child)
+    imbalance = max(n_left, n_right) / (n_left + n_right)
+    print(f"  Root split: {n_left} / {n_right} (imbalance={imbalance:.3f})")
+
+    # γ (gamma = d/n) distribution across internal nodes
+    internal_nodes = [nd for nd in tree.nodes() if tree.out_degree(nd) > 0]
+    gammas = []
+    for nd in internal_nodes:
+        leaves_below = set()
+        stack = [nd]
+        while stack:
+            cur = stack.pop()
+            children = list(tree.successors(cur))
+            if not children:
+                leaves_below.add(cur)
+            else:
+                stack.extend(children)
+        n_desc = len(leaves_below)
+        if n_desc > 0:
+            gamma = p / n_desc
+            gammas.append(gamma)
+    gammas = np.array(gammas)
+    print(
+        f"  γ (d/n) distribution: min={gammas.min():.1f}, median={np.median(gammas):.1f}, "
+        f"max={gammas.max():.1f}, mean={gammas.mean():.1f}"
+    )
+    pct_gt1 = (gammas > 1).mean() * 100
+    pct_gt10 = (gammas > 10).mean() * 100
+    print(
+        f"  γ > 1: {pct_gt1:.0f}%, γ > 10: {pct_gt10:.0f}% "
+        f"(γ > 1 ⇒ MP fails to separate signal eigenvalues)"
+    )
+
     # ── Spectral dimensions (before decompose) ──
     print(
         f"\nConfig: SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
-        f"SPECTRAL_MIN_K={config.SPECTRAL_MIN_K}, "
+        f"SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}, "
         f"SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}"
     )
 
     # ── Run decomposition ──
     decomp = tree.decompose(
         leaf_data=data_t,
-        alpha_local=config.ALPHA_LOCAL,
+        alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
     )
     stats = tree.stats_df
@@ -276,6 +341,58 @@ def diagnose_case(case_name: str) -> None:
     # ── DFS tree trace (top 3 levels) ──
     print("\n--- DFS decision tree (first 3 levels from root) ---")
     _print_dfs_tree(tree, stats, root, depth=0, max_depth=3)
+
+    # ── Cluster assignments vs true labels ──
+    if y_t is not None:
+        print("\n--- Cluster assignments vs true labels ---")
+        for cid, cinfo in sorted(decomp["cluster_assignments"].items()):
+            root_node = cinfo["root_node"]
+            leaves = cinfo["leaves"]
+            true_comp: dict[int, int] = {}
+            for leaf in leaves:
+                idx = data_t.index.get_loc(leaf)
+                tl = int(y_t[idx])
+                true_comp[tl] = true_comp.get(tl, 0) + 1
+            dominant = max(true_comp, key=true_comp.get)
+            purity = true_comp[dominant] / cinfo["size"]
+            print(
+                f"  Cluster {cid}: root={root_node}, size={cinfo['size']}, " f"purity={purity:.2f}"
+            )
+            print(f"    True label composition: {dict(sorted(true_comp.items()))}")
+
+    # ── Per-split-node subtree composition ──
+    if split_nodes and y_t is not None:
+        from networkx import shortest_path_length as _spl
+
+        depths_split = {nd: _spl(tree, root, nd) for nd in split_nodes}
+        sorted_splits_all = sorted(split_nodes, key=lambda x: depths_split[x])
+        print("\n--- Split-node subtree composition (true labels) ---")
+        for nd in sorted_splits_all[:10]:
+            ch = list(tree.successors(nd))
+            for side, child in zip(("L", "R"), ch):
+                stack = [child]
+                child_leaves = []
+                while stack:
+                    cur = stack.pop()
+                    kids = list(tree.successors(cur))
+                    if not kids:
+                        child_leaves.append(cur)
+                    else:
+                        stack.extend(kids)
+                comp: dict[int, int] = {}
+                for leaf_node in child_leaves:
+                    label = tree.nodes[leaf_node].get("label", leaf_node)
+                    idx = data_t.index.get_loc(label)
+                    comp[int(y_t[idx])] = comp.get(int(y_t[idx]), 0) + 1
+                edge_sig = bool(stats.loc[child, "Child_Parent_Divergence_Significant"])
+                print(
+                    f"  {nd} {side}-child {child}: {len(child_leaves)} leaves, "
+                    f"edge_sig={edge_sig}, comp={dict(sorted(comp.items()))}"
+                )
+            sib_stat = stats.loc[nd, "Sibling_Test_Statistic"]
+            sib_df = stats.loc[nd, "Sibling_Degrees_of_Freedom"]
+            sib_p = stats.loc[nd, "Sibling_Divergence_P_Value_Corrected"]
+            print(f"    → stat={sib_stat:.2f}, df={sib_df:.1f}, p_corr={sib_p:.2e}")
 
     print()
 

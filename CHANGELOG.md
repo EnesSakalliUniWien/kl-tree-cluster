@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased] - 2026-03-17
 
 ### Investigated
-- **Gate 3 projection dimension regression** (exp15–exp19): Systematic investigation of the power regression caused by forwarding Marchenko-Pastur spectral dimensions from Gate 2 to Gate 3 via `_derive_sibling_spectral_dims()`. The min-child strategy `k = min(k_L, k_R)` yields k ≈ 0–2 on small within-child data, collapsing χ²(k) power. Mean ARI drops from 0.979 (JL baseline) to 0.815 (min-child spectral) across 15 sentinel cases. Optimal strategy identified: `jl_floor_qrt` = `max(min(k_L, k_R), ⌈8·ln(n)/ε²⌉/4)` achieves ARI 0.991. Full analysis: 30+ strategies tested across 5 experiments, 16 spectral equations benchmarked. See `debug_scripts/enhancement_lab/SPECTRAL_DIM_REPORT.md`.
+- **Gate 3 projection dimension investigation** (exp15–exp19): Systematic investigation of Gate 3 k-selection under Marchenko-Pastur Gate 2 dimensions. The original enhancement-lab report claimed a severe `min_child` regression and recommended `jl_floor_qrt`. After repairing the stale lab harness on 2026-03-20, the live reruns no longer reproduce that conclusion: `exp16` now gives mean ARI `0.998` for `min_child`, `0.994` for `jl_floor_qrt`, and `0.979` for pure JL; repaired `exp19` ranks `jl_floor_qrt` below several alternatives at `0.994`. The old recommendation should be treated as superseded pending broader validation. See `debug_scripts/enhancement_lab/SPECTRAL_DIM_REPORT.md`.
 
 ### Added
 - **Enhancement lab experiments 15–19** (`debug_scripts/enhancement_lab/`):

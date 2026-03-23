@@ -2,6 +2,8 @@
 
 ## Experiment Chronology
 
+> Update (2026-03-20): The original exp15-19 conclusions below were based on a stale lab harness. After repairing the override path to the current `sibling_config` API and rerunning the strategy benchmarks, the `jl_floor_qrt` winner claim did not reproduce. Current live reruns show `exp16`: `min_child=0.998`, `jl_floor_qrt=0.994`, `none=0.979`; repaired `exp19`: `jl_floor_qrt=0.994`, below several alternatives at `0.998`.
+
 | Exp | Focus                                          | Key Finding                                   |
 | --- | ---------------------------------------------- | --------------------------------------------- |
 | 0   | Baseline                                       | 7 failure cases identified (ARI=0, K=1)       |
@@ -14,8 +16,8 @@
 | 13  | Power loss trace                               | Complete gate-by-gate attribution (see below) |
 | 14  | SNN distance                                   | Alternative distance metric                   |
 | 15  | Spectral dim regression                        | min-child k ≈ 2 confirmed as regression cause |
-| 16  | Spectral dim strategies (8)                    | **jl_floor_qrt wins** (ARI=0.991)            |
-| 17  | Literature strategies (12)                     | No literature method beat jl_floor_qrt        |
+| 16  | Spectral dim strategies (8)                    | Historical claim: `jl_floor_qrt` won; repaired rerun shows `min_child` 0.998 vs `jl_floor_qrt` 0.994 |
+| 17  | Literature strategies (12)                     | Historical claim only; no current rerun-backed winner conclusion |
 | 18  | Eigenvector relationships                      | Parent gains extra dims at SPLIT boundaries   |
 | 19  | Spectral equations (16)                        | JL/4 floor is the essential ingredient        |
 
@@ -114,25 +116,20 @@ almost always yields k ≈ 0–2, collapsing the χ² test to near-zero power.
 Per-node tracing showed nodes that SPLIT under JL (k ≈ 12) instead MERGE under spectral (k = 2).
 Five cases collapsed from ARI=1.0 (JL) to ARI=0.0–0.7 (min-child spectral).
 
-### Exp 16 — Strategy Comparison (8 strategies, winner: `jl_floor_qrt`)
+### Exp 16 — Strategy Comparison (8 strategies, historical result superseded)
 
 Tested 8 k-derivation strategies across 15 sentinel cases:
 
 | Strategy | Mean ARI | Notes |
 |----------|----------|-------|
-| **jl_floor_qrt** | **0.991** | max(spectral_min, JL/4) — **best** |
-| jl_floor_half | 0.988 | max(spectral_min, JL/2) |
-| sum_child_2x | 0.981 | 2 × (k_L + k_R) |
-| none (pure JL) | 0.979 | ⌈8·ln(n)/ε²⌉ |
-| min_child | 0.815 | min(k_L, k_R) ← regression |
+| min_child | 0.998 | repaired rerun on 2026-03-20 |
+| max_child / sum_child | 0.998 | repaired rerun on 2026-03-20 |
+| **jl_floor_qrt** | **0.994** | repaired rerun on 2026-03-20 |
+| none (pure JL) | 0.979 | repaired rerun on 2026-03-20 |
 
-### Exp 17 — Literature Strategies (no improvement)
+### Exp 17 — Literature Strategies (historical section; needs rerun)
 
-Added 6 literature-inspired strategies (Lopes 2011, Srivastava 2016, Chen & Qin 2010) plus
-`k_parent` and `k_parent_jl`. None beat `jl_floor_qrt`:
-- `pooled_mp`, `effective_rank`, `ncp_power_opt` → 0.968
-- `k_parent` → 0.815 (same floor problem)
-- `k_parent_jl` → 0.991 (ties, JL/4 does the work)
+This section reflects the pre-repair harness and should not be treated as current evidence. The repaired 2026-03-20 rerun was performed on `exp19`, not on `exp17`, so the detailed exp17 claims remain historical until rerun.
 
 ### Exp 18 — Eigenvector Relationship Mapping
 
@@ -159,10 +156,6 @@ Three-phase analysis: spectral feature distributions → equation evaluation →
 
 ### Conclusion
 
-**`jl_floor_qrt` = max(min(k_L, k_R), ⌈8·ln(n)/ε²⌉/4) is the optimal strategy.**
-
-The JL/4 floor provides minimum statistical power; spectral caps prevent noise dilution.
-All hybrid `max(X, JL/4)` forms cluster at 0.984–0.991; the JL/4 component dominates.
-Pure spectral equations top out at 0.968 due to small-sample MP underestimation.
+The earlier claim that `jl_floor_qrt = max(min(k_L, k_R), ⌈8·ln(n)/ε²⌉/4)` is the optimal strategy is no longer supported by the repaired 2026-03-20 reruns. Current live evidence says only that pure JL remains weaker (`0.979`) and that `jl_floor_qrt` can be competitive (`0.994`), but it does not beat the current `min_child` strategy (`0.998`) on the repaired exp16 benchmark.
 
 Full details in [SPECTRAL_DIM_REPORT.md](SPECTRAL_DIM_REPORT.md).

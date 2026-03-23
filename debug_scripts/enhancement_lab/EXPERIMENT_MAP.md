@@ -1,7 +1,7 @@
 # Enhancement Lab — Experiment Map
 
-**Last Updated**: 2026-03-18  
-**Total Experiments**: 26+ (exp0–exp26b)  
+**Last Updated**: 2026-03-20  
+**Total Experiments**: 31+ (exp0–exp31)  
 **Status**: Active investigation pipeline
 
 ---
@@ -50,6 +50,13 @@ enhancement_lab/
 │   ├── exp26_parent_pca_projection.py      # Parent PCA for Gate 3
 │   └── exp26b_satterthwaite_projection.py  # Satterthwaite approximation
 │
+├── Inflation Policy Discovery (exp27–exp31) 🆕
+│   ├── exp27_neighborhood_padding.py        # Neighborhood-aware local context tests
+│   ├── exp28_f_uncertainty_deflation.py     # ESS-based F-tail and robust c-hat tests
+│   ├── exp29_low_ess_permutation_benchmark.py  # Low-ESS search + permutation benchmark
+│   ├── exp30_global_local_shrinkage.py      # Partial-pooling global/local shrinkage
+│   └── exp31_oracle_policy_equations.py     # Oracle rows, portability, Fourier summaries, spectra plots
+│
 └── Supporting Infrastructure
     ├── lab_helpers.py                      # Shared benchmark infrastructure
     ├── run_lab_baseline.py                 # Baseline runner
@@ -70,17 +77,17 @@ enhancement_lab/
 
 ### Phase 1: Power/Calibration Foundation (exp0–exp14)
 
-| Exp | Question | Finding | Status |
-|-----|----------|---------|--------|
-| **exp0** | What are baseline failure modes? | 7 cases with ARI=0, K=1 | ✅ Complete |
-| **exp1–6** | Can tuning fix under-splitting? | Minor ARI gains, not root-cause | ✅ Complete |
-| **exp7** | Is JL dimension too low? | Confirmed: k capped too low | ✅ Complete |
-| **exp8–9** | What dims does Gate 3 use? | Uses JL, not spectral — mismatch | ✅ Complete |
-| **exp10** | Is tree structure interleaved? | Confirmed visually | ✅ Complete |
-| **exp11** | Is power symmetric? | Gate 2 + Gate 3 both underpowered at small n | ✅ Complete |
-| **exp12** | Is deflation the bottleneck? | **No** — TP=0 regardless of estimator | ✅ Complete |
-| **exp13** | Where is power lost? | **41.7% Gate 2, 58.3% Gate 3**, 0% pass | ✅ Complete |
-| **exp14** | Does SNN distance help? | Alternative metric explored | ✅ Complete |
+| Exp        | Question                         | Finding                                      | Status     |
+| ---------- | -------------------------------- | -------------------------------------------- | ---------- |
+| **exp0**   | What are baseline failure modes? | 7 cases with ARI=0, K=1                      | ✅ Complete |
+| **exp1–6** | Can tuning fix under-splitting?  | Minor ARI gains, not root-cause              | ✅ Complete |
+| **exp7**   | Is JL dimension too low?         | Confirmed: k capped too low                  | ✅ Complete |
+| **exp8–9** | What dims does Gate 3 use?       | Uses JL, not spectral — mismatch             | ✅ Complete |
+| **exp10**  | Is tree structure interleaved?   | Confirmed visually                           | ✅ Complete |
+| **exp11**  | Is power symmetric?              | Gate 2 + Gate 3 both underpowered at small n | ✅ Complete |
+| **exp12**  | Is deflation the bottleneck?     | **No** — TP=0 regardless of estimator        | ✅ Complete |
+| **exp13**  | Where is power lost?             | **41.7% Gate 2, 58.3% Gate 3**, 0% pass      | ✅ Complete |
+| **exp14**  | Does SNN distance help?          | Alternative metric explored                  | ✅ Complete |
 
 **Phase 1 Conclusion**: Problem is **structural** (tree interleaving → small nodes → no power), not calibration.
 
@@ -88,56 +95,70 @@ enhancement_lab/
 
 ### Phase 2: Spectral Dimension Solution (exp15–exp19) ⭐
 
-| Exp | Question | Finding | Status |
-|-----|----------|---------|--------|
-| **exp15** | Is min-child k the regression cause? | **Yes** — k≈2 collapses power (ARI 0.979→0.815) | ✅ Complete |
-| **exp16** | What's the optimal k strategy? | **`jl_floor_qrt`** = max(min(k_L,k_R), JL/4) → ARI=0.991 | ✅ Complete |
-| **exp17** | Do literature methods help? | **No** — 12 methods, none beat jl_floor_qrt | ✅ Complete |
-| **exp18** | What's the eigenspace structure? | SPLIT: parent gains dims, children orthogonal | ✅ Complete |
-| **exp19** | What's the best spectral equation? | **jl_floor_qrt** wins (16 equations tested) | ✅ Complete |
+> Update (2026-03-20): The `jl_floor_qrt` deployment recommendation below is stale. After repairing the enhancement-lab harness against the current `sibling_config` API, live reruns gave `exp16`: `min_child=0.998`, `jl_floor_qrt=0.994`, `none=0.979`; repaired `exp19`: `jl_floor_qrt=0.994`, below several alternatives at `0.998`.
 
-**Winner**: `jl_floor_qrt = max(min(k_L, k_R), ⌈8·ln(n)/ε²⌉/4)`  
-**Impact**: ARI 0.815 → 0.991 (15 sentinel cases)  
-**Status**: Validated, ready for production deployment
+| Exp       | Question                             | Finding                                                                | Status     |
+| --------- | ------------------------------------ | ---------------------------------------------------------------------- | ---------- |
+| **exp15** | Is min-child k the regression cause? | Historical claim only; not revalidated after harness repair            | ✅ Complete |
+| **exp16** | What's the optimal k strategy?       | Repaired rerun: `min_child` 0.998, `jl_floor_qrt` 0.994, `none` 0.979  | ✅ Complete |
+| **exp17** | Do literature methods help?          | Historical claim only; needs rerun                                     | ✅ Complete |
+| **exp18** | What's the eigenspace structure?     | SPLIT: parent gains dims, children orthogonal                          | ✅ Complete |
+| **exp19** | What's the best spectral equation?   | Repaired rerun: `jl_floor_qrt` = 0.994, below several 0.998 strategies | ✅ Complete |
+
+**Winner**: no current winner claim should be treated as settled  
+**Impact**: repaired reruns do not support the earlier `0.815 → 0.991` production narrative  
+**Status**: not ready for production deployment
 
 ---
 
 ### Phase 3: Combined Gate Validation (exp20–exp25)
 
-| Exp | Question | Finding | Status |
-|-----|----------|---------|--------|
-| **exp20** | Extended equations? | Confirms jl_floor_qrt robustness | ✅ Complete |
-| **exp21** | Full suite validation? | Validates across 74 benchmark cases | ✅ Complete |
-| **exp22** | Gate 2 projection dim? | Dimension sensitivity analysis | ✅ Complete |
-| **exp23** | Combined gate performance? | Gate 2+3 interaction mapping | ✅ Complete |
-| **exp24** | Signal fraction validation? | Signal-to-noise analysis | ✅ Complete |
-| **exp25** | Lam12 × JL hybrid? | Alternative floor strategy | ✅ Complete |
-| **exp25b** | Principled floor derivation? | Theoretical justification | ✅ Complete |
+| Exp        | Question                     | Finding                             | Status     |
+| ---------- | ---------------------------- | ----------------------------------- | ---------- |
+| **exp20**  | Extended equations?          | Confirms jl_floor_qrt robustness    | ✅ Complete |
+| **exp21**  | Full suite validation?       | Validates across 74 benchmark cases | ✅ Complete |
+| **exp22**  | Gate 2 projection dim?       | Dimension sensitivity analysis      | ✅ Complete |
+| **exp23**  | Combined gate performance?   | Gate 2+3 interaction mapping        | ✅ Complete |
+| **exp24**  | Signal fraction validation?  | Signal-to-noise analysis            | ✅ Complete |
+| **exp25**  | Lam12 × JL hybrid?           | Alternative floor strategy          | ✅ Complete |
+| **exp25b** | Principled floor derivation? | Theoretical justification           | ✅ Complete |
 
-**Phase 3 Conclusion**: jl_floor_qrt robust across gate combinations and parameter settings.
+**Phase 3 Conclusion**: the earlier `jl_floor_qrt` robustness claim is historical and should be revalidated before use.
 
 ---
 
 ### Phase 4: Parent-PCA Projection (exp26–exp26b) 🆕
 
-| Exp | Question | Finding | Status |
-|-----|----------|---------|--------|
-| **exp26** | Should Gate 3 use parent PCA? | Tests parent PCA directions vs random | 🔄 In Progress |
-| **exp26b** | Satterthwaite approximation? | Alternative χ² approximation | 🔄 In Progress |
+| Exp        | Question                      | Finding                               | Status        |
+| ---------- | ----------------------------- | ------------------------------------- | ------------- |
+| **exp26**  | Should Gate 3 use parent PCA? | Tests parent PCA directions vs random | 🔄 In Progress |
+| **exp26b** | Satterthwaite approximation?  | Alternative χ² approximation          | 🔄 In Progress |
 
 **Hypothesis**: Parent PCA captures between-group variance better than random projections.
 
 ---
 
+### Phase 5: Inflation Policy Discovery (exp27–exp31) 🆕
+
+| Exp       | Question                                           | Finding                                                           | Status      |
+| --------- | -------------------------------------------------- | ----------------------------------------------------------------- | ----------- |
+| **exp27** | Does local neighborhood padding recover power?     | Additional local context benchmarked                              | ✅ Complete |
+| **exp28** | Does uncertainty-aware F-tail help?                | F-tail stayed close to global χ²; median variants were unstable   | ✅ Complete |
+| **exp29** | What happens in the lowest-ESS cases?              | No evidence that F-tail or permutation-median beats global χ²     | ✅ Complete |
+| **exp30** | Can simple global/local shrinkage improve things?  | Null control preserved, but BH focal outcomes stayed flat         | ✅ Complete |
+| **exp31** | Can we distill a portable oracle-policy rule?      | New row-level oracle dataset, family portability, Fourier summary | 🔄 In Progress |
+
+**Phase 5 Conclusion**: ad hoc scalar shrinkage was too weak; the current direction is row-level oracle policy distillation with explicit portability checks across case families.
+
+---
+
 ## Strategic Recommendations
 
-### Immediate Deployment (Ready Now)
+### Immediate Deployment
 
-1. **`jl_floor_qrt` for Gate 3 projection dimension**
-   - File: `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py`
-   - Function: `_derive_sibling_spectral_dims()`
-   - Change: `k = max(min(k_L, k_R), ceil(8*ln(n)/ε²)/4)`
-   - Expected impact: ARI 0.815 → 0.991
+1. **Do not deploy `jl_floor_qrt` to production yet**
+   - The repaired 2026-03-20 reruns do not reproduce the earlier winner claim
+   - Revalidate on the full-suite harness before changing Gate 3 production logic
 
 2. **Remove `PROJECTION_MAX_DIMENSION` cap**
    - Already applied in exp7–9
@@ -173,11 +194,11 @@ enhancement_lab/
 
 ### Sentinel Cases (15 cases, used in exp15–exp25)
 
-| Category | Cases |
-|----------|-------|
+| Category                                  | Cases                                                                                                              |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | **Failure cases** (ARI=0 under min-child) | `binary_balanced_low_noise__2`, `gauss_clear_small`, `binary_low_noise_12c`, `binary_perfect_8c`, `binary_hard_4c` |
-| **Regression guard** (must not regress) | `binary_2clusters`, `binary_hard_8c`, `binary_low_noise_2c/4c/8c`, `gauss_clear_small/medium/large` |
-| **Partial success** (0.3 ≤ ARI < 0.8) | `cat_highcard_10cat_4c`, `phylo_dna_4taxa_low_mut`, `overlap_unbal_4c_small` |
+| **Regression guard** (must not regress)   | `binary_2clusters`, `binary_hard_8c`, `binary_low_noise_2c/4c/8c`, `gauss_clear_small/medium/large`                |
+| **Partial success** (0.3 ≤ ARI < 0.8)     | `cat_highcard_10cat_4c`, `phylo_dna_4taxa_low_mut`, `overlap_unbal_4c_small`                                       |
 
 ### Metrics
 
@@ -190,26 +211,27 @@ enhancement_lab/
 
 ## Code Locations
 
-| Component | File | Function |
-|-----------|------|----------|
-| Gate 3 dimension derivation | `orchestrator.py` | `_derive_sibling_spectral_dims()` |
-| Gate 3 PCA projections | `orchestrator.py` | `_derive_sibling_pca_projections()` |
-| Edge test (Gate 2) | `child_parent_divergence.py` | `annotate_edge_gate()` |
-| Sibling test (Gate 3) | `sibling_divergence/` | `annotate_sibling_divergence*()` |
-| Spectral decomposition | `spectral.py` | `compute_spectral_decomposition()` |
-| Marchenko-Pastur | `marchenko_pastur.py` | `estimate_k_marchenko_pastur()` |
+| Component                   | File                         | Function                            |
+| --------------------------- | ---------------------------- | ----------------------------------- |
+| Gate 3 dimension derivation | `orchestrator.py`            | `_derive_sibling_spectral_dims()`   |
+| Gate 3 PCA projections      | `orchestrator.py`            | `_derive_sibling_pca_projections()` |
+| Edge test (Gate 2)          | `child_parent_divergence.py` | `annotate_edge_gate()`              |
+| Sibling test (Gate 3)       | `sibling_divergence/`        | `annotate_sibling_divergence*()`    |
+| Spectral decomposition      | `spectral.py`                | `compute_spectral_decomposition()`  |
+| Marchenko-Pastur            | `marchenko_pastur.py`        | `estimate_k_marchenko_pastur()`     |
 
 ---
 
 ## Timeline
 
-| Date | Milestone |
-|------|-----------|
-| 2026-02-14 | Post-selection bias identified, cousin-adjusted Wald deployed |
-| 2026-02-17 | Signal localization v2 benchmarked (ARI 0.431 vs v1 0.757) |
-| 2026-03-17 | Spectral dimension investigation complete (exp15–exp19) |
-| 2026-03-18 | Parent-PCA projection investigation started (exp26) |
-| **Next** | Deploy `jl_floor_qrt` to production |
+| Date       | Milestone                                                        |
+| ---------- | ---------------------------------------------------------------- |
+| 2026-02-14 | Post-selection bias identified, cousin-adjusted Wald deployed    |
+| 2026-02-17 | Signal localization v2 benchmarked (ARI 0.431 vs v1 0.757)       |
+| 2026-03-17 | Spectral dimension investigation complete (exp15–exp19)          |
+| 2026-03-18 | Parent-PCA projection investigation started (exp26)              |
+| 2026-03-20 | Oracle-policy row modeling and portability analysis started (exp31) |
+| **Next**   | Revalidate Gate 3 k-selection on the repaired full-suite harness |
 
 ---
 

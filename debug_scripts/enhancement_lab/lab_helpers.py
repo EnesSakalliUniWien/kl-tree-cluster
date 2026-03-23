@@ -31,6 +31,9 @@ from benchmarks.shared.cases import get_default_test_cases  # noqa: E402
 from benchmarks.shared.generators import generate_case_data  # noqa: E402
 from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (  # noqa: E402
+    sibling_config,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (  # noqa: E402
     marchenko_pastur as mp_module,
 )
@@ -102,15 +105,11 @@ def temporary_experiment_overrides(
             stack.enter_context(temporary_dict_values(leaf_data_cache, leaf_data=leaf_data))
         if sibling_dims is not _MISSING:
             stack.enter_context(
-                temporary_attr(orchestrator, "_derive_sibling_spectral_dims", sibling_dims)
+                temporary_attr(sibling_config, "derive_sibling_spectral_dims", sibling_dims)
             )
         if sibling_pca is not _MISSING:
             stack.enter_context(
-                temporary_attr(
-                    orchestrator,
-                    "_derive_sibling_pca_projections",
-                    sibling_pca,
-                )
+                temporary_attr(sibling_config, "derive_sibling_pca_projections", sibling_pca)
             )
         if gate2_estimator is not _MISSING:
             stack.enter_context(
