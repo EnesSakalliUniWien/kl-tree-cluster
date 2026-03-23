@@ -6,6 +6,7 @@ import pandas as pd
 
 from ..core.contracts import (
     LEGACY_EDGE_COLUMNS,
+    LEGACY_EDGE_OPTIONAL_COLUMNS,
     LEGACY_SIBLING_COLUMNS,
     LEGACY_SIBLING_OPTIONAL_COLUMNS,
 )
@@ -44,7 +45,8 @@ def validate_legacy_edge_columns(
 ) -> tuple[str, ...]:
     produced = edge_gate_columns(df)
     missing = [col for col in LEGACY_EDGE_COLUMNS if col not in produced]
-    extras = [col for col in produced if col not in LEGACY_EDGE_COLUMNS]
+    allowed = set(LEGACY_EDGE_COLUMNS) | set(LEGACY_EDGE_OPTIONAL_COLUMNS)
+    extras = [col for col in produced if col not in allowed]
     if missing or extras:
         detail = _format_contract_detail(missing, extras)
         raise DecompositionValidationError(f"{error_context}: {detail}.")

@@ -13,7 +13,7 @@ class CalibrationModel:
     """Result of fitting the post-selection inflation model.
 
     Stores the global inflation factor c-hat estimated via continuous
-    edge-weight calibration.  The model is intercept-only: a single
+    edge-weight calibration. The live model is intercept-only: a single
     constant c-hat applied uniformly to all focal sibling pairs.
     """
 

@@ -20,8 +20,9 @@ def run_gate_annotation_pipeline(
     sibling_alpha: float = config.SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
+    minimum_projection_dimension: int | None = None,
     sibling_method: str = config.SIBLING_TEST_METHOD,
-    fdr_method: str = "tree_bh",
+    fdr_method: str = config.EDGE_FDR_METHOD,
     sibling_spectral_dims: dict[str, int] | None = None,
     sibling_pca_projections: dict[str, np.ndarray] | None = None,
     sibling_pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -42,6 +43,7 @@ def run_gate_annotation_pipeline(
         significance_level_alpha=alpha_local,
         leaf_data=leaf_data,
         spectral_method=spectral_method,
+        minimum_projection_dimension=minimum_projection_dimension,
         fdr_method=fdr_method,
     )
 
@@ -65,6 +67,7 @@ def run_gate_annotation_pipeline(
         edge_bundle.annotated_df,
         significance_level_alpha=sibling_alpha,
         sibling_method=sibling_method,
+        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=sibling_spectral_dims,
         pca_projections=sibling_pca_projections,
         pca_eigenvalues=sibling_pca_eigenvalues,

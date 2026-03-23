@@ -7,8 +7,8 @@ from typing import Optional, Tuple
 import numpy as np
 from scipy import linalg
 
-from ..core.eigen_result import EigenResult
 from ...statistics.projection.k_estimators import marchenko_pastur_signal_count
+from ..core.eigen_result import EigenResult
 
 
 def eigendecompose_correlation_backend(

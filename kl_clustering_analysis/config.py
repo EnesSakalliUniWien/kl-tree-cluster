@@ -16,6 +16,13 @@ SIBLING_ALPHA: float = 0.01
 # Default significance level for Gate 2 edge (child-vs-parent) tests.
 EDGE_ALPHA: float = 0.001
 
+# Multiple-testing correction for Gate 2 edge (child-vs-parent) tests.
+# Options:
+#   "tree_bh"    - hierarchical TreeBH (default production behavior)
+#   "level_wise" - BH independently at each tree depth
+#   "flat"       - BH across all child-parent edges
+EDGE_FDR_METHOD: Literal["tree_bh", "level_wise", "flat"] = "tree_bh"
+
 
 # --- Legacy Branch-Length Variance Scaling ---
 
@@ -48,6 +55,19 @@ TREE_DISTANCE_METRIC: str = "hamming"
 # Average (UPGMA) produces more balanced trees than complete linkage
 TREE_LINKAGE_METHOD: str = "average"
 
+# --- Random Projection Parameters ---
+
+# Distortion tolerance for Johnson-Lindenstrauss projection.
+# Smaller eps preserves distances more tightly but increases k.
+PROJECTION_EPS: float = 0.3
+
+# Minimum projected dimension for the JL path.
+# May be an integer or "auto" to derive a floor from the global effective rank.
+PROJECTION_MINIMUM_DIMENSION: int | str = "auto"
+
+# Random seed for deterministic per-test projection seeding.
+PROJECTION_RANDOM_SEED: int | None = 42
+
 # --- Spectral Dimension Estimation ---
 
 # Per-node projection dimension method.  Uses eigendecomposition of the local
@@ -56,8 +76,11 @@ TREE_LINKAGE_METHOD: str = "average"
 #   "marchenko_pastur"    - Count eigenvalues above MP upper bound (default)
 # Marchenko-Pastur uses random matrix theory to separate signal eigenvalues
 # from the noise bulk.  For the correlation matrix σ²=1 exactly, so the
-# MP bounds are (1±√(d/n))².  When MP yields k=0 (no signal eigenvalues),
-# the test is skipped and the node is treated as a merge.
+# MP bounds are (1±√(d/n))². When no eigenvalues exceed the MP upper bound,
+# the raw signal count is 0 conceptually, but the implementation floors the
+# returned dimension to at least 1 and then applies SPECTRAL_MINIMUM_DIMENSION.
+# In practice, pure-noise nodes therefore receive a tiny fallback dimension
+# and are expected to fail to reject rather than taking a literal k=0 skip path.
 SPECTRAL_METHOD: str | None = "marchenko_pastur"
 
 # Minimum projection dimension for the SPECTRAL (Gate 2) path only.
@@ -76,6 +99,22 @@ SPECTRAL_MINIMUM_DIMENSION: int = 2
 # Keeping True is recommended for consistency.
 INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 
+# --- One-Active 1D Handling ---
+#
+# Optional handling for subtrees with exactly one active-variance feature.
+# These are not true multivariate PCA failures: the local rank is 1.
+#
+# Options:
+#   "off"                 - disable the one-active guard; useful as a baseline
+#                           for comparison, but no longer the preferred default
+#   "per_tree_load_guard" - fit low-vs-high leverage within the current tree,
+#                           then allow deterministic 1D only when low-leverage
+#                           one-active nodes do not dominate the tree's support
+#                           load. Thresholds are estimated fresh per clustering
+#                           run; no fixed magic numbers are used. Preferred
+#                           production default.
+ONE_ACTIVE_1D_MODE: Literal["off", "per_tree_load_guard"] = "per_tree_load_guard"
+
 # --- Sibling Test Method ---
 
 # Method for sibling divergence testing.
@@ -86,7 +125,21 @@ INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 #                             one log-linear regression on (BL_sum, n_parent), then deflates
 #                             focal pair stats: T_adj = T / ĉ ~ χ²(k).
 #                             Production default.
+#   "parametric_wald"       - Parametric Wald: fits c(n) = α · n^(-β) from null-like pairs
+#                             via log-linear OLS + curve_fit refinement, then deflates each
+#                             focal pair with a per-node c(n_parent) prediction.
 SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
+
+# --- Conditional Deflation ---
+
+# Per-node deflation sensitivity parameter (df-mismatch kernel).
+# When not None, the adjusted Wald deflation is node-specific:
+#   c_i = 1 + (c_global - 1) * clip(1 - alpha * |log(k_i / k_pool_median)|, 0, 1)
+# Nodes whose df matches the calibration pool get full deflation;
+# nodes far from the pool median get reduced deflation.
+# Set to None to disable (revert to global-constant deflation).
+# Validated at 0.3 on 101 benchmark cases (+0.033 mean ARI, K=1 halved).
+CONDITIONAL_DEFLATION_ALPHA: float | None = 0.3
 
 # --- Sibling Whitening Mode ---
 # Controls how projected statistics are converted to p-values in Gate 3.

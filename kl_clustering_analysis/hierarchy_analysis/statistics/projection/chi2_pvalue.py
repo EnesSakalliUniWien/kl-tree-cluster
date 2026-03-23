@@ -35,7 +35,7 @@ WhiteningMode = Literal["per_component", "satterthwaite"]
 
 def compute_projected_pvalue(
     projected_vector: np.ndarray,
-    degrees_of_freedom: int,
+    degrees_of_freedom: int | float,
     eigenvalues: np.ndarray | None = None,
     *,
     whitening: WhiteningMode = "per_component",

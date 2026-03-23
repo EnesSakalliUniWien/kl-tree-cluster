@@ -14,11 +14,12 @@ class SiblingPairRecord:
     left: str
     right: str
     stat: float
-    degrees_of_freedom: int
+    degrees_of_freedom: float
     p_value: float
     branch_length_sum: float
     n_parent: int
     is_null_like: bool
+    is_gate2_blocked: bool = False
     edge_weight: float = 0.0  # min(p_edge_left, p_edge_right) for continuous calibration
 
 
@@ -27,8 +28,9 @@ class DeflatableSiblingRecord(Protocol):
 
     parent: str
     stat: float
-    degrees_of_freedom: int
+    degrees_of_freedom: float
     is_null_like: bool
+    is_gate2_blocked: bool
 
 
 _R = TypeVar("_R", bound=DeflatableSiblingRecord)

@@ -15,6 +15,10 @@ LEGACY_EDGE_COLUMNS: tuple[str, ...] = (
     "Child_Parent_Divergence_df",
     "Child_Parent_Divergence_Invalid",
 )
+LEGACY_EDGE_OPTIONAL_COLUMNS: tuple[str, ...] = (
+    "Child_Parent_Divergence_Tested",
+    "Child_Parent_Divergence_Ancestor_Blocked",
+)
 
 LEGACY_SIBLING_COLUMNS: tuple[str, ...] = (
     "Sibling_Divergence_Skipped",

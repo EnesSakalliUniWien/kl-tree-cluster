@@ -17,6 +17,9 @@ import pandas as pd
 from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
+from .decomposition.backends.random_projection_backend import (
+    resolve_minimum_projection_dimension_backend,
+)
 from .decomposition.gates.gate_evaluator import GateEvaluator
 from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
 from .decomposition.gates.traversal import iterate_worklist, process_node
@@ -50,6 +53,7 @@ class TreeDecomposition:
         *,
         alpha_local: float = config.EDGE_ALPHA,
         sibling_alpha: float = config.SIBLING_ALPHA,
+        edge_fdr_method: str = config.EDGE_FDR_METHOD,
         leaf_data: pd.DataFrame | None = None,
         spectral_method: str | None = config.SPECTRAL_METHOD,
         passthrough: bool = config.PASSTHROUGH,
@@ -80,8 +84,13 @@ class TreeDecomposition:
         self.annotations_df = annotations_df if annotations_df is not None else pd.DataFrame()
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
+        self._edge_fdr_method = str(edge_fdr_method)
         self._leaf_data = leaf_data
         self._spectral_method = spectral_method if leaf_data is not None else None
+        self._resolved_minimum_projection_dimension = resolve_minimum_projection_dimension_backend(
+            config.PROJECTION_MINIMUM_DIMENSION,
+            leaf_data=leaf_data,
+        )
 
         # ----- root -----
         self._root = next(node_id for node_id, degree in self.tree.in_degree() if degree == 0)
@@ -203,9 +212,10 @@ class TreeDecomposition:
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
             spectral_method=self._spectral_method,
+            minimum_projection_dimension=self._resolved_minimum_projection_dimension,
             sibling_method=config.SIBLING_TEST_METHOD,
             sibling_whitening=config.SIBLING_WHITENING,
-            fdr_method="tree_bh",
+            fdr_method=self._edge_fdr_method,
         ).annotated_df
 
     def _cache_node_metadata(self) -> None:

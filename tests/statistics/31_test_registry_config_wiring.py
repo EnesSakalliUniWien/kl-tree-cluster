@@ -58,6 +58,7 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
     [
         "wald",
         "cousin_adjusted_wald",
+        "parametric_wald",
     ],
 )
 @pytest.mark.parametrize(

@@ -8,6 +8,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
@@ -15,6 +16,7 @@ from kl_clustering_analysis.core_utils.data_utils import (
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
 from ..multiple_testing import apply_multiple_testing_correction
+from ..multiple_testing.tree_bh_correction import tree_bh_correction
 from .child_parent_spectral_decomposition import compute_child_parent_spectral_context
 from .child_parent_tree_testing import run_child_parent_tests_across_tree
 
@@ -24,10 +26,11 @@ logger = logging.getLogger(__name__)
 def annotate_child_parent_divergence(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
-    significance_level_alpha: float = 0.05,
-    fdr_method: str = "tree_bh",
+    significance_level_alpha: float = config.EDGE_ALPHA,
+    fdr_method: str = config.EDGE_FDR_METHOD,
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
+    minimum_projection_dimension: int | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using the projected Wald pipeline."""
     annotations_df = annotations_df.copy()
@@ -54,6 +57,9 @@ def annotate_child_parent_divergence(
     annotations_df.attrs["_spectral_dims"] = node_spectral_dimensions
     annotations_df.attrs["_pca_projections"] = node_pca_projections
     annotations_df.attrs["_pca_eigenvalues"] = node_pca_eigenvalues
+    one_active_guard_audit = tree.graph.get("_one_active_guard_audit")
+    if one_active_guard_audit is not None:
+        annotations_df.attrs["_one_active_guard_audit"] = one_active_guard_audit
 
     (
         edge_test_statistics,
@@ -113,14 +119,29 @@ def annotate_child_parent_divergence(
             preview_node_ids,
         )
 
-    reject_null_hypothesis, corrected_p_values = apply_multiple_testing_correction(
-        p_values=p_values_for_correction,
-        child_ids=child_ids,
-        child_depths=child_depths_for_correction,
-        alpha=edge_alpha,
-        method=fdr_method,
-        tree=tree,
-    )
+    tested_mask = np.ones(len(child_ids), dtype=bool)
+    ancestor_blocked_mask = np.zeros(len(child_ids), dtype=bool)
+    if fdr_method == "tree_bh":
+        tree_bh_result = tree_bh_correction(
+            tree,
+            p_values_for_correction,
+            child_ids,
+            alpha=edge_alpha,
+        )
+        reject_null_hypothesis = tree_bh_result.reject
+        corrected_p_values = tree_bh_result.adjusted_p.copy()
+        tested_mask = np.asarray(tree_bh_result.tested_mask, dtype=bool)
+        ancestor_blocked_mask = ~tested_mask
+        corrected_p_values = np.where(tested_mask, corrected_p_values, np.nan)
+    else:
+        reject_null_hypothesis, corrected_p_values = apply_multiple_testing_correction(
+            p_values=p_values_for_correction,
+            child_ids=child_ids,
+            child_depths=child_depths_for_correction,
+            alpha=edge_alpha,
+            method=fdr_method,
+            tree=tree,
+        )
 
     reject_null_hypothesis = np.where(non_finite_p_value_mask, False, reject_null_hypothesis)
 
@@ -129,6 +150,8 @@ def annotate_child_parent_divergence(
         "invalid_tests": invalid_test_count,
         "non_finite_p_values": non_finite_p_value_count,
         "conservative_path_tests": non_finite_p_value_count,
+        "tested_edges": int(np.sum(tested_mask)),
+        "ancestor_blocked_edges": int(np.sum(ancestor_blocked_mask)),
     }
 
     return assign_divergence_results(
@@ -139,6 +162,8 @@ def annotate_child_parent_divergence(
         reject_null=reject_null_hypothesis,
         degrees_of_freedom=edge_degrees_of_freedom,
         invalid_mask=invalid_test_mask,
+        tested_mask=tested_mask,
+        ancestor_blocked_mask=ancestor_blocked_mask,
     )
 
 

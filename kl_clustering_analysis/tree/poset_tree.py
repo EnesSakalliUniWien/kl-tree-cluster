@@ -371,6 +371,10 @@ class PosetTree(nx.DiGraph):
         # Extract alpha values from kwargs (with defaults from config)
         alpha_local = decomposer_kwargs.pop("alpha_local", config.EDGE_ALPHA)
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
+        edge_fdr_method = decomposer_kwargs.pop("edge_fdr_method", config.EDGE_FDR_METHOD)
+        gate2_fdr_method = decomposer_kwargs.pop("gate2_fdr_method", None)
+        if gate2_fdr_method is not None:
+            edge_fdr_method = gate2_fdr_method
 
         if annotations_df is None:
             if self.stats_df is None:
@@ -387,6 +391,7 @@ class PosetTree(nx.DiGraph):
             annotations_df=annotations_df,
             alpha_local=alpha_local,
             sibling_alpha=sibling_alpha,
+            edge_fdr_method=edge_fdr_method,
             leaf_data=leaf_data,
             **decomposer_kwargs,
         )

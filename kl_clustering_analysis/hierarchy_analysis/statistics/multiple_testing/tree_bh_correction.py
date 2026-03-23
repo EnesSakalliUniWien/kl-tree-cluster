@@ -37,6 +37,9 @@ class TreeBHResult:
         Boolean array of rejections (True = reject null hypothesis)
     adjusted_p : np.ndarray
         Adjusted p-values
+    tested_mask : np.ndarray
+        Boolean mask indicating which edges were actually tested within a
+        reached TreeBH family. Untested descendants remain ``False``.
     level_thresholds : Dict[int, float]
         Threshold used at each level
     family_results : Dict[str, Dict]
@@ -45,6 +48,7 @@ class TreeBHResult:
 
     reject: np.ndarray
     adjusted_p: np.ndarray
+    tested_mask: np.ndarray
     level_thresholds: Dict[int, float]
     family_results: Dict[str, Dict]
 
@@ -125,11 +129,14 @@ def _compute_family_threshold(
     return adjusted_alpha
 
 
-def _initialize_tree_bh_outputs(total_hypothesis_count: int) -> tuple[np.ndarray, np.ndarray]:
-    """Initialize rejection mask and adjusted p-value array."""
+def _initialize_tree_bh_outputs(
+    total_hypothesis_count: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Initialize rejection, adjusted-p, and tested-mask arrays."""
     rejection_mask = np.zeros(total_hypothesis_count, dtype=bool)
     adjusted_p_values = np.ones(total_hypothesis_count, dtype=float)
-    return rejection_mask, adjusted_p_values
+    tested_mask = np.zeros(total_hypothesis_count, dtype=bool)
+    return rejection_mask, adjusted_p_values, tested_mask
 
 
 def _compute_child_depths(tree: nx.DiGraph, child_ids: List[str]) -> np.ndarray:
@@ -182,6 +189,7 @@ def _record_family_bh_outcome(
     child_ids: List[str],
     rejection_mask: np.ndarray,
     adjusted_p_values: np.ndarray,
+    tested_mask: np.ndarray,
     rejected_parent_nodes: Set[str],
     family_rejection_counts: Dict[str, Tuple[int, int]],
     family_results: Dict[str, Dict],
@@ -191,6 +199,7 @@ def _record_family_bh_outcome(
     for within_family_index, global_index in enumerate(family_child_indices):
         rejection_mask[global_index] = family_reject_mask[within_family_index]
         adjusted_p_values[global_index] = family_adjusted_p_values[within_family_index]
+        tested_mask[global_index] = True
         if family_reject_mask[within_family_index]:
             rejected_parent_nodes.add(child_ids[global_index])
 
@@ -257,12 +266,15 @@ def tree_bh_correction(
     array([ True,  True,  True])
     """
     total_hypothesis_count = len(p_values)
-    rejection_mask, adjusted_p_values = _initialize_tree_bh_outputs(total_hypothesis_count)
+    rejection_mask, adjusted_p_values, tested_mask = _initialize_tree_bh_outputs(
+        total_hypothesis_count
+    )
 
     if total_hypothesis_count == 0:
         return TreeBHResult(
             reject=rejection_mask,
             adjusted_p=adjusted_p_values,
+            tested_mask=tested_mask,
             level_thresholds={},
             family_results={},
         )
@@ -330,6 +342,7 @@ def tree_bh_correction(
                 child_ids=child_ids,
                 rejection_mask=rejection_mask,
                 adjusted_p_values=adjusted_p_values,
+                tested_mask=tested_mask,
                 rejected_parent_nodes=rejected_parent_nodes,
                 family_rejection_counts=family_rejection_counts,
                 family_results=family_results,
@@ -347,6 +360,7 @@ def tree_bh_correction(
     return TreeBHResult(
         reject=rejection_mask,
         adjusted_p=adjusted_p_values,
+        tested_mask=tested_mask,
         level_thresholds=level_thresholds,
         family_results=family_results,
     )

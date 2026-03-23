@@ -7,8 +7,12 @@ import pandas.testing as pdt
 import pytest
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import GateAnnotationBundle
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate import annotate_edge_gate
+from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
+    GateAnnotationBundle,
+)
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate import (
+    annotate_edge_gate,
+)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -48,7 +52,7 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
     return tree, base_df
 
 
-@pytest.mark.parametrize("sibling_method", ["wald", "cousin_adjusted_wald"])
+@pytest.mark.parametrize("sibling_method", ["wald", "cousin_adjusted_wald", "parametric_wald"])
 def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
     monkeypatch,
     sibling_method: str,
@@ -109,15 +113,9 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
     expected_edge_cols = tuple(
         col for col in sequential_gate_cols if col.startswith("Child_Parent_")
     )
-    expected_sibling_cols = tuple(
-        col for col in sequential_gate_cols if col.startswith("Sibling_")
-    )
-    actual_edge_cols = tuple(
-        col for col in adapter_df.columns if col.startswith("Child_Parent_")
-    )
-    actual_sibling_cols = tuple(
-        col for col in adapter_df.columns if col.startswith("Sibling_")
-    )
+    expected_sibling_cols = tuple(col for col in sequential_gate_cols if col.startswith("Sibling_"))
+    actual_edge_cols = tuple(col for col in adapter_df.columns if col.startswith("Child_Parent_"))
+    actual_sibling_cols = tuple(col for col in adapter_df.columns if col.startswith("Sibling_"))
     assert actual_edge_cols == expected_edge_cols
     assert actual_sibling_cols == expected_sibling_cols
     assert "pipeline" in bundle.metadata

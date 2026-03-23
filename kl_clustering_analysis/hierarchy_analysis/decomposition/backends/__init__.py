@@ -7,7 +7,12 @@ from .eigen_backend import (
     estimate_spectral_k_backend,
 )
 from .random_projection_backend import (
+    compute_projection_dimension_backend,
     derive_projection_seed_backend,
+    generate_projection_matrix_backend,
+    get_resolved_minimum_projection_dimension_backend,
+    resolve_minimum_projection_dimension_backend,
+    set_resolved_minimum_projection_dimension_backend,
 )
 
 __all__ = [
@@ -15,5 +20,10 @@ __all__ = [
     "eigendecompose_correlation_backend",
     "estimate_spectral_k_backend",
     "build_pca_projection_backend",
+    "compute_projection_dimension_backend",
     "derive_projection_seed_backend",
+    "generate_projection_matrix_backend",
+    "get_resolved_minimum_projection_dimension_backend",
+    "resolve_minimum_projection_dimension_backend",
+    "set_resolved_minimum_projection_dimension_backend",
 ]

@@ -125,7 +125,7 @@ def mahalanobis_wald_categorical(
     )
     T = float(np.sum(z**2))
     degrees_of_freedom = d * (K - 1)
-    return float(T), int(degrees_of_freedom)
+    return float(T), float(degrees_of_freedom)
 
 
 __all__ = ["categorical_whitened_vector", "mahalanobis_wald_categorical"]

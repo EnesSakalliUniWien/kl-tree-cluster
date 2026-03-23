@@ -1,10 +1,15 @@
-"""Cousin-adjusted Wald sibling divergence annotation.
+"""Parametric Wald sibling divergence annotation.
 
-Corrects the post-selection inflation of the Wald chi-squared statistic
-by estimating the inflation factor c from null-like calibration pairs,
-then deflating focal pairs before BH correction.
+Corrects post-selection inflation using a per-node power-law model:
 
-The calibration model lives in ``calibration.py``.
+    c(n) = α · n^(-β)
+
+fitted from null-like calibration pairs (neither child edge-significant).
+Each focal pair is deflated by its node-specific predicted c(n_parent),
+then tested against χ²(k).
+
+Falls back to global weighted-mean ĉ when fewer than 3 null-like pairs
+are available for fitting.
 """
 
 from __future__ import annotations
@@ -25,15 +30,10 @@ from .bh_annotation import (
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
 )
-from .inflation_correction.conditional_deflation import (
-    PoolStats,
-    compute_pool_stats,
-    predict_conditional_inflation_factor,
-)
 from .inflation_correction.inflation_estimation import (
     CalibrationModel,
-    fit_inflation_model,
-    predict_inflation_factor,
+    fit_parametric_inflation_model,
+    predict_parametric_inflation_factor,
 )
 from .pair_testing.sibling_pair_collection import (
     SiblingPairRecord,
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
-# Pipeline: collect -> test -> calibrate -> deflate
+# Pipeline: collect -> fit parametric -> deflate per-node -> apply
 # =============================================================================
 
 
@@ -61,13 +61,7 @@ def _collect_all_pairs(
     child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
     whitening: str = "per_component",
 ) -> Tuple[List[SiblingPairRecord], List[str]]:
-    """Collect ALL binary-child parent nodes and compute raw Wald stats.
-
-    All pairs are computed for calibration purposes; only focal pairs
-    (at least one child edge-significant) are subsequently tested.
-
-    Returns (records, non_binary_nodes).
-    """
+    """Collect ALL binary-child parent nodes and compute raw Wald stats."""
     return collect_sibling_pair_records(
         tree,
         annotations_df,
@@ -84,34 +78,17 @@ def _collect_all_pairs(
 def _deflate_and_test(
     records: List[SiblingPairRecord],
     model: CalibrationModel,
-    pool: PoolStats | None = None,
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
-    """Deflate focal pairs and compute adjusted p-values.
-
-    When ``pool`` is provided and ``config.CONDITIONAL_DEFLATION_ALPHA``
-    is set, uses per-node conditional deflation.  Otherwise falls back
-    to the global-constant deflation.
-
-    Returns:
-        focal_parents: parent node IDs for focal (edge-significant) pairs
-        focal_results: (T_adj, k, p_adj) per focal pair
-        calibration_methods: method string per focal pair
-    """
-    cond_alpha = config.CONDITIONAL_DEFLATION_ALPHA
-    use_conditional = cond_alpha is not None and pool is not None
+    """Deflate focal pairs using per-node c(n) and compute adjusted p-values."""
 
     def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]:
-        if use_conditional:
-            inflation_factor = predict_conditional_inflation_factor(
-                model, pool, rec.degrees_of_freedom, alpha=cond_alpha,
-            )
-            return inflation_factor, "conditional_df_mismatch"
-        inflation_factor = predict_inflation_factor(
-            model,
-            rec.branch_length_sum,
-            n_reference=rec.n_parent,
+        c = predict_parametric_inflation_factor(model, n_reference=rec.n_parent)
+        method_label = (
+            "parametric_power_law"
+            if model.method == "parametric_power_law"
+            else "parametric_fallback"
         )
-        return inflation_factor, "adjusted_regression"
+        return c, method_label
 
     return deflate_focal_pairs(
         records,
@@ -119,7 +96,7 @@ def _deflate_and_test(
     )
 
 
-def _apply_results_adjusted(
+def _apply_results_parametric(
     annotations_df: pd.DataFrame,
     focal_parents: List[str],
     focal_results: List[Tuple[float, float, float]],
@@ -134,7 +111,7 @@ def _apply_results_adjusted(
         focal_results,
         alpha,
         logger=logger,
-        audit_label="Cousin-adjusted Wald",
+        audit_label="Parametric Wald",
         method_labels=calibration_methods,
         skipped_parents=skipped_parents,
     )
@@ -145,7 +122,7 @@ def _apply_results_adjusted(
 # =============================================================================
 
 
-def annotate_sibling_divergence_adjusted(
+def annotate_sibling_divergence_parametric(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     *,
@@ -157,15 +134,16 @@ def annotate_sibling_divergence_adjusted(
     child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
     whitening: str = "per_component",
 ) -> pd.DataFrame:
-    """Test sibling divergence using cousin-adjusted Wald.
+    """Test sibling divergence using parametric Wald with c(n) = α · n^(-β).
 
-    Two-pass approach:
-    1. Compute raw Wald chi-squared stats for ALL binary-child parent nodes.
-       Null-like pairs provide calibration data; focal pairs are tested.
-    2. Estimate inflation c-hat using continuous edge-weight calibration
-       (weighted mean of T/k, where null-like pairs dominate via high weights).
-    3. For *focal* pairs (at least one child edge-significant), deflate:
-       T_adj = T / c-hat, p = chi-sq_sf(T_adj, k).
+    Three-pass approach:
+    1. Compute raw Wald χ² stats for ALL binary-child parent nodes.
+    2. Fit power-law inflation model c(n) = α · n^(-β) from null-like pairs.
+    3. For *focal* pairs, deflate with per-node prediction:
+       T_adj = T / c(n_parent), p = χ²_sf(T_adj, k).
+
+    Falls back to global weighted-mean ĉ when fewer than 3 null-like pairs
+    are available.
 
     Parameters
     ----------
@@ -185,7 +163,7 @@ def annotate_sibling_divergence_adjusted(
 
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
-    # Pass 1: compute raw Wald stats for ALL pairs (needed for calibration)
+    # Pass 1: compute raw Wald stats for ALL pairs
     records, non_binary = _collect_all_pairs(
         tree,
         annotations_df,
@@ -198,7 +176,6 @@ def annotate_sibling_divergence_adjusted(
         whitening=whitening,
     )
 
-    # Mark non-binary/leaf nodes as skipped (never testable)
     mark_non_binary_as_skipped(annotations_df, non_binary, logger=logger)
 
     early_annotations_df = early_return_if_no_records(annotations_df, records)
@@ -207,32 +184,23 @@ def annotate_sibling_divergence_adjusted(
 
     n_null, n_focal, n_blocked = count_null_focal_pairs(records)
     logger.info(
-        "Cousin-adjusted Wald: %d total pairs (%d null-like, %d focal, %d gate2-blocked).",
+        "Parametric Wald: %d total pairs (%d null-like, %d focal, %d gate2-blocked).",
         len(records),
         n_null,
         n_focal,
         n_blocked,
     )
 
-    # Pass 2: fit inflation model using continuous edge weights
-    model = fit_inflation_model(records)
+    # Pass 2: fit parametric inflation model c(n) = α · n^(-β)
+    model = fit_parametric_inflation_model(records)
 
-    # Pass 2b: compute pool stats for conditional deflation
-    pool: PoolStats | None = None
-    if config.CONDITIONAL_DEFLATION_ALPHA is not None:
-        pool = compute_pool_stats(records, model)
-
-    # Pass 3: deflate focal pairs only and compute p-values
-    focal_parents, focal_results, cal_methods = _deflate_and_test(
-        records,
-        model,
-        pool,
-    )
+    # Pass 3: deflate focal pairs with per-node c(n) prediction
+    focal_parents, focal_results, cal_methods = _deflate_and_test(records, model)
 
     # Null-like parents are skipped (they are noise splits)
     skipped_parents = [r.parent for r in records if r.is_null_like]
 
-    annotations_df = _apply_results_adjusted(
+    annotations_df = _apply_results_parametric(
         annotations_df,
         focal_parents,
         focal_results,
@@ -250,22 +218,13 @@ def annotate_sibling_divergence_adjusted(
         "calibration_method": model.method,
         "calibration_n": model.n_calibration,
         "global_inflation_factor": model.global_inflation_factor,
-        "deflation_mode": (
-            f"conditional_df_mismatch_alpha={config.CONDITIONAL_DEFLATION_ALPHA}"
-            if config.CONDITIONAL_DEFLATION_ALPHA is not None
-            else "global_constant"
-        ),
-        "conditional_deflation_alpha": config.CONDITIONAL_DEFLATION_ALPHA,
-        "pool_median_df": pool.median_df if pool is not None else None,
-        "one_active_1d_mode": config.ONE_ACTIVE_1D_MODE,
         "diagnostics": model.diagnostics,
-        "test_method": "cousin_adjusted_wald",
+        "test_method": "parametric_wald",
     }
 
-    # Store the fitted model object for downstream use (e.g., post-hoc merge).
     annotations_df.attrs["_calibration_model"] = model
 
     return annotations_df
 
 
-__all__ = ["annotate_sibling_divergence_adjusted"]
+__all__ = ["annotate_sibling_divergence_parametric"]

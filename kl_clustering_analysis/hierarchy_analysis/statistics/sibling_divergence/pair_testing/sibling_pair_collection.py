@@ -141,6 +141,7 @@ def collect_sibling_pair_records(
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
     *,
+    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
@@ -167,7 +168,7 @@ def collect_sibling_pair_records(
     )
 
     # Extract BH-corrected edge p-values for continuous calibration weights.
-    # NaN values (e.g. skipped leaf nodes) default to 1.0 (maximally null-like).
+    # NaN values (e.g. skipped leaf nodes) default to 1.0.
     edge_p_value_column = "Child_Parent_Divergence_P_Value_BH"
     if edge_p_value_column not in annotations_df.columns:
         raise ValueError(f"Missing '{edge_p_value_column}' column. Run child-parent test first.")
@@ -181,6 +182,19 @@ def collect_sibling_pair_records(
         )
         for node_id in annotations_df.index
     }
+
+    edge_tested_by_node: Dict[str, bool] | None = None
+    edge_ancestor_blocked_by_node: Dict[str, bool] | None = None
+    if "Child_Parent_Divergence_Tested" in annotations_df.columns:
+        edge_tested_by_node = extract_bool_column_dict(
+            annotations_df,
+            "Child_Parent_Divergence_Tested",
+        )
+    if "Child_Parent_Divergence_Ancestor_Blocked" in annotations_df.columns:
+        edge_ancestor_blocked_by_node = extract_bool_column_dict(
+            annotations_df,
+            "Child_Parent_Divergence_Ancestor_Blocked",
+        )
 
     records: List[SiblingPairRecord] = []
     non_binary_nodes: List[str] = []
@@ -215,6 +229,8 @@ def collect_sibling_pair_records(
             branch_length_left=branch_length_left,
             branch_length_right=branch_length_right,
             mean_branch_length=mean_branch_length,
+            test_id=f"sibling:{parent}",
+            minimum_projection_dimension=minimum_projection_dimension,
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=node_pca_eigenvalues,
@@ -222,14 +238,43 @@ def collect_sibling_pair_records(
             whitening=whitening,
         )
 
+        left_edge_tested = edge_tested_by_node.get(left, True) if edge_tested_by_node else True
+        right_edge_tested = edge_tested_by_node.get(right, True) if edge_tested_by_node else True
+        left_edge_blocked = (
+            edge_ancestor_blocked_by_node.get(left, False)
+            if edge_ancestor_blocked_by_node
+            else False
+        )
+        right_edge_blocked = (
+            edge_ancestor_blocked_by_node.get(right, False)
+            if edge_ancestor_blocked_by_node
+            else False
+        )
+        is_gate2_blocked = (
+            (not left_edge_tested)
+            or (not right_edge_tested)
+            or left_edge_blocked
+            or right_edge_blocked
+        )
         is_null_like = not either_child_significant(left, right, edge_significance_by_node)
         # Continuous weight: min(p_edge_left, p_edge_right).
         # High weight → both children look null-like (high edge p-values).
         # Low weight → at least one child has strong edge signal.
-        edge_calibration_weight = min(
-            edge_p_value_by_node.get(left, 1.0),
-            edge_p_value_by_node.get(right, 1.0),
+        #
+        # Legacy blocked-edge semantics: TreeBH descendants that were never
+        # reached contribute as maximally null-like edge surrogates (p=1.0) for
+        # calibration, while still retaining explicit gate2-blocked audit flags.
+        legacy_edge_p_left = (
+            1.0
+            if left_edge_blocked or (not left_edge_tested)
+            else edge_p_value_by_node.get(left, 1.0)
         )
+        legacy_edge_p_right = (
+            1.0
+            if right_edge_blocked or (not right_edge_tested)
+            else edge_p_value_by_node.get(right, 1.0)
+        )
+        edge_calibration_weight = min(legacy_edge_p_left, legacy_edge_p_right)
 
         records.append(
             SiblingPairRecord(
@@ -238,12 +283,13 @@ def collect_sibling_pair_records(
                 right=right,
                 stat=test_statistic,
                 degrees_of_freedom=(
-                    int(degrees_of_freedom) if np.isfinite(degrees_of_freedom) else 0
+                    float(degrees_of_freedom) if np.isfinite(degrees_of_freedom) else 0.0
                 ),
                 p_value=p_value,
                 branch_length_sum=_branch_length_sum(branch_length_left, branch_length_right),
                 n_parent=extract_node_sample_size(tree, parent),
                 is_null_like=is_null_like,
+                is_gate2_blocked=is_gate2_blocked,
                 edge_weight=edge_calibration_weight,
             )
         )
@@ -295,12 +341,13 @@ def deflate_focal_pairs(
 # =============================================================================
 
 
-def count_null_focal_pairs(records: Iterable[DeflatableSiblingRecord]) -> Tuple[int, int]:
-    """Count (null-like, focal) record totals."""
+def count_null_focal_pairs(records: Iterable[DeflatableSiblingRecord]) -> Tuple[int, int, int]:
+    """Count (null-like, focal, gate2-blocked) record totals."""
     records_list = list(records)
     n_null = sum(1 for r in records_list if r.is_null_like)
-    n_focal = len(records_list) - n_null
-    return n_null, n_focal
+    n_blocked = sum(1 for r in records_list if getattr(r, "is_gate2_blocked", False))
+    n_focal = sum(1 for r in records_list if not r.is_null_like)
+    return n_null, n_focal, n_blocked
 
 
 __all__ = [

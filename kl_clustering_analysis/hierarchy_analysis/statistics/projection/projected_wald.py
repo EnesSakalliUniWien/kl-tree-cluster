@@ -11,7 +11,7 @@ from .projection_basis import build_projection_basis_with_padding
 
 def compute_projected_pvalue(
     projected_vector: np.ndarray,
-    degrees_of_freedom: int,
+    degrees_of_freedom: int | float,
     *,
     eigenvalues: np.ndarray | None = None,
     whitening: WhiteningMode = "per_component",
@@ -19,7 +19,7 @@ def compute_projected_pvalue(
     """Compute projected test statistic and p-value."""
     return _compute_projected_pvalue(
         np.asarray(projected_vector, dtype=np.float64),
-        int(degrees_of_freedom),
+        degrees_of_freedom,
         eigenvalues=eigenvalues,
         whitening=whitening,
     )
@@ -28,6 +28,8 @@ def compute_projected_pvalue(
 def run_projected_wald_kernel(
     z: np.ndarray,
     *,
+    seed: int | None = None,
+    minimum_projection_dimension: int | None = None,
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
@@ -47,12 +49,6 @@ def run_projected_wald_kernel(
     if spectral_k is None or spectral_k <= 0:
         return (float("nan"), 0, float("nan"), float("nan"))
 
-    # PCA basis is required when spectral_k > 0.  When the upstream pipeline
-    # could not produce a PCA decomposition for this node (e.g. too few
-    # descendant samples), treat the test as invalid — skip/merge.
-    if pca_projection is None:
-        return (float("nan"), 0, float("nan"), float("nan"))
-
     standardized_diff = np.asarray(z, dtype=np.float64)
     n_features = int(standardized_diff.shape[0])
     projection_dim = min(int(spectral_k), n_features)
@@ -63,6 +59,7 @@ def run_projected_wald_kernel(
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
         child_pca_projections=child_pca_projections,
+        random_state=seed,
     )
 
     projected_diff = projection_matrix @ standardized_diff
@@ -73,7 +70,12 @@ def run_projected_wald_kernel(
         eigenvalues=whitening_eigenvalues,
         whitening=whitening,
     )
-    return float(test_statistic), int(projection_matrix.shape[0]), float(effective_df), float(p_value)
+    return (
+        float(test_statistic),
+        int(projection_matrix.shape[0]),
+        float(effective_df),
+        float(p_value),
+    )
 
 
 __all__ = [

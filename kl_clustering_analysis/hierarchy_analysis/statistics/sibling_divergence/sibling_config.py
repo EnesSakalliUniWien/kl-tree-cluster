@@ -25,18 +25,10 @@ def derive_sibling_spectral_dims(
 ) -> dict[str, int] | None:
     """Derive Gate 3 projection dimensions from Gate 2 spectral output.
 
-    Uses the **min-child** strategy: for each binary parent P with children
-    L, R, the sibling projection dimension is ``min(k_L, k_R)`` (from the
-    per-child Marchenko-Pastur eigendecomposition in the edge test).
-
-    The *projection directions and eigenvalues* come from the parent's PCA
-    (automatically derived by :func:`derive_sibling_pca_projections`), which
-    captures between-group variance.  The dimension k is kept conservative
-    via min-child to avoid diluting the test with within-group-only PCs.
-
-    Children with spectral k = 0 are excluded from the minimum.
-    Parents where no child has a positive spectral k are omitted —
-    the sibling test is skipped (merge) for those.
+    Uses **geometric-mean-of-children** strategy: for each binary parent P
+    with children L, R, the sibling projection dimension is
+    ``round(sqrt(k_L * k_R))``.  When only one child has a positive
+    spectral dimension, that value is used directly.
 
     Parameters
     ----------
@@ -61,18 +53,17 @@ def derive_sibling_spectral_dims(
         children = list(tree.successors(parent))
         if len(children) != 2:
             continue
+
         left, right = children
-        child_ks = [
-            k
-            for k in (
-                edge_spectral_dims.get(left, 0),
-                edge_spectral_dims.get(right, 0),
-            )
-            if k > 0
-        ]
-        if not child_ks:
-            continue
-        sibling_dims[parent] = min(child_ks)
+        k_left = edge_spectral_dims.get(left, 0)
+        k_right = edge_spectral_dims.get(right, 0)
+
+        if k_left > 0 and k_right > 0:
+            sibling_dims[parent] = max(1, round(np.sqrt(k_left * k_right)))
+        elif k_left > 0:
+            sibling_dims[parent] = k_left
+        elif k_right > 0:
+            sibling_dims[parent] = k_right
 
     return sibling_dims if sibling_dims else None
 
@@ -167,9 +158,7 @@ def derive_sibling_child_pca_projections(
         children = list(tree.successors(parent))
         if len(children) != 2:
             continue
-        child_projs = [
-            pca_projections[c] for c in children if c in pca_projections
-        ]
+        child_projs = [pca_projections[c] for c in children if c in pca_projections]
         if child_projs:
             child_pca_map[parent] = child_projs
 
