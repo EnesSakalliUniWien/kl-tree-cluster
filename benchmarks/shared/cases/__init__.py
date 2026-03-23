@@ -6,13 +6,16 @@ Import `get_default_test_cases()` to get all cases, or import specific
 category modules for targeted testing.
 """
 
-from .gaussian import GAUSSIAN_CASES
-from .binary import BINARY_CASES
-from .sbm import SBM_CASES
-from .categorical import CATEGORICAL_CASES
 from benchmarks.phylogenetic.cases import PHYLOGENETIC_CASES
+
+from .binary import BINARY_CASES
+from .categorical import CATEGORICAL_CASES
+from .dimensionality import DIMENSIONALITY_CASES
+from .gaussian import GAUSSIAN_CASES
+from .outliers import OUTLIER_CASES
 from .overlapping import OVERLAPPING_CASES
 from .real_data import REAL_DATA_CASES
+from .sbm import SBM_CASES
 
 # Small test cases for quick smoke tests
 SMALL_TEST_CASES = [
@@ -45,6 +48,8 @@ SMALL_TEST_CASES = [
 # All test case categories
 ALL_CASE_CATEGORIES = {
     **GAUSSIAN_CASES,
+    **DIMENSIONALITY_CASES,
+    **OUTLIER_CASES,
     **BINARY_CASES,
     **SBM_CASES,
     **CATEGORICAL_CASES,

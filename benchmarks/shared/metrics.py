@@ -1,6 +1,6 @@
 """Metric helpers for benchmarking pipeline.
 
-Contains helpers for computing clustering metrics (ARI, NMI, Purity).
+Contains helpers for computing clustering metrics and outlier-isolation metrics.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from sklearn.metrics import (
     f1_score,
     homogeneity_score,
     normalized_mutual_info_score,
+    precision_score,
     recall_score,
 )
 from sklearn.metrics.cluster import contingency_matrix
@@ -31,6 +32,11 @@ class ClusteringMetrics:
     macro_recall: float
     macro_f1: float
     worst_cluster_recall: float
+    outlier_precision: float
+    outlier_recall: float
+    outlier_f1: float
+    singleton_outlier_isolated: float
+    grouped_outlier_cluster_recovered: float
 
 
 def _nan_metrics() -> ClusteringMetrics:
@@ -41,6 +47,83 @@ def _nan_metrics() -> ClusteringMetrics:
         macro_recall=np.nan,
         macro_f1=np.nan,
         worst_cluster_recall=np.nan,
+        outlier_precision=np.nan,
+        outlier_recall=np.nan,
+        outlier_f1=np.nan,
+        singleton_outlier_isolated=np.nan,
+        grouped_outlier_cluster_recovered=np.nan,
+    )
+
+
+def _calculate_outlier_isolation_metrics(
+    report_df: pd.DataFrame,
+    sample_names: pd.Index,
+    outlier_indices: list[int] | tuple[int, ...] | np.ndarray,
+) -> tuple[float, float, float, float, float]:
+    """Compute outlier-isolation metrics from predicted clusters.
+
+    A predicted cluster counts as an outlier cluster when a strict majority of its
+    members are true outliers. This makes the metric meaningful even when methods
+    do not emit a dedicated noise label.
+    """
+
+    if len(outlier_indices) == 0:
+        return np.nan, np.nan, np.nan, np.nan, np.nan
+
+    sample_index = pd.Index(sample_names)
+    if sample_index.empty:
+        return np.nan, np.nan, np.nan, np.nan, np.nan
+
+    outlier_mask_by_position = np.zeros(len(sample_index), dtype=bool)
+    outlier_positions = np.asarray(outlier_indices, dtype=int)
+    if np.any(outlier_positions < 0) or np.any(outlier_positions >= len(sample_index)):
+        raise ValueError("outlier_indices contains positions outside sample_names")
+    outlier_mask_by_position[outlier_positions] = True
+
+    outlier_lookup = pd.Series(outlier_mask_by_position, index=sample_index)
+    true_outlier = report_df.index.to_series().map(outlier_lookup)
+    pred_cluster = report_df["cluster_id"]
+
+    if true_outlier.isna().any() or pred_cluster.isna().any():
+        return np.nan, np.nan, np.nan, np.nan, np.nan
+
+    cluster_outlier_fraction = true_outlier.groupby(pred_cluster).mean()
+    predicted_outlier_clusters = cluster_outlier_fraction[cluster_outlier_fraction > 0.5].index
+    predicted_outlier = pred_cluster.isin(predicted_outlier_clusters).to_numpy(dtype=bool)
+    true_outlier_arr = true_outlier.to_numpy(dtype=bool)
+
+    outlier_precision = float(
+        precision_score(true_outlier_arr, predicted_outlier, zero_division=0)
+    )
+    outlier_recall = float(recall_score(true_outlier_arr, predicted_outlier, zero_division=0))
+    outlier_f1 = float(f1_score(true_outlier_arr, predicted_outlier, zero_division=0))
+
+    singleton_outlier_isolated = np.nan
+    if len(outlier_positions) == 1:
+        outlier_sample_name = sample_index[int(outlier_positions[0])]
+        if outlier_sample_name in pred_cluster.index:
+            outlier_cluster = pred_cluster.loc[outlier_sample_name]
+            singleton_outlier_isolated = float((pred_cluster == outlier_cluster).sum() == 1)
+
+    grouped_outlier_cluster_recovered = np.nan
+    if len(outlier_positions) > 1:
+        outlier_sample_names = sample_index[outlier_positions]
+        outlier_cluster_ids = pred_cluster.loc[outlier_sample_names]
+        if outlier_cluster_ids.nunique(dropna=False) == 1:
+            grouped_cluster_id = outlier_cluster_ids.iloc[0]
+            grouped_cluster_mask = pred_cluster == grouped_cluster_id
+            grouped_outlier_cluster_recovered = float(
+                true_outlier[grouped_cluster_mask].all() and int(grouped_cluster_mask.sum()) == len(outlier_positions)
+            )
+        else:
+            grouped_outlier_cluster_recovered = 0.0
+
+    return (
+        outlier_precision,
+        outlier_recall,
+        outlier_f1,
+        singleton_outlier_isolated,
+        grouped_outlier_cluster_recovered,
     )
 
 
@@ -74,6 +157,7 @@ def _calculate_ari_nmi_purity_metrics(
     report_df: pd.DataFrame | None,
     sample_names: pd.Index,
     true_labels: np.ndarray,
+    metadata: dict[str, object] | None = None,
 ) -> ClusteringMetrics:
     """Calculate clustering metrics (ARI, NMI, Purity + label-matched class metrics).
     """
@@ -103,6 +187,11 @@ def _calculate_ari_nmi_purity_metrics(
 
     y_true = true_cluster.to_numpy()
     y_pred = pred_cluster.to_numpy()
+    outlier_precision = np.nan
+    outlier_recall = np.nan
+    outlier_f1 = np.nan
+    singleton_outlier_isolated = np.nan
+    grouped_outlier_cluster_recovered = np.nan
     try:
         ari = adjusted_rand_score(y_true, y_pred)
         nmi = normalized_mutual_info_score(y_true, y_pred)
@@ -132,6 +221,19 @@ def _calculate_ari_nmi_purity_metrics(
                 )
             )
             worst_cluster_recall = float(np.min(per_class_recall))
+        outlier_indices_raw = None if metadata is None else metadata.get("outlier_indices")
+        if isinstance(outlier_indices_raw, (list, tuple, np.ndarray)) and len(outlier_indices_raw) > 0:
+            (
+                outlier_precision,
+                outlier_recall,
+                outlier_f1,
+                singleton_outlier_isolated,
+                grouped_outlier_cluster_recovered,
+            ) = _calculate_outlier_isolation_metrics(
+                report_df,
+                sample_names,
+                outlier_indices_raw,
+            )
     except ValueError:
         return _nan_metrics()
 
@@ -142,4 +244,9 @@ def _calculate_ari_nmi_purity_metrics(
         macro_recall=float(macro_recall),
         macro_f1=float(macro_f1),
         worst_cluster_recall=float(worst_cluster_recall),
+        outlier_precision=float(outlier_precision),
+        outlier_recall=float(outlier_recall),
+        outlier_f1=float(outlier_f1),
+        singleton_outlier_isolated=float(singleton_outlier_isolated),
+        grouped_outlier_cluster_recovered=float(grouped_outlier_cluster_recovered),
     )

@@ -104,18 +104,26 @@ def run_single_method_once(
                 report_df = _create_report_dataframe_from_labels(labels, data_t.index)
         found_clusters = result.found_clusters
         labels_len = len(labels)
-        metrics = _calculate_ari_nmi_purity_metrics(report_df, data_t.index, y_t)
+        metrics = _calculate_ari_nmi_purity_metrics(report_df, data_t.index, y_t, meta)
         ari = metrics.ari
         nmi = metrics.nmi
         purity = metrics.purity
         macro_recall = metrics.macro_recall
         macro_f1 = metrics.macro_f1
         worst_cluster_recall = metrics.worst_cluster_recall
+        outlier_precision = metrics.outlier_precision
+        outlier_recall = metrics.outlier_recall
+        outlier_f1 = metrics.outlier_f1
+        singleton_outlier_isolated = metrics.singleton_outlier_isolated
+        grouped_outlier_cluster_recovered = metrics.grouped_outlier_cluster_recovered
     else:
         labels_len = 0
         found_clusters = 0
         ari, nmi, purity = np.nan, np.nan, np.nan
         macro_recall, macro_f1, worst_cluster_recall = np.nan, np.nan, np.nan
+        outlier_precision, outlier_recall, outlier_f1 = np.nan, np.nan, np.nan
+        singleton_outlier_isolated = np.nan
+        grouped_outlier_cluster_recovered = np.nan
 
     if result.status == "ok" and true_clusters_raw is not None:
         cluster_count_abs_error = float(abs(int(found_clusters) - true_clusters))
@@ -143,6 +151,11 @@ def run_single_method_once(
         macro_recall=macro_recall,
         macro_f1=macro_f1,
         worst_cluster_recall=worst_cluster_recall,
+        outlier_precision=outlier_precision,
+        outlier_recall=outlier_recall,
+        outlier_f1=outlier_f1,
+        singleton_outlier_isolated=singleton_outlier_isolated,
+        grouped_outlier_cluster_recovered=grouped_outlier_cluster_recovered,
         cluster_count_abs_error=cluster_count_abs_error,
         over_split=over_split,
         under_split=under_split,
@@ -161,6 +174,19 @@ def run_single_method_once(
             ari=float(ari) if np.isfinite(ari) else np.nan,
             nmi=float(nmi) if np.isfinite(nmi) else np.nan,
             purity=float(purity) if np.isfinite(purity) else np.nan,
+            outlier_precision=float(outlier_precision) if np.isfinite(outlier_precision) else np.nan,
+            outlier_recall=float(outlier_recall) if np.isfinite(outlier_recall) else np.nan,
+            outlier_f1=float(outlier_f1) if np.isfinite(outlier_f1) else np.nan,
+            singleton_outlier_isolated=(
+                float(singleton_outlier_isolated)
+                if np.isfinite(singleton_outlier_isolated)
+                else np.nan
+            ),
+            grouped_outlier_cluster_recovered=(
+                float(grouped_outlier_cluster_recovered)
+                if np.isfinite(grouped_outlier_cluster_recovered)
+                else np.nan
+            ),
             labels=result.labels,
             data=data_t,
             meta=meta_run,

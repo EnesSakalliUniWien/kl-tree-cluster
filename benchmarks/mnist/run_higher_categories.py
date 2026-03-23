@@ -33,18 +33,14 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 import numpy as np
 import pandas as pd
+from run import load_mnist_subset, run_kl_clustering
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
-from sklearn.metrics import (
-    accuracy_score,
-    adjusted_rand_score,
-    normalized_mutual_info_score,
-)
+from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import BayesianGaussianMixture
 
-from run import load_mnist_subset, run_kl_clustering
+from benchmarks.shared.runners.kl_diffusion_runner import _build_diffusion_distance
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-
 
 HIGHER_CATEGORY_SCHEMES: dict[str, dict[int, str]] = {
     "shape_3": {
@@ -144,6 +140,13 @@ def parse_arguments() -> argparse.Namespace:
         default=400,
         help="Max iterations for per-pixel BayesianGaussianMixture fits",
     )
+    parser.add_argument(
+        "--tree-construction",
+        type=str,
+        default="standard",
+        choices=["standard", "diffusion"],
+        help="Tree construction strategy: standard linkage or diffusion HAC",
+    )
     return parser.parse_args()
 
 
@@ -152,9 +155,14 @@ def encode_higher_categories(
     digit_to_category_name: dict[int, str],
 ) -> tuple[np.ndarray, list[str]]:
     category_names = sorted(set(digit_to_category_name.values()))
-    category_name_to_id = {category_name: category_id for category_id, category_name in enumerate(category_names)}
+    category_name_to_id = {
+        category_name: category_id for category_id, category_name in enumerate(category_names)
+    }
     category_ids = np.array(
-        [category_name_to_id[digit_to_category_name[int(digit_label)]] for digit_label in digit_labels],
+        [
+            category_name_to_id[digit_to_category_name[int(digit_label)]]
+            for digit_label in digit_labels
+        ],
         dtype=int,
     )
     return category_ids, category_names
@@ -184,18 +192,26 @@ def run_tree_decomposition_on_preprocessed_data(
     linkage_method: str,
     significance_level: float,
     verbose: bool,
+    tree_construction: str = "standard",
 ) -> np.ndarray:
     """Run tree decomposition from a preprocessed integer feature matrix."""
-    sample_names = [f"Sample_{sample_index}" for sample_index in range(preprocessed_matrix.shape[0])]
+    sample_names = [
+        f"Sample_{sample_index}" for sample_index in range(preprocessed_matrix.shape[0])
+    ]
     annotations_df = pd.DataFrame(preprocessed_matrix, index=sample_names)
 
-    if verbose:
-        print(f"  Building hierarchy with {distance_metric} + {linkage_method}")
-
-    linkage_matrix = linkage(
-        pdist(annotations_df.values, metric=distance_metric),
-        method=linkage_method,
-    )
+    if tree_construction == "diffusion":
+        if verbose:
+            print("  Building hierarchy with diffusion HAC")
+        diff_dist = _build_diffusion_distance(annotations_df)
+        linkage_matrix = linkage(diff_dist, method="average")
+    else:
+        if verbose:
+            print(f"  Building hierarchy with {distance_metric} + {linkage_method}")
+        linkage_matrix = linkage(
+            pdist(annotations_df.values, metric=distance_metric),
+            method=linkage_method,
+        )
     tree = PosetTree.from_linkage(linkage_matrix, leaf_names=sample_names)
     decomposition_results = tree.decompose(
         leaf_data=annotations_df,
@@ -209,6 +225,48 @@ def run_tree_decomposition_on_preprocessed_data(
         for leaf_name in cluster_metadata["leaves"]:
             label_map[leaf_name] = int(cluster_identifier)
     return np.array([label_map.get(sample_name, -1) for sample_name in sample_names], dtype=int)
+
+
+def _run_diffusion_kl_clustering(
+    X: np.ndarray,
+    verbose: bool = True,
+    binarize_threshold: float = 0.1,
+) -> np.ndarray:
+    """Run KL divergence clustering with diffusion HAC tree construction."""
+    if verbose:
+        print("\nRunning KL Divergence clustering (diffusion HAC)...")
+        print(f"  Data shape: {X.shape}")
+
+    X_binary = (X > binarize_threshold).astype(int)
+    if verbose:
+        sparsity = 1 - X_binary.mean()
+        print(f"  Binarized with threshold={binarize_threshold}, sparsity={sparsity:.1%}")
+
+    sample_names = [f"Sample_{j}" for j in range(X.shape[0])]
+    data = pd.DataFrame(X_binary, index=sample_names)
+
+    if verbose:
+        print("  Building hierarchy with diffusion HAC")
+    diff_dist = _build_diffusion_distance(data)
+    Z = linkage(diff_dist, method="average")
+
+    tree = PosetTree.from_linkage(Z, leaf_names=sample_names)
+    results = tree.decompose(
+        leaf_data=data,
+        alpha_local=0.05,
+        sibling_alpha=0.05,
+    )
+
+    cluster_assignments = results.get("cluster_assignments", {})
+    n_clusters = results.get("num_clusters", 0)
+    if verbose:
+        print(f"  Found {n_clusters} clusters")
+
+    label_map: dict[str, int] = {}
+    for cluster_id, info in cluster_assignments.items():
+        for leaf in info["leaves"]:
+            label_map[leaf] = cluster_id
+    return np.array([label_map.get(name, -1) for name in sample_names])
 
 
 def _fit_bayesian_gmm_for_pixel(
@@ -258,12 +316,20 @@ def _fit_bayesian_gmm_for_pixel(
                 continue
             nearest_active_index = int(
                 sorted_active_component_indices[
-                    int(np.argmin(np.abs(component_means_active - component_means[int(predicted_component)])))
+                    int(
+                        np.argmin(
+                            np.abs(
+                                component_means_active - component_means[int(predicted_component)]
+                            )
+                        )
+                    )
                 ]
             )
             predicted_component_indices[sample_index] = nearest_active_index
 
-    component_index_to_category_id = np.full(component_weights.shape[0], fill_value=-1, dtype=np.int16)
+    component_index_to_category_id = np.full(
+        component_weights.shape[0], fill_value=-1, dtype=np.int16
+    )
     for category_id, component_index in enumerate(sorted_active_component_indices.tolist()):
         component_index_to_category_id[int(component_index)] = int(category_id)
 
@@ -293,7 +359,9 @@ def infer_pixel_categories_with_bayesian_gmm(
     random_generator = np.random.default_rng(random_seed)
 
     if fit_samples > 0 and fit_samples < n_samples:
-        fit_sample_indices = np.sort(random_generator.choice(n_samples, size=fit_samples, replace=False))
+        fit_sample_indices = np.sort(
+            random_generator.choice(n_samples, size=fit_samples, replace=False)
+        )
     else:
         fit_sample_indices = np.arange(n_samples)
 
@@ -332,8 +400,12 @@ def infer_pixel_categories_with_bayesian_gmm(
                 "pixel_index": pixel_index,
                 "inferred_category_count": inferred_category_count,
                 "realized_category_count": int(np.unique(category_ids).size),
-                "active_component_weights": ";".join(f"{weight:.6f}" for weight in active_component_weights),
-                "active_component_means": ";".join(f"{mean:.6f}" for mean in active_component_means),
+                "active_component_weights": ";".join(
+                    f"{weight:.6f}" for weight in active_component_weights
+                ),
+                "active_component_means": ";".join(
+                    f"{mean:.6f}" for mean in active_component_means
+                ),
             }
         )
 
@@ -369,12 +441,12 @@ def create_bokeh_higher_category_plot(
     """Create interactive UMAP HTML with image hover and higher-category labels."""
     try:
         import umap
-        from PIL import Image
         from bokeh.layouts import row
         from bokeh.models import CategoricalColorMapper, ColumnDataSource, HoverTool
         from bokeh.palettes import Category10, Category20
         from bokeh.plotting import figure, output_file, save
         from bokeh.resources import INLINE
+        from PIL import Image
     except ImportError as import_error:
         print(f"Skipping UMAP HTML output: missing dependency ({import_error})")
         return
@@ -420,7 +492,9 @@ def create_bokeh_higher_category_plot(
 
     true_factors = sorted(plot_dataframe["true_higher_category"].unique().tolist())
     pred_factors = sorted(plot_dataframe["pred_higher_category"].unique().tolist())
-    cluster_factors = sorted(plot_dataframe["cluster"].unique().tolist(), key=lambda value: int(value))
+    cluster_factors = sorted(
+        plot_dataframe["cluster"].unique().tolist(), key=lambda value: int(value)
+    )
 
     true_color_mapper = CategoricalColorMapper(
         factors=true_factors,
@@ -557,9 +631,9 @@ def create_plotly_higher_category_plot_3d(
 ) -> None:
     """Create interactive 3D UMAP HTML with panels for true/predicted/cluster labels."""
     try:
-        import umap
         import plotly.graph_objects as go
         import plotly.offline as plotly_offline
+        import umap
         from plotly.subplots import make_subplots
     except ImportError as import_error:
         print(f"Skipping 3D UMAP HTML output: missing dependency ({import_error})")
@@ -718,7 +792,9 @@ def create_plotly_higher_category_plot_3d(
         margin={"l": 10, "r": 10, "t": 60, "b": 10},
     )
 
-    plotly_offline.plot(figure, filename=str(output_path), auto_open=False, include_plotlyjs="inline")
+    plotly_offline.plot(
+        figure, filename=str(output_path), auto_open=False, include_plotlyjs="inline"
+    )
     print(f"Saved interactive 3D HTML: {output_path}")
 
 
@@ -730,6 +806,7 @@ def main() -> None:
     print("=" * 72)
     print(f"scheme={arguments.scheme}")
     print(f"pixel_categorization={arguments.pixel_categorization}")
+    print(f"tree_construction={arguments.tree_construction}")
     print(
         f"clustering={arguments.distance_metric}+{arguments.linkage_method}, "
         f"binarize_threshold={arguments.binarize_threshold}"
@@ -745,21 +822,30 @@ def main() -> None:
     clustering_distance_metric = arguments.distance_metric
 
     if arguments.pixel_categorization == "binary_threshold":
-        cluster_labels = run_kl_clustering(
-            feature_matrix,
-            verbose=True,
-            binarize_threshold=arguments.binarize_threshold,
-            distance_metric=arguments.distance_metric,
-            linkage_method=arguments.linkage_method,
-        )
+        if arguments.tree_construction == "diffusion":
+            cluster_labels = _run_diffusion_kl_clustering(
+                feature_matrix,
+                verbose=True,
+                binarize_threshold=arguments.binarize_threshold,
+            )
+        else:
+            cluster_labels = run_kl_clustering(
+                feature_matrix,
+                verbose=True,
+                binarize_threshold=arguments.binarize_threshold,
+                distance_metric=arguments.distance_metric,
+                linkage_method=arguments.linkage_method,
+            )
     else:
-        categorical_feature_matrix, pixel_category_summary_dataframe = infer_pixel_categories_with_bayesian_gmm(
-            feature_matrix,
-            random_seed=arguments.seed,
-            max_components=arguments.bgm_max_components,
-            weight_threshold=arguments.bgm_weight_threshold,
-            fit_samples=arguments.bgm_fit_samples,
-            max_iter=arguments.bgm_max_iter,
+        categorical_feature_matrix, pixel_category_summary_dataframe = (
+            infer_pixel_categories_with_bayesian_gmm(
+                feature_matrix,
+                random_seed=arguments.seed,
+                max_components=arguments.bgm_max_components,
+                weight_threshold=arguments.bgm_weight_threshold,
+                fit_samples=arguments.bgm_fit_samples,
+                max_iter=arguments.bgm_max_iter,
+            )
         )
 
         one_hot_feature_matrix = expand_pixel_categories_to_one_hot(categorical_feature_matrix)
@@ -774,6 +860,7 @@ def main() -> None:
             linkage_method=arguments.linkage_method,
             significance_level=0.05,
             verbose=True,
+            tree_construction=arguments.tree_construction,
         )
 
     digit_to_category_name = HIGHER_CATEGORY_SCHEMES[arguments.scheme]
@@ -825,10 +912,16 @@ def main() -> None:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     output_directory = repo_root / "benchmarks" / "results"
     output_directory.mkdir(exist_ok=True)
-    output_csv_file = output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.csv"
+    output_csv_file = (
+        output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.csv"
+    )
     output_dataframe.to_csv(output_csv_file, index=False)
-    output_html_file = output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.html"
-    output_html_3d_file = output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}_3d.html"
+    output_html_file = (
+        output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.html"
+    )
+    output_html_3d_file = (
+        output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}_3d.html"
+    )
     pixel_summary_file = None
     if pixel_category_summary_dataframe is not None:
         pixel_summary_file = (

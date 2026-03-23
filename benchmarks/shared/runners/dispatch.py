@@ -66,6 +66,15 @@ def run_clustering_result(
     alpha = config.SIBLING_ALPHA if significance_level is None else float(significance_level)
 
     try:
+        if method_id == "kl_diffusion":
+            result = spec.runner(
+                data_df,
+                alpha,
+                k_neighbors=params.get("k_neighbors", 15),
+                diffusion_time=params.get("diffusion_time", 3),
+            )
+            return _normalize_method_result(result)
+
         if method_id in {"kl", "kl_rogerstanimoto", "kl_complete", "kl_single", "kl_ward", "kl_v2"}:
             metric = params.get("tree_distance_metric", config.TREE_DISTANCE_METRIC)
             if method_id == "kl_ward":

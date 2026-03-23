@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def _format_ari_nmi(result: ComputedResultRecord, *, compact: bool = False) -> str:
-    """Format ARI/NMI when available on a computed result record."""
+    """Format primary benchmark metrics when available on a computed result record."""
     ari = result.ari
     nmi = result.nmi
     parts: list[str] = []
@@ -32,6 +32,15 @@ def _format_ari_nmi(result: ComputedResultRecord, *, compact: bool = False) -> s
         parts.append(f"A={float(ari):.3f}" if compact else f"ARI={float(ari):.3f}")
     if isinstance(nmi, (int, float, np.floating)) and np.isfinite(float(nmi)):
         parts.append(f"N={float(nmi):.3f}" if compact else f"NMI={float(nmi):.3f}")
+    outlier_f1 = result.outlier_f1
+    singleton_hit = result.singleton_outlier_isolated
+    grouped_recovery = result.grouped_outlier_cluster_recovered
+    if isinstance(outlier_f1, (int, float, np.floating)) and np.isfinite(float(outlier_f1)):
+        parts.append(f"OF1={float(outlier_f1):.3f}" if compact else f"Outlier_F1={float(outlier_f1):.3f}")
+    if isinstance(singleton_hit, (int, float, np.floating)) and np.isfinite(float(singleton_hit)):
+        parts.append(f"SOI={float(singleton_hit):.0f}" if compact else f"Singleton_Isolated={float(singleton_hit):.0f}")
+    if isinstance(grouped_recovery, (int, float, np.floating)) and np.isfinite(float(grouped_recovery)):
+        parts.append(f"GOR={float(grouped_recovery):.0f}" if compact else f"Grouped_Outlier_Recovered={float(grouped_recovery):.0f}")
     return ", ".join(parts)
 
 

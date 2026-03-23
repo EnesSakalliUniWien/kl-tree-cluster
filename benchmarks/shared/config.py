@@ -4,6 +4,7 @@ from __future__ import annotations
 
 DEFAULT_METHODS: tuple[str, ...] = (
     "kl",
+    "kl_diffusion",
     "leiden",
     "louvain",
     "kmeans",

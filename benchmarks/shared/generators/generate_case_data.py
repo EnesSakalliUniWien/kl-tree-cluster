@@ -20,6 +20,14 @@ from sklearn.datasets import make_blobs
 from benchmarks.shared.generators.generate_categorical_matrix import (
     generate_categorical_feature_matrix,
 )
+from benchmarks.shared.generators.generate_dimensional_gaussian import (
+    DimensionalGaussianConfig,
+    generate_dimensional_gaussian,
+)
+from benchmarks.shared.generators.generate_gaussian_outliers import (
+    GaussianOutlierConfig,
+    generate_gaussian_outliers,
+)
 from benchmarks.shared.generators.generate_phylogenetic import generate_phylogenetic_data
 from benchmarks.shared.generators.generate_random_feature_matrix import (
     generate_random_feature_matrix,
@@ -193,6 +201,122 @@ def _generate_blobs_quantile_case(
     # Return one-hot encoded data as x_original so UMAP and baseline methods
     # (K-Means, Spectral) operate on the same feature space as the KL pipeline.
     return data_df, y, data_df.values.astype(float), metadata
+
+
+def _resolve_dimensional_feature_counts(test_case: dict) -> Tuple[int, int]:
+    informative_dims = test_case.get("informative_dims")
+    if informative_dims is None:
+        raise ValueError("Dimensional Gaussian generator requires 'informative_dims'.")
+
+    n_features = test_case.get("n_features", test_case.get("n_cols"))
+    noise_dims = test_case.get("noise_dims")
+    if n_features is None and noise_dims is None:
+        raise ValueError(
+            "Dimensional Gaussian generator requires either 'n_features' or 'noise_dims'."
+        )
+
+    informative_dims = int(informative_dims)
+    if n_features is not None:
+        n_features = int(n_features)
+        noise_dims = n_features - informative_dims
+    else:
+        noise_dims = int(noise_dims)
+        n_features = informative_dims + noise_dims
+
+    if informative_dims <= 0:
+        raise ValueError(f"informative_dims must be positive, got {informative_dims}")
+    if noise_dims < 0:
+        raise ValueError(
+            f"noise_dims must be non-negative after resolving total features, got {noise_dims}"
+        )
+    return informative_dims, noise_dims
+
+
+def _generate_dimensional_gaussian_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    n_samples = int(test_case["n_samples"])
+    informative_dims, noise_dims = _resolve_dimensional_feature_counts(test_case)
+    config = DimensionalGaussianConfig(
+        n_samples=n_samples,
+        n_clusters=int(test_case["n_clusters"]),
+        informative_dims=informative_dims,
+        noise_dims=noise_dims,
+        separation=float(test_case.get("separation", 2.5)),
+        informative_std=float(test_case.get("informative_std", 1.0)),
+        noise_std=float(test_case.get("noise_std", 1.0)),
+        informative_corr=float(test_case.get("informative_corr", 0.0)),
+        noise_corr=float(test_case.get("noise_corr", 0.0)),
+        signal_mode=str(test_case.get("signal_mode", "consolidated")),
+        balanced_clusters=bool(test_case.get("balanced_clusters", True)),
+        random_seed=seed,
+    )
+
+    x_continuous, y, sim_meta = generate_dimensional_gaussian(config)
+    x_binary = (x_continuous > np.median(x_continuous, axis=0)).astype(int)
+    feature_names = [f"F{j}" for j in range(x_binary.shape[1])]
+    sample_names = [f"S{j}" for j in range(n_samples)]
+    data_df = pd.DataFrame(x_binary, index=sample_names, columns=feature_names)
+
+    metadata = {
+        "n_samples": n_samples,
+        "n_features": int(x_binary.shape[1]),
+        "n_clusters": int(test_case["n_clusters"]),
+        "noise": float(test_case.get("noise_std", 1.0)),
+        "name": test_case.get("name", f"dimensional_gaussian_{n_samples}x{x_binary.shape[1]}"),
+        "generator": "dimensional_gaussian",
+        "informative_dims": informative_dims,
+        "noise_dims": noise_dims,
+        "separation": float(test_case.get("separation", 2.5)),
+        "informative_corr": float(test_case.get("informative_corr", 0.0)),
+        "noise_corr": float(test_case.get("noise_corr", 0.0)),
+        "signal_mode": str(test_case.get("signal_mode", "consolidated")),
+        "binarization": "median",
+        **sim_meta,
+    }
+    return data_df, y, x_binary.astype(float), metadata
+
+
+def _generate_gaussian_outlier_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    n_samples = int(test_case["n_samples"])
+    n_features = int(test_case["n_features"])
+    n_inlier_clusters = int(test_case.get("n_inlier_clusters", test_case["n_clusters"]))
+
+    config = GaussianOutlierConfig(
+        n_samples=n_samples,
+        n_features=n_features,
+        n_inlier_clusters=n_inlier_clusters,
+        cluster_std=float(test_case.get("cluster_std", 0.7)),
+        outlier_count=int(test_case.get("outlier_count", 1)),
+        outlier_distance=float(test_case.get("outlier_distance", 8.0)),
+        outlier_std=float(test_case.get("outlier_std", 0.2)),
+        spatial_mode=str(test_case.get("outlier_spatial_mode", "clustered")),
+        label_mode=str(test_case.get("outlier_label_mode", "singleton")),
+        balanced_clusters=bool(test_case.get("balanced_clusters", True)),
+        random_seed=seed,
+    )
+
+    x_continuous, y, sim_meta = generate_gaussian_outliers(config)
+    x_binary = (x_continuous > np.median(x_continuous, axis=0)).astype(int)
+    data_df = pd.DataFrame(
+        x_binary,
+        index=[f"S{j}" for j in range(n_samples)],
+        columns=[f"F{j}" for j in range(n_features)],
+    )
+    metadata = {
+        "n_samples": n_samples,
+        "n_features": n_features,
+        "n_clusters": int(np.unique(y).size),
+        "n_inlier_clusters": n_inlier_clusters,
+        "noise": float(test_case.get("outlier_count", 1)) / float(n_samples),
+        "name": test_case.get("name", f"gaussian_outliers_{n_samples}x{n_features}"),
+        "generator": "gaussian_outliers",
+        "binarization": "median",
+        **sim_meta,
+    }
+    return data_df, y, x_binary.astype(float), metadata
 
 
 def _generate_sbm_case(
@@ -503,6 +627,10 @@ def generate_case_data(
         data_df, y, x_original, metadata = _generate_blobs_case(test_case, seed)
     elif generator == "blobs_quantile":
         data_df, y, x_original, metadata = _generate_blobs_quantile_case(test_case, seed)
+    elif generator == "dimensional_gaussian":
+        data_df, y, x_original, metadata = _generate_dimensional_gaussian_case(test_case, seed)
+    elif generator == "gaussian_outliers":
+        data_df, y, x_original, metadata = _generate_gaussian_outlier_case(test_case, seed)
     elif generator == "sbm":
         data_df, y, x_original, metadata = _generate_sbm_case(test_case, seed)
     elif generator == "categorical":

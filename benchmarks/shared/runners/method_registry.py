@@ -64,6 +64,14 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
+    "kl_diffusion": MethodSpec(
+        name="KL (Diffusion)",
+        runner=_safe_import_runner(
+            "benchmarks.shared.runners.kl_diffusion_runner",
+            "_run_kl_diffusion_method",
+        ),
+        param_grid=[{"k_neighbors": 15, "diffusion_time": 3}],
+    ),
     # "kl_ward": MethodSpec(
     #     name="KL (Ward)",
     #     runner=_safe_import_runner(

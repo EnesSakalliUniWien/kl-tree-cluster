@@ -33,6 +33,17 @@ _COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
     "macro_recall": ("macro_recall", "Macro_Recall"),
     "macro_f1": ("macro_f1", "Macro_F1"),
     "worst_cluster_recall": ("worst_cluster_recall", "Worst_Cluster_Recall"),
+    "outlier_precision": ("outlier_precision", "Outlier_Precision"),
+    "outlier_recall": ("outlier_recall", "Outlier_Recall"),
+    "outlier_f1": ("outlier_f1", "Outlier_F1"),
+    "singleton_outlier_isolated": (
+        "singleton_outlier_isolated",
+        "Singleton_Outlier_Isolated",
+    ),
+    "grouped_outlier_cluster_recovered": (
+        "grouped_outlier_cluster_recovered",
+        "Grouped_Outlier_Cluster_Recovered",
+    ),
     "cluster_count_abs_error": ("cluster_count_abs_error", "Cluster_Count_Abs_Error"),
     "over_split": ("over_split", "Over_Split"),
     "under_split": ("under_split", "Under_Split"),
@@ -54,6 +65,11 @@ _NUMERIC_COLUMNS = (
     "macro_recall",
     "macro_f1",
     "worst_cluster_recall",
+    "outlier_precision",
+    "outlier_recall",
+    "outlier_f1",
+    "singleton_outlier_isolated",
+    "grouped_outlier_cluster_recovered",
     "cluster_count_abs_error",
     "over_split",
     "under_split",
@@ -386,6 +402,11 @@ def _summarize(frame: pd.DataFrame, group_cols: list[str]) -> pd.DataFrame:
             median_ari=("ari", "median"),
             mean_nmi=("nmi", "mean"),
             mean_purity=("purity", "mean"),
+            mean_outlier_precision=("outlier_precision", "mean"),
+            mean_outlier_recall=("outlier_recall", "mean"),
+            mean_outlier_f1=("outlier_f1", "mean"),
+            singleton_hit_rate=("singleton_outlier_isolated", "mean"),
+            grouped_recovery_rate=("grouped_outlier_cluster_recovered", "mean"),
             exact_k_rate=("exact_k", "mean"),
             over_split_rate=("over_split_flag", "mean"),
             under_split_rate=("under_split_flag", "mean"),
@@ -422,6 +443,15 @@ def _compute_correlations(frame: pd.DataFrame) -> pd.DataFrame:
         if predictor in frame.columns and frame[predictor].notna().any()
     ]
     targets = ["ari", "nmi", "exact_k", "over_split_flag", "under_split_flag", "abs_cluster_error"]
+    for outlier_target in (
+        "outlier_precision",
+        "outlier_recall",
+        "outlier_f1",
+        "singleton_outlier_isolated",
+        "grouped_outlier_cluster_recovered",
+    ):
+        if outlier_target in frame.columns and frame[outlier_target].notna().any():
+            targets.append(outlier_target)
     scopes: list[tuple[str, pd.DataFrame]] = [("all", frame)]
 
     if frame["method"].nunique() > 1:
@@ -930,6 +960,34 @@ def _write_relationship_report(
         ]
     )
 
+    outlier_rows = frame[frame["outlier_f1"].notna()].copy()
+    if not outlier_rows.empty:
+        best_outlier_method = (
+            outlier_rows.groupby("method", dropna=False)
+            .agg(
+                mean_outlier_f1=("outlier_f1", "mean"),
+                singleton_hit_rate=("singleton_outlier_isolated", "mean"),
+                grouped_recovery_rate=("grouped_outlier_cluster_recovered", "mean"),
+            )
+            .reset_index()
+            .sort_values(
+                ["mean_outlier_f1", "grouped_recovery_rate", "singleton_hit_rate"],
+                ascending=[False, False, False],
+            )
+            .iloc[0]
+        )
+        lines.extend(
+            [
+                (
+                    f"- Best outlier recovery: `{best_outlier_method['method']}` "
+                    f"(mean outlier F1 `{best_outlier_method['mean_outlier_f1']:.3f}`, "
+                    f"singleton hit rate `{best_outlier_method['singleton_hit_rate']:.3f}`, "
+                    f"grouped recovery `{best_outlier_method['grouped_recovery_rate']:.3f}`)."
+                ),
+                "",
+            ]
+        )
+
     pairwise_lines = _summarize_pairwise_findings(pairwise_method_summary)
     if pairwise_lines:
         lines.append("## Pairwise Method Contrasts")
@@ -949,6 +1007,9 @@ def _write_relationship_report(
                         "n_rows",
                         "mean_ari",
                         "mean_nmi",
+                        "mean_outlier_f1",
+                        "singleton_hit_rate",
+                        "grouped_recovery_rate",
                         "exact_k_rate",
                         "over_split_rate",
                         "under_split_rate",
@@ -967,6 +1028,9 @@ def _write_relationship_report(
                         "n_rows",
                         "mean_ari",
                         "mean_nmi",
+                        "mean_outlier_f1",
+                        "singleton_hit_rate",
+                        "grouped_recovery_rate",
                         "exact_k_rate",
                         "over_split_rate",
                         "under_split_rate",

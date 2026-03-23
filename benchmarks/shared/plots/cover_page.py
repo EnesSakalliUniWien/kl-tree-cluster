@@ -35,6 +35,10 @@ _register(
     "gaussian_extreme_noise",
     "improved_gaussian",
     "gaussian_null",
+    "gaussian_dimensionality_consolidated",
+    "gaussian_dimensionality_diffuse",
+    "gaussian_outlier_singleton",
+    "gaussian_outlier_contamination",
 )
 _register(
     "binary",
@@ -142,7 +146,7 @@ _OVERVIEW_TEXT = dedent(
 
 _GAUSSIAN_TEXT = dedent(
     """\
-    Gaussian Cases  (12 cases)
+    Gaussian Cases  (21 cases)
 
     Data generation:
       sklearn.make_blobs with configurable cluster standard deviation, then
@@ -170,6 +174,29 @@ _GAUSSIAN_TEXT = dedent(
       3. gaussian_null (2 cases)
          Single-cluster data (K=1) with no structure.  Tests the
          algorithm's ability to correctly return K=1.
+
+      4. gaussian_dimensionality_consolidated (3 cases)
+        Fixed informative subspace with increasing irrelevant dimensions.
+        Signal is concentrated in cluster-owned feature blocks, following
+        common high-dimensional benchmark practice where p grows mainly
+        through noise features rather than extra informative ones.
+
+      5. gaussian_dimensionality_diffuse (3 cases)
+        Fixed informative subspace with correlated signal spread across the
+        relevant dimensions, plus increasing irrelevant dimensions.
+        This stresses recovery when the signal is weakly distributed rather
+        than localized in a small block.
+
+      6. gaussian_outlier_singleton (1 case)
+        A standard clustered Gaussian benchmark with one extreme singleton
+        outlier added far from the inlier clusters. This tests whether the
+        method isolates a lone anomalous point as its own leaf/split.
+
+      7. gaussian_outlier_contamination (2 cases)
+        Small outlier contamination using either a tiny remote Gaussian group
+        or a shell of dispersed anomalous points around the inlier support.
+        This tests whether the method can separate clustered contamination
+        and low-rate diffuse anomalies.
 
     Design notes:
       Median binarization forces theta close to 0.5, maximizing Wald
@@ -320,6 +347,11 @@ _EVALUATION_TEXT = dedent(
       Adjusted Rand Index            [-1, 1]   1 = perfect, 0 = random
       Normalized Mutual Information  [ 0, 1]   1 = perfect label correspondence
       Purity                         [ 0, 1]   fraction in dominant true class
+      Outlier Precision              [ 0, 1]   predicted outlier samples that are truly outliers
+      Outlier Recall                 [ 0, 1]   true outlier samples recovered by outlier-like clusters
+      Outlier F1                     [ 0, 1]   harmonic mean of outlier precision and recall
+      Singleton Outlier Isolated     {0,1}     single outlier recovered as a singleton cluster
+      Grouped Outlier Recovered      {0,1}     grouped outliers recovered as one pure cluster
       Exact K                        count     found K equals true K
 
     Primary method:

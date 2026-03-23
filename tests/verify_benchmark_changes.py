@@ -39,8 +39,10 @@ def verify_case_configs() -> list[bool]:
     results: list[bool] = []
 
     from benchmarks.shared.cases import get_default_test_cases
+    from benchmarks.shared.cases.dimensionality import DIMENSIONALITY_CASES
     from benchmarks.shared.cases.binary import BINARY_CASES
     from benchmarks.shared.cases.gaussian import GAUSSIAN_CASES
+    from benchmarks.shared.cases.outliers import OUTLIER_CASES
     from benchmarks.shared.cases.overlapping import OVERLAPPING_CASES
 
     # --- Binary ---
@@ -91,8 +93,10 @@ def verify_case_configs() -> list[bool]:
     results.append(check("Binary null cases K=1", all_null_k1 and len(null_cases) == 2))
 
     # --- Gaussian ---
-    gauss_count = sum(len(v) for v in GAUSSIAN_CASES.values())
-    results.append(check("Gaussian case count", gauss_count == 12, f"got {gauss_count}"))
+    gauss_count = sum(len(v) for v in GAUSSIAN_CASES.values()) + sum(
+        len(v) for v in DIMENSIONALITY_CASES.values()
+    ) + sum(len(v) for v in OUTLIER_CASES.values())
+    results.append(check("Gaussian case count", gauss_count == 21, f"got {gauss_count}"))
 
     gauss_categories = set(GAUSSIAN_CASES.keys())
     results.append(
@@ -102,6 +106,20 @@ def verify_case_configs() -> list[bool]:
         )
     )
     results.append(check("gaussian_null present", "gaussian_null" in gauss_categories))
+    results.append(
+        check(
+            "Gaussian dimensionality categories present",
+            set(DIMENSIONALITY_CASES.keys())
+            == {"gaussian_dimensionality_consolidated", "gaussian_dimensionality_diffuse"},
+        )
+    )
+    results.append(
+        check(
+            "Gaussian outlier categories present",
+            set(OUTLIER_CASES.keys())
+            == {"gaussian_outlier_singleton", "gaussian_outlier_contamination"},
+        )
+    )
 
     gauss_null = GAUSSIAN_CASES.get("gaussian_null", [])
     all_gauss_null_k1 = all(c["n_clusters"] == 1 for c in gauss_null)
@@ -251,6 +269,8 @@ def verify_case_generation() -> list[bool]:
         "binary_noise_feat_50i_200n",  # noise features
         "gauss_clear_small",  # Gaussian improved
         "gauss_null_small",  # Gaussian null
+        "dim_consolidated_4c_72f",  # dimensionality sweep
+        "gauss_single_outlier_4c",  # outlier singleton
     ]
 
     all_cases = {c["name"]: c for c in get_default_test_cases()}
