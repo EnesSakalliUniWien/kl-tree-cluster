@@ -1,3 +1,4 @@
+from .nearby_stable import enrich_blocked_weights
 from .sibling_pair_collection import (
     collect_significant_sibling_pairs,
     collect_sibling_pair_records,
@@ -13,5 +14,6 @@ __all__ = [
     "collect_sibling_pair_records",
     "count_null_focal_pairs",
     "deflate_focal_pairs",
+    "enrich_blocked_weights",
     "sibling_divergence_test",
 ]

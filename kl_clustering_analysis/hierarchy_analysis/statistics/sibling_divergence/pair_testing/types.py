@@ -21,6 +21,10 @@ class SiblingPairRecord:
     is_null_like: bool
     is_gate2_blocked: bool = False
     edge_weight: float = 0.0  # min(p_edge_left, p_edge_right) for continuous calibration
+    structural_dimension: float = 0.0  # sibling k derived from child edge dimensions
+    nearby_stable_support: float | None = None
+    ancestor_support: float | None = None
+    blend_lambda: float | None = None
 
 
 class DeflatableSiblingRecord(Protocol):

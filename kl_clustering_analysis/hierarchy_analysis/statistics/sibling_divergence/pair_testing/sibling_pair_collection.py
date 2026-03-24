@@ -291,6 +291,15 @@ def collect_sibling_pair_records(
                 is_null_like=is_null_like,
                 is_gate2_blocked=is_gate2_blocked,
                 edge_weight=edge_calibration_weight,
+                structural_dimension=(
+                    float(spectral_k)
+                    if spectral_k is not None and spectral_k > 0
+                    else (
+                        float(degrees_of_freedom)
+                        if np.isfinite(degrees_of_freedom) and degrees_of_freedom > 0
+                        else 0.0
+                    )
+                ),
             )
         )
 

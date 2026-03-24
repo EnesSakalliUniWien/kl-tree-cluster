@@ -18,6 +18,12 @@ dispatcher
 """
 
 from .base import benjamini_hochberg_correction
+from .blocker_recovery import (
+    BlockerInfo,
+    SignalNeighborInfo,
+    recover_blocker_metadata,
+    recover_signal_neighbors,
+)
 from .flat_correction import flat_bh_correction
 from .level_wise_correction import level_wise_bh_correction
 from .tree_bh_correction import tree_bh_correction, TreeBHResult
@@ -31,6 +37,11 @@ __all__ = [
     "level_wise_bh_correction",
     "tree_bh_correction",
     "TreeBHResult",
+    # Blocker recovery
+    "BlockerInfo",
+    "SignalNeighborInfo",
+    "recover_blocker_metadata",
+    "recover_signal_neighbors",
     # Dispatcher
     "apply_multiple_testing_correction",
 ]

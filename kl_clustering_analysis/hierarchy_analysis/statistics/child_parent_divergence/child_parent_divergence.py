@@ -154,6 +154,46 @@ def annotate_child_parent_divergence(
         "ancestor_blocked_edges": int(np.sum(ancestor_blocked_mask)),
     }
 
+    if fdr_method == "tree_bh" and int(np.sum(ancestor_blocked_mask)) > 0:
+        from ..multiple_testing.blocker_recovery import (
+            recover_blocker_metadata,
+            recover_signal_neighbors,
+        )
+
+        blocker_map = recover_blocker_metadata(tree, tree_bh_result, child_ids)
+        signal_map = recover_signal_neighbors(
+            tree,
+            child_ids,
+            reject_mask=reject_null_hypothesis,
+            tested_mask=tested_mask,
+            corrected_p_values=corrected_p_values,
+            depths=node_depths,
+        )
+
+        blocker_p_values = np.full(len(child_ids), np.nan)
+        distances_to_blocker = np.full(len(child_ids), np.nan)
+        signal_p_values = np.full(len(child_ids), np.nan)
+        distances_to_signal = np.full(len(child_ids), np.nan)
+
+        for index, child_id in enumerate(child_ids):
+            blocker_info = blocker_map.get(str(child_id))
+            if blocker_info is not None:
+                blocker_p_values[index] = blocker_info.blocker_p_value
+                distances_to_blocker[index] = blocker_info.distance_to_blocker
+
+            signal_info = signal_map.get(str(child_id))
+            if signal_info is not None:
+                signal_p_values[index] = signal_info.sig_p_value
+                distances_to_signal[index] = signal_info.distance_to_sig
+
+        annotations_df.attrs["_blocker_metadata"] = {
+            "child_ids": child_ids,
+            "blocker_p_values": blocker_p_values,
+            "distances_to_blocker": distances_to_blocker,
+            "signal_p_values": signal_p_values,
+            "distances_to_signal": distances_to_signal,
+        }
+
     return assign_divergence_results(
         annotations_df=annotations_df,
         child_ids=child_ids,
