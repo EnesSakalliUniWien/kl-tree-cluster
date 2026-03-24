@@ -21,7 +21,7 @@ from benchmarks.shared.generators import (
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
-def analyze_differences(tree, stats_df, entropy_label):
+def analyze_differences(tree, annotations_df, entropy_label):
     """Analyze distribution differences for edges in the tree."""
     print(f"\n{'=' * 60}")
     print(f"Distribution Difference Analysis: entropy={entropy_label}")
@@ -66,7 +66,7 @@ def analyze_differences(tree, stats_df, entropy_label):
     print(f"  Max:    {max_d.max():.4f}")
 
 
-def analyze_cluster_purity(tree, stats_df, labels, entropy_label):
+def analyze_cluster_purity(tree, annotations_df, labels, entropy_label):
     """Analyze how pure the subtrees are with respect to true labels."""
     print(f"\nCluster Purity Analysis:")
 
@@ -138,8 +138,8 @@ def main():
         # Populate distributions
         tree.populate_node_divergences(df)
 
-        analyze_differences(tree, tree.stats_df, entropy)
-        analyze_cluster_purity(tree, tree.stats_df, labels, entropy)
+        analyze_differences(tree, tree.annotations_df, entropy)
+        analyze_cluster_purity(tree, tree.annotations_df, labels, entropy)
 
 
 if __name__ == "__main__":

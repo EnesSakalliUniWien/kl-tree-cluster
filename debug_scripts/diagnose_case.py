@@ -172,7 +172,7 @@ def diagnose_case(case_name: str) -> None:
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
     )
-    stats = tree.stats_df
+    stats = tree.annotations_df
     K_found = decomp["num_clusters"]
 
     # Compute ARI

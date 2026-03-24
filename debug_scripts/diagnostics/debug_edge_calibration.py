@@ -63,7 +63,7 @@ def _make_tree(data: pd.DataFrame) -> PosetTree:
 
 
 def _run_decompose(data: pd.DataFrame, alpha: float, edge_cal: bool) -> tuple[dict, pd.DataFrame]:
-    """Run full pipeline with/without edge calibration.  Returns (decomp_result, stats_df)."""
+    """Run full pipeline with/without edge calibration.  Returns (decomp_result, annotations_df)."""
     orig = config.EDGE_CALIBRATION
     config.EDGE_CALIBRATION = edge_cal
     try:
@@ -71,7 +71,7 @@ def _run_decompose(data: pd.DataFrame, alpha: float, edge_cal: bool) -> tuple[di
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             decomp = tree.decompose(leaf_data=data, alpha_local=alpha, sibling_alpha=alpha)
-        return decomp, tree.stats_df
+        return decomp, tree.annotations_df
     finally:
         config.EDGE_CALIBRATION = orig
 
@@ -112,7 +112,7 @@ def main() -> None:
     spectral_dims = stats_cal.attrs.get("_spectral_dims", {})
 
     if not raw:
-        print("ERROR: No raw edge test data found in stats_df.attrs.")
+        print("ERROR: No raw edge test data found in annotations_df.attrs.")
         print("  Available attrs keys:", list(stats_cal.attrs.keys()))
         return
 

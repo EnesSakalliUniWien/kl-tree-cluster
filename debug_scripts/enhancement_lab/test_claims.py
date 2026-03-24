@@ -61,16 +61,16 @@ def collect_pairs_for_case(case_name: str) -> list[dict]:
     """Run the pipeline and extract all sibling pair records."""
     tree, data_df, y_true, tc = build_tree_and_data(case_name)
     decomp = run_decomposition(tree, data_df)
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    spectral_dims = derive_sibling_spectral_dims(tree, stats_df)
-    pca_proj, pca_eig = derive_sibling_pca_projections(stats_df, spectral_dims)
-    child_pca = derive_sibling_child_pca_projections(tree, stats_df, spectral_dims)
+    spectral_dims = derive_sibling_spectral_dims(tree, annotations_df)
+    pca_proj, pca_eig = derive_sibling_pca_projections(annotations_df, spectral_dims)
+    child_pca = derive_sibling_child_pca_projections(tree, annotations_df, spectral_dims)
 
     records, non_binary = collect_sibling_pair_records(
         tree,
-        stats_df,
+        annotations_df,
         mean_bl,
         spectral_dims=spectral_dims,
         pca_projections=pca_proj,

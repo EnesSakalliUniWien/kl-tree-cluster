@@ -229,24 +229,24 @@ def run_example():
         sibling_alpha=0.05,
     )
 
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     # Show child-parent test results
     print("\n--- Child-Parent Divergence Results ---")
     cp_cols = ["Child_Parent_Divergence_Significant", "Child_Parent_Divergence_P_Value"]
-    cp_sig = stats_df[stats_df["Child_Parent_Divergence_Significant"] == True]
+    cp_sig = annotations_df[annotations_df["Child_Parent_Divergence_Significant"] == True]
     print(f"Significant child-parent divergences: {len(cp_sig)}")
 
     # Show sibling test results
     print("\n--- Sibling Divergence Results ---")
-    if "Sibling_BH_Different" in stats_df.columns:
-        sib_tested = stats_df["Sibling_Divergence_P_Value"].notna().sum()
-        sib_diff = stats_df["Sibling_BH_Different"].sum()
+    if "Sibling_BH_Different" in annotations_df.columns:
+        sib_tested = annotations_df["Sibling_Divergence_P_Value"].notna().sum()
+        sib_diff = annotations_df["Sibling_BH_Different"].sum()
         print(f"Sibling tests performed: {sib_tested}")
         print(f"Siblings different: {sib_diff}")
 
         # Show details
-        tested_nodes = stats_df[stats_df["Sibling_Divergence_P_Value"].notna()]
+        tested_nodes = annotations_df[annotations_df["Sibling_Divergence_P_Value"].notna()]
         for node_id, row in tested_nodes.iterrows():
             p_val = row["Sibling_Divergence_P_Value"]
             is_diff = row["Sibling_BH_Different"]

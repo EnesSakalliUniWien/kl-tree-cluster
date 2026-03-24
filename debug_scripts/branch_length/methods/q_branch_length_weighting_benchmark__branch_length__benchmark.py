@@ -72,7 +72,7 @@ def data_to_probability_df(data: np.ndarray, sample_names: list) -> pd.DataFrame
     return pd.DataFrame(prob_data, index=sample_names)
 
 
-def get_cluster_assignments(tree: PosetTree, stats_df: pd.DataFrame) -> dict:
+def get_cluster_assignments(tree: PosetTree, annotations_df: pd.DataFrame) -> dict:
     """Extract cluster assignments from decomposed tree."""
     # Find nodes where we should NOT split (these are cluster roots)
     # A node is a cluster root if it's significant but its children are not
@@ -85,7 +85,7 @@ def get_cluster_assignments(tree: PosetTree, stats_df: pd.DataFrame) -> dict:
             leaves.extend(get_leaves_under(child))
         return leaves
 
-    # Get significant split decisions from stats_df
+    # Get significant split decisions from annotations_df
     root = tree.graph.get("root") or next(n for n, d in tree.in_degree() if d == 0)
 
     # Simple approach: use the 'Sibling_BH_Different' column if available
@@ -132,10 +132,10 @@ def run_single_comparison(
     # Compute divergences (standard leaf-count weighting)
     # The compute_node_divergences signature has changed - just call it simply
     # It now calculates composite scores internally with default lambda=0.2
-    stats_df = compute_node_divergences(tree, prob_df)
+    annotations_df = compute_node_divergences(tree, prob_df)
 
     # Get KL divergence statistics for internal nodes
-    internal_nodes = stats_df[~stats_df["is_leaf"]]
+    internal_nodes = annotations_df[~annotations_df["is_leaf"]]
 
     # For each internal node, check if its children span multiple true clusters
     def get_leaves_under(node_id):
@@ -175,8 +175,8 @@ def run_single_comparison(
             bl_vals = []
 
             for child in children:
-                if child in stats_df.index:
-                    kl = stats_df.loc[child, "kl_divergence_local"]
+                if child in annotations_df.index:
+                    kl = annotations_df.loc[child, "kl_divergence_local"]
                     bl = tree.edges[node_id, child].get("branch_length")
                     if bl is None:
                         continue

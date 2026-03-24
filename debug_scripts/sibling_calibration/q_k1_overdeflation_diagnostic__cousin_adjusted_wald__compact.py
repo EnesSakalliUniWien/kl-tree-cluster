@@ -66,7 +66,7 @@ for case in cases:
     tree_w = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
     decomp_w = tree_w.decompose(leaf_data=data_df, alpha_local=0.05, sibling_alpha=0.05)
 
-    sdf = tree.stats_df
+    sdf = tree.annotations_df
     audit = sdf.attrs.get("sibling_divergence_audit", {})
     diag = audit.get("diagnostics", {})
     mean_bl = compute_mean_branch_length(tree)

@@ -129,10 +129,10 @@ try:
     print(f"\n  Found clusters: {len(results)}")
     print(f"  Cluster sizes: {[len(v) for v in results.values()]}")
 
-    # Check the stats_df for calibration audit
-    stats_df = tree.stats_df
-    if stats_df is not None and hasattr(stats_df, 'attrs'):
-        audit = stats_df.attrs.get("sibling_divergence_audit", {})
+    # Check the annotations_df for calibration audit
+    annotations_df = tree.annotations_df
+    if annotations_df is not None and hasattr(annotations_df, 'attrs'):
+        audit = annotations_df.attrs.get("sibling_divergence_audit", {})
         print(f"\n  Calibration audit:")
         for k, v in audit.items():
             if k != "diagnostics":
@@ -145,9 +145,9 @@ try:
     # Show root node stats
     root = [n for n in tree.nodes if tree.in_degree(n) == 0][0]
     print(f"\n  Root node: {root}")
-    if stats_df is not None and root in stats_df.index:
-        root_row = stats_df.loc[root]
-        for col in stats_df.columns:
+    if annotations_df is not None and root in annotations_df.index:
+        root_row = annotations_df.loc[root]
+        for col in annotations_df.columns:
             val = root_row[col]
             if pd.notna(val):
                 print(f"    {col}: {val}")

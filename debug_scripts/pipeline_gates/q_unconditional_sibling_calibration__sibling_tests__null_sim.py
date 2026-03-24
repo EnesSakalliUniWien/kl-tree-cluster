@@ -104,7 +104,7 @@ def run_unconditional_sibling_trial(seed=42, n=200, p=50, verbose=True):
     reject_bh, padj, _ = benjamini_hochberg_correction(pvals_arr, alpha=0.05)
 
     # Also run the CURRENT pipeline (edge-gated) for comparison
-    results_df = tree.stats_df.copy()
+    results_df = tree.annotations_df.copy()
     results_df_edge = annotate_child_parent_divergence(
         tree, results_df.copy(), significance_level_alpha=0.05, fdr_method="tree_bh"
     )

@@ -78,7 +78,7 @@ def generate_analysis_data(
 
     # Run decomposition to get KL metrics
     tree.decompose(leaf_data=prob_df)
-    stats_df = tree.stats_df.copy()
+    annotations_df = tree.annotations_df.copy()
 
     # Compute inconsistency coefficient
     R = scipy_inconsistent(Z, d=2)
@@ -91,7 +91,7 @@ def generate_analysis_data(
         node_id = f"N{node_idx}"
         inconsistency_map[node_id] = R[merge_idx, 3]  # inconsistency coefficient
 
-    stats_df["inconsistency"] = stats_df.index.map(
+    annotations_df["inconsistency"] = annotations_df.index.map(
         lambda x: inconsistency_map.get(x, np.nan)
     )
 
@@ -112,8 +112,8 @@ def generate_analysis_data(
         return leaves
 
     true_info = []
-    for node_id in stats_df.index:
-        if stats_df.loc[node_id, "is_leaf"]:
+    for node_id in annotations_df.index:
+        if annotations_df.loc[node_id, "is_leaf"]:
             n_true = 1
             should_split = False
         else:
@@ -130,16 +130,16 @@ def generate_analysis_data(
         )
 
     true_df = pd.DataFrame(true_info).set_index("node_id")
-    stats_df = stats_df.join(true_df)
+    annotations_df = annotations_df.join(true_df)
 
-    return stats_df, tree, Z
+    return annotations_df, tree, Z
 
 
-def analyze_metrics(stats_df):
+def analyze_metrics(annotations_df):
     """Analyze predictive power of different metrics."""
 
     # Filter to internal nodes with valid data
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
     internal = internal.dropna(subset=["should_split"])
 
     print("=" * 80)
@@ -218,10 +218,10 @@ def analyze_metrics(stats_df):
     return pd.DataFrame(results)
 
 
-def show_example_nodes(stats_df, n=10):
+def show_example_nodes(annotations_df, n=10):
     """Show example nodes with their metrics."""
 
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
     internal = internal.dropna(subset=["should_split", "height"])
 
     # Sort by height descending (highest merges first)
@@ -253,10 +253,10 @@ def show_example_nodes(stats_df, n=10):
     print(no_split[cols].to_string())
 
 
-def explore_combinations(stats_df):
+def explore_combinations(annotations_df):
     """Explore combining multiple metrics."""
 
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
     internal = internal.dropna(subset=["should_split", "height", "sibling_branch_sum"])
 
     print("\n" + "=" * 80)
@@ -329,7 +329,7 @@ def main():
         )
         print(f"{'#' * 80}")
 
-        stats_df, tree, Z = generate_analysis_data(
+        annotations_df, tree, Z = generate_analysis_data(
             n_clusters=n_clusters,
             n_per_cluster=n_per,
             n_features=n_feat,
@@ -337,13 +337,13 @@ def main():
             seed=42,
         )
 
-        results = analyze_metrics(stats_df)
+        results = analyze_metrics(annotations_df)
         results["scenario"] = desc
         all_results.append(results)
 
         if desc == "Base case":
-            show_example_nodes(stats_df)
-            explore_combinations(stats_df)
+            show_example_nodes(annotations_df)
+            explore_combinations(annotations_df)
 
     # Summary across scenarios
     all_df = pd.concat(all_results, ignore_index=True)

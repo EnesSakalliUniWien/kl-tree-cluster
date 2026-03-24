@@ -145,12 +145,12 @@ def run_decomposition_and_compare(tree, data_df, true_labels):
         sibling_alpha=0.05,
     )
 
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     # Show sibling test results
     print("\nSibling tests performed during decomposition:")
-    if "Sibling_BH_Different" in stats_df.columns:
-        tested = stats_df[stats_df["Sibling_Divergence_P_Value"].notna()]
+    if "Sibling_BH_Different" in annotations_df.columns:
+        tested = annotations_df[annotations_df["Sibling_Divergence_P_Value"].notna()]
         for node_id, row in tested.iterrows():
             children = list(tree.successors(node_id))
             p_val = row["Sibling_Divergence_P_Value"]

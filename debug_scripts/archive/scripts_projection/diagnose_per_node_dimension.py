@@ -619,7 +619,7 @@ def section_gate_trace(
             alpha_local=config.ALPHA_LOCAL,
             sibling_alpha=config.SIBLING_ALPHA,
         )
-        rdf = tree.stats_df
+        rdf = tree.annotations_df
         found_k = result["num_clusters"]
 
         true_k_str = ""
@@ -898,7 +898,7 @@ def _print_failure_analysis(
 
                 # Compute what the un-deflated raw Wald T would be
                 # T_adj = T_raw / ĉ, so T_raw = T_adj * ĉ
-                # But we don't store T_raw in stats_df. We can reconstruct:
+                # But we don't store T_raw in annotations_df. We can reconstruct:
                 # The sibling_divergence_test gives raw T.
                 left_dist = tree.nodes[left].get("distribution")
                 right_dist = tree.nodes[right].get("distribution")

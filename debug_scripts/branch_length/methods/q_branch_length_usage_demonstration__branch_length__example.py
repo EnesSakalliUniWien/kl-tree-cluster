@@ -87,7 +87,7 @@ def analyze_branch_metrics(data, labels, sample_names):
 
     # Run decomposition to get KL-divergence stats
     decomp_results = tree.decompose(leaf_data=prob_df)
-    stats_df = tree.stats_df.copy()
+    annotations_df = tree.annotations_df.copy()
 
     # Map labels to leaf nodes
     leaf_labels = {name: lbl for name, lbl in zip(sample_names, labels)}
@@ -110,8 +110,8 @@ def analyze_branch_metrics(data, labels, sample_names):
     n_leaves = len(sample_names)
     analysis_data = []
 
-    for node_id in stats_df.index:
-        if stats_df.loc[node_id, "is_leaf"]:
+    for node_id in annotations_df.index:
+        if annotations_df.loc[node_id, "is_leaf"]:
             continue
 
         # Get merge_idx for this node
@@ -124,13 +124,13 @@ def analyze_branch_metrics(data, labels, sample_names):
         # Get metrics
         height = Z[merge_idx, 2]
         incons = R[merge_idx, 3] if R[merge_idx, 1] > 0 else 0  # Avoid div by zero
-        sibling_branch = stats_df.loc[node_id, "sibling_branch_sum"]
+        sibling_branch = annotations_df.loc[node_id, "sibling_branch_sum"]
 
         # Get KL test results
-        kl_local = stats_df.loc[node_id, "kl_divergence_local"]
+        kl_local = annotations_df.loc[node_id, "kl_divergence_local"]
         cp_sig = (
-            stats_df.loc[node_id, "Child_Parent_Divergence_Significant"]
-            if "Child_Parent_Divergence_Significant" in stats_df.columns
+            annotations_df.loc[node_id, "Child_Parent_Divergence_Significant"]
+            if "Child_Parent_Divergence_Significant" in annotations_df.columns
             else np.nan
         )
 

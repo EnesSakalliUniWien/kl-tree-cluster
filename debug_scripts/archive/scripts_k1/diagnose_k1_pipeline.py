@@ -116,10 +116,10 @@ for _, brow in k1_rows.iterrows():
 
     print(f"  Result: found K={found_k}, sizes={cluster_sizes}")
 
-    # ── Extract stats_df ────────────────────────────────────────────────
-    sdf = tree.stats_df
+    # ── Extract annotations_df ────────────────────────────────────────────────
+    sdf = tree.annotations_df
     if sdf is None:
-        print("  WARNING: stats_df is None\n")
+        print("  WARNING: annotations_df is None\n")
         continue
 
     # ── Calibration audit ───────────────────────────────────────────────
@@ -226,7 +226,7 @@ for _, brow in k1_rows.iterrows():
         elif root_diff:
             blocking = "NOT BLOCKED AT ROOT — split should occur"
         else:
-            blocking = "UNKNOWN — check stats_df manually"
+            blocking = "UNKNOWN — check annotations_df manually"
 
         print(f"\n  >>> ROOT BLOCKING REASON: {blocking}")
 

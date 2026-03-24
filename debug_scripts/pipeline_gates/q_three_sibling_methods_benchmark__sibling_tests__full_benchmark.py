@@ -92,8 +92,8 @@ def run_single_case(case, method_name):
 
     # Get calibration audit info if available
     audit = {}
-    if hasattr(tree, "stats_df") and tree.stats_df is not None:
-        sdf = tree.stats_df
+    if hasattr(tree, "annotations_df") and tree.annotations_df is not None:
+        sdf = tree.annotations_df
         if hasattr(sdf, "attrs"):
             audit = sdf.attrs.get("sibling_divergence_audit", {})
 

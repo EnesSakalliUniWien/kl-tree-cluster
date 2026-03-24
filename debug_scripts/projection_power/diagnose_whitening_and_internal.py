@@ -106,16 +106,16 @@ def run_case(case_config: dict, whitening: bool, include_internal: bool):
     pred = np.array([label_map.get(leaf_names[i], -1) for i in range(len(leaf_names))])
     ari = adjusted_rand_score(labels, pred) if labels is not None else float("nan")
 
-    # Get root spectral dim from stats_df
-    stats_df = tree.stats_df
-    spectral_dims = stats_df.attrs.get("_spectral_dims", {})
+    # Get root spectral dim from annotations_df
+    annotations_df = tree.annotations_df
+    spectral_dims = annotations_df.attrs.get("_spectral_dims", {})
     root = tree.root()
     root_k = spectral_dims.get(root) if spectral_dims else None
 
     # Count edge-significant nodes
     n_edge_sig = 0
-    if "Child_Parent_Divergence_Significant" in stats_df.columns:
-        n_edge_sig = int(stats_df["Child_Parent_Divergence_Significant"].sum())
+    if "Child_Parent_Divergence_Significant" in annotations_df.columns:
+        n_edge_sig = int(annotations_df["Child_Parent_Divergence_Significant"].sum())
 
     return {
         "found_k": found_k,

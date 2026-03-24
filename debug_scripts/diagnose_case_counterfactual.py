@@ -312,7 +312,7 @@ def diagnose_case(case_name: str, *, include_parent_k: bool) -> None:
     linkage_matrix = linkage(dist, method=config.TREE_LINKAGE_METHOD)
     tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_t.index.tolist())
     tree.populate_node_divergences(data_t)
-    base_annotations = tree.stats_df.copy()
+    base_annotations = tree.annotations_df.copy()
 
     print(
         f"\nConfig: SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
@@ -326,7 +326,7 @@ def diagnose_case(case_name: str, *, include_parent_k: bool) -> None:
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
     )
-    configured_stats = tree.stats_df.copy()
+    configured_stats = tree.annotations_df.copy()
     raw_stats = _run_pipeline_variant(
         tree,
         base_annotations,

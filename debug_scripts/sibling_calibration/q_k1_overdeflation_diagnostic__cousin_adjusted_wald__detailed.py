@@ -66,9 +66,9 @@ def run_case_three_methods(case):
 
 def diagnose_adjusted_wald(tree, data_df):
     """Deep dive into the adj_wald calibration for a given tree."""
-    sdf = tree.stats_df
+    sdf = tree.annotations_df
     if sdf is None:
-        print("  No stats_df available")
+        print("  No annotations_df available")
         return
 
     audit = sdf.attrs.get("sibling_divergence_audit", {})

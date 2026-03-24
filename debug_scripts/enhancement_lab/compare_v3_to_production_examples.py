@@ -137,14 +137,14 @@ def collect_case_context(case_name: str) -> CaseContext:
     runtime_parametric = _runtime_summary(case_name, "parametric_wald")
 
     tree = runtime_default["tree"]
-    stats_df = runtime_default["stats_df"]
+    annotations_df = runtime_default["annotations_df"]
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_spectral_dims(tree, stats_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(stats_df, sibling_dims)
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, stats_df, sibling_dims)
+    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
+    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
     records, _ = collect_sibling_pair_records(
         tree,
-        stats_df,
+        annotations_df,
         mean_bl,
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,
@@ -154,7 +154,7 @@ def collect_case_context(case_name: str) -> CaseContext:
     )
 
     root = tree.root()
-    c_global = float(stats_df.attrs.get("sibling_divergence_audit", {}).get("global_inflation_factor", 1.0))
+    c_global = float(annotations_df.attrs.get("sibling_divergence_audit", {}).get("global_inflation_factor", 1.0))
     is_binary_case, is_null_case = _case_flags(case_name)
     pairs: list[PairExample] = []
 

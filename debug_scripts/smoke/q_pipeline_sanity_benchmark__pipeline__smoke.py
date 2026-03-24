@@ -64,11 +64,11 @@ def run_benchmark():
             decomp = tree.decompose(leaf_data=df, alpha_local=0.01, sibling_alpha=0.01)
 
             # Get test stats
-            stats_df = tree.stats_df
-            cp_sig = stats_df.get(
+            annotations_df = tree.annotations_df
+            cp_sig = annotations_df.get(
                 "Child_Parent_Divergence_Significant", pd.Series()
             ).sum()
-            sib_diff = stats_df.get("Sibling_BH_Different", pd.Series()).sum()
+            sib_diff = annotations_df.get("Sibling_BH_Different", pd.Series()).sum()
 
             # Extract predicted clusters
             leaf_to_cluster = extract_clusters(decomp)

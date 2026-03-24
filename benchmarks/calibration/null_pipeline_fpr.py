@@ -144,27 +144,31 @@ def _run_one_replicate(
 
     k_found = int(result.get("num_clusters", 1))
 
-    # Collect test-level diagnostics from stats_df.
-    stats_df = tree.stats_df if tree.stats_df is not None else pd.DataFrame()
+    # Collect test-level diagnostics from annotations_df.
+    annotations_df = tree.annotations_df if tree.annotations_df is not None else pd.DataFrame()
 
     edge_tests = 0
     edge_rejects = 0
     sibling_tests = 0
     sibling_rejects = 0
 
-    if not stats_df.empty:
-        if "Child_Parent_Divergence_P_Value_BH" in stats_df.columns:
-            mask = stats_df["Child_Parent_Divergence_P_Value_BH"].notna()
+    if not annotations_df.empty:
+        if "Child_Parent_Divergence_P_Value_BH" in annotations_df.columns:
+            mask = annotations_df["Child_Parent_Divergence_P_Value_BH"].notna()
             edge_tests = int(mask.sum())
             if edge_tests > 0:
                 edge_rejects = int(
-                    stats_df.loc[mask, "Child_Parent_Divergence_Significant"].astype(bool).sum()
+                    annotations_df.loc[
+                        mask, "Child_Parent_Divergence_Significant"
+                    ].astype(bool).sum()
                 )
-        if "Sibling_Divergence_P_Value_Corrected" in stats_df.columns:
-            mask = stats_df["Sibling_Divergence_P_Value_Corrected"].notna()
+        if "Sibling_Divergence_P_Value_Corrected" in annotations_df.columns:
+            mask = annotations_df["Sibling_Divergence_P_Value_Corrected"].notna()
             sibling_tests = int(mask.sum())
             if sibling_tests > 0:
-                sibling_rejects = int(stats_df.loc[mask, "Sibling_BH_Different"].astype(bool).sum())
+                sibling_rejects = int(
+                    annotations_df.loc[mask, "Sibling_BH_Different"].astype(bool).sum()
+                )
 
     return {
         "scenario": scenario["scenario"],

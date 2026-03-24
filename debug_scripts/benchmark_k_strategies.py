@@ -217,7 +217,7 @@ def run_single_case(tc: dict) -> list[dict]:
     Z = linkage(dist, method=config.TREE_LINKAGE_METHOD)
     tree = PosetTree.from_linkage(Z, leaf_names=data_t.index.tolist())
     tree.populate_node_divergences(data_t)
-    base = tree.stats_df.copy()
+    base = tree.annotations_df.copy()
 
     # Run Gate 2 (edge annotation) once to get spectral dims
     pipeline_result = run_gate_annotation_pipeline(

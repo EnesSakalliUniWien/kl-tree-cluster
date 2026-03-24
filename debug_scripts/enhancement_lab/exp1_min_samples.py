@@ -46,7 +46,7 @@ def _decompose_with_min_samples(
     # Build the decomposer normally (runs full annotation pipeline)
     decomposer = TreeDecomposition(
         tree=tree,
-        annotations_df=tree.stats_df.copy(),
+        annotations_df=tree.annotations_df.copy(),
         alpha_local=alpha_local or config.EDGE_ALPHA,
         sibling_alpha=sibling_alpha or config.SIBLING_ALPHA,
         leaf_data=data_df,

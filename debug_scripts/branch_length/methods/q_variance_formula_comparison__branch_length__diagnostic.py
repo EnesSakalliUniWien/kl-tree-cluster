@@ -121,21 +121,21 @@ def analyze_single_case(true_k=2, entropy=0.1, n_rows=200, n_cols=50, seed=42):
     print("-" * 70)
 
     decomp = tree.decompose(leaf_data=df, alpha_local=0.05, sibling_alpha=0.05)
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     # Show test results
-    if "Child_Parent_Divergence_P_Value" in stats_df.columns:
-        pvals = stats_df["Child_Parent_Divergence_P_Value"].dropna()
-        sig = stats_df.get("Child_Parent_Divergence_Significant", pd.Series()).sum()
+    if "Child_Parent_Divergence_P_Value" in annotations_df.columns:
+        pvals = annotations_df["Child_Parent_Divergence_P_Value"].dropna()
+        sig = annotations_df.get("Child_Parent_Divergence_Significant", pd.Series()).sum()
         print(f"\nChild-Parent Tests:")
         print(f"  Significant: {sig}/{len(pvals)}")
         print(
             f"  P-values: min={pvals.min():.2e}, median={pvals.median():.2e}, max={pvals.max():.2e}"
         )
 
-    if "Sibling_Divergence_P_Value" in stats_df.columns:
-        sib_pvals = stats_df["Sibling_Divergence_P_Value"].dropna()
-        sib_diff = stats_df.get("Sibling_BH_Different", pd.Series()).sum()
+    if "Sibling_Divergence_P_Value" in annotations_df.columns:
+        sib_pvals = annotations_df["Sibling_Divergence_P_Value"].dropna()
+        sib_diff = annotations_df.get("Sibling_BH_Different", pd.Series()).sum()
         print(f"\nSibling Tests:")
         print(f"  Different: {sib_diff}/{len(sib_pvals)}")
         if len(sib_pvals) > 0:

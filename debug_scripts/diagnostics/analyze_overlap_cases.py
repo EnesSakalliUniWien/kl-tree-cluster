@@ -66,7 +66,7 @@ def analyze_case(tc: dict) -> None:
     print(f"Found K={found_k}")
 
     # --- Gate statistics ---
-    df = tree.stats_df
+    df = tree.annotations_df
     internal = df[~df.index.str.startswith("L")]
 
     # Gate 2: Edge significance

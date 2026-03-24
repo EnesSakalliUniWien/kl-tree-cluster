@@ -86,7 +86,7 @@ def run_statistical_analysis(tree, X):
     tree.populate_node_divergences(X)
 
     # Run statistical tests (skip root-level test for speed/consistency)
-    annotations_df = tree.stats_df.copy()
+    annotations_df = tree.annotations_df.copy()
 
     annotations_df = annotate_child_parent_divergence(
         tree,

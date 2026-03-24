@@ -120,26 +120,26 @@ def run_comparison(X, y_true, y_optimal, dataset_name):
     )
 
     # Debug info
-    if hasattr(tree, "stats_df") and tree.stats_df is not None:
-        n_sig = tree.stats_df["Child_Parent_Divergence_Significant"].sum()
-        print(f"  [DEBUG] Significant nodes found: {n_sig} / {len(tree.stats_df)}")
+    if hasattr(tree, "annotations_df") and tree.annotations_df is not None:
+        n_sig = tree.annotations_df["Child_Parent_Divergence_Significant"].sum()
+        print(f"  [DEBUG] Significant nodes found: {n_sig} / {len(tree.annotations_df)}")
 
         # Check root children
         root = [n for n, d in tree.in_degree() if d == 0][0]
         children = list(tree.successors(root))
         print(f"  [DEBUG] Root: {root} ({tree.nodes[root].get('leaf_count')})")
         for child in children:
-            if child in tree.stats_df.index:
-                sig = tree.stats_df.loc[child, "Child_Parent_Divergence_Significant"]
-                pval = tree.stats_df.loc[child, "Child_Parent_Divergence_P_Value"]
+            if child in tree.annotations_df.index:
+                sig = tree.annotations_df.loc[child, "Child_Parent_Divergence_Significant"]
+                pval = tree.annotations_df.loc[child, "Child_Parent_Divergence_P_Value"]
                 print(
                     f"    Child {child} ({tree.nodes[child].get('leaf_count')}): Sig={sig}, p={pval:.4f}"
                 )
             else:
-                print(f"    Child {child}: Not in stats_df")
+                print(f"    Child {child}: Not in annotations_df")
 
         if n_sig > 0:
-            # print(f"  [DEBUG] Sample sizes of sig nodes: {tree.stats_df[tree.stats_df['Child_Parent_Divergence_Significant']]['leaf_count'].unique()}")
+            # print(f"  [DEBUG] Sample sizes of sig nodes: {tree.annotations_df[tree.annotations_df['Child_Parent_Divergence_Significant']]['leaf_count'].unique()}")
             pass
 
     # Extract labels from cluster_assignments
@@ -165,10 +165,10 @@ def run_comparison(X, y_true, y_optimal, dataset_name):
     # V2: Signal localization
     print(f"\nV2 (signal localization):")
     try:
-        # Use existing stats_df from the tree (populated by V1 run)
+        # Use existing annotations_df from the tree (populated by V1 run)
         decomposer = TreeDecomposition(
             tree=tree,
-            annotations_df=tree.stats_df,
+            annotations_df=tree.annotations_df,
             alpha_local=0.05,
             sibling_alpha=0.05,
             use_signal_localization=True,

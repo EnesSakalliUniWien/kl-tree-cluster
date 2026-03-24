@@ -195,7 +195,7 @@ def _case_features(case: str) -> tuple[pd.DataFrame, pd.DataFrame]:
             sibling_alpha=config.SIBLING_ALPHA,
         )
 
-    stats = tree.stats_df
+    stats = tree.annotations_df
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
     sibling_dims = sibling_config.derive_sibling_spectral_dims(tree, stats)
     pca_projections, pca_eigenvalues = sibling_config.derive_sibling_pca_projections(stats, sibling_dims)

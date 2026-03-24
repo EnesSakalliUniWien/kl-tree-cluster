@@ -111,7 +111,7 @@ def _run_kl_diffusion_method(
         extra={
             "tree": tree_t,
             "decomposition": decomp_t,
-            "stats": tree_t.stats_df,
+            "annotations": tree_t.annotations_df,
             "linkage_matrix": Z_t,
         },
     )

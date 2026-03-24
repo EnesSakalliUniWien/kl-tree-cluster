@@ -60,7 +60,7 @@ def get_jl_dim(n_samples: int, n_features: int) -> int:
 
 def run_annotation_pipeline(tree, data_df, use_auto_derive: bool):
     """Run Gate 2 + Gate 3 and return annotated DataFrame + spectral info."""
-    annotations_df = tree.stats_df.copy() if tree.stats_df is not None else pd.DataFrame()
+    annotations_df = tree.annotations_df.copy() if tree.annotations_df is not None else pd.DataFrame()
 
     if use_auto_derive:
         bundle = run_gate_annotation_pipeline(

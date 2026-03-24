@@ -71,14 +71,14 @@ def run_decompose(data_df: pd.DataFrame, edge_calibration: bool) -> dict:
             alpha_local=config.SIGNIFICANCE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
         )
-        return {"tree": tree, "results": results, "stats_df": tree.stats_df}
+        return {"tree": tree, "results": results, "annotations_df": tree.annotations_df}
     finally:
         config.EDGE_CALIBRATION = orig
 
 
-def trace_sibling_calibration(stats_df: pd.DataFrame, label: str):
+def trace_sibling_calibration(annotations_df: pd.DataFrame, label: str):
     """Print sibling (Gate 3) calibration audit info."""
-    audit = stats_df.attrs.get("sibling_divergence_audit", {})
+    audit = annotations_df.attrs.get("sibling_divergence_audit", {})
     if not audit:
         print(f"    [{label}] Sibling calibration: NO AUDIT DATA")
         return
@@ -99,7 +99,7 @@ def trace_sibling_calibration(stats_df: pd.DataFrame, label: str):
                 print(f"      {k} = {v}")
 
 
-def trace_root_gates(tree: PosetTree, stats_df: pd.DataFrame, label: str):
+def trace_root_gates(tree: PosetTree, annotations_df: pd.DataFrame, label: str):
     """Print gate trace for the root and its children."""
     root = tree.root()
     children = list(tree.successors(root))
@@ -113,7 +113,7 @@ def trace_root_gates(tree: PosetTree, stats_df: pd.DataFrame, label: str):
 
     # Gate 2: child-parent divergence
     for child_label, child in [("Left", left), ("Right", right)]:
-        row = stats_df.loc[child] if child in stats_df.index else None
+        row = annotations_df.loc[child] if child in annotations_df.index else None
         if row is None:
             print(f"    Gate 2 ({child_label} = {child}): NO STATS ROW")
             continue
@@ -127,13 +127,13 @@ def trace_root_gates(tree: PosetTree, stats_df: pd.DataFrame, label: str):
         )
 
     left_sig = (
-        stats_df.loc[left].get("Child_Parent_Divergence_Significant", False)
-        if left in stats_df.index
+        annotations_df.loc[left].get("Child_Parent_Divergence_Significant", False)
+        if left in annotations_df.index
         else False
     )
     right_sig = (
-        stats_df.loc[right].get("Child_Parent_Divergence_Significant", False)
-        if right in stats_df.index
+        annotations_df.loc[right].get("Child_Parent_Divergence_Significant", False)
+        if right in annotations_df.index
         else False
     )
     gate2_pass = left_sig or right_sig
@@ -144,7 +144,7 @@ def trace_root_gates(tree: PosetTree, stats_df: pd.DataFrame, label: str):
         return
 
     # Gate 3: sibling divergence
-    root_row = stats_df.loc[root] if root in stats_df.index else None
+    root_row = annotations_df.loc[root] if root in annotations_df.index else None
     if root_row is not None:
         sib_diff = root_row.get("Sibling_BH_Different", None)
         sib_p = root_row.get("Sibling_Divergence_P_Value_Corrected", None)
@@ -164,15 +164,15 @@ def trace_root_gates(tree: PosetTree, stats_df: pd.DataFrame, label: str):
         print(f"    Gate 3: NO STATS ROW for root {root}")
 
 
-def trace_calibration_detail(tree: PosetTree, stats_df: pd.DataFrame):
+def trace_calibration_detail(tree: PosetTree, annotations_df: pd.DataFrame):
     """Print edge calibration details for root's children."""
     root = tree.root()
     children = list(tree.successors(root))
     if len(children) != 2:
         return
 
-    # Get calibration model from stats_df.attrs
-    cal_model: EdgeCalibrationModel | None = stats_df.attrs.get("edge_calibration_model", None)
+    # Get calibration model from annotations_df.attrs
+    cal_model: EdgeCalibrationModel | None = annotations_df.attrs.get("edge_calibration_model", None)
     if cal_model is None:
         print("    Calibration: NO MODEL (calibration disabled or failed)")
         return
@@ -188,8 +188,8 @@ def trace_calibration_detail(tree: PosetTree, stats_df: pd.DataFrame):
     # Detail on root's children
     node_depths = compute_node_depths(tree)
 
-    pca_eigenvalues = stats_df.attrs.get("_pca_eigenvalues", {})
-    spectral_dims = stats_df.attrs.get("_spectral_dims", {})
+    pca_eigenvalues = annotations_df.attrs.get("_pca_eigenvalues", {})
+    spectral_dims = annotations_df.attrs.get("_spectral_dims", {})
 
     for child in children:
         n_child = len(tree.get_leaves(child))
@@ -231,7 +231,7 @@ def trace_calibration_detail(tree: PosetTree, stats_df: pd.DataFrame):
         print(f"      w={w:.4f}, ĉ_local(depth={depth})={c_level:.4f}, ĉ_soft={c_soft:.4f}")
 
 
-def trace_all_internal_nodes(tree: PosetTree, stats_df: pd.DataFrame, max_nodes: int = 10):
+def trace_all_internal_nodes(tree: PosetTree, annotations_df: pd.DataFrame, max_nodes: int = 10):
     """Print gate trace for the first few internal nodes (BFS from root)."""
     root = tree.root()
     from collections import deque
@@ -258,17 +258,17 @@ def trace_all_internal_nodes(tree: PosetTree, stats_df: pd.DataFrame, max_nodes:
             continue
 
         left, right = children
-        row = stats_df.loc[node] if node in stats_df.index else None
+        row = annotations_df.loc[node] if node in annotations_df.index else None
 
         # Gate 2
         left_sig = (
-            stats_df.loc[left].get("Child_Parent_Divergence_Significant", False)
-            if left in stats_df.index
+            annotations_df.loc[left].get("Child_Parent_Divergence_Significant", False)
+            if left in annotations_df.index
             else False
         )
         right_sig = (
-            stats_df.loc[right].get("Child_Parent_Divergence_Significant", False)
-            if right in stats_df.index
+            annotations_df.loc[right].get("Child_Parent_Divergence_Significant", False)
+            if right in annotations_df.index
             else False
         )
         g2 = left_sig or right_sig
@@ -285,13 +285,13 @@ def trace_all_internal_nodes(tree: PosetTree, stats_df: pd.DataFrame, max_nodes:
         marker = "SPLIT" if split else "MERGE"
 
         left_p = (
-            stats_df.loc[left].get("Child_Parent_Divergence_P_Value_BH", None)
-            if left in stats_df.index
+            annotations_df.loc[left].get("Child_Parent_Divergence_P_Value_BH", None)
+            if left in annotations_df.index
             else None
         )
         right_p = (
-            stats_df.loc[right].get("Child_Parent_Divergence_P_Value_BH", None)
-            if right in stats_df.index
+            annotations_df.loc[right].get("Child_Parent_Divergence_P_Value_BH", None)
+            if right in annotations_df.index
             else None
         )
 
@@ -338,8 +338,8 @@ def investigate_case(case_name: str):
     baseline = run_decompose(data_df, edge_calibration=False)
     k_baseline = baseline["results"]["num_clusters"]
     print(f"  K found = {k_baseline}")
-    trace_root_gates(baseline["tree"], baseline["stats_df"], "Baseline")
-    trace_sibling_calibration(baseline["stats_df"], "Baseline")
+    trace_root_gates(baseline["tree"], baseline["annotations_df"], "Baseline")
+    trace_sibling_calibration(baseline["annotations_df"], "Baseline")
 
     # Run WITH calibration (soft local)
     print(f"\n  {'─'*60}")
@@ -348,22 +348,22 @@ def investigate_case(case_name: str):
     calibrated = run_decompose(data_df, edge_calibration=True)
     k_calibrated = calibrated["results"]["num_clusters"]
     print(f"  K found = {k_calibrated}")
-    trace_root_gates(calibrated["tree"], calibrated["stats_df"], "Calibrated")
-    trace_sibling_calibration(calibrated["stats_df"], "Calibrated")
-    trace_calibration_detail(calibrated["tree"], calibrated["stats_df"])
+    trace_root_gates(calibrated["tree"], calibrated["annotations_df"], "Calibrated")
+    trace_sibling_calibration(calibrated["annotations_df"], "Calibrated")
+    trace_calibration_detail(calibrated["tree"], calibrated["annotations_df"])
 
     # Show top-10 internal nodes for calibrated run to see where everything merges
     if k_calibrated == 1:
         print(f"\n  {'─'*60}")
         print("  GATE TRACE (calibrated, top-10 nodes BFS from root)")
         print(f"  {'─'*60}")
-        trace_all_internal_nodes(calibrated["tree"], calibrated["stats_df"], max_nodes=10)
+        trace_all_internal_nodes(calibrated["tree"], calibrated["annotations_df"], max_nodes=10)
 
     # Compare edge calibration weights across ALL edges
     print(f"\n  {'─'*60}")
     print("  EDGE WEIGHT DISTRIBUTION (calibrated run)")
     print(f"  {'─'*60}")
-    cal_model = calibrated["stats_df"].attrs.get("edge_calibration_model", None)
+    cal_model = calibrated["annotations_df"].attrs.get("edge_calibration_model", None)
     if cal_model is not None and cal_model.diagnostics:
         diag = cal_model.diagnostics
         print(f"    Global ĉ (weighted mean)  = {diag.get('global_inflation_factor', '?'):.4f}")

@@ -1,7 +1,7 @@
-"""Full benchmark: global vs df_mis_0.3 conditional deflation across all 102 cases.
+"""Historical benchmark: pre-local-kernel conditional deflation sweep.
 
-Focused comparison of the current production deflation vs the best
-candidate from Phase 0 sentinel testing. Outputs a CSV for analysis.
+This benchmark compares legacy df-mismatch heuristics only. The current
+production runtime uses local structural-k kernel deflation instead.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from kl_clustering_analysis import config
 # Only two strategies for speed — add more if needed
 STRATEGIES: dict[str, StrategyFn] = {
     "global": _strategy_global,
-    "df_mis_0.3": _make_df_mismatch_strategy(0.3),
+    "legacy_df_mis_0.3": _make_df_mismatch_strategy(0.3),
     "half_global": _strategy_half_global,
 }
 
@@ -162,18 +162,18 @@ def main() -> None:
             f"Exact K={exact_k}/{total}, K=1 false={k1_false}"
         )
 
-    # Pairwise diff: df_mis_0.3 vs global
-    if "global" in STRATEGIES and "df_mis_0.3" in STRATEGIES:
-        print("\n--- df_mis_0.3 vs global ---")
+    # Pairwise diff: legacy_df_mis_0.3 vs global
+    if "global" in STRATEGIES and "legacy_df_mis_0.3" in STRATEGIES:
+        print("\n--- legacy_df_mis_0.3 vs global ---")
         improvements = []
         regressions = []
         for c in case_names:
             if c not in all_results:
                 continue
-            if "global" not in all_results[c] or "df_mis_0.3" not in all_results[c]:
+            if "global" not in all_results[c] or "legacy_df_mis_0.3" not in all_results[c]:
                 continue
             a_base = all_results[c]["global"]["ari"]
-            a_new = all_results[c]["df_mis_0.3"]["ari"]
+            a_new = all_results[c]["legacy_df_mis_0.3"]["ari"]
             diff = a_new - a_base
             if diff > 0.005:
                 improvements.append((c, a_base, a_new, diff))
@@ -183,7 +183,7 @@ def main() -> None:
         print(f"  Improvements ({len(improvements)}):")
         for c, a_base, a_new, diff in sorted(improvements, key=lambda x: -x[3]):
             k_base = all_results[c]["global"]["found_k"]
-            k_new = all_results[c]["df_mis_0.3"]["found_k"]
+            k_new = all_results[c]["legacy_df_mis_0.3"]["found_k"]
             k_true = all_results[c]["global"]["true_k"]
             print(
                 f"    {c:<40} ARI {a_base:.3f}→{a_new:.3f} (+{diff:.3f})  K: {k_base}→{k_new} (true={k_true})"
@@ -192,7 +192,7 @@ def main() -> None:
         print(f"  Regressions ({len(regressions)}):")
         for c, a_base, a_new, diff in sorted(regressions, key=lambda x: x[3]):
             k_base = all_results[c]["global"]["found_k"]
-            k_new = all_results[c]["df_mis_0.3"]["found_k"]
+            k_new = all_results[c]["legacy_df_mis_0.3"]["found_k"]
             k_true = all_results[c]["global"]["true_k"]
             print(
                 f"    {c:<40} ARI {a_base:.3f}→{a_new:.3f} ({diff:.3f})  K: {k_base}→{k_new} (true={k_true})"

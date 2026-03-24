@@ -35,7 +35,7 @@ def run_case(case_dict, spectral_method):
     finally:
         config.SPECTRAL_METHOD = old
 
-    df = tree.stats_df
+    df = tree.annotations_df
     n_edge_sig = int(df["Child_Parent_Divergence_Significant"].sum())
     n_sib_diff = int(df["Sibling_BH_Different"].sum())
     K = res.get("num_clusters", -1)

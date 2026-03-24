@@ -157,7 +157,7 @@ def collect_features(case_name):
         alpha_local=config.SIBLING_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
     )
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     rows = []
     for parent in tree.nodes:
@@ -232,15 +232,15 @@ def collect_features(case_name):
         # Edge p-values (Gate 2 evidence for Bayesian weighting)
         edge_p_L = 1.0
         edge_p_R = 1.0
-        if left in stats_df.index:
-            edge_p_L = float(stats_df.loc[left].get("Child_Parent_Divergence_P_Value_BH", 1.0))
-        if right in stats_df.index:
-            edge_p_R = float(stats_df.loc[right].get("Child_Parent_Divergence_P_Value_BH", 1.0))
+        if left in annotations_df.index:
+            edge_p_L = float(annotations_df.loc[left].get("Child_Parent_Divergence_P_Value_BH", 1.0))
+        if right in annotations_df.index:
+            edge_p_R = float(annotations_df.loc[right].get("Child_Parent_Divergence_P_Value_BH", 1.0))
 
         # Gate 3 decision
         sibling_diff = False
-        if parent in stats_df.index:
-            sibling_diff = bool(stats_df.loc[parent].get("Sibling_BH_Different", False))
+        if parent in annotations_df.index:
+            sibling_diff = bool(annotations_df.loc[parent].get("Sibling_BH_Different", False))
 
         rows.append({
             "parent": parent,

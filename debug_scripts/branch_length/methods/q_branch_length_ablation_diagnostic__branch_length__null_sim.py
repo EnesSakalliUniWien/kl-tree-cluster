@@ -48,7 +48,7 @@ def run_branch_length_ablation(seed=42, n=200, p=50):
     )
     tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
     tree.populate_node_divergences(data)
-    results_df = tree.stats_df.copy()
+    results_df = tree.annotations_df.copy()
 
     edge_list = list(tree.edges())
     parent_ids = [par for par, _ in edge_list]
@@ -240,7 +240,7 @@ def run_multi_ablation(n_trials=10, n=200, p=50):
         )
         tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
         tree.populate_node_divergences(data)
-        results_df = tree.stats_df.copy()
+        results_df = tree.annotations_df.copy()
 
         edge_list = list(tree.edges())
         parent_ids = [par for par, _ in edge_list]

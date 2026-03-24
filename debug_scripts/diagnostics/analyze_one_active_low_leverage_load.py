@@ -210,7 +210,7 @@ def _augment_node_metrics(
     tree,
     node_hits: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    pca_eigenvalues = tree.stats_df.attrs.get("_pca_eigenvalues", {})
+    pca_eigenvalues = tree.annotations_df.attrs.get("_pca_eigenvalues", {})
     root_node = tree.root()
 
     for row in node_hits:

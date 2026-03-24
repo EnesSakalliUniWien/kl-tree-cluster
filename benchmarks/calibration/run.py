@@ -175,49 +175,57 @@ def _run_one_null_replicate(
         alpha_local=float(alpha),
         sibling_alpha=float(alpha),
     )
-    stats_df = (
-        tree.stats_df if tree.stats_df is not None else pd.DataFrame(index=list(tree.nodes()))
+    annotations_df = (
+        tree.annotations_df
+        if tree.annotations_df is not None
+        else pd.DataFrame(index=list(tree.nodes()))
     )
 
     edge_tested_mask = (
-        stats_df["Child_Parent_Divergence_P_Value_BH"].notna()
-        if "Child_Parent_Divergence_P_Value_BH" in stats_df.columns
-        else pd.Series(False, index=stats_df.index)
+        annotations_df["Child_Parent_Divergence_P_Value_BH"].notna()
+        if "Child_Parent_Divergence_P_Value_BH" in annotations_df.columns
+        else pd.Series(False, index=annotations_df.index)
     )
     sibling_tested_mask = (
-        stats_df["Sibling_Divergence_P_Value_Corrected"].notna()
-        if "Sibling_Divergence_P_Value_Corrected" in stats_df.columns
-        else pd.Series(False, index=stats_df.index)
+        annotations_df["Sibling_Divergence_P_Value_Corrected"].notna()
+        if "Sibling_Divergence_P_Value_Corrected" in annotations_df.columns
+        else pd.Series(False, index=annotations_df.index)
     )
 
     edge_tests = int(edge_tested_mask.sum())
     sibling_tests = int(sibling_tested_mask.sum())
     edge_rejects = (
         int(
-            stats_df.loc[edge_tested_mask, "Child_Parent_Divergence_Significant"].astype(bool).sum()
+            annotations_df.loc[
+                edge_tested_mask, "Child_Parent_Divergence_Significant"
+            ].astype(bool).sum()
         )
         if edge_tests > 0
         else 0
     )
     sibling_rejects = (
-        int(stats_df.loc[sibling_tested_mask, "Sibling_BH_Different"].astype(bool).sum())
+        int(annotations_df.loc[sibling_tested_mask, "Sibling_BH_Different"].astype(bool).sum())
         if sibling_tests > 0
         else 0
     )
 
     edge_invalid = (
-        int(stats_df.loc[edge_tested_mask, "Child_Parent_Divergence_Invalid"].astype(bool).sum())
-        if "Child_Parent_Divergence_Invalid" in stats_df.columns and edge_tests > 0
+        int(
+            annotations_df.loc[
+                edge_tested_mask, "Child_Parent_Divergence_Invalid"
+            ].astype(bool).sum()
+        )
+        if "Child_Parent_Divergence_Invalid" in annotations_df.columns and edge_tests > 0
         else 0
     )
     sibling_invalid = (
-        int(stats_df.loc[sibling_tested_mask, "Sibling_Divergence_Invalid"].astype(bool).sum())
-        if "Sibling_Divergence_Invalid" in stats_df.columns and sibling_tests > 0
+        int(annotations_df.loc[sibling_tested_mask, "Sibling_Divergence_Invalid"].astype(bool).sum())
+        if "Sibling_Divergence_Invalid" in annotations_df.columns and sibling_tests > 0
         else 0
     )
 
-    cp_audit = stats_df.attrs.get("child_parent_divergence_audit", {})
-    sib_audit = stats_df.attrs.get("sibling_divergence_audit", {})
+    cp_audit = annotations_df.attrs.get("child_parent_divergence_audit", {})
+    sib_audit = annotations_df.attrs.get("sibling_divergence_audit", {})
 
     return {
         "scenario": scenario["scenario"],

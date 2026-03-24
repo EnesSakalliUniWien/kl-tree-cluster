@@ -150,7 +150,7 @@ def collect_spectral_map(case_name):
         alpha_local=config.SIBLING_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
     )
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     rows = []
     for parent in tree.nodes:
@@ -226,8 +226,8 @@ def collect_spectral_map(case_name):
 
         # Gate 3 decision
         sibling_diff = False
-        if parent in stats_df.index:
-            sibling_diff = bool(stats_df.loc[parent].get("Sibling_BH_Different", False))
+        if parent in annotations_df.index:
+            sibling_diff = bool(annotations_df.loc[parent].get("Sibling_BH_Different", False))
 
         rows.append({
             "parent": parent, "n_L": n_L, "n_R": n_R, "n_P": n_L + n_R,

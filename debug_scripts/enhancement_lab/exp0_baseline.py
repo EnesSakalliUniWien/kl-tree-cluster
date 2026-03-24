@@ -48,7 +48,7 @@ def main() -> None:
         print(f"{'=' * 72}")
 
         result = quick_eval(case_name)
-        node_df = collect_node_stats(result["tree"], result["stats_df"])
+        node_df = collect_node_stats(result["tree"], result["annotations_df"])
 
         print(f"\nTotal internal binary nodes: {len(node_df)}")
         print(f"SPLIT decisions: {(node_df['decision'] == 'SPLIT').sum()}")
@@ -82,7 +82,7 @@ def main() -> None:
                 print("  (none)")
 
         # Calibration audit
-        audit = result["stats_df"].attrs.get("sibling_divergence_audit", {})
+        audit = result["annotations_df"].attrs.get("sibling_divergence_audit", {})
         if audit:
             print("\n--- Calibration audit ---")
             for k, v in audit.items():
@@ -102,7 +102,7 @@ def main() -> None:
             print(f"{'=' * 72}")
 
             result = quick_eval(case_name)
-            stats = result["stats_df"]
+            stats = result["annotations_df"]
             tree = result["tree"]
             root = next(n for n, d in tree.in_degree() if d == 0)
             children = list(tree.successors(root))

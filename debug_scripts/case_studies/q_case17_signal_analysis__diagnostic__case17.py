@@ -212,17 +212,17 @@ def analyze_case_17():
         annotate_sibling_divergence,
     )
 
-    tree.stats_df = annotate_child_parent_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05
+    tree.annotations_df = annotate_child_parent_divergence(
+        tree, tree.annotations_df, significance_level_alpha=0.05
     )
-    tree.stats_df = annotate_sibling_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05
+    tree.annotations_df = annotate_sibling_divergence(
+        tree, tree.annotations_df, significance_level_alpha=0.05
     )
 
     # 2. Run V2
     decomposer = TreeDecomposition(
         tree=tree,
-        annotations_df=tree.stats_df,
+        annotations_df=tree.annotations_df,
         alpha_local=0.05,
         sibling_alpha=0.05,
         use_signal_localization=True,
@@ -239,7 +239,7 @@ def analyze_case_17():
 
     # Check sibling test results
     internal_nodes = [n for n in tree.nodes() if list(tree.successors(n))]
-    stats = tree.stats_df
+    stats = tree.annotations_df
 
     sig_count = 0
     not_sig_count = 0

@@ -284,25 +284,25 @@ def run_case(case_name: str) -> tuple[str, list[NodeResult], ParametricModel | N
 
     tree, data_df, y_true, tc = build_tree_and_data(case_name)
     decomp = run_decomposition(tree, data_df)
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     true_k = tc.get("n_clusters")
     found_k = decomp["num_clusters"]
     ari = compute_ari(decomp, data_df, y_true) if y_true is not None else float("nan")
 
     # Global ĉ from pipeline
-    audit = stats_df.attrs.get("sibling_divergence_audit", {})
+    audit = annotations_df.attrs.get("sibling_divergence_audit", {})
     c_hat_global = float(audit.get("global_inflation_factor", 1.0))
 
     # Collect all pair records (same as pipeline does)
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_spectral_dims(tree, stats_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(stats_df, sibling_dims)
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, stats_df, sibling_dims)
+    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
+    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
 
     records, _ = collect_sibling_pair_records(
         tree,
-        stats_df,
+        annotations_df,
         mean_bl,
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,

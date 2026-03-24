@@ -71,7 +71,7 @@ def _decompose_with_eps(case_name: str, eps: float) -> dict:
         ari = compute_ari(decomp, data_df, y_t) if y_t is not None else float("nan")
 
         # Report what k values were actually used
-        stats = tree.stats_df
+        stats = tree.annotations_df
         sib_df_col = "Sibling_Degrees_of_Freedom"
         sib_dfs = (
             stats[sib_df_col].dropna() if sib_df_col in stats.columns else pd.Series(dtype=float)
@@ -149,7 +149,7 @@ def _decompose_with_k_cap(case_name: str, k_cap: int) -> dict:
         found_k = decomp["num_clusters"]
         ari = compute_ari(decomp, data_df, y_t) if y_t is not None else float("nan")
 
-        stats = tree.stats_df
+        stats = tree.annotations_df
         sib_df_col = "Sibling_Degrees_of_Freedom"
         sib_dfs = (
             stats[sib_df_col].dropna() if sib_df_col in stats.columns else pd.Series(dtype=float)
@@ -216,7 +216,7 @@ def _decompose_with_spectral_sibling(case_name: str) -> dict:
 
     edge_bundle = annotate_edge_gate(
         tree,
-        tree.stats_df.copy(),
+        tree.annotations_df.copy(),
         significance_level_alpha=config.EDGE_ALPHA,
         leaf_data=data_df,
         spectral_method=config.SPECTRAL_METHOD,
@@ -250,7 +250,7 @@ def _decompose_with_spectral_sibling(case_name: str) -> dict:
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,
     )
-    tree.stats_df = decomposer.annotations_df
+    tree.annotations_df = decomposer.annotations_df
     result = decomposer.decompose_tree()
 
     true_k = tc.get("n_clusters", None)
@@ -259,7 +259,7 @@ def _decompose_with_spectral_sibling(case_name: str) -> dict:
 
     # Stats on spectral dims used
     sib_df_col = "Sibling_Degrees_of_Freedom"
-    stats = tree.stats_df
+    stats = tree.annotations_df
     sib_dfs = stats[sib_df_col].dropna() if sib_df_col in stats.columns else pd.Series(dtype=float)
     mean_k = sib_dfs.mean() if len(sib_dfs) else float("nan")
     max_k = sib_dfs.max() if len(sib_dfs) else float("nan")
@@ -294,7 +294,7 @@ def _decompose_baseline(case_name: str) -> dict:
     found_k = decomp["num_clusters"]
     ari = compute_ari(decomp, data_df, y_t) if y_t is not None else float("nan")
 
-    stats = tree.stats_df
+    stats = tree.annotations_df
     sib_df_col = "Sibling_Degrees_of_Freedom"
     sib_dfs = stats[sib_df_col].dropna() if sib_df_col in stats.columns else pd.Series(dtype=float)
     mean_k = sib_dfs.mean() if len(sib_dfs) else float("nan")

@@ -45,16 +45,16 @@ def export_decomposition_audit(
         tree = res.tree
 
         # 1. Export Primary Node Stats
-        stats_df = res.stats
-        if stats_df is not None:
+        annotations_df = res.annotations
+        if annotations_df is not None:
             # ...existing code...
             cols_to_drop = [
                 "distribution",
                 "kl_divergence_per_column_global",
                 "kl_divergence_per_column_local",
             ]
-            export_df = stats_df.drop(
-                columns=[c for c in cols_to_drop if c in stats_df.columns]
+            export_df = annotations_df.drop(
+                columns=[c for c in cols_to_drop if c in annotations_df.columns]
             ).copy()
 
             if tree is not None:

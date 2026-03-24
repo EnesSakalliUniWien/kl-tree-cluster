@@ -253,36 +253,36 @@ def run_case(case_name: str) -> CaseInflation:
 
     tree, data_df, y_true, tc = build_tree_and_data(case_name)
     decomp = run_decomposition(tree, data_df)
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     true_k = tc.get("n_clusters")
     found_k = decomp["num_clusters"]
     ari = compute_ari(decomp, data_df, y_true) if y_true is not None else float("nan")
 
     # Extract global ĉ from the calibration audit
-    audit = stats_df.attrs.get("sibling_divergence_audit", {})
+    audit = annotations_df.attrs.get("sibling_divergence_audit", {})
     c_hat_global = float(audit.get("global_inflation_factor", 1.0))
 
     # Gate 2 config for sibling test
-    sibling_dims = derive_sibling_spectral_dims(tree, stats_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(stats_df, sibling_dims)
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, stats_df, sibling_dims)
+    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
+    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Identify tested sibling pairs
     parents, child_pairs, skipped, non_binary = collect_significant_sibling_pairs(
         tree,
-        stats_df,
+        annotations_df,
     )
 
     nodes: list[NodeInflation] = []
 
     for parent, (left, right) in zip(parents, child_pairs, strict=False):
         # Pipeline results
-        p_wald_raw = float(stats_df.at[parent, "Sibling_Divergence_P_Value"])
-        p_wald_bh = float(stats_df.at[parent, "Sibling_Divergence_P_Value_Corrected"])
-        t_obs_pipeline = float(stats_df.at[parent, "Sibling_Test_Statistic"])
+        p_wald_raw = float(annotations_df.at[parent, "Sibling_Divergence_P_Value"])
+        p_wald_bh = float(annotations_df.at[parent, "Sibling_Divergence_P_Value_Corrected"])
+        t_obs_pipeline = float(annotations_df.at[parent, "Sibling_Test_Statistic"])
 
         _, _, n_left, n_right, _, _ = get_sibling_data(tree, parent, left, right)
 
@@ -299,8 +299,8 @@ def run_case(case_name: str) -> CaseInflation:
         )
 
         # Extract edge weight for this parent
-        edge_p_l = float(stats_df.at[left, "Child_Parent_Divergence_P_Value_BH"])
-        edge_p_r = float(stats_df.at[right, "Child_Parent_Divergence_P_Value_BH"])
+        edge_p_l = float(annotations_df.at[left, "Child_Parent_Divergence_P_Value_BH"])
+        edge_p_r = float(annotations_df.at[right, "Child_Parent_Divergence_P_Value_BH"])
         edge_weight = min(edge_p_l, edge_p_r)
 
         # Full permutation null distribution

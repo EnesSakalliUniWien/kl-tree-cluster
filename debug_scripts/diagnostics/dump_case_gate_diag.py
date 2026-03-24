@@ -42,7 +42,7 @@ def main() -> None:
         alpha_local=config.SIBLING_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
     )
-    stats = tree.stats_df.copy()
+    stats = tree.annotations_df.copy()
     root = next(node for node, degree in tree.in_degree() if degree == 0)
     depths = dict(nx.shortest_path_length(tree, root))
 

@@ -246,7 +246,7 @@ def main() -> None:
     plot_tree_with_clusters(
         tree,
         decomposition,
-        annotations_df=tree.stats_df,
+        annotations_df=tree.annotations_df,
         layout="rectangular",
         title=f"KL Tree — {n_clusters} clusters (α={args.sibling_alpha})",
         ax=ax_tree,

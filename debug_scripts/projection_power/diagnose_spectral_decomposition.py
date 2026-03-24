@@ -248,9 +248,9 @@ def analyze_case(name: str, case_config: dict):
     ari = adjusted_rand_score(labels, pred) if labels is not None else "N/A"
     print(f"    Found K={found_k} (true K={true_k}), ARI={ari:.3f}")
 
-    # Show spectral dims from stats_df
-    stats_df = tree.stats_df
-    spectral_dims_cached = stats_df.attrs.get("_spectral_dims", {})
+    # Show spectral dims from annotations_df
+    annotations_df = tree.annotations_df
+    spectral_dims_cached = annotations_df.attrs.get("_spectral_dims", {})
     if spectral_dims_cached:
         cached_ks = [k for nid, k in spectral_dims_cached.items() if k is not None and k > 0]
         if cached_ks:

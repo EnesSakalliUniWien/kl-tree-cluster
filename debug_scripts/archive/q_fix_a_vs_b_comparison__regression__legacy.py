@@ -91,7 +91,7 @@ def run_with_adj_wald(data_df, Z, true_labels):
     ari = adjusted_rand_score(true_labels, pred)
 
     # Extract calibration data for fixes
-    sdf = tree.stats_df
+    sdf = tree.annotations_df
     mean_bl = compute_mean_branch_length(tree)
     records = _collect_all_pairs(tree, sdf, mean_bl)
     model = _fit_inflation_model(records)
@@ -112,6 +112,7 @@ def simulate_fix(records, model, tree, sdf, predict_fn, alpha=0.05):
     )
     from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing import (
         benjamini_hochberg_correction,
+    )
     df = sdf.copy()
 
     # Reset sibling columns
@@ -171,16 +172,16 @@ def simulate_fix(records, model, tree, sdf, predict_fn, alpha=0.05):
     return df
 
 
-def decompose_with_patched_sdf(tree, patched_sdf, data_df, true_labels):
+def decompose_with_patched_annotations_df(tree, patched_annotations_df, data_df, true_labels):
     """Re-run tree decomposition using patched sibling annotations."""
     from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
-    # Inject patched stats_df back into tree
-    tree._stats_df = patched_sdf
+    # Inject patched annotations_df back into tree
+    tree.annotations_df = patched_annotations_df
 
     decomposer = TreeDecomposition(
         tree,
-        patched_sdf,
+        patched_annotations_df,
         alpha_local=0.05,
         sibling_alpha=0.05,
         posthoc_merge=config.POSTHOC_MERGE,
@@ -257,14 +258,18 @@ def main():
         try:
             predict_a = lambda m, bl, n, mr=max_ratio: _predict_c_fix_a(m, bl, n, mr)
             patched_a = simulate_fix(records, model, tree, sdf, predict_a)
-            k_a, ari_a = decompose_with_patched_sdf(tree, patched_a, data_df, true_labels)
+            k_a, ari_a = decompose_with_patched_annotations_df(
+                tree, patched_a, data_df, true_labels
+            )
         except Exception:
             k_a, ari_a = -1, np.nan
 
         # 4. Fix B: drop β₂
         try:
             patched_b = simulate_fix(records, model, tree, sdf, _predict_c_fix_b)
-            k_b, ari_b = decompose_with_patched_sdf(tree, patched_b, data_df, true_labels)
+            k_b, ari_b = decompose_with_patched_annotations_df(
+                tree, patched_b, data_df, true_labels
+            )
         except Exception:
             k_b, ari_b = -1, np.nan
 

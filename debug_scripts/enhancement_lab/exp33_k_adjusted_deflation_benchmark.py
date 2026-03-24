@@ -314,7 +314,7 @@ def run_case(
     k_found = int(decomp.get("num_clusters", 0))
     ari = float(adjusted_rand_score(y_true, labels))
 
-    audit = tree.stats_df.attrs.get("sibling_divergence_audit", {})
+    audit = tree.annotations_df.attrs.get("sibling_divergence_audit", {})
     c_hat = float(audit.get("global_inflation_factor", 1.0))
 
     results.append(
@@ -372,7 +372,7 @@ def run_case(
         k_found_k = int(decomp_k.get("num_clusters", 0))
         ari_k = float(adjusted_rand_score(y_true, labels_k))
 
-        audit_k = tree_k.stats_df.attrs.get("sibling_divergence_audit", {})
+        audit_k = tree_k.annotations_df.attrs.get("sibling_divergence_audit", {})
         c_hat_k = float(audit_k.get("global_inflation_factor", 1.0))
 
         gi = (

@@ -285,7 +285,7 @@ def quick_eval(
 ) -> dict[str, Any]:
     """Build tree, decompose, compute metrics — all in one call.
 
-    Returns dict with: case, true_k, found_k, ari, tree, stats_df, decomp.
+    Returns dict with: case, true_k, found_k, ari, tree, annotations_df, decomp.
     """
     tree, data_df, y_t, tc = build_tree_and_data(case_name)
     decomp = run_decomposition(tree, data_df, alpha_local=alpha_local, sibling_alpha=sibling_alpha)
@@ -298,7 +298,7 @@ def quick_eval(
         "found_k": found_k,
         "ari": ari,
         "tree": tree,
-        "stats_df": tree.stats_df,
+        "annotations_df": tree.annotations_df,
         "decomp": decomp,
         "data_df": data_df,
         "y_true": y_t,
@@ -346,7 +346,7 @@ def run_case_battery(
     return df
 
 
-def collect_node_stats(tree: PosetTree, stats_df: pd.DataFrame) -> pd.DataFrame:
+def collect_node_stats(tree: PosetTree, annotations_df: pd.DataFrame) -> pd.DataFrame:
     """Build a per-node diagnostic table for internal nodes.
 
     Columns: node, depth, leaf_count, gate2_pass, gate3_result,
@@ -362,28 +362,28 @@ def collect_node_stats(tree: PosetTree, stats_df: pd.DataFrame) -> pd.DataFrame:
         if len(children) != 2:
             continue
         l, r = children
-        l_sig = bool(stats_df.loc[l, "Child_Parent_Divergence_Significant"])
-        r_sig = bool(stats_df.loc[r, "Child_Parent_Divergence_Significant"])
+        l_sig = bool(annotations_df.loc[l, "Child_Parent_Divergence_Significant"])
+        r_sig = bool(annotations_df.loc[r, "Child_Parent_Divergence_Significant"])
         g2 = l_sig or r_sig
-        skipped = bool(stats_df.loc[nd, "Sibling_Divergence_Skipped"])
-        different = bool(stats_df.loc[nd, "Sibling_BH_Different"])
+        skipped = bool(annotations_df.loc[nd, "Sibling_Divergence_Skipped"])
+        different = bool(annotations_df.loc[nd, "Sibling_BH_Different"])
         g3 = different and not skipped
 
         leaf_count = len(tree.compute_descendant_sets(use_labels=True).get(nd, set()))
 
         sib_stat = (
-            stats_df.loc[nd, "Sibling_Test_Statistic"]
-            if "Sibling_Test_Statistic" in stats_df.columns
+            annotations_df.loc[nd, "Sibling_Test_Statistic"]
+            if "Sibling_Test_Statistic" in annotations_df.columns
             else np.nan
         )
         sib_df = (
-            stats_df.loc[nd, "Sibling_Degrees_of_Freedom"]
-            if "Sibling_Degrees_of_Freedom" in stats_df.columns
+            annotations_df.loc[nd, "Sibling_Degrees_of_Freedom"]
+            if "Sibling_Degrees_of_Freedom" in annotations_df.columns
             else np.nan
         )
         sib_p = (
-            stats_df.loc[nd, "Sibling_Divergence_P_Value_Corrected"]
-            if "Sibling_Divergence_P_Value_Corrected" in stats_df.columns
+            annotations_df.loc[nd, "Sibling_Divergence_P_Value_Corrected"]
+            if "Sibling_Divergence_P_Value_Corrected" in annotations_df.columns
             else np.nan
         )
 

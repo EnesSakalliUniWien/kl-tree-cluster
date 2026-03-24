@@ -354,7 +354,7 @@ def plot_tree(
     plot_tree_with_clusters(
         tree,
         result,
-        annotations_df=tree.stats_df,
+        annotations_df=tree.annotations_df,
         layout="rectangular",
         title=f"KL Tree — {n_clusters} clusters (α={alpha})",
         ax=ax,
@@ -369,7 +369,7 @@ def plot_tree(
 
 def print_significance_summary(tree: PosetTree) -> None:
     """Print a quick summary of the gate test statistics."""
-    df = tree.stats_df
+    df = tree.annotations_df
     sep = "=" * 60
     print(f"\n{sep}")
     print("SIGNIFICANCE TEST SUMMARY")

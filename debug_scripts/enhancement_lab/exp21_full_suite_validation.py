@@ -306,7 +306,7 @@ def run_case(case_name: str) -> dict[str, dict]:
                 "error": str(exc)[:80],
             }
 
-        # Force fresh tree for next strategy (re-build since decompose mutates stats_df)
+        # Force fresh tree for next strategy (re-build since decompose mutates annotations_df)
         tree, data_df, y_true, tc = build_tree_and_data(case_name)
 
     return results

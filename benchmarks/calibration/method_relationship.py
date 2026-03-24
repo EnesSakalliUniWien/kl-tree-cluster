@@ -87,7 +87,7 @@ def _run_method(
                 sibling_alpha=sibling_alpha,
             )
 
-        stats = tree.stats_df
+        annotations = tree.annotations_df
         k_found = decomp.get("num_clusters", 0)
 
         # Compute ARI
@@ -98,10 +98,14 @@ def _run_method(
                 labels_pred[data.index.get_loc(leaf)] = cid
         ari = adjusted_rand_score(y_true, labels_pred)
 
-        audit = stats.attrs.get("sibling_divergence_audit", {}) if stats is not None else {}
+        audit = (
+            annotations.attrs.get("sibling_divergence_audit", {})
+            if annotations is not None
+            else {}
+        )
 
         return {
-            "stats_df": stats,
+            "annotations_df": annotations,
             "k_found": k_found,
             "ari": ari,
             "audit": audit,
@@ -215,7 +219,7 @@ def main() -> None:
             )
 
         # Per-node comparison
-        comp = _compare_nodes(wald_res["stats_df"], adj_res["stats_df"])
+        comp = _compare_nodes(wald_res["annotations_df"], adj_res["annotations_df"])
 
         if comp.empty:
             print("  (no tested nodes to compare)")

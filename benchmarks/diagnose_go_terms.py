@@ -50,8 +50,8 @@ results = tree.decompose(
 K = results["num_clusters"]
 print(f"\n*** Clusters found: {K} ***\n")
 
-# Examine stats
-stats = tree.stats_df
+# Examine annotations
+annotations = tree.annotations_df
 root_children = list(tree.successors(root))
 print(f"Root children: {root_children}")
 
@@ -71,26 +71,26 @@ gate_cols = [
 ]
 
 for node in root_children + [root]:
-    if node in stats.index:
+    if node in annotations.index:
         print(f"\n--- {node} ---")
         for col in gate_cols:
-            if col in stats.columns:
-                print(f"  {col}: {stats.loc[node, col]}")
+            if col in annotations.columns:
+                print(f"  {col}: {annotations.loc[node, col]}")
 
 # Summary counts
-if "Child_Parent_Divergence_Significant" in stats.columns:
+if "Child_Parent_Divergence_Significant" in annotations.columns:
     print(
-        f"\nEdge-significant nodes: {stats['Child_Parent_Divergence_Significant'].sum()} / {len(stats)}"
+        f"\nEdge-significant nodes: {annotations['Child_Parent_Divergence_Significant'].sum()} / {len(annotations)}"
     )
-if "Sibling_BH_Different" in stats.columns:
-    print(f"Sibling different: {stats['Sibling_BH_Different'].sum()}")
-    if "Sibling_BH_Same" in stats.columns:
-        print(f"Sibling same: {stats['Sibling_BH_Same'].sum()}")
-    if "Sibling_Divergence_Skipped" in stats.columns:
-        print(f"Sibling skipped: {stats['Sibling_Divergence_Skipped'].sum()}")
+if "Sibling_BH_Different" in annotations.columns:
+    print(f"Sibling different: {annotations['Sibling_BH_Different'].sum()}")
+    if "Sibling_BH_Same" in annotations.columns:
+        print(f"Sibling same: {annotations['Sibling_BH_Same'].sum()}")
+    if "Sibling_Divergence_Skipped" in annotations.columns:
+        print(f"Sibling skipped: {annotations['Sibling_Divergence_Skipped'].sum()}")
 
 # Calibration audit
-audit = stats.attrs.get("sibling_divergence_audit", {})
+audit = annotations.attrs.get("sibling_divergence_audit", {})
 if audit:
     print("\nCalibration audit:")
     for k, v in audit.items():
@@ -101,11 +101,11 @@ if audit:
         else:
             print(f"  {k}: {v}")
 else:
-    print("\nNo calibration audit found in stats_df.attrs")
+    print("\nNo calibration audit found in annotations_df.attrs")
 
 # Top sibling tests
 print("\n--- Top 20 sibling tests by raw p-value ---")
-sib = stats.dropna(subset=["Sibling_Test_Statistic"]).sort_values("Sibling_Divergence_P_Value")
+sib = annotations.dropna(subset=["Sibling_Test_Statistic"]).sort_values("Sibling_Divergence_P_Value")
 cols = [
     c
     for c in [

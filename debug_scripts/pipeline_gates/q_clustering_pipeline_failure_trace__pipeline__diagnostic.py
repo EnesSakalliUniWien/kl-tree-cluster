@@ -69,18 +69,18 @@ def debug_clustering():
 
     # 5. Initialize stats DataFrame
     print("\n5. Initializing stats DataFrame...")
-    if hasattr(tree, "stats_df"):
-        stats_df = tree.stats_df.copy()
+    if hasattr(tree, "annotations_df"):
+        annotations_df = tree.annotations_df.copy()
         print(
-            f"   Using existing tree.stats_df with {len(stats_df)} rows and columns: {list(stats_df.columns)}"
+            f"   Using existing tree.annotations_df with {len(annotations_df)} rows and columns: {list(annotations_df.columns)}"
         )
     else:
-        print("   WARNING: tree.stats_df not found! Creating from node attributes...")
+        print("   WARNING: tree.annotations_df not found! Creating from node attributes...")
         data = {}
         for n in tree.nodes:
             data[n] = tree.nodes[n]
-        stats_df = pd.DataFrame.from_dict(data, orient="index")
-        print(f"   Created stats_df with columns: {list(stats_df.columns)}")
+        annotations_df = pd.DataFrame.from_dict(data, orient="index")
+        print(f"   Created annotations_df with columns: {list(annotations_df.columns)}")
 
     # 6. Run Child-Parent Divergence
     print("\n6. Running Child-Parent Divergence Test...")
@@ -90,24 +90,24 @@ def debug_clustering():
         alpha_local = 0.05
 
         # Manually run the annotation
-        stats_df = annotate_child_parent_divergence(
+        annotations_df = annotate_child_parent_divergence(
             tree=tree,
-            nodes_statistics_dataframe=stats_df,
+            nodes_statistics_dataframe=annotations_df,
             significance_level_alpha=alpha_local,
         )
 
-        sig_count = stats_df["Child_Parent_Divergence_Significant"].sum()
-        total_count = len(stats_df)
+        sig_count = annotations_df["Child_Parent_Divergence_Significant"].sum()
+        total_count = len(annotations_df)
         print(f"   Significant nodes: {sig_count} / {total_count}")
 
         # DEBUG: Print significant nodes info
-        sig_nodes = stats_df[
-            stats_df["Child_Parent_Divergence_Significant"]
+        sig_nodes = annotations_df[
+            annotations_df["Child_Parent_Divergence_Significant"]
         ].index.tolist()
         print(f"   Significant Node IDs: {sig_nodes}")
         for nid in sig_nodes:
             print(
-                f"     - {nid}: leaf_count={tree.nodes[nid].get('leaf_count')}, pval={stats_df.loc[nid, 'Child_Parent_Divergence_P_Value']:.4f}"
+                f"     - {nid}: leaf_count={tree.nodes[nid].get('leaf_count')}, pval={annotations_df.loc[nid, 'Child_Parent_Divergence_P_Value']:.4f}"
             )
 
         # Check root children specifically
@@ -117,12 +117,12 @@ def debug_clustering():
             print(
                 f"     Child {child}: leaf_count={tree.nodes[child].get('leaf_count')}"
             )
-            print(f"       KL Local: {stats_df.loc[child, 'kl_divergence_local']:.4f}")
+            print(f"       KL Local: {annotations_df.loc[child, 'kl_divergence_local']:.4f}")
             print(
-                f"       P-Value: {stats_df.loc[child, 'Child_Parent_Divergence_P_Value']:.4f}"
+                f"       P-Value: {annotations_df.loc[child, 'Child_Parent_Divergence_P_Value']:.4f}"
             )
             print(
-                f"       Significant: {stats_df.loc[child, 'Child_Parent_Divergence_Significant']}"
+                f"       Significant: {annotations_df.loc[child, 'Child_Parent_Divergence_Significant']}"
             )
 
         if sig_count == 0:
@@ -131,7 +131,7 @@ def debug_clustering():
 
             # Print p-values to see if they are close
             print("   P-value stats:")
-            print(stats_df["Child_Parent_Divergence_P_Value"].describe())
+            print(annotations_df["Child_Parent_Divergence_P_Value"].describe())
 
     except Exception as e:
         print(f"   ERROR in Child-Parent test: {e}")
@@ -152,7 +152,7 @@ def debug_clustering():
 
             l, r = children
             # Condition 1: Check significance map
-            sig_map = stats_df["Child_Parent_Divergence_Significant"].to_dict()
+            sig_map = annotations_df["Child_Parent_Divergence_Significant"].to_dict()
             is_sig = sig_map.get(l, False) or sig_map.get(r, False)
 
             # Condition 2: Check sample sizes
@@ -173,30 +173,30 @@ def debug_clustering():
                 l, r = children
                 print(f"     Root children: {l}, {r}")
                 print(
-                    f"     Sig(L): {stats_df.loc[l, 'Child_Parent_Divergence_Significant']}"
+                    f"     Sig(L): {annotations_df.loc[l, 'Child_Parent_Divergence_Significant']}"
                 )
                 print(
-                    f"     Sig(R): {stats_df.loc[r, 'Child_Parent_Divergence_Significant']}"
+                    f"     Sig(R): {annotations_df.loc[r, 'Child_Parent_Divergence_Significant']}"
                 )
                 print(
-                    f"     P-val(L): {stats_df.loc[l, 'Child_Parent_Divergence_P_Value']}"
+                    f"     P-val(L): {annotations_df.loc[l, 'Child_Parent_Divergence_P_Value']}"
                 )
                 print(
-                    f"     P-val(R): {stats_df.loc[r, 'Child_Parent_Divergence_P_Value']}"
+                    f"     P-val(R): {annotations_df.loc[r, 'Child_Parent_Divergence_P_Value']}"
                 )
                 print(f"     Count(L): {tree.nodes[l].get('leaf_count')}")
                 print(f"     Count(R): {tree.nodes[r].get('leaf_count')}")
 
         sibling_alpha = 0.05
-        stats_df = annotate_sibling_divergence(
+        annotations_df = annotate_sibling_divergence(
             tree=tree,
-            nodes_statistics_dataframe=stats_df,
+            nodes_statistics_dataframe=annotations_df,
             significance_level_alpha=sibling_alpha,
         )
 
         diff_count = (
-            stats_df["Sibling_BH_Different"].sum()
-            if "Sibling_BH_Different" in stats_df.columns
+            annotations_df["Sibling_BH_Different"].sum()
+            if "Sibling_BH_Different" in annotations_df.columns
             else 0
         )
         print(f"   Sibling different pairs: {diff_count}")
@@ -232,7 +232,7 @@ def debug_clustering():
 
         # 9. Broken Chain Analysis
         print("\n9. Broken Chain Analysis...")
-        sig_map = stats_df["Child_Parent_Divergence_Significant"].to_dict()
+        sig_map = annotations_df["Child_Parent_Divergence_Significant"].to_dict()
         broken_chains = []
 
         # Traverse downwards

@@ -98,8 +98,8 @@ def build_and_decompose(
         print(f"Decomposition failed: {e}")
         return None
 
-    # Get stats_df with branch length info
-    stats_df = tree.stats_df.copy()
+    # Get annotations_df with branch length info
+    annotations_df = tree.annotations_df.copy()
 
     # Add true cluster information
     # Map sample_name -> true label
@@ -125,8 +125,8 @@ def build_and_decompose(
         return leaves
 
     true_cluster_info = []
-    for node_id in stats_df.index:
-        if stats_df.loc[node_id, "is_leaf"]:
+    for node_id in annotations_df.index:
+        if annotations_df.loc[node_id, "is_leaf"]:
             n_true_clusters = 1
             should_split = False
         else:
@@ -144,11 +144,11 @@ def build_and_decompose(
         )
 
     true_df = pd.DataFrame(true_cluster_info).set_index("node_id")
-    stats_df = stats_df.join(true_df)
+    annotations_df = annotations_df.join(true_df)
 
     return {
         "tree": tree,
-        "stats_df": stats_df,
+        "annotations_df": annotations_df,
         "decomp_results": decomp_results,
         "labels": labels,
         "sample_names": sample_names,
@@ -160,10 +160,10 @@ def build_and_decompose(
 # =============================================================================
 
 
-def compute_predictive_metrics(stats_df: pd.DataFrame) -> dict:
+def compute_predictive_metrics(annotations_df: pd.DataFrame) -> dict:
     """Compute how well branch length predicts split decisions."""
     # Filter to internal nodes with valid data
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
     internal = internal.dropna(subset=["sibling_branch_sum", "should_split"])
 
     if len(internal) < 10:
@@ -294,7 +294,7 @@ def run_benchmark():
                     continue
 
                 # Compute predictive metrics
-                metrics = compute_predictive_metrics(result["stats_df"])
+                metrics = compute_predictive_metrics(result["annotations_df"])
 
                 metrics["scenario"] = scenario_name
                 metrics["n_clusters"] = n_clusters

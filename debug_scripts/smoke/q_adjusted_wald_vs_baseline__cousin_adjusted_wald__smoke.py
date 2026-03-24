@@ -106,10 +106,10 @@ def run_case(name, data, true_labels, method):
     k_found = len(set(pred))
     ari = adjusted_rand_score(true_labels, pred) if len(set(true_labels)) > 1 else 0.0
 
-    # Extract calibration info from tree.stats_df
+    # Extract calibration info from tree.annotations_df
     audit = {}
-    if tree.stats_df is not None and hasattr(tree.stats_df, "attrs"):
-        audit = tree.stats_df.attrs.get("sibling_divergence_audit", {})
+    if tree.annotations_df is not None and hasattr(tree.annotations_df, "attrs"):
+        audit = tree.annotations_df.attrs.get("sibling_divergence_audit", {})
 
     return k_found, ari, audit
 

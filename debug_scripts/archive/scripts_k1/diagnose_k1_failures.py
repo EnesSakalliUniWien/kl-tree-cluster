@@ -39,10 +39,10 @@ def diagnose_case(name, data_df, linkage_method="average"):
     Z = linkage(pdist(data_df.values, metric="hamming"), method=linkage_method)
     tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
 
-    # Full decomposition — populates tree.stats_df with both gates
+    # Full decomposition — populates tree.annotations_df with both gates
     decomp = tree.decompose(leaf_data=data_df, alpha_local=0.05, sibling_alpha=0.05)
     K = decomp["num_clusters"]
-    td = tree.stats_df
+    td = tree.annotations_df
 
     # Spectral info from attrs
     spectral_dims = td.attrs.get("_spectral_dims", {})

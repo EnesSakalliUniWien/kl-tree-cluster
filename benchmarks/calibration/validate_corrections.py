@@ -82,19 +82,19 @@ def _run_null_trial(seed: int, method: str, alpha: float) -> dict:
             )
 
         k_found = decomp.get("num_clusters", 0)
-        stats = tree.stats_df
+        annotations = tree.annotations_df
 
         # Edge test diagnostics
-        edge_tested = stats[stats["Child_Parent_Divergence_P_Value"].notna()]
+        edge_tested = annotations[annotations["Child_Parent_Divergence_P_Value"].notna()]
         edge_p_raw = edge_tested["Child_Parent_Divergence_P_Value"].dropna().values
         edge_p_bh = edge_tested["Child_Parent_Divergence_P_Value_BH"].dropna().values
         edge_reject = edge_tested["Child_Parent_Divergence_Significant"].sum()
         edge_total = len(edge_tested)
 
         # Sibling test diagnostics
-        sib_tested = stats[
-            (stats["Sibling_Divergence_Skipped"] == False)  # noqa: E712
-            & stats["Sibling_Divergence_P_Value"].notna()
+        sib_tested = annotations[
+            (annotations["Sibling_Divergence_Skipped"] == False)  # noqa: E712
+            & annotations["Sibling_Divergence_P_Value"].notna()
         ]
         sib_p_raw = sib_tested["Sibling_Divergence_P_Value"].dropna().values
         sib_p_bh = sib_tested["Sibling_Divergence_P_Value_Corrected"].dropna().values
@@ -104,7 +104,7 @@ def _run_null_trial(seed: int, method: str, alpha: float) -> dict:
         sib_total = len(sib_tested)
 
         # Calibration audit
-        audit = stats.attrs.get("sibling_divergence_audit", {})
+        audit = annotations.attrs.get("sibling_divergence_audit", {})
         c_hat = audit.get("global_inflation_factor", None)
         diag = audit.get("diagnostics", {})
         r2 = diag.get("r_squared", None)

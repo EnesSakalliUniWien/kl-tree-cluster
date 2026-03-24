@@ -3,7 +3,7 @@
 Diagnostic: Gate 3 failures blocking descendant signal.
 
 For each benchmark subset case, runs the full KL decomposition pipeline, then
-inspects the annotated stats_df to identify internal nodes where:
+inspects the annotated annotations_df to identify internal nodes where:
   - Gates 1+2 PASS (binary structure, at least one child diverges from parent)
   - Gate 3 FAILS (siblings declared "same" or test skipped)
   - BUT some descendant node has Sibling_BH_Different == True
@@ -74,7 +74,7 @@ def _get_descendants(tree, node):
     return nx.descendants(tree, node)
 
 
-def _evaluate_gates_for_diagnostic(tree, stats_df, node):
+def _evaluate_gates_for_diagnostic(tree, annotations_df, node):
     """Evaluate Gates 1-3 for a single node. Returns dict with gate results."""
     children = list(tree.successors(node))
 
@@ -102,13 +102,13 @@ def _evaluate_gates_for_diagnostic(tree, stats_df, node):
 
     # Gate 2: child-parent divergence
     left_sig = (
-        stats_df.loc[left, "Child_Parent_Divergence_Significant"]
-        if left in stats_df.index
+        annotations_df.loc[left, "Child_Parent_Divergence_Significant"]
+        if left in annotations_df.index
         else False
     )
     right_sig = (
-        stats_df.loc[right, "Child_Parent_Divergence_Significant"]
-        if right in stats_df.index
+        annotations_df.loc[right, "Child_Parent_Divergence_Significant"]
+        if right in annotations_df.index
         else False
     )
     result["left_diverges"] = bool(left_sig)
@@ -119,42 +119,42 @@ def _evaluate_gates_for_diagnostic(tree, stats_df, node):
         return result
 
     # Gate 3: sibling divergence
-    if node in stats_df.index:
+    if node in annotations_df.index:
         skipped = (
-            bool(stats_df.loc[node, "Sibling_Divergence_Skipped"])
-            if "Sibling_Divergence_Skipped" in stats_df.columns
+            bool(annotations_df.loc[node, "Sibling_Divergence_Skipped"])
+            if "Sibling_Divergence_Skipped" in annotations_df.columns
             else False
         )
         different = (
-            bool(stats_df.loc[node, "Sibling_BH_Different"])
-            if "Sibling_BH_Different" in stats_df.columns
+            bool(annotations_df.loc[node, "Sibling_BH_Different"])
+            if "Sibling_BH_Different" in annotations_df.columns
             else False
         )
         result["gate3_skipped"] = skipped
         result["sibling_different"] = different
         result["gate3_pass"] = different and not skipped
 
-        if "Sibling_Divergence_P_Value_Corrected" in stats_df.columns:
-            pval = stats_df.loc[node, "Sibling_Divergence_P_Value_Corrected"]
+        if "Sibling_Divergence_P_Value_Corrected" in annotations_df.columns:
+            pval = annotations_df.loc[node, "Sibling_Divergence_P_Value_Corrected"]
             result["sibling_p_value"] = float(pval) if pd.notna(pval) else None
 
     return result
 
 
-def _has_descendant_with_signal(tree, stats_df, node):
+def _has_descendant_with_signal(tree, annotations_df, node):
     """Check if any descendant internal node has Sibling_BH_Different == True."""
     descendants = _get_descendants(tree, node)
     internal_descendants = [d for d in descendants if tree.out_degree(d) > 0]
 
     signal_nodes = []
     for desc in internal_descendants:
-        if desc in stats_df.index:
-            if "Sibling_BH_Different" in stats_df.columns:
-                if bool(stats_df.loc[desc, "Sibling_BH_Different"]):
+        if desc in annotations_df.index:
+            if "Sibling_BH_Different" in annotations_df.columns:
+                if bool(annotations_df.loc[desc, "Sibling_BH_Different"]):
                     # Also check it's not skipped
                     skipped = (
-                        bool(stats_df.loc[desc, "Sibling_Divergence_Skipped"])
-                        if "Sibling_Divergence_Skipped" in stats_df.columns
+                        bool(annotations_df.loc[desc, "Sibling_Divergence_Skipped"])
+                        if "Sibling_Divergence_Skipped" in annotations_df.columns
                         else False
                     )
                     if not skipped:
@@ -163,7 +163,7 @@ def _has_descendant_with_signal(tree, stats_df, node):
     return signal_nodes
 
 
-def _simulate_passthrough(tree, stats_df):
+def _simulate_passthrough(tree, annotations_df):
     """Simulate pass-through traversal and return cluster leaf sets.
 
     Like v1, but when Gates 1+2 pass and Gate 3 fails, check if any descendant
@@ -184,7 +184,7 @@ def _simulate_passthrough(tree, stats_df):
             continue
         processed.add(node)
 
-        gate_result = _evaluate_gates_for_diagnostic(tree, stats_df, node)
+        gate_result = _evaluate_gates_for_diagnostic(tree, annotations_df, node)
 
         if gate_result["gate1_pass"] and gate_result["gate2_pass"] and gate_result["gate3_pass"]:
             # SPLIT — push children
@@ -198,7 +198,7 @@ def _simulate_passthrough(tree, stats_df):
             and not gate_result["gate3_pass"]
         ):
             # Gates 1+2 pass but Gate 3 fails — check for descendant signal
-            signal_below = _has_descendant_with_signal(tree, stats_df, node)
+            signal_below = _has_descendant_with_signal(tree, annotations_df, node)
             if signal_below:
                 # PASS-THROUGH: continue DFS
                 children = list(tree.successors(node))
@@ -243,14 +243,14 @@ def run_diagnostic_for_case(tc):
         Z = linkage(distance_condensed, method=config.TREE_LINKAGE_METHOD)
         tree = PosetTree.from_linkage(Z, leaf_names=data_t.index.tolist())
 
-        # Run decomposition (this populates stats_df)
+        # Run decomposition (this populates annotations_df)
         decomp = tree.decompose(
             leaf_data=data_t,
             alpha_local=config.EDGE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
         )
 
-        stats_df = tree.stats_df
+        annotations_df = tree.annotations_df
         v1_k = decomp["num_clusters"]
 
         # Analyze all internal nodes
@@ -261,13 +261,13 @@ def run_diagnostic_for_case(tc):
         blocked_with_signal = []  # Above + descendant has signal
 
         for node in internal_nodes:
-            gate_result = _evaluate_gates_for_diagnostic(tree, stats_df, node)
+            gate_result = _evaluate_gates_for_diagnostic(tree, annotations_df, node)
             if (
                 gate_result["gate1_pass"]
                 and gate_result["gate2_pass"]
                 and not gate_result["gate3_pass"]
             ):
-                signal_below = _has_descendant_with_signal(tree, stats_df, node)
+                signal_below = _has_descendant_with_signal(tree, annotations_df, node)
                 blocked_nodes.append(
                     {
                         **gate_result,
@@ -288,11 +288,11 @@ def run_diagnostic_for_case(tc):
         n_gate3_pass = sum(
             1
             for node in internal_nodes
-            if _evaluate_gates_for_diagnostic(tree, stats_df, node)["gate3_pass"]
+            if _evaluate_gates_for_diagnostic(tree, annotations_df, node)["gate3_pass"]
         )
 
         # Simulate pass-through
-        pt_leaf_sets = _simulate_passthrough(tree, stats_df)
+        pt_leaf_sets = _simulate_passthrough(tree, annotations_df)
         pt_k = len(pt_leaf_sets)
 
         # Compute labels for ARI comparison

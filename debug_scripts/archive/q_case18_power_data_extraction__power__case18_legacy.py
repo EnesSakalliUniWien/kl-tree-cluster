@@ -43,11 +43,11 @@ def generate_case_18_data():
     populate_distributions(tree, data)
 
     # Annotate statistics
-    tree.stats_df = annotate_child_parent_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05
+    tree.annotations_df = annotate_child_parent_divergence(
+        tree, tree.annotations_df, significance_level_alpha=0.05
     )
-    tree.stats_df = annotate_sibling_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05
+    tree.annotations_df = annotate_sibling_divergence(
+        tree, tree.annotations_df, significance_level_alpha=0.05
     )
 
     return tree
@@ -77,15 +77,15 @@ def extract_split_decisions(tree):
         dist_left = tree.nodes[left].get("distribution", None)
         dist_right = tree.nodes[right].get("distribution", None)
 
-        # Get test results from stats_df if available
+        # Get test results from annotations_df if available
         cp_pval = None
         cp_significant = None
         sb_pval = None
         sb_different = None
 
-        if hasattr(tree, "stats_df") and tree.stats_df is not None:
-            if node_id in tree.stats_df.index:
-                row = tree.stats_df.loc[node_id]
+        if hasattr(tree, "annotations_df") and tree.annotations_df is not None:
+            if node_id in tree.annotations_df.index:
+                row = tree.annotations_df.loc[node_id]
                 cp_pval = row.get("Child_Parent_Divergence_P_Value", None)
                 cp_significant = row.get("Child_Parent_Divergence_Significant", None)
                 sb_pval = row.get("Sibling_Divergence_P_Value", None)

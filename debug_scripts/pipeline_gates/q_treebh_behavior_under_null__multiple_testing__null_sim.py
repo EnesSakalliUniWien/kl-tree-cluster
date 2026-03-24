@@ -58,7 +58,7 @@ def run_single_null_trial(seed: int = 42, n: int = 200, p: int = 50, verbose: bo
     )
     tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
     tree.populate_node_divergences(data)
-    results_df = tree.stats_df.copy()
+    results_df = tree.annotations_df.copy()
 
     # --- Part 1: TreeBH family structure analysis ---
     if verbose:

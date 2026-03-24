@@ -101,20 +101,20 @@ def build_and_annotate_tree(data):
     populate_distributions(tree, data)
 
     # Create empty DataFrame with node_id as index
-    tree.stats_df = pd.DataFrame(index=list(tree.nodes()))
+    tree.annotations_df = pd.DataFrame(index=list(tree.nodes()))
 
     # Add leaf_count column
-    tree.stats_df["leaf_count"] = [
+    tree.annotations_df["leaf_count"] = [
         int(_require_node_attr(tree, n, "leaf_count")) for n in tree.nodes()
     ]
 
-    tree.stats_df = annotate_child_parent_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05
+    tree.annotations_df = annotate_child_parent_divergence(
+        tree, tree.annotations_df, significance_level_alpha=0.05
     )
-    tree.stats_df = annotate_sibling_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05
+    tree.annotations_df = annotate_sibling_divergence(
+        tree, tree.annotations_df, significance_level_alpha=0.05
     )
-    missing_cols = [c for c in REQUIRED_STATS_COLUMNS if c not in tree.stats_df.columns]
+    missing_cols = [c for c in REQUIRED_STATS_COLUMNS if c not in tree.annotations_df.columns]
     if missing_cols:
         raise ValueError(
             f"Missing required stats columns after annotation: {missing_cols}"
@@ -151,13 +151,13 @@ def extract_split_decisions(tree):
             f"right child {right}", _require_node_attr(tree, right, "distribution")
         )
 
-        if not hasattr(tree, "stats_df") or tree.stats_df is None:
+        if not hasattr(tree, "annotations_df") or tree.annotations_df is None:
             raise ValueError(
-                "Tree is missing stats_df; annotate tree before extraction"
+                "Tree is missing annotations_df; annotate tree before extraction"
             )
-        if node_id not in tree.stats_df.index:
-            raise ValueError(f"Node {node_id!r} missing from stats_df index")
-        row = tree.stats_df.loc[node_id]
+        if node_id not in tree.annotations_df.index:
+            raise ValueError(f"Node {node_id!r} missing from annotations_df index")
+        row = tree.annotations_df.loc[node_id]
         cp_pval = row["Child_Parent_Divergence_P_Value"]
         cp_significant = row["Child_Parent_Divergence_Significant"]
         sb_pval = row["Sibling_Divergence_P_Value"]

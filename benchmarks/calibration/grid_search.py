@@ -109,21 +109,25 @@ def _run_one(
         ari = adjusted_rand_score(y_true, labels_pred)
 
         # Extract calibration audit
-        stats_df = tree.stats_df
-        audit = stats_df.attrs.get("sibling_divergence_audit", {}) if stats_df is not None else {}
+        annotations_df = tree.annotations_df
+        audit = (
+            annotations_df.attrs.get("sibling_divergence_audit", {})
+            if annotations_df is not None
+            else {}
+        )
         cal_method = audit.get("calibration_method", "n/a")
         cal_n = audit.get("calibration_n", 0)
         c_hat = audit.get("global_inflation_factor", 1.0)
         n_focal = audit.get("focal_pairs", audit.get("total_tests", 0))
         n_null = audit.get("null_like_pairs", 0)
 
-        # Count BH rejections from stats_df
+        # Count BH rejections from annotations_df
         n_bh_reject = 0
         n_tested = 0
-        if stats_df is not None and "Sibling_BH_Different" in stats_df.columns:
-            tested = stats_df["Sibling_Divergence_Skipped"] == False  # noqa: E712
+        if annotations_df is not None and "Sibling_BH_Different" in annotations_df.columns:
+            tested = annotations_df["Sibling_Divergence_Skipped"] == False  # noqa: E712
             n_tested = int(tested.sum())
-            n_bh_reject = int(stats_df.loc[tested, "Sibling_BH_Different"].sum())
+            n_bh_reject = int(annotations_df.loc[tested, "Sibling_BH_Different"].sum())
 
         return {
             "k_found": k_found,

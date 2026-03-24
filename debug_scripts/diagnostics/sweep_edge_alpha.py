@@ -115,7 +115,7 @@ def _run_at_alpha(data, edge_alpha, sibling_alpha=0.05):
                 alpha_local=edge_alpha,
                 sibling_alpha=sibling_alpha,
             )
-        stats = tree.stats_df
+        stats = tree.annotations_df
 
         # Count edges passing Gate 2
         n_sig = 0

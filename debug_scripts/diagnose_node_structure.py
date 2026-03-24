@@ -96,7 +96,7 @@ def diagnose(case_name: str) -> None:
     Z = linkage(dist, method=config.TREE_LINKAGE_METHOD)
     tree = PosetTree.from_linkage(Z, leaf_names=data_t.index.tolist())
     tree.populate_node_divergences(data_t)
-    base = tree.stats_df.copy()
+    base = tree.annotations_df.copy()
 
     result = run_gate_annotation_pipeline(
         tree,

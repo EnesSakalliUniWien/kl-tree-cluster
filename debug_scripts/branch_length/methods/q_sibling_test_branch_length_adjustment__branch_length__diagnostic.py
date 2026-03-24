@@ -260,17 +260,17 @@ def test_end_to_end_pipeline():
         sibling_alpha=config.SIBLING_ALPHA,
     )
 
-    stats_df = tree.stats_df
-    print(f"\nStats DataFrame shape: {stats_df.shape}")
+    annotations_df = tree.annotations_df
+    print(f"\nStats DataFrame shape: {annotations_df.shape}")
 
     # Check sibling test columns
-    sibling_cols = [c for c in stats_df.columns if "Sibling" in c]
+    sibling_cols = [c for c in annotations_df.columns if "Sibling" in c]
     print(f"Sibling columns: {sibling_cols}")
 
     # Summary of sibling tests
-    if "Sibling_BH_Different" in stats_df.columns:
-        sig_count = stats_df["Sibling_BH_Different"].sum()
-        tested_count = stats_df["Sibling_Divergence_P_Value"].notna().sum()
+    if "Sibling_BH_Different" in annotations_df.columns:
+        sig_count = annotations_df["Sibling_BH_Different"].sum()
+        tested_count = annotations_df["Sibling_Divergence_P_Value"].notna().sum()
         print(f"\nSibling tests: {tested_count} pairs tested, {sig_count} significant")
 
     print("\n✓ End-to-end pipeline test complete")

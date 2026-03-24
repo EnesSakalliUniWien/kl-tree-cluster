@@ -133,28 +133,28 @@ def run_benchmark(
         sibling_alpha=0.05,
     )
 
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     # Summarize test results
     print("\n--- Test Results Summary ---")
 
     # Child-parent tests
-    if "Child_Parent_Divergence_P_Value" in stats_df.columns:
-        pvals = stats_df["Child_Parent_Divergence_P_Value"].dropna()
+    if "Child_Parent_Divergence_P_Value" in annotations_df.columns:
+        pvals = annotations_df["Child_Parent_Divergence_P_Value"].dropna()
         print(f"Child-Parent p-values: min={pvals.min():.6f}, max={pvals.max():.6f}")
         print(f"  p < 0.01: {(pvals < 0.01).sum()}")
         print(f"  p < 0.05: {(pvals < 0.05).sum()}")
         print(f"  p < 0.10: {(pvals < 0.10).sum()}")
 
-    if "Child_Parent_Divergence_Significant" in stats_df.columns:
-        cp_sig = stats_df["Child_Parent_Divergence_Significant"].sum()
-        cp_tested = stats_df["Child_Parent_Divergence_P_Value"].notna().sum()
+    if "Child_Parent_Divergence_Significant" in annotations_df.columns:
+        cp_sig = annotations_df["Child_Parent_Divergence_Significant"].sum()
+        cp_tested = annotations_df["Child_Parent_Divergence_P_Value"].notna().sum()
         print(f"Child-Parent significant (after FDR): {cp_sig}/{cp_tested}")
 
     # Sibling tests
-    if "Sibling_BH_Different" in stats_df.columns:
-        sib_diff = stats_df["Sibling_BH_Different"].sum()
-        sib_tested = stats_df["Sibling_Divergence_P_Value"].notna().sum()
+    if "Sibling_BH_Different" in annotations_df.columns:
+        sib_diff = annotations_df["Sibling_BH_Different"].sum()
+        sib_tested = annotations_df["Sibling_Divergence_P_Value"].notna().sum()
         print(f"Sibling different (after FDR): {sib_diff}/{sib_tested}")
 
     # Extract predicted clusters using decomposition results (like quick_start.py)
@@ -192,10 +192,10 @@ def run_benchmark(
         "nmi": nmi,
         "silhouette": sil,
         "cp_significant": cp_sig
-        if "Child_Parent_Divergence_Significant" in stats_df.columns
+        if "Child_Parent_Divergence_Significant" in annotations_df.columns
         else 0,
         "sibling_different": sib_diff
-        if "Sibling_BH_Different" in stats_df.columns
+        if "Sibling_BH_Different" in annotations_df.columns
         else 0,
     }
 

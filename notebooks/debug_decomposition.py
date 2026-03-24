@@ -60,25 +60,25 @@ def main():
     tree.populate_node_divergences(data)
 
     print("Annotating statistics...")
-    tree.stats_df = annotate_child_parent_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05
+    tree.annotations_df = annotate_child_parent_divergence(
+        tree, tree.annotations_df, significance_level_alpha=0.05
     )
-    tree.stats_df = annotate_sibling_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05
+    tree.annotations_df = annotate_sibling_divergence(
+        tree, tree.annotations_df, significance_level_alpha=0.05
     )
 
     # Print root stats
     root = tree.root()
     print(f"\nRoot: {root}")
-    if root in tree.stats_df.index:
-        row = tree.stats_df.loc[root]
+    if root in tree.annotations_df.index:
+        row = tree.annotations_df.loc[root]
         print(f"Child-Parent Significant: {row['Child_Parent_Divergence_Significant']}")
         print(f"Sibling Different: {row['Sibling_BH_Different']}")
         print(f"Leaf Count: {row['leaf_count']}")
 
     decomposer = TreeDecomposition(
         tree=tree,
-        annotations_df=tree.stats_df,
+        annotations_df=tree.annotations_df,
         alpha_local=0.05,
         sibling_alpha=0.05,
     )

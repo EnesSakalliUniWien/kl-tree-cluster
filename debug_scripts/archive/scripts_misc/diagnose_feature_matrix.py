@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Diagnose why KL decomposition produces K=1 on feature_matrix.tsv.
 
-Runs the full pipeline, then inspects the stats_df (per-node gate decisions)
+Runs the full pipeline, then inspects the annotations_df (per-node gate decisions)
 to show exactly which statistical gate blocked splitting at every internal
 node.  Also produces a UMAP plot colored by the (trivial) cluster labels
 and saves diagnostic tables.
@@ -100,10 +100,10 @@ def main() -> None:
     num_k = decomp.get("num_clusters", -1)
     print(f"Decomposition K = {num_k}  (alpha_local={alpha}, sibling_alpha={alpha})")
 
-    # 3. stats_df — gate decisions for EVERY internal node
-    sdf = tree.stats_df
+    # 3. annotations_df — gate decisions for EVERY internal node
+    sdf = tree.annotations_df
     if sdf is None:
-        print("ERROR: stats_df is None after decomposition — cannot diagnose.")
+        print("ERROR: annotations_df is None after decomposition — cannot diagnose.")
         return
 
     # Identify internal (non-leaf) nodes
@@ -111,7 +111,7 @@ def main() -> None:
     leaf_set = {n for n in tree.nodes() if tree.out_degree(n) == 0}
     internal = [n for n in all_nodes if n not in leaf_set]
 
-    # Key columns we want (actual stats_df column names)
+    # Key columns we want (actual annotations_df column names)
     gate_cols = [
         "leaf_count",
         # Gate 2 — edge (child-parent)

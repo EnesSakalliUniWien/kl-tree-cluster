@@ -16,7 +16,7 @@ NetworkX `DiGraph` subclass. Central data structure for the entire pipeline.
 | `compute_descendant_sets()`                 | Map every node → frozenset of its descendant leaf labels.                                      |
 | `find_lca(a, b)`                            | Lowest common ancestor of two nodes using depth-based walk. O(depth).                          |
 | `find_lca_for_set(nodes)`                   | LCA for a collection of nodes (iterative pairwise reduction).                                  |
-| `populate_node_divergences(leaf_data)`      | Populate distributions, leaf counts, global/local KL divergences. Stores result in `stats_df`. |
+| `populate_node_divergences(leaf_data)`      | Populate distributions, leaf counts, global/local KL divergences. Stores result in `annotations_df`. |
 | `decompose(results_df, leaf_data, **kw)`    | Thin facade: builds `TreeDecomposition`, runs `decompose_tree()` or `decompose_tree_v2()`.     |
 | `build_sample_cluster_assignments(results)` | Per-sample cluster table from decomposition output.                                            |
 

@@ -67,7 +67,7 @@ from benchmarks.shared.generators.generate_phylogenetic import (
 # =============================================================================
 
 
-def model_1_height_prior(stats_df, threshold_percentile=50, steepness=10):
+def model_1_height_prior(annotations_df, threshold_percentile=50, steepness=10):
     """
     Model 1: Height-based Prior
 
@@ -75,7 +75,7 @@ def model_1_height_prior(stats_df, threshold_percentile=50, steepness=10):
 
     Higher heights → higher probability of split.
     """
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
 
     # Normalize height to [0, 1]
     h_min, h_max = internal["height"].min(), internal["height"].max()
@@ -90,7 +90,7 @@ def model_1_height_prior(stats_df, threshold_percentile=50, steepness=10):
     return internal["height_prior"]
 
 
-def model_2_calibrated_divergence(stats_df, d_max=100, lambda_param=5):
+def model_2_calibrated_divergence(annotations_df, d_max=100, lambda_param=5):
     """
     Model 2: Expected Divergence Calibration
 
@@ -99,7 +99,7 @@ def model_2_calibrated_divergence(stats_df, d_max=100, lambda_param=5):
 
     If observed >> expected, likely true split.
     """
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
     internal = internal.dropna(subset=["height", "kl_divergence_local"])
 
     # Expected divergence under model
@@ -116,7 +116,7 @@ def model_2_calibrated_divergence(stats_df, d_max=100, lambda_param=5):
     return internal[["expected_kl", "kl_ratio", "kl_residual"]]
 
 
-def model_3_inconsistency(linkage_matrix, stats_df, depth=2):
+def model_3_inconsistency(linkage_matrix, annotations_df, depth=2):
     """
     Model 3: Inconsistency Coefficient (classical scipy approach)
 
@@ -135,7 +135,7 @@ def model_3_inconsistency(linkage_matrix, stats_df, depth=2):
     return pd.Series(inconsistency_map, name="inconsistency")
 
 
-def model_4_combined_score(stats_df, weights=(0.4, 0.3, 0.3)):
+def model_4_combined_score(annotations_df, weights=(0.4, 0.3, 0.3)):
     """
     Model 4: Combined Score
 
@@ -143,7 +143,7 @@ def model_4_combined_score(stats_df, weights=(0.4, 0.3, 0.3)):
 
     Ensemble of multiple signals.
     """
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
 
     w_h, w_kl, w_inc = weights
 
@@ -168,7 +168,7 @@ def model_4_combined_score(stats_df, weights=(0.4, 0.3, 0.3)):
     return internal["combined_score"]
 
 
-def model_5_path_length_ratio(stats_df, tree):
+def model_5_path_length_ratio(annotations_df, tree):
     """
     Model 5: Path Length Ratio
 
@@ -177,7 +177,7 @@ def model_5_path_length_ratio(stats_df, tree):
 
     Score = path_to_leaves / height
     """
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
 
     def get_total_path_to_leaves(tree, node_id, accumulated=0):
         children = list(tree.successors(node_id))
@@ -269,7 +269,7 @@ def run_comparison(
             prob_data[i, j * K + data[i, j]] = 1.0
     prob_df = pd.DataFrame(prob_data, index=sample_names)
     tree.decompose(leaf_data=prob_df)
-    stats_df = tree.stats_df.copy()
+    annotations_df = tree.annotations_df.copy()
 
     # Add true labels
     leaf_labels = {name: lbl for name, lbl in zip(sample_names, labels)}
@@ -285,40 +285,40 @@ def run_comparison(
         return sum([get_leaves(t, c) for c in t.successors(n)], [])
 
     should_split = {}
-    for node_id in stats_df.index:
-        if stats_df.loc[node_id, "is_leaf"]:
+    for node_id in annotations_df.index:
+        if annotations_df.loc[node_id, "is_leaf"]:
             should_split[node_id] = False
         else:
             leaves = get_leaves(tree, node_id)
             lbls = [leaf_labels.get(l) for l in leaves if l in leaf_labels]
             should_split[node_id] = len(set(lbls)) > 1
 
-    stats_df["should_split"] = pd.Series(should_split)
+    annotations_df["should_split"] = pd.Series(should_split)
 
     # Add inconsistency
-    inconsistency = model_3_inconsistency(Z, stats_df)
-    stats_df["inconsistency"] = inconsistency
+    inconsistency = model_3_inconsistency(Z, annotations_df)
+    annotations_df["inconsistency"] = inconsistency
 
     # Evaluate models
     results = []
-    internal = stats_df[~stats_df["is_leaf"]]
+    internal = annotations_df[~annotations_df["is_leaf"]]
     true_labels = internal["should_split"]
 
     # Model 1: Height Prior
-    height_prior = model_1_height_prior(stats_df)
-    stats_df.loc[height_prior.index, "height_prior"] = height_prior
+    height_prior = model_1_height_prior(annotations_df)
+    annotations_df.loc[height_prior.index, "height_prior"] = height_prior
     res = evaluate_model(
-        stats_df.loc[internal.index, "height_prior"], true_labels, "M1: Height Prior"
+        annotations_df.loc[internal.index, "height_prior"], true_labels, "M1: Height Prior"
     )
     if res:
         results.append(res)
 
     # Model 2: Calibrated Divergence
-    calib = model_2_calibrated_divergence(stats_df)
+    calib = model_2_calibrated_divergence(annotations_df)
     for col in calib.columns:
-        stats_df.loc[calib.index, col] = calib[col]
+        annotations_df.loc[calib.index, col] = calib[col]
     res = evaluate_model(
-        stats_df.loc[internal.index, "kl_ratio"], true_labels, "M2: KL Ratio"
+        annotations_df.loc[internal.index, "kl_ratio"], true_labels, "M2: KL Ratio"
     )
     if res:
         results.append(res)
@@ -329,20 +329,20 @@ def run_comparison(
         results.append(res)
 
     # Model 4: Combined
-    combined = model_4_combined_score(stats_df)
-    stats_df.loc[combined.index, "combined_score"] = combined
+    combined = model_4_combined_score(annotations_df)
+    annotations_df.loc[combined.index, "combined_score"] = combined
     res = evaluate_model(
-        stats_df.loc[internal.index, "combined_score"], true_labels, "M4: Combined"
+        annotations_df.loc[internal.index, "combined_score"], true_labels, "M4: Combined"
     )
     if res:
         results.append(res)
 
     # Model 5: Path Length
-    path_metrics = model_5_path_length_ratio(stats_df, tree)
+    path_metrics = model_5_path_length_ratio(annotations_df, tree)
     for col in path_metrics.columns:
-        stats_df.loc[path_metrics.index, col] = path_metrics[col]
+        annotations_df.loc[path_metrics.index, col] = path_metrics[col]
     res = evaluate_model(
-        stats_df.loc[internal.index, "path_to_leaves"], true_labels, "M5: Path Length"
+        annotations_df.loc[internal.index, "path_to_leaves"], true_labels, "M5: Path Length"
     )
     if res:
         results.append(res)

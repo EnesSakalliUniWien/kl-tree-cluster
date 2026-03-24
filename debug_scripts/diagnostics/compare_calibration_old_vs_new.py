@@ -153,7 +153,7 @@ def main():
         annotate_child_parent_divergence,
     )
 
-    results_df = tree.stats_df
+    results_df = tree.annotations_df
     results_df = annotate_child_parent_divergence(
         tree, results_df, significance_level_alpha=config.SIGNIFICANCE_ALPHA
     )

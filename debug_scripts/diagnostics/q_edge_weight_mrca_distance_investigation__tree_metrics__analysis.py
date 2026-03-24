@@ -40,7 +40,7 @@ from benchmarks.shared.generators.generate_phylogenetic import (
 )
 
 
-def compute_edge_based_metrics(tree, stats_df):
+def compute_edge_based_metrics(tree, annotations_df):
     """
     Compute edge-based metrics for each internal node.
 
@@ -89,8 +89,8 @@ def compute_edge_based_metrics(tree, stats_df):
 
     edge_metrics = []
 
-    for node_id in stats_df.index:
-        if stats_df.loc[node_id, "is_leaf"]:
+    for node_id in annotations_df.index:
+        if annotations_df.loc[node_id, "is_leaf"]:
             edge_metrics.append(
                 {
                     "node_id": node_id,
@@ -174,7 +174,7 @@ def compute_edge_based_metrics(tree, stats_df):
         )
 
     edge_df = pd.DataFrame(edge_metrics).set_index("node_id")
-    return stats_df.join(edge_df)
+    return annotations_df.join(edge_df)
 
 
 def generate_and_analyze(
@@ -214,10 +214,10 @@ def generate_and_analyze(
 
     # Run decomposition
     tree.decompose(leaf_data=prob_df)
-    stats_df = tree.stats_df.copy()
+    annotations_df = tree.annotations_df.copy()
 
     # Add edge-based metrics
-    stats_df = compute_edge_based_metrics(tree, stats_df)
+    annotations_df = compute_edge_based_metrics(tree, annotations_df)
 
     # Add true cluster information
     leaf_labels = {name: lbl for name, lbl in zip(sample_names, labels)}
@@ -236,8 +236,8 @@ def generate_and_analyze(
         return leaves
 
     true_info = []
-    for node_id in stats_df.index:
-        if stats_df.loc[node_id, "is_leaf"]:
+    for node_id in annotations_df.index:
+        if annotations_df.loc[node_id, "is_leaf"]:
             n_true = 1
             should_split = False
         else:
@@ -254,15 +254,15 @@ def generate_and_analyze(
         )
 
     true_df = pd.DataFrame(true_info).set_index("node_id")
-    stats_df = stats_df.join(true_df)
+    annotations_df = annotations_df.join(true_df)
 
-    return stats_df, tree
+    return annotations_df, tree
 
 
-def analyze_edge_metrics(stats_df):
+def analyze_edge_metrics(annotations_df):
     """Analyze predictive power of edge-based metrics."""
 
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
     internal = internal.dropna(subset=["should_split"])
 
     print("=" * 90)
@@ -341,10 +341,10 @@ def analyze_edge_metrics(stats_df):
     return pd.DataFrame(results)
 
 
-def explore_derived_metrics(stats_df):
+def explore_derived_metrics(annotations_df):
     """Explore derived metrics that might be more useful."""
 
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
     internal = internal.dropna(subset=["should_split", "height", "total_edge_weight"])
 
     print("\n" + "=" * 90)
@@ -409,10 +409,10 @@ def explore_derived_metrics(stats_df):
             print(f"{name:<35} Error: {e}")
 
 
-def show_example_nodes(stats_df):
+def show_example_nodes(annotations_df):
     """Show example nodes with edge metrics."""
 
-    internal = stats_df[~stats_df["is_leaf"]].copy()
+    internal = annotations_df[~annotations_df["is_leaf"]].copy()
     internal = internal.dropna(subset=["should_split", "total_edge_weight"])
     internal = internal.sort_values("height", ascending=False)
 
@@ -470,7 +470,7 @@ This script analyzes actual edge weights (distances) in the dendrogram:
         print(f"# Clusters={n_clusters}, Samples/cluster={n_per}, Divergence={div}")
         print(f"{'#' * 90}")
 
-        stats_df, tree = generate_and_analyze(
+        annotations_df, tree = generate_and_analyze(
             n_clusters=n_clusters,
             n_per_cluster=n_per,
             n_features=n_feat,
@@ -478,13 +478,13 @@ This script analyzes actual edge weights (distances) in the dendrogram:
             seed=42,
         )
 
-        results = analyze_edge_metrics(stats_df)
+        results = analyze_edge_metrics(annotations_df)
         results["scenario"] = desc
         all_results.append(results)
 
         if desc == "Base case":
-            explore_derived_metrics(stats_df)
-            show_example_nodes(stats_df)
+            explore_derived_metrics(annotations_df)
+            show_example_nodes(annotations_df)
 
     # Summary
     all_df = pd.concat(all_results, ignore_index=True)

@@ -50,7 +50,7 @@ def alpha_sweep(
                 ari = compute_ari(decomp, data_df, y_t) if y_t is not None else float("nan")
 
                 # Extract calibration info
-                stats = tree2.stats_df
+                stats = tree2.annotations_df
                 audit = stats.attrs.get("sibling_divergence_audit", {})
                 c_hat = audit.get("global_inflation_factor", None)
                 n_cal = audit.get("calibration_n", None)

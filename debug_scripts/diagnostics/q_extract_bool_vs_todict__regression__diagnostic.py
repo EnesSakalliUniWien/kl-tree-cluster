@@ -201,7 +201,7 @@ def diagnose_case(name: str, data: pd.DataFrame, true_labels: np.ndarray):
 
     # 3. Edge test
     results_df = (
-        tree.stats_df.copy() if tree.stats_df is not None else pd.DataFrame(index=list(tree.nodes))
+        tree.annotations_df.copy() if tree.annotations_df is not None else pd.DataFrame(index=list(tree.nodes))
     )
     results_df = annotate_child_parent_divergence(
         tree,
@@ -283,7 +283,7 @@ def diagnose_case(name: str, data: pd.DataFrame, true_labels: np.ndarray):
     print(f"  Current (extract_bool):  K={k_cur}, ARI={ari_cur:.4f}")
 
     # Check if we have any calibration info
-    stats = tree_cur.stats_df
+    stats = tree_cur.annotations_df
     if stats is not None:
         audit = stats.attrs.get("sibling_divergence_audit", {})
         if audit:

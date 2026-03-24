@@ -45,9 +45,9 @@ class PosetTree(nx.DiGraph):
     # ---------------- Constructors ----------------
 
     def __init__(self, *args, **kwargs):
-        """Initialize PosetTree with stats_df property."""
+        """Initialize PosetTree with annotations_df property."""
         super().__init__(*args, **kwargs)
-        self.stats_df: pd.DataFrame | None = None
+        self.annotations_df: pd.DataFrame | None = None
         self._depths: dict[str, int] | None = None
 
     @classmethod
@@ -322,7 +322,7 @@ class PosetTree(nx.DiGraph):
 
         Notes
         -----
-        Results are stored in tree.stats_df for later access.
+        Results are stored in ``tree.annotations_df`` for later access.
         """
         import pandas as pd
 
@@ -338,7 +338,7 @@ class PosetTree(nx.DiGraph):
                     "is_leaf": node_attrs.get("is_leaf", False),
                 }
             )
-        self.stats_df = pd.DataFrame.from_records(node_records).set_index("node_id", drop=True)
+        self.annotations_df = pd.DataFrame.from_records(node_records).set_index("node_id", drop=True)
 
     # ---------------- Decomposition helper ----------------
 
@@ -354,7 +354,7 @@ class PosetTree(nx.DiGraph):
         ----------
         annotations_df
             Optional statistics/annotations DataFrame. When omitted, falls back to
-            ``self.stats_df`` (populated by :meth:`populate_node_divergences`).
+            ``self.annotations_df`` (populated by :meth:`populate_node_divergences`).
         leaf_data
             Optional leaf-level probability DataFrame. When provided and ``annotations_df``
             is not supplied, ``populate_node_divergences`` will be invoked to
@@ -377,14 +377,14 @@ class PosetTree(nx.DiGraph):
             edge_fdr_method = gate2_fdr_method
 
         if annotations_df is None:
-            if self.stats_df is None:
+            if self.annotations_df is None:
                 if leaf_data is None:
                     raise ValueError(
-                        "Tree has no stats_df; provide annotations_df or leaf_data to populate."
+                        "Tree has no annotations_df; provide annotations_df or leaf_data to populate."
                     )
                 self.populate_node_divergences(leaf_data)
-            assert self.stats_df is not None
-            annotations_df = self.stats_df.copy()
+            assert self.annotations_df is not None
+            annotations_df = self.annotations_df.copy()
 
         decomposer = TreeDecomposition(
             tree=self,
@@ -396,8 +396,8 @@ class PosetTree(nx.DiGraph):
             **decomposer_kwargs,
         )
 
-        # Cache annotated results back so stats_df reflects the full pipeline
-        self.stats_df = decomposer.annotations_df
+        # Cache annotated results back so annotations_df reflects the full pipeline
+        self.annotations_df = decomposer.annotations_df
 
         return decomposer.decompose_tree()
 

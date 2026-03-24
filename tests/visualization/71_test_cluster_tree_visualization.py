@@ -26,7 +26,7 @@ def test_plot_tree_with_significance_legend():
     }
     decomposition = {"cluster_assignments": cluster_assignments, "num_clusters": 2}
 
-    stats_df = pd.DataFrame(
+    annotations_df = pd.DataFrame(
         {
             "Child_Parent_Divergence_Significant": [False, True, False],
             "Sibling_BH_Different": [True, False, False],
@@ -38,7 +38,7 @@ def test_plot_tree_with_significance_legend():
     fig, ax = plot_tree_with_clusters(
         tree=G,
         decomposition_results=decomposition,
-        annotations_df=stats_df,
+        annotations_df=annotations_df,
         show=False,
     )
 
@@ -56,7 +56,7 @@ def test_tree_style_grouping_uses_significance_and_skips():
 
     leaves = {n for n in G.nodes() if G.out_degree(n) == 0}
 
-    stats_df = pd.DataFrame(
+    annotations_df = pd.DataFrame(
         {
             "Child_Parent_Divergence_Significant": [False, True, False, False, False],
             "Sibling_BH_Different": [True, False, False, False, False],
@@ -65,11 +65,11 @@ def test_tree_style_grouping_uses_significance_and_skips():
         index=["root", "a", "b", "c", "d"],
     )
 
-    sig_nodes, nonsig_nodes = _group_internal_nodes_for_halo(G, leaves, stats_df)
+    sig_nodes, nonsig_nodes = _group_internal_nodes_for_halo(G, leaves, annotations_df)
     assert set(sig_nodes) == {"a"}
     assert set(nonsig_nodes) == set()
 
-    edge_groups = _group_edges_for_sibling_style(G, stats_df)
+    edge_groups = _group_edges_for_sibling_style(G, annotations_df)
     assert set(edge_groups["different"]) == {("root", "a"), ("root", "b")}
     assert set(edge_groups["missing"]) == {("a", "c"), ("a", "d")}
     assert edge_groups["not_different"] == []

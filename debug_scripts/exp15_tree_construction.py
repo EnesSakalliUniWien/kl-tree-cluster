@@ -539,7 +539,7 @@ def run_case(case_name: str) -> list[dict]:
                 ari = float("nan")
 
             # Calibration audit
-            stats = tree.stats_df
+            stats = tree.annotations_df
             audit = stats.attrs.get("sibling_divergence_audit", {})
             c_hat = audit.get("global_inflation_factor", float("nan"))
 

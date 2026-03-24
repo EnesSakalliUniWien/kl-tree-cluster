@@ -25,7 +25,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_signific
 )
 
 
-def analyze_z_scores(tree, stats_df, entropy_label):
+def analyze_z_scores(tree, annotations_df, entropy_label):
     """Analyze z-score distributions for edges in the tree."""
     print(f"\n{'=' * 60}")
     print(f"Z-Score Analysis: entropy={entropy_label}")
@@ -48,8 +48,8 @@ def analyze_z_scores(tree, stats_df, entropy_label):
         if child_dist is None or parent_dist is None:
             continue
 
-        n_child = int(stats_df.loc[child, "leaf_count"])
-        n_parent = int(stats_df.loc[parent, "leaf_count"])
+        n_child = int(annotations_df.loc[child, "leaf_count"])
+        n_parent = int(annotations_df.loc[parent, "leaf_count"])
         bl = tree.edges[parent, child].get("branch_length")
 
         z = _compute_standardized_z(
@@ -95,15 +95,15 @@ def analyze_z_scores(tree, stats_df, entropy_label):
     return z_magnitudes
 
 
-def analyze_pvalues(stats_df, entropy_label):
+def analyze_pvalues(annotations_df, entropy_label):
     """Analyze p-value distribution."""
     print(f"\nP-value Analysis:")
 
     pval_col = "Child_Parent_Divergence_P_Value"
     pval_corr_col = "Child_Parent_Divergence_P_Value_BH"
 
-    if pval_col in stats_df.columns:
-        pvals = stats_df[pval_col].dropna()
+    if pval_col in annotations_df.columns:
+        pvals = annotations_df[pval_col].dropna()
         print(f"  Raw p-values (n={len(pvals)}):")
         print(f"    Min:    {pvals.min():.2e}")
         print(f"    Median: {pvals.median():.2e}")
@@ -115,8 +115,8 @@ def analyze_pvalues(stats_df, entropy_label):
     else:
         print(f"  Column '{pval_col}' not found!")
 
-    if pval_corr_col in stats_df.columns:
-        pvals_corr = stats_df[pval_corr_col].dropna()
+    if pval_corr_col in annotations_df.columns:
+        pvals_corr = annotations_df[pval_corr_col].dropna()
         print(f"\n  BH-corrected p-values (n={len(pvals_corr)}):")
         for alpha in [0.05, 0.01, 0.001]:
             count = (pvals_corr < alpha).sum()
@@ -125,7 +125,7 @@ def analyze_pvalues(stats_df, entropy_label):
         print(f"  Column '{pval_corr_col}' not found!")
 
 
-def analyze_variance_components(tree, stats_df, entropy_label):
+def analyze_variance_components(tree, annotations_df, entropy_label):
     """Break down variance into components."""
     print(f"\nVariance Component Analysis:")
 
@@ -142,8 +142,8 @@ def analyze_variance_components(tree, stats_df, entropy_label):
         if child_dist is None or parent_dist is None:
             continue
 
-        n_child = int(stats_df.loc[child, "leaf_count"])
-        n_parent = int(stats_df.loc[parent, "leaf_count"])
+        n_child = int(annotations_df.loc[child, "leaf_count"])
+        n_parent = int(annotations_df.loc[parent, "leaf_count"])
         bl = tree.edges[parent, child].get("branch_length")
 
         # Component 1: Nested factor
@@ -207,13 +207,13 @@ def main():
             annotate_child_parent_divergence,
         )
 
-        stats_df = annotate_child_parent_divergence(
-            tree, tree.stats_df, significance_level_alpha=0.01
+        annotations_df = annotate_child_parent_divergence(
+            tree, tree.annotations_df, significance_level_alpha=0.01
         )
 
-        analyze_z_scores(tree, stats_df, entropy)
-        analyze_pvalues(stats_df, entropy)
-        analyze_variance_components(tree, stats_df, entropy)
+        analyze_z_scores(tree, annotations_df, entropy)
+        analyze_pvalues(annotations_df, entropy)
+        analyze_variance_components(tree, annotations_df, entropy)
 
 
 if __name__ == "__main__":

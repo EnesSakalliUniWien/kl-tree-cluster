@@ -90,13 +90,15 @@ def _run_tree(
             alpha_local=float(alpha),
             sibling_alpha=float(alpha),
         )
-    stats_df = tree.stats_df if tree.stats_df is not None else pd.DataFrame(index=tree.nodes())
-    return tree, stats_df
+    annotations_df = (
+        tree.annotations_df if tree.annotations_df is not None else pd.DataFrame(index=tree.nodes())
+    )
+    return tree, annotations_df
 
 
 def _extract_edge_rows(
     tree: PosetTree,
-    stats_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     *,
     scenario: str,
     mode: str,
@@ -113,18 +115,18 @@ def _extract_edge_rows(
 
     for parent, child in tree.edges():
         p_value = (
-            float(stats_df.at[child, p_col])
-            if p_col in stats_df.columns and child in stats_df.index
+            float(annotations_df.at[child, p_col])
+            if p_col in annotations_df.columns and child in annotations_df.index
             else np.nan
         )
         reject = (
-            bool(stats_df.at[child, sig_col])
-            if sig_col in stats_df.columns and child in stats_df.index
+            bool(annotations_df.at[child, sig_col])
+            if sig_col in annotations_df.columns and child in annotations_df.index
             else False
         )
         invalid = (
-            bool(stats_df.at[child, inv_col])
-            if inv_col in stats_df.columns and child in stats_df.index
+            bool(annotations_df.at[child, inv_col])
+            if inv_col in annotations_df.columns and child in annotations_df.index
             else False
         )
 

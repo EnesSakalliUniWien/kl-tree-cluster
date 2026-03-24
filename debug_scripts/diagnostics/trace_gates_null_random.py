@@ -44,7 +44,7 @@ def _run(data, spectral_method, label):
         config.EDGE_CALIBRATION = orig_ec
 
     K = result["num_clusters"]
-    stats = tree.stats_df
+    stats = tree.annotations_df
 
     edge_sig = stats["Child_Parent_Divergence_Significant"]
     sib_diff = stats["Sibling_BH_Different"]

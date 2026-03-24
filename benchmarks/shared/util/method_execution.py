@@ -194,7 +194,7 @@ def run_single_method_once(
             y_true=y_t,
             tree=result.extra.get("tree") if result.extra else None,
             decomposition=result.extra.get("decomposition") if result.extra else None,
-            stats=result.extra.get("stats") if result.extra else None,
+            annotations=result.extra.get("annotations") if result.extra else None,
         )
 
     method_audit = None

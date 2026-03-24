@@ -121,7 +121,7 @@ def run_full_pipeline(X, sample_names, n_features):
     results = tree.decompose(leaf_data=data_df)
 
     # Get the stats DataFrame created during decomposition
-    results_df = tree.stats_df.copy() if hasattr(tree, "stats_df") else pd.DataFrame()
+    results_df = tree.annotations_df.copy() if hasattr(tree, "annotations_df") else pd.DataFrame()
 
     # Compute branch lengths
     branch_lengths = compute_branch_lengths(tree)
@@ -244,7 +244,7 @@ def main():
         )
 
         if results_df.empty:
-            print("WARNING: No stats_df available")
+            print("WARNING: No annotations_df available")
             continue
 
         internal_df = analyze_branch_length_vs_tests(results_df)

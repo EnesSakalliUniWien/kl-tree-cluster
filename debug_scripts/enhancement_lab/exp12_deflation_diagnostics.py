@@ -52,10 +52,10 @@ def collect_pair_data(case_name: str) -> pd.DataFrame:
     """Build tree, annotate Gates 1-2, collect ALL sibling pair records."""
     tree, data_df, y_true, tc = build_tree_and_data(case_name)
 
-    # Use tree.stats_df (populated by build_tree_and_data → populate_node_divergences)
+    # Use tree.annotations_df (populated by build_tree_and_data → populate_node_divergences)
     # which contains leaf_count, distribution, is_leaf columns required by the pipeline
-    assert tree.stats_df is not None, "stats_df must be populated"
-    annotations_df = tree.stats_df.copy()
+    assert tree.annotations_df is not None, "annotations_df must be populated"
+    annotations_df = tree.annotations_df.copy()
     bundle = run_gate_annotation_pipeline(
         tree,
         annotations_df,

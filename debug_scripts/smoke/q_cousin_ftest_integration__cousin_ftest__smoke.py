@@ -27,9 +27,9 @@ tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
 result = tree.decompose(leaf_data=data)
 print("Clusters:", result["num_clusters"])
 
-# Check that the stats_df has the test method column
-if "Sibling_Test_Method" in tree.stats_df.columns:
-    methods = tree.stats_df["Sibling_Test_Method"].dropna().value_counts()
+# Check that the annotations_df has the test method column
+if "Sibling_Test_Method" in tree.annotations_df.columns:
+    methods = tree.annotations_df["Sibling_Test_Method"].dropna().value_counts()
     print("Test methods used:")
     for m, c in methods.items():
         print(f"  {m}: {c}")

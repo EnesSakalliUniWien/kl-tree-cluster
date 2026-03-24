@@ -1,4 +1,8 @@
-"""Lab: compare conditional deflation strategies for the adjusted Wald test.
+"""Historical lab: compare pre-local-kernel deflation strategies.
+
+This script preserves the old df-mismatch experiments for reference.
+The production runtime no longer uses these strategies; it now applies
+local structural-k kernel deflation.
 
 Tests multiple strategies for computing a per-node deflation factor
 c_i = 1 + (c_global - 1) * r_i, where r_i ∈ [0,1] controls how much
@@ -9,7 +13,7 @@ strategies can only REDUCE over-deflation — they cannot cause new K=1
 collapses compared to the global-constant baseline.
 
 Strategies:
-  1. global           — current production: c_i = c_global for all nodes
+  1. global           — global constant baseline
   2. no_deflation     — c_i = 1.0 (raw Wald, maximum splitting power)
   3. half_global      — c_i = 1 + (c_global - 1) * 0.5 (constant 50% reduction)
   4. bounded_df_mismatch — r_i = clip(1 - α·|log(k_i / k_pool_median)|, 0, 1)
@@ -156,9 +160,9 @@ STRATEGIES: dict[str, StrategyFn] = {
     "global": _strategy_global,
     "no_deflation": _strategy_no_deflation,
     "half_global": _strategy_half_global,
-    "df_mis_0.3": _make_df_mismatch_strategy(0.3),
-    "df_mis_0.5": _make_df_mismatch_strategy(0.5),
-    "df_mis_0.7": _make_df_mismatch_strategy(0.7),
+    "legacy_df_mis_0.3": _make_df_mismatch_strategy(0.3),
+    "legacy_df_mis_0.5": _make_df_mismatch_strategy(0.5),
+    "legacy_df_mis_0.7": _make_df_mismatch_strategy(0.7),
     "ratio_cap": _strategy_ratio_cap,
 }
 

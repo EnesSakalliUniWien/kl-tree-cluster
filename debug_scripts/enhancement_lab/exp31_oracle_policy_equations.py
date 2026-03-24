@@ -205,11 +205,11 @@ def _case_names(top_k: int) -> list[str]:
 def _collect_case_frame(case_name: str, *, n_permutations: int) -> pd.DataFrame:
     tree, data_df, _y_true, tc = build_tree_and_data(case_name)
     run_decomposition(tree, data_df)
-    stats_df = tree.stats_df
-    if stats_df is None:
-        raise ValueError(f"stats_df not populated for case {case_name}")
+    annotations_df = tree.annotations_df
+    if annotations_df is None:
+        raise ValueError(f"annotations_df not populated for case {case_name}")
 
-    audit = stats_df.attrs.get("sibling_divergence_audit", {})
+    audit = annotations_df.attrs.get("sibling_divergence_audit", {})
     diagnostics = audit.get("diagnostics", {})
     c_global = float(audit.get("global_inflation_factor", 1.0))
     effective_n = float(diagnostics.get("effective_n", 0.0))
@@ -218,12 +218,12 @@ def _collect_case_frame(case_name: str, *, n_permutations: int) -> pd.DataFrame:
     case_subfamily = _infer_case_subfamily(case_name, case_category, case_family)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_spectral_dims(tree, stats_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(stats_df, sibling_dims)
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, stats_df, sibling_dims)
+    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
+    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
     records, _ = collect_sibling_pair_records(
         tree,
-        stats_df,
+        annotations_df,
         mean_bl,
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,

@@ -526,7 +526,7 @@ def main():
         sibling_alpha=config.SIBLING_ALPHA,
         passthrough=False,
     )
-    stats = tree.stats_df
+    stats = tree.annotations_df
     print(f"\n  Decomposition result: K={decomp['num_clusters']}")
 
     # ── Root info ──

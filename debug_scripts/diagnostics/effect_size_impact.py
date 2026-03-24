@@ -108,7 +108,7 @@ class NodeRecord:
 
 def collect_node_records(
     tree: PosetTree,
-    stats_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     case_name: str,
 ) -> List[NodeRecord]:
     """Walk the tree and collect effect-size + gate info for every internal node."""
@@ -159,17 +159,17 @@ def collect_node_records(
         sib_mean = compute_sibling_effect(tree, left, right)
         sib_max = compute_max_sibling_effect(tree, left, right)
 
-        # Gate decisions from stats_df
+        # Gate decisions from annotations_df
         left_sig = False
         right_sig = False
         edge_p_left = np.nan
         edge_p_right = np.nan
-        if left in stats_df.index:
-            left_sig = bool(stats_df.loc[left, "Child_Parent_Divergence_Significant"])
-            edge_p_left = float(stats_df.loc[left, "Child_Parent_Divergence_P_Value_BH"])
-        if right in stats_df.index:
-            right_sig = bool(stats_df.loc[right, "Child_Parent_Divergence_Significant"])
-            edge_p_right = float(stats_df.loc[right, "Child_Parent_Divergence_P_Value_BH"])
+        if left in annotations_df.index:
+            left_sig = bool(annotations_df.loc[left, "Child_Parent_Divergence_Significant"])
+            edge_p_left = float(annotations_df.loc[left, "Child_Parent_Divergence_P_Value_BH"])
+        if right in annotations_df.index:
+            right_sig = bool(annotations_df.loc[right, "Child_Parent_Divergence_Significant"])
+            edge_p_right = float(annotations_df.loc[right, "Child_Parent_Divergence_P_Value_BH"])
 
         gate_12_pass = left_sig or right_sig
 
@@ -177,12 +177,12 @@ def collect_node_records(
         sibling_diff = False
         sibling_skip = True
         sibling_p = np.nan
-        if node_id in stats_df.index:
-            sibling_diff = bool(stats_df.loc[node_id, "Sibling_BH_Different"])
-            sibling_skip = bool(stats_df.loc[node_id, "Sibling_Divergence_Skipped"])
+        if node_id in annotations_df.index:
+            sibling_diff = bool(annotations_df.loc[node_id, "Sibling_BH_Different"])
+            sibling_skip = bool(annotations_df.loc[node_id, "Sibling_Divergence_Skipped"])
             p_col = "Sibling_Divergence_P_Value_Corrected"
-            if p_col in stats_df.columns:
-                sibling_p = float(stats_df.loc[node_id, p_col])
+            if p_col in annotations_df.columns:
+                sibling_p = float(annotations_df.loc[node_id, p_col])
 
         gate_3_pass = gate_12_pass and sibling_diff and not sibling_skip
 
@@ -222,7 +222,7 @@ def collect_node_records(
 
 def simulate_with_threshold(
     tree: PosetTree,
-    stats_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     sibling_min_effect: float,
     edge_min_effect: float | None = None,
 ) -> int:
@@ -242,9 +242,9 @@ def simulate_with_threshold(
 
     from kl_clustering_analysis.core_utils.data_utils import extract_bool_column_dict
 
-    local_significant = extract_bool_column_dict(stats_df, "Child_Parent_Divergence_Significant")
-    sibling_different = extract_bool_column_dict(stats_df, "Sibling_BH_Different")
-    sibling_skipped = extract_bool_column_dict(stats_df, "Sibling_Divergence_Skipped")
+    local_significant = extract_bool_column_dict(annotations_df, "Child_Parent_Divergence_Significant")
+    sibling_different = extract_bool_column_dict(annotations_df, "Sibling_BH_Different")
+    sibling_skipped = extract_bool_column_dict(annotations_df, "Sibling_Divergence_Skipped")
 
     nodes_to_visit = [root]
     cluster_count = 0
@@ -307,7 +307,7 @@ def simulate_with_threshold(
 
 def labels_from_simulation(
     tree: PosetTree,
-    stats_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     sample_names: list[str],
     sibling_min_effect: float,
     edge_min_effect: float | None = None,
@@ -319,9 +319,9 @@ def labels_from_simulation(
 
     from kl_clustering_analysis.core_utils.data_utils import extract_bool_column_dict
 
-    local_significant = extract_bool_column_dict(stats_df, "Child_Parent_Divergence_Significant")
-    sibling_different = extract_bool_column_dict(stats_df, "Sibling_BH_Different")
-    sibling_skipped = extract_bool_column_dict(stats_df, "Sibling_Divergence_Skipped")
+    local_significant = extract_bool_column_dict(annotations_df, "Child_Parent_Divergence_Significant")
+    sibling_different = extract_bool_column_dict(annotations_df, "Sibling_BH_Different")
+    sibling_skipped = extract_bool_column_dict(annotations_df, "Sibling_Divergence_Skipped")
 
     nodes_to_visit = [root]
     cluster_leaf_sets: List[set] = []
@@ -415,7 +415,7 @@ def run_case(case: dict) -> Tuple[Optional[pd.DataFrame], Optional[dict]]:
         print(f"  SKIP {case_name}: decomposition failed — {e}")
         return None, None
 
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
     n_clust = case.get("n_clusters")
     if n_clust is None:
         # Real-data cases may not have a ground-truth K
@@ -435,7 +435,7 @@ def run_case(case: dict) -> Tuple[Optional[pd.DataFrame], Optional[dict]]:
     ari_current = adjusted_rand_score(y_true, labels_current) if has_gt else np.nan
 
     # Collect node records
-    records = collect_node_records(tree, stats_df, case_name)
+    records = collect_node_records(tree, annotations_df, case_name)
     records_df = pd.DataFrame([r.__dict__ for r in records])
 
     # Simulate thresholds
@@ -445,7 +445,7 @@ def run_case(case: dict) -> Tuple[Optional[pd.DataFrame], Optional[dict]]:
     for thr in sibling_thresholds:
         sim_labels = labels_from_simulation(
             tree,
-            stats_df,
+            annotations_df,
             data_df.index.tolist(),
             sibling_min_effect=thr,
             edge_min_effect=None,

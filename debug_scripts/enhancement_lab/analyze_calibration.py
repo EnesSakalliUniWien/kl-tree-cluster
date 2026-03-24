@@ -23,7 +23,7 @@ def analyze_calibration(case_name: str) -> None:
     print(f"{'=' * 72}")
 
     result = quick_eval(case_name)
-    stats = result["stats_df"]
+    stats = result["annotations_df"]
     tree = result["tree"]
     audit = stats.attrs.get("sibling_divergence_audit", {})
 

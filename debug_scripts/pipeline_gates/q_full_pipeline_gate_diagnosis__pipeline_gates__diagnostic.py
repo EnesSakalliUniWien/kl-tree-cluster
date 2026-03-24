@@ -202,9 +202,9 @@ def diagnose(name: str, data: pd.DataFrame, true_labels: np.ndarray):
         print("  BL: NONE")
 
     # 3. Edge test (shared across all sibling methods)
-    # Use tree.stats_df which has leaf_count and other required columns
+    # Use tree.annotations_df which has leaf_count and other required columns
     results_df = (
-        tree.stats_df.copy() if tree.stats_df is not None else pd.DataFrame(index=list(tree.nodes))
+        tree.annotations_df.copy() if tree.annotations_df is not None else pd.DataFrame(index=list(tree.nodes))
     )
     results_df = annotate_child_parent_divergence(
         tree, results_df, significance_level_alpha=config.SIGNIFICANCE_ALPHA

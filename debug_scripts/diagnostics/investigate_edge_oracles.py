@@ -87,7 +87,7 @@ def _extract_edge_data(data: pd.DataFrame, alpha: float = 0.01) -> dict | None:
             warnings.simplefilter("ignore")
             decomp = tree.decompose(leaf_data=data, alpha_local=alpha, sibling_alpha=alpha)
 
-        stats = tree.stats_df
+        stats = tree.annotations_df
         raw = stats.attrs.get("_edge_raw_test_data", {})
         spectral_dims = stats.attrs.get("_spectral_dims", {})
 

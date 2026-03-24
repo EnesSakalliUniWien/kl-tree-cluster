@@ -1279,7 +1279,7 @@ def build_case_sources(
 
     edge_bundle = annotate_edge_gate(
         tree,
-        tree.stats_df.copy(),
+        tree.annotations_df.copy(),
         significance_level_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,
         spectral_method=config.SPECTRAL_METHOD,
@@ -1688,7 +1688,7 @@ def aggregate_case_diagnostics(
 
 def build_gate2_treebh_edge_diagnostics(
     tree,
-    stats_df,
+    annotations_df,
     *,
     alpha: float,
     fdr_method: str,
@@ -1697,7 +1697,7 @@ def build_gate2_treebh_edge_diagnostics(
     if str(fdr_method) != "tree_bh":
         return {}
 
-    raw_test_data = stats_df.attrs.get("_edge_raw_test_data") or {}
+    raw_test_data = annotations_df.attrs.get("_edge_raw_test_data") or {}
     child_ids = [str(child_id) for child_id in raw_test_data.get("child_ids", [])]
     raw_p_values = np.asarray(raw_test_data.get("p_values", []), dtype=np.float64)
 
@@ -1836,11 +1836,11 @@ def build_node_diagnostics(
     dominant_support_energy_share_threshold: float,
 ) -> list[dict[str, Any]]:
     """Build one diagnostic row per padded internal node."""
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
     descendant_sets = tree.compute_descendant_sets(use_labels=True)
     gate2_edge_diagnostics = build_gate2_treebh_edge_diagnostics(
         tree,
-        stats_df,
+        annotations_df,
         alpha=config.SIBLING_ALPHA,
         fdr_method=gate2_fdr_method,
     )
@@ -1896,8 +1896,8 @@ def build_node_diagnostics(
             float(len(overlap_true_labels) / union_size) if union_size > 0 else float("nan")
         )
 
-        sibling_different = bool(stats_df.loc[parent, "Sibling_BH_Different"])
-        sibling_skipped = bool(stats_df.loc[parent, "Sibling_Divergence_Skipped"])
+        sibling_different = bool(annotations_df.loc[parent, "Sibling_BH_Different"])
+        sibling_skipped = bool(annotations_df.loc[parent, "Sibling_Divergence_Skipped"])
         if sibling_different:
             gate3_decision = "split"
         elif sibling_skipped:
@@ -1905,8 +1905,8 @@ def build_node_diagnostics(
         else:
             gate3_decision = "merge"
 
-        edge_gate_pass = bool(stats_df.loc[left, "Child_Parent_Divergence_Significant"]) or bool(
-            stats_df.loc[right, "Child_Parent_Divergence_Significant"]
+        edge_gate_pass = bool(annotations_df.loc[left, "Child_Parent_Divergence_Significant"]) or bool(
+            annotations_df.loc[right, "Child_Parent_Divergence_Significant"]
         )
         left_edge_ancestor_blocked = bool(left_edge_diag.get("ancestor_blocked", False))
         right_edge_ancestor_blocked = bool(right_edge_diag.get("ancestor_blocked", False))

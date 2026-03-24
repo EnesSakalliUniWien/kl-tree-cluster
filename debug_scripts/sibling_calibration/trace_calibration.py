@@ -49,7 +49,7 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
 
     # Gate 2: edge significance
     results_df = annotate_child_parent_divergence(
-        tree, tree.stats_df, significance_level_alpha=0.05, leaf_data=data_bin
+        tree, tree.annotations_df, significance_level_alpha=0.05, leaf_data=data_bin
     )
 
     spectral_dims = results_df.attrs.get("_spectral_dims")
@@ -149,8 +149,8 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
     found_k = result["num_clusters"]
     print(f"  decompose() found K = {found_k}")
 
-    # Inspect stats_df from decomposition
-    sdf = tree2.stats_df
+    # Inspect annotations_df from decomposition
+    sdf = tree2.annotations_df
     if sdf is not None:
         root2 = [n for n in tree2.nodes if tree2.in_degree(n) == 0][0]
         root_children2 = list(tree2.successors(root2))

@@ -202,9 +202,9 @@ def _create_tree_figures_for_case(
 
         tree_t = result.tree
         decomp_t = result.decomposition
-        stats_df = result.stats
-        if stats_df is None:
-            stats_df = getattr(tree_t, "stats_df", None)
+        annotations_df = result.annotations
+        if annotations_df is None:
+            annotations_df = getattr(tree_t, "annotations_df", None)
         method_name = result.method_name
         params = result.params
         param_str_display = format_params_for_display(params)
@@ -223,7 +223,7 @@ def _create_tree_figures_for_case(
         plot_tree_with_clusters(
             tree=tree_t,
             decomposition_results=decomp_t,
-            annotations_df=stats_df,
+            annotations_df=annotations_df,
             use_labels=True,
             node_size=12,
             font_size=9,

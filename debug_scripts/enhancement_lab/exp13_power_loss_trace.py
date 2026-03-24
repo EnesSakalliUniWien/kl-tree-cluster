@@ -68,8 +68,8 @@ def analyze_case(case_name: str) -> dict:
             leaf_to_label[leaf_name] = int(y_true[i])
 
     # Run full gate pipeline
-    assert tree.stats_df is not None
-    annotations_df = tree.stats_df.copy()
+    assert tree.annotations_df is not None
+    annotations_df = tree.annotations_df.copy()
     bundle = run_gate_annotation_pipeline(
         tree,
         annotations_df,

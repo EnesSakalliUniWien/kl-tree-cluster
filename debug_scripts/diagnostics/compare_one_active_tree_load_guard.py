@@ -230,7 +230,7 @@ def _fit_tree_load_thresholds() -> Thresholds:
             tree = _run_kl_method(data_df, distance_condensed, 0.01).extra["tree"]
             case_rows = ratio_rows[ratio_cursor:]
             ratio_cursor = len(ratio_rows)
-            pca_eigenvalues = tree.stats_df.attrs.get("_pca_eigenvalues", {})
+            pca_eigenvalues = tree.annotations_df.attrs.get("_pca_eigenvalues", {})
             for row in case_rows:
                 row["case_id"] = case_name
                 parent_node = next(iter(tree.predecessors(row["node_id"])), None)

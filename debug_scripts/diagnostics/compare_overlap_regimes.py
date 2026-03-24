@@ -187,12 +187,12 @@ def analyze_case(case_name: str, regime: str) -> tuple[CaseSummary, list[NodeTra
 
     leaf_to_label = {leaf_name: int(y_true[idx]) for idx, leaf_name in enumerate(data_df.index)}
 
-    if tree.stats_df is None:
-        raise ValueError(f"Tree for case {case_name!r} has no initial stats_df.")
+    if tree.annotations_df is None:
+        raise ValueError(f"Tree for case {case_name!r} has no initial annotations_df.")
 
     gate_bundle = run_gate_annotation_pipeline(
         tree,
-        tree.stats_df.copy(),
+        tree.annotations_df.copy(),
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,

@@ -78,7 +78,7 @@ def _find_sibling_cluster_pairs(
 def _posthoc_merge(
     tree,
     data_df: pd.DataFrame,
-    stats_df: pd.DataFrame,
+    annotations_df: pd.DataFrame,
     decomposer: TreeDecomposition,
     decomp: dict,
     alpha: float,
@@ -97,12 +97,12 @@ def _posthoc_merge(
 
         for parent, left, right in pairs:
             # Read the pre-computed sibling test result from the annotated stats
-            if parent not in stats_df.index:
+            if parent not in annotations_df.index:
                 continue
 
             sib_p = (
-                stats_df.loc[parent, "Sibling_Divergence_P_Value_Corrected"]
-                if "Sibling_Divergence_P_Value_Corrected" in stats_df.columns
+                annotations_df.loc[parent, "Sibling_Divergence_P_Value_Corrected"]
+                if "Sibling_Divergence_P_Value_Corrected" in annotations_df.columns
                 else np.nan
             )
 
@@ -174,7 +174,7 @@ def _decompose_with_posthoc(
     """
     decomposer = TreeDecomposition(
         tree=tree,
-        annotations_df=tree.stats_df.copy(),
+        annotations_df=tree.annotations_df.copy(),
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,

@@ -145,7 +145,7 @@ def run_decomposition_custom(
     )
 
     # Gate 2
-    annotations_df = tree.stats_df.copy()
+    annotations_df = tree.annotations_df.copy()
     edge_bundle = annotate_edge_gate(
         tree,
         annotations_df,

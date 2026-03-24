@@ -46,7 +46,7 @@ def _decompose_with_pt_limit(
     """
     decomposer = TreeDecomposition(
         tree=tree,
-        annotations_df=tree.stats_df.copy(),
+        annotations_df=tree.annotations_df.copy(),
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,

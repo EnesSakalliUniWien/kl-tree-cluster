@@ -272,7 +272,7 @@ def main():
         sibling_alpha=config.SIBLING_ALPHA,
         passthrough=False,
     )
-    stats = tree.stats_df
+    stats = tree.annotations_df
 
     # Restore originals
     _rpb.compute_projection_dimension_backend = _orig_cpd
@@ -343,7 +343,7 @@ def main():
             T_adj_root = (
                 stats.loc[root, "Sibling_Test_Statistic"] if root in stats.index else np.nan
             )
-            print(f"    T_adj in stats_df:        {T_adj_root:.4f}")
+            print(f"    T_adj in annotations_df:        {T_adj_root:.4f}")
             print(f"    Implied T_raw = T_adj * ĉ: {T_adj_root * c_hat_root:.4f}")
 
     # ── Replay pipeline's collect_sibling_pair_records to get the ACTUAL raw T ──

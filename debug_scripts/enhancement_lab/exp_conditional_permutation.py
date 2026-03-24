@@ -281,23 +281,23 @@ def run_case(case_name: str) -> CaseResult:
     # 1. Build tree, run full pipeline
     tree, data_df, y_true, tc = build_tree_and_data(case_name)
     decomp = run_decomposition(tree, data_df)
-    stats_df = tree.stats_df
+    annotations_df = tree.annotations_df
 
     true_k = tc.get("n_clusters")
     found_k = decomp["num_clusters"]
     ari = compute_ari(decomp, data_df, y_true) if y_true is not None else float("nan")
 
     # 2. Extract Gate 2 output for sibling config
-    sibling_dims = derive_sibling_spectral_dims(tree, stats_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(stats_df, sibling_dims)
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, stats_df, sibling_dims)
+    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
+    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # 3. Identify tested sibling pairs from the pipeline
     parents, child_pairs, skipped, non_binary = collect_significant_sibling_pairs(
         tree,
-        stats_df,
+        annotations_df,
     )
 
     # 4. Run permutation test for each eligible pair
@@ -305,9 +305,9 @@ def run_case(case_name: str) -> CaseResult:
 
     for parent, (left, right) in zip(parents, child_pairs, strict=False):
         # Wald results from the pipeline
-        p_wald_raw = float(stats_df.at[parent, "Sibling_Divergence_P_Value"])
-        p_wald_bh = float(stats_df.at[parent, "Sibling_Divergence_P_Value_Corrected"])
-        t_obs_pipeline = float(stats_df.at[parent, "Sibling_Test_Statistic"])
+        p_wald_raw = float(annotations_df.at[parent, "Sibling_Divergence_P_Value"])
+        p_wald_bh = float(annotations_df.at[parent, "Sibling_Divergence_P_Value_Corrected"])
+        t_obs_pipeline = float(annotations_df.at[parent, "Sibling_Test_Statistic"])
 
         _, _, n_left, n_right, _, _ = get_sibling_data(tree, parent, left, right)
 

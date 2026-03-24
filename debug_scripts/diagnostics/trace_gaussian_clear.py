@@ -62,8 +62,8 @@ print(f"\nKL ARI: {ari:.4f}")
 cluster_roots = decomp.get("cluster_roots", set())
 print(f"\nCluster roots: {sorted(cluster_roots)}")
 
-# Check tree.stats_df for gate decisions at cluster root parents
-stats = tree.stats_df
+# Check tree.annotations_df for gate decisions at cluster root parents
+stats = tree.annotations_df
 if stats is not None:
     print("\nGate decisions at internal nodes near the root:")
     cols = [
