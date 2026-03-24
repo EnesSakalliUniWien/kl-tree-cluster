@@ -33,7 +33,7 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
         tree.nodes[node]["is_leaf"] = is_leaf
         tree.nodes[node]["label"] = node
 
-    stats_df = pd.DataFrame(
+    annotations_df = pd.DataFrame(
         {
             "leaf_count": {
                 "root": 200,
@@ -50,7 +50,7 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
         index=["A", "B"],
         dtype=np.float64,
     )
-    return tree, stats_df, leaf_data
+    return tree, annotations_df, leaf_data
 
 
 @pytest.mark.parametrize(
@@ -68,12 +68,12 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
 def test_pipeline_supports_current_config_method_combinations(
     sibling_method: str, spectral_method: str | None
 ) -> None:
-    tree, stats_df, leaf_data = _build_small_tree_with_leaf_data()
+    tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
 
     needs_leaf_data = spectral_method not in (None, "none")
     bundle = run_gate_annotation_pipeline(
         tree,
-        stats_df.copy(),
+        annotations_df.copy(),
         alpha_local=0.01,
         sibling_alpha=0.01,
         leaf_data=leaf_data if needs_leaf_data else None,
@@ -91,21 +91,21 @@ def test_pipeline_supports_current_config_method_combinations(
 
 
 def test_pipeline_rejects_unknown_sibling_method() -> None:
-    tree, stats_df, _leaf_data = _build_small_tree_with_leaf_data()
+    tree, annotations_df, _leaf_data = _build_small_tree_with_leaf_data()
     with pytest.raises(KeyError):
         run_gate_annotation_pipeline(
             tree,
-            stats_df.copy(),
+            annotations_df.copy(),
             sibling_method="not_a_real_method",
         )
 
 
 def test_pipeline_rejects_unknown_spectral_method() -> None:
-    tree, stats_df, leaf_data = _build_small_tree_with_leaf_data()
+    tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     with pytest.raises((ValueError, KeyError)):
         run_gate_annotation_pipeline(
             tree,
-            stats_df.copy(),
+            annotations_df.copy(),
             leaf_data=leaf_data,
             spectral_method="not_a_real_method",
         )

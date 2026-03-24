@@ -128,6 +128,7 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
         pca_eigenvalues: np.ndarray | None = None,
         child_pca_projections: list[np.ndarray] | None = None,
         whitening: str = "per_component",
+        **kwargs,
     ) -> tuple[float, float, float]:
         return np.nan, np.nan, np.nan
 

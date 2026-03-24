@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 
-from kl_clustering_analysis import config
 from debug_scripts.enhancement_lab.exp_parametric_inflation import DIAGNOSTIC_CASES
 from debug_scripts.enhancement_lab.exp_parametric_inflation_v3 import (
     build_rows,
@@ -12,16 +11,18 @@ from debug_scripts.enhancement_lab.exp_parametric_inflation_v3 import (
 
 
 @pytest.mark.slow
-def test_v3_selector_preserves_null_control_with_conservative_focal_tradeoff() -> None:
+def test_v3_selector_preserves_null_control_with_conservative_focal_tradeoff(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     # Pin to global-constant deflation: this test was calibrated against
-    # the original intercept-only model and is independent of conditional
-    # deflation improvements.
-    saved = config.CONDITIONAL_DEFLATION_ALPHA
-    config.CONDITIONAL_DEFLATION_ALPHA = None
-    try:
-        _run_v3_assertions()
-    finally:
-        config.CONDITIONAL_DEFLATION_ALPHA = saved
+    # the original intercept-only model and is independent of the new
+    # local structural-k kernel.
+    monkeypatch.setattr(
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence"
+        ".adjusted_wald_annotation.predict_local_inflation_factor",
+        lambda model, pool, structural_dimension: model.global_inflation_factor,
+    )
+    _run_v3_assertions()
 
 
 def _run_v3_assertions() -> None:

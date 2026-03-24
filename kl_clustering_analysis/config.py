@@ -121,25 +121,15 @@ ONE_ACTIVE_1D_MODE: Literal["off", "per_tree_load_guard"] = "per_tree_load_guard
 # Options:
 #   "wald"                  - Standard projected Wald χ² test (original, known anti-conservative)
 #   "cousin_adjusted_wald"  - Cousin-adjusted Wald: estimates post-selection inflation c
-#                             from null-like pairs (neither child edge-significant) via
-#                             one log-linear regression on (BL_sum, n_parent), then deflates
-#                             focal pair stats: T_adj = T / ĉ ~ χ²(k).
+#                             from all valid sibling pairs using a continuous
+#                             edge-weighted mean of T/df ratios, then deflates focal
+#                             pair stats by a global ĉ adaptively shrunken per node
+#                             using learned effective-df mismatch.
 #                             Production default.
 #   "parametric_wald"       - Parametric Wald: fits c(n) = α · n^(-β) from null-like pairs
 #                             via log-linear OLS + curve_fit refinement, then deflates each
 #                             focal pair with a per-node c(n_parent) prediction.
 SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
-
-# --- Conditional Deflation ---
-
-# Per-node deflation sensitivity parameter (df-mismatch kernel).
-# When not None, the adjusted Wald deflation is node-specific:
-#   c_i = 1 + (c_global - 1) * clip(1 - alpha * |log(k_i / k_pool_median)|, 0, 1)
-# Nodes whose df matches the calibration pool get full deflation;
-# nodes far from the pool median get reduced deflation.
-# Set to None to disable (revert to global-constant deflation).
-# Validated at 0.3 on 101 benchmark cases (+0.033 mean ARI, K=1 halved).
-CONDITIONAL_DEFLATION_ALPHA: float | None = 0.3
 
 # --- Sibling Whitening Mode ---
 # Controls how projected statistics are converted to p-values in Gate 3.

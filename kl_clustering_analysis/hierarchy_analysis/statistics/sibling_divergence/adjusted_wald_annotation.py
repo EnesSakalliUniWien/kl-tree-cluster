@@ -1,10 +1,10 @@
 """Cousin-adjusted Wald sibling divergence annotation.
 
-Corrects the post-selection inflation of the Wald chi-squared statistic
-by estimating the inflation factor c from null-like calibration pairs,
-then deflating focal pairs before BH correction.
-
-The calibration model lives in ``calibration.py``.
+Corrects post-selection inflation in sibling Wald statistics by:
+1. computing raw sibling statistics for all binary parent nodes,
+2. fitting a global inflation factor from continuous edge-weighted T/df ratios,
+3. localizing that global factor per node in structural-dimension space, and
+4. deflating focal sibling pairs before BH correction.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from .bh_annotation import (
 from .inflation_correction.conditional_deflation import (
     PoolStats,
     compute_pool_stats,
-    predict_conditional_inflation_factor,
+    predict_local_inflation_factor,
 )
 from .inflation_correction.inflation_estimation import (
     CalibrationModel,
@@ -41,6 +41,7 @@ from .pair_testing.sibling_pair_collection import (
     count_null_focal_pairs,
     deflate_focal_pairs,
 )
+from .pair_testing.nearby_stable import enrich_blocked_weights
 
 logger = logging.getLogger(__name__)
 
@@ -88,30 +89,31 @@ def _deflate_and_test(
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate focal pairs and compute adjusted p-values.
 
-    When ``pool`` is provided and ``config.CONDITIONAL_DEFLATION_ALPHA``
-    is set, uses per-node conditional deflation.  Otherwise falls back
-    to the global-constant deflation.
+    When ``pool`` is provided, uses local per-node deflation in
+    log-structural-dimension space. Otherwise falls back to the global-constant
+    deflation.
 
     Returns:
         focal_parents: parent node IDs for focal (edge-significant) pairs
         focal_results: (T_adj, k, p_adj) per focal pair
         calibration_methods: method string per focal pair
     """
-    cond_alpha = config.CONDITIONAL_DEFLATION_ALPHA
-    use_conditional = cond_alpha is not None and pool is not None
+    use_conditional = pool is not None
 
     def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]:
         if use_conditional:
-            inflation_factor = predict_conditional_inflation_factor(
-                model, pool, rec.degrees_of_freedom, alpha=cond_alpha,
+            inflation_factor = predict_local_inflation_factor(
+                model,
+                pool,
+                rec.structural_dimension,
             )
-            return inflation_factor, "conditional_df_mismatch"
+            return inflation_factor, "local_structural_k_kernel"
         inflation_factor = predict_inflation_factor(
             model,
             rec.branch_length_sum,
             n_reference=rec.n_parent,
         )
-        return inflation_factor, "adjusted_regression"
+        return inflation_factor, "global_weighted_mean"
 
     return deflate_focal_pairs(
         records,
@@ -159,13 +161,17 @@ def annotate_sibling_divergence_adjusted(
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-adjusted Wald.
 
-    Two-pass approach:
+    Runtime path:
     1. Compute raw Wald chi-squared stats for ALL binary-child parent nodes.
-       Null-like pairs provide calibration data; focal pairs are tested.
-    2. Estimate inflation c-hat using continuous edge-weight calibration
-       (weighted mean of T/k, where null-like pairs dominate via high weights).
-    3. For *focal* pairs (at least one child edge-significant), deflate:
-       T_adj = T / c-hat, p = chi-sq_sf(T_adj, k).
+       All valid pairs contribute to calibration through continuous edge weights;
+       focal pairs are the only ones tested after deflation.
+    2. Estimate a global inflation factor using a weighted mean of T/df ratios,
+       with weights ``min(p_edge_left, p_edge_right)``.
+    3. Build a local kernel in log-structural-dimension space using the
+       decomposition-derived sibling dimension ``k_struct`` and the
+       edge-weighted log-k bandwidth of the calibration pool.
+    4. For focal pairs, deflate ``T_adj = T / c_node`` and compute the
+       adjusted sibling p-value from ``chi2.sf(T_adj, df_effective)``.
 
     Parameters
     ----------
@@ -214,13 +220,14 @@ def annotate_sibling_divergence_adjusted(
         n_blocked,
     )
 
+    if n_blocked > 0:
+        records = enrich_blocked_weights(records, tree, annotations_df)
+
     # Pass 2: fit inflation model using continuous edge weights
     model = fit_inflation_model(records)
 
-    # Pass 2b: compute pool stats for conditional deflation
-    pool: PoolStats | None = None
-    if config.CONDITIONAL_DEFLATION_ALPHA is not None:
-        pool = compute_pool_stats(records, model)
+    # Pass 2b: compute pool stats for local per-node deflation
+    pool = compute_pool_stats(records, model)
 
     # Pass 3: deflate focal pairs only and compute p-values
     focal_parents, focal_results, cal_methods = _deflate_and_test(
@@ -250,13 +257,10 @@ def annotate_sibling_divergence_adjusted(
         "calibration_method": model.method,
         "calibration_n": model.n_calibration,
         "global_inflation_factor": model.global_inflation_factor,
-        "deflation_mode": (
-            f"conditional_df_mismatch_alpha={config.CONDITIONAL_DEFLATION_ALPHA}"
-            if config.CONDITIONAL_DEFLATION_ALPHA is not None
-            else "global_constant"
-        ),
-        "conditional_deflation_alpha": config.CONDITIONAL_DEFLATION_ALPHA,
-        "pool_median_df": pool.median_df if pool is not None else None,
+        "deflation_mode": "local_structural_k_kernel",
+        "local_kernel_center_structural_dimension": pool.geometric_mean_structural_dimension,
+        "local_kernel_bandwidth_log_structural_dimension": pool.bandwidth_log_structural_dimension,
+        "local_kernel_bandwidth_status": pool.bandwidth_status,
         "one_active_1d_mode": config.ONE_ACTIVE_1D_MODE,
         "diagnostics": model.diagnostics,
         "test_method": "cousin_adjusted_wald",

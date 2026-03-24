@@ -1,29 +1,23 @@
-"""Conditional (per-node) deflation for the adjusted Wald test.
+"""Local structural-dimension kernel deflation for the adjusted Wald test.
 
-Instead of deflating every focal pair by the same global ĉ, this module
-computes a per-node factor:
+Instead of shrinking the global inflation factor with a fitted slope,
+this module estimates a node-specific correction directly from nearby
+calibration pairs in log-structural-dimension space:
 
-    ĉ_i = 1 + (ĉ_global − 1) · r_i
+    w_i(u) = w_i^edge * exp(-0.5 * ((log k_i - log k_u) / h)^2)
+    c_u = weighted_mean(T_i / df_i, weights=w_i(u))
 
-where r_i ∈ [0, 1] is a *trust weight* measuring how well node i's
-degrees of freedom match the calibration pool that produced ĉ_global.
-
-Bounded interpolation guarantees  1 ≤ ĉ_i ≤ ĉ_global  — the per-node
-correction can only *reduce* over-deflation, never increase it.
-
-The weight function (df-mismatch kernel):
-
-    r_i = clip(1 − α · |log(k_i / k_pool_median)|, 0, 1)
-
-where k_i is the node's sibling-test df and k_pool_median is the
-edge-weight-weighted median df across the calibration pool.  α controls
-sensitivity (default 0.3, validated on 101 benchmark cases).
+where ``k_i`` is the sibling structural dimension carried by each record,
+``w_i^edge`` is the continuous edge-based null-likeness weight, and ``h``
+is the edge-weighted standard deviation of ``log(k)`` over the calibration
+pool. This makes the deflation local in the decomposition-derived geometry
+rather than global in effective-df space.
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 import numpy as np
@@ -34,115 +28,151 @@ from .types import CalibrationModel
 logger = logging.getLogger(__name__)
 
 
-# ── Pool statistics ────────────────────────────────────────────────────────
+def _safe_weights(weights: np.ndarray) -> np.ndarray:
+    """Return non-negative finite weights, defaulting to uniform weights."""
+    clean = np.clip(np.asarray(weights, dtype=float), 0.0, None)
+    clean = np.where(np.isfinite(clean), clean, 0.0)
+    if clean.sum() <= 0:
+        return np.ones_like(clean, dtype=float)
+    return clean
+
+
+def _weighted_mean(values: np.ndarray, weights: np.ndarray) -> float:
+    """Return a finite weighted mean, falling back to the unweighted mean."""
+    if len(values) == 0:
+        return 0.0
+    clean_weights = _safe_weights(weights)
+    return float(np.average(np.asarray(values, dtype=float), weights=clean_weights))
+
+
+def _weighted_std(values: np.ndarray, weights: np.ndarray) -> float:
+    """Return the weighted standard deviation."""
+    if len(values) == 0:
+        return 0.0
+    clean_weights = _safe_weights(weights)
+    values = np.asarray(values, dtype=float)
+    mean_value = float(np.average(values, weights=clean_weights))
+    variance = float(np.average((values - mean_value) ** 2, weights=clean_weights))
+    return float(np.sqrt(max(variance, 0.0)))
+
+
+def _record_structural_dimension(record: SiblingPairRecord) -> float:
+    """Return the structural-dimension axis used for local calibration."""
+    if np.isfinite(record.structural_dimension) and record.structural_dimension > 0:
+        return float(record.structural_dimension)
+    if np.isfinite(record.degrees_of_freedom) and record.degrees_of_freedom > 0:
+        return float(record.degrees_of_freedom)
+    return 1.0
 
 
 @dataclass(frozen=True)
 class PoolStats:
-    """Summary of the calibration pool, computed once per tree."""
+    """Summary of the calibration pool used for local kernel deflation."""
 
     c_global: float
-    median_log_df: float  # weighted median of log(df)
-    median_df: float  # exp(median_log_df)
+    mean_log_structural_dimension: float
+    geometric_mean_structural_dimension: float
+    bandwidth_log_structural_dimension: float
+    bandwidth_status: str
+    max_ratio: float
     n_records: int
+    calibration_log_structural_dimensions: np.ndarray = field(repr=False)
+    calibration_edge_weights: np.ndarray = field(repr=False)
+    calibration_stat_df_ratios: np.ndarray = field(repr=False)
 
 
 def compute_pool_stats(
     records: List[SiblingPairRecord],
     model: CalibrationModel,
 ) -> PoolStats:
-    """Compute calibration-pool summary from all valid sibling pair records.
-
-    The weighted median uses ``edge_weight`` (= min of the two children's
-    BH-corrected edge p-values), so null-like pairs dominate — matching the
-    weighting scheme used to estimate ĉ_global itself.
-    """
-    valid = [r for r in records if np.isfinite(r.stat) and r.degrees_of_freedom > 0]
+    """Compute the local-kernel calibration pool from valid sibling records."""
+    valid = [record for record in records if np.isfinite(record.stat) and record.degrees_of_freedom > 0]
     if not valid:
         return PoolStats(
             c_global=model.global_inflation_factor,
-            median_log_df=0.0,
-            median_df=1.0,
+            mean_log_structural_dimension=0.0,
+            geometric_mean_structural_dimension=1.0,
+            bandwidth_log_structural_dimension=0.0,
+            bandwidth_status="global_fallback_no_data",
+            max_ratio=max(1.0, float(model.max_observed_ratio)),
             n_records=0,
+            calibration_log_structural_dimensions=np.array([], dtype=float),
+            calibration_edge_weights=np.array([], dtype=float),
+            calibration_stat_df_ratios=np.array([], dtype=float),
         )
 
-    log_dfs = np.array([np.log(max(r.degrees_of_freedom, 1)) for r in valid])
-    weights = np.array([r.edge_weight for r in valid])
+    structural_dimensions = np.array(
+        [_record_structural_dimension(record) for record in valid],
+        dtype=float,
+    )
+    log_structural_dimensions = np.log(np.maximum(structural_dimensions, 1.0))
+    edge_weights = np.array([record.edge_weight for record in valid], dtype=float)
+    stat_df_ratios = np.array([record.stat / record.degrees_of_freedom for record in valid], dtype=float)
 
-    # Weighted median via sorted cumulative weights
-    sort_idx = np.argsort(log_dfs)
-    sorted_log_dfs = log_dfs[sort_idx]
-    sorted_weights = weights[sort_idx]
-    cum_weights = np.cumsum(sorted_weights)
-    total_weight = cum_weights[-1]
-
-    if total_weight > 0:
-        median_idx = np.searchsorted(cum_weights, total_weight / 2.0)
-        median_idx = min(median_idx, len(sorted_log_dfs) - 1)
-        median_log_df = float(sorted_log_dfs[median_idx])
+    mean_log_structural_dimension = _weighted_mean(log_structural_dimensions, edge_weights)
+    bandwidth = _weighted_std(log_structural_dimensions, edge_weights)
+    if not np.isfinite(bandwidth) or bandwidth <= 1e-12:
+        bandwidth = 0.0
+        bandwidth_status = "global_fallback_zero_log_k_spread"
     else:
-        median_log_df = float(np.median(log_dfs))
+        bandwidth_status = "weighted_log_k_std"
 
     pool = PoolStats(
         c_global=model.global_inflation_factor,
-        median_log_df=median_log_df,
-        median_df=float(np.exp(median_log_df)),
+        mean_log_structural_dimension=mean_log_structural_dimension,
+        geometric_mean_structural_dimension=float(np.exp(mean_log_structural_dimension)),
+        bandwidth_log_structural_dimension=bandwidth,
+        bandwidth_status=bandwidth_status,
+        max_ratio=max(1.0, float(np.max(stat_df_ratios)), float(model.max_observed_ratio)),
         n_records=len(valid),
+        calibration_log_structural_dimensions=log_structural_dimensions,
+        calibration_edge_weights=_safe_weights(edge_weights),
+        calibration_stat_df_ratios=stat_df_ratios,
     )
 
     logger.debug(
-        "Conditional deflation pool: median_df=%.2f, c_global=%.4f, " "n_records=%d.",
-        pool.median_df,
+        "Local structural-k kernel pool: center_k=%.2f, bandwidth=%.4f, "
+        "c_global=%.4f, n_records=%d.",
+        pool.geometric_mean_structural_dimension,
+        pool.bandwidth_log_structural_dimension,
         pool.c_global,
         pool.n_records,
     )
     return pool
 
 
-# ── Per-node inflation factor ──────────────────────────────────────────────
-
-
-def predict_conditional_inflation_factor(
+def predict_local_inflation_factor(
     model: CalibrationModel,
     pool: PoolStats,
-    degrees_of_freedom: int | float,
-    *,
-    alpha: float = 0.3,
+    structural_dimension: int | float,
 ) -> float:
-    """Return the per-node inflation factor ĉ_i.
+    """Return the node-specific inflation factor from the local kernel.
 
-    Uses the df-mismatch kernel:
-
-        r_i = clip(1 − alpha · |log(k_i / k_pool_median)|, 0, 1)
-        ĉ_i = 1 + (ĉ_global − 1) · r_i
-
-    Parameters
-    ----------
-    model : CalibrationModel
-        Fitted global inflation model.
-    pool : PoolStats
-        Pre-computed calibration pool summary.
-    degrees_of_freedom : int | float
-        The sibling-test df (k) for the node being deflated.
-    alpha : float
-        Sensitivity of the df-mismatch kernel.  Larger values reduce
-        deflation faster as df departs from the pool median.  Validated
-        at 0.3 on 101 benchmark cases.
-
-    Returns
-    -------
-    float
-        Per-node inflation factor, guaranteed in [1.0, ĉ_global].
+    The target node is positioned at ``log(k_u)``, where ``k_u`` is the
+    sibling structural dimension inferred from the decomposition. The
+    calibration pool is then reweighted with a Gaussian kernel in that
+    one-dimensional log-k space.
     """
-    k_i = max(degrees_of_freedom, 1)
-    k_median = max(pool.median_df, 1.0)
-    df_mismatch = abs(np.log(k_i / k_median))
-    r_i = float(np.clip(1.0 - alpha * df_mismatch, 0.0, 1.0))
-    return 1.0 + (pool.c_global - 1.0) * r_i
+    if pool.n_records == 0 or pool.bandwidth_log_structural_dimension <= 0:
+        return float(np.clip(pool.c_global, 1.0, pool.max_ratio))
+
+    log_target = float(np.log(max(float(structural_dimension), 1.0)))
+    normalized_offsets = (
+        pool.calibration_log_structural_dimensions - log_target
+    ) / pool.bandwidth_log_structural_dimension
+    kernel_weights = np.exp(-0.5 * normalized_offsets**2)
+    local_weights = pool.calibration_edge_weights * kernel_weights
+
+    if not np.isfinite(local_weights).any() or float(np.sum(local_weights)) <= 0:
+        return float(np.clip(pool.c_global, 1.0, pool.max_ratio))
+
+    clean_weights = _safe_weights(local_weights)
+    local_inflation = float(np.average(pool.calibration_stat_df_ratios, weights=clean_weights))
+    return float(np.clip(local_inflation, 1.0, pool.max_ratio))
 
 
 __all__ = [
     "PoolStats",
     "compute_pool_stats",
-    "predict_conditional_inflation_factor",
+    "predict_local_inflation_factor",
 ]
