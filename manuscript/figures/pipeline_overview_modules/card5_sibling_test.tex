@@ -1,0 +1,21 @@
+\node[panel, fill=green!3] (p5) at (0,-5.55) {};
+\node[paneltitle] at ($(p5.north west)+(0.10,-0.12)$) {5. Sibling test};
+
+\node[treept] (r5) at ($(p5.center)+(0,1.30)$) {};
+\node[treept] (u51) at ($(p5.center)+(-1.05,0.52)$) {};
+\node[treept] (u52) at ($(p5.center)+(1.05,0.52)$) {};
+\node[treept] (a5) at ($(p5.center)+(-1.60,-0.30)$) {};
+\node[treept] (b5) at ($(p5.center)+(-0.50,-0.30)$) {};
+\node[treept] (c5) at ($(p5.center)+(0.50,-0.30)$) {};
+\node[treept] (d5) at ($(p5.center)+(1.60,-0.30)$) {};
+\draw[treeline] (r5) -- (u51);
+\draw[treeline] (r5) -- (u52);
+\draw[treeline] (u51) -- (a5);
+\draw[treeline] (u51) -- (b5);
+\draw[treeline] (u52) -- (c5);
+\draw[treeline] (u52) -- (d5);
+\draw[gate3line] ($(u51)+(0.18,0.18)$) -- ($(u52)+(-0.18,0.18)$);
+\node[leafchip, anchor=north] at ($(a5)+(0,-0.24)$) {$A$\\$[1,1,0,1]$};
+\node[leafchip, anchor=north] at ($(b5)+(0,-0.24)$) {$B$\\$[1,1,0,1]$};
+\node[leafchip, anchor=north] at ($(c5)+(0,-0.24)$) {$C$\\$[0,0,1,0]$};
+\node[leafchip, anchor=north] at ($(d5)+(0,-0.24)$) {$D$\\$[0,0,1,0]$};

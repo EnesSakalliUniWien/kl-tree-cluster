@@ -1,0 +1,41 @@
+% !TEX root = ../../main.tex
+
+\subsection{From Test Annotations to Final Clusters}
+
+Once the edge-test and sibling-test annotations are available, the inferential
+work is finished. The remaining step is purely algorithmic: traverse the tree
+from the root downward and decide where the splits are kept. The traversal does
+not estimate any new model or compute any new $p$-values; it turns the
+precomputed evidence tables into a final partition.
+
+The final clusters are produced by a top-down traversal that reads the two test
+annotation tables. For an internal node $u$ with children $l(u)$ and $r(u)$,
+the split rule is
+\begin{equation}
+\mathrm{Split}(u) = 1
+\end{equation}
+if and only if all three conditions hold:
+\begin{enumerate}[leftmargin=1.5em]
+  \item $u$ has exactly two children;
+  \item $S^{\mathrm{edge}}(l(u)) = 1$ or $S^{\mathrm{edge}}(r(u)) = 1$;
+  \item $S^{\mathrm{sib}}(u) = 1$.
+\end{enumerate}
+If these conditions hold, traversal continues into both children. Otherwise the
+method would ordinarily stop and declare $u$ a terminal cluster.
+
+However, the implementation also enables pass-through traversal. Let
+$D^{\mathrm{sib}}(u)$ be the indicator that some proper descendant of $u$ has a
+significant non-skipped sibling split. Then the traversal still descends into
+both children when
+\begin{equation}
+\mathrm{Split}(u) = 0,
+\qquad
+u \text{ has exactly two children},
+\qquad
+S^{\mathrm{edge}}(l(u)) \vee S^{\mathrm{edge}}(r(u)) = 1,
+\qquad
+D^{\mathrm{sib}}(u) = 1.
+\end{equation}
+This is the pass-through rule used to prevent a shallow sibling-test failure from
+masking deeper structure. The terminal nodes returned by this traversal define
+the final cluster partition directly.

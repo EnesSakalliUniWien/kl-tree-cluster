@@ -1,0 +1,27 @@
+% !TEX root = ../../main.tex
+
+\subsection{Edge Multiplicity Control Across the Tree}
+
+Even a well-calibrated edge test would over-split the hierarchy if it were
+applied independently to every edge and thresholded at a fixed level. The tree
+contains many overlapping candidate splits, and the final partition depends on
+reading those edge decisions jointly. The method therefore applies a
+hierarchical Benjamini--Hochberg correction on the tree
+\citep{bogomolov2021hypotheses} at level
+$\alpha_{\mathrm{edge}} = 0.001$. Edge hypotheses are grouped into families by
+parent node. If $F(u)$ denotes the family of edges from parent $u$ to its
+children, then the family-specific level used by the implementation is
+\begin{equation}
+\alpha_u
+=
+\alpha_{\mathrm{edge}}
+\prod_{a \in \mathrm{Anc}(u)}
+\frac{R_a}{|F(a)|},
+\end{equation}
+where $R_a$ is the number of rejections already made in the ancestor family
+$F(a)$. Intuitively, evidence is allowed to propagate downward only after
+earlier parts of the tree have already shown signal. Root families start at
+$\alpha_{\mathrm{edge}}$. Within each family, ordinary Benjamini--Hochberg is
+applied at level $\alpha_u$. Let
+$S^{\mathrm{edge}}(c) \in \{0,1\}$ denote the resulting significance indicator
+for child $c$.

@@ -1,10 +1,10 @@
-% !TEX root = ../main.tex
+% !TEX root = ../../main.tex
 
-\section{Evaluation Plan}
+\section{Evaluation Questions}
 
 An empirical evaluation of KL-TE should cover four main blocks.
 
-\subsection{Null calibration}
+\subsection{Does the Method Stay Calibrated Under the Null?}
 
 The first requirement is a null calibration study on binary data with no true
 cluster structure. The goal is to measure how often the child-parent edge test
@@ -14,7 +14,7 @@ individual-test level and at the resulting number-of-clusters level. The latter
 is critical because a method can have mild per-test inflation yet still produce
 severe over-splitting once the tree walk is applied.
 
-\subsection{Power under planted structure}
+\subsection{Does the Method Recover Planted Structure?}
 
 The second requirement is a controlled power study with planted binary subtrees.
 This should vary:
@@ -31,7 +31,7 @@ Power should be measured both for recovery of important tree splits and for the
 final clustering outcome. Adjusted Rand Index and exact split recovery are both
 useful endpoints.
 
-\subsection{Robustness analyses}
+\subsection{Where Is the Method Robust or Fragile?}
 
 For a paper centered on one implemented method, the key empirical question is
 robustness. The most useful stress tests are:
@@ -47,7 +47,7 @@ These analyses should show where the implemented method is well calibrated,
 where it becomes under-powered, and where it tends to over-split or
 under-split.
 
-\subsection{Real-data benchmarks}
+\subsection{How Does the Method Behave on Benchmarks?}
 
 The repository already contains benchmark infrastructure and reporting code. A
 manuscript-quality benchmark section should align those experiments with the

@@ -1,0 +1,281 @@
+% !TEX root = ../../main.tex
+
+\subsection{Edge Test: Does a Child Depart from Its Parent?}
+
+The child-parent edge test is the first inferential step. For each edge
+$(u,c) \in E$, it asks whether child $c$ carries signal beyond its parent $u$.
+This is the method's first guard against keeping a split just because the
+linkage algorithm happened to create one. In plain terms, the question is:
+does this child really move away from the background defined by its parent, or
+is the observed difference small enough to be explained by sampling noise?
+
+The raw difference $\theta_c-\theta_u$ is not enough on its own. Some features
+are naturally more variable than others, and very small child subtrees are
+noisier than large ones. The test therefore begins by converting the raw
+child-parent difference into standardized feature scores. The coordinate-wise null is
+$H_{0,j}^{\mathrm{edge}}(u,c): \theta_{c,j} = \theta_{u,j}$. Because $c$ is
+nested inside $u$, the child and parent estimators are not independent. In the
+binary or indicator representation,
+\begin{equation}
+\mathrm{Var}(\hat{\theta}_{c,j} - \hat{\theta}_{u,j})
+=
+\theta_{u,j}(1-\theta_{u,j})
+\left(\frac{1}{n_c} - \frac{1}{n_u}\right),
+\end{equation}
+which is the variance expression used in the code. The standardized edge vector
+is therefore
+\begin{equation}
+z_{u \to c,j}^{\mathrm{edge}}
+=
+\frac{\theta_{c,j} - \theta_{u,j}}
+{\sqrt{\theta_{u,j}(1-\theta_{u,j})\left(\frac{1}{n_c} - \frac{1}{n_u}\right)}}.
+\end{equation}
+This standardization is applied \emph{coordinatewise}. Each feature first gets
+its own z-like score before the method combines evidence across features. For a
+parent-child edge with $p$ binary or indicator coordinates, the implementation first computes $p$ scalar standardized scores
+$z_{u \to c,1}^{\mathrm{edge}},\dots,z_{u \to c,p}^{\mathrm{edge}}$, one for
+each feature, then stacks them into the vector
+\begin{equation}
+z_{u \to c}^{\mathrm{edge}}
+=
+\left(
+z_{u \to c,1}^{\mathrm{edge}},
+\dots,
+z_{u \to c,p}^{\mathrm{edge}}
+\right)^\top
+\in \mathbb{R}^p.
+\end{equation}
+The subtraction term
+$\frac{1}{n_c} - \frac{1}{n_u}$ is the signature of the nested tree setting.
+In an ordinary two-sample test for independent groups, the variance factor
+would look like $\frac{1}{n_1} + \frac{1}{n_2}$. Here the parent already
+contains the child, so part of the uncertainty cancels out, which yields the
+nested factor $\frac{1}{n_c} - \frac{1}{n_u} > 0$. This is why very small
+children need a larger raw deviation $\theta_{c,j} - \theta_{u,j}$ to generate
+the same standardized score.
+
+Coordinatewise standardization fixes heteroskedasticity, but it does not solve
+the second problem: the edge evidence is high-dimensional and correlated.
+Summing $z_{u \to c,j}^2$ directly would overcount redundant coordinates and let
+noisy directions dominate just because they contribute many small correlated
+terms. The method therefore looks for a smaller set of parent-local directions
+that summarize the main variation seen below the parent, and it measures the
+edge deviation in that reduced space. For each parent node $u$, the
+implementation forms a local matrix $M_u$ whose rows are:
+\begin{enumerate}[leftmargin=1.5em]
+  \item all descendant leaf vectors $X_i$ for $i \in L(u)$, and
+  \item all descendant internal-node distributions $\theta_v$ for proper
+  descendants $v$ of $u$.
+\end{enumerate}
+After removing constant features, let $d_u$ be the number of active
+coordinates and let $m_u$ be the number of rows in $M_u$. The code computes the correlation matrix
+$C_u \in \mathbb{R}^{d_u \times d_u}$ and its eigen-decomposition
+\begin{equation}
+C_u = V_u \Lambda_u V_u^\top,
+\qquad
+\Lambda_u = \mathrm{diag}(\lambda_{u,1},\dots,\lambda_{u,d_u}),
+\qquad
+\lambda_{u,1} \ge \cdots \ge \lambda_{u,d_u} \ge 0.
+\end{equation}
+Equivalently, if $\widetilde{M}_u \in \mathbb{R}^{m_u \times d_u}$ denotes the
+column-standardized active-coordinate submatrix of $M_u$ after centering each
+active feature to mean zero and scaling it to unit variance, then
+\begin{equation}
+C_u = \frac{1}{m_u}\widetilde{M}_u^\top \widetilde{M}_u,
+\end{equation}
+up to the standard Pearson-correlation normalization already enforced by the
+column standardization. In practice, this matrix identifies the main patterns
+of co-variation visible below the parent. When $m_u < d_u$, the implementation
+switches to the dual standardized Gram matrix
+\begin{equation}
+G_u = \frac{1}{d_u}\widetilde{M}_u \widetilde{M}_u^\top,
+\end{equation}
+whose nonzero eigenvalues encode the same spectral information as those of
+$C_u$ up to the normalization convention, so the same local summary is
+recovered in a computationally cheaper form.
+
+\paragraph{Why the dual Gram formulation is used.}
+The switch from $C_u$ to $G_u$ is not a change of model but a change of
+computational viewpoint. When the number of active features $d_u$ is much
+larger than the number of local rows $m_u$, directly diagonalizing the
+$d_u \times d_u$ feature-space correlation matrix is wasteful: its rank is at
+most $m_u$, so most feature-space directions cannot carry additional spectral
+information. The dual matrix $G_u$ stores the same row-inner-product structure
+in a smaller $m_u \times m_u$ object. This is the same linear-algebra idea
+often described as a kernel-trick-style dualization: rather than working with
+feature-feature covariance directly, one works with row-row inner products and
+then lifts the resulting eigenvectors back into feature space. Concretely, if
+$u_{u,i}$ is a unit eigenvector of $G_u$ with eigenvalue $\lambda_{u,i} > 0$,
+then the corresponding feature-space direction is recovered by
+\begin{equation}
+v_{u,i} = \frac{\widetilde{M}_u^\top u_{u,i}}{\sqrt{\lambda_{u,i}}\sqrt{d_u}},
+\end{equation}
+followed by normalization. The implementation therefore obtains the same
+parent-local principal directions while replacing a potentially very large
+$d_u \times d_u$ eigendecomposition by a much smaller $m_u \times m_u$ one.
+
+The spectral dimension is the Marchenko--Pastur signal count
+\citep{marchenko1967distribution}. With
+\begin{equation}
+\hat{\sigma}_u^2 = \mathrm{median}\{\lambda_{u,i} : \lambda_{u,i} > 0\},
+\qquad
+b_u^{\mathrm{MP}} = \hat{\sigma}_u^2 \left(1 + \sqrt{\frac{d_u}{m_u}}\right)^2,
+\end{equation}
+the projection dimension is
+\begin{equation}
+k_u^{\mathrm{edge}}
+=
+\max\left\{
+2,\;
+\#\{i : \lambda_{u,i} > b_u^{\mathrm{MP}}\}
+\right\},
+\end{equation}
+followed by the implementation cap $k_u^{\mathrm{edge}} \le d_u$. The floor is
+$2$.
+
+Let $v_{u,1},\dots,v_{u,k_u^{\mathrm{edge}}}$ denote the leading eigenvectors.
+After the coordinatewise standardization step, the vector
+$z_{u \to c}^{\mathrm{edge}} \in \mathbb{R}^p$ is projected onto these
+parent-local directions. The edge test then rescales those projected
+coordinates so that noisy directions do not automatically count more than
+stable ones. The resulting test statistic is
+\begin{equation}
+T_{u \to c}^{\mathrm{edge}}
+=
+\sum_{i=1}^{k_u^{\mathrm{edge}}}
+\frac{(v_{u,i}^\top z_{u \to c}^{\mathrm{edge}})^2}{\lambda_{u,i}}.
+\end{equation}
+Writing
+$w_{u \to c,i} = v_{u,i}^\top z_{u \to c}^{\mathrm{edge}}$ for the projected
+coordinate along the $i$th parent-local spectral direction, each summand is
+\begin{equation}
+\frac{w_{u \to c,i}^2}{\lambda_{u,i}}.
+\end{equation}
+This is the practical role of the projection-and-whitening step. The projection
+rewrites the edge deviation in directions that are actually present in the
+subtree below $u$, and the whitening step stops high-variance background
+directions from dominating the test merely because they are noisy.
+Under the local correlation-model approximation used by the implementation, the
+resulting statistic is calibrated against a $\chi^2_{k_u^{\mathrm{edge}}}$
+reference law:
+\begin{equation}
+T_{u \to c}^{\mathrm{edge}} \sim \chi^2_{k_u^{\mathrm{edge}}},
+\qquad
+p_{u \to c}^{\mathrm{edge}}
+=
+\Pr\!\left(
+\chi^2_{k_u^{\mathrm{edge}}}
+\ge
+T_{u \to c}^{\mathrm{edge}}
+\right).
+\end{equation}
+This calibration is exact in the pure PCA-whitened case. In the implemented
+mixed-basis path, if fewer usable PCA directions are available than the
+nominal target dimension, the implementation simply uses the available
+parent-local rows rather than padding with unrelated random directions.
+\paragraph{Worked child-parent example.}
+The worked example below is intended to show the logic of the edge test, not
+just the algebra. It starts with a parent-child comparison that is visibly
+different by eye, then shows how each formula answers one of the two problems
+above: nested variance and correlated high-dimensional evidence. Consider four
+binary samples
+\begin{equation}
+A=(1,1,0,1),\quad
+B=(1,1,0,1),\quad
+C=(0,0,1,0),\quad
+D=(0,0,1,0),
+\end{equation}
+with tree root $R$ and children $U_1=\{A,B\}$ and $U_2=\{C,D\}$. The node
+distributions are
+\begin{equation}
+\theta_{U_1}=(1,1,0,1),\qquad
+\theta_{U_2}=(0,0,1,0),\qquad
+\theta_R=(0.5,0.5,0.5,0.5).
+\end{equation}
+Because the implementation includes proper descendant internal distributions in
+the spectral matrix, the root-local matrix is
+\begin{equation}
+M_R =
+\begin{bmatrix}
+1&1&0&1\\
+1&1&0&1\\
+0&0&1&0\\
+0&0&1&0\\
+1&1&0&1\\
+0&0&1&0
+\end{bmatrix},
+\end{equation}
+where the first four rows are the leaves $A,B,C,D$ and the last two rows are
+the internal-node distributions $\theta_{U_1}$ and $\theta_{U_2}$. Each active
+column has mean $0.5$ and standard deviation $0.5$, so the standardized matrix
+is
+\begin{equation}
+\widetilde{M}_R =
+\begin{bmatrix}
+1&1&-1&1\\
+1&1&-1&1\\
+-1&-1&1&-1\\
+-1&-1&1&-1\\
+1&1&-1&1\\
+-1&-1&1&-1
+\end{bmatrix}.
+\end{equation}
+The corresponding parent-local correlation matrix is
+\begin{equation}
+C_R =
+\begin{bmatrix}
+1&1&-1&1\\
+1&1&-1&1\\
+-1&-1&1&-1\\
+1&1&-1&1
+\end{bmatrix},
+\end{equation}
+whose eigenvalues are
+\begin{equation}
+(\lambda_{R,1},\lambda_{R,2},\lambda_{R,3},\lambda_{R,4}) = (4,0,0,0).
+\end{equation}
+One leading eigenvector is
+\begin{equation}
+v_{R,1} = (0.5,0.5,-0.5,0.5)^\top.
+\end{equation}
+Now test the edge $R \to U_1$. Since $n_R=4$ and $n_{U_1}=2$, the nested
+variance factor is
+\begin{equation}
+\frac{1}{n_{U_1}} - \frac{1}{n_R} = \frac{1}{2} - \frac{1}{4} = \frac{1}{4}.
+\end{equation}
+Because each root coordinate equals $0.5$, every feature has variance
+\begin{equation}
+0.5(1-0.5)\left(\frac{1}{2}-\frac{1}{4}\right)=0.0625.
+\end{equation}
+Using the coordinatewise standardization formula above, the edge vector is
+\begin{equation}
+z_{R \to U_1}^{\mathrm{edge}}
+=
+\frac{(1,1,0,1)-(0.5,0.5,0.5,0.5)}{\sqrt{0.0625}}
+=
+(2,2,-2,2)^\top.
+\end{equation}
+Projecting onto the leading spectral direction gives
+\begin{equation}
+w_{R \to U_1,1}
+=
+v_{R,1}^\top z_{R \to U_1}^{\mathrm{edge}}
+=
+0.5\cdot 2 + 0.5\cdot 2 - 0.5\cdot (-2) + 0.5\cdot 2
+=
+4.
+\end{equation}
+Therefore the first whitened contribution to the edge-test statistic is
+\begin{equation}
+\frac{w_{R \to U_1,1}^2}{\lambda_{R,1}}
+=
+\frac{4^2}{4}
+=
+4.
+\end{equation}
+This example shows the full logic of the child-parent edge test in the same
+order as the formulas: standardize the raw difference, express it in the main
+parent-level directions, and then down-weight directions that are mostly noise.
+In larger real subtrees the implementation can use more than one such
+direction, but the core interpretation is already visible in this toy example.
+These $p$-values are computed for every edge in the tree.

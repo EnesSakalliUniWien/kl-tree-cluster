@@ -1,0 +1,30 @@
+\node[topanel] (p2) at (5.15,0) {};
+\node[paneltitle] at ($(p2.north west)+(0.10,-0.12)$) {2. Build tree};
+\node[
+	anchor=north west,
+	font=\scriptsize,
+	align=left,
+	text width=4.00cm,
+] at ($(p2.north west)+(0.10,-0.38)$)
+	{Hamming average-linkage hierarchy};
+
+\node[treept] (r2) at ($(p2.center)+(0,1.35)$) {};
+\node[treept] (u21) at ($(p2.center)+(-1.00,0.40)$) {};
+\node[treept] (u22) at ($(p2.center)+(1.00,0.40)$) {};
+\node[treept] (a2) at ($(p2.center)+(-1.55,-1.00)$) {};
+\node[treept] (b2) at ($(p2.center)+(-0.45,-1.00)$) {};
+\node[treept] (c2) at ($(p2.center)+(0.45,-1.00)$) {};
+\node[treept] (d2) at ($(p2.center)+(1.55,-1.00)$) {};
+\draw[treeline] (r2) -- (u21);
+\draw[treeline] (r2) -- (u22);
+\draw[treeline] (u21) -- (a2);
+\draw[treeline] (u21) -- (b2);
+\draw[treeline] (u22) -- (c2);
+\draw[treeline] (u22) -- (d2);
+\node[tinylabel, above=1pt of r2] {$R$};
+\node[tinylabel, above=1pt of u21] {$U_1$};
+\node[tinylabel, above=1pt of u22] {$U_2$};
+\node[leafchip, anchor=north] at ($(a2)+(0,-0.24)$) {$A$\\$[1,1,0,1]$};
+\node[leafchip, anchor=north] at ($(b2)+(0,-0.24)$) {$B$\\$[1,1,0,1]$};
+\node[leafchip, anchor=north] at ($(c2)+(0,-0.24)$) {$C$\\$[0,0,1,0]$};
+\node[leafchip, anchor=north] at ($(d2)+(0,-0.24)$) {$D$\\$[0,0,1,0]$};

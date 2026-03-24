@@ -1,0 +1,46 @@
+\node[widepanel] (p3) at (2.58,-5.32) {};
+\node[paneltitle] at ($(p3.north west)+(0.10,-0.12)$) {3. Node distributions};
+\node[
+	anchor=north west,
+	font=\scriptsize,
+	align=left,
+	text width=6.40cm,
+] at ($(p3.north west)+(0.10,-0.38)$)
+	{subtree-level distributions $\theta_u$ estimated from descendant leaves};
+\node[
+	anchor=north west,
+	font=\scriptsize\itshape,
+	align=left,
+	text width=6.40cm,
+] at ($(p3.north west)+(0.10,-0.78)$)
+	{$\theta_u = \mathrm{mean}\{X_i : i \in L(u)\}$};
+
+\node[treept] (r3) at ($(p3.center)+(0,1.42)$) {};
+\node[treept] (u31) at ($(p3.center)+(-1.20,0.56)$) {};
+\node[treept] (u32) at ($(p3.center)+(1.20,0.56)$) {};
+\node[treept] (a3) at ($(p3.center)+(-1.92,-0.28)$) {};
+\node[treept] (b3) at ($(p3.center)+(-0.48,-0.28)$) {};
+\node[treept] (c3) at ($(p3.center)+(0.48,-0.28)$) {};
+\node[treept] (d3) at ($(p3.center)+(1.92,-0.28)$) {};
+\draw[treeline] (r3) -- (u31);
+\draw[treeline] (r3) -- (u32);
+\draw[treeline] (u31) -- (a3);
+\draw[treeline] (u31) -- (b3);
+\draw[treeline] (u32) -- (c3);
+\draw[treeline] (u32) -- (d3);
+\node[leafchip, anchor=north] at ($(a3)+(0,-0.24)$) {$A$\\$[1,1,0,1]$};
+\node[leafchip, anchor=north] at ($(b3)+(0,-0.24)$) {$B$\\$[1,1,0,1]$};
+\node[leafchip, anchor=north] at ($(c3)+(0,-0.24)$) {$C$\\$[0,0,1,0]$};
+\node[leafchip, anchor=north] at ($(d3)+(0,-0.24)$) {$D$\\$[0,0,1,0]$};
+\matrix[
+	matrix of nodes,
+	anchor=south,
+	row sep=0pt,
+	column sep=0.55cm,
+	nodes={summarychip, anchor=center},
+] (distrow) at ($(p3.south)+(0,0.82)$) {
+	{$\theta_{U_1}=$\\$(1,1,0,1)$} & {$\theta_R=$\\$(.5,.5,.5,.5)$} & {$\theta_{U_2}=$\\$(0,0,1,0)$} \\
+};
+\draw[helperline] (distrow-1-1.north) -- ($(u31)+(0,-0.12)$);
+\draw[helperline] (distrow-1-2.north) -- ($(r3)+(0,-0.14)$);
+\draw[helperline] (distrow-1-3.north) -- ($(u32)+(0,-0.12)$);

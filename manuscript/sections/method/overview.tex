@@ -1,0 +1,50 @@
+% !TEX root = ../../main.tex
+
+\subsection{Decision Problem and Workflow}
+
+The central question at every internal node can be stated directly: should this split
+survive in the final partition? The hierarchy alone cannot answer it. A linkage
+procedure proposes candidate splits, but it does not tell us whether a child
+really leaves its parent's distributional background, whether the two children
+are truly distinct from one another, or whether repeated testing across the
+tree has created spurious evidence.
+
+KL-TE answers that node-level question with two tests and one final traversal
+rule. The child-parent edge test asks whether at least one branch departs from
+its ancestral context. The sibling test asks whether the two children under the
+same parent are distinct enough to justify keeping the split. Around those two
+questions sit four practical complications that drive the rest of the method:
+nested child-parent sampling, correlated high-dimensional edge evidence, many
+tests across the tree, and post-selection inflation in sibling testing.
+
+With that motivation in place, one full run of the method proceeds in the order
+the code executes it:
+\begin{enumerate}[leftmargin=1.5em]
+  \item represent the input data in a discrete sample-feature matrix;
+  \item build an average-linkage Hamming tree on the samples;
+  \item assign every node a feature-wise distribution estimated from its
+  descendant leaves;
+  \item run the child-parent edge test on every parent-child edge to test
+  whether a child subtree differs from its parent;
+  \item run the sibling test on every binary sibling pair to test whether the two child
+  subtrees are distinguishable from one another, then calibrate those sibling
+  statistics for post-selection inflation;
+  \item perform a top-down tree traversal that keeps a split only when the test
+  annotations support it.
+\end{enumerate}
+The rest of this section follows that same logic rather than only the code
+path. We first define the subtree-level objects being tested, then explain why
+the child-parent comparison needs nested variance and spectral whitening, then
+show why the sibling comparison requires a separate post-selection correction,
+and finally describe how the resulting evidence tables are turned into
+clusters.
+
+\begin{figure}[p]
+\centering
+\resizebox{0.89\textwidth}{!}{\input{figures/pipeline_overview_single_page}}
+\caption{Overview of the KL-TE workflow. Samples are represented as a discrete
+sample-feature matrix, assembled into a candidate hierarchy, summarized by
+subtree-level distributions, evaluated with child-parent and sibling tests, and
+then cut by a top-down traversal to yield terminal clusters.}
+\label{fig:pipeline-overview}
+\end{figure}

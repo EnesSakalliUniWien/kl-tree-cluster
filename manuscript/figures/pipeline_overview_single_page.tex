@@ -1,0 +1,42 @@
+\begin{tikzpicture}[
+  x=1cm,
+  y=1cm,
+  font=\small,
+  >=Latex,
+]
+\input{figures/pipeline_overview_modules/shared_styles}
+
+% Top block: cards 1--3 keep their existing relative arrangement.
+\begin{scope}[shift={(0,0)}]
+  \input{figures/pipeline_overview_modules/card1_input_matrix}
+  \input{figures/pipeline_overview_modules/card2_build_tree}
+  \input{figures/pipeline_overview_modules/card3_node_distributions}
+\end{scope}
+
+% Middle block: cards 4 and 5 are laid out side by side on one row.
+\begin{scope}[shift={(0,-9.55)}]
+  \node[panel, fill=orange!3] (p4) at (0,0) {};
+  \node[paneltitle] at ($(p4.north west)+(0.10,-0.12)$) {4. Child-parent test};
+  \input{figures/pipeline_overview_modules/card4_child_parent_test_body}
+\end{scope}
+
+\begin{scope}[shift={(6.65,-9.55)}]
+  \node[panel, fill=green!3] (p5) at (0,0) {};
+  \node[paneltitle] at ($(p5.north west)+(0.10,-0.12)$) {5. Sibling test};
+  \input{figures/pipeline_overview_modules/card5_sibling_test_body}
+\end{scope}
+
+% Bottom block: the final cut card is centered under the two test cards.
+\begin{scope}[shift={(3.30,-14.85)}]
+  \input{figures/pipeline_overview_modules/card6_final_cluster_cut}
+\end{scope}
+
+% Flow arrows between blocks.
+\draw[steparrow] ($(p1.east)+(0.18,0)$) -- ($(p2.west)+(-0.18,0)$);
+\draw[steparrow] ($(p2.south)+(-0.90,-0.05)$) -- ($(p3.north)+(1.85,0.10)$);
+\draw[steparrow] ($(p3.south)+(-1.85,-0.03)$) -- ($(p4.north)+(0.40,0.10)$);
+\draw[steparrow] ($(p3.south)+(1.85,-0.03)$) -- ($(p5.north)+(-0.40,0.10)$);
+\draw[steparrow] ($(p4.south east)+(0.05,-0.04)$) -- ($(p6.north west)+(-0.12,0.06)$);
+\draw[steparrow] ($(p5.south west)+(-0.05,-0.04)$) -- ($(p6.north east)+(0.12,0.06)$);
+
+\end{tikzpicture}

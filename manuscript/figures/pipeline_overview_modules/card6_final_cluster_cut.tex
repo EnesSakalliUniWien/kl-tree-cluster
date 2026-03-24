@@ -1,0 +1,28 @@
+\node[panelsmall] (p6) at (0,0) {};
+\node[paneltitle] at ($(p6.north west)+(0.10,-0.12)$) {6. Final cluster cut};
+
+\node[treept] (r6) at ($(p6.center)+(0,1.10)$) {};
+\node[treept] (u61) at ($(p6.center)+(-0.94,0.18)$) {};
+\node[treept] (u62) at ($(p6.center)+(0.94,0.18)$) {};
+\node[treept] (a6) at ($(p6.center)+(-1.55,-0.95)$) {};
+\node[treept] (b6) at ($(p6.center)+(-0.45,-0.95)$) {};
+\node[treept] (c6) at ($(p6.center)+(0.45,-0.95)$) {};
+\node[treept] (d6) at ($(p6.center)+(1.55,-0.95)$) {};
+\draw[treeline] (r6) -- (u61);
+\draw[treeline] (r6) -- (u62);
+\draw[treeline] (u61) -- (a6);
+\draw[treeline] (u61) -- (b6);
+\draw[treeline] (u62) -- (c6);
+\draw[treeline] (u62) -- (d6);
+\draw[cutline] ($(r6)+(-0.22,0.42)$) -- ($(r6)+(-1.00,-0.18)$);
+\draw[cutline] ($(r6)+(0.22,0.42)$) -- ($(r6)+(1.00,-0.18)$);
+\begin{scope}[on background layer]
+  \fill[blue!10, rounded corners=2pt] ($(u61)+(-0.68,-1.05)$) rectangle ($(u61)+(0.68,0.06)$);
+  \fill[green!10, rounded corners=2pt] ($(u62)+(-0.68,-1.05)$) rectangle ($(u62)+(0.68,0.06)$);
+\end{scope}
+\node[leafchip, anchor=north] at ($(a6)+(0,-0.24)$) {$A$\\$[1,1,0,1]$};
+\node[leafchip, anchor=north] at ($(b6)+(0,-0.24)$) {$B$\\$[1,1,0,1]$};
+\node[leafchip, anchor=north] at ($(c6)+(0,-0.24)$) {$C$\\$[0,0,1,0]$};
+\node[leafchip, anchor=north] at ($(d6)+(0,-0.24)$) {$D$\\$[0,0,1,0]$};
+\node[tinylabel, anchor=south] at ($(p6.south)+(-0.95,0.14)$) {cluster 1};
+\node[tinylabel, anchor=south] at ($(p6.south)+(0.95,0.14)$) {cluster 2};

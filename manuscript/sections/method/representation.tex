@@ -1,0 +1,82 @@
+% !TEX root = ../../main.tex
+
+\subsection{Data Representation and Subtree Objects}
+
+Let $X$ denote the working sample representation after any preprocessing. In
+the direct binary or indicator case,
+$X \in \{0,1\}^{n \times p}$ with rows $X_i \in \{0,1\}^p$. Categorical and
+continuous inputs are mapped into this same discrete representation before the
+tree is built. The method builds a rooted agglomerative tree
+$\mathcal{T} = (V,E)$ using Hamming distance between samples and average
+linkage. It is helpful to state explicitly what this tree contains. The leaf
+set consists of the original samples, so there are $n$ leaves and each leaf is
+in one-to-one correspondence with one row of $X$. Every agglomerative merge
+creates one new internal node whose descendant set is the union of the two
+merged child subtrees. Starting from $n$ singleton leaves and merging until all
+samples belong to one connected hierarchy therefore yields a rooted binary tree
+with
+\begin{equation}
+|V| = 2n-1,
+\qquad
+|E| = 2n-2,
+\end{equation}
+consisting of $n$ leaves, $n-1$ internal nodes, and one root. The root
+represents the full sample set, each non-root node has exactly one parent, and
+each internal node corresponds to one candidate split location that may or may
+not survive the later statistical filtering.
+
+Once that tree is fixed, the inferential problem is about subtrees rather than
+individual samples. The method therefore replaces each node by an empirical
+feature distribution over its descendant leaves. This is the object that enters
+both tests: the edge test compares a child distribution to its parent's
+distribution, and the sibling test compares the two child distributions under
+the same parent. The raw leaf matrix still matters through the descendant sets
+and local spectral matrices, but the primary inferential units are node-level
+distributions.
+
+For each node $u \in V$, let $L(u)$ denote its descendant leaf set and let
+$n_u = |L(u)|$. For binary or indicator coordinates, the node distribution is
+the feature-wise mean vector
+\begin{equation}
+\theta_u = \frac{1}{n_u}\sum_{i \in L(u)} X_i \in [0,1]^p.
+\end{equation}
+If $u$ has children $l$ and $r$, then
+\begin{equation}
+n_u = n_l + n_r,
+\qquad
+\theta_u = \frac{n_l \theta_l + n_r \theta_r}{n_u}.
+\end{equation}
+The decomposition goal is to identify a set of terminal tree nodes whose leaf
+sets partition the samples and whose defining splits are supported by the two
+statistical tests below. These formulas cover binary data directly and also the
+indicator representations used for categorical and discretized continuous data.
+
+Categorical features with values $C_{ij} \in \{0,\dots,K-1\}$ are represented
+through one-hot indicators
+\begin{equation}
+\tilde{X}_{i,j,k} = \mathbf{1}\{C_{ij} = k\},
+\qquad
+k = 0,\dots,K-1,
+\end{equation}
+so that the Bernoulli/indicator formulas below apply directly on the expanded
+feature space. Continuous inputs enter through an explicit preprocessing map
+into a discrete representation. Median binarization is
+\begin{equation}
+X_{ij}^{\mathrm{bin}}
+=
+\mathbf{1}\!\left\{
+W_{ij} > \mathrm{median}(W_{\cdot j})
+\right\},
+\end{equation}
+and quantile discretization followed by one-hot expansion is
+\begin{equation}
+C_{ij}
+=
+\sum_{q=1}^{K-1} \mathbf{1}\{W_{ij} > t_{jq}\},
+\qquad
+t_{jq} = Q_{q/K}(W_{\cdot j}),
+\end{equation}
+with the same indicator map
+$\tilde{X}_{i,j,k} = \mathbf{1}\{C_{ij} = k\}$. After this representation step,
+the same tree construction and testing logic are used for all supported input
+types.

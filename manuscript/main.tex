@@ -10,6 +10,9 @@
 \usepackage{booktabs}
 \usepackage[numbers]{natbib}
 \usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{tikz}
@@ -55,11 +58,14 @@ current form and provides the mathematical description needed for empirical
 evaluation.
 \end{abstract}
 
-\input{sections/introduction}
-\input{sections/method}
-\input{sections/implementation}
-\input{sections/experiments}
-\input{sections/discussion}
+\input{sections/introduction/section}
+\input{sections/method/section}
+\input{sections/implementation/section}
+\input{sections/experiments/section}
+\input{sections/discussion/section}
+
+\appendix
+\input{sections/appendix/projected_wald}
 
 \bibliographystyle{plainnat}
 \bibliography{references}

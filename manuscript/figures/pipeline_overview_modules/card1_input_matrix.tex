@@ -1,0 +1,32 @@
+\node[topanel] (p1) at (0,0) {};
+\node[paneltitle] at ($(p1.north west)+(0.10,-0.12)$) {1. Input matrix};
+\node[
+  anchor=north west,
+  font=\scriptsize,
+  align=left,
+  text width=4.00cm,
+] at ($(p1.north west)+(0.10,-0.38)$)
+  {discrete sample representation $X \in \{0,1\}^{n \times p}$};
+
+\matrix[
+  matrix of nodes,
+  nodes={draw, minimum width=0.50cm, minimum height=0.50cm, anchor=center, font=\scriptsize},
+  row sep=-\pgflinewidth,
+  column sep=-\pgflinewidth,
+] (mat) at ($(p1.center)+(0,0.45)$) {
+1 & 1 & 0 & 1 \\
+1 & 1 & 0 & 1 \\
+0 & 0 & 1 & 0 \\
+0 & 0 & 1 & 0 \\
+};
+\node[tinylabel, anchor=east] at ($(mat-1-1.west)+(-0.12,0)$) {$A$};
+\node[tinylabel, anchor=east] at ($(mat-2-1.west)+(-0.12,0)$) {$B$};
+\node[tinylabel, anchor=east] at ($(mat-3-1.west)+(-0.12,0)$) {$C$};
+\node[tinylabel, anchor=east] at ($(mat-4-1.west)+(-0.12,0)$) {$D$};
+\foreach \c in {1,2,3,4} {
+  \node[tinylabel, anchor=south] at ($(mat-1-\c.north)+(0,0.06)$) {$x_{\c}$};
+}
+\begin{scope}[on background layer]
+  \fill[blue!10, rounded corners=1pt] ($(mat-1-1.north west)+(-0.04,0.04)$) rectangle ($(mat-2-4.south east)+(0.04,-0.04)$);
+  \fill[blue!18, rounded corners=1pt] ($(mat-3-1.north west)+(-0.04,0.04)$) rectangle ($(mat-4-4.south east)+(0.04,-0.04)$);
+\end{scope}

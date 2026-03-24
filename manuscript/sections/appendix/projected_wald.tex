@@ -1,0 +1,136 @@
+% !TEX root = ../../main.tex
+
+\section{Projected Wald Example in Matrix Form}
+\label{app:projected-wald-example}
+
+This appendix expands the worked sibling example from the Method section in
+full matrix form. Let
+\begin{equation}
+z =
+\begin{bmatrix}
+2.0\\
+-1.0\\
+0.5\\
+1.0
+\end{bmatrix},
+\qquad
+P =
+\begin{bmatrix}
+1&0&0&0\\
+0&1&0&0\\
+0&0&1&0
+\end{bmatrix}.
+\end{equation}
+The projected vector is
+\begin{equation}
+y = Pz =
+\begin{bmatrix}
+1&0&0&0\\
+0&1&0&0\\
+0&0&1&0
+\end{bmatrix}
+\begin{bmatrix}
+2.0\\
+-1.0\\
+0.5\\
+1.0
+\end{bmatrix}
+=
+\begin{bmatrix}
+2.0\\
+-1.0\\
+0.5
+\end{bmatrix}.
+\end{equation}
+The plain quadratic form is therefore
+\begin{equation}
+y^\top y
+=
+\begin{bmatrix}
+2.0 & -1.0 & 0.5
+\end{bmatrix}
+\begin{bmatrix}
+2.0\\
+-1.0\\
+0.5
+\end{bmatrix}
+=
+5.25.
+\end{equation}
+If the projected coordinates were all unit-variance Gaussian noise, this would
+be compared directly to $\chi^2_3$.
+
+Now suppose the first two coordinates are PCA-derived and have eigenvalue
+matrix
+\begin{equation}
+\Lambda =
+\begin{bmatrix}
+4&0\\
+0&1
+\end{bmatrix},
+\qquad
+\Lambda^{-1} =
+\begin{bmatrix}
+1/4&0\\
+0&1
+\end{bmatrix}.
+\end{equation}
+Writing
+\begin{equation}
+y_{\mathrm{pca}} =
+\begin{bmatrix}
+2.0\\
+-1.0
+\end{bmatrix},
+\qquad
+y_{\mathrm{pad}} =
+\begin{bmatrix}
+0.5
+\end{bmatrix},
+\end{equation}
+the whitened statistic is
+\begin{equation}
+y_{\mathrm{pca}}^\top \Lambda^{-1} y_{\mathrm{pca}}
++
+y_{\mathrm{pad}}^\top y_{\mathrm{pad}}
+=
+\begin{bmatrix}
+2.0 & -1.0
+\end{bmatrix}
+\begin{bmatrix}
+1/4&0\\
+0&1
+\end{bmatrix}
+\begin{bmatrix}
+2.0\\
+-1.0
+\end{bmatrix}
++
+0.25
+=
+2.25.
+\end{equation}
+This is the per-component whitening path: the PCA coordinates are each divided
+by their own null variance before being squared and summed.
+
+For the Satterthwaite calibration, the same raw statistic $5.25$ is kept, but
+its null law is approximated by a scaled chi-square. The effective weights are
+$4$, $1$, and $1$, so
+\begin{equation}
+\mu = 4 + 1 + 1 = 6,
+\qquad
+\sigma^2 = 2(4^2 + 1^2 + 1^2) = 36.
+\end{equation}
+Moment matching to $c\chi^2(\nu)$ gives
+\begin{equation}
+c = \frac{\sigma^2}{2\mu} = 3,
+\qquad
+\nu = \frac{2\mu^2}{\sigma^2} = 2,
+\end{equation}
+and therefore
+\begin{equation}
+p = \Pr\!\left(\chi^2_2 \ge \frac{5.25}{3}\right).
+\end{equation}
+The practical distinction is the same as in the main text: whitening changes
+the coordinates before summation, whereas Satterthwaite keeps the raw
+quadratic form and changes the reference distribution instead.

@@ -1,0 +1,155 @@
+% Figures for KL-TE: Statistically Filtered Hierarchical Clustering
+
+% Figure 1: High-Level Pipeline Overview
+% This figure illustrates the complete workflow of the KL-TE method, from binary matrix input to cluster extraction.
+% It uses a modular approach where each "card" represents a logical step in the pipeline.
+
+\begin{tikzpicture}[
+  x=1cm, y=1cm, font=\small, >=Latex,
+  % Define common styles used across the pipeline cards
+  panel/.style={draw, rounded corners=2pt, fill=gray!4, minimum width=4.6cm, minimum height=5cm, inner sep=5pt},
+  widepanel/.style={panel, minimum width=9.75cm, minimum height=4.75cm},
+  paneltitle/.style={font=\bfseries\footnotesize, anchor=north west},
+  treeline/.style={line width=0.9pt, draw=black!75},
+  gate2line/.style={draw=orange!98!black, line width=1.45pt},
+  gate3line/.style={draw=green!75!black, line width=1.45pt},
+  cutline/.style={draw=red!75!black, line width=1.25pt, dashed},
+  treept/.style={circle, draw=black!75, fill=white, minimum size=3.5mm, inner sep=0pt},
+  leafchip/.style={draw=black!18, rounded corners=1pt, fill=white, inner sep=1pt, font=\tiny, align=center, text width=1cm}
+]
+
+% 1. Input Matrix
+\node[panel] (p1) at (0,0) {};
+\node[paneltitle] at ($(p1.north west)+(0.1,-0.1)$) {1. Input matrix};
+\matrix[matrix of nodes, nodes={draw, minimum size=4mm, anchor=center, font=\tiny}, row sep=-\pgflinewidth, column sep=-\pgflinewidth] (mat) at ($(p1.center)+(0,0.2)$) {
+  1 & 1 & 0 & 1 \\ 1 & 1 & 0 & 1 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 1 & 0 \\
+};
+\node[anchor=north, font=\scriptsize] at ($(mat.south)$) {Binary representation $X$};
+
+% 2. Build Tree
+\node[panel] (p2) at (5,0) {};
+\node[paneltitle] at ($(p2.north west)+(0.1,-0.1)$) {2. Build tree};
+\node[treept] (r2) at ($(p2.center)+(0,1)$) {};
+\node[treept] (u21) at ($(p2.center)+(-0.8,0.2)$) {};
+\node[treept] (u22) at ($(p2.center)+(0.8,0.2)$) {};
+\draw[treeline] (r2) -- (u21); \draw[treeline] (r2) -- (u22);
+\node[anchor=north, font=\scriptsize] at ($(p2.south)+(0,0.5)$) {Hamming Average Linkage};
+
+% 3. Statistical Gates (Gate 2 & 3)
+\node[widepanel] (p3) at (2.5,-5.5) {};
+\node[paneltitle] at ($(p3.north west)+(0.1,-0.1)$) {3. Statistical Gates (Node Evaluation)};
+% Left: Gate 2 (Edge)
+\begin{scope}[shift={(p3.center)}, xshift=-2.2cm]
+  \node[treept] (r3a) at (0,1) {}; \node[treept] (u3a) at (-0.8,0.2) {};
+  \draw[treeline] (r3a) -- (u3a); \draw[gate2line] (r3a) -- (u3a);
+  \node[anchor=north, font=\scriptsize, orange!80!black] at (0,-0.5) {Gate 2: Edge Signal};
+\end{scope}
+% Right: Gate 3 (Sibling)
+\begin{scope}[shift={(p3.center)}, xshift=2.2cm]
+  \node[treept] (r3b) at (0,1) {}; \node[treept] (u3l) at (-0.8,0.2) {}; \node[treept] (u3r) at (0.8,0.2) {};
+  \draw[treeline] (r3b) -- (u3l); \draw[treeline] (r3b) -- (u3r);
+  \draw[gate3line] ($(u3l)+(0.15,0.15)$) -- ($(u3r)+(-0.15,0.15)$);
+  \node[anchor=north, font=\scriptsize, green!60!black] at (0,-0.5) {Gate 3: Sibling Separation};
+\end{scope}
+
+\end{tikzpicture}
+
+% Figure 2: Detailed Gate 2 & 3 Statistical Principles
+% This figure illustrates the mathematical and conceptual differences between the two primary tests.
+% Left: Gate 2 (Child-Parent Divergence) testing signal departure from the ancestral background.
+% Right: Gate 3 (Sibling Divergence) testing the separation between two proposed clusters.
+
+\begin{tikzpicture}[
+  x=1cm, y=1cm, font=\small, >=Latex,
+  eqbox/.style={draw=black!25, rounded corners=1pt, fill=white, inner sep=3pt, font=\scriptsize, align=center, text width=3.5cm},
+  gate2box/.style={eqbox, draw=orange!98!black, fill=orange!5},
+  gate3box/.style={eqbox, draw=green!75!black, fill=green!5}
+]
+
+% Gate 2 Conceptual Diagram
+\begin{scope}
+  \node[font=\bfseries] at (0,3) {Gate 2: Child-Parent Divergence};
+  \node[circle, draw, minimum size=8mm, label=above:Parent $P$] (P) at (0,1.5) {$\theta_P$};
+  \node[circle, draw, minimum size=8mm, label=below:Child $C$] (C) at (0,-1) {$\theta_C$};
+  \draw[->, line width=2pt, orange] (P) -- (C) node[midway, right, black] {Test $H_0: \theta_C = \theta_P$};
+  \node[gate2box] at (0,-2.5) {
+    \textbf{Projected Wald Test}\\
+    $Var \propto \frac{1}{n_C} - \frac{1}{n_P}$\\
+    Nested Variance Adjustment
+  };
+\end{scope}
+
+% Gate 3 Conceptual Diagram
+\begin{scope}[xshift=7cm]
+  \node[font=\bfseries] at (0,3) {Gate 3: Sibling Divergence};
+  \node[circle, draw, minimum size=8mm] (Parent) at (0,1.5) {$\theta_P$};
+  \node[circle, draw, minimum size=8mm] (L) at (-1.2,0) {$\theta_L$};
+  \node[circle, draw, minimum size=8mm] (R) at (1.2,0) {$\theta_R$};
+  \draw (Parent) -- (L); \draw (Parent) -- (R);
+  \draw[<->, line width=2pt, green!70!black] (L) -- (R) node[midway, below=2pt, black] {Test $H_0: \theta_L = \theta_R$};
+  \node[gate3box] at (0,-2.5) {
+    \textbf{Calibration Step}\\
+    $T_{adj} = T / \hat{c}$\\
+    Post-selection Inflation Correction
+  };
+\end{scope}
+
+\end{tikzpicture}
+
+% Figure 3: Sibling Test Calibration Mechanism
+% This figure explains the crucial "Cousin-Adjusted" Wald test, which deflates statistics to account for post-selection bias.
+
+\begin{tikzpicture}[x=1cm, y=1cm, font=\small, >=Latex]
+
+% Scatter plot placeholder for calibration
+\draw[->] (0,0) -- (6,0) node[right] {$n_{parent}$};
+\draw[->] (0,0) -- (0,4) node[above] {$T/k$ (Inflation Ratio)};
+
+% Calibration points (null-like pairs)
+\foreach \i in {1,...,15}{
+  \fill[gray!50] ({rand*2.5+3},{rand*0.5+2.5}) circle (2pt);
+}
+% Signal points (high T/k)
+\foreach \i in {1,...,5}{
+  \fill[orange!60] ({rand*1+4},{rand*0.5+3.5}) circle (2pt);
+}
+
+% Regression Line / Adjustment factor
+\draw[dashed, red, thick] (0,2.5) -- (5.5,2.5) node[right, red] {$\hat{c}$ (Global Inflation)};
+
+% Annotation
+\node[anchor=west, text width=5cm, align=left, font=\scriptsize] at (0.5, 1) {
+  \textbf{Calibration Logic:}\\
+  1. Identify "null-like" pairs (where Gate 2 failed).\\
+  2. Estimate global inflation factor $\hat{c}$.\\
+  3. Deflate focal pairs: $T_{adj} = T/\hat{c}$.
+};
+
+\end{tikzpicture}
+
+% Figure 4: Recursive Top-Down Traversal (Decision Logic)
+% This flow chart represents the traversal rule used to define final cluster boundaries.
+
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  terminal/.style={rectangle, rounded corners, draw, fill=blue!10, text width=3cm, align=center, font=\footnotesize},
+  decision/.style={diamond, draw, fill=gray!5, aspect=2, text width=2.5cm, align=center, font=\scriptsize, inner sep=0pt},
+  process/.style={rectangle, draw, fill=orange!10, text width=3.2cm, align=center, font=\footnotesize},
+  arrow/.style={thick,->,>=stealth}
+]
+
+\node (start) [terminal] {Traverse Node $P$};
+\node (gate12) [decision, below of=start] {Gates 1 \& 2 Open?};
+\node (gate3) [decision, below of=gate12, yshift=-0.5cm] {Gate 3 Open?};
+\node (split) [process, left of=gate3, xshift=-2.5cm] {KEEP SPLIT\\Recurse to Children};
+\node (merge) [process, right of=gate3, xshift=2.5cm] {MERGE AT $P$\\Stop Traversal};
+
+\draw [arrow] (start) -- (gate12);
+\draw [arrow] (gate12) -- node[anchor=east] {Yes} (gate3);
+\draw [arrow] (gate12) -| node[anchor=south, xshift=-1cm] {No} (merge);
+\draw [arrow] (gate3) -- node[anchor=south] {Yes} (split);
+\draw [arrow] (gate3) -- node[anchor=south] {No} (merge);
+
+\node[anchor=north west, font=\tiny, text width=3cm, gray] at (gate12.east) {Gate 1: Binary Split\\Gate 2: Signal Found};
+
+\end{tikzpicture}

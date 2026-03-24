@@ -1,6 +1,6 @@
-% !TEX root = ../main.tex
+% !TEX root = ../../main.tex
 
-\section{Practical Setup}
+\section{Practical Setup and Default Choices}
 
 Table~\ref{tab:defaults} summarizes the main settings used in the current
 implementation. These settings define how the tree is built, how evidence is
@@ -18,9 +18,9 @@ Edge significance level & $\alpha_{\mathrm{edge}} = 0.001$ \\
 Sibling significance level & $\alpha_{\mathrm{sib}} = 0.01$ \\
 Edge test & Projected Wald test with parent-specific whitening \\
 Edge dimension rule & Signal count from the parent's local spectrum \\
-Sibling test & Projected Wald test with edge-weight adjustment \\
-Sibling dimension rule & Smallest positive child signal dimension \\
-Sibling basis / calibration & Parent PCA basis, Satterthwaite default \\
+Sibling test & Projected Wald test with continuous edge-weight deflation \\
+Sibling dimension rule & Geometric mean of positive child edge dimensions \\
+Sibling basis / calibration & Parent PCA head + random padding; Satterthwaite raw test; weighted $\hat c$ localized by a Gaussian kernel in log-structural-dimension space \\
 Minimum spectral dimension & 2 \\
 Include internal spectral rows & On \\
 Edge multiple-testing correction & Hierarchical BH correction on the tree \\
