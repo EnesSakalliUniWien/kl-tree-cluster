@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from .. import config
-from ..core_utils.data_utils import extract_bool_column_dict
+from ..core_utils.data_utils import extract_row_column_maps
 from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
 from .decomposition.backends.random_projection_backend import (
     resolve_minimum_projection_dimension_backend,
@@ -109,16 +109,19 @@ class TreeDecomposition:
         # ----- ensure statistical annotations are present -----
         self.annotations_df = self._prepare_annotations(self.annotations_df)
 
-        # ----- annotations_df → fast dictionary lookups (no .loc in hot paths) -----
-        self._local_significant = extract_bool_column_dict(
-            self.annotations_df, "Child_Parent_Divergence_Significant"
+        # ----- annotations_df → fast row/column dictionary lookups (no .loc in hot paths) -----
+        self._annotations_by_row, self._annotations_by_column = extract_row_column_maps(
+            self.annotations_df
+        )
+        self._local_significant = self._extract_required_bool_annotation_column(
+            "Child_Parent_Divergence_Significant"
         )
         # Sibling divergence test: Sibling_BH_Different = True means siblings differ -> SPLIT
-        self._sibling_different = extract_bool_column_dict(
-            self.annotations_df, "Sibling_BH_Different"
+        self._sibling_different = self._extract_required_bool_annotation_column(
+            "Sibling_BH_Different"
         )
-        self._sibling_skipped = extract_bool_column_dict(
-            self.annotations_df, "Sibling_Divergence_Skipped"
+        self._sibling_skipped = self._extract_required_bool_annotation_column(
+            "Sibling_Divergence_Skipped"
         )
 
         for column_name, mapping in (
@@ -217,6 +220,22 @@ class TreeDecomposition:
             sibling_whitening=config.SIBLING_WHITENING,
             fdr_method=self._edge_fdr_method,
         ).annotated_df
+
+    def _extract_required_bool_annotation_column(self, column_name: str) -> dict[str, bool]:
+        """Extract a required boolean annotation column from cached column mappings."""
+        if column_name not in self._annotations_by_column:
+            raise KeyError(f"Missing required column {column_name!r} in dataframe.")
+
+        raw_mapping = self._annotations_by_column[column_name]
+        missing_nodes = [node_id for node_id, value in raw_mapping.items() if pd.isna(value)]
+        if missing_nodes:
+            preview = ", ".join(map(repr, missing_nodes[:5]))
+            raise ValueError(
+                f"Column {column_name!r} contains missing values for nodes: {preview}. "
+                "Ensure all nodes are annotated before extraction."
+            )
+
+        return {node_id: bool(value) for node_id, value in raw_mapping.items()}
 
     def _cache_node_metadata(self) -> None:
         """Cache node attributes for fast repeated access during decomposition.

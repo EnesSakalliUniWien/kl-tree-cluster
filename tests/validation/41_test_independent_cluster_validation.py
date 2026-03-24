@@ -60,6 +60,21 @@ def _make_binary_tree() -> tuple[PosetTree, pd.DataFrame]:
 class TestIndependentClusterValidation(unittest.TestCase):
     """Minimal, dependency-light validation of TreeDecomposition."""
 
+    def test_annotation_dataframe_maps_all_rows_and_columns(self) -> None:
+        tree, stats = _make_binary_tree()
+
+        with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
+            decomposer = TreeDecomposition(tree=tree, annotations_df=stats)
+
+        self.assertEqual(set(decomposer._annotations_by_row), {"root", "L", "R"})
+        self.assertEqual(set(decomposer._annotations_by_column), set(stats.columns))
+        self.assertTrue(
+            decomposer._annotations_by_row["root"]["Sibling_BH_Different"]
+        )
+        self.assertTrue(
+            decomposer._annotations_by_column["Sibling_BH_Different"]["root"]
+        )
+
     def test_split_occurs_when_all_gates_pass(self) -> None:
         tree, stats = _make_binary_tree()
         # Bypass annotation pipeline — this test controls gate columns directly.

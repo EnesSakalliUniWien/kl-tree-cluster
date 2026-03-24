@@ -10,6 +10,8 @@ clustering pipeline.
 | `tree_decomposition.py` | Public decomposition engine. Prepares annotations, caches node metadata, evaluates gates, and emits cluster assignments. |
 | `cluster_assignments.py` | Builds cluster-root and per-sample assignment tables from traversal output. |
 | `bootstrap_consensus.py` | Bootstrap-based stability helpers layered on top of decomposition results. |
+| `annotations_df/README.md` | Schema reference for the node-indexed `annotations_df`, including column meanings and gate usage. |
+| `decomposition/wrapper_shim_map.md` | In-repo map of removable wrapper/shim layers in the decomposition stack. |
 | `decomposition/gates/orchestrator.py` | Runs Gate 2 then Gate 3 adapters and returns a legacy-compatible annotation bundle. |
 | `decomposition/gates/gate_evaluator.py` | Encapsulates binary-structure, child-parent, sibling, and passthrough decisions at runtime. |
 | `decomposition/gates/traversal.py` | Worklist traversal helpers used by `TreeDecomposition` to walk the tree. |

@@ -236,6 +236,40 @@ def initialize_sibling_divergence_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def extract_row_column_maps(
+    df: object,
+) -> tuple[dict[str, dict[str, object]], dict[str, dict[str, object]]]:
+    """Extract a DataFrame into row-major and column-major dictionaries.
+
+    Parameters
+    ----------
+    df : pd.DataFrame or similar
+        DataFrame to materialize as lookup dictionaries.
+
+    Returns
+    -------
+    tuple[dict[str, dict[str, object]], dict[str, dict[str, object]]]
+        ``(rows, columns)`` where:
+
+        - ``rows[node_id][column_name] -> value``
+        - ``columns[column_name][node_id] -> value``
+    """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Expected a pandas DataFrame for row/column extraction.")
+    if df.empty:
+        raise ValueError("Empty DataFrame; cannot extract row/column mappings.")
+
+    row_map = {
+        str(node_id): {str(column_name): value for column_name, value in row.items()}
+        for node_id, row in df.to_dict(orient="index").items()
+    }
+    column_map = {
+        str(column_name): {str(node_id): value for node_id, value in series.items()}
+        for column_name, series in df.items()
+    }
+    return row_map, column_map
+
+
 def extract_bool_column_dict(
     df: object,
     column_name: str,
