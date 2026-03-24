@@ -39,8 +39,6 @@ SUBSET_NAMES = {
     # Edge cases
     "binary_2clusters",  # K=2
     "binary_many_features",  # K=4, high-d
-    # Real data
-    "feature_matrix_go_terms",  # real GO-term binary matrix
 }
 
 all_cases = get_default_test_cases()

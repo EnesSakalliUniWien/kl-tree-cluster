@@ -3,8 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import networkx as nx
+import pytest
 
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing import (
+    TreeBHFamilyOutcome,
     TreeBHResult,
     recover_blocker_metadata,
     recover_signal_neighbors,
@@ -32,27 +34,57 @@ def _build_tree() -> nx.DiGraph:
     return tree
 
 
+def _build_unbalanced_signal_tree() -> nx.DiGraph:
+    tree = nx.DiGraph()
+    tree.add_edges_from(
+        [
+            ("root", "A"),
+            ("root", "B"),
+            ("A", "C"),
+            ("C", "D"),
+            ("D", "E"),
+            ("B", "F"),
+        ]
+    )
+    return tree
+
+
+def _build_multi_parent_graph() -> nx.DiGraph:
+    tree = nx.DiGraph()
+    tree.add_edges_from(
+        [
+            ("root", "A"),
+            ("root", "B"),
+            ("A", "C"),
+            ("B", "C"),
+        ]
+    )
+    return tree
+
+
 def test_recover_blocker_metadata_walks_to_nearest_nonrejected_ancestor() -> None:
     tree = _build_tree()
     child_ids = ["A", "B", "C", "D", "E", "F"]
     tree_bh_result = TreeBHResult(
         reject=np.array([True, True, False, True, False, False], dtype=bool),
-        adjusted_p=np.array([0.01, 0.02, 0.8, 0.03, 1.0, 1.0], dtype=float),
+        adjusted_p_values=np.array([0.01, 0.02, 0.8, 0.03, 1.0, 1.0], dtype=float),
         tested_mask=np.array([True, True, True, True, False, False], dtype=bool),
-        level_thresholds={1: 0.05, 2: 0.05},
-        family_results={
-            "root": {
-                "child_ids": ["A", "B"],
-                "rejected": [True, True],
-                "p_values": [0.01, 0.02],
-                "adjusted_alpha": 0.05,
-            },
-            "A": {
-                "child_ids": ["C", "D"],
-                "rejected": [False, True],
-                "p_values": [0.6, 0.01],
-                "adjusted_alpha": 0.05,
-            },
+        level_alpha_by_depth={1: 0.05, 2: 0.05},
+        family_outcomes={
+            "root": TreeBHFamilyOutcome(
+                depth=1,
+                adjusted_alpha=0.05,
+                tested_child_ids=["A", "B"],
+                raw_p_values=[0.01, 0.02],
+                reject_mask=[True, True],
+            ),
+            "A": TreeBHFamilyOutcome(
+                depth=2,
+                adjusted_alpha=0.05,
+                tested_child_ids=["C", "D"],
+                raw_p_values=[0.6, 0.01],
+                reject_mask=[False, True],
+            ),
         },
     )
 
@@ -62,7 +94,7 @@ def test_recover_blocker_metadata_walks_to_nearest_nonrejected_ancestor() -> Non
         child_ids,
         reject_mask=tree_bh_result.reject,
         tested_mask=tree_bh_result.tested_mask,
-        corrected_p_values=tree_bh_result.adjusted_p,
+        corrected_p_values=tree_bh_result.adjusted_p_values,
         depths={"root": 0, "A": 1, "B": 1, "C": 2, "D": 2, "E": 3, "F": 3},
     )
 
@@ -72,9 +104,50 @@ def test_recover_blocker_metadata_walks_to_nearest_nonrejected_ancestor() -> Non
     assert blocker_map["E"].distance_to_blocker == 1.0
     assert blocker_map["E"].generations_above == 1
 
-    assert signal_map["E"].sig_node == "D"
+    assert signal_map["E"].sig_node == "A"
+    assert signal_map["E"].sig_p_value == 0.01
+    assert signal_map["E"].distance_to_sig == 2.0
+
+
+def test_recover_signal_neighbors_uses_tree_distance_not_depth_gap() -> None:
+    tree = _build_unbalanced_signal_tree()
+    child_ids = ["A", "B", "C", "D", "E", "F"]
+
+    signal_map = recover_signal_neighbors(
+        tree,
+        child_ids,
+        reject_mask=np.array([False, False, True, False, False, True], dtype=bool),
+        tested_mask=np.array([True, True, True, True, False, True], dtype=bool),
+        corrected_p_values=np.array([0.8, 0.9, 0.03, 0.7, np.nan, 0.04], dtype=float),
+        depths={"root": 0, "A": 1, "B": 1, "C": 2, "D": 3, "E": 4, "F": 2},
+    )
+
+    assert signal_map["E"].sig_node == "C"
     assert signal_map["E"].sig_p_value == 0.03
-    assert signal_map["E"].distance_to_sig == 1.0
+    assert signal_map["E"].distance_to_sig == 2.0
+
+
+def test_recover_blocker_metadata_rejects_multi_parent_graph() -> None:
+    tree = _build_multi_parent_graph()
+    child_ids = ["A", "B", "C"]
+    tree_bh_result = TreeBHResult(
+        reject=np.array([True, True, False], dtype=bool),
+        adjusted_p_values=np.array([0.01, 0.02, 1.0], dtype=float),
+        tested_mask=np.array([True, True, False], dtype=bool),
+        level_alpha_by_depth={1: 0.05},
+        family_outcomes={
+            "root": TreeBHFamilyOutcome(
+                depth=1,
+                adjusted_alpha=0.05,
+                tested_child_ids=["A", "B"],
+                raw_p_values=[0.01, 0.02],
+                reject_mask=[True, True],
+            ),
+        },
+    )
+
+    with pytest.raises(ValueError, match="at most one parent per node"):
+        recover_blocker_metadata(tree, tree_bh_result, child_ids)
 
 
 def test_enrich_blocked_weights_replaces_legacy_weight_and_populates_audit_fields() -> None:

@@ -36,8 +36,8 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     derive_projection_seed_backend as derive_projection_seed,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (
-    tree_bh_correction,
+from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh import (
+    apply_tree_bh_correction,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -529,7 +529,7 @@ def _run_treebh_replicates(
                 alt_beta_a=alt_beta_a,
             )
 
-            result = tree_bh_correction(
+            result = apply_tree_bh_correction(
                 tree=tree,
                 p_values=p_values,
                 child_ids=child_ids,

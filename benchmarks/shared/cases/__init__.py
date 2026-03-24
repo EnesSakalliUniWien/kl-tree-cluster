@@ -14,7 +14,6 @@ from .dimensionality import DIMENSIONALITY_CASES
 from .gaussian import GAUSSIAN_CASES
 from .outliers import OUTLIER_CASES
 from .overlapping import OVERLAPPING_CASES
-from .real_data import REAL_DATA_CASES
 from .sbm import SBM_CASES
 
 # Small test cases for quick smoke tests
@@ -55,7 +54,6 @@ ALL_CASE_CATEGORIES = {
     **CATEGORICAL_CASES,
     **PHYLOGENETIC_CASES,
     **OVERLAPPING_CASES,
-    **REAL_DATA_CASES,
 }
 
 
