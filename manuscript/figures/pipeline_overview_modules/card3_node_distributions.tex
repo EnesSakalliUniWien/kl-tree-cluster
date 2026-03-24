@@ -4,16 +4,17 @@
 	anchor=north west,
 	font=\scriptsize,
 	align=left,
-	text width=6.40cm,
+	text width=4.30cm,
 ] at ($(p3.north west)+(0.10,-0.38)$)
-	{subtree-level distributions $\theta_u$ estimated from descendant leaves};
+	{feature-wise subtree means from descendant leaves};
+
 \node[
-	anchor=north west,
+	anchor=north east,
 	font=\scriptsize\itshape,
-	align=left,
-	text width=6.40cm,
-] at ($(p3.north west)+(0.10,-0.78)$)
-	{$\theta_u = \mathrm{mean}\{X_i : i \in L(u)\}$};
+	align=right,
+	text width=3.20cm,
+] at ($(p3.north east)+(-0.12,-0.42)$)
+	{$\theta_u = \mathrm{mean}_{i \in L(u)} X_i$};
 
 \node[treept] (r3) at ($(p3.center)+(0,1.42)$) {};
 \node[treept] (u31) at ($(p3.center)+(-1.20,0.56)$) {};
@@ -36,7 +37,7 @@
 	matrix of nodes,
 	anchor=south,
 	row sep=0pt,
-	column sep=0.55cm,
+	column sep=0.42cm,
 	nodes={summarychip, anchor=center},
 ] (distrow) at ($(p3.south)+(0,0.82)$) {
 	{$\theta_{U_1}=$\\$(1,1,0,1)$} & {$\theta_R=$\\$(.5,.5,.5,.5)$} & {$\theta_{U_2}=$\\$(0,0,1,0)$} \\
