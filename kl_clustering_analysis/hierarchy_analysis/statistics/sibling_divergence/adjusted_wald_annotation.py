@@ -19,7 +19,7 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..branch_length_utils import compute_mean_branch_length
-from .bh_annotation import (
+from .fdr_annotation import (
     apply_sibling_bh_results,
     early_return_if_no_records,
     init_sibling_annotation_df,
@@ -41,7 +41,7 @@ from .pair_testing.sibling_pair_collection import (
     count_null_focal_pairs,
     deflate_focal_pairs,
 )
-from .pair_testing.nearby_stable import enrich_blocked_weights
+from .pair_testing.sibling_null_prior_interpolation import interpolate_sibling_null_priors
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +221,7 @@ def annotate_sibling_divergence_adjusted(
     )
 
     if n_blocked > 0:
-        records = enrich_blocked_weights(records, tree, annotations_df)
+        records = interpolate_sibling_null_priors(records, tree, annotations_df)
 
     # Pass 2: fit inflation model using continuous edge weights
     model = fit_inflation_model(records)
@@ -261,7 +261,7 @@ def annotate_sibling_divergence_adjusted(
         "local_kernel_center_structural_dimension": pool.geometric_mean_structural_dimension,
         "local_kernel_bandwidth_log_structural_dimension": pool.bandwidth_log_structural_dimension,
         "local_kernel_bandwidth_status": pool.bandwidth_status,
-        "one_active_1d_mode": config.ONE_ACTIVE_1D_MODE,
+        "single_feature_subtree_mode": config.SINGLE_FEATURE_SUBTREE_MODE,
         "diagnostics": model.diagnostics,
         "test_method": "cousin_adjusted_wald",
     }

@@ -76,8 +76,14 @@ class TestSpectralKFloor:
         # forwarding the global JL-derived minimum_projection_dimension.
         assert "SPECTRAL_MINIMUM_DIMENSION" in source
         # The old pattern that forwarded the global minimum_projection_dimension should be gone.
-        assert "minimum_projection_dimension if isinstance(minimum_projection_dimension, int) else 4" not in source
-        assert "minimum_projection_dimension if isinstance(minimum_projection_dimension, int) else 1" not in source
+        assert (
+            "minimum_projection_dimension if isinstance(minimum_projection_dimension, int) else 4"
+            not in source
+        )
+        assert (
+            "minimum_projection_dimension if isinstance(minimum_projection_dimension, int) else 1"
+            not in source
+        )
 
     def test_spectral_minimum_projection_dimension_config_exists(self):
         """config.SPECTRAL_MINIMUM_DIMENSION must exist and be a small integer."""
@@ -87,6 +93,80 @@ class TestSpectralKFloor:
         assert isinstance(config.SPECTRAL_MINIMUM_DIMENSION, int)
         assert config.SPECTRAL_MINIMUM_DIMENSION >= 1
         assert config.SPECTRAL_MINIMUM_DIMENSION <= 4  # must be small — the whole point
+
+    def test_single_feature_subtree_audit_blocks_low_information_subtrees_when_tree_is_dangerous(
+        self, monkeypatch
+    ):
+        """Low-leverage one-active nodes should be blocked when they dominate the tree."""
+        import networkx as nx
+
+        from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence._single_feature_subtree_policy import (
+            _build_single_feature_subtree_audit,
+        )
+
+        tree = nx.DiGraph()
+        tree.add_edges_from(
+            [
+                ("root", "A"),
+                ("root", "B"),
+                ("A", "A1"),
+                ("A", "L2"),
+                ("A1", "L0"),
+                ("A1", "L1"),
+                ("B", "L3"),
+                ("B", "L4"),
+            ]
+        )
+
+        for leaf in ["L0", "L1", "L2", "L3", "L4"]:
+            tree.nodes[leaf]["label"] = leaf
+            tree.nodes[leaf]["is_leaf"] = True
+
+        tree.nodes["A1"]["distribution"] = np.array([0.5, 0.0])
+        tree.nodes["A"]["distribution"] = np.array([0.3, 0.0])
+        tree.nodes["B"]["distribution"] = np.array([0.0, 1.0])
+        tree.nodes["root"]["distribution"] = np.array([0.3, 0.4])
+
+        leaf_data = pd.DataFrame(
+            [
+                [0.0, 0.0],
+                [1.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 2.0],
+            ],
+            index=["L0", "L1", "L2", "L3", "L4"],
+            columns=["F0", "F1"],
+        )
+
+        monkeypatch.setattr(
+            "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence._single_feature_subtree_policy._find_low_variance_ratio_threshold",
+            lambda ratios: (True, 0.5),
+        )
+
+        audit = _build_single_feature_subtree_audit(
+            tree,
+            leaf_data,
+            node_spectral_dimensions={},
+            node_pca_projections={},
+            node_pca_eigenvalues={
+                "root": np.array([1.0]),
+                "A": np.array([1.0]),
+            },
+        )
+
+        assert audit["candidate_nodes"] == 3
+        assert audit["dangerous_tree"] is True
+        assert audit["blocked_node_ids"] == ["A", "A1"]
+        assert audit["allowed_node_ids"] == ["B"]
+
+        node_audit = {node["node_id"]: node for node in audit["nodes"]}
+        assert node_audit["A"]["is_low_leverage"] is True
+        assert node_audit["A1"]["is_low_leverage"] is True
+        assert node_audit["B"]["is_low_leverage"] is False
+        assert node_audit["A"]["allowed_one_active_1d"] is False
+        assert node_audit["A1"]["allowed_one_active_1d"] is False
+        assert node_audit["B"]["allowed_one_active_1d"] is True
 
 
 # =============================================================================
@@ -156,9 +236,8 @@ class TestNonBinarySkippedFlag:
 
         # Leaves should be skipped (they have no children to test)
         for leaf in ["L0", "L1", "L2", "L3"]:
-            assert (
-                result.loc[leaf, "Sibling_Divergence_Skipped"] is True
-                or result.loc[leaf, "Sibling_Divergence_Skipped"] == True
+            assert bool(
+                result.loc[leaf, "Sibling_Divergence_Skipped"]
             ), f"Leaf {leaf} should be marked as Sibling_Divergence_Skipped"
 
     def test_adjusted_wald_marks_leaves_as_skipped(self):
@@ -172,9 +251,8 @@ class TestNonBinarySkippedFlag:
         result = annotate_sibling_divergence_adjusted(tree, df)
 
         for leaf in ["L0", "L1", "L2", "L3"]:
-            assert (
-                result.loc[leaf, "Sibling_Divergence_Skipped"] is True
-                or result.loc[leaf, "Sibling_Divergence_Skipped"] == True
+            assert bool(
+                result.loc[leaf, "Sibling_Divergence_Skipped"]
             ), f"Leaf {leaf} should be marked as Sibling_Divergence_Skipped"
 
     def test_collect_test_arguments_returns_non_binary(self):

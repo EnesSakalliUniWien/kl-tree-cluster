@@ -18,7 +18,7 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..branch_length_utils import compute_mean_branch_length
-from .bh_annotation import (
+from .fdr_annotation import (
     apply_sibling_bh_results,
     early_return_if_no_records,
     init_sibling_annotation_df,

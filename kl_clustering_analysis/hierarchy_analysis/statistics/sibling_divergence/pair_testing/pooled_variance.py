@@ -28,6 +28,10 @@ from typing import Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
+    felsenstein_sibling_multiplier,
+)
+
 
 def _is_categorical(arr: np.ndarray) -> bool:
     """Check if array represents categorical distributions (2D)."""
@@ -168,25 +172,8 @@ def standardize_proportion_difference(
     """
     variance = compute_pooled_variance(theta_1, theta_2, n_1, n_2, eps)
 
-    # Felsenstein (1985) branch-length adjustment with normalization:
-    # For sibling contrasts, variance scales with sum of branch lengths.
-    # We normalize: BL_norm = 1 + BL_sum/(2*mean_BL)
-    # The factor of 2 accounts for summing two branches.
-    # This ensures BL_norm ≥ 1, preventing variance shrinkage.
-    #
-    # Longer total branch length → more expected divergence → larger variance
-    # → smaller z-scores → harder to declare siblings as different.
     if branch_length_sum is not None and branch_length_sum > 0:
-        if mean_branch_length is None or mean_branch_length <= 0:
-            raise ValueError(
-                "mean_branch_length is required when branch_length_sum is provided. "
-                f"Got mean_branch_length={mean_branch_length!r}, "
-                f"branch_length_sum={branch_length_sum!r}. "
-                "Ensure the tree has valid branch lengths before running "
-                "the Felsenstein-adjusted sibling divergence test."
-            )
-        bl_normalized = 1.0 + branch_length_sum / (2 * mean_branch_length)
-        variance = variance * bl_normalized
+        variance = variance * felsenstein_sibling_multiplier(branch_length_sum, mean_branch_length)
 
     difference = theta_1 - theta_2
 

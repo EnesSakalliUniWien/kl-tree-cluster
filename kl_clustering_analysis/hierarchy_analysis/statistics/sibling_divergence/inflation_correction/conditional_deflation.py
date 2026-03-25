@@ -4,12 +4,12 @@ Instead of shrinking the global inflation factor with a fitted slope,
 this module estimates a node-specific correction directly from nearby
 calibration pairs in log-structural-dimension space:
 
-    w_i(u) = w_i^edge * exp(-0.5 * ((log k_i - log k_u) / h)^2)
+    w_i(u) = w_i^null_prior * exp(-0.5 * ((log k_i - log k_u) / h)^2)
     c_u = weighted_mean(T_i / df_i, weights=w_i(u))
 
 where ``k_i`` is the sibling structural dimension carried by each record,
-``w_i^edge`` is the continuous edge-based null-likeness weight, and ``h``
-is the edge-weighted standard deviation of ``log(k)`` over the calibration
+``w_i^null_prior`` is the sibling null prior (from Gate 2 edge p-values), and ``h``
+is the null-prior-weighted standard deviation of ``log(k)`` over the calibration
 pool. This makes the deflation local in the decomposition-derived geometry
 rather than global in effective-df space.
 """
@@ -77,7 +77,7 @@ class PoolStats:
     max_ratio: float
     n_records: int
     calibration_log_structural_dimensions: np.ndarray = field(repr=False)
-    calibration_edge_weights: np.ndarray = field(repr=False)
+    calibration_sibling_null_priors: np.ndarray = field(repr=False)
     calibration_stat_df_ratios: np.ndarray = field(repr=False)
 
 
@@ -97,7 +97,7 @@ def compute_pool_stats(
             max_ratio=max(1.0, float(model.max_observed_ratio)),
             n_records=0,
             calibration_log_structural_dimensions=np.array([], dtype=float),
-            calibration_edge_weights=np.array([], dtype=float),
+            calibration_sibling_null_priors=np.array([], dtype=float),
             calibration_stat_df_ratios=np.array([], dtype=float),
         )
 
@@ -106,11 +106,11 @@ def compute_pool_stats(
         dtype=float,
     )
     log_structural_dimensions = np.log(np.maximum(structural_dimensions, 1.0))
-    edge_weights = np.array([record.edge_weight for record in valid], dtype=float)
+    sibling_null_priors = np.array([record.sibling_null_prior_from_edge_pvalue for record in valid], dtype=float)
     stat_df_ratios = np.array([record.stat / record.degrees_of_freedom for record in valid], dtype=float)
 
-    mean_log_structural_dimension = _weighted_mean(log_structural_dimensions, edge_weights)
-    bandwidth = _weighted_std(log_structural_dimensions, edge_weights)
+    mean_log_structural_dimension = _weighted_mean(log_structural_dimensions, sibling_null_priors)
+    bandwidth = _weighted_std(log_structural_dimensions, sibling_null_priors)
     if not np.isfinite(bandwidth) or bandwidth <= 1e-12:
         bandwidth = 0.0
         bandwidth_status = "global_fallback_zero_log_k_spread"
@@ -126,7 +126,7 @@ def compute_pool_stats(
         max_ratio=max(1.0, float(np.max(stat_df_ratios)), float(model.max_observed_ratio)),
         n_records=len(valid),
         calibration_log_structural_dimensions=log_structural_dimensions,
-        calibration_edge_weights=_safe_weights(edge_weights),
+        calibration_sibling_null_priors=_safe_weights(sibling_null_priors),
         calibration_stat_df_ratios=stat_df_ratios,
     )
 
@@ -161,7 +161,7 @@ def predict_local_inflation_factor(
         pool.calibration_log_structural_dimensions - log_target
     ) / pool.bandwidth_log_structural_dimension
     kernel_weights = np.exp(-0.5 * normalized_offsets**2)
-    local_weights = pool.calibration_edge_weights * kernel_weights
+    local_weights = pool.calibration_sibling_null_priors * kernel_weights
 
     if not np.isfinite(local_weights).any() or float(np.sum(local_weights)) <= 0:
         return float(np.clip(pool.c_global, 1.0, pool.max_ratio))

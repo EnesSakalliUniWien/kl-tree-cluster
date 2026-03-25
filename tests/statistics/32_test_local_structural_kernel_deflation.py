@@ -19,7 +19,7 @@ def _make_record(
     parent: str,
     stat: float,
     degrees_of_freedom: float,
-    edge_weight: float,
+    sibling_null_prior_from_edge_pvalue: float,
     structural_dimension: float,
 ) -> SiblingPairRecord:
     return SiblingPairRecord(
@@ -32,16 +32,34 @@ def _make_record(
         branch_length_sum=0.1,
         n_parent=32,
         is_null_like=False,
-        edge_weight=edge_weight,
+        sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
         structural_dimension=structural_dimension,
     )
 
 
 def test_compute_pool_stats_tracks_structural_k_center_and_bandwidth() -> None:
     records = [
-        _make_record("p0", stat=3.0, degrees_of_freedom=2.0, edge_weight=1.0, structural_dimension=2.0),
-        _make_record("p1", stat=10.0, degrees_of_freedom=4.0, edge_weight=2.0, structural_dimension=4.0),
-        _make_record("p2", stat=12.0, degrees_of_freedom=6.0, edge_weight=1.0, structural_dimension=8.0),
+        _make_record(
+            "p0",
+            stat=3.0,
+            degrees_of_freedom=2.0,
+            sibling_null_prior_from_edge_pvalue=1.0,
+            structural_dimension=2.0,
+        ),
+        _make_record(
+            "p1",
+            stat=10.0,
+            degrees_of_freedom=4.0,
+            sibling_null_prior_from_edge_pvalue=2.0,
+            structural_dimension=4.0,
+        ),
+        _make_record(
+            "p2",
+            stat=12.0,
+            degrees_of_freedom=6.0,
+            sibling_null_prior_from_edge_pvalue=1.0,
+            structural_dimension=8.0,
+        ),
     ]
     ratios = np.array([record.stat / record.degrees_of_freedom for record in records], dtype=float)
     model = CalibrationModel(
@@ -68,7 +86,7 @@ def test_predict_local_inflation_factor_tracks_nearby_structural_dimensions() ->
         max_ratio=4.0,
         n_records=3,
         calibration_log_structural_dimensions=np.log(np.array([2.0, 4.0, 16.0], dtype=float)),
-        calibration_edge_weights=np.array([1.0, 1.0, 1.0], dtype=float),
+        calibration_sibling_null_priors=np.array([1.0, 1.0, 1.0], dtype=float),
         calibration_stat_df_ratios=np.array([1.3, 3.5, 1.1], dtype=float),
     )
     model = CalibrationModel(
@@ -89,8 +107,20 @@ def test_predict_local_inflation_factor_tracks_nearby_structural_dimensions() ->
 
 def test_predict_local_inflation_factor_falls_back_to_global_with_zero_log_k_spread() -> None:
     records = [
-        _make_record("p0", stat=4.0, degrees_of_freedom=4.0, edge_weight=1.0, structural_dimension=4.0),
-        _make_record("p1", stat=8.0, degrees_of_freedom=8.0, edge_weight=1.0, structural_dimension=4.0),
+        _make_record(
+            "p0",
+            stat=4.0,
+            degrees_of_freedom=4.0,
+            sibling_null_prior_from_edge_pvalue=1.0,
+            structural_dimension=4.0,
+        ),
+        _make_record(
+            "p1",
+            stat=8.0,
+            degrees_of_freedom=8.0,
+            sibling_null_prior_from_edge_pvalue=1.0,
+            structural_dimension=4.0,
+        ),
     ]
     model = CalibrationModel(
         method="weighted_mean",
@@ -105,4 +135,3 @@ def test_predict_local_inflation_factor_falls_back_to_global_with_zero_log_k_spr
     assert pool.bandwidth_log_structural_dimension == 0.0
     assert pool.bandwidth_status == "global_fallback_zero_log_k_spread"
     assert predicted == model.global_inflation_factor
-

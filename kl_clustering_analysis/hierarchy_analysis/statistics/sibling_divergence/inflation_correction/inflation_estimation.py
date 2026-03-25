@@ -1,10 +1,11 @@
-"""Post-selection inflation calibration for the adjusted Wald test.
+"""Post-selection inflation estimation for the adjusted Wald test.
 
-Estimates the inflation factor c using continuous edge-weight calibration.
-Each sibling pair is weighted by min(p_edge_left, p_edge_right), so
-pairs where neither child is edge-significant dominate the estimate.
-This avoids the circular dependency of the binary null-like oracle,
-which fails on null data when the edge test passes everything.
+Estimates the inflation factor ĉ using sibling null priors as weights.
+Each sibling pair is weighted by its sibling_null_prior_from_edge_pvalue
+(= min(p_edge_left, p_edge_right)), so pairs where neither child is
+edge-significant dominate the estimate.  This avoids the circular
+dependency of the binary null-like oracle, which fails on null data
+when the edge test passes everything.
 """
 
 from __future__ import annotations
@@ -28,13 +29,14 @@ logger = logging.getLogger(__name__)
 def _compute_weighted_inflation(
     records: List[SiblingPairRecord],
 ) -> CalibrationModel:
-    """Estimate global inflation c-hat as a weighted mean of T/k ratios.
+    """Estimate global inflation ĉ as a weighted mean of T/k ratios.
 
-    Each pair is weighted by its ``edge_weight`` (= min of the two children's
-    BH-corrected edge p-values).  Pairs with high edge p-values (null-like)
-    dominate; pairs with low edge p-values (signal) are down-weighted.
+    Each pair is weighted by its ``sibling_null_prior_from_edge_pvalue``
+    (= min of the two children's BH-corrected edge p-values).  Pairs with
+    high null priors (null-like) dominate; pairs with low null priors
+    (signal) are down-weighted.
 
-    The model is intercept-only: c-hat is constant across all pairs.
+    The model is intercept-only: ĉ is constant across all pairs.
     """
     # Collect valid pairs: finite stat, positive df
     valid_records = [
@@ -54,13 +56,13 @@ def _compute_weighted_inflation(
         )
 
     stat_df_ratios = np.array([record.stat / record.degrees_of_freedom for record in valid_records])
-    edge_weights = np.array([record.edge_weight for record in valid_records])
+    sibling_null_priors = np.array([record.sibling_null_prior_from_edge_pvalue for record in valid_records])
     # Filter out non-positive ratios (can happen with degenerate pairs)
     positive_ratio_mask = stat_df_ratios > 0
     stat_df_ratios = stat_df_ratios[positive_ratio_mask]
-    edge_weights = edge_weights[positive_ratio_mask]
+    sibling_null_priors = sibling_null_priors[positive_ratio_mask]
 
-    if len(stat_df_ratios) == 0 or edge_weights.sum() == 0:
+    if len(stat_df_ratios) == 0 or sibling_null_priors.sum() == 0:
         logger.warning(
             "Continuous-weight calibration: no positive-ratio pairs — " "using neutral c-hat = 1.0."
         )
@@ -75,17 +77,17 @@ def _compute_weighted_inflation(
 
     max_observed_ratio = float(np.max(stat_df_ratios))
 
-    inflation_factor = float(np.average(stat_df_ratios, weights=edge_weights))
+    inflation_factor = float(np.average(stat_df_ratios, weights=sibling_null_priors))
 
     # Clamp: at least 1.0 (never inflate the statistic), at most max observed
     inflation_factor = max(inflation_factor, 1.0)
     inflation_factor = min(inflation_factor, max_observed_ratio)
 
-    contributing_pair_count = int(np.sum(edge_weights > 0))
+    contributing_pair_count = int(np.sum(sibling_null_priors > 0))
 
     effective_sample_size = (
-        float(np.sum(edge_weights) ** 2 / np.sum(edge_weights**2))
-        if np.sum(edge_weights**2) > 0
+        float(np.sum(sibling_null_priors) ** 2 / np.sum(sibling_null_priors**2))
+        if np.sum(sibling_null_priors**2) > 0
         else 0.0
     )
 
@@ -96,9 +98,9 @@ def _compute_weighted_inflation(
         "effective_n": effective_sample_size,
         "max_observed_ratio": max_observed_ratio,
         "median_ratio": float(np.median(stat_df_ratios)),
-        "mean_weight": float(np.mean(edge_weights)),
-        "max_weight": float(np.max(edge_weights)),
-        "min_weight": float(np.min(edge_weights)),
+        "mean_sibling_null_prior": float(np.mean(sibling_null_priors)),
+        "max_sibling_null_prior": float(np.max(sibling_null_priors)),
+        "min_sibling_null_prior": float(np.min(sibling_null_priors)),
     }
 
     logger.info(
@@ -123,10 +125,11 @@ def _compute_weighted_inflation(
 def fit_inflation_model(
     records: List[SiblingPairRecord],
 ) -> CalibrationModel:
-    """Estimate the post-selection inflation factor using continuous edge weights.
+    """Estimate the post-selection inflation factor using sibling null priors.
 
-    Uses all sibling pairs weighted by min(p_edge_left, p_edge_right).
-    The model is intercept-only: a single global c-hat.
+    Uses all sibling pairs weighted by sibling_null_prior_from_edge_pvalue
+    (= min(p_edge_left, p_edge_right)).
+    The model is intercept-only: a single global ĉ.
     """
     return _compute_weighted_inflation(records)
 

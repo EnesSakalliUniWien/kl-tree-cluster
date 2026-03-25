@@ -23,13 +23,63 @@ from ....decomposition.backends.random_projection_backend import (
 from ....decomposition.backends.random_projection_backend import (
     derive_projection_seed_backend as derive_projection_seed,
 )
-from ...projection.projected_wald import run_projected_wald_kernel
-from ...projection.chi2_pvalue import WhiteningMode
 from ...branch_length_utils import sanitize_positive_branch_length
 from ...categorical_mahalanobis import categorical_whitened_vector
+from ...projection.chi2_pvalue import WhiteningMode
+from ...projection.projected_wald import run_projected_wald_kernel
 from .pooled_variance import _is_categorical, standardize_proportion_difference
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_sibling_branch_length_sum(
+    branch_length_left: float | None,
+    branch_length_right: float | None,
+    mean_branch_length: float | None,
+) -> float | None:
+    """Return the sibling branch-length sum when variance adjustment is enabled."""
+    if mean_branch_length is None:
+        return None
+
+    sanitized_left = sanitize_positive_branch_length(branch_length_left)
+    sanitized_right = sanitize_positive_branch_length(branch_length_right)
+    if sanitized_left is None or sanitized_right is None:
+        return None
+
+    return sanitized_left + sanitized_right
+
+
+def _compute_sibling_z_scores(
+    left_distribution: np.ndarray,
+    right_distribution: np.ndarray,
+    n_left: float,
+    n_right: float,
+    *,
+    branch_length_sum: float | None,
+    mean_branch_length: float | None,
+) -> np.ndarray:
+    left_array = np.asarray(left_distribution)
+    right_array = np.asarray(right_distribution)
+
+    if _is_categorical(left_array):
+        return categorical_whitened_vector(
+            np.asarray(left_array, dtype=np.float64),
+            np.asarray(right_array, dtype=np.float64),
+            float(n_left),
+            float(n_right),
+            branch_length_sum=branch_length_sum,
+            mean_branch_length=mean_branch_length,
+        )
+
+    z_scores, _ = standardize_proportion_difference(
+        left_distribution,
+        right_distribution,
+        n_left,
+        n_right,
+        branch_length_sum=branch_length_sum,
+        mean_branch_length=mean_branch_length,
+    )
+    return z_scores
 
 
 def sibling_divergence_test(
@@ -68,44 +118,20 @@ def sibling_divergence_test(
     Tuple[float, float, float]
         (test_statistic, degrees_of_freedom, p_value).
     """
-    # Compute branch-length sum for the optional variance adjustment hook.
-    # When mean_branch_length is None (disabled via config),
-    # skip branch-length computation entirely to avoid triggering the
-    # ValueError in standardize_proportion_difference().
-    branch_length_sum = None
-    if mean_branch_length is not None:
-        sanitized_left = sanitize_positive_branch_length(branch_length_left)
-        sanitized_right = sanitize_positive_branch_length(branch_length_right)
-        if sanitized_left is not None and sanitized_right is not None:
-            branch_length_sum = sanitized_left + sanitized_right
-            if branch_length_sum <= 0:
-                logger.warning(
-                    "Non-positive sibling branch length sum encountered "
-                    "(left=%s, right=%s). Disabling branch-length variance adjustment "
-                    "for this test.",
-                    sanitized_left,
-                    sanitized_right,
-                )
-                branch_length_sum = None
+    branch_length_sum = _resolve_sibling_branch_length_sum(
+        branch_length_left,
+        branch_length_right,
+        mean_branch_length,
+    )
 
-    if _is_categorical(np.asarray(left_distribution)):
-        z_scores = categorical_whitened_vector(
-            np.asarray(left_distribution, dtype=np.float64),
-            np.asarray(right_distribution, dtype=np.float64),
-            float(n_left),
-            float(n_right),
-            branch_length_sum=branch_length_sum,
-            mean_branch_length=mean_branch_length,
-        )
-    else:
-        z_scores, _ = standardize_proportion_difference(
-            left_distribution,
-            right_distribution,
-            n_left,
-            n_right,
-            branch_length_sum=branch_length_sum,
-            mean_branch_length=mean_branch_length,
-        )
+    z_scores = _compute_sibling_z_scores(
+        left_distribution,
+        right_distribution,
+        n_left,
+        n_right,
+        branch_length_sum=branch_length_sum,
+        mean_branch_length=mean_branch_length,
+    )
 
     # Explicit invalid-test path: never coerce non-finite z-scores.
     if not np.isfinite(z_scores).all():
@@ -115,6 +141,7 @@ def sibling_divergence_test(
             int(np.sum(~np.isfinite(z_scores))),
         )
         return np.nan, np.nan, np.nan
+
     z_scores = z_scores.astype(np.float64, copy=False)
 
     n_features = int(z_scores.shape[0])
@@ -125,6 +152,7 @@ def sibling_divergence_test(
             n_features,
             minimum_projection_dimension=minimum_projection_dimension,
         )
+
     if test_id is None:
         test_id = (
             f"sibling:shapeL={tuple(np.shape(left_distribution))}:"

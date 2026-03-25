@@ -23,9 +23,9 @@ from kl_clustering_analysis.core_utils.data_utils import (
     extract_node_sample_size,
 )
 
-from .types import _R, DeflatableSiblingRecord, SiblingPairRecord
-from .wald_statistic import sibling_divergence_test
 from ...projection.chi2_pvalue import WhiteningMode
+from .types import SiblingPairRecord
+from .wald_statistic import sibling_divergence_test
 
 # =============================================================================
 # Tree helpers
@@ -234,7 +234,9 @@ def collect_sibling_pair_records(
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=node_pca_eigenvalues,
-            child_pca_projections=child_pca_projections.get(parent) if child_pca_projections else None,
+            child_pca_projections=(
+                child_pca_projections.get(parent) if child_pca_projections else None
+            ),
             whitening=whitening,
         )
 
@@ -257,24 +259,14 @@ def collect_sibling_pair_records(
             or right_edge_blocked
         )
         is_null_like = not either_child_significant(left, right, edge_significance_by_node)
-        # Continuous weight: min(p_edge_left, p_edge_right).
-        # High weight → both children look null-like (high edge p-values).
-        # Low weight → at least one child has strong edge signal.
-        #
-        # Legacy blocked-edge semantics: TreeBH descendants that were never
-        # reached contribute as maximally null-like edge surrogates (p=1.0) for
-        # calibration, while still retaining explicit gate2-blocked audit flags.
-        legacy_edge_p_left = (
-            1.0
-            if left_edge_blocked or (not left_edge_tested)
-            else edge_p_value_by_node.get(left, 1.0)
+        # Sibling null prior: min(p_edge_left, p_edge_right).
+        # High value → both children look null-like (high edge p-values).
+        # Low value → at least one child has strong edge signal.
+        # Blocked-edge adjustments are handled downstream by interpolate_sibling_null_priors().
+        sibling_null_prior_from_edge_pvalue = min(
+            edge_p_value_by_node.get(left, 1.0),
+            edge_p_value_by_node.get(right, 1.0),
         )
-        legacy_edge_p_right = (
-            1.0
-            if right_edge_blocked or (not right_edge_tested)
-            else edge_p_value_by_node.get(right, 1.0)
-        )
-        edge_calibration_weight = min(legacy_edge_p_left, legacy_edge_p_right)
 
         records.append(
             SiblingPairRecord(
@@ -290,7 +282,7 @@ def collect_sibling_pair_records(
                 n_parent=extract_node_sample_size(tree, parent),
                 is_null_like=is_null_like,
                 is_gate2_blocked=is_gate2_blocked,
-                edge_weight=edge_calibration_weight,
+                sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
                 structural_dimension=(
                     float(spectral_k)
                     if spectral_k is not None and spectral_k > 0
@@ -312,9 +304,9 @@ def collect_sibling_pair_records(
 
 
 def deflate_focal_pairs(
-    records: Iterable[_R],
+    records: Iterable[SiblingPairRecord],
     *,
-    calibration_resolver: Callable[[_R], Tuple[float, str]],
+    calibration_resolver: Callable[[SiblingPairRecord], Tuple[float, str]],
 ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
     """Deflate all focal records and return parent IDs, adjusted triples, and methods."""
     focal_parents: List[str] = []
@@ -350,17 +342,16 @@ def deflate_focal_pairs(
 # =============================================================================
 
 
-def count_null_focal_pairs(records: Iterable[DeflatableSiblingRecord]) -> Tuple[int, int, int]:
+def count_null_focal_pairs(records: Iterable[SiblingPairRecord]) -> Tuple[int, int, int]:
     """Count (null-like, focal, gate2-blocked) record totals."""
     records_list = list(records)
     n_null = sum(1 for r in records_list if r.is_null_like)
-    n_blocked = sum(1 for r in records_list if getattr(r, "is_gate2_blocked", False))
+    n_blocked = sum(1 for r in records_list if r.is_gate2_blocked)
     n_focal = sum(1 for r in records_list if not r.is_null_like)
     return n_null, n_focal, n_blocked
 
 
 __all__ = [
-    "DeflatableSiblingRecord",
     "SiblingPairRecord",
     "collect_significant_sibling_pairs",
     "collect_sibling_pair_records",
