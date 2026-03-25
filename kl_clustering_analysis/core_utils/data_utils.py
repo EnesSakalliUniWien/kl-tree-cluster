@@ -124,9 +124,9 @@ def assign_divergence_results(
     p_values_corrected: np.ndarray,
     reject_null: np.ndarray,
     degrees_of_freedom: np.ndarray,
-    invalid_mask: np.ndarray | None = None,
-    tested_mask: np.ndarray | None = None,
-    ancestor_blocked_mask: np.ndarray | None = None,
+    invalid_test_flags: np.ndarray | None = None,
+    tested_edge_flags: np.ndarray | None = None,
+    ancestor_blocked_edge_flags: np.ndarray | None = None,
 ) -> pd.DataFrame:
     """Assign child-parent divergence test results to the annotations dataframe.
 
@@ -147,14 +147,14 @@ def assign_divergence_results(
         Boolean array indicating significant edges
     degrees_of_freedom
         Effective degrees of freedom for each edge
-    invalid_mask
-        Optional boolean mask (aligned to ``child_ids``) indicating tests
+    invalid_test_flags
+        Optional boolean flags (aligned to ``child_ids``) indicating tests
         that were invalid and routed through the conservative p-value path.
-    tested_mask
-        Optional boolean mask aligned to ``child_ids`` indicating whether the
+    tested_edge_flags
+        Optional boolean flags aligned to ``child_ids`` indicating whether the
         edge was actually tested by the multiple-testing procedure.
-    ancestor_blocked_mask
-        Optional boolean mask aligned to ``child_ids`` indicating TreeBH
+    ancestor_blocked_edge_flags
+        Optional boolean flags aligned to ``child_ids`` indicating TreeBH
         descendants that were not tested because an ancestor family failed.
 
     Returns
@@ -176,35 +176,37 @@ def assign_divergence_results(
     annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value_BH"] = p_values_corrected
     annotations_df.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null
     annotations_df.loc[child_ids, "Child_Parent_Divergence_df"] = degrees_of_freedom
-    if tested_mask is None:
+    if tested_edge_flags is None:
         annotations_df.loc[child_ids, "Child_Parent_Divergence_Tested"] = True
     else:
-        tested_array = np.asarray(tested_mask, dtype=bool)
+        tested_array = np.asarray(tested_edge_flags, dtype=bool)
         if tested_array.shape[0] != len(child_ids):
             raise ValueError(
-                "tested_mask must be aligned to child_ids. "
-                f"Got len(tested_mask)={tested_array.shape[0]}, len(child_ids)={len(child_ids)}."
+                "tested_edge_flags must be aligned to child_ids. "
+                "Got "
+                f"len(tested_edge_flags)={tested_array.shape[0]}, len(child_ids)={len(child_ids)}."
             )
         annotations_df.loc[child_ids, "Child_Parent_Divergence_Tested"] = tested_array
 
-    if ancestor_blocked_mask is not None:
-        blocked_array = np.asarray(ancestor_blocked_mask, dtype=bool)
+    if ancestor_blocked_edge_flags is not None:
+        blocked_array = np.asarray(ancestor_blocked_edge_flags, dtype=bool)
         if blocked_array.shape[0] != len(child_ids):
             raise ValueError(
-                "ancestor_blocked_mask must be aligned to child_ids. "
+                "ancestor_blocked_edge_flags must be aligned to child_ids. "
                 "Got "
-                f"len(ancestor_blocked_mask)={blocked_array.shape[0]}, len(child_ids)={len(child_ids)}."
+                f"len(ancestor_blocked_edge_flags)={blocked_array.shape[0]}, len(child_ids)={len(child_ids)}."
             )
         annotations_df.loc[child_ids, "Child_Parent_Divergence_Ancestor_Blocked"] = blocked_array
 
-    if invalid_mask is not None:
-        invalid_array = np.asarray(invalid_mask, dtype=bool)
+    if invalid_test_flags is not None:
+        invalid_array = np.asarray(invalid_test_flags, dtype=bool)
 
         if invalid_array.shape[0] != len(child_ids):
 
             raise ValueError(
-                "invalid_mask must be aligned to child_ids. "
-                f"Got len(invalid_mask)={invalid_array.shape[0]}, len(child_ids)={len(child_ids)}."
+                "invalid_test_flags must be aligned to child_ids. "
+                "Got "
+                f"len(invalid_test_flags)={invalid_array.shape[0]}, len(child_ids)={len(child_ids)}."
             )
 
         annotations_df.loc[child_ids, "Child_Parent_Divergence_Invalid"] = invalid_array

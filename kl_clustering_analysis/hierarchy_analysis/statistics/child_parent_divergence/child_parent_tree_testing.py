@@ -26,7 +26,7 @@ def run_child_parent_tests_across_tree(
     test_statistics = np.full(n_edge_tests, np.nan)
     degrees_of_freedom = np.full(n_edge_tests, np.nan)
     p_values = np.full(n_edge_tests, np.nan)
-    invalid_test_mask = np.zeros(n_edge_tests, dtype=bool)
+    invalid_test_flags = np.zeros(n_edge_tests, dtype=bool)
 
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
@@ -78,9 +78,9 @@ def run_child_parent_tests_across_tree(
             edge_p_value,
         )
 
-        invalid_test_mask[edge_index] = bool(edge_test_invalid)
+        invalid_test_flags[edge_index] = bool(edge_test_invalid)
 
-    return test_statistics, degrees_of_freedom, p_values, invalid_test_mask
+    return test_statistics, degrees_of_freedom, p_values, invalid_test_flags
 
 
 __all__ = ["run_child_parent_tests_across_tree"]

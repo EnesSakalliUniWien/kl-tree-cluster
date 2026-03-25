@@ -53,7 +53,6 @@ class TreeDecomposition:
         *,
         alpha_local: float = config.EDGE_ALPHA,
         sibling_alpha: float = config.SIBLING_ALPHA,
-        edge_fdr_method: str = config.EDGE_FDR_METHOD,
         leaf_data: pd.DataFrame | None = None,
         spectral_method: str | None = config.SPECTRAL_METHOD,
         passthrough: bool = config.PASSTHROUGH,
@@ -84,7 +83,6 @@ class TreeDecomposition:
         self.annotations_df = annotations_df if annotations_df is not None else pd.DataFrame()
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
-        self._edge_fdr_method = str(edge_fdr_method)
         self._leaf_data = leaf_data
         self._spectral_method = spectral_method if leaf_data is not None else None
         self._resolved_minimum_projection_dimension = resolve_minimum_projection_dimension_backend(
@@ -218,7 +216,6 @@ class TreeDecomposition:
             minimum_projection_dimension=self._resolved_minimum_projection_dimension,
             sibling_method=config.SIBLING_TEST_METHOD,
             sibling_whitening=config.SIBLING_WHITENING,
-            fdr_method=self._edge_fdr_method,
         ).annotated_df
 
     def _extract_required_bool_annotation_column(self, column_name: str) -> dict[str, bool]:

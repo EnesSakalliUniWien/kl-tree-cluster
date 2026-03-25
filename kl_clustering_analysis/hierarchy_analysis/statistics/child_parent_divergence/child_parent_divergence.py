@@ -13,21 +13,70 @@ from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
 )
-from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 
-from ..multiple_testing import apply_multiple_testing_correction
-from ..multiple_testing.tree_bh_correction import tree_bh_correction
+from ..multiple_testing.tree_bh import ChildParentEdgeTreeBHResult, apply_tree_bh_correction
 from .child_parent_spectral_decomposition import compute_child_parent_spectral_context
 from .child_parent_tree_testing import run_child_parent_tests_across_tree
 
 logger = logging.getLogger(__name__)
 
 
+def _apply_edge_multiple_testing_correction(
+    tree: nx.DiGraph,
+    p_values_for_correction: np.ndarray,
+    child_ids: list[str],
+    edge_alpha: float,
+    fdr_method: str,
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    ChildParentEdgeTreeBHResult | None,
+]:
+    """Apply the sole supported Gate 2 multiple-testing correction: Tree-BH."""
+    if fdr_method != "tree_bh":
+        raise ValueError(
+            f"Unsupported Gate 2 correction method: {fdr_method!r}. Only 'tree_bh' is supported."
+        )
+
+    tree_bh_result = apply_tree_bh_correction(
+        tree,
+        p_values_for_correction,
+        child_ids,
+        alpha=edge_alpha,
+    )
+    child_parent_edge_null_rejected_by_tree_bh = (
+        tree_bh_result.child_parent_edge_null_rejected_by_tree_bh
+    )
+    child_parent_edge_corrected_p_values_by_tree_bh = (
+        tree_bh_result.child_parent_edge_corrected_p_values_by_tree_bh.copy()
+    )
+    child_parent_edge_tested_by_tree_bh = np.asarray(
+        tree_bh_result.child_parent_edge_tested_by_tree_bh,
+        dtype=bool,
+    )
+    ancestor_blocked_mask = ~child_parent_edge_tested_by_tree_bh
+    child_parent_edge_corrected_p_values_by_tree_bh = np.where(
+        child_parent_edge_tested_by_tree_bh,
+        child_parent_edge_corrected_p_values_by_tree_bh,
+        np.nan,
+    )
+
+    return (
+        child_parent_edge_null_rejected_by_tree_bh,
+        child_parent_edge_corrected_p_values_by_tree_bh,
+        child_parent_edge_tested_by_tree_bh,
+        ancestor_blocked_mask,
+        tree_bh_result,
+    )
+
+
 def annotate_child_parent_divergence(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     significance_level_alpha: float = config.EDGE_ALPHA,
-    fdr_method: str = config.EDGE_FDR_METHOD,
+    fdr_method: str = "tree_bh",
     leaf_data: pd.DataFrame | None = None,
     spectral_method: str | None = None,
     minimum_projection_dimension: int | None = None,
@@ -57,15 +106,16 @@ def annotate_child_parent_divergence(
     annotations_df.attrs["_spectral_dims"] = node_spectral_dimensions
     annotations_df.attrs["_pca_projections"] = node_pca_projections
     annotations_df.attrs["_pca_eigenvalues"] = node_pca_eigenvalues
-    one_active_guard_audit = tree.graph.get("_one_active_guard_audit")
-    if one_active_guard_audit is not None:
-        annotations_df.attrs["_one_active_guard_audit"] = one_active_guard_audit
+    single_feature_subtree_audit = tree.graph.get("_single_feature_subtree_audit")
+
+    if single_feature_subtree_audit is not None:
+        annotations_df.attrs["_single_feature_subtree_audit"] = single_feature_subtree_audit
 
     (
         edge_test_statistics,
         edge_degrees_of_freedom,
         edge_p_values,
-        invalid_test_mask,
+        invalid_test_flags,
     ) = run_child_parent_tests_across_tree(
         tree=tree,
         child_ids=child_ids,
@@ -87,13 +137,10 @@ def annotate_child_parent_divergence(
         "parent_leaf_counts": parent_leaf_counts.copy(),
     }
 
-    node_depths = compute_node_depths(tree)
-    child_depths_for_correction = np.array([node_depths.get(cid, 0) for cid in child_ids])
-
     p_values_for_correction = np.where(np.isfinite(edge_p_values), edge_p_values, 1.0)
-    non_finite_p_value_mask = ~np.isfinite(edge_p_values)
-    invalid_test_count = int(np.sum(invalid_test_mask))
-    non_finite_p_value_count = int(np.sum(non_finite_p_value_mask))
+    non_finite_p_value_flags = ~np.isfinite(edge_p_values)
+    invalid_test_count = int(np.sum(invalid_test_flags))
+    non_finite_p_value_count = int(np.sum(non_finite_p_value_flags))
 
     if invalid_test_count or non_finite_p_value_count:
 
@@ -119,91 +166,72 @@ def annotate_child_parent_divergence(
             preview_node_ids,
         )
 
-    tested_mask = np.ones(len(child_ids), dtype=bool)
-    ancestor_blocked_mask = np.zeros(len(child_ids), dtype=bool)
-    if fdr_method == "tree_bh":
-        tree_bh_result = tree_bh_correction(
-            tree,
-            p_values_for_correction,
-            child_ids,
-            alpha=edge_alpha,
-        )
-        reject_null_hypothesis = tree_bh_result.reject
-        corrected_p_values = tree_bh_result.adjusted_p.copy()
-        tested_mask = np.asarray(tree_bh_result.tested_mask, dtype=bool)
-        ancestor_blocked_mask = ~tested_mask
-        corrected_p_values = np.where(tested_mask, corrected_p_values, np.nan)
-    else:
-        reject_null_hypothesis, corrected_p_values = apply_multiple_testing_correction(
-            p_values=p_values_for_correction,
-            child_ids=child_ids,
-            child_depths=child_depths_for_correction,
-            alpha=edge_alpha,
-            method=fdr_method,
-            tree=tree,
-        )
+    (
+        child_parent_edge_null_rejected_by_tree_bh,
+        child_parent_edge_corrected_p_values_by_tree_bh,
+        child_parent_edge_tested_by_tree_bh,
+        ancestor_blocked_edge_flags,
+        tree_bh_result,
+    ) = _apply_edge_multiple_testing_correction(
+        tree=tree,
+        p_values_for_correction=p_values_for_correction,
+        child_ids=child_ids,
+        edge_alpha=edge_alpha,
+        fdr_method=fdr_method,
+    )
 
-    reject_null_hypothesis = np.where(non_finite_p_value_mask, False, reject_null_hypothesis)
+    child_parent_edge_null_rejected_by_tree_bh = np.where(
+        non_finite_p_value_flags,
+        False,
+        child_parent_edge_null_rejected_by_tree_bh,
+    )
 
     annotations_df.attrs["child_parent_divergence_audit"] = {
         "total_tests": int(len(child_ids)),
         "invalid_tests": invalid_test_count,
         "non_finite_p_values": non_finite_p_value_count,
         "conservative_path_tests": non_finite_p_value_count,
-        "tested_edges": int(np.sum(tested_mask)),
-        "ancestor_blocked_edges": int(np.sum(ancestor_blocked_mask)),
+        "tested_edges": int(np.sum(child_parent_edge_tested_by_tree_bh)),
+        "ancestor_blocked_edges": int(np.sum(ancestor_blocked_edge_flags)),
     }
 
-    if fdr_method == "tree_bh" and int(np.sum(ancestor_blocked_mask)) > 0:
-        from ..multiple_testing.blocker_recovery import (
-            recover_blocker_metadata,
+    if fdr_method == "tree_bh" and int(np.sum(ancestor_blocked_edge_flags)) > 0:
+        from ..multiple_testing.stopping_edge_recovery import (
             recover_signal_neighbors,
+            recover_stopping_edge_info,
+        )
+        from ..multiple_testing.stopping_edge_recovery.serialization import (
+            STOPPING_EDGE_INFO_ATTR_KEY,
+            build_stopping_edge_attrs,
         )
 
-        blocker_map = recover_blocker_metadata(tree, tree_bh_result, child_ids)
-        signal_map = recover_signal_neighbors(
+        assert tree_bh_result is not None
+        stopping_edge_info_by_child = recover_stopping_edge_info(tree, tree_bh_result, child_ids)
+        nearest_signal_neighbor_by_child = recover_signal_neighbors(
             tree,
             child_ids,
-            reject_mask=reject_null_hypothesis,
-            tested_mask=tested_mask,
-            corrected_p_values=corrected_p_values,
-            depths=node_depths,
+            child_parent_edge_null_rejected_by_tree_bh=(child_parent_edge_null_rejected_by_tree_bh),
+            child_parent_edge_tested_by_tree_bh=child_parent_edge_tested_by_tree_bh,
+            child_parent_edge_corrected_p_values_by_tree_bh=(
+                child_parent_edge_corrected_p_values_by_tree_bh
+            ),
         )
-
-        blocker_p_values = np.full(len(child_ids), np.nan)
-        distances_to_blocker = np.full(len(child_ids), np.nan)
-        signal_p_values = np.full(len(child_ids), np.nan)
-        distances_to_signal = np.full(len(child_ids), np.nan)
-
-        for index, child_id in enumerate(child_ids):
-            blocker_info = blocker_map.get(str(child_id))
-            if blocker_info is not None:
-                blocker_p_values[index] = blocker_info.blocker_p_value
-                distances_to_blocker[index] = blocker_info.distance_to_blocker
-
-            signal_info = signal_map.get(str(child_id))
-            if signal_info is not None:
-                signal_p_values[index] = signal_info.sig_p_value
-                distances_to_signal[index] = signal_info.distance_to_sig
-
-        annotations_df.attrs["_blocker_metadata"] = {
-            "child_ids": child_ids,
-            "blocker_p_values": blocker_p_values,
-            "distances_to_blocker": distances_to_blocker,
-            "signal_p_values": signal_p_values,
-            "distances_to_signal": distances_to_signal,
-        }
+        annotations_df.attrs[STOPPING_EDGE_INFO_ATTR_KEY] = build_stopping_edge_attrs(
+            child_node_ids=child_ids,
+            stopping_edge_info_by_child=stopping_edge_info_by_child,
+            signal_neighbor_info_by_child=nearest_signal_neighbor_by_child,
+        )
 
     return assign_divergence_results(
         annotations_df=annotations_df,
         child_ids=child_ids,
         p_values=edge_p_values,
-        p_values_corrected=corrected_p_values,
-        reject_null=reject_null_hypothesis,
+        p_values_corrected=child_parent_edge_corrected_p_values_by_tree_bh,
+        reject_null=child_parent_edge_null_rejected_by_tree_bh,
         degrees_of_freedom=edge_degrees_of_freedom,
-        invalid_mask=invalid_test_mask,
-        tested_mask=tested_mask,
-        ancestor_blocked_mask=ancestor_blocked_mask,
+        invalid_test_flags=invalid_test_flags,
+        tested_edge_flags=child_parent_edge_tested_by_tree_bh,
+        ancestor_blocked_edge_flags=ancestor_blocked_edge_flags,
     )
 
 

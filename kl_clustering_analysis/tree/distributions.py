@@ -40,6 +40,9 @@ def _calculate_hierarchy_node_distribution(
 ) -> None:
     """Weighted mean of children distributions."""
     children = list(tree.successors(node_id))
+    if not children:
+        raise ValueError(f"Internal node {node_id!r} has no children.")
+
     weighted_distribution_sum = 0.0
     total_weight = 0.0
     total_descendant_leaves = 0
@@ -54,6 +57,12 @@ def _calculate_hierarchy_node_distribution(
 
         weighted_distribution_sum += child_distribution * weight
         total_weight += weight
+
+    if total_weight <= 0:
+        raise ValueError(
+            f"Internal node {node_id!r} has no descendant leaves; malformed tree. "
+            f"Children: {children!r}."
+        )
 
     tree.nodes[node_id]["leaf_count"] = total_descendant_leaves
     tree.nodes[node_id]["distribution"] = weighted_distribution_sum / total_weight

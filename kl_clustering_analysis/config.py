@@ -16,13 +16,6 @@ SIBLING_ALPHA: float = 0.01
 # Default significance level for Gate 2 edge (child-vs-parent) tests.
 EDGE_ALPHA: float = 0.001
 
-# Multiple-testing correction for Gate 2 edge (child-vs-parent) tests.
-# Options:
-#   "tree_bh"    - hierarchical TreeBH (default production behavior)
-#   "level_wise" - BH independently at each tree depth
-#   "flat"       - BH across all child-parent edges
-EDGE_FDR_METHOD: Literal["tree_bh", "level_wise", "flat"] = "tree_bh"
-
 
 # --- Legacy Branch-Length Variance Scaling ---
 
@@ -99,21 +92,25 @@ SPECTRAL_MINIMUM_DIMENSION: int = 2
 # Keeping True is recommended for consistency.
 INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 
-# --- One-Active 1D Handling ---
+# --- Single-Feature Subtree Handling ---
 #
-# Optional handling for subtrees with exactly one active-variance feature.
-# These are not true multivariate PCA failures: the local rank is 1.
+# Optional handling for subtrees where only one feature varies.
+# These are not multivariate PCA failures: the local rank is genuinely 1.
 #
 # Options:
-#   "off"                 - disable the one-active guard; useful as a baseline
-#                           for comparison, but no longer the preferred default
-#   "per_tree_load_guard" - fit low-vs-high leverage within the current tree,
-#                           then allow deterministic 1D only when low-leverage
-#                           one-active nodes do not dominate the tree's support
-#                           load. Thresholds are estimated fresh per clustering
-#                           run; no fixed magic numbers are used. Preferred
-#                           production default.
-ONE_ACTIVE_1D_MODE: Literal["off", "per_tree_load_guard"] = "per_tree_load_guard"
+#   "off"                            - disable the single-feature subtree policy;
+#                                      useful as a baseline comparison.
+#   "block_low_information_subtrees" - compare low-variance and high-variance
+#                                      single-feature subtrees within the current
+#                                      tree, then only allow deterministic 1D
+#                                      handling when the low-information group
+#                                      does not dominate the tree. Thresholds are
+#                                      estimated fresh per clustering run; no
+#                                      fixed magic numbers are used. Preferred
+#                                      production default.
+SINGLE_FEATURE_SUBTREE_MODE: Literal["off", "block_low_information_subtrees"] = (
+	"block_low_information_subtrees"
+)
 
 # --- Sibling Test Method ---
 
