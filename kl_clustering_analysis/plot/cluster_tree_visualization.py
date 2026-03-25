@@ -162,6 +162,37 @@ def _map_nodes_to_clusters(
     return node_to_cluster
 
 
+def _build_label_to_node(tree) -> Dict:
+    """Map display labels back to node ids."""
+    label_to_node: Dict = {}
+    for node in tree.nodes():
+        node_attrs = tree.nodes[node] if hasattr(tree, "nodes") else {}
+        label = node_attrs.get("label", node) if isinstance(node_attrs, dict) else node
+        label_to_node[label] = node
+    return label_to_node
+
+
+def _build_leaf_node_colors(
+    leaf_nodes: list[object],
+    node_to_cluster: Dict,
+    cluster_id_to_color: Dict[int, str],
+    unassigned_color: str,
+) -> list[str]:
+    """Return leaf colors keyed by cluster assignment."""
+    leaf_node_colors: list[str] = []
+    for node in leaf_nodes:
+        if node not in node_to_cluster:
+            leaf_node_colors.append(unassigned_color)
+            continue
+
+        try:
+            cluster_id = int(node_to_cluster[node])
+        except Exception:
+            cluster_id = None
+        leaf_node_colors.append(cluster_id_to_color.get(cluster_id, unassigned_color))
+    return leaf_node_colors
+
+
 def _sorted_children(G: nx.DiGraph, node: object) -> list[object]:
     children = list(G.successors(node))
     try:
@@ -267,89 +298,34 @@ def _graphviz_twopi_layout(G: nx.Graph, args: str = "") -> Dict:
     return _rectangular_tree_layout(nx.DiGraph(G))
 
 
-def plot_tree_with_clusters(
-    tree,
-    decomposition_results: Dict,
-    annotations_df=None,
-    use_labels: bool = True,
-    width: int = 900,
-    height: int = 600,
-    node_size: int = 20,
-    font_size: int = 10,
-    show_cluster_boundaries: bool = True,
-    colormap: Optional[str] = None,
-    title: Optional[str] = None,
-    layout: str = "rectangular",
-    figsize: Optional[Tuple[float, float]] = None,
-    ax: Optional["plt.Axes"] = None,
-    show: bool = False,
-):
-    """
-    Plot hierarchical tree with cluster assignments.
-
-    Notes
-    -----
-    - This is intentionally a lightweight plot. ``show_cluster_boundaries`` is a
-      placeholder (not implemented).
-    - Leaf nodes are colored by their cluster ID; internal nodes are gray.
-    """
-    _ = show_cluster_boundaries
-    _ = use_labels
-
-    cluster_assignments = decomposition_results["cluster_assignments"]
-    num_clusters = decomposition_results["num_clusters"]
-
-    spec = build_cluster_color_spec(
-        num_clusters, base_cmap=colormap, unassigned_color=UNASSIGNED_NODE_COLOR
-    )
-    cluster_id_to_color = spec.id_to_color
-    unassigned_color = spec.unassigned_color
-
-    label_to_node: Dict = {}
-    for node in tree.nodes():
-        node_attrs = tree.nodes[node] if hasattr(tree, "nodes") else {}
-        label = node_attrs.get("label", node) if isinstance(node_attrs, dict) else node
-        label_to_node[label] = node
-
-    node_to_cluster = _map_nodes_to_clusters(cluster_assignments, label_to_node, tree)
-
-    G = nx.DiGraph()
-    G.add_nodes_from(tree.nodes())
-    G.add_edges_from(tree.edges())
-
-    leaves = {n for n in G.nodes() if G.out_degree(n) == 0}
-    leaf_nodes = [n for n in G.nodes() if n in leaves]
-    internal_nodes = [n for n in G.nodes() if n not in leaves]
-    leaf_node_colors: list[str] = []
-    for node in leaf_nodes:
-        if node in node_to_cluster:
-            try:
-                cluster_id = int(node_to_cluster[node])
-            except Exception:
-                cluster_id = None
-            leaf_node_colors.append(cluster_id_to_color.get(cluster_id, unassigned_color))
-        else:
-            leaf_node_colors.append(unassigned_color)
-
+def _resolve_layout(G: nx.DiGraph, layout: str) -> Dict[object, Tuple[float, float]]:
+    """Resolve the requested layout strategy."""
     if layout == "rectangular":
-        pos = _rectangular_tree_layout(G)
-    elif layout == "radial":
-        pos = _graphviz_twopi_layout(G, args="")
-    else:
-        raise ValueError(f"Unknown layout={layout!r}; expected 'rectangular' or 'radial'.")
+        return _rectangular_tree_layout(G)
+    if layout == "radial":
+        return _graphviz_twopi_layout(G, args="")
+    raise ValueError(f"Unknown layout={layout!r}; expected 'rectangular' or 'radial'.")
 
-    if title is None:
-        title = (
-            f"Hierarchical Tree with Cluster Decomposition: "
-            f"{num_clusters} Independent Clusters Identified"
-        )
 
-    if ax is None:
-        if figsize is None:
-            figsize = (max(width, 1) / 100.0, max(height, 1) / 100.0)
-        fig, ax = plt.subplots(figsize=figsize)
-    else:
-        fig = ax.figure
+def _create_figure_and_axes(
+    *,
+    width: int,
+    height: int,
+    figsize: Optional[Tuple[float, float]],
+    ax: Optional["plt.Axes"],
+):
+    """Create a new figure when an axes object was not supplied."""
+    if ax is not None:
+        return ax.figure, ax
+
+    resolved_figsize = figsize
+    if resolved_figsize is None:
+        resolved_figsize = (max(width, 1) / 100.0, max(height, 1) / 100.0)
+    return plt.subplots(figsize=resolved_figsize)
+
+
+def _draw_styled_edges(G: nx.DiGraph, pos: Dict, annotations_df, ax: "plt.Axes") -> None:
+    """Draw edges grouped by sibling-test styling."""
     edge_groups = _group_edges_for_sibling_style(G, annotations_df)
     for edge_group in EDGE_DRAW_ORDER:
         edgelist = edge_groups[edge_group]
@@ -368,6 +344,18 @@ def plot_tree_with_clusters(
             alpha=edge_style["alpha"],
         )
 
+
+def _draw_tree_nodes(
+    G: nx.DiGraph,
+    pos: Dict,
+    *,
+    internal_nodes: list[object],
+    leaf_nodes: list[object],
+    leaf_node_colors: list[str],
+    node_size: int,
+    ax: "plt.Axes",
+) -> None:
+    """Draw internal and leaf nodes using the configured styles."""
     if internal_nodes:
         nx.draw_networkx_nodes(
             G,
@@ -393,12 +381,24 @@ def plot_tree_with_clusters(
             ax=ax,
         )
 
+
+def _draw_internal_node_halos(
+    G: nx.DiGraph,
+    pos: Dict,
+    *,
+    leaves: set,
+    annotations_df,
+    node_size: int,
+    ax: "plt.Axes",
+) -> None:
+    """Draw annotation halos around tested internal nodes."""
     halo_significant, halo_tested_not_significant = _group_internal_nodes_for_halo(
         G,
         leaves,
         annotations_df,
     )
     halo_size = max(node_size * HALO_SIZE_MULTIPLIER, node_size + HALO_SIZE_OFFSET)
+
     if halo_tested_not_significant:
         halo_non_sig_style = HALO_STYLES["tested_not_significant"]
         halo_non_sig = nx.draw_networkx_nodes(
@@ -426,23 +426,16 @@ def plot_tree_with_clusters(
             ax=ax,
         )
         halo_sig.set_linestyle(halo_sig_style["linestyle"])
-    ax.set_title(title, fontsize=font_size)
-    # Do not force equal aspect: trees with many leaves collapse vertically.
-    ax.set_aspect("auto")
-    ax.set_axis_off()
 
-    leaf_cluster_ids = [
-        int(node_to_cluster[n])
-        for n in leaves
-        if n in node_to_cluster and str(node_to_cluster[n]).lstrip("-").isdigit()
-    ]
-    present_ids = present_cluster_ids(leaf_cluster_ids)
+
+def _build_style_legend_handles() -> list[Line2D]:
+    """Build legend handles for edge and halo styling."""
     halo_sig_style = HALO_STYLES["significant"]
     halo_non_sig_style = HALO_STYLES["tested_not_significant"]
     edge_diff_style = EDGE_STYLES["different"]
     edge_not_diff_style = EDGE_STYLES["not_different"]
     edge_missing_style = EDGE_STYLES["missing"]
-    style_handles = [
+    return [
         Line2D(
             [0],
             [0],
@@ -493,35 +486,161 @@ def plot_tree_with_clusters(
         ),
     ]
 
-    if present_ids:
-        handles = [
-            Patch(facecolor=cluster_id_to_color[cid], edgecolor="none", label=f"{cid}")
-            for cid in present_ids
-            if cid in cluster_id_to_color
-        ]
-    else:
-        handles = []
 
-    handles.extend(style_handles)
-    if handles:
-        ax.legend(
-            handles=handles,
-            title="Legend",
-            loc="best",
-            frameon=False,
-            fontsize=max(font_size - 1, 6),
-            title_fontsize=max(font_size - 1, 6),
+def _add_plot_legend(
+    ax: "plt.Axes",
+    *,
+    leaves: set,
+    node_to_cluster: Dict,
+    cluster_id_to_color: Dict[int, str],
+    font_size: int,
+) -> None:
+    """Attach cluster and style legends when there is something to show."""
+    leaf_cluster_ids = [
+        int(node_to_cluster[n])
+        for n in leaves
+        if n in node_to_cluster and str(node_to_cluster[n]).lstrip("-").isdigit()
+    ]
+    present_ids = present_cluster_ids(leaf_cluster_ids)
+
+    handles = [
+        Patch(facecolor=cluster_id_to_color[cid], edgecolor="none", label=f"{cid}")
+        for cid in present_ids
+        if cid in cluster_id_to_color
+    ]
+    handles.extend(_build_style_legend_handles())
+
+    if not handles:
+        return
+
+    ax.legend(
+        handles=handles,
+        title="Legend",
+        loc="best",
+        frameon=False,
+        fontsize=max(font_size - 1, 6),
+        title_fontsize=max(font_size - 1, 6),
+    )
+
+
+def _finalize_axes(ax: "plt.Axes", title: str, font_size: int) -> None:
+    """Apply final axes formatting for tree plots."""
+    ax.set_title(title, fontsize=font_size)
+    ax.set_aspect("auto")
+    ax.set_axis_off()
+
+
+def _warn_if_show_requested(show: bool) -> None:
+    """Warn on deprecated direct showing behavior."""
+    if not show:
+        return
+
+    import warnings
+
+    warnings.warn(
+        (
+            "plot_tree_with_clusters: 'show' is deprecated and will be removed; "
+            "save figures externally instead."
+        ),
+        DeprecationWarning,
+    )
+
+
+def plot_tree_with_clusters(
+    tree,
+    decomposition_results: Dict,
+    annotations_df=None,
+    use_labels: bool = True,
+    width: int = 900,
+    height: int = 600,
+    node_size: int = 20,
+    font_size: int = 10,
+    show_cluster_boundaries: bool = True,
+    colormap: Optional[str] = None,
+    title: Optional[str] = None,
+    layout: str = "rectangular",
+    figsize: Optional[Tuple[float, float]] = None,
+    ax: Optional["plt.Axes"] = None,
+    show: bool = False,
+):
+    """
+    Plot hierarchical tree with cluster assignments.
+
+    Notes
+    -----
+    - This is intentionally a lightweight plot. ``show_cluster_boundaries`` is a
+      placeholder (not implemented).
+    - Leaf nodes are colored by their cluster ID; internal nodes are gray.
+    """
+    _ = show_cluster_boundaries
+    _ = use_labels
+
+    cluster_assignments = decomposition_results["cluster_assignments"]
+    num_clusters = decomposition_results["num_clusters"]
+
+    spec = build_cluster_color_spec(
+        num_clusters, base_cmap=colormap, unassigned_color=UNASSIGNED_NODE_COLOR
+    )
+    cluster_id_to_color = spec.id_to_color
+    unassigned_color = spec.unassigned_color
+
+    label_to_node = _build_label_to_node(tree)
+
+    node_to_cluster = _map_nodes_to_clusters(cluster_assignments, label_to_node, tree)
+
+    G = nx.DiGraph()
+    G.add_nodes_from(tree.nodes())
+    G.add_edges_from(tree.edges())
+
+    leaves = {n for n in G.nodes() if G.out_degree(n) == 0}
+    leaf_nodes = [n for n in G.nodes() if n in leaves]
+    internal_nodes = [n for n in G.nodes() if n not in leaves]
+    leaf_node_colors = _build_leaf_node_colors(
+        leaf_nodes,
+        node_to_cluster,
+        cluster_id_to_color,
+        unassigned_color,
+    )
+    pos = _resolve_layout(G, layout)
+
+    if title is None:
+        title = (
+            f"Hierarchical Tree with Cluster Decomposition: "
+            f"{num_clusters} Independent Clusters Identified"
         )
 
-    if show:
-        import warnings
-
-        warnings.warn(
-            (
-                "plot_tree_with_clusters: 'show' is deprecated and will be removed; "
-                "save figures externally instead."
-            ),
-            DeprecationWarning,
-        )
+    fig, ax = _create_figure_and_axes(
+        width=width,
+        height=height,
+        figsize=figsize,
+        ax=ax,
+    )
+    _draw_styled_edges(G, pos, annotations_df, ax)
+    _draw_tree_nodes(
+        G,
+        pos,
+        internal_nodes=internal_nodes,
+        leaf_nodes=leaf_nodes,
+        leaf_node_colors=leaf_node_colors,
+        node_size=node_size,
+        ax=ax,
+    )
+    _draw_internal_node_halos(
+        G,
+        pos,
+        leaves=leaves,
+        annotations_df=annotations_df,
+        node_size=node_size,
+        ax=ax,
+    )
+    _finalize_axes(ax, title, font_size)
+    _add_plot_legend(
+        ax,
+        leaves=leaves,
+        node_to_cluster=node_to_cluster,
+        cluster_id_to_color=cluster_id_to_color,
+        font_size=font_size,
+    )
+    _warn_if_show_requested(show)
 
     return fig, ax

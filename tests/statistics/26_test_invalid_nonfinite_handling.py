@@ -92,7 +92,6 @@ def test_child_parent_nonfinite_keeps_nan_and_uses_conservative_correction(
         tree=tree,
         annotations_df=nodes_df,
         significance_level_alpha=0.05,
-        fdr_method="flat",
     )
 
     assert np.isnan(out.loc["A", "Child_Parent_Divergence_P_Value"])

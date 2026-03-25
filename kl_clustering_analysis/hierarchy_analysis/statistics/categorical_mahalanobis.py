@@ -9,6 +9,10 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy import linalg
 
+from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
+    felsenstein_sibling_multiplier,
+)
+
 
 def categorical_whitened_vector(
     theta_1: NDArray[np.floating],
@@ -65,13 +69,7 @@ def categorical_whitened_vector(
     # Apply sibling branch-length scaling as variance inflation.
     # Since T = ||z||^2, scaling variance by c implies T/c, i.e. z/sqrt(c).
     if branch_length_sum is not None and branch_length_sum > 0:
-        if mean_branch_length is None or mean_branch_length <= 0:
-            raise ValueError(
-                "mean_branch_length must be finite positive when branch_length_sum is provided. "
-                f"Got mean_branch_length={mean_branch_length!r}, branch_length_sum={branch_length_sum!r}."
-            )
-        bl_normalized = 1.0 + branch_length_sum / (2.0 * mean_branch_length)
-        z = z / np.sqrt(bl_normalized)
+        z = z / np.sqrt(felsenstein_sibling_multiplier(branch_length_sum, mean_branch_length))
 
     return z
 

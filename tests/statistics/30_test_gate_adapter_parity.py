@@ -66,7 +66,6 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
         base_df.copy(),
         significance_level_alpha=0.01,
         spectral_method=None,
-        fdr_method="tree_bh",
     )
     sequential_bundle = annotate_sibling_gate(
         tree,

@@ -22,7 +22,6 @@ def run_gate_annotation_pipeline(
     spectral_method: str | None = None,
     minimum_projection_dimension: int | None = None,
     sibling_method: str = config.SIBLING_TEST_METHOD,
-    fdr_method: str = config.EDGE_FDR_METHOD,
     sibling_spectral_dims: dict[str, int] | None = None,
     sibling_pca_projections: dict[str, np.ndarray] | None = None,
     sibling_pca_eigenvalues: dict[str, np.ndarray] | None = None,
@@ -44,7 +43,6 @@ def run_gate_annotation_pipeline(
         leaf_data=leaf_data,
         spectral_method=spectral_method,
         minimum_projection_dimension=minimum_projection_dimension,
-        fdr_method=fdr_method,
     )
 
     # Auto-derive Gate 3 configuration from Gate 2 output
