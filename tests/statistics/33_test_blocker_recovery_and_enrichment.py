@@ -6,7 +6,7 @@ import networkx as nx
 import pytest
 
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing import (
-    TreeBHFamilyOutcome,
+    TreeBHSiblingGroupOutcome,
     TreeBHResult,
     recover_blocker_metadata,
     recover_signal_neighbors,
@@ -70,15 +70,15 @@ def test_recover_blocker_metadata_walks_to_nearest_nonrejected_ancestor() -> Non
         adjusted_p_values=np.array([0.01, 0.02, 0.8, 0.03, 1.0, 1.0], dtype=float),
         tested_mask=np.array([True, True, True, True, False, False], dtype=bool),
         level_alpha_by_depth={1: 0.05, 2: 0.05},
-        family_outcomes={
-            "root": TreeBHFamilyOutcome(
+        sibling_group_outcomes={
+            "root": TreeBHSiblingGroupOutcome(
                 depth=1,
                 adjusted_alpha=0.05,
                 tested_child_ids=["A", "B"],
                 raw_p_values=[0.01, 0.02],
                 reject_mask=[True, True],
             ),
-            "A": TreeBHFamilyOutcome(
+            "A": TreeBHSiblingGroupOutcome(
                 depth=2,
                 adjusted_alpha=0.05,
                 tested_child_ids=["C", "D"],
@@ -135,8 +135,8 @@ def test_recover_blocker_metadata_rejects_multi_parent_graph() -> None:
         adjusted_p_values=np.array([0.01, 0.02, 1.0], dtype=float),
         tested_mask=np.array([True, True, False], dtype=bool),
         level_alpha_by_depth={1: 0.05},
-        family_outcomes={
-            "root": TreeBHFamilyOutcome(
+        sibling_group_outcomes={
+            "root": TreeBHSiblingGroupOutcome(
                 depth=1,
                 adjusted_alpha=0.05,
                 tested_child_ids=["A", "B"],
