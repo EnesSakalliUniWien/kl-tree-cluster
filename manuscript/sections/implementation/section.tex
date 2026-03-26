@@ -2,13 +2,13 @@
 
 \section{Practical Setup and Default Choices}
 
-Table~\ref{tab:defaults} summarizes the main settings used in the current
+\Cref{tab:defaults} summarizes the main settings used in the current
 implementation. These settings define how the tree is built, how evidence is
 combined across the tree, and how final cluster decisions are made.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{ll}
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
 \toprule
 Component & Current choice \\
 \midrule
@@ -17,7 +17,7 @@ Linkage & Average linkage \\
 Edge significance level & $\alpha_{\mathrm{edge}} = 0.001$ \\
 Sibling significance level & $\alpha_{\mathrm{sib}} = 0.01$ \\
 Edge test & Projected Wald test with parent-specific whitening \\
-Edge dimension rule & Signal count from the parent's local spectrum \\
+Edge dimension rule & Marchenko--Pastur signal count from the parent's local spectrum \\
 Sibling test & Projected Wald test with continuous edge-weight deflation \\
 Sibling dimension rule & Geometric mean of positive child edge dimensions \\
 Sibling basis / calibration & Parent PCA head + random padding; Satterthwaite raw test; weighted $\hat c$ localized by a Gaussian kernel in log-structural-dimension space \\
@@ -27,7 +27,7 @@ Edge multiple-testing correction & Hierarchical BH correction on the tree \\
 Sibling multiple-testing correction & Flat BH on focal pairs \\
 Pass-through traversal & On \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \caption{Main settings used in the current implementation.}
 \label{tab:defaults}
 \end{table}

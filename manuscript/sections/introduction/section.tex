@@ -2,23 +2,34 @@
 
 \section{Introduction}
 
-Hierarchical clustering is attractive when the analyst wants more than a flat
-partition. A tree exposes coarse-to-fine structure, keeps near-miss cluster
-boundaries visible, and provides a natural substrate for interpretable cluster
-decisions. In practice, however, most hierarchical
-workflows still cut the tree using simple geometric rules such as a fixed height,
-an inconsistency threshold, or a manually chosen number of clusters. Those
-choices are often difficult to defend when the goal is not only descriptive
-grouping but also reproducible statistical claims.
+Hierarchical clustering, meaning a family of methods that builds nested groups
+by repeatedly merging similar samples or sample groups, is attractive when the
+analyst wants more than a flat partition. In this setting, a tree is a rooted
+diagram of nested groups of
+samples. The leaves of the tree are the observed samples themselves. As the
+clustering algorithm merges similar samples or groups, it creates internal
+nodes, each of which represents the union of all leaves below it. The root is
+the final node containing the full data set. Such a representation exposes
+coarse-to-fine structure, keeps near-miss cluster boundaries visible, and makes
+it possible to discuss not only the final grouping but also the intermediate
+grouping decisions that led to it. In practice, however, most hierarchical
+workflows still cut the tree using simple geometric rules such as a fixed
+height, an inconsistency threshold, or a manually chosen number of clusters.
+Those choices are often difficult to defend when the goal is not only
+descriptive grouping but also reproducible statistical claims.
 
-KL-TE takes a different view of the tree. An internal node is not merely a
-merge produced by the algorithm; it is a decision point. For a parent node $u$ with children
-$l(u)$ and $r(u)$, the core question is: should this split survive in the final
-partition? A linkage tree alone cannot answer that question. It proposes
-candidate splits, but it does not tell us whether at least one child genuinely
-departs from the parent's feature distribution, whether the two children are
-actually distinct enough to represent separate clusters, or whether scanning
-the entire tree has produced false positives.
+KL-TE takes a different view of this tree. An internal node is not merely a
+merge produced by the algorithm; it is a candidate decision point. If a parent
+node $u$ has children $l(u)$ and $r(u)$, then that parent proposes a possible
+split of the data into two child subtrees. The central question is whether this
+proposed split should survive in the final partition. A linkage tree alone
+cannot answer that question. Here, a linkage tree means the hierarchy returned
+by the agglomerative merging rule itself. It proposes candidate splits, but it
+does not tell
+us whether at least one child genuinely departs from the parent's feature
+distribution, whether the two children are actually distinct enough to
+represent separate clusters, or whether scanning the entire tree has produced
+false positives.
 
 The method therefore requires two kinds of evidence. First, a split should not
 survive unless at least one child meaningfully departs from its ancestral
@@ -27,7 +38,8 @@ branch or a mild asymmetry without supporting two stable child clusters, so the
 children themselves must also be distinguishable from one another. This is why
 the method uses both a child-parent edge test and a sibling test. The final
 partition keeps a split only when both questions are answered favorably after
-multiple-testing correction.
+multiple-testing correction, that is, an adjustment for the fact that many
+candidate splits are tested across the same hierarchy.
 
 Four inferential complications shape the design. The child is a subset of its
 parent, so the edge comparison is nested rather than an ordinary two-sample
@@ -52,9 +64,14 @@ the resulting partition.
 
 The presentation follows that decision problem in order. It first constructs the
 tree and node distributions that define the candidate splits. It then asks
-whether a child departs from its parent, explains why that test needs nested
-variance and a parent-local summary of the feature space, and applies hierarchical multiple-testing
-control across the tree. It next asks whether the two children under the same
-parent are genuinely distinct, and explains why that sibling comparison needs a
-post-selection calibration step. Only after both evidence tables are in place
-does the final tree traversal convert them into clusters.
+whether a child departs from its parent, explains why that test needs a nested
+variance formula because the child group is contained inside the parent group,
+and uses a parent-local summary of the feature space, meaning a lower-dimensional
+description built from the variation visible below that parent. It then applies
+hierarchical multiple-testing control across the tree. Next it asks whether the
+two children under the same parent are genuinely distinct, and explains why
+that sibling comparison needs a post-selection calibration step, meaning a
+correction for the bias introduced when the same data are used both to choose a
+split and to test it. Only after both evidence tables are in place does the
+final tree traversal, that is, the top-down walk that decides where splitting
+stops, convert them into clusters.

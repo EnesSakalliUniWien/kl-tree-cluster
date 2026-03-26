@@ -2,28 +2,67 @@
 
 \subsection{Data Representation and Subtree Objects}
 
-Let $X$ denote the working sample representation after any preprocessing. In
-the direct binary or indicator case,
-$X \in \{0,1\}^{n \times p}$ with rows $X_i \in \{0,1\}^p$. Categorical and
-continuous inputs are mapped into this same discrete representation before the
-tree is built. The method builds a rooted agglomerative tree
-$\mathcal{T} = (V,E)$ using Hamming distance between samples and average
-linkage. It is helpful to state explicitly what this tree contains. The leaf
-set consists of the original samples, so there are $n$ leaves and each leaf is
-in one-to-one correspondence with one row of $X$. Every agglomerative merge
-creates one new internal node whose descendant set is the union of the two
-merged child subtrees. Starting from $n$ singleton leaves and merging until all
-samples belong to one connected hierarchy therefore yields a rooted binary tree
-with
+\Cref{tab:notation} fixes the global symbols used in the rest of the
+method. This subsection introduces the tree objects in plain language before
+writing them formally, because the statistical tests operate on subtree
+summaries rather than directly on individual samples. All supported inputs are
+first mapped into one working discrete sample-feature matrix $X$, and the
+method then builds a rooted agglomerative tree $\mathcal{T} = (V,E)$ using
+Hamming distance and average linkage.
+
+For a non-expert reader, the important point is that the tree is a
+bookkeeping device for nested groups of samples. Each leaf corresponds to one
+observed sample. Each internal node is created by one agglomerative merge and
+therefore stands for a group of leaves rather than a new observation. The root
+is the unique node that contains every sample. In that sense, internal nodes
+represent candidate subpopulations, while leaves represent the original data
+points.
+
+The edges of the tree record immediate containment relations between these
+groups. If $(u,c) \in E$, then $c$ is a child subtree sitting directly inside
+the larger parent subtree $u$. Equivalently, every leaf below $c$ is also
+below $u$, and there is no intermediate node between them. This interpretation
+is important because the edge test is attached to exactly that parent-child
+relation: it asks whether the child subtree distribution departs from the
+background defined by its parent. The sibling test then uses the two child
+edges under the same parent to ask whether those child subtrees should remain
+separate.
+
+In the direct binary or indicator case, $X \in \{0,1\}^{n \times p}$ with rows
+$X_i \in \{0,1\}^p$. The leaf set of $\mathcal{T}$ consists of the original
+samples, and each agglomerative merge creates one new internal node whose
+descendant set is the union of the two merged child subtrees. Starting from $n$
+singleton leaves and merging until all samples belong to one connected
+hierarchy yields a rooted binary tree with
 \begin{equation}
 |V| = 2n-1,
 \qquad
 |E| = 2n-2,
 \end{equation}
 consisting of $n$ leaves, $n-1$ internal nodes, and one root. The root
-represents the full sample set, each non-root node has exactly one parent, and
-each internal node corresponds to one candidate split location that may or may
-not survive the later statistical filtering.
+represents the full sample set, and each internal node defines one candidate
+split location that may or may not survive the later statistical filtering.
+Formally, if $u \in V$ is any node, then its associated subtree object is the
+set of descendant leaves
+\begin{equation}
+L(u) = \{ i \in \{1,\dots,n\} : \text{leaf } L_i \text{ lies below } u \}.
+\end{equation}
+The subtree size is
+\begin{equation}
+n_u = |L(u)|.
+\end{equation}
+If $c$ is a child of $u$, then the edge $(u,c)$ represents the immediate set
+inclusion
+\begin{equation}
+L(c) \subset L(u),
+\end{equation}
+and if $u$ has children $l(u)$ and $r(u)$, then the binary-tree structure gives
+the disjoint union identity
+\begin{equation}
+L(u) = L\bigl(l(u)\bigr) \cup L\bigl(r(u)\bigr),
+\qquad
+L\bigl(l(u)\bigr) \cap L\bigl(r(u)\bigr) = \varnothing.
+\end{equation}
 
 Once that tree is fixed, the inferential problem is about subtrees rather than
 individual samples. The method therefore replaces each node by an empirical
@@ -34,17 +73,20 @@ the same parent. The raw leaf matrix still matters through the descendant sets
 and local spectral matrices, but the primary inferential units are node-level
 distributions.
 
-For each node $u \in V$, let $L(u)$ denote its descendant leaf set and let
-$n_u = |L(u)|$. For binary or indicator coordinates, the node distribution is
-the feature-wise mean vector
+For binary or indicator coordinates, the node distribution is the feature-wise
+mean over the descendant leaves,
 \begin{equation}
 \theta_u = \frac{1}{n_u}\sum_{i \in L(u)} X_i \in [0,1]^p.
 \end{equation}
+Thus $\theta_u$ is not a parameter attached to a single sample. It is the
+empirical summary of the whole subtree rooted at $u$: each coordinate
+$\theta_{u,j}$ is the fraction of descendant leaves in that subtree whose
+$j$th working feature equals $1$.
 If $u$ has children $l$ and $r$, then
 \begin{equation}
-n_u = n_l + n_r,
+n_u = n_{l(u)} + n_{r(u)},
 \qquad
-\theta_u = \frac{n_l \theta_l + n_r \theta_r}{n_u}.
+\theta_u = \frac{n_{l(u)} \theta_{l(u)} + n_{r(u)} \theta_{r(u)}}{n_u}.
 \end{equation}
 The decomposition goal is to identify a set of terminal tree nodes whose leaf
 sets partition the samples and whose defining splits are supported by the two
@@ -58,9 +100,9 @@ through one-hot indicators
 \qquad
 k = 0,\dots,K-1,
 \end{equation}
-so that the Bernoulli/indicator formulas below apply directly on the expanded
-feature space. Continuous inputs enter through an explicit preprocessing map
-into a discrete representation. Median binarization is
+so that the same Bernoulli or indicator formulas apply on the expanded feature
+space. Continuous inputs enter through an explicit preprocessing map into a
+discrete representation. One simple option is median binarization,
 \begin{equation}
 X_{ij}^{\mathrm{bin}}
 =
@@ -68,7 +110,8 @@ X_{ij}^{\mathrm{bin}}
 W_{ij} > \mathrm{median}(W_{\cdot j})
 \right\},
 \end{equation}
-and quantile discretization followed by one-hot expansion is
+while a more granular option is quantile discretization followed by one-hot
+expansion,
 \begin{equation}
 C_{ij}
 =

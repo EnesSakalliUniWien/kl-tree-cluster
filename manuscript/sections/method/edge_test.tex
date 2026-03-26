@@ -9,21 +9,41 @@ linkage algorithm happened to create one. In plain terms, the question is:
 does this child really move away from the background defined by its parent, or
 is the observed difference small enough to be explained by sampling noise?
 
-The raw difference $\theta_c-\theta_u$ is not enough on its own. Some features
-are naturally more variable than others, and very small child subtrees are
-noisier than large ones. The test therefore begins by converting the raw
-child-parent difference into standardized feature scores. The coordinate-wise null is
-$H_{0,j}^{\mathrm{edge}}(u,c): \theta_{c,j} = \theta_{u,j}$. Because $c$ is
-nested inside $u$, the child and parent estimators are not independent. In the
-binary or indicator representation,
+The derivation has two parts. First, the raw child-parent contrast must be
+standardized with the correct nested variance. Second, the resulting
+high-dimensional contrast must be summarized without overcounting redundant
+directions.
+
+\paragraph{Step 1: Define the coordinatewise edge contrast.}
+The coordinate-wise null is
+\begin{equation}
+H_{0,j}^{\mathrm{edge}}(u,c): \theta_{c,j} = \theta_{u,j}.
+\end{equation}
+At the estimator level, the raw contrast is
+\begin{equation}
+\hat{\theta}_{c,j} - \hat{\theta}_{u,j}.
+\end{equation}
+Because $c$ is nested inside $u$, the child and parent estimators are not
+independent. This is what makes the edge test a nested comparison rather than
+an ordinary two-sample comparison.
+
+\paragraph{Step 2: Use the nested variance.}
+In the binary or indicator representation,
 \begin{equation}
 \mathrm{Var}(\hat{\theta}_{c,j} - \hat{\theta}_{u,j})
 =
 \theta_{u,j}(1-\theta_{u,j})
 \left(\frac{1}{n_c} - \frac{1}{n_u}\right),
 \end{equation}
-which is the variance expression used in the code. The standardized edge vector
-is therefore
+which is the variance expression used in the code. The subtraction term
+$\frac{1}{n_c} - \frac{1}{n_u}$ is the signature of the nested tree setting.
+In an ordinary two-sample test for independent groups, the variance factor
+would look like $\frac{1}{n_1} + \frac{1}{n_2}$. Here the parent already
+contains the child, so part of the uncertainty cancels out, which yields the
+nested factor $\frac{1}{n_c} - \frac{1}{n_u} > 0$.
+
+\paragraph{Step 3: Standardize the edge contrast coordinatewise.}
+The standardized edge vector is therefore
 \begin{equation}
 z_{u \to c,j}^{\mathrm{edge}}
 =
@@ -45,15 +65,10 @@ z_{u \to c,p}^{\mathrm{edge}}
 \right)^\top
 \in \mathbb{R}^p.
 \end{equation}
-The subtraction term
-$\frac{1}{n_c} - \frac{1}{n_u}$ is the signature of the nested tree setting.
-In an ordinary two-sample test for independent groups, the variance factor
-would look like $\frac{1}{n_1} + \frac{1}{n_2}$. Here the parent already
-contains the child, so part of the uncertainty cancels out, which yields the
-nested factor $\frac{1}{n_c} - \frac{1}{n_u} > 0$. This is why very small
-children need a larger raw deviation $\theta_{c,j} - \theta_{u,j}$ to generate
-the same standardized score.
+This is why very small children need a larger raw deviation
+$\theta_{c,j} - \theta_{u,j}$ to generate the same standardized score.
 
+\paragraph{Step 4: Replace a raw sum of squares by a parent-local spectral summary.}
 Coordinatewise standardization fixes heteroskedasticity, but it does not solve
 the second problem: the edge evidence is high-dimensional and correlated.
 Summing $z_{u \to c,j}^2$ directly would overcount redundant coordinates and let
@@ -114,8 +129,11 @@ followed by normalization. The implementation therefore obtains the same
 parent-local principal directions while replacing a potentially very large
 $d_u \times d_u$ eigendecomposition by a much smaller $m_u \times m_u$ one.
 
-The spectral dimension is the Marchenko--Pastur signal count
-\citep{marchenko1967distribution}. With
+The edge-stage structural dimension is selected by a local
+Marchenko--Pastur signal-count rule \citep{marchenko1967distribution},
+rather than fixed globally. Eigenvalues above the Marchenko--Pastur upper
+noise edge are treated as signal-bearing directions, while eigenvalues below
+that threshold are treated as part of the local noise bulk. With
 \begin{equation}
 \hat{\sigma}_u^2 = \mathrm{median}\{\lambda_{u,i} : \lambda_{u,i} > 0\},
 \qquad
@@ -130,9 +148,13 @@ k_u^{\mathrm{edge}}
 \#\{i : \lambda_{u,i} > b_u^{\mathrm{MP}}\}
 \right\},
 \end{equation}
-followed by the implementation cap $k_u^{\mathrm{edge}} \le d_u$. The floor is
-$2$.
+followed by the implementation cap $k_u^{\mathrm{edge}} \le d_u$. The floor of
+$2$ is an implementation regularizer rather than part of the
+Marchenko--Pastur law itself: it keeps weak-signal or pure-noise subtrees on
+the same projected-Wald path, avoids a degenerate $k=0$ skip case, and avoids
+the numerically fragile $\chi^2(1)$ regime.
 
+\paragraph{Step 5: Project and whiten the edge evidence.}
 Let $v_{u,1},\dots,v_{u,k_u^{\mathrm{edge}}}$ denote the leading eigenvectors.
 After the coordinatewise standardization step, the vector
 $z_{u \to c}^{\mathrm{edge}} \in \mathbb{R}^p$ is projected onto these

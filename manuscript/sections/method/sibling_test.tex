@@ -15,6 +15,8 @@ simple: every non-root node has exactly one parent and therefore at most one
 sibling, namely the other child of that same parent. The sibling test is thus
 always a single pairwise comparison, not a comparison against a larger sibling
 set.
+
+\paragraph{Sibling null and pooled baseline.}
 Formally, it tests the sibling null
 \begin{equation}
 H_0^{\mathrm{sib}}(u): \theta_{l(u)} = \theta_{r(u)}.
@@ -26,7 +28,12 @@ For binary or indicator coordinates, the pooled null proportion is
 \frac{n_{l(u)}\theta_{l(u),j} + n_{r(u)}\theta_{r(u),j}}
 {n_{l(u)} + n_{r(u)}}.
 \end{equation}
-The standardized sibling vector is
+
+\paragraph{Standardized sibling contrast.}
+Because the two children are disjoint subtrees under the same parent, the
+coordinatewise variance takes the usual two-sample Bernoulli form rather than
+the nested child-parent form used in the edge test. The standardized sibling
+vector is
 \begin{equation}
 z_{u,j}^{\mathrm{sib}}
 =
@@ -52,15 +59,24 @@ k_u^{\mathrm{sib}}
 k_{l(u)}^{\mathrm{edge}}
 k_{r(u)}^{\mathrm{edge}}
 }
-\right)
+\right).
 \end{equation}
-when both child dimensions are positive. If only one child has a positive
-dimension, that value is reused directly; if neither child has a positive
-dimension, the sibling test is skipped and the node is treated conservatively
-as a merge.
+If exactly one child has a positive edge-stage spectral dimension, that value
+is reused directly; if neither child has a positive dimension, the sibling
+test is skipped and the node is treated conservatively as a merge. This
+standardized vector answers the first sibling question: how large is the
+left-right contrast after accounting for feature-specific sampling noise? The
+next question is how to combine those coordinatewise contrasts into one summary
+score.
+
+\paragraph{Projected sibling statistic.}
+The sibling test then combines this multi-feature contrast into a single
+summary score while preserving the low-dimensional structure already learned at
+the parent during the edge stage.
 
 The projection basis starts with the parent node, not a fresh random draw. The
-first available parent PCA directions are used up to
+first available parent PCA directions, where PCA refers to principal-component
+directions summarizing the main variation at that parent, are used up to
 $k_u^{\mathrm{sib}}$. If the requested sibling dimension exceeds the available
 parent PCA rank, the remaining rows are filled with random orthonormal padding
 directions. The runtime API accepts child PCA projections as an input, but the
@@ -74,11 +90,15 @@ T_u^{\mathrm{raw}}
 =
 \|P_u z_u^{\mathrm{sib}}\|_2^2.
 \end{equation}
+
+\paragraph{Reference-law calibration.}
 The default p-value calculation is deliberately conservative. After
 projection, the method asks whether the observed squared contrast is larger
 than would be expected from ordinary within-parent sampling noise, while still
 allowing different projected directions to have different variances. In the
-current implementation, this is done with a Satterthwaite moment match for the
+current implementation, this is done with a Satterthwaite moment match, meaning
+an approximation that replaces the exact null law by a scaled chi-square law
+with the same first two moments, for the
 PCA-derived part of the test and plain $\chi^2(1)$ contributions for any added
 orthogonal-complement directions.
 
@@ -192,18 +212,27 @@ p_u^{\mathrm{sib}}
 This is the practical difference between whitening and Satterthwaite
 calibration: whitening rescales the coordinates before summing, whereas
 Satterthwaite keeps the raw quadratic form and adjusts the reference
-distribution instead. Appendix~\ref{app:projected-wald-example} expands this
+distribution instead. \Cref{app:projected-wald-example} expands this
 example in full matrix form and shows the corresponding plain, whitened, and
 Satterthwaite-calibrated calculations side by side.
 
-Raw sibling $p$-values are still not enough on their own. The same data are
-used to build the hierarchy, choose which nodes matter, and evaluate sibling
-contrasts. That reuse creates \emph{post-selection inflation}: the tree has
-already been optimized to separate the data, so the observed sibling
-difference vector $z_u^{\mathrm{sib}}$ is systematically larger than it would
-be under a fresh null sample, even when the data contain no cluster structure.
-Empirical null simulations confirm that the uncorrected Wald sibling test
-produces Type~I error rates of approximately 39\% at $\alpha = 0.05$.
+\paragraph{Post-selection inflation.}
+Raw sibling $p$-values are still not enough on their own because the sibling
+pair being tested is not fixed in advance. The same data are used first to
+construct the hierarchy and thereby expose pairs of child subtrees that already
+look well separated, and then again to test whether those selected siblings are
+significantly different. This data reuse creates \emph{post-selection
+inflation}. Even under a null setting with no true cluster structure, the tree
+construction step tends to present unusually separated sibling pairs simply
+because it was built from the observed dissimilarities. The sibling statistic
+is therefore evaluated conditionally on a favorable selection event rather than
+under the unconditional null distribution for a pre-specified pair. The
+practical consequence is anti-conservative inference: the observed sibling
+difference vector $z_u^{\mathrm{sib}}$ is systematically larger than the naive
+reference law expects, so raw $p$-values are too small and false split
+decisions become too common. Empirical null simulations confirm this effect:
+without correction, the Wald sibling test produces Type~I error rates of
+approximately 39\% at $\alpha = 0.05$.
 
 \paragraph{Calibration via continuous edge-weight deflation.}
 The sibling calibration then corrects for this extra optimism by estimating a
@@ -222,7 +251,7 @@ w_q = \min\!\left(p^{\mathrm{edge}}_{l(q)},\;
                     p^{\mathrm{edge}}_{r(q)}\right),
 \end{equation}
 where $p^{\mathrm{edge}}_{l(q)}$ and $p^{\mathrm{edge}}_{r(q)}$ are the
-BH-corrected edge-test $p$-values of the two children. Pairs where neither
+Benjamini--Hochberg-corrected edge-test $p$-values of the two children. Pairs where neither
 child is edge-significant receive large weights and dominate the estimate,
 while pairs with genuine cluster signal receive small weights and are
 down-weighted. In the runtime, child edges that were blocked or never tested
@@ -251,14 +280,14 @@ weighting avoids this dead zone: even when all edge $p$-values are similarly
 small, the weights are approximately equal, and the weighted mean of $r_q$
 still recovers the true inflation $\hat{c} \approx 3$.
 
-\paragraph{Default runtime correction.}
+\paragraph{Runtime deflation and sibling false-discovery-rate correction.}
 The implementation first fits one global weighted-mean inflation level
 $\hat{c}_{\mathrm{global}}$. It then localizes that correction in the
 decomposition-derived sibling structural dimension
-$k_q^{\mathrm{struct}}$. The structural dimension of a sibling pair is the
-same quantity used to choose the sibling projection dimension at runtime, so
-the calibration neighborhood is defined in the same geometric coordinate system
-as the test itself.
+$k_q^{\mathrm{struct}}$. This structural dimension is the same quantity used to
+choose the sibling projection dimension at runtime. As a result, the
+calibration neighborhood is defined in the same geometric coordinate system as
+the test itself.
 
 For all valid sibling pairs in the calibration pool, define
 \[

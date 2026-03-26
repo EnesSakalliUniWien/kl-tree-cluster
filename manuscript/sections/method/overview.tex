@@ -1,51 +1,65 @@
 % !TEX root = ../../main.tex
 
-\subsection{Decision Problem and Workflow}
+\subsection{Tree Representation and Inferential Objective}
 
-The central question at every internal node can be stated directly: should this split
-survive in the final partition? The hierarchy alone cannot answer it. A linkage
-procedure proposes candidate splits, but it does not tell us whether a child
-really leaves its parent's distributional background, whether the two children
-are truly distinct from one another, or whether repeated testing across the
-tree has created spurious evidence.
+The method begins with a hierarchical clustering tree built from the samples.
+Here, a tree is a rooted diagram of nested sample groups. The leaves of the
+tree are the observed samples themselves. Each internal node is created when
+two smaller groups are merged during agglomerative clustering, so an internal
+node represents the union of all leaves below it rather than a new data point.
+The root is the unique top node containing every sample. An edge connects a
+parent node to one of its immediate child subtrees, so the tree records how
+small groups sit inside larger groups. In this paper, the tree should therefore
+be read as a structured list of candidate groups and candidate splits, not as a
+claim that every branch already corresponds to a real cluster.
 
-KL-TE answers that node-level question with two tests and one final traversal
-rule. The child-parent edge test asks whether at least one branch departs from
-its ancestral context. The sibling test asks whether the two children under the
-same parent are distinct enough to justify keeping the split. Around those two
-questions sit four practical complications that drive the rest of the method:
-nested child-parent sampling, correlated high-dimensional edge evidence, many
-tests across the tree, and post-selection inflation in sibling testing.
+Once the tree is understood in that way, the inferential problem becomes
+concrete. Each internal node proposes a possible split of the sample set into
+its two child subtrees, but the tree alone does not say whether that split
+should be kept in the final partition. The main question is whether a proposed
+split is supported strongly enough to remain as a cluster boundary. The role of
+the statistical method is therefore not to build the hierarchy from scratch,
+but to evaluate the splits proposed by that hierarchy.
 
-With that motivation in place, one full run of the method proceeds in the order
-the code executes it:
-\begin{enumerate}[leftmargin=1.5em]
-  \item represent the input data in a discrete sample-feature matrix;
-  \item build an average-linkage Hamming tree on the samples;
-  \item assign every node a feature-wise distribution estimated from its
-  descendant leaves;
-  \item run the child-parent edge test on every parent-child edge to test
-  whether a child subtree differs from its parent;
-  \item run the sibling test on every binary sibling pair to test whether the two child
-  subtrees are distinguishable from one another, then calibrate those sibling
-  statistics for post-selection inflation;
-  \item perform a top-down tree traversal that keeps a split only when the test
-  annotations support it.
-\end{enumerate}
-The rest of this section follows that same logic rather than only the code
-path. We first define the subtree-level objects being tested, then explain why
-the child-parent comparison needs nested variance and spectral whitening, then
-show why the sibling comparison requires a separate post-selection correction,
-and finally describe how the resulting evidence tables are turned into
-clusters.
+KL-TE answers this question in a direct way. After the data are represented in
+a common discrete sample-feature space and arranged into a rooted binary tree,
+each node is summarized by the empirical feature distribution of its descendant
+leaves. These subtree-level summaries are the basic inferential objects used in
+the rest of the method. For each proposed split, the child-parent edge test
+asks whether a child subtree differs from the broader background represented by
+its parent. The sibling test then asks whether the two child subtrees under the
+same parent differ enough from each other to justify treating them as separate
+clusters. A final top-down traversal turns these local decisions into a single
+partition of the leaves.
+
+This structure is needed because the tree creates statistical issues that a
+purely geometric cut rule does not address. Parent and child are nested groups,
+so the edge comparison is not an ordinary two-sample problem. The feature space
+can be high-dimensional and strongly correlated, so evidence has to be combined
+carefully rather than coordinate by coordinate. Because many candidate splits
+are tested across the tree, multiplicity must be controlled. In addition, the
+sibling test is affected by post-selection inflation, since the same data are
+used both to build the hierarchy and to evaluate the splits that the hierarchy
+exposes. Here post-selection inflation means that a split can look more
+statistically convincing than it really is because it was selected from the
+same data on which it is later tested. The rest of this section develops the
+method in that order.
+
+Accordingly, the next subsection defines the representation and subtree objects
+used throughout. The edge-test and sibling-test subsections then formalize the
+two inferential stages, including the relevant variance models, projected test
+statistics, and correction steps. Only after those ingredients are in place do
+we describe the traversal rule that turns nodewise evidence into the returned
+cluster set.
 
 \begin{figure}[p]
 \centering
 \resizebox{0.93\textwidth}{!}{\input{figures/pipeline_overview_single_page}}
-\caption{Overview of the KL-TE workflow. Samples are represented as a discrete
+\caption{Overview of the KL-TE method. Samples are represented in a discrete
 sample-feature matrix, organized into a candidate hierarchy, summarized by
 subtree-level distributions, evaluated with child-parent and sibling tests, and
-finally cut by a top-down traversal to yield terminal clusters. The schematic
-illustrates the logic of the method rather than a literal execution trace.}
+finally converted into terminal clusters by a top-down traversal. The schematic
+illustrates the inferential structure of the method rather than a literal
+execution trace.}
 \label{fig:pipeline-overview}
 \end{figure}

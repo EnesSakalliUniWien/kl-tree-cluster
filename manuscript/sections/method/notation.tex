@@ -1,0 +1,57 @@
+% !TEX root = ../../main.tex
+
+\subsection{Notation}
+
+We use one notation layer throughout the method to keep the statistical and
+algorithmic steps aligned. The working sample representation is a discrete
+matrix $X$, the hierarchy is a rooted binary tree $\mathcal{T} = (V,E)$, and
+the main inferential objects are node-level distributions $\theta_u$ estimated
+from descendant leaves. Edge-stage quantities compare a child $c$ to its parent
+$u$, sibling-stage quantities compare $l(u)$ and $r(u)$ under the same parent,
+and traversal quantities convert the resulting significance indicators into the
+final partition. \Cref{tab:notation} summarizes the symbols that carry the
+rest of the method.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Core notation used throughout the KL-TE method description.}
+\label{tab:notation}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$n$ & Number of samples. \\
+$p$ & Number of binary or indicator coordinates in the working representation. \\
+$X \in \{0,1\}^{n \times p}$ & Working sample-feature matrix after preprocessing. \\
+$X_i \in \{0,1\}^p$ & Row vector for sample $i$. \\
+$\mathcal{T} = (V,E)$ & Rooted binary hierarchy built from the samples. \\
+$u, v, a$ & Generic tree nodes. \\
+$L_i$ & Leaf node corresponding to observed sample $i$. \\
+$R$ & Root node whose descendant set contains all samples. \\
+$c$ & Generic child node in a parent-child edge comparison. \\
+$l(u), r(u)$ & Left and right child of parent node $u$. \\
+$L(u)$ & Descendant leaf set of node $u$. \\
+$n_u = |L(u)|$ & Number of descendant leaves under node $u$. \\
+$e = (u,c)$ & Directed tree edge from parent $u$ to child $c$, representing immediate subtree containment. \\
+$\theta_u \in [0,1]^p$ & Empirical node distribution at node $u$. \\
+$H_{0,j}^{\mathrm{edge}}(u,c)$ & Coordinatewise child-parent edge null for feature $j$. \\
+$z_{u \to c}^{\mathrm{edge}}$ & Standardized child-parent edge vector. \\
+$T_{u \to c}^{\mathrm{edge}}$ & Projected edge statistic for edge $(u,c)$. \\
+$p_{u \to c}^{\mathrm{edge}}$ & Raw edge p-value. \\
+$S^{\mathrm{edge}}(c)$ & Edge significance indicator after multiplicity correction. \\
+$H_0^{\mathrm{sib}}(u)$ & Sibling null at parent $u$. \\
+$\bar\theta_{u,j}$ & Pooled sibling proportion at coordinate $j$. \\
+$z_u^{\mathrm{sib}}$ & Standardized sibling contrast vector at parent $u$. \\
+$k_u^{\mathrm{edge}}, k_u^{\mathrm{sib}}$ & Edge-stage and sibling-stage projection dimensions. \\
+$T_u^{\mathrm{raw}}$ & Raw projected sibling statistic. \\
+$\nu_u$ & Effective sibling degrees of freedom. \\
+$r_q = T_q^{\mathrm{raw}} / \nu_q$ & Raw inflation ratio used in sibling calibration. \\
+$\hat c$ & Global sibling inflation estimate used for deflation. \\
+$S^{\mathrm{sib}}(u)$ & Sibling significance indicator after correction. \\
+$\mathrm{Split}(u)$ & Indicator that traversal keeps the split at node $u$. \\
+$D^{\mathrm{sib}}(u)$ & Indicator that some proper descendant of $u$ has a significant non-skipped sibling split. \\
+$\mathcal{C}$ & Final set of terminal cluster nodes returned by traversal. \\
+\bottomrule
+\end{tabularx}
+\end{table}
