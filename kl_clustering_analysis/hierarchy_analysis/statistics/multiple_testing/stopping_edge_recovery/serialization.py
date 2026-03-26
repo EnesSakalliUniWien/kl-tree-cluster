@@ -1,13 +1,24 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping
 
 import numpy as np
 
 from .models import SignalNeighborInfo, StoppingEdgeInfo
 
 STOPPING_EDGE_INFO_ATTR_KEY = "_stopping_edge_info"
+_REQUIRED_ATTR_FIELDS = (
+    "child_node_ids",
+    "stopping_edge_p_values",
+    "distances_to_stopping_edge",
+    "signal_p_values",
+    "distances_to_signal",
+)
+
+
+def _malformed_payload_error(message: str) -> ValueError:
+    return ValueError(f"Malformed {STOPPING_EDGE_INFO_ATTR_KEY} attrs payload: {message}")
 
 
 def _coerce_float_array(
@@ -18,12 +29,9 @@ def _coerce_float_array(
 ) -> np.ndarray:
     values = np.asarray(raw_values, dtype=float)
     if values.ndim != 1:
-        raise ValueError(
-            f"Malformed {STOPPING_EDGE_INFO_ATTR_KEY} attrs payload: {field_name!r} must be 1-D."
-        )
+        raise _malformed_payload_error(f"{field_name!r} must be 1-D.")
     if len(values) != expected_length:
-        raise ValueError(
-            "Malformed _stopping_edge_info attrs payload: "
+        raise _malformed_payload_error(
             f"{field_name!r} has length {len(values)}, expected {expected_length}."
         )
     return values.copy()
@@ -37,100 +45,86 @@ class StoppingEdgeAttrPayload:
     signal_p_values: np.ndarray
     distances_to_signal: np.ndarray
 
-    @classmethod
-    def from_recovery_maps(
-        cls,
-        *,
-        child_node_ids: list[str],
-        stopping_edge_info_by_child: Mapping[str, StoppingEdgeInfo],
-        signal_neighbor_info_by_child: Mapping[str, SignalNeighborInfo],
-    ) -> StoppingEdgeAttrPayload:
-        child_ids = tuple(str(child_node_id) for child_node_id in child_node_ids)
-        stopping_edge_p_values = np.full(len(child_ids), np.nan)
-        distances_to_stopping_edge = np.full(len(child_ids), np.nan)
-        signal_p_values = np.full(len(child_ids), np.nan)
-        distances_to_signal = np.full(len(child_ids), np.nan)
 
-        for index, child_id in enumerate(child_ids):
-            child_stopping_edge_info = stopping_edge_info_by_child.get(child_id)
-            if child_stopping_edge_info is not None:
-                stopping_edge_p_values[index] = child_stopping_edge_info.stopping_edge_p_value
-                distances_to_stopping_edge[index] = (
-                    child_stopping_edge_info.distance_to_stopping_edge
-                )
+def _build_payload(
+    *,
+    child_node_ids: list[str],
+    stopping_edge_info_by_child: Mapping[str, StoppingEdgeInfo],
+    signal_neighbor_info_by_child: Mapping[str, SignalNeighborInfo],
+) -> StoppingEdgeAttrPayload:
+    child_ids = tuple(child_node_ids)
+    stopping_edge_p_values = np.full(len(child_ids), np.nan)
+    distances_to_stopping_edge = np.full(len(child_ids), np.nan)
+    signal_p_values = np.full(len(child_ids), np.nan)
+    distances_to_signal = np.full(len(child_ids), np.nan)
 
-            child_signal_neighbor_info = signal_neighbor_info_by_child.get(child_id)
-            if child_signal_neighbor_info is not None:
-                signal_p_values[index] = child_signal_neighbor_info.sig_p_value
-                distances_to_signal[index] = child_signal_neighbor_info.distance_to_sig
-
-        return cls(
-            child_node_ids=child_ids,
-            stopping_edge_p_values=stopping_edge_p_values,
-            distances_to_stopping_edge=distances_to_stopping_edge,
-            signal_p_values=signal_p_values,
-            distances_to_signal=distances_to_signal,
-        )
-
-    @classmethod
-    def from_attrs_value(cls, attrs_value: object) -> StoppingEdgeAttrPayload:
-        if not isinstance(attrs_value, Mapping):
-            raise ValueError(
-                f"Malformed {STOPPING_EDGE_INFO_ATTR_KEY} attrs payload: expected a mapping."
+    for index, child_id in enumerate(child_ids):
+        child_stopping_edge_info = stopping_edge_info_by_child.get(child_id)
+        if child_stopping_edge_info is not None:
+            stopping_edge_p_values[index] = child_stopping_edge_info.stopping_edge_p_value
+            distances_to_stopping_edge[index] = (
+                child_stopping_edge_info.distance_to_stopping_edge
             )
 
-        required_fields = (
-            "child_node_ids",
-            "stopping_edge_p_values",
-            "distances_to_stopping_edge",
-            "signal_p_values",
-            "distances_to_signal",
-        )
-        missing_fields = [
-            field_name for field_name in required_fields if field_name not in attrs_value
-        ]
-        if missing_fields:
-            raise ValueError(
-                "Malformed _stopping_edge_info attrs payload: missing fields "
-                f"{missing_fields!r}."
-            )
+        child_signal_neighbor_info = signal_neighbor_info_by_child.get(child_id)
+        if child_signal_neighbor_info is not None:
+            signal_p_values[index] = child_signal_neighbor_info.sig_p_value
+            distances_to_signal[index] = child_signal_neighbor_info.distance_to_sig
 
-        child_node_ids = tuple(
-            str(child_node_id) for child_node_id in attrs_value["child_node_ids"]
-        )
-        expected_length = len(child_node_ids)
-        return cls(
-            child_node_ids=child_node_ids,
-            stopping_edge_p_values=_coerce_float_array(
-                field_name="stopping_edge_p_values",
-                raw_values=attrs_value["stopping_edge_p_values"],
-                expected_length=expected_length,
-            ),
-            distances_to_stopping_edge=_coerce_float_array(
-                field_name="distances_to_stopping_edge",
-                raw_values=attrs_value["distances_to_stopping_edge"],
-                expected_length=expected_length,
-            ),
-            signal_p_values=_coerce_float_array(
-                field_name="signal_p_values",
-                raw_values=attrs_value["signal_p_values"],
-                expected_length=expected_length,
-            ),
-            distances_to_signal=_coerce_float_array(
-                field_name="distances_to_signal",
-                raw_values=attrs_value["distances_to_signal"],
-                expected_length=expected_length,
-            ),
-        )
+    return StoppingEdgeAttrPayload(
+        child_node_ids=child_ids,
+        stopping_edge_p_values=stopping_edge_p_values,
+        distances_to_stopping_edge=distances_to_stopping_edge,
+        signal_p_values=signal_p_values,
+        distances_to_signal=distances_to_signal,
+    )
 
-    def to_attrs_value(self) -> dict[str, object]:
-        return {
-            "child_node_ids": list(self.child_node_ids),
-            "stopping_edge_p_values": self.stopping_edge_p_values.copy(),
-            "distances_to_stopping_edge": self.distances_to_stopping_edge.copy(),
-            "signal_p_values": self.signal_p_values.copy(),
-            "distances_to_signal": self.distances_to_signal.copy(),
-        }
+
+def _serialize_payload(payload: StoppingEdgeAttrPayload) -> dict[str, object]:
+    return {
+        "child_node_ids": list(payload.child_node_ids),
+        "stopping_edge_p_values": payload.stopping_edge_p_values.copy(),
+        "distances_to_stopping_edge": payload.distances_to_stopping_edge.copy(),
+        "signal_p_values": payload.signal_p_values.copy(),
+        "distances_to_signal": payload.distances_to_signal.copy(),
+    }
+
+
+def _parse_payload(attrs_value: object) -> StoppingEdgeAttrPayload:
+    if not isinstance(attrs_value, Mapping):
+        raise _malformed_payload_error("expected a mapping.")
+
+    missing_fields = [
+        field_name for field_name in _REQUIRED_ATTR_FIELDS if field_name not in attrs_value
+    ]
+    if missing_fields:
+        raise _malformed_payload_error(f"missing fields {missing_fields!r}.")
+
+    child_node_ids = tuple(str(child_node_id) for child_node_id in attrs_value["child_node_ids"])
+    expected_length = len(child_node_ids)
+    return StoppingEdgeAttrPayload(
+        child_node_ids=child_node_ids,
+        stopping_edge_p_values=_coerce_float_array(
+            field_name="stopping_edge_p_values",
+            raw_values=attrs_value["stopping_edge_p_values"],
+            expected_length=expected_length,
+        ),
+        distances_to_stopping_edge=_coerce_float_array(
+            field_name="distances_to_stopping_edge",
+            raw_values=attrs_value["distances_to_stopping_edge"],
+            expected_length=expected_length,
+        ),
+        signal_p_values=_coerce_float_array(
+            field_name="signal_p_values",
+            raw_values=attrs_value["signal_p_values"],
+            expected_length=expected_length,
+        ),
+        distances_to_signal=_coerce_float_array(
+            field_name="distances_to_signal",
+            raw_values=attrs_value["distances_to_signal"],
+            expected_length=expected_length,
+        ),
+    )
 
 
 def build_stopping_edge_attrs(
@@ -139,11 +133,13 @@ def build_stopping_edge_attrs(
     stopping_edge_info_by_child: Mapping[str, StoppingEdgeInfo],
     signal_neighbor_info_by_child: Mapping[str, SignalNeighborInfo],
 ) -> dict[str, object]:
-    return StoppingEdgeAttrPayload.from_recovery_maps(
-        child_node_ids=child_node_ids,
-        stopping_edge_info_by_child=stopping_edge_info_by_child,
-        signal_neighbor_info_by_child=signal_neighbor_info_by_child,
-    ).to_attrs_value()
+    return _serialize_payload(
+        _build_payload(
+            child_node_ids=child_node_ids,
+            stopping_edge_info_by_child=stopping_edge_info_by_child,
+            signal_neighbor_info_by_child=signal_neighbor_info_by_child,
+        )
+    )
 
 
 def parse_stopping_edge_attrs(
@@ -152,7 +148,7 @@ def parse_stopping_edge_attrs(
     attrs_value = attrs.get(STOPPING_EDGE_INFO_ATTR_KEY)
     if attrs_value is None:
         return None
-    return StoppingEdgeAttrPayload.from_attrs_value(attrs_value)
+    return _parse_payload(attrs_value)
 
 
 __all__ = [

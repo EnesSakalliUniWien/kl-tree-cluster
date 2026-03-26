@@ -42,51 +42,62 @@ def get_resolved_minimum_projection_dimension_backend() -> int | None:
     return _RESOLVED_MINIMUM_PROJECTION_DIMENSION
 
 
-def estimate_min_projection_dimension_backend(
-    leaf_data: pd.DataFrame,
+def estimate_projection_dimension_floor_backend(
+    leaf_feature_matrix: pd.DataFrame,
     *,
-    hard_floor: int = 2,
-    hard_cap: int = 20,
+    minimum_dimension_floor: int = 2,
+    maximum_dimension_cap: int = 20,
 ) -> int:
     """Estimate an adaptive JL floor from the effective rank of the full data."""
-    feature_matrix = leaf_data.values.astype(np.float64)
-    n_samples, n_features = feature_matrix.shape
+    leaf_feature_values = leaf_feature_matrix.values.astype(np.float64)
+    n_samples, n_features = leaf_feature_values.shape
 
     if n_samples < 2 or n_features < 2:
-        return hard_floor
+        return minimum_dimension_floor
 
-    column_variance = np.var(feature_matrix, axis=0)
-    active_feature_mask = column_variance > 0
-    n_active_features = int(np.sum(active_feature_mask))
-    if n_active_features < 2:
-        return hard_floor
+    feature_variances = np.var(leaf_feature_values, axis=0)
+    nonconstant_feature_mask = feature_variances > 0
+    n_nonconstant_features = int(np.sum(nonconstant_feature_mask))
+    if n_nonconstant_features < 2:
+        return minimum_dimension_floor
 
-    active_feature_matrix = feature_matrix[:, active_feature_mask]
-    if n_samples < n_active_features:
-        column_means = active_feature_matrix.mean(axis=0)
-        column_stds = active_feature_matrix.std(axis=0, ddof=0)
-        column_stds[column_stds == 0] = 1.0
-        standardized_features = (active_feature_matrix - column_means) / column_stds
-        gram_matrix = standardized_features @ standardized_features.T / n_active_features
-        eigenvalues = np.sort(np.linalg.eigvalsh(gram_matrix))[::-1]
+    nonconstant_feature_matrix = leaf_feature_values[:, nonconstant_feature_mask]
+    if n_samples < n_nonconstant_features:
+        feature_means = nonconstant_feature_matrix.mean(axis=0)
+        feature_standard_deviations = nonconstant_feature_matrix.std(axis=0, ddof=0)
+        feature_standard_deviations[feature_standard_deviations == 0] = 1.0
+        standardized_feature_matrix = (
+            nonconstant_feature_matrix - feature_means
+        ) / feature_standard_deviations
+        gram_matrix = standardized_feature_matrix @ standardized_feature_matrix.T
+        gram_matrix /= n_nonconstant_features
+        spectrum_eigenvalues = np.sort(np.linalg.eigvalsh(gram_matrix))[::-1]
     else:
-        correlation_matrix = np.corrcoef(active_feature_matrix.T)
+        correlation_matrix = np.corrcoef(nonconstant_feature_matrix.T)
         correlation_matrix = np.nan_to_num(correlation_matrix, nan=0.0)
         np.fill_diagonal(correlation_matrix, 1.0)
-        eigenvalues = np.sort(np.linalg.eigvalsh(correlation_matrix))[::-1]
+        spectrum_eigenvalues = np.sort(np.linalg.eigvalsh(correlation_matrix))[::-1]
 
-    minimum_projection_dimension = int(np.ceil(_effective_rank(np.maximum(eigenvalues, 0.0))))
-    minimum_projection_dimension = max(minimum_projection_dimension, hard_floor)
-    minimum_projection_dimension = min(minimum_projection_dimension, hard_cap)
+    estimated_projection_dimension_floor = int(
+        np.ceil(_effective_rank(np.maximum(spectrum_eigenvalues, 0.0)))
+    )
+    estimated_projection_dimension_floor = max(
+        estimated_projection_dimension_floor,
+        minimum_dimension_floor,
+    )
+    estimated_projection_dimension_floor = min(
+        estimated_projection_dimension_floor,
+        maximum_dimension_cap,
+    )
 
     logger.info(
         "Adaptive PROJECTION_MINIMUM_DIMENSION: minimum_projection_dimension=%d (n=%d, d=%d, d_active=%d)",
-        minimum_projection_dimension,
+        estimated_projection_dimension_floor,
         n_samples,
         n_features,
-        n_active_features,
+        n_nonconstant_features,
     )
-    return minimum_projection_dimension
+    return estimated_projection_dimension_floor
 
 
 def resolve_minimum_projection_dimension_backend(
@@ -106,7 +117,7 @@ def resolve_minimum_projection_dimension_backend(
             )
             set_resolved_minimum_projection_dimension_backend(2)
             return 2
-        resolved = estimate_min_projection_dimension_backend(leaf_data)
+        resolved = estimate_projection_dimension_floor_backend(leaf_data)
         set_resolved_minimum_projection_dimension_backend(resolved)
         return resolved
 
@@ -132,7 +143,9 @@ def compute_projection_dimension_backend(
             minimum_projection_dimension = _RESOLVED_MINIMUM_PROJECTION_DIMENSION
         else:
             configured_value = config.PROJECTION_MINIMUM_DIMENSION
-            minimum_projection_dimension = configured_value if isinstance(configured_value, int) else 2
+            minimum_projection_dimension = (
+                configured_value if isinstance(configured_value, int) else 2
+            )
     elif isinstance(minimum_projection_dimension, str):
         minimum_projection_dimension = 2
 
@@ -188,7 +201,7 @@ def derive_projection_seed_backend(base_seed: int | None, test_id: str) -> int:
 __all__ = [
     "compute_projection_dimension_backend",
     "derive_projection_seed_backend",
-    "estimate_min_projection_dimension_backend",
+    "estimate_projection_dimension_floor_backend",
     "generate_projection_matrix_backend",
     "get_resolved_minimum_projection_dimension_backend",
     "resolve_minimum_projection_dimension_backend",

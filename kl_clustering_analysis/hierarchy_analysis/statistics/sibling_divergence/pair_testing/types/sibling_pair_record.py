@@ -29,7 +29,7 @@ class SiblingPairRecord:
     """Tree-neighborhood-interpolated sibling null prior for nodes whose
     Gate 2 edge test was blocked (ancestor-blocked or untested)."""
     ancestor_support: float | None = None
-    blend_lambda: float | None = None
+    neighborhood_reliance: float | None = None
 
 
 __all__ = ["SiblingPairRecord"]

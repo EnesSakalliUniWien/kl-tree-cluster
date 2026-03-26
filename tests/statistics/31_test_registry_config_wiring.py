@@ -55,29 +55,20 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
 
 @pytest.mark.parametrize(
     "sibling_method",
-    [
-        "wald",
-        "cousin_adjusted_wald",
-        "parametric_wald",
-    ],
+    ["cousin_adjusted_wald"],
 )
-@pytest.mark.parametrize(
-    "spectral_method",
-    [None, "marchenko_pastur"],
-)
-def test_pipeline_supports_current_config_method_combinations(
-    sibling_method: str, spectral_method: str | None
+@pytest.mark.parametrize("use_leaf_data", [False, True])
+def test_pipeline_supports_current_gate_annotation_modes(
+    sibling_method: str, use_leaf_data: bool
 ) -> None:
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
 
-    needs_leaf_data = spectral_method not in (None, "none")
     bundle = run_gate_annotation_pipeline(
         tree,
         annotations_df.copy(),
         alpha_local=0.01,
         sibling_alpha=0.01,
-        leaf_data=leaf_data if needs_leaf_data else None,
-        spectral_method=spectral_method,
+        leaf_data=leaf_data if use_leaf_data else None,
         sibling_method=sibling_method,
     )
     out = bundle.annotated_df
@@ -92,20 +83,9 @@ def test_pipeline_supports_current_config_method_combinations(
 
 def test_pipeline_rejects_unknown_sibling_method() -> None:
     tree, annotations_df, _leaf_data = _build_small_tree_with_leaf_data()
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError):
         run_gate_annotation_pipeline(
             tree,
             annotations_df.copy(),
             sibling_method="not_a_real_method",
-        )
-
-
-def test_pipeline_rejects_unknown_spectral_method() -> None:
-    tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
-    with pytest.raises((ValueError, KeyError)):
-        run_gate_annotation_pipeline(
-            tree,
-            annotations_df.copy(),
-            leaf_data=leaf_data,
-            spectral_method="not_a_real_method",
         )

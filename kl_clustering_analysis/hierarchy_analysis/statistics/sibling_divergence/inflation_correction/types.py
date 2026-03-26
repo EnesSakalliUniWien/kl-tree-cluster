@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional
-
-import numpy as np
+from typing import Dict
 
 
 @dataclass
@@ -21,7 +19,6 @@ class CalibrationModel:
     n_calibration: int  # number of pairs that contributed (weight > 0)
     global_inflation_factor: float  # the estimated c-hat
     max_observed_ratio: float = 1.0  # max(r_i) — upper bound for c-hat
-    beta: Optional[np.ndarray] = None  # kept for API compat; [log(c-hat), 0, 0]
     diagnostics: Dict = field(default_factory=dict)
 
 

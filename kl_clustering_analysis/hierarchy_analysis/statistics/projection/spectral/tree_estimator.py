@@ -3,6 +3,16 @@
 Builds per-node spectral tasks, dispatches them in parallel (or
 sequentially for small trees), and assembles results into the three
 output dicts consumed by the rest of the pipeline.
+
+The only supported estimator is Marchenko-Pastur rank selection. It uses
+random matrix theory to separate signal eigenvalues from the noise bulk of
+the local correlation matrix. For correlation matrices, $\sigma^2 = 1$
+exactly, so the Marchenko-Pastur support is $(1 \pm \sqrt{d/n})^2$. When no
+eigenvalues exceed the upper bound, the raw signal count is conceptually 0,
+but the implementation floors the returned dimension to at least 1 and then
+applies ``config.SPECTRAL_MINIMUM_DIMENSION``. Pure-noise nodes therefore get
+a small fallback dimension and are expected to fail to reject rather than
+taking a literal ``k = 0`` skip path.
 """
 
 from __future__ import annotations
@@ -101,7 +111,6 @@ def compute_spectral_decomposition(
     tree: nx.DiGraph,
     leaf_data: pd.DataFrame,
     *,
-    method: str = "marchenko_pastur",
     minimum_projection_dimension: int = 1,
     compute_projections: bool = True,
     include_internal: bool | None = None,
@@ -126,8 +135,6 @@ def compute_spectral_decomposition(
         ``tree.nodes[n].get("label", n)``.
     leaf_data
         DataFrame with leaf labels as index and features as columns.
-    method
-        Dimension estimator: ``"marchenko_pastur"`` (default).
     minimum_projection_dimension
         Floor on the returned dimension.
     compute_projections
@@ -151,11 +158,6 @@ def compute_spectral_decomposition(
 
     if include_internal is None:
         include_internal = _config.INCLUDE_INTERNAL_IN_SPECTRAL
-
-    if method != "marchenko_pastur":
-        raise ValueError(
-            f"Unknown spectral dimension method {method!r}. " f"Choose 'marchenko_pastur'."
-        )
 
     feature_count = leaf_data.shape[1]
     leaf_label_to_index = {label: i for i, label in enumerate(leaf_data.index)}
@@ -194,7 +196,7 @@ def compute_spectral_decomposition(
     spectral_results = _run_spectral_tasks_parallel(
         spectral_tasks,
         leaf_feature_matrix,
-        dimension_method=method,
+        dimension_method="marchenko_pastur",
         minimum_projection_dimension=minimum_projection_dimension,
         feature_count=feature_count,
         compute_eigendecomposition_outputs=compute_eigendecomposition_outputs,
@@ -216,9 +218,8 @@ def compute_spectral_decomposition(
 
     if internal_projection_dimensions:
         logger.info(
-            "Spectral dimensions (%s): median=%d, mean=%.1f, min=%d, max=%d "
+            "Spectral dimensions (marchenko_pastur): median=%d, mean=%.1f, min=%d, max=%d "
             "(across %d internal nodes, d=%d) [%.2fs]",
-            method,
             int(np.median(internal_projection_dimensions)),
             float(np.mean(internal_projection_dimensions)),
             min(internal_projection_dimensions),

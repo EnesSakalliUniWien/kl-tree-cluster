@@ -49,8 +49,6 @@ class GateAnnotationBundle:
     """Container for gate-annotation outputs and optional run metadata."""
 
     annotated_df: pd.DataFrame
-    local_gate_column: str = "Child_Parent_Divergence_Significant"
-    sibling_gate_column: str = "Sibling_BH_Different"
     local_gate_columns: tuple[str, ...] = LEGACY_EDGE_COLUMNS
     sibling_gate_columns: tuple[str, ...] = LEGACY_SIBLING_COLUMNS
     metadata: dict[str, Any] = field(default_factory=dict)

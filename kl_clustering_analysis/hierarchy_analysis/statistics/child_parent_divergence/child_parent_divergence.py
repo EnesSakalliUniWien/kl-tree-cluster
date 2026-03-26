@@ -26,7 +26,6 @@ def _apply_edge_multiple_testing_correction(
     p_values_for_correction: np.ndarray,
     child_ids: list[str],
     edge_alpha: float,
-    fdr_method: str,
 ) -> tuple[
     np.ndarray,
     np.ndarray,
@@ -34,12 +33,11 @@ def _apply_edge_multiple_testing_correction(
     np.ndarray,
     ChildParentEdgeTreeBHResult | None,
 ]:
-    """Apply the sole supported Gate 2 multiple-testing correction: Tree-BH."""
-    if fdr_method != "tree_bh":
-        raise ValueError(
-            f"Unsupported Gate 2 correction method: {fdr_method!r}. Only 'tree_bh' is supported."
-        )
+    """Apply Tree-BH correction to child-parent edge p-values.
 
+    Tree-BH (Tree-structured Benjamini-Hochberg) is the only supported
+    Gate 2 multiple-testing correction method.
+    """
     tree_bh_result = apply_tree_bh_correction(
         tree,
         p_values_for_correction,
@@ -75,13 +73,15 @@ def _apply_edge_multiple_testing_correction(
 def annotate_child_parent_divergence(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
+    *,
     significance_level_alpha: float = config.EDGE_ALPHA,
-    fdr_method: str = "tree_bh",
     leaf_data: pd.DataFrame | None = None,
-    spectral_method: str | None = None,
-    minimum_projection_dimension: int | None = None,
 ) -> pd.DataFrame:
-    """Test child-parent divergence using the projected Wald pipeline."""
+    """Test child-parent divergence using the projected Wald pipeline.
+
+    Uses Tree-BH (Tree-structured Benjamini-Hochberg) for FDR correction.
+    This is the only supported multiple-testing correction method for Gate 2.
+    """
     annotations_df = annotations_df.copy()
     edge_alpha = float(significance_level_alpha)
 
@@ -95,13 +95,17 @@ def annotate_child_parent_divergence(
     child_leaf_counts = extract_leaf_counts(annotations_df, child_ids)
     parent_leaf_counts = extract_leaf_counts(annotations_df, parent_ids)
 
-    node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues = (
-        compute_child_parent_spectral_context(
-            tree,
-            leaf_data,
-            spectral_method,
+    if leaf_data is None:
+        node_spectral_dimensions = None
+        node_pca_projections = None
+        node_pca_eigenvalues = None
+    else:
+        node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues = (
+            compute_child_parent_spectral_context(
+                tree,
+                leaf_data,
+            )
         )
-    )
 
     annotations_df.attrs["_spectral_dims"] = node_spectral_dimensions
     annotations_df.attrs["_pca_projections"] = node_pca_projections
@@ -177,7 +181,6 @@ def annotate_child_parent_divergence(
         p_values_for_correction=p_values_for_correction,
         child_ids=child_ids,
         edge_alpha=edge_alpha,
-        fdr_method=fdr_method,
     )
 
     child_parent_edge_null_rejected_by_tree_bh = np.where(
@@ -195,7 +198,8 @@ def annotate_child_parent_divergence(
         "ancestor_blocked_edges": int(np.sum(ancestor_blocked_edge_flags)),
     }
 
-    if fdr_method == "tree_bh" and int(np.sum(ancestor_blocked_edge_flags)) > 0:
+    # Build stopping-edge recovery metadata for blocked edges
+    if int(np.sum(ancestor_blocked_edge_flags)) > 0:
         from ..multiple_testing.stopping_edge_recovery import (
             recover_signal_neighbors,
             recover_stopping_edge_info,
@@ -210,11 +214,9 @@ def annotate_child_parent_divergence(
         nearest_signal_neighbor_by_child = recover_signal_neighbors(
             tree,
             child_ids,
-            child_parent_edge_null_rejected_by_tree_bh=(child_parent_edge_null_rejected_by_tree_bh),
+            child_parent_edge_null_rejected_by_tree_bh=child_parent_edge_null_rejected_by_tree_bh,
             child_parent_edge_tested_by_tree_bh=child_parent_edge_tested_by_tree_bh,
-            child_parent_edge_corrected_p_values_by_tree_bh=(
-                child_parent_edge_corrected_p_values_by_tree_bh
-            ),
+            child_parent_edge_corrected_p_values_by_tree_bh=child_parent_edge_corrected_p_values_by_tree_bh,
         )
         annotations_df.attrs[STOPPING_EDGE_INFO_ATTR_KEY] = build_stopping_edge_attrs(
             child_node_ids=child_ids,

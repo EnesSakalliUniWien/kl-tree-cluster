@@ -2,16 +2,15 @@
 
 Provides ``process_node`` and ``iterate_worklist`` — stateless functions
 used by :class:`TreeDecomposition` during the top-down DFS walk.
-
-:class:`GateEvaluator` lives in :mod:`.gate_evaluator` and is re-exported
-here for backward compatibility.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
-from .gate_evaluator import GateEvaluator  # re-export
+if TYPE_CHECKING:
+    from .gate_evaluator import GateEvaluator
 
 # ======================================================================
 # Traversal helpers (stateless functions)

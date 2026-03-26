@@ -224,22 +224,6 @@ class TestNonBinarySkippedFlag:
         df["Child_Parent_Divergence_P_Value"] = 0.01
         return df
 
-    def test_base_wald_marks_leaves_as_skipped(self):
-        """Base Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
-            annotate_sibling_divergence,
-        )
-
-        tree = self._build_simple_tree()
-        df = self._make_base_df(tree)
-        result = annotate_sibling_divergence(tree, df)
-
-        # Leaves should be skipped (they have no children to test)
-        for leaf in ["L0", "L1", "L2", "L3"]:
-            assert bool(
-                result.loc[leaf, "Sibling_Divergence_Skipped"]
-            ), f"Leaf {leaf} should be marked as Sibling_Divergence_Skipped"
-
     def test_adjusted_wald_marks_leaves_as_skipped(self):
         """Adjusted Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
         from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
@@ -254,22 +238,3 @@ class TestNonBinarySkippedFlag:
             assert bool(
                 result.loc[leaf, "Sibling_Divergence_Skipped"]
             ), f"Leaf {leaf} should be marked as Sibling_Divergence_Skipped"
-
-    def test_collect_test_arguments_returns_non_binary(self):
-        """_collect_test_arguments should return non-binary nodes separately."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald_annotation import (
-            _collect_test_arguments,
-        )
-
-        tree = self._build_simple_tree()
-        df = self._make_base_df(tree)
-
-        parents, args, skipped, non_binary = _collect_test_arguments(tree, df)
-
-        # Leaves (L0-L3) have 0 children -> non-binary
-        assert set(non_binary) >= {
-            "L0",
-            "L1",
-            "L2",
-            "L3",
-        }, f"Leaves should be in non_binary list, got {non_binary}"

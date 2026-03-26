@@ -22,6 +22,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.stopp
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation import (
     interpolate_sibling_null_priors,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation.edge_metadata import (
+    extract_stopping_edge_info,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
     SiblingPairRecord,
 )
@@ -185,14 +188,6 @@ def test_enrich_blocked_weights_replaces_legacy_weight_and_populates_audit_field
         },
         index=["A", "B", "C", "D", "E", "F"],
     )
-    annotations_df.attrs["_stopping_edge_info"] = {
-        "child_node_ids": ["A", "B", "C", "D", "E", "F"],
-        "stopping_edge_p_values": np.array([np.nan, np.nan, np.nan, np.nan, 0.8, 0.8]),
-        "distances_to_stopping_edge": np.array([np.nan, np.nan, np.nan, np.nan, 1.0, 1.0]),
-        "signal_p_values": np.array([np.nan, np.nan, np.nan, np.nan, 0.03, 0.03]),
-        "distances_to_signal": np.array([np.nan, np.nan, np.nan, np.nan, 1.0, 1.0]),
-    }
-
     annotations_df.attrs[STOPPING_EDGE_INFO_ATTR_KEY] = build_stopping_edge_attrs(
         child_node_ids=["A", "B", "C", "D", "E", "F"],
         stopping_edge_info_by_child={
@@ -249,7 +244,32 @@ def test_enrich_blocked_weights_replaces_legacy_weight_and_populates_audit_field
     assert 0.0 <= enriched_blocked.sibling_null_prior_from_edge_pvalue < 1.0
     assert enriched_blocked.smoothed_sibling_null_prior is not None
     assert enriched_blocked.ancestor_support is not None
-    assert enriched_blocked.blend_lambda is not None
+    assert enriched_blocked.neighborhood_reliance is not None
+
+
+def test_extract_stopping_edge_info_preserves_serialized_values() -> None:
+    annotations_df = pd.DataFrame(index=["A", "B", "C"])
+    annotations_df.attrs[STOPPING_EDGE_INFO_ATTR_KEY] = build_stopping_edge_attrs(
+        child_node_ids=["A", "B", "C"],
+        stopping_edge_info_by_child={
+            "B": StoppingEdgeInfo(
+                stopping_child_node="A",
+                stopping_edge_p_value=0.25,
+                distance_to_stopping_edge=2.0,
+                generations_above=1,
+            )
+        },
+        signal_neighbor_info_by_child={
+            "B": SignalNeighborInfo(sig_node="C", sig_p_value=0.1, distance_to_sig=1.0)
+        },
+    )
+
+    stopping_edge_info = extract_stopping_edge_info(annotations_df)
+
+    assert stopping_edge_info is not None
+    assert list(stopping_edge_info) == ["B"]
+    assert stopping_edge_info["B"].stopping_edge_p_value == pytest.approx(0.25)
+    assert stopping_edge_info["B"].distance_to_stopping_edge == pytest.approx(2.0)
 
 
 def test_interpolate_sibling_null_priors_rejects_malformed_stopping_edge_attrs() -> None:

@@ -14,8 +14,8 @@ Examples:
     # Run specific test case
     python run_benchmark.py --case binary_perfect_4c
 
-    # Run with custom config
-    python run_benchmark.py --full --sibling-method wald --edge-alpha 0.05
+    # Run with custom alpha settings
+    python run_benchmark.py --full --sibling-method cousin_adjusted_wald --edge-alpha 0.05
 """
 
 from __future__ import annotations
@@ -46,7 +46,6 @@ def run_single_case(
     alpha_local: float = None,
     sibling_alpha: float = None,
     sibling_method: str = None,
-    spectral_method: str = None,
     verbose: bool = True,
 ) -> dict:
     """Run KL-TE pipeline on a single test case.
@@ -61,8 +60,6 @@ def run_single_case(
         Gate 3 significance level (default: config.SIBLING_ALPHA).
     sibling_method : str, optional
         Sibling test method (default: config.SIBLING_TEST_METHOD).
-    spectral_method : str, optional
-        Spectral dimension method (default: config.SPECTRAL_METHOD).
     verbose : bool
         Print progress and results.
 
@@ -75,7 +72,6 @@ def run_single_case(
     orig_edge_alpha = config.EDGE_ALPHA
     orig_sibling_alpha = config.SIBLING_ALPHA
     orig_sibling_method = config.SIBLING_TEST_METHOD
-    orig_spectral_method = config.SPECTRAL_METHOD
 
     if alpha_local is not None:
         config.EDGE_ALPHA = alpha_local
@@ -83,8 +79,6 @@ def run_single_case(
         config.SIBLING_ALPHA = sibling_alpha
     if sibling_method is not None:
         config.SIBLING_TEST_METHOD = sibling_method
-    if spectral_method is not None:
-        config.SPECTRAL_METHOD = spectral_method
 
     try:
         # Get test case
@@ -134,7 +128,7 @@ def run_single_case(
                 "edge_alpha": config.EDGE_ALPHA,
                 "sibling_alpha": config.SIBLING_ALPHA,
                 "sibling_method": config.SIBLING_TEST_METHOD,
-                "spectral_method": config.SPECTRAL_METHOD,
+                "spectral_dimension_estimator": "marchenko_pastur",
             },
         }
 
@@ -150,7 +144,7 @@ def run_single_case(
             print(f"  EDGE_ALPHA={config.EDGE_ALPHA}")
             print(f"  SIBLING_ALPHA={config.SIBLING_ALPHA}")
             print(f"  SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}")
-            print(f"  SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+            print("  SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
 
         return result
 
@@ -159,7 +153,6 @@ def run_single_case(
         config.EDGE_ALPHA = orig_edge_alpha
         config.SIBLING_ALPHA = orig_sibling_alpha
         config.SIBLING_TEST_METHOD = orig_sibling_method
-        config.SPECTRAL_METHOD = orig_spectral_method
 
 
 def run_quick_benchmark(
@@ -215,7 +208,6 @@ def run_full_benchmark(
     alpha_local: float = None,
     sibling_alpha: float = None,
     sibling_method: str = None,
-    spectral_method: str = None,
 ) -> list[dict]:
     """Run full benchmark suite (95 cases)."""
     print("Running full benchmark (95 cases)...")
@@ -233,7 +225,6 @@ def run_full_benchmark(
         alpha_local=alpha_local,
         sibling_alpha=sibling_alpha,
         sibling_method=sibling_method,
-        spectral_method=spectral_method,
     )
 
 
@@ -279,17 +270,9 @@ def main():
     parser.add_argument(
         "--sibling-method",
         type=str,
-        choices=["wald", "cousin_adjusted_wald", "cousin_weighted_wald"],
+        choices=["cousin_adjusted_wald"],
         default=None,
         help=f"Sibling test method (default: {config.SIBLING_TEST_METHOD})",
-    )
-
-    parser.add_argument(
-        "--spectral-method",
-        type=str,
-        choices=["marchenko_pastur", "none"],
-        default=None,
-        help=f"Spectral dimension method (default: {config.SPECTRAL_METHOD})",
     )
 
     parser.add_argument(
@@ -310,7 +293,6 @@ def main():
             alpha_local=args.edge_alpha,
             sibling_alpha=args.sibling_alpha,
             sibling_method=args.sibling_method,
-            spectral_method=args.spectral_method,
             verbose=True,
         )
     elif args.quick:
@@ -324,7 +306,6 @@ def main():
             alpha_local=args.edge_alpha,
             sibling_alpha=args.sibling_alpha,
             sibling_method=args.sibling_method,
-            spectral_method=args.spectral_method,
         )
 
 

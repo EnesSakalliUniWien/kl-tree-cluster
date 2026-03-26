@@ -69,14 +69,19 @@ def compute_projected_pvalue(
         n_pca = len(eigenvalues)
         pca_part = projected_vector[:n_pca]
         padding_part = projected_vector[n_pca:]
-        padding_statistic = float(np.sum(padding_part ** 2)) if len(padding_part) > 0 else 0.0
+        padding_statistic = float(np.sum(padding_part**2)) if len(padding_part) > 0 else 0.0
         n_padding = len(padding_part) if len(padding_part) > 0 else 0
 
         if whitening == "satterthwaite":
-            return _satterthwaite_pvalue(pca_part, eigenvalues, padding_statistic, n_padding)
+            return _compute_satterthwaite_pvalue(
+                pca_part,
+                eigenvalues,
+                padding_statistic,
+                n_padding,
+            )
 
         # Default: per-component whitening  T = Σ wᵢ²/λᵢ ~ χ²(k)
-        whitened_statistic = float(np.sum(pca_part ** 2 / eigenvalues))
+        whitened_statistic = float(np.sum(pca_part**2 / eigenvalues))
         test_statistic = whitened_statistic + padding_statistic
         p_value = float(chi2.sf(test_statistic, df=degrees_of_freedom))
         return test_statistic, float(degrees_of_freedom), p_value
@@ -86,8 +91,8 @@ def compute_projected_pvalue(
         return test_statistic, float(degrees_of_freedom), p_value
 
 
-def _satterthwaite_pvalue(
-    pca_projections: np.ndarray,
+def _compute_satterthwaite_pvalue(
+    projected_pca_components: np.ndarray,
     eigenvalues: np.ndarray,
     padding_statistic: float,
     n_padding: int,
@@ -100,32 +105,36 @@ def _satterthwaite_pvalue(
     The random-padding part is plain χ²(n_padding), which is added
     as ``c=1, ν=n_padding`` to the combined Satterthwaite moments.
     """
-    eigs = np.asarray(eigenvalues, dtype=np.float64)
-    eigs = np.maximum(eigs, 1e-12)
+    component_eigenvalues = np.asarray(eigenvalues, dtype=np.float64)
+    component_eigenvalues = np.maximum(component_eigenvalues, 1e-12)
 
     # PCA Satterthwaite moments
-    sum_lam = float(np.sum(eigs))
-    sum_lam2 = float(np.sum(eigs ** 2))
+    sum_eigenvalues = float(np.sum(component_eigenvalues))
+    sum_squared_eigenvalues = float(np.sum(component_eigenvalues**2))
 
     # Combined moments (PCA + padding):
     # Padding is Σ rᵢᵀz² ~ χ²(n_padding) ⟹ each weight = 1
-    total_mean = sum_lam + n_padding         # E[T]
-    total_var = 2.0 * sum_lam2 + 2.0 * n_padding  # Var[T]
+    combined_statistic_mean = sum_eigenvalues + n_padding  # E[T]
+    combined_statistic_variance = 2.0 * sum_squared_eigenvalues + 2.0 * n_padding  # Var[T]
 
-    if total_mean <= 0 or total_var <= 0:
+    if combined_statistic_mean <= 0 or combined_statistic_variance <= 0:
         return 0.0, 1.0, 1.0
 
-    c = total_var / (2.0 * total_mean)
-    nu = 2.0 * total_mean ** 2 / total_var
+    satterthwaite_scale = combined_statistic_variance / (2.0 * combined_statistic_mean)
+    satterthwaite_degrees_of_freedom = (
+        2.0 * combined_statistic_mean**2 / combined_statistic_variance
+    )
 
     # Unwhitened test statistic
-    pca_statistic = float(np.sum(pca_projections ** 2))
+    pca_statistic = float(np.sum(projected_pca_components**2))
     test_statistic = pca_statistic + padding_statistic
 
     # p-value: P(c × χ²(ν) > T) = P(χ²(ν) > T/c)
-    p_value = float(chi2.sf(test_statistic / c, df=nu))
+    p_value = float(
+        chi2.sf(test_statistic / satterthwaite_scale, df=satterthwaite_degrees_of_freedom)
+    )
 
-    return test_statistic, float(nu), p_value
+    return test_statistic, float(satterthwaite_degrees_of_freedom), p_value
 
 
 __all__ = ["compute_projected_pvalue"]

@@ -10,7 +10,8 @@ Corrects post-selection inflation in sibling Wald statistics by:
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Tuple
+from functools import partial
+from typing import Dict
 
 import networkx as nx
 import numpy as np
@@ -19,6 +20,7 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ..branch_length_utils import compute_mean_branch_length
+from ..projection.chi2_pvalue import WhiteningMode
 from .fdr_annotation import (
     apply_sibling_bh_results,
     early_return_if_no_records,
@@ -30,116 +32,37 @@ from .inflation_correction.conditional_deflation import (
     compute_pool_stats,
     predict_local_inflation_factor,
 )
-from .inflation_correction.inflation_estimation import (
-    CalibrationModel,
-    fit_inflation_model,
-    predict_inflation_factor,
-)
-from .pair_testing.sibling_pair_collection import (
-    SiblingPairRecord,
-    collect_sibling_pair_records,
-    count_null_focal_pairs,
-    deflate_focal_pairs,
-)
+from .inflation_correction.inflation_estimation import CalibrationModel, fit_inflation_model
 from .pair_testing.sibling_null_prior_interpolation import interpolate_sibling_null_priors
+from .pair_testing.sibling_pair_collection import (
+    collect_sibling_pair_records,
+    compute_adjusted_sibling_tests,
+    count_null_focal_pairs,
+)
+from .pair_testing.types import SiblingPairRecord
 
 logger = logging.getLogger(__name__)
-
 
 # =============================================================================
 # Pipeline: collect -> test -> calibrate -> deflate
 # =============================================================================
 
 
-def _collect_all_pairs(
-    tree: nx.DiGraph,
-    annotations_df: pd.DataFrame,
-    mean_branch_length: float | None,
-    minimum_projection_dimension: int | None = None,
-    spectral_dims: Dict[str, int] | None = None,
-    pca_projections: Dict[str, np.ndarray] | None = None,
-    pca_eigenvalues: Dict[str, np.ndarray] | None = None,
-    child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
-    whitening: str = "per_component",
-) -> Tuple[List[SiblingPairRecord], List[str]]:
-    """Collect ALL binary-child parent nodes and compute raw Wald stats.
-
-    All pairs are computed for calibration purposes; only focal pairs
-    (at least one child edge-significant) are subsequently tested.
-
-    Returns (records, non_binary_nodes).
-    """
-    return collect_sibling_pair_records(
-        tree,
-        annotations_df,
-        mean_branch_length,
-        minimum_projection_dimension=minimum_projection_dimension,
-        spectral_dims=spectral_dims,
-        pca_projections=pca_projections,
-        pca_eigenvalues=pca_eigenvalues,
-        child_pca_projections=child_pca_projections,
-        whitening=whitening,
-    )
-
-
-def _deflate_and_test(
-    records: List[SiblingPairRecord],
+def _resolve_calibration(
+    sibling_test_record: SiblingPairRecord,
     model: CalibrationModel,
-    pool: PoolStats | None = None,
-) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
-    """Deflate focal pairs and compute adjusted p-values.
-
-    When ``pool`` is provided, uses local per-node deflation in
-    log-structural-dimension space. Otherwise falls back to the global-constant
-    deflation.
-
-    Returns:
-        focal_parents: parent node IDs for focal (edge-significant) pairs
-        focal_results: (T_adj, k, p_adj) per focal pair
-        calibration_methods: method string per focal pair
-    """
-    use_conditional = pool is not None
-
-    def _resolve_calibration(rec: SiblingPairRecord) -> tuple[float, str]:
-        if use_conditional:
-            inflation_factor = predict_local_inflation_factor(
-                model,
-                pool,
-                rec.structural_dimension,
-            )
-            return inflation_factor, "local_structural_k_kernel"
-        inflation_factor = predict_inflation_factor(
+    pool: PoolStats | None,
+) -> tuple[float, str]:
+    """Return the inflation adjustment and label for one sibling test."""
+    if pool is not None:
+        inflation_factor = predict_local_inflation_factor(
             model,
-            rec.branch_length_sum,
-            n_reference=rec.n_parent,
+            pool,
+            sibling_test_record.structural_dimension,
         )
-        return inflation_factor, "global_weighted_mean"
-
-    return deflate_focal_pairs(
-        records,
-        calibration_resolver=_resolve_calibration,
-    )
-
-
-def _apply_results_adjusted(
-    annotations_df: pd.DataFrame,
-    focal_parents: List[str],
-    focal_results: List[Tuple[float, float, float]],
-    calibration_methods: List[str],
-    skipped_parents: List[str],
-    alpha: float,
-) -> pd.DataFrame:
-    """Apply deflated results with BH correction to DataFrame."""
-    return apply_sibling_bh_results(
-        annotations_df,
-        focal_parents,
-        focal_results,
-        alpha,
-        logger=logger,
-        audit_label="Cousin-adjusted Wald",
-        method_labels=calibration_methods,
-        skipped_parents=skipped_parents,
-    )
+        return inflation_factor, "local_structural_k_kernel"
+    # Global model: intercept-only, same c-hat for all pairs
+    return model.global_inflation_factor, "global_weighted_mean"
 
 
 # =============================================================================
@@ -152,12 +75,11 @@ def annotate_sibling_divergence_adjusted(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    minimum_projection_dimension: int | None = None,
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
     child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
-    whitening: str = "per_component",
+    whitening: WhiteningMode = "per_component",
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-adjusted Wald.
 
@@ -192,11 +114,10 @@ def annotate_sibling_divergence_adjusted(
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # Pass 1: compute raw Wald stats for ALL pairs (needed for calibration)
-    records, non_binary = _collect_all_pairs(
+    records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
         mean_branch_length,
-        minimum_projection_dimension=minimum_projection_dimension,
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
@@ -212,13 +133,6 @@ def annotate_sibling_divergence_adjusted(
         return early_annotations_df
 
     n_null, n_focal, n_blocked = count_null_focal_pairs(records)
-    logger.info(
-        "Cousin-adjusted Wald: %d total pairs (%d null-like, %d focal, %d gate2-blocked).",
-        len(records),
-        n_null,
-        n_focal,
-        n_blocked,
-    )
 
     if n_blocked > 0:
         records = interpolate_sibling_null_priors(records, tree, annotations_df)
@@ -230,22 +144,26 @@ def annotate_sibling_divergence_adjusted(
     pool = compute_pool_stats(records, model)
 
     # Pass 3: deflate focal pairs only and compute p-values
-    focal_parents, focal_results, cal_methods = _deflate_and_test(
-        records,
-        model,
-        pool,
+    tested_parent_ids, adjusted_test_summaries, adjustment_method_labels = (
+        compute_adjusted_sibling_tests(
+            records,
+            resolve_inflation_adjustment=partial(_resolve_calibration, model=model, pool=pool),
+        )
     )
 
     # Null-like parents are skipped (they are noise splits)
     skipped_parents = [r.parent for r in records if r.is_null_like]
 
-    annotations_df = _apply_results_adjusted(
+    # Apply BH correction to deflated sibling test results
+    annotations_df = apply_sibling_bh_results(
         annotations_df,
-        focal_parents,
-        focal_results,
-        cal_methods,
-        skipped_parents,
+        tested_parent_ids,
+        adjusted_test_summaries,
         significance_level_alpha,
+        logger=logger,
+        audit_label="Cousin-adjusted Wald",
+        method_labels=adjustment_method_labels,
+        skipped_parents=skipped_parents,
     )
 
     # Audit metadata

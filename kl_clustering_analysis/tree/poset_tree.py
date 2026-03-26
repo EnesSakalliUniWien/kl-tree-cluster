@@ -338,7 +338,9 @@ class PosetTree(nx.DiGraph):
                     "is_leaf": node_attrs.get("is_leaf", False),
                 }
             )
-        self.annotations_df = pd.DataFrame.from_records(node_records).set_index("node_id", drop=True)
+        self.annotations_df = pd.DataFrame.from_records(node_records).set_index(
+            "node_id", drop=True
+        )
 
     # ---------------- Decomposition helper ----------------
 
@@ -371,8 +373,14 @@ class PosetTree(nx.DiGraph):
         # Extract alpha values from kwargs (with defaults from config)
         alpha_local = decomposer_kwargs.pop("alpha_local", config.EDGE_ALPHA)
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
-        if "edge_fdr_method" in decomposer_kwargs or "gate2_fdr_method" in decomposer_kwargs:
-            raise ValueError("Gate 2 multiple-testing method is no longer configurable; Tree-BH is always used.")
+
+        # Reject deprecated FDR method parameters
+        for deprecated_param in ("edge_fdr_method", "gate2_fdr_method", "fdr_method"):
+            if deprecated_param in decomposer_kwargs:
+                raise ValueError(
+                    f"Parameter {deprecated_param!r} is no longer supported. "
+                    "Tree-BH is the only FDR method for Gate 2."
+                )
 
         if annotations_df is None:
             if self.annotations_df is None:

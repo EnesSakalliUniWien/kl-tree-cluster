@@ -63,7 +63,7 @@ def _walk_to_stopping_edge(
     child_node_id_to_hypothesis_index: Dict[str, int],
 ) -> StoppingEdgeInfo | None:
     """Walk upward from an untested child to find the nearest stopping edge."""
-    current_child_node = str(target_child_node)
+    current_child_node = target_child_node
     generations = 0
     cumulative_branch_length = 0.0
     all_branch_lengths_available = True
@@ -83,9 +83,7 @@ def _walk_to_stopping_edge(
 
         sibling_group_outcome = tree_bh_result.sibling_group_outcomes.get(parent_id)
         if sibling_group_outcome is not None:
-            sibling_group_children = [
-                str(child_id) for child_id in sibling_group_outcome.tested_child_ids
-            ]
+            sibling_group_children = sibling_group_outcome.tested_child_ids
             try:
                 within_sibling_group_index = sibling_group_children.index(current_child_node)
             except ValueError:
@@ -142,5 +140,5 @@ def recover_stopping_edge_info(
             child_node_id_to_hypothesis_index,
         )
         if info is not None:
-            result[str(child_node_id)] = info
+            result[child_node_id] = info
     return result

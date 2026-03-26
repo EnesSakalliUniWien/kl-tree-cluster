@@ -1,12 +1,9 @@
-"""Sibling test configuration helpers (Gate 3).
+"""Gate 2 -> Gate 3 configuration helpers.
 
-Provides utilities for deriving projection dimensions and PCA directions
-from Gate 2 (edge test) output for use in Gate 3 (sibling divergence) tests.
-
-These functions bridge the Gate 2 → Gate 3 data flow:
-- Extract spectral dimensions (k) from child-parent edge tests
-- Extract PCA projections/eigenvalues from parent node decompositions
-- Package configuration for sibling Wald tests
+These helpers intentionally keep a permissive contract: when Gate 2 did not
+materialize spectral metadata, they return ``None`` instead of raising. The
+Gate 3 annotators already treat missing spectral/PCA inputs as a supported
+configuration path.
 """
 
 from __future__ import annotations
@@ -17,6 +14,15 @@ import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+
+def _get_gate2_pca_projections(annotated_df: pd.DataFrame) -> dict[str, np.ndarray] | None:
+    """Return Gate 2 PCA projections, logging once when they are unavailable."""
+    pca_projections = annotated_df.attrs.get("_pca_projections")
+    if not pca_projections:
+        logger.debug("Gate 3: no _pca_projections found on Gate 2 annotations")
+        return None
+    return pca_projections
 
 
 def derive_sibling_spectral_dims(
@@ -45,6 +51,7 @@ def derive_sibling_spectral_dims(
     """
     edge_spectral_dims = annotated_df.attrs.get("_spectral_dims")
     if not edge_spectral_dims:
+        logger.debug("Gate 3: no _spectral_dims found on Gate 2 annotations")
         return None
 
     sibling_dims: dict[str, int] = {}
@@ -93,8 +100,8 @@ def derive_sibling_pca_projections(
     if sibling_dims is None:
         return None, None
 
-    pca_projections = annotated_df.attrs.get("_pca_projections")
-    if not pca_projections:
+    pca_projections = _get_gate2_pca_projections(annotated_df)
+    if pca_projections is None:
         return None, None
 
     pca_eigenvalues = annotated_df.attrs.get("_pca_eigenvalues")
@@ -148,8 +155,8 @@ def derive_sibling_child_pca_projections(
     if sibling_dims is None:
         return None
 
-    pca_projections = annotated_df.attrs.get("_pca_projections")
-    if not pca_projections:
+    pca_projections = _get_gate2_pca_projections(annotated_df)
+    if pca_projections is None:
         return None
 
     child_pca_map: dict[str, list[np.ndarray]] = {}

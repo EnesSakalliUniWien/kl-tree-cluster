@@ -93,7 +93,7 @@ def _process_node(
 
     eigendecomposition_result = eigendecompose_correlation(
         descendant_feature_matrix,
-        need_eigh=compute_eigendecomposition_outputs,
+        compute_eigenvectors=compute_eigendecomposition_outputs,
     )
 
     if eigendecomposition_result is None:
@@ -107,7 +107,7 @@ def _process_node(
     projection_dimension = estimate_k_marchenko_pastur(
         eigendecomposition_result.eigenvalues,
         n_samples=descendant_feature_matrix.shape[0],
-        n_features=eigendecomposition_result.d_active,
+        n_features=eigendecomposition_result.active_feature_count,
         minimum_projection_dimension=minimum_projection_dimension,
     )
 
@@ -119,9 +119,6 @@ def _process_node(
             projection_dimension=projection_dimension,
             n_features_total=feature_count,
         )
-
-        if projection_matrix is None or pca_eigenvalues is None:
-            projection_matrix, pca_eigenvalues = None, None
 
     return NodeSpectralResult(
         node_id=spectral_task.node_id,

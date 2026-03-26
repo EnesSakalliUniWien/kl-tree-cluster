@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Callable
+from typing import Any, Callable, cast
 
 import networkx as nx
 import numpy as np
@@ -35,10 +36,10 @@ class EdgeLevelMetadata:
 
 
 def extract_stopping_edge_info(
-    annotations_df: pd.DataFrame,
+    annotations_dataframe: pd.DataFrame,
 ) -> dict[str, StoppingEdgeSummary] | None:
     """Extract per-child stopping-edge information from DataFrame attrs."""
-    metadata = parse_stopping_edge_attrs(annotations_df.attrs)
+    metadata = parse_stopping_edge_attrs(cast(Mapping[str, object], annotations_dataframe.attrs))
     if metadata is None:
         return None
 
@@ -47,54 +48,70 @@ def extract_stopping_edge_info(
         stopping_edge_p_value = metadata.stopping_edge_p_values[index]
         if not np.isfinite(stopping_edge_p_value):
             continue
-        stopping_edge_info_by_child[str(child_id)] = StoppingEdgeSummary(
-            stopping_edge_p_value=float(stopping_edge_p_value),
-            distance_to_stopping_edge=float(metadata.distances_to_stopping_edge[index]),
+        stopping_edge_info_by_child[child_id] = StoppingEdgeSummary(
+            stopping_edge_p_value=stopping_edge_p_value,
+            distance_to_stopping_edge=metadata.distances_to_stopping_edge[index],
         )
     return stopping_edge_info_by_child if stopping_edge_info_by_child else None
 
 
-def extract_edge_metadata(annotations_df: pd.DataFrame) -> EdgeLevelMetadata:
+def extract_edge_metadata(annotations_dataframe: pd.DataFrame) -> EdgeLevelMetadata:
     """Return edge-level tested/significant masks and BH p-values."""
     child_parent_edge_tested = (
-        annotations_df["Child_Parent_Divergence_Tested"].astype(bool).to_numpy()
-        if "Child_Parent_Divergence_Tested" in annotations_df.columns
-        else np.ones(len(annotations_df), dtype=bool)
+        annotations_dataframe["Child_Parent_Divergence_Tested"].astype(bool).to_numpy()
+        if "Child_Parent_Divergence_Tested" in annotations_dataframe.columns
+        else np.ones(len(annotations_dataframe), dtype=bool)
     )
+
     child_parent_edge_significant = (
-        annotations_df["Child_Parent_Divergence_Significant"].astype(bool).to_numpy()
-        if "Child_Parent_Divergence_Significant" in annotations_df.columns
-        else np.zeros(len(annotations_df), dtype=bool)
+        annotations_dataframe["Child_Parent_Divergence_Significant"].astype(bool).to_numpy()
+        if "Child_Parent_Divergence_Significant" in annotations_dataframe.columns
+        else np.zeros(len(annotations_dataframe), dtype=bool)
     )
+
     child_parent_edge_bh_p_values = (
-        annotations_df["Child_Parent_Divergence_P_Value_BH"].astype(float).to_numpy()
-        if "Child_Parent_Divergence_P_Value_BH" in annotations_df.columns
-        else np.full(len(annotations_df), np.nan, dtype=float)
+        annotations_dataframe["Child_Parent_Divergence_P_Value_BH"].astype(float).to_numpy()
+        if "Child_Parent_Divergence_P_Value_BH" in annotations_dataframe.columns
+        else np.full(len(annotations_dataframe), np.nan, dtype=float)
     )
+
     return EdgeLevelMetadata(
-        edge_child_ids=list(map(str, annotations_df.index.tolist())),
+        edge_child_ids=list(map(str, annotations_dataframe.index.tolist())),
         child_parent_edge_tested=child_parent_edge_tested,
         child_parent_edge_significant=child_parent_edge_significant,
         child_parent_edge_bh_p_values=child_parent_edge_bh_p_values,
-        edge_spectral_dims=annotations_df.attrs.get("_spectral_dims"),
+        edge_spectral_dims=annotations_dataframe.attrs.get("_spectral_dims"),
     )
 
 
 def edge_structural_dimension(
     node_id: str,
-    annotations_df: pd.DataFrame,
+    annotations_dataframe: pd.DataFrame,
     edge_spectral_dims: dict[str, int] | None,
 ) -> float:
     """Return the edge-level structural dimension used for neighborhood matching."""
+    spectral_dimension = None
     if edge_spectral_dims is not None:
-        value = edge_spectral_dims.get(str(node_id))
-        if value is not None and np.isfinite(value) and float(value) > 0:
-            return float(value)
+        spectral_dimension = edge_spectral_dims.get(str(node_id))
+    if (
+        spectral_dimension is not None
+        and np.isfinite(spectral_dimension)
+        and float(spectral_dimension) > 0
+    ):
+        return float(spectral_dimension)
 
-    if "Child_Parent_Divergence_df" in annotations_df.columns:
-        value = float(annotations_df.at[node_id, "Child_Parent_Divergence_df"])
-        if np.isfinite(value) and value > 0:
-            return float(value)
+    edge_degrees_of_freedom = None
+    if "Child_Parent_Divergence_df" in annotations_dataframe.columns:
+        edge_degrees_of_freedom_raw = cast(
+            Any, annotations_dataframe.at[node_id, "Child_Parent_Divergence_df"]
+        )
+        edge_degrees_of_freedom = float(np.asarray(edge_degrees_of_freedom_raw, dtype=float).item())
+    if (
+        edge_degrees_of_freedom is not None
+        and np.isfinite(edge_degrees_of_freedom)
+        and edge_degrees_of_freedom > 0
+    ):
+        return float(edge_degrees_of_freedom)
 
     return 1.0
 

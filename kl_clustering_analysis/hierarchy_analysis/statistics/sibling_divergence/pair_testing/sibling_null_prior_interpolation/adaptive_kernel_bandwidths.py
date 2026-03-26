@@ -60,6 +60,7 @@ def compute_adaptive_kernel_bandwidths(
     tau_s = safe_positive_bandwidth(nearest_signal_distances, default=1.0)
 
     h_k = float(np.std(stable_log_ks)) if len(stable_log_ks) > 1 else 0.0
+
     return AdaptiveKernelBandwidths(
         tau_b=tau_b,
         tau_t=tau_t,

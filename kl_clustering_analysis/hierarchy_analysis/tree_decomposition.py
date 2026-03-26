@@ -54,7 +54,6 @@ class TreeDecomposition:
         alpha_local: float = config.EDGE_ALPHA,
         sibling_alpha: float = config.SIBLING_ALPHA,
         leaf_data: pd.DataFrame | None = None,
-        spectral_method: str | None = config.SPECTRAL_METHOD,
         passthrough: bool = config.PASSTHROUGH,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
@@ -76,16 +75,13 @@ class TreeDecomposition:
             Raw binary data matrix (samples × features).  Required for per-node
             spectral dimension estimation.  When ``None``, spectral projection
             is disabled and tests are skipped (treated as merge).
-        spectral_method
-            Per-node projection dimension estimator.  See ``config.SPECTRAL_METHOD``.
         """
         self.tree = tree
         self.annotations_df = annotations_df if annotations_df is not None else pd.DataFrame()
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
-        self._spectral_method = spectral_method if leaf_data is not None else None
-        self._resolved_minimum_projection_dimension = resolve_minimum_projection_dimension_backend(
+        resolve_minimum_projection_dimension_backend(
             config.PROJECTION_MINIMUM_DIMENSION,
             leaf_data=leaf_data,
         )
@@ -212,8 +208,6 @@ class TreeDecomposition:
             alpha_local=self.alpha_local,
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
-            spectral_method=self._spectral_method,
-            minimum_projection_dimension=self._resolved_minimum_projection_dimension,
             sibling_method=config.SIBLING_TEST_METHOD,
             sibling_whitening=config.SIBLING_WHITENING,
         ).annotated_df
@@ -258,21 +252,6 @@ class TreeDecomposition:
         self._node_ids = tuple(node_ids)
 
     # ---------- utilities ----------
-
-    def _get_all_leaves(self, node_id: str) -> set[str]:
-        """Return the leaf partition beneath a node using precomputed cache.
-
-        Parameters
-        ----------
-        node_id
-            The node whose leaf partition to retrieve
-
-        Returns
-        -------
-        set
-            Set of leaf labels in the node's partition
-        """
-        return set(self._descendant_leaf_sets[node_id])
 
     # ---------- LCA ----------
 

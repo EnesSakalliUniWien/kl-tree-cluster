@@ -55,7 +55,12 @@ def _make_sibling_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
                 "root": False,
                 "L": True,
                 "R": False,
-            }
+            },
+            "Child_Parent_Divergence_P_Value_BH": {
+                "root": 1.0,
+                "L": 0.01,
+                "R": 1.0,
+            },
         }
     )
     return tree, nodes_df
@@ -116,8 +121,8 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
     def _fake_sibling_test(
         left_distribution: np.ndarray,
         right_distribution: np.ndarray,
-        n_left: float,
-        n_right: float,
+        left_sample_size: float,
+        right_sample_size: float,
         branch_length_left: float | None = None,
         branch_length_right: float | None = None,
         mean_branch_length: float | None = None,
@@ -132,7 +137,7 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
         return np.nan, np.nan, np.nan
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.standard_wald_annotation.sibling_divergence_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection.sibling_divergence_test",
         _fake_sibling_test,
     )
 
@@ -148,9 +153,10 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
     assert bool(out.loc["root", "Sibling_Divergence_Invalid"]) is True
 
     audit = out.attrs.get("sibling_divergence_audit", {})
-    assert audit.get("total_tests") == 1
-    assert audit.get("invalid_tests") == 1
-    assert audit.get("conservative_path_tests") == 1
+    assert audit.get("total_pairs") == 1
+    assert audit.get("calibration_method") == "weighted_mean"
+    assert audit.get("calibration_n") == 0
+    assert audit.get("test_method") == "cousin_adjusted_wald"
 
 
 def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
@@ -173,8 +179,8 @@ def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
     stat, df, pval = sibling_divergence_test(
         left_distribution=np.array([0.4, 0.6], dtype=float),
         right_distribution=np.array([0.5, 0.5], dtype=float),
-        n_left=10.0,
-        n_right=10.0,
+        left_sample_size=10.0,
+        right_sample_size=10.0,
     )
 
     assert np.isnan(stat)

@@ -5,31 +5,14 @@ from __future__ import annotations
 import numpy as np
 
 from .chi2_pvalue import WhiteningMode
-from .chi2_pvalue import compute_projected_pvalue as _compute_projected_pvalue
+from .chi2_pvalue import compute_projected_pvalue
 from .projection_basis import build_projection_basis_with_padding
-
-
-def compute_projected_pvalue(
-    projected_vector: np.ndarray,
-    degrees_of_freedom: int | float,
-    *,
-    eigenvalues: np.ndarray | None = None,
-    whitening: WhiteningMode = "per_component",
-) -> tuple[float, float, float]:
-    """Compute projected test statistic and p-value."""
-    return _compute_projected_pvalue(
-        np.asarray(projected_vector, dtype=np.float64),
-        degrees_of_freedom,
-        eigenvalues=eigenvalues,
-        whitening=whitening,
-    )
 
 
 def run_projected_wald_kernel(
     z: np.ndarray,
     *,
     seed: int | None = None,
-    minimum_projection_dimension: int | None = None,
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
@@ -80,5 +63,4 @@ def run_projected_wald_kernel(
 
 __all__ = [
     "run_projected_wald_kernel",
-    "compute_projected_pvalue",
 ]

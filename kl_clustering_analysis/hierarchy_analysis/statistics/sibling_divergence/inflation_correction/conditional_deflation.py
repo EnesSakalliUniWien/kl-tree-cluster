@@ -60,9 +60,11 @@ def _record_structural_dimension(record: SiblingPairRecord) -> float:
     """Return the structural-dimension axis used for local calibration."""
     if np.isfinite(record.structural_dimension) and record.structural_dimension > 0:
         return float(record.structural_dimension)
-    if np.isfinite(record.degrees_of_freedom) and record.degrees_of_freedom > 0:
-        return float(record.degrees_of_freedom)
-    return 1.0
+    raise ValueError(
+        f"Invalid structural_dimension={record.structural_dimension!r}; "
+        "caller must supply records with structural_dimension > 0 "
+        "(upstream filter on degrees_of_freedom > 0 should guarantee this)."
+    )
 
 
 @dataclass(frozen=True)
@@ -86,7 +88,9 @@ def compute_pool_stats(
     model: CalibrationModel,
 ) -> PoolStats:
     """Compute the local-kernel calibration pool from valid sibling records."""
-    valid = [record for record in records if np.isfinite(record.stat) and record.degrees_of_freedom > 0]
+    valid = [
+        record for record in records if np.isfinite(record.stat) and record.degrees_of_freedom > 0
+    ]
     if not valid:
         return PoolStats(
             c_global=model.global_inflation_factor,
@@ -106,8 +110,12 @@ def compute_pool_stats(
         dtype=float,
     )
     log_structural_dimensions = np.log(np.maximum(structural_dimensions, 1.0))
-    sibling_null_priors = np.array([record.sibling_null_prior_from_edge_pvalue for record in valid], dtype=float)
-    stat_df_ratios = np.array([record.stat / record.degrees_of_freedom for record in valid], dtype=float)
+    sibling_null_priors = np.array(
+        [record.sibling_null_prior_from_edge_pvalue for record in valid], dtype=float
+    )
+    stat_df_ratios = np.array(
+        [record.stat / record.degrees_of_freedom for record in valid], dtype=float
+    )
 
     mean_log_structural_dimension = _weighted_mean(log_structural_dimensions, sibling_null_priors)
     bandwidth = _weighted_std(log_structural_dimensions, sibling_null_priors)

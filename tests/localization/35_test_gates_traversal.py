@@ -14,8 +14,10 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.traversal import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.gate_evaluator import (
     GateEvaluator,
+)
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.traversal import (
     iterate_worklist,
     process_node,
 )

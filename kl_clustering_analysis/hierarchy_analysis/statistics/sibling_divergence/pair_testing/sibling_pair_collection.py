@@ -1,16 +1,14 @@
 """Tree traversal and pair collection for divergence testing.
 
 Provides the shared infrastructure for walking a hierarchical tree,
-identifying eligible sibling pairs, running the Wald kernel on each,
-and packaging results into ``SiblingPairRecord`` objects.
-
-Used by both the standard Wald orchestrator (``standard_wald``) and the
-cousin-adjusted Wald orchestrator (``adjusted_wald``).
+running the sibling Wald kernel on binary child pairs, and packaging
+results into ``SiblingPairRecord`` objects for the production
+cousin-adjusted Wald pipeline.
 """
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from collections.abc import Callable, Iterable
 
 import networkx as nx
 import numpy as np
@@ -27,12 +25,10 @@ from ...projection.chi2_pvalue import WhiteningMode
 from .types import SiblingPairRecord
 from .wald_statistic import sibling_divergence_test
 
-# =============================================================================
-# Tree helpers
-# =============================================================================
+AdjustedSiblingTestSummary = tuple[float, float, float]
 
 
-def get_binary_children(tree: nx.DiGraph, parent: str) -> Optional[Tuple[str, str]]:
+def get_binary_children(tree: nx.DiGraph, parent: str) -> tuple[str, str] | None:
     """Return (left, right) children if parent has exactly 2, else None."""
     children = list(tree.successors(parent))
     if len(children) != 2:
@@ -40,21 +36,12 @@ def get_binary_children(tree: nx.DiGraph, parent: str) -> Optional[Tuple[str, st
     return children[0], children[1]
 
 
-def either_child_significant(
-    left: str,
-    right: str,
-    edge_significance_by_node: Dict[str, bool],
-) -> bool:
-    """Check if at least one child has significant child-parent divergence."""
-    return edge_significance_by_node.get(left, False) or edge_significance_by_node.get(right, False)
-
-
 def get_sibling_data(
     tree: nx.DiGraph,
     parent: str,
     left: str,
     right: str,
-) -> Tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]:
+) -> tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]:
     """Extract distributions, sample sizes, and branch lengths for a sibling pair.
 
     Branch lengths are extracted from the tree edges (parent → child).
@@ -76,26 +63,56 @@ def get_sibling_data(
 def _branch_length_sum(
     branch_length_left: float | None, branch_length_right: float | None
 ) -> float:
-    """Sum sibling branch lengths, treating None as zero."""
+    """Sum sibling branch lengths. Returns 0.0 only when both are None."""
     if branch_length_left is not None and branch_length_right is not None:
         return float(branch_length_left + branch_length_right)
-    if branch_length_left is not None:
-        return float(branch_length_left)
-    if branch_length_right is not None:
-        return float(branch_length_right)
+    if branch_length_left is None and branch_length_right is None:
+        return 0.0
+    raise ValueError(
+        f"Inconsistent branch lengths: left={branch_length_left!r}, right={branch_length_right!r}. "
+        "Supply either both branch lengths or neither."
+    )
+
+
+def _is_gate2_blocked_for_pair(
+    left: str,
+    right: str,
+    edge_tested_by_node: dict[str, bool] | None,
+    edge_ancestor_blocked_by_node: dict[str, bool] | None,
+) -> bool:
+    """Return whether either child lacks a usable Gate 2 edge annotation."""
+    left_edge_tested = edge_tested_by_node.get(left, True) if edge_tested_by_node else True
+    right_edge_tested = edge_tested_by_node.get(right, True) if edge_tested_by_node else True
+
+    left_edge_blocked = (
+        edge_ancestor_blocked_by_node.get(left, False) if edge_ancestor_blocked_by_node else False
+    )
+    right_edge_blocked = (
+        edge_ancestor_blocked_by_node.get(right, False) if edge_ancestor_blocked_by_node else False
+    )
+
+    return (
+        (not left_edge_tested) or (not right_edge_tested) or left_edge_blocked or right_edge_blocked
+    )
+
+
+def _resolve_structural_dimension(
+    *,
+    spectral_dimension: int | None,
+    degrees_of_freedom: float,
+) -> float:
+    if spectral_dimension is not None and spectral_dimension > 0:
+        return float(spectral_dimension)
+    if np.isfinite(degrees_of_freedom) and degrees_of_freedom > 0:
+        return float(degrees_of_freedom)
     return 0.0
-
-
-# =============================================================================
-# Collection: standard Wald path
-# =============================================================================
 
 
 def collect_significant_sibling_pairs(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
-) -> Tuple[List[str], List[Tuple[str, str]], List[str], List[str]]:
-    """Collect binary-child parent nodes where at least one child is edge-significant.
+) -> tuple[list[str], list[tuple[str, str]], list[str], list[str]]:
+    """Collect edge-significant binary-child parents for diagnostics and experiments.
 
     Returns (parents, child_pairs, skipped, non_binary).
     """
@@ -109,10 +126,10 @@ def collect_significant_sibling_pairs(
         "Child_Parent_Divergence_Significant",
     )
 
-    parents: List[str] = []
-    child_pairs: List[Tuple[str, str]] = []
-    skipped: List[str] = []
-    non_binary: List[str] = []
+    parents: list[str] = []
+    child_pairs: list[tuple[str, str]] = []
+    skipped: list[str] = []
+    non_binary: list[str] = []
 
     for parent in tree.nodes:
         children = get_binary_children(tree, parent)
@@ -121,7 +138,10 @@ def collect_significant_sibling_pairs(
             continue
 
         left, right = children
-        if not either_child_significant(left, right, edge_significance_by_node):
+        if not (
+            edge_significance_by_node.get(left, False)
+            or edge_significance_by_node.get(right, False)
+        ):
             skipped.append(parent)
             continue
 
@@ -131,23 +151,17 @@ def collect_significant_sibling_pairs(
     return parents, child_pairs, skipped, non_binary
 
 
-# =============================================================================
-# Collection: calibrated Wald path (records-based)
-# =============================================================================
-
-
 def collect_sibling_pair_records(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
     *,
-    minimum_projection_dimension: int | None = None,
-    spectral_dims: Dict[str, int] | None = None,
-    pca_projections: Dict[str, np.ndarray] | None = None,
-    pca_eigenvalues: Dict[str, np.ndarray] | None = None,
-    child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
+    spectral_dims: dict[str, int] | None = None,
+    pca_projections: dict[str, np.ndarray] | None = None,
+    pca_eigenvalues: dict[str, np.ndarray] | None = None,
+    child_pca_projections: dict[str, list[np.ndarray]] | None = None,
     whitening: WhiteningMode = "per_component",
-) -> Tuple[List[SiblingPairRecord], List[str]]:
+) -> tuple[list[SiblingPairRecord], list[str]]:
     """Collect raw sibling-test records for ALL binary-child parent nodes.
 
     Runs the Wald kernel on every pair and tags each as null-like or focal
@@ -174,8 +188,9 @@ def collect_sibling_pair_records(
         raise ValueError(f"Missing '{edge_p_value_column}' column. Run child-parent test first.")
 
     edge_p_value_series = annotations_df[edge_p_value_column].astype(float)
-    edge_p_value_by_node: Dict[str, float] = {
-        node_id: (
+
+    edge_p_value_by_node: dict[str, float] = {
+        str(node_id): (
             float(edge_p_value_series[node_id])
             if np.isfinite(edge_p_value_series[node_id])
             else 1.0
@@ -183,8 +198,8 @@ def collect_sibling_pair_records(
         for node_id in annotations_df.index
     }
 
-    edge_tested_by_node: Dict[str, bool] | None = None
-    edge_ancestor_blocked_by_node: Dict[str, bool] | None = None
+    edge_tested_by_node: dict[str, bool] | None = None
+    edge_ancestor_blocked_by_node: dict[str, bool] | None = None
     if "Child_Parent_Divergence_Tested" in annotations_df.columns:
         edge_tested_by_node = extract_bool_column_dict(
             annotations_df,
@@ -196,13 +211,11 @@ def collect_sibling_pair_records(
             "Child_Parent_Divergence_Ancestor_Blocked",
         )
 
-    records: List[SiblingPairRecord] = []
-    non_binary_nodes: List[str] = []
+    records: list[SiblingPairRecord] = []
+    non_binary_nodes: list[str] = []
 
     for parent in tree.nodes:
-
         children = get_binary_children(tree, parent)
-
         if children is None:
             non_binary_nodes.append(parent)
             continue
@@ -211,8 +224,8 @@ def collect_sibling_pair_records(
         (
             left_distribution,
             right_distribution,
-            n_left,
-            n_right,
+            left_sample_size,
+            right_sample_size,
             branch_length_left,
             branch_length_right,
         ) = get_sibling_data(tree, parent, left, right)
@@ -224,13 +237,12 @@ def collect_sibling_pair_records(
         test_statistic, degrees_of_freedom, p_value = sibling_divergence_test(
             left_distribution,
             right_distribution,
-            float(n_left),
-            float(n_right),
+            float(left_sample_size),
+            float(right_sample_size),
             branch_length_left=branch_length_left,
             branch_length_right=branch_length_right,
             mean_branch_length=mean_branch_length,
             test_id=f"sibling:{parent}",
-            minimum_projection_dimension=minimum_projection_dimension,
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=node_pca_eigenvalues,
@@ -240,25 +252,17 @@ def collect_sibling_pair_records(
             whitening=whitening,
         )
 
-        left_edge_tested = edge_tested_by_node.get(left, True) if edge_tested_by_node else True
-        right_edge_tested = edge_tested_by_node.get(right, True) if edge_tested_by_node else True
-        left_edge_blocked = (
-            edge_ancestor_blocked_by_node.get(left, False)
-            if edge_ancestor_blocked_by_node
-            else False
+        is_gate2_blocked = _is_gate2_blocked_for_pair(
+            left,
+            right,
+            edge_tested_by_node,
+            edge_ancestor_blocked_by_node,
         )
-        right_edge_blocked = (
-            edge_ancestor_blocked_by_node.get(right, False)
-            if edge_ancestor_blocked_by_node
-            else False
+
+        is_null_like = not (
+            edge_significance_by_node.get(left, False)
+            or edge_significance_by_node.get(right, False)
         )
-        is_gate2_blocked = (
-            (not left_edge_tested)
-            or (not right_edge_tested)
-            or left_edge_blocked
-            or right_edge_blocked
-        )
-        is_null_like = not either_child_significant(left, right, edge_significance_by_node)
         # Sibling null prior: min(p_edge_left, p_edge_right).
         # High value → both children look null-like (high edge p-values).
         # Low value → at least one child has strong edge signal.
@@ -283,14 +287,9 @@ def collect_sibling_pair_records(
                 is_null_like=is_null_like,
                 is_gate2_blocked=is_gate2_blocked,
                 sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
-                structural_dimension=(
-                    float(spectral_k)
-                    if spectral_k is not None and spectral_k > 0
-                    else (
-                        float(degrees_of_freedom)
-                        if np.isfinite(degrees_of_freedom) and degrees_of_freedom > 0
-                        else 0.0
-                    )
+                structural_dimension=_resolve_structural_dimension(
+                    spectral_dimension=spectral_k,
+                    degrees_of_freedom=float(degrees_of_freedom),
                 ),
             )
         )
@@ -303,61 +302,80 @@ def collect_sibling_pair_records(
 # =============================================================================
 
 
-def deflate_focal_pairs(
-    records: Iterable[SiblingPairRecord],
+def _compute_adjusted_sibling_test(
+    sibling_test_record: SiblingPairRecord,
     *,
-    calibration_resolver: Callable[[SiblingPairRecord], Tuple[float, str]],
-) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
-    """Deflate all focal records and return parent IDs, adjusted triples, and methods."""
-    focal_parents: List[str] = []
-    focal_results: List[Tuple[float, float, float]] = []
-    methods: List[str] = []
+    resolve_inflation_adjustment: Callable[[SiblingPairRecord], tuple[float, str]],
+) -> tuple[AdjustedSiblingTestSummary, str] | None:
+    """Return one adjusted sibling-test summary, or ``None`` for null-like records."""
+    if sibling_test_record.is_null_like:
+        return None
 
-    for pair_record in records:
+    if (
+        not np.isfinite(sibling_test_record.stat)
+        or sibling_test_record.degrees_of_freedom <= 0
+    ):
+        return (np.nan, np.nan, np.nan), "invalid"
 
-        if pair_record.is_null_like:
+    estimated_inflation_factor, adjustment_method_label = resolve_inflation_adjustment(
+        sibling_test_record
+    )
+    adjusted_statistic = sibling_test_record.stat / estimated_inflation_factor
+    adjusted_degrees_of_freedom = float(sibling_test_record.degrees_of_freedom)
+    adjusted_p_value = float(chi2.sf(adjusted_statistic, df=adjusted_degrees_of_freedom))
+    return (
+        adjusted_statistic,
+        adjusted_degrees_of_freedom,
+        adjusted_p_value,
+    ), adjustment_method_label
+
+
+def compute_adjusted_sibling_tests(
+    sibling_test_records: Iterable[SiblingPairRecord],
+    *,
+    resolve_inflation_adjustment: Callable[[SiblingPairRecord], tuple[float, str]],
+) -> tuple[list[str], list[AdjustedSiblingTestSummary], list[str]]:
+    """Return adjusted sibling-test summaries and adjustment labels for tested parents."""
+    tested_parent_ids: list[str] = []
+    adjusted_test_summaries: list[AdjustedSiblingTestSummary] = []
+    adjustment_method_labels: list[str] = []
+
+    for sibling_test_record in sibling_test_records:
+        adjusted_test_summary = _compute_adjusted_sibling_test(
+            sibling_test_record,
+            resolve_inflation_adjustment=resolve_inflation_adjustment,
+        )
+        if adjusted_test_summary is None:
             continue
 
-        if not np.isfinite(pair_record.stat) or pair_record.degrees_of_freedom <= 0:
-            focal_parents.append(pair_record.parent)
-            focal_results.append((np.nan, np.nan, np.nan))
-            methods.append("invalid")
-            continue
+        test_summary, adjustment_method_label = adjusted_test_summary
+        tested_parent_ids.append(sibling_test_record.parent)
+        adjusted_test_summaries.append(test_summary)
+        adjustment_method_labels.append(adjustment_method_label)
 
-        inflation_factor, method = calibration_resolver(pair_record)
-        t_adj = pair_record.stat / inflation_factor
-        p_adj = float(chi2.sf(t_adj, df=pair_record.degrees_of_freedom))
-
-        focal_parents.append(pair_record.parent)
-
-        focal_results.append((t_adj, float(pair_record.degrees_of_freedom), p_adj))
-
-        methods.append(method)
-
-    return focal_parents, focal_results, methods
+    return tested_parent_ids, adjusted_test_summaries, adjustment_method_labels
 
 
-# =============================================================================
-# Counting
-# =============================================================================
-
-
-def count_null_focal_pairs(records: Iterable[SiblingPairRecord]) -> Tuple[int, int, int]:
+def count_null_focal_pairs(records: Iterable[SiblingPairRecord]) -> tuple[int, int, int]:
     """Count (null-like, focal, gate2-blocked) record totals."""
-    records_list = list(records)
-    n_null = sum(1 for r in records_list if r.is_null_like)
-    n_blocked = sum(1 for r in records_list if r.is_gate2_blocked)
-    n_focal = sum(1 for r in records_list if not r.is_null_like)
+    n_null = 0
+    n_focal = 0
+    n_blocked = 0
+    for record in records:
+        if record.is_null_like:
+            n_null += 1
+        else:
+            n_focal += 1
+        if record.is_gate2_blocked:
+            n_blocked += 1
     return n_null, n_focal, n_blocked
 
 
 __all__ = [
-    "SiblingPairRecord",
     "collect_significant_sibling_pairs",
     "collect_sibling_pair_records",
+    "compute_adjusted_sibling_tests",
     "count_null_focal_pairs",
-    "deflate_focal_pairs",
-    "either_child_significant",
     "get_binary_children",
     "get_sibling_data",
 ]

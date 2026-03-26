@@ -11,8 +11,8 @@ by the decomposition pipeline.
 | `child_parent_divergence/child_parent_tree_testing.py` | Tree-wide Gate 2 execution over parent-child edges. |
 | `child_parent_divergence/child_parent_projected_wald.py` | Child-parent z-score construction and the single-edge projected-Wald kernel. |
 | `child_parent_divergence/child_parent_spectral_decomposition.py` | Spectral context for per-node projection dimensions and PCA-based projections. |
-| `sibling_divergence/standard_wald_annotation.py` | Raw sibling Wald annotation path. |
 | `sibling_divergence/adjusted_wald_annotation.py` | Cousin-adjusted sibling Wald path with post-selection inflation correction. |
+| `sibling_divergence/__init__.py` | Public adjusted-only Gate 3 entrypoint and compatibility alias. |
 | `sibling_divergence/pair_testing/` | Sibling-pair collection and the core Wald statistic kernel. |
 | `sibling_divergence/inflation_correction/` | Inflation-model fitting and prediction for the adjusted sibling path. |
 | `sibling_divergence/bh_annotation.py` | Shared DataFrame writing and BH result bookkeeping for Gate 3. |
@@ -26,12 +26,13 @@ by the decomposition pipeline.
 
 1. Gate 2 annotates child-parent divergence across the tree.
 2. Optional spectral context from Gate 2 can be forwarded into Gate 3 projection settings.
-3. Gate 3 runs either the raw Wald or cousin-adjusted Wald sibling test.
+3. Gate 3 runs the production cousin-adjusted Wald sibling test.
 4. Multiple-testing correction is applied through the dispatcher selected by the decomposition layer.
 
 ## Stable Entrypoints
 
 - `annotate_child_parent_divergence(...)` is the public Gate 2 entrypoint.
-- `annotate_sibling_divergence(...)` and `annotate_sibling_divergence_adjusted(...)` are the public Gate 3 entrypoints.
+- `annotate_sibling_divergence(...)` is the public Gate 3 entrypoint and aliases the adjusted implementation.
+- `annotate_sibling_divergence_adjusted(...)` remains available as the explicit adjusted implementation.
 - `apply_multiple_testing_correction(...)` is the shared correction dispatcher.
 - `run_projected_wald_kernel(...)` is the common projected-Wald kernel used underneath the test adapters.

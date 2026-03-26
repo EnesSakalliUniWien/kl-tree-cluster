@@ -63,19 +63,6 @@ PROJECTION_RANDOM_SEED: int | None = 42
 
 # --- Spectral Dimension Estimation ---
 
-# Per-node projection dimension method.  Uses eigendecomposition of the local
-# correlation matrix at each node to determine signal rank.
-# Options:
-#   "marchenko_pastur"    - Count eigenvalues above MP upper bound (default)
-# Marchenko-Pastur uses random matrix theory to separate signal eigenvalues
-# from the noise bulk.  For the correlation matrix σ²=1 exactly, so the
-# MP bounds are (1±√(d/n))². When no eigenvalues exceed the MP upper bound,
-# the raw signal count is 0 conceptually, but the implementation floors the
-# returned dimension to at least 1 and then applies SPECTRAL_MINIMUM_DIMENSION.
-# In practice, pure-noise nodes therefore receive a tiny fallback dimension
-# and are expected to fail to reject rather than taking a literal k=0 skip path.
-SPECTRAL_METHOD: str | None = "marchenko_pastur"
-
 # Minimum projection dimension for the SPECTRAL (Gate 2) path only.
 # With Marchenko-Pastur, noise nodes get k=1 (no signal eigenvalues above
 # the MP bound).  The floor of 2 prevents χ²(1) tests, which have a
@@ -109,23 +96,14 @@ INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 #                                      fixed magic numbers are used. Preferred
 #                                      production default.
 SINGLE_FEATURE_SUBTREE_MODE: Literal["off", "block_low_information_subtrees"] = (
-	"block_low_information_subtrees"
+    "block_low_information_subtrees"
 )
 
 # --- Sibling Test Method ---
 
 # Method for sibling divergence testing.
-# Options:
-#   "wald"                  - Standard projected Wald χ² test (original, known anti-conservative)
-#   "cousin_adjusted_wald"  - Cousin-adjusted Wald: estimates post-selection inflation c
-#                             from all valid sibling pairs using a continuous
-#                             edge-weighted mean of T/df ratios, then deflates focal
-#                             pair stats by a global ĉ adaptively shrunken per node
-#                             using learned effective-df mismatch.
-#                             Production default.
-#   "parametric_wald"       - Parametric Wald: fits c(n) = α · n^(-β) from null-like pairs
-#                             via log-linear OLS + curve_fit refinement, then deflates each
-#                             focal pair with a per-node c(n_parent) prediction.
+# The codebase supports only the production cousin-adjusted Wald path.
+# Historical alternatives have been removed from the live code path.
 SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
 
 # --- Sibling Whitening Mode ---

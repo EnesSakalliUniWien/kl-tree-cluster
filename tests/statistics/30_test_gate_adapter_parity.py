@@ -4,20 +4,19 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pandas.testing as pdt
-import pytest
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
     GateAnnotationBundle,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate import (
-    annotate_edge_gate,
-)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.sibling_gate import (
-    annotate_sibling_gate,
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+    annotate_child_parent_divergence,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+    annotate_sibling_divergence,
 )
 
 
@@ -52,26 +51,20 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
     return tree, base_df
 
 
-@pytest.mark.parametrize("sibling_method", ["wald", "cousin_adjusted_wald", "parametric_wald"])
-def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
-    monkeypatch,
-    sibling_method: str,
-) -> None:
+def test_gate_adapter_pipeline_matches_sequential_gate_annotations(monkeypatch) -> None:
     tree, base_df = _build_small_binary_tree()
 
-    monkeypatch.setattr(config, "SIBLING_TEST_METHOD", sibling_method)
+    monkeypatch.setattr(config, "SIBLING_TEST_METHOD", "cousin_adjusted_wald")
 
-    edge_bundle = annotate_edge_gate(
+    edge_df = annotate_child_parent_divergence(
         tree,
         base_df.copy(),
         significance_level_alpha=0.01,
-        spectral_method=None,
     )
-    sequential_bundle = annotate_sibling_gate(
+    sequential_df = annotate_sibling_divergence(
         tree,
-        edge_bundle.annotated_df,
+        edge_df,
         significance_level_alpha=0.01,
-        sibling_method=sibling_method,
     )
 
     bundle = run_gate_annotation_pipeline(
@@ -79,13 +72,11 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
         base_df.copy(),
         alpha_local=0.01,
         sibling_alpha=0.01,
-        spectral_method=None,
-        sibling_method=sibling_method,
+        sibling_method=config.SIBLING_TEST_METHOD,
     )
 
     assert isinstance(bundle, GateAnnotationBundle)
     adapter_df = bundle.annotated_df
-    sequential_df = sequential_bundle.annotated_df
 
     sequential_gate_cols = [
         col
@@ -105,9 +96,6 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
         check_dtype=False,
     )
 
-    assert bundle.local_gate_column == "Child_Parent_Divergence_Significant"
-    assert bundle.sibling_gate_column == "Sibling_BH_Different"
-
     # Verify all expected gate columns are present in the annotated DataFrame
     expected_edge_cols = tuple(
         col for col in sequential_gate_cols if col.startswith("Child_Parent_")
@@ -117,6 +105,8 @@ def test_gate_adapter_pipeline_matches_sequential_gate_wrappers(
     actual_sibling_cols = tuple(col for col in adapter_df.columns if col.startswith("Sibling_"))
     assert actual_edge_cols == expected_edge_cols
     assert actual_sibling_cols == expected_sibling_cols
+    assert bundle.local_gate_columns == expected_edge_cols
+    assert bundle.sibling_gate_columns == expected_sibling_cols
     assert "pipeline" in bundle.metadata
     assert "edge" in bundle.metadata
     assert "sibling" in bundle.metadata

@@ -37,7 +37,7 @@ def _collect_significant_signal_nodes(
         ):
             continue
 
-        node_ids.append(str(child_node_id))
+        node_ids.append(child_node_id)
         p_value = child_parent_edge_corrected_p_values_by_tree_bh[index]
         p_values.append(float(p_value) if np.isfinite(p_value) else 0.0)
 
@@ -98,9 +98,8 @@ def recover_signal_neighbors(
         if tested_hypotheses_arr[index]:
             continue
 
-        untested_child_node = str(child_node_id)
-        result[untested_child_node] = _find_nearest_signal_neighbor(
-            untested_child_node=untested_child_node,
+        result[child_node_id] = _find_nearest_signal_neighbor(
+            untested_child_node=child_node_id,
             signal_nodes=signal_nodes,
             tree_distance=tree_distance,
         )

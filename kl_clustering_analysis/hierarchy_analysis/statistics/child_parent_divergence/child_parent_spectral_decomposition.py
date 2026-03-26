@@ -14,17 +14,10 @@ from ..projection.spectral import compute_spectral_decomposition
 
 def compute_child_parent_spectral_context(
     tree: nx.DiGraph,
-    leaf_data: pd.DataFrame | None,
-    spectral_method: str | None,
+    leaf_data: pd.DataFrame,
 ) -> tuple[dict[str, int] | None, dict[str, np.ndarray] | None, dict[str, np.ndarray] | None]:
-    """Prepare per-node spectral dimensions and PCA projections for Gate 2."""
+    """Prepare Marchenko-Pastur spectral context for Gate 2."""
     tree.graph.pop("_single_feature_subtree_audit", None)
-
-    if spectral_method is None:
-        return None, None, None
-
-    if leaf_data is None:
-        raise ValueError(f"spectral_method={spectral_method!r} requires leaf_data to be provided.")
 
     spectral_minimum_projection_dimension = getattr(
         config,
@@ -39,7 +32,6 @@ def compute_child_parent_spectral_context(
     ) = compute_spectral_decomposition(
         tree,
         leaf_data,
-        method=spectral_method,
         minimum_projection_dimension=spectral_minimum_projection_dimension,
         compute_projections=True,
     )
