@@ -26,7 +26,11 @@ if str(_LAB) not in sys.path:
     sys.path.insert(0, str(_LAB))
 
 import exp31_oracle_policy_equations as exp31  # noqa: E402
-from lab_helpers import temporary_attr, temporary_config  # noqa: E402
+from lab_helpers import (  # noqa: E402
+    enhancement_lab_results_relative,
+    temporary_attr,
+    temporary_config,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -42,52 +46,66 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_rows_one_active_1d.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_rows_one_active_1d.csv"),
     )
     parser.add_argument(
         "--disagreement-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_disagreements_one_active_1d.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_disagreements_one_active_1d.csv"),
     )
     parser.add_argument(
         "--family-portability-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_family_portability_one_active_1d.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_family_portability_one_active_1d.csv"
+        ),
     )
     parser.add_argument(
         "--gaussian-subfamily-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_subfamily_portability_one_active_1d.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_gaussian_subfamily_portability_one_active_1d.csv"
+        ),
     )
     parser.add_argument(
         "--ranked-false-global-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_ranked_false_global_splits_one_active_1d.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_ranked_false_global_splits_one_active_1d.csv"
+        ),
     )
     parser.add_argument(
         "--ranked-false-global-markdown",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_ranked_false_global_splits_one_active_1d.md",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_ranked_false_global_splits_one_active_1d.md"
+        ),
     )
     parser.add_argument(
         "--fourier-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_fourier_summary_one_active_1d.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_fourier_summary_one_active_1d.csv"
+        ),
     )
     parser.add_argument(
         "--fourier-plot-dir",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_fourier_plots_one_active_1d",
+        default=enhancement_lab_results_relative("_oracle_policy_fourier_plots_one_active_1d"),
     )
     parser.add_argument(
         "--extreme-noise-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_extreme_noise_slice_one_active_1d.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_gaussian_extreme_noise_slice_one_active_1d.csv"
+        ),
     )
     parser.add_argument(
         "--extreme-noise-markdown",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_extreme_noise_slice_one_active_1d.md",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_gaussian_extreme_noise_slice_one_active_1d.md"
+        ),
     )
     return parser
 

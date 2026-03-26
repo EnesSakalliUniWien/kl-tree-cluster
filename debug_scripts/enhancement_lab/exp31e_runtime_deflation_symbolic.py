@@ -45,11 +45,14 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import LeaveOneGroupOut
 
+from debug_scripts.enhancement_lab.lab_helpers import (
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+)
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (
     benjamini_hochberg_correction,
 )
-
 
 _ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_GROUP_COLUMN = "case_family"
@@ -76,11 +79,11 @@ class ModeSpec:
 _DEFAULT_MODES: tuple[ModeSpec, ...] = (
     ModeSpec(
         name="baseline",
-        rows_csv="debug_scripts/enhancement_lab/_oracle_policy_rows.csv",
+        rows_csv=enhancement_lab_results_relative("_oracle_policy_rows.csv"),
     ),
     ModeSpec(
         name="one_active_1d",
-        rows_csv="debug_scripts/enhancement_lab/_oracle_policy_rows_one_active_1d.csv",
+        rows_csv=enhancement_lab_results_relative("_oracle_policy_rows_one_active_1d.csv"),
     ),
 )
 
@@ -96,19 +99,21 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--summary-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_symbolic_deflation_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_symbolic_deflation_summary.csv"),
     )
     parser.add_argument(
         "--equation-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_symbolic_deflation_equations.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_symbolic_deflation_equations.csv"),
     )
     parser.add_argument(
         "--prediction-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_symbolic_deflation_predictions.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_symbolic_deflation_predictions.csv"
+        ),
     )
     parser.add_argument(
         "--summary-markdown",
-        default="debug_scripts/enhancement_lab/_oracle_policy_symbolic_deflation_summary.md",
+        default=enhancement_lab_results_relative("_oracle_policy_symbolic_deflation_summary.md"),
     )
     parser.add_argument(
         "--include-null-like",
@@ -185,8 +190,12 @@ def _prepare_frame(path: Path, *, include_null_like: bool) -> pd.DataFrame:
     frame["log_stat_per_k"] = _safe_log(stat / k)
     frame["neglog_edge_weight"] = _safe_neglog10(edge_weight, floor=1e-12)
     frame["neglog_p_global"] = _safe_neglog10(p_global, floor=1e-300)
-    frame["log_effective_n"] = np.log1p(np.maximum(frame["effective_n"].to_numpy(dtype=np.float64), 0.0))
-    frame["log_n_null_case"] = np.log1p(np.maximum(frame["n_null_case"].to_numpy(dtype=np.float64), 0.0))
+    frame["log_effective_n"] = np.log1p(
+        np.maximum(frame["effective_n"].to_numpy(dtype=np.float64), 0.0)
+    )
+    frame["log_n_null_case"] = np.log1p(
+        np.maximum(frame["n_null_case"].to_numpy(dtype=np.float64), 0.0)
+    )
     frame["log_n_focal_case"] = np.log1p(
         np.maximum(frame["n_focal_case"].to_numpy(dtype=np.float64), 0.0)
     )
@@ -251,7 +260,9 @@ def _fit_symbolic(
     return model
 
 
-def _predict_symbolic(model: SymbolicRegressor, frame: pd.DataFrame, feature_names: list[str]) -> np.ndarray:
+def _predict_symbolic(
+    model: SymbolicRegressor, frame: pd.DataFrame, feature_names: list[str]
+) -> np.ndarray:
     x = frame[feature_names].to_numpy(dtype=np.float64)
     prediction = model.predict(x).astype(np.float64)
     return np.maximum(prediction, 0.0)
@@ -311,7 +322,9 @@ def _render_protected_equation(program: str) -> str:
     return rendered
 
 
-def _student_p_values(frame: pd.DataFrame, student_log_deflation: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _student_p_values(
+    frame: pd.DataFrame, student_log_deflation: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     c_global = np.maximum(frame["c_global"].to_numpy(dtype=np.float64), 1.0)
     stat = frame["stat"].to_numpy(dtype=np.float64)
     k = frame["k"].to_numpy(dtype=np.int64)
@@ -376,10 +389,18 @@ def _evaluate_student_bh(frame: pd.DataFrame, *, student_log_deflation: np.ndarr
     evaluated["c_student"] = c_student
     evaluated["p_student"] = p_student
     _apply_casewise_bh(evaluated, "p_student", "student_bh_reject")
-    evaluated["student_false_global"] = evaluated["student_bh_reject"] & (~evaluated["perm_bh_reject"])
-    evaluated["student_false_local"] = evaluated["perm_bh_reject"] & (~evaluated["student_bh_reject"])
-    evaluated["baseline_false_global"] = evaluated["global_bh_reject"] & (~evaluated["perm_bh_reject"])
-    evaluated["baseline_false_local"] = evaluated["perm_bh_reject"] & (~evaluated["global_bh_reject"])
+    evaluated["student_false_global"] = evaluated["student_bh_reject"] & (
+        ~evaluated["perm_bh_reject"]
+    )
+    evaluated["student_false_local"] = evaluated["perm_bh_reject"] & (
+        ~evaluated["student_bh_reject"]
+    )
+    evaluated["baseline_false_global"] = evaluated["global_bh_reject"] & (
+        ~evaluated["perm_bh_reject"]
+    )
+    evaluated["baseline_false_local"] = evaluated["perm_bh_reject"] & (
+        ~evaluated["global_bh_reject"]
+    )
     return evaluated
 
 
@@ -415,7 +436,9 @@ def _summary_row(
         "target_mean": float(frame["extra_log_deflation"].mean()),
         "prediction_mean": float(np.mean(y_pred)),
         "mean_fold_mae": float(fold_summary["mae"].mean()) if not fold_summary.empty else math.nan,
-        "mean_fold_rmse": float(fold_summary["rmse"].mean()) if not fold_summary.empty else math.nan,
+        "mean_fold_rmse": (
+            float(fold_summary["rmse"].mean()) if not fold_summary.empty else math.nan
+        ),
         **regression,
         "global_bh_balanced_accuracy": _safe_balanced_accuracy(perm_target, global_pred),
         "student_bh_balanced_accuracy": _safe_balanced_accuracy(perm_target, student_pred),
@@ -489,7 +512,7 @@ def main() -> None:
     prediction_frames: list[pd.DataFrame] = []
 
     for mode in modes:
-        path = (_ROOT / mode.rows_csv).resolve()
+        path = resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)
         frame = _prepare_frame(path, include_null_like=args.include_null_like)
         feature_names = _usable_feature_columns(frame, _RUNTIME_FEATURE_COLUMNS)
         if not feature_names:
@@ -553,10 +576,10 @@ def main() -> None:
     equations_df = pd.DataFrame(equation_rows)
     predictions_df = pd.concat(prediction_frames, axis=0, ignore_index=True)
 
-    summary_path = (_ROOT / args.summary_output_csv).resolve()
-    equation_path = (_ROOT / args.equation_output_csv).resolve()
-    prediction_path = (_ROOT / args.prediction_output_csv).resolve()
-    markdown_path = (_ROOT / args.summary_markdown).resolve()
+    summary_path = resolve_enhancement_lab_artifact_path(args.summary_output_csv)
+    equation_path = resolve_enhancement_lab_artifact_path(args.equation_output_csv)
+    prediction_path = resolve_enhancement_lab_artifact_path(args.prediction_output_csv)
+    markdown_path = resolve_enhancement_lab_artifact_path(args.summary_markdown)
     summary_path.parent.mkdir(parents=True, exist_ok=True)
 
     summary_df.to_csv(summary_path, index=False)

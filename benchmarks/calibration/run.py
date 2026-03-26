@@ -196,9 +196,9 @@ def _run_one_null_replicate(
     sibling_tests = int(sibling_tested_mask.sum())
     edge_rejects = (
         int(
-            annotations_df.loc[
-                edge_tested_mask, "Child_Parent_Divergence_Significant"
-            ].astype(bool).sum()
+            annotations_df.loc[edge_tested_mask, "Child_Parent_Divergence_Significant"]
+            .astype(bool)
+            .sum()
         )
         if edge_tests > 0
         else 0
@@ -211,15 +211,17 @@ def _run_one_null_replicate(
 
     edge_invalid = (
         int(
-            annotations_df.loc[
-                edge_tested_mask, "Child_Parent_Divergence_Invalid"
-            ].astype(bool).sum()
+            annotations_df.loc[edge_tested_mask, "Child_Parent_Divergence_Invalid"]
+            .astype(bool)
+            .sum()
         )
         if "Child_Parent_Divergence_Invalid" in annotations_df.columns and edge_tests > 0
         else 0
     )
     sibling_invalid = (
-        int(annotations_df.loc[sibling_tested_mask, "Sibling_Divergence_Invalid"].astype(bool).sum())
+        int(
+            annotations_df.loc[sibling_tested_mask, "Sibling_Divergence_Invalid"].astype(bool).sum()
+        )
         if "Sibling_Divergence_Invalid" in annotations_df.columns and sibling_tests > 0
         else 0
     )
@@ -535,7 +537,7 @@ def _run_treebh_replicates(
                 child_ids=child_ids,
                 alpha=float(alpha),
             )
-            reject = np.asarray(result.reject, dtype=bool)
+            reject = np.asarray(result.child_parent_edge_null_rejected_by_tree_bh, dtype=bool)
 
             n_reject = int(np.sum(reject))
             n_null = int(np.sum(~true_alt))

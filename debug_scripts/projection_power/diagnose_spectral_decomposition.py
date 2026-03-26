@@ -280,7 +280,7 @@ def main():
     print("=" * 80)
     print("SPECTRAL DECOMPOSITION DIAGNOSTIC")
     print(
-        f"Config: SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
+        "Config: SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "
         f"INCLUDE_INTERNAL_IN_SPECTRAL={config.INCLUDE_INTERNAL_IN_SPECTRAL}"
     )
     print(

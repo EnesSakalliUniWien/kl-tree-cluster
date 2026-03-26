@@ -68,7 +68,7 @@ def _collect_one_active_records(collector: list[dict[str, float]]) -> None:
                     {
                         "stat": float(record.stat),
                         "df": float(record.degrees_of_freedom),
-                        "edge_weight": float(record.edge_weight),
+                        "sibling_null_prior": float(record.sibling_null_prior_from_edge_pvalue),
                         "is_null_like": bool(record.is_null_like),
                     }
                 )
@@ -299,7 +299,7 @@ def _global_one_active_c() -> tuple[float, int]:
             _run_kl_suite()
 
     ratios = np.array([row["stat"] / row["df"] for row in collector if np.isfinite(row["stat"]) and row["df"] > 0 and (row["stat"] / row["df"]) > 0], dtype=np.float64)
-    weights = np.array([row["edge_weight"] for row in collector if np.isfinite(row["stat"]) and row["df"] > 0 and (row["stat"] / row["df"]) > 0], dtype=np.float64)
+    weights = np.array([row["sibling_null_prior"] for row in collector if np.isfinite(row["stat"]) and row["df"] > 0 and (row["stat"] / row["df"]) > 0], dtype=np.float64)
     if len(ratios) == 0 or np.sum(weights) <= 0:
         return 1.0, 0
     return float(np.average(ratios, weights=weights)), int(np.sum(weights > 0))

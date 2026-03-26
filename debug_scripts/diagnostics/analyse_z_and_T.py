@@ -27,9 +27,6 @@ from scipy.spatial.distance import pdist
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis import (
-    build_projection_basis_with_padding,
-)
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald import (
     compute_child_parent_standardized_z_scores,
 )
@@ -38,6 +35,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergenc
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.chi2_pvalue import (
     compute_projected_pvalue,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis import (
+    build_projection_basis_with_padding,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -75,7 +75,6 @@ def _build_tree(data):
         spectral_dims, pca_projections, pca_eigenvalues = compute_child_parent_spectral_context(
             tree,
             data,
-            config.SPECTRAL_METHOD,
         )
         return tree, spectral_dims, pca_projections, pca_eigenvalues
     finally:
@@ -355,24 +354,25 @@ def _print_analysis(df, label, true_k):
         )
 
 
-def _build_tree_with_method(data, spectral_method):
-    """Build tree and decompose with a specific spectral method. Return tree + K."""
+def _build_tree_with_method(data, use_leaf_data):
+    """Build tree and decompose with fixed MP or a no-leaf-data control path."""
     orig_ec = config.EDGE_CALIBRATION
-    orig_sm = config.SPECTRAL_METHOD
     config.EDGE_CALIBRATION = False
-    config.SPECTRAL_METHOD = spectral_method
     try:
         dist = pdist(data.values, metric=config.TREE_DISTANCE_METRIC)
         Z = linkage(dist, method=config.TREE_LINKAGE_METHOD)
         tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            results = tree.decompose(leaf_data=data, alpha_local=0.05, sibling_alpha=0.05)
+            results = tree.decompose(
+                leaf_data=data if use_leaf_data else None,
+                alpha_local=0.05,
+                sibling_alpha=0.05,
+            )
         K = results["num_clusters"]
         return tree, K
     finally:
         config.EDGE_CALIBRATION = orig_ec
-        config.SPECTRAL_METHOD = orig_sm
 
 
 def _analyse_edges_random(tree, data):
@@ -529,7 +529,6 @@ def main():
         spectral_dims, pca_projections, pca_eigenvalues = compute_child_parent_spectral_context(
             tree_pca,
             data,
-            "marchenko_pastur",
         )
         df_pca = _analyse_edges(tree_pca, label, spectral_dims, pca_projections, pca_eigenvalues)
 

@@ -36,8 +36,11 @@ from sklearn.model_selection import GroupKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from debug_scripts.enhancement_lab.lab_helpers import build_tree_and_data
-
+from debug_scripts.enhancement_lab.lab_helpers import (
+    build_tree_and_data,
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+)
 
 _ROOT = Path(__file__).resolve().parents[2]
 _FEATURE_COLUMNS = [
@@ -60,11 +63,11 @@ class ModeSpec:
 _DEFAULT_MODES: tuple[ModeSpec, ...] = (
     ModeSpec(
         name="baseline",
-        rows_csv="debug_scripts/enhancement_lab/_oracle_policy_rows.csv",
+        rows_csv=enhancement_lab_results_relative("_oracle_policy_rows.csv"),
     ),
     ModeSpec(
         name="one_active_1d",
-        rows_csv="debug_scripts/enhancement_lab/_oracle_policy_rows_one_active_1d.csv",
+        rows_csv=enhancement_lab_results_relative("_oracle_policy_rows_one_active_1d.csv"),
     ),
 )
 
@@ -73,31 +76,33 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--equation-summary-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_followup_equation_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_followup_equation_summary.csv"),
     )
     parser.add_argument(
         "--equation-coefficients-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_followup_equation_coefficients.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_followup_equation_coefficients.csv"
+        ),
     )
     parser.add_argument(
         "--guard-summary-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_followup_guard_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_followup_guard_summary.csv"),
     )
     parser.add_argument(
         "--guard-subfamily-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_followup_guard_subfamilies.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_followup_guard_subfamilies.csv"),
     )
     parser.add_argument(
         "--guard-anchor-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_followup_guard_anchors.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_followup_guard_anchors.csv"),
     )
     parser.add_argument(
         "--top20-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_followup_top20.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_followup_top20.csv"),
     )
     parser.add_argument(
         "--summary-markdown",
-        default="debug_scripts/enhancement_lab/_oracle_policy_followup_summary.md",
+        default=enhancement_lab_results_relative("_oracle_policy_followup_summary.md"),
     )
     parser.add_argument("--guard-max-depth", type=int, default=1)
     parser.add_argument("--guard-gap-threshold", type=float, default=4.0)
@@ -346,7 +351,9 @@ def _collect_guard_anchors(
     for case_name, case_hits in hits.groupby("case_name", sort=True):
         anchors = [str(node) for node in case_hits["parent"].tolist()]
         covered_nodes = _iter_case_subtree_nodes(str(case_name), anchors)
-        case_rows = frame.loc[frame["case_name"] == case_name].copy().set_index("parent", drop=False)
+        case_rows = (
+            frame.loc[frame["case_name"] == case_name].copy().set_index("parent", drop=False)
+        )
         covered_case = case_rows.loc[case_rows.index.intersection(covered_nodes)].copy()
         for parent, row in case_hits.set_index("parent", drop=False).iterrows():
             subtree_nodes = _iter_case_subtree_nodes(str(case_name), [str(parent)])
@@ -368,7 +375,9 @@ def _collect_guard_anchors(
                     "subtree_false_global": int(subtree_rows["oracle_prefers_global_bh"].sum()),
                     "subtree_predictive_mass": float(subtree_rows["predictive_score"].sum()),
                     "covered_case_rows": int(len(covered_case)),
-                    "covered_case_false_global": int(covered_case["oracle_prefers_global_bh"].sum()),
+                    "covered_case_false_global": int(
+                        covered_case["oracle_prefers_global_bh"].sum()
+                    ),
                     "covered_case_predictive_mass": float(covered_case["predictive_score"].sum()),
                     "guard_definition": (
                         f"depth<={max_depth} & gap>={gap_threshold:g} & edge<={edge_eps:.1e} & k=1"
@@ -397,7 +406,9 @@ def _summary_row(frame: pd.DataFrame, *, mode_name: str, policy_name: str) -> di
     gaussian = frame.loc[(frame["case_family"] == "gaussian") & (~frame["is_null_like"])].copy()
     extreme = gaussian.loc[gaussian["case_subfamily"] == "gaussian_extreme_noise"].copy()
     other = gaussian.loc[gaussian["case_subfamily"] != "gaussian_extreme_noise"].copy()
-    top20_false_global = frame.loc[frame["in_top20_false_global"] & frame["oracle_prefers_global_bh"]].copy()
+    top20_false_global = frame.loc[
+        frame["in_top20_false_global"] & frame["oracle_prefers_global_bh"]
+    ].copy()
     return {
         "mode": mode_name,
         "policy": policy_name,
@@ -411,9 +422,14 @@ def _summary_row(frame: pd.DataFrame, *, mode_name: str, policy_name: str) -> di
         "other_gaussian_false_global": int(other["oracle_prefers_global_bh"].sum()),
         "other_gaussian_predictive_mass": float(other["predictive_score"].sum()),
         "top20_false_global_rows": int(len(top20_false_global)),
-        "top20_extreme_noise_rows": int((top20_false_global["case_subfamily"] == "gaussian_extreme_noise").sum()),
+        "top20_extreme_noise_rows": int(
+            (top20_false_global["case_subfamily"] == "gaussian_extreme_noise").sum()
+        ),
         "top20_other_gaussian_rows": int(
-            ((top20_false_global["case_family"] == "gaussian") & (top20_false_global["case_subfamily"] != "gaussian_extreme_noise")).sum()
+            (
+                (top20_false_global["case_family"] == "gaussian")
+                & (top20_false_global["case_subfamily"] != "gaussian_extreme_noise")
+            ).sum()
         ),
     }
 
@@ -431,7 +447,11 @@ def _subfamily_summary(frame: pd.DataFrame, *, mode_name: str, policy_name: str)
             predictive_mass=("predictive_score", "sum"),
             top20_rows=("in_top20_false_global", "sum"),
         )
-        .sort_values(["false_global", "predictive_mass", "case_subfamily"], ascending=[False, False, True], kind="stable")
+        .sort_values(
+            ["false_global", "predictive_mass", "case_subfamily"],
+            ascending=[False, False, True],
+            kind="stable",
+        )
         .reset_index(drop=True)
     )
     summary.insert(0, "policy", policy_name)
@@ -476,7 +496,7 @@ def _analyze_mode(
     gap_threshold: float,
     edge_eps: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    frame = pd.read_csv((_ROOT / mode.rows_csv).resolve()).copy()
+    frame = pd.read_csv(resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)).copy()
     frame["heldout_probability"] = _heldout_probability(frame)
     frame["heldout_probability_source"] = _heldout_probability_source(frame)
     frame["predictive_score"] = _predictive_score(frame)
@@ -528,8 +548,12 @@ def _analyze_mode(
     subfamilies = pd.concat(
         [
             _subfamily_summary(baseline_marked, mode_name=mode.name, policy_name="baseline"),
-            _subfamily_summary(downrank_marked, mode_name=mode.name, policy_name="downrank_subtree"),
-            _subfamily_summary(suppress_marked, mode_name=mode.name, policy_name="suppress_subtree"),
+            _subfamily_summary(
+                downrank_marked, mode_name=mode.name, policy_name="downrank_subtree"
+            ),
+            _subfamily_summary(
+                suppress_marked, mode_name=mode.name, policy_name="suppress_subtree"
+            ),
         ],
         ignore_index=True,
     )
@@ -619,13 +643,25 @@ def main() -> None:
     guard_anchor_df = pd.concat(guard_anchors, ignore_index=True)
     top20_df = pd.concat(top20_frames, ignore_index=True)
 
-    equation_summary_path = (_ROOT / args.equation_summary_output_csv).resolve()
-    equation_coeff_path = (_ROOT / args.equation_coefficients_output_csv).resolve()
-    guard_summary_path = (_ROOT / args.guard_summary_output_csv).resolve()
-    guard_subfamily_path = (_ROOT / args.guard_subfamily_output_csv).resolve()
-    guard_anchor_path = (_ROOT / args.guard_anchor_output_csv).resolve()
-    top20_path = (_ROOT / args.top20_output_csv).resolve()
-    markdown_path = (_ROOT / args.summary_markdown).resolve()
+    equation_summary_path = resolve_enhancement_lab_artifact_path(args.equation_summary_output_csv)
+    equation_coeff_path = resolve_enhancement_lab_artifact_path(
+        args.equation_coefficients_output_csv
+    )
+    guard_summary_path = resolve_enhancement_lab_artifact_path(args.guard_summary_output_csv)
+    guard_subfamily_path = resolve_enhancement_lab_artifact_path(args.guard_subfamily_output_csv)
+    guard_anchor_path = resolve_enhancement_lab_artifact_path(args.guard_anchor_output_csv)
+    top20_path = resolve_enhancement_lab_artifact_path(args.top20_output_csv)
+    markdown_path = resolve_enhancement_lab_artifact_path(args.summary_markdown)
+    for path in [
+        equation_summary_path,
+        equation_coeff_path,
+        guard_summary_path,
+        guard_subfamily_path,
+        guard_anchor_path,
+        top20_path,
+        markdown_path,
+    ]:
+        path.parent.mkdir(parents=True, exist_ok=True)
 
     equation_summary_df.to_csv(equation_summary_path, index=False)
     equation_coeff_df.to_csv(equation_coeff_path, index=False)

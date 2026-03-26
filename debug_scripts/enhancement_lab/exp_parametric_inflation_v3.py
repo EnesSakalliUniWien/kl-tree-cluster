@@ -81,7 +81,7 @@ class PairRow:
     k: int
     depth: int
     branch_length_sum: float
-    edge_weight: float
+    sibling_null_prior: float
     is_null_like: bool
     is_binary_case: float
     is_null_case: float
@@ -286,7 +286,7 @@ def fit_pooled_power_law(rows: list[PairRow]) -> PowerLawModel:
 
     log_n = np.array([math.log(max(row.n_parent, 1)) for row in rows], dtype=np.float64)
     log_ratio = np.array([math.log(max(row.t_obs / row.k, 1.0)) for row in rows], dtype=np.float64)
-    weights = np.array([max(row.edge_weight, 0.05) for row in rows], dtype=np.float64)
+    weights = np.array([max(row.sibling_null_prior_from_edge_pvalue, 0.05) for row in rows], dtype=np.float64)
     design = np.column_stack([np.ones(len(rows), dtype=np.float64), log_n])
     coefficients = _fit_weighted_ridge(design, log_ratio, weights, ridge_lambda=POWER_RIDGE)
 
@@ -312,7 +312,7 @@ def fit_residual_model(rows: list[PairRow], power_model: PowerLawModel) -> Resid
         ],
         dtype=np.float64,
     )
-    weights = np.array([max(row.edge_weight, 0.05) for row in rows], dtype=np.float64)
+    weights = np.array([max(row.sibling_null_prior_from_edge_pvalue, 0.05) for row in rows], dtype=np.float64)
     coefficients = _fit_weighted_ridge(design, target, weights, ridge_lambda=FEATURE_RIDGE)
 
     return ResidualModel(
@@ -332,7 +332,7 @@ def _score_candidate(
     residual_scale: float,
     offset_quantile: float,
 ) -> CandidateScore:
-    weights = np.array([max(row.edge_weight, 0.05) for row in null_rows], dtype=np.float64)
+    weights = np.array([max(row.sibling_null_prior_from_edge_pvalue, 0.05) for row in null_rows], dtype=np.float64)
     baseline_logs = np.array([power_model.predict_log(row) for row in null_rows], dtype=np.float64)
     residual_predictions = np.array([residual_model.predict(row) for row in null_rows], dtype=np.float64)
     target_logs = np.array(
@@ -497,7 +497,7 @@ def collect_case_rows(case_name: str) -> list[PairRow]:
                 k=int(record.degrees_of_freedom),
                 depth=depth,
                 branch_length_sum=float(max(record.branch_length_sum, 0.0)),
-                edge_weight=float(record.edge_weight),
+                sibling_null_prior=float(record.sibling_null_prior_from_edge_pvalue),
                 is_null_like=bool(record.is_null_like),
                 is_binary_case=is_binary_case,
                 is_null_case=is_null_case,

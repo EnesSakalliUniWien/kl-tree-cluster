@@ -109,6 +109,7 @@ benchmarks/**/run_*/
 # Debug output
 debug_output/
 *.log
+debug_scripts/diagnostics/results/enhancement_lab/
 
 # Node modules (if any frontend tooling)
 node_modules/

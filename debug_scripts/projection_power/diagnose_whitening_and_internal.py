@@ -129,7 +129,7 @@ def main():
     print("=" * 110)
     print("WHITENING × INCLUDE_INTERNAL A/B DIAGNOSIS")
     print(
-        f"SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
+        "SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "
         f"SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}"
     )
     print("=" * 110)

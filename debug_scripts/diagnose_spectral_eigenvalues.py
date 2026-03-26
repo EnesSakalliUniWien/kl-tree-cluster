@@ -37,24 +37,27 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 warnings.filterwarnings("ignore")
 os.environ.setdefault("KL_TE_N_JOBS", "1")
 
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.sibling_spectral_dimension import (
+    compute_sibling_spectral_dimensions,
+)
+
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends import (
-    EigenResult,
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_backend import (
     build_pca_projection_backend,
     eigendecompose_correlation_backend,
-    estimate_spectral_k_backend,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
-    effective_rank,
-    marchenko_pastur_signal_count,
+from kl_clustering_analysis.hierarchy_analysis.decomposition.core.eigen_result import (
+    EigenResult,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.chi2_pvalue import (
     compute_projected_pvalue,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.sibling_spectral_dimension import (
-    compute_sibling_spectral_dimensions,
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+    effective_rank,
+    estimate_k_marchenko_pastur,
+    marchenko_pastur_signal_count,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
     compute_spectral_decomposition,
@@ -96,14 +99,16 @@ def print_eigenvector_loadings(
 ) -> None:
     """Show top feature loadings for leading eigenvectors."""
     if eig.use_dual:
-        if eig.gram_vecs is None or eig.X_std is None:
+        if eig.dual_sample_eigenvectors is None or eig.standardized_data_active is None:
             print("  (Dual form — eigenvectors not available)")
             return
         # Recover d-space eigenvectors from dual form
-        k_avail = min(top_k_vectors, eig.gram_vecs.shape[1])
+        k_avail = min(top_k_vectors, eig.dual_sample_eigenvectors.shape[1])
         top_eigs = np.maximum(eig.eigenvalues[:k_avail], 1e-12)
         vecs_active = (
-            eig.X_std.T @ eig.gram_vecs[:, :k_avail] / (np.sqrt(top_eigs) * np.sqrt(eig.d_active))
+            eig.standardized_data_active.T
+            @ eig.dual_sample_eigenvectors[:, :k_avail]
+            / (np.sqrt(top_eigs) * np.sqrt(eig.active_feature_count))
         )
         norms = np.linalg.norm(vecs_active, axis=0)
         norms[norms == 0] = 1.0
@@ -116,7 +121,7 @@ def print_eigenvector_loadings(
         vecs_active = eig.eigenvectors_active[:, :k_avail]
 
     # Map back to feature names via active_mask
-    active_indices = np.where(eig.active_mask)[0]
+    active_indices = np.where(eig.is_active_feature)[0]
 
     print(f"\n  Top-{top_n_features} feature loadings for leading {k_avail} PCs:")
     for pc_idx in range(k_avail):
@@ -151,23 +156,26 @@ def analyze_root_gate2(
     print(f"  Descendants: n={len(root_idx)}, d={data_sub.shape[1]}")
 
     # Eigendecompose
-    eig = eigendecompose_correlation_backend(data_sub, need_eigh=True)
+    eig = eigendecompose_correlation_backend(data_sub, compute_eigenvectors=True)
     if eig is None:
         print("  ERROR: Eigendecomposition returned None (< 2 active features)")
         return
 
     print(f"  Form: {'DUAL (n×n Gram)' if eig.use_dual else 'PRIMAL (d×d correlation)'}")
-    print(f"  Active features: {eig.d_active} / {data_sub.shape[1]}")
+    print(f"  Active features: {eig.active_feature_count} / {data_sub.shape[1]}")
 
     # Effective rank
     erank = effective_rank(eig.eigenvalues)
-    mp_count = marchenko_pastur_signal_count(eig.eigenvalues, len(root_idx), eig.d_active)  # positional: eigenvalues, n_samples, n_features
-    k_used = estimate_spectral_k_backend(
+    mp_count = marchenko_pastur_signal_count(
+        eig.eigenvalues, len(root_idx), eig.active_feature_count
+    )  # positional: eigenvalues, n_samples, n_features
+    k_used = estimate_k_marchenko_pastur(
         eig.eigenvalues,
-        method="effective_rank",
         n_samples=len(root_idx),
-        n_features=eig.d_active,
-        minimum_projection_dimension=config.PROJECTION_MIN_K if isinstance(config.PROJECTION_MIN_K, int) else 4,
+        n_features=eig.active_feature_count,
+        minimum_projection_dimension=(
+            config.PROJECTION_MIN_K if isinstance(config.PROJECTION_MIN_K, int) else 4
+        ),
     )
 
     print(f"  Effective rank: {erank:.2f}")
@@ -183,12 +191,12 @@ def analyze_root_gate2(
         if len(child_idx) < 2:
             continue
         child_data = X[child_idx, :]
-        child_eig = eigendecompose_correlation_backend(child_data, need_eigh=False)
+        child_eig = eigendecompose_correlation_backend(child_data, compute_eigenvectors=False)
         if child_eig is None:
             continue
         child_erank = effective_rank(child_eig.eigenvalues)
         print(
-            f"\n  Child {child}: n={len(child_idx)}, d_active={child_eig.d_active}, "
+            f"\n  Child {child}: n={len(child_idx)}, d_active={child_eig.active_feature_count}, "
             f"erank={child_erank:.2f}, form={'dual' if child_eig.use_dual else 'primal'}"
         )
         print_eigenvalue_table(child_eig.eigenvalues, f"Child {child} correlation")
@@ -231,22 +239,23 @@ def analyze_root_gate3(
 
     print(f"  Pooled residuals shape: {pooled_resid.shape}")
 
-    eig_pooled = eigendecompose_correlation_backend(pooled_resid, need_eigh=True)
+    eig_pooled = eigendecompose_correlation_backend(pooled_resid, compute_eigenvectors=True)
     if eig_pooled is None:
         print("  ERROR: Pooled eigendecomposition returned None")
         return
 
     erank_pooled = effective_rank(eig_pooled.eigenvalues)
-    k_pooled = estimate_spectral_k_backend(
+    k_pooled = estimate_k_marchenko_pastur(
         eig_pooled.eigenvalues,
-        method="effective_rank",
         n_samples=pooled_resid.shape[0],
-        n_features=eig_pooled.d_active,
-        minimum_projection_dimension=config.PROJECTION_MIN_K if isinstance(config.PROJECTION_MIN_K, int) else 4,
+        n_features=eig_pooled.active_feature_count,
+        minimum_projection_dimension=(
+            config.PROJECTION_MIN_K if isinstance(config.PROJECTION_MIN_K, int) else 4
+        ),
     )
 
     print(f"  Form: {'DUAL' if eig_pooled.use_dual else 'PRIMAL'}")
-    print(f"  Active features (pooled): {eig_pooled.d_active}")
+    print(f"  Active features (pooled): {eig_pooled.active_feature_count}")
     print(f"  Pooled within-cluster effective rank: {erank_pooled:.2f}")
     print(f"  k_pooled (with floor): {k_pooled}")
 
@@ -255,7 +264,7 @@ def analyze_root_gate3(
     # Compare: overall root eig vs pooled
     root_idx = desc_indices.get(root, [])
     root_data = X[root_idx, :]
-    eig_root = eigendecompose_correlation_backend(root_data, need_eigh=False)
+    eig_root = eigendecompose_correlation_backend(root_data, compute_eigenvectors=False)
     if eig_root is not None:
         erank_root = effective_rank(eig_root.eigenvalues)
         print("\n  Comparison:")
@@ -320,16 +329,18 @@ def analyze_z_vector_and_wald(
     resid_right = right_rows - right_rows.mean(axis=0)
     pooled_resid = np.vstack([resid_left, resid_right])
 
-    eig_pooled = eigendecompose_correlation_backend(pooled_resid, need_eigh=True)
+    eig_pooled = eigendecompose_correlation_backend(pooled_resid, compute_eigenvectors=True)
     if eig_pooled is None:
         print("  Cannot compute pooled eigendecomposition for projection.")
         return
 
     erank_pooled = effective_rank(eig_pooled.eigenvalues)
     k = max(int(np.round(erank_pooled)), 4)
-    k = min(k, eig_pooled.d_active)
+    k = min(k, eig_pooled.active_feature_count)
 
-    proj, ev = build_pca_projection_backend(eig_pooled, projection_dimension=k, n_features_total=len(z))
+    proj, ev = build_pca_projection_backend(
+        eig_pooled, projection_dimension=k, n_features_total=len(z)
+    )
     if proj is None:
         print("  PCA projection matrix unavailable.")
         return
@@ -376,7 +387,7 @@ def analyze_cluster_eigenspectra(
             print(f"\n  Cluster {int(label)}: n={n_c} (too few for eigendecomposition)")
             continue
 
-        eig = eigendecompose_correlation_backend(cluster_data, need_eigh=False)
+        eig = eigendecompose_correlation_backend(cluster_data, compute_eigenvectors=False)
         if eig is None:
             print(f"\n  Cluster {int(label)}: n={n_c}, eigendecomposition failed")
             continue
@@ -384,7 +395,7 @@ def analyze_cluster_eigenspectra(
         erank = effective_rank(eig.eigenvalues)
         top5 = eig.eigenvalues[:5]
         print(
-            f"\n  Cluster {int(label)}: n={n_c}, d_active={eig.d_active}, erank={erank:.2f}, "
+            f"\n  Cluster {int(label)}: n={n_c}, d_active={eig.active_feature_count}, erank={erank:.2f}, "
             f"form={'dual' if eig.use_dual else 'primal'}"
         )
         print(f"    Top-5 λ: [{', '.join(f'{v:.3f}' for v in top5)}]")
@@ -493,7 +504,7 @@ def main():
     print_header(f"Spectral Eigenvalue Diagnosis: {case_name}")
     print(
         f"  Config: EIGENVALUE_WHITENING={config.EIGENVALUE_WHITENING}, "
-        f"SPECTRAL_METHOD={config.SPECTRAL_METHOD}"
+        "SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)"
     )
     print(
         f"  Config: PROJECTION_MIN_K={config.PROJECTION_MIN_K}, "

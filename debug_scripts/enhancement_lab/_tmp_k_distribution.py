@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import sys
 from collections import Counter
+from importlib import import_module
 from pathlib import Path
 
 _LAB = Path(__file__).resolve().parent
@@ -15,17 +16,17 @@ _ROOT = _LAB.parents[1]
 sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(_LAB))
 
-import numpy as np
-from lab_helpers import build_tree_and_data
+import numpy as np  # noqa: E402
+from lab_helpers import build_tree_and_data  # noqa: E402
 
-from benchmarks.shared.cases import get_default_test_cases
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate import (
-    annotate_edge_gate,
-)
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
-    _derive_sibling_spectral_dims,
-)
+get_default_test_cases = import_module("benchmarks.shared.cases").get_default_test_cases
+config = import_module("kl_clustering_analysis").config
+annotate_child_parent_divergence = import_module(
+    "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence"
+).annotate_child_parent_divergence
+derive_sibling_spectral_dims = import_module(
+    "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config"
+).derive_sibling_spectral_dims
 
 all_cases = get_default_test_cases()
 
@@ -38,17 +39,16 @@ for i, tc in enumerate(all_cases):
         tree, data_df, y_true, tc_info = build_tree_and_data(name)
         annotations_df = tree.annotations_df.copy()
 
-        edge_bundle = annotate_edge_gate(
+        edge_annotated_df = annotate_child_parent_divergence(
             tree,
             annotations_df,
             significance_level_alpha=config.EDGE_ALPHA,
-            leaf_data=data_df,
-            spectral_method="marchenko_pastur",
-            minimum_projection_dimension=None,
             fdr_method="tree_bh",
+            leaf_data=data_df,
+            minimum_projection_dimension=None,
         )
 
-        sibling_dims = _derive_sibling_spectral_dims(tree, edge_bundle.annotated_df)
+        sibling_dims = derive_sibling_spectral_dims(tree, edge_annotated_df)
         if sibling_dims:
             ks = list(sibling_dims.values())
             all_k_values.extend(ks)

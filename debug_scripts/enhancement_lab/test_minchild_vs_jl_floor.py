@@ -20,14 +20,14 @@ import numpy as np
 from sklearn.metrics import adjusted_rand_score
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate import (
-    annotate_edge_gate,
-)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.gate_evaluator import (
     GateEvaluator,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.sibling_gate import (
-    annotate_sibling_gate,
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+    annotate_child_parent_divergence,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+    annotate_sibling_divergence_adjusted,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -140,30 +140,28 @@ def run_decomposition_custom(
     sibling_alpha: float = 0.01,
 ) -> dict:
     """Run decomposition with custom spectral_dims derivation."""
-    from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
         derive_sibling_pca_projections,
     )
 
     # Gate 2
     annotations_df = tree.annotations_df.copy()
-    edge_bundle = annotate_edge_gate(
+    edge_annotated_df = annotate_child_parent_divergence(
         tree,
         annotations_df,
         significance_level_alpha=alpha_local,
-        leaf_data=leaf_data,
-        spectral_method="marchenko_pastur",
         fdr_method="tree_bh",
+        leaf_data=leaf_data,
     )
 
     # Gate 3 with custom spectral_dims
-    sibling_dims = spectral_dims_fn(tree, edge_bundle.annotated_df, leaf_data)
-    pca_projs, pca_eigs = derive_sibling_pca_projections(edge_bundle.annotated_df, sibling_dims)
+    sibling_dims = spectral_dims_fn(tree, edge_annotated_df, leaf_data)
+    pca_projs, pca_eigs = derive_sibling_pca_projections(edge_annotated_df, sibling_dims)
 
-    sibling_bundle = annotate_sibling_gate(
+    annotated_df = annotate_sibling_divergence_adjusted(
         tree,
-        edge_bundle.annotated_df,
+        edge_annotated_df,
         significance_level_alpha=sibling_alpha,
-        sibling_method="cousin_adjusted_wald",
         spectral_dims=sibling_dims,
         pca_projections=pca_projs,
         pca_eigenvalues=pca_eigs,
@@ -172,7 +170,7 @@ def run_decomposition_custom(
     # Decomposition
     evaluator = GateEvaluator(tree)
     cluster_roots = evaluator.decompose_with_gates(
-        sibling_bundle.annotated_df,
+        annotated_df,
         passthrough=True,
     )
 
@@ -263,7 +261,7 @@ def main():
     print("=" * 90)
     print(f"\nSentinel cases: {len(SENTINEL_CASES)}")
     print(
-        f"Config: SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}, SPECTRAL_METHOD={config.SPECTRAL_METHOD}"
+        f"Config: SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}, SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)"
     )
     print()
 

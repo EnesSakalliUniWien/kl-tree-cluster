@@ -39,21 +39,17 @@ import numpy as np
 from lab_helpers import build_tree_and_data, compute_ari, temporary_experiment_overrides
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
-    compute_projection_dimension_backend as compute_jl_dim,
-)
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
-    marchenko_pastur_signal_count,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
-    marchenko_pastur as mp_module,
-)
 
 # Apply jl_floor_qrt as the FIXED Gate 3 strategy for all runs
 # (isolate Gate 2 effect from Gate 3)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as _compute_jl_dim_g3,
+)
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
+    compute_projection_dimension_backend as compute_jl_dim,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+    marchenko_pastur_signal_count,
 )
 
 
@@ -494,7 +490,7 @@ def run_phase_b():
     n_strat = len(strat_names)
 
     print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print("        Gate 3 fixed to: jl_floor_qrt")
     print(f"\n═══ PHASE B: {n_cases} cases × {n_strat} Gate 2 strategies ═══\n")
 
@@ -613,7 +609,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print("        Gate 3 fixed to: jl_floor_qrt")
     print()
 

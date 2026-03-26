@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analyze the impact of switching SPECTRAL_METHOD to marchenko_pastur.
+"""Analyze the historical switch to Marchenko-Pastur spectral estimation.
 
 Compares benchmark runs across all cases and methods. Originally used to
 compare the legacy effective_rank baseline against the Marchenko-Pastur

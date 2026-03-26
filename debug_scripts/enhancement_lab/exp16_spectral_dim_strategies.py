@@ -189,7 +189,7 @@ def run_case_strategy(case_name: str, strategy_fn) -> dict:
 
 if __name__ == "__main__":
     print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print()
 
     strat_names = list(STRATEGIES.keys())

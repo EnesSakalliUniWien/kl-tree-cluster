@@ -48,8 +48,12 @@ import pandas as pd
 import statsmodels.api as sm
 from numpy.linalg import lstsq
 
+from debug_scripts.enhancement_lab.lab_helpers import (
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+)
+
 _ROOT = Path(__file__).resolve().parents[2]
-_OUTPUT_DIR = Path(__file__).resolve().parent
 
 # ---------------------------------------------------------------------------
 # CLI
@@ -60,7 +64,7 @@ def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Exp32: Deflation equation fitting")
     ap.add_argument(
         "--rows-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_rows.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_rows.csv"),
         help="Path to exp31 oracle rows CSV (relative to project root).",
     )
     ap.add_argument(
@@ -71,7 +75,7 @@ def parse_args() -> argparse.Namespace:
     )
     ap.add_argument(
         "--output-prefix",
-        default="debug_scripts/enhancement_lab/_exp32_deflation_equation",
+        default=enhancement_lab_results_relative("_exp32_deflation_equation"),
         help="Prefix for output files (relative to project root).",
     )
     return ap.parse_args()
@@ -1007,8 +1011,9 @@ def write_markdown_report(
 
 def main() -> None:
     args = parse_args()
-    rows_csv = (_ROOT / args.rows_csv).resolve()
-    prefix = (_ROOT / args.output_prefix).resolve()
+    rows_csv = resolve_enhancement_lab_artifact_path(args.rows_csv, for_input=True)
+    prefix = resolve_enhancement_lab_artifact_path(args.output_prefix)
+    prefix.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"Loading data from {rows_csv}")
     data = prepare_data(rows_csv)
@@ -1155,4 +1160,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    main()
     main()

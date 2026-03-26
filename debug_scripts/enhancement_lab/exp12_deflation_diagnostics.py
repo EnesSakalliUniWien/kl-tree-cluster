@@ -62,7 +62,6 @@ def collect_pair_data(case_name: str) -> pd.DataFrame:
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,
-        spectral_method=config.SPECTRAL_METHOD,
         sibling_method=config.SIBLING_TEST_METHOD,
     )
     annotated = bundle.annotated_df
@@ -103,7 +102,7 @@ def collect_pair_data(case_name: str) -> pd.DataFrame:
             "p_value": rec.p_value,
             "n_parent": rec.n_parent,
             "is_null_like": rec.is_null_like,
-            "edge_weight": rec.edge_weight,
+            "sibling_null_prior": rec.sibling_null_prior_from_edge_pvalue,
             "bl_sum": rec.branch_length_sum,
         }
         if np.isfinite(rec.stat) and rec.degrees_of_freedom > 0:
@@ -226,7 +225,7 @@ def estimate_inflation_methods(pdf: pd.DataFrame) -> dict:
         return {}
 
     ratios = (valid["stat"] / valid["k"]).values
-    weights = valid["edge_weight"].values
+    weights = valid["sibling_null_prior"].values
     k_values = valid["k"].values
     p_values = valid["p_value"].values
 

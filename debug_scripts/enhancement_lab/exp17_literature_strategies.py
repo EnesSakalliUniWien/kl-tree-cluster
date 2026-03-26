@@ -46,6 +46,8 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     effective_rank as compute_effective_rank,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     marchenko_pastur_signal_count,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
@@ -192,14 +194,14 @@ def _derive_pooled_mp(tree, annotated_df):
         if pooled.shape[0] < 2:
             continue
 
-        result = eigendecompose_correlation_backend(pooled, need_eigh=False)
+        result = eigendecompose_correlation_backend(pooled, compute_eigenvectors=False)
         if result is None:
             continue
 
         k = marchenko_pastur_signal_count(
             result.eigenvalues,
             n_samples=pooled.shape[0],
-            n_features=result.d_active,
+            n_features=result.active_feature_count,
         )
         if k > 0:
             sibling_dims[parent] = k
@@ -234,7 +236,7 @@ def _derive_effective_rank(tree, annotated_df):
         if pooled.shape[0] < 2:
             continue
 
-        result = eigendecompose_correlation_backend(pooled, need_eigh=False)
+        result = eigendecompose_correlation_backend(pooled, compute_eigenvectors=False)
         if result is None:
             continue
 
@@ -286,11 +288,11 @@ def _derive_ncp_power(tree, annotated_df):
         n_features = pooled.shape[1]
 
         # Estimate effective signal dimension from pooled data
-        result = eigendecompose_correlation_backend(pooled, need_eigh=False)
+        result = eigendecompose_correlation_backend(pooled, compute_eigenvectors=False)
         if result is None:
             continue
         s = marchenko_pastur_signal_count(
-            result.eigenvalues, n_samples=n_parent, n_features=result.d_active
+            result.eigenvalues, n_samples=n_parent, n_features=result.active_feature_count
         )
 
         # Estimate SNR from the mean-difference norm (crude)
@@ -448,14 +450,14 @@ def _derive_k_parent(tree, annotated_df):
         if pooled.shape[0] < 2:
             continue
 
-        result = eigendecompose_correlation_backend(pooled, need_eigh=False)
+        result = eigendecompose_correlation_backend(pooled, compute_eigenvectors=False)
         if result is None:
             continue
 
         k = marchenko_pastur_signal_count(
             result.eigenvalues,
             n_samples=pooled.shape[0],
-            n_features=result.d_active,
+            n_features=result.active_feature_count,
         )
         # Floor at 2 to avoid degenerate chi^2(1) tests
         sibling_dims[parent] = max(k, 2)
@@ -493,14 +495,14 @@ def _derive_k_parent_jl_floor(tree, annotated_df):
         n_features = pooled.shape[1]
         n_parent = pooled.shape[0]
 
-        result = eigendecompose_correlation_backend(pooled, need_eigh=False)
+        result = eigendecompose_correlation_backend(pooled, compute_eigenvectors=False)
         if result is None:
             continue
 
         k_mp = marchenko_pastur_signal_count(
             result.eigenvalues,
             n_samples=n_parent,
-            n_features=result.d_active,
+            n_features=result.active_feature_count,
         )
 
         jl_k = compute_jl_dim(n_parent, n_features)
@@ -558,7 +560,7 @@ def run_case_strategy(case_name: str, strategy_fn) -> dict:
 
 if __name__ == "__main__":
     print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print()
 
     strat_names = list(STRATEGIES.keys())

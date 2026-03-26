@@ -74,11 +74,14 @@ from sklearn.model_selection import LeaveOneGroupOut
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from debug_scripts.enhancement_lab.lab_helpers import (
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+)
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (
     benjamini_hochberg_correction,
 )
-
 
 _ROOT = Path(__file__).resolve().parents[2]
 _FEATURES = [
@@ -100,8 +103,11 @@ class ModeSpec:
 
 
 _DEFAULT_MODES: tuple[ModeSpec, ...] = (
-    ModeSpec("baseline", "debug_scripts/enhancement_lab/_oracle_policy_rows.csv"),
-    ModeSpec("one_active_1d", "debug_scripts/enhancement_lab/_oracle_policy_rows_one_active_1d.csv"),
+    ModeSpec("baseline", enhancement_lab_results_relative("_oracle_policy_rows.csv")),
+    ModeSpec(
+        "one_active_1d",
+        enhancement_lab_results_relative("_oracle_policy_rows_one_active_1d.csv"),
+    ),
 )
 
 
@@ -116,23 +122,29 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--shrink-strengths", default="0.25,0.5,0.75,1.0")
     parser.add_argument(
         "--summary-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_anchored_downward_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_anchored_downward_summary.csv"),
     )
     parser.add_argument(
         "--coefficients-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_anchored_downward_coefficients.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_anchored_downward_coefficients.csv"
+        ),
     )
     parser.add_argument(
         "--predictions-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_anchored_downward_predictions.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_anchored_downward_predictions.csv"
+        ),
     )
     parser.add_argument(
         "--case-delta-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_anchored_downward_case_deltas.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_anchored_downward_case_deltas.csv"
+        ),
     )
     parser.add_argument(
         "--summary-markdown",
-        default="debug_scripts/enhancement_lab/_oracle_policy_anchored_downward_summary.md",
+        default=enhancement_lab_results_relative("_oracle_policy_anchored_downward_summary.md"),
     )
     return parser.parse_args()
 
@@ -146,13 +158,7 @@ def _resolve_modes(arg: str) -> list[ModeSpec]:
 
 
 def _parse_strengths(arg: str) -> list[float]:
-    strengths = sorted(
-        {
-            float(token.strip())
-            for token in arg.split(",")
-            if token.strip()
-        }
-    )
+    strengths = sorted({float(token.strip()) for token in arg.split(",") if token.strip()})
     if not strengths:
         raise ValueError("At least one shrink strength is required.")
     for value in strengths:
@@ -210,7 +216,8 @@ def _prepare_frame(path: Path, *, logit_eps: float) -> pd.DataFrame:
     focal["log_n_parent"] = np.log(np.maximum(focal["n_parent"].to_numpy(dtype=np.float64), 1.0))
     focal["log_stat_per_k"] = np.log(
         np.maximum(
-            focal["stat"].to_numpy(dtype=np.float64) / np.maximum(focal["k"].to_numpy(dtype=np.float64), 1.0),
+            focal["stat"].to_numpy(dtype=np.float64)
+            / np.maximum(focal["k"].to_numpy(dtype=np.float64), 1.0),
             1e-300,
         )
     )
@@ -345,12 +352,8 @@ def _evaluate_mode(
     method_rows.extend([baseline_eval, teacher_eval])
 
     for eta in strengths:
-        r_teacher_eta = 1.0 - eta * (
-            1.0 - evaluated["r_target"].to_numpy(dtype=np.float64)
-        )
-        r_student_eta = 1.0 - eta * (
-            1.0 - evaluated["r_pred"].to_numpy(dtype=np.float64)
-        )
+        r_teacher_eta = 1.0 - eta * (1.0 - evaluated["r_target"].to_numpy(dtype=np.float64))
+        r_student_eta = 1.0 - eta * (1.0 - evaluated["r_pred"].to_numpy(dtype=np.float64))
         c_global = evaluated["c_baseline"].to_numpy(dtype=np.float64)
         c_teacher_eta = 1.0 + (c_global - 1.0) * r_teacher_eta
         c_student_eta = 1.0 + (c_global - 1.0) * r_student_eta
@@ -392,7 +395,9 @@ def _evaluate_mode(
         _apply_casewise_bh(evaluated, "p_student_tmp", "bh_student_tmp")
 
         for case_name, case_frame in evaluated.groupby("case_name", sort=False):
-            base_false_global = int((case_frame["bh_baseline"] & (~case_frame["perm_bh_reject"])).sum())
+            base_false_global = int(
+                (case_frame["bh_baseline"] & (~case_frame["perm_bh_reject"])).sum()
+            )
             student_false_global = int(
                 (case_frame["bh_student_tmp"] & (~case_frame["perm_bh_reject"])).sum()
             )
@@ -416,10 +421,7 @@ def _evaluate_mode(
 
     coeff_rows = [
         {"term": "intercept", "value": intercept},
-        *(
-            {"term": feature, "value": float(coef_map[feature])}
-            for feature in _FEATURES
-        ),
+        *({"term": feature, "value": float(coef_map[feature])} for feature in _FEATURES),
     ]
 
     metrics = pd.DataFrame(method_rows)
@@ -435,9 +437,7 @@ def _evaluate_mode(
         metrics.loc[mask, "target_r_mae"] = float(
             mean_absolute_error(evaluated["r_target"], r_student_eta)
         )
-        metrics.loc[mask, "target_r_r2"] = float(
-            r2_score(evaluated["r_target"], r_student_eta)
-        )
+        metrics.loc[mask, "target_r_r2"] = float(r2_score(evaluated["r_target"], r_student_eta))
         metrics.loc[mask, "target_logc_mae"] = float(
             mean_absolute_error(
                 np.log(evaluated["c_teacher_down"].to_numpy(dtype=np.float64)),
@@ -462,11 +462,14 @@ def _evaluate_mode(
         metrics.loc[teacher_mask, "target_logc_mae"] = float(
             mean_absolute_error(
                 np.log(evaluated["c_teacher_down"].to_numpy(dtype=np.float64)),
-                np.log(np.maximum(
-                    1.0 + (evaluated["c_baseline"].to_numpy(dtype=np.float64) - 1.0)
-                    * evaluated[f"r_teacher_eta_{eta:.2f}"].to_numpy(dtype=np.float64),
-                    1.0,
-                )),
+                np.log(
+                    np.maximum(
+                        1.0
+                        + (evaluated["c_baseline"].to_numpy(dtype=np.float64) - 1.0)
+                        * evaluated[f"r_teacher_eta_{eta:.2f}"].to_numpy(dtype=np.float64),
+                        1.0,
+                    )
+                ),
             )
         )
 
@@ -535,7 +538,10 @@ def main() -> None:
     prediction_rows: list[pd.DataFrame] = []
 
     for mode in modes:
-        frame = _prepare_frame(_ROOT / mode.rows_csv, logit_eps=args.logit_eps)
+        frame = _prepare_frame(
+            resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True),
+            logit_eps=args.logit_eps,
+        )
         summary, coefficients, cases, evaluated = _evaluate_mode(
             frame,
             group_column=args.group_column,
@@ -556,11 +562,11 @@ def main() -> None:
     coefficients_df = pd.concat(coefficient_rows, ignore_index=True)
     case_df = pd.concat(case_rows, ignore_index=True)
 
-    summary_path = _ROOT / args.summary_output_csv
-    coeff_path = _ROOT / args.coefficients_output_csv
-    pred_path = _ROOT / args.predictions_output_csv
-    case_path = _ROOT / args.case_delta_output_csv
-    md_path = _ROOT / args.summary_markdown
+    summary_path = resolve_enhancement_lab_artifact_path(args.summary_output_csv)
+    coeff_path = resolve_enhancement_lab_artifact_path(args.coefficients_output_csv)
+    pred_path = resolve_enhancement_lab_artifact_path(args.predictions_output_csv)
+    case_path = resolve_enhancement_lab_artifact_path(args.case_delta_output_csv)
+    md_path = resolve_enhancement_lab_artifact_path(args.summary_markdown)
     for path in (summary_path, coeff_path, pred_path, case_path, md_path):
         path.parent.mkdir(parents=True, exist_ok=True)
 

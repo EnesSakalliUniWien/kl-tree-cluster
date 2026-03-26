@@ -23,8 +23,11 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from debug_scripts.enhancement_lab.lab_helpers import build_tree_and_data
-
+from debug_scripts.enhancement_lab.lab_helpers import (
+    build_tree_and_data,
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+)
 
 _ROOT = Path(__file__).resolve().parents[2]
 
@@ -38,11 +41,11 @@ class ModeSpec:
 _DEFAULT_MODES: tuple[ModeSpec, ...] = (
     ModeSpec(
         name="baseline",
-        rows_csv="debug_scripts/enhancement_lab/_oracle_policy_rows.csv",
+        rows_csv=enhancement_lab_results_relative("_oracle_policy_rows.csv"),
     ),
     ModeSpec(
         name="one_active_1d",
-        rows_csv="debug_scripts/enhancement_lab/_oracle_policy_rows_one_active_1d.csv",
+        rows_csv=enhancement_lab_results_relative("_oracle_policy_rows_one_active_1d.csv"),
     ),
 )
 
@@ -53,23 +56,25 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--summary-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_zero_edge_ablation_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_zero_edge_ablation_summary.csv"),
     )
     parser.add_argument(
         "--subfamily-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_zero_edge_ablation_subfamilies.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_zero_edge_ablation_subfamilies.csv"
+        ),
     )
     parser.add_argument(
         "--anchor-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_zero_edge_ablation_anchors.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_zero_edge_ablation_anchors.csv"),
     )
     parser.add_argument(
         "--top20-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_zero_edge_ablation_top20.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_zero_edge_ablation_top20.csv"),
     )
     parser.add_argument(
         "--summary-markdown",
-        default="debug_scripts/enhancement_lab/_oracle_policy_zero_edge_ablation_summary.md",
+        default=enhancement_lab_results_relative("_oracle_policy_zero_edge_ablation_summary.md"),
     )
     return parser.parse_args()
 
@@ -91,7 +96,7 @@ def _target_mask(frame: pd.DataFrame, *, max_depth: int) -> pd.Series:
         & (~frame["is_null_like"])
         & (frame["depth"] <= max_depth)
         & (frame["gap_log"] >= 4.0)
-        & (frame["edge_weight"] <= 1e-9)
+        & (frame["sibling_null_prior"] <= 1e-9)
     )
 
 
@@ -145,7 +150,9 @@ def _iter_case_subtree_nodes(case_name: str, anchor_nodes: Iterable[str]) -> set
     return covered
 
 
-def _collect_anchor_table(frame: pd.DataFrame, *, mode_name: str, scope_name: str) -> tuple[pd.DataFrame, set[tuple[str, str]]]:
+def _collect_anchor_table(
+    frame: pd.DataFrame, *, mode_name: str, scope_name: str
+) -> tuple[pd.DataFrame, set[tuple[str, str]]]:
     target_rows = frame.loc[frame["is_target_anchor"]].copy()
     if target_rows.empty:
         return pd.DataFrame(), set()
@@ -171,13 +178,15 @@ def _collect_anchor_table(frame: pd.DataFrame, *, mode_name: str, scope_name: st
                     "anchor_depth": int(row["depth"]),
                     "anchor_n_parent": int(row["n_parent"]),
                     "anchor_gap_log": float(row["gap_log"]),
-                    "anchor_edge_weight": float(row["edge_weight"]),
+                    "anchor_sibling_null_prior": float(row["sibling_null_prior"]),
                     "anchor_false_global": bool(row["oracle_prefers_global_bh"]),
                     "subtree_rows": int(len(subtree_rows)),
                     "subtree_false_global": int(subtree_rows["oracle_prefers_global_bh"].sum()),
                     "subtree_risk_sum": float(subtree_rows["risk_score"].sum()),
                     "covered_case_rows": int(len(covered_case)),
-                    "covered_case_false_global": int(covered_case["oracle_prefers_global_bh"].sum()),
+                    "covered_case_false_global": int(
+                        covered_case["oracle_prefers_global_bh"].sum()
+                    ),
                     "covered_case_risk_sum": float(covered_case["risk_score"].sum()),
                 }
             )
@@ -186,7 +195,9 @@ def _collect_anchor_table(frame: pd.DataFrame, *, mode_name: str, scope_name: st
     return pd.DataFrame(anchor_rows), covered_keys
 
 
-def _subfamily_summary(frame: pd.DataFrame, *, mode_name: str, policy_name: str, scope_name: str) -> pd.DataFrame:
+def _subfamily_summary(
+    frame: pd.DataFrame, *, mode_name: str, policy_name: str, scope_name: str
+) -> pd.DataFrame:
     gaussian = frame.loc[(frame["case_family"] == "gaussian") & (~frame["is_null_like"])].copy()
     if gaussian.empty:
         return pd.DataFrame()
@@ -202,16 +213,24 @@ def _subfamily_summary(frame: pd.DataFrame, *, mode_name: str, policy_name: str,
             risk_sum=("risk_score", "sum"),
             top20_rows=("in_top20_false_global", "sum"),
         )
-        .sort_values(["false_global", "risk_sum", "case_subfamily"], ascending=[False, False, True], kind="stable")
+        .sort_values(
+            ["false_global", "risk_sum", "case_subfamily"],
+            ascending=[False, False, True],
+            kind="stable",
+        )
         .reset_index(drop=True)
     )
 
 
-def _overall_summary(frame: pd.DataFrame, *, mode_name: str, policy_name: str, scope_name: str) -> dict[str, object]:
+def _overall_summary(
+    frame: pd.DataFrame, *, mode_name: str, policy_name: str, scope_name: str
+) -> dict[str, object]:
     gaussian = frame.loc[(frame["case_family"] == "gaussian") & (~frame["is_null_like"])].copy()
     extreme = gaussian.loc[gaussian["case_subfamily"] == "gaussian_extreme_noise"].copy()
     other = gaussian.loc[gaussian["case_subfamily"] != "gaussian_extreme_noise"].copy()
-    false_global_top20 = frame.loc[frame["in_top20_false_global"] & frame["oracle_prefers_global_bh"]].copy()
+    false_global_top20 = frame.loc[
+        frame["in_top20_false_global"] & frame["oracle_prefers_global_bh"]
+    ].copy()
     return {
         "mode": mode_name,
         "policy": policy_name,
@@ -226,9 +245,14 @@ def _overall_summary(frame: pd.DataFrame, *, mode_name: str, policy_name: str, s
         "other_gaussian_false_global": int(other["oracle_prefers_global_bh"].sum()),
         "other_gaussian_risk_sum": float(other["risk_score"].sum()),
         "top20_false_global_rows": int(len(false_global_top20)),
-        "top20_extreme_noise_rows": int((false_global_top20["case_subfamily"] == "gaussian_extreme_noise").sum()),
+        "top20_extreme_noise_rows": int(
+            (false_global_top20["case_subfamily"] == "gaussian_extreme_noise").sum()
+        ),
         "top20_other_gaussian_rows": int(
-            ((false_global_top20["case_family"] == "gaussian") & (false_global_top20["case_subfamily"] != "gaussian_extreme_noise")).sum()
+            (
+                (false_global_top20["case_family"] == "gaussian")
+                & (false_global_top20["case_subfamily"] != "gaussian_extreme_noise")
+            ).sum()
         ),
     }
 
@@ -262,7 +286,9 @@ def _write_markdown(summary: pd.DataFrame, anchors: pd.DataFrame, output_path: P
         with pd.option_context("display.max_columns", None, "display.width", 180):
             lines.append(block.to_string(index=False))
         lines.append("")
-        anchor_block = anchors.loc[(anchors["mode"] == mode_name) & (anchors["scope"] == scope_name)].copy()
+        anchor_block = anchors.loc[
+            (anchors["mode"] == mode_name) & (anchors["scope"] == scope_name)
+        ].copy()
         if not anchor_block.empty:
             lines.append("Anchors:")
             with pd.option_context("display.max_columns", None, "display.width", 180):
@@ -272,8 +298,10 @@ def _write_markdown(summary: pd.DataFrame, anchors: pd.DataFrame, output_path: P
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _analyze_mode(mode: ModeSpec, *, scope_name: str, max_depth: int) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    frame = pd.read_csv((_ROOT / mode.rows_csv).resolve()).copy()
+def _analyze_mode(
+    mode: ModeSpec, *, scope_name: str, max_depth: int
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    frame = pd.read_csv(resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)).copy()
     frame["risk_score"] = _compute_risk_score(frame)
     frame["is_target_anchor"] = _target_mask(frame, max_depth=max_depth)
 
@@ -289,8 +317,16 @@ def _analyze_mode(mode: ModeSpec, *, scope_name: str, max_depth: int) -> tuple[p
 
     baseline_ranked = _rank_false_global_rows(frame)
     baseline_marked = _with_top20_flag(frame, baseline_ranked)
-    outputs_summary.append(_overall_summary(baseline_marked, mode_name=mode.name, policy_name="baseline", scope_name=scope_name))
-    outputs_subfamily.append(_subfamily_summary(baseline_marked, mode_name=mode.name, policy_name="baseline", scope_name=scope_name))
+    outputs_summary.append(
+        _overall_summary(
+            baseline_marked, mode_name=mode.name, policy_name="baseline", scope_name=scope_name
+        )
+    )
+    outputs_subfamily.append(
+        _subfamily_summary(
+            baseline_marked, mode_name=mode.name, policy_name="baseline", scope_name=scope_name
+        )
+    )
     if not baseline_ranked.empty:
         top = baseline_ranked.head(20).copy()
         top.insert(0, "mode", mode.name)
@@ -300,8 +336,22 @@ def _analyze_mode(mode: ModeSpec, *, scope_name: str, max_depth: int) -> tuple[p
 
     downrank_ranked = _rank_false_global_rows_downranked(frame)
     downrank_marked = _with_top20_flag(frame, downrank_ranked)
-    outputs_summary.append(_overall_summary(downrank_marked, mode_name=mode.name, policy_name="downrank_subtree", scope_name=scope_name))
-    outputs_subfamily.append(_subfamily_summary(downrank_marked, mode_name=mode.name, policy_name="downrank_subtree", scope_name=scope_name))
+    outputs_summary.append(
+        _overall_summary(
+            downrank_marked,
+            mode_name=mode.name,
+            policy_name="downrank_subtree",
+            scope_name=scope_name,
+        )
+    )
+    outputs_subfamily.append(
+        _subfamily_summary(
+            downrank_marked,
+            mode_name=mode.name,
+            policy_name="downrank_subtree",
+            scope_name=scope_name,
+        )
+    )
     if not downrank_ranked.empty:
         top = downrank_ranked.head(20).copy()
         top.insert(0, "mode", mode.name)
@@ -312,8 +362,22 @@ def _analyze_mode(mode: ModeSpec, *, scope_name: str, max_depth: int) -> tuple[p
     suppressed = frame.loc[~frame["in_targeted_subtree"]].copy()
     suppress_ranked = _rank_false_global_rows(suppressed)
     suppress_marked = _with_top20_flag(suppressed, suppress_ranked)
-    outputs_summary.append(_overall_summary(suppress_marked, mode_name=mode.name, policy_name="suppress_subtree", scope_name=scope_name))
-    outputs_subfamily.append(_subfamily_summary(suppress_marked, mode_name=mode.name, policy_name="suppress_subtree", scope_name=scope_name))
+    outputs_summary.append(
+        _overall_summary(
+            suppress_marked,
+            mode_name=mode.name,
+            policy_name="suppress_subtree",
+            scope_name=scope_name,
+        )
+    )
+    outputs_subfamily.append(
+        _subfamily_summary(
+            suppress_marked,
+            mode_name=mode.name,
+            policy_name="suppress_subtree",
+            scope_name=scope_name,
+        )
+    )
     if not suppress_ranked.empty:
         top = suppress_ranked.head(20).copy()
         top.insert(0, "mode", mode.name)
@@ -338,7 +402,9 @@ def main() -> None:
 
     for mode in _DEFAULT_MODES:
         for scope_name, max_depth in (("root_only", 0), ("early_depth_le1", 1)):
-            summary, subfamily, anchors, top20 = _analyze_mode(mode, scope_name=scope_name, max_depth=max_depth)
+            summary, subfamily, anchors, top20 = _analyze_mode(
+                mode, scope_name=scope_name, max_depth=max_depth
+            )
             all_summary.append(summary)
             all_subfamily.append(subfamily)
             all_anchors.append(anchors)
@@ -349,11 +415,13 @@ def main() -> None:
     anchor_df = pd.concat(all_anchors, ignore_index=True) if all_anchors else pd.DataFrame()
     top20_df = pd.concat(all_top20, ignore_index=True) if all_top20 else pd.DataFrame()
 
-    summary_path = (_ROOT / args.summary_output_csv).resolve()
-    subfamily_path = (_ROOT / args.subfamily_output_csv).resolve()
-    anchor_path = (_ROOT / args.anchor_output_csv).resolve()
-    top20_path = (_ROOT / args.top20_output_csv).resolve()
-    markdown_path = (_ROOT / args.summary_markdown).resolve()
+    summary_path = resolve_enhancement_lab_artifact_path(args.summary_output_csv)
+    subfamily_path = resolve_enhancement_lab_artifact_path(args.subfamily_output_csv)
+    anchor_path = resolve_enhancement_lab_artifact_path(args.anchor_output_csv)
+    top20_path = resolve_enhancement_lab_artifact_path(args.top20_output_csv)
+    markdown_path = resolve_enhancement_lab_artifact_path(args.summary_markdown)
+    for path in [summary_path, subfamily_path, anchor_path, top20_path, markdown_path]:
+        path.parent.mkdir(parents=True, exist_ok=True)
 
     summary_df.to_csv(summary_path, index=False)
     subfamily_df.to_csv(subfamily_path, index=False)

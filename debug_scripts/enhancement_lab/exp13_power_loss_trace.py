@@ -29,8 +29,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from lab_helpers import FAILURE_CASES, REGRESSION_GUARD_CASES, build_tree_and_data
 
-
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -76,7 +74,6 @@ def analyze_case(case_name: str) -> dict:
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,
-        spectral_method=config.SPECTRAL_METHOD,
         sibling_method=config.SIBLING_TEST_METHOD,
     )
     ann = bundle.annotated_df

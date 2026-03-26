@@ -70,8 +70,8 @@ if __name__ == "__main__":
 
         # ── Test 1: exp21 style (need_eigh=True, result.n_samples) ──
         try:
-            result = eigendecompose_correlation_backend(data_P, need_eigh=True)
-            _ = result.eigenvalues, result.n_samples, result.d_active
+            result = eigendecompose_correlation_backend(data_P, compute_eigenvectors=True)
+            _ = result.eigenvalues, result.n_samples, result.active_feature_count
             n_eigendecompose_ok += 1
         except Exception as e:
             n_eigendecompose_fail += 1
@@ -100,11 +100,11 @@ if __name__ == "__main__":
                     _node_data(tree, right, data_df),
                 ]
             )
-            eig = eigendecompose_correlation_backend(data_P, need_eigh=False)
+            eig = eigendecompose_correlation_backend(data_P, compute_eigenvectors=False)
             if eig is None:
                 fail2 += 1
             else:
-                _ = eig.eigenvalues, data_P.shape[0], eig.d_active
+                _ = eig.eigenvalues, data_P.shape[0], eig.active_feature_count
                 ok2 += 1
         except Exception:
             fail2 += 1

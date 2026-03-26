@@ -38,6 +38,8 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     effective_rank as compute_effective_rank,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     marchenko_pastur_signal_count,
 )
 
@@ -84,37 +86,37 @@ def get_signal_eigenvectors(data_matrix):
 
     signal_vecs: (k_mp × d_active) matrix of top-k eigenvectors.
     """
-    eig = eigendecompose_correlation_backend(data_matrix, need_eigh=True)
+    eig = eigendecompose_correlation_backend(data_matrix, compute_eigenvectors=True)
     if eig is None:
         return None, None, 0, 1.0, 0
 
     n_samples, _ = data_matrix.shape
-    k_mp = marchenko_pastur_signal_count(eig.eigenvalues, n_samples, eig.d_active)
+    k_mp = marchenko_pastur_signal_count(eig.eigenvalues, n_samples, eig.active_feature_count)
     eff_rank = compute_effective_rank(eig.eigenvalues)
 
     # Get top-k eigenvectors in d_active space
-    if eig.use_dual and eig.gram_vecs is not None and eig.X_std is not None:
+    if eig.use_dual and eig.dual_sample_eigenvectors is not None and eig.standardized_data_active is not None:
         # Recover d-space eigenvectors from dual form
-        top_gram = eig.gram_vecs[:, :k_mp]
+        top_gram = eig.dual_sample_eigenvectors[:, :k_mp]
         top_evals = eig.eigenvalues[:k_mp]
         vecs = []
         for i in range(k_mp):
             if top_evals[i] > 1e-12:
-                v = eig.X_std.T @ top_gram[:, i]
-                v = v / (np.sqrt(top_evals[i]) * np.sqrt(eig.d_active))
+                v = eig.standardized_data_active.T @ top_gram[:, i]
+                v = v / (np.sqrt(top_evals[i]) * np.sqrt(eig.active_feature_count))
                 norm = np.linalg.norm(v)
                 if norm > 1e-12:
                     v = v / norm
                 vecs.append(v)
         if not vecs:
-            return eig.eigenvalues, None, k_mp, eff_rank, eig.d_active
+            return eig.eigenvalues, None, k_mp, eff_rank, eig.active_feature_count
         signal_vecs = np.array(vecs)  # (k_mp, d_active)
     elif eig.eigenvectors_active is not None:
         signal_vecs = eig.eigenvectors_active[:, :k_mp].T  # (k_mp, d_active)
     else:
-        return eig.eigenvalues, None, k_mp, eff_rank, eig.d_active
+        return eig.eigenvalues, None, k_mp, eff_rank, eig.active_feature_count
 
-    return eig.eigenvalues, signal_vecs, k_mp, eff_rank, eig.d_active
+    return eig.eigenvalues, signal_vecs, k_mp, eff_rank, eig.active_feature_count
 
 
 def principal_angles(A, B):

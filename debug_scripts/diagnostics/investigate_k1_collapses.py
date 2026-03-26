@@ -172,7 +172,9 @@ def trace_calibration_detail(tree: PosetTree, annotations_df: pd.DataFrame):
         return
 
     # Get calibration model from annotations_df.attrs
-    cal_model: EdgeCalibrationModel | None = annotations_df.attrs.get("edge_calibration_model", None)
+    cal_model: EdgeCalibrationModel | None = annotations_df.attrs.get(
+        "edge_calibration_model", None
+    )
     if cal_model is None:
         print("    Calibration: NO MODEL (calibration disabled or failed)")
         return
@@ -416,7 +418,7 @@ def main():
         f"SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}"
     )
     print(
-        f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
+        "        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "
         f"EDGE_CALIBRATION={config.EDGE_CALIBRATION}"
     )
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Trace gate decisions on null data with random projection (SPECTRAL_METHOD=None).
+"""Trace gate decisions on null data with the fixed Marchenko-Pastur pipeline.
 
 Shows exactly which gates fire at each node and why K != 1 on pure noise.
 """
@@ -27,10 +27,8 @@ def _generate_null(n=100, p=50, seed=42):
     return pd.DataFrame(X, index=[f"S{i}" for i in range(n)], columns=[f"F{j}" for j in range(p)])
 
 
-def _run(data, spectral_method, label):
-    orig_sm = config.SPECTRAL_METHOD
+def _run(data, label):
     orig_ec = config.EDGE_CALIBRATION
-    config.SPECTRAL_METHOD = spectral_method
     config.EDGE_CALIBRATION = False
     try:
         Z = linkage(
@@ -40,7 +38,6 @@ def _run(data, spectral_method, label):
         tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
         result = tree.decompose(leaf_data=data, alpha_local=0.05, sibling_alpha=0.05)
     finally:
-        config.SPECTRAL_METHOD = orig_sm
         config.EDGE_CALIBRATION = orig_ec
 
     K = result["num_clusters"]
@@ -56,9 +53,8 @@ def _run(data, spectral_method, label):
     n_same = int(sib_same.sum()) if not sib_same.isna().all() else 0
     n_skip = int(sib_skip.sum()) if not sib_skip.isna().all() else 0
 
-    sm_label = spectral_method or "None (random JL)"
     print(f"\n{'═' * 90}")
-    print(f"  {label}   SPECTRAL_METHOD = {sm_label}")
+    print(f"  {label}   SPECTRAL_DIMENSION_ESTIMATOR = marchenko_pastur (fixed)")
     print(f"{'═' * 90}")
     print(f"  K found: {K}")
     print(f"  Edge significant: {n_edge_sig}/{len(stats)}")
@@ -154,8 +150,7 @@ def main():
     data = _generate_null(100, 50, seed=42)
     print(f"Null data: n={len(data)}, p={data.shape[1]}, true K=1\n")
 
-    _run(data, "marchenko_pastur", "NULL n=100 p=50")
-    _run(data, None, "NULL n=100 p=50")
+    _run(data, "NULL n=100 p=50")
 
 
 if __name__ == "__main__":

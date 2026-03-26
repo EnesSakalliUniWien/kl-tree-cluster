@@ -141,7 +141,6 @@ def decompose_with_strategy(
             alpha_local=self_td.alpha_local,
             sibling_alpha=self_td.sibling_alpha,
             leaf_data=self_td._leaf_data,
-            spectral_method=self_td._spectral_method,
             minimum_projection_dimension=self_td._resolved_minimum_projection_dimension,
             sibling_method=config.SIBLING_TEST_METHOD,
             fdr_method="tree_bh",

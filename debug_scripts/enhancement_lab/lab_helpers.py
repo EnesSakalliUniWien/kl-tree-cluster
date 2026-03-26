@@ -40,6 +40,58 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral im
 from kl_clustering_analysis.tree.poset_tree import PosetTree  # noqa: E402
 
 _MISSING = object()
+_ENHANCEMENT_LAB_RELATIVE = Path("debug_scripts") / "enhancement_lab"
+_ENHANCEMENT_LAB_RESULTS_RELATIVE = (
+    Path("debug_scripts") / "diagnostics" / "results" / "enhancement_lab"
+)
+
+
+def enhancement_lab_results_relative(*parts: str) -> str:
+    """Return a repo-relative path rooted in the diagnostics enhancement-lab output dir."""
+    return _ENHANCEMENT_LAB_RESULTS_RELATIVE.joinpath(*parts).as_posix()
+
+
+def resolve_enhancement_lab_artifact_path(
+    pathlike: str | Path,
+    *,
+    for_input: bool = False,
+) -> Path:
+    """Resolve enhancement-lab artifact paths to the centralized diagnostics results dir.
+
+    Legacy relative paths under ``debug_scripts/enhancement_lab`` that point to generated
+    artifacts are redirected into ``debug_scripts/diagnostics/results/enhancement_lab``.
+    For reads, the resolver falls back to the legacy location when the redirected file does
+    not exist yet so downstream analyses continue to work during the migration.
+    """
+    raw_path = Path(pathlike).expanduser()
+    if raw_path.is_absolute():
+        return raw_path
+
+    normalized = Path(raw_path.as_posix().lstrip("./"))
+    normalized_str = normalized.as_posix()
+    results_prefix = _ENHANCEMENT_LAB_RESULTS_RELATIVE.as_posix()
+    legacy_prefix = _ENHANCEMENT_LAB_RELATIVE.as_posix()
+
+    if normalized_str == results_prefix or normalized_str.startswith(f"{results_prefix}/"):
+        resolved = Path(_PROJECT_ROOT) / normalized
+        if for_input:
+            suffix = Path(normalized_str.removeprefix(results_prefix).lstrip("/"))
+            legacy = Path(_PROJECT_ROOT) / _ENHANCEMENT_LAB_RELATIVE / suffix
+            if not resolved.exists() and legacy.exists():
+                return legacy
+        return resolved
+
+    if normalized_str == legacy_prefix or normalized_str.startswith(f"{legacy_prefix}/"):
+        suffix = Path(normalized_str.removeprefix(legacy_prefix).lstrip("/"))
+        if suffix.parts and (suffix.parts[0] == "_run_logs" or suffix.name.startswith("_")):
+            redirected = Path(_PROJECT_ROOT) / _ENHANCEMENT_LAB_RESULTS_RELATIVE / suffix
+            if for_input:
+                legacy = Path(_PROJECT_ROOT) / _ENHANCEMENT_LAB_RELATIVE / suffix
+                if not redirected.exists() and legacy.exists():
+                    return legacy
+            return redirected
+
+    return Path(_PROJECT_ROOT) / normalized
 
 
 @contextmanager

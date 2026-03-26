@@ -92,7 +92,7 @@ def main() -> None:
     print("═══════════════════════════════════════════════════════════════")
     print(f"  Edge Calibration Debug — seed={args.seed}, n={args.n}, p={args.p}, α={args.alpha}")
     print(f"  EDGE_CALIBRATION={config.EDGE_CALIBRATION}")
-    print(f"  SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("  SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print(f"  SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}")
     print("═══════════════════════════════════════════════════════════════\n")
 

@@ -62,26 +62,38 @@ if str(LAB_ROOT) not in sys.path:
 
 os.environ.setdefault("KL_TE_N_JOBS", "1")
 
+from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (  # noqa: E402
+    tree_bh_correction,
+)
+
+from debug_scripts.enhancement_lab.lab_helpers import (  # noqa: E402
+    build_tree_and_data,
+    compute_ari,
+    enhancement_lab_results_relative,
+    temporary_attr,
+    temporary_config,
+)
 from kl_clustering_analysis import config  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis import tree_decomposition as tree_decomposition_module  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis import (  # noqa: E402
+    tree_decomposition as tree_decomposition_module,
+)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (  # noqa: E402
     generate_projection_matrix_backend,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.edge_gate import (  # noqa: E402
-    annotate_edge_gate,
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import (  # noqa: E402
+    orchestrator as gate_orchestrator_module,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator as gate_orchestrator_module  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection import (  # noqa: E402
-    projected_wald as projected_wald_module,
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (  # noqa: E402
+    annotate_child_parent_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (  # noqa: E402
     benjamini_hochberg_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh_correction import (  # noqa: E402
-    tree_bh_correction,
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection import (  # noqa: E402
+    projected_wald as projected_wald_module,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (  # noqa: E402
-    standard_wald_annotation as standard_wald_module,
+    adjusted_wald_annotation as adjusted_wald_module,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (  # noqa: E402
     sibling_pair_collection as sibling_pair_collection_module,
@@ -93,13 +105,6 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sib
     derive_sibling_pca_projections,
     derive_sibling_spectral_dims,
 )
-from debug_scripts.enhancement_lab.lab_helpers import (  # noqa: E402
-    build_tree_and_data,
-    compute_ari,
-    temporary_attr,
-    temporary_config,
-)
-
 
 BATTERY_CASES = [
     "binary_balanced_low_noise",
@@ -131,9 +136,7 @@ VARIANTS: dict[str, PaddingVariant] = {
     "random_tail": PaddingVariant("random_tail", ()),
     "uncle_then_random": PaddingVariant("uncle_then_random", ("uncle",)),
     "cousins_then_random": PaddingVariant("cousins_then_random", ("cousins",)),
-    "neighborhood_then_random": PaddingVariant(
-        "neighborhood_then_random", ("uncle", "cousins")
-    ),
+    "neighborhood_then_random": PaddingVariant("neighborhood_then_random", ("uncle", "cousins")),
     "expanding_collateral_then_random": PaddingVariant(
         "expanding_collateral_then_random",
         (),
@@ -173,7 +176,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="/tmp/kl_exp27_neighborhood_padding",
+        default=enhancement_lab_results_relative("exp27_neighborhood_padding"),
         help="Directory for CSV/JSON artifacts.",
     )
     parser.add_argument(
@@ -233,8 +236,7 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=0.9,
         help=(
-            "Minimum stacked-rank ratio required for labeling a supported node "
-            "as mixed-support."
+            "Minimum stacked-rank ratio required for labeling a supported node " "as mixed-support."
         ),
     )
     parser.add_argument(
@@ -249,8 +251,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--gate2-fdr-method",
         default="tree_bh",
-        choices=["tree_bh", "level_wise", "flat"],
-        help="Gate 2 multiple-testing correction to use during decomposition.",
+        choices=["tree_bh"],
+        help="Gate 2 multiple-testing correction. Tree-BH is the only supported option.",
     )
     return parser.parse_args()
 
@@ -286,11 +288,7 @@ def _get_uncle(tree, parent: str) -> str | None:
     grandparent_children = list(tree.successors(grandparent))
     if len(grandparent_children) != 2:
         return None
-    return (
-        grandparent_children[0]
-        if grandparent_children[1] == parent
-        else grandparent_children[1]
-    )
+    return grandparent_children[0] if grandparent_children[1] == parent else grandparent_children[1]
 
 
 def _derive_nonfocal_pca_sources(
@@ -388,9 +386,7 @@ def _derive_collateral_shells(
             shell["leaf_mass_with_pca"] += leaf_mass
 
         if shells_by_radius:
-            shell_map[parent] = [
-                shells_by_radius[radius] for radius in sorted(shells_by_radius)
-            ]
+            shell_map[parent] = [shells_by_radius[radius] for radius in sorted(shells_by_radius)]
 
     return shell_map
 
@@ -604,18 +600,10 @@ def _analyze_collateral_span_structure(
             "collateral_span_mixture_index": float("nan"),
         }, []
 
-    support_rank_sum = int(
-        sum(int(node_rows[index]["residual_rank"]) for index in support_indices)
-    )
-    stacked_residual_rank = (
-        _basis_rank(np.vstack(support_bases))
-        if support_bases
-        else 0
-    )
+    support_rank_sum = int(sum(int(node_rows[index]["residual_rank"]) for index in support_indices))
+    stacked_residual_rank = _basis_rank(np.vstack(support_bases)) if support_bases else 0
     rank_ratio = (
-        float(stacked_residual_rank / support_rank_sum)
-        if support_rank_sum > 0
-        else float("nan")
+        float(stacked_residual_rank / support_rank_sum) if support_rank_sum > 0 else float("nan")
     )
     total_node_residual_energy = float(
         sum(float(node_rows[index]["residual_energy"]) for index in support_indices)
@@ -667,11 +655,7 @@ def _analyze_collateral_span_structure(
         if len(support_bases) == 1:
             unique_rank_contribution = int(stacked_residual_rank)
         else:
-            remaining = [
-                basis
-                for idx, basis in enumerate(support_bases)
-                if idx != support_offset
-            ]
+            remaining = [basis for idx, basis in enumerate(support_bases) if idx != support_offset]
             rank_without = _basis_rank(np.vstack(remaining)) if remaining else 0
             unique_rank_contribution = int(stacked_residual_rank - rank_without)
 
@@ -687,9 +671,7 @@ def _analyze_collateral_span_structure(
             if np.isfinite(float(row["mean_subspace_similarity_to_others"]))
             else 1.0
         )
-        row["span_outlier_score"] = float(
-            similarity_penalty * max(unique_rank_contribution, 0)
-        )
+        row["span_outlier_score"] = float(similarity_penalty * max(unique_rank_contribution, 0))
         if np.isfinite(energy_share):
             max_node_residual_energy_share = (
                 energy_share
@@ -713,19 +695,11 @@ def _analyze_collateral_span_structure(
         "collateral_stacked_residual_rank": int(stacked_residual_rank),
         "collateral_stacked_rank_ratio": float(rank_ratio),
         "collateral_total_node_residual_energy": float(total_node_residual_energy),
-        "collateral_max_node_residual_energy_share": float(
-            max_node_residual_energy_share
-        ),
-        "collateral_energy_significant_support_nodes": int(
-            energy_significant_support_nodes
-        ),
+        "collateral_max_node_residual_energy_share": float(max_node_residual_energy_share),
+        "collateral_energy_significant_support_nodes": int(energy_significant_support_nodes),
         "collateral_pairwise_mean_similarity": float(pairwise_mean_similarity),
-        "collateral_pairwise_mean_principal_angle_deg": float(
-            _mean_or_nan(pairwise_mean_angles)
-        ),
-        "collateral_pairwise_max_principal_angle_deg": float(
-            _mean_or_nan(pairwise_max_angles)
-        ),
+        "collateral_pairwise_mean_principal_angle_deg": float(_mean_or_nan(pairwise_mean_angles)),
+        "collateral_pairwise_max_principal_angle_deg": float(_mean_or_nan(pairwise_max_angles)),
         "collateral_span_mixture_index": float(span_mixture_index),
     }, node_rows
 
@@ -839,9 +813,7 @@ def _run_expanding_collateral_search(
 
         local_parts.append(local_rows)
         current_basis = (
-            local_rows
-            if current_basis.shape[0] == 0
-            else np.vstack([current_basis, local_rows])
+            local_rows if current_basis.shape[0] == 0 else np.vstack([current_basis, local_rows])
         )
         local_rows_filled += int(local_rows.shape[0])
         remaining_padding -= int(local_rows.shape[0])
@@ -868,14 +840,10 @@ def _run_expanding_collateral_search(
         "used_residual_energy": float(used_residual_energy),
         "radius_needed": float(radius_needed) if radius_needed is not None else math.nan,
         "max_local_radius_used": (
-            float(max_local_radius_used)
-            if max_local_radius_used is not None
-            else math.nan
+            float(max_local_radius_used) if max_local_radius_used is not None else math.nan
         ),
         "local_fill_ratio": (
-            float(local_rows_filled / requested_padding_rows)
-            if requested_padding_rows > 0
-            else 1.0
+            float(local_rows_filled / requested_padding_rows) if requested_padding_rows > 0 else 1.0
         ),
         "used_radii": used_radii,
         "collateral_span_summary": span_summary,
@@ -910,18 +878,20 @@ def _finalize_audit_row(audit_row: dict[str, Any]) -> dict[str, Any]:
 
     radius_needed = (
         float(radius_needed_raw)
-        if radius_needed_raw not in (None, "")
-        and np.isfinite(float(radius_needed_raw))
+        if radius_needed_raw not in (None, "") and np.isfinite(float(radius_needed_raw))
         else math.nan
     )
     max_local_radius_used = (
         float(max_local_radius_raw)
-        if max_local_radius_raw not in (None, "")
-        and np.isfinite(float(max_local_radius_raw))
+        if max_local_radius_raw not in (None, "") and np.isfinite(float(max_local_radius_raw))
         else math.nan
     )
 
-    if not np.isfinite(radius_needed) and np.isfinite(max_local_radius_used) and local_fill_ratio > 0.0:
+    if (
+        not np.isfinite(radius_needed)
+        and np.isfinite(max_local_radius_used)
+        and local_fill_ratio > 0.0
+    ):
         radius_proxy = max_local_radius_used + 1.0
     else:
         radius_proxy = radius_needed
@@ -1023,9 +993,7 @@ def _make_custom_builder(
             if local_parts:
                 basis_parts.extend(local_parts)
 
-            remaining_padding = int(
-                requested_padding_rows - search_info["local_rows_filled"]
-            )
+            remaining_padding = int(requested_padding_rows - search_info["local_rows_filled"])
             used_random_fallback = False
             if remaining_padding > 0 and context.variant.use_random_fallback:
                 used_random_fallback = True
@@ -1037,11 +1005,7 @@ def _make_custom_builder(
                     )
                 )
 
-            projection_matrix = (
-                basis_parts[0]
-                if len(basis_parts) == 1
-                else np.vstack(basis_parts)
-            )
+            projection_matrix = basis_parts[0] if len(basis_parts) == 1 else np.vstack(basis_parts)
             audit_row.update(
                 {
                     "local_rows_filled": int(search_info["local_rows_filled"]),
@@ -1055,39 +1019,25 @@ def _make_custom_builder(
                         search_info["shell_diagnostics"], separators=(",", ":")
                     ),
                     "nodes_visited": int(search_info["nodes_visited"]),
-                    "nodes_with_pca_visited": int(
-                        search_info["nodes_with_pca_visited"]
-                    ),
+                    "nodes_with_pca_visited": int(search_info["nodes_with_pca_visited"]),
                     "leaf_mass_visited": int(search_info["leaf_mass_visited"]),
-                    "leaf_mass_with_pca_visited": int(
-                        search_info["leaf_mass_with_pca_visited"]
-                    ),
+                    "leaf_mass_with_pca_visited": int(search_info["leaf_mass_with_pca_visited"]),
                     "residual_energy": float(search_info["residual_energy"]),
                     "used_residual_energy": float(search_info["used_residual_energy"]),
                     "collateral_pca_nodes_visited": int(
-                        search_info["collateral_span_summary"][
-                            "collateral_pca_nodes_visited"
-                        ]
+                        search_info["collateral_span_summary"]["collateral_pca_nodes_visited"]
                     ),
                     "collateral_residual_support_nodes": int(
-                        search_info["collateral_span_summary"][
-                            "collateral_residual_support_nodes"
-                        ]
+                        search_info["collateral_span_summary"]["collateral_residual_support_nodes"]
                     ),
                     "collateral_residual_rank_sum": int(
-                        search_info["collateral_span_summary"][
-                            "collateral_residual_rank_sum"
-                        ]
+                        search_info["collateral_span_summary"]["collateral_residual_rank_sum"]
                     ),
                     "collateral_stacked_residual_rank": int(
-                        search_info["collateral_span_summary"][
-                            "collateral_stacked_residual_rank"
-                        ]
+                        search_info["collateral_span_summary"]["collateral_stacked_residual_rank"]
                     ),
                     "collateral_stacked_rank_ratio": float(
-                        search_info["collateral_span_summary"][
-                            "collateral_stacked_rank_ratio"
-                        ]
+                        search_info["collateral_span_summary"]["collateral_stacked_rank_ratio"]
                     ),
                     "collateral_total_node_residual_energy": float(
                         search_info["collateral_span_summary"][
@@ -1120,9 +1070,7 @@ def _make_custom_builder(
                         ]
                     ),
                     "collateral_span_mixture_index": float(
-                        search_info["collateral_span_summary"][
-                            "collateral_span_mixture_index"
-                        ]
+                        search_info["collateral_span_summary"]["collateral_span_mixture_index"]
                     ),
                     "collateral_span_node_diagnostics": json.dumps(
                         search_info["collateral_span_node_diagnostics"],
@@ -1214,11 +1162,7 @@ def _make_custom_builder(
                 )
             )
 
-        projection_matrix = (
-            basis_parts[0]
-            if len(basis_parts) == 1
-            else np.vstack(basis_parts)
-        )
+        projection_matrix = basis_parts[0] if len(basis_parts) == 1 else np.vstack(basis_parts)
 
         audit_row.update(
             {
@@ -1229,13 +1173,9 @@ def _make_custom_builder(
                     else 1.0
                 ),
                 "used_random_fallback": bool(used_random_fallback),
-                "radius_needed": (
-                    float(radius_needed) if radius_needed is not None else math.nan
-                ),
+                "radius_needed": (float(radius_needed) if radius_needed is not None else math.nan),
                 "max_local_radius_used": (
-                    float(max_local_radius_used)
-                    if max_local_radius_used is not None
-                    else math.nan
+                    float(max_local_radius_used) if max_local_radius_used is not None else math.nan
                 ),
                 "used_sources": "+".join(used_sources),
                 "residual_energy": float(residual_energy),
@@ -1277,19 +1217,18 @@ def build_case_sources(
     """Compute sibling-dim and non-focal PCA availability for one case."""
     tree, data_df, y_true, test_case = build_tree_and_data(case_name)
 
-    edge_bundle = annotate_edge_gate(
+    edge_annotated_df = annotate_child_parent_divergence(
         tree,
         tree.annotations_df.copy(),
         significance_level_alpha=config.SIBLING_ALPHA,
-        leaf_data=data_df,
-        spectral_method=config.SPECTRAL_METHOD,
-        minimum_projection_dimension=getattr(config, "PROJECTION_MINIMUM_DIMENSION", None),
         fdr_method=gate2_fdr_method,
+        leaf_data=data_df,
+        minimum_projection_dimension=getattr(config, "PROJECTION_MINIMUM_DIMENSION", None),
     )
 
-    sibling_dims = derive_sibling_spectral_dims(tree, edge_bundle.annotated_df) or {}
-    parent_pca, _ = derive_sibling_pca_projections(edge_bundle.annotated_df, sibling_dims)
-    raw_pca = edge_bundle.annotated_df.attrs.get("_pca_projections") or {}
+    sibling_dims = derive_sibling_spectral_dims(tree, edge_annotated_df) or {}
+    parent_pca, _ = derive_sibling_pca_projections(edge_annotated_df, sibling_dims)
+    raw_pca = edge_annotated_df.attrs.get("_pca_projections") or {}
     source_maps = _derive_nonfocal_pca_sources(tree, raw_pca, sibling_dims)
     collateral_shells = _derive_collateral_shells(tree, raw_pca, sibling_dims)
 
@@ -1298,7 +1237,7 @@ def build_case_sources(
         "data_df": data_df,
         "y_true": y_true,
         "test_case": test_case,
-        "edge_bundle": edge_bundle,
+        "edge_annotated_df": edge_annotated_df,
         "sibling_dims": sibling_dims,
         "parent_pca": parent_pca or {},
     }
@@ -1389,7 +1328,7 @@ def run_variant_case(
         )
         stack.enter_context(
             temporary_attr(
-                standard_wald_module,
+                adjusted_wald_module,
                 "sibling_divergence_test",
                 wrapped_test,
             )
@@ -1463,13 +1402,9 @@ def _select_padding_rows(
     padding_regime: str,
 ) -> list[dict[str, Any]]:
     """Filter audit rows down to the padding regime being summarized."""
-    padding_rows = [
-        row for row in audit_rows if int(row.get("requested_padding_rows", 0)) > 0
-    ]
+    padding_rows = [row for row in audit_rows if int(row.get("requested_padding_rows", 0)) > 0]
     if padding_regime == "short_parent_only":
-        padding_rows = [
-            row for row in padding_rows if not bool(row.get("no_parent_pca", False))
-        ]
+        padding_rows = [row for row in padding_rows if not bool(row.get("no_parent_pca", False))]
     elif padding_regime == "no_parent_only":
         padding_rows = [row for row in padding_rows if bool(row.get("no_parent_pca", False))]
     return padding_rows
@@ -1493,9 +1428,7 @@ def summarize_variant(
 
     local_fill_values = [float(row["local_fill_ratio"]) for row in padding_rows]
     residual_energy_values = [float(row["residual_energy"]) for row in padding_rows]
-    used_residual_energy_values = [
-        float(row["used_residual_energy"]) for row in padding_rows
-    ]
+    used_residual_energy_values = [float(row["used_residual_energy"]) for row in padding_rows]
     nodes_visited_values = [
         float(row["nodes_visited"])
         for row in padding_rows
@@ -1794,11 +1727,11 @@ def build_gate2_treebh_edge_diagnostics(
             else float("nan")
         )
         direct_family_flat_reject = (
-            bool(family_diag["reject"][within_family_index])
-            if within_family_index >= 0
-            else False
+            bool(family_diag["reject"][within_family_index]) if within_family_index >= 0 else False
         )
-        parent_family_tested = bool(parent_id in tree_bh_result.family_results) if parent_id else False
+        parent_family_tested = (
+            bool(parent_id in tree_bh_result.family_results) if parent_id else False
+        )
         blocking_info = _find_blocking_ancestor(child_id)
         ancestor_blocked = bool(
             parent_id is not None and not parent_family_tested and bool(blocking_info)
@@ -1809,7 +1742,9 @@ def build_gate2_treebh_edge_diagnostics(
             "parent": parent_id,
             "raw_p_value": float(raw_p_values[index]),
             "tree_bh_adjusted_p": float(tree_bh_result.adjusted_p[index]),
-            "tree_bh_reject": bool(tree_bh_result.reject[index]),
+            "tree_bh_reject": bool(
+                tree_bh_result.child_parent_edge_null_rejected_by_tree_bh[index]
+            ),
             "direct_family_flat_bh_adjusted_p": direct_family_flat_adjusted_p,
             "direct_family_flat_bh_reject": bool(direct_family_flat_reject),
             "parent_family_tested": bool(parent_family_tested),
@@ -1905,9 +1840,9 @@ def build_node_diagnostics(
         else:
             gate3_decision = "merge"
 
-        edge_gate_pass = bool(annotations_df.loc[left, "Child_Parent_Divergence_Significant"]) or bool(
-            annotations_df.loc[right, "Child_Parent_Divergence_Significant"]
-        )
+        edge_gate_pass = bool(
+            annotations_df.loc[left, "Child_Parent_Divergence_Significant"]
+        ) or bool(annotations_df.loc[right, "Child_Parent_Divergence_Significant"])
         left_edge_ancestor_blocked = bool(left_edge_diag.get("ancestor_blocked", False))
         right_edge_ancestor_blocked = bool(right_edge_diag.get("ancestor_blocked", False))
         left_edge_direct_family_flat_reject = bool(
@@ -1968,26 +1903,22 @@ def build_node_diagnostics(
         stacked_rank_ratio = audit_row.get("collateral_stacked_rank_ratio", math.nan)
         pairwise_similarity = (
             float(pairwise_similarity)
-            if pairwise_similarity not in (None, "")
-            and np.isfinite(float(pairwise_similarity))
+            if pairwise_similarity not in (None, "") and np.isfinite(float(pairwise_similarity))
             else math.nan
         )
         pairwise_angle_deg = (
             float(pairwise_angle_deg)
-            if pairwise_angle_deg not in (None, "")
-            and np.isfinite(float(pairwise_angle_deg))
+            if pairwise_angle_deg not in (None, "") and np.isfinite(float(pairwise_angle_deg))
             else math.nan
         )
         stacked_rank_ratio = (
             float(stacked_rank_ratio)
-            if stacked_rank_ratio not in (None, "")
-            and np.isfinite(float(stacked_rank_ratio))
+            if stacked_rank_ratio not in (None, "") and np.isfinite(float(stacked_rank_ratio))
             else math.nan
         )
         max_node_energy_share = (
             float(max_node_energy_share)
-            if max_node_energy_share not in (None, "")
-            and np.isfinite(float(max_node_energy_share))
+            if max_node_energy_share not in (None, "") and np.isfinite(float(max_node_energy_share))
             else math.nan
         )
 
@@ -2004,12 +1935,9 @@ def build_node_diagnostics(
         ):
             collateral_support_category = "mixed_support_span"
             collateral_support_supercategory = "mixed_support_span"
-        elif (
-            support_nodes == 1
-            or (
-                np.isfinite(max_node_energy_share)
-                and max_node_energy_share >= dominant_support_energy_share_threshold
-            )
+        elif support_nodes == 1 or (
+            np.isfinite(max_node_energy_share)
+            and max_node_energy_share >= dominant_support_energy_share_threshold
         ):
             collateral_support_category = "dominant_single_support"
             collateral_support_supercategory = "single_support_span"
@@ -2041,9 +1969,7 @@ def build_node_diagnostics(
                     "tree_bh_adjusted_p",
                     math.nan,
                 ),
-                "left_child_edge_tree_bh_reject": bool(
-                    left_edge_diag.get("tree_bh_reject", False)
-                ),
+                "left_child_edge_tree_bh_reject": bool(left_edge_diag.get("tree_bh_reject", False)),
                 "right_child_edge_tree_bh_reject": bool(
                     right_edge_diag.get("tree_bh_reject", False)
                 ),
@@ -2105,12 +2031,8 @@ def build_node_diagnostics(
                     "blocking_generations_above_edge",
                     math.nan,
                 ),
-                "gate2_any_child_ancestor_blocked": bool(
-                    gate2_any_child_ancestor_blocked
-                ),
-                "gate2_both_children_ancestor_blocked": bool(
-                    gate2_both_children_ancestor_blocked
-                ),
+                "gate2_any_child_ancestor_blocked": bool(gate2_any_child_ancestor_blocked),
+                "gate2_both_children_ancestor_blocked": bool(gate2_both_children_ancestor_blocked),
                 "gate2_any_child_direct_family_flat_reject": bool(
                     gate2_any_child_direct_family_flat_reject
                 ),
@@ -2133,13 +2055,9 @@ def build_node_diagnostics(
                 "low_overlap_mixed_parent_truth": bool(low_overlap_mixed_parent_truth),
                 "low_overlap_mixed_merge_flag": bool(low_overlap_mixed_merge_flag),
                 "support_energy_share_threshold": float(support_energy_share_threshold),
-                "mixed_span_similarity_threshold": float(
-                    mixed_span_similarity_threshold
-                ),
+                "mixed_span_similarity_threshold": float(mixed_span_similarity_threshold),
                 "mixed_span_angle_threshold": float(mixed_span_angle_threshold),
-                "mixed_span_rank_ratio_threshold": float(
-                    mixed_span_rank_ratio_threshold
-                ),
+                "mixed_span_rank_ratio_threshold": float(mixed_span_rank_ratio_threshold),
                 "dominant_support_energy_share_threshold": float(
                     dominant_support_energy_share_threshold
                 ),
@@ -2195,13 +2113,9 @@ def build_collateral_span_rows(
             "nodes_with_pca_visited": audit_row.get("nodes_with_pca_visited"),
             "leaf_mass_visited": audit_row.get("leaf_mass_visited"),
             "collateral_pca_nodes_visited": audit_row.get("collateral_pca_nodes_visited"),
-            "collateral_residual_support_nodes": audit_row.get(
-                "collateral_residual_support_nodes"
-            ),
+            "collateral_residual_support_nodes": audit_row.get("collateral_residual_support_nodes"),
             "collateral_residual_rank_sum": audit_row.get("collateral_residual_rank_sum"),
-            "collateral_stacked_residual_rank": audit_row.get(
-                "collateral_stacked_residual_rank"
-            ),
+            "collateral_stacked_residual_rank": audit_row.get("collateral_stacked_residual_rank"),
             "collateral_stacked_rank_ratio": audit_row.get("collateral_stacked_rank_ratio"),
             "collateral_total_node_residual_energy": audit_row.get(
                 "collateral_total_node_residual_energy"
@@ -2221,9 +2135,7 @@ def build_collateral_span_rows(
             "collateral_pairwise_max_principal_angle_deg": audit_row.get(
                 "collateral_pairwise_max_principal_angle_deg"
             ),
-            "collateral_span_mixture_index": audit_row.get(
-                "collateral_span_mixture_index"
-            ),
+            "collateral_span_mixture_index": audit_row.get("collateral_span_mixture_index"),
         }
         for entry in node_entries:
             row = dict(parent_fields)
@@ -2290,7 +2202,9 @@ def summarize_case_associations(
         and np.isfinite(float(row["mean_local_span_recovery_score"]))
     ]
     return {
-        "cases_with_padding": int(sum(int(row.get("padding_tests", 0)) > 0 for row in case_diagnostic_rows)),
+        "cases_with_padding": int(
+            sum(int(row.get("padding_tests", 0)) > 0 for row in case_diagnostic_rows)
+        ),
         "cases_with_score": int(len(informative_rows)),
         "score_vs_ari_spearman": _spearman_summary(
             informative_rows,
@@ -2377,18 +2291,13 @@ def summarize_node_associations(
     ]
 
     def _flag_rate(rows: list[dict[str, Any]], flag_key: str) -> float:
-        return (
-            float(sum(bool(row[flag_key]) for row in rows) / len(rows))
-            if rows
-            else float("nan")
-        )
+        return float(sum(bool(row[flag_key]) for row in rows) / len(rows)) if rows else float("nan")
 
     def _spearman_bool(x_key: str, y_key: str) -> dict[str, Any]:
         paired = [
             (float(row[x_key]), float(bool(row[y_key])))
             for row in informative_rows
-            if row.get(x_key, "") not in ("", "nan")
-            and np.isfinite(float(row[x_key]))
+            if row.get(x_key, "") not in ("", "nan") and np.isfinite(float(row[x_key]))
         ]
         if len(paired) < 3 or spearmanr is None:
             return {"n": len(paired), "rho": float("nan"), "p_value": float("nan")}
@@ -2420,19 +2329,19 @@ def summarize_node_associations(
         *,
         category_key: str = "collateral_support_category",
     ) -> float:
-        category_rows = [
-            row
-            for row in informative_rows
-            if row.get(category_key) == category
-        ]
+        category_rows = [row for row in informative_rows if row.get(category_key) == category]
         return _flag_rate(category_rows, flag_key)
 
     return {
         "padding_nodes": int(len(selected_rows)),
         "informative_nodes": int(len(informative_rows)),
-        "true_disjoint_nodes": int(sum(bool(row["true_disjoint_children"]) for row in selected_rows)),
+        "true_disjoint_nodes": int(
+            sum(bool(row["true_disjoint_children"]) for row in selected_rows)
+        ),
         "false_merge_nodes": int(sum(bool(row["false_merge_flag"]) for row in selected_rows)),
-        "recovered_split_nodes": int(sum(bool(row["recovered_split_flag"]) for row in selected_rows)),
+        "recovered_split_nodes": int(
+            sum(bool(row["recovered_split_flag"]) for row in selected_rows)
+        ),
         "mixed_parent_nodes": int(sum(bool(row["mixed_parent_truth"]) for row in selected_rows)),
         "mixed_merge_nodes": int(sum(bool(row["mixed_merge_flag"]) for row in selected_rows)),
         "low_overlap_mixed_parent_nodes": int(
@@ -2443,8 +2352,7 @@ def summarize_node_associations(
         ),
         "no_support_nodes": int(
             sum(
-                row.get("collateral_support_supercategory") == "no_support"
-                for row in selected_rows
+                row.get("collateral_support_supercategory") == "no_support" for row in selected_rows
             )
         ),
         "single_support_span_nodes": int(
@@ -2680,36 +2588,34 @@ def summarize_node_associations(
             "low_overlap_mixed_merge_flag",
         ),
         "padding_regime": padding_regime,
-        "low_overlap_jaccard_threshold": float(
-            selected_rows[0]["low_overlap_jaccard_threshold"]
-        )
-        if selected_rows
-        else float("nan"),
-        "support_energy_share_threshold": float(
-            selected_rows[0]["support_energy_share_threshold"]
-        )
-        if selected_rows
-        else float("nan"),
-        "mixed_span_similarity_threshold": float(
-            selected_rows[0]["mixed_span_similarity_threshold"]
-        )
-        if selected_rows
-        else float("nan"),
-        "mixed_span_angle_threshold": float(
-            selected_rows[0]["mixed_span_angle_threshold"]
-        )
-        if selected_rows
-        else float("nan"),
-        "mixed_span_rank_ratio_threshold": float(
-            selected_rows[0]["mixed_span_rank_ratio_threshold"]
-        )
-        if selected_rows
-        else float("nan"),
-        "dominant_support_energy_share_threshold": float(
-            selected_rows[0]["dominant_support_energy_share_threshold"]
-        )
-        if selected_rows
-        else float("nan"),
+        "low_overlap_jaccard_threshold": (
+            float(selected_rows[0]["low_overlap_jaccard_threshold"])
+            if selected_rows
+            else float("nan")
+        ),
+        "support_energy_share_threshold": (
+            float(selected_rows[0]["support_energy_share_threshold"])
+            if selected_rows
+            else float("nan")
+        ),
+        "mixed_span_similarity_threshold": (
+            float(selected_rows[0]["mixed_span_similarity_threshold"])
+            if selected_rows
+            else float("nan")
+        ),
+        "mixed_span_angle_threshold": (
+            float(selected_rows[0]["mixed_span_angle_threshold"]) if selected_rows else float("nan")
+        ),
+        "mixed_span_rank_ratio_threshold": (
+            float(selected_rows[0]["mixed_span_rank_ratio_threshold"])
+            if selected_rows
+            else float("nan")
+        ),
+        "dominant_support_energy_share_threshold": (
+            float(selected_rows[0]["dominant_support_energy_share_threshold"])
+            if selected_rows
+            else float("nan")
+        ),
     }
 
 
@@ -2839,6 +2745,9 @@ def main() -> None:
     print("\n=== SUMMARY ===")
     print(json.dumps(payload, indent=2))
 
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()

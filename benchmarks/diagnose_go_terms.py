@@ -16,7 +16,7 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 print(f"SIBLING_TEST_METHOD: {config.SIBLING_TEST_METHOD}")
 print(f"EDGE_ALPHA: {config.EDGE_ALPHA}")
 print(f"SIBLING_ALPHA: {config.SIBLING_ALPHA}")
-print(f"SPECTRAL_METHOD: {config.SPECTRAL_METHOD}")
+print("SPECTRAL_DIMENSION_ESTIMATOR: marchenko_pastur (fixed)")
 print(f"PROJECTION_MINIMUM_DIMENSION: {config.PROJECTION_MINIMUM_DIMENSION}")
 print(f"POSTHOC_MERGE: {config.POSTHOC_MERGE}")
 print(f"FELSENSTEIN_SCALING: {config.FELSENSTEIN_SCALING}")

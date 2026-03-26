@@ -35,7 +35,6 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_projection_dimension,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     _derive_sibling_spectral_dims,
     run_gate_annotation_pipeline,
@@ -60,7 +59,9 @@ def get_jl_dim(n_samples: int, n_features: int) -> int:
 
 def run_annotation_pipeline(tree, data_df, use_auto_derive: bool):
     """Run Gate 2 + Gate 3 and return annotated DataFrame + spectral info."""
-    annotations_df = tree.annotations_df.copy() if tree.annotations_df is not None else pd.DataFrame()
+    annotations_df = (
+        tree.annotations_df.copy() if tree.annotations_df is not None else pd.DataFrame()
+    )
 
     if use_auto_derive:
         bundle = run_gate_annotation_pipeline(
@@ -69,7 +70,6 @@ def run_annotation_pipeline(tree, data_df, use_auto_derive: bool):
             alpha_local=config.SIBLING_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
             leaf_data=data_df,
-            spectral_method=config.SPECTRAL_METHOD,
             sibling_method=config.SIBLING_TEST_METHOD,
         )
     else:
@@ -80,7 +80,6 @@ def run_annotation_pipeline(tree, data_df, use_auto_derive: bool):
             alpha_local=config.SIBLING_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
             leaf_data=data_df,
-            spectral_method=config.SPECTRAL_METHOD,
             sibling_method=config.SIBLING_TEST_METHOD,
             sibling_spectral_dims={},  # Empty dict → no spectral override per node
         )
@@ -303,7 +302,7 @@ def print_case_report(result: dict):
 
 if __name__ == "__main__":
     print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print(f"        PROJECTION_MINIMUM_DIMENSION={config.PROJECTION_MINIMUM_DIMENSION}")
 
     all_results = []

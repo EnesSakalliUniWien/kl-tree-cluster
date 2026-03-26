@@ -161,7 +161,7 @@ def diagnose_case(case_name: str) -> None:
 
     # ── Spectral dimensions (before decompose) ──
     print(
-        f"\nConfig: SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
+        "\nConfig: SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "
         f"SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}, "
         f"SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}"
     )

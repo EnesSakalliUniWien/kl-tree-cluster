@@ -45,6 +45,10 @@ from sklearn.metrics import adjusted_rand_score
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from benchmarks.shared.util.decomposition import _labels_from_decomposition
+from debug_scripts.enhancement_lab.lab_helpers import (
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+)
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     CalibrationModel,
@@ -117,7 +121,7 @@ def infer_gamma_from_pairs(
     records: List[SiblingPairRecord],
     *,
     use_null_like_only: bool = False,
-    use_edge_weights: bool = False,
+    use_sibling_null_priors: bool = False,
 ) -> InferredGamma:
     """Infer the k-exponent γ from within-tree sibling pair T/k ratios.
 
@@ -133,8 +137,8 @@ def infer_gamma_from_pairs(
         If True, only use null-like pairs (neither child edge-significant)
         for fit.  These pairs have signal ≈ 0, so T/k ≈ c purely, giving
         a cleaner estimate of the inflation k-slope without signal contamination.
-    use_edge_weights : bool
-        If True, weight each observation by edge_weight (= min(p_edge_L, p_edge_R)).
+    use_sibling_null_priors : bool
+        If True, weight each observation by sibling_null_prior (= min(p_edge_L, p_edge_R)).
         Null-like pairs have high weights, signal pairs have low weights.
         This continuously attenuates the signal contribution.
 
@@ -158,8 +162,8 @@ def infer_gamma_from_pairs(
     log_k = np.array([math.log(r.degrees_of_freedom) for r in valid])
     log_tk = np.array([math.log(r.stat / r.degrees_of_freedom) for r in valid])
 
-    if use_edge_weights:
-        w = np.array([max(r.edge_weight, 1e-12) for r in valid])
+    if use_sibling_null_priors:
+        w = np.array([max(r.sibling_null_prior_from_edge_pvalue, 1e-12) for r in valid])
     else:
         w = np.ones(len(valid))
 
@@ -250,9 +254,9 @@ def make_k_adjusted_resolver(
 
 # Each k-adjusted variant specifies how to call infer_gamma_from_pairs()
 _K_ADJ_METHODS: dict[str, dict[str, bool]] = {
-    "k_adj_all": {"use_null_like_only": False, "use_edge_weights": False},
-    "k_adj_null": {"use_null_like_only": True, "use_edge_weights": False},
-    "k_adj_weighted": {"use_null_like_only": False, "use_edge_weights": True},
+    "k_adj_all": {"use_null_like_only": False, "use_sibling_null_priors": False},
+    "k_adj_null": {"use_null_like_only": True, "use_sibling_null_priors": False},
+    "k_adj_weighted": {"use_null_like_only": False, "use_sibling_null_priors": True},
 }
 
 
@@ -575,7 +579,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Exp33: k-adjusted deflation benchmark")
     parser.add_argument(
         "--output-prefix",
-        default="_exp33_k_adjusted_benchmark",
+        default=enhancement_lab_results_relative("_exp33_k_adjusted_benchmark"),
         help="Output file prefix (relative to script dir)",
     )
     parser.add_argument(
@@ -595,7 +599,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    prefix = _ROOT / args.output_prefix
+    prefix = resolve_enhancement_lab_artifact_path(args.output_prefix)
+    prefix.parent.mkdir(parents=True, exist_ok=True)
 
     # Get cases
     all_cases = get_default_test_cases()

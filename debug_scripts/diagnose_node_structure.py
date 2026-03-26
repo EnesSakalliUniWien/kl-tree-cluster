@@ -104,11 +104,9 @@ def diagnose(case_name: str) -> None:
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_t,
-        spectral_method=config.SPECTRAL_METHOD,
         minimum_projection_dimension=config.PROJECTION_MINIMUM_DIMENSION,
         sibling_method=config.SIBLING_TEST_METHOD,
         sibling_whitening=config.SIBLING_WHITENING,
-        fdr_method=config.EDGE_FDR_METHOD,
     )
     stats = result.annotated_df
     edge_dims = stats.attrs.get("_spectral_dims", {})
@@ -307,11 +305,9 @@ def diagnose(case_name: str) -> None:
             alpha_local=config.EDGE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
             leaf_data=data_t,
-            spectral_method=config.SPECTRAL_METHOD,
             minimum_projection_dimension=config.PROJECTION_MINIMUM_DIMENSION,
             sibling_method=config.SIBLING_TEST_METHOD,
             sibling_whitening=config.SIBLING_WHITENING,
-            fdr_method=config.EDGE_FDR_METHOD,
             sibling_spectral_dims=dims,
         )
         ann = pipeline_result.annotated_df
@@ -346,46 +342,7 @@ def diagnose(case_name: str) -> None:
             f"G3_pass={g3_pass:>4}, ĉ={c_hat}"
         )
 
-    # Also run raw wald (no deflation) with each strategy
-    print("\n  --- Raw Wald (no deflation) ---")
-    for strategy_name in strategy_cols:
-        dims = strategy_dims[strategy_name]
-        pipeline_result = run_gate_annotation_pipeline(
-            tree,
-            base.copy(),
-            alpha_local=config.EDGE_ALPHA,
-            sibling_alpha=config.SIBLING_ALPHA,
-            leaf_data=data_t,
-            spectral_method=config.SPECTRAL_METHOD,
-            minimum_projection_dimension=config.PROJECTION_MINIMUM_DIMENSION,
-            sibling_method="wald",
-            sibling_whitening=config.SIBLING_WHITENING,
-            fdr_method=config.EDGE_FDR_METHOD,
-            sibling_spectral_dims=dims,
-        )
-        ann = pipeline_result.annotated_df
-
-        decomp = _decompose_from_annotations(tree, ann)
-        k_found = decomp["num_clusters"]
-
-        ari_str = "N/A"
-        if y_t is not None and true_k is not None:
-            y_pred = np.full(n, -1, dtype=int)
-            for cid, cinfo in decomp["cluster_assignments"].items():
-                for leaf in cinfo["leaves"]:
-                    y_pred[data_t.index.get_loc(leaf)] = cid
-            ari_str = f"{adjusted_rand_score(y_t, y_pred):.3f}"
-
-        g3_pass = 0
-        for node in tree.nodes():
-            if tree.out_degree(node) == 0:
-                continue
-            if not bool(ann.loc[node, "Sibling_Divergence_Skipped"]) and bool(
-                ann.loc[node, "Sibling_BH_Different"]
-            ):
-                g3_pass += 1
-
-        print(f"  {strategy_name:>18s}: K={k_found:>3}, ARI={ari_str}, G3_pass={g3_pass:>4}")
+    # Additional per-strategy diagnostics can be added here if needed.
 
 
 if __name__ == "__main__":

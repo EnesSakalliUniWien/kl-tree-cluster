@@ -426,9 +426,9 @@ def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
             compute_eigendecomposition_outputs,
         )
 
-    def patched_compute_child_parent_spectral_context(tree, leaf_data, spectral_method):
+    def patched_compute_child_parent_spectral_context(tree, leaf_data):
         node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues = (
-            original_compute_child_parent_context(tree, leaf_data, spectral_method)
+            original_compute_child_parent_context(tree, leaf_data)
         )
 
         if (

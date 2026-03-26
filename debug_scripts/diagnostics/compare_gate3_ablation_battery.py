@@ -69,11 +69,6 @@ def parse_args() -> argparse.Namespace:
         help="Temporary override for config.SIBLING_TEST_METHOD.",
     )
     parser.add_argument(
-        "--spectral-method",
-        default=None,
-        help="Temporary override for config.SPECTRAL_METHOD.",
-    )
-    parser.add_argument(
         "--sibling-whitening",
         default=None,
         help="Temporary override for config.SIBLING_WHITENING.",
@@ -143,7 +138,6 @@ def main() -> None:
     started = time.time()
     with temporary_config(
         SIBLING_TEST_METHOD=args.sibling_method or config.SIBLING_TEST_METHOD,
-        SPECTRAL_METHOD=args.spectral_method or config.SPECTRAL_METHOD,
         SIBLING_WHITENING=args.sibling_whitening or config.SIBLING_WHITENING,
     ):
         rows: list[dict[str, Any]] = []
@@ -163,7 +157,7 @@ def main() -> None:
         "cases": list(args.cases),
         "config": {
             "SIBLING_TEST_METHOD": args.sibling_method or config.SIBLING_TEST_METHOD,
-            "SPECTRAL_METHOD": args.spectral_method or config.SPECTRAL_METHOD,
+            "SPECTRAL_DIMENSION_ESTIMATOR": "marchenko_pastur",
             "SIBLING_WHITENING": args.sibling_whitening or config.SIBLING_WHITENING,
         },
         "summary": summarize(rows),

@@ -59,7 +59,12 @@ sys.path.insert(0, str(_LAB))
 
 from exp29_low_ess_permutation_benchmark import discover_low_ess_cases  # noqa: E402
 from exp_parametric_inflation import DIAGNOSTIC_CASES, permutation_c  # noqa: E402
-from lab_helpers import build_tree_and_data, run_decomposition  # noqa: E402
+from lab_helpers import (  # noqa: E402
+    build_tree_and_data,
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+    run_decomposition,
+)
 
 from benchmarks.shared.cases import get_default_test_cases  # noqa: E402
 from kl_clustering_analysis import config  # noqa: E402
@@ -900,7 +905,9 @@ def _summarize_subtree(
 ) -> tuple[int, int, float]:
     internal_nodes = {node, *nx.descendants(tree, node)}
     subtree_rows = rows_by_parent.loc[rows_by_parent.index.intersection(internal_nodes)]
-    false_global = int(subtree_rows["oracle_prefers_global_bh"].sum()) if not subtree_rows.empty else 0
+    false_global = (
+        int(subtree_rows["oracle_prefers_global_bh"].sum()) if not subtree_rows.empty else 0
+    )
     row_count = int(len(subtree_rows))
     risk_sum = float(subtree_rows["risk_score"].sum()) if not subtree_rows.empty else 0.0
     return false_global, row_count, risk_sum
@@ -981,12 +988,15 @@ def _build_highd_ablation(trace: pd.DataFrame) -> pd.DataFrame:
     ablation = trace.assign(
         removed_false_global=lambda df: df["chosen_child_false_global_subtree"].astype(np.int64),
         remaining_false_global_if_cut_here=lambda df: (
-            total_false_global
-            - df["chosen_child_false_global_subtree"].astype(np.int64)
+            total_false_global - df["chosen_child_false_global_subtree"].astype(np.int64)
         ),
-        removed_false_global_share=lambda df: df["chosen_child_false_global_subtree"].astype(np.float64)
+        removed_false_global_share=lambda df: df["chosen_child_false_global_subtree"].astype(
+            np.float64
+        )
         / max(total_false_global, 1),
-        sibling_share_after_cut=lambda df: df["sibling_child_false_global_subtree"].astype(np.float64)
+        sibling_share_after_cut=lambda df: df["sibling_child_false_global_subtree"].astype(
+            np.float64
+        )
         / max(total_false_global, 1),
     ).loc[
         :,
@@ -1134,7 +1144,9 @@ def _build_gaussian_guard_counterfactual(frame: pd.DataFrame) -> GuardBenchmark:
         ],
     ].sort_values(["oracle_prefers_global_bh", "gap_log", "depth"], ascending=[False, False, True])
 
-    return GuardBenchmark(hit_rows=hits, subfamily_summary=subfamily_summary, case_summary=case_summary)
+    return GuardBenchmark(
+        hit_rows=hits, subfamily_summary=subfamily_summary, case_summary=case_summary
+    )
 
 
 def _build_extreme_noise_diagnostic(frame: pd.DataFrame) -> ExtremeNoiseDiagnostic:
@@ -1156,7 +1168,8 @@ def _build_extreme_noise_diagnostic(frame: pd.DataFrame) -> ExtremeNoiseDiagnost
 
     focused = focused.assign(
         risk_score=lambda df: (
-            df["gaussian_subfamily_probability"].fillna(df["family_portability_probability"])
+            df["gaussian_subfamily_probability"]
+            .fillna(df["family_portability_probability"])
             .fillna(df["statsmodels_fitted_probability"])
             .fillna(0.0)
         )
@@ -1510,87 +1523,95 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_rows.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_rows.csv"),
     )
     parser.add_argument(
         "--disagreement-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_disagreements.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_disagreements.csv"),
     )
     parser.add_argument(
         "--family-portability-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_family_portability.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_family_portability.csv"),
     )
     parser.add_argument(
         "--gaussian-subfamily-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_subfamily_portability.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_gaussian_subfamily_portability.csv"
+        ),
     )
     parser.add_argument(
         "--ranked-false-global-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_ranked_false_global_splits.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_ranked_false_global_splits.csv"),
     )
     parser.add_argument(
         "--ranked-false-global-markdown",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_ranked_false_global_splits.md",
+        default=enhancement_lab_results_relative("_oracle_policy_ranked_false_global_splits.md"),
     )
     parser.add_argument(
         "--fourier-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_fourier_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_fourier_summary.csv"),
     )
     parser.add_argument(
         "--fourier-plot-dir",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_fourier_plots",
+        default=enhancement_lab_results_relative("_oracle_policy_fourier_plots"),
     )
     parser.add_argument(
         "--extreme-noise-output-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_extreme_noise_slice.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_gaussian_extreme_noise_slice.csv"),
     )
     parser.add_argument(
         "--extreme-noise-markdown",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_extreme_noise_slice.md",
+        default=enhancement_lab_results_relative("_oracle_policy_gaussian_extreme_noise_slice.md"),
     )
     parser.add_argument(
         "--extreme-noise-driver-depth-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_extreme_noise_driver_depth.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_gaussian_extreme_noise_driver_depth.csv"
+        ),
     )
     parser.add_argument(
         "--extreme-noise-highd-trace-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_extreme_noise_highd_trace.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_gaussian_extreme_noise_highd_trace.csv"
+        ),
     )
     parser.add_argument(
         "--extreme-noise-highd-ablation-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_extreme_noise_highd_ablation.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_gaussian_extreme_noise_highd_ablation.csv"
+        ),
     )
     parser.add_argument(
         "--gaussian-guard-summary-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_guard_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_gaussian_guard_summary.csv"),
     )
     parser.add_argument(
         "--gaussian-guard-case-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_guard_case_hits.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_gaussian_guard_case_hits.csv"),
     )
     parser.add_argument(
         "--gaussian-guard-hit-csv",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_guard_hits.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_gaussian_guard_hits.csv"),
     )
     parser.add_argument(
         "--gaussian-guard-markdown",
         type=str,
-        default="debug_scripts/enhancement_lab/_oracle_policy_gaussian_guard_counterfactual.md",
+        default=enhancement_lab_results_relative("_oracle_policy_gaussian_guard_counterfactual.md"),
     )
     return parser.parse_args()
 
@@ -1671,41 +1692,82 @@ def main() -> None:
     else:
         combined["fitted_target_column"] = "none"
 
-    disagreement_path = (_ROOT / args.disagreement_output_csv).resolve()
+    disagreement_path = resolve_enhancement_lab_artifact_path(args.disagreement_output_csv)
     disagreement_rows = combined.loc[combined["any_bh_disagreement"]].copy()
     disagreement_rows.to_csv(disagreement_path, index=False)
 
-    ranked_false_global_path = (_ROOT / args.ranked_false_global_output_csv).resolve()
+    ranked_false_global_path = resolve_enhancement_lab_artifact_path(
+        args.ranked_false_global_output_csv
+    )
     ranked_false_global = _build_ranked_false_global_split_report(combined)
     ranked_false_global.to_csv(ranked_false_global_path, index=False)
-    ranked_false_global_markdown_path = (_ROOT / args.ranked_false_global_markdown).resolve()
+    ranked_false_global_markdown_path = resolve_enhancement_lab_artifact_path(
+        args.ranked_false_global_markdown
+    )
     _write_ranked_false_global_markdown(ranked_false_global, ranked_false_global_markdown_path)
 
-    family_portability_path = (_ROOT / args.family_portability_output_csv).resolve()
+    family_portability_path = resolve_enhancement_lab_artifact_path(
+        args.family_portability_output_csv
+    )
     family_portability.to_csv(family_portability_path, index=False)
 
-    gaussian_subfamily_path = (_ROOT / args.gaussian_subfamily_output_csv).resolve()
+    gaussian_subfamily_path = resolve_enhancement_lab_artifact_path(
+        args.gaussian_subfamily_output_csv
+    )
     gaussian_subfamily_portability.to_csv(gaussian_subfamily_path, index=False)
 
     fourier_summary = _compute_fourier_summary(combined)
-    fourier_path = (_ROOT / args.fourier_output_csv).resolve()
+    fourier_path = resolve_enhancement_lab_artifact_path(args.fourier_output_csv)
     fourier_summary.to_csv(fourier_path, index=False)
-    fourier_plot_dir = (_ROOT / args.fourier_plot_dir).resolve()
+    fourier_plot_dir = resolve_enhancement_lab_artifact_path(args.fourier_plot_dir)
     saved_fourier_plots = _save_family_spectra_plots(combined, fourier_plot_dir)
 
     extreme_noise_diagnostic = _build_extreme_noise_diagnostic(combined)
     gaussian_guard = _build_gaussian_guard_counterfactual(combined)
-    extreme_noise_path = (_ROOT / args.extreme_noise_output_csv).resolve()
-    extreme_noise_markdown_path = (_ROOT / args.extreme_noise_markdown).resolve()
-    extreme_noise_driver_depth_path = (_ROOT / args.extreme_noise_driver_depth_csv).resolve()
-    extreme_noise_highd_trace_path = (_ROOT / args.extreme_noise_highd_trace_csv).resolve()
-    extreme_noise_highd_ablation_path = (_ROOT / args.extreme_noise_highd_ablation_csv).resolve()
-    gaussian_guard_summary_path = (_ROOT / args.gaussian_guard_summary_csv).resolve()
-    gaussian_guard_case_path = (_ROOT / args.gaussian_guard_case_csv).resolve()
-    gaussian_guard_hit_path = (_ROOT / args.gaussian_guard_hit_csv).resolve()
-    gaussian_guard_markdown_path = (_ROOT / args.gaussian_guard_markdown).resolve()
+    extreme_noise_path = resolve_enhancement_lab_artifact_path(args.extreme_noise_output_csv)
+    extreme_noise_markdown_path = resolve_enhancement_lab_artifact_path(args.extreme_noise_markdown)
+    extreme_noise_driver_depth_path = resolve_enhancement_lab_artifact_path(
+        args.extreme_noise_driver_depth_csv
+    )
+    extreme_noise_highd_trace_path = resolve_enhancement_lab_artifact_path(
+        args.extreme_noise_highd_trace_csv
+    )
+    extreme_noise_highd_ablation_path = resolve_enhancement_lab_artifact_path(
+        args.extreme_noise_highd_ablation_csv
+    )
+    gaussian_guard_summary_path = resolve_enhancement_lab_artifact_path(
+        args.gaussian_guard_summary_csv
+    )
+    gaussian_guard_case_path = resolve_enhancement_lab_artifact_path(args.gaussian_guard_case_csv)
+    gaussian_guard_hit_path = resolve_enhancement_lab_artifact_path(args.gaussian_guard_hit_csv)
+    gaussian_guard_markdown_path = resolve_enhancement_lab_artifact_path(
+        args.gaussian_guard_markdown
+    )
+    output_path = resolve_enhancement_lab_artifact_path(args.output_csv)
+    for path in [
+        disagreement_path,
+        ranked_false_global_path,
+        ranked_false_global_markdown_path,
+        family_portability_path,
+        gaussian_subfamily_path,
+        fourier_path,
+        fourier_plot_dir,
+        extreme_noise_path,
+        extreme_noise_markdown_path,
+        extreme_noise_driver_depth_path,
+        extreme_noise_highd_trace_path,
+        extreme_noise_highd_ablation_path,
+        gaussian_guard_summary_path,
+        gaussian_guard_case_path,
+        gaussian_guard_hit_path,
+        gaussian_guard_markdown_path,
+        output_path,
+    ]:
+        path.parent.mkdir(parents=True, exist_ok=True)
     extreme_noise_diagnostic.node_drivers.to_csv(extreme_noise_path, index=False)
-    extreme_noise_diagnostic.driver_depth_summary.to_csv(extreme_noise_driver_depth_path, index=False)
+    extreme_noise_diagnostic.driver_depth_summary.to_csv(
+        extreme_noise_driver_depth_path, index=False
+    )
     extreme_noise_diagnostic.highd_trace.to_csv(extreme_noise_highd_trace_path, index=False)
     extreme_noise_diagnostic.highd_ablation.to_csv(extreme_noise_highd_ablation_path, index=False)
     _write_extreme_noise_markdown(extreme_noise_diagnostic, extreme_noise_markdown_path)
@@ -1714,8 +1776,6 @@ def main() -> None:
     gaussian_guard.hit_rows.to_csv(gaussian_guard_hit_path, index=False)
     _write_gaussian_guard_markdown(gaussian_guard, gaussian_guard_markdown_path)
 
-    output_path = (_ROOT / args.output_csv).resolve()
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     combined.to_csv(output_path, index=False)
 
     focal = combined.loc[~combined["is_null_like"]]

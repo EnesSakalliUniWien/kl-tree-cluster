@@ -176,7 +176,7 @@ def collect_case_context(case_name: str) -> CaseContext:
             k=int(record.degrees_of_freedom),
             depth=int(nx.shortest_path_length(tree, root, record.parent)),
             branch_length_sum=float(max(record.branch_length_sum, 0.0)),
-            edge_weight=float(record.edge_weight),
+            sibling_null_prior=float(record.sibling_null_prior_from_edge_pvalue),
             is_null_like=bool(record.is_null_like),
             is_binary_case=is_binary_case,
             is_null_case=is_null_case,

@@ -90,7 +90,7 @@ def main() -> None:
     print(
         f"Config:  SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}, "
         f"FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}, "
-        f"SPECTRAL_METHOD={config.SPECTRAL_METHOD}"
+        "SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)"
     )
     print(f"Sweeping {len(alphas)} alpha values...\n")
     print(f"{'alpha':>8}  {'K':>4}  {'cluster sizes (top 10)'}")

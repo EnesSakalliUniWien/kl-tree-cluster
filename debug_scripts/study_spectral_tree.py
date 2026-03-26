@@ -32,7 +32,7 @@ from scipy.stats import norm as sp_norm
 
 from benchmarks.shared.generators import generate_random_feature_matrix
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_backend import (
     build_pca_projection_backend,
     eigendecompose_correlation_backend,
 )
@@ -425,7 +425,7 @@ def main():
         d_active_node = count_active_features(X_node)
 
         # ── Correlation eigendecomposition ────────────────────────────
-        corr_result = eigendecompose_correlation_backend(X_node, need_eigh=True)
+        corr_result = eigendecompose_correlation_backend(X_node, compute_eigenvectors=True)
         corr_evals, corr_evecs_full = None, None
         corr_erank = 0
         k_mp_corr = 1

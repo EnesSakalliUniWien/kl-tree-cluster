@@ -134,7 +134,7 @@ def _aggregate(records: Iterable[SiblingPairRecord], leaf_count_by_node: dict[st
         )
 
     ratios = np.array([_record_ratio(r) for r in recs], dtype=float)
-    weights = np.array([float(r.edge_weight) for r in recs], dtype=float)
+    weights = np.array([float(r.sibling_null_prior_from_edge_pvalue) for r in recs], dtype=float)
     raw_ps = np.array([float(r.p_value) for r in recs], dtype=float)
     sum_weight = float(np.sum(weights))
     sum_ratio_weight = float(np.sum(ratios * weights))
@@ -161,16 +161,16 @@ def _aggregate(records: Iterable[SiblingPairRecord], leaf_count_by_node: dict[st
 
 def _top_burden_parent(tree: nx.DiGraph, root: str, records: list[SiblingPairRecord], top_n: int = 12) -> list[dict[str, object]]:
     valid = [r for r in records if r.degrees_of_freedom > 0 and np.isfinite(r.stat)]
-    total_weight = float(np.sum([float(r.edge_weight) for r in valid]))
+    total_weight = float(np.sum([float(r.sibling_null_prior_from_edge_pvalue) for r in valid]))
     rows = []
     for r in valid:
-        contrib = (_record_ratio(r) * float(r.edge_weight) / total_weight) if total_weight > 0 else float("nan")
+        contrib = (_record_ratio(r) * float(r.sibling_null_prior_from_edge_pvalue) / total_weight) if total_weight > 0 else float("nan")
         rows.append(
             {
                 "node": r.parent,
                 "depth": int(nx.shortest_path_length(tree, root, r.parent)),
                 "ratio": _record_ratio(r),
-                "weight": float(r.edge_weight),
+                "weight": float(r.sibling_null_prior_from_edge_pvalue),
                 "contrib_to_c_global": contrib,
                 "blocked": bool(r.is_gate2_blocked),
                 "null_like": bool(r.is_null_like),
@@ -217,7 +217,7 @@ def _case_features(case: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         n: int(stats.loc[n, "leaf_count"]) if "leaf_count" in stats.columns else len(_leaf_descendants(tree, n, leaves))
         for n in internal_binary_nodes
     }
-    total_weight = float(np.sum([float(r.edge_weight) for r in records if r.degrees_of_freedom > 0 and np.isfinite(r.stat)]))
+    total_weight = float(np.sum([float(r.sibling_null_prior_from_edge_pvalue) for r in records if r.degrees_of_freedom > 0 and np.isfinite(r.stat)]))
     total_agg = _aggregate(records, leaf_count_by_node)
 
     rows: list[dict[str, object]] = []
@@ -237,7 +237,7 @@ def _case_features(case: str) -> tuple[pd.DataFrame, pd.DataFrame]:
 
         raw_ratio = _record_ratio(rec) if rec is not None else float("nan")
         contrib = (
-            raw_ratio * float(rec.edge_weight) / total_weight
+            raw_ratio * float(rec.sibling_null_prior_from_edge_pvalue) / total_weight
             if rec is not None and np.isfinite(raw_ratio) and total_weight > 0
             else float("nan")
         )
@@ -256,7 +256,7 @@ def _case_features(case: str) -> tuple[pd.DataFrame, pd.DataFrame]:
             "branch_length_sum": None if rec is None else float(rec.branch_length_sum),
             "is_null_like": None if rec is None else bool(rec.is_null_like),
             "is_gate2_blocked": None if rec is None else bool(rec.is_gate2_blocked),
-            "edge_weight": None if rec is None else float(rec.edge_weight),
+            "sibling_null_prior": None if rec is None else float(rec.sibling_null_prior_from_edge_pvalue),
             "raw_stat": None if rec is None else float(rec.stat),
             "raw_df": None if rec is None else int(rec.degrees_of_freedom),
             "raw_ratio": raw_ratio,

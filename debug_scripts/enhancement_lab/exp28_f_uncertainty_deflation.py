@@ -80,7 +80,7 @@ class PairOutcome:
     stat: float
     k: int
     is_null_like: bool
-    edge_weight: float
+    sibling_null_prior: float
     n_parent: int
 
 
@@ -174,7 +174,7 @@ def _collect_case_pairs(case_name: str) -> tuple[list[PairOutcome], CaseCalibrat
     ratios = np.array(
         [record.stat / record.degrees_of_freedom for record in valid_records], dtype=np.float64
     )
-    weights = np.array([record.edge_weight for record in valid_records], dtype=np.float64)
+    weights = np.array([record.sibling_null_prior_from_edge_pvalue for record in valid_records], dtype=np.float64)
     positive_mask = ratios > 0
     ratios = ratios[positive_mask]
     weights = weights[positive_mask]
@@ -187,7 +187,7 @@ def _collect_case_pairs(case_name: str) -> tuple[list[PairOutcome], CaseCalibrat
             stat=float(record.stat),
             k=int(record.degrees_of_freedom),
             is_null_like=bool(record.is_null_like),
-            edge_weight=float(record.edge_weight),
+            sibling_null_prior=float(record.sibling_null_prior_from_edge_pvalue),
             n_parent=int(record.n_parent),
         )
         for record in valid_records

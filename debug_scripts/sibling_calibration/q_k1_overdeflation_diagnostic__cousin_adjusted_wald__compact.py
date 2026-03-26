@@ -1,7 +1,7 @@
 """
 Purpose: Compact diagnostics for K=1 over-deflation in cousin-adjusted Wald calibration.
-Inputs: Saved benchmark summaries and/or generated focal cases.
-Outputs: Compact console report of over-deflation indicators.
+Inputs: Generated focal cases.
+Outputs: Compact console report of adjusted-only over-deflation indicators.
 Expected runtime: ~10-60 seconds.
 How to run: python debug_scripts/sibling_calibration/q_k1_overdeflation_diagnostic__cousin_adjusted_wald__compact.py
 """
@@ -56,15 +56,10 @@ for case in cases:
     dist_c = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
     Z = linkage(dist_c, method=config.TREE_LINKAGE_METHOD)
 
-    # Run adj_wald
+    # Run the production adjusted sibling test.
     config.SIBLING_TEST_METHOD = "cousin_adjusted_wald"
     tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
     decomp = tree.decompose(leaf_data=data_df, alpha_local=0.05, sibling_alpha=0.05)
-
-    # Run wald for comparison
-    config.SIBLING_TEST_METHOD = "wald"
-    tree_w = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
-    decomp_w = tree_w.decompose(leaf_data=data_df, alpha_local=0.05, sibling_alpha=0.05)
 
     sdf = tree.annotations_df
     audit = sdf.attrs.get("sibling_divergence_audit", {})
@@ -78,7 +73,7 @@ for case in cases:
 
     print(f"\n{'='*70}")
     print(f"{name} (n={len(data_df)}, p={data_df.shape[1]}, true_k={case.get('n_clusters')})")
-    print(f"  wald K={decomp_w['num_clusters']}, adj_wald K={decomp['num_clusters']}")
+    print(f"  adjusted K={decomp['num_clusters']}")
     print(f"  Pairs: {len(records)} total, {n_null} null-like, {n_focal} focal")
     print(
         f"  Calib: method={model.method}, n={model.n_calibration}, median_c={model.global_inflation_factor:.3f}"

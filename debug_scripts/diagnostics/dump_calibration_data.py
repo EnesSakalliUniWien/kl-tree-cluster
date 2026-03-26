@@ -21,6 +21,8 @@ if str(LAB_ROOT) not in sys.path:
     sys.path.insert(0, str(LAB_ROOT))
 
 from lab_helpers import build_tree_and_data, run_decomposition  # noqa: E402
+
+
 from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (  # noqa: E402
     compute_mean_branch_length,
@@ -82,7 +84,7 @@ def main() -> None:
                 (
                     record.parent,
                     record.stat / record.degrees_of_freedom,
-                    record.edge_weight,
+                    record.sibling_null_prior_from_edge_pvalue,
                     record.is_null_like,
                     record.n_parent,
                 )
@@ -118,21 +120,21 @@ def main() -> None:
             handle.write(f"Max ratio: {np.max(ratios):.3f}\n")
             handle.write(f"Weight sum: {weights.sum():.4f}, Mean weight: {np.mean(weights):.4f}\n")
 
-            handle.write("\nAll pairs sorted by edge_weight (most null-like first):\n")
-            handle.write(f"{'Parent':<8} {'T/k':>7} {'ew':>7} {'null':>5} {'nP':>4}\n")
+            handle.write("\nAll pairs sorted by sibling_null_prior (most null-like first):\n")
+            handle.write(f"{'Parent':<8} {'T/k':>7} {'prior':>7} {'null':>5} {'nP':>4}\n")
             handle.write("-" * 38 + "\n")
-            for parent, ratio, edge_weight, is_null_like, n_parent in valid:
+            for parent, ratio, sibling_null_prior, is_null_like, n_parent in valid:
                 handle.write(
-                    f"{parent:<8} {ratio:>7.3f} {edge_weight:>7.4f} {str(is_null_like):>5} {n_parent:>4}\n"
+                    f"{parent:<8} {ratio:>7.3f} {sibling_null_prior:>7.4f} {str(is_null_like):>5} {n_parent:>4}\n"
                 )
 
             contributions = weights * ratios
             top_indices = np.argsort(-contributions)[:8]
-            handle.write("\nTop 8 contributors (ew * T/k):\n")
+            handle.write("\nTop 8 contributors (prior * T/k):\n")
             for index in top_indices:
-                parent, ratio, edge_weight, is_null_like, n_parent = valid[index]
+                parent, ratio, sibling_null_prior, is_null_like, n_parent = valid[index]
                 handle.write(
-                    f"  {parent:<8} T/k={ratio:.3f} x ew={edge_weight:.4f} = {edge_weight * ratio:.4f} "
+                    f"  {parent:<8} T/k={ratio:.3f} x prior={sibling_null_prior:.4f} = {sibling_null_prior * ratio:.4f} "
                     f"null={is_null_like} nP={n_parent}\n"
                 )
 

@@ -49,11 +49,14 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import LeaveOneGroupOut
 
+from debug_scripts.enhancement_lab.lab_helpers import (
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+)
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (
     benjamini_hochberg_correction,
 )
-
 
 _ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_GROUP_COLUMN = "case_family"
@@ -80,11 +83,11 @@ class ModeSpec:
 _DEFAULT_MODES: tuple[ModeSpec, ...] = (
     ModeSpec(
         name="baseline",
-        rows_csv="debug_scripts/enhancement_lab/_oracle_policy_rows.csv",
+        rows_csv=enhancement_lab_results_relative("_oracle_policy_rows.csv"),
     ),
     ModeSpec(
         name="one_active_1d",
-        rows_csv="debug_scripts/enhancement_lab/_oracle_policy_rows_one_active_1d.csv",
+        rows_csv=enhancement_lab_results_relative("_oracle_policy_rows_one_active_1d.csv"),
     ),
 )
 
@@ -96,19 +99,19 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--modes", default="baseline,one_active_1d")
     parser.add_argument(
         "--summary-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_hurdle_deflation_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_hurdle_deflation_summary.csv"),
     )
     parser.add_argument(
         "--equation-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_hurdle_deflation_equations.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_hurdle_deflation_equations.csv"),
     )
     parser.add_argument(
         "--prediction-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_hurdle_deflation_predictions.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_hurdle_deflation_predictions.csv"),
     )
     parser.add_argument(
         "--summary-markdown",
-        default="debug_scripts/enhancement_lab/_oracle_policy_hurdle_deflation_summary.md",
+        default=enhancement_lab_results_relative("_oracle_policy_hurdle_deflation_summary.md"),
     )
     parser.add_argument("--group-column", default=_DEFAULT_GROUP_COLUMN)
     parser.add_argument("--positive-threshold", type=float, default=1e-9)
@@ -175,9 +178,15 @@ def _prepare_frame(path: Path, *, positive_threshold: float) -> pd.DataFrame:
     frame["log_stat_per_k"] = _safe_log(stat / k)
     frame["neglog_edge_weight"] = _safe_neglog10(edge_weight, floor=1e-12)
     frame["neglog_p_global"] = _safe_neglog10(p_global, floor=1e-300)
-    frame["log_effective_n"] = np.log1p(np.maximum(frame["effective_n"].to_numpy(dtype=np.float64), 0.0))
-    frame["log_n_null_case"] = np.log1p(np.maximum(frame["n_null_case"].to_numpy(dtype=np.float64), 0.0))
-    frame["log_n_focal_case"] = np.log1p(np.maximum(frame["n_focal_case"].to_numpy(dtype=np.float64), 0.0))
+    frame["log_effective_n"] = np.log1p(
+        np.maximum(frame["effective_n"].to_numpy(dtype=np.float64), 0.0)
+    )
+    frame["log_n_null_case"] = np.log1p(
+        np.maximum(frame["n_null_case"].to_numpy(dtype=np.float64), 0.0)
+    )
+    frame["log_n_focal_case"] = np.log1p(
+        np.maximum(frame["n_focal_case"].to_numpy(dtype=np.float64), 0.0)
+    )
     frame["extra_log_deflation"] = np.maximum(frame["log_c_ratio"].to_numpy(dtype=np.float64), 0.0)
     frame["gate_target"] = frame["extra_log_deflation"] > positive_threshold
     return frame
@@ -356,7 +365,9 @@ def _regression_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, flo
     }
 
 
-def _student_p_values(frame: pd.DataFrame, extra_log_deflation: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _student_p_values(
+    frame: pd.DataFrame, extra_log_deflation: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     c_global = np.maximum(frame["c_global"].to_numpy(dtype=np.float64), 1.0)
     stat = frame["stat"].to_numpy(dtype=np.float64)
     k = frame["k"].to_numpy(dtype=np.int64)
@@ -388,9 +399,15 @@ def _evaluate_student_bh(
     evaluated["p_student_hard"] = p_hard
     _apply_casewise_bh(evaluated, "p_student_soft", "student_soft_bh_reject")
     _apply_casewise_bh(evaluated, "p_student_hard", "student_hard_bh_reject")
-    evaluated["baseline_false_global"] = evaluated["global_bh_reject"] & (~evaluated["perm_bh_reject"])
-    evaluated["soft_false_global"] = evaluated["student_soft_bh_reject"] & (~evaluated["perm_bh_reject"])
-    evaluated["hard_false_global"] = evaluated["student_hard_bh_reject"] & (~evaluated["perm_bh_reject"])
+    evaluated["baseline_false_global"] = evaluated["global_bh_reject"] & (
+        ~evaluated["perm_bh_reject"]
+    )
+    evaluated["soft_false_global"] = evaluated["student_soft_bh_reject"] & (
+        ~evaluated["perm_bh_reject"]
+    )
+    evaluated["hard_false_global"] = evaluated["student_hard_bh_reject"] & (
+        ~evaluated["perm_bh_reject"]
+    )
     return evaluated
 
 
@@ -408,7 +425,11 @@ def _leave_group_out_predictions(
     rows: list[dict[str, float | int | str]] = []
 
     for fold_idx, (train_idx, test_idx) in enumerate(
-        splitter.split(frame[feature_names].to_numpy(dtype=np.float64), frame["gate_target"].astype(int).to_numpy(), groups)
+        splitter.split(
+            frame[feature_names].to_numpy(dtype=np.float64),
+            frame["gate_target"].astype(int).to_numpy(),
+            groups,
+        )
     ):
         train = frame.iloc[train_idx].copy()
         test = frame.iloc[test_idx].copy()
@@ -429,7 +450,9 @@ def _leave_group_out_predictions(
         if not np.isfinite(fallback_amount):
             fallback_amount = 0.0
         test_gate = _predict_classifier_prob(classifier, test, feature_names)
-        test_amount = _predict_regressor_amount(regressor, test, feature_names, fallback=fallback_amount)
+        test_amount = _predict_regressor_amount(
+            regressor, test, feature_names, fallback=fallback_amount
+        )
         test_soft = test_gate * test_amount
 
         gate_prob.loc[test.index] = test_gate
@@ -476,7 +499,9 @@ def _summary_row(
 
     gate_true = valid["gate_target"].astype(int).to_numpy(dtype=np.int64)
     gate_pred = (gate_p >= args.gate_threshold).astype(np.int64)
-    all_regression = _regression_metrics(valid["extra_log_deflation"].to_numpy(dtype=np.float64), soft_hat)
+    all_regression = _regression_metrics(
+        valid["extra_log_deflation"].to_numpy(dtype=np.float64), soft_hat
+    )
     positive = valid.loc[valid["gate_target"]].copy()
     if not positive.empty:
         positive_soft = soft_extra.loc[positive.index].to_numpy(dtype=np.float64)
@@ -506,15 +531,21 @@ def _summary_row(
                 "equation_type": "amount",
                 "equation": amount_program,
                 "equation_rendered": _render_protected_equation(amount_program),
-                "program_length": _safe_program_int(amount_model._program, "length_")
-                if amount_model is not None
-                else math.nan,
-                "program_depth": _safe_program_int(amount_model._program, "depth_")
-                if amount_model is not None
-                else math.nan,
-                "raw_fitness": float(getattr(amount_model._program, "raw_fitness_", math.nan))
-                if amount_model is not None
-                else math.nan,
+                "program_length": (
+                    _safe_program_int(amount_model._program, "length_")
+                    if amount_model is not None
+                    else math.nan
+                ),
+                "program_depth": (
+                    _safe_program_int(amount_model._program, "depth_")
+                    if amount_model is not None
+                    else math.nan
+                ),
+                "raw_fitness": (
+                    float(getattr(amount_model._program, "raw_fitness_", math.nan))
+                    if amount_model is not None
+                    else math.nan
+                ),
                 "feature_names": ",".join(feature_names),
             },
         ]
@@ -532,26 +563,36 @@ def _summary_row(
         "positive_mae_soft": positive_regression["mae"],
         "positive_rmse_soft": positive_regression["rmse"],
         "positive_r2_soft": positive_regression["r2"],
-        "mean_fold_gate_balanced_accuracy": float(fold_summary["gate_balanced_accuracy"].mean())
-        if not fold_summary.empty
-        else math.nan,
-        "mean_fold_gate_roc_auc": float(fold_summary["gate_roc_auc"].mean())
-        if not fold_summary.empty
-        else math.nan,
+        "mean_fold_gate_balanced_accuracy": (
+            float(fold_summary["gate_balanced_accuracy"].mean())
+            if not fold_summary.empty
+            else math.nan
+        ),
+        "mean_fold_gate_roc_auc": (
+            float(fold_summary["gate_roc_auc"].mean()) if not fold_summary.empty else math.nan
+        ),
         "baseline_false_global": int(evaluated["baseline_false_global"].sum()),
         "soft_false_global": int(evaluated["soft_false_global"].sum()),
         "hard_false_global": int(evaluated["hard_false_global"].sum()),
         "mean_c_global": float(evaluated["c_global"].mean()),
         "mean_c_student_soft": float(evaluated["c_student_soft"].mean()),
         "mean_c_student_hard": float(evaluated["c_student_hard"].mean()),
-        "gate_equation_rendered": equation_frame.loc[equation_frame["equation_type"] == "gate", "equation_rendered"].iloc[0],
-        "amount_equation_rendered": equation_frame.loc[equation_frame["equation_type"] == "amount", "equation_rendered"].iloc[0],
+        "gate_equation_rendered": equation_frame.loc[
+            equation_frame["equation_type"] == "gate", "equation_rendered"
+        ].iloc[0],
+        "amount_equation_rendered": equation_frame.loc[
+            equation_frame["equation_type"] == "amount", "equation_rendered"
+        ].iloc[0],
     }
-    return summary, evaluated.assign(
-        mode=mode_name,
-        gate_probability=gate_p,
-        amount_prediction=amount_hat,
-    ), equation_frame
+    return (
+        summary,
+        evaluated.assign(
+            mode=mode_name,
+            gate_probability=gate_p,
+            amount_prediction=amount_hat,
+        ),
+        equation_frame,
+    )
 
 
 def _write_markdown(summary: pd.DataFrame, equations: pd.DataFrame, output_path: Path) -> None:
@@ -608,7 +649,7 @@ def main() -> None:
     prediction_frames: list[pd.DataFrame] = []
 
     for mode in modes:
-        path = (_ROOT / mode.rows_csv).resolve()
+        path = resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)
         frame = _prepare_frame(path, positive_threshold=args.positive_threshold)
         feature_names = _usable_feature_columns(frame, _RUNTIME_FEATURE_COLUMNS)
         if not feature_names:
@@ -651,10 +692,10 @@ def main() -> None:
     equations_df = pd.concat(equation_frames, axis=0, ignore_index=True)
     predictions_df = pd.concat(prediction_frames, axis=0, ignore_index=True)
 
-    summary_path = (_ROOT / args.summary_output_csv).resolve()
-    equation_path = (_ROOT / args.equation_output_csv).resolve()
-    prediction_path = (_ROOT / args.prediction_output_csv).resolve()
-    markdown_path = (_ROOT / args.summary_markdown).resolve()
+    summary_path = resolve_enhancement_lab_artifact_path(args.summary_output_csv)
+    equation_path = resolve_enhancement_lab_artifact_path(args.equation_output_csv)
+    prediction_path = resolve_enhancement_lab_artifact_path(args.prediction_output_csv)
+    markdown_path = resolve_enhancement_lab_artifact_path(args.summary_markdown)
     summary_path.parent.mkdir(parents=True, exist_ok=True)
 
     summary_df.to_csv(summary_path, index=False)

@@ -41,7 +41,6 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_back
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_jl_dim,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Shared helpers
@@ -73,10 +72,10 @@ def _node_data(tree, node, leaf_data):
 def _eigendecompose(data_matrix):
     if data_matrix.shape[0] < 2:
         return None
-    result = eigendecompose_correlation_backend(data_matrix, need_eigh=False)
+    result = eigendecompose_correlation_backend(data_matrix, compute_eigenvectors=False)
     if result is None:
         return None
-    return result.eigenvalues, data_matrix.shape[0], result.d_active
+    return result.eigenvalues, data_matrix.shape[0], result.active_feature_count
 
 
 def _clamp_k(x, minimum=2):
@@ -291,7 +290,7 @@ if __name__ == "__main__":
     n_cases = len(case_names)
 
     print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print(f"\n═══ EXP25: Floored lam12 Hybrid — {n_cases} cases × {N_CONFIGS} configs ═══")
     print("  Strategies:")
     for i, cn in enumerate(CONFIG_NAMES, 1):

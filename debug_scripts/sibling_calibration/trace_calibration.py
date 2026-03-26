@@ -74,7 +74,7 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
     print(f"CALIBRATION TRACE: {label}")
     print(f"  n={n_samples}, p={n_features}, K={n_clusters}, noise={noise}")
     print(f"  Config: SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"  Config: SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("  Config: SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print(f"  Config: FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}")
     print("=" * 90)
     print(f"Total pairs: {len(records)}  (null-like: {n_null}, focal: {n_focal})")
@@ -82,14 +82,14 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
 
     # --- Per-pair table ---
     print(
-        f"{'Parent':>8} {'T':>10} {'k':>4} {'raw_p':>10} "
+        f"{'Parent':>8} {'T':>10} {'k':>6} {'raw_p':>10} "
         f"{'r=T/k':>8} {'null':>5} {'bl_sum':>8} {'n_par':>6}"
     )
     print("-" * 80)
     for r in sorted(records, key=lambda x: x.n_parent, reverse=True):
         ratio = r.stat / r.degrees_of_freedom if r.degrees_of_freedom > 0 else float("nan")
         print(
-            f"{r.parent:>8} {r.stat:10.4f} {r.degrees_of_freedom:4d} {r.p_value:10.6f} "
+            f"{r.parent:>8} {r.stat:10.4f} {r.degrees_of_freedom:6.0f} {r.p_value:10.6f} "
             f"{ratio:8.4f} {str(r.is_null_like):>5} "
             f"{r.branch_length_sum:8.4f} {r.n_parent:6d}"
         )
@@ -122,7 +122,7 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
 
         print(f"\n--- ROOT NODE ({root}) ---")
         print(f"  Children: {list(tree.successors(root))}")
-        print(f"  T = {rr.stat:.4f},  k = {rr.degrees_of_freedom},  raw p = {rr.p_value:.6f}")
+        print(f"  T = {rr.stat:.4f},  k = {rr.degrees_of_freedom:.0f},  raw p = {rr.p_value:.6f}")
         print(f"  r = T/k = {ratio:.4f}")
         print(f"  bl_sum = {rr.branch_length_sum:.4f},  n_parent = {rr.n_parent}")
         print(f"  is_null_like = {rr.is_null_like}")

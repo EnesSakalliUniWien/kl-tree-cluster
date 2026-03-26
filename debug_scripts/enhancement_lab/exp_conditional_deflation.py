@@ -75,7 +75,7 @@ def compute_pool_stats(records: List[SiblingPairRecord], model: CalibrationModel
         )
 
     log_dfs = np.array([np.log(max(r.degrees_of_freedom, 1)) for r in valid])
-    weights = np.array([r.edge_weight for r in valid])
+    weights = np.array([r.sibling_null_prior_from_edge_pvalue for r in valid])
 
     # Weighted median via sorted cumulative weights
     sort_idx = np.argsort(log_dfs)
@@ -190,13 +190,14 @@ def _make_patched_deflate_and_test(
     def _patched_deflate_and_test(
         records: List[SiblingPairRecord],
         model: CalibrationModel,
+        pool: PoolStats | None = None,
     ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
-        pool = _captured.get("pool_stats")
-        if pool is None:
-            pool = compute_pool_stats(records, model)
+        resolved_pool = pool if pool is not None else _captured.get("pool_stats")
+        if resolved_pool is None:
+            resolved_pool = compute_pool_stats(records, model)
 
         def _resolve(rec: SiblingPairRecord) -> tuple[float, str]:
-            c_i = strategy_fn(rec, model, pool)
+            c_i = strategy_fn(rec, model, resolved_pool)
             return c_i, "conditional_experiment"
 
         return deflate_focal_pairs(records, calibration_resolver=_resolve)
@@ -280,7 +281,7 @@ def run_case_strategy(case_name: str, strategy_fn: StrategyFn) -> dict:
 
 def main() -> None:
     print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print()
 
     strat_names = list(STRATEGIES.keys())

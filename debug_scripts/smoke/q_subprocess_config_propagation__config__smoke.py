@@ -47,17 +47,23 @@ def main() -> None:
     ), f"Expected default, got: {result1['method']}"
     print(f"[PASS] Default config in subprocess: {result1['method']}")
 
-    # 2) With env var → should override
-    os.environ["KL_TE_SIBLING_TEST_METHOD"] = "cousin_weighted_wald"
+    # 2) With env var → should propagate explicitly to the worker
+    os.environ["KL_TE_SIBLING_TEST_METHOD"] = "cousin_adjusted_wald"
     q2: "mp.Queue" = ctx.Queue()
     p2 = ctx.Process(target=_worker, args=(q2,))
     p2.start()
     p2.join(timeout=10)
     result2 = q2.get()
     assert (
-        result2["method"] == "cousin_weighted_wald"
-    ), f"Expected cousin_weighted_wald, got: {result2['method']}"
-    print(f"[PASS] Overridden config in subprocess: {result2['method']}")
+        result2["env"] == "cousin_adjusted_wald"
+    ), f"Expected propagated env value, got: {result2['env']}"
+    assert (
+        result2["method"] == "cousin_adjusted_wald"
+    ), f"Expected cousin_adjusted_wald, got: {result2['method']}"
+    print(
+        "[PASS] Explicit subprocess override propagated: "
+        f"env={result2['env']} method={result2['method']}"
+    )
 
     # Cleanup
     del os.environ["KL_TE_SIBLING_TEST_METHOD"]

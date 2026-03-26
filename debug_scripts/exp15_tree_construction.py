@@ -28,20 +28,21 @@ import sys
 import warnings
 from pathlib import Path
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-warnings.filterwarnings("ignore")
-os.environ.setdefault("KL_TE_N_JOBS", "1")
-
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+warnings.filterwarnings("ignore")
+os.environ.setdefault("KL_TE_N_JOBS", "1")
 
 # ────────────────────────────────────────────────────────────────────
 # Strategy 1: Spectral Bisection (recursive Fiedler vector)
@@ -56,8 +57,6 @@ def _build_spectral_bisection_tree(
     Stops recursing when subtree size <= min_bisect and builds a balanced
     sub-tree for the remaining leaves (avoids hundreds of tiny eigendecompositions).
     """
-    import networkx as nx
-
     n = len(data)
     leaf_names = data.index.tolist()
 
@@ -87,9 +86,7 @@ def _build_spectral_bisection_tree(
             tree.add_node(node_id, is_leaf=False)
             if parent_id is not None:
                 tree.add_edge(parent_id, node_id, branch_length=1.0)
-            _build_balanced_subtree(
-                tree, node_id, sample_indices, leaf_names, node_counter
-            )
+            _build_balanced_subtree(tree, node_id, sample_indices, leaf_names, node_counter)
             return node_id
 
         # Create subgraph for these samples
@@ -162,29 +159,19 @@ def _build_bisecting_kmeans_tree(data: pd.DataFrame) -> PosetTree:
     )
     bkm.fit(X)
 
-    # Map each sample to its leaf-cluster label
+    # Map each sample to its leaf-cluster label.
+    # sklearn assigns labels by iterating bkm._bisecting_tree.iter_leaves()
+    # in order, so labels_ already index directly into that leaf order.
     labels = bkm.labels_  # shape (n,)
 
-    # Collect leaf nodes and their centers
+    # Collect leaf nodes in the same order used to assign labels_.
     bkm_leaves = list(bkm._bisecting_tree.iter_leaves())
-    leaf_centers = np.array([l.center for l in bkm_leaves])
 
-    # Map cluster-centers to tree leaves via nearest center
-    # bkm.cluster_centers_[label] is the center for cluster `label`
-    from scipy.spatial.distance import cdist
-
-    # Match each bkm leaf to the cluster_centers_ index
-    center_dists = cdist(leaf_centers, bkm.cluster_centers_)
-    leaf_to_cluster = center_dists.argmin(axis=1)
-    # Reverse: cluster -> bkm_leaf_index
-    cluster_to_leaf_idx = {int(leaf_to_cluster[i]): i for i in range(len(bkm_leaves))}
-
-    # Assign samples to bkm_leaf_index
+    # Assign samples to the corresponding leaf index directly.
     leaf_samples: dict[int, list[int]] = {}
     for sample_idx in range(n):
-        cl = int(labels[sample_idx])
-        li = cluster_to_leaf_idx.get(cl, cl)
-        leaf_samples.setdefault(li, []).append(sample_idx)
+        leaf_idx = int(labels[sample_idx])
+        leaf_samples.setdefault(leaf_idx, []).append(sample_idx)
 
     # Build PosetTree by traversing bkm tree structure
     tree = PosetTree()
@@ -338,8 +325,6 @@ def _build_diffusion_hac_tree(
     # Normalize to transition matrix
     D = W.sum(axis=1)
     D[D == 0] = 1e-10
-    D_inv = 1.0 / D
-    T = W * D_inv[:, None]  # row-normalized transition matrix
 
     # Eigendecomposition of transition matrix
     from scipy.linalg import eigh
@@ -381,7 +366,7 @@ def _build_diffusion_hac_tree(
 # ────────────────────────────────────────────────────────────────────
 
 
-def _build_snn_graph(data: pd.DataFrame, k_neighbors: int = 15) -> "nx.Graph":
+def _build_snn_graph(data: pd.DataFrame, k_neighbors: int = 15) -> nx.Graph:
     """Build a Shared Nearest Neighbor (SNN) weighted graph."""
     import networkx as nx
     from sklearn.neighbors import NearestNeighbors
@@ -444,7 +429,6 @@ def _tree_diagnostics(tree: PosetTree, data: pd.DataFrame) -> dict:
     """Compute tree quality metrics."""
     root = tree.graph.get("root") or next(n for n, d in tree.in_degree() if d == 0)
     children = list(tree.successors(root))
-    n = len(data)
     p = data.shape[1]
 
     # Root imbalance
@@ -475,6 +459,44 @@ def _tree_diagnostics(tree: PosetTree, data: pd.DataFrame) -> dict:
         "gamma_pct_gt1": float((gammas > 1).mean() * 100),
         "n_internal": len(internal),
     }
+
+
+def _cut_tree_to_k_roots(tree: PosetTree, target_k: int) -> list[str]:
+    """Return a top-down frontier of subtree roots with size at most ``target_k``.
+
+    This generic tree cut works for all exp15 strategies, including custom trees
+    that do not come from a SciPy linkage matrix.
+    """
+    if target_k <= 1:
+        return [tree.root()]
+
+    frontier = [tree.root()]
+
+    while len(frontier) < target_k:
+        splittable = [node for node in frontier if tree.out_degree(node) > 0]
+        if not splittable:
+            break
+
+        node_to_split = max(
+            splittable,
+            key=lambda node_id: (int(tree.nodes[node_id].get("leaf_count", 0)), node_id),
+        )
+        frontier.remove(node_to_split)
+        frontier.extend(list(tree.successors(node_to_split)))
+
+    return frontier
+
+
+def _labels_from_tree_cut(tree: PosetTree, data: pd.DataFrame, target_k: int) -> np.ndarray:
+    """Assign cluster labels by cutting the tree topology into ``target_k`` groups."""
+    y_pred = np.full(len(data), -1, dtype=int)
+    frontier = _cut_tree_to_k_roots(tree, target_k)
+
+    for cluster_id, root_node in enumerate(frontier):
+        for leaf_label in tree.get_leaves(root_node, return_labels=True, sort=False):
+            y_pred[data.index.get_loc(leaf_label)] = cluster_id
+
+    return y_pred
 
 
 # ────────────────────────────────────────────────────────────────────
@@ -527,23 +549,32 @@ def run_case(case_name: str) -> list[dict]:
             )
             K_found = decomp["num_clusters"]
 
-            # ARI
+            # ARI from full KL decomposition and from a pure tree cut at true K.
             if y_t is not None:
+                cut_pred = _labels_from_tree_cut(tree, data_t, true_k)
+                cut_ari = adjusted_rand_score(y_t, cut_pred)
+
                 y_pred = np.full(n, -1, dtype=int)
                 for cid, cinfo in decomp["cluster_assignments"].items():
                     for leaf in cinfo["leaves"]:
                         idx = data_t.index.get_loc(leaf)
                         y_pred[idx] = cid
                 ari = adjusted_rand_score(y_t, y_pred)
+                gate_loss = cut_ari - ari
             else:
+                cut_ari = float("nan")
                 ari = float("nan")
+                gate_loss = float("nan")
 
             # Calibration audit
             stats = tree.annotations_df
             audit = stats.attrs.get("sibling_divergence_audit", {})
             c_hat = audit.get("global_inflation_factor", float("nan"))
 
-            print(f"    K_found={K_found} (true={true_k}), ARI={ari:.3f}, " f"ĉ={c_hat:.1f}")
+            print(
+                f"    cut@K ARI={cut_ari:.3f}, K_found={K_found} (true={true_k}), "
+                f"decomp ARI={ari:.3f}, gate loss={gate_loss:.3f}, ĉ={c_hat:.1f}"
+            )
 
             # Cluster composition
             if y_t is not None:
@@ -564,8 +595,10 @@ def run_case(case_name: str) -> list[dict]:
                     "case": case_name,
                     "strategy": strategy_name,
                     "true_k": true_k,
+                    "cut_k_ari": cut_ari,
                     "found_k": K_found,
                     "ari": ari,
+                    "gate_loss": gate_loss,
                     "c_hat": c_hat,
                     "root_imbalance": diag["root_imbalance"],
                     "gamma_median": diag["gamma_median"],
@@ -583,8 +616,10 @@ def run_case(case_name: str) -> list[dict]:
                     "case": case_name,
                     "strategy": strategy_name,
                     "true_k": true_k,
+                    "cut_k_ari": float("nan"),
                     "found_k": -1,
                     "ari": float("nan"),
+                    "gate_loss": float("nan"),
                     "c_hat": float("nan"),
                     "root_imbalance": float("nan"),
                     "gamma_median": float("nan"),
@@ -609,8 +644,10 @@ def print_summary(all_results: list[dict]) -> None:
     agg = (
         df.groupby("strategy")
         .agg(
+            mean_cut_k_ari=("cut_k_ari", "mean"),
             mean_ari=("ari", "mean"),
             median_ari=("ari", "median"),
+            mean_gate_loss=("gate_loss", "mean"),
             exact_k_pct=("exact_k", "mean"),
             mean_c_hat=("c_hat", "mean"),
             mean_imbalance=("root_imbalance", "mean"),
@@ -625,9 +662,17 @@ def print_summary(all_results: list[dict]) -> None:
 
     # Per-case comparison
     if df["case"].nunique() <= 20:
+        print("\nPer-case cut@true-K ARI:")
+        pivot_cut = df.pivot(index="case", columns="strategy", values="cut_k_ari")
+        print(pivot_cut.to_string(float_format="%.3f"))
+
         print("\nPer-case detail:")
         pivot = df.pivot(index="case", columns="strategy", values="ari")
         print(pivot.to_string(float_format="%.3f"))
+
+        print("\nPer-case gate loss (cut@K ARI - decomp ARI):")
+        pivot_loss = df.pivot(index="case", columns="strategy", values="gate_loss")
+        print(pivot_loss.to_string(float_format="%.3f"))
 
         pivot_k = df.pivot(index="case", columns="strategy", values="found_k")
         print("\nK found:")
@@ -661,4 +706,5 @@ if __name__ == "__main__":
     for cn in case_names:
         all_results.extend(run_case(cn))
 
+    print_summary(all_results)
     print_summary(all_results)

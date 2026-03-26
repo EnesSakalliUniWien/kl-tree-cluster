@@ -43,11 +43,14 @@ from sklearn.model_selection import LeaveOneGroupOut
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from debug_scripts.enhancement_lab.lab_helpers import (
+    enhancement_lab_results_relative,
+    resolve_enhancement_lab_artifact_path,
+)
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (
     benjamini_hochberg_correction,
 )
-
 
 _ROOT = Path(__file__).resolve().parents[2]
 _FEATURES = [
@@ -65,8 +68,11 @@ class ModeSpec:
 
 
 _DEFAULT_MODES: tuple[ModeSpec, ...] = (
-    ModeSpec("baseline", "debug_scripts/enhancement_lab/_oracle_policy_rows.csv"),
-    ModeSpec("one_active_1d", "debug_scripts/enhancement_lab/_oracle_policy_rows_one_active_1d.csv"),
+    ModeSpec("baseline", enhancement_lab_results_relative("_oracle_policy_rows.csv")),
+    ModeSpec(
+        "one_active_1d",
+        enhancement_lab_results_relative("_oracle_policy_rows_one_active_1d.csv"),
+    ),
 )
 
 
@@ -80,23 +86,29 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--gate-threshold", type=float, default=0.5)
     parser.add_argument(
         "--summary-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_distilled_deflation_summary.csv",
+        default=enhancement_lab_results_relative("_oracle_policy_distilled_deflation_summary.csv"),
     )
     parser.add_argument(
         "--coefficients-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_distilled_deflation_coefficients.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_distilled_deflation_coefficients.csv"
+        ),
     )
     parser.add_argument(
         "--predictions-output-csv",
-        default="debug_scripts/enhancement_lab/_oracle_policy_distilled_deflation_predictions.csv",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_distilled_deflation_predictions.csv"
+        ),
     )
     parser.add_argument(
         "--model-output-json",
-        default="debug_scripts/enhancement_lab/_oracle_policy_distilled_deflation_coefficients.json",
+        default=enhancement_lab_results_relative(
+            "_oracle_policy_distilled_deflation_coefficients.json"
+        ),
     )
     parser.add_argument(
         "--summary-markdown",
-        default="debug_scripts/enhancement_lab/_oracle_policy_distilled_deflation_summary.md",
+        default=enhancement_lab_results_relative("_oracle_policy_distilled_deflation_summary.md"),
     )
     return parser.parse_args()
 
@@ -189,7 +201,9 @@ def _equation_string(intercept: float, coef_map: dict[str, float]) -> str:
     return f"sigmoid({linear})"
 
 
-def _student_p_values(frame: pd.DataFrame, extra_log_deflation: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _student_p_values(
+    frame: pd.DataFrame, extra_log_deflation: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     c_global = np.maximum(frame["c_global"].to_numpy(dtype=np.float64), 1.0)
     c_student = c_global * np.exp(np.maximum(extra_log_deflation, 0.0))
     p_student = np.array(
@@ -207,7 +221,9 @@ def _student_p_values(frame: pd.DataFrame, extra_log_deflation: np.ndarray) -> t
     return c_student, p_student
 
 
-def _evaluate_mode(frame: pd.DataFrame, *, group_column: str, gate_threshold: float) -> tuple[dict[str, object], pd.DataFrame, dict[str, object]]:
+def _evaluate_mode(
+    frame: pd.DataFrame, *, group_column: str, gate_threshold: float
+) -> tuple[dict[str, object], pd.DataFrame, dict[str, object]]:
     x = frame[_FEATURES].to_numpy(dtype=np.float64)
     y = frame["gate_target"].astype(int).to_numpy(dtype=np.int64)
     groups = frame[group_column].to_numpy()
@@ -225,7 +241,9 @@ def _evaluate_mode(frame: pd.DataFrame, *, group_column: str, gate_threshold: fl
         model.fit(x[train_idx], y[train_idx])
         prob = model.predict_proba(test_x)[:, 1]
         gate_prob[test_idx] = prob
-        gate_ba_scores.append(_safe_balanced_accuracy(test_y, (prob >= gate_threshold).astype(np.int64)))
+        gate_ba_scores.append(
+            _safe_balanced_accuracy(test_y, (prob >= gate_threshold).astype(np.int64))
+        )
         gate_auc_scores.append(_safe_roc_auc(test_y, prob))
         positive_train = train.loc[train["gate_target"], "extra_log_deflation"]
         uplift[test_idx] = float(positive_train.median()) if not positive_train.empty else 0.0
@@ -236,8 +254,12 @@ def _evaluate_mode(frame: pd.DataFrame, *, group_column: str, gate_threshold: fl
     evaluated["student_extra_soft"] = gate_prob * uplift
     evaluated["student_extra_hard"] = (gate_prob >= gate_threshold).astype(np.float64) * uplift
 
-    c_soft, p_soft = _student_p_values(evaluated, evaluated["student_extra_soft"].to_numpy(dtype=np.float64))
-    c_hard, p_hard = _student_p_values(evaluated, evaluated["student_extra_hard"].to_numpy(dtype=np.float64))
+    c_soft, p_soft = _student_p_values(
+        evaluated, evaluated["student_extra_soft"].to_numpy(dtype=np.float64)
+    )
+    c_hard, p_hard = _student_p_values(
+        evaluated, evaluated["student_extra_hard"].to_numpy(dtype=np.float64)
+    )
     evaluated["c_student_soft"] = c_soft
     evaluated["c_student_hard"] = c_hard
     evaluated["p_student_soft"] = p_soft
@@ -245,9 +267,15 @@ def _evaluate_mode(frame: pd.DataFrame, *, group_column: str, gate_threshold: fl
     _apply_casewise_bh(evaluated, "p_student_soft", "student_soft_bh_reject")
     _apply_casewise_bh(evaluated, "p_student_hard", "student_hard_bh_reject")
 
-    evaluated["baseline_false_global"] = evaluated["global_bh_reject"] & (~evaluated["perm_bh_reject"])
-    evaluated["soft_false_global"] = evaluated["student_soft_bh_reject"] & (~evaluated["perm_bh_reject"])
-    evaluated["hard_false_global"] = evaluated["student_hard_bh_reject"] & (~evaluated["perm_bh_reject"])
+    evaluated["baseline_false_global"] = evaluated["global_bh_reject"] & (
+        ~evaluated["perm_bh_reject"]
+    )
+    evaluated["soft_false_global"] = evaluated["student_soft_bh_reject"] & (
+        ~evaluated["perm_bh_reject"]
+    )
+    evaluated["hard_false_global"] = evaluated["student_hard_bh_reject"] & (
+        ~evaluated["perm_bh_reject"]
+    )
 
     final_model = _fit_pipeline()
     final_model.fit(x, y)
@@ -324,7 +352,7 @@ def main() -> None:
     prediction_frames: list[pd.DataFrame] = []
 
     for mode in modes:
-        path = (_ROOT / mode.rows_csv).resolve()
+        path = resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)
         frame = _prepare_frame(path, positive_threshold=args.positive_threshold)
         summary, evaluated, coefficients = _evaluate_mode(
             frame,
@@ -339,12 +367,13 @@ def main() -> None:
     coefficients_df = pd.DataFrame(coefficient_rows)
     predictions_df = pd.concat(prediction_frames, axis=0, ignore_index=True)
 
-    summary_path = (_ROOT / args.summary_output_csv).resolve()
-    coefficients_path = (_ROOT / args.coefficients_output_csv).resolve()
-    predictions_path = (_ROOT / args.predictions_output_csv).resolve()
-    model_json_path = (_ROOT / args.model_output_json).resolve()
-    markdown_path = (_ROOT / args.summary_markdown).resolve()
-    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path = resolve_enhancement_lab_artifact_path(args.summary_output_csv)
+    coefficients_path = resolve_enhancement_lab_artifact_path(args.coefficients_output_csv)
+    predictions_path = resolve_enhancement_lab_artifact_path(args.predictions_output_csv)
+    model_json_path = resolve_enhancement_lab_artifact_path(args.model_output_json)
+    markdown_path = resolve_enhancement_lab_artifact_path(args.summary_markdown)
+    for path in [summary_path, coefficients_path, predictions_path, model_json_path, markdown_path]:
+        path.parent.mkdir(parents=True, exist_ok=True)
 
     summary_df.to_csv(summary_path, index=False)
     coefficients_df.to_csv(coefficients_path, index=False)
@@ -360,7 +389,9 @@ def main() -> None:
         }
         for row in coefficient_rows
     }
-    model_json_path.write_text(json.dumps(model_payload, indent=2, sort_keys=True), encoding="utf-8")
+    model_json_path.write_text(
+        json.dumps(model_payload, indent=2, sort_keys=True), encoding="utf-8"
+    )
     _write_markdown(summary_df, markdown_path)
 
     print(f"Wrote summary to {summary_path}")

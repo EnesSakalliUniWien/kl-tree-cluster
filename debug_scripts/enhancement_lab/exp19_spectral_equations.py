@@ -39,6 +39,8 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     effective_rank as compute_effective_rank,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
     marchenko_pastur_signal_count,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
@@ -85,10 +87,10 @@ def _eigendecompose(data):
     """Return (eigenvalues_sorted_desc, n_samples, d_active) or None."""
     if data.shape[0] < 2:
         return None
-    eig = eigendecompose_correlation_backend(data, need_eigh=False)
+    eig = eigendecompose_correlation_backend(data, compute_eigenvectors=False)
     if eig is None:
         return None
-    return eig.eigenvalues, data.shape[0], eig.d_active
+    return eig.eigenvalues, data.shape[0], eig.active_feature_count
 
 
 def _mp_upper_bound(eigenvalues, n_samples, d_active):
@@ -499,7 +501,7 @@ def run_case_strategy(case_name, strategy_fn):
 
 if __name__ == "__main__":
     print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"        SPECTRAL_METHOD={config.SPECTRAL_METHOD}")
+    print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print()
 
     # ═════════════════════════════════════════════════════════════════════
