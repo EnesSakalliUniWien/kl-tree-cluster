@@ -156,38 +156,6 @@ class PosetTree(nx.DiGraph):
             return bool(is_leaf_attr)
         return self.out_degree(node_id) == 0
 
-    @property
-    def distribution_map(self) -> dict[str, np.ndarray]:
-        """Map each node to its distribution vector.
-
-        Returns
-        -------
-        dict[str, np.ndarray]
-            Dictionary whose keys are node ids and values are the node
-            distribution arrays (populated by :meth:`populate_node_divergences`).
-        """
-        return {
-            node_id: np.asarray(node_data["distribution"], dtype=float)
-            for node_id, node_data in self.nodes(data=True)
-            if "distribution" in node_data
-        }
-
-    @property
-    def leaf_count_map(self) -> dict[str, int]:
-        """Map each node to its descendant leaf count.
-
-        Returns
-        -------
-        dict[str, int]
-            Dictionary whose keys are node ids and values are the ``leaf_count``
-            attribute (populated by :meth:`populate_node_divergences`).
-        """
-        return {
-            node_id: int(node_data["leaf_count"])
-            for node_id, node_data in self.nodes(data=True)
-            if "leaf_count" in node_data
-        }
-
     def compute_descendant_sets(self, use_labels: bool = True) -> dict[str, frozenset]:
         """Map each node to the set of leaf labels under it.
 

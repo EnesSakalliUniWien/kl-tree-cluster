@@ -4,16 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from functools import lru_cache
-from typing import Any, Callable, cast
+from typing import Any, cast
 
-import networkx as nx
 import numpy as np
 import pandas as pd
 
+from ....multiple_testing.stopping_edge_recovery._tree import (
+    build_tree_distance_resolver as build_tree_distance,
+)
 from ....multiple_testing.stopping_edge_recovery.serialization import parse_stopping_edge_attrs
-
-_DISTANCE_INF = 1e12
 
 
 @dataclass(frozen=True)
@@ -114,22 +113,6 @@ def edge_structural_dimension(
         return float(edge_degrees_of_freedom)
 
     return 1.0
-
-
-def build_tree_distance(tree: nx.DiGraph) -> Callable[[str, str], float]:
-    """Build a cached shortest-path lookup over the undirected tree."""
-    tree_undirected = tree.to_undirected(as_view=True)
-
-    @lru_cache(maxsize=None)
-    def tree_distance(node_a: str, node_b: str) -> float:
-        if node_a == node_b:
-            return 0.0
-        try:
-            return float(nx.shortest_path_length(tree_undirected, node_a, node_b))
-        except nx.NetworkXNoPath:
-            return _DISTANCE_INF
-
-    return tree_distance
 
 
 __all__ = [
