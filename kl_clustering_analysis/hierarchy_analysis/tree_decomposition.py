@@ -94,11 +94,6 @@ class TreeDecomposition:
         # ----- leaf partitions & counts (poset view) -----
         self._descendant_leaf_sets = self.tree.compute_descendant_sets(use_labels=True)
 
-        self._leaf_count_cache: dict[str, int] = {
-            node_id: node_data.get("leaf_count", len(self._descendant_leaf_sets.get(node_id, ())))
-            for node_id, node_data in self._node_attrs_by_id.items()
-        }
-
         # ----- ensure statistical annotations are present -----
         self.annotations_df = self._prepare_annotations(self.annotations_df)
 

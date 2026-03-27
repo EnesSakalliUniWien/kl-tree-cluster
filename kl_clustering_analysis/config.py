@@ -24,17 +24,7 @@ EDGE_ALPHA: float = 0.001
 # under-splits on data-dependent trees (mean ARI 0.694 → 1.000 without it).
 FELSENSTEIN_SCALING: bool = False
 
-# Explicit branch-length semantics for pairwise path distances used by
-# branch-length scaling in localization and post-hoc merge:
-# - "phylogeny": use edge ``branch_length`` values as true path lengths.
-# - "topology": ignore edge values and use unit hop-length per edge.
-FELSENSTEIN_BRANCH_LENGTH_MODE: Literal["phylogeny", "topology"] = "topology"
 
-# Behavior when branch-length scaling is enabled in phylogeny mode but some edges have
-# missing/invalid branch lengths:
-# - "warn_disable": emit a warning and disable branch-length scaling for that run.
-# - "error": raise ValueError and fail fast.
-FELSENSTEIN_INCOMPLETE_BRANCH_POLICY: Literal["warn_disable", "error"] = "warn_disable"
 
 # --- Tree Inference Parameters ---
 

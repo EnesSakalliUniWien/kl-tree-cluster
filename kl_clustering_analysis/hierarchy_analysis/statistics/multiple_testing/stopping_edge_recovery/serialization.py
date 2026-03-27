@@ -61,10 +61,9 @@ def _build_payload(
     for index, child_id in enumerate(child_ids):
         child_stopping_edge_info = stopping_edge_info_by_child.get(child_id)
         if child_stopping_edge_info is not None:
+
             stopping_edge_p_values[index] = child_stopping_edge_info.stopping_edge_p_value
-            distances_to_stopping_edge[index] = (
-                child_stopping_edge_info.distance_to_stopping_edge
-            )
+            distances_to_stopping_edge[index] = child_stopping_edge_info.distance_to_stopping_edge
 
         child_signal_neighbor_info = signal_neighbor_info_by_child.get(child_id)
         if child_signal_neighbor_info is not None:

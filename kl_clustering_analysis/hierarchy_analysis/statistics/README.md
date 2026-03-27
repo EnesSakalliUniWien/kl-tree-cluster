@@ -19,7 +19,6 @@ by the decomposition pipeline.
 | `projection/` | Projection bases, projected-Wald p-values, chi-square helpers, and spectral `k` estimators. |
 | `multiple_testing/` | Flat BH, level-wise BH, TreeBH, and dispatch logic. |
 | `branch_length_utils.py` | Shared branch-length sanitization and tree-wide summaries. |
-| `power_analysis.py` | Power calculations for edge and sibling tests. |
 | `categorical_mahalanobis.py` | Drop-last-basis whitening for categorical distributions. |
 
 ## Runtime Flow

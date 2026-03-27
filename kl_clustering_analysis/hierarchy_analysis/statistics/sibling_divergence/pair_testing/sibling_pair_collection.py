@@ -108,49 +108,6 @@ def _resolve_structural_dimension(
     return 0.0
 
 
-def collect_significant_sibling_pairs(
-    tree: nx.DiGraph,
-    annotations_df: pd.DataFrame,
-) -> tuple[list[str], list[tuple[str, str]], list[str], list[str]]:
-    """Collect edge-significant binary-child parents for diagnostics and experiments.
-
-    Returns (parents, child_pairs, skipped, non_binary).
-    """
-    if "Child_Parent_Divergence_Significant" not in annotations_df.columns:
-        raise ValueError(
-            "Missing 'Child_Parent_Divergence_Significant' column. Run child-parent test first."
-        )
-
-    edge_significance_by_node = extract_bool_column_dict(
-        annotations_df,
-        "Child_Parent_Divergence_Significant",
-    )
-
-    parents: list[str] = []
-    child_pairs: list[tuple[str, str]] = []
-    skipped: list[str] = []
-    non_binary: list[str] = []
-
-    for parent in tree.nodes:
-        children = get_binary_children(tree, parent)
-        if children is None:
-            non_binary.append(parent)
-            continue
-
-        left, right = children
-        if not (
-            edge_significance_by_node.get(left, False)
-            or edge_significance_by_node.get(right, False)
-        ):
-            skipped.append(parent)
-            continue
-
-        parents.append(parent)
-        child_pairs.append((left, right))
-
-    return parents, child_pairs, skipped, non_binary
-
-
 def collect_sibling_pair_records(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
@@ -368,7 +325,6 @@ def count_null_focal_pairs(records: Iterable[SiblingPairRecord]) -> tuple[int, i
 
 
 __all__ = [
-    "collect_significant_sibling_pairs",
     "collect_sibling_pair_records",
     "compute_adjusted_sibling_tests",
     "count_null_focal_pairs",

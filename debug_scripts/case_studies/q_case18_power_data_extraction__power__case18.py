@@ -25,11 +25,32 @@ from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_sibling_divergence,
 )
 from benchmarks.shared.cases import get_test_cases_by_category
-from kl_clustering_analysis.hierarchy_analysis.statistics.power_analysis import (
-    power_wald_two_sample,
-    cohens_h,
-)
 from kl_clustering_analysis import config as kl_config
+
+
+def cohens_h(p1: float, p2: float) -> float:
+    """Cohen's h effect size for two proportions."""
+    p1 = np.clip(p1, 1e-10, 1 - 1e-10)
+    p2 = np.clip(p2, 1e-10, 1 - 1e-10)
+    return 2 * (np.arcsin(np.sqrt(p1)) - np.arcsin(np.sqrt(p2)))
+
+
+def power_wald_two_sample(
+    n1: float, n2: float, p1: float, p2: float,
+    alpha: float = 0.05, alternative: str = "two-sided",
+) -> float:
+    """Power for a two-sample Wald test of proportions."""
+    delta = p1 - p2
+    p_pool = (n1 * p1 + n2 * p2) / (n1 + n2)
+    var_pool = p_pool * (1 - p_pool) * (1 / n1 + 1 / n2)
+    var_alt = p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2
+    if var_pool <= 0 or var_alt <= 0:
+        return 0.0
+    ncp = delta**2 / var_alt
+    df = 1
+    alpha_adj = alpha if alternative == "two-sided" else 2 * alpha
+    critical = stats.chi2.ppf(1 - alpha_adj, df=df)
+    return float(1 - stats.ncx2.cdf(critical, df=df, nc=ncp))
 
 
 REQUIRED_STATS_COLUMNS = [

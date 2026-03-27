@@ -6,8 +6,6 @@ KL-divergence measures with NetworkX and advanced visualization capabilities.
 """
 
 __version__ = "0.1.0"
-__author__ = "Your Name"
-__email__ = "your.email@example.com"
 
 # Core modules
 from . import hierarchy_analysis

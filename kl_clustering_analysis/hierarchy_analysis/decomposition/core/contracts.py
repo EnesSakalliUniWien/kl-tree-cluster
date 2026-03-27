@@ -35,16 +35,6 @@ LEGACY_SIBLING_OPTIONAL_COLUMNS: tuple[str, ...] = ("Sibling_Test_Method",)
 
 
 @dataclass
-class ProjectedTestResult:
-    """Canonical projected test output shared by edge/sibling gates."""
-
-    statistic: float
-    degrees_of_freedom: float
-    p_value: float
-    invalid: bool = False
-
-
-@dataclass
 class GateAnnotationBundle:
     """Container for gate-annotation outputs and optional run metadata."""
 

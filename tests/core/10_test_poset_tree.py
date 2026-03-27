@@ -31,11 +31,6 @@ def _assert_laminar_and_inner_nodes_consistent(G: nx.DiGraph):
     assert inner_nodes_poset == inner_nodes_graph
 
 
-def test_from_tuples_nested_basic():
-    # Skip this test as from_nested_tuples method doesn't exist
-    pytest.skip("from_nested_tuples method not implemented")
-
-
 def test_from_tuples_edges_basic():
     # Star: a-b, b-c, b-d
     edges = [("a", "b", 2.0), ("b", "c", 1.0), ("b", "d", 3.0)]
