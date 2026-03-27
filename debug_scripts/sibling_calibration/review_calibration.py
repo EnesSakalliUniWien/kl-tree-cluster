@@ -202,7 +202,7 @@ def analyze_case(
     unique_k = sorted(set(all_struct_k))
     c_local_profile = {}
     for k in unique_k:
-        c_local_profile[k] = predict_local_inflation_factor(model, pool, k)
+        c_local_profile[k] = predict_local_inflation_factor(pool, k)
 
     # Focal pair deflation
     focal_details = []
@@ -210,7 +210,7 @@ def analyze_case(
         if r.is_null_like:
             continue
         sk = r.structural_dimension if np.isfinite(r.structural_dimension) and r.structural_dimension > 0 else r.degrees_of_freedom
-        c_local = predict_local_inflation_factor(model, pool, sk)
+        c_local = predict_local_inflation_factor(pool, sk)
         t_adj = r.stat / c_local if c_local > 0 else r.stat
         p_adj = float(chi2.sf(t_adj, df=r.degrees_of_freedom)) if r.degrees_of_freedom > 0 else float("nan")
         focal_details.append({

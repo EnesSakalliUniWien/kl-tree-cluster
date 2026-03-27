@@ -33,7 +33,6 @@ from .inflation_correction.conditional_deflation import (
     predict_local_inflation_factor,
 )
 from .inflation_correction.inflation_estimation import fit_inflation_model
-from .inflation_correction.types import CalibrationModel
 from .pair_testing.sibling_null_prior_interpolation import interpolate_sibling_null_priors
 from .pair_testing.sibling_pair_collection import (
     collect_sibling_pair_records,
@@ -51,19 +50,14 @@ logger = logging.getLogger(__name__)
 
 def _resolve_calibration(
     sibling_test_record: SiblingPairRecord,
-    model: CalibrationModel,
-    pool: PoolStats | None,
+    pool: PoolStats,
 ) -> tuple[float, str]:
     """Return the inflation adjustment and label for one sibling test."""
-    if pool is not None:
-        inflation_factor = predict_local_inflation_factor(
-            model,
-            pool,
-            sibling_test_record.structural_dimension,
-        )
-        return inflation_factor, "local_structural_k_kernel"
-    # Global model: intercept-only, same c-hat for all pairs
-    return model.global_inflation_factor, "global_weighted_mean"
+    inflation_factor = predict_local_inflation_factor(
+        pool,
+        sibling_test_record.structural_dimension,
+    )
+    return inflation_factor, "local_structural_k_kernel"
 
 
 # =============================================================================
@@ -146,7 +140,7 @@ def annotate_sibling_divergence(
     tested_parent_ids, adjusted_test_summaries, adjustment_method_labels = (
         compute_adjusted_sibling_tests(
             records,
-            resolve_inflation_adjustment=partial(_resolve_calibration, model=model, pool=pool),
+            resolve_inflation_adjustment=partial(_resolve_calibration, pool=pool),
         )
     )
 

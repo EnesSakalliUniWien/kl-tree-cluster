@@ -52,7 +52,7 @@ z_{u \to c,j}^{\mathrm{edge}}
 \end{equation}
 This standardization is applied \emph{coordinatewise}. Each feature first gets
 its own z-like score before the method combines evidence across features. For a
-parent-child edge with $p$ binary or indicator coordinates, the implementation first computes $p$ scalar standardized scores
+parent-child edge with $p$ binary or indicator coordinates, the method first computes $p$ scalar standardized scores
 $z_{u \to c,1}^{\mathrm{edge}},\dots,z_{u \to c,p}^{\mathrm{edge}}$, one for
 each feature, then stacks them into the vector
 \begin{equation}
@@ -76,7 +76,7 @@ noisy directions dominate just because they contribute many small correlated
 terms. The method therefore looks for a smaller set of parent-local directions
 that summarize the main variation seen below the parent, and it measures the
 edge deviation in that reduced space. For each parent node $u$, the
-implementation forms a local matrix $M_u$ whose rows are:
+method forms a local matrix $M_u$ whose rows are:
 \begin{enumerate}[leftmargin=1.5em]
   \item all descendant leaf vectors $X_i$ for $i \in L(u)$, and
   \item all descendant internal-node distributions $\theta_v$ for proper
@@ -100,7 +100,7 @@ C_u = \frac{1}{m_u}\widetilde{M}_u^\top \widetilde{M}_u,
 \end{equation}
 up to the standard Pearson-correlation normalization already enforced by the
 column standardization. In practice, this matrix identifies the main patterns
-of co-variation visible below the parent. When $m_u < d_u$, the implementation
+of co-variation visible below the parent. When $m_u < d_u$, the method
 switches to the dual standardized Gram matrix
 \begin{equation}
 G_u = \frac{1}{d_u}\widetilde{M}_u \widetilde{M}_u^\top,
@@ -125,7 +125,7 @@ then the corresponding feature-space direction is recovered by
 \begin{equation}
 v_{u,i} = \frac{\widetilde{M}_u^\top u_{u,i}}{\sqrt{\lambda_{u,i}}\sqrt{d_u}},
 \end{equation}
-followed by normalization. The implementation therefore obtains the same
+followed by normalization. This construction therefore obtains the same
 parent-local principal directions while replacing a potentially very large
 $d_u \times d_u$ eigendecomposition by a much smaller $m_u \times m_u$ one.
 
@@ -148,8 +148,8 @@ k_u^{\mathrm{edge}}
 \#\{i : \lambda_{u,i} > b_u^{\mathrm{MP}}\}
 \right\},
 \end{equation}
-followed by the implementation cap $k_u^{\mathrm{edge}} \le d_u$. The floor of
-$2$ is an implementation regularizer rather than part of the
+followed by the working cap $k_u^{\mathrm{edge}} \le d_u$. The floor of
+$2$ is a practical regularizer rather than part of the
 Marchenko--Pastur law itself: it keeps weak-signal or pure-noise subtrees on
 the same projected-Wald path, avoids a degenerate $k=0$ skip case, and avoids
 the numerically fragile $\chi^2(1)$ regime.
@@ -177,7 +177,7 @@ This is the practical role of the projection-and-whitening step. The projection
 rewrites the edge deviation in directions that are actually present in the
 subtree below $u$, and the whitening step stops high-variance background
 directions from dominating the test merely because they are noisy.
-Under the local correlation-model approximation used by the implementation, the
+Under the local correlation-model approximation used here, the
 resulting statistic is calibrated against a $\chi^2_{k_u^{\mathrm{edge}}}$
 reference law:
 \begin{equation}
@@ -191,9 +191,9 @@ p_{u \to c}^{\mathrm{edge}}
 T_{u \to c}^{\mathrm{edge}}
 \right).
 \end{equation}
-This calibration is exact in the pure PCA-whitened case. In the implemented
-mixed-basis path, if fewer usable PCA directions are available than the
-nominal target dimension, the implementation simply uses the available
+This calibration is exact in the pure PCA-whitened case. In the mixed-basis
+path, if fewer usable PCA directions are available than the
+nominal target dimension, the method simply uses the available
 parent-local rows rather than padding with unrelated random directions.
 \paragraph{Worked child-parent example.}
 The worked example below is intended to show the logic of the edge test, not
@@ -214,7 +214,7 @@ distributions are
 \theta_{U_2}=(0,0,1,0),\qquad
 \theta_R=(0.5,0.5,0.5,0.5).
 \end{equation}
-Because the implementation includes proper descendant internal distributions in
+Because the local spectral matrix includes proper descendant internal distributions in
 the spectral matrix, the root-local matrix is
 \begin{equation}
 M_R =
@@ -298,6 +298,6 @@ Therefore the first whitened contribution to the edge-test statistic is
 This example shows the full logic of the child-parent edge test in the same
 order as the formulas: standardize the raw difference, express it in the main
 parent-level directions, and then down-weight directions that are mostly noise.
-In larger real subtrees the implementation can use more than one such
+In larger real subtrees the method can use more than one such
 direction, but the core interpretation is already visible in this toy example.
 These $p$-values are computed for every edge in the tree.

@@ -70,18 +70,6 @@ def interpolate_sibling_null_priors(
             right_estimate.neighborhood_interpolation_weight,
         )
 
-    logger.debug(
-        "Sibling null prior interpolation: n_children=%d, tau_b=%.3f, "
-        "tau_t=%.3f, tau_s=%.3f, h_k=%.6f, n_stable=%d, n_signal=%d.",
-        len(child_ids),
-        kernel_bandwidths.tau_b,
-        kernel_bandwidths.tau_t,
-        kernel_bandwidths.tau_s,
-        kernel_bandwidths.h_k,
-        len(reference_sets.stable_nodes),
-        len(reference_sets.signal_nodes),
-    )
-
     return records
 
 

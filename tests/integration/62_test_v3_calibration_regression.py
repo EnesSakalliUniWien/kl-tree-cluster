@@ -20,7 +20,7 @@ def test_v3_selector_preserves_null_control_with_conservative_focal_tradeoff(
     monkeypatch.setattr(
         "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence"
         ".adjusted_wald_annotation.predict_local_inflation_factor",
-        lambda model, pool, structural_dimension: model.global_inflation_factor,
+        lambda pool, structural_dimension: pool.c_global,
     )
     _run_v3_assertions()
 

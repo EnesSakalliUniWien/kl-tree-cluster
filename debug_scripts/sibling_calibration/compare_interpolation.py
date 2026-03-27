@@ -161,7 +161,7 @@ def _deflate_records(records, model, pool):
     for r in records:
         if r.is_null_like:
             continue
-        c_local = predict_local_inflation_factor(model, pool, r.structural_dimension)
+        c_local = predict_local_inflation_factor(pool, r.structural_dimension)
         t_adj = r.stat / c_local
         p_adj = (
             float(chi2.sf(t_adj, df=r.degrees_of_freedom))

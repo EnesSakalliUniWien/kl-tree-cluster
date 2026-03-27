@@ -307,3 +307,54 @@ def test_interpolate_sibling_null_priors_rejects_malformed_stopping_edge_attrs()
 
     with pytest.raises(ValueError, match="Malformed _stopping_edge_info attrs payload"):
         interpolate_sibling_null_priors([record], tree, annotations_df)
+
+
+def test_interpolate_sibling_null_priors_handles_partial_child_stopping_edge_coverage() -> None:
+    tree = _build_tree()
+    annotations_df = pd.DataFrame(
+        {
+            "Child_Parent_Divergence_Tested": [True, True, True, True, False, False],
+            "Child_Parent_Divergence_Ancestor_Blocked": [False, False, False, False, True, True],
+            "Child_Parent_Divergence_Significant": [True, True, False, True, False, False],
+            "Child_Parent_Divergence_P_Value_BH": [0.01, 0.02, 0.8, 0.03, 0.61, 0.91],
+        },
+        index=["A", "B", "C", "D", "E", "F"],
+    )
+    annotations_df.attrs[STOPPING_EDGE_INFO_ATTR_KEY] = build_stopping_edge_attrs(
+        child_node_ids=["A", "B", "C", "D", "E", "F"],
+        stopping_edge_info_by_child={
+            "E": StoppingEdgeInfo(
+                stopping_child_node="C",
+                stopping_edge_p_value=0.8,
+                distance_to_stopping_edge=1.0,
+                generations_above=1,
+            ),
+        },
+        signal_neighbor_info_by_child={
+            "E": SignalNeighborInfo(sig_node="D", sig_p_value=0.03, distance_to_sig=1.0),
+        },
+    )
+
+    record = SiblingPairRecord(
+        parent="C",
+        left="E",
+        right="F",
+        stat=2.0,
+        degrees_of_freedom=2.0,
+        p_value=0.5,
+        branch_length_sum=0.1,
+        n_parent=8,
+        is_null_like=True,
+        is_gate2_blocked=True,
+        sibling_null_prior_from_edge_pvalue=0.61,
+        structural_dimension=2.0,
+    )
+
+    [enriched_record] = interpolate_sibling_null_priors([record], tree, annotations_df)
+
+    assert 0.0 <= enriched_record.sibling_null_prior_from_edge_pvalue <= 1.0
+    assert enriched_record.smoothed_sibling_null_prior is not None
+    assert enriched_record.ancestor_support is not None
+    assert enriched_record.neighborhood_reliance is not None
+    # The pair-level prior remains finite even when one child has no stopping-edge context.
+    assert enriched_record.sibling_null_prior_from_edge_pvalue <= 0.61

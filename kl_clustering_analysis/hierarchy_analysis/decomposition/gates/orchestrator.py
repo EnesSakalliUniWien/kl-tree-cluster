@@ -23,6 +23,7 @@ from .column_contracts import (
     validate_legacy_sibling_columns,
 )
 
+
 @dataclass(frozen=True)
 class _SiblingGateInputs:
     spectral_dims: dict[str, int] | None

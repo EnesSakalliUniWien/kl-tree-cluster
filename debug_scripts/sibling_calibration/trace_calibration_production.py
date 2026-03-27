@@ -193,7 +193,7 @@ def trace_case(
     for r in sorted(records, key=lambda x: x.n_parent, reverse=True):
         if r.is_null_like:
             continue
-        c_local = predict_local_inflation_factor(model, pool, r.structural_dimension)
+        c_local = predict_local_inflation_factor(pool, r.structural_dimension)
         c_global = predict_inflation_factor(model, r.branch_length_sum, r.n_parent)
         t_adj = r.stat / c_local
         p_adj = (
@@ -211,7 +211,7 @@ def trace_case(
     root_rec = [r for r in records if r.parent == root]
     if root_rec:
         rr = root_rec[0]
-        c_local = predict_local_inflation_factor(model, pool, rr.structural_dimension)
+        c_local = predict_local_inflation_factor(pool, rr.structural_dimension)
         c_global = predict_inflation_factor(model, rr.branch_length_sum, rr.n_parent)
         t_adj_local = rr.stat / c_local
         t_adj_global = rr.stat / c_global

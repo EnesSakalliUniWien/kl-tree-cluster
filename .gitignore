@@ -110,6 +110,8 @@ benchmarks/**/run_*/
 debug_output/
 *.log
 debug_scripts/diagnostics/results/enhancement_lab/
+debug_scripts/enhancement_lab/_oracle_policy_fourier_plots/
+debug_scripts/enhancement_lab/_oracle_policy_fourier_plots_one_active_1d/
 
 # Node modules (if any frontend tooling)
 node_modules/

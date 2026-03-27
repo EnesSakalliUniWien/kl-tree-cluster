@@ -89,16 +89,9 @@ def test_predict_local_inflation_factor_tracks_nearby_structural_dimensions() ->
         calibration_sibling_null_priors=np.array([1.0, 1.0, 1.0], dtype=float),
         calibration_stat_df_ratios=np.array([1.3, 3.5, 1.1], dtype=float),
     )
-    model = CalibrationModel(
-        method="weighted_mean",
-        n_calibration=3,
-        global_inflation_factor=3.0,
-        max_observed_ratio=4.0,
-    )
-
-    near_center = predict_local_inflation_factor(model, pool, structural_dimension=4.0)
-    toward_large = predict_local_inflation_factor(model, pool, structural_dimension=16.0)
-    far_out = predict_local_inflation_factor(model, pool, structural_dimension=256.0)
+    near_center = predict_local_inflation_factor(pool, structural_dimension=4.0)
+    toward_large = predict_local_inflation_factor(pool, structural_dimension=16.0)
+    far_out = predict_local_inflation_factor(pool, structural_dimension=256.0)
 
     assert near_center > toward_large
     assert 1.0 <= far_out <= pool.max_ratio
@@ -130,8 +123,41 @@ def test_predict_local_inflation_factor_falls_back_to_global_with_zero_log_k_spr
     )
 
     pool = compute_pool_stats(records, model)
-    predicted = predict_local_inflation_factor(model, pool, structural_dimension=32.0)
+    predicted = predict_local_inflation_factor(pool, structural_dimension=32.0)
 
     assert pool.bandwidth_log_structural_dimension == 0.0
     assert pool.bandwidth_status == "global_fallback_zero_log_k_spread"
+    assert predicted == model.global_inflation_factor
+
+
+def test_compute_pool_stats_falls_back_to_global_when_no_positive_weights() -> None:
+    records = [
+        _make_record(
+            "p0",
+            stat=4.0,
+            degrees_of_freedom=2.0,
+            sibling_null_prior_from_edge_pvalue=0.0,
+            structural_dimension=2.0,
+        ),
+        _make_record(
+            "p1",
+            stat=12.0,
+            degrees_of_freedom=4.0,
+            sibling_null_prior_from_edge_pvalue=0.0,
+            structural_dimension=16.0,
+        ),
+    ]
+    model = CalibrationModel(
+        method="weighted_mean",
+        n_calibration=0,
+        global_inflation_factor=1.0,
+        max_observed_ratio=3.0,
+        diagnostics={"fit_status": "neutral_no_positive_weights"},
+    )
+
+    pool = compute_pool_stats(records, model)
+    predicted = predict_local_inflation_factor(pool, structural_dimension=16.0)
+
+    assert pool.n_records == 0
+    assert pool.bandwidth_status == "global_fallback_no_positive_weights"
     assert predicted == model.global_inflation_factor

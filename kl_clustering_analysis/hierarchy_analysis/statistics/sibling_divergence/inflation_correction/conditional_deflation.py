@@ -18,11 +18,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import List
 
 import numpy as np
 
 from ..pair_testing.types import SiblingPairRecord
+from .inflation_estimation import _positive_ratio_records
 from .types import CalibrationModel
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ def _safe_weights(weights: np.ndarray) -> np.ndarray:
 
 
 def _weighted_mean(values: np.ndarray, weights: np.ndarray) -> float:
-    """Return a finite weighted mean, falling back to the unweighted mean."""
+    """Return a finite weighted mean using sanitized non-negative weights."""
     if len(values) == 0:
         return 0.0
     clean_weights = _safe_weights(weights)
@@ -84,13 +84,11 @@ class PoolStats:
 
 
 def compute_pool_stats(
-    records: List[SiblingPairRecord],
+    records: list[SiblingPairRecord],
     model: CalibrationModel,
 ) -> PoolStats:
     """Compute the local-kernel calibration pool from valid sibling records."""
-    valid = [
-        record for record in records if np.isfinite(record.stat) and record.degrees_of_freedom > 0
-    ]
+    valid = _positive_ratio_records(records)
     if not valid:
         return PoolStats(
             c_global=model.global_inflation_factor,
@@ -116,6 +114,25 @@ def compute_pool_stats(
     stat_df_ratios = np.array(
         [record.stat / record.degrees_of_freedom for record in valid], dtype=float
     )
+    positive_weight_mask = np.isfinite(sibling_null_priors) & (sibling_null_priors > 0)
+    if not np.any(positive_weight_mask):
+        return PoolStats(
+            c_global=model.global_inflation_factor,
+            mean_log_structural_dimension=0.0,
+            geometric_mean_structural_dimension=1.0,
+            bandwidth_log_structural_dimension=0.0,
+            bandwidth_status="global_fallback_no_positive_weights",
+            max_ratio=max(1.0, float(np.max(stat_df_ratios)), float(model.max_observed_ratio)),
+            n_records=0,
+            calibration_log_structural_dimensions=np.array([], dtype=float),
+            calibration_sibling_null_priors=np.array([], dtype=float),
+            calibration_stat_df_ratios=np.array([], dtype=float),
+        )
+
+    structural_dimensions = structural_dimensions[positive_weight_mask]
+    log_structural_dimensions = log_structural_dimensions[positive_weight_mask]
+    sibling_null_priors = sibling_null_priors[positive_weight_mask]
+    stat_df_ratios = stat_df_ratios[positive_weight_mask]
 
     mean_log_structural_dimension = _weighted_mean(log_structural_dimensions, sibling_null_priors)
     bandwidth = _weighted_std(log_structural_dimensions, sibling_null_priors)
@@ -132,7 +149,7 @@ def compute_pool_stats(
         bandwidth_log_structural_dimension=bandwidth,
         bandwidth_status=bandwidth_status,
         max_ratio=max(1.0, float(np.max(stat_df_ratios)), float(model.max_observed_ratio)),
-        n_records=len(valid),
+        n_records=len(stat_df_ratios),
         calibration_log_structural_dimensions=log_structural_dimensions,
         calibration_sibling_null_priors=_safe_weights(sibling_null_priors),
         calibration_stat_df_ratios=stat_df_ratios,
@@ -150,7 +167,6 @@ def compute_pool_stats(
 
 
 def predict_local_inflation_factor(
-    model: CalibrationModel,
     pool: PoolStats,
     structural_dimension: int | float,
 ) -> float:

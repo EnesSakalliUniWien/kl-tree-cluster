@@ -1,9 +1,25 @@
 % !TEX root = ../../main.tex
 
-\section{Practical Setup and Default Choices}
+\section{Online Methods}
 
-\Cref{tab:defaults} summarizes the main settings used in the current
-implementation. These settings define how the tree is built, how evidence is
+\subsection{Software implementation}
+\label{sec:software-implementation}
+
+The manuscript documents the \texttt{kl\_clustering\_analysis} software version
+\texttt{0.1.0}, which is the version identifier currently exposed by the
+repository. The reference implementation is written in Python and organizes the
+workflow into tree construction, node-level distribution summaries,
+child-parent and sibling testing, multiple-testing correction, and top-down
+traversal. Version-specific engineering choices are recorded here rather than
+in the main method narrative. In the software described here, the sibling basis
+starts with the parent PCA directions and uses orthonormal padding if the
+requested dimension exceeds the available parent rank; internal APIs can expose
+child PCA projections, but the default basis constructor does not use them.
+
+\subsection{Default analysis settings}
+
+\Cref{tab:defaults} summarizes the default settings used in the software
+described here. These settings define how the tree is built, how evidence is
 combined across the tree, and how final cluster decisions are made.
 
 \begin{table}[ht]
@@ -28,11 +44,11 @@ Sibling multiple-testing correction & Flat BH on focal pairs \\
 Pass-through traversal & On \\
 \bottomrule
 \end{tabularx}
-\caption{Main settings used in the current implementation.}
+\caption{Default analysis settings used in the software documented here.}
 \label{tab:defaults}
 \end{table}
 
-Two aspects of the setup deserve special emphasis. First, the two tests do not
+Two aspects of these defaults deserve special emphasis. First, the two tests do not
 combine information in the same way. The child-parent edge test asks whether a
 child leaves the background defined by its parent. The sibling test then asks
 whether the two children are different enough from one another to justify

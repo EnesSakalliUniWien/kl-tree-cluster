@@ -44,7 +44,7 @@ z_{u,j}^{\mathrm{sib}}
 }}.
 \end{equation}
 The sibling test then asks how to combine this multi-feature contrast into one
-summary score. The current runtime reuses the spectral information already
+summary score. The method reuses the spectral information already
 computed during the child-parent stage rather than drawing a fresh random
 projection from scratch. For a binary parent $u$ with children $l(u)$ and
 $r(u)$, let $k_{l(u)}^{\mathrm{edge}}$ and $k_{r(u)}^{\mathrm{edge}}$ denote
@@ -78,10 +78,9 @@ The projection basis starts with the parent node, not a fresh random draw. The
 first available parent PCA directions, where PCA refers to principal-component
 directions summarizing the main variation at that parent, are used up to
 $k_u^{\mathrm{sib}}$. If the requested sibling dimension exceeds the available
-parent PCA rank, the remaining rows are filled with random orthonormal padding
-directions. The runtime API accepts child PCA projections as an input, but the
-current production basis builder does not use them, so the actual basis is a
-parent-PCA head with a random padded tail.
+parent PCA rank, the remaining rows are filled with orthonormal padding
+directions. Version-specific basis-construction details are summarized in
+\Cref{sec:software-implementation}.
 
 If $P_u \in \mathbb{R}^{k_u^{\mathrm{sib}} \times p}$ denotes this sibling
 projection basis, the raw sibling statistic is
@@ -96,7 +95,7 @@ The default p-value calculation is deliberately conservative. After
 projection, the method asks whether the observed squared contrast is larger
 than would be expected from ordinary within-parent sampling noise, while still
 allowing different projected directions to have different variances. In the
-current implementation, this is done with a Satterthwaite moment match, meaning
+method described here, this is done with a Satterthwaite moment match, meaning
 an approximation that replaces the exact null law by a scaled chi-square law
 with the same first two moments, for the
 PCA-derived part of the test and plain $\chi^2(1)$ contributions for any added
@@ -240,7 +239,7 @@ global adjustment factor from the sibling statistics themselves, using the
 edge-test $p$-values as continuous weights. For every binary parent $q$, let
 $T_q^{\mathrm{raw}}$ be the raw sibling statistic and let $\nu_q$ be the
 effective sibling degrees of freedom returned by the projected-Wald kernel. The
-inflation ratio used in the implementation is
+inflation ratio is
 \begin{equation}
 r_q = \frac{T_q^{\mathrm{raw}}}{\nu_q}.
 \end{equation}
@@ -254,7 +253,7 @@ where $p^{\mathrm{edge}}_{l(q)}$ and $p^{\mathrm{edge}}_{r(q)}$ are the
 Benjamini--Hochberg-corrected edge-test $p$-values of the two children. Pairs where neither
 child is edge-significant receive large weights and dominate the estimate,
 while pairs with genuine cluster signal receive small weights and are
-down-weighted. In the runtime, child edges that were blocked or never tested
+down-weighted. For this calibration step, child edges that were blocked or never tested
 are treated as $p=1$ for this calibration weight only. The global inflation
 factor is then the
 weighted mean
@@ -281,11 +280,11 @@ small, the weights are approximately equal, and the weighted mean of $r_q$
 still recovers the true inflation $\hat{c} \approx 3$.
 
 \paragraph{Runtime deflation and sibling false-discovery-rate correction.}
-The implementation first fits one global weighted-mean inflation level
+The method first fits one global weighted-mean inflation level
 $\hat{c}_{\mathrm{global}}$. It then localizes that correction in the
 decomposition-derived sibling structural dimension
 $k_q^{\mathrm{struct}}$. This structural dimension is the same quantity used to
-choose the sibling projection dimension at runtime. As a result, the
+choose the sibling projection dimension. As a result, the
 calibration neighborhood is defined in the same geometric coordinate system as
 the test itself.
 
@@ -335,8 +334,8 @@ p_u^{\mathrm{sib}}
 =
 \Pr\!\left(\chi^2_{\nu_u} \ge T_u^{\mathrm{adj}}\right).
 \end{equation}
-This is the literal runtime rule used after deflation. It should be read as a
-practical calibration layer for post-selection inflation rather than as a
+This adjusted test should be read as a practical calibration layer for
+post-selection inflation rather than as a
 separate finite-sample exact theorem for the adjusted sibling statistic.
 
 The sibling multiplicity correction is ordinary

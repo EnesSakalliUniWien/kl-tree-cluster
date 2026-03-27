@@ -36,6 +36,17 @@ def _neutral_calibration_model(fit_status: str) -> CalibrationModel:
     )
 
 
+def _positive_ratio_records(records: list[SiblingPairRecord]) -> list[SiblingPairRecord]:
+    """Return finite-stat, positive-df, positive-ratio records."""
+    return [
+        record
+        for record in records
+        if np.isfinite(record.stat)
+        and record.degrees_of_freedom > 0
+        and (record.stat / record.degrees_of_freedom) > 0
+    ]
+
+
 def fit_inflation_model(
     records: list[SiblingPairRecord],
 ) -> CalibrationModel:
@@ -57,22 +68,29 @@ def fit_inflation_model(
         )
         return _neutral_calibration_model("neutral_no_data")
 
-    stat_df_ratios = np.array([record.stat / record.degrees_of_freedom for record in valid_records])
-    sibling_null_priors = np.array(
-        [record.sibling_null_prior_from_edge_pvalue for record in valid_records]
-    )
-    # Filter out non-positive ratios (can happen with degenerate pairs)
-    positive_ratio_mask = stat_df_ratios > 0
-    stat_df_ratios = stat_df_ratios[positive_ratio_mask]
-    sibling_null_priors = sibling_null_priors[positive_ratio_mask]
-
-    if len(stat_df_ratios) == 0 or sibling_null_priors.sum() == 0:
+    positive_ratio_records = _positive_ratio_records(valid_records)
+    if not positive_ratio_records:
         logger.warning(
-            "Continuous-weight calibration: no positive-ratio pairs — " "using neutral c-hat = 1.0."
+            "Continuous-weight calibration: no positive-ratio pairs — using neutral c-hat = 1.0."
         )
         return _neutral_calibration_model("neutral_no_positive_ratios")
 
+    stat_df_ratios = np.array(
+        [record.stat / record.degrees_of_freedom for record in positive_ratio_records]
+    )
+    sibling_null_priors = np.array(
+        [record.sibling_null_prior_from_edge_pvalue for record in positive_ratio_records]
+    )
     max_observed_ratio = max(float(np.max(stat_df_ratios)), 1.0)
+    positive_weight_mask = np.isfinite(sibling_null_priors) & (sibling_null_priors > 0)
+    if not np.any(positive_weight_mask):
+        logger.warning(
+            "Continuous-weight calibration: no positive-weight pairs — using neutral c-hat = 1.0."
+        )
+        return _neutral_calibration_model("neutral_no_positive_weights")
+
+    stat_df_ratios = stat_df_ratios[positive_weight_mask]
+    sibling_null_priors = sibling_null_priors[positive_weight_mask]
 
     inflation_factor = float(np.average(stat_df_ratios, weights=sibling_null_priors))
 
@@ -90,7 +108,7 @@ def fit_inflation_model(
 
     diagnostics = {
         "fit_status": "weighted_mean",
-        "n_valid_pairs": len(stat_df_ratios),
+        "n_valid_pairs": len(positive_ratio_records),
         "n_contributing": contributing_pair_count,
         "effective_n": effective_sample_size,
         "max_observed_ratio": max_observed_ratio,

@@ -26,7 +26,7 @@ if and only if all three conditions hold:
 If these conditions hold, traversal continues into both children. Otherwise the
 method would ordinarily stop and declare $u$ a terminal cluster.
 
-However, the implementation also enables pass-through traversal. Let
+One traversal variant also allows pass-through splitting. Let
 $D^{\mathrm{sib}}(u)$ be the indicator that some proper descendant of $u$ has a
 significant non-skipped sibling split. Then the traversal still descends into
 both children when
@@ -39,6 +39,6 @@ S^{\mathrm{edge}}(l(u)) \vee S^{\mathrm{edge}}(r(u)) = 1,
 \qquad
 D^{\mathrm{sib}}(u) = 1.
 \end{equation}
-This is the pass-through rule used to prevent a shallow sibling-test failure from
+This pass-through rule is used to prevent a shallow sibling-test failure from
 masking deeper structure. The terminal nodes returned by this traversal define
 the final cluster partition directly.
