@@ -111,7 +111,7 @@ Relevant code:
 
 - [config.py](/Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/config.py)
 - [gate_evaluator.py](/Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py)
-- [traversal.py](/Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/decomposition/gates/traversal.py)
+- [tree_decomposition.py](/Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py)
 
 In contrast, `leiden` and `louvain` work on a k-NN graph built from the benchmark distance matrix and can recover local communities without requiring one globally certifiable binary split near the root.
 

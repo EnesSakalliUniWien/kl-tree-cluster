@@ -22,7 +22,6 @@ from .decomposition.backends.random_projection_backend import (
 )
 from .decomposition.gates.gate_evaluator import GateEvaluator
 from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
-from .decomposition.gates.traversal import iterate_worklist, process_node
 
 
 class TreeDecomposition:
@@ -305,8 +304,19 @@ class TreeDecomposition:
         final_leaf_sets: list[set[str]] = []
         processed: set[str] = set()
 
-        for node in iterate_worklist(nodes_to_visit, processed):
-            process_node(node, self._gate, nodes_to_visit, final_leaf_sets)
+        while nodes_to_visit:
+            node = nodes_to_visit.pop()
+            if node in processed:
+                continue
+            processed.add(node)
+
+            if self._gate.should_split(node) or self._gate.should_pass_through(node):
+                left_child, right_child = self._children[node]
+                nodes_to_visit.append(right_child)
+                nodes_to_visit.append(left_child)
+                continue
+
+            final_leaf_sets.append(set(self._descendant_leaf_sets[node]))
 
         cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
 
