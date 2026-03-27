@@ -29,6 +29,8 @@ def run_projected_wald_kernel(
     tuple[float, int, float, float]
         ``(statistic, nominal_k, effective_df, p_value)``
     """
+    del child_pca_projections
+
     if spectral_k is None or spectral_k <= 0:
         return (float("nan"), 0, float("nan"), float("nan"))
 
@@ -41,7 +43,6 @@ def run_projected_wald_kernel(
         k=projection_dim,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
-        child_pca_projections=child_pca_projections,
         random_state=seed,
     )
 

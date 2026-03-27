@@ -137,15 +137,15 @@ def derive_sibling_child_pca_projections(
     annotated_df: pd.DataFrame,
     sibling_dims: dict[str, int] | None,
 ) -> dict[str, list[np.ndarray]] | None:
-    """Extract per-child PCA projections for orthogonal-complement padding.
+    """Extract per-child PCA projections for debug and experimental analysis.
 
     For each binary parent P with children L, R, collects the child PCA
     projection matrices (from Gate 2's ``_pca_projections``) into a list
     ``[V_L, V_R]`` keyed by parent node ID.
 
-    These are used by :func:`build_projection_basis_with_padding` to construct
-    orthogonal-complement padding rows when the parent PCA has fewer than
-    ``spectral_k`` components.
+    The live production projected-Wald kernel does not consume these child
+    projections; this helper remains available for diagnostic scripts that
+    inspect or compare alternative padding strategies offline.
 
     Returns
     -------

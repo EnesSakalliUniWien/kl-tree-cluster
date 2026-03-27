@@ -14,7 +14,6 @@ from ...statistics.child_parent_divergence import annotate_child_parent_divergen
 from ...statistics.projection.chi2_pvalue import WhiteningMode
 from ...statistics.sibling_divergence import annotate_sibling_divergence
 from ...statistics.sibling_divergence.sibling_config import (
-    derive_sibling_child_pca_projections,
     derive_sibling_pca_projections,
     derive_sibling_spectral_dims,
 )
@@ -41,7 +40,6 @@ class _SiblingGateInputs:
     spectral_dims: dict[str, int] | None
     pca_projections: dict[str, np.ndarray] | None
     pca_eigenvalues: dict[str, np.ndarray] | None
-    child_pca_projections: dict[str, list[np.ndarray]] | None
 
 
 def _build_column_names_metadata(
@@ -106,7 +104,6 @@ def _resolve_sibling_gate_inputs(
     sibling_spectral_dims: dict[str, int] | None,
     sibling_pca_projections: dict[str, np.ndarray] | None,
     sibling_pca_eigenvalues: dict[str, np.ndarray] | None,
-    sibling_child_pca_projections: dict[str, list[np.ndarray]] | None,
 ) -> _SiblingGateInputs:
     """Resolve optional Gate 3 inputs from explicit args or Gate 2 attrs."""
     resolved_spectral_dims = sibling_spectral_dims
@@ -121,19 +118,10 @@ def _resolve_sibling_gate_inputs(
             resolved_pca_eigenvalues,
         ) = derive_sibling_pca_projections(edge_annotated_df, resolved_spectral_dims)
 
-    resolved_child_pca_projections = sibling_child_pca_projections
-    if resolved_child_pca_projections is None:
-        resolved_child_pca_projections = derive_sibling_child_pca_projections(
-            tree,
-            edge_annotated_df,
-            resolved_spectral_dims,
-        )
-
     return _SiblingGateInputs(
         spectral_dims=resolved_spectral_dims,
         pca_projections=resolved_pca_projections,
         pca_eigenvalues=resolved_pca_eigenvalues,
-        child_pca_projections=resolved_child_pca_projections,
     )
 
 
@@ -148,7 +136,6 @@ def run_gate_annotation_pipeline(
     sibling_spectral_dims: dict[str, int] | None = None,
     sibling_pca_projections: dict[str, np.ndarray] | None = None,
     sibling_pca_eigenvalues: dict[str, np.ndarray] | None = None,
-    sibling_child_pca_projections: dict[str, list[np.ndarray]] | None = None,
     sibling_whitening: WhiteningMode = config.SIBLING_WHITENING,
 ) -> GateAnnotationBundle:
     """Run Gate 2 (edge) and Gate 3 (sibling) annotation pipeline.
@@ -177,7 +164,6 @@ def run_gate_annotation_pipeline(
         sibling_spectral_dims=sibling_spectral_dims,
         sibling_pca_projections=sibling_pca_projections,
         sibling_pca_eigenvalues=sibling_pca_eigenvalues,
-        sibling_child_pca_projections=sibling_child_pca_projections,
     )
 
     # Run Gate 3: sibling divergence tests
@@ -189,7 +175,6 @@ def run_gate_annotation_pipeline(
         spectral_dims=sibling_inputs.spectral_dims,
         pca_projections=sibling_inputs.pca_projections,
         pca_eigenvalues=sibling_inputs.pca_eigenvalues,
-        child_pca_projections=sibling_inputs.child_pca_projections,
         whitening=sibling_whitening,
     )
     output_edge_columns = validate_legacy_edge_columns(
