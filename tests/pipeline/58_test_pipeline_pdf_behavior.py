@@ -40,6 +40,7 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
         *,
         pdf=None,
     ):
+        del computed_results, plot_umap, plot_manifold
         called["save_png"] = save_png
         called["collect_figs"] = collect_figs
         called["include_cover_pages"] = include_cover_pages
@@ -51,7 +52,7 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
     )
 
     # With concat_plots_pdf=True, pipeline streams to PdfPages and never emits PNGs.
-    df, fig = pipeline.benchmark_cluster_algorithm(
+    _df, _fig = pipeline.benchmark_cluster_algorithm(
         test_cases=[],
         verbose=True,
         concat_plots_pdf=True,

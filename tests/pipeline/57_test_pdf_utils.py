@@ -1,6 +1,4 @@
-import os
 from pathlib import Path
-import tempfile
 import matplotlib
 
 matplotlib.use("Agg")
@@ -9,11 +7,6 @@ from PIL import Image
 
 from benchmarks.shared.util.pdf.figure_split import (
     split_collected_figs_to_pdfs,
-)
-from benchmarks.shared.util.pdf.image_concat import (
-    concat_plots_to_pdf,
-    concat_tree_plots,
-    concat_umap_plots,
 )
 
 

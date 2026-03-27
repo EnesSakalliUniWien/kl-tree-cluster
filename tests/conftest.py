@@ -80,6 +80,7 @@ def pytest_runtest_logreport(report):  # type: ignore[no-untyped-def]
 
 
 def pytest_sessionfinish(session, exitstatus):  # type: ignore[no-untyped-def]
+    del exitstatus
     if not _PROGRESS.enabled:
         return
     terminal_reporter = session.config.pluginmanager.getplugin("terminalreporter")
