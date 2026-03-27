@@ -233,7 +233,6 @@ def _collect_case_frame(case_name: str, *, n_permutations: int) -> pd.DataFrame:
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,
         pca_eigenvalues=sibling_eig,
-        child_pca_projections=sibling_child_pca,
         whitening=config.SIBLING_WHITENING,
     )
 
@@ -268,7 +267,6 @@ def _collect_case_frame(case_name: str, *, n_permutations: int) -> pd.DataFrame:
             spectral_k=int(record.degrees_of_freedom),
             pca_projection=pca_proj,
             pca_eigenvalues=pca_eig,
-            child_pca_projections=child_pca,
             whitening=config.SIBLING_WHITENING,
             n_permutations=n_permutations,
         )

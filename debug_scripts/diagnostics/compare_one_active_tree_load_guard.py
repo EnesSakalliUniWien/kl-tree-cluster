@@ -139,7 +139,6 @@ def _fit_tree_load_thresholds() -> Thresholds:
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalues,
-            child_pca_projections=child_pca_projections,
             whitening=whitening,
         )
 
@@ -350,7 +349,6 @@ def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalues,
-            child_pca_projections=child_pca_projections,
             whitening=whitening,
         )
 

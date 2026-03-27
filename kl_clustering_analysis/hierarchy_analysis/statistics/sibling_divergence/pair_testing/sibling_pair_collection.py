@@ -159,7 +159,6 @@ def collect_sibling_pair_records(
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
-    child_pca_projections: dict[str, list[np.ndarray]] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> tuple[list[SiblingPairRecord], list[str]]:
     """Collect raw sibling-test records for ALL binary-child parent nodes.
@@ -246,9 +245,6 @@ def collect_sibling_pair_records(
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=node_pca_eigenvalues,
-            child_pca_projections=(
-                child_pca_projections.get(parent) if child_pca_projections else None
-            ),
             whitening=whitening,
         )
 

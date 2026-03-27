@@ -75,7 +75,6 @@ def collect_pairs_for_case(case_name: str) -> list[dict]:
         spectral_dims=spectral_dims,
         pca_projections=pca_proj,
         pca_eigenvalues=pca_eig,
-        child_pca_projections=child_pca,
         whitening=config.SIBLING_WHITENING,
     )
 

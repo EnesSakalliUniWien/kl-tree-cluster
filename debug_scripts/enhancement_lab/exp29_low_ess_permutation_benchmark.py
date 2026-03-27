@@ -157,7 +157,6 @@ def collect_permutation_pairs(
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,
         pca_eigenvalues=sibling_eig,
-        child_pca_projections=sibling_child_pca,
         whitening=config.SIBLING_WHITENING,
     )
 
@@ -191,7 +190,6 @@ def collect_permutation_pairs(
             spectral_k=int(record.degrees_of_freedom),
             pca_projection=pca_proj,
             pca_eigenvalues=pca_eig,
-            child_pca_projections=child_pca,
             whitening=config.SIBLING_WHITENING,
             n_permutations=n_permutations,
         )

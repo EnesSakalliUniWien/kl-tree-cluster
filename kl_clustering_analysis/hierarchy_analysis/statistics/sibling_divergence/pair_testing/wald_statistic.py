@@ -94,7 +94,6 @@ def sibling_divergence_test(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
-    child_pca_projections: list[np.ndarray] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence.
@@ -165,7 +164,6 @@ def sibling_divergence_test(
         spectral_k=spectral_k,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
-        child_pca_projections=child_pca_projections,
         whitening=whitening,
     )
 

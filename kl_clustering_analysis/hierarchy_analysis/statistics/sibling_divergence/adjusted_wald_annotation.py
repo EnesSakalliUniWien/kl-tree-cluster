@@ -79,7 +79,6 @@ def annotate_sibling_divergence_adjusted(
     spectral_dims: Dict[str, int] | None = None,
     pca_projections: Dict[str, np.ndarray] | None = None,
     pca_eigenvalues: Dict[str, np.ndarray] | None = None,
-    child_pca_projections: Dict[str, list[np.ndarray]] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-adjusted Wald.
@@ -122,7 +121,6 @@ def annotate_sibling_divergence_adjusted(
         spectral_dims=spectral_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
-        child_pca_projections=child_pca_projections,
         whitening=whitening,
     )
 

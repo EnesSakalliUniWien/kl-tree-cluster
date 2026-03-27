@@ -118,7 +118,6 @@ def _patch_one_active_feature_to_1d() -> dict[str, int]:
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalues,
-            child_pca_projections=child_pca_projections,
             whitening=whitening,
         )
 

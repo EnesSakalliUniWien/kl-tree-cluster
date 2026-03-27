@@ -164,7 +164,6 @@ def _collect_case_pairs(case_name: str) -> tuple[list[PairOutcome], CaseCalibrat
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,
         pca_eigenvalues=sibling_eig,
-        child_pca_projections=sibling_child_pca,
         whitening=config.SIBLING_WHITENING,
     )
 

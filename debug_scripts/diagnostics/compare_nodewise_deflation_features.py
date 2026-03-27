@@ -207,7 +207,6 @@ def _case_features(case: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         spectral_dims=sibling_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
-        child_pca_projections=child_pca,
         whitening=config.SIBLING_WHITENING,
     )
 

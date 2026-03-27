@@ -16,7 +16,6 @@ def run_projected_wald_kernel(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
-    child_pca_projections: list[np.ndarray] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> tuple[float, int, float, float]:
     """Project a standardized vector and compute Wald statistic/p-value.
@@ -29,8 +28,6 @@ def run_projected_wald_kernel(
     tuple[float, int, float, float]
         ``(statistic, nominal_k, effective_df, p_value)``
     """
-    del child_pca_projections
-
     if spectral_k is None or spectral_k <= 0:
         return (float("nan"), 0, float("nan"), float("nan"))
 

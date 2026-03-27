@@ -118,7 +118,6 @@ def _compute_t_from_leaf_data(
         spectral_k=spectral_k,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
-        child_pca_projections=child_pca_projections,
         whitening=whitening,
     )
     return t_stat
@@ -307,7 +306,6 @@ def run_case(case_name: str) -> tuple[str, list[NodeResult], ParametricModel | N
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,
         pca_eigenvalues=sibling_eig,
-        child_pca_projections=sibling_child_pca,
         whitening=config.SIBLING_WHITENING,
     )
 
@@ -348,7 +346,6 @@ def run_case(case_name: str) -> tuple[str, list[NodeResult], ParametricModel | N
             spectral_k=k,
             pca_projection=pca_proj,
             pca_eigenvalues=pca_eig,
-            child_pca_projections=child_pca,
             whitening=config.SIBLING_WHITENING,
         )
 

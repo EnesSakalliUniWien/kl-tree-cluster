@@ -76,7 +76,6 @@ def main() -> None:
                 spectral_dims=spectral_dims,
                 pca_projections=pca_projections,
                 pca_eigenvalues=pca_eigenvalues,
-                child_pca_projections=child_pca_projections,
                 whitening=config.SIBLING_WHITENING,
             )
 

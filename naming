@@ -1,0 +1,232 @@
+
+
+Let me first read the current file and do broader exploration to understand the naming landscape. 
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/fdr_annotation.py#1-1), lines 1 to 80
+
+Explore stopping_edge naming landscape
+
+Searched for files matching `**/stopping_edge_recovery`, no matches
+
+Searched for files matching `**/sibling_null_prior_interpolation`, no matches
+
+Searched for text `StoppingEdgeInfo`, 20 results
+
+Searched for files matching `**/child_parent_divergence.py`, 1 match
+
+Searched for files matching `**/stopping_edge_recovery/*.py`, 5 matches
+
+Searched for text `recover_signal_neighbors`, 11 results
+
+Searched for text `build_tree_distance_resolver`, 3 results
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/models.py)
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/signals.py#76-76), lines 76 to 111
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/_tree.py)
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/edge_metadata.py#1-1), lines 1 to 60
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/child_parent_divergence/child_parent_divergence.py#1-1), lines 1 to 250
+
+Searched for text `annotations_df[` (`**/kl_clustering_analysis/hierarchy_analysis/statistics/**/*.py`), 4 results
+
+Searched for text `.attrs[` (`**/kl_clustering_analysis/hierarchy_analysis/statistics/**/*.py`), 12 results
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/child_parent_divergence/child_parent_divergence.py#240-240), lines 240 to 259
+
+Searched for text `assign_divergence_results` (`**/kl_clustering_analysis/core_utils/data_utils.py`), 1 result
+
+Searched for text `build_tree_distance` (`**/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/edge_metadata.py`), 2 results
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/core_utils/data_utils.py#120-120), lines 120 to 200
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/edge_metadata.py#101-101), lines 101 to 120
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/core_utils/data_utils.py#180-180), lines 180 to 200
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/stopping_edges.py#1-1), lines 1 to 80
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/signals.py)
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/stopping_edges.py#60-60), lines 60 to 147
+
+Searched for text `.attrs.update(`, no results
+
+Searched for text `.attrs.get(`, 20 results
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/fdr_annotation.py#1-1), lines 1 to 100
+
+Searched for text `annotations_df[` (`**/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/*.py`), no results
+
+Searched for text `.attrs[` (`**/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/*.py`), 5 results
+
+Searched for text `initialize_sibling_divergence_columns` (`**/kl_clustering_analysis/core_utils/data_utils.py`), 1 result
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/adjusted_wald_annotation.py#100-100), lines 100 to 240
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/standard_wald_annotation.py#120-120), lines 120 to 220
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/core_utils/data_utils.py#217-217), lines 217 to 260
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/__init__.py)
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/parametric_wald_annotation.py#210-210), lines 210 to 231
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/adjusted_wald_annotation.py#250-250), lines 250 to 276
+
+Searched for regex `^def ` (`**/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/*.py`), 9 results
+
+Searched for text `.attrs[` (`**/kl_clustering_analysis/hierarchy_analysis/statistics/child_parent_divergence/*.py`), 7 results
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/stopping_edges.py#14-14), lines 14 to 55
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/stopping_edges.py#122-122), lines 122 to 140
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/_tree.py)
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/multiple_testing/stopping_edge_recovery/stopping_edges.py#59-59), lines 59 to 125
+
+Searched for regex `\.attrs\[.*\]` (`**/kl_clustering_analysis/hierarchy_analysis/statistics/**/*.py`), 12 results
+
+Read [](file:///Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/standard_wald_annotation.py#220-220), lines 220 to 236
+
+Read [](file:///Users/berksakalli/Library/Application%20Support/Code/User/workspaceStorage/a0bcadf7a15f25b4e9b85aad8eee2ca5/GitHub.copilot-chat/chat-session-resources/19800afe-2422-4224-a1b1-7bcee065bba9/toolu_bdrk_01JEfyqGM79mBZAuG3kWbUW5__vscode-1774276199664/content.txt#1-1), lines 1 to 200
+
+Read [](file:///Users/berksakalli/Library/Application%20Support/Code/User/workspaceStorage/a0bcadf7a15f25b4e9b85aad8eee2ca5/GitHub.copilot-chat/chat-session-resources/19800afe-2422-4224-a1b1-7bcee065bba9/toolu_bdrk_01JEfyqGM79mBZAuG3kWbUW5__vscode-1774276199664/content.txt#200-200), lines 200 to 338
+
+Analyzing your answers...
+
+Find all DataFrame column consumers
+
+Searched for regex `Child_Parent_Divergence_P_Value|Child_Parent_Divergence_P_Value_BH|Child_Parent_Divergence_Significant|Child_Parent_Divergence_df|Child_Parent_Divergence_Invalid|Child_Parent_Divergence_Tested|Child_Parent_Divergence_Ancestor_Blocked` (`**/kl_clustering_analysis/**`), 50 results
+
+Searched for regex `Sibling_Test_Statistic|Sibling_Degrees_of_Freedom|Sibling_Divergence_P_Value|Sibling_Divergence_P_Value_Corrected|Sibling_Divergence_Invalid|Sibling_BH_Different|Sibling_BH_Same|Sibling_Divergence_Skipped|Sibling_Test_Method` (`**/kl_clustering_analysis/**`), 51 results
+
+Searched for regex `_stopping_edge_info|_spectral_dims|_pca_projections|_pca_eigenvalues|_edge_raw_test_data|child_parent_divergence_audit|sibling_divergence_audit|_calibration_model|_single_feature_subtree_audit` (`**/kl_clustering_analysis/**`), 181 results
+
+Searched for regex `Child_Parent_Divergence_P_Value|Child_Parent_Divergence_P_Value_BH|Child_Parent_Divergence_Significant|Child_Parent_Divergence_df|Child_Parent_Divergence_Invalid|Child_Parent_Divergence_Tested|Child_Parent_Divergence_Ancestor_Blocked` (`**/tests/**`), 37 results
+
+Searched for regex `Sibling_Test_Statistic|Sibling_Degrees_of_Freedom|Sibling_Divergence_P_Value|Sibling_Divergence_P_Value_Corrected|Sibling_Divergence_Invalid|Sibling_BH_Different|Sibling_BH_Same|Sibling_Divergence_Skipped|Sibling_Test_Method` (`**/tests/**`), 72 results
+
+Searched for regex `_stopping_edge_info|_spectral_dims|_pca_projections|_pca_eigenvalues|_edge_raw_test_data|child_parent_divergence_audit|sibling_divergence_audit|_calibration_model|_single_feature_subtree_audit` (`**/tests/**`), 15 results
+
+Searched for regex `Child_Parent_Divergence_P_Value|Child_Parent_Divergence_P_Value_BH|Child_Parent_Divergence_Significant|Child_Parent_Divergence_df|Child_Parent_Divergence_Invalid|Child_Parent_Divergence_Tested|Child_Parent_Divergence_Ancestor_Blocked|Sibling_Test_Statistic|Sibling_Degrees_of_Freedom|Sibling_Divergence_P_Value|Sibling_Divergence_P_Value_Corrected|Sibling_Divergence_Invalid|Sibling_BH_Different|Sibling_BH_Same|Sibling_Divergence_Skipped|Sibling_Test_Method` (`**/debug_scripts/**`), 200 results
+
+Searched for regex `_stopping_edge_info|_spectral_dims|_pca_projections|_pca_eigenvalues|_edge_raw_test_data|child_parent_divergence_audit|sibling_divergence_audit|_calibration_model|_single_feature_subtree_audit` (`**/debug_scripts/**`), 200 results
+
+Searched for regex `Child_Parent_Divergence_P_Value|Child_Parent_Divergence_P_Value_BH|Child_Parent_Divergence_Significant|Child_Parent_Divergence_df|Child_Parent_Divergence_Invalid|Child_Parent_Divergence_Tested|Child_Parent_Divergence_Ancestor_Blocked|Sibling_Test_Statistic|Sibling_Degrees_of_Freedom|Sibling_Divergence_P_Value|Sibling_Divergence_P_Value_Corrected|Sibling_Divergence_Invalid|Sibling_BH_Different|Sibling_BH_Same|Sibling_Divergence_Skipped|Sibling_Test_Method` (`**/benchmarks/**`), 131 results
+
+Searched for regex `_stopping_edge_info|_spectral_dims|_pca_projections|_pca_eigenvalues|_edge_raw_test_data|child_parent_divergence_audit|sibling_divergence_audit|_calibration_model|_single_feature_subtree_audit` (`**/benchmarks/**`), 6 results
+
+Searched for regex `Child_Parent_Divergence_P_Value|Child_Parent_Divergence_P_Value_BH|Child_Parent_Divergence_Significant|Child_Parent_Divergence_df|Sibling_Test_Statistic|Sibling_Degrees_of_Freedom|Sibling_Divergence_P_Value|Sibling_Divergence_P_Value_Corrected|Sibling_BH_Different|Sibling_BH_Same|Sibling_Divergence_Skipped|_stopping_edge_info|_spectral_dims|_pca_projections|sibling_divergence_audit` (`**/copilot-instructions.md`), no results
+
+Read [](file:///Users/berksakalli/Library/Application%20Support/Code/User/workspaceStorage/a0bcadf7a15f25b4e9b85aad8eee2ca5/GitHub.copilot-chat/chat-session-resources/19800afe-2422-4224-a1b1-7bcee065bba9/toolu_bdrk_01MKyQUDf3Xwa3NzSAK6BPhV__vscode-1774276199712/content.txt#1-1), lines 1 to 100
+
+Read [](file:///Users/berksakalli/Library/Application%20Support/Code/User/workspaceStorage/a0bcadf7a15f25b4e9b85aad8eee2ca5/GitHub.copilot-chat/chat-session-resources/19800afe-2422-4224-a1b1-7bcee065bba9/toolu_bdrk_01MKyQUDf3Xwa3NzSAK6BPhV__vscode-1774276199712/content.txt#100-100), lines 100 to 240
+
+Read [](file:///Users/berksakalli/Library/Application%20Support/Code/User/workspaceStorage/a0bcadf7a15f25b4e9b85aad8eee2ca5/GitHub.copilot-chat/chat-session-resources/19800afe-2422-4224-a1b1-7bcee065bba9/toolu_bdrk_01MKyQUDf3Xwa3NzSAK6BPhV__vscode-1774276199712/content.txt#240-240), lines 240 to 410
+
+This is a massive rename scope. Let me now create the plan.  
+
+Analyzing your answers...
+
+Created memory file [](file:///Users/berksakalli/Library/Application%20Support/Code/User/workspaceStorage/a0bcadf7a15f25b4e9b85aad8eee2ca5/GitHub.copilot-chat/memory-tool/memories/MTk4MDBhZmUtMjQyMi00MjI0LWExYjEtN2JjZWUwNjViYmE5/plan.md)
+
+## Plan: Statistical Naming Refactor & Stopping-Edge Dedup
+
+Rename all DataFrame columns, attrs keys, and dataclasses to use consistent, fully spelled-out, test-named statistical conventions. Also dedup `StoppingEdgeInfo`, consolidate tree-distance builders, and remove the dead `depths` parameter. Full scope: production, tests, debug_scripts, benchmarks, copilot-instructions.
+
+---
+
+### Phase 1 — Structural Dedup (no column renames — do first)
+
+**1.1 Consolidate tree-distance builder**
+- Canonical location: `stopping_edge_recovery/_tree.py` → `build_tree_distance_resolver()`
+- Delete duplicate `build_tree_distance()` from edge_metadata.py
+- Update importers to use canonical version
+- Standardize on `float("inf")` (drop `_DISTANCE_INF = 1e12`)
+
+**1.2 Dedup StoppingEdgeInfo**
+- Keep 4-field `StoppingEdgeInfo` in `stopping_edge_recovery/models.py`
+- Rename 2-field version in edge_metadata.py → `StoppingEdgeSummary` (it's a reduced projection, structurally different)
+
+**1.3 Remove dead `depths` parameter**
+- Remove from `recover_signal_neighbors()` signature and its caller in child_parent_divergence.py
+
+**Files**: `stopping_edge_recovery/signals.py`, `stopping_edge_recovery/_tree.py`, edge_metadata.py, sibling_null_prior_interpolation.py, child_parent_divergence.py, test 33
+
+---
+
+### Phase 2 — Column Rename Mapping
+
+**Gate 2 (Edge Wald χ² test):**
+
+| Old | New |
+|-----|-----|
+| `Child_Parent_Divergence_P_Value` | `Edge_Wald_Raw_P_Value` |
+| `Child_Parent_Divergence_P_Value_BH` | `Edge_Wald_Corrected_P_Value` |
+| `Child_Parent_Divergence_Significant` | `Edge_Wald_Significant` |
+| `Child_Parent_Divergence_df` | `Edge_Wald_Degrees_of_Freedom` |
+| `Child_Parent_Divergence_Invalid` | `Edge_Wald_Invalid` |
+| `Child_Parent_Divergence_Tested` | `Edge_Wald_Tested` |
+| `Child_Parent_Divergence_Ancestor_Blocked` | `Edge_Wald_Ancestor_Blocked` |
+
+**Gate 3 (Sibling Wald χ² test):**
+
+| Old | New |
+|-----|-----|
+| `Sibling_Test_Statistic` | `Sibling_Wald_Test_Statistic` |
+| `Sibling_Degrees_of_Freedom` | `Sibling_Wald_Degrees_of_Freedom` |
+| `Sibling_Divergence_P_Value` | `Sibling_Wald_Raw_P_Value` |
+| `Sibling_Divergence_P_Value_Corrected` | `Sibling_Wald_Corrected_P_Value` |
+| `Sibling_Divergence_Invalid` | `Sibling_Wald_Invalid` |
+| `Sibling_BH_Different` | `Sibling_Wald_Different` |
+| `Sibling_BH_Same` | `Sibling_Wald_Same` |
+| `Sibling_Divergence_Skipped` | `Sibling_Wald_Skipped` |
+| `Sibling_Test_Method` | `Sibling_Wald_Calibration_Method` |
+
+**attrs keys:**
+
+| Old | New |
+|-----|-----|
+| `_stopping_edge_info` | `_stopping_edge_metadata` |
+| `_spectral_dims` | `_spectral_dimensions` |
+| `_pca_projections` | `_principal_component_projections` |
+| `_pca_eigenvalues` | `_principal_component_eigenvalues` |
+| `_edge_raw_test_data` | `_edge_wald_raw_test_data` |
+| `child_parent_divergence_audit` | `edge_wald_audit` |
+| `sibling_divergence_audit` | `sibling_wald_audit` |
+| `_calibration_model` | `_sibling_wald_calibration_model` |
+
+---
+
+### Phase 3 — Execution (file groups, parallelizable within each)
+
+| Group | Files | Depends on |
+|-------|-------|------------|
+| **3.1 Production** | ~16 files under kl_clustering_analysis | Phase 1 |
+| **3.2 Tests** | ~9 test files | 3.1 |
+| **3.3 Debug scripts** | ~30+ files under debug_scripts | *parallel with 3.2* |
+| **3.4 Benchmarks** | ~10 files under benchmarks | *parallel with 3.2* |
+| **3.5 Documentation** | copilot-instructions.md | 3.1 |
+
+---
+
+### Verification
+
+1. Full `pytest` pass
+2. `grep` for any surviving old column names in kl_clustering_analysis and tests
+3. Import check on the critical annotation functions
+4. No duplicate `StoppingEdgeInfo` definitions
+5. `depths` parameter fully removed
+
+---
+
+### Decisions
+- **Full scope** — production, tests, debug_scripts, benchmarks, docs
+- **No abbreviations** — all names fully spelled out
+- **Convention** — test-named (`Edge_Wald_*`, `Sibling_Wald_*`)
+- **StoppingEdgeInfo dedup** — rename 2-field version to `StoppingEdgeSummary`
+- **Phase 1 first** to reduce subsequent merge conflicts

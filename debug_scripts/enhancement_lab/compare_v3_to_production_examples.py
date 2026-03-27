@@ -149,7 +149,6 @@ def collect_case_context(case_name: str) -> CaseContext:
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,
         pca_eigenvalues=sibling_eig,
-        child_pca_projections=sibling_child_pca,
         whitening=config.SIBLING_WHITENING,
     )
 

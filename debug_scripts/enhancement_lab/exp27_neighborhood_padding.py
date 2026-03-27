@@ -937,7 +937,6 @@ def _make_custom_builder(
                 k=k,
                 pca_projection=pca_projection,
                 pca_eigenvalues=pca_eigenvalues,
-                child_pca_projections=None,
                 random_state=random_state,
             )
 
@@ -1088,7 +1087,6 @@ def _make_custom_builder(
                 k=k,
                 pca_projection=pca_projection,
                 pca_eigenvalues=pca_eigenvalues,
-                child_pca_projections=None,
                 random_state=random_state,
             )
             audit_row.update(
