@@ -3,10 +3,10 @@
 Sweep config parameter combinations on overlap benchmark cases.
 
 Tests combinations of:
-  - EIGENVALUE_WHITENING: True / False
+  - SIBLING_WHITENING: per_component / satterthwaite
   - INCLUDE_INTERNAL_IN_SPECTRAL: True / False
-  - FELSENSTEIN_SCALING: True / False  (with BRANCH_LENGTH_MODE variants)
-  - SIGNIFICANCE_ALPHA / SIBLING_ALPHA / ALPHA_LOCAL: 0.05 / 0.01 / 0.001
+  - FELSENSTEIN_SCALING: True / False
+  - EDGE_ALPHA / SIBLING_ALPHA: 0.05 / 0.01 / 0.001
 """
 
 import itertools
@@ -39,35 +39,25 @@ TARGET_CASES = {
 
 # --- Parameter grid ---
 PARAM_GRID = {
-    "EIGENVALUE_WHITENING": [False, True],
+    "SIBLING_WHITENING": ["per_component", "satterthwaite"],
     "INCLUDE_INTERNAL_IN_SPECTRAL": [False, True],
     "FELSENSTEIN_SCALING": [False, True],
-    "FELSENSTEIN_BRANCH_LENGTH_MODE": ["phylogeny", "topology"],
     "alpha": [0.05, 0.01, 0.001],
 }
 
 
 def set_config(combo: dict) -> str:
     """Apply a config combination and return a short label."""
-    config.EIGENVALUE_WHITENING = combo["EIGENVALUE_WHITENING"]
+    config.SIBLING_WHITENING = combo["SIBLING_WHITENING"]
     config.INCLUDE_INTERNAL_IN_SPECTRAL = combo["INCLUDE_INTERNAL_IN_SPECTRAL"]
     config.FELSENSTEIN_SCALING = combo["FELSENSTEIN_SCALING"]
-    config.FELSENSTEIN_BRANCH_LENGTH_MODE = combo["FELSENSTEIN_BRANCH_LENGTH_MODE"]
-    config.SIGNIFICANCE_ALPHA = combo["alpha"]
+    config.EDGE_ALPHA = combo["alpha"]
     config.SIBLING_ALPHA = combo["alpha"]
-    config.ALPHA_LOCAL = combo["alpha"]
-
-    # Skip topology mode when Felsenstein is off (redundant)
-    if not combo["FELSENSTEIN_SCALING"] and combo["FELSENSTEIN_BRANCH_LENGTH_MODE"] == "topology":
-        return None  # skip
 
     parts = []
-    parts.append(f"whiten={'Y' if combo['EIGENVALUE_WHITENING'] else 'N'}")
+    parts.append(f"whiten={combo['SIBLING_WHITENING'][:3]}")
     parts.append(f"internal={'Y' if combo['INCLUDE_INTERNAL_IN_SPECTRAL'] else 'N'}")
-    if combo["FELSENSTEIN_SCALING"]:
-        parts.append(f"fels={combo['FELSENSTEIN_BRANCH_LENGTH_MODE'][:4]}")
-    else:
-        parts.append("fels=off")
+    parts.append(f"fels={'Y' if combo['FELSENSTEIN_SCALING'] else 'N'}")
     parts.append(f"α={combo['alpha']}")
     return " | ".join(parts)
 
@@ -121,10 +111,9 @@ def main():
 
     # Build all combos
     keys = [
-        "EIGENVALUE_WHITENING",
+        "SIBLING_WHITENING",
         "INCLUDE_INTERNAL_IN_SPECTRAL",
         "FELSENSTEIN_SCALING",
-        "FELSENSTEIN_BRANCH_LENGTH_MODE",
         "alpha",
     ]
     combos = [dict(zip(keys, vals)) for vals in itertools.product(*[PARAM_GRID[k] for k in keys])]

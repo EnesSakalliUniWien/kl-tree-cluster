@@ -52,7 +52,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pai
     standardize_proportion_difference,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (  # noqa: E402
-    collect_significant_sibling_pairs,
+    collect_sibling_pair_records,
     get_sibling_data,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (  # noqa: E402
@@ -294,15 +294,20 @@ def run_case(case_name: str) -> CaseResult:
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
     # 3. Identify tested sibling pairs from the pipeline
-    parents, child_pairs, skipped, non_binary = collect_significant_sibling_pairs(
+    records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
+        mean_branch_length=mean_bl,
+        spectral_dims=sibling_dims,
+        pca_projections=sibling_pca,
+        pca_eigenvalues=sibling_eig,
     )
 
     # 4. Run permutation test for each eligible pair
     comparisons: list[NodeComparison] = []
 
-    for parent, (left, right) in zip(parents, child_pairs, strict=False):
+    for rec in records:
+        parent, left, right = rec.parent, rec.left, rec.right
         # Wald results from the pipeline
         p_wald_raw = float(annotations_df.at[parent, "Sibling_Divergence_P_Value"])
         p_wald_bh = float(annotations_df.at[parent, "Sibling_Divergence_P_Value_Corrected"])

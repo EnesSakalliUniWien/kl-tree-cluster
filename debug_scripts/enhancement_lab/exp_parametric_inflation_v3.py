@@ -286,7 +286,7 @@ def fit_pooled_power_law(rows: list[PairRow]) -> PowerLawModel:
 
     log_n = np.array([math.log(max(row.n_parent, 1)) for row in rows], dtype=np.float64)
     log_ratio = np.array([math.log(max(row.t_obs / row.k, 1.0)) for row in rows], dtype=np.float64)
-    weights = np.array([max(row.sibling_null_prior_from_edge_pvalue, 0.05) for row in rows], dtype=np.float64)
+    weights = np.array([max(row.sibling_null_prior, 0.05) for row in rows], dtype=np.float64)
     design = np.column_stack([np.ones(len(rows), dtype=np.float64), log_n])
     coefficients = _fit_weighted_ridge(design, log_ratio, weights, ridge_lambda=POWER_RIDGE)
 
@@ -312,7 +312,7 @@ def fit_residual_model(rows: list[PairRow], power_model: PowerLawModel) -> Resid
         ],
         dtype=np.float64,
     )
-    weights = np.array([max(row.sibling_null_prior_from_edge_pvalue, 0.05) for row in rows], dtype=np.float64)
+    weights = np.array([max(row.sibling_null_prior, 0.05) for row in rows], dtype=np.float64)
     coefficients = _fit_weighted_ridge(design, target, weights, ridge_lambda=FEATURE_RIDGE)
 
     return ResidualModel(
@@ -332,7 +332,7 @@ def _score_candidate(
     residual_scale: float,
     offset_quantile: float,
 ) -> CandidateScore:
-    weights = np.array([max(row.sibling_null_prior_from_edge_pvalue, 0.05) for row in null_rows], dtype=np.float64)
+    weights = np.array([max(row.sibling_null_prior, 0.05) for row in null_rows], dtype=np.float64)
     baseline_logs = np.array([power_model.predict_log(row) for row in null_rows], dtype=np.float64)
     residual_predictions = np.array([residual_model.predict(row) for row in null_rows], dtype=np.float64)
     target_logs = np.array(
