@@ -338,23 +338,16 @@ def _build_single_feature_subtree_audit_payload(
             )
             for candidate in single_feature_candidates
         ],
-        "allowed_single_feature_subtrees": [
-            candidate
-            for candidate in single_feature_candidates
-            if str(candidate["node_id"]) in group_summary["allowed_node_id_set"]
-        ],
     }
 
 
-def _build_single_feature_subtree_audit(
+def _analyze_single_feature_subtrees(
     tree: nx.DiGraph,
     leaf_data: pd.DataFrame,
-    node_spectral_dimensions: dict[str, int],
     node_pca_projections: dict[str, np.ndarray],
     node_pca_eigenvalues: dict[str, np.ndarray],
-) -> dict[str, Any]:
-    _ = node_spectral_dimensions
-
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Return allowed one-active candidates plus the persisted audit payload."""
     single_feature_candidates = _prepare_single_feature_subtree_context(
         tree,
         leaf_data,
@@ -368,13 +361,35 @@ def _build_single_feature_subtree_audit(
         single_feature_candidates,
         low_node_ids if has_low_group else set(),
     )
-    return _build_single_feature_subtree_audit_payload(
+    allowed_node_id_set = set(group_summary["allowed_node_ids"])
+    allowed_single_feature_subtrees = [
+        candidate
+        for candidate in single_feature_candidates
+        if str(candidate["node_id"]) in allowed_node_id_set
+    ]
+    audit = _build_single_feature_subtree_audit_payload(
         single_feature_candidates,
         has_low_group=has_low_group,
         low_ratio_threshold=low_ratio_threshold,
         low_node_ids=low_node_ids,
         group_summary=group_summary,
     )
+    return allowed_single_feature_subtrees, audit
+
+
+def _build_single_feature_subtree_audit(
+    tree: nx.DiGraph,
+    leaf_data: pd.DataFrame,
+    node_pca_projections: dict[str, np.ndarray],
+    node_pca_eigenvalues: dict[str, np.ndarray],
+) -> dict[str, Any]:
+    _, audit = _analyze_single_feature_subtrees(
+        tree,
+        leaf_data,
+        node_pca_projections,
+        node_pca_eigenvalues,
+    )
+    return audit
 
 
 def _apply_single_feature_subtree_policy(
@@ -384,15 +399,14 @@ def _apply_single_feature_subtree_policy(
     node_pca_projections: dict[str, np.ndarray],
     node_pca_eigenvalues: dict[str, np.ndarray],
 ) -> tuple[dict[str, int], dict[str, np.ndarray], dict[str, np.ndarray], dict[str, Any]]:
-    audit = _build_single_feature_subtree_audit(
+    allowed_single_feature_subtrees, audit = _analyze_single_feature_subtrees(
         tree,
         leaf_data,
-        node_spectral_dimensions,
         node_pca_projections,
         node_pca_eigenvalues,
     )
 
-    for candidate in audit.pop("allowed_single_feature_subtrees"):
+    for candidate in allowed_single_feature_subtrees:
         node_id = str(candidate["node_id"])
         node_spectral_dimensions[node_id] = 1
         node_pca_projections[node_id] = np.asarray(candidate["projection"], dtype=np.float64)

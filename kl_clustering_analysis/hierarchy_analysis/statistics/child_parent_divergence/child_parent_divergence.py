@@ -15,7 +15,9 @@ from kl_clustering_analysis.core_utils.data_utils import (
 )
 
 from ..multiple_testing.tree_bh import ChildParentEdgeTreeBHResult, apply_tree_bh_correction
-from .child_parent_spectral_decomposition import compute_child_parent_spectral_context
+from .child_parent_spectral_decomposition import (
+    _compute_child_parent_spectral_context_with_audit,
+)
 from .child_parent_tree_testing import run_child_parent_tests_across_tree
 
 logger = logging.getLogger(__name__)
@@ -99,18 +101,21 @@ def annotate_child_parent_divergence(
         node_spectral_dimensions = None
         node_pca_projections = None
         node_pca_eigenvalues = None
+        single_feature_subtree_audit = None
     else:
-        node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues = (
-            compute_child_parent_spectral_context(
-                tree,
-                leaf_data,
-            )
+        (
+            node_spectral_dimensions,
+            node_pca_projections,
+            node_pca_eigenvalues,
+            single_feature_subtree_audit,
+        ) = _compute_child_parent_spectral_context_with_audit(
+            tree,
+            leaf_data,
         )
 
     annotations_df.attrs["_spectral_dims"] = node_spectral_dimensions
     annotations_df.attrs["_pca_projections"] = node_pca_projections
     annotations_df.attrs["_pca_eigenvalues"] = node_pca_eigenvalues
-    single_feature_subtree_audit = tree.graph.get("_single_feature_subtree_audit")
 
     if single_feature_subtree_audit is not None:
         annotations_df.attrs["_single_feature_subtree_audit"] = single_feature_subtree_audit
@@ -211,6 +216,7 @@ def annotate_child_parent_divergence(
 
         assert tree_bh_result is not None
         stopping_edge_info_by_child = recover_stopping_edge_info(tree, tree_bh_result, child_ids)
+
         nearest_signal_neighbor_by_child = recover_signal_neighbors(
             tree,
             child_ids,

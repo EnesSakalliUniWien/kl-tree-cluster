@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-import logging
-
 import numpy as np
 
 from ..projection.projected_wald import run_projected_wald_kernel
-
-logger = logging.getLogger(__name__)
 
 
 def compute_child_parent_standardized_z_scores(

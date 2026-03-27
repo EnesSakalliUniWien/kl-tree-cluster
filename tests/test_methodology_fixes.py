@@ -63,27 +63,41 @@ class TestComputeProjectedPvalue:
 class TestSpectralKFloor:
     """Verify the spectral path uses its own small floor (SPECTRAL_MINIMUM_DIMENSION)."""
 
-    def test_spectral_minimum_projection_dimension_decoupled_from_global(self):
-        """The spectral path should use config.SPECTRAL_MINIMUM_DIMENSION, not the global JL minimum_projection_dimension."""
-        import inspect
+    def test_spectral_minimum_projection_dimension_decoupled_from_global(self, monkeypatch):
+        """The spectral path should pass config.SPECTRAL_MINIMUM_DIMENSION into the spectral estimator."""
+        import networkx as nx
 
+        import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_spectral_decomposition as spectral_module
+        from kl_clustering_analysis import config
         from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
             compute_child_parent_spectral_context,
         )
 
-        source = inspect.getsource(compute_child_parent_spectral_context)
-        # The spectral path reads SPECTRAL_MINIMUM_DIMENSION from config instead of
-        # forwarding the global JL-derived minimum_projection_dimension.
-        assert "SPECTRAL_MINIMUM_DIMENSION" in source
-        # The old pattern that forwarded the global minimum_projection_dimension should be gone.
-        assert (
-            "minimum_projection_dimension if isinstance(minimum_projection_dimension, int) else 4"
-            not in source
+        tree = nx.DiGraph()
+        tree.add_edge("root", "L0")
+        tree.add_edge("root", "L1")
+        tree.nodes["L0"]["label"] = "L0"
+        tree.nodes["L1"]["label"] = "L1"
+        tree.nodes["L0"]["is_leaf"] = True
+        tree.nodes["L1"]["is_leaf"] = True
+        leaf_data = pd.DataFrame([[0.0], [1.0]], index=["L0", "L1"], columns=["F0"])
+
+        captured: list[int] = []
+
+        def _fake_compute_spectral_decomposition(*args, **kwargs):
+            captured.append(kwargs["minimum_projection_dimension"])
+            return {}, {}, {}
+
+        monkeypatch.setattr(config, "SPECTRAL_MINIMUM_DIMENSION", 3)
+        monkeypatch.setattr(
+            spectral_module,
+            "compute_spectral_decomposition",
+            _fake_compute_spectral_decomposition,
         )
-        assert (
-            "minimum_projection_dimension if isinstance(minimum_projection_dimension, int) else 1"
-            not in source
-        )
+
+        compute_child_parent_spectral_context(tree, leaf_data)
+
+        assert captured == [3]
 
     def test_spectral_minimum_projection_dimension_config_exists(self):
         """config.SPECTRAL_MINIMUM_DIMENSION must exist and be a small integer."""
@@ -147,7 +161,6 @@ class TestSpectralKFloor:
         audit = _build_single_feature_subtree_audit(
             tree,
             leaf_data,
-            node_spectral_dimensions={},
             node_pca_projections={},
             node_pca_eigenvalues={
                 "root": np.array([1.0]),

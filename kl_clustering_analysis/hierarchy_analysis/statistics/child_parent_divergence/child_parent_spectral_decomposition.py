@@ -12,13 +12,16 @@ from ._single_feature_subtree_policy import _apply_single_feature_subtree_policy
 from ..projection.spectral import compute_spectral_decomposition
 
 
-def compute_child_parent_spectral_context(
+def _compute_child_parent_spectral_context_with_audit(
     tree: nx.DiGraph,
     leaf_data: pd.DataFrame,
-) -> tuple[dict[str, int] | None, dict[str, np.ndarray] | None, dict[str, np.ndarray] | None]:
-    """Prepare Marchenko-Pastur spectral context for Gate 2."""
-    tree.graph.pop("_single_feature_subtree_audit", None)
-
+) -> tuple[
+    dict[str, int] | None,
+    dict[str, np.ndarray] | None,
+    dict[str, np.ndarray] | None,
+    dict[str, object] | None,
+]:
+    """Prepare Marchenko-Pastur spectral context plus optional policy audit."""
     spectral_minimum_projection_dimension = getattr(
         config,
         "SPECTRAL_MINIMUM_DIMENSION",
@@ -38,6 +41,7 @@ def compute_child_parent_spectral_context(
 
     node_pca_projections = dict(computed_node_pca_projections or {})
     node_pca_eigenvalues = dict(computed_node_pca_eigenvalues or {})
+    single_feature_subtree_audit: dict[str, object] | None = None
 
     single_feature_subtree_mode = str(getattr(config, "SINGLE_FEATURE_SUBTREE_MODE", "off"))
     if single_feature_subtree_mode == "block_low_information_subtrees":
@@ -53,11 +57,26 @@ def compute_child_parent_spectral_context(
             node_pca_projections,
             node_pca_eigenvalues,
         )
-        tree.graph["_single_feature_subtree_audit"] = single_feature_subtree_audit
 
     node_pca_projections = node_pca_projections if node_pca_projections else None
     node_pca_eigenvalues = node_pca_eigenvalues if node_pca_eigenvalues else None
 
+    return (
+        node_spectral_dimensions,
+        node_pca_projections,
+        node_pca_eigenvalues,
+        single_feature_subtree_audit,
+    )
+
+
+def compute_child_parent_spectral_context(
+    tree: nx.DiGraph,
+    leaf_data: pd.DataFrame,
+) -> tuple[dict[str, int] | None, dict[str, np.ndarray] | None, dict[str, np.ndarray] | None]:
+    """Prepare Marchenko-Pastur spectral context for Gate 2."""
+    node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues, _ = (
+        _compute_child_parent_spectral_context_with_audit(tree, leaf_data)
+    )
     return node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues
 
 
