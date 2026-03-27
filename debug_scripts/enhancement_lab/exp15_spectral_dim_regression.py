@@ -36,8 +36,10 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
     compute_projection_dimension_backend as compute_projection_dimension,
 )
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
-    _derive_sibling_spectral_dims,
     run_gate_annotation_pipeline,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
+    derive_sibling_spectral_dims,
 )
 
 # Cases with known regression from auto-derive
@@ -101,7 +103,7 @@ def analyze_case(case_name: str) -> dict:
     edge_spectral_dims = df_auto.attrs.get("_spectral_dims", {})
 
     # Derive sibling dims (same logic as orchestrator)
-    sibling_dims = _derive_sibling_spectral_dims(tree, df_auto) or {}
+    sibling_dims = derive_sibling_spectral_dims(tree, df_auto) or {}
 
     # --- Mode B: JL fallback ---
     tree2, data_df2, _, _ = build_tree_and_data(case_name)

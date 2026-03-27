@@ -1,9 +1,14 @@
 """Gate 2 -> Gate 3 configuration helpers.
 
 These helpers intentionally keep a permissive contract: when Gate 2 did not
-materialize spectral metadata, they return ``None`` instead of raising. The
-Gate 3 annotators already treat missing spectral/PCA inputs as a supported
-configuration path.
+materialize spectral metadata, they return ``None`` instead of raising. That
+``None`` path is tolerated for non-standard configurations such as
+``tree.decompose(..., leaf_data=None)`` or explicit experimental overrides.
+
+In standard runs with leaf data, missing sibling dims are expected only for
+binary parents whose two children are both leaves. Gate 2 assigns leaves
+spectral dimension ``0``, so Gate 3 has no positive child-derived subspace to
+combine for those parents and the sibling test falls back downstream.
 """
 
 from __future__ import annotations
@@ -34,7 +39,10 @@ def derive_sibling_spectral_dims(
     Uses **geometric-mean-of-children** strategy: for each binary parent P
     with children L, R, the sibling projection dimension is
     ``round(sqrt(k_L * k_R))``.  When only one child has a positive
-    spectral dimension, that value is used directly.
+    spectral dimension, that value is used directly. When both children have
+    non-positive spectral dims, the parent is omitted from the returned
+    mapping. In the standard pipeline this means leaf-leaf parents are omitted,
+    because leaves carry ``k=0``.
 
     Parameters
     ----------
@@ -47,7 +55,8 @@ def derive_sibling_spectral_dims(
     -------
     dict[str, int] | None
         Mapping from parent node to projection dimension k, or None if
-        no valid dimensions found.
+        no valid dimensions found. ``None`` means Gate 3 has no parent-specific
+        spectral override and should use its fallback policy downstream.
     """
     edge_spectral_dims = annotated_df.attrs.get("_spectral_dims")
     if not edge_spectral_dims:

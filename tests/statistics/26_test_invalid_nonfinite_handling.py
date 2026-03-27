@@ -3,6 +3,7 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 import pandas as pd
+import pytest
 
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
@@ -12,6 +13,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence imp
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
     sibling_divergence_test,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
+    _resolve_sibling_projection_k,
 )
 
 
@@ -185,3 +189,80 @@ def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
     assert np.isnan(stat)
     assert np.isnan(df)
     assert np.isnan(pval)
+
+
+def test_resolve_sibling_projection_k_uses_jl_fallback_for_missing_k(
+    monkeypatch,
+) -> None:
+    calls: list[tuple[int, int]] = []
+
+    def _fake_compute_projection_dimension(
+        total_sample_size: int,
+        n_features: int,
+    ) -> int:
+        calls.append((total_sample_size, n_features))
+        return 7
+
+    monkeypatch.setattr(
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.compute_projection_dimension",
+        _fake_compute_projection_dimension,
+    )
+
+    resolved_k, source = _resolve_sibling_projection_k(
+        spectral_k=None,
+        left_sample_size=3.0,
+        right_sample_size=4.0,
+        n_features=5,
+    )
+
+    assert resolved_k == 7
+    assert source == "jl_fallback"
+    assert calls == [(7, 5)]
+
+
+def test_resolve_sibling_projection_k_rejects_nonpositive_k(
+    monkeypatch,
+) -> None:
+    def _fail_compute_projection_dimension(
+        total_sample_size: int,
+        n_features: int,
+    ) -> int:
+        raise AssertionError("JL fallback should not run for invalid spectral_k")
+
+    monkeypatch.setattr(
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.compute_projection_dimension",
+        _fail_compute_projection_dimension,
+    )
+
+    with pytest.raises(ValueError, match="Invalid spectral_k=0"):
+        _resolve_sibling_projection_k(
+            spectral_k=0,
+            left_sample_size=2.0,
+            right_sample_size=3.0,
+            n_features=4,
+        )
+
+
+def test_resolve_sibling_projection_k_uses_supplied_spectral_k_without_jl(
+    monkeypatch,
+) -> None:
+    def _fail_compute_projection_dimension(
+        total_sample_size: int,
+        n_features: int,
+    ) -> int:
+        raise AssertionError("JL fallback should not run for positive spectral_k")
+
+    monkeypatch.setattr(
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.compute_projection_dimension",
+        _fail_compute_projection_dimension,
+    )
+
+    resolved_k, source = _resolve_sibling_projection_k(
+        spectral_k=3,
+        left_sample_size=2.0,
+        right_sample_size=3.0,
+        n_features=4,
+    )
+
+    assert resolved_k == 3
+    assert source == "spectral"

@@ -81,6 +81,41 @@ def _compute_sibling_z_scores(
     return z_scores
 
 
+def _resolve_sibling_projection_k(
+    *,
+    spectral_k: int | None,
+    left_sample_size: float,
+    right_sample_size: float,
+    n_features: int,
+) -> tuple[int, str]:
+    """Resolve the projection dimension and record which path supplied it.
+
+    Returns
+    -------
+    tuple[int, str]
+        ``(resolved_k, source)`` where ``source`` is either ``"spectral"``
+        for a caller-supplied positive dimension or ``"jl_fallback"`` when
+        the sibling test has to synthesize a Johnson-Lindenstrauss dimension.
+        ``spectral_k=None`` means no sibling-specific spectral dimension is
+        available for this pair. That is the legitimate fallback case used for
+        leaf-leaf sibling pairs and explicit no-spectral configurations.
+        Non-positive explicit values are invalid caller input.
+    """
+    if spectral_k is None:
+        total_sample_size = int(left_sample_size + right_sample_size)
+        return (
+            compute_projection_dimension(total_sample_size, n_features),
+            "jl_fallback",
+        )
+
+    if spectral_k <= 0:
+        raise ValueError(
+            f"Invalid spectral_k={spectral_k}; expected None or a positive integer."
+        )
+
+    return int(spectral_k), "spectral"
+
+
 def sibling_divergence_test(
     left_distribution: np.ndarray,
     right_distribution: np.ndarray,
@@ -109,6 +144,11 @@ def sibling_divergence_test(
     mean_branch_length : float, optional
         Mean branch length across the tree, used only by the optional
         branch-length variance hook in the standardization step.
+    spectral_k : int | None, optional
+        Pair-specific projection dimension. ``None`` means no sibling spectral
+        override is available, so the test falls back to a JL dimension.
+        Positive integers are used as-is. Non-positive explicit values are
+        rejected as invalid input.
 
     Returns
     -------
@@ -142,12 +182,12 @@ def sibling_divergence_test(
     z_scores = z_scores.astype(np.float64, copy=False)
 
     n_features = int(z_scores.shape[0])
-    if spectral_k is None or spectral_k <= 0:
-        total_sample_size = int(left_sample_size + right_sample_size)
-        spectral_k = compute_projection_dimension(
-            total_sample_size,
-            n_features,
-        )
+    spectral_k, _projection_k_source = _resolve_sibling_projection_k(
+        spectral_k=spectral_k,
+        left_sample_size=left_sample_size,
+        right_sample_size=right_sample_size,
+        n_features=n_features,
+    )
 
     if test_id is None:
         test_id = (
