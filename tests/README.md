@@ -8,7 +8,6 @@ statistics, traversal, pipeline contracts, integration, and visualization.
 ```text
 tests/
 ├── conftest.py
-├── improved_test_cases.py
 ├── test_cases_config.py
 ├── core/
 ├── statistics/
@@ -24,11 +23,8 @@ tests/
 ### Shared fixtures and repo-wide regressions
 
 - `conftest.py`
-- `improved_test_cases.py`
 - `test_cases_config.py`
 - `test_methodology_fixes.py`
-- `test_one_hot_encoding.py`
-- `verify_benchmark_changes.py`
 
 ### Core tree/decomposition primitives (`core/`)
 
@@ -39,7 +35,6 @@ tests/
 
 ### Statistical kernels and config wiring (`statistics/`)
 
-- `21_test_random_projection.py`
 - `22_test_edge_branch_length_regression.py`
 - `25_test_per_test_projection_seeding.py`
 - `26_test_invalid_nonfinite_handling.py`
@@ -47,7 +42,6 @@ tests/
 - `29_test_method_k_estimators_parity.py`
 - `30_test_gate_adapter_parity.py`
 - `31_test_registry_config_wiring.py`
-- `test_adaptive_min_k.py`
 
 ### Traversal and localization behavior (`localization/`)
 

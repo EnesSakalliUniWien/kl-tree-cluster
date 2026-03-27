@@ -240,12 +240,12 @@ class TestNonBinarySkippedFlag:
     def test_adjusted_wald_marks_leaves_as_skipped(self):
         """Adjusted Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
         from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
-            annotate_sibling_divergence_adjusted,
+            annotate_sibling_divergence,
         )
 
         tree = self._build_simple_tree()
         df = self._make_base_df(tree)
-        result = annotate_sibling_divergence_adjusted(tree, df)
+        result = annotate_sibling_divergence(tree, df)
 
         for leaf in ["L0", "L1", "L2", "L3"]:
             assert bool(

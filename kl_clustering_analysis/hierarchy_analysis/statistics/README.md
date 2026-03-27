@@ -12,7 +12,7 @@ by the decomposition pipeline.
 | `child_parent_divergence/child_parent_projected_wald.py` | Child-parent z-score construction and the single-edge projected-Wald kernel. |
 | `child_parent_divergence/child_parent_spectral_decomposition.py` | Spectral context for per-node projection dimensions and PCA-based projections. |
 | `sibling_divergence/adjusted_wald_annotation.py` | Cousin-adjusted sibling Wald path with post-selection inflation correction. |
-| `sibling_divergence/__init__.py` | Public adjusted-only Gate 3 entrypoint and compatibility alias. |
+| `sibling_divergence/__init__.py` | Public Gate 3 entrypoint. |
 | `sibling_divergence/pair_testing/` | Sibling-pair collection and the core Wald statistic kernel. |
 | `sibling_divergence/inflation_correction/` | Inflation-model fitting and prediction for the adjusted sibling path. |
 | `sibling_divergence/bh_annotation.py` | Shared DataFrame writing and BH result bookkeeping for Gate 3. |
@@ -32,7 +32,6 @@ by the decomposition pipeline.
 ## Stable Entrypoints
 
 - `annotate_child_parent_divergence(...)` is the public Gate 2 entrypoint.
-- `annotate_sibling_divergence(...)` is the public Gate 3 entrypoint and aliases the adjusted implementation.
-- `annotate_sibling_divergence_adjusted(...)` remains available as the explicit adjusted implementation.
+- `annotate_sibling_divergence(...)` is the public Gate 3 entrypoint.
 - `apply_multiple_testing_correction(...)` is the shared correction dispatcher.
 - `run_projected_wald_kernel(...)` is the common projected-Wald kernel used underneath the test adapters.

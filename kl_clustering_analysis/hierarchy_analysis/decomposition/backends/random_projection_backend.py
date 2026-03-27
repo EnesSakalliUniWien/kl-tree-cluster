@@ -11,7 +11,7 @@ from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 from kl_clustering_analysis import config
 
-from ...statistics.projection.k_estimators import effective_rank as _effective_rank
+from ...statistics.projection.k_estimators import effective_rank
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ def estimate_projection_dimension_floor_backend(
         spectrum_eigenvalues = np.sort(np.linalg.eigvalsh(correlation_matrix))[::-1]
 
     estimated_projection_dimension_floor = int(
-        np.ceil(_effective_rank(np.maximum(spectrum_eigenvalues, 0.0)))
+        np.ceil(effective_rank(np.maximum(spectrum_eigenvalues, 0.0)))
     )
     estimated_projection_dimension_floor = max(
         estimated_projection_dimension_floor,

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
@@ -23,17 +22,6 @@ from .column_contracts import (
     validate_legacy_edge_columns,
     validate_legacy_sibling_columns,
 )
-
-SiblingAnnotator = Callable[..., pd.DataFrame]
-
-
-def _resolve_sibling_annotator(sibling_method: str) -> SiblingAnnotator:
-    if sibling_method != config.SIBLING_TEST_METHOD:
-        raise ValueError(
-            f"unsupported sibling_method={sibling_method!r}; only {config.SIBLING_TEST_METHOD!r} is supported"
-        )
-    return annotate_sibling_divergence
-
 
 @dataclass(frozen=True)
 class _SiblingGateInputs:
@@ -167,8 +155,11 @@ def run_gate_annotation_pipeline(
     )
 
     # Run Gate 3: sibling divergence tests
-    sibling_annotator = _resolve_sibling_annotator(sibling_method)
-    annotated_df = sibling_annotator(
+    if sibling_method != config.SIBLING_TEST_METHOD:
+        raise ValueError(
+            f"unsupported sibling_method={sibling_method!r}; only {config.SIBLING_TEST_METHOD!r} is supported"
+        )
+    annotated_df = annotate_sibling_divergence(
         tree,
         edge_annotated_df,
         significance_level_alpha=sibling_alpha,

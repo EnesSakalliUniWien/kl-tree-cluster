@@ -16,7 +16,7 @@ import pandas as pd
 
 from .. import config
 from ..core_utils.data_utils import extract_row_column_maps
-from .cluster_assignments import build_cluster_assignments as _build_cluster_assignments_func
+from .cluster_assignments import build_cluster_assignments
 from .decomposition.backends.random_projection_backend import (
     resolve_minimum_projection_dimension_backend,
 )
@@ -281,15 +281,6 @@ class TreeDecomposition:
 
     # ---------- core decomposition (iterative, no recursion) ----------
 
-    def _build_cluster_assignments(
-        self, final_leaf_sets: list[set[str]]
-    ) -> dict[int, dict[str, object]]:
-        """Build cluster assignment dictionary from collected leaf sets.
-
-        Delegates to :func:`.cluster_assignments.build_cluster_assignments`.
-        """
-        return _build_cluster_assignments_func(final_leaf_sets, self._find_cluster_root)
-
     def decompose_tree(self) -> dict[str, object]:
         """Return cluster assignments by iteratively traversing the hierarchy.
 
@@ -318,7 +309,10 @@ class TreeDecomposition:
 
             final_leaf_sets.append(set(self._descendant_leaf_sets[node]))
 
-        cluster_assignments = self._build_cluster_assignments(final_leaf_sets)
+        cluster_assignments = build_cluster_assignments(
+            final_leaf_sets,
+            self._find_cluster_root,
+        )
 
         return {
             "cluster_assignments": cluster_assignments,

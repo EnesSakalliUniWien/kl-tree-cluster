@@ -71,7 +71,7 @@ def _resolve_calibration(
 # =============================================================================
 
 
-def annotate_sibling_divergence_adjusted(
+def annotate_sibling_divergence(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     *,
@@ -189,4 +189,4 @@ def annotate_sibling_divergence_adjusted(
     return annotations_df
 
 
-__all__ = ["annotate_sibling_divergence_adjusted"]
+__all__ = ["annotate_sibling_divergence"]

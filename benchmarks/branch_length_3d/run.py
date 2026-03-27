@@ -31,7 +31,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 from benchmarks.branch_length.logic import (
     run_branch_length_benchmark,

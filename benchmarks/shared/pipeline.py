@@ -17,8 +17,7 @@ from benchmarks.shared.config import DEFAULT_METHODS
 
 # Logging helpers extracted to a small utility module to keep the pipeline
 # focused and testable.
-from benchmarks.shared.logging import log_validation_completion as _log_validation_completion
-from benchmarks.shared.logging import log_validation_start as _log_validation_start
+from benchmarks.shared.logging import log_validation_completion, log_validation_start
 
 # Metrics helpers extracted to their own module for reuse and easier testing.
 from benchmarks.shared.plots import generate_benchmark_plots
@@ -109,7 +108,7 @@ def benchmark_cluster_algorithm(
         test_cases = get_default_test_cases()
 
     if verbose:
-        _log_validation_start(len(test_cases))
+        log_validation_start(len(test_cases))
 
     result_rows: list[BenchmarkResultRow] = []
 
@@ -173,7 +172,7 @@ def benchmark_cluster_algorithm(
             computed_results.extend(case_computed_results)
 
         if verbose:
-            _log_validation_completion(total_runs, len(test_cases))
+            log_validation_completion(total_runs, len(test_cases))
 
         df_results = benchmark_rows_to_dataframe(result_rows)
 

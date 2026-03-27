@@ -9,7 +9,7 @@ from benchmarks.shared.audit_utils import (
     export_case_and_method_matrix_audits,
     export_decomposition_audit,
 )
-from benchmarks.shared.logging import log_test_case_start as _log_test_case_start
+from benchmarks.shared.logging import log_test_case_start
 from benchmarks.shared.results import BenchmarkResultRow, ComputedResultRecord
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
@@ -33,7 +33,7 @@ def run_single_case(
     case_idx = tc.get("test_case_num", case_position)
     case_name = tc.get("name", f"Case {case_idx}")
     if verbose:
-        _log_test_case_start(case_idx, total_cases, case_name)
+        log_test_case_start(case_idx, total_cases, case_name)
 
     if output_pdf:
         audit_root_inc = output_pdf.parent

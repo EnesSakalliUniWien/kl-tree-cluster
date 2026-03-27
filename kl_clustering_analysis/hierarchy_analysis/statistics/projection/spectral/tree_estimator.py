@@ -1,4 +1,4 @@
-"""Tree-level spectral decomposition orchestrator.
+r"""Tree-level spectral decomposition orchestrator.
 
 Builds per-node spectral tasks, dispatches them in parallel (or
 sequentially for small trees), and assembles results into the three
@@ -154,10 +154,10 @@ def compute_spectral_decomposition(
         pca_projections : dict[str, np.ndarray] — node_id → (k_v × d) matrix
         pca_eigenvalues : dict[str, np.ndarray] — node_id → (k_v,) eigenvalues
     """
-    from kl_clustering_analysis import config as _config
-
     if include_internal is None:
-        include_internal = _config.INCLUDE_INTERNAL_IN_SPECTRAL
+        from kl_clustering_analysis import config
+
+        include_internal = config.INCLUDE_INTERNAL_IN_SPECTRAL
 
     feature_count = leaf_data.shape[1]
     leaf_label_to_index = {label: i for i, label in enumerate(leaf_data.index)}

@@ -263,7 +263,6 @@ def plot_umap_embedding(
     title: str,
     ax_true,
     ax_pred,
-    class_names: list = None,
 ):
     """Plot UMAP embedding colored by true and predicted labels."""
     try:
