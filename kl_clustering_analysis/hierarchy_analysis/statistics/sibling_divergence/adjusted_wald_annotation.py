@@ -32,7 +32,8 @@ from .inflation_correction.conditional_deflation import (
     compute_pool_stats,
     predict_local_inflation_factor,
 )
-from .inflation_correction.inflation_estimation import CalibrationModel, fit_inflation_model
+from .inflation_correction.inflation_estimation import fit_inflation_model
+from .inflation_correction.types import CalibrationModel
 from .pair_testing.sibling_null_prior_interpolation import interpolate_sibling_null_priors
 from .pair_testing.sibling_pair_collection import (
     collect_sibling_pair_records,

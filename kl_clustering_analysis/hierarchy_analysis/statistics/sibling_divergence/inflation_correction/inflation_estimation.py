@@ -11,7 +11,6 @@ when the edge test passes everything.
 from __future__ import annotations
 
 import logging
-from typing import List
 
 import numpy as np
 
@@ -26,8 +25,19 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 
+def _neutral_calibration_model(fit_status: str) -> CalibrationModel:
+    """Return the neutral intercept-only calibration model."""
+    return CalibrationModel(
+        method="weighted_mean",
+        n_calibration=0,
+        global_inflation_factor=1.0,
+        max_observed_ratio=1.0,
+        diagnostics={"fit_status": fit_status},
+    )
+
+
 def fit_inflation_model(
-    records: List[SiblingPairRecord],
+    records: list[SiblingPairRecord],
 ) -> CalibrationModel:
     """Estimate the post-selection inflation factor ĉ as a weighted mean of T/k ratios.
 
@@ -45,13 +55,7 @@ def fit_inflation_model(
         logger.warning(
             "Continuous-weight calibration: 0 valid pairs — " "using neutral c-hat = 1.0."
         )
-        return CalibrationModel(
-            method="weighted_mean",
-            n_calibration=0,
-            global_inflation_factor=1.0,
-            max_observed_ratio=1.0,
-            diagnostics={"fit_status": "neutral_no_data"},
-        )
+        return _neutral_calibration_model("neutral_no_data")
 
     stat_df_ratios = np.array([record.stat / record.degrees_of_freedom for record in valid_records])
     sibling_null_priors = np.array(
@@ -66,15 +70,9 @@ def fit_inflation_model(
         logger.warning(
             "Continuous-weight calibration: no positive-ratio pairs — " "using neutral c-hat = 1.0."
         )
-        return CalibrationModel(
-            method="weighted_mean",
-            n_calibration=0,
-            global_inflation_factor=1.0,
-            max_observed_ratio=1.0,
-            diagnostics={"fit_status": "neutral_no_positive_ratios"},
-        )
+        return _neutral_calibration_model("neutral_no_positive_ratios")
 
-    max_observed_ratio = float(np.max(stat_df_ratios))
+    max_observed_ratio = max(float(np.max(stat_df_ratios)), 1.0)
 
     inflation_factor = float(np.average(stat_df_ratios, weights=sibling_null_priors))
 
