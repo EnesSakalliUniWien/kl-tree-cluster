@@ -1,25 +1,10 @@
-#!/usr/bin/env python3
-"""
-Utility functions for building and analyzing hierarchical trees for KL divergence clustering.
-
-This module provides functions to generate synthetic data, build hierarchical trees, and run
-statistical analysis. It is used by tests and notebooks.
-"""
-
-import sys
-from pathlib import Path
+"""Helpers for building small end-to-end clustering test cases."""
 
 import pandas as pd
 
-# Add the project root to the path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics import annotate_child_parent_divergence
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
-    annotate_sibling_divergence,
-)
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from .. import config
+from ..hierarchy_analysis.decomposition.gates.orchestrator import run_gate_annotation_pipeline
+from ..tree.poset_tree import PosetTree
 
 
 def create_test_case_data(n_samples=50, n_features=20, n_clusters=3, noise_level=1.0, seed=42):
@@ -79,26 +64,19 @@ def build_hierarchical_tree(X, linkage_method="complete", distance_metric="hammi
 
 
 def run_statistical_analysis(tree, X):
-    """Run statistical tests on the hierarchical tree."""
+    """Run the production gate-annotation pipeline on a populated tree."""
     print("Running statistical analysis...")
 
-    # Calculate KL divergence statistics
     tree.populate_node_divergences(X)
-
-    # Run statistical tests (skip root-level test for speed/consistency)
-    annotations_df = tree.annotations_df.copy()
-
-    annotations_df = annotate_child_parent_divergence(
+    annotations_df = run_gate_annotation_pipeline(
         tree,
-        annotations_df,
-        significance_level_alpha=config.EDGE_ALPHA,
+        tree.annotations_df.copy(),
+        alpha_local=config.EDGE_ALPHA,
+        sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=X,
-    )
-    annotations_df = annotate_sibling_divergence(
-        tree,
-        annotations_df,
-        significance_level_alpha=config.SIBLING_ALPHA,
-    )
+        sibling_method=config.SIBLING_TEST_METHOD,
+        sibling_whitening=config.SIBLING_WHITENING,
+    ).annotated_df
 
     print("Statistical analysis complete.")
 

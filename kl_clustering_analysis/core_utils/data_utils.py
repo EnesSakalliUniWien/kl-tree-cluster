@@ -74,8 +74,9 @@ def extract_node_distribution(tree: nx.DiGraph, node_id: str) -> np.ndarray:
 def extract_node_sample_size(tree: nx.DiGraph, node_id: str) -> int:
     """Extract sample size (leaf count) for a node.
 
-    Checks for the canonical 'leaf_count' attribute first, then falls back
-    to alternative names and finally counts descendants if needed.
+    Checks for the canonical ``leaf_count`` attribute first, then falls back
+    to leaf detection or descendant counting if the tree has not been fully
+    annotated yet.
 
     Parameters
     ----------
@@ -91,22 +92,12 @@ def extract_node_sample_size(tree: nx.DiGraph, node_id: str) -> int:
     """
     node_data = tree.nodes.get(node_id, {})
 
-    # Check canonical attribute first
     if "leaf_count" in node_data:
         return int(node_data["leaf_count"])
 
-    # Fallback to alternative names
-    if "sample_size" in node_data:
-        return int(node_data["sample_size"])
-
-    if "n_leaves" in node_data:
-        return int(node_data["n_leaves"])
-
-    # Check if node is a leaf
     if node_data.get("is_leaf", False) or tree.out_degree(node_id) == 0:
         return 1
 
-    # Count leaf descendants as last resort
     descendants = list(nx.descendants(tree, node_id))
     count = sum(
         1

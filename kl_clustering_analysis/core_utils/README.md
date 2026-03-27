@@ -10,7 +10,7 @@ DataFrame helpers for extracting and writing node-level annotations.
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
 | `extract_leaf_counts(df, node_ids)`                    | Pull `leaf_count` column for specified nodes. Raises if missing.                                                    |
 | `extract_node_distribution(tree, node_id)`             | Get `distribution` attribute from a tree node as float64 array.                                                     |
-| `extract_node_sample_size(tree, node_id)`              | Get leaf count from node attributes. Fallback chain: `leaf_count` → `sample_size` → `n_leaves` → count descendants. |
+| `extract_node_sample_size(tree, node_id)`              | Get leaf count from node attributes. Fallback chain: `leaf_count` → leaf detection → count descendants.              |
 | `assign_divergence_results(df, child_ids, pvals, ...)` | Write Gate 2 result columns (`Child_Parent_Divergence_*`) to DataFrame.                                             |
 | `initialize_sibling_divergence_columns(df)`            | Initialize all Gate 3 output columns with defaults (False / NaN).                                                   |
 | `extract_row_column_maps(df)`                          | Materialize a DataFrame as both `{node_id: {column: value}}` and `{column: {node_id: value}}` for O(1) lookups.    |
@@ -24,7 +24,7 @@ Convenience functions for quick prototyping.
 | -------------------------------------------- | ------------------------------------------------------------------------------ |
 | `create_test_case_data(n, p, k, ...)`        | Generate synthetic binary data with k clusters.                                |
 | `build_hierarchical_tree(X, method, metric)` | `pdist` → `linkage` → `PosetTree.from_linkage()`. One-liner tree construction. |
-| `run_statistical_analysis(tree, X)`          | Populate divergences + decompose in one call.                                  |
+| `run_statistical_analysis(tree, X)`          | Populate node distributions, then run the production Gate 2 + Gate 3 annotator. |
 
 ## tree_utils.py
 

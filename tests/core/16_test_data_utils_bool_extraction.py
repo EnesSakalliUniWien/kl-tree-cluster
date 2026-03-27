@@ -3,9 +3,11 @@
 import numpy as np
 import pandas as pd
 import pytest
+import networkx as nx
 
 from kl_clustering_analysis.core_utils.data_utils import (
     extract_bool_column_dict,
+    extract_node_sample_size,
     extract_row_column_maps,
 )
 
@@ -79,3 +81,22 @@ def test_extract_row_column_maps_raises_on_empty_dataframe():
 def test_extract_row_column_maps_raises_on_non_dataframe():
     with pytest.raises(TypeError, match="Expected a pandas DataFrame"):
         extract_row_column_maps({"flag": [True]})
+
+
+def test_extract_node_sample_size_prefers_leaf_count():
+    tree = nx.DiGraph()
+    tree.add_node("node", leaf_count=7, is_leaf=False)
+
+    assert extract_node_sample_size(tree, "node") == 7
+
+
+def test_extract_node_sample_size_counts_descendant_leaves_without_legacy_keys():
+    tree = nx.DiGraph()
+    tree.add_edge("root", "left")
+    tree.add_edge("root", "right")
+    tree.nodes["left"]["is_leaf"] = True
+    tree.nodes["right"]["is_leaf"] = True
+    tree.nodes["root"]["sample_size"] = 99
+    tree.nodes["root"]["n_leaves"] = 123
+
+    assert extract_node_sample_size(tree, "root") == 2
