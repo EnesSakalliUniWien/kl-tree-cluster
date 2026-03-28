@@ -6,23 +6,23 @@ Expected runtime: ~20-120 seconds.
 How to run: python debug_scripts/archive/q_case18_power_data_extraction__power__case18_legacy.py
 """
 
+import sys
+
 import numpy as np
 import pandas as pd
+from scipy import stats
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
-import sys
-import json
 
 sys.path.insert(0, "/Users/berksakalli/Projects/kl-te-cluster")
 
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.tree.distributions import populate_distributions
+from benchmarks.shared.cases import get_test_cases_by_category
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_child_parent_divergence,
     annotate_sibling_divergence,
 )
-from benchmarks.shared.cases import get_test_cases_by_category
-from scipy import stats
+from kl_clustering_analysis.tree.distributions import populate_distributions
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
 def cohens_h(p1: float, p2: float) -> float:

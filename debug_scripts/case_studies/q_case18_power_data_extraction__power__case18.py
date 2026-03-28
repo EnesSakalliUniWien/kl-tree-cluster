@@ -6,26 +6,27 @@ Expected runtime: ~20-120 seconds.
 How to run: python debug_scripts/case_studies/q_case18_power_data_extraction__power__case18.py
 """
 
+import sys
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
+from scipy import stats
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
-from scipy import stats
-import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.tree.distributions import populate_distributions
+from benchmarks.shared.cases import get_test_cases_by_category
+from kl_clustering_analysis import config as kl_config
 from kl_clustering_analysis.hierarchy_analysis.statistics import (
     annotate_child_parent_divergence,
     annotate_sibling_divergence,
 )
-from benchmarks.shared.cases import get_test_cases_by_category
-from kl_clustering_analysis import config as kl_config
+from kl_clustering_analysis.tree.distributions import populate_distributions
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
 def cohens_h(p1: float, p2: float) -> float:
@@ -36,8 +37,12 @@ def cohens_h(p1: float, p2: float) -> float:
 
 
 def power_wald_two_sample(
-    n1: float, n2: float, p1: float, p2: float,
-    alpha: float = 0.05, alternative: str = "two-sided",
+    n1: float,
+    n2: float,
+    p1: float,
+    p2: float,
+    alpha: float = 0.05,
+    alternative: str = "two-sided",
 ) -> float:
     """Power for a two-sample Wald test of proportions."""
     delta = p1 - p2
@@ -66,9 +71,7 @@ OUTPUT_PATH = Path(__file__).resolve().parent / "case_18_power_analysis.csv"
 def _require_node_attr(tree, node_id: str, attr_name: str):
     """Get a required node attribute or raise an explicit error."""
     if attr_name not in tree.nodes[node_id]:
-        raise ValueError(
-            f"Missing required node attribute {attr_name!r} for node {node_id!r}"
-        )
+        raise ValueError(f"Missing required node attribute {attr_name!r} for node {node_id!r}")
     return tree.nodes[node_id][attr_name]
 
 
@@ -137,9 +140,7 @@ def build_and_annotate_tree(data):
     )
     missing_cols = [c for c in REQUIRED_STATS_COLUMNS if c not in tree.annotations_df.columns]
     if missing_cols:
-        raise ValueError(
-            f"Missing required stats columns after annotation: {missing_cols}"
-        )
+        raise ValueError(f"Missing required stats columns after annotation: {missing_cols}")
 
     return tree
 
@@ -173,9 +174,7 @@ def extract_split_decisions(tree):
         )
 
         if not hasattr(tree, "annotations_df") or tree.annotations_df is None:
-            raise ValueError(
-                "Tree is missing annotations_df; annotate tree before extraction"
-            )
+            raise ValueError("Tree is missing annotations_df; annotate tree before extraction")
         if node_id not in tree.annotations_df.index:
             raise ValueError(f"Node {node_id!r} missing from annotations_df index")
         row = tree.annotations_df.loc[node_id]
@@ -225,9 +224,7 @@ def compute_power_for_all_splits(df_decisions, min_effect_size=0.2):
         p_left_raw = row["dist_left_mean"]
         p_right_raw = row["dist_right_mean"]
         if pd.isna(p_left_raw) or pd.isna(p_right_raw):
-            raise ValueError(
-                f"Missing required distribution means for node {row['node_id']!r}"
-            )
+            raise ValueError(f"Missing required distribution means for node {row['node_id']!r}")
         p_left = _validate_probability("p_left", float(p_left_raw))
         p_right = _validate_probability("p_right", float(p_right_raw))
 
