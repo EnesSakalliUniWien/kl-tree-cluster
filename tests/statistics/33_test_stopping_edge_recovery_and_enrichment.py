@@ -23,6 +23,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pai
     interpolate_sibling_null_priors,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation.edge_metadata import (
+    extract_edge_metadata,
     extract_stopping_edge_info,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
@@ -270,6 +271,21 @@ def test_extract_stopping_edge_info_preserves_serialized_values() -> None:
     assert list(stopping_edge_info) == ["B"]
     assert stopping_edge_info["B"].stopping_edge_p_value == pytest.approx(0.25)
     assert stopping_edge_info["B"].distance_to_stopping_edge == pytest.approx(2.0)
+
+
+def test_extract_edge_metadata_requires_child_parent_edge_columns() -> None:
+    annotations_df = pd.DataFrame(
+        {
+            "Child_Parent_Divergence_Significant": [True, False],
+        },
+        index=["A", "B"],
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Missing required child-parent edge metadata columns",
+    ):
+        extract_edge_metadata(annotations_df)
 
 
 def test_interpolate_sibling_null_priors_rejects_malformed_stopping_edge_attrs() -> None:

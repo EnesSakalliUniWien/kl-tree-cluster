@@ -19,8 +19,8 @@ from ...statistics.sibling_divergence.sibling_config import (
 from ..core.contracts import GateAnnotationBundle
 from .column_contracts import (
     sibling_gate_columns,
-    validate_legacy_edge_columns,
-    validate_legacy_sibling_columns,
+    validate_edge_gate_columns,
+    validate_sibling_gate_columns,
 )
 
 
@@ -36,7 +36,7 @@ def _build_column_names_metadata(
     edge_columns: tuple[str, ...],
     sibling_columns: tuple[str, ...],
 ) -> dict[str, list[str]]:
-    """Normalize column collections into the legacy metadata shape."""
+    """Normalize column collections into the pipeline metadata shape."""
     return {
         "edge": list(edge_columns),
         "sibling": list(sibling_columns),
@@ -71,7 +71,7 @@ def _build_sibling_metadata(
     edge_columns: tuple[str, ...],
     sibling_columns: tuple[str, ...],
 ) -> dict[str, object]:
-    """Build legacy metadata for Gate 3 output."""
+    """Build metadata for Gate 3 output."""
     return {
         "gate": "sibling",
         "alpha": float(sibling_alpha),
@@ -139,7 +139,7 @@ def run_gate_annotation_pipeline(
         significance_level_alpha=alpha_local,
         leaf_data=leaf_data,
     )
-    edge_columns = validate_legacy_edge_columns(edge_annotated_df)
+    edge_columns = validate_edge_gate_columns(edge_annotated_df)
     edge_sibling_columns = sibling_gate_columns(edge_annotated_df)
     edge_metadata = _build_edge_metadata(
         alpha_local=alpha_local,
@@ -169,11 +169,11 @@ def run_gate_annotation_pipeline(
         pca_eigenvalues=sibling_inputs.pca_eigenvalues,
         whitening=sibling_whitening,
     )
-    output_edge_columns = validate_legacy_edge_columns(
+    output_edge_columns = validate_edge_gate_columns(
         annotated_df,
-        error_context="Sibling gate input/output edge columns differ from legacy contract",
+        error_context="Sibling gate input/output edge columns differ from required contract",
     )
-    sibling_columns = validate_legacy_sibling_columns(annotated_df)
+    sibling_columns = validate_sibling_gate_columns(annotated_df)
     sibling_metadata = _build_sibling_metadata(
         sibling_alpha=sibling_alpha,
         sibling_method=sibling_method,

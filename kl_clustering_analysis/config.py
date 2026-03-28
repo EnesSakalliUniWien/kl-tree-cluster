@@ -25,7 +25,6 @@ EDGE_ALPHA: float = 0.001
 FELSENSTEIN_SCALING: bool = False
 
 
-
 # --- Tree Inference Parameters ---
 
 # Distance metric for hierarchical clustering

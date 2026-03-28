@@ -1,14 +1,14 @@
-"""Shared column-prefix and legacy-contract helpers for gate adapters."""
+"""Shared column-prefix and contract helpers for gate adapters."""
 
 from __future__ import annotations
 
 import pandas as pd
 
 from ..core.contracts import (
-    LEGACY_EDGE_COLUMNS,
-    LEGACY_EDGE_OPTIONAL_COLUMNS,
-    LEGACY_SIBLING_COLUMNS,
-    LEGACY_SIBLING_OPTIONAL_COLUMNS,
+    EDGE_GATE_COLUMNS,
+    EDGE_GATE_OPTIONAL_COLUMNS,
+    SIBLING_GATE_COLUMNS,
+    SIBLING_GATE_OPTIONAL_COLUMNS,
 )
 from ..core.errors import DecompositionValidationError
 
@@ -38,14 +38,14 @@ def _format_contract_detail(missing: list[str], extras: list[str]) -> str:
     return "; ".join(detail_parts)
 
 
-def validate_legacy_edge_columns(
+def validate_edge_gate_columns(
     df: pd.DataFrame,
     *,
-    error_context: str = "Edge gate columns differ from legacy contract",
+    error_context: str = "Edge gate columns differ from required contract",
 ) -> tuple[str, ...]:
     produced = edge_gate_columns(df)
-    missing = [col for col in LEGACY_EDGE_COLUMNS if col not in produced]
-    allowed = set(LEGACY_EDGE_COLUMNS) | set(LEGACY_EDGE_OPTIONAL_COLUMNS)
+    missing = [col for col in EDGE_GATE_COLUMNS if col not in produced]
+    allowed = set(EDGE_GATE_COLUMNS) | set(EDGE_GATE_OPTIONAL_COLUMNS)
     extras = [col for col in produced if col not in allowed]
     if missing or extras:
         detail = _format_contract_detail(missing, extras)
@@ -53,14 +53,14 @@ def validate_legacy_edge_columns(
     return produced
 
 
-def validate_legacy_sibling_columns(
+def validate_sibling_gate_columns(
     df: pd.DataFrame,
     *,
-    error_context: str = "Sibling gate columns differ from legacy contract",
+    error_context: str = "Sibling gate columns differ from required contract",
 ) -> tuple[str, ...]:
     produced = sibling_gate_columns(df)
-    missing = [col for col in LEGACY_SIBLING_COLUMNS if col not in produced]
-    allowed = set(LEGACY_SIBLING_COLUMNS) | set(LEGACY_SIBLING_OPTIONAL_COLUMNS)
+    missing = [col for col in SIBLING_GATE_COLUMNS if col not in produced]
+    allowed = set(SIBLING_GATE_COLUMNS) | set(SIBLING_GATE_OPTIONAL_COLUMNS)
     extras = [col for col in produced if col not in allowed]
     if missing or extras:
         detail = _format_contract_detail(missing, extras)
@@ -74,6 +74,6 @@ __all__ = [
     "prefixed_columns",
     "edge_gate_columns",
     "sibling_gate_columns",
-    "validate_legacy_edge_columns",
-    "validate_legacy_sibling_columns",
+    "validate_edge_gate_columns",
+    "validate_sibling_gate_columns",
 ]

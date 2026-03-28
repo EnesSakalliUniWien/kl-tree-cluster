@@ -7,10 +7,11 @@ import logging
 import networkx as nx
 import pandas as pd
 
+from ....multiple_testing.stopping_edge_recovery._tree import build_tree_distance_resolver
 from ..types import SiblingPairRecord
 from .adaptive_kernel_bandwidths import compute_adaptive_kernel_bandwidths
 from .child_prior_estimation import _estimate_sibling_pair_null_priors
-from .edge_metadata import build_tree_distance, extract_edge_metadata, extract_stopping_edge_info
+from .edge_metadata import extract_edge_metadata, extract_stopping_edge_info
 from .reference_set import _collect_reference_sets
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ def interpolate_sibling_null_priors(
     reference_sets = _collect_reference_sets(annotations_dataframe, edge_metadata)
     child_ids = sorted(stopping_edge_info_by_child.keys())
 
-    tree_distance = build_tree_distance(tree)
+    tree_distance = build_tree_distance_resolver(tree)
 
     kernel_bandwidths = compute_adaptive_kernel_bandwidths(
         stopping_edge_info=stopping_edge_info_by_child,

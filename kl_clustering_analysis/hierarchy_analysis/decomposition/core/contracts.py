@@ -7,20 +7,19 @@ from typing import Any
 
 import pandas as pd
 
-
-LEGACY_EDGE_COLUMNS: tuple[str, ...] = (
+EDGE_GATE_COLUMNS: tuple[str, ...] = (
     "Child_Parent_Divergence_P_Value",
     "Child_Parent_Divergence_P_Value_BH",
     "Child_Parent_Divergence_Significant",
     "Child_Parent_Divergence_df",
     "Child_Parent_Divergence_Invalid",
 )
-LEGACY_EDGE_OPTIONAL_COLUMNS: tuple[str, ...] = (
+EDGE_GATE_OPTIONAL_COLUMNS: tuple[str, ...] = (
     "Child_Parent_Divergence_Tested",
     "Child_Parent_Divergence_Ancestor_Blocked",
 )
 
-LEGACY_SIBLING_COLUMNS: tuple[str, ...] = (
+SIBLING_GATE_COLUMNS: tuple[str, ...] = (
     "Sibling_Divergence_Skipped",
     "Sibling_Test_Statistic",
     "Sibling_Degrees_of_Freedom",
@@ -31,7 +30,7 @@ LEGACY_SIBLING_COLUMNS: tuple[str, ...] = (
     "Sibling_BH_Same",
 )
 
-LEGACY_SIBLING_OPTIONAL_COLUMNS: tuple[str, ...] = ("Sibling_Test_Method",)
+SIBLING_GATE_OPTIONAL_COLUMNS: tuple[str, ...] = ("Sibling_Test_Method",)
 
 
 @dataclass
@@ -39,6 +38,6 @@ class GateAnnotationBundle:
     """Container for gate-annotation outputs and optional run metadata."""
 
     annotated_df: pd.DataFrame
-    local_gate_columns: tuple[str, ...] = LEGACY_EDGE_COLUMNS
-    sibling_gate_columns: tuple[str, ...] = LEGACY_SIBLING_COLUMNS
+    local_gate_columns: tuple[str, ...] = EDGE_GATE_COLUMNS
+    sibling_gate_columns: tuple[str, ...] = SIBLING_GATE_COLUMNS
     metadata: dict[str, Any] = field(default_factory=dict)

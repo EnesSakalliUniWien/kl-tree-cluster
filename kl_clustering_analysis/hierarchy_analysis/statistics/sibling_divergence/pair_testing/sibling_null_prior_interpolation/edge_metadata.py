@@ -9,10 +9,13 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
-from ....multiple_testing.stopping_edge_recovery._tree import (
-    build_tree_distance_resolver as build_tree_distance,
-)
 from ....multiple_testing.stopping_edge_recovery.serialization import parse_stopping_edge_attrs
+
+_REQUIRED_EDGE_METADATA_COLUMNS = (
+    "Child_Parent_Divergence_Tested",
+    "Child_Parent_Divergence_Significant",
+    "Child_Parent_Divergence_P_Value_BH",
+)
 
 
 @dataclass(frozen=True)
@@ -56,22 +59,25 @@ def extract_stopping_edge_info(
 
 def extract_edge_metadata(annotations_dataframe: pd.DataFrame) -> EdgeLevelMetadata:
     """Return edge-level tested/significant masks and BH p-values."""
+    missing_columns = [
+        column_name
+        for column_name in _REQUIRED_EDGE_METADATA_COLUMNS
+        if column_name not in annotations_dataframe.columns
+    ]
+    if missing_columns:
+        raise ValueError(
+            "Missing required child-parent edge metadata columns for sibling null-prior "
+            f"interpolation: {missing_columns!r}."
+        )
+
     child_parent_edge_tested = (
         annotations_dataframe["Child_Parent_Divergence_Tested"].astype(bool).to_numpy()
-        if "Child_Parent_Divergence_Tested" in annotations_dataframe.columns
-        else np.ones(len(annotations_dataframe), dtype=bool)
     )
-
     child_parent_edge_significant = (
         annotations_dataframe["Child_Parent_Divergence_Significant"].astype(bool).to_numpy()
-        if "Child_Parent_Divergence_Significant" in annotations_dataframe.columns
-        else np.zeros(len(annotations_dataframe), dtype=bool)
     )
-
     child_parent_edge_bh_p_values = (
         annotations_dataframe["Child_Parent_Divergence_P_Value_BH"].astype(float).to_numpy()
-        if "Child_Parent_Divergence_P_Value_BH" in annotations_dataframe.columns
-        else np.full(len(annotations_dataframe), np.nan, dtype=float)
     )
 
     return EdgeLevelMetadata(
@@ -118,7 +124,6 @@ def edge_structural_dimension(
 __all__ = [
     "EdgeLevelMetadata",
     "StoppingEdgeSummary",
-    "build_tree_distance",
     "edge_structural_dimension",
     "extract_edge_metadata",
     "extract_stopping_edge_info",
