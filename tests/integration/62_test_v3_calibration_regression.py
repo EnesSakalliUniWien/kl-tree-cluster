@@ -16,11 +16,11 @@ def test_v3_selector_preserves_null_control_with_conservative_focal_tradeoff(
 ) -> None:
     # Pin to global-constant deflation: this test was calibrated against
     # the original intercept-only model and is independent of the new
-    # local structural-k kernel.
+    # local Gaussian adjuster.
     monkeypatch.setattr(
         "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence"
-        ".adjusted_wald_annotation.predict_local_inflation_factor",
-        lambda pool, structural_dimension: pool.c_global,
+        ".adjusted_wald_annotation.predict_sibling_adjustment",
+        lambda calibrator, sibling_scale: calibrator.global_adjustment,
     )
     _run_v3_assertions()
 

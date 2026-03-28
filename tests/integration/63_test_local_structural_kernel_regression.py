@@ -18,8 +18,8 @@ def test_local_structural_kernel_restores_gauss_null_large_to_one_cluster() -> N
     assert result.found_clusters == 1
     annotations = result.extra["annotations"]
     audit = annotations.attrs["sibling_divergence_audit"]
-    assert audit["deflation_mode"] == "local_structural_k_kernel"
-    assert audit["local_kernel_bandwidth_log_structural_dimension"] > 0.0
+    assert audit["deflation_mode"] == "local_gaussian_adjuster"
+    assert audit["local_adjuster_spread"] > 0.0
 
 
 @pytest.mark.slow

@@ -6,9 +6,9 @@ import numpy as np
 
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction import (
     CalibrationModel,
-    PoolStats,
-    compute_pool_stats,
-    predict_local_inflation_factor,
+    SiblingLocalGaussianInflationCalibrator,
+    fit_sibling_inflation_calibrator,
+    predict_sibling_adjustment,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
     SiblingPairRecord,
@@ -20,7 +20,7 @@ def _make_record(
     stat: float,
     degrees_of_freedom: float,
     sibling_null_prior_from_edge_pvalue: float,
-    structural_dimension: float,
+    sibling_scale: float,
 ) -> SiblingPairRecord:
     return SiblingPairRecord(
         parent=parent,
@@ -33,32 +33,32 @@ def _make_record(
         n_parent=32,
         is_null_like=False,
         sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
-        structural_dimension=structural_dimension,
+        sibling_scale=sibling_scale,
     )
 
 
-def test_compute_pool_stats_tracks_structural_k_center_and_bandwidth() -> None:
+def test_fit_sibling_inflation_calibrator_tracks_scale_center_and_spread() -> None:
     records = [
         _make_record(
             "p0",
             stat=3.0,
             degrees_of_freedom=2.0,
             sibling_null_prior_from_edge_pvalue=1.0,
-            structural_dimension=2.0,
+            sibling_scale=2.0,
         ),
         _make_record(
             "p1",
             stat=10.0,
             degrees_of_freedom=4.0,
             sibling_null_prior_from_edge_pvalue=2.0,
-            structural_dimension=4.0,
+            sibling_scale=4.0,
         ),
         _make_record(
             "p2",
             stat=12.0,
             degrees_of_freedom=6.0,
             sibling_null_prior_from_edge_pvalue=1.0,
-            structural_dimension=8.0,
+            sibling_scale=8.0,
         ),
     ]
     ratios = np.array([record.stat / record.degrees_of_freedom for record in records], dtype=float)
@@ -69,50 +69,50 @@ def test_compute_pool_stats_tracks_structural_k_center_and_bandwidth() -> None:
         max_observed_ratio=float(np.max(ratios)),
     )
 
-    pool = compute_pool_stats(records, model)
+    calibrator = fit_sibling_inflation_calibrator(records, model)
 
-    assert math.isclose(pool.geometric_mean_structural_dimension, 4.0, rel_tol=1e-9)
-    assert pool.bandwidth_log_structural_dimension > 0.0
-    assert pool.bandwidth_status == "weighted_log_k_std"
+    assert math.isclose(calibrator.center, 4.0, rel_tol=1e-9)
+    assert calibrator.spread > 0.0
+    assert calibrator.spread_status == "weighted_log_scale_std"
 
 
-def test_predict_local_inflation_factor_tracks_nearby_structural_dimensions() -> None:
-    pool = PoolStats(
-        c_global=3.0,
-        mean_log_structural_dimension=math.log(4.0),
-        geometric_mean_structural_dimension=4.0,
-        bandwidth_log_structural_dimension=0.5,
-        bandwidth_status="weighted_log_k_std",
-        max_ratio=4.0,
-        n_records=3,
-        calibration_log_structural_dimensions=np.log(np.array([2.0, 4.0, 16.0], dtype=float)),
-        calibration_sibling_null_priors=np.array([1.0, 1.0, 1.0], dtype=float),
-        calibration_stat_df_ratios=np.array([1.3, 3.5, 1.1], dtype=float),
+def test_predict_sibling_adjustment_tracks_nearby_sibling_scales() -> None:
+    calibrator = SiblingLocalGaussianInflationCalibrator(
+        global_adjustment=3.0,
+        log_center=math.log(4.0),
+        center=4.0,
+        spread=0.5,
+        spread_status="weighted_log_scale_std",
+        max_adjustment=4.0,
+        record_count=3,
+        sample_log_scales=np.log(np.array([2.0, 4.0, 16.0], dtype=float)),
+        sample_weights=np.array([1.0, 1.0, 1.0], dtype=float),
+        sample_adjustments=np.array([1.3, 3.5, 1.1], dtype=float),
     )
-    near_center = predict_local_inflation_factor(pool, structural_dimension=4.0)
-    toward_large = predict_local_inflation_factor(pool, structural_dimension=16.0)
-    far_out = predict_local_inflation_factor(pool, structural_dimension=256.0)
+    near_center = predict_sibling_adjustment(calibrator, sibling_scale=4.0)
+    toward_large = predict_sibling_adjustment(calibrator, sibling_scale=16.0)
+    far_out = predict_sibling_adjustment(calibrator, sibling_scale=256.0)
 
     assert near_center > toward_large
-    assert 1.0 <= far_out <= pool.max_ratio
+    assert 1.0 <= far_out <= calibrator.max_adjustment
     assert far_out < near_center
 
 
-def test_predict_local_inflation_factor_falls_back_to_global_with_zero_log_k_spread() -> None:
+def test_predict_sibling_adjustment_falls_back_to_global_with_zero_log_scale_spread() -> None:
     records = [
         _make_record(
             "p0",
             stat=4.0,
             degrees_of_freedom=4.0,
             sibling_null_prior_from_edge_pvalue=1.0,
-            structural_dimension=4.0,
+            sibling_scale=4.0,
         ),
         _make_record(
             "p1",
             stat=8.0,
             degrees_of_freedom=8.0,
             sibling_null_prior_from_edge_pvalue=1.0,
-            structural_dimension=4.0,
+            sibling_scale=4.0,
         ),
     ]
     model = CalibrationModel(
@@ -122,29 +122,29 @@ def test_predict_local_inflation_factor_falls_back_to_global_with_zero_log_k_spr
         max_observed_ratio=2.5,
     )
 
-    pool = compute_pool_stats(records, model)
-    predicted = predict_local_inflation_factor(pool, structural_dimension=32.0)
+    calibrator = fit_sibling_inflation_calibrator(records, model)
+    predicted = predict_sibling_adjustment(calibrator, sibling_scale=32.0)
 
-    assert pool.bandwidth_log_structural_dimension == 0.0
-    assert pool.bandwidth_status == "global_fallback_zero_log_k_spread"
+    assert calibrator.spread == 0.0
+    assert calibrator.spread_status == "global_fallback_zero_log_scale_spread"
     assert predicted == model.global_inflation_factor
 
 
-def test_compute_pool_stats_falls_back_to_global_when_no_positive_weights() -> None:
+def test_fit_sibling_inflation_calibrator_falls_back_to_global_when_no_positive_weights() -> None:
     records = [
         _make_record(
             "p0",
             stat=4.0,
             degrees_of_freedom=2.0,
             sibling_null_prior_from_edge_pvalue=0.0,
-            structural_dimension=2.0,
+            sibling_scale=2.0,
         ),
         _make_record(
             "p1",
             stat=12.0,
             degrees_of_freedom=4.0,
             sibling_null_prior_from_edge_pvalue=0.0,
-            structural_dimension=16.0,
+            sibling_scale=16.0,
         ),
     ]
     model = CalibrationModel(
@@ -155,9 +155,9 @@ def test_compute_pool_stats_falls_back_to_global_when_no_positive_weights() -> N
         diagnostics={"fit_status": "neutral_no_positive_weights"},
     )
 
-    pool = compute_pool_stats(records, model)
-    predicted = predict_local_inflation_factor(pool, structural_dimension=16.0)
+    calibrator = fit_sibling_inflation_calibrator(records, model)
+    predicted = predict_sibling_adjustment(calibrator, sibling_scale=16.0)
 
-    assert pool.n_records == 0
-    assert pool.bandwidth_status == "global_fallback_no_positive_weights"
+    assert calibrator.record_count == 0
+    assert calibrator.spread_status == "global_fallback_no_positive_weights"
     assert predicted == model.global_inflation_factor

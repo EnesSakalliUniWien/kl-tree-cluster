@@ -222,7 +222,7 @@ def test_enrich_blocked_weights_replaces_legacy_weight_and_populates_audit_field
         n_parent=10,
         is_null_like=True,
         sibling_null_prior_from_edge_pvalue=0.4,
-        structural_dimension=2.0,
+        sibling_scale=2.0,
     )
     blocked_record = SiblingPairRecord(
         parent="C",
@@ -236,7 +236,7 @@ def test_enrich_blocked_weights_replaces_legacy_weight_and_populates_audit_field
         is_null_like=True,
         is_gate2_blocked=True,
         sibling_null_prior_from_edge_pvalue=1.0,
-        structural_dimension=2.0,
+        sibling_scale=2.0,
     )
 
     records = interpolate_sibling_null_priors([stable_record, blocked_record], tree, annotations_df)
@@ -318,7 +318,7 @@ def test_interpolate_sibling_null_priors_rejects_malformed_stopping_edge_attrs()
         is_null_like=True,
         is_gate2_blocked=True,
         sibling_null_prior_from_edge_pvalue=1.0,
-        structural_dimension=2.0,
+        sibling_scale=2.0,
     )
 
     with pytest.raises(ValueError, match="Malformed _stopping_edge_info attrs payload"):
@@ -363,7 +363,7 @@ def test_interpolate_sibling_null_priors_handles_partial_child_stopping_edge_cov
         is_null_like=True,
         is_gate2_blocked=True,
         sibling_null_prior_from_edge_pvalue=0.61,
-        structural_dimension=2.0,
+        sibling_scale=2.0,
     )
 
     [enriched_record] = interpolate_sibling_null_priors([record], tree, annotations_df)
