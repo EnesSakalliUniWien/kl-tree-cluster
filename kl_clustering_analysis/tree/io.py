@@ -70,7 +70,7 @@ def _build_tree_from_merges(
 
     # Add leaf nodes.
     for i, name in enumerate(leaf_names):
-        G.add_node(node_id(i, n_leaves), is_leaf=True, label=str(name))
+        G.add_node(node_id(i, n_leaves), is_leaf=True, label=name)
 
     # Add internal merges.
     for k, (a, b) in enumerate(children):

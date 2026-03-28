@@ -108,6 +108,7 @@ class TreeDecomposition:
         self._sibling_different = self._extract_required_bool_annotation_column(
             "Sibling_BH_Different"
         )
+
         self._sibling_skipped = self._extract_required_bool_annotation_column(
             "Sibling_Divergence_Skipped"
         )

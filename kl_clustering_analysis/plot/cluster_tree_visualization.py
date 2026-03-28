@@ -62,22 +62,17 @@ def _normalize_optional_bool(value: object) -> Optional[bool]:
 
 
 def _lookup_annotation_value(annotations_df, node_id: object, column_name: str) -> object | None:
-    """Lookup a per-node value in ``annotations_df`` with robust id matching."""
+    """Lookup a per-node value in ``annotations_df``."""
     if annotations_df is None:
         return None
-
-    columns = getattr(annotations_df, "columns", None)
-    index = getattr(annotations_df, "index", None)
-    if columns is None or index is None or column_name not in columns:
-        return None
-
-    for candidate in (node_id, str(node_id)):
-        try:
-            if candidate in index:
-                return annotations_df.at[candidate, column_name]
-        except Exception:
-            continue
-    return None
+    if column_name not in annotations_df.columns:
+        raise KeyError(column_name)
+    try:
+        return annotations_df.at[node_id, column_name]
+    except KeyError:
+        if isinstance(node_id, str):
+            return None
+        return annotations_df.at[str(node_id), column_name]
 
 
 def _group_internal_nodes_for_halo(
@@ -187,7 +182,7 @@ def _build_leaf_node_colors(
 
         try:
             cluster_id = int(node_to_cluster[node])
-        except Exception:
+        except (TypeError, ValueError):
             cluster_id = None
         leaf_node_colors.append(cluster_id_to_color.get(cluster_id, unassigned_color))
     return leaf_node_colors
