@@ -57,8 +57,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base 
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
+from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (  # noqa: E402
-    derive_sibling_child_pca_projections,
     derive_sibling_pca_projections,
     derive_sibling_spectral_dims,
 )

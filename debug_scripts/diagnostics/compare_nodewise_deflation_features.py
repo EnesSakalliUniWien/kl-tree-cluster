@@ -38,6 +38,7 @@ from debug_scripts.enhancement_lab.lab_helpers import build_tree_and_data, compu
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import compute_mean_branch_length
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import effective_rank
+from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import sibling_config
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
     SiblingPairRecord,
@@ -199,7 +200,7 @@ def _case_features(case: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
     sibling_dims = sibling_config.derive_sibling_spectral_dims(tree, stats)
     pca_projections, pca_eigenvalues = sibling_config.derive_sibling_pca_projections(stats, sibling_dims)
-    child_pca = sibling_config.derive_sibling_child_pca_projections(tree, stats, sibling_dims)
+    child_pca = derive_sibling_child_pca_projections(tree, stats, sibling_dims)
     records, _ = collect_sibling_pair_records(
         tree,
         stats,

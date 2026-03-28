@@ -14,20 +14,14 @@ combine for those parents and the sibling test falls back downstream.
 from __future__ import annotations
 
 import logging
+import math
+from typing import TYPE_CHECKING
 
-import numpy as np
-import pandas as pd
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
-
-
-def _get_gate2_pca_projections(annotated_df: pd.DataFrame) -> dict[str, np.ndarray] | None:
-    """Return Gate 2 PCA projections, logging once when they are unavailable."""
-    pca_projections = annotated_df.attrs.get("_pca_projections")
-    if not pca_projections:
-        logger.debug("Gate 3: no _pca_projections found on Gate 2 annotations")
-        return None
-    return pca_projections
 
 
 def derive_sibling_spectral_dims(
@@ -75,7 +69,7 @@ def derive_sibling_spectral_dims(
         k_right = edge_spectral_dims.get(right, 0)
 
         if k_left > 0 and k_right > 0:
-            sibling_dims[parent] = max(1, round(np.sqrt(k_left * k_right)))
+            sibling_dims[parent] = max(1, round(math.sqrt(k_left * k_right)))
         elif k_left > 0:
             sibling_dims[parent] = k_left
         elif k_right > 0:
@@ -109,8 +103,9 @@ def derive_sibling_pca_projections(
     if sibling_dims is None:
         return None, None
 
-    pca_projections = _get_gate2_pca_projections(annotated_df)
-    if pca_projections is None:
+    pca_projections = annotated_df.attrs.get("_pca_projections")
+    if not pca_projections:
+        logger.debug("Gate 3: no _pca_projections found on Gate 2 annotations")
         return None, None
 
     pca_eigenvalues = annotated_df.attrs.get("_pca_eigenvalues")
@@ -127,7 +122,7 @@ def derive_sibling_pca_projections(
             sibling_eigenvalues[parent] = eig
 
     # Log mismatch between sibling_dims and available PCA projections
-    missing_pca = set(sibling_dims.keys()) - set(pca_projections.keys())
+    missing_pca = sibling_dims.keys() - pca_projections.keys()
     if missing_pca:
         logger.debug(
             "Gate 3: %d parents have sibling_dims but no PCA projections: %s",
@@ -141,48 +136,7 @@ def derive_sibling_pca_projections(
     )
 
 
-def derive_sibling_child_pca_projections(
-    tree,
-    annotated_df: pd.DataFrame,
-    sibling_dims: dict[str, int] | None,
-) -> dict[str, list[np.ndarray]] | None:
-    """Extract per-child PCA projections for debug and experimental analysis.
-
-    For each binary parent P with children L, R, collects the child PCA
-    projection matrices (from Gate 2's ``_pca_projections``) into a list
-    ``[V_L, V_R]`` keyed by parent node ID.
-
-    The live production projected-Wald kernel does not consume these child
-    projections; this helper remains available for diagnostic scripts that
-    inspect or compare alternative padding strategies offline.
-
-    Returns
-    -------
-    dict[str, list[np.ndarray]] | None
-        Mapping from parent to ``[child_L_pca, child_R_pca]``, or None.
-    """
-    if sibling_dims is None:
-        return None
-
-    pca_projections = _get_gate2_pca_projections(annotated_df)
-    if pca_projections is None:
-        return None
-
-    child_pca_map: dict[str, list[np.ndarray]] = {}
-
-    for parent in sibling_dims:
-        children = list(tree.successors(parent))
-        if len(children) != 2:
-            continue
-        child_projs = [pca_projections[c] for c in children if c in pca_projections]
-        if child_projs:
-            child_pca_map[parent] = child_projs
-
-    return child_pca_map if child_pca_map else None
-
-
 __all__ = [
     "derive_sibling_spectral_dims",
     "derive_sibling_pca_projections",
-    "derive_sibling_child_pca_projections",
 ]

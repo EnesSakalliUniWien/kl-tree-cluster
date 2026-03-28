@@ -58,8 +58,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pai
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
     SiblingPairRecord,
 )
+from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_child_pca_projections,
     derive_sibling_pca_projections,
     derive_sibling_spectral_dims,
 )
