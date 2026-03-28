@@ -1,11 +1,15 @@
-from .conditional_deflation import PoolStats, compute_pool_stats, predict_local_inflation_factor
+from .conditional_deflation import (
+    SiblingLocalGaussianInflationCalibrator,
+    fit_sibling_inflation_calibrator,
+    predict_sibling_adjustment,
+)
 from .inflation_estimation import fit_inflation_model
 from .types import CalibrationModel
 
 __all__ = [
     "CalibrationModel",
-    "PoolStats",
-    "compute_pool_stats",
+    "SiblingLocalGaussianInflationCalibrator",
+    "fit_sibling_inflation_calibrator",
     "fit_inflation_model",
-    "predict_local_inflation_factor",
+    "predict_sibling_adjustment",
 ]

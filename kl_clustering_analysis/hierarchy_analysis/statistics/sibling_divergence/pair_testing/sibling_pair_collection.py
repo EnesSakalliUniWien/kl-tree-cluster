@@ -96,7 +96,7 @@ def _is_gate2_blocked_for_pair(
     )
 
 
-def _resolve_structural_dimension(
+def _resolve_sibling_scale(
     *,
     spectral_dimension: int | None,
     degrees_of_freedom: float,
@@ -240,7 +240,7 @@ def collect_sibling_pair_records(
                 is_null_like=is_null_like,
                 is_gate2_blocked=is_gate2_blocked,
                 sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
-                structural_dimension=_resolve_structural_dimension(
+                sibling_scale=_resolve_sibling_scale(
                     spectral_dimension=spectral_k,
                     degrees_of_freedom=float(degrees_of_freedom),
                 ),

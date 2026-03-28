@@ -24,7 +24,12 @@ class SiblingPairRecord:
     pair is null, derived from the Gate 2 child-parent edge p-values.
     High value → both children look null-like (no signal detected by Gate 2).
     Used as weight when estimating the post-selection inflation factor ĉ."""
-    structural_dimension: float = 0.0  # sibling k derived from child edge dimensions
+    sibling_scale: float = 0.0
+    """Rough sibling split scale used to match nearby calibration examples.
+
+    Prefer the upstream spectral dimension when available; otherwise fall back
+    to the sibling test degrees of freedom.
+    """
     smoothed_sibling_null_prior: float | None = None
     """Tree-neighborhood-interpolated sibling null prior for nodes whose
     Gate 2 edge test was blocked (ancestor-blocked or untested)."""

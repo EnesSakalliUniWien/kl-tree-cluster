@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from .edge_metadata import EdgeLevelMetadata, edge_structural_dimension
+from .edge_metadata import EdgeLevelMetadata, edge_scale
 from .types import NeighborhoodReferenceSet
 
 
@@ -39,7 +39,7 @@ def _collect_reference_sets(
 
         stable_p_values.append(float(child_parent_edge_bh_p_value))
 
-        edge_dimension = edge_structural_dimension(
+        edge_dimension = edge_scale(
             node_id,
             annotations_dataframe,
             edge_metadata.edge_spectral_dims,

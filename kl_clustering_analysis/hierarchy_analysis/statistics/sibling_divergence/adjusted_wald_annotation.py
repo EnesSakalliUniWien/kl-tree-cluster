@@ -3,7 +3,7 @@
 Corrects post-selection inflation in sibling Wald statistics by:
 1. computing raw sibling statistics for all binary parent nodes,
 2. fitting a global inflation factor from continuous edge-weighted T/df ratios,
-3. localizing that global factor per node in structural-dimension space, and
+3. localizing that global factor per node in sibling-scale space, and
 4. deflating focal sibling pairs before BH correction.
 """
 
@@ -28,9 +28,9 @@ from .fdr_annotation import (
     mark_non_binary_as_skipped,
 )
 from .inflation_correction.conditional_deflation import (
-    PoolStats,
-    compute_pool_stats,
-    predict_local_inflation_factor,
+    SiblingLocalGaussianInflationCalibrator,
+    fit_sibling_inflation_calibrator,
+    predict_sibling_adjustment,
 )
 from .inflation_correction.inflation_estimation import fit_inflation_model
 from .pair_testing.sibling_null_prior_interpolation import interpolate_sibling_null_priors
@@ -50,14 +50,14 @@ logger = logging.getLogger(__name__)
 
 def _resolve_calibration(
     sibling_test_record: SiblingPairRecord,
-    pool: PoolStats,
+    calibrator: SiblingLocalGaussianInflationCalibrator,
 ) -> tuple[float, str]:
-    """Return the inflation adjustment and label for one sibling test."""
-    inflation_factor = predict_local_inflation_factor(
-        pool,
-        sibling_test_record.structural_dimension,
+    """Return the sibling adjustment and label for one sibling test."""
+    adjustment = predict_sibling_adjustment(
+        calibrator,
+        sibling_test_record.sibling_scale,
     )
-    return inflation_factor, "local_structural_k_kernel"
+    return adjustment, "local_gaussian_adjuster"
 
 
 # =============================================================================
@@ -83,10 +83,10 @@ def annotate_sibling_divergence(
        focal pairs are the only ones tested after deflation.
     2. Estimate a global inflation factor using a weighted mean of T/df ratios,
        with weights ``min(p_edge_left, p_edge_right)``.
-    3. Build a local kernel in log-structural-dimension space using the
-       decomposition-derived sibling dimension ``k_struct`` and the
-       edge-weighted log-k bandwidth of the calibration pool.
-    4. For focal pairs, deflate ``T_adj = T / c_node`` and compute the
+    3. Fit a local Gaussian adjuster in log sibling-scale space using the
+       decomposition-derived sibling scale and the edge-weighted log-scale
+       spread from the calibration records.
+    4. For focal pairs, deflate ``T_adj = T / adjustment`` and compute the
        adjusted sibling p-value from ``chi2.sf(T_adj, df_effective)``.
 
     Parameters
@@ -133,14 +133,14 @@ def annotate_sibling_divergence(
     # Pass 2: fit inflation model using continuous edge weights
     model = fit_inflation_model(records)
 
-    # Pass 2b: compute pool stats for local per-node deflation
-    pool = compute_pool_stats(records, model)
+    # Pass 2b: fit the local adjuster for per-node deflation
+    calibrator = fit_sibling_inflation_calibrator(records, model)
 
     # Pass 3: deflate focal pairs only and compute p-values
     tested_parent_ids, adjusted_test_summaries, adjustment_method_labels = (
         compute_adjusted_sibling_tests(
             records,
-            resolve_inflation_adjustment=partial(_resolve_calibration, pool=pool),
+            resolve_inflation_adjustment=partial(_resolve_calibration, calibrator=calibrator),
         )
     )
 
@@ -168,10 +168,10 @@ def annotate_sibling_divergence(
         "calibration_method": model.method,
         "calibration_n": model.n_calibration,
         "global_inflation_factor": model.global_inflation_factor,
-        "deflation_mode": "local_structural_k_kernel",
-        "local_kernel_center_structural_dimension": pool.geometric_mean_structural_dimension,
-        "local_kernel_bandwidth_log_structural_dimension": pool.bandwidth_log_structural_dimension,
-        "local_kernel_bandwidth_status": pool.bandwidth_status,
+        "deflation_mode": "local_gaussian_adjuster",
+        "local_adjuster_center": calibrator.center,
+        "local_adjuster_spread": calibrator.spread,
+        "local_adjuster_spread_status": calibrator.spread_status,
         "single_feature_subtree_mode": config.SINGLE_FEATURE_SUBTREE_MODE,
         "diagnostics": model.diagnostics,
         "test_method": "cousin_adjusted_wald",

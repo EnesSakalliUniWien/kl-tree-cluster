@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from .adaptive_kernel_bandwidths import AdaptiveKernelBandwidths, structural_kernel
-from .edge_metadata import StoppingEdgeSummary, edge_structural_dimension
+from .edge_metadata import StoppingEdgeSummary, edge_scale
 from .types import NeighborhoodReferenceSet
 
 
@@ -31,9 +31,9 @@ def _compute_child_log_k(
     annotations_dataframe: pd.DataFrame,
     edge_spectral_dims: dict[str, int] | None,
 ) -> float:
-    """Log of the structural (spectral) dimension for a child node."""
-    dimension = edge_structural_dimension(child_id, annotations_dataframe, edge_spectral_dims)
-    return float(np.real(np.log(max(dimension, 1.0))))
+    """Log of the scale used to match nearby child nodes."""
+    scale = edge_scale(child_id, annotations_dataframe, edge_spectral_dims)
+    return float(np.real(np.log(max(scale, 1.0))))
 
 
 def _estimate_null_pvalue_from_stable_neighbors(

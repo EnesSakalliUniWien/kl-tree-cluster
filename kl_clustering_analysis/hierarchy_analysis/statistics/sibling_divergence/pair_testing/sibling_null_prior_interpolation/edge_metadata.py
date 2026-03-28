@@ -89,12 +89,12 @@ def extract_edge_metadata(annotations_dataframe: pd.DataFrame) -> EdgeLevelMetad
     )
 
 
-def edge_structural_dimension(
+def edge_scale(
     node_id: str,
     annotations_dataframe: pd.DataFrame,
     edge_spectral_dims: dict[str, int] | None,
 ) -> float:
-    """Return the edge-level structural dimension used for neighborhood matching."""
+    """Return the edge-level scale used for neighborhood matching."""
     spectral_dimension = None
     if edge_spectral_dims is not None:
         spectral_dimension = edge_spectral_dims.get(str(node_id))
@@ -124,7 +124,7 @@ def edge_structural_dimension(
 __all__ = [
     "EdgeLevelMetadata",
     "StoppingEdgeSummary",
-    "edge_structural_dimension",
+    "edge_scale",
     "extract_edge_metadata",
     "extract_stopping_edge_info",
 ]

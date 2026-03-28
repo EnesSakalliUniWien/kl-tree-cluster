@@ -1,17 +1,17 @@
-"""Local structural-dimension kernel deflation for the adjusted Wald test.
+"""Local Gaussian adjustment for the adjusted sibling Wald test.
 
 Instead of shrinking the global inflation factor with a fitted slope,
 this module estimates a node-specific correction directly from nearby
-calibration pairs in log-structural-dimension space:
+calibration pairs in log sibling-scale space:
 
-    w_i(u) = w_i^null_prior * exp(-0.5 * ((log k_i - log k_u) / h)^2)
-    c_u = weighted_mean(T_i / df_i, weights=w_i(u))
+    w_i(u) = w_i^null_prior * exp(-0.5 * ((log s_i - log s_u) / h)^2)
+    a_u = weighted_mean(T_i / df_i, weights=w_i(u))
 
-where ``k_i`` is the sibling structural dimension carried by each record,
+where ``s_i`` is the rough sibling scale carried by each record,
 ``w_i^null_prior`` is the sibling null prior (from Gate 2 edge p-values), and ``h``
-is the null-prior-weighted standard deviation of ``log(k)`` over the calibration
-pool. This makes the deflation local in the decomposition-derived geometry
-rather than global in effective-df space.
+is the null-prior-weighted spread of ``log(scale)`` over the calibration
+sample. This makes the deflation local in the decomposition-derived geometry
+rather than global in effective degrees-of-freedom space.
 """
 
 from __future__ import annotations
@@ -56,147 +56,155 @@ def _weighted_std(values: np.ndarray, weights: np.ndarray) -> float:
     return float(np.sqrt(max(variance, 0.0)))
 
 
-def _record_structural_dimension(record: SiblingPairRecord) -> float:
-    """Return the structural-dimension axis used for local calibration."""
-    if np.isfinite(record.structural_dimension) and record.structural_dimension > 0:
-        return float(record.structural_dimension)
+def _record_sibling_scale(record: SiblingPairRecord) -> float:
+    """Return the sibling-scale axis used for local calibration."""
+    if np.isfinite(record.sibling_scale) and record.sibling_scale > 0:
+        return float(record.sibling_scale)
     raise ValueError(
-        f"Invalid structural_dimension={record.structural_dimension!r}; "
-        "caller must supply records with structural_dimension > 0 "
+        f"Invalid sibling_scale={record.sibling_scale!r}; "
+        "caller must supply records with sibling_scale > 0 "
         "(upstream filter on degrees_of_freedom > 0 should guarantee this)."
     )
 
 
 @dataclass(frozen=True)
-class PoolStats:
-    """Summary of the calibration pool used for local kernel deflation."""
+class SiblingLocalGaussianInflationCalibrator:
+    """Fitted local Gaussian calibrator for sibling inflation deflation."""
 
-    c_global: float
-    mean_log_structural_dimension: float
-    geometric_mean_structural_dimension: float
-    bandwidth_log_structural_dimension: float
-    bandwidth_status: str
-    max_ratio: float
-    n_records: int
-    calibration_log_structural_dimensions: np.ndarray = field(repr=False)
-    calibration_sibling_null_priors: np.ndarray = field(repr=False)
-    calibration_stat_df_ratios: np.ndarray = field(repr=False)
+    global_adjustment: float
+    log_center: float
+    center: float
+    spread: float
+    spread_status: str
+    max_adjustment: float
+    record_count: int
+    sample_log_scales: np.ndarray = field(repr=False)
+    sample_weights: np.ndarray = field(repr=False)
+    sample_adjustments: np.ndarray = field(repr=False)
 
 
-def compute_pool_stats(
+def fit_sibling_inflation_calibrator(
     records: list[SiblingPairRecord],
     model: CalibrationModel,
-) -> PoolStats:
-    """Compute the local-kernel calibration pool from valid sibling records."""
+) -> SiblingLocalGaussianInflationCalibrator:
+    """Fit the local Gaussian sibling adjuster from valid sibling records."""
     valid = _positive_ratio_records(records)
     if not valid:
-        return PoolStats(
-            c_global=model.global_inflation_factor,
-            mean_log_structural_dimension=0.0,
-            geometric_mean_structural_dimension=1.0,
-            bandwidth_log_structural_dimension=0.0,
-            bandwidth_status="global_fallback_no_data",
-            max_ratio=max(1.0, float(model.max_observed_ratio)),
-            n_records=0,
-            calibration_log_structural_dimensions=np.array([], dtype=float),
-            calibration_sibling_null_priors=np.array([], dtype=float),
-            calibration_stat_df_ratios=np.array([], dtype=float),
+        return SiblingLocalGaussianInflationCalibrator(
+            global_adjustment=model.global_inflation_factor,
+            log_center=0.0,
+            center=1.0,
+            spread=0.0,
+            spread_status="global_fallback_no_data",
+            max_adjustment=max(1.0, float(model.max_observed_ratio)),
+            record_count=0,
+            sample_log_scales=np.array([], dtype=float),
+            sample_weights=np.array([], dtype=float),
+            sample_adjustments=np.array([], dtype=float),
         )
 
-    structural_dimensions = np.array(
-        [_record_structural_dimension(record) for record in valid],
+    sibling_scales = np.array(
+        [_record_sibling_scale(record) for record in valid],
         dtype=float,
     )
-    log_structural_dimensions = np.log(np.maximum(structural_dimensions, 1.0))
+    sample_log_scales = np.log(np.maximum(sibling_scales, 1.0))
     sibling_null_priors = np.array(
         [record.sibling_null_prior_from_edge_pvalue for record in valid], dtype=float
     )
-    stat_df_ratios = np.array(
+    sample_adjustments = np.array(
         [record.stat / record.degrees_of_freedom for record in valid], dtype=float
     )
     positive_weight_mask = np.isfinite(sibling_null_priors) & (sibling_null_priors > 0)
     if not np.any(positive_weight_mask):
-        return PoolStats(
-            c_global=model.global_inflation_factor,
-            mean_log_structural_dimension=0.0,
-            geometric_mean_structural_dimension=1.0,
-            bandwidth_log_structural_dimension=0.0,
-            bandwidth_status="global_fallback_no_positive_weights",
-            max_ratio=max(1.0, float(np.max(stat_df_ratios)), float(model.max_observed_ratio)),
-            n_records=0,
-            calibration_log_structural_dimensions=np.array([], dtype=float),
-            calibration_sibling_null_priors=np.array([], dtype=float),
-            calibration_stat_df_ratios=np.array([], dtype=float),
+        return SiblingLocalGaussianInflationCalibrator(
+            global_adjustment=model.global_inflation_factor,
+            log_center=0.0,
+            center=1.0,
+            spread=0.0,
+            spread_status="global_fallback_no_positive_weights",
+            max_adjustment=max(
+                1.0,
+                float(np.max(sample_adjustments)),
+                float(model.max_observed_ratio),
+            ),
+            record_count=0,
+            sample_log_scales=np.array([], dtype=float),
+            sample_weights=np.array([], dtype=float),
+            sample_adjustments=np.array([], dtype=float),
         )
 
-    structural_dimensions = structural_dimensions[positive_weight_mask]
-    log_structural_dimensions = log_structural_dimensions[positive_weight_mask]
+    sibling_scales = sibling_scales[positive_weight_mask]
+    sample_log_scales = sample_log_scales[positive_weight_mask]
     sibling_null_priors = sibling_null_priors[positive_weight_mask]
-    stat_df_ratios = stat_df_ratios[positive_weight_mask]
+    sample_adjustments = sample_adjustments[positive_weight_mask]
 
-    mean_log_structural_dimension = _weighted_mean(log_structural_dimensions, sibling_null_priors)
-    bandwidth = _weighted_std(log_structural_dimensions, sibling_null_priors)
-    if not np.isfinite(bandwidth) or bandwidth <= 1e-12:
-        bandwidth = 0.0
-        bandwidth_status = "global_fallback_zero_log_k_spread"
+    log_center = _weighted_mean(sample_log_scales, sibling_null_priors)
+    spread = _weighted_std(sample_log_scales, sibling_null_priors)
+    if not np.isfinite(spread) or spread <= 1e-12:
+        spread = 0.0
+        spread_status = "global_fallback_zero_log_scale_spread"
     else:
-        bandwidth_status = "weighted_log_k_std"
+        spread_status = "weighted_log_scale_std"
 
-    pool = PoolStats(
-        c_global=model.global_inflation_factor,
-        mean_log_structural_dimension=mean_log_structural_dimension,
-        geometric_mean_structural_dimension=float(np.exp(mean_log_structural_dimension)),
-        bandwidth_log_structural_dimension=bandwidth,
-        bandwidth_status=bandwidth_status,
-        max_ratio=max(1.0, float(np.max(stat_df_ratios)), float(model.max_observed_ratio)),
-        n_records=len(stat_df_ratios),
-        calibration_log_structural_dimensions=log_structural_dimensions,
-        calibration_sibling_null_priors=_safe_weights(sibling_null_priors),
-        calibration_stat_df_ratios=stat_df_ratios,
+    calibrator = SiblingLocalGaussianInflationCalibrator(
+        global_adjustment=model.global_inflation_factor,
+        log_center=log_center,
+        center=float(np.exp(log_center)),
+        spread=spread,
+        spread_status=spread_status,
+        max_adjustment=max(
+            1.0,
+            float(np.max(sample_adjustments)),
+            float(model.max_observed_ratio),
+        ),
+        record_count=len(sample_adjustments),
+        sample_log_scales=sample_log_scales,
+        sample_weights=_safe_weights(sibling_null_priors),
+        sample_adjustments=sample_adjustments,
     )
 
     logger.debug(
-        "Local structural-k kernel pool: center_k=%.2f, bandwidth=%.4f, "
-        "c_global=%.4f, n_records=%d.",
-        pool.geometric_mean_structural_dimension,
-        pool.bandwidth_log_structural_dimension,
-        pool.c_global,
-        pool.n_records,
+        "Local sibling adjuster: center=%.2f, spread=%.4f, global_adjustment=%.4f, "
+        "record_count=%d.",
+        calibrator.center,
+        calibrator.spread,
+        calibrator.global_adjustment,
+        calibrator.record_count,
     )
-    return pool
+    return calibrator
 
 
-def predict_local_inflation_factor(
-    pool: PoolStats,
-    structural_dimension: int | float,
+def predict_sibling_adjustment(
+    calibrator: SiblingLocalGaussianInflationCalibrator,
+    sibling_scale: int | float,
 ) -> float:
-    """Return the node-specific inflation factor from the local kernel.
+    """Return the node-specific sibling adjustment from the local Gaussian fit.
 
-    The target node is positioned at ``log(k_u)``, where ``k_u`` is the
-    sibling structural dimension inferred from the decomposition. The
-    calibration pool is then reweighted with a Gaussian kernel in that
-    one-dimensional log-k space.
+    The target node is positioned at ``log(scale_u)``, where ``scale_u`` is the
+    sibling scale inferred from the decomposition. The calibration sample is
+    then reweighted with a Gaussian kernel in that one-dimensional log-scale
+    space.
     """
-    if pool.n_records == 0 or pool.bandwidth_log_structural_dimension <= 0:
-        return float(np.clip(pool.c_global, 1.0, pool.max_ratio))
+    if calibrator.record_count == 0 or calibrator.spread <= 0:
+        return float(np.clip(calibrator.global_adjustment, 1.0, calibrator.max_adjustment))
 
-    log_target = float(np.log(max(float(structural_dimension), 1.0)))
+    log_target = float(np.log(max(float(sibling_scale), 1.0)))
     normalized_offsets = (
-        pool.calibration_log_structural_dimensions - log_target
-    ) / pool.bandwidth_log_structural_dimension
+        calibrator.sample_log_scales - log_target
+    ) / calibrator.spread
     kernel_weights = np.exp(-0.5 * normalized_offsets**2)
-    local_weights = pool.calibration_sibling_null_priors * kernel_weights
+    local_weights = calibrator.sample_weights * kernel_weights
 
     if not np.isfinite(local_weights).any() or float(np.sum(local_weights)) <= 0:
-        return float(np.clip(pool.c_global, 1.0, pool.max_ratio))
+        return float(np.clip(calibrator.global_adjustment, 1.0, calibrator.max_adjustment))
 
     clean_weights = _safe_weights(local_weights)
-    local_inflation = float(np.average(pool.calibration_stat_df_ratios, weights=clean_weights))
-    return float(np.clip(local_inflation, 1.0, pool.max_ratio))
+    local_adjustment = float(np.average(calibrator.sample_adjustments, weights=clean_weights))
+    return float(np.clip(local_adjustment, 1.0, calibrator.max_adjustment))
 
 
 __all__ = [
-    "PoolStats",
-    "compute_pool_stats",
-    "predict_local_inflation_factor",
+    "SiblingLocalGaussianInflationCalibrator",
+    "fit_sibling_inflation_calibrator",
+    "predict_sibling_adjustment",
 ]
