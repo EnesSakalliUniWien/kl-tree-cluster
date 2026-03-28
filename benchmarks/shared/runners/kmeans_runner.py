@@ -40,11 +40,10 @@ def _run_kmeans_method(
             skip_reason=None,
         )
 
-    n_clusters = _resolve_n_clusters(n_samples, params)
-    n_init = int(params.get("n_init", 10))
-    random_state = 42 if seed is None else int(seed)
-
     try:
+        n_clusters = _resolve_n_clusters(n_samples, params)
+        n_init = int(params.get("n_init", 10))
+        random_state = 42 if seed is None else int(seed)
         model = KMeans(
             n_clusters=n_clusters,
             n_init=n_init,

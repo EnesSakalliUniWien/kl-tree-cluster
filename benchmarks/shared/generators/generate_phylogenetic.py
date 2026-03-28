@@ -200,7 +200,7 @@ def _get_tree_structure(root: PhyloNode) -> dict:
             "right": node_to_dict(node.right),
         }
 
-    return node_to_dict(root) or {}
+    return node_to_dict(root)
 
 
 def generate_phylogenetic_data(

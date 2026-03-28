@@ -14,14 +14,14 @@ def get_env_bool(name: str, default: bool = False) -> bool:
 
 
 def get_env_int(name: str, default: int) -> int:
-    """Parse integer environment variables with a safe default."""
+    """Parse integer environment variables."""
     raw = os.getenv(name)
     if raw is None:
         return default
     try:
         return int(raw)
-    except Exception:
-        return default
+    except ValueError as exc:
+        raise ValueError(f"{name} must be an integer, got {raw!r}.") from exc
 
 
 __all__ = ["get_env_bool", "get_env_int"]

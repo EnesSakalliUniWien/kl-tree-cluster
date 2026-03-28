@@ -26,6 +26,12 @@ def _pad_to_three_dims(embedding: np.ndarray) -> np.ndarray:
     return np.hstack([embedding, pad])
 
 
+def _require_finite(name: str, values: np.ndarray) -> np.ndarray:
+    if not np.isfinite(values).all():
+        raise ValueError(f"{name} contains non-finite values.")
+    return values
+
+
 def create_manifold_alignment_plot(
     X_original: np.ndarray,
     y_kl: np.ndarray,
@@ -43,7 +49,10 @@ def create_manifold_alignment_plot(
 
     try:
         import umap
-
+    except ImportError:
+        pca = PCA(n_components=min(3, X_scaled.shape[1], len(X_scaled)))
+        embedding_umap = pca.fit_transform(X_scaled)
+    else:
         n_neighbors = min(15, len(X_scaled) - 1) if len(X_scaled) > 1 else 1
         reducer = umap.UMAP(
             n_components=3,
@@ -53,12 +62,8 @@ def create_manifold_alignment_plot(
             metric="euclidean",
         )
         embedding_umap = reducer.fit_transform(X_scaled)
-    except Exception:
-        pca = PCA(n_components=min(3, X_scaled.shape[1], len(X_scaled)))
-        embedding_umap = pca.fit_transform(X_scaled)
 
-    embedding_umap = _pad_to_three_dims(embedding_umap)
-    embedding_umap = np.nan_to_num(embedding_umap, nan=0.0, posinf=0.0, neginf=0.0)
+    embedding_umap = _require_finite("UMAP embedding", _pad_to_three_dims(embedding_umap))
 
     n_neighbors_iso = min(10, len(X_scaled) - 1) if len(X_scaled) > 1 else 1
     embedding_iso = Isomap(
@@ -66,28 +71,24 @@ def create_manifold_alignment_plot(
         n_components=3,
         metric="euclidean",
     ).fit_transform(X_scaled)
-    embedding_iso = _pad_to_three_dims(embedding_iso)
-    embedding_iso = np.nan_to_num(embedding_iso, nan=0.0, posinf=0.0, neginf=0.0)
+    embedding_iso = _require_finite("Isomap embedding", _pad_to_three_dims(embedding_iso))
 
     dist_umap = pairwise_distances(embedding_umap)
-    dist_umap = np.nan_to_num(dist_umap, nan=0.0, posinf=0.0, neginf=0.0)
+    _require_finite("UMAP distance matrix", dist_umap)
     dist_umap = 0.5 * (dist_umap + dist_umap.T)
     np.fill_diagonal(dist_umap, 0.0)
 
     dist_iso = pairwise_distances(embedding_iso)
-    dist_iso = np.nan_to_num(dist_iso, nan=0.0, posinf=0.0, neginf=0.0)
+    _require_finite("Isomap distance matrix", dist_iso)
     dist_iso = 0.5 * (dist_iso + dist_iso.T)
     np.fill_diagonal(dist_iso, 0.0)
 
-    try:
-        mantel_stat, mantel_p, _ = mantel(
-            dist_umap,
-            dist_iso,
-            method="pearson",
-            permutations=199,
-        )
-    except Exception:
-        mantel_stat, mantel_p = float("nan"), float("nan")
+    mantel_stat, mantel_p, _ = mantel(
+        dist_umap,
+        dist_iso,
+        method="pearson",
+        permutations=199,
+    )
 
     upper_idx = np.triu_indices_from(dist_umap, k=1)
 
