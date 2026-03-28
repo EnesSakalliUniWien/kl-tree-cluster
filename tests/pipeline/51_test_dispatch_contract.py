@@ -52,7 +52,7 @@ def test_dispatch_result_propagates_runner_skip_reason():
     assert "Spectral failed" in result.skip_reason
 
 
-def test_dispatch_result_returns_skip_on_unexpected_exception(monkeypatch):
+def test_dispatch_result_propagates_unexpected_exception(monkeypatch):
     def _raise_runner(*_args, **_kwargs):
         raise RuntimeError("boom")
 
@@ -67,16 +67,17 @@ def test_dispatch_result_returns_skip_on_unexpected_exception(monkeypatch):
     )
 
     df = _toy_dataframe()
-    result = run_clustering_result(
-        data_df=df,
-        method_id="kmeans",
-        params={"n_clusters": 2},
-        seed=42,
-    )
-    assert result.status == "skip"
-    assert result.labels is None
-    assert result.report_df is None
-    assert result.skip_reason == "RuntimeError: boom"
+    try:
+        run_clustering_result(
+            data_df=df,
+            method_id="kmeans",
+            params={"n_clusters": 2},
+            seed=42,
+        )
+    except RuntimeError as exc:
+        assert str(exc) == "boom"
+    else:
+        raise AssertionError("Unexpected runner exception should propagate.")
 
 
 def test_run_clustering_result_uses_provided_kl_distance_condensed():
