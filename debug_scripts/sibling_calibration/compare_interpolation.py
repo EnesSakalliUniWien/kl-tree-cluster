@@ -5,8 +5,8 @@ on the same case (gauss_clear_medium: n=60, p=40, K=4, noise=0.6), then
 compares every intermediate value that matters:
 
   - Pre/post interpolation sibling null priors for blocked pairs
-  - T statistics, degrees of freedom, structural_dimension for ALL pairs
-  - Pool stats (center, bandwidth, n_records)
+  - T statistics, degrees of freedom, and sibling scale for ALL pairs
+  - Calibrator summary (center, spread, record_count)
   - Per-focal-pair local c, T_adj, p_adj
   - Final BH outcomes (Sibling_BH_Different / Sibling_BH_Same)
 
@@ -37,9 +37,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergenc
     annotate_child_parent_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.conditional_deflation import (
-    PoolStats,
-    compute_pool_stats,
-    predict_local_inflation_factor,
+    SiblingLocalGaussianInflationCalibrator,
+    fit_sibling_inflation_calibrator,
+    predict_sibling_adjustment,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
@@ -121,7 +121,7 @@ def _print_pair_table(records: list[SiblingPairRecord], title: str) -> None:
     """Print a summary table for a list of sibling pair records."""
     print(f"\n{title}")
     print(
-        f"  {'Parent':>8} {'T':>10} {'df':>8} {'struct_k':>8} "
+        f"  {'Parent':>8} {'T':>10} {'df':>8} {'scale':>8} "
         f"{'raw_p':>10} {'T/df':>8} {'null':>5} {'blocked':>7} "
         f"{'prior':>8} {'smooth':>8} {'anc_sup':>8} {'lambda':>8}"
     )
@@ -137,31 +137,33 @@ def _print_pair_table(records: list[SiblingPairRecord], title: str) -> None:
         lam = f"{r.neighborhood_reliance:.4f}" if r.neighborhood_reliance is not None else "None"
         print(
             f"  {r.parent:>8} {r.stat:10.4f} {r.degrees_of_freedom:8.1f} "
-            f"{r.structural_dimension:8.2f} {r.p_value:10.6f} {ratio:8.4f} "
+            f"{r.sibling_scale:8.2f} {r.p_value:10.6f} {ratio:8.4f} "
             f"{str(r.is_null_like):>5} {str(r.is_gate2_blocked):>7} "
             f"{r.sibling_null_prior_from_edge_pvalue:8.4f} {smooth:>8} "
             f"{anc:>8} {lam:>8}"
         )
 
 
-def _print_pool_stats(pool: PoolStats, label: str) -> None:
-    """Print pool stats summary."""
+def _print_calibrator_summary(
+    calibrator: SiblingLocalGaussianInflationCalibrator, label: str
+) -> None:
+    """Print calibrator summary."""
     print(f"\n  {label}:")
-    print(f"    c_global:                  {pool.c_global:.6f}")
-    print(f"    geom_mean_struct_k:        {pool.geometric_mean_structural_dimension:.6f}")
-    print(f"    bandwidth_log_struct_k:    {pool.bandwidth_log_structural_dimension:.6f}")
-    print(f"    bandwidth_status:          {pool.bandwidth_status}")
-    print(f"    max_ratio:                 {pool.max_ratio:.6f}")
-    print(f"    n_records:                 {pool.n_records}")
+    print(f"    global_adjustment:  {calibrator.global_adjustment:.6f}")
+    print(f"    center:             {calibrator.center:.6f}")
+    print(f"    spread:             {calibrator.spread:.6f}")
+    print(f"    spread_status:      {calibrator.spread_status}")
+    print(f"    max_adjustment:     {calibrator.max_adjustment:.6f}")
+    print(f"    record_count:       {calibrator.record_count}")
 
 
-def _deflate_records(records, model, pool):
-    """Deflate focal pairs using local kernel and return results dict."""
+def _deflate_records(records, _model, calibrator):
+    """Deflate focal pairs using the local calibrator and return results dict."""
     results = {}
     for r in records:
         if r.is_null_like:
             continue
-        c_local = predict_local_inflation_factor(pool, r.structural_dimension)
+        c_local = predict_sibling_adjustment(calibrator, r.sibling_scale)
         t_adj = r.stat / c_local
         p_adj = (
             float(chi2.sf(t_adj, df=r.degrees_of_freedom))
@@ -171,7 +173,7 @@ def _deflate_records(records, model, pool):
         results[r.parent] = {
             "T": r.stat,
             "df": r.degrees_of_freedom,
-            "struct_k": r.structural_dimension,
+            "scale": r.sibling_scale,
             "c_local": c_local,
             "T_adj": t_adj,
             "p_adj": p_adj,
@@ -218,25 +220,25 @@ def main() -> None:
         _print_pair_table(records_a, "--- After interpolation ---")
 
     model_a = fit_inflation_model(records_a)
-    pool_a = compute_pool_stats(records_a, model_a)
-    _print_pool_stats(pool_a, "Pool stats (Path A)")
+    calibrator_a = fit_sibling_inflation_calibrator(records_a, model_a)
+    _print_calibrator_summary(calibrator_a, "Calibrator summary (Path A)")
 
     print(
-        f"\n  Model: method={model_a.method}, c_global={model_a.global_inflation_factor:.6f}, "
-        f"max_ratio={model_a.max_observed_ratio:.6f}, n_cal={model_a.n_calibration}"
+        f"\n  Model: method={model_a.method}, global_adjustment={model_a.global_inflation_factor:.6f}, "
+        f"max_adjustment={model_a.max_observed_ratio:.6f}, n_cal={model_a.n_calibration}"
     )
 
-    deflation_a = _deflate_records(records_a, model_a, pool_a)
+    deflation_a = _deflate_records(records_a, model_a, calibrator_a)
 
     print("\n  --- Focal pair deflation (Path A) ---")
     print(
-        f"  {'Parent':>8} {'T':>10} {'df':>8} {'struct_k':>8} {'c_local':>8} {'T_adj':>10} {'p_adj':>10}"
+        f"  {'Parent':>8} {'T':>10} {'df':>8} {'scale':>8} {'c_local':>8} {'T_adj':>10} {'p_adj':>10}"
     )
     print("  " + "-" * 70)
     for parent in sorted(deflation_a, key=lambda p: deflation_a[p]["T"], reverse=True):
         d = deflation_a[parent]
         print(
-            f"  {parent:>8} {d['T']:10.4f} {d['df']:8.1f} {d['struct_k']:8.2f} "
+            f"  {parent:>8} {d['T']:10.4f} {d['df']:8.1f} {d['scale']:8.2f} "
             f"{d['c_local']:8.4f} {d['T_adj']:10.4f} {d['p_adj']:10.6f}"
         )
 
@@ -247,40 +249,40 @@ def main() -> None:
     print("PATH B: Full pipeline decompose() [with record capture]")
     print("─" * 50)
 
-    # Monkey-patch compute_pool_stats at the USAGE site (adjusted_wald_annotation)
+    # Monkey-patch fit_sibling_inflation_calibrator at the USAGE site (adjusted_wald_annotation)
     import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation as _awa_mod
 
     _captured_records_b = []
     _captured_model_b = []
-    _orig_compute_pool_stats = _awa_mod.compute_pool_stats
+    _orig_fit_calibrator = _awa_mod.fit_sibling_inflation_calibrator
 
-    def _capturing_compute_pool_stats(records, model):
+    def _capturing_fit_calibrator(records, model):
         _captured_records_b.append(list(records))
         _captured_model_b.append(model)
-        return _orig_compute_pool_stats(records, model)
+        return _orig_fit_calibrator(records, model)
 
-    _awa_mod.compute_pool_stats = _capturing_compute_pool_stats
+    _awa_mod.fit_sibling_inflation_calibrator = _capturing_fit_calibrator
 
     result = tree.decompose(leaf_data=data_bin, alpha_local=ALPHA, sibling_alpha=ALPHA)
 
-    _awa_mod.compute_pool_stats = _orig_compute_pool_stats  # restore
+    _awa_mod.fit_sibling_inflation_calibrator = _orig_fit_calibrator  # restore
 
     print(f"Found K = {result['num_clusters']}")
-    print(f"  Captured {len(_captured_records_b)} compute_pool_stats call(s)")
+    print(f"  Captured {len(_captured_records_b)} fit_sibling_inflation_calibrator call(s)")
 
     if _captured_records_b:
         records_b = _captured_records_b[0]
         model_b = _captured_model_b[0]
         print(f"  Pipeline records: {len(records_b)}")
-        print(f"  Pipeline c_global: {model_b.global_inflation_factor:.6f}")
+        print(f"  Pipeline global_adjustment: {model_b.global_inflation_factor:.6f}")
 
-        # — Direct per-record comparison: prior and struct_k —
+        # — Direct per-record comparison: prior and scale —
         print("\n--- Per-record prior comparison (trace vs pipeline) ---")
         print(
             f"  {'Parent':>8} {'prior_A':>10} {'prior_B':>10} {'delta':>12} "
-            f"{'sk_A':>6} {'sk_B':>6} {'match':>6}"
+            f"{'scale_A':>8} {'scale_B':>8} {'match':>6}"
         )
-        print("  " + "-" * 68)
+        print("  " + "-" * 74)
         rec_a_map = {r.parent: r for r in records_a}
         rec_b_map = {r.parent: r for r in records_b}
         prior_mismatches = 0
@@ -298,7 +300,7 @@ def main() -> None:
                 print(
                     f"  {parent:>8} {ra.sibling_null_prior_from_edge_pvalue:10.6f} "
                     f"{rb.sibling_null_prior_from_edge_pvalue:10.6f} {delta:+12.6e} "
-                    f"{ra.structural_dimension:6.1f} {rb.structural_dimension:6.1f} {flag:>6}"
+                    f"{ra.sibling_scale:6.1f} {rb.sibling_scale:6.1f} {flag:>6}"
                 )
             elif ra:
                 print(
@@ -310,9 +312,12 @@ def main() -> None:
                 )
         print(f"\n  Prior mismatches: {prior_mismatches}/{len(rec_a_map)}")
 
-        # Re-compute pool stats with pipeline's records for comparison
-        pool_b = _orig_compute_pool_stats(records_b, model_b)
-        _print_pool_stats(pool_b, "Pool stats (re-computed from captured pipeline records)")
+        # Re-fit the calibrator with the pipeline's records for comparison.
+        calibrator_b = _orig_fit_calibrator(records_b, model_b)
+        _print_calibrator_summary(
+            calibrator_b,
+            "Calibrator summary (re-fit from captured pipeline records)",
+        )
     else:
         records_b = None
 
@@ -420,11 +425,11 @@ def main() -> None:
     else:
         print("\n  No blocked pairs — interpolation was not invoked.")
 
-    # Compare pool-level stats vs pipeline audit
-    print("\n--- Pool stats vs pipeline audit ---")
+    # Compare calibrator-level summary vs pipeline audit.
+    print("\n--- Calibrator summary vs pipeline audit ---")
     pipe_c = audit.get("global_inflation_factor")
-    pipe_bw = audit.get("local_kernel_bandwidth_log_structural_dimension")
-    pipe_center = audit.get("local_kernel_center_structural_dimension")
+    pipe_spread = audit.get("local_adjuster_spread")
+    pipe_center = audit.get("local_adjuster_center")
     print(f"  {'Metric':<45} {'Trace':>12} {'Pipeline':>12} {'Match':>6}")
     print("  " + "-" * 78)
 
@@ -437,10 +442,10 @@ def main() -> None:
             match = "skip"
         print(f"  {label:<45} {t_str:>12} {p_str:>12} {match:>6}")
 
-    _cmp("global_inflation_factor (c_global)", pool_a.c_global, pipe_c)
-    _cmp("geom_mean_structural_dimension", pool_a.geometric_mean_structural_dimension, pipe_center)
-    _cmp("bandwidth_log_structural_dimension", pool_a.bandwidth_log_structural_dimension, pipe_bw)
-    _cmp("max_ratio", pool_a.max_ratio, audit.get("max_observed_ratio"))
+    _cmp("global_inflation_factor (global_adjustment)", calibrator_a.global_adjustment, pipe_c)
+    _cmp("center", calibrator_a.center, pipe_center)
+    _cmp("spread", calibrator_a.spread, pipe_spread)
+    _cmp("max_adjustment", calibrator_a.max_adjustment, audit.get("max_observed_ratio"))
     _cmp("n_calibration", float(model_a.n_calibration), float(audit.get("calibration_n", 0)))
 
     # Summary

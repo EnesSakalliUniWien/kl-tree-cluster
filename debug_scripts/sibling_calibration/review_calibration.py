@@ -1,12 +1,12 @@
 """Multi-case calibration review: diagnoses the cousin-adjusted Wald pipeline.
 
-Runs the full calibration chain (collect → interpolate → fit → pool → deflate)
+Runs the full calibration chain (collect → interpolate → fit → calibrate → deflate)
 across a representative set of benchmark cases and reports:
 
-  1. Global inflation ĉ, effective_n, max_ratio, null-like/focal/blocked counts
-  2. Pool geometry: center, bandwidth, bandwidth_status
-  3. Local kernel c(k) profile: inflation factor at each unique structural_k
-  4. Per-focal-pair: T, df, structural_k, c_local, T_adj, p_adj
+  1. Global inflation ĉ, effective_n, max_adjustment, null-like/focal/blocked counts
+  2. Calibrator summary: center, spread, spread_status
+  3. Local adjuster c(scale) profile: inflation factor at each unique sibling scale
+  4. Per-focal-pair: T, df, sibling scale, c_local, T_adj, p_adj
   5. Pipeline K vs true K, ARI
   6. Cross-case summary table
 
@@ -42,8 +42,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergenc
     annotate_child_parent_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.conditional_deflation import (
-    compute_pool_stats,
-    predict_local_inflation_factor,
+    fit_sibling_inflation_calibrator,
+    predict_sibling_adjustment,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
@@ -177,47 +177,55 @@ def analyze_case(
 
     # Fit inflation model
     model = fit_inflation_model(records)
-    c_global = model.global_inflation_factor
-    max_ratio = model.max_observed_ratio
+    global_adjustment = model.global_inflation_factor
+    max_adjustment = model.max_observed_ratio
     diag = model.diagnostics or {}
     effective_n = diag.get("effective_n", 0.0)
 
-    # Pool stats
-    pool = compute_pool_stats(records, model)
+    # Fit the local sibling adjuster.
+    calibrator = fit_sibling_inflation_calibrator(records, model)
 
-    # Collect T/df ratios and structural dims
+    # Collect T/df ratios and sibling scales.
     all_ratios = []
-    all_struct_k = []
+    all_scales = []
     all_priors = []
     for r in records:
         if np.isfinite(r.stat) and r.degrees_of_freedom > 0:
             ratio = r.stat / r.degrees_of_freedom
             if ratio > 0:
                 all_ratios.append(ratio)
-                sk = r.structural_dimension if np.isfinite(r.structural_dimension) and r.structural_dimension > 0 else r.degrees_of_freedom
-                all_struct_k.append(sk)
+                scale = (
+                    r.sibling_scale
+                    if np.isfinite(r.sibling_scale) and r.sibling_scale > 0
+                    else r.degrees_of_freedom
+                )
+                all_scales.append(scale)
                 all_priors.append(r.sibling_null_prior_from_edge_pvalue)
 
-    # Local kernel profile: c(k) at unique structural dimensions
-    unique_k = sorted(set(all_struct_k))
+    # Local adjuster profile: c(scale) at each unique sibling scale.
+    unique_scales = sorted(set(all_scales))
     c_local_profile = {}
-    for k in unique_k:
-        c_local_profile[k] = predict_local_inflation_factor(pool, k)
+    for scale in unique_scales:
+        c_local_profile[scale] = predict_sibling_adjustment(calibrator, scale)
 
     # Focal pair deflation
     focal_details = []
     for r in records:
         if r.is_null_like:
             continue
-        sk = r.structural_dimension if np.isfinite(r.structural_dimension) and r.structural_dimension > 0 else r.degrees_of_freedom
-        c_local = predict_local_inflation_factor(pool, sk)
+        scale = (
+            r.sibling_scale
+            if np.isfinite(r.sibling_scale) and r.sibling_scale > 0
+            else r.degrees_of_freedom
+        )
+        c_local = predict_sibling_adjustment(calibrator, scale)
         t_adj = r.stat / c_local if c_local > 0 else r.stat
         p_adj = float(chi2.sf(t_adj, df=r.degrees_of_freedom)) if r.degrees_of_freedom > 0 else float("nan")
         focal_details.append({
             "parent": r.parent,
             "T": r.stat,
             "df": r.degrees_of_freedom,
-            "struct_k": sk,
+            "scale": scale,
             "c_local": c_local,
             "T_adj": t_adj,
             "p_adj": p_adj,
@@ -245,13 +253,13 @@ def analyze_case(
         "n_null": n_null,
         "n_focal": n_focal,
         "n_blocked": n_blocked,
-        "c_global": c_global,
+        "global_adjustment": global_adjustment,
         "effective_n": effective_n,
-        "max_ratio": max_ratio,
-        "pool_center_k": pool.geometric_mean_structural_dimension,
-        "pool_bandwidth": pool.bandwidth_log_structural_dimension,
-        "pool_bw_status": pool.bandwidth_status,
-        "pool_n_records": pool.n_records,
+        "max_adjustment": max_adjustment,
+        "calibrator_center": calibrator.center,
+        "calibrator_spread": calibrator.spread,
+        "calibrator_spread_status": calibrator.spread_status,
+        "calibrator_record_count": calibrator.record_count,
         "c_local_profile": c_local_profile,
         "focal_details": focal_details,
         "ratio_stats": {
@@ -261,11 +269,11 @@ def analyze_case(
             "max": float(np.max(all_ratios)) if all_ratios else float("nan"),
             "std": float(np.std(all_ratios)) if all_ratios else float("nan"),
         },
-        "struct_k_stats": {
-            "min": float(np.min(all_struct_k)) if all_struct_k else float("nan"),
-            "median": float(np.median(all_struct_k)) if all_struct_k else float("nan"),
-            "max": float(np.max(all_struct_k)) if all_struct_k else float("nan"),
-            "unique_count": len(unique_k),
+        "scale_stats": {
+            "min": float(np.min(all_scales)) if all_scales else float("nan"),
+            "median": float(np.median(all_scales)) if all_scales else float("nan"),
+            "max": float(np.max(all_scales)) if all_scales else float("nan"),
+            "unique_count": len(unique_scales),
         },
         "prior_stats": {
             "min": float(np.min(all_priors)) if all_priors else float("nan"),
@@ -302,43 +310,46 @@ def _print_case_report(s: dict) -> None:
 
     # ── Global inflation ──
     print("\n  Global inflation:")
-    print(f"    ĉ_global      = {s['c_global']:.6f}")
+    print(f"    ĉ_global      = {s['global_adjustment']:.6f}")
     print(f"    effective_n    = {s['effective_n']:.1f}")
-    print(f"    max_ratio      = {s['max_ratio']:.4f}")
+    print(f"    max_adjustment      = {s['max_adjustment']:.4f}")
 
     # ── T/df ratio distribution ──
     rs = s["ratio_stats"]
     print("\n  T/df ratio distribution (all valid pairs):")
     print(f"    min={rs['min']:.4f}  median={rs['median']:.4f}  mean={rs['mean']:.4f}  max={rs['max']:.4f}  std={rs['std']:.4f}")
 
-    # ── Structural dimension ──
-    ks = s["struct_k_stats"]
-    print("\n  Structural dimension (k):")
-    print(f"    min={ks['min']:.0f}  median={ks['median']:.0f}  max={ks['max']:.0f}  unique values: {ks['unique_count']}")
+    # ── Sibling scale ──
+    scale_stats = s["scale_stats"]
+    print("\n  Sibling scale:")
+    print(
+        f"    min={scale_stats['min']:.0f}  median={scale_stats['median']:.0f}  "
+        f"max={scale_stats['max']:.0f}  unique values: {scale_stats['unique_count']}"
+    )
 
     # ── Prior distribution ──
     ps = s["prior_stats"]
     print("\n  Sibling null prior distribution:")
     print(f"    min={ps['min']:.6f}  median={ps['median']:.6f}  mean={ps['mean']:.6f}  max={ps['max']:.6f}")
 
-    # ── Pool stats ──
-    print("\n  Pool stats:")
-    print(f"    center (geom_mean_k) = {s['pool_center_k']:.4f}")
-    print(f"    bandwidth (log_k)    = {s['pool_bandwidth']:.6f}")
-    print(f"    bandwidth_status     = {s['pool_bw_status']}")
-    print(f"    n_records            = {s['pool_n_records']}")
+    # ── Calibrator summary ──
+    print("\n  Calibrator summary:")
+    print(f"    center         = {s['calibrator_center']:.4f}")
+    print(f"    spread         = {s['calibrator_spread']:.6f}")
+    print(f"    spread_status  = {s['calibrator_spread_status']}")
+    print(f"    record_count   = {s['calibrator_record_count']}")
 
-    # ── Local kernel c(k) profile ──
+    # ── Local adjuster c(scale) profile ──
     profile = s["c_local_profile"]
     if profile:
-        print("\n  Local kernel c(k) profile:")
-        print(f"    {'k':>8} {'c_local':>10} {'c/c_global':>12}")
+        print("\n  Local adjuster c(scale) profile:")
+        print(f"    {'scale':>8} {'c_local':>10} {'c/global':>12}")
         print(f"    {'─'*8} {'─'*10} {'─'*12}")
-        for k in sorted(profile.keys()):
-            c = profile[k]
-            ratio = c / s["c_global"] if s["c_global"] > 0 else float("nan")
+        for scale in sorted(profile.keys()):
+            c = profile[scale]
+            ratio = c / s["global_adjustment"] if s["global_adjustment"] > 0 else float("nan")
             bar = "█" * min(int(c / max(profile.values()) * 30), 30) if max(profile.values()) > 0 else ""
-            print(f"    {k:8.1f} {c:10.4f} {ratio:12.4f}  {bar}")
+            print(f"    {scale:8.1f} {c:10.4f} {ratio:12.4f}  {bar}")
         c_vals = list(profile.values())
         c_range = max(c_vals) / min(c_vals) if min(c_vals) > 0 else float("inf")
         print(f"    c_local range: {min(c_vals):.4f} → {max(c_vals):.4f}  (ratio: {c_range:.1f}×)")
@@ -347,12 +358,12 @@ def _print_case_report(s: dict) -> None:
     focal = s["focal_details"]
     if focal:
         print(f"\n  Focal pair deflation ({len(focal)} pairs):")
-        print(f"    {'Parent':>8} {'T':>10} {'df':>6} {'sk':>6} {'c_local':>8} {'T_adj':>10} {'p_adj':>10} {'prior':>8} {'n_par':>6}")
+        print(f"    {'Parent':>8} {'T':>10} {'df':>6} {'scale':>7} {'c_local':>8} {'T_adj':>10} {'p_adj':>10} {'prior':>8} {'n_par':>6}")
         print(f"    {'─'*8} {'─'*10} {'─'*6} {'─'*6} {'─'*8} {'─'*10} {'─'*10} {'─'*8} {'─'*6}")
         for d in sorted(focal, key=lambda x: x["T"], reverse=True):
             sig = "*" if d["p_adj"] < ALPHA else " "
             print(
-                f"    {d['parent']:>8} {d['T']:10.4f} {d['df']:6.1f} {d['struct_k']:6.1f} "
+                f"    {d['parent']:>8} {d['T']:10.4f} {d['df']:6.1f} {d['scale']:7.1f} "
                 f"{d['c_local']:8.4f} {d['T_adj']:10.4f} {d['p_adj']:10.6f}{sig} "
                 f"{d['prior']:8.4f} {d['n_parent']:6}"
             )
@@ -375,7 +386,7 @@ def _print_cross_case_summary(summaries: list[dict]) -> None:
         f"  {'Case':<30} {'n':>5} {'p':>5} {'K*':>3} {'K':>3} {'ARI':>6} "
         f"{'pairs':>5} {'null%':>5} {'focal':>5} {'blk':>4} "
         f"{'ĉ_glob':>7} {'eff_n':>6} {'max_R':>8} "
-        f"{'bw':>6} {'c_min':>6} {'c_max':>6} {'c_×':>5}"
+        f"{'spr':>6} {'c_min':>6} {'c_max':>6} {'c_×':>5}"
     )
     print("  " + "─" * 136)
 
@@ -396,8 +407,8 @@ def _print_cross_case_summary(summaries: list[dict]) -> None:
             f"  {s['name']:<30} {s['n_samples']:5} {s['n_features']:5} {s['true_k']:3} "
             f"{s['pipeline_k']:3}{k_match} {s['ari']:6.3f} "
             f"{s['total_pairs']:5} {null_pct:5.1f} {s['n_focal']:5} {s['n_blocked']:4} "
-            f"{s['c_global']:7.3f} {s['effective_n']:6.1f} {s['max_ratio']:8.2f} "
-            f"{s['pool_bandwidth']:6.3f} {c_min:6.2f} {c_max:6.2f} {c_range:5.1f}"
+            f"{s['global_adjustment']:7.3f} {s['effective_n']:6.1f} {s['max_adjustment']:8.2f} "
+            f"{s['calibrator_spread']:6.3f} {c_min:6.2f} {c_max:6.2f} {c_range:5.1f}"
         )
 
     print("  " + "─" * 136)
@@ -408,15 +419,15 @@ def _print_cross_case_summary(summaries: list[dict]) -> None:
 
     # Calibration quality indicators
     print("\n  Calibration diagnostics:")
-    c_globals = [s["c_global"] for s in summaries]
+    c_globals = [s["global_adjustment"] for s in summaries]
     print(f"    ĉ_global range:   {min(c_globals):.3f} – {max(c_globals):.3f}")
     eff_ns = [s["effective_n"] for s in summaries]
     print(f"    effective_n range: {min(eff_ns):.1f} – {max(eff_ns):.1f}")
-    bws = [s["pool_bandwidth"] for s in summaries if s["pool_bandwidth"] > 0]
-    if bws:
-        print(f"    bandwidth range:  {min(bws):.4f} – {max(bws):.4f}")
-    max_rs = [s["max_ratio"] for s in summaries]
-    print(f"    max_ratio range:  {min(max_rs):.2f} – {max(max_rs):.2f}")
+    spreads = [s["calibrator_spread"] for s in summaries if s["calibrator_spread"] > 0]
+    if spreads:
+        print(f"    spread range:     {min(spreads):.4f} – {max(spreads):.4f}")
+    max_rs = [s["max_adjustment"] for s in summaries]
+    print(f"    max_adjustment range:  {min(max_rs):.2f} – {max(max_rs):.2f}")
 
     # Over/under-splitting diagnosis
     over_split = [s for s in summaries if s["pipeline_k"] > s["true_k"] * 1.5]
@@ -424,11 +435,15 @@ def _print_cross_case_summary(summaries: list[dict]) -> None:
     if over_split:
         print(f"\n  Over-splitting cases ({len(over_split)}):")
         for s in over_split:
-            print(f"    {s['name']}: K={s['pipeline_k']} vs K*={s['true_k']},  ĉ={s['c_global']:.3f}, c_max={max(s['c_local_profile'].values()) if s['c_local_profile'] else 0:.3f}")
+            print(
+                f"    {s['name']}: K={s['pipeline_k']} vs K*={s['true_k']},  "
+                f"ĉ={s['global_adjustment']:.3f}, "
+                f"c_max={max(s['c_local_profile'].values()) if s['c_local_profile'] else 0:.3f}"
+            )
     if under_split:
         print(f"\n  Under-splitting cases ({len(under_split)}):")
         for s in under_split:
-            print(f"    {s['name']}: K={s['pipeline_k']} vs K*={s['true_k']},  ĉ={s['c_global']:.3f}, eff_n={s['effective_n']:.1f}")
+            print(f"    {s['name']}: K={s['pipeline_k']} vs K*={s['true_k']},  ĉ={s['global_adjustment']:.3f}, eff_n={s['effective_n']:.1f}")
 
     # Null case analysis
     null_cases = [s for s in summaries if s["true_k"] == 1]
@@ -436,7 +451,7 @@ def _print_cross_case_summary(summaries: list[dict]) -> None:
         print("\n  Null cases (true_K=1):")
         for s in null_cases:
             status = "✓ K=1" if s["pipeline_k"] == 1 else f"✗ K={s['pipeline_k']} (false positive)"
-            print(f"    {s['name']}: {status},  ĉ={s['c_global']:.3f}, null%={s['n_null']/s['total_pairs']*100:.0f}%")
+            print(f"    {s['name']}: {status},  ĉ={s['global_adjustment']:.3f}, null%={s['n_null']/s['total_pairs']*100:.0f}%")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────

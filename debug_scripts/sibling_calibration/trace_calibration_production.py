@@ -9,8 +9,8 @@ replicates every step of the production `run_gate_annotation_pipeline`:
 4. collect_sibling_pair_records  with child_pca_projections + whitening
 5. interpolate_sibling_null_priors  (if blocked pairs exist)
 6. fit_inflation_model  (global ĉ)
-7. compute_pool_stats  (local kernel in log-k space)
-8. _deflate_and_test  using predict_local_inflation_factor  (per-node ĉ)
+7. fit_sibling_inflation_calibrator  (local Gaussian adjuster in log-scale space)
+8. _deflate_and_test  using predict_sibling_adjustment  (per-node ĉ)
 9. Full decompose() comparison
 
 This is a diagnostic-only script.  It does NOT modify any production code.
@@ -31,8 +31,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergenc
     annotate_child_parent_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.conditional_deflation import (
-    compute_pool_stats,
-    predict_local_inflation_factor,
+    fit_sibling_inflation_calibrator,
+    predict_sibling_adjustment,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
@@ -138,14 +138,14 @@ def trace_case(
 
     # ── Per-pair table ──────────────────────────────────────────────────
     print(
-        f"{'Parent':>8} {'T':>10} {'k':>6} {'struct_k':>8} "
+        f"{'Parent':>8} {'T':>10} {'k':>6} {'scale':>8} "
         f"{'raw_p':>10} {'r=T/k':>8} {'null':>5} {'prior':>8} {'bl_sum':>8} {'n_par':>6}"
     )
     print("-" * 100)
     for r in sorted(records, key=lambda x: x.n_parent, reverse=True):
         ratio = r.stat / r.degrees_of_freedom if r.degrees_of_freedom > 0 else float("nan")
         print(
-            f"{r.parent:>8} {r.stat:10.4f} {r.degrees_of_freedom:6.0f} {r.structural_dimension:8.2f} "
+            f"{r.parent:>8} {r.stat:10.4f} {r.degrees_of_freedom:6.0f} {r.sibling_scale:8.2f} "
             f"{r.p_value:10.6f} {ratio:8.4f} {str(r.is_null_like):>5} "
             f"{r.sibling_null_prior_from_edge_pvalue:8.4f} "
             f"{r.branch_length_sum:8.4f} {r.n_parent:6d}"
@@ -174,15 +174,15 @@ def trace_case(
         for k, v in sorted(model.diagnostics.items()):
             print(f"  diag.{k}: {v}")
 
-    # ── Step 7: Compute pool stats (local kernel) ───────────────────────
-    pool = compute_pool_stats(records, model)
-    print("\nPool stats:")
-    print(f"  c_global: {pool.c_global:.4f}")
-    print(f"  geometric_mean_structural_dimension: {pool.geometric_mean_structural_dimension:.4f}")
-    print(f"  bandwidth_log_structural_dimension: {pool.bandwidth_log_structural_dimension:.4f}")
-    print(f"  bandwidth_status: {pool.bandwidth_status}")
-    print(f"  max_ratio: {pool.max_ratio:.4f}")
-    print(f"  n_records: {pool.n_records}")
+    # ── Step 7: Fit calibrator summary (local Gaussian adjuster) ────────
+    calibrator = fit_sibling_inflation_calibrator(records, model)
+    print("\nCalibrator summary:")
+    print(f"  global_adjustment: {calibrator.global_adjustment:.4f}")
+    print(f"  center: {calibrator.center:.4f}")
+    print(f"  spread: {calibrator.spread:.4f}")
+    print(f"  spread_status: {calibrator.spread_status}")
+    print(f"  max_adjustment: {calibrator.max_adjustment:.4f}")
+    print(f"  record_count: {calibrator.record_count}")
 
     # ── Step 8: Per-node local deflation ────────────────────────────────
     root = [n for n in tree.nodes if tree.in_degree(n) == 0][0]
@@ -193,8 +193,8 @@ def trace_case(
     for r in sorted(records, key=lambda x: x.n_parent, reverse=True):
         if r.is_null_like:
             continue
-        c_local = predict_local_inflation_factor(pool, r.structural_dimension)
-        c_global = predict_inflation_factor(model, r.branch_length_sum, r.n_parent)
+        c_local = predict_sibling_adjustment(calibrator, r.sibling_scale)
+        global_adjustment = predict_inflation_factor(model, r.branch_length_sum, r.n_parent)
         t_adj = r.stat / c_local
         p_adj = (
             float(chi2.sf(t_adj, df=r.degrees_of_freedom))
@@ -202,8 +202,8 @@ def trace_case(
             else float("nan")
         )
         print(
-            f"  {r.parent:>8}  T={r.stat:8.2f}  k={r.degrees_of_freedom:5.1f}  struct_k={r.structural_dimension:6.2f}"
-            f"  c_local={c_local:6.3f}  c_global={c_global:6.3f}  delta={c_local - c_global:+7.3f}"
+            f"  {r.parent:>8}  T={r.stat:8.2f}  k={r.degrees_of_freedom:5.1f}  scale={r.sibling_scale:6.2f}"
+            f"  c_local={c_local:6.3f}  global_adjustment={global_adjustment:6.3f}  delta={c_local - global_adjustment:+7.3f}"
             f"  T_adj={t_adj:8.2f}  p_adj={p_adj:.6f}  reject={p_adj < 0.05}"
         )
 
@@ -211,10 +211,10 @@ def trace_case(
     root_rec = [r for r in records if r.parent == root]
     if root_rec:
         rr = root_rec[0]
-        c_local = predict_local_inflation_factor(pool, rr.structural_dimension)
-        c_global = predict_inflation_factor(model, rr.branch_length_sum, rr.n_parent)
+        c_local = predict_sibling_adjustment(calibrator, rr.sibling_scale)
+        global_adjustment = predict_inflation_factor(model, rr.branch_length_sum, rr.n_parent)
         t_adj_local = rr.stat / c_local
-        t_adj_global = rr.stat / c_global
+        t_adj_global = rr.stat / global_adjustment
         p_local = (
             float(chi2.sf(t_adj_local, df=rr.degrees_of_freedom))
             if rr.degrees_of_freedom > 0
@@ -229,7 +229,7 @@ def trace_case(
         print(f"\n--- ROOT NODE ({root}) ---")
         print(f"  Children: {root_children}")
         print(
-            f"  T = {rr.stat:.4f},  k = {rr.degrees_of_freedom:.1f},  struct_k = {rr.structural_dimension:.2f}"
+            f"  T = {rr.stat:.4f},  k = {rr.degrees_of_freedom:.1f},  scale = {rr.sibling_scale:.2f}"
         )
         print(f"  raw p = {rr.p_value:.6f}")
         print(f"  is_null_like = {rr.is_null_like}")
@@ -239,7 +239,7 @@ def trace_case(
             f"  LOCAL deflation (production):  c={c_local:.4f}  T_adj={t_adj_local:.4f}  p_adj={p_local:.6f}  reject={p_local < 0.05}"
         )
         print(
-            f"  GLOBAL deflation (old trace):  c={c_global:.4f}  T_adj={t_adj_global:.4f}  p_adj={p_global:.6f}  reject={p_global < 0.05}"
+            f"  GLOBAL deflation (old trace):  c={global_adjustment:.4f}  T_adj={t_adj_global:.4f}  p_adj={p_global:.6f}  reject={p_global < 0.05}"
         )
 
     # ── Step 9: Full pipeline comparison ────────────────────────────────

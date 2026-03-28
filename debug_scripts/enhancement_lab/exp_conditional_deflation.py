@@ -1,23 +1,23 @@
-"""Historical lab: compare pre-local-kernel deflation strategies.
+"""Historical lab: compare pre-local-adjuster deflation strategies.
 
 This script preserves the old df-mismatch experiments for reference.
 The production runtime no longer uses these strategies; it now applies
-local structural-k kernel deflation.
+the local Gaussian adjuster.
 
 Tests multiple strategies for computing a per-node deflation factor
-c_i = 1 + (c_global - 1) * r_i, where r_i ∈ [0,1] controls how much
+c_i = 1 + (global_adjustment - 1) * r_i, where r_i ∈ [0,1] controls how much
 of the global deflation is applied to each node.
 
-The bounded interpolation guarantees 1 ≤ c_i ≤ c_global, so these
+The bounded interpolation guarantees 1 ≤ c_i ≤ global_adjustment, so these
 strategies can only REDUCE over-deflation — they cannot cause new K=1
 collapses compared to the global-constant baseline.
 
 Strategies:
   1. global           — global constant baseline
   2. no_deflation     — c_i = 1.0 (raw Wald, maximum splitting power)
-  3. half_global      — c_i = 1 + (c_global - 1) * 0.5 (constant 50% reduction)
-  4. bounded_df_mismatch — r_i = clip(1 - α·|log(k_i / k_pool_median)|, 0, 1)
-  5. bounded_ratio_cap   — r_i = clip(raw_ratio / c_global, 0, 1)
+  3. half_global      — c_i = 1 + (global_adjustment - 1) * 0.5 (constant 50% reduction)
+  4. bounded_df_mismatch — r_i = clip(1 - α·|log(k_i / k_center)|, 0, 1)
+  5. bounded_ratio_cap   — r_i = clip(raw_ratio / global_adjustment, 0, 1)
 """
 
 from __future__ import annotations
@@ -50,28 +50,30 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pai
     deflate_focal_pairs,
 )
 
-# ── Pool statistics computed once per case ─────────────────────────────────
+# ── Calibrator summary computed once per case ───────────────────────────────
 
 
 @dataclass(frozen=True)
-class PoolStats:
-    """Summary statistics from the calibration pool for strategy use."""
+class StrategyCalibratorSummary:
+    """Summary statistics from the calibration sample for strategy use."""
 
-    c_global: float
-    median_log_df: float  # weighted median of log(df) across all valid records
-    median_df: float  # exp(median_log_df)
-    n_records: int
+    global_adjustment: float
+    log_center: float  # weighted median of log(df) across all valid records
+    center: float  # exp(log_center)
+    record_count: int
 
 
-def compute_pool_stats(records: List[SiblingPairRecord], model: CalibrationModel) -> PoolStats:
-    """Compute pool-level statistics from all sibling pair records."""
+def fit_strategy_calibrator_summary(
+    records: List[SiblingPairRecord], model: CalibrationModel
+) -> StrategyCalibratorSummary:
+    """Compute a summary calibrator view from all sibling pair records."""
     valid = [r for r in records if np.isfinite(r.stat) and r.degrees_of_freedom > 0]
     if not valid:
-        return PoolStats(
-            c_global=model.global_inflation_factor,
-            median_log_df=0.0,
-            median_df=1.0,
-            n_records=0,
+        return StrategyCalibratorSummary(
+            global_adjustment=model.global_inflation_factor,
+            log_center=0.0,
+            center=1.0,
+            record_count=0,
         )
 
     log_dfs = np.array([np.log(max(r.degrees_of_freedom, 1)) for r in valid])
@@ -87,73 +89,89 @@ def compute_pool_stats(records: List[SiblingPairRecord], model: CalibrationModel
     if total_weight > 0:
         median_idx = np.searchsorted(cum_weights, total_weight / 2.0)
         median_idx = min(median_idx, len(sorted_log_dfs) - 1)
-        median_log_df = float(sorted_log_dfs[median_idx])
+        log_center = float(sorted_log_dfs[median_idx])
     else:
-        median_log_df = float(np.median(log_dfs))
+        log_center = float(np.median(log_dfs))
 
-    return PoolStats(
-        c_global=model.global_inflation_factor,
-        median_log_df=median_log_df,
-        median_df=float(np.exp(median_log_df)),
-        n_records=len(valid),
+    return StrategyCalibratorSummary(
+        global_adjustment=model.global_inflation_factor,
+        log_center=log_center,
+        center=float(np.exp(log_center)),
+        record_count=len(valid),
     )
 
 
 # ── Strategy definitions ───────────────────────────────────────────────────
 
-StrategyFn = Callable[[SiblingPairRecord, CalibrationModel, PoolStats], float]
-"""Strategy signature: (record, model, pool_stats) → c_i."""
+StrategyFn = Callable[[SiblingPairRecord, CalibrationModel, StrategyCalibratorSummary], float]
+"""Strategy signature: (record, model, calibrator_summary) → c_i."""
 
 
-def _strategy_global(rec: SiblingPairRecord, model: CalibrationModel, pool: PoolStats) -> float:
+def _strategy_global(
+    rec: SiblingPairRecord,
+    model: CalibrationModel,
+    calibrator_summary: StrategyCalibratorSummary,
+) -> float:
     """Baseline: global constant c_hat for all nodes."""
     return model.global_inflation_factor
 
 
 def _strategy_no_deflation(
-    rec: SiblingPairRecord, model: CalibrationModel, pool: PoolStats
+    rec: SiblingPairRecord,
+    model: CalibrationModel,
+    calibrator_summary: StrategyCalibratorSummary,
 ) -> float:
     """No deflation at all — raw Wald statistic."""
     return 1.0
 
 
 def _strategy_half_global(
-    rec: SiblingPairRecord, model: CalibrationModel, pool: PoolStats
+    rec: SiblingPairRecord,
+    model: CalibrationModel,
+    calibrator_summary: StrategyCalibratorSummary,
 ) -> float:
-    """Constant 50% interpolation: c_i = 1 + (c_global - 1) * 0.5."""
-    return 1.0 + (pool.c_global - 1.0) * 0.5
+    """Constant 50% interpolation: c_i = 1 + (global_adjustment - 1) * 0.5."""
+    return 1.0 + (calibrator_summary.global_adjustment - 1.0) * 0.5
 
 
 def _make_df_mismatch_strategy(alpha: float) -> StrategyFn:
-    """Factory: r_i = clip(1 - alpha * |log(k_i / k_pool_median)|, 0, 1).
+    """Factory: r_i = clip(1 - alpha * |log(k_i / k_center)|, 0, 1).
 
-    Nodes whose df matches the calibration pool median get full deflation.
-    Nodes whose df is far from the pool median get reduced deflation.
+    Nodes whose df matches the calibration-sample center get full deflation.
+    Nodes whose df is far from that center get reduced deflation.
     """
 
-    def _strategy(rec: SiblingPairRecord, model: CalibrationModel, pool: PoolStats) -> float:
+    def _strategy(
+        rec: SiblingPairRecord,
+        model: CalibrationModel,
+        calibrator_summary: StrategyCalibratorSummary,
+    ) -> float:
         k_i = max(rec.degrees_of_freedom, 1)
-        k_median = max(pool.median_df, 1.0)
+        k_median = max(calibrator_summary.center, 1.0)
         df_mismatch = abs(np.log(k_i / k_median))
         r_i = float(np.clip(1.0 - alpha * df_mismatch, 0.0, 1.0))
-        return 1.0 + (pool.c_global - 1.0) * r_i
+        return 1.0 + (calibrator_summary.global_adjustment - 1.0) * r_i
 
     _strategy.__doc__ = f"df-mismatch (α={alpha})"
     _strategy.__name__ = f"df_mismatch_a{alpha}"
     return _strategy
 
 
-def _strategy_ratio_cap(rec: SiblingPairRecord, model: CalibrationModel, pool: PoolStats) -> float:
-    """Self-anchored: r_i = clip(raw_ratio / c_global, 0, 1).
+def _strategy_ratio_cap(
+    rec: SiblingPairRecord,
+    model: CalibrationModel,
+    calibrator_summary: StrategyCalibratorSummary,
+) -> float:
+    """Self-anchored: r_i = clip(raw_ratio / global_adjustment, 0, 1).
 
-    Nodes whose raw T/k is already below c_global get proportionally
-    less deflation. Nodes at or above c_global get full deflation.
+    Nodes whose raw T/k is already below global_adjustment get proportionally
+    less deflation. Nodes at or above global_adjustment get full deflation.
     """
-    if rec.degrees_of_freedom <= 0 or pool.c_global <= 1.0:
-        return pool.c_global
+    if rec.degrees_of_freedom <= 0 or calibrator_summary.global_adjustment <= 1.0:
+        return calibrator_summary.global_adjustment
     raw_ratio = rec.stat / rec.degrees_of_freedom
-    r_i = float(np.clip(raw_ratio / pool.c_global, 0.0, 1.0))
-    return 1.0 + (pool.c_global - 1.0) * r_i
+    r_i = float(np.clip(raw_ratio / calibrator_summary.global_adjustment, 0.0, 1.0))
+    return 1.0 + (calibrator_summary.global_adjustment - 1.0) * r_i
 
 
 STRATEGIES: dict[str, StrategyFn] = {
@@ -178,7 +196,7 @@ def _capturing_fit_inflation_model(records: List[SiblingPairRecord]) -> Calibrat
     model = fit_inflation_model(records)
     _captured["records"] = records
     _captured["model"] = model
-    _captured["pool_stats"] = compute_pool_stats(records, model)
+    _captured["calibrator_summary"] = fit_strategy_calibrator_summary(records, model)
     return model
 
 
@@ -190,14 +208,18 @@ def _make_patched_deflate_and_test(
     def _patched_deflate_and_test(
         records: List[SiblingPairRecord],
         model: CalibrationModel,
-        pool: PoolStats | None = None,
+        calibrator_summary: StrategyCalibratorSummary | None = None,
     ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
-        resolved_pool = pool if pool is not None else _captured.get("pool_stats")
-        if resolved_pool is None:
-            resolved_pool = compute_pool_stats(records, model)
+        resolved_calibrator_summary = (
+            calibrator_summary
+            if calibrator_summary is not None
+            else _captured.get("calibrator_summary")
+        )
+        if resolved_calibrator_summary is None:
+            resolved_calibrator_summary = fit_strategy_calibrator_summary(records, model)
 
         def _resolve(rec: SiblingPairRecord) -> tuple[float, str]:
-            c_i = strategy_fn(rec, model, resolved_pool)
+            c_i = strategy_fn(rec, model, resolved_calibrator_summary)
             return c_i, "conditional_experiment"
 
         return deflate_focal_pairs(records, calibration_resolver=_resolve)
@@ -263,16 +285,16 @@ def run_case_strategy(case_name: str, strategy_fn: StrategyFn) -> dict:
     ari = compute_ari(decomp, data_df, y_true) if y_true is not None else float("nan")
 
     # Collect strategy diagnostics
-    pool = _captured.get("pool_stats")
+    calibrator_summary = _captured.get("calibrator_summary")
     model = _captured.get("model")
 
     return {
         "true_k": tc.get("n_clusters", "?"),
         "found_k": decomp["num_clusters"],
         "ari": round(ari, 3),
-        "c_global": round(model.global_inflation_factor, 2) if model else None,
-        "pool_median_df": round(pool.median_df, 1) if pool else None,
-        "pool_n": pool.n_records if pool else None,
+        "global_adjustment": round(model.global_inflation_factor, 2) if model else None,
+        "center": round(calibrator_summary.center, 1) if calibrator_summary else None,
+        "record_count": calibrator_summary.record_count if calibrator_summary else None,
     }
 
 
@@ -316,11 +338,11 @@ def main() -> None:
                 row += f" | {r['found_k']:>3} {r['ari']:>5.3f}"
 
                 # Print diagnostics once per case (from baseline strategy)
-                if not case_diag_printed and sname == "global" and r["c_global"] is not None:
+                if not case_diag_printed and sname == "global" and r["global_adjustment"] is not None:
                     print(
-                        f"  [{name}] c_global={r['c_global']}, "
-                        f"pool_median_df={r['pool_median_df']}, "
-                        f"pool_n={r['pool_n']}",
+                        f"  [{name}] global_adjustment={r['global_adjustment']}, "
+                        f"center={r['center']}, "
+                        f"record_count={r['record_count']}",
                         file=sys.stderr,
                     )
                     case_diag_printed = True

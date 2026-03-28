@@ -4,7 +4,7 @@ Two PosetTree instances built from the same linkage matrix can produce
 different Gate 2 spectral dimensions for nodes near the Marchenko-Pastur
 threshold.  This script builds two trees from the same data (exactly
 replicating what compare_interpolation.py does) and diffs every per-node
-spectral dimension, sibling spectral dimension, and downstream pool stat.
+spectral dimension, sibling spectral dimension, and downstream calibrator summary.
 
 Usage:
     python debug_scripts/sibling_calibration/diagnose_spectral_dim_flip.py
