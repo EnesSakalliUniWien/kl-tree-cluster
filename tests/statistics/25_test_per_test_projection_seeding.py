@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
-    derive_projection_seed_backend as derive_projection_seed,
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection.seed import (
+    derive_projection_seed,
 )
 
 

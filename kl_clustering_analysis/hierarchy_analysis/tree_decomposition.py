@@ -17,8 +17,8 @@ import pandas as pd
 from .. import config
 from ..core_utils.data_utils import extract_row_column_maps
 from .cluster_assignments import build_cluster_assignments
-from .decomposition.backends.random_projection_backend import (
-    resolve_minimum_projection_dimension_backend,
+from .decomposition.backends.random_projection.dimension import (
+    resolve_minimum_projection_dimension,
 )
 from .decomposition.gates.gate_evaluator import GateEvaluator
 from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
@@ -80,7 +80,7 @@ class TreeDecomposition:
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
-        resolve_minimum_projection_dimension_backend(
+        resolve_minimum_projection_dimension(
             config.PROJECTION_MINIMUM_DIMENSION,
             leaf_data=leaf_data,
         )

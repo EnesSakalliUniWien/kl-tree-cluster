@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ...decomposition.backends.random_projection_backend import generate_projection_matrix_backend
+from ...decomposition.backends.random_projection.matrix import generate_projection_matrix
 
 
 def _resolve_pca_component(
@@ -36,7 +36,7 @@ def build_projection_basis_with_padding(
     target_projection_dim = int(k)
 
     if pca_projection is None:
-        random_projection_basis = generate_projection_matrix_backend(
+        random_projection_basis = generate_projection_matrix(
             int(n_features),
             int(target_projection_dim),
             random_state=random_state,
@@ -51,7 +51,7 @@ def build_projection_basis_with_padding(
     if n_padding_rows == 0:
         return pca_basis, eigenvalues_for_whitening
 
-    random_padding_basis = generate_projection_matrix_backend(
+    random_padding_basis = generate_projection_matrix(
         int(n_features),
         int(n_padding_rows),
         random_state=random_state,

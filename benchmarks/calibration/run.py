@@ -33,8 +33,8 @@ from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
-    derive_projection_seed_backend as derive_projection_seed,
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection.seed import (
+    derive_projection_seed,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh import (
     apply_tree_bh_correction,

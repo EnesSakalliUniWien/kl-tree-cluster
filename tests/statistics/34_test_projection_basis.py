@@ -10,7 +10,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_
 def test_projection_basis_without_pca_uses_random_backend(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
-    def _fake_generate_projection_matrix_backend(
+    def _fake_generate_projection_matrix(
         n_features: int,
         n_components: int,
         random_state: int | None = None,
@@ -21,8 +21,8 @@ def test_projection_basis_without_pca_uses_random_backend(monkeypatch) -> None:
         return np.full((n_components, n_features), 7.0, dtype=np.float64)
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis.generate_projection_matrix_backend",
-        _fake_generate_projection_matrix_backend,
+        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis.generate_projection_matrix",
+        _fake_generate_projection_matrix,
     )
 
     basis, eigenvalues = build_projection_basis_with_padding(
@@ -59,7 +59,7 @@ def test_projection_basis_truncates_parent_pca_to_target_dimension() -> None:
 
 
 def test_projection_basis_pads_short_parent_pca_with_random_rows(monkeypatch) -> None:
-    def _fake_generate_projection_matrix_backend(
+    def _fake_generate_projection_matrix(
         n_features: int,
         n_components: int,
         random_state: int | None = None,
@@ -76,8 +76,8 @@ def test_projection_basis_pads_short_parent_pca_with_random_rows(monkeypatch) ->
         )
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis.generate_projection_matrix_backend",
-        _fake_generate_projection_matrix_backend,
+        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis.generate_projection_matrix",
+        _fake_generate_projection_matrix,
     )
 
     pca_projection = np.array(

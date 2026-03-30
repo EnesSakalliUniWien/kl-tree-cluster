@@ -13,12 +13,8 @@ import os
 
 import numpy as np
 
-from ....decomposition.backends.eigen_backend import (
-    build_pca_projection_backend as build_pca_projection,
-)
-from ....decomposition.backends.eigen_backend import (
-    eigendecompose_correlation_backend as eigendecompose_correlation,
-)
+from ....decomposition.backends.eigen.decomposition import eigendecompose_correlation
+from ....decomposition.backends.eigen.projection import build_pca_projection
 from ..k_estimators import estimate_k_marchenko_pastur
 from .types import NodeSpectralResult, NodeSpectralTask
 
