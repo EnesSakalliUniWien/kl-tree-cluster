@@ -10,7 +10,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator 
     run_gate_annotation_pipeline,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_spectral_dims,
+    derive_sibling_projection_dimensions_from_edge_comparisons,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -47,7 +47,9 @@ def _collect_binary_parent_structure(
         leaf_data=data_df,
     ).annotated_df
     edge_spectral_dims = annotated_df.attrs["_spectral_dims"]
-    sibling_dims = derive_sibling_spectral_dims(tree, annotated_df) or {}
+    sibling_projection_dimensions_from_edge_comparisons = (
+        derive_sibling_projection_dimensions_from_edge_comparisons(tree, annotated_df) or {}
+    )
 
     omitted: list[tuple[str, list[str], tuple[int, int], tuple[bool, bool]]] = []
     included: list[tuple[str, list[str], tuple[int, int], tuple[bool, bool], int]] = []
@@ -64,9 +66,15 @@ def _collect_binary_parent_structure(
             bool(tree.nodes[children[0]].get("is_leaf", False)),
             bool(tree.nodes[children[1]].get("is_leaf", False)),
         )
-        if parent in sibling_dims:
+        if parent in sibling_projection_dimensions_from_edge_comparisons:
             included.append(
-                (parent, children, child_dims, child_is_leaf, int(sibling_dims[parent]))
+                (
+                    parent,
+                    children,
+                    child_dims,
+                    child_is_leaf,
+                    int(sibling_projection_dimensions_from_edge_comparisons[parent]),
+                )
             )
         else:
             omitted.append((parent, children, child_dims, child_is_leaf))

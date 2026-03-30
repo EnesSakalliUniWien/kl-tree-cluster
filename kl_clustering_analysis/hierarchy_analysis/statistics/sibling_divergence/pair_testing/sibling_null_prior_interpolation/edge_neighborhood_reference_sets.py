@@ -1,11 +1,11 @@
-"""Builds the stable/signal reference neighborhoods from tree annotations."""
+"""Build edge-neighborhood reference sets from tree annotations."""
 
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 
-from .edge_metadata import EdgeLevelMetadata, edge_scale
+from .edge_metadata import EdgeLevelMetadata, edge_neighborhood_matching_scale
 from .types import NeighborhoodReferenceSet
 
 
@@ -39,10 +39,10 @@ def _collect_reference_sets(
 
         stable_p_values.append(float(child_parent_edge_bh_p_value))
 
-        edge_dimension = edge_scale(
+        edge_dimension = edge_neighborhood_matching_scale(
             node_id,
             annotations_dataframe,
-            edge_metadata.edge_spectral_dims,
+            edge_metadata.edge_projection_dimensions,
         )
         edge_dimension_clamped = max(edge_dimension, 1.0)
         log_value = np.log(edge_dimension_clamped)

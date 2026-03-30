@@ -20,7 +20,7 @@ def _make_record(
     stat: float,
     degrees_of_freedom: float,
     sibling_null_prior_from_edge_pvalue: float,
-    sibling_scale: float,
+    sibling_test_calibration_scale: float,
 ) -> SiblingPairRecord:
     return SiblingPairRecord(
         parent=parent,
@@ -33,7 +33,7 @@ def _make_record(
         n_parent=32,
         is_null_like=False,
         sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
-        sibling_scale=sibling_scale,
+        sibling_test_calibration_scale=sibling_test_calibration_scale,
     )
 
 
@@ -44,21 +44,21 @@ def test_fit_sibling_inflation_calibrator_tracks_scale_center_and_spread() -> No
             stat=3.0,
             degrees_of_freedom=2.0,
             sibling_null_prior_from_edge_pvalue=1.0,
-            sibling_scale=2.0,
+            sibling_test_calibration_scale=2.0,
         ),
         _make_record(
             "p1",
             stat=10.0,
             degrees_of_freedom=4.0,
             sibling_null_prior_from_edge_pvalue=2.0,
-            sibling_scale=4.0,
+            sibling_test_calibration_scale=4.0,
         ),
         _make_record(
             "p2",
             stat=12.0,
             degrees_of_freedom=6.0,
             sibling_null_prior_from_edge_pvalue=1.0,
-            sibling_scale=8.0,
+            sibling_test_calibration_scale=8.0,
         ),
     ]
     ratios = np.array([record.stat / record.degrees_of_freedom for record in records], dtype=float)
@@ -89,9 +89,18 @@ def test_predict_sibling_adjustment_tracks_nearby_sibling_scales() -> None:
         sample_weights=np.array([1.0, 1.0, 1.0], dtype=float),
         sample_adjustments=np.array([1.3, 3.5, 1.1], dtype=float),
     )
-    near_center = predict_sibling_adjustment(calibrator, sibling_scale=4.0)
-    toward_large = predict_sibling_adjustment(calibrator, sibling_scale=16.0)
-    far_out = predict_sibling_adjustment(calibrator, sibling_scale=256.0)
+    near_center = predict_sibling_adjustment(
+        calibrator,
+        sibling_test_calibration_scale=4.0,
+    )
+    toward_large = predict_sibling_adjustment(
+        calibrator,
+        sibling_test_calibration_scale=16.0,
+    )
+    far_out = predict_sibling_adjustment(
+        calibrator,
+        sibling_test_calibration_scale=256.0,
+    )
 
     assert near_center > toward_large
     assert 1.0 <= far_out <= calibrator.max_adjustment
@@ -105,14 +114,14 @@ def test_predict_sibling_adjustment_falls_back_to_global_with_zero_log_scale_spr
             stat=4.0,
             degrees_of_freedom=4.0,
             sibling_null_prior_from_edge_pvalue=1.0,
-            sibling_scale=4.0,
+            sibling_test_calibration_scale=4.0,
         ),
         _make_record(
             "p1",
             stat=8.0,
             degrees_of_freedom=8.0,
             sibling_null_prior_from_edge_pvalue=1.0,
-            sibling_scale=4.0,
+            sibling_test_calibration_scale=4.0,
         ),
     ]
     model = CalibrationModel(
@@ -123,7 +132,10 @@ def test_predict_sibling_adjustment_falls_back_to_global_with_zero_log_scale_spr
     )
 
     calibrator = fit_sibling_inflation_calibrator(records, model)
-    predicted = predict_sibling_adjustment(calibrator, sibling_scale=32.0)
+    predicted = predict_sibling_adjustment(
+        calibrator,
+        sibling_test_calibration_scale=32.0,
+    )
 
     assert calibrator.spread == 0.0
     assert calibrator.spread_status == "global_fallback_zero_log_scale_spread"
@@ -137,14 +149,14 @@ def test_fit_sibling_inflation_calibrator_falls_back_to_global_when_no_positive_
             stat=4.0,
             degrees_of_freedom=2.0,
             sibling_null_prior_from_edge_pvalue=0.0,
-            sibling_scale=2.0,
+            sibling_test_calibration_scale=2.0,
         ),
         _make_record(
             "p1",
             stat=12.0,
             degrees_of_freedom=4.0,
             sibling_null_prior_from_edge_pvalue=0.0,
-            sibling_scale=16.0,
+            sibling_test_calibration_scale=16.0,
         ),
     ]
     model = CalibrationModel(
@@ -156,7 +168,10 @@ def test_fit_sibling_inflation_calibrator_falls_back_to_global_when_no_positive_
     )
 
     calibrator = fit_sibling_inflation_calibrator(records, model)
-    predicted = predict_sibling_adjustment(calibrator, sibling_scale=16.0)
+    predicted = predict_sibling_adjustment(
+        calibrator,
+        sibling_test_calibration_scale=16.0,
+    )
 
     assert calibrator.record_count == 0
     assert calibrator.spread_status == "global_fallback_no_positive_weights"

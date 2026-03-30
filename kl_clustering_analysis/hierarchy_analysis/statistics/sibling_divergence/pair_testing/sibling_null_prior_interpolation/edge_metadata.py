@@ -3,38 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Any, cast
 
 import numpy as np
 import pandas as pd
 
 from ....multiple_testing.stopping_edge_recovery.serialization import parse_stopping_edge_attrs
-
-_REQUIRED_EDGE_METADATA_COLUMNS = (
-    "Child_Parent_Divergence_Tested",
-    "Child_Parent_Divergence_Significant",
-    "Child_Parent_Divergence_P_Value_BH",
+from .types import (
+    EdgeLevelMetadata,
+    REQUIRED_EDGE_METADATA_COLUMNS,
+    StoppingEdgeSummary,
 )
-
-
-@dataclass(frozen=True)
-class StoppingEdgeSummary:
-    """Stopping-edge support attached to a child edge."""
-
-    stopping_edge_p_value: float
-    distance_to_stopping_edge: float
-
-
-@dataclass(frozen=True)
-class EdgeLevelMetadata:
-    """Edge-level Gate 2 metadata used for tree-neighborhood smoothing."""
-
-    edge_child_ids: list[str]
-    child_parent_edge_tested: np.ndarray
-    child_parent_edge_significant: np.ndarray
-    child_parent_edge_bh_p_values: np.ndarray
-    edge_spectral_dims: dict[str, int] | None
 
 
 def extract_stopping_edge_info(
@@ -61,7 +40,7 @@ def extract_edge_metadata(annotations_dataframe: pd.DataFrame) -> EdgeLevelMetad
     """Return edge-level tested/significant masks and BH p-values."""
     missing_columns = [
         column_name
-        for column_name in _REQUIRED_EDGE_METADATA_COLUMNS
+        for column_name in REQUIRED_EDGE_METADATA_COLUMNS
         if column_name not in annotations_dataframe.columns
     ]
     if missing_columns:
@@ -85,25 +64,30 @@ def extract_edge_metadata(annotations_dataframe: pd.DataFrame) -> EdgeLevelMetad
         child_parent_edge_tested=child_parent_edge_tested,
         child_parent_edge_significant=child_parent_edge_significant,
         child_parent_edge_bh_p_values=child_parent_edge_bh_p_values,
-        edge_spectral_dims=annotations_dataframe.attrs.get("_spectral_dims"),
+        edge_projection_dimensions=annotations_dataframe.attrs.get("_spectral_dims"),
     )
 
 
-def edge_scale(
+def edge_neighborhood_matching_scale(
     node_id: str,
     annotations_dataframe: pd.DataFrame,
-    edge_spectral_dims: dict[str, int] | None,
+    edge_projection_dimensions: dict[str, int] | None,
 ) -> float:
-    """Return the edge-level scale used for neighborhood matching."""
-    spectral_dimension = None
-    if edge_spectral_dims is not None:
-        spectral_dimension = edge_spectral_dims.get(str(node_id))
+    """Return the edge-level neighborhood-matching scale.
+
+    Prefer the edge projection dimension computed from Gate 2. When no
+    positive edge projection dimension is available, fall back to the
+    edge-level projected Wald degrees of freedom.
+    """
+    edge_projection_dimension = None
+    if edge_projection_dimensions is not None:
+        edge_projection_dimension = edge_projection_dimensions.get(str(node_id))
     if (
-        spectral_dimension is not None
-        and np.isfinite(spectral_dimension)
-        and float(spectral_dimension) > 0
+        edge_projection_dimension is not None
+        and np.isfinite(edge_projection_dimension)
+        and float(edge_projection_dimension) > 0
     ):
-        return float(spectral_dimension)
+        return float(edge_projection_dimension)
 
     edge_degrees_of_freedom = None
     if "Child_Parent_Divergence_df" in annotations_dataframe.columns:
@@ -124,7 +108,7 @@ def edge_scale(
 __all__ = [
     "EdgeLevelMetadata",
     "StoppingEdgeSummary",
-    "edge_scale",
+    "edge_neighborhood_matching_scale",
     "extract_edge_metadata",
     "extract_stopping_edge_info",
 ]

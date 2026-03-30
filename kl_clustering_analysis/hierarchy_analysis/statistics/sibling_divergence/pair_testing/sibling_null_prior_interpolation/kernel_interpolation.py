@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from .adaptive_kernel_bandwidths import AdaptiveKernelBandwidths, structural_kernel
-from .edge_metadata import StoppingEdgeSummary, edge_scale
+from .edge_metadata import StoppingEdgeSummary, edge_neighborhood_matching_scale
 from .types import NeighborhoodReferenceSet
 
 
@@ -26,13 +26,17 @@ def _compute_ancestor_trust_weight(
     )
 
 
-def _compute_child_log_k(
+def _compute_child_log_neighborhood_matching_scale(
     child_id: str,
     annotations_dataframe: pd.DataFrame,
-    edge_spectral_dims: dict[str, int] | None,
+    edge_projection_dimensions: dict[str, int] | None,
 ) -> float:
     """Log of the scale used to match nearby child nodes."""
-    scale = edge_scale(child_id, annotations_dataframe, edge_spectral_dims)
+    scale = edge_neighborhood_matching_scale(
+        child_id,
+        annotations_dataframe,
+        edge_projection_dimensions,
+    )
     return float(np.real(np.log(max(scale, 1.0))))
 
 
@@ -57,19 +61,25 @@ def _estimate_null_pvalue_from_stable_neighbors(
         [tree_distance(child_id, stable_node) for stable_node in reference_sets.stable_nodes],
         dtype=float,
     )
+
     tree_kernel = np.exp(-stable_distances / kernel_bandwidths.tau_t)
+
     structural_weights = structural_kernel(
         reference_sets.stable_log_ks,
         child_log_k,
         kernel_bandwidths.h_k,
     )
+
     neighbor_weights = tree_kernel * structural_weights
+
     trusted_neighbor_weight_sum = float(np.real(np.sum(neighbor_weights)))
+
     neighborhood_p_value_estimate = (
         float(np.real(np.average(reference_sets.stable_p_values, weights=neighbor_weights)))
         if trusted_neighbor_weight_sum > 0
         else fallback_p_value
     )
+
     return trusted_neighbor_weight_sum, neighborhood_p_value_estimate
 
 
@@ -99,19 +109,22 @@ def _compute_signal_suppression_factor(
     """Max signal-decay suppression from nearby significant edges."""
     if not reference_sets.signal_nodes:
         return 0.0
+
     signal_distances = np.asarray(
         [tree_distance(child_id, signal_node) for signal_node in reference_sets.signal_nodes],
         dtype=float,
     )
+
     signal_terms = (1.0 - reference_sets.signal_p_values) * np.exp(
         -signal_distances / kernel_bandwidths.tau_s
     )
+
     return float(np.real(np.max(signal_terms))) if len(signal_terms) else 0.0
 
 
 __all__ = [
     "_compute_ancestor_trust_weight",
-    "_compute_child_log_k",
+    "_compute_child_log_neighborhood_matching_scale",
     "_estimate_null_pvalue_from_stable_neighbors",
     "_interpolate_ancestor_and_neighbor_pvalue",
     "_compute_signal_suppression_factor",

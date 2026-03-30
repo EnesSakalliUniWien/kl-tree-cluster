@@ -30,7 +30,12 @@ SIBLING_GATE_COLUMNS: tuple[str, ...] = (
     "Sibling_BH_Same",
 )
 
-SIBLING_GATE_OPTIONAL_COLUMNS: tuple[str, ...] = ("Sibling_Test_Method",)
+SIBLING_GATE_OPTIONAL_COLUMNS: tuple[str, ...] = (
+    "Sibling_Test_Method",
+    "Sibling_Projection_Dimension_Source",
+    "Sibling_Resolved_Projection_Dimension",
+    "Sibling_Used_Parent_Principal_Component_Basis",
+)
 
 
 @dataclass

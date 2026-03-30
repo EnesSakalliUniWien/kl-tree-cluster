@@ -24,11 +24,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def derive_sibling_spectral_dims(
+def derive_sibling_projection_dimensions_from_edge_comparisons(
     tree,
     annotated_df: pd.DataFrame,
 ) -> dict[str, int] | None:
-    """Derive Gate 3 projection dimensions from Gate 2 spectral output.
+    """Derive Gate 3 projection dimensions from Gate 2 edge comparisons.
 
     Uses **geometric-mean-of-children** strategy: for each binary parent P
     with children L, R, the sibling projection dimension is
@@ -57,7 +57,7 @@ def derive_sibling_spectral_dims(
         logger.debug("Gate 3: no _spectral_dims found on Gate 2 annotations")
         return None
 
-    sibling_dims: dict[str, int] = {}
+    sibling_projection_dimensions_from_edge_comparisons: dict[str, int] = {}
 
     for parent in tree.nodes:
         children = list(tree.successors(parent))
@@ -69,20 +69,26 @@ def derive_sibling_spectral_dims(
         k_right = edge_spectral_dims.get(right, 0)
 
         if k_left > 0 and k_right > 0:
-            sibling_dims[parent] = max(1, round(math.sqrt(k_left * k_right)))
+            sibling_projection_dimensions_from_edge_comparisons[parent] = max(
+                1, round(math.sqrt(k_left * k_right))
+            )
         elif k_left > 0:
-            sibling_dims[parent] = k_left
+            sibling_projection_dimensions_from_edge_comparisons[parent] = k_left
         elif k_right > 0:
-            sibling_dims[parent] = k_right
+            sibling_projection_dimensions_from_edge_comparisons[parent] = k_right
 
-    return sibling_dims if sibling_dims else None
+    return (
+        sibling_projection_dimensions_from_edge_comparisons
+        if sibling_projection_dimensions_from_edge_comparisons
+        else None
+    )
 
 
-def derive_sibling_pca_projections(
+def derive_parent_principal_component_projections_for_sibling_tests(
     annotated_df: pd.DataFrame,
-    sibling_dims: dict[str, int] | None,
+    sibling_projection_dimensions_from_edge_comparisons: dict[str, int] | None,
 ) -> tuple[dict[str, np.ndarray] | None, dict[str, np.ndarray] | None]:
-    """Extract parent PCA projections and eigenvalues for Gate 3 sibling tests.
+    """Extract parent principal-component projections for Gate 3 sibling tests.
 
     Returns the subset of Gate 2 PCA projections/eigenvalues that correspond
     to parents with valid sibling spectral dims. If no projections or dims
@@ -92,15 +98,17 @@ def derive_sibling_pca_projections(
     ----------
     annotated_df : pd.DataFrame
         Gate 2 output with `_pca_projections` and `_pca_eigenvalues` attributes.
-    sibling_dims : dict[str, int] | None
-        Sibling spectral dimensions from :func:`derive_sibling_spectral_dims`.
+    sibling_projection_dimensions_from_edge_comparisons : dict[str, int] | None
+        Sibling projection dimensions from
+        :func:`derive_sibling_projection_dimensions_from_edge_comparisons`.
 
     Returns
     -------
     tuple[dict[str, np.ndarray] | None, dict[str, np.ndarray] | None]
-        ``(pca_projections, pca_eigenvalues)`` mappings for valid parents.
+        ``(parent_principal_component_projections,
+        parent_principal_component_eigenvalues)`` mappings for valid parents.
     """
-    if sibling_dims is None:
+    if sibling_projection_dimensions_from_edge_comparisons is None:
         return None, None
 
     pca_projections = annotated_df.attrs.get("_pca_projections")
@@ -110,33 +118,37 @@ def derive_sibling_pca_projections(
 
     pca_eigenvalues = annotated_df.attrs.get("_pca_eigenvalues")
 
-    sibling_projections: dict[str, np.ndarray] = {}
-    sibling_eigenvalues: dict[str, np.ndarray] = {}
+    parent_principal_component_projections: dict[str, np.ndarray] = {}
+    parent_principal_component_eigenvalues: dict[str, np.ndarray] = {}
 
-    for parent in sibling_dims:
+    for parent in sibling_projection_dimensions_from_edge_comparisons:
         proj = pca_projections.get(parent)
         if proj is not None:
-            sibling_projections[parent] = proj
+            parent_principal_component_projections[parent] = proj
         eig = pca_eigenvalues.get(parent) if pca_eigenvalues else None
         if eig is not None:
-            sibling_eigenvalues[parent] = eig
+            parent_principal_component_eigenvalues[parent] = eig
 
-    # Log mismatch between sibling_dims and available PCA projections
-    missing_pca = sibling_dims.keys() - pca_projections.keys()
+    # Log mismatch between edge-derived sibling projection dims and parent PCA projections
+    missing_pca = (
+        sibling_projection_dimensions_from_edge_comparisons.keys() - pca_projections.keys()
+    )
     if missing_pca:
         logger.debug(
-            "Gate 3: %d parents have sibling_dims but no PCA projections: %s",
+            "Gate 3: %d parents have edge-derived sibling projection dimensions but no parent principal-component projections: %s",
             len(missing_pca),
             sorted(missing_pca)[:10],  # Show first 10
         )
 
     return (
-        sibling_projections if sibling_projections else None,
-        sibling_eigenvalues if sibling_eigenvalues else None,
+        parent_principal_component_projections if parent_principal_component_projections else None,
+        parent_principal_component_eigenvalues
+        if parent_principal_component_eigenvalues
+        else None,
     )
 
 
 __all__ = [
-    "derive_sibling_spectral_dims",
-    "derive_sibling_pca_projections",
+    "derive_parent_principal_component_projections_for_sibling_tests",
+    "derive_sibling_projection_dimensions_from_edge_comparisons",
 ]

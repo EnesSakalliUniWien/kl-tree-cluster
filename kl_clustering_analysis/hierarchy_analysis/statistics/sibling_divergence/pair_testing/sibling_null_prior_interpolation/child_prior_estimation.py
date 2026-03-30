@@ -12,7 +12,7 @@ from .adaptive_kernel_bandwidths import AdaptiveKernelBandwidths
 from .edge_metadata import EdgeLevelMetadata, StoppingEdgeSummary
 from .kernel_interpolation import (
     _compute_ancestor_trust_weight,
-    _compute_child_log_k,
+    _compute_child_log_neighborhood_matching_scale,
     _compute_signal_suppression_factor,
     _estimate_null_pvalue_from_stable_neighbors,
     _interpolate_ancestor_and_neighbor_pvalue,
@@ -61,8 +61,10 @@ def _compute_child_sibling_null_prior(
     """Full interpolated estimate for a child with a valid stopping-edge context."""
     ancestor_trust_weight = _compute_ancestor_trust_weight(stopping_info, kernel_bandwidths)
     ancestor_p_value = stopping_info.stopping_edge_p_value
-    child_log_k = _compute_child_log_k(
-        child_id, annotations_dataframe, edge_metadata.edge_spectral_dims
+    child_log_k = _compute_child_log_neighborhood_matching_scale(
+        child_id,
+        annotations_dataframe,
+        edge_metadata.edge_projection_dimensions,
     )
     trusted_neighbor_weight_sum, neighborhood_p_value_estimate = (
         _estimate_null_pvalue_from_stable_neighbors(

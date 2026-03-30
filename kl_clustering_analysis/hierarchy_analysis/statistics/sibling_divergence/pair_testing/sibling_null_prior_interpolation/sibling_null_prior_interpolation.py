@@ -11,8 +11,8 @@ from ....multiple_testing.stopping_edge_recovery._tree import build_tree_distanc
 from ..types import SiblingPairRecord
 from .adaptive_kernel_bandwidths import compute_adaptive_kernel_bandwidths
 from .child_prior_estimation import _estimate_sibling_pair_null_priors
+from .edge_neighborhood_reference_sets import _collect_reference_sets
 from .edge_metadata import extract_edge_metadata, extract_stopping_edge_info
-from .reference_set import _collect_reference_sets
 
 logger = logging.getLogger(__name__)
 

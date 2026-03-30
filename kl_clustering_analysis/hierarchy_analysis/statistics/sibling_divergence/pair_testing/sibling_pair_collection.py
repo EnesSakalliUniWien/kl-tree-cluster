@@ -12,7 +12,6 @@ from collections.abc import Callable, Iterable
 
 import networkx as nx
 import numpy as np
-import pandas as pd
 from scipy.stats import chi2
 
 from kl_clustering_analysis.core_utils.data_utils import (
@@ -96,13 +95,16 @@ def _is_gate2_blocked_for_pair(
     )
 
 
-def _resolve_sibling_scale(
+def _resolve_sibling_test_calibration_scale(
     *,
-    spectral_dimension: int | None,
+    projection_dimension_from_edge_comparisons: int | None,
     degrees_of_freedom: float,
 ) -> float:
-    if spectral_dimension is not None and spectral_dimension > 0:
-        return float(spectral_dimension)
+    if (
+        projection_dimension_from_edge_comparisons is not None
+        and projection_dimension_from_edge_comparisons > 0
+    ):
+        return float(projection_dimension_from_edge_comparisons)
     if np.isfinite(degrees_of_freedom) and degrees_of_freedom > 0:
         return float(degrees_of_freedom)
     return 0.0
@@ -113,9 +115,9 @@ def collect_sibling_pair_records(
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
     *,
-    spectral_dims: dict[str, int] | None = None,
-    pca_projections: dict[str, np.ndarray] | None = None,
-    pca_eigenvalues: dict[str, np.ndarray] | None = None,
+    sibling_projection_dimensions_from_edge_comparisons: dict[str, int] | None = None,
+    parent_principal_component_projections: dict[str, np.ndarray] | None = None,
+    parent_principal_component_eigenvalues: dict[str, np.ndarray] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> tuple[list[SiblingPairRecord], list[str]]:
     """Collect raw sibling-test records for ALL binary-child parent nodes.
@@ -186,9 +188,22 @@ def collect_sibling_pair_records(
             branch_length_right,
         ) = get_sibling_data(tree, parent, left, right)
 
-        spectral_k = spectral_dims.get(parent) if spectral_dims else None
-        pca_projection = pca_projections.get(parent) if pca_projections else None
-        node_pca_eigenvalues = pca_eigenvalues.get(parent) if pca_eigenvalues else None
+        projection_dimension_from_edge_comparisons = (
+            sibling_projection_dimensions_from_edge_comparisons.get(parent)
+            if sibling_projection_dimensions_from_edge_comparisons
+            else None
+        )
+        parent_principal_component_projection = (
+            parent_principal_component_projections.get(parent)
+            if parent_principal_component_projections
+            else None
+        )
+        parent_principal_component_eigenvalues_for_parent = (
+            parent_principal_component_eigenvalues.get(parent)
+            if parent_principal_component_eigenvalues
+            else None
+        )
+        projection_diagnostics: dict[str, object] = {}
 
         test_statistic, degrees_of_freedom, p_value = sibling_divergence_test(
             left_distribution,
@@ -199,10 +214,31 @@ def collect_sibling_pair_records(
             branch_length_right=branch_length_right,
             mean_branch_length=mean_branch_length,
             test_id=f"sibling:{parent}",
-            spectral_k=spectral_k,
-            pca_projection=pca_projection,
-            pca_eigenvalues=node_pca_eigenvalues,
+            projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
+            parent_principal_component_projection=parent_principal_component_projection,
+            parent_principal_component_eigenvalues=(
+                parent_principal_component_eigenvalues_for_parent
+            ),
             whitening=whitening,
+            projection_diagnostics=projection_diagnostics,
+        )
+
+        projection_dimension_source = str(projection_diagnostics.get("source", ""))
+        resolved_projection_dimension = float(
+            projection_diagnostics.get("resolved_projection_dimension", np.nan)
+        )
+        if (
+            not projection_dimension_source
+            and projection_dimension_from_edge_comparisons is not None
+        ):
+            projection_dimension_source = "derived_from_edge_comparisons"
+            resolved_projection_dimension = float(projection_dimension_from_edge_comparisons)
+        elif not projection_dimension_source and projection_dimension_from_edge_comparisons is None:
+            projection_dimension_source = "johnson_lindenstrauss_fallback"
+
+        used_parent_principal_component_basis = bool(
+            projection_dimension_source == "derived_from_edge_comparisons"
+            and parent_principal_component_projection is not None
         )
 
         is_gate2_blocked = _is_gate2_blocked_for_pair(
@@ -240,10 +276,13 @@ def collect_sibling_pair_records(
                 is_null_like=is_null_like,
                 is_gate2_blocked=is_gate2_blocked,
                 sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
-                sibling_scale=_resolve_sibling_scale(
-                    spectral_dimension=spectral_k,
+                sibling_test_calibration_scale=_resolve_sibling_test_calibration_scale(
+                    projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
                     degrees_of_freedom=float(degrees_of_freedom),
                 ),
+                projection_dimension_source=projection_dimension_source,
+                resolved_projection_dimension=resolved_projection_dimension,
+                used_parent_principal_component_basis=used_parent_principal_component_basis,
             )
         )
 

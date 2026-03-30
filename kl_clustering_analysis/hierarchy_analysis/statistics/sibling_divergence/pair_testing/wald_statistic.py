@@ -16,12 +16,8 @@ import numpy as np
 
 from kl_clustering_analysis import config
 
-from ....decomposition.backends.random_projection_backend import (
-    compute_projection_dimension_backend as compute_projection_dimension,
-)
-from ....decomposition.backends.random_projection_backend import (
-    derive_projection_seed_backend as derive_projection_seed,
-)
+from ....decomposition.backends.random_projection.dimension import compute_projection_dimension
+from ....decomposition.backends.random_projection.seed import derive_projection_seed
 from ...branch_length_utils import sanitize_positive_branch_length
 from ...categorical_mahalanobis import categorical_whitened_vector
 from ...projection.chi2_pvalue import WhiteningMode
@@ -81,9 +77,9 @@ def _compute_sibling_z_scores(
     return z_scores
 
 
-def _resolve_sibling_projection_k(
+def _resolve_sibling_projection_dimension(
     *,
-    spectral_k: int | None,
+    projection_dimension_from_edge_comparisons: int | None,
     left_sample_size: float,
     right_sample_size: float,
     n_features: int,
@@ -93,27 +89,30 @@ def _resolve_sibling_projection_k(
     Returns
     -------
     tuple[int, str]
-        ``(resolved_k, source)`` where ``source`` is either ``"spectral"``
-        for a caller-supplied positive dimension or ``"jl_fallback"`` when
-        the sibling test has to synthesize a Johnson-Lindenstrauss dimension.
-        ``spectral_k=None`` means no sibling-specific spectral dimension is
-        available for this pair. That is the legitimate fallback case used for
-        leaf-leaf sibling pairs and explicit no-spectral configurations.
+        ``(resolved_k, source)`` where ``source`` is either
+        ``"derived_from_edge_comparisons"`` for a caller-supplied positive
+        dimension or ``"johnson_lindenstrauss_fallback"`` when the sibling
+        test has to synthesize a Johnson-Lindenstrauss dimension.
+        ``projection_dimension_from_edge_comparisons=None`` means no
+        sibling-specific dimension derived from edge comparisons is available
+        for this pair. That is the legitimate fallback case used for leaf-leaf
+        sibling pairs and explicit no-spectral configurations.
         Non-positive explicit values are invalid caller input.
     """
-    if spectral_k is None:
+    if projection_dimension_from_edge_comparisons is None:
         total_sample_size = int(left_sample_size + right_sample_size)
         return (
             compute_projection_dimension(total_sample_size, n_features),
-            "jl_fallback",
+            "johnson_lindenstrauss_fallback",
         )
 
-    if spectral_k <= 0:
+    if projection_dimension_from_edge_comparisons <= 0:
         raise ValueError(
-            f"Invalid spectral_k={spectral_k}; expected None or a positive integer."
+            "Invalid projection_dimension_from_edge_comparisons="
+            f"{projection_dimension_from_edge_comparisons}; expected None or a positive integer."
         )
 
-    return int(spectral_k), "spectral"
+    return int(projection_dimension_from_edge_comparisons), "derived_from_edge_comparisons"
 
 
 def sibling_divergence_test(
@@ -126,10 +125,11 @@ def sibling_divergence_test(
     mean_branch_length: float | None = None,
     *,
     test_id: str | None = None,
-    spectral_k: int | None = None,
-    pca_projection: np.ndarray | None = None,
-    pca_eigenvalues: np.ndarray | None = None,
+    projection_dimension_from_edge_comparisons: int | None = None,
+    parent_principal_component_projection: np.ndarray | None = None,
+    parent_principal_component_eigenvalues: np.ndarray | None = None,
     whitening: WhiteningMode = "per_component",
+    projection_diagnostics: dict[str, object] | None = None,
 ) -> tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence.
 
@@ -144,11 +144,12 @@ def sibling_divergence_test(
     mean_branch_length : float, optional
         Mean branch length across the tree, used only by the optional
         branch-length variance hook in the standardization step.
-    spectral_k : int | None, optional
-        Pair-specific projection dimension. ``None`` means no sibling spectral
-        override is available, so the test falls back to a JL dimension.
-        Positive integers are used as-is. Non-positive explicit values are
-        rejected as invalid input.
+    projection_dimension_from_edge_comparisons : int | None, optional
+        Pair-specific projection dimension derived from the children's
+        child-parent edge comparisons. ``None`` means no such dimension is
+        available, so the test falls back to a Johnson-Lindenstrauss
+        dimension. Positive integers are used as-is. Non-positive explicit
+        values are rejected as invalid input.
 
     Returns
     -------
@@ -170,6 +171,33 @@ def sibling_divergence_test(
         mean_branch_length=mean_branch_length,
     )
 
+    n_features = int(z_scores.shape[0])
+    try:
+        (
+            resolved_projection_dimension,
+            projection_dimension_source,
+        ) = _resolve_sibling_projection_dimension(
+            projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
+            left_sample_size=left_sample_size,
+            right_sample_size=right_sample_size,
+            n_features=n_features,
+        )
+    except ValueError:
+        if not np.isfinite(z_scores).all():
+            logger.warning(
+                "Found %d non-finite z-scores in sibling test; marking test invalid "
+                "(raw outputs NaN, conservative p=1.0 for correction).",
+                int(np.sum(~np.isfinite(z_scores))),
+            )
+            return np.nan, np.nan, np.nan
+        raise
+
+    if projection_diagnostics is not None:
+        projection_diagnostics["source"] = projection_dimension_source
+        projection_diagnostics["resolved_projection_dimension"] = int(
+            resolved_projection_dimension
+        )
+
     # Explicit invalid-test path: never coerce non-finite z-scores.
     if not np.isfinite(z_scores).all():
         logger.warning(
@@ -180,14 +208,6 @@ def sibling_divergence_test(
         return np.nan, np.nan, np.nan
 
     z_scores = z_scores.astype(np.float64, copy=False)
-
-    n_features = int(z_scores.shape[0])
-    spectral_k, _projection_k_source = _resolve_sibling_projection_k(
-        spectral_k=spectral_k,
-        left_sample_size=left_sample_size,
-        right_sample_size=right_sample_size,
-        n_features=n_features,
-    )
 
     if test_id is None:
         test_id = (
@@ -201,9 +221,9 @@ def sibling_divergence_test(
     test_statistic, _k_nominal, effective_df, p_value = run_projected_wald_kernel(
         z_scores,
         seed=test_seed,
-        spectral_k=spectral_k,
-        pca_projection=pca_projection,
-        pca_eigenvalues=pca_eigenvalues,
+        spectral_k=resolved_projection_dimension,
+        pca_projection=parent_principal_component_projection,
+        pca_eigenvalues=parent_principal_component_eigenvalues,
         whitening=whitening,
     )
 

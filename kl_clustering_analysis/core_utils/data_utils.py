@@ -226,6 +226,9 @@ def initialize_sibling_divergence_columns(df: pd.DataFrame) -> pd.DataFrame:
     df["Sibling_Divergence_Invalid"] = False
     df["Sibling_BH_Different"] = False  # Reject H₀: siblings are different
     df["Sibling_BH_Same"] = False  # Fail to reject: siblings are similar
+    df["Sibling_Projection_Dimension_Source"] = ""
+    df["Sibling_Resolved_Projection_Dimension"] = np.nan
+    df["Sibling_Used_Parent_Principal_Component_Basis"] = False
     return df
 
 

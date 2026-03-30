@@ -7,7 +7,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator 
     run_gate_annotation_pipeline,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_spectral_dims,
+    derive_sibling_projection_dimensions_from_edge_comparisons,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -123,7 +123,7 @@ def _build_mixed_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
     return tree, annotations_df, leaf_data
 
 
-def test_cherry_with_leaf_data_omits_leaf_pair_parent_from_sibling_dims() -> None:
+def test_cherry_with_leaf_data_omits_leaf_pair_parent_from_edge_derived_sibling_projection_dimensions() -> None:
     tree, annotations_df, leaf_data = _build_cherry_tree()
 
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
@@ -134,14 +134,16 @@ def test_cherry_with_leaf_data_omits_leaf_pair_parent_from_sibling_dims() -> Non
     assert spectral_dims["B"] == 0
     assert spectral_dims["root"] > 0
 
-    sibling_dims = derive_sibling_spectral_dims(tree, out)
-    assert sibling_dims is None
+    sibling_projection_dimensions_from_edge_comparisons = (
+        derive_sibling_projection_dimensions_from_edge_comparisons(tree, out)
+    )
+    assert sibling_projection_dimensions_from_edge_comparisons is None
 
     assert np.isfinite(out.loc["root", "Sibling_Degrees_of_Freedom"])
     assert np.isfinite(out.loc["root", "Sibling_Divergence_P_Value"])
 
 
-def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_sibling_dims() -> None:
+def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibling_projection_dimensions() -> None:
     tree, annotations_df, leaf_data = _build_mixed_tree()
 
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
@@ -154,11 +156,13 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_sibling_dims() -> 
     assert spectral_dims["I"] > 0
     assert spectral_dims["root"] > 0
 
-    sibling_dims = derive_sibling_spectral_dims(tree, out)
-    assert sibling_dims is not None
-    assert set(sibling_dims) == {"root"}
-    assert sibling_dims["root"] > 0
-    assert "I" not in sibling_dims
+    sibling_projection_dimensions_from_edge_comparisons = (
+        derive_sibling_projection_dimensions_from_edge_comparisons(tree, out)
+    )
+    assert sibling_projection_dimensions_from_edge_comparisons is not None
+    assert set(sibling_projection_dimensions_from_edge_comparisons) == {"root"}
+    assert sibling_projection_dimensions_from_edge_comparisons["root"] > 0
+    assert "I" not in sibling_projection_dimensions_from_edge_comparisons
 
 
 def test_decompose_without_leaf_data_disables_spectral_metadata_and_merges() -> None:

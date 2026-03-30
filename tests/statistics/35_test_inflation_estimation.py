@@ -16,7 +16,7 @@ def _make_record(
     stat: float,
     degrees_of_freedom: float,
     sibling_null_prior_from_edge_pvalue: float,
-    sibling_scale: float = 4.0,
+    sibling_test_calibration_scale: float = 4.0,
 ) -> SiblingPairRecord:
     return SiblingPairRecord(
         parent=parent,
@@ -30,7 +30,7 @@ def _make_record(
         is_null_like=False,
         is_gate2_blocked=False,
         sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
-        sibling_scale=sibling_scale,
+        sibling_test_calibration_scale=sibling_test_calibration_scale,
     )
 
 

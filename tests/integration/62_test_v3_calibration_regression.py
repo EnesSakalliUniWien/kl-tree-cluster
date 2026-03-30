@@ -20,7 +20,7 @@ def test_v3_selector_preserves_null_control_with_conservative_focal_tradeoff(
     monkeypatch.setattr(
         "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence"
         ".adjusted_wald_annotation.predict_sibling_adjustment",
-        lambda calibrator, sibling_scale: calibrator.global_adjustment,
+        lambda calibrator, sibling_test_calibration_scale: calibrator.global_adjustment,
     )
     _run_v3_assertions()
 

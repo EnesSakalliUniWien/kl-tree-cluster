@@ -56,13 +56,17 @@ def _weighted_std(values: np.ndarray, weights: np.ndarray) -> float:
     return float(np.sqrt(max(variance, 0.0)))
 
 
-def _record_sibling_scale(record: SiblingPairRecord) -> float:
-    """Return the sibling-scale axis used for local calibration."""
-    if np.isfinite(record.sibling_scale) and record.sibling_scale > 0:
-        return float(record.sibling_scale)
+def _record_sibling_test_calibration_scale(record: SiblingPairRecord) -> float:
+    """Return the sibling-test calibration axis used for local calibration."""
+    if (
+        np.isfinite(record.sibling_test_calibration_scale)
+        and record.sibling_test_calibration_scale > 0
+    ):
+        return float(record.sibling_test_calibration_scale)
     raise ValueError(
-        f"Invalid sibling_scale={record.sibling_scale!r}; "
-        "caller must supply records with sibling_scale > 0 "
+        "Invalid sibling_test_calibration_scale="
+        f"{record.sibling_test_calibration_scale!r}; "
+        "caller must supply records with sibling_test_calibration_scale > 0 "
         "(upstream filter on degrees_of_freedom > 0 should guarantee this)."
     )
 
@@ -103,11 +107,11 @@ def fit_sibling_inflation_calibrator(
             sample_adjustments=np.array([], dtype=float),
         )
 
-    sibling_scales = np.array(
-        [_record_sibling_scale(record) for record in valid],
+    sibling_test_calibration_scales = np.array(
+        [_record_sibling_test_calibration_scale(record) for record in valid],
         dtype=float,
     )
-    sample_log_scales = np.log(np.maximum(sibling_scales, 1.0))
+    sample_log_scales = np.log(np.maximum(sibling_test_calibration_scales, 1.0))
     sibling_null_priors = np.array(
         [record.sibling_null_prior_from_edge_pvalue for record in valid], dtype=float
     )
@@ -133,7 +137,7 @@ def fit_sibling_inflation_calibrator(
             sample_adjustments=np.array([], dtype=float),
         )
 
-    sibling_scales = sibling_scales[positive_weight_mask]
+    sibling_test_calibration_scales = sibling_test_calibration_scales[positive_weight_mask]
     sample_log_scales = sample_log_scales[positive_weight_mask]
     sibling_null_priors = sibling_null_priors[positive_weight_mask]
     sample_adjustments = sample_adjustments[positive_weight_mask]
@@ -176,7 +180,7 @@ def fit_sibling_inflation_calibrator(
 
 def predict_sibling_adjustment(
     calibrator: SiblingLocalGaussianInflationCalibrator,
-    sibling_scale: int | float,
+    sibling_test_calibration_scale: int | float,
 ) -> float:
     """Return the node-specific sibling adjustment from the local Gaussian fit.
 
@@ -188,7 +192,7 @@ def predict_sibling_adjustment(
     if calibrator.record_count == 0 or calibrator.spread <= 0:
         return float(np.clip(calibrator.global_adjustment, 1.0, calibrator.max_adjustment))
 
-    log_target = float(np.log(max(float(sibling_scale), 1.0)))
+    log_target = float(np.log(max(float(sibling_test_calibration_scale), 1.0)))
     normalized_offsets = (
         calibrator.sample_log_scales - log_target
     ) / calibrator.spread

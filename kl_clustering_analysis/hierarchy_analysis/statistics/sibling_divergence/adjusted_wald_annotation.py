@@ -9,6 +9,7 @@ Corrects post-selection inflation in sibling Wald statistics by:
 
 from __future__ import annotations
 
+from collections import Counter
 import logging
 from functools import partial
 from typing import Dict
@@ -55,7 +56,7 @@ def _resolve_calibration(
     """Return the sibling adjustment and label for one sibling test."""
     adjustment = predict_sibling_adjustment(
         calibrator,
-        sibling_test_record.sibling_scale,
+        sibling_test_record.sibling_test_calibration_scale,
     )
     return adjustment, "local_gaussian_adjuster"
 
@@ -70,9 +71,9 @@ def annotate_sibling_divergence(
     annotations_df: pd.DataFrame,
     *,
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    spectral_dims: Dict[str, int] | None = None,
-    pca_projections: Dict[str, np.ndarray] | None = None,
-    pca_eigenvalues: Dict[str, np.ndarray] | None = None,
+    sibling_projection_dimensions_from_edge_comparisons: Dict[str, int] | None = None,
+    parent_principal_component_projections: Dict[str, np.ndarray] | None = None,
+    parent_principal_component_eigenvalues: Dict[str, np.ndarray] | None = None,
     whitening: WhiteningMode = "per_component",
 ) -> pd.DataFrame:
     """Test sibling divergence using cousin-adjusted Wald.
@@ -112,9 +113,11 @@ def annotate_sibling_divergence(
         tree,
         annotations_df,
         mean_branch_length,
-        spectral_dims=spectral_dims,
-        pca_projections=pca_projections,
-        pca_eigenvalues=pca_eigenvalues,
+        sibling_projection_dimensions_from_edge_comparisons=(
+            sibling_projection_dimensions_from_edge_comparisons
+        ),
+        parent_principal_component_projections=parent_principal_component_projections,
+        parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
         whitening=whitening,
     )
 
@@ -125,16 +128,30 @@ def annotate_sibling_divergence(
     if early_annotations_df is not None:
         return early_annotations_df
 
+    record_parents = [record.parent for record in records]
+    annotations_df.loc[record_parents, "Sibling_Projection_Dimension_Source"] = [
+        record.projection_dimension_source for record in records
+    ]
+    annotations_df.loc[record_parents, "Sibling_Resolved_Projection_Dimension"] = [
+        record.resolved_projection_dimension for record in records
+    ]
+    annotations_df.loc[record_parents, "Sibling_Used_Parent_Principal_Component_Basis"] = [
+        record.used_parent_principal_component_basis for record in records
+    ]
+
     n_null, n_focal, n_blocked = count_null_focal_pairs(records)
 
     if n_blocked > 0:
         records = interpolate_sibling_null_priors(records, tree, annotations_df)
 
+    calibration_records = list(records)
+    excluded_from_calibration_records: list[SiblingPairRecord] = []
+
     # Pass 2: fit inflation model using continuous edge weights
-    model = fit_inflation_model(records)
+    model = fit_inflation_model(calibration_records)
 
     # Pass 2b: fit the local adjuster for per-node deflation
-    calibrator = fit_sibling_inflation_calibrator(records, model)
+    calibrator = fit_sibling_inflation_calibrator(calibration_records, model)
 
     # Pass 3: deflate focal pairs only and compute p-values
     tested_parent_ids, adjusted_test_summaries, adjustment_method_labels = (
@@ -146,6 +163,37 @@ def annotate_sibling_divergence(
 
     # Null-like parents are skipped (they are noise splits)
     skipped_parents = [r.parent for r in records if r.is_null_like]
+    projection_dimension_source_counts = {
+        str(source): int(count)
+        for source, count in sorted(
+            Counter(record.projection_dimension_source for record in records).items()
+        )
+    }
+    calibration_projection_dimension_source_counts = {
+        str(source): int(count)
+        for source, count in sorted(
+            Counter(record.projection_dimension_source for record in calibration_records).items()
+        )
+    }
+    excluded_from_calibration_projection_dimension_source_counts = {
+        str(source): int(count)
+        for source, count in sorted(
+            Counter(
+                record.projection_dimension_source
+                for record in excluded_from_calibration_records
+            ).items()
+        )
+    }
+    tested_projection_dimension_source_counts = {
+        str(source): int(count)
+        for source, count in sorted(
+            Counter(
+                record.projection_dimension_source
+                for record in records
+                if not record.is_null_like
+            ).items()
+        )
+    }
 
     # Apply BH correction to deflated sibling test results
     annotations_df = apply_sibling_bh_results(
@@ -172,6 +220,16 @@ def annotate_sibling_divergence(
         "local_adjuster_center": calibrator.center,
         "local_adjuster_spread": calibrator.spread,
         "local_adjuster_spread_status": calibrator.spread_status,
+        "projection_dimension_source_counts": projection_dimension_source_counts,
+        "calibration_pair_count": len(calibration_records),
+        "excluded_from_calibration_pair_count": len(excluded_from_calibration_records),
+        "calibration_projection_dimension_source_counts": (
+            calibration_projection_dimension_source_counts
+        ),
+        "excluded_from_calibration_projection_dimension_source_counts": (
+            excluded_from_calibration_projection_dimension_source_counts
+        ),
+        "tested_projection_dimension_source_counts": tested_projection_dimension_source_counts,
         "single_feature_subtree_mode": config.SINGLE_FEATURE_SUBTREE_MODE,
         "diagnostics": model.diagnostics,
         "test_method": "cousin_adjusted_wald",

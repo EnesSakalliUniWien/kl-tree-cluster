@@ -14,8 +14,11 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence imp
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
     sibling_divergence_test,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+    collect_sibling_pair_records,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
-    _resolve_sibling_projection_k,
+    _resolve_sibling_projection_dimension,
 )
 
 
@@ -191,7 +194,7 @@ def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
     assert np.isnan(pval)
 
 
-def test_resolve_sibling_projection_k_uses_jl_fallback_for_missing_k(
+def test_resolve_sibling_projection_dimension_uses_johnson_lindenstrauss_fallback_for_missing_dimension(
     monkeypatch,
 ) -> None:
     calls: list[tuple[int, int]] = []
@@ -208,19 +211,141 @@ def test_resolve_sibling_projection_k_uses_jl_fallback_for_missing_k(
         _fake_compute_projection_dimension,
     )
 
-    resolved_k, source = _resolve_sibling_projection_k(
-        spectral_k=None,
+    resolved_k, source = _resolve_sibling_projection_dimension(
+        projection_dimension_from_edge_comparisons=None,
         left_sample_size=3.0,
         right_sample_size=4.0,
         n_features=5,
     )
 
     assert resolved_k == 7
-    assert source == "jl_fallback"
+    assert source == "johnson_lindenstrauss_fallback"
     assert calls == [(7, 5)]
 
 
-def test_resolve_sibling_projection_k_rejects_nonpositive_k(
+def test_collect_sibling_pair_records_ignores_parent_principal_component_basis_and_uses_johnson_lindenstrauss_fallback_when_edge_derived_dimension_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tree = nx.DiGraph()
+    tree.add_edge("root", "L")
+    tree.add_edge("root", "R")
+
+    tree.nodes["root"]["distribution"] = np.array([0.5, 0.5], dtype=float)
+    tree.nodes["L"]["distribution"] = np.array([0.4, 0.6], dtype=float)
+    tree.nodes["R"]["distribution"] = np.array([0.6, 0.4], dtype=float)
+    tree.nodes["root"]["leaf_count"] = 10
+    tree.nodes["L"]["leaf_count"] = 5
+    tree.nodes["R"]["leaf_count"] = 5
+
+    annotations_df = pd.DataFrame(
+        {
+            "Child_Parent_Divergence_Significant": {
+                "root": False,
+                "L": False,
+                "R": False,
+            },
+            "Child_Parent_Divergence_P_Value_BH": {
+                "root": 1.0,
+                "L": 1.0,
+                "R": 1.0,
+            },
+        }
+    )
+    annotations_df.attrs["_pca_projections"] = {
+        "root": np.array(
+            [
+                [3.0, 4.0],
+                [0.0, 1.0],
+            ],
+            dtype=float,
+        )
+    }
+    annotations_df.attrs["_pca_eigenvalues"] = {"root": np.array([2.5, 0.5], dtype=float)}
+
+    captured: dict[str, object] = {}
+
+    def _fake_sibling_test(
+        left_distribution: np.ndarray,
+        right_distribution: np.ndarray,
+        left_sample_size: float,
+        right_sample_size: float,
+        branch_length_left: float | None = None,
+        branch_length_right: float | None = None,
+        mean_branch_length: float | None = None,
+        *,
+        projection_dimension_from_edge_comparisons: int | None = None,
+        parent_principal_component_projection: np.ndarray | None = None,
+        parent_principal_component_eigenvalues: np.ndarray | None = None,
+        whitening: str = "per_component",
+        **kwargs,
+    ) -> tuple[float, float, float]:
+        captured["projection_dimension_from_edge_comparisons"] = (
+            projection_dimension_from_edge_comparisons
+        )
+        captured["parent_principal_component_projection"] = (
+            parent_principal_component_projection
+        )
+        captured["parent_principal_component_eigenvalues"] = (
+            parent_principal_component_eigenvalues
+        )
+        return 1.0, 1.0, 0.5
+
+    monkeypatch.setattr(
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection.sibling_divergence_test",
+        _fake_sibling_test,
+    )
+
+    records, non_binary = collect_sibling_pair_records(
+        tree,
+        annotations_df,
+        mean_branch_length=None,
+        sibling_projection_dimensions_from_edge_comparisons=None,
+        parent_principal_component_projections=None,
+        parent_principal_component_eigenvalues=None,
+    )
+
+    assert "root" not in non_binary
+    assert len(records) == 1
+    assert captured["projection_dimension_from_edge_comparisons"] is None
+    assert captured["parent_principal_component_projection"] is None
+    assert captured["parent_principal_component_eigenvalues"] is None
+    assert (
+        records[0].projection_dimension_source == "johnson_lindenstrauss_fallback"
+    )
+    assert np.isnan(records[0].resolved_projection_dimension)
+    assert records[0].used_parent_principal_component_basis is False
+
+
+def test_annotate_sibling_divergence_persists_jl_projection_diagnostics() -> None:
+    tree, nodes_df = _make_sibling_tree()
+
+    out = annotate_sibling_divergence(
+        tree=tree,
+        annotations_df=nodes_df,
+        significance_level_alpha=0.05,
+    )
+
+    assert (
+        out.loc["root", "Sibling_Projection_Dimension_Source"]
+        == "johnson_lindenstrauss_fallback"
+    )
+    assert float(out.loc["root", "Sibling_Resolved_Projection_Dimension"]) > 0.0
+    assert bool(out.loc["root", "Sibling_Used_Parent_Principal_Component_Basis"]) is False
+
+    audit = out.attrs.get("sibling_divergence_audit", {})
+    assert audit.get("calibration_projection_dimension_source_counts") == {
+        "johnson_lindenstrauss_fallback": 1
+    }
+    assert audit.get("excluded_from_calibration_projection_dimension_source_counts") == {}
+    assert audit.get("projection_dimension_source_counts") == {
+        "johnson_lindenstrauss_fallback": 1
+    }
+    assert audit.get("tested_projection_dimension_source_counts") == {
+        "johnson_lindenstrauss_fallback": 1
+    }
+
+
+def test_resolve_sibling_projection_dimension_rejects_nonpositive_dimension(
     monkeypatch,
 ) -> None:
     def _fail_compute_projection_dimension(
@@ -234,16 +359,16 @@ def test_resolve_sibling_projection_k_rejects_nonpositive_k(
         _fail_compute_projection_dimension,
     )
 
-    with pytest.raises(ValueError, match="Invalid spectral_k=0"):
-        _resolve_sibling_projection_k(
-            spectral_k=0,
+    with pytest.raises(ValueError, match="Invalid projection_dimension_from_edge_comparisons=0"):
+        _resolve_sibling_projection_dimension(
+            projection_dimension_from_edge_comparisons=0,
             left_sample_size=2.0,
             right_sample_size=3.0,
             n_features=4,
         )
 
 
-def test_resolve_sibling_projection_k_uses_supplied_spectral_k_without_jl(
+def test_resolve_sibling_projection_dimension_uses_supplied_edge_derived_dimension_without_johnson_lindenstrauss_fallback(
     monkeypatch,
 ) -> None:
     def _fail_compute_projection_dimension(
@@ -257,12 +382,12 @@ def test_resolve_sibling_projection_k_uses_supplied_spectral_k_without_jl(
         _fail_compute_projection_dimension,
     )
 
-    resolved_k, source = _resolve_sibling_projection_k(
-        spectral_k=3,
+    resolved_k, source = _resolve_sibling_projection_dimension(
+        projection_dimension_from_edge_comparisons=3,
         left_sample_size=2.0,
         right_sample_size=3.0,
         n_features=4,
     )
 
     assert resolved_k == 3
-    assert source == "spectral"
+    assert source == "derived_from_edge_comparisons"
