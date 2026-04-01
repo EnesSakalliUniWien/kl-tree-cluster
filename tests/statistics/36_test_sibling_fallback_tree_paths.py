@@ -6,8 +6,8 @@ import pandas as pd
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_projection_dimensions_from_edge_comparisons,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -135,7 +135,7 @@ def test_cherry_with_leaf_data_omits_leaf_pair_parent_from_edge_derived_sibling_
     assert spectral_dims["root"] > 0
 
     sibling_projection_dimensions_from_edge_comparisons = (
-        derive_sibling_projection_dimensions_from_edge_comparisons(tree, out)
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, out)
     )
     assert sibling_projection_dimensions_from_edge_comparisons is None
 
@@ -157,7 +157,7 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
     assert spectral_dims["root"] > 0
 
     sibling_projection_dimensions_from_edge_comparisons = (
-        derive_sibling_projection_dimensions_from_edge_comparisons(tree, out)
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, out)
     )
     assert sibling_projection_dimensions_from_edge_comparisons is not None
     assert set(sibling_projection_dimensions_from_edge_comparisons) == {"root"}

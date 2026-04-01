@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 
 import numpy as np
 
-from .models import SignalNeighborInfo, StoppingEdgeInfo
+from .types import SignalNeighborInfo, StoppingEdgeAttrPayload, StoppingEdgeInfo
 
 STOPPING_EDGE_INFO_ATTR_KEY = "_stopping_edge_info"
 _REQUIRED_ATTR_FIELDS = (
@@ -37,15 +36,6 @@ def _coerce_float_array(
     return values.copy()
 
 
-@dataclass(frozen=True)
-class StoppingEdgeAttrPayload:
-    child_node_ids: tuple[str, ...]
-    stopping_edge_p_values: np.ndarray
-    distances_to_stopping_edge: np.ndarray
-    signal_p_values: np.ndarray
-    distances_to_signal: np.ndarray
-
-
 def build_stopping_edge_attrs(
     *,
     child_node_ids: list[str],
@@ -66,8 +56,8 @@ def build_stopping_edge_attrs(
 
         child_signal_neighbor_info = signal_neighbor_info_by_child.get(child_id)
         if child_signal_neighbor_info is not None:
-            signal_p_values[index] = child_signal_neighbor_info.sig_p_value
-            distances_to_signal[index] = child_signal_neighbor_info.distance_to_sig
+            signal_p_values[index] = child_signal_neighbor_info.signal_p_value
+            distances_to_signal[index] = child_signal_neighbor_info.tree_distance_to_signal_node
 
     return {
         "child_node_ids": list(child_ids),

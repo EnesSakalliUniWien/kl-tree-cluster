@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.chi2_pvalue import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_reference_distribution import (
     compute_projected_pvalue,
 )
 
@@ -44,15 +44,17 @@ class TestComputeProjectedPvalue:
         assert df1 == df2
         assert pval1 == pval2
 
-    def test_whitened_mode(self):
-        """Eigenvalue whitening: T = Σ w²/λ ~ χ²(k)."""
+    def test_satterthwaite_calibration_with_eigenvalues(self):
+        """Eigenvalue-aware projected tests use Satterthwaite calibration."""
         projected = np.array([1.0, 2.0, 3.0])
         eigenvalues = np.array([2.0, 1.0, 0.5])
         stat, df, pval = compute_projected_pvalue(projected, 3, eigenvalues=eigenvalues)
-        expected_stat = 1.0 / 2.0 + 4.0 / 1.0 + 9.0 / 0.5
+        expected_stat = float(np.sum(projected**2))
+        expected_df = float(np.sum(eigenvalues) ** 2) / float(np.sum(eigenvalues**2))
+        expected_scale = float(np.sum(eigenvalues**2)) / float(np.sum(eigenvalues))
         assert abs(stat - expected_stat) < 1e-10
-        assert df == 3.0
-        assert abs(pval - float(chi2.sf(expected_stat, df=3))) < 1e-10
+        assert abs(df - expected_df) < 1e-10
+        assert abs(pval - float(chi2.sf(expected_stat / expected_scale, df=expected_df))) < 1e-10
 
 
 # =============================================================================
@@ -114,7 +116,7 @@ class TestSpectralKFloor:
         """Low-leverage one-active nodes should be blocked when they dominate the tree."""
         import networkx as nx
 
-        from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence._single_feature_subtree_policy import (
+        from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.single_feature_subtree_policy.single_feature_subtree_projection_policy import (
             _build_single_feature_subtree_audit,
         )
 
@@ -154,7 +156,7 @@ class TestSpectralKFloor:
         )
 
         monkeypatch.setattr(
-            "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence._single_feature_subtree_policy._find_low_variance_ratio_threshold",
+            "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.single_feature_subtree_policy.single_feature_subtree_low_information_threshold._find_low_variance_ratio_threshold",
             lambda ratios: (True, 0.5),
         )
 

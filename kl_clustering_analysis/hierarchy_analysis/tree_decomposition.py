@@ -203,8 +203,6 @@ class TreeDecomposition:
             alpha_local=self.alpha_local,
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
-            sibling_method=config.SIBLING_TEST_METHOD,
-            sibling_whitening=config.SIBLING_WHITENING,
         ).annotated_df
 
     def _extract_required_bool_annotation_column(self, column_name: str) -> dict[str, bool]:

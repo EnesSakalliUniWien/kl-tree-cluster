@@ -16,16 +16,6 @@ DataFrame helpers for extracting and writing node-level annotations.
 | `extract_row_column_maps(df)`                          | Materialize a DataFrame as both `{node_id: {column: value}}` and `{column: {node_id: value}}` for O(1) lookups.    |
 | `extract_bool_column_dict(df, column)`                 | Convert a boolean DataFrame column to `{node_id: bool}` dict for O(1) lookups.                                      |
 
-## pipeline_helpers.py
-
-Convenience functions for quick prototyping.
-
-| Function                                     | What it does                                                                   |
-| -------------------------------------------- | ------------------------------------------------------------------------------ |
-| `create_test_case_data(n, p, k, ...)`        | Generate synthetic binary data with k clusters.                                |
-| `build_hierarchical_tree(X, method, metric)` | `pdist` → `linkage` → `PosetTree.from_linkage()`. One-liner tree construction. |
-| `run_statistical_analysis(tree, X)`          | Populate node distributions, then run the production Gate 2 + Gate 3 annotator. |
-
 ## tree_utils.py
 
 | Function                    | What it does                                                               |

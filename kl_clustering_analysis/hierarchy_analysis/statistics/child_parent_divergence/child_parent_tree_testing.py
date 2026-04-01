@@ -8,7 +8,9 @@ import numpy as np
 from kl_clustering_analysis import config
 
 from ..branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
-from .child_parent_projected_wald import run_child_parent_projected_wald_test
+from .child_parent_projected_wald.child_parent_projected_wald_test import (
+    run_child_parent_projected_wald_test,
+)
 
 
 def run_child_parent_tests_across_tree(

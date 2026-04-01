@@ -7,18 +7,68 @@ to ensure clustering quality metrics are computed correctly.
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.metrics.cluster import contingency_matrix
 from sklearn.preprocessing import LabelEncoder
 from scipy.optimize import linear_sum_assignment
 
-from kl_clustering_analysis.core_utils.pipeline_helpers import (
-    create_test_case_data,
-    build_hierarchical_tree,
-    run_statistical_analysis,
+from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis import config
+
+
+def _create_test_case_data(
+    n_samples: int = 50,
+    n_features: int = 20,
+    n_clusters: int = 3,
+    noise_level: float = 1.0,
+    seed: int = 42,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Create synthetic binary test data for end-to-end pipeline tests."""
+    from sklearn.datasets import make_blobs
+
+    x_continuous, y_true = make_blobs(
+        n_samples=n_samples,
+        n_features=n_features,
+        centers=n_clusters,
+        cluster_std=noise_level,
+        random_state=seed,
+    )
+    x_binary = (x_continuous > np.median(x_continuous, axis=0)).astype(int)
+    x = pd.DataFrame(
+        x_binary,
+        index=[f"S{j}" for j in range(n_samples)],
+        columns=[f"F{j}" for j in range(n_features)],
+    )
+    return x, pd.Series(y_true)
+
+
+def _build_hierarchical_tree(
+    x: pd.DataFrame,
+    linkage_method: str = "complete",
+    distance_metric: str = "hamming",
+) -> tuple[PosetTree, np.ndarray]:
+    """Build a PosetTree from a binary feature matrix."""
+    distance_matrix = pdist(x.values, metric=distance_metric)
+    linkage_matrix = linkage(distance_matrix, method=linkage_method)
+    tree = PosetTree.from_linkage(linkage_matrix, x.index.tolist())
+    return tree, linkage_matrix
+
+
+def _run_statistical_analysis(tree: PosetTree, x: pd.DataFrame) -> pd.DataFrame:
+    """Run the production gate-annotation pipeline on a populated tree."""
+    tree.populate_node_divergences(x)
+    return run_gate_annotation_pipeline(
+        tree,
+        tree.annotations_df.copy(),
+        alpha_local=config.EDGE_ALPHA,
+        sibling_alpha=config.SIBLING_ALPHA,
+        leaf_data=x,
+    ).annotated_df
 
 
 def _remap_labels(y_true_arr: np.ndarray, y_pred_raw: np.ndarray) -> np.ndarray:
@@ -43,11 +93,11 @@ def analyze_cluster_assignments_label_invariant():
     """Analyze cluster assignments with label remapping for correctness."""
 
     # 1) Data + tree + stats
-    X, y_true = create_test_case_data(
+    X, y_true = _create_test_case_data(
         n_samples=90, n_features=60, n_clusters=3, noise_level=1.0, seed=42
     )
-    tree, _ = build_hierarchical_tree(X)
-    annotations_df = run_statistical_analysis(tree, X)
+    tree, _ = _build_hierarchical_tree(X)
+    annotations_df = _run_statistical_analysis(tree, X)
 
     # 2) Decomposition
     result = tree.decompose(annotations_df=annotations_df, leaf_data=X)

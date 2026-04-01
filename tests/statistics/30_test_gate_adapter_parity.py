@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import pandas.testing as pdt
 
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
     GateAnnotationBundle,
 )
@@ -54,8 +53,6 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
 def test_gate_adapter_pipeline_matches_sequential_gate_annotations(monkeypatch) -> None:
     tree, base_df = _build_small_binary_tree()
 
-    monkeypatch.setattr(config, "SIBLING_TEST_METHOD", "cousin_adjusted_wald")
-
     edge_df = annotate_child_parent_divergence(
         tree,
         base_df.copy(),
@@ -72,7 +69,6 @@ def test_gate_adapter_pipeline_matches_sequential_gate_annotations(monkeypatch) 
         base_df.copy(),
         alpha_local=0.01,
         sibling_alpha=0.01,
-        sibling_method=config.SIBLING_TEST_METHOD,
     )
 
     assert isinstance(bundle, GateAnnotationBundle)

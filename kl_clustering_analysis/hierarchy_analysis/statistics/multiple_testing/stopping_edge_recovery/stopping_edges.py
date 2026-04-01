@@ -8,7 +8,7 @@ import numpy as np
 from ...branch_length_utils import sanitize_positive_branch_length
 from ..tree_bh import ChildParentEdgeTreeBHResult
 from ._tree import get_unique_parent_id
-from .models import StoppingEdgeInfo
+from .types import StoppingEdgeInfo
 
 
 def _resolve_stopping_edge_p_value(
@@ -21,9 +21,7 @@ def _resolve_stopping_edge_p_value(
     """Return the best available p-value for the tested edge that stopped descent."""
     stopping_hypothesis_index = child_node_id_to_hypothesis_index.get(current_child_id)
     if stopping_hypothesis_index is not None and np.isfinite(
-        tree_bh_result.child_parent_edge_corrected_p_values_by_tree_bh[
-            stopping_hypothesis_index
-        ]
+        tree_bh_result.child_parent_edge_corrected_p_values_by_tree_bh[stopping_hypothesis_index]
     ):
         return float(
             tree_bh_result.child_parent_edge_corrected_p_values_by_tree_bh[

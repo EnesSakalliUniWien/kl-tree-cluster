@@ -342,14 +342,6 @@ class PosetTree(nx.DiGraph):
         alpha_local = decomposer_kwargs.pop("alpha_local", config.EDGE_ALPHA)
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
 
-        # Reject deprecated FDR method parameters
-        for deprecated_param in ("edge_fdr_method", "gate2_fdr_method", "fdr_method"):
-            if deprecated_param in decomposer_kwargs:
-                raise ValueError(
-                    f"Parameter {deprecated_param!r} is no longer supported. "
-                    "Tree-BH is the only FDR method for Gate 2."
-                )
-
         if annotations_df is None:
             if self.annotations_df is None:
                 if leaf_data is None:

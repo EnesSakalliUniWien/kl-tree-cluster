@@ -8,8 +8,10 @@ import pandas as pd
 
 from kl_clustering_analysis import config
 
-from ._single_feature_subtree_policy import _apply_single_feature_subtree_policy
 from ..projection.spectral import compute_spectral_decomposition
+from .single_feature_subtree_policy.single_feature_subtree_projection_policy import (
+    _apply_single_feature_subtree_projection_policy,
+)
 
 
 def _compute_child_parent_spectral_context_with_audit(
@@ -50,7 +52,7 @@ def _compute_child_parent_spectral_context_with_audit(
             node_pca_projections,
             node_pca_eigenvalues,
             single_feature_subtree_audit,
-        ) = _apply_single_feature_subtree_policy(
+        ) = _apply_single_feature_subtree_projection_policy(
             tree,
             leaf_data,
             node_spectral_dimensions,

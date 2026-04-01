@@ -53,13 +53,9 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
     return tree, annotations_df, leaf_data
 
 
-@pytest.mark.parametrize(
-    "sibling_method",
-    ["cousin_adjusted_wald"],
-)
 @pytest.mark.parametrize("use_leaf_data", [False, True])
 def test_pipeline_supports_current_gate_annotation_modes(
-    sibling_method: str, use_leaf_data: bool
+    use_leaf_data: bool
 ) -> None:
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
 
@@ -69,7 +65,6 @@ def test_pipeline_supports_current_gate_annotation_modes(
         alpha_local=0.01,
         sibling_alpha=0.01,
         leaf_data=leaf_data if use_leaf_data else None,
-        sibling_method=sibling_method,
     )
     out = bundle.annotated_df
     for col in EDGE_GATE_COLUMNS:
@@ -80,12 +75,3 @@ def test_pipeline_supports_current_gate_annotation_modes(
     assert "edge" in bundle.metadata
     assert "sibling" in bundle.metadata
 
-
-def test_pipeline_rejects_unknown_sibling_method() -> None:
-    tree, annotations_df, _leaf_data = _build_small_tree_with_leaf_data()
-    with pytest.raises(ValueError):
-        run_gate_annotation_pipeline(
-            tree,
-            annotations_df.copy(),
-            sibling_method="not_a_real_method",
-        )

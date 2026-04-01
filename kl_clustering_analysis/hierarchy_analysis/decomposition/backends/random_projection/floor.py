@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from ....statistics.projection.k_estimators import effective_rank
+from ....statistics.projection.projection_dimension_estimation.projection_dimension_estimators import effective_rank
 
 
 @dataclass(frozen=True)

@@ -17,13 +17,12 @@ rather than global in effective degrees-of-freedom space.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
 
 import numpy as np
 
 from ..pair_testing.types import SiblingPairRecord
 from .inflation_estimation import _positive_ratio_records
-from .types import CalibrationModel
+from .types import CalibrationModel, SiblingLocalGaussianInflationCalibrator
 
 logger = logging.getLogger(__name__)
 
@@ -69,22 +68,6 @@ def _record_sibling_test_calibration_scale(record: SiblingPairRecord) -> float:
         "caller must supply records with sibling_test_calibration_scale > 0 "
         "(upstream filter on degrees_of_freedom > 0 should guarantee this)."
     )
-
-
-@dataclass(frozen=True)
-class SiblingLocalGaussianInflationCalibrator:
-    """Fitted local Gaussian calibrator for sibling inflation deflation."""
-
-    global_adjustment: float
-    log_center: float
-    center: float
-    spread: float
-    spread_status: str
-    max_adjustment: float
-    record_count: int
-    sample_log_scales: np.ndarray = field(repr=False)
-    sample_weights: np.ndarray = field(repr=False)
-    sample_adjustments: np.ndarray = field(repr=False)
 
 
 def fit_sibling_inflation_calibrator(
@@ -193,9 +176,7 @@ def predict_sibling_adjustment(
         return float(np.clip(calibrator.global_adjustment, 1.0, calibrator.max_adjustment))
 
     log_target = float(np.log(max(float(sibling_test_calibration_scale), 1.0)))
-    normalized_offsets = (
-        calibrator.sample_log_scales - log_target
-    ) / calibrator.spread
+    normalized_offsets = (calibrator.sample_log_scales - log_target) / calibrator.spread
     kernel_weights = np.exp(-0.5 * normalized_offsets**2)
     local_weights = calibrator.sample_weights * kernel_weights
 

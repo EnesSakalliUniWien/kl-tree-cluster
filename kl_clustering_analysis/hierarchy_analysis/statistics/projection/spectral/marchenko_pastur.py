@@ -15,7 +15,9 @@ import numpy as np
 
 from ....decomposition.backends.eigen.decomposition import eigendecompose_correlation
 from ....decomposition.backends.eigen.projection import build_pca_projection
-from ..k_estimators import estimate_k_marchenko_pastur
+from ..projection_dimension_estimation.projection_dimension_estimators import (
+    estimate_k_marchenko_pastur,
+)
 from .types import NodeSpectralResult, NodeSpectralTask
 
 logger = logging.getLogger(__name__)

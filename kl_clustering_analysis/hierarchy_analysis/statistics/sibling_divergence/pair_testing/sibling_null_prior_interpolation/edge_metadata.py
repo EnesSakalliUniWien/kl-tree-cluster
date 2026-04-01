@@ -9,11 +9,7 @@ import numpy as np
 import pandas as pd
 
 from ....multiple_testing.stopping_edge_recovery.serialization import parse_stopping_edge_attrs
-from .types import (
-    EdgeLevelMetadata,
-    REQUIRED_EDGE_METADATA_COLUMNS,
-    StoppingEdgeSummary,
-)
+from .types import REQUIRED_EDGE_METADATA_COLUMNS, EdgeLevelMetadata, StoppingEdgeSummary
 
 
 def extract_stopping_edge_info(

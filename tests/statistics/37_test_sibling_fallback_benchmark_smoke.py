@@ -9,8 +9,8 @@ from benchmarks.shared.generators.generate_case_data import generate_case_data
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_projection_dimensions_from_edge_comparisons,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -48,7 +48,7 @@ def _collect_binary_parent_structure(
     ).annotated_df
     edge_spectral_dims = annotated_df.attrs["_spectral_dims"]
     sibling_projection_dimensions_from_edge_comparisons = (
-        derive_sibling_projection_dimensions_from_edge_comparisons(tree, annotated_df) or {}
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotated_df) or {}
     )
 
     omitted: list[tuple[str, list[str], tuple[int, int], tuple[bool, bool]]] = []

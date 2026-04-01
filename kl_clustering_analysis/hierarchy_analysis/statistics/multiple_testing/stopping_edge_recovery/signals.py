@@ -1,22 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import List
 
 import networkx as nx
 import numpy as np
 
 from ._tree import build_tree_distance_resolver
-from .models import SignalNeighborInfo
-
-
-@dataclass(frozen=True)
-class _SignificantSignalNodes:
-    """Tested-significant node ids aligned with their corrected p-values."""
-
-    node_ids: tuple[str, ...]
-    p_values: tuple[float, ...]
+from .types import SignalNeighborInfo
+from .types.significant_signal_nodes import _SignificantSignalNodes
 
 
 def _collect_significant_signal_nodes(
@@ -53,9 +45,9 @@ def _find_nearest_signal_neighbor(
     """Return the nearest tested-significant node for one untested child."""
     if not signal_nodes.node_ids:
         return SignalNeighborInfo(
-            sig_node=None,
-            sig_p_value=1.0,
-            distance_to_sig=float("inf"),
+            signal_node_id=None,
+            signal_p_value=1.0,
+            tree_distance_to_signal_node=float("inf"),
         )
 
     best_distance = float("inf")
@@ -67,9 +59,9 @@ def _find_nearest_signal_neighbor(
             best_index = sig_index
 
     return SignalNeighborInfo(
-        sig_node=signal_nodes.node_ids[best_index],
-        sig_p_value=signal_nodes.p_values[best_index],
-        distance_to_sig=best_distance,
+        signal_node_id=signal_nodes.node_ids[best_index],
+        signal_p_value=signal_nodes.p_values[best_index],
+        tree_distance_to_signal_node=best_distance,
     )
 
 

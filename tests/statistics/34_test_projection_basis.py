@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis import (
     build_projection_basis_with_padding,
 )
 
@@ -21,7 +21,7 @@ def test_projection_basis_without_pca_uses_random_backend(monkeypatch) -> None:
         return np.full((n_components, n_features), 7.0, dtype=np.float64)
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis.generate_projection_matrix",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis.generate_projection_matrix",
         _fake_generate_projection_matrix,
     )
 
@@ -76,7 +76,7 @@ def test_projection_basis_pads_short_parent_pca_with_random_rows(monkeypatch) ->
         )
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis.generate_projection_matrix",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis.generate_projection_matrix",
         _fake_generate_projection_matrix,
     )
 

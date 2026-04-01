@@ -1,30 +1,24 @@
-"""Projection and spectral dimension subpackage.
+"""Projection statistics package.
 
-Provides projected-test p-value utilities, projection basis construction,
-projected Wald test kernel, dimension estimators, and spectral decomposition helpers.
+Subpackages are organized by statistical responsibility:
 
-Submodules
-----------
-k_estimators
-    Projection-dimension estimators (effective rank, Marchenko-Pastur).
-projected_wald
-    Shared projected Wald test kernel.
-projection_basis
-    Projection basis construction (PCA, random, hybrid padding).
-tree_helpers
-    Tree traversal helpers for spectral dimension estimation.
-spectral_dimension
-    Public orchestrator for per-node spectral decomposition.
+- ``projected_wald``: projected-test reference distributions, projection-basis
+  construction, and the shared projected Wald kernel.
+- ``projection_dimension_estimation``: effective-rank and Marchenko-Pastur
+  projection-dimension estimators.
+- ``spectral``: per-node spectral decomposition over tree substructures.
 """
 
-from .chi2_pvalue import compute_projected_pvalue
-from .k_estimators import (
+from .projected_wald import (
+    build_projection_basis_with_padding,
+    compute_projected_pvalue,
+    run_projected_wald_kernel,
+)
+from .projection_dimension_estimation import (
     effective_rank,
     estimate_k_marchenko_pastur,
     marchenko_pastur_signal_count,
 )
-from .projected_wald import run_projected_wald_kernel
-from .projection_basis import build_projection_basis_with_padding
 from .spectral import (
     compute_spectral_decomposition,
 )

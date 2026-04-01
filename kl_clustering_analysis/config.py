@@ -88,23 +88,6 @@ SINGLE_FEATURE_SUBTREE_MODE: Literal["off", "block_low_information_subtrees"] = 
     "block_low_information_subtrees"
 )
 
-# --- Sibling Test Method ---
-
-# Method for sibling divergence testing.
-# The codebase supports only the production cousin-adjusted Wald path.
-# Historical alternatives have been removed from the live code path.
-SIBLING_TEST_METHOD: str = "cousin_adjusted_wald"
-
-# --- Sibling Whitening Mode ---
-# Controls how projected statistics are converted to p-values in Gate 3.
-#   "per_component"   - T = Σ (vᵢᵀz)²/λᵢ ~ χ²(k).  Exact under H₀ when
-#                        eigenvalues come from null covariance.  Default.
-#   "satterthwaite"   - T = Σ (vᵢᵀz)² (unwhitened), referenced against a
-#                        moment-matched c × χ²(ν).  Use when eigenvalues
-#                        are contaminated by between-group signal (e.g.
-#                        parent PCA for sibling test).
-SIBLING_WHITENING: Literal["per_component", "satterthwaite"] = "satterthwaite"
-
 # --- Pass-Through Traversal ---
 
 # When True, the DFS traversal continues past nodes where Gate 3 fails

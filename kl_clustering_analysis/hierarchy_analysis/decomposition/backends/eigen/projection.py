@@ -76,9 +76,7 @@ def _recover_dual_feature_eigenvectors(
     dual_sample_vectors = dual_sample_eigenvectors[:, :effective_dimension]
     top_eigenvalues_floored = np.maximum(eig.eigenvalues[:effective_dimension], 1e-12)
     recovery_scale = np.sqrt(top_eigenvalues_floored) * np.sqrt(eig.active_feature_count)
-    recovered_feature_vectors = (
-        standardized_data_active.T @ dual_sample_vectors / recovery_scale
-    )
+    recovered_feature_vectors = standardized_data_active.T @ dual_sample_vectors / recovery_scale
 
     recovered_norms = np.linalg.norm(recovered_feature_vectors, axis=0)
     recovered_norms[recovered_norms == 0] = 1.0

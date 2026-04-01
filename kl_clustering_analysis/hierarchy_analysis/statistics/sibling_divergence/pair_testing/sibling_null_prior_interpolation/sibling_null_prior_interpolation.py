@@ -7,7 +7,7 @@ import logging
 import networkx as nx
 import pandas as pd
 
-from ....multiple_testing.stopping_edge_recovery._tree import build_tree_distance_resolver
+from ....multiple_testing.stopping_edge_recovery import build_tree_distance_resolver
 from ..types import SiblingPairRecord
 from .adaptive_kernel_bandwidths import compute_adaptive_kernel_bandwidths
 from .child_prior_estimation import _estimate_sibling_pair_null_priors

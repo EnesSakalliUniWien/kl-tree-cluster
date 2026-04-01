@@ -15,7 +15,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.stopp
     STOPPING_EDGE_INFO_ATTR_KEY,
     build_stopping_edge_attrs,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.stopping_edge_recovery.models import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.stopping_edge_recovery.types import (
     SignalNeighborInfo,
     StoppingEdgeInfo,
 )
@@ -125,9 +125,9 @@ def test_recover_stopping_edge_info_walks_to_nearest_nonrejected_ancestor() -> N
     assert stopping_edge_map["E"].distance_to_stopping_edge == 1.0
     assert stopping_edge_map["E"].generations_above == 1
 
-    assert signal_map["E"].sig_node == "A"
-    assert signal_map["E"].sig_p_value == 0.01
-    assert signal_map["E"].distance_to_sig == 2.0
+    assert signal_map["E"].signal_node_id == "A"
+    assert signal_map["E"].signal_p_value == 0.01
+    assert signal_map["E"].tree_distance_to_signal_node == 2.0
 
 
 def test_recover_signal_neighbors_uses_tree_distance_not_depth_gap() -> None:
@@ -148,9 +148,9 @@ def test_recover_signal_neighbors_uses_tree_distance_not_depth_gap() -> None:
         ),
     )
 
-    assert signal_map["E"].sig_node == "C"
-    assert signal_map["E"].sig_p_value == 0.03
-    assert signal_map["E"].distance_to_sig == 2.0
+    assert signal_map["E"].signal_node_id == "C"
+    assert signal_map["E"].signal_p_value == 0.03
+    assert signal_map["E"].tree_distance_to_signal_node == 2.0
 
 
 def test_recover_stopping_edge_info_rejects_multi_parent_graph() -> None:
@@ -206,8 +206,8 @@ def test_enrich_blocked_weights_replaces_legacy_weight_and_populates_audit_field
             ),
         },
         signal_neighbor_info_by_child={
-            "E": SignalNeighborInfo(sig_node="D", sig_p_value=0.03, distance_to_sig=1.0),
-            "F": SignalNeighborInfo(sig_node="D", sig_p_value=0.03, distance_to_sig=1.0),
+            "E": SignalNeighborInfo(signal_node_id="D", signal_p_value=0.03, tree_distance_to_signal_node=1.0),
+            "F": SignalNeighborInfo(signal_node_id="D", signal_p_value=0.03, tree_distance_to_signal_node=1.0),
         },
     )
 
@@ -261,7 +261,7 @@ def test_extract_stopping_edge_info_preserves_serialized_values() -> None:
             )
         },
         signal_neighbor_info_by_child={
-            "B": SignalNeighborInfo(sig_node="C", sig_p_value=0.1, distance_to_sig=1.0)
+            "B": SignalNeighborInfo(signal_node_id="C", signal_p_value=0.1, tree_distance_to_signal_node=1.0)
         },
     )
 
@@ -347,7 +347,7 @@ def test_interpolate_sibling_null_priors_handles_partial_child_stopping_edge_cov
             ),
         },
         signal_neighbor_info_by_child={
-            "E": SignalNeighborInfo(sig_node="D", sig_p_value=0.03, distance_to_sig=1.0),
+            "E": SignalNeighborInfo(signal_node_id="D", signal_p_value=0.03, tree_distance_to_signal_node=1.0),
         },
     )
 

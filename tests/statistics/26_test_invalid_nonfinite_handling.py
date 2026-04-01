@@ -14,11 +14,11 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence imp
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
     sibling_divergence_test,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
-    _resolve_sibling_projection_dimension,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing import (
+    resolve_sibling_projection_dimension,
 )
 
 
@@ -96,7 +96,7 @@ def test_child_parent_nonfinite_keeps_nan_and_uses_conservative_correction(
         )
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence.run_child_parent_tests_across_tree",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation.run_child_parent_tests_across_tree",
         _fake_compute_p_values_via_projection,
     )
 
@@ -137,13 +137,12 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
         spectral_k: int | None = None,
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
-        whitening: str = "per_component",
         **kwargs,
     ) -> tuple[float, float, float]:
         return np.nan, np.nan, np.nan
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection.sibling_divergence_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.sibling_test_execution.sibling_divergence_test",
         _fake_sibling_test,
     )
 
@@ -207,11 +206,11 @@ def test_resolve_sibling_projection_dimension_uses_johnson_lindenstrauss_fallbac
         return 7
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.compute_projection_dimension",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension.compute_projection_dimension",
         _fake_compute_projection_dimension,
     )
 
-    resolved_k, source = _resolve_sibling_projection_dimension(
+    resolved_k, source = resolve_sibling_projection_dimension(
         projection_dimension_from_edge_comparisons=None,
         left_sample_size=3.0,
         right_sample_size=4.0,
@@ -276,7 +275,6 @@ def test_collect_sibling_pair_records_ignores_parent_principal_component_basis_a
         projection_dimension_from_edge_comparisons: int | None = None,
         parent_principal_component_projection: np.ndarray | None = None,
         parent_principal_component_eigenvalues: np.ndarray | None = None,
-        whitening: str = "per_component",
         **kwargs,
     ) -> tuple[float, float, float]:
         captured["projection_dimension_from_edge_comparisons"] = (
@@ -291,7 +289,7 @@ def test_collect_sibling_pair_records_ignores_parent_principal_component_basis_a
         return 1.0, 1.0, 0.5
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection.sibling_divergence_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.sibling_test_execution.sibling_divergence_test",
         _fake_sibling_test,
     )
 
@@ -355,12 +353,12 @@ def test_resolve_sibling_projection_dimension_rejects_nonpositive_dimension(
         raise AssertionError("JL fallback should not run for invalid spectral_k")
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.compute_projection_dimension",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension.compute_projection_dimension",
         _fail_compute_projection_dimension,
     )
 
     with pytest.raises(ValueError, match="Invalid projection_dimension_from_edge_comparisons=0"):
-        _resolve_sibling_projection_dimension(
+        resolve_sibling_projection_dimension(
             projection_dimension_from_edge_comparisons=0,
             left_sample_size=2.0,
             right_sample_size=3.0,
@@ -378,11 +376,11 @@ def test_resolve_sibling_projection_dimension_uses_supplied_edge_derived_dimensi
         raise AssertionError("JL fallback should not run for positive spectral_k")
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.compute_projection_dimension",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension.compute_projection_dimension",
         _fail_compute_projection_dimension,
     )
 
-    resolved_k, source = _resolve_sibling_projection_dimension(
+    resolved_k, source = resolve_sibling_projection_dimension(
         projection_dimension_from_edge_comparisons=3,
         left_sample_size=2.0,
         right_sample_size=3.0,

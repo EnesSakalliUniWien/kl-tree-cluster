@@ -20,7 +20,12 @@ def get_unique_parent_id(tree: nx.DiGraph, node_id: str) -> str | None:
 
 
 def build_tree_distance_resolver(tree: nx.DiGraph) -> Callable[[str, str], float]:
-    """Return a cached shortest-path distance function on the undirected tree view."""
+    """Return a cached shortest-path distance function on the undirected tree view.
+
+    Distances are unweighted hop counts (number of edges on the unique
+    path between two nodes), **not** branch-length distances.  The
+    ``weight=None`` default of ``nx.shortest_path_length`` is used.
+    """
     tree_undirected = tree.to_undirected(as_view=True)
 
     @lru_cache(maxsize=None)

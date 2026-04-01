@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     estimate_k_marchenko_pastur,
 )
 

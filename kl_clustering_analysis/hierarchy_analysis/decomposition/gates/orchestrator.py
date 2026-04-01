@@ -10,11 +10,12 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ...statistics.child_parent_divergence import annotate_child_parent_divergence
-from ...statistics.projection.chi2_pvalue import WhiteningMode
 from ...statistics.sibling_divergence import annotate_sibling_divergence
-from ...statistics.sibling_divergence.sibling_config import (
-    derive_parent_principal_component_projections_for_sibling_tests,
-    derive_sibling_projection_dimensions_from_edge_comparisons,
+from ...statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from ...statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from ..core.contracts import GateAnnotationBundle
 from .column_contracts import (
@@ -66,7 +67,6 @@ def _build_edge_metadata(
 def _build_sibling_metadata(
     *,
     sibling_alpha: float,
-    sibling_method: str,
     sibling_inputs: _SiblingGateInputs,
     edge_columns: tuple[str, ...],
     sibling_columns: tuple[str, ...],
@@ -75,7 +75,6 @@ def _build_sibling_metadata(
     return {
         "gate": "sibling",
         "alpha": float(sibling_alpha),
-        "sibling_method": sibling_method,
         "uses_projection_dimensions_from_edge_comparisons": (
             sibling_inputs.projection_dimensions_from_edge_comparisons is not None
         ),
@@ -106,7 +105,7 @@ def _resolve_sibling_gate_inputs(
     )
     if resolved_projection_dimensions_from_edge_comparisons is None:
         resolved_projection_dimensions_from_edge_comparisons = (
-            derive_sibling_projection_dimensions_from_edge_comparisons(tree, edge_annotated_df)
+            derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, edge_annotated_df)
         )
 
     resolved_parent_principal_component_projections = parent_principal_component_projections
@@ -115,7 +114,7 @@ def _resolve_sibling_gate_inputs(
         (
             resolved_parent_principal_component_projections,
             resolved_parent_principal_component_eigenvalues,
-        ) = derive_parent_principal_component_projections_for_sibling_tests(
+        ) = collect_parent_principal_component_inputs_for_sibling_tests(
             edge_annotated_df,
             resolved_projection_dimensions_from_edge_comparisons,
         )
@@ -140,11 +139,9 @@ def run_gate_annotation_pipeline(
     alpha_local: float = config.EDGE_ALPHA,
     sibling_alpha: float = config.SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
-    sibling_method: str = config.SIBLING_TEST_METHOD,
     sibling_projection_dimensions_from_edge_comparisons: dict[str, int] | None = None,
     parent_principal_component_projections: dict[str, np.ndarray] | None = None,
     parent_principal_component_eigenvalues: dict[str, np.ndarray] | None = None,
-    sibling_whitening: WhiteningMode = config.SIBLING_WHITENING,
 ) -> GateAnnotationBundle:
     """Run Gate 2 (edge) and Gate 3 (sibling) annotation pipeline.
 
@@ -177,10 +174,6 @@ def run_gate_annotation_pipeline(
     )
 
     # Run Gate 3: sibling divergence tests
-    if sibling_method != config.SIBLING_TEST_METHOD:
-        raise ValueError(
-            f"unsupported sibling_method={sibling_method!r}; only {config.SIBLING_TEST_METHOD!r} is supported"
-        )
     annotated_df = annotate_sibling_divergence(
         tree,
         edge_annotated_df,
@@ -194,7 +187,6 @@ def run_gate_annotation_pipeline(
         parent_principal_component_eigenvalues=(
             sibling_inputs.parent_principal_component_eigenvalues
         ),
-        whitening=sibling_whitening,
     )
     output_edge_columns = validate_edge_gate_columns(
         annotated_df,
@@ -203,7 +195,6 @@ def run_gate_annotation_pipeline(
     sibling_columns = validate_sibling_gate_columns(annotated_df)
     sibling_metadata = _build_sibling_metadata(
         sibling_alpha=sibling_alpha,
-        sibling_method=sibling_method,
         sibling_inputs=sibling_inputs,
         edge_columns=output_edge_columns,
         sibling_columns=sibling_columns,
