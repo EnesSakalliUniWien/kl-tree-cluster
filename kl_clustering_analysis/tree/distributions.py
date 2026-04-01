@@ -22,7 +22,24 @@ def _calculate_leaf_distribution(
     leaf_matrix: npt.NDArray[np.float64],
     label_to_row_idx: Dict[Any, int],
 ) -> None:
-    """Set distribution and leaf count for a leaf node."""
+    """Set a leaf's distribution to its row in ``leaf_matrix``.
+
+    The stored vector is
+
+        distribution = leaf_matrix[row_idx, :]
+
+    This function does not encode or normalize the row. It copies it into
+    ``tree.nodes[node_id]["distribution"]`` and sets ``leaf_count = 1``.
+
+    Args:
+        tree: Directed tree containing the leaf node.
+        node_id: Leaf node whose distribution should be populated.
+        leaf_matrix: Matrix whose rows correspond to leaf labels.
+        label_to_row_idx: Mapping from leaf label to row index.
+
+    Raises:
+        KeyError: If the leaf label is not present in ``label_to_row_idx``.
+    """
     label = tree.nodes[node_id].get("label", node_id)
     try:
         row_idx = label_to_row_idx[label]
@@ -38,7 +55,31 @@ def _calculate_hierarchy_node_distribution(
     tree: nx.DiGraph,
     node_id: str,
 ) -> None:
-    """Weighted mean of children distributions."""
+    """Compute an internal node's distribution from its immediate children.
+
+    If each child already stores ``distribution`` and ``leaf_count``, then
+
+        parent_distribution =
+            sum(child_leaf_count_i * child_distribution_i) /
+            sum(child_leaf_count_i)
+
+    and
+
+        parent_leaf_count = sum(child_leaf_count_i)
+
+    If child entries lie in ``[0, 1]``, parent entries do too. The vector is
+    not required to sum to 1; here it represents feature-wise probabilities,
+    not a categorical simplex vector.
+
+    Args:
+        tree: Directed tree whose child nodes already have ``distribution`` and
+            ``leaf_count`` attributes.
+        node_id: Internal node whose distribution should be computed.
+
+    Raises:
+        ValueError: If the node has no children or if the combined child weight
+            is not positive.
+    """
     children = list(tree.successors(node_id))
     if not children:
         raise ValueError(f"Internal node {node_id!r} has no children.")
@@ -48,15 +89,12 @@ def _calculate_hierarchy_node_distribution(
     total_descendant_leaves = 0
 
     for child_id in children:
-        child_leaves = int(tree.nodes[child_id]["leaf_count"])
+        child_leaf_count = int(tree.nodes[child_id]["leaf_count"])
         child_distribution = np.asarray(tree.nodes[child_id]["distribution"], dtype=np.float64)
-        total_descendant_leaves += child_leaves
+        total_descendant_leaves += child_leaf_count
 
-        # Original behavior: weight = leaf_count
-        weight = child_leaves
-
-        weighted_distribution_sum += child_distribution * weight
-        total_weight += weight
+        weighted_distribution_sum += child_distribution * child_leaf_count
+        total_weight += child_leaf_count
 
     if total_weight <= 0:
         raise ValueError(

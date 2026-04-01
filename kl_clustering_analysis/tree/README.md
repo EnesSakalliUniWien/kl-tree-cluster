@@ -28,4 +28,4 @@ Bottom-up distribution population (called by `populate_node_divergences`).
 | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `populate_distributions(tree, leaf_data)`            | Postorder traversal: leaves get raw feature vectors, internal nodes get leaf-count-weighted means. Sets `distribution` and `leaf_count` on each node. |
 | `_calculate_leaf_distribution(tree, node, data)`     | Set distribution for a single leaf from `leaf_data`.                                                                                                  |
-| `_calculate_hierarchy_node_distribution(tree, node)` | Weighted average of children's distributions (weight = leaf count).                                                                                   |
+| `_calculate_hierarchy_node_distribution(tree, node)` | Compute an internal node's distribution as a leaf-count-weighted average of its children's distributions; also updates the parent's total descendant leaf count. |
