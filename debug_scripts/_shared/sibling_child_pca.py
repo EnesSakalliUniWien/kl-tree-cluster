@@ -1,6 +1,6 @@
 """Debug helper: extract per-child PCA projections from Gate 2 output.
 
-Moved from ``sibling_config.py`` during legacy-code cleanup (2026-03-27).
+Moved from the former Gate 3 projection-input module during legacy-code cleanup (2026-03-27).
 This function is not used by the production pipeline; it exists solely
 for diagnostic and enhancement-lab scripts.
 """

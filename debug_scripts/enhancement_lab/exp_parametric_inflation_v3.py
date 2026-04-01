@@ -46,6 +46,9 @@ sys.path.insert(0, str(_LAB))
 from exp_parametric_inflation import DIAGNOSTIC_CASES  # noqa: E402
 from lab_helpers import build_tree_and_data, compute_ari, run_decomposition  # noqa: E402
 
+from debug_scripts._shared.sibling_child_pca import (  # noqa: E402
+    derive_sibling_child_pca_projections,
+)
 from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.core_utils.data_utils import extract_node_sample_size  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (  # noqa: E402
@@ -54,15 +57,15 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (  # noqa: E402
     benjamini_hochberg_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
-from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (  # noqa: E402
-    derive_sibling_pca_projections,
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
+    collect_parent_principal_component_inputs_for_sibling_tests,
 )
-
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
+)
 
 EPS = 1e-9
 POWER_RIDGE = 0.01
@@ -135,7 +138,11 @@ class V3Model:
         baseline_log = self.power_model.predict_log(row)
         residual_term = self.residual_scale * self.residual_model.predict(row) + self.safety_offset
         extra_log = max(0.0, residual_term)
-        return float(np.clip(baseline_log + extra_log, self.power_model.min_log_c, self.power_model.max_log_c))
+        return float(
+            np.clip(
+                baseline_log + extra_log, self.power_model.min_log_c, self.power_model.max_log_c
+            )
+        )
 
     def predict(self, row: PairRow) -> float:
         return max(1.0, math.exp(self.predict_log(row)))
@@ -306,10 +313,7 @@ def fit_residual_model(rows: list[PairRow], power_model: PowerLawModel) -> Resid
     raw_design = np.vstack([_feature_vector(row) for row in rows])
     design, means, scales = _standardize_matrix(raw_design)
     target = np.array(
-        [
-            math.log(max(row.t_obs / row.k, 1.0)) - power_model.predict_log(row)
-            for row in rows
-        ],
+        [math.log(max(row.t_obs / row.k, 1.0)) - power_model.predict_log(row) for row in rows],
         dtype=np.float64,
     )
     weights = np.array([max(row.sibling_null_prior, 0.05) for row in rows], dtype=np.float64)
@@ -334,7 +338,9 @@ def _score_candidate(
 ) -> CandidateScore:
     weights = np.array([max(row.sibling_null_prior, 0.05) for row in null_rows], dtype=np.float64)
     baseline_logs = np.array([power_model.predict_log(row) for row in null_rows], dtype=np.float64)
-    residual_predictions = np.array([residual_model.predict(row) for row in null_rows], dtype=np.float64)
+    residual_predictions = np.array(
+        [residual_model.predict(row) for row in null_rows], dtype=np.float64
+    )
     target_logs = np.array(
         [math.log(max(row.t_obs / row.k, 1.0)) for row in null_rows],
         dtype=np.float64,
@@ -343,7 +349,9 @@ def _score_candidate(
     residual_errors = target_logs - (baseline_logs + residual_scale * residual_predictions)
     safety_offset = max(0.0, _weighted_quantile(residual_errors, weights, offset_quantile))
     extra_logs = np.maximum(0.0, residual_scale * residual_predictions + safety_offset)
-    predicted_logs = np.clip(baseline_logs + extra_logs, power_model.min_log_c, power_model.max_log_c)
+    predicted_logs = np.clip(
+        baseline_logs + extra_logs, power_model.min_log_c, power_model.max_log_c
+    )
     null_p_values = np.array(
         [
             _predict_p_value(row.t_obs, row.k, math.exp(predicted_log))
@@ -395,7 +403,9 @@ def _score_candidate(
     )
 
 
-def select_v3_model(train_null_rows: list[PairRow], train_eval_rows: list[PairRow] | None = None) -> V3Model:
+def select_v3_model(
+    train_null_rows: list[PairRow], train_eval_rows: list[PairRow] | None = None
+) -> V3Model:
     power_model = fit_pooled_power_law(train_null_rows)
     residual_model = fit_residual_model(train_null_rows, power_model)
     eval_rows = train_eval_rows if train_eval_rows is not None else train_null_rows
@@ -453,20 +463,23 @@ def collect_case_rows(case_name: str) -> list[PairRow]:
     true_k = tc.get("n_clusters")
     found_k = decomp["num_clusters"]
     ari = compute_ari(decomp, data_df, y_true) if y_true is not None else float("nan")
-    c_global = float(annotations_df.attrs.get("sibling_divergence_audit", {}).get("global_inflation_factor", 1.0))
+    c_global = float(
+        annotations_df.attrs.get("sibling_divergence_audit", {}).get("global_inflation_factor", 1.0)
+    )
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
+    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(
+        annotations_df, sibling_dims
+    )
     sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
     records, _ = collect_sibling_pair_records(
         tree,
         annotations_df,
         mean_bl,
-        spectral_dims=sibling_dims,
-        pca_projections=sibling_pca,
-        pca_eigenvalues=sibling_eig,
-        whitening=config.SIBLING_WHITENING,
+        sibling_projection_dimensions_from_edge_comparisons=sibling_dims,
+        parent_principal_component_projections=sibling_pca,
+        parent_principal_component_eigenvalues=sibling_eig,
     )
 
     root = tree.root()
@@ -547,7 +560,10 @@ def evaluate_case(case_name: str, rows: list[PairRow], model: V3Model) -> CaseEv
             return np.array([row.p_global for row in target_rows], dtype=np.float64)
         if mode == "power":
             return np.array(
-                [_predict_p_value(row.t_obs, row.k, model.power_model.predict(row)) for row in target_rows],
+                [
+                    _predict_p_value(row.t_obs, row.k, model.power_model.predict(row))
+                    for row in target_rows
+                ],
                 dtype=np.float64,
             )
         if mode == "v3":
@@ -593,7 +609,9 @@ def evaluate_loco(rows: list[PairRow], case_names: list[str]) -> None:
     print("\n" + "=" * 116)
     print("LEAVE-ONE-CASE-OUT V3: global ĉ vs pooled power-law vs conservative analytic v3")
     print("=" * 116)
-    print("Approx-null rows are null-like pairs only. Focal rows are reported as aggressiveness, not accuracy.")
+    print(
+        "Approx-null rows are null-like pairs only. Focal rows are reported as aggressiveness, not accuracy."
+    )
 
     evaluations: list[CaseEvaluation] = []
     total_null = 0
@@ -615,7 +633,9 @@ def evaluate_loco(rows: list[PairRow], case_names: list[str]) -> None:
         train_null_rows = [row for row in rows if row.case_name != case_name and row.is_null_like]
         train_eval_rows = [row for row in rows if row.case_name != case_name]
         if not train_null_rows:
-            train_null_rows = [row for row in rows if row.case_name == case_name and row.is_null_like]
+            train_null_rows = [
+                row for row in rows if row.case_name == case_name and row.is_null_like
+            ]
             train_eval_rows = [row for row in rows if row.case_name == case_name]
         if not train_null_rows:
             raise ValueError(f"No null-like training rows available for case {case_name!r}.")
@@ -705,7 +725,7 @@ def main() -> None:
         raise ValueError("At least one case is required.")
 
     print(
-        f"Config: METHOD={config.SIBLING_TEST_METHOD}, "
+        f"Config: METHOD={"cousin_adjusted_wald"}, "
         f"SIBLING_ALPHA={config.SIBLING_ALPHA}, EDGE_ALPHA={config.EDGE_ALPHA}"
     )
     print("V3 model: pooled power-law + conservative residual uplift from null-like pairs only")
@@ -717,4 +737,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    main()
     main()

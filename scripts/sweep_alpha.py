@@ -88,7 +88,7 @@ def main() -> None:
 
     print(f"Dataset: {label}")
     print(
-        f"Config:  SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}, "
+        f"Config:  Sibling test method=cousin_adjusted_wald, "
         f"FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}, "
         "SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)"
     )

@@ -36,13 +36,15 @@ from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (  # noqa: E402
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
 from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (  # noqa: E402
-    derive_sibling_pca_projections,
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
 # Cases: mix of null (K=1) and signal cases
@@ -64,8 +66,8 @@ def collect_pairs_for_case(case_name: str) -> list[dict]:
     annotations_df = tree.annotations_df
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    spectral_dims = derive_sibling_spectral_dims(tree, annotations_df)
-    pca_proj, pca_eig = derive_sibling_pca_projections(annotations_df, spectral_dims)
+    spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
+    pca_proj, pca_eig = collect_parent_principal_component_inputs_for_sibling_tests(annotations_df, spectral_dims)
     child_pca = derive_sibling_child_pca_projections(tree, annotations_df, spectral_dims)
 
     records, non_binary = collect_sibling_pair_records(
@@ -75,7 +77,6 @@ def collect_pairs_for_case(case_name: str) -> list[dict]:
         spectral_dims=spectral_dims,
         pca_projections=pca_proj,
         pca_eigenvalues=pca_eig,
-        whitening=config.SIBLING_WHITENING,
     )
 
     rows = []

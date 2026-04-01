@@ -289,7 +289,7 @@ if __name__ == "__main__":
     case_names = [c["name"] for c in all_cases]
     n_cases = len(case_names)
 
-    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
+    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
     print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print(f"\n═══ EXP25: Floored lam12 Hybrid — {n_cases} cases × {N_CONFIGS} configs ═══")
     print("  Strategies:")

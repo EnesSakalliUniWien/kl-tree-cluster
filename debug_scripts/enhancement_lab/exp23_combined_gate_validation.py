@@ -33,7 +33,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_back
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_jl_dim,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     marchenko_pastur_signal_count,
 )
 
@@ -288,7 +288,7 @@ if __name__ == "__main__":
     case_names = [c["name"] for c in all_cases]
     n_cases = len(case_names)
 
-    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
+    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
     print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print(f"\n═══ EXP23: Combined Gate Validation — {n_cases} cases × {N_CONFIGS} configs ═══")
     print("    1. production   = Gate2:MP          + Gate3:min_child")

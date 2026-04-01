@@ -24,9 +24,9 @@ config = import_module("kl_clustering_analysis").config
 annotate_child_parent_divergence = import_module(
     "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence"
 ).annotate_child_parent_divergence
-derive_sibling_spectral_dims = import_module(
-    "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config"
-).derive_sibling_spectral_dims
+derive_sibling_projection_dimensions_from_child_edge_comparisons = import_module(
+    "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs"
+).derive_sibling_projection_dimensions_from_child_edge_comparisons
 
 all_cases = get_default_test_cases()
 
@@ -48,7 +48,7 @@ for i, tc in enumerate(all_cases):
             minimum_projection_dimension=None,
         )
 
-        sibling_dims = derive_sibling_spectral_dims(tree, edge_annotated_df)
+        sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, edge_annotated_df)
         if sibling_dims:
             ks = list(sibling_dims.values())
             all_k_values.extend(ks)

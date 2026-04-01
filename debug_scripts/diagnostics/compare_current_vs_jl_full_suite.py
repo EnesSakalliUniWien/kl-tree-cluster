@@ -2,7 +2,7 @@
 """Compare current Gate 3 sibling-dimension behavior against JL fallback.
 
 Runs the full default benchmark case suite twice:
-1. Current runtime behavior from sibling_config.py.
+1. Current runtime behavior from the child-edge-derived sibling projection-dimension path.
 2. Reconstructed JL fallback by disabling sibling spectral overrides.
 
 Outputs an aggregate JSON summary and a per-case CSV under /tmp so the repo
@@ -39,9 +39,7 @@ from debug_scripts.enhancement_lab.lab_helpers import (  # noqa: E402
     temporary_attr,
 )
 from kl_clustering_analysis import config  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (  # noqa: E402
-    sibling_config,
-)
+import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions as sibling_projection_dimension_module  # noqa: E402
 
 
 def run_case(case_name: str, *, use_jl_fallback: bool) -> dict[str, Any]:
@@ -49,8 +47,8 @@ def run_case(case_name: str, *, use_jl_fallback: bool) -> dict[str, Any]:
 
     if use_jl_fallback:
         with temporary_attr(
-            sibling_config,
-            "derive_sibling_spectral_dims",
+            sibling_projection_dimension_module,
+            "derive_sibling_projection_dimensions_from_child_edge_comparisons",
             lambda tree_obj, df: None,
         ):
             decomp = tree.decompose(
@@ -157,7 +155,7 @@ def main() -> None:
     payload = {
         "elapsed_seconds": time.time() - started,
         "current": summarize(current_rows),
-        "jl_fallback": summarize(jl_rows),
+        "johnson_lindenstrauss_fallback": summarize(jl_rows),
         "n_improved": len(improved),
         "n_regressed": len(regressed),
         "top_improved": improved[:15],

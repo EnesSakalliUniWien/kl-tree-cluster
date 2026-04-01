@@ -15,7 +15,7 @@ Examples:
     python run_benchmark.py --case binary_perfect_4c
 
     # Run with custom alpha settings
-    python run_benchmark.py --full --sibling-method cousin_adjusted_wald --edge-alpha 0.05
+    python run_benchmark.py --full --edge-alpha 0.05
 """
 
 from __future__ import annotations
@@ -45,7 +45,6 @@ def run_single_case(
     case_name: str,
     alpha_local: float = None,
     sibling_alpha: float = None,
-    sibling_method: str = None,
     verbose: bool = True,
 ) -> dict:
     """Run KL-TE pipeline on a single test case.
@@ -58,8 +57,6 @@ def run_single_case(
         Gate 2 significance level (default: config.EDGE_ALPHA).
     sibling_alpha : float, optional
         Gate 3 significance level (default: config.SIBLING_ALPHA).
-    sibling_method : str, optional
-        Sibling test method (default: config.SIBLING_TEST_METHOD).
     verbose : bool
         Print progress and results.
 
@@ -71,14 +68,10 @@ def run_single_case(
     # Override config if specified
     orig_edge_alpha = config.EDGE_ALPHA
     orig_sibling_alpha = config.SIBLING_ALPHA
-    orig_sibling_method = config.SIBLING_TEST_METHOD
-
     if alpha_local is not None:
         config.EDGE_ALPHA = alpha_local
     if sibling_alpha is not None:
         config.SIBLING_ALPHA = sibling_alpha
-    if sibling_method is not None:
-        config.SIBLING_TEST_METHOD = sibling_method
 
     try:
         # Get test case
@@ -127,7 +120,7 @@ def run_single_case(
             "config": {
                 "edge_alpha": config.EDGE_ALPHA,
                 "sibling_alpha": config.SIBLING_ALPHA,
-                "sibling_method": config.SIBLING_TEST_METHOD,
+                "sibling_method": "cousin_adjusted_wald",
                 "spectral_dimension_estimator": "marchenko_pastur",
             },
         }
@@ -143,7 +136,7 @@ def run_single_case(
             print("\nConfig:")
             print(f"  EDGE_ALPHA={config.EDGE_ALPHA}")
             print(f"  SIBLING_ALPHA={config.SIBLING_ALPHA}")
-            print(f"  SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}")
+            print("  Sibling test method=fixed cousin_adjusted_wald")
             print("  SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
 
         return result
@@ -152,13 +145,10 @@ def run_single_case(
         # Restore config
         config.EDGE_ALPHA = orig_edge_alpha
         config.SIBLING_ALPHA = orig_sibling_alpha
-        config.SIBLING_TEST_METHOD = orig_sibling_method
-
 
 def run_quick_benchmark(
     alpha_local: float = None,
     sibling_alpha: float = None,
-    sibling_method: str = None,
 ) -> list[dict]:
     """Run quick sanity check on 5 representative cases."""
     quick_cases = [
@@ -176,7 +166,6 @@ def run_quick_benchmark(
                 case_name,
                 alpha_local=alpha_local,
                 sibling_alpha=sibling_alpha,
-                sibling_method=sibling_method,
                 verbose=True,
             )
             results.append(result)
@@ -207,14 +196,13 @@ def run_quick_benchmark(
 def run_full_benchmark(
     alpha_local: float = None,
     sibling_alpha: float = None,
-    sibling_method: str = None,
 ) -> list[dict]:
     """Run full benchmark suite (95 cases)."""
     print("Running full benchmark (95 cases)...")
     print(
         f"Config: EDGE_ALPHA={alpha_local or config.EDGE_ALPHA}, "
         f"SIBLING_ALPHA={sibling_alpha or config.SIBLING_ALPHA}, "
-        f"SIBLING_METHOD={sibling_method or config.SIBLING_TEST_METHOD}"
+        "SIBLING_METHOD=fixed cousin_adjusted_wald"
     )
     print()
 
@@ -224,7 +212,6 @@ def run_full_benchmark(
     return _run_full(
         alpha_local=alpha_local,
         sibling_alpha=sibling_alpha,
-        sibling_method=sibling_method,
     )
 
 
@@ -268,14 +255,6 @@ def main():
     )
 
     parser.add_argument(
-        "--sibling-method",
-        type=str,
-        choices=["cousin_adjusted_wald"],
-        default=None,
-        help=f"Sibling test method (default: {config.SIBLING_TEST_METHOD})",
-    )
-
-    parser.add_argument(
         "--output",
         type=str,
         help="Output directory for results (default: benchmarks/results/)",
@@ -292,20 +271,17 @@ def main():
             args.case,
             alpha_local=args.edge_alpha,
             sibling_alpha=args.sibling_alpha,
-            sibling_method=args.sibling_method,
             verbose=True,
         )
     elif args.quick:
         run_quick_benchmark(
             alpha_local=args.edge_alpha,
             sibling_alpha=args.sibling_alpha,
-            sibling_method=args.sibling_method,
         )
     elif args.full:
         run_full_benchmark(
             alpha_local=args.edge_alpha,
             sibling_alpha=args.sibling_alpha,
-            sibling_method=args.sibling_method,
         )
 
 

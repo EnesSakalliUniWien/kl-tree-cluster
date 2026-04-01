@@ -47,9 +47,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pai
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_helpers import (
     precompute_descendants,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
-    get_binary_children as _get_binary_children,
-    get_sibling_data as _get_sibling_data,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
+    extract_sibling_pair_observations as _get_sibling_data,
+    identify_binary_sibling_children as _get_binary_children,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
     sibling_divergence_test,
@@ -168,7 +168,7 @@ def main():
     n_samples, d = X.shape
 
     print(f"  Data: {n_samples} samples × {d} features, K_true={len(np.unique(y_t))}")
-    print(f"  Method: {config.SIBLING_TEST_METHOD}")
+    print(f"  Method: cousin_adjusted_wald")
 
     dist = pdist(X, metric=config.TREE_DISTANCE_METRIC)
     Z = linkage(dist, method=config.TREE_LINKAGE_METHOD)
@@ -357,7 +357,7 @@ def main():
     from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
         compute_mean_branch_length as _compute_mean_bl,
     )
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
         collect_sibling_pair_records as _collect,
     )
 

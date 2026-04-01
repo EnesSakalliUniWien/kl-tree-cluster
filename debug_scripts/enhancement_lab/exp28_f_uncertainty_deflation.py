@@ -59,13 +59,15 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (  # noqa: E402
     benjamini_hochberg_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
 from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (  # noqa: E402
-    derive_sibling_pca_projections,
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
 EPS = 1e-9
@@ -154,8 +156,8 @@ def _collect_case_pairs(case_name: str) -> tuple[list[PairOutcome], CaseCalibrat
     effective_n = float(diagnostics.get("effective_n", 0.0))
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
+    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(annotations_df, sibling_dims)
     sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
     records, _ = collect_sibling_pair_records(
         tree,
@@ -164,7 +166,6 @@ def _collect_case_pairs(case_name: str) -> tuple[list[PairOutcome], CaseCalibrat
         spectral_dims=sibling_dims,
         pca_projections=sibling_pca,
         pca_eigenvalues=sibling_eig,
-        whitening=config.SIBLING_WHITENING,
     )
 
     valid_records = [

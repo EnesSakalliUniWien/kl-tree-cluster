@@ -36,7 +36,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_back
     build_pca_projection_backend,
     eigendecompose_correlation_backend,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     count_active_features,
     effective_rank,
     marchenko_pastur_signal_count,

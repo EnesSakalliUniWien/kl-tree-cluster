@@ -14,14 +14,14 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
     predict_inflation_factor,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -62,9 +62,9 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
         tree,
         results_df,
         mean_bl,
-        spectral_dims=spectral_dims,
-        pca_projections=pca_projections,
-        pca_eigenvalues=pca_eigenvalues,
+        sibling_projection_dimensions_from_edge_comparisons=spectral_dims,
+        parent_principal_component_projections=pca_projections,
+        parent_principal_component_eigenvalues=pca_eigenvalues,
     )
 
     n_null = sum(1 for r in records if r.is_null_like)
@@ -73,7 +73,7 @@ def trace_case(n_samples, n_features, n_clusters, noise, seed=42, label=""):
     print("=" * 90)
     print(f"CALIBRATION TRACE: {label}")
     print(f"  n={n_samples}, p={n_features}, K={n_clusters}, noise={noise}")
-    print(f"  Config: SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}")
+    print("  Config: Sibling test method=fixed cousin_adjusted_wald")
     print("  Config: SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print(f"  Config: FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}")
     print("=" * 90)

@@ -415,7 +415,7 @@ def main():
     print(
         f"Config: SIGNIFICANCE_ALPHA={config.SIGNIFICANCE_ALPHA}, "
         f"SIBLING_ALPHA={config.SIBLING_ALPHA}, "
-        f"SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}"
+        "Sibling test method=fixed cousin_adjusted_wald"
     )
     print(
         "        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "

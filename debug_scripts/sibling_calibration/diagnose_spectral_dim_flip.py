@@ -21,11 +21,11 @@ from scipy.spatial.distance import pdist
 
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -95,7 +95,7 @@ def _build_and_annotate(
     edge_dims: dict[str, int] = dict(ann.attrs.get("_spectral_dims", {}))
     pca_proj: dict[str, np.ndarray] = dict(ann.attrs.get("_pca_projections", {}))
     pca_eig: dict[str, np.ndarray] = dict(ann.attrs.get("_pca_eigenvalues", {}))
-    sib_dims = derive_sibling_spectral_dims(tree, ann) or {}
+    sib_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, ann) or {}
 
     return GateTwoSnapshot(
         edge_spectral_dims=edge_dims,
@@ -273,7 +273,7 @@ def _print_dim_histogram(dims: dict[str, int]) -> None:
 def main() -> None:
     print("Diagnose spectral-dimension flips between two PosetTree builds")
     print(f"  SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}")
-    print(f"  SIBLING_WHITENING={config.SIBLING_WHITENING}")
+    print("  SIBLING_CALIBRATION=satterthwaite")
     print()
     for case in CASES:
         diagnose_case(case)

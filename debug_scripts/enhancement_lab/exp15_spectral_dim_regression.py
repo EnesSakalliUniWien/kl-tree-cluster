@@ -38,8 +38,8 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
 # Cases with known regression from auto-derive
@@ -72,7 +72,6 @@ def run_annotation_pipeline(tree, data_df, use_auto_derive: bool):
             alpha_local=config.SIBLING_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
             leaf_data=data_df,
-            sibling_method=config.SIBLING_TEST_METHOD,
         )
     else:
         # Explicitly pass None to disable auto-derive
@@ -82,7 +81,6 @@ def run_annotation_pipeline(tree, data_df, use_auto_derive: bool):
             alpha_local=config.SIBLING_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
             leaf_data=data_df,
-            sibling_method=config.SIBLING_TEST_METHOD,
             sibling_spectral_dims={},  # Empty dict → no spectral override per node
         )
 
@@ -103,7 +101,7 @@ def analyze_case(case_name: str) -> dict:
     edge_spectral_dims = df_auto.attrs.get("_spectral_dims", {})
 
     # Derive sibling dims (same logic as orchestrator)
-    sibling_dims = derive_sibling_spectral_dims(tree, df_auto) or {}
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, df_auto) or {}
 
     # --- Mode B: JL fallback ---
     tree2, data_df2, _, _ = build_tree_and_data(case_name)
@@ -303,7 +301,7 @@ def print_case_report(result: dict):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
+    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
     print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print(f"        PROJECTION_MINIMUM_DIMENSION={config.PROJECTION_MINIMUM_DIMENSION}")
 

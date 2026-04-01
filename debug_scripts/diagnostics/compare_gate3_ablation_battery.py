@@ -63,16 +63,6 @@ def parse_args() -> argparse.Namespace:
         default=BATTERY_CASES,
         help="Case names to run. Defaults to the 7-case discriminative battery.",
     )
-    parser.add_argument(
-        "--sibling-method",
-        default=None,
-        help="Temporary override for config.SIBLING_TEST_METHOD.",
-    )
-    parser.add_argument(
-        "--sibling-whitening",
-        default=None,
-        help="Temporary override for config.SIBLING_WHITENING.",
-    )
     return parser.parse_args()
 
 
@@ -136,10 +126,7 @@ def main() -> None:
     out_json = output_dir / f"{args.label}_summary.json"
 
     started = time.time()
-    with temporary_config(
-        SIBLING_TEST_METHOD=args.sibling_method or config.SIBLING_TEST_METHOD,
-        SIBLING_WHITENING=args.sibling_whitening or config.SIBLING_WHITENING,
-    ):
+    with temporary_config():
         rows: list[dict[str, Any]] = []
         for index, case_name in enumerate(args.cases, start=1):
             print(f"[{index}/{len(args.cases)}] {args.label:<16s} {case_name}", flush=True)
@@ -156,9 +143,9 @@ def main() -> None:
         "elapsed_seconds": time.time() - started,
         "cases": list(args.cases),
         "config": {
-            "SIBLING_TEST_METHOD": args.sibling_method or config.SIBLING_TEST_METHOD,
+            "sibling_test_method": "cousin_adjusted_wald",
             "SPECTRAL_DIMENSION_ESTIMATOR": "marchenko_pastur",
-            "SIBLING_WHITENING": args.sibling_whitening or config.SIBLING_WHITENING,
+            "SIBLING_CALIBRATION": "satterthwaite",
         },
         "summary": summarize(rows),
         "csv": str(out_csv),

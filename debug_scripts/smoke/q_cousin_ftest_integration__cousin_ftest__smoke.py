@@ -8,7 +8,7 @@ How to run: python debug_scripts/smoke/q_cousin_ftest_integration__cousin_ftest_
 
 from kl_clustering_analysis import config
 
-print("SIBLING_TEST_METHOD =", config.SIBLING_TEST_METHOD)
+print("Sibling test method =", "cousin_adjusted_wald")
 
 import numpy as np
 import pandas as pd

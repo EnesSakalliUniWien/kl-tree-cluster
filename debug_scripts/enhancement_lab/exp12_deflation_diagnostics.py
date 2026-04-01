@@ -37,7 +37,7 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
 
@@ -62,7 +62,6 @@ def collect_pair_data(case_name: str) -> pd.DataFrame:
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,
-        sibling_method=config.SIBLING_TEST_METHOD,
     )
     annotated = bundle.annotated_df
 

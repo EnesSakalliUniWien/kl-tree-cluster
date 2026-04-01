@@ -36,10 +36,10 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_back
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_jl_dim,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     effective_rank as compute_effective_rank,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     marchenko_pastur_signal_count,
 )
 
@@ -257,7 +257,7 @@ def analyze_case(case_name):
 # ── Main ───────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
+    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
     print()
 
     for case_name in CASES:

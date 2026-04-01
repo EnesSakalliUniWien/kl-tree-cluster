@@ -117,7 +117,7 @@ try:
 
     print(f"  Tree nodes: {tree.number_of_nodes()}")
     print(f"  Tree edges: {tree.number_of_edges()}")
-    print(f"  Config: SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}")
+    print("  Config: Sibling test method=fixed cousin_adjusted_wald")
 
     # Run decompose
     results = tree.decompose(

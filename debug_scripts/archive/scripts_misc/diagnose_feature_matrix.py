@@ -293,7 +293,7 @@ def main() -> None:
         "n_features": p,
         "alpha": alpha,
         "num_clusters": num_k,
-        "sibling_test_method": config.SIBLING_TEST_METHOD,
+        "sibling_test_method": "cousin_adjusted_wald",
         "distance_metric": config.TREE_DISTANCE_METRIC,
         "linkage_method": config.TREE_LINKAGE_METHOD,
         "n_internal_nodes": len(internal),

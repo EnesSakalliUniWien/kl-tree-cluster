@@ -43,19 +43,21 @@ from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (  # noqa: E402
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald import (  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_kernel import (  # noqa: E402
     run_projected_wald_kernel,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (  # noqa: E402
     standardize_proportion_difference,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
 from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (  # noqa: E402
-    derive_sibling_pca_projections,
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
 # ---------------------------------------------------------------------------
@@ -118,7 +120,6 @@ def _compute_t_from_leaf_data(
         spectral_k=spectral_k,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
-        whitening=whitening,
     )
     return t_stat
 
@@ -136,7 +137,6 @@ def permutation_c(
     pca_projection: np.ndarray | None,
     pca_eigenvalues: np.ndarray | None,
     child_pca_projections: list[np.ndarray] | None,
-    whitening: str = "per_component",
     n_permutations: int = N_PERMUTATIONS,
 ) -> tuple[float, float, float]:
     """Return (c_perm_mean, c_perm_median, p_perm) for one node."""
@@ -295,18 +295,17 @@ def run_case(case_name: str) -> tuple[str, list[NodeResult], ParametricModel | N
 
     # Collect all pair records (same as pipeline does)
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
+    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(annotations_df, sibling_dims)
     sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
 
     records, _ = collect_sibling_pair_records(
         tree,
         annotations_df,
         mean_bl,
-        spectral_dims=sibling_dims,
-        pca_projections=sibling_pca,
-        pca_eigenvalues=sibling_eig,
-        whitening=config.SIBLING_WHITENING,
+        sibling_projection_dimensions_from_edge_comparisons=sibling_dims,
+        parent_principal_component_projections=sibling_pca,
+        parent_principal_component_eigenvalues=sibling_eig,
     )
 
     # ─── Phase 1: Compute permutation ground truth for ALL valid pairs ───
@@ -346,8 +345,7 @@ def run_case(case_name: str) -> tuple[str, list[NodeResult], ParametricModel | N
             spectral_k=k,
             pca_projection=pca_proj,
             pca_eigenvalues=pca_eig,
-            whitening=config.SIBLING_WHITENING,
-        )
+            )
 
         # Global deflation p-value
         t_adj_global = rec.stat / c_hat_global if c_hat_global > 0 else rec.stat
@@ -532,7 +530,7 @@ def analyze_results(all_results: list[tuple[str, list[NodeResult], ParametricMod
 # ---------------------------------------------------------------------------
 def main():
     print(
-        f"Config: METHOD={config.SIBLING_TEST_METHOD}, "
+        f"Config: METHOD={"cousin_adjusted_wald"}, "
         f"SIBLING_ALPHA={config.SIBLING_ALPHA}, EDGE_ALPHA={config.EDGE_ALPHA}"
     )
     print(f"Permutations: {N_PERMUTATIONS}")

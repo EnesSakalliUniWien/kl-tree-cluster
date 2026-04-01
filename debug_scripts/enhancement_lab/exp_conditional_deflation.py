@@ -41,13 +41,15 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
     adjusted_wald_annotation as awa_module,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction import (
+    compute_adjusted_sibling_tests,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     CalibrationModel,
     fit_inflation_model,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
     SiblingPairRecord,
-    deflate_focal_pairs,
 )
 
 # ── Calibrator summary computed once per case ───────────────────────────────
@@ -200,20 +202,22 @@ def _capturing_fit_inflation_model(records: List[SiblingPairRecord]) -> Calibrat
     return model
 
 
-def _make_patched_deflate_and_test(
+def _make_patched_compute_adjusted_sibling_tests(
     strategy_fn: StrategyFn,
 ) -> Callable:
-    """Build a replacement for _deflate_and_test that uses the given strategy."""
+    """Build a replacement for compute_adjusted_sibling_tests using one strategy."""
 
-    def _patched_deflate_and_test(
+    def _patched_compute_adjusted_sibling_tests(
         records: List[SiblingPairRecord],
-        model: CalibrationModel,
-        calibrator_summary: StrategyCalibratorSummary | None = None,
+        *,
+        resolve_inflation_adjustment,
     ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
+        model = _captured.get("model")
+        if not isinstance(model, CalibrationModel):
+            raise RuntimeError("Expected captured CalibrationModel before adjustment stage")
+
         resolved_calibrator_summary = (
-            calibrator_summary
-            if calibrator_summary is not None
-            else _captured.get("calibrator_summary")
+            _captured.get("calibrator_summary")
         )
         if resolved_calibrator_summary is None:
             resolved_calibrator_summary = fit_strategy_calibrator_summary(records, model)
@@ -222,18 +226,27 @@ def _make_patched_deflate_and_test(
             c_i = strategy_fn(rec, model, resolved_calibrator_summary)
             return c_i, "conditional_experiment"
 
-        return deflate_focal_pairs(records, calibration_resolver=_resolve)
+        return compute_adjusted_sibling_tests(
+            records,
+            resolve_inflation_adjustment=_resolve,
+        )
 
-    return _patched_deflate_and_test
+    return _patched_compute_adjusted_sibling_tests
 
 
 @contextmanager
 def apply_strategy(strategy_fn: StrategyFn):
     """Context manager that patches the deflation pipeline for one strategy."""
-    patched_deflate = _make_patched_deflate_and_test(strategy_fn)
+    patched_compute_adjusted_sibling_tests = _make_patched_compute_adjusted_sibling_tests(
+        strategy_fn
+    )
     _captured.clear()
     with (
-        patch.object(awa_module, "_deflate_and_test", patched_deflate),
+        patch.object(
+            awa_module,
+            "compute_adjusted_sibling_tests",
+            patched_compute_adjusted_sibling_tests,
+        ),
         patch(
             "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence"
             ".adjusted_wald_annotation.fit_inflation_model",
@@ -302,7 +315,7 @@ def run_case_strategy(case_name: str, strategy_fn: StrategyFn) -> dict:
 
 
 def main() -> None:
-    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
+    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
     print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print()
 

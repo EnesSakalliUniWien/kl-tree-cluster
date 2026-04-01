@@ -196,7 +196,6 @@ def analyze_case(case_name: str, regime: str) -> tuple[CaseSummary, list[NodeTra
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,
-        sibling_method=config.SIBLING_TEST_METHOD,
     )
     annotated_df = gate_bundle.annotated_df
 
@@ -386,7 +385,7 @@ def main() -> None:
 
     print(
         "Config: SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "
-        f"SIBLING_METHOD={config.SIBLING_TEST_METHOD}, "
+        f"SIBLING_METHOD={"cousin_adjusted_wald"}, "
         f"TREE_DISTANCE={config.TREE_DISTANCE_METRIC}, "
         f"TREE_LINKAGE={config.TREE_LINKAGE_METHOD}"
     )

@@ -105,8 +105,6 @@ def diagnose(case_name: str) -> None:
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_t,
         minimum_projection_dimension=config.PROJECTION_MINIMUM_DIMENSION,
-        sibling_method=config.SIBLING_TEST_METHOD,
-        sibling_whitening=config.SIBLING_WHITENING,
     )
     stats = result.annotated_df
     edge_dims = stats.attrs.get("_spectral_dims", {})
@@ -306,9 +304,7 @@ def diagnose(case_name: str) -> None:
             sibling_alpha=config.SIBLING_ALPHA,
             leaf_data=data_t,
             minimum_projection_dimension=config.PROJECTION_MINIMUM_DIMENSION,
-            sibling_method=config.SIBLING_TEST_METHOD,
-            sibling_whitening=config.SIBLING_WHITENING,
-            sibling_spectral_dims=dims,
+                sibling_spectral_dims=dims,
         )
         ann = pipeline_result.annotated_df
 

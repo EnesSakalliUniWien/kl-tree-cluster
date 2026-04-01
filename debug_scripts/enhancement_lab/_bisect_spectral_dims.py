@@ -1,6 +1,6 @@
-"""Quick A/B: auto-derived sibling spectral dims (HEAD) vs None (pre-9b474c4).
+"""Quick A/B: auto-derived sibling projection dimensions vs None (pre-9b474c4).
 
-Tests whether _derive_sibling_spectral_dims in the orchestrator causes regression.
+Tests whether the auto-derived sibling projection-dimension function causes regression.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from lab_helpers import build_tree_and_data, compute_ari, temporary_experiment_o
 
 
 from kl_clustering_analysis import config  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator  # noqa: E402
+import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions as sibling_projection_dimension_module  # noqa: E402
 
 # Mix of guard, intermediate, and failure cases
 SENTINEL = [
@@ -35,7 +35,9 @@ SENTINEL = [
     "gauss_overlap_4c_med",
 ]
 
-orig_fn = orchestrator._derive_sibling_spectral_dims
+orig_fn = (
+    sibling_projection_dimension_module.derive_sibling_projection_dimensions_from_child_edge_comparisons
+)
 
 
 def run_case(case_name: str, disable_auto_derive: bool) -> dict:
@@ -55,7 +57,7 @@ def run_case(case_name: str, disable_auto_derive: bool) -> dict:
     }
 
 
-print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
+print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
 print(f"{'Case':<35} {'TK':>3} {'K_a':>4} {'ARI_a':>7} {'K_n':>4} {'ARI_n':>7} {'delta':>7}")
 print("-" * 75)
 

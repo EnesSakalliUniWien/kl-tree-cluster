@@ -72,7 +72,7 @@ def main() -> None:
     n_total = len(case_names)
 
     print(f"Full benchmark: {n_total} cases × {len(strat_names)} strategies")
-    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
+    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
     print(f"Output: {OUTPUT_CSV}")
     print()
 

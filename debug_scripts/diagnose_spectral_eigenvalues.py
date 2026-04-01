@@ -37,10 +37,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 warnings.filterwarnings("ignore")
 os.environ.setdefault("KL_TE_N_JOBS", "1")
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.sibling_spectral_dimension import (
-    compute_sibling_spectral_dimensions,
-)
-
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
@@ -48,16 +44,17 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen_back
     build_pca_projection_backend,
     eigendecompose_correlation_backend,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.eigen_result import (
-    EigenResult,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.chi2_pvalue import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.core.eigen_result import EigenResult
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_reference_distribution import (
     compute_projected_pvalue,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     effective_rank,
     estimate_k_marchenko_pastur,
     marchenko_pastur_signal_count,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.sibling_spectral_dimension import (
+    compute_sibling_spectral_dimensions,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
     compute_spectral_decomposition,
@@ -350,7 +347,7 @@ def analyze_z_vector_and_wald(
     print(f"\n  Projection: k={k}, proj.shape={proj.shape}")
     print(f"  Projected vector w = R·z (length {len(projected)}):")
     for i in range(min(k, 10)):
-        wt = "whitened" if config.EIGENVALUE_WHITENING else "raw"
+        wt = "whitened" if False else "satterthwaite"
         w_sq_lam = (
             projected[i] ** 2 / ev[i] if ev is not None and i < len(ev) else projected[i] ** 2
         )
@@ -361,9 +358,7 @@ def analyze_z_vector_and_wald(
 
     # Compute test stat and p-value
     stat, eff_df, pval = compute_projected_pvalue(projected, k, eigenvalues=ev)
-    print(
-        f"\n  Projected Wald test ({('whitened' if config.EIGENVALUE_WHITENING else 'Satterthwaite')}):"
-    )
+    print("\n  Projected Wald test (Satterthwaite):")
     print(f"    T = {stat:.4f}")
     print(f"    df = {eff_df:.1f}")
     print(f"    p = {pval:.6f}")
@@ -503,11 +498,11 @@ def main():
 
     print_header(f"Spectral Eigenvalue Diagnosis: {case_name}")
     print(
-        f"  Config: EIGENVALUE_WHITENING={config.EIGENVALUE_WHITENING}, "
+        "  Config: sibling calibration=satterthwaite, "
         "SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)"
     )
     print(
-        f"  Config: PROJECTION_MIN_K={config.PROJECTION_MIN_K}, "
+        f"  Config: SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}, "
         f"PROJECTION_EPS={config.PROJECTION_EPS}"
     )
 

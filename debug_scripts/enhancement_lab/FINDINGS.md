@@ -2,7 +2,7 @@
 
 ## Experiment Chronology
 
-> Update (2026-03-20): The original exp15-19 conclusions below were based on a stale lab harness. After repairing the override path to the current `sibling_config` API and rerunning the strategy benchmarks, the `jl_floor_qrt` winner claim did not reproduce. Current live reruns show `exp16`: `min_child=0.998`, `jl_floor_qrt=0.994`, `none=0.979`; repaired `exp19`: `jl_floor_qrt=0.994`, below several alternatives at `0.998`.
+> Update (2026-03-20): The original exp15-19 conclusions below were based on a stale lab harness. After repairing the override path to the current `sibling_projection_inputs` API and rerunning the strategy benchmarks, the `jl_floor_qrt` winner claim did not reproduce. Current live reruns show `exp16`: `min_child=0.998`, `jl_floor_qrt=0.994`, `none=0.979`; repaired `exp19`: `jl_floor_qrt=0.994`, below several alternatives at `0.998`.
 
 | Exp | Focus                                          | Key Finding                                   |
 | --- | ---------------------------------------------- | --------------------------------------------- |
@@ -24,7 +24,7 @@
 ## Implementation (from exp7–9)
 
 **Applied to codebase (all tests passing):**
-- Gate 3 sibling test now uses `min(k_left, k_right)` spectral dims from Gate 2
+- Gate 3 sibling test now uses `min(k_left, k_right)` spectral dims from Gate 2 *(historical — production has since been updated to geometric mean `round(sqrt(k_L * k_R))`; see `sibling_projection_inputs.py`)*
 - Removed `PROJECTION_MAX_DIMENSION` cap across 8 files
 - ARI on failure cases improved from 0.059 → 0.220 (still low)
 
@@ -108,7 +108,7 @@ The current approach is **sound** for well-separated clusters where HAC produces
 
 The introduction of Marchenko-Pastur spectral dimensions for Gate 2 created a regression
 when those per-node dimensions were forwarded to Gate 3 via `_derive_sibling_spectral_dims()`.
-The function computes `k = min(k_left, k_right)` — but MP on small within-child data
+The function historically computed `k = min(k_left, k_right)` — but MP on small within-child data
 almost always yields k ≈ 0–2, collapsing the χ² test to near-zero power.
 
 ### Exp 15 — Root Cause Confirmation

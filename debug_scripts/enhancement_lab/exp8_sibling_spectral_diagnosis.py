@@ -42,7 +42,7 @@ from kl_clustering_analysis.core_utils.data_utils import (
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     marchenko_pastur_signal_count,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (

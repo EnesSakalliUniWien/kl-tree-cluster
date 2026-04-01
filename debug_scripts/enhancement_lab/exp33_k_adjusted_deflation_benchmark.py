@@ -11,11 +11,11 @@ Runs each benchmark case under four deflation strategies:
      where null-like pairs naturally dominate.
 
 All methods use the SAME tree, SAME data, and SAME Gate 2 annotations.
-Only the Gate 3 deflation step differs.
+Only the Gate 3 adjustment step differs.
 
-The experiment monkey-patches ``_deflate_and_test`` inside
-``adjusted_wald_annotation.py`` to inject the k-adjusted calibration resolver,
-avoiding any production code changes.
+The experiment monkey-patches ``compute_adjusted_sibling_tests`` inside the
+``adjusted_wald_annotation`` package to inject the k-adjusted calibration
+resolver, avoiding any production code changes.
 
 Output: CSV of (case, method, K_true, K_found, ARI, gamma_hat, c_hat) and a
 summary markdown report.
@@ -50,12 +50,14 @@ from debug_scripts.enhancement_lab.lab_helpers import (
     resolve_enhancement_lab_artifact_path,
 )
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction import (
+    compute_adjusted_sibling_tests,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     CalibrationModel,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
     SiblingPairRecord,
-    deflate_focal_pairs,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -341,36 +343,52 @@ def run_case(
     # --- Methods 2-4: k_adjusted variants ---
     import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation as awa_mod
 
-    original_deflate_and_test = awa_mod._deflate_and_test
+    original_compute_adjusted_sibling_tests = awa_mod.compute_adjusted_sibling_tests
+    original_fit_inflation_model = awa_mod.fit_inflation_model
 
     for method_name, gamma_kwargs in _K_ADJ_METHODS.items():
         tree_k = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
 
         captured_gamma_info: list[InferredGamma] = []
+        captured_model: list[CalibrationModel] = []
 
         def _make_patch(gkw: dict) -> Callable:
-            """Create a patched _deflate_and_test for the given gamma kwargs."""
+            """Create a patched adjusted-test stage for the given gamma kwargs."""
 
             def _patched(
                 records: List[SiblingPairRecord],
-                model: CalibrationModel,
+                *,
+                resolve_inflation_adjustment,
             ) -> Tuple[List[str], List[Tuple[float, float, float]], List[str]]:
+                if not captured_model:
+                    raise RuntimeError("Expected fit_inflation_model to run before adjustment")
+                model = captured_model[-1]
                 gamma_info = infer_gamma_from_pairs(records, **gkw)
                 captured_gamma_info.append(gamma_info)
                 resolver = make_k_adjusted_resolver(model, gamma_info)
-                return deflate_focal_pairs(records, calibration_resolver=resolver)
+                return compute_adjusted_sibling_tests(
+                    records,
+                    resolve_inflation_adjustment=resolver,
+                )
 
             return _patched
 
+        def _capturing_fit_inflation_model(records: List[SiblingPairRecord]) -> CalibrationModel:
+            model = original_fit_inflation_model(records)
+            captured_model.append(model)
+            return model
+
         try:
-            awa_mod._deflate_and_test = _make_patch(gamma_kwargs)
+            awa_mod.fit_inflation_model = _capturing_fit_inflation_model
+            awa_mod.compute_adjusted_sibling_tests = _make_patch(gamma_kwargs)
             decomp_k = tree_k.decompose(
                 leaf_data=data_df,
                 alpha_local=significance_level,
                 sibling_alpha=significance_level,
             )
         finally:
-            awa_mod._deflate_and_test = original_deflate_and_test
+            awa_mod.fit_inflation_model = original_fit_inflation_model
+            awa_mod.compute_adjusted_sibling_tests = original_compute_adjusted_sibling_tests
 
         labels_k = np.asarray(_labels_from_decomposition(decomp_k, data_df.index.tolist()))
         k_found_k = int(decomp_k.get("num_clusters", 0))

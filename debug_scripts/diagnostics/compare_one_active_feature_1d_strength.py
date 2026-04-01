@@ -69,7 +69,7 @@ def _patch_one_active_feature_to_1d() -> dict[str, int]:
     from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
         child_parent_projected_wald,
     )
-    from kl_clustering_analysis.hierarchy_analysis.statistics.projection import projected_wald
+    from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald import projected_wald_kernel as projected_wald
     from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
         wald_statistic,
     )
@@ -107,7 +107,6 @@ def _patch_one_active_feature_to_1d() -> dict[str, int]:
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
         child_pca_projections: list[np.ndarray] | None = None,
-        whitening: str = "per_component",
     ):
         if _is_canonical_one_feature_basis(pca_projection):
             spectral_k = 1
@@ -118,7 +117,6 @@ def _patch_one_active_feature_to_1d() -> dict[str, int]:
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalues,
-            whitening=whitening,
         )
 
     def patched_process_node(

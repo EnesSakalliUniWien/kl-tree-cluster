@@ -95,15 +95,15 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection import (  #
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (  # noqa: E402
     adjusted_wald_annotation as adjusted_wald_module,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (  # noqa: E402
-    sibling_pair_collection as sibling_pair_collection_module,
-)
+import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection as record_collection_module  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (  # noqa: E402
     wald_statistic as wald_statistic_module,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (  # noqa: E402
-    derive_sibling_pca_projections,
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
 BATTERY_CASES = [
@@ -178,16 +178,6 @@ def parse_args() -> argparse.Namespace:
         "--output-dir",
         default=enhancement_lab_results_relative("exp27_neighborhood_padding"),
         help="Directory for CSV/JSON artifacts.",
-    )
-    parser.add_argument(
-        "--sibling-method",
-        default=None,
-        help="Temporary override for config.SIBLING_TEST_METHOD.",
-    )
-    parser.add_argument(
-        "--sibling-whitening",
-        default=None,
-        help="Temporary override for config.SIBLING_WHITENING.",
     )
     parser.add_argument(
         "--padding-regime",
@@ -1224,8 +1214,8 @@ def build_case_sources(
         minimum_projection_dimension=getattr(config, "PROJECTION_MINIMUM_DIMENSION", None),
     )
 
-    sibling_dims = derive_sibling_spectral_dims(tree, edge_annotated_df) or {}
-    parent_pca, _ = derive_sibling_pca_projections(edge_annotated_df, sibling_dims)
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, edge_annotated_df) or {}
+    parent_pca, _ = collect_parent_principal_component_inputs_for_sibling_tests(edge_annotated_df, sibling_dims)
     raw_pca = edge_annotated_df.attrs.get("_pca_projections") or {}
     source_maps = _derive_nonfocal_pca_sources(tree, raw_pca, sibling_dims)
     collateral_shells = _derive_collateral_shells(tree, raw_pca, sibling_dims)
@@ -1333,7 +1323,7 @@ def run_variant_case(
         )
         stack.enter_context(
             temporary_attr(
-                sibling_pair_collection_module,
+                record_collection_module,
                 "sibling_divergence_test",
                 wrapped_test,
             )
@@ -2645,10 +2635,7 @@ def main() -> None:
     node_associations_by_variant: dict[str, Any] = {}
 
     started = time.time()
-    with temporary_config(
-        SIBLING_TEST_METHOD=args.sibling_method or config.SIBLING_TEST_METHOD,
-        SIBLING_WHITENING=args.sibling_whitening or config.SIBLING_WHITENING,
-    ):
+    with temporary_config():
         for variant_name in args.variants:
             variant = VARIANTS[variant_name]
             variant_case_rows: list[dict[str, Any]] = []
@@ -2716,8 +2703,8 @@ def main() -> None:
         "variants": list(args.variants),
         "elapsed_seconds": time.time() - started,
         "config": {
-            "SIBLING_TEST_METHOD": args.sibling_method or config.SIBLING_TEST_METHOD,
-            "SIBLING_WHITENING": args.sibling_whitening or config.SIBLING_WHITENING,
+            "sibling_test_method": "cousin_adjusted_wald",
+            "SIBLING_CALIBRATION": "satterthwaite",
             "PADDING_REGIME": args.padding_regime,
             "LOW_OVERLAP_JACCARD_THRESHOLD": args.low_overlap_jaccard_threshold,
             "SUPPORT_ENERGY_SHARE_THRESHOLD": args.support_energy_share_threshold,

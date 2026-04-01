@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check whether posthoc merge changes affect the 'clear' case under the production sibling test."""
+"""Check whether posthoc merge changes affect the 'clear' case under the fixed production sibling test."""
 import sys
 
 sys.path.insert(0, "/Users/berksakalli/Projects/kl-te-cluster")
@@ -19,10 +19,7 @@ CLEAR_CASE = {
     "seed": 0,
 }
 
-orig_sibling_method = config.SIBLING_TEST_METHOD
 orig_posthoc_merge = config.POSTHOC_MERGE
-
-config.SIBLING_TEST_METHOD = "cousin_adjusted_wald"
 
 for merge in [True, False]:
     config.POSTHOC_MERGE = merge
@@ -35,9 +32,8 @@ for merge in [True, False]:
     kl = df[df["Method"] == "KL Divergence"]
     row = kl.iloc[0]
     print(
-        f"method={config.SIBLING_TEST_METHOD:<25s} merge={merge!s:<6s}  K={row['Found']}/{row['True']}  ARI={row['ARI']:.3f}"
+        f"method={'cousin_adjusted_wald':<25s} merge={merge!s:<6s}  K={row['Found']}/{row['True']}  ARI={row['ARI']:.3f}"
     )
 
 # Restore defaults
-config.SIBLING_TEST_METHOD = orig_sibling_method
 config.POSTHOC_MERGE = orig_posthoc_merge

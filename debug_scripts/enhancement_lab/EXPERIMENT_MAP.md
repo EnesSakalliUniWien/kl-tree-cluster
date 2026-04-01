@@ -95,7 +95,7 @@ enhancement_lab/
 
 ### Phase 2: Spectral Dimension Solution (exp15–exp19) ⭐
 
-> Update (2026-03-20): The `jl_floor_qrt` deployment recommendation below is stale. After repairing the enhancement-lab harness against the current `sibling_config` API, live reruns gave `exp16`: `min_child=0.998`, `jl_floor_qrt=0.994`, `none=0.979`; repaired `exp19`: `jl_floor_qrt=0.994`, below several alternatives at `0.998`.
+> Update (2026-03-20): The `jl_floor_qrt` deployment recommendation below is stale. After repairing the enhancement-lab harness against the current `sibling_projection_inputs` API, live reruns gave `exp16`: `min_child=0.998`, `jl_floor_qrt=0.994`, `none=0.979`; repaired `exp19`: `jl_floor_qrt=0.994`, below several alternatives at `0.998`.
 
 | Exp       | Question                             | Finding                                                                | Status     |
 | --------- | ------------------------------------ | ---------------------------------------------------------------------- | ---------- |

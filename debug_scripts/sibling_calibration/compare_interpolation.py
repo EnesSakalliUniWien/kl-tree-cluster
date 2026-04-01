@@ -33,7 +33,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.conditional_deflation import (
@@ -44,20 +44,24 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inf
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.adjusted_sibling_tests import (
+    count_null_focal_pairs,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation import (
     interpolate_sibling_null_priors,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
-    count_null_focal_pairs,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
     SiblingPairRecord,
 )
 from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_pca_projections,
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -97,8 +101,8 @@ def _collect_records(tree, data_bin):
         leaf_data=data_bin,
         minimum_projection_dimension=min_proj_dim,
     )
-    spectral_dims = derive_sibling_spectral_dims(tree, annotations_df)
-    pca_projections, pca_eigenvalues = derive_sibling_pca_projections(annotations_df, spectral_dims)
+    spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
+    pca_projections, pca_eigenvalues = collect_parent_principal_component_inputs_for_sibling_tests(annotations_df, spectral_dims)
     child_pca_projections = derive_sibling_child_pca_projections(
         tree, annotations_df, spectral_dims
     )
@@ -108,11 +112,9 @@ def _collect_records(tree, data_bin):
         tree,
         annotations_df,
         mean_bl,
-        spectral_dims=spectral_dims,
-        pca_projections=pca_projections,
-        pca_eigenvalues=pca_eigenvalues,
-        child_pca_projections=child_pca_projections,
-        whitening=config.SIBLING_WHITENING,
+        sibling_projection_dimensions_from_edge_comparisons=spectral_dims,
+        parent_principal_component_projections=pca_projections,
+        parent_principal_component_eigenvalues=pca_eigenvalues,
     )
     return records, annotations_df
 
@@ -137,7 +139,7 @@ def _print_pair_table(records: list[SiblingPairRecord], title: str) -> None:
         lam = f"{r.neighborhood_reliance:.4f}" if r.neighborhood_reliance is not None else "None"
         print(
             f"  {r.parent:>8} {r.stat:10.4f} {r.degrees_of_freedom:8.1f} "
-            f"{r.sibling_scale:8.2f} {r.p_value:10.6f} {ratio:8.4f} "
+            f"{r.sibling_test_calibration_scale:8.2f} {r.p_value:10.6f} {ratio:8.4f} "
             f"{str(r.is_null_like):>5} {str(r.is_gate2_blocked):>7} "
             f"{r.sibling_null_prior_from_edge_pvalue:8.4f} {smooth:>8} "
             f"{anc:>8} {lam:>8}"
@@ -163,7 +165,7 @@ def _deflate_records(records, _model, calibrator):
     for r in records:
         if r.is_null_like:
             continue
-        c_local = predict_sibling_adjustment(calibrator, r.sibling_scale)
+        c_local = predict_sibling_adjustment(calibrator, r.sibling_test_calibration_scale)
         t_adj = r.stat / c_local
         p_adj = (
             float(chi2.sf(t_adj, df=r.degrees_of_freedom))
@@ -173,7 +175,7 @@ def _deflate_records(records, _model, calibrator):
         results[r.parent] = {
             "T": r.stat,
             "df": r.degrees_of_freedom,
-            "scale": r.sibling_scale,
+            "scale": r.sibling_test_calibration_scale,
             "c_local": c_local,
             "T_adj": t_adj,
             "p_adj": p_adj,
@@ -186,8 +188,8 @@ def main() -> None:
     data_bin, labels, _, _ = generate_case_data(CASE)
     print("=" * 100)
     print("INTERPOLATION COMPARISON: gauss_clear_medium (n=60, p=40, K=4, noise=0.6)")
-    print(f"  Config: SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}")
-    print(f"  Config: SIBLING_WHITENING={config.SIBLING_WHITENING}")
+    print("  Config: Sibling test method=fixed cousin_adjusted_wald")
+    print("  Config: SIBLING_CALIBRATION=satterthwaite")
     print(f"  Config: FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}")
     print("=" * 100)
 
@@ -300,7 +302,7 @@ def main() -> None:
                 print(
                     f"  {parent:>8} {ra.sibling_null_prior_from_edge_pvalue:10.6f} "
                     f"{rb.sibling_null_prior_from_edge_pvalue:10.6f} {delta:+12.6e} "
-                    f"{ra.sibling_scale:6.1f} {rb.sibling_scale:6.1f} {flag:>6}"
+                    f"{ra.sibling_test_calibration_scale:6.1f} {rb.sibling_test_calibration_scale:6.1f} {flag:>6}"
                 )
             elif ra:
                 print(

@@ -5,7 +5,9 @@ dimension, ranging from pure JL to various spectral combinations.
 
 Strategies:
   1. none          — JL fallback only (no spectral override)
-  2. min_child     — min(k_L, k_R)  [current HEAD, causes regression]
+  2. geom_mean     — round(sqrt(k_L * k_R))  [current HEAD; historically labelled 'min_child'
+                     because _derive_min_child calls the live production API, which now
+                     implements geometric mean, not min(k_L, k_R)]
   3. max_child     — max(k_L, k_R)
   4. sum_child     — k_L + k_R
   5. max_child_2x  — 2 × max(k_L, k_R)
@@ -31,8 +33,8 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend as compute_jl_dim,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_spectral_dims as current_derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons as current_derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
 # Sentinel cases: 5 improving, 2 going the other direction
@@ -54,7 +56,7 @@ CASES = [
     "gauss_noisy_many",  # intermediate
 ]
 
-orig_derive = current_derive_sibling_spectral_dims
+orig_derive = current_derive_sibling_projection_dimensions_from_child_edge_comparisons
 
 
 # ── Strategy derivation functions ──────────────────────────────────────────
@@ -66,7 +68,13 @@ def _derive_none(tree, annotated_df):
 
 
 def _derive_min_child(tree, annotated_df):
-    """Strategy: min_child — min(k_L, k_R). Current HEAD."""
+    """Strategy: geom_mean — round(sqrt(k_L * k_R)). Current HEAD.
+
+    Historically labelled 'min_child'; calls the live production API
+    ``derive_sibling_projection_dimensions_from_child_edge_comparisons`` which now
+    implements ``max(1, round(math.sqrt(k_left * k_right)))`` (geometric mean),
+    not ``min(k_L, k_R)``.
+    """
     return orig_derive(tree, annotated_df)
 
 
@@ -188,7 +196,7 @@ def run_case_strategy(case_name: str, strategy_fn) -> dict:
 # ── Main ───────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={config.SIBLING_TEST_METHOD}")
+    print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
     print("        SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
     print()
 

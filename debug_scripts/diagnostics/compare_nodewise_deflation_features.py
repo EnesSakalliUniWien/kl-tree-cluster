@@ -37,10 +37,15 @@ os.environ.setdefault("KL_TE_N_JOBS", "1")
 from debug_scripts.enhancement_lab.lab_helpers import build_tree_and_data, compute_ari, temporary_config
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import compute_mean_branch_length
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.k_estimators import effective_rank
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import effective_rank
 from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import sibling_config
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     SiblingPairRecord,
     collect_sibling_pair_records,
 )
@@ -198,8 +203,10 @@ def _case_features(case: str) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     stats = tree.annotations_df
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = sibling_config.derive_sibling_spectral_dims(tree, stats)
-    pca_projections, pca_eigenvalues = sibling_config.derive_sibling_pca_projections(stats, sibling_dims)
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, stats)
+    pca_projections, pca_eigenvalues = collect_parent_principal_component_inputs_for_sibling_tests(
+        stats, sibling_dims
+    )
     child_pca = derive_sibling_child_pca_projections(tree, stats, sibling_dims)
     records, _ = collect_sibling_pair_records(
         tree,
@@ -208,7 +215,6 @@ def _case_features(case: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         spectral_dims=sibling_dims,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
-        whitening=config.SIBLING_WHITENING,
     )
 
     record_by_parent = {r.parent: r for r in records}

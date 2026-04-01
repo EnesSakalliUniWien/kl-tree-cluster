@@ -31,9 +31,8 @@ from benchmarks.shared.cases import get_default_test_cases  # noqa: E402
 from benchmarks.shared.generators import generate_case_data  # noqa: E402
 from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates import orchestrator  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (  # noqa: E402
-    sibling_config,
-)
+import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs as parent_principal_component_inputs_module  # noqa: E402
+import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions as sibling_projection_dimension_module  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (  # noqa: E402
     marchenko_pastur as mp_module,
 )
@@ -157,11 +156,19 @@ def temporary_experiment_overrides(
             stack.enter_context(temporary_dict_values(leaf_data_cache, leaf_data=leaf_data))
         if sibling_dims is not _MISSING:
             stack.enter_context(
-                temporary_attr(sibling_config, "derive_sibling_spectral_dims", sibling_dims)
+                temporary_attr(
+                    sibling_projection_dimension_module,
+                    "derive_sibling_projection_dimensions_from_child_edge_comparisons",
+                    sibling_dims,
+                )
             )
         if sibling_pca is not _MISSING:
             stack.enter_context(
-                temporary_attr(sibling_config, "derive_sibling_pca_projections", sibling_pca)
+                temporary_attr(
+                    parent_principal_component_inputs_module,
+                    "collect_parent_principal_component_inputs_for_sibling_tests",
+                    sibling_pca,
+                )
             )
         if gate2_estimator is not _MISSING:
             stack.enter_context(

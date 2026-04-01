@@ -74,7 +74,6 @@ def analyze_case(case_name: str) -> dict:
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,
-        sibling_method=config.SIBLING_TEST_METHOD,
     )
     ann = bundle.annotated_df
 

@@ -28,9 +28,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_proj
     derive_projection_seed,
     generate_projection_matrix,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
-    get_binary_children as _get_binary_children,
-    get_sibling_data as _get_sibling_data,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
+    extract_sibling_pair_observations as _get_sibling_data,
+    identify_binary_sibling_children as _get_binary_children,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 

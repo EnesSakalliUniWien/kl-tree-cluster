@@ -38,6 +38,9 @@ sys.path.insert(0, str(_LAB))
 
 from lab_helpers import build_tree_and_data, compute_ari, run_decomposition  # noqa: E402
 
+from debug_scripts._shared.sibling_child_pca import (  # noqa: E402
+    derive_sibling_child_pca_projections,
+)
 from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (  # noqa: E402
     compute_mean_branch_length,
@@ -45,20 +48,23 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing import (  # noqa: E402
     benjamini_hochberg_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald import (  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_kernel import (  # noqa: E402
     run_projected_wald_kernel,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (  # noqa: E402
     standardize_proportion_difference,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (  # noqa: E402
-    collect_sibling_pair_records,
-    get_sibling_data,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (  # noqa: E402
+    extract_sibling_pair_observations,
 )
-from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (  # noqa: E402
-    derive_sibling_pca_projections,
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
+    collect_sibling_pair_records,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
 # ---------------------------------------------------------------------------
@@ -176,7 +182,6 @@ def _compute_t_from_leaf_data(
         spectral_k=spectral_k,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
-        whitening=whitening,
     )
     return t_stat
 
@@ -194,7 +199,6 @@ def conditional_permutation_pvalue(
     pca_projection: np.ndarray | None,
     pca_eigenvalues: np.ndarray | None,
     child_pca_projections: list[np.ndarray] | None,
-    whitening: str = "per_component",
     n_permutations: int = N_PERMUTATIONS,
 ) -> tuple[float, float]:
     """Conditional permutation test for a sibling pair.
@@ -287,8 +291,10 @@ def run_case(case_name: str) -> CaseResult:
     ari = compute_ari(decomp, data_df, y_true) if y_true is not None else float("nan")
 
     # 2. Extract Gate 2 output for sibling config
-    sibling_dims = derive_sibling_spectral_dims(tree, annotations_df)
-    sibling_pca, sibling_eig = derive_sibling_pca_projections(annotations_df, sibling_dims)
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
+    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(
+        annotations_df, sibling_dims
+    )
     sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
@@ -313,7 +319,9 @@ def run_case(case_name: str) -> CaseResult:
         p_wald_bh = float(annotations_df.at[parent, "Sibling_Divergence_P_Value_Corrected"])
         t_obs_pipeline = float(annotations_df.at[parent, "Sibling_Test_Statistic"])
 
-        _, _, n_left, n_right, _, _ = get_sibling_data(tree, parent, left, right)
+        _, _, n_left, n_right, _, _ = extract_sibling_pair_observations(
+            tree, parent, left, right
+        )
 
         # Spectral config for this parent
         spec_k = sibling_dims.get(parent, 0) if sibling_dims else 0
@@ -340,8 +348,7 @@ def run_case(case_name: str) -> CaseResult:
             spectral_k=spec_k,
             pca_projection=pca_proj,
             pca_eigenvalues=pca_eig,
-            whitening=config.SIBLING_WHITENING,
-            n_permutations=N_PERMUTATIONS,
+                n_permutations=N_PERMUTATIONS,
         )
 
         comparisons.append(
@@ -431,7 +438,7 @@ def print_summary_table(results: Sequence[CaseResult]) -> None:
     print("\n" + "=" * len(hdr))
     print("SUMMARY: Conditional Permutation vs Cousin-Weighted Wald")
     print(f"Permutations: {N_PERMUTATIONS}")
-    print(f"Sibling method: {config.SIBLING_TEST_METHOD}")
+    print(f"Sibling method: {"cousin_adjusted_wald"}")
     print(f"Sibling alpha: {config.SIBLING_ALPHA}")
     print("=" * len(hdr))
     print(hdr)
@@ -512,7 +519,7 @@ def print_summary_table(results: Sequence[CaseResult]) -> None:
 
 def main() -> None:
     print(
-        f"Config: METHOD={config.SIBLING_TEST_METHOD}, "
+        f"Config: METHOD={"cousin_adjusted_wald"}, "
         f"SIBLING_ALPHA={config.SIBLING_ALPHA}, "
         f"EDGE_ALPHA={config.EDGE_ALPHA}"
     )
@@ -543,5 +550,7 @@ def main() -> None:
     print_summary_table(results)
 
 
+if __name__ == "__main__":
+    main()
 if __name__ == "__main__":
     main()

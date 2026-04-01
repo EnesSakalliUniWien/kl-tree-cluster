@@ -57,7 +57,6 @@ for case in cases:
     Z = linkage(dist_c, method=config.TREE_LINKAGE_METHOD)
 
     # Run the production adjusted sibling test.
-    config.SIBLING_TEST_METHOD = "cousin_adjusted_wald"
     tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
     decomp = tree.decompose(leaf_data=data_df, alpha_local=0.05, sibling_alpha=0.05)
 

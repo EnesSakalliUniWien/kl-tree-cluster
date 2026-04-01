@@ -61,7 +61,7 @@ def compute_jl_floor_qrt(n_samples: int, n_features: int) -> int:
     return max(2, jl_k // 4)
 
 
-def derive_sibling_spectral_dims_min_child(
+def derive_sibling_projection_dimensions_from_child_edge_comparisons_min_child(
     tree,
     annotated_df,
 ) -> dict[str, int] | None:
@@ -90,7 +90,7 @@ def derive_sibling_spectral_dims_min_child(
     return sibling_dims if sibling_dims else None
 
 
-def derive_sibling_spectral_dims_jl_floor_qrt(
+def derive_sibling_projection_dimensions_from_child_edge_comparisons_jl_floor_qrt(
     tree,
     annotated_df,
     leaf_data,
@@ -140,8 +140,8 @@ def run_decomposition_custom(
     sibling_alpha: float = 0.01,
 ) -> dict:
     """Run decomposition with custom spectral_dims derivation."""
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-        derive_sibling_pca_projections,
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+        collect_parent_principal_component_inputs_for_sibling_tests,
     )
 
     # Gate 2
@@ -156,7 +156,7 @@ def run_decomposition_custom(
 
     # Gate 3 with custom spectral_dims
     sibling_dims = spectral_dims_fn(tree, edge_annotated_df, leaf_data)
-    pca_projs, pca_eigs = derive_sibling_pca_projections(edge_annotated_df, sibling_dims)
+    pca_projs, pca_eigs = collect_parent_principal_component_inputs_for_sibling_tests(edge_annotated_df, sibling_dims)
 
     annotated_df = annotate_sibling_divergence_adjusted(
         tree,
@@ -207,7 +207,7 @@ def run_case(case_name: str) -> dict:
     # Strategy 1: min_child (current production)
     t0 = time.time()
     try:
-        result_min = run_decomposition_custom(tree, data_df, derive_sibling_spectral_dims_min_child)
+        result_min = run_decomposition_custom(tree, data_df, derive_sibling_projection_dimensions_from_child_edge_comparisons_min_child)
         ari_min = compute_ari(result_min, data_df, y_true) if y_true is not None else float("nan")
         results["min_child"] = {
             "found_k": result_min["num_clusters"],
@@ -226,7 +226,7 @@ def run_case(case_name: str) -> dict:
     t0 = time.time()
     try:
         result_jl = run_decomposition_custom(
-            tree, data_df, derive_sibling_spectral_dims_jl_floor_qrt
+            tree, data_df, derive_sibling_projection_dimensions_from_child_edge_comparisons_jl_floor_qrt
         )
         ari_jl = compute_ari(result_jl, data_df, y_true) if y_true is not None else float("nan")
         results["jl_floor_qrt"] = {
@@ -261,7 +261,7 @@ def main():
     print("=" * 90)
     print(f"\nSentinel cases: {len(SENTINEL_CASES)}")
     print(
-        f"Config: SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}, SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)"
+        "Config: Sibling test method=fixed cousin_adjusted_wald, SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)"
     )
     print()
 

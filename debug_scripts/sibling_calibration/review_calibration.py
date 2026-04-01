@@ -38,7 +38,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.conditional_deflation import (
@@ -48,20 +48,24 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inf
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.adjusted_sibling_tests import (
+    count_null_focal_pairs,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation import (
     interpolate_sibling_null_priors,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_pair_collection import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
-    count_null_focal_pairs,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
     SiblingPairRecord,
 )
 from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.sibling_config import (
-    derive_sibling_pca_projections,
-    derive_sibling_spectral_dims,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -117,8 +121,8 @@ def _build_tree_and_annotate(
         leaf_data=data_bin,
         minimum_projection_dimension=min_proj_dim,
     )
-    spectral_dims = derive_sibling_spectral_dims(tree, annotations_df)
-    pca_projections, pca_eigenvalues = derive_sibling_pca_projections(
+    spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
+    pca_projections, pca_eigenvalues = collect_parent_principal_component_inputs_for_sibling_tests(
         annotations_df, spectral_dims,
     )
     child_pca_projections = derive_sibling_child_pca_projections(
@@ -130,11 +134,9 @@ def _build_tree_and_annotate(
         tree,
         annotations_df,
         mean_bl,
-        spectral_dims=spectral_dims,
-        pca_projections=pca_projections,
-        pca_eigenvalues=pca_eigenvalues,
-        child_pca_projections=child_pca_projections,
-        whitening=config.SIBLING_WHITENING,
+        sibling_projection_dimensions_from_edge_comparisons=spectral_dims,
+        parent_principal_component_projections=pca_projections,
+        parent_principal_component_eigenvalues=pca_eigenvalues,
     )
     return tree, annotations_df, records, non_binary
 
@@ -195,8 +197,8 @@ def analyze_case(
             if ratio > 0:
                 all_ratios.append(ratio)
                 scale = (
-                    r.sibling_scale
-                    if np.isfinite(r.sibling_scale) and r.sibling_scale > 0
+                    r.sibling_test_calibration_scale
+                    if np.isfinite(r.sibling_test_calibration_scale) and r.sibling_test_calibration_scale > 0
                     else r.degrees_of_freedom
                 )
                 all_scales.append(scale)
@@ -214,8 +216,8 @@ def analyze_case(
         if r.is_null_like:
             continue
         scale = (
-            r.sibling_scale
-            if np.isfinite(r.sibling_scale) and r.sibling_scale > 0
+            r.sibling_test_calibration_scale
+            if np.isfinite(r.sibling_test_calibration_scale) and r.sibling_test_calibration_scale > 0
             else r.degrees_of_freedom
         )
         c_local = predict_sibling_adjustment(calibrator, scale)
@@ -492,8 +494,8 @@ def main() -> None:
     print(f"║  CALIBRATION REVIEW: {len(case_names)} cases" + " " * (98 - 24 - len(str(len(case_names)))) + "║")
     print("╚" + "═" * 98 + "╝")
     print("\n  Config:")
-    print(f"    SIBLING_TEST_METHOD         = {config.SIBLING_TEST_METHOD}")
-    print(f"    SIBLING_WHITENING           = {config.SIBLING_WHITENING}")
+    print("    Sibling test method         = fixed cousin_adjusted_wald")
+    print("    SIBLING_CALIBRATION        = satterthwaite")
     print(f"    FELSENSTEIN_SCALING          = {config.FELSENSTEIN_SCALING}")
     print(f"    SPECTRAL_MINIMUM_DIMENSION  = {config.SPECTRAL_MINIMUM_DIMENSION}")
     print(f"    PROJECTION_MINIMUM_DIMENSION= {config.PROJECTION_MINIMUM_DIMENSION}")

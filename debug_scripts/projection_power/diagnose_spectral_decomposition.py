@@ -284,12 +284,12 @@ def main():
         f"INCLUDE_INTERNAL_IN_SPECTRAL={config.INCLUDE_INTERNAL_IN_SPECTRAL}"
     )
     print(
-        f"        EIGENVALUE_WHITENING={config.EIGENVALUE_WHITENING}, "
+        "        Sibling calibration=satterthwaite, "
         f"PROJECTION_EPS={config.PROJECTION_EPS}"
     )
     print(
-        f"        PROJECTION_MIN_K={config.PROJECTION_MIN_K}, "
-        f"SIBLING_TEST_METHOD={config.SIBLING_TEST_METHOD}"
+        f"        SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}, "
+        "Sibling test method=fixed cousin_adjusted_wald"
     )
     print("=" * 80)
 

@@ -34,15 +34,6 @@ def _run_case_worker(
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
-    # Restore config overrides that were set in the parent process.
-    # With mp.get_context("spawn") the child reimports everything from scratch,
-    # so Python-level config changes are lost.  We propagate them via env vars.
-    from kl_clustering_analysis import config as _cfg
-
-    _sibling_override = os.environ.get("KL_TE_SIBLING_TEST_METHOD", "")
-    if _sibling_override:
-        _cfg.SIBLING_TEST_METHOD = _sibling_override
-
     try:
         df_res, _ = _get_benchmark_fn()(
             test_cases=[case],

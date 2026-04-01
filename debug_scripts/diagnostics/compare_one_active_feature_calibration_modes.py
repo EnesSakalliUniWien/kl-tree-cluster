@@ -58,7 +58,10 @@ def _collect_one_active_records(collector: list[dict[str, float]]) -> None:
 
     def wrapped_collect(*args, **kwargs):
         records, non_binary = original_collect(*args, **kwargs)
-        pca_projections = kwargs.get("pca_projections")
+        pca_projections = kwargs.get(
+            "parent_principal_component_projections",
+            kwargs.get("pca_projections"),
+        )
         for record in records:
             regime = _regime_for_projection(
                 pca_projections.get(record.parent) if pca_projections is not None else None
@@ -100,11 +103,14 @@ def _patch_one_active_calibration(
 
     original_collect = awa.collect_sibling_pair_records
     original_fit = awa.fit_inflation_model
-    original_deflate = awa._deflate_and_test
+    original_compute_adjusted_sibling_tests = awa.compute_adjusted_sibling_tests
 
     def wrapped_collect(*args, **kwargs):
         records, non_binary = original_collect(*args, **kwargs)
-        pca_projections = kwargs.get("pca_projections")
+        pca_projections = kwargs.get(
+            "parent_principal_component_projections",
+            kwargs.get("pca_projections"),
+        )
         for record in records:
             record.projection_regime = _regime_for_projection(
                 pca_projections.get(record.parent) if pca_projections is not None else None
@@ -189,7 +195,11 @@ def _patch_one_active_calibration(
             },
         )
 
-    def wrapped_deflate(records, model):
+    def wrapped_compute_adjusted_sibling_tests(
+        records,
+        *,
+        resolve_inflation_adjustment,
+    ):
         regime_models = model.diagnostics["regime_models"]
         focal_parents: list[str] = []
         focal_results: list[tuple[float, float, float]] = []
@@ -220,13 +230,13 @@ def _patch_one_active_calibration(
 
     awa.collect_sibling_pair_records = wrapped_collect
     awa.fit_inflation_model = wrapped_fit
-    awa._deflate_and_test = wrapped_deflate
+    awa.compute_adjusted_sibling_tests = wrapped_compute_adjusted_sibling_tests
     try:
         yield
     finally:
         awa.collect_sibling_pair_records = original_collect
         awa.fit_inflation_model = original_fit
-        awa._deflate_and_test = original_deflate
+        awa.compute_adjusted_sibling_tests = original_compute_adjusted_sibling_tests
 
 
 def _compare(reference: pd.DataFrame, candidate: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, object]]:

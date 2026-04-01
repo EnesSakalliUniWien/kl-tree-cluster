@@ -33,10 +33,10 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergenc
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_spectral_decomposition import (
     compute_child_parent_spectral_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.chi2_pvalue import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_reference_distribution import (
     compute_projected_pvalue,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_basis import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis import (
     build_projection_basis_with_padding,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree

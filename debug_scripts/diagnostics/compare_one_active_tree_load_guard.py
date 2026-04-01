@@ -100,7 +100,7 @@ def _fit_tree_load_thresholds() -> Thresholds:
     from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
         child_parent_projected_wald,
     )
-    from kl_clustering_analysis.hierarchy_analysis.statistics.projection import projected_wald
+    from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald import projected_wald_kernel as projected_wald
     from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
         marchenko_pastur,
         tree_estimator,
@@ -128,7 +128,6 @@ def _fit_tree_load_thresholds() -> Thresholds:
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
         child_pca_projections: list[np.ndarray] | None = None,
-        whitening: str = "per_component",
     ):
         if _canonical_one_feature_basis(pca_projection):
             spectral_k = 1
@@ -139,7 +138,6 @@ def _fit_tree_load_thresholds() -> Thresholds:
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalues,
-            whitening=whitening,
         )
 
     def patched_process_node(
@@ -292,7 +290,7 @@ def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
         child_parent_projected_wald,
         child_parent_spectral_decomposition,
     )
-    from kl_clustering_analysis.hierarchy_analysis.statistics.projection import projected_wald
+    from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald import projected_wald_kernel as projected_wald
     from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
         marchenko_pastur,
         tree_estimator,
@@ -338,7 +336,6 @@ def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
         child_pca_projections: list[np.ndarray] | None = None,
-        whitening: str = "per_component",
     ):
         if _canonical_one_feature_basis(pca_projection):
             spectral_k = 1
@@ -349,7 +346,6 @@ def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
             spectral_k=spectral_k,
             pca_projection=pca_projection,
             pca_eigenvalues=pca_eigenvalues,
-            whitening=whitening,
         )
 
     def patched_process_node(

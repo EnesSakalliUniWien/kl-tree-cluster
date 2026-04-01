@@ -13,7 +13,7 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 # Print current config
-print(f"SIBLING_TEST_METHOD: {config.SIBLING_TEST_METHOD}")
+print("Sibling test method: fixed cousin_adjusted_wald")
 print(f"EDGE_ALPHA: {config.EDGE_ALPHA}")
 print(f"SIBLING_ALPHA: {config.SIBLING_ALPHA}")
 print("SPECTRAL_DIMENSION_ESTIMATOR: marchenko_pastur (fixed)")
