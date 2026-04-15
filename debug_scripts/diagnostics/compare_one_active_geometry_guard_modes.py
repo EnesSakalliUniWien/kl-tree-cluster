@@ -59,7 +59,9 @@ def _patch_one_active_guard(spec: GuardSpec) -> dict[str, Any]:
     from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
         child_parent_divergence,
         child_parent_projected_wald,
-        child_parent_spectral_decomposition,
+    )
+    from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation import (
+        spectral_context as child_parent_spectral_context,
     )
     from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald import projected_wald_kernel as projected_wald
     from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
@@ -78,7 +80,7 @@ def _patch_one_active_guard(spec: GuardSpec) -> dict[str, Any]:
     )
     original_sibling_projected_wald_kernel = wald_statistic.run_projected_wald_kernel
     original_compute_child_parent_context = (
-        child_parent_spectral_decomposition.compute_child_parent_spectral_context
+        child_parent_spectral_context.compute_child_parent_spectral_context
     )
     original_compute_child_parent_context_alias = (
         child_parent_divergence.compute_child_parent_spectral_context
@@ -269,7 +271,7 @@ def _patch_one_active_guard(spec: GuardSpec) -> dict[str, Any]:
     projected_wald.run_projected_wald_kernel = patched_run_projected_wald_kernel
     child_parent_projected_wald.run_projected_wald_kernel = patched_run_projected_wald_kernel
     wald_statistic.run_projected_wald_kernel = patched_run_projected_wald_kernel
-    child_parent_spectral_decomposition.compute_child_parent_spectral_context = (
+    child_parent_spectral_context.compute_child_parent_spectral_context = (
         patched_compute_child_parent_spectral_context
     )
     child_parent_divergence.compute_child_parent_spectral_context = (
@@ -286,7 +288,7 @@ def _patch_one_active_guard(spec: GuardSpec) -> dict[str, Any]:
             original_child_parent_projected_wald_kernel
         )
         wald_statistic.run_projected_wald_kernel = original_sibling_projected_wald_kernel
-        child_parent_spectral_decomposition.compute_child_parent_spectral_context = (
+        child_parent_spectral_context.compute_child_parent_spectral_context = (
             original_compute_child_parent_context
         )
         child_parent_divergence.compute_child_parent_spectral_context = (

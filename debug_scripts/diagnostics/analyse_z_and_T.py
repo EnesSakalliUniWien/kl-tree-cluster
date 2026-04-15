@@ -30,7 +30,7 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald import (
     compute_child_parent_standardized_z_scores,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_spectral_decomposition import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     compute_child_parent_spectral_context,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_reference_distribution import (

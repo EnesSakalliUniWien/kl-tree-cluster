@@ -69,7 +69,7 @@ class TestSpectralKFloor:
         """The spectral path should pass config.SPECTRAL_MINIMUM_DIMENSION into the spectral estimator."""
         import networkx as nx
 
-        import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_spectral_decomposition as spectral_module
+        import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
         from kl_clustering_analysis import config
         from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
             compute_child_parent_spectral_context,

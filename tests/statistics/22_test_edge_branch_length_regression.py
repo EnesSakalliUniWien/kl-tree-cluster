@@ -58,7 +58,7 @@ def _run_edge_projection_with_capture(
         return 0.0, 1.0, 1.0, False
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_tree_testing.run_child_parent_projected_wald_test",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.tree_testing.run_child_parent_projected_wald_test",
         _fake_projected_test,
     )
 
