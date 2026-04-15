@@ -7,7 +7,9 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from ....statistics.projection.projection_dimension_estimation.projection_dimension_estimators import effective_rank
+from ....statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
+    effective_rank,
+)
 
 
 @dataclass(frozen=True)
@@ -88,9 +90,7 @@ def estimate_projection_dimension_floor(
         return minimum_dimension_floor
 
     spectrum_eigenvalues = _compute_spectrum_eigenvalues(prepared_matrix)
-    estimated_projection_dimension_floor = _estimate_effective_rank_floor(
-        spectrum_eigenvalues
-    )
+    estimated_projection_dimension_floor = _estimate_effective_rank_floor(spectrum_eigenvalues)
     return _clamp_projection_dimension_floor(
         estimated_projection_dimension_floor,
         minimum_dimension_floor=minimum_dimension_floor,
