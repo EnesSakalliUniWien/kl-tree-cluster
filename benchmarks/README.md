@@ -5,7 +5,7 @@ This directory contains the benchmark infrastructure for KL-Divergence Hierarchi
 ## Quick Start
 
 ```bash
-# Run full benchmark (96 cases, all methods)
+# Run full benchmark (currently 101 cases, 9 default methods)
 python benchmarks/full/run.py
 
 # Run specific benchmark suites
@@ -31,6 +31,18 @@ python benchmarks/analyze_relationships.py
 
 All benchmark code should import from `benchmarks.shared.*`.
 
+### Authoritative Defaults
+
+The authoritative default benchmark definition lives in code:
+
+- Cases: `benchmarks.shared.cases.get_default_test_cases()`
+- Default methods: `benchmarks.shared.config.DEFAULT_METHODS`
+
+Both `benchmarks/full/run.py` and
+`benchmarks/shared/pipeline.py::benchmark_cluster_algorithm()` should reflect
+those same defaults. The README documents those code-backed defaults and is not
+an independent source of truth.
+
 ### Shared Features
 
 The `benchmarks/shared/` system provides:
@@ -45,10 +57,11 @@ The `benchmarks/shared/` system provides:
 | File                       | Purpose                                                         |
 | -------------------------- | --------------------------------------------------------------- |
 | `shared/cases/__init__.py` | All test case definitions (Gaussian, binary, SBM, phylogenetic) |
-| `shared/runner.py`         | `run_benchmark()` - main entry point for all suites             |
-| `shared/kl_runner.py`      | KL-specific runner with SBM `distance_condensed` handling       |
+| `shared/pipeline.py`       | `benchmark_cluster_algorithm()` shared execution pipeline       |
+| `full/run.py`              | Canonical full benchmark runner                                 |
+| `shared/runners/kl_runner.py` | KL-specific runner with SBM `distance_condensed` handling    |
 | `shared/metrics.py`        | ARI, NMI, Purity calculations                                   |
-| `shared/generators.py`     | Data generators (phylogenetic, Gaussian, etc.)                  |
+| `shared/generators/`       | Data generators (phylogenetic, Gaussian, etc.)                  |
 
 ## Running Benchmarks
 
@@ -68,7 +81,7 @@ cd benchmarks/full && python run.py  # Will fail on imports
 
 Results saved to timestamped directories under each benchmark's `results/` folder:
 ```
-benchmarks/full/results/run_YYYYMMDD_HHMMSSZ/
+benchmarks/results/run_YYYYMMDD_HHMMSSZ/
 ├── full_benchmark_comparison.csv    # Main results
 ├── failure_report.md              # Failed cases analysis
 ├── benchmark_relationship_report.md   # Factor/method relationship summary
@@ -83,13 +96,24 @@ benchmarks/full/results/run_YYYYMMDD_HHMMSSZ/
 
 ### 1. Full Suite ([full/](full/))
 
-**Purpose**: Canonical end-to-end benchmark — runs the complete test case suite and compares all clustering methods.
+**Purpose**: Canonical end-to-end benchmark — runs the complete default test
+case suite and compares the default benchmark methods.
 
-**Data generation**: 96 test cases across 7 categories (see [Test Case Categories](#test-case-categories) below). Each case specifies a generator, sample count, feature count, cluster count, and noise level. The dispatcher (`generate_case_data`) routes to the appropriate generator, binarizes or one-hot-encodes as needed, and feeds the resulting binary matrix to each clustering method.
+**Data generation**: The full suite uses
+`benchmarks.shared.cases.get_default_test_cases()`, which currently resolves to
+101 cases. Each case specifies a generator, sample count, feature count,
+cluster count, and noise level. The dispatcher (`generate_case_data`) routes to
+the appropriate generator, binarizes or one-hot-encodes as needed, and feeds
+the resulting matrix to each clustering method.
 
 **Experiment setup**:
 
-- Methods: up to 13 (KL variants + Leiden, Louvain, K-Means, Spectral, DBSCAN, OPTICS, HDBSCAN). Configurable via `KL_TE_METHODS` env var.
+- Default methods: `benchmarks.shared.config.DEFAULT_METHODS`, currently
+  `kl`, `kl_diffusion`, `leiden`, `louvain`, `kmeans`, `spectral`, `dbscan`,
+  `optics`, and `hdbscan`.
+- Additional registered methods such as `kl_complete` and `kl_single` are
+  available through `KL_TE_METHODS`, but they are not part of the canonical
+  default benchmark unless explicitly requested.
 - Each case runs in an isolated subprocess (optional), with configurable timeout (default 1800 s) and retry count (default 4).
 - Per-case PDF plots (tree, UMAP embedding, manifold comparison) are generated and merged into `full_benchmark_report.pdf`.
 
@@ -153,7 +177,10 @@ For a focused diagnosis of the current KL gap on categorical and overlapping fam
 
 **Purpose**: Fast iteration benchmark — runs ~15 representative cases from the full suite for quick validation during development.
 
-**Data generation**: Draws from the same 96-case pool used by the full suite. Hand-picked subset covers Gaussian (easy/moderate), Binary (perfect/noisy/sparse), Categorical, SBM, Overlapping, and Real Data categories.
+**Data generation**: Draws from the same default case pool used by the full
+suite (`get_default_test_cases()`), which currently contains 101 cases.
+Hand-picked subset covers Gaussian, Binary, Categorical, SBM, and Overlapping
+families.
 
 **Experiment setup**:
 
@@ -221,7 +248,8 @@ For a focused diagnosis of the current KL gap on categorical and overlapping fam
 
 ## Test Case Categories
 
-The full suite's 96 cases are organized into 7 categories:
+The full suite currently resolves to 101 cases from the shared case registry.
+The major families represented in that registry are summarized below.
 
 ### Gaussian (18 cases)
 
@@ -316,16 +344,17 @@ All benchmarks (except calibration) evaluate clustering quality using:
 
 Note: K-Means and Spectral Clustering are given the **true K** as input, making them oracle baselines rather than fully unsupervised competitors.
 
-## Clustering Methods (13 methods)
+## Clustering Methods
+
+The method registry currently exposes 11 methods, while the canonical default
+benchmark uses the 9-method subset in `benchmarks.shared.config.DEFAULT_METHODS`.
 
 | Key                 | Name                 | Distance          | Linkage  | Notes                               |
 | ------------------- | -------------------- | ----------------- | -------- | ----------------------------------- |
 | `kl`                | KL Divergence        | hamming           | average  | Default — binary-native             |
 | `kl_complete`       | KL (Complete)        | hamming           | complete | Complete-linkage variant            |
 | `kl_single`         | KL (Single)          | hamming           | single   | Single-linkage variant              |
-| `kl_ward`           | KL (Ward)            | euclidean         | ward     | Ward requires Euclidean distance    |
-| `kl_rogerstanimoto` | KL (Rogers-Tanimoto) | rogerstanimoto    | average  | Double-weights mismatches           |
-| `kl_v2`             | KL v2                | hamming           | average  | Experimental signal localization    |
+| `kl_diffusion`      | KL (Diffusion)       | diffusion graph   | —        | Experimental diffusion variant      |
 | `leiden`            | Leiden               | KNN graph         | —        | Community detection, resolution=1.0 |
 | `louvain`           | Louvain              | KNN graph         | —        | Community detection, resolution=1.0 |
 | `kmeans`            | K-Means              | —                 | —        | **Oracle**: uses true K             |
@@ -346,8 +375,6 @@ mkdir benchmarks/my_suite/results
 ### 2. Create cases.py
 
 ```python
-from benchmarks.shared.cases import BASE_CASES
-
 MY_CASES = [
     {
         "name": "my_custom_case",
@@ -360,24 +387,19 @@ MY_CASES = [
     },
 ]
 
-ALL_CASES = BASE_CASES + MY_CASES
+ALL_CASES = MY_CASES
 ```
 
 ### 3. Create run.py
 
 ```python
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from benchmarks.shared.runner import run_benchmark
+from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 from benchmarks.my_suite.cases import ALL_CASES
 
 if __name__ == "__main__":
-    results_df, fig = run_benchmark(
+    results_df, fig = benchmark_cluster_algorithm(
         test_cases=ALL_CASES,
-        methods=["kl", "kl_rogerstanimoto"],
-        output_dir=Path(__file__).parent / "results"
+        methods=["kl", "kl_diffusion"],
     )
 ```
 
@@ -417,13 +439,16 @@ There is **no fallback** to `pdist()` on raw adjacency data.
 
 ### Enable Debug Trace
 
-```python
-# In your run.py
-results_df, fig = run_benchmark(
-    test_cases=CASES,
-    methods=["kl"],
-    debug_trace=True,  # Detailed per-case logging
-)
+Use the canonical runner outputs for diagnosis:
+
+- `benchmarks/results/run_<timestamp>/full_benchmark_comparison.csv`
+- `benchmarks/results/run_<timestamp>/failure_report.md`
+- `benchmarks/results/run_<timestamp>/audit/`
+
+For targeted regression analysis between stored runs, use:
+
+```bash
+python benchmarks/diagnose_benchmark_regression.py
 ```
 
 ### Common Failure Patterns
@@ -437,26 +462,9 @@ results_df, fig = run_benchmark(
 
 ### Analyze Specific Case
 
-See `debug_scripts/analyze_case_*.py` for patterns:
-```python
-from benchmarks.shared.cases import CASES
-from benchmarks.shared.generators import generate_gaussian
-from kl_clustering_analysis import config
-
-# Adjust thresholds for sensitivity analysis
-config.EDGE_ALPHA = 0.05
-```
-
-## Latest Results (2026-02-14, 95 cases × 2 methods)
-
-| Metric     | `kl` (hamming) | `kl_rogerstanimoto` |
-| ---------- | -------------- | ------------------- |
-| Mean ARI   | 0.757          | 0.759               |
-| Median ARI | 1.000          | 1.000               |
-| Exact K    | 59/95          | 61/95               |
-| K=1 cases  | 10             | 11                  |
-
-**Key Finding**: `kl` (hamming) outperforms `kl_rogerstanimoto` across all metrics for binarized data.
+See the maintained diagnostic utilities under `benchmarks/` and
+`debug_scripts/`. Prefer generated benchmark artifacts over hard-coded README
+tables when inspecting current behavior.
 
 ## Integration with Main Library
 

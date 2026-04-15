@@ -11,10 +11,18 @@ def resolve_methods_from_env(
     method_specs: Mapping[str, object],
     *,
     env_var: str = "KL_TE_METHODS",
+    default_methods: Sequence[str] | None = None,
 ) -> list[str]:
-    """Resolve method ids from an env var, defaulting to all available methods."""
-    raw = (os.getenv(env_var) or "all").strip()
-    if raw.lower() == "all":
+    """Resolve method ids from an env var.
+
+    When the env var is unset, defaults to ``default_methods`` when provided,
+    otherwise all available methods. The special value ``all`` expands to the
+    same default set.
+    """
+    raw = (os.getenv(env_var) or "").strip()
+    if not raw or raw.lower() == "all":
+        if default_methods is not None:
+            return list(default_methods)
         return list(method_specs.keys())
 
     selected = [m.strip() for m in raw.split(",") if m.strip()]

@@ -1,4 +1,8 @@
-"""Shared benchmark configuration constants."""
+"""Shared benchmark configuration constants.
+
+These constants define the canonical default benchmark configuration used by
+both the full runner and the shared benchmarking pipeline.
+"""
 
 from __future__ import annotations
 

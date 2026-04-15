@@ -77,7 +77,8 @@ def benchmark_cluster_algorithm(
         If True, saves UMAP-vs-Isomap manifold diagnostics for each test case
 
     methods : list of str, optional
-        Clustering methods to run (defaults to the full registry).
+        Clustering methods to run. If omitted, uses the shared default
+        benchmark method set from ``benchmarks.shared.config.DEFAULT_METHODS``.
     method_params : dict, optional
         Optional per-method parameter grids. Values are lists of param dicts.
     concat_plots_pdf : bool, default=False

@@ -20,6 +20,7 @@ import pandas as pd
 
 from benchmarks.calibration.run import run_calibration_suite
 from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.config import DEFAULT_METHODS
 from benchmarks.shared.env import get_env_bool, get_env_int
 from benchmarks.shared.plots.cover_page import (
     GROUP_ORDER,
@@ -105,7 +106,10 @@ def run_benchmarks():
     test_cases = get_default_test_cases()
     print(f"Found {len(test_cases)} test cases.")
 
-    methods_to_test = resolve_methods_from_env(METHOD_SPECS)
+    methods_to_test = resolve_methods_from_env(
+        METHOD_SPECS,
+        default_methods=DEFAULT_METHODS,
+    )
     # Ensure the primary KL (Hamming + average) method is always included for
     # tree plot generation.
     if "kl" not in methods_to_test:
