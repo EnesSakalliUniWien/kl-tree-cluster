@@ -9,8 +9,8 @@ How to run: python debug_scripts/smoke/q_embedding_disk_cache_verification__embe
 from __future__ import annotations
 
 import os
-import sys
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
@@ -79,9 +79,9 @@ def main() -> None:
     key = _cache_key_for_array(X, 2, "test_case_42")
     assert key == "embedding_test_case_42_2d", f"Unexpected key: {key}"
     key_hash = _cache_key_for_array(X, 2, None)
-    assert key_hash.startswith("embedding_") and key_hash.endswith("_2d"), (
-        f"Unexpected hash key: {key_hash}"
-    )
+    assert key_hash.startswith("embedding_") and key_hash.endswith(
+        "_2d"
+    ), f"Unexpected hash key: {key_hash}"
     print("[PASS] _cache_key_for_array() works")
 
     # 3) Compute 2D embedding (will save to cache)

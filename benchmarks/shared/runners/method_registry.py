@@ -72,6 +72,23 @@ METHOD_SPECS: dict[str, MethodSpec] = {
         ),
         param_grid=[{"k_neighbors": 15, "diffusion_time": 3}],
     ),
+    "kl_diffusion_adaptive": MethodSpec(
+        name="KL (Adaptive Diffusion)",
+        runner=_safe_import_runner(
+            "benchmarks.shared.runners.kl_diffusion_runner",
+            "_run_kl_diffusion_adaptive_method",
+        ),
+        param_grid=[
+            {
+                "k_neighbors": None,
+                "diffusion_time": 3,
+                "n_components": 30,
+                "metric": "hamming",
+                "bandwidth_type": "-1/(d+2)",
+                "epsilon": "median",
+            }
+        ],
+    ),
     # "kl_ward": MethodSpec(
     #     name="KL (Ward)",
     #     runner=_safe_import_runner(

@@ -69,6 +69,18 @@ def run_clustering_result(
             diffusion_time=params.get("diffusion_time", 3),
         )
         return _normalize_method_result(result)
+    if method_id == "kl_diffusion_adaptive":
+        result = spec.runner(
+            data_df,
+            alpha,
+            k_neighbors=params.get("k_neighbors"),
+            diffusion_time=params.get("diffusion_time", 3),
+            n_components=params.get("n_components", 30),
+            metric=params.get("metric", "hamming"),
+            bandwidth_type=params.get("bandwidth_type", "-1/(d+2)"),
+            epsilon=params.get("epsilon", "median"),
+        )
+        return _normalize_method_result(result)
 
     if method_id in {"kl", "kl_rogerstanimoto", "kl_complete", "kl_single", "kl_ward", "kl_v2"}:
         metric = params.get("tree_distance_metric", config.TREE_DISTANCE_METRIC)
