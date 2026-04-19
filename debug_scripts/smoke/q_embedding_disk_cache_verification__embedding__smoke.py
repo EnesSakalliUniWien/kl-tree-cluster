@@ -104,7 +104,7 @@ def main() -> None:
     print(f"[PASS] 3D embedding computed and cached ({npy_3d.name})")
 
     # 6) Without cache_key — content-addressable hash
-    emb_hash = _fit_embedding_2d(X)
+    _fit_embedding_2d(X)
     npy_files = list(cache_dir.glob("embedding_*_2d.npy"))
     assert len(npy_files) >= 2, f"Expected ≥2 cache files, found {len(npy_files)}"
     print(f"[PASS] Content-addressable cache key works ({len(npy_files)} files)")

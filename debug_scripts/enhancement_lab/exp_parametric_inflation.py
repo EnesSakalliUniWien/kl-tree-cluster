@@ -530,7 +530,7 @@ def analyze_results(all_results: list[tuple[str, list[NodeResult], ParametricMod
 # ---------------------------------------------------------------------------
 def main():
     print(
-        f"Config: METHOD={"cousin_adjusted_wald"}, "
+        "Config: METHOD=cousin_adjusted_wald, "
         f"SIBLING_ALPHA={config.SIBLING_ALPHA}, EDGE_ALPHA={config.EDGE_ALPHA}"
     )
     print(f"Permutations: {N_PERMUTATIONS}")

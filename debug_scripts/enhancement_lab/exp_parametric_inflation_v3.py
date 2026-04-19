@@ -725,7 +725,7 @@ def main() -> None:
         raise ValueError("At least one case is required.")
 
     print(
-        f"Config: METHOD={"cousin_adjusted_wald"}, "
+        "Config: METHOD=cousin_adjusted_wald, "
         f"SIBLING_ALPHA={config.SIBLING_ALPHA}, EDGE_ALPHA={config.EDGE_ALPHA}"
     )
     print("V3 model: pooled power-law + conservative residual uplift from null-like pairs only")

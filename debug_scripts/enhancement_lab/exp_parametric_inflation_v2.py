@@ -609,7 +609,7 @@ def evaluate_loco(rows: list[FeatureRow]) -> None:
 
 def main() -> None:
     print(
-        f"Config: METHOD={"cousin_adjusted_wald"}, "
+        "Config: METHOD=cousin_adjusted_wald, "
         f"SIBLING_ALPHA={config.SIBLING_ALPHA}, EDGE_ALPHA={config.EDGE_ALPHA}"
     )
     print("V2 model: pooled leave-one-case-out log-linear feature model")

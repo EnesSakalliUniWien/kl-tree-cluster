@@ -133,7 +133,6 @@ def _build_diffusion_distance(
     n_components: int = 30,
 ) -> np.ndarray:
     """Compute condensed diffusion distance from binary feature matrix."""
-    from scipy.linalg import eigh
     from scipy.sparse import lil_matrix
     from sklearn.neighbors import NearestNeighbors
 
