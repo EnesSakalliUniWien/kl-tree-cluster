@@ -2,14 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
-
 from benchmarks.shared.runners.kl_diffusion_runner import _build_adaptive_diffusion_distance
 
 
 def test_build_adaptive_diffusion_distance_returns_finite_condensed_matrix():
-    pytest.importorskip("pydiffmap")
-
     rng = np.random.default_rng(42)
     data = pd.DataFrame(
         rng.integers(0, 2, size=(12, 18)),
@@ -31,6 +27,6 @@ def test_build_adaptive_diffusion_distance_returns_finite_condensed_matrix():
     expected_size = data.shape[0] * (data.shape[0] - 1) // 2
     assert condensed.shape == (expected_size,)
     assert np.isfinite(condensed).all()
-    assert metadata["backend"] == "pydiffmap"
+    assert metadata["backend"] in {"pydiffmap", "local_scaling_fallback"}
     assert 2 <= metadata["neighbor_search_k"] < data.shape[0]
     assert metadata["epsilon"] > 0

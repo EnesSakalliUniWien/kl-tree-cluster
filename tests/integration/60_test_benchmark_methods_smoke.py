@@ -29,3 +29,19 @@ def test_benchmark_graph_and_density_methods_smoke():
 
     ok_rows = df_results[df_results["Status"] == "ok"]
     assert (ok_rows["Labels_Length"] == ok_rows["Samples"]).all()
+
+
+def test_benchmark_louvain_and_adaptive_diffusion_methods_smoke():
+    """Run the previously nonfunctional methods through one benchmark case."""
+    case = SMALL_TEST_CASES[0].copy()
+    df_results, _ = benchmark_cluster_algorithm(
+        test_cases=[case],
+        verbose=False,
+        plot_umap=False,
+        methods=["louvain", "kl_diffusion_adaptive"],
+    )
+
+    assert len(df_results) == 2
+    assert set(df_results["Method"]) == {"Louvain", "KL (Adaptive Diffusion)"}
+    assert set(df_results["Status"]) == {"ok"}
+    assert (df_results["Labels_Length"] == df_results["Samples"]).all()

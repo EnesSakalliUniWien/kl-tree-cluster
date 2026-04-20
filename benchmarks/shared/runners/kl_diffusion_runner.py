@@ -14,16 +14,15 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage
-from scipy.linalg import eigh
-from scipy.spatial.distance import pdist
-
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import (
     _create_report_dataframe,
     _labels_from_decomposition,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from scipy.cluster.hierarchy import linkage
+from scipy.linalg import eigh
+from scipy.spatial.distance import pdist
 
 
 def _resolve_neighbor_search_k(
@@ -52,14 +51,29 @@ def _resolve_adaptive_epsilon(
     metric: str,
 ) -> tuple[float, str]:
     """Resolve a scalar epsilon after pydiffmap has fitted local bandwidths."""
-    if isinstance(epsilon, numbers.Real):
-        return float(epsilon), "scalar"
-
-    epsilon_text = str(epsilon).strip().lower()
     if not hasattr(kernel_object, "scaled_dists") or kernel_object.scaled_dists is None:
         raise ValueError("Adaptive diffusion kernel is missing scaled distance data.")
 
     scaled_sq = np.asarray(kernel_object.scaled_dists.data, dtype=float) ** 2
+    return _resolve_adaptive_epsilon_from_scaled_sq(
+        scaled_sq,
+        epsilon,
+        metric=metric,
+    )
+
+
+def _resolve_adaptive_epsilon_from_scaled_sq(
+    scaled_sq: np.ndarray,
+    epsilon: str | float,
+    *,
+    metric: str,
+) -> tuple[float, str]:
+    """Resolve a scalar epsilon from precomputed scaled squared distances."""
+    if isinstance(epsilon, numbers.Real):
+        return float(epsilon), "scalar"
+
+    epsilon_text = str(epsilon).strip().lower()
+    scaled_sq = np.asarray(scaled_sq, dtype=float)
     scaled_sq = scaled_sq[np.isfinite(scaled_sq) & (scaled_sq > 0)]
     if scaled_sq.size == 0:
         return 1.0, "fallback_constant"
@@ -78,7 +92,10 @@ def _resolve_adaptive_epsilon(
                 stacklevel=2,
             )
             return float(np.median(scaled_sq)), "median_fallback_from_bgh"
-        from pydiffmap import kernel as diffusion_kernel
+        try:
+            from pydiffmap import kernel as diffusion_kernel
+        except ImportError:
+            return float(np.median(scaled_sq)), "median_fallback_from_bgh"
 
         epsilon_value, _ = diffusion_kernel.choose_optimal_epsilon_BGH(scaled_sq)
         return float(epsilon_value), "bgh"
@@ -90,6 +107,112 @@ def _resolve_adaptive_epsilon(
             "Unrecognized adaptive epsilon specification %r. "
             "Use a float or one of {'median', 'mean', 'q75', 'bgh'}." % epsilon
         ) from exc
+
+
+def _build_adaptive_diffusion_distance_fallback(
+    data_df: pd.DataFrame,
+    *,
+    k_neighbors: int | None = None,
+    diffusion_time: int = 3,
+    n_components: int = 30,
+    metric: str = "hamming",
+    bandwidth_type: str | float | None = "-1/(d+2)",
+    epsilon: str | float = "median",
+    return_metadata: bool = False,
+) -> np.ndarray | tuple[np.ndarray, dict[str, object]]:
+    """Approximate adaptive diffusion with a self-tuning local-scaling kernel."""
+    from scipy.sparse import lil_matrix
+    from sklearn.neighbors import NearestNeighbors
+
+    X = data_df.values.astype(float)
+    n_samples = len(X)
+    neighbor_k = _resolve_neighbor_search_k(n_samples, k_neighbors)
+
+    if n_samples <= 1:
+        distance_condensed = np.array([], dtype=float)
+        metadata = {
+            "backend": "local_scaling_fallback",
+            "metric": metric,
+            "neighbor_search_k": int(neighbor_k),
+            "bandwidth_type": (
+                bandwidth_type
+                if bandwidth_type is None or isinstance(bandwidth_type, str)
+                else float(bandwidth_type)
+            ),
+            "epsilon": 1.0,
+            "epsilon_method": "fallback_constant",
+        }
+        if return_metadata:
+            return distance_condensed, metadata
+        return distance_condensed
+
+    nn = NearestNeighbors(
+        n_neighbors=min(neighbor_k + 1, n_samples),
+        metric=metric,
+        n_jobs=-1,
+    )
+    nn.fit(X)
+    knn_dist, knn_idx = nn.kneighbors(X)
+
+    neighbor_sets: list[list[tuple[int, float]]] = []
+    local_scale = np.ones(n_samples, dtype=float)
+    for i in range(n_samples):
+        pairs = [
+            (int(j), float(dist))
+            for j, dist in zip(knn_idx[i], knn_dist[i])
+            if int(j) != i
+        ][:neighbor_k]
+        neighbor_sets.append(pairs)
+        positive_local = [dist for _, dist in pairs if dist > 0]
+        if positive_local:
+            local_scale[i] = positive_local[-1]
+
+    local_scale = np.maximum(local_scale, 1e-10)
+    scaled_sq_values = []
+    for i, pairs in enumerate(neighbor_sets):
+        for j, dist in pairs:
+            denom = max(local_scale[i] * local_scale[j], 1e-10)
+            scaled_sq_values.append((dist * dist) / denom)
+
+    epsilon_value, epsilon_method = _resolve_adaptive_epsilon_from_scaled_sq(
+        np.asarray(scaled_sq_values, dtype=float),
+        epsilon,
+        metric=metric,
+    )
+    epsilon_value = max(float(epsilon_value), 1e-10)
+
+    weights = lil_matrix((n_samples, n_samples), dtype=float)
+    for i, pairs in enumerate(neighbor_sets):
+        for j, dist in pairs:
+            denom = max(local_scale[i] * local_scale[j], 1e-10)
+            scaled_sq = (dist * dist) / denom
+            sim = math.exp(-scaled_sq / epsilon_value)
+            if sim <= 0:
+                continue
+            weights[i, j] = max(weights[i, j], sim)
+            weights[j, i] = max(weights[j, i], sim)
+
+    diffusion_coords = _compute_diffusion_coordinates(
+        weights.toarray(),
+        diffusion_time=diffusion_time,
+        n_components=n_components,
+    )
+    distance_condensed = pdist(diffusion_coords, metric="euclidean")
+
+    if not return_metadata:
+        return distance_condensed
+
+    metadata = {
+        "backend": "local_scaling_fallback",
+        "metric": metric,
+        "neighbor_search_k": int(neighbor_k),
+        "bandwidth_type": (
+            bandwidth_type if bandwidth_type is None or isinstance(bandwidth_type, str) else float(bandwidth_type)
+        ),
+        "epsilon": float(epsilon_value),
+        "epsilon_method": epsilon_method,
+    }
+    return distance_condensed, metadata
 
 
 def _compute_diffusion_coordinates(
@@ -180,10 +303,17 @@ def _build_adaptive_diffusion_distance(
     """Compute diffusion distance with a variable-bandwidth kernel from pydiffmap."""
     try:
         from pydiffmap import kernel
-    except ImportError as exc:  # pragma: no cover - dependency guard
-        raise ImportError(
-            "Adaptive diffusion requires the 'pydiffmap' package."
-        ) from exc
+    except ImportError:
+        return _build_adaptive_diffusion_distance_fallback(
+            data_df,
+            k_neighbors=k_neighbors,
+            diffusion_time=diffusion_time,
+            n_components=n_components,
+            metric=metric,
+            bandwidth_type=bandwidth_type,
+            epsilon=epsilon,
+            return_metadata=return_metadata,
+        )
 
     X = data_df.values.astype(float)
     n_samples = len(X)

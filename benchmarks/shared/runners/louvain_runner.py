@@ -60,8 +60,8 @@ def _run_louvain_method(
         )
 
     try:
-        import community
         import networkx as nx
+        from networkx.algorithms.community import louvain_communities
     except ImportError as exc:
         return MethodRunResult(
             labels=None,
@@ -74,10 +74,17 @@ def _run_louvain_method(
     graph = nx.Graph()
     graph.add_nodes_from(range(n_samples))
     graph.add_weighted_edges_from(edges)
-    partition = community.best_partition(
-        graph, weight="weight", resolution=resolution, random_state=random_state
+    communities = louvain_communities(
+        graph,
+        weight="weight",
+        resolution=resolution,
+        seed=random_state,
     )
-    labels = _normalize_labels(np.array([partition[i] for i in range(n_samples)], dtype=int))
+    labels = np.full(n_samples, -1, dtype=int)
+    for cluster_id, community_nodes in enumerate(communities):
+        for node in community_nodes:
+            labels[int(node)] = cluster_id
+    labels = _normalize_labels(labels)
     report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
     return MethodRunResult(
         labels=labels,
