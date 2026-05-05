@@ -139,6 +139,8 @@ local_data/
 # IDE/tool specs
 .kiro/
 .github/skills/
+.github/copilot-instructions.md
+.playwright-mcp/
 
 # Standalone analysis pipeline
 analysis/
