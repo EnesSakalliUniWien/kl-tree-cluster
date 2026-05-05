@@ -223,7 +223,6 @@ def pathway_enrichment(
     print("PATHWAY ENRICHMENT ANALYSIS  (Fisher exact, BH-corrected)")
     print("=" * 70)
 
-    N = fm.shape[0]  # total genes
     all_results = []
 
     for cid in sorted(assign.cluster_id.unique()):
@@ -413,8 +412,6 @@ def top_pathways_chart(
     for i, cid in enumerate(cluster_ids):
         bar_vals = matrix[i]
         colour = cmap[i % 20]
-        # Only label clusters that contribute meaningfully
-        label = f"C{cid}" if bar_vals.sum() > 0 else None
         ax.barh(y_pos, bar_vals, left=left, color=colour, height=0.8)
         left += bar_vals
 
