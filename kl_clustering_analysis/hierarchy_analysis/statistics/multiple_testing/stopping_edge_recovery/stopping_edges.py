@@ -8,7 +8,7 @@ import numpy as np
 from ...branch_length_utils import sanitize_positive_branch_length
 from ..tree_bh import ChildParentEdgeTreeBHResult
 from ._tree import get_unique_parent_id
-from .types import StoppingEdgeInfo
+from .types.stopping_edge_info import StoppingEdgeInfo
 
 
 def _resolve_stopping_edge_p_value(

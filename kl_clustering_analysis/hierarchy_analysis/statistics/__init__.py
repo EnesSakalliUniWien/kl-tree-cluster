@@ -1,13 +1,11 @@
 from .child_parent_divergence import annotate_child_parent_divergence
-from .sibling_divergence import annotate_sibling_divergence
-
-# Import from new package structure
 from .multiple_testing import (
-    benjamini_hochberg_correction,
-    apply_tree_bh_correction,
     ChildParentEdgeTreeBHResult,
     TreeBHSiblingGroupOutcome,
+    apply_tree_bh_correction,
+    benjamini_hochberg_correction,
 )
+from .sibling_divergence.adjusted_wald_annotation.pipeline import annotate_sibling_divergence
 
 __all__ = [
     # Core statistics

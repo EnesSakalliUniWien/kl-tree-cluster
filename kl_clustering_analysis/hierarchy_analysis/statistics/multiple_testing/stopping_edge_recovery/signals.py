@@ -7,7 +7,7 @@ import networkx as nx
 import numpy as np
 
 from ._tree import build_tree_distance_resolver
-from .types import SignalNeighborInfo
+from .types.signal_neighbor_info import SignalNeighborInfo
 from .types.significant_signal_nodes import _SignificantSignalNodes
 
 

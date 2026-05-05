@@ -19,9 +19,7 @@ from .projection_dimension_estimation import (
     estimate_k_marchenko_pastur,
     marchenko_pastur_signal_count,
 )
-from .spectral import (
-    compute_spectral_decomposition,
-)
+from .spectral.tree_estimator import compute_spectral_decomposition
 from .spectral.tree_helpers import (
     build_subtree_data,
     is_leaf,

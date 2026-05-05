@@ -4,7 +4,9 @@ from collections.abc import Mapping
 
 import numpy as np
 
-from .types import SignalNeighborInfo, StoppingEdgeAttrPayload, StoppingEdgeInfo
+from .types.signal_neighbor_info import SignalNeighborInfo
+from .types.stopping_edge_attr_payload import StoppingEdgeAttrPayload
+from .types.stopping_edge_info import StoppingEdgeInfo
 
 STOPPING_EDGE_INFO_ATTR_KEY = "_stopping_edge_info"
 _REQUIRED_ATTR_FIELDS = (
