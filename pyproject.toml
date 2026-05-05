@@ -10,7 +10,7 @@ readme = "README.md"
 
 dependencies = [
     "joblib>=1.3.0",
-    "numpy>=1.24.0",
+    "numpy>=1.24.0,<2.4",
     "pandas>=2.0.0",
     "scipy>=1.10.0",
     "matplotlib>=3.7.0",
@@ -40,11 +40,27 @@ benchmark = [
     "python-louvain>=0.16",
     "hdbscan>=0.8.41",
 ]
+viz = [
+    "scikit-bio>=0.6.0",
+    "umap-learn>=0.5.11",
+    "kaleido>=0.2.1",
+]
 all = [
     "jupyter>=1.0.0",
     "ipython>=8.12.0",
-    "notebook>=7.0.0", 
+    "notebook>=7.0.0",
     "pytest>=7.4.0",
+    "radon",
+    "lizard",
+    "xenon",
+    "wily",
+    "leidenalg>=0.10.0",
+    "igraph>=0.10.0",
+    "python-louvain>=0.16",
+    "hdbscan>=0.8.41",
+    "scikit-bio>=0.6.0",
+    "umap-learn>=0.5.11",
+    "kaleido>=0.2.1",
 ]
 
 [build-system]
@@ -75,6 +91,6 @@ ignore = ["E402", "E501"]
 [tool.deptry]
 ignore_notebooks = true
 known_first_party = ["benchmarks", "kl_clustering_analysis"]
-pep621_dev_dependency_groups = ["dev", "benchmark", "all"]
+pep621_dev_dependency_groups = ["dev", "benchmark", "viz", "all"]
 extend_exclude = ["^debug_scripts/", "^manuscript/", "^notebooks/"]
 package_module_name_map = { "python-louvain" = "community", "scikit-bio" = "skbio" }
