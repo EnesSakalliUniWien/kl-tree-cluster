@@ -3,15 +3,16 @@
 
 Runs the pipeline on:
 - The 3 FAILING test cases (clear, balanced 72×40, unbalanced 96×36)
-- The feature_matrix.tsv real dataset
+- The data/feature_matrices/feature_matrix.tsv real dataset
 under both EIGENVALUE_WHITENING=True (whitened) and False (Satterthwaite).
 """
 
 import sys
-import os
+from pathlib import Path
 
 # Bootstrap: add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+repo_root = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(repo_root))
 
 import numpy as np
 import pandas as pd
@@ -90,14 +91,13 @@ def test_clear_case():
 
 
 def test_feature_matrix():
-    """Real feature_matrix.tsv."""
-    fpath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                         "feature_matrix.tsv")
-    if not os.path.exists(fpath):
+    """Real data/feature_matrices/feature_matrix.tsv."""
+    fpath = repo_root / "data" / "feature_matrices" / "feature_matrix.tsv"
+    if not fpath.exists():
         return None, None, "feature_matrix (NOT FOUND)"
     data_df = pd.read_csv(fpath, sep="\t", index_col=0)
     decomp = run_pipeline(data_df)
-    return decomp["num_clusters"], None, "feature_matrix.tsv"
+    return decomp["num_clusters"], None, "data/feature_matrices/feature_matrix.tsv"
 
 
 def main():

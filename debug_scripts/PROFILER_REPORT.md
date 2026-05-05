@@ -216,7 +216,7 @@ The following CSV files were generated during profiling:
 
 | File | Configuration | Purpose |
 |------|---------------|---------|
-| `profiler_results.csv` | n=80, d=100 | Baseline profiling |
+| `reports/profiling/profiler_results.csv` | n=80, d=100 | Baseline profiling |
 | `profiler_results_detailed.csv` | n=80, d=100 | Separate Gate 2/3 timing |
 | `profiler_results_large.csv` | n=200, d=150 | Large dataset scaling |
 

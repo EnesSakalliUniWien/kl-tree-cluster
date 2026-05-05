@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Diagnose why KL decomposition produces K=1 on feature_matrix.tsv.
+"""Diagnose why KL decomposition produces K=1 on data/feature_matrices/feature_matrix.tsv.
 
 Runs the full pipeline, then inspects the annotations_df (per-node gate decisions)
 to show exactly which statistical gate blocked splitting at every internal
@@ -10,7 +10,7 @@ Usage
 -----
     python scripts/diagnose_feature_matrix.py
     python scripts/diagnose_feature_matrix.py --alpha 0.001
-    python scripts/diagnose_feature_matrix.py --alpha 0.05 --input feature_matrix.tsv
+    python scripts/diagnose_feature_matrix.py --alpha 0.05 --input data/feature_matrices/feature_matrix.tsv
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import build_
 # ── CLI ───────────────────────────────────────────────────────────────────────
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--input", type=Path, default=Path("feature_matrix.tsv"))
+    p.add_argument("--input", type=Path, default=Path("data/feature_matrices/feature_matrix.tsv"))
     p.add_argument("--alpha", type=float, default=0.001, help="Significance level for both gates (default 0.001)")
     p.add_argument("--output-dir", type=Path, default=None)
     p.add_argument("--umap-neighbors", type=int, default=15)

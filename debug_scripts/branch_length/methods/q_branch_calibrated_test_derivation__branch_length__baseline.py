@@ -637,8 +637,16 @@ This should:
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(repo_root / "results" / "branch_calibrated_test.png", dpi=150)
-    print(f"\nPlot saved to: results/branch_calibrated_test.png")
+    out_path = (
+        repo_root
+        / "benchmarks"
+        / "results"
+        / "06_method_experiments_sweeps"
+        / "branch_calibrated_test.png"
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(out_path, dpi=150)
+    print(f"\nPlot saved to: {out_path.relative_to(repo_root)}")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ are purely from the clustering, not from different projections.
 """
 
 import warnings
+from pathlib import Path
 
 import matplotlib
 import numpy as np
@@ -247,7 +248,8 @@ for row, (metric, link, label) in enumerate(METHODS):
 
 plt.tight_layout(rect=[0, 0, 1, 0.96])
 
-out_path = "data/results_GO_CC_alpha_005/tree_method_umap_comparison.pdf"
+out_path = Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/tree_method_umap_comparison.pdf")
+out_path.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(out_path, dpi=150, bbox_inches="tight")
 print(f"\nFigure saved to {out_path}")
 

@@ -38,7 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
-OUT_DIR = Path("debug_scripts/diagnostics/results")
+OUT_DIR = Path("benchmarks/results/05_diagnostics_validation_audits/debug_diagnostics_results")
 
 
 # ───────────────────────────────────────────────────────────────────────

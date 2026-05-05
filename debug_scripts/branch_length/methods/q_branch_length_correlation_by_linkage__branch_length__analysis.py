@@ -6,6 +6,7 @@ Expected runtime: ~10-180 seconds depending on dataset and settings.
 How to run: python debug_scripts/branch_length/methods/q_branch_length_correlation_by_linkage__branch_length__analysis.py
 """
 
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import linkage
@@ -410,8 +411,13 @@ if __name__ == "__main__":
     print_summary(df)
 
     # Save detailed results
-    df.to_csv(
-        "/Users/berksakalli/Projects/kl-te-cluster/results/branch_length_by_linkage.csv",
-        index=False,
+    out_path = (
+        Path(__file__).resolve().parents[3]
+        / "benchmarks"
+        / "results"
+        / "06_method_experiments_sweeps"
+        / "branch_length_by_linkage.csv"
     )
-    print("\n\nDetailed results saved to results/branch_length_by_linkage.csv")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(out_path, index=False)
+    print(f"\n\nDetailed results saved to {out_path.relative_to(Path(__file__).resolve().parents[3])}")

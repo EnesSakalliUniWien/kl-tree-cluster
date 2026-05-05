@@ -109,6 +109,8 @@ benchmarks/**/run_*/
 # Debug output
 debug_output/
 *.log
+!reports/logs/
+!reports/logs/comparison_output.log
 debug_scripts/diagnostics/results/enhancement_lab/
 debug_scripts/enhancement_lab/_oracle_policy_fourier_plots/
 debug_scripts/enhancement_lab/_oracle_policy_fourier_plots_one_active_1d/
@@ -127,17 +129,16 @@ node_modules/
 # Temporary files
 tmp/
 temp/
+local_data/
 *.tmp
 *.temp
 *.swp
 *.swo
 *~
-data
 
 # IDE/tool specs
 .kiro/
+.github/skills/
 
 # Standalone analysis pipeline
 analysis/
-.github
-.github

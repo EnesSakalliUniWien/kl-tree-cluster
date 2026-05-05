@@ -19,7 +19,7 @@ Candidate k-selection strategies:
   (f) Signal-adaptive             — number of z_j exceeding Bonferroni threshold
 
 Usage:
-    python scripts/diagnose_edge_calibration_and_k.py [--input feature_matrix.tsv]
+    python scripts/diagnose_edge_calibration_and_k.py [--input data/feature_matrices/feature_matrix.tsv]
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    p.add_argument("--input", type=Path, default=Path("feature_matrix.tsv"))
+    p.add_argument("--input", type=Path, default=Path("data/feature_matrices/feature_matrix.tsv"))
     return p.parse_args()
 
 

@@ -327,7 +327,7 @@ Binary subcategories use the `binary` generator with high `entropy_param` (0.22�
 
 ### Real Data (1 case)
 
-Loads `feature_matrix.tsv` from the repo root — a pre-existing binary GO-term feature matrix. No ground-truth labels; used for qualitative evaluation only.
+Loads `data/feature_matrices/feature_matrix.tsv` from the repo root — a pre-existing binary GO-term feature matrix. No ground-truth labels; used for qualitative evaluation only.
 
 ---
 

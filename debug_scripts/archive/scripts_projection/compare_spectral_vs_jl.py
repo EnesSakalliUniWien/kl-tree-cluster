@@ -96,14 +96,14 @@ METHODS = [
 
 def main():
     # =====================================================================
-    # Part 1: Real data — feature_matrix.tsv
+    # Part 1: Real data — data/feature_matrices/feature_matrix.tsv
     # =====================================================================
     from pathlib import Path
 
-    fpath = Path("feature_matrix.tsv")
+    fpath = Path("data/feature_matrices/feature_matrix.tsv")
     if fpath.exists():
         print("=" * 80)
-        print("REAL DATA: feature_matrix.tsv")
+        print("REAL DATA: data/feature_matrices/feature_matrix.tsv")
         print("=" * 80)
         df = pd.read_csv(fpath, sep="\t", index_col=0)
         print(f"Shape: {df.shape[0]} x {df.shape[1]}, sparsity={1 - df.values.mean():.3f}\n")

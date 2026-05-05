@@ -41,7 +41,11 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree  # noqa: E402
 _MISSING = object()
 _ENHANCEMENT_LAB_RELATIVE = Path("debug_scripts") / "enhancement_lab"
 _ENHANCEMENT_LAB_RESULTS_RELATIVE = (
-    Path("debug_scripts") / "diagnostics" / "results" / "enhancement_lab"
+    Path("benchmarks")
+    / "results"
+    / "05_diagnostics_validation_audits"
+    / "debug_diagnostics_results"
+    / "enhancement_lab"
 )
 
 
@@ -58,7 +62,7 @@ def resolve_enhancement_lab_artifact_path(
     """Resolve enhancement-lab artifact paths to the centralized diagnostics results dir.
 
     Legacy relative paths under ``debug_scripts/enhancement_lab`` that point to generated
-    artifacts are redirected into ``debug_scripts/diagnostics/results/enhancement_lab``.
+    artifacts are redirected into ``benchmarks/results/05_diagnostics_validation_audits/debug_diagnostics_results/enhancement_lab``.
     For reads, the resolver falls back to the legacy location when the redirected file does
     not exist yet so downstream analyses continue to work during the migration.
     """

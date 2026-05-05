@@ -6,24 +6,20 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pandas as pd
+from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
-from kl_clustering_analysis import config
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-
 # Print current config
-print("Sibling test method: fixed cousin_adjusted_wald")
 print(f"EDGE_ALPHA: {config.EDGE_ALPHA}")
 print(f"SIBLING_ALPHA: {config.SIBLING_ALPHA}")
-print("SPECTRAL_DIMENSION_ESTIMATOR: marchenko_pastur (fixed)")
 print(f"PROJECTION_MINIMUM_DIMENSION: {config.PROJECTION_MINIMUM_DIMENSION}")
-print(f"POSTHOC_MERGE: {config.POSTHOC_MERGE}")
 print(f"FELSENSTEIN_SCALING: {config.FELSENSTEIN_SCALING}")
 print()
 
 # Load data
-data = pd.read_csv("feature_matrix.tsv", sep="\t", index_col=0)
+data = pd.read_csv("data/feature_matrices/feature_matrix.tsv", sep="\t", index_col=0)
 print(f"Data shape: {data.shape}")
 print(f"Sparsity: {(data.values == 0).mean():.3f}")
 print(

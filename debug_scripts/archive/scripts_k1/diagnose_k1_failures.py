@@ -7,13 +7,14 @@ to find exactly where the pipeline kills splits.
 Cases:
 1. unbalanced 96x36 (complete linkage, as in integration test)
 2. 'clear' from SMALL_TEST_CASES (benchmark pipeline)
-3. feature_matrix.tsv
+3. data/feature_matrices/feature_matrix.tsv
 """
 
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+repo_root = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(repo_root))
 
 import numpy as np
 import pandas as pd
@@ -206,14 +207,12 @@ except Exception as e:
     traceback.print_exc()
 
 # ============================================================
-# Case 3: feature_matrix.tsv
+# Case 3: data/feature_matrices/feature_matrix.tsv
 # ============================================================
-fpath = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "feature_matrix.tsv"
-)
-if os.path.exists(fpath):
+fpath = repo_root / "data" / "feature_matrices" / "feature_matrix.tsv"
+if fpath.exists():
     data_fm = pd.read_csv(fpath, sep="\t", index_col=0)
-    diagnose_case("feature_matrix.tsv", data_fm)
+    diagnose_case("data/feature_matrices/feature_matrix.tsv", data_fm)
 else:
-    print("\n  feature_matrix.tsv not found")
-    print("\n  feature_matrix.tsv not found")
+    print("\n  data/feature_matrices/feature_matrix.tsv not found")
+    print("\n  data/feature_matrices/feature_matrix.tsv not found")

@@ -5,7 +5,7 @@ REAL_DATA_CASES = {
         {
             "name": "feature_matrix_go_terms",
             "generator": "preloaded",
-            "file_path": "feature_matrix.tsv",
+            "file_path": "data/feature_matrices/feature_matrix.tsv",
             "sep": "\t",
             "n_clusters": None,  # no ground truth
         },

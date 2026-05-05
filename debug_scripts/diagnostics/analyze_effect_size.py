@@ -18,7 +18,7 @@ if str(_project_root) not in sys.path:
 
 import pandas as pd
 
-RESULTS_DIR = Path(__file__).parent / "results"
+RESULTS_DIR = Path("benchmarks/results/05_diagnostics_validation_audits/debug_diagnostics_results")
 SWEEP_CSV = RESULTS_DIR / "effect_size_threshold_sweep.csv"
 NODES_CSV = RESULTS_DIR / "effect_size_node_records.csv"
 

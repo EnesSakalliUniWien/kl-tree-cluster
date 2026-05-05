@@ -14,7 +14,7 @@ Usage
 -----
     python scripts/swiss_roll_test.py                   # defaults
     python scripts/swiss_roll_test.py -n 1000 --bins 8  # more samples, finer bins
-    python scripts/swiss_roll_test.py -o results/swiss   # custom output dir
+    python scripts/swiss_roll_test.py -o benchmarks/results/06_method_experiments_sweeps/swiss_roll_diffusion/swiss   # custom output dir
 """
 
 from __future__ import annotations
@@ -407,7 +407,7 @@ def parse_args() -> argparse.Namespace:
         "--output-dir",
         type=str,
         default=None,
-        help="Output directory (default: results/swiss_roll_<timestamp>)",
+        help="Output directory (default: benchmarks/results/06_method_experiments_sweeps/swiss_roll_diffusion/swiss_roll_<timestamp>)",
     )
     return p.parse_args()
 
