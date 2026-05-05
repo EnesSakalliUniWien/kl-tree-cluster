@@ -20,9 +20,12 @@ import logging
 
 import numpy as np
 
-from ..pair_testing.types import SiblingPairRecord
+from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
 from .inflation_estimation import _positive_ratio_records
-from .types import CalibrationModel, SiblingLocalGaussianInflationCalibrator
+from .types.calibration_model import CalibrationModel
+from .types.sibling_local_gaussian_inflation_calibrator import (
+    SiblingLocalGaussianInflationCalibrator,
+)
 
 logger = logging.getLogger(__name__)
 

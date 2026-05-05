@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..types import SiblingPairRecord
+from ..types.sibling_pair_record import SiblingPairRecord
 
 
 def build_sibling_pair_record(

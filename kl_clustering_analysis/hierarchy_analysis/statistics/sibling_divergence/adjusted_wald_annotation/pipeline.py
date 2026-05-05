@@ -1,10 +1,9 @@
-"""Public pipeline for cousin-adjusted sibling Wald annotation."""
+"""Public pipeline for calibrated projected Wald sibling annotation."""
 
 from __future__ import annotations
 
-from functools import partial
-from importlib import import_module
 import logging
+from functools import partial
 from typing import Dict
 
 import networkx as nx
@@ -14,13 +13,24 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ...branch_length_utils import compute_mean_branch_length
+from ..inflation_correction.adjusted_sibling_tests import (
+    compute_adjusted_sibling_tests,
+    count_null_focal_pairs,
+)
+from ..inflation_correction.conditional_deflation import fit_sibling_inflation_calibrator
+from ..inflation_correction.inflation_estimation import fit_inflation_model
+from ..pair_testing.collection.record_collection import collect_sibling_pair_records
+from ..pair_testing.sibling_null_prior_interpolation.sibling_null_prior_interpolation import (
+    interpolate_sibling_null_priors,
+)
+from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
+from .calibration import _resolve_calibration
 from .fdr_annotation import (
     apply_sibling_bh_results,
     early_return_if_no_records,
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
 )
-from ..pair_testing.types import SiblingPairRecord
 from .metadata import build_sibling_divergence_audit, write_record_projection_metadata
 
 logger = logging.getLogger(__name__)
@@ -34,14 +44,14 @@ def annotate_sibling_divergence(
     sibling_projection_dimensions_from_edge_comparisons: Dict[str, int] | None = None,
     parent_principal_component_projections: Dict[str, np.ndarray] | None = None,
     parent_principal_component_eigenvalues: Dict[str, np.ndarray] | None = None,
+    edge_projection_dimensions_by_node: dict[str, int] | None = None,
 ) -> pd.DataFrame:
-    """Test sibling divergence using cousin-adjusted Wald."""
-    adjusted_wald_annotation_module = import_module(__package__)
+    """Test sibling divergence using calibrated projected Wald."""
     annotations_df = init_sibling_annotation_df(annotations_df)
 
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
-    records, non_binary = adjusted_wald_annotation_module.collect_sibling_pair_records(
+    records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
         mean_branch_length,
@@ -59,29 +69,29 @@ def annotate_sibling_divergence(
         return early_annotations_df
 
     write_record_projection_metadata(annotations_df, records)
-    n_null, n_focal, n_blocked = adjusted_wald_annotation_module.count_null_focal_pairs(records)
+    n_null, n_focal, n_blocked = count_null_focal_pairs(records)
 
     if n_blocked > 0:
-        records = adjusted_wald_annotation_module.interpolate_sibling_null_priors(
-            records, tree, annotations_df
+        records = interpolate_sibling_null_priors(
+            records,
+            tree,
+            annotations_df,
+            edge_projection_dimensions_by_node=edge_projection_dimensions_by_node,
         )
 
     calibration_records = list(records)
     excluded_from_calibration_records: list[SiblingPairRecord] = []
 
-    model = adjusted_wald_annotation_module.fit_inflation_model(calibration_records)
-    calibrator = adjusted_wald_annotation_module.fit_sibling_inflation_calibrator(
+    model = fit_inflation_model(calibration_records)
+    calibrator = fit_sibling_inflation_calibrator(
         calibration_records,
         model,
     )
 
     tested_parent_ids, adjusted_test_summaries, adjustment_method_labels = (
-        adjusted_wald_annotation_module.compute_adjusted_sibling_tests(
+        compute_adjusted_sibling_tests(
             records,
-            resolve_inflation_adjustment=partial(
-                adjusted_wald_annotation_module._resolve_calibration,
-                calibrator=calibrator,
-            ),
+            resolve_inflation_adjustment=partial(_resolve_calibration, calibrator=calibrator),
         )
     )
 
@@ -93,7 +103,7 @@ def annotate_sibling_divergence(
         adjusted_test_summaries,
         significance_level_alpha,
         logger=logger,
-        audit_label="Cousin-adjusted Wald",
+        audit_label="Calibrated projected Wald",
         method_labels=adjustment_method_labels,
         skipped_parents=skipped_parents,
     )

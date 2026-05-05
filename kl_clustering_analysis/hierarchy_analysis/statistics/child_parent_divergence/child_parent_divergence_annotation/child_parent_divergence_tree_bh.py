@@ -69,13 +69,13 @@ def attach_child_parent_stopping_edge_recovery_metadata(
     if int(np.sum(ancestor_blocked_edge_flags)) <= 0:
         return
 
-    from ...multiple_testing.stopping_edge_recovery import (
-        recover_signal_neighbors,
-        recover_stopping_edge_info,
-    )
     from ...multiple_testing.stopping_edge_recovery.serialization import (
         STOPPING_EDGE_INFO_ATTR_KEY,
         build_stopping_edge_attrs,
+    )
+    from ...multiple_testing.stopping_edge_recovery.signals import recover_signal_neighbors
+    from ...multiple_testing.stopping_edge_recovery.stopping_edges import (
+        recover_stopping_edge_info,
     )
 
     assert tree_bh_result is not None

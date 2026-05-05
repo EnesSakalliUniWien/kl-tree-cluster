@@ -14,8 +14,8 @@ import logging
 
 import numpy as np
 
-from ..pair_testing.types import SiblingPairRecord
-from .types import CalibrationModel
+from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
+from .types.calibration_model import CalibrationModel
 
 logger = logging.getLogger(__name__)
 

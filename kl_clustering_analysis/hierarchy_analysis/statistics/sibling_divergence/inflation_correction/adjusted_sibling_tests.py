@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable
 import numpy as np
 from scipy.stats import chi2
 
-from ..pair_testing.types import SiblingPairRecord
+from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
 
 AdjustedSiblingTestSummary = tuple[float, float, float]
 

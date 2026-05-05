@@ -4,8 +4,8 @@ from .....decomposition.backends.random_projection.dimension import compute_proj
 from ....categorical_mahalanobis import categorical_whitened_vector
 from ..pooled_variance import _is_categorical, standardize_proportion_difference
 from .branch_length import _resolve_sibling_branch_length_sum
-from .sibling_z_scores import _compute_sibling_z_scores
 from .sibling_divergence_test import sibling_divergence_test
+from .sibling_z_scores import _compute_sibling_z_scores
 
 __all__ = [
     "_compute_sibling_z_scores",

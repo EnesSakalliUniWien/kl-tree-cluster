@@ -8,8 +8,11 @@ import pandas as pd
 
 from kl_clustering_analysis import config
 
-from ..inflation_correction.types import CalibrationModel, SiblingLocalGaussianInflationCalibrator
-from ..pair_testing.types import SiblingPairRecord
+from ..inflation_correction.types.calibration_model import CalibrationModel
+from ..inflation_correction.types.sibling_local_gaussian_inflation_calibrator import (
+    SiblingLocalGaussianInflationCalibrator,
+)
+from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
 
 
 def write_record_projection_metadata(
@@ -97,7 +100,7 @@ def build_sibling_divergence_audit(
         "tested_projection_dimension_source_counts": tested_projection_dimension_source_counts,
         "single_feature_subtree_mode": config.SINGLE_FEATURE_SUBTREE_MODE,
         "diagnostics": model.diagnostics,
-        "test_method": "cousin_adjusted_wald",
+        "test_method": "calibrated_projected_wald",
     }
 
 

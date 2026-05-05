@@ -1,3 +1,5 @@
+"""Sibling test inflation-correction public API."""
+
 from .adjusted_sibling_tests import (
     AdjustedSiblingTestSummary,
     compute_adjusted_sibling_tests,
@@ -16,7 +18,7 @@ __all__ = [
     "SiblingLocalGaussianInflationCalibrator",
     "compute_adjusted_sibling_tests",
     "count_null_focal_pairs",
-    "fit_sibling_inflation_calibrator",
     "fit_inflation_model",
+    "fit_sibling_inflation_calibrator",
     "predict_sibling_adjustment",
 ]

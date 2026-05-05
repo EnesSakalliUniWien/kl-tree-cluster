@@ -26,8 +26,9 @@ import pandas as pd
 from joblib import Parallel, delayed
 
 from .marchenko_pastur import _get_n_jobs, _process_node
+from .node_spectral_result import NodeSpectralResult
+from .node_spectral_task import NodeSpectralTask
 from .tree_helpers import is_leaf, precompute_descendants
-from .types import NodeSpectralResult, NodeSpectralTask
 
 logger = logging.getLogger(__name__)
 

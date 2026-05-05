@@ -9,7 +9,9 @@ import numpy as np
 import pandas as pd
 
 from ....multiple_testing.stopping_edge_recovery.serialization import parse_stopping_edge_attrs
-from .types import REQUIRED_EDGE_METADATA_COLUMNS, EdgeLevelMetadata, StoppingEdgeSummary
+from .types.edge_level_metadata import EdgeLevelMetadata
+from .types.required_edge_metadata_columns import REQUIRED_EDGE_METADATA_COLUMNS
+from .types.stopping_edge_summary import StoppingEdgeSummary
 
 
 def extract_stopping_edge_info(
@@ -32,7 +34,11 @@ def extract_stopping_edge_info(
     return stopping_edge_info_by_child if stopping_edge_info_by_child else None
 
 
-def extract_edge_metadata(annotations_dataframe: pd.DataFrame) -> EdgeLevelMetadata:
+def extract_edge_metadata(
+    annotations_dataframe: pd.DataFrame,
+    *,
+    edge_projection_dimensions_by_node: dict[str, int] | None = None,
+) -> EdgeLevelMetadata:
     """Return edge-level tested/significant masks and BH p-values."""
     missing_columns = [
         column_name
@@ -60,7 +66,7 @@ def extract_edge_metadata(annotations_dataframe: pd.DataFrame) -> EdgeLevelMetad
         child_parent_edge_tested=child_parent_edge_tested,
         child_parent_edge_significant=child_parent_edge_significant,
         child_parent_edge_bh_p_values=child_parent_edge_bh_p_values,
-        edge_projection_dimensions=annotations_dataframe.attrs.get("_spectral_dims"),
+        edge_projection_dimensions=edge_projection_dimensions_by_node,
     )
 
 

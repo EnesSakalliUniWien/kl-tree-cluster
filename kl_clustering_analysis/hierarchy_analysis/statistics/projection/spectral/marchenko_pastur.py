@@ -18,7 +18,8 @@ from ....decomposition.backends.eigen.projection import build_pca_projection
 from ..projection_dimension_estimation.projection_dimension_estimators import (
     estimate_k_marchenko_pastur,
 )
-from .types import NodeSpectralResult, NodeSpectralTask
+from .node_spectral_result import NodeSpectralResult
+from .node_spectral_task import NodeSpectralTask
 
 logger = logging.getLogger(__name__)
 

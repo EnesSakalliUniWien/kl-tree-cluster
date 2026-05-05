@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+    collect_parent_principal_component_inputs_for_sibling_tests,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
@@ -128,14 +130,20 @@ def test_cherry_with_leaf_data_omits_leaf_pair_parent_from_edge_derived_sibling_
 
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
     out = bundle.annotated_df
-
-    spectral_dims = out.attrs["_spectral_dims"]
-    assert spectral_dims["A"] == 0
-    assert spectral_dims["B"] == 0
-    assert spectral_dims["root"] > 0
+    assert bundle.gate_two_result is not None
+    spectral_projection_dimensions_by_node = (
+        bundle.gate_two_result.spectral_context.spectral_projection_dimensions_by_node
+    )
+    assert spectral_projection_dimensions_by_node is not None
+    assert spectral_projection_dimensions_by_node["A"] == 0
+    assert spectral_projection_dimensions_by_node["B"] == 0
+    assert spectral_projection_dimensions_by_node["root"] > 0
 
     sibling_projection_dimensions_from_edge_comparisons = (
-        derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, out)
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(
+            tree,
+            spectral_context=bundle.gate_two_result.spectral_context,
+        )
     )
     assert sibling_projection_dimensions_from_edge_comparisons is None
 
@@ -147,22 +155,46 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
     tree, annotations_df, leaf_data = _build_mixed_tree()
 
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
-    out = bundle.annotated_df
 
-    spectral_dims = out.attrs["_spectral_dims"]
-    assert spectral_dims["L1"] == 0
-    assert spectral_dims["L2"] == 0
-    assert spectral_dims["L3"] == 0
-    assert spectral_dims["I"] > 0
-    assert spectral_dims["root"] > 0
+    assert bundle.gate_two_result is not None
+    spectral_projection_dimensions_by_node = (
+        bundle.gate_two_result.spectral_context.spectral_projection_dimensions_by_node
+    )
+    assert spectral_projection_dimensions_by_node is not None
+    assert spectral_projection_dimensions_by_node["L1"] == 0
+    assert spectral_projection_dimensions_by_node["L2"] == 0
+    assert spectral_projection_dimensions_by_node["L3"] == 0
+    assert spectral_projection_dimensions_by_node["I"] > 0
+    assert spectral_projection_dimensions_by_node["root"] > 0
 
     sibling_projection_dimensions_from_edge_comparisons = (
-        derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, out)
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(
+            tree,
+            spectral_context=bundle.gate_two_result.spectral_context,
+        )
     )
     assert sibling_projection_dimensions_from_edge_comparisons is not None
     assert set(sibling_projection_dimensions_from_edge_comparisons) == {"root"}
     assert sibling_projection_dimensions_from_edge_comparisons["root"] > 0
     assert "I" not in sibling_projection_dimensions_from_edge_comparisons
+
+    legacy_projection_dimensions = (
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(
+            tree,
+            bundle.annotated_df,
+        )
+    )
+    assert legacy_projection_dimensions == sibling_projection_dimensions_from_edge_comparisons
+
+    legacy_parent_projections, legacy_parent_eigenvalues = (
+        collect_parent_principal_component_inputs_for_sibling_tests(
+            bundle.annotated_df,
+            legacy_projection_dimensions,
+        )
+    )
+    assert legacy_parent_projections is not None
+    assert set(legacy_parent_projections) == {"root"}
+    assert legacy_parent_eigenvalues is not None
 
 
 def test_decompose_without_leaf_data_disables_spectral_metadata_and_merges() -> None:
@@ -172,6 +204,6 @@ def test_decompose_without_leaf_data_disables_spectral_metadata_and_merges() -> 
 
     assert result["num_clusters"] == 1
     assert tree.annotations_df is not None
-    assert tree.annotations_df.attrs["_spectral_dims"] is None
+    assert "_spectral_dims" not in tree.annotations_df.attrs
     assert np.isnan(tree.annotations_df.loc["root", "Sibling_Degrees_of_Freedom"])
     assert np.isnan(tree.annotations_df.loc["root", "Sibling_Divergence_P_Value"])

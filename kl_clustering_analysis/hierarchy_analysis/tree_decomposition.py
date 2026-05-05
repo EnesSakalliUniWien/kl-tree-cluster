@@ -11,17 +11,22 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..tree.poset_tree import PosetTree
 
-import numpy as np
 import pandas as pd
 
 from .. import config
-from ..core_utils.data_utils import extract_row_column_maps
 from .cluster_assignments import build_cluster_assignments
-from .decomposition.backends.random_projection.dimension import (
-    resolve_minimum_projection_dimension,
+from .decomposition.core.contracts import GATE_ANNOTATION_METADATA_ATTR
+from .decomposition.core.errors import DecompositionValidationError
+from .decomposition.gates.column_contracts import (
+    validate_edge_gate_columns,
+    validate_sibling_gate_columns,
 )
 from .decomposition.gates.gate_evaluator import GateEvaluator
-from .decomposition.gates.orchestrator import run_gate_annotation_pipeline
+from .decomposition.gates.orchestrator import (
+    build_gate_annotation_config_metadata,
+    build_gate_annotation_leaf_data_metadata,
+    run_gate_annotation_pipeline,
+)
 
 
 class TreeDecomposition:
@@ -80,10 +85,6 @@ class TreeDecomposition:
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
-        resolve_minimum_projection_dimension(
-            config.PROJECTION_MINIMUM_DIMENSION,
-            leaf_data=leaf_data,
-        )
 
         # ----- root -----
         self._root = next(node_id for node_id, degree in self.tree.in_degree() if degree == 0)
@@ -97,10 +98,6 @@ class TreeDecomposition:
         # ----- ensure statistical annotations are present -----
         self.annotations_df = self._prepare_annotations(self.annotations_df)
 
-        # ----- annotations_df → fast row/column dictionary lookups (no .loc in hot paths) -----
-        self._annotations_by_row, self._annotations_by_column = extract_row_column_maps(
-            self.annotations_df
-        )
         self._local_significant = self._extract_required_bool_annotation_column(
             "Child_Parent_Divergence_Significant"
         )
@@ -195,22 +192,65 @@ class TreeDecomposition:
     def _prepare_annotations(self, annotations_df: pd.DataFrame) -> pd.DataFrame:
         """Ensure statistical annotation columns are present on *annotations_df*.
 
-        Delegates directly to canonical gate orchestrator.
+        Reuses precomputed gate annotations only when their contract and run
+        metadata match this decomposition request.
         """
-        return run_gate_annotation_pipeline(
+        if self._can_reuse_gate_annotations(annotations_df):
+            return annotations_df
+
+        annotation_bundle = run_gate_annotation_pipeline(
             self.tree,
             annotations_df,
             alpha_local=self.alpha_local,
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
-        ).annotated_df
+        )
+        annotated_df = annotation_bundle.annotated_df
+        annotated_df.attrs[GATE_ANNOTATION_METADATA_ATTR] = annotation_bundle.metadata
+        return annotated_df
+
+    def _can_reuse_gate_annotations(self, annotations_df: pd.DataFrame) -> bool:
+        """Return whether existing gate annotations can be trusted as current."""
+        if annotations_df.empty:
+            return False
+
+        try:
+            validate_edge_gate_columns(annotations_df)
+            validate_sibling_gate_columns(annotations_df)
+        except DecompositionValidationError:
+            return False
+
+        required_gate_decision_columns = (
+            "Child_Parent_Divergence_Significant",
+            "Sibling_BH_Different",
+            "Sibling_Divergence_Skipped",
+        )
+        if any(column not in annotations_df.columns for column in required_gate_decision_columns):
+            return False
+        if any(annotations_df[column].isna().any() for column in required_gate_decision_columns):
+            return False
+        if set(self._node_ids) - set(annotations_df.index):
+            return False
+
+        metadata = annotations_df.attrs.get(GATE_ANNOTATION_METADATA_ATTR)
+        if not isinstance(metadata, dict):
+            return False
+
+        return (
+            metadata.get("pipeline") == "gate_annotation"
+            and metadata.get("edge", {}).get("alpha") == self.alpha_local
+            and metadata.get("sibling", {}).get("alpha") == self.sibling_alpha
+            and metadata.get("config") == build_gate_annotation_config_metadata()
+            and metadata.get("leaf_data")
+            == build_gate_annotation_leaf_data_metadata(self._leaf_data)
+        )
 
     def _extract_required_bool_annotation_column(self, column_name: str) -> dict[str, bool]:
         """Extract a required boolean annotation column from cached column mappings."""
-        if column_name not in self._annotations_by_column:
+        if column_name not in self.annotations_df.columns:
             raise KeyError(f"Missing required column {column_name!r} in dataframe.")
 
-        raw_mapping = self._annotations_by_column[column_name]
+        raw_mapping = self.annotations_df[column_name].to_dict()
         missing_nodes = [node_id for node_id, value in raw_mapping.items() if pd.isna(value)]
         if missing_nodes:
             preview = ", ".join(map(repr, missing_nodes[:5]))
@@ -224,22 +264,16 @@ class TreeDecomposition:
     def _cache_node_metadata(self) -> None:
         """Cache node attributes for fast repeated access during decomposition.
 
-        Extracts and stores distributions, leaf flags, and labels.
+        Extracts and stores leaf flags and labels.
         This one-time preprocessing avoids expensive NetworkX lookups in tight loops.
         """
         self._node_ids: tuple[str, ...] = tuple()
-        self._node_attrs_by_id: dict[str, dict] = {}
-        self._distribution_by_node: dict[str, np.ndarray] = {}
         self._is_leaf: dict[str, bool] = {}
         self._label: dict[str, str] = {}
 
         node_ids: list[str] = []
         for node_id, node_data in self.tree.nodes(data=True):
             node_ids.append(node_id)
-            self._node_attrs_by_id[node_id] = node_data
-            # Preserve shape: 1D for binary (Bernoulli), 2D for categorical (multinomial)
-            distribution_array = np.asarray(node_data["distribution"], dtype=float)
-            self._distribution_by_node[node_id] = distribution_array
             self._is_leaf[node_id] = node_data["is_leaf"]
             self._label[node_id] = node_data.get("label", node_id)
         self._node_ids = tuple(node_ids)

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from importlib import import_module
 
-from ..inflation_correction.types import SiblingLocalGaussianInflationCalibrator
-from ..pair_testing.types import SiblingPairRecord
+from ..inflation_correction.types.sibling_local_gaussian_inflation_calibrator import (
+    SiblingLocalGaussianInflationCalibrator,
+)
+from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
 
 
 def _resolve_calibration(

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..wald_statistic import sibling_divergence_test
+from ..wald_statistic.sibling_divergence_test import sibling_divergence_test
 
 
 def run_sibling_divergence_wald_test_with_diagnostics(

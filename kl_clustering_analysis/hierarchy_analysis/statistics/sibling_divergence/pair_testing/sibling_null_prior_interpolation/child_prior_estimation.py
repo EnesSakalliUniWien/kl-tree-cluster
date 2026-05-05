@@ -7,7 +7,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-from ..types import SiblingPairRecord
+from ..types.sibling_pair_record import SiblingPairRecord
 from .adaptive_kernel_bandwidths import AdaptiveKernelBandwidths
 from .edge_metadata import EdgeLevelMetadata, StoppingEdgeSummary
 from .kernel_interpolation import (
@@ -17,7 +17,8 @@ from .kernel_interpolation import (
     _estimate_null_pvalue_from_stable_neighbors,
     _interpolate_ancestor_and_neighbor_pvalue,
 )
-from .types import ChildSiblingNullPriorEstimate, NeighborhoodReferenceSet
+from .types.child_sibling_null_prior_estimate import ChildSiblingNullPriorEstimate
+from .types.neighborhood_reference_set import NeighborhoodReferenceSet
 
 
 def _fallback_child_sibling_null_prior(

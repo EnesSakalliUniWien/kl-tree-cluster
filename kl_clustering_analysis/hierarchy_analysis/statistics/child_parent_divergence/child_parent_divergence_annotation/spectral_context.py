@@ -8,7 +8,7 @@ import pandas as pd
 
 from kl_clustering_analysis import config
 
-from ...projection.spectral import compute_spectral_decomposition
+from ...projection.spectral.tree_estimator import compute_spectral_decomposition
 from ..single_feature_subtree_policy.single_feature_subtree_projection_policy import (
     _apply_single_feature_subtree_projection_policy,
 )

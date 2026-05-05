@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import logging
 import math
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import pandas as pd
+from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import SpectralContext
 
 logger = logging.getLogger(__name__)
 
 
 def derive_sibling_projection_dimensions_from_child_edge_comparisons(
     tree,
-    annotated_df: pd.DataFrame,
+    annotated_df=None,
+    *,
+    spectral_context: SpectralContext | None = None,
 ) -> dict[str, int] | None:
     """Derive Gate 3 projection dimensions from child Gate 2 edge comparisons.
 
@@ -24,9 +24,19 @@ def derive_sibling_projection_dimensions_from_child_edge_comparisons(
     edge-derived dimension, the parent is omitted so Gate 3 can fall back
     downstream.
     """
-    edge_spectral_dims = annotated_df.attrs.get("_spectral_dims")
-    if not edge_spectral_dims:
-        logger.debug("Gate 3: no _spectral_dims found on Gate 2 annotations")
+    if spectral_context is None and annotated_df is not None:
+        spectral_context = SpectralContext(
+            spectral_projection_dimensions_by_node=annotated_df.attrs.get("_spectral_dims")
+        )
+    if spectral_context is None:
+        logger.debug("Gate 3: no spectral context found for edge-derived dimensions")
+        return None
+
+    spectral_projection_dimensions_by_node = (
+        spectral_context.spectral_projection_dimensions_by_node
+    )
+    if not spectral_projection_dimensions_by_node:
+        logger.debug("Gate 3: no spectral projection dimensions found in Gate 2 context")
         return None
 
     sibling_projection_dimensions_from_child_edge_comparisons: dict[str, int] = {}
@@ -37,17 +47,21 @@ def derive_sibling_projection_dimensions_from_child_edge_comparisons(
             continue
 
         left, right = children
-        k_left = edge_spectral_dims.get(left, 0)
-        k_right = edge_spectral_dims.get(right, 0)
+        left_projection_dimension = spectral_projection_dimensions_by_node.get(left, 0)
+        right_projection_dimension = spectral_projection_dimensions_by_node.get(right, 0)
 
-        if k_left > 0 and k_right > 0:
+        if left_projection_dimension > 0 and right_projection_dimension > 0:
             sibling_projection_dimensions_from_child_edge_comparisons[parent] = max(
-                1, round(math.sqrt(k_left * k_right))
+                1, round(math.sqrt(left_projection_dimension * right_projection_dimension))
             )
-        elif k_left > 0:
-            sibling_projection_dimensions_from_child_edge_comparisons[parent] = k_left
-        elif k_right > 0:
-            sibling_projection_dimensions_from_child_edge_comparisons[parent] = k_right
+        elif left_projection_dimension > 0:
+            sibling_projection_dimensions_from_child_edge_comparisons[parent] = (
+                left_projection_dimension
+            )
+        elif right_projection_dimension > 0:
+            sibling_projection_dimensions_from_child_edge_comparisons[parent] = (
+                right_projection_dimension
+            )
 
     return (
         sibling_projection_dimensions_from_child_edge_comparisons

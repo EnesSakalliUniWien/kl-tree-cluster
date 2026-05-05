@@ -7,12 +7,12 @@ import logging
 import networkx as nx
 import pandas as pd
 
-from ....multiple_testing.stopping_edge_recovery import build_tree_distance_resolver
-from ..types import SiblingPairRecord
+from ....multiple_testing.stopping_edge_recovery._tree import build_tree_distance_resolver
+from ..types.sibling_pair_record import SiblingPairRecord
 from .adaptive_kernel_bandwidths import compute_adaptive_kernel_bandwidths
 from .child_prior_estimation import _estimate_sibling_pair_null_priors
-from .edge_neighborhood_reference_sets import _collect_reference_sets
 from .edge_metadata import extract_edge_metadata, extract_stopping_edge_info
+from .edge_neighborhood_reference_sets import _collect_reference_sets
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +21,18 @@ def interpolate_sibling_null_priors(
     records: list[SiblingPairRecord],
     tree: nx.DiGraph,
     annotations_dataframe: pd.DataFrame,
+    *,
+    edge_projection_dimensions_by_node: dict[str, int] | None = None,
 ) -> list[SiblingPairRecord]:
     """Interpolate sibling null priors for blocked nodes from tree-local neighborhoods."""
     stopping_edge_info_by_child = extract_stopping_edge_info(annotations_dataframe)
     if stopping_edge_info_by_child is None:
         return records
 
-    edge_metadata = extract_edge_metadata(annotations_dataframe)
+    edge_metadata = extract_edge_metadata(
+        annotations_dataframe,
+        edge_projection_dimensions_by_node=edge_projection_dimensions_by_node,
+    )
 
     reference_sets = _collect_reference_sets(annotations_dataframe, edge_metadata)
     child_ids = sorted(stopping_edge_info_by_child.keys())

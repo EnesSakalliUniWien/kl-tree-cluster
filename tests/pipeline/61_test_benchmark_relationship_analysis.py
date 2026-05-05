@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-
 from benchmarks.shared.relationship_analysis import (
     analyze_benchmark_relationships,
     normalize_results_dataframe,
@@ -200,32 +199,88 @@ def _write_synthetic_audit(output_dir: Path, *, case_num: int, method_slug: str,
     df.to_csv(audit_dir / f"case_{case_num}_{method_slug}_stats.csv", index=False)
 
 
-def test_normalize_results_dataframe_maps_legacy_columns() -> None:
+def test_normalize_results_dataframe_uses_current_schema_only() -> None:
     df = pd.DataFrame(
         {
-            "Test": [1],
-            "Case_Name": ["legacy_case"],
-            "Case_Category": ["improved_gaussian"],
-            "Method": ["KL Divergence"],
-            "True": [3],
-            "Found": [2],
-            "Samples": [30],
-            "Features": [20],
-            "Noise": [0.4],
-            "ARI": [0.5],
-            "NMI": [0.6],
-            "Purity": [0.7],
-            "Status": ["ok"],
+            "test_case": [1],
+            "case_id": ["current_case"],
+            "case_category": ["improved_gaussian"],
+            "method": ["kl"],
+            "true_clusters": [3],
+            "found_clusters": [2],
+            "samples": [30],
+            "features": [20],
+            "noise": [0.4],
+            "ari": [0.5],
+            "nmi": [0.6],
+            "purity": [0.7],
+            "status": ["ok"],
         }
     )
 
     normalized = normalize_results_dataframe(df)
 
     assert list(normalized["test_case"]) == [1]
-    assert list(normalized["case_id"]) == ["legacy_case"]
-    assert list(normalized["method"]) == ["KL Divergence"]
+    assert list(normalized["case_id"]) == ["current_case"]
+    assert list(normalized["method"]) == ["kl"]
     assert list(normalized["ari"]) == [0.5]
     assert list(normalized["status"]) == ["ok"]
+
+
+def test_normalize_results_dataframe_does_not_map_noncanonical_columns() -> None:
+    df = pd.DataFrame({"Test": [1], "Case_Name": ["legacy_case"], "ARI": [0.5]})
+
+    normalized = normalize_results_dataframe(df)
+
+    assert pd.isna(normalized.loc[0, "test_case"])
+    assert normalized.loc[0, "case_id"] == ""
+    assert pd.isna(normalized.loc[0, "ari"])
+    assert normalized.loc[0, "Test"] == 1
+    assert normalized.loc[0, "Case_Name"] == "legacy_case"
+    assert normalized.loc[0, "ARI"] == 0.5
+
+
+def test_normalize_results_dataframe_accepts_full_runner_csv_columns() -> None:
+    df = pd.DataFrame(
+        {
+            "test_case": [1],
+            "case_id": ["case_1"],
+            "Case_Category": ["improved_gaussian"],
+            "method": ["kl"],
+            "Params": ["tree_distance_metric=hamming"],
+            "true_clusters": [3],
+            "found_clusters": [3],
+            "Samples": [30],
+            "Features": [20],
+            "Noise": [0.4],
+            "ari": [0.75],
+            "NMI": [0.8],
+            "Purity": [0.9],
+            "Macro_Recall": [0.7],
+            "Macro_F1": [0.72],
+            "Worst_Cluster_Recall": [0.6],
+            "Cluster_Count_Abs_Error": [0],
+            "Over_Split": [0],
+            "Under_Split": [0],
+            "Status": ["ok"],
+            "Skip_Reason": [""],
+            "Labels_Length": [30],
+        }
+    )
+
+    normalized = normalize_results_dataframe(df)
+
+    assert normalized.loc[0, "case_category"] == "improved_gaussian"
+    assert normalized.loc[0, "params"] == "tree_distance_metric=hamming"
+    assert normalized.loc[0, "samples"] == 30
+    assert normalized.loc[0, "features"] == 20
+    assert normalized.loc[0, "noise"] == 0.4
+    assert normalized.loc[0, "nmi"] == 0.8
+    assert normalized.loc[0, "purity"] == 0.9
+    assert normalized.loc[0, "macro_recall"] == 0.7
+    assert normalized.loc[0, "cluster_count_abs_error"] == 0
+    assert normalized.loc[0, "status"] == "ok"
+    assert normalized.loc[0, "labels_length"] == 30
 
 
 def test_prepare_relationship_frame_derives_split_flags() -> None:

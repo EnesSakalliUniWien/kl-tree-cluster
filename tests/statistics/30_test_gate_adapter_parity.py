@@ -4,9 +4,10 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pandas.testing as pdt
-
 from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
+    Gate2Result,
     GateAnnotationBundle,
+    SpectralContext,
 )
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
@@ -14,7 +15,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator 
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 
@@ -72,6 +73,8 @@ def test_gate_adapter_pipeline_matches_sequential_gate_annotations(monkeypatch) 
     )
 
     assert isinstance(bundle, GateAnnotationBundle)
+    assert isinstance(bundle.gate_two_result, Gate2Result)
+    assert isinstance(bundle.gate_two_result.spectral_context, SpectralContext)
     adapter_df = bundle.annotated_df
 
     sequential_gate_cols = [

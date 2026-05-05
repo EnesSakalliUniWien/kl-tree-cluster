@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from .edge_metadata import EdgeLevelMetadata, edge_neighborhood_matching_scale
-from .types import NeighborhoodReferenceSet
+from .types.neighborhood_reference_set import NeighborhoodReferenceSet
 
 
 def _collect_reference_sets(

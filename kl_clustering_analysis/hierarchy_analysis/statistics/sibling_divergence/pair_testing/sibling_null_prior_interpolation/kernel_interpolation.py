@@ -13,7 +13,7 @@ import pandas as pd
 
 from .adaptive_kernel_bandwidths import AdaptiveKernelBandwidths, structural_kernel
 from .edge_metadata import StoppingEdgeSummary, edge_neighborhood_matching_scale
-from .types import NeighborhoodReferenceSet
+from .types.neighborhood_reference_set import NeighborhoodReferenceSet
 
 
 def _compute_ancestor_trust_weight(

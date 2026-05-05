@@ -13,9 +13,8 @@ from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
 )
+from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import SpectralContext
 
-from .spectral_context import _compute_child_parent_spectral_context_with_audit
-from .tree_testing import run_child_parent_tests_across_tree
 from .child_parent_divergence_audit import (
     build_child_parent_divergence_audit,
     log_non_finite_child_parent_divergence_audit,
@@ -24,6 +23,8 @@ from .child_parent_divergence_tree_bh import (
     apply_child_parent_divergence_tree_bh_correction,
     attach_child_parent_stopping_edge_recovery_metadata,
 )
+from .spectral_context import _compute_child_parent_spectral_context_with_audit
+from .tree_testing import run_child_parent_tests_across_tree
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,23 @@ def annotate_child_parent_divergence(
     Uses Tree-BH (Tree-structured Benjamini-Hochberg) for FDR correction.
     This is the only supported multiple-testing correction method for Gate 2.
     """
+    annotated_df, _spectral_context = annotate_child_parent_divergence_with_context(
+        tree,
+        annotations_df,
+        significance_level_alpha=significance_level_alpha,
+        leaf_data=leaf_data,
+    )
+    return annotated_df
+
+
+def annotate_child_parent_divergence_with_context(
+    tree: nx.DiGraph,
+    annotations_df: pd.DataFrame,
+    *,
+    significance_level_alpha: float = config.EDGE_ALPHA,
+    leaf_data: pd.DataFrame | None = None,
+) -> tuple[pd.DataFrame, SpectralContext]:
+    """Test child-parent divergence and return typed Gate 2 spectral context."""
     annotations_df = annotations_df.copy()
     edge_alpha = float(significance_level_alpha)
 
@@ -69,12 +87,12 @@ def annotate_child_parent_divergence(
             leaf_data,
         )
 
-    annotations_df.attrs["_spectral_dims"] = node_spectral_dimensions
-    annotations_df.attrs["_pca_projections"] = node_pca_projections
-    annotations_df.attrs["_pca_eigenvalues"] = node_pca_eigenvalues
-
-    if single_feature_subtree_audit is not None:
-        annotations_df.attrs["_single_feature_subtree_audit"] = single_feature_subtree_audit
+    spectral_context = SpectralContext(
+        spectral_projection_dimensions_by_node=node_spectral_dimensions,
+        principal_component_projections_by_node=node_pca_projections,
+        principal_component_eigenvalues_by_node=node_pca_eigenvalues,
+        single_feature_subtree_audit=single_feature_subtree_audit,
+    )
 
     (
         edge_test_statistics,
@@ -153,7 +171,7 @@ def annotate_child_parent_divergence(
         ancestor_blocked_edge_flags=ancestor_blocked_edge_flags,
     )
 
-    return assign_divergence_results(
+    annotated_df = assign_divergence_results(
         annotations_df=annotations_df,
         child_ids=child_ids,
         p_values=edge_p_values,
@@ -164,6 +182,16 @@ def annotate_child_parent_divergence(
         tested_edge_flags=child_parent_edge_tested_by_tree_bh,
         ancestor_blocked_edge_flags=ancestor_blocked_edge_flags,
     )
+    if leaf_data is not None:
+        annotated_df.attrs["_spectral_dims"] = node_spectral_dimensions
+        annotated_df.attrs["_pca_projections"] = node_pca_projections
+        annotated_df.attrs["_pca_eigenvalues"] = node_pca_eigenvalues
+        if single_feature_subtree_audit is not None:
+            annotated_df.attrs["_single_feature_subtree_audit"] = single_feature_subtree_audit
+    return annotated_df, spectral_context
 
 
-__all__ = ["annotate_child_parent_divergence"]
+__all__ = [
+    "annotate_child_parent_divergence",
+    "annotate_child_parent_divergence_with_context",
+]
