@@ -8,14 +8,12 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
-RunStatus = Literal["ok", "skip"]
-
 
 @dataclass
 class MethodRunResult:
     labels: np.ndarray | None
     found_clusters: int
     report_df: pd.DataFrame | None
-    status: RunStatus
+    status: Literal["ok", "skip"]
     skip_reason: str | None
     extra: dict | None = None

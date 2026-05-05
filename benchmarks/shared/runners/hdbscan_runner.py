@@ -5,9 +5,14 @@ Same implementation as before; helpers are imported lazily.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pandas as pd
 from sklearn.cluster import OPTICS
+
+if TYPE_CHECKING:
+    from benchmarks.shared.types.method_run_result import MethodRunResult
 
 
 def _run_hdbscan_method(

@@ -168,17 +168,6 @@ PHYLOGENETIC_LARGE_CASES = [
 ]
 
 
-def get_phylogenetic_cases():
-    """Get all phylogenetic test cases as a flat list."""
-    return (
-        [c.copy() for c in PHYLOGENETIC_DNA_CASES]
-        + [c.copy() for c in PHYLOGENETIC_PROTEIN_CASES]
-        + [c.copy() for c in PHYLOGENETIC_DIVERGENT_CASES]
-        + [c.copy() for c in PHYLOGENETIC_CONSERVED_CASES]
-        + [c.copy() for c in PHYLOGENETIC_LARGE_CASES]
-    )
-
-
 # Category mapping for grouped access
 PHYLOGENETIC_CASES = {
     "phylogenetic_dna": PHYLOGENETIC_DNA_CASES,

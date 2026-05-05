@@ -35,10 +35,9 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
-
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.bootstrap_consensus import bootstrap_consensus
+from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score, silhouette_score
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)  # suppress statsmodels GLM warnings
 
@@ -217,7 +216,7 @@ def main():
         print("       sparse/background pathway profiles.")
 
     # --- Save co-association matrix for downstream use ---
-    out_path = "data/results_GO_CC_alpha_005/bootstrap_co_association.tsv"
+    out_path = "benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/bootstrap_co_association.tsv"
     result["co_association_matrix"].to_csv(out_path, sep="\t")
     print(f"\n  Co-association matrix saved to {out_path}")
 

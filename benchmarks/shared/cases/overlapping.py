@@ -367,19 +367,6 @@ OVERLAPPING_GAUSSIAN_QUANTILE_CASES = [
 ]
 
 
-def get_overlapping_cases():
-    """Get all overlapping test cases as a flat list."""
-    return (
-        [c.copy() for c in OVERLAPPING_BINARY_HEAVY_CASES]
-        + [c.copy() for c in OVERLAPPING_BINARY_MODERATE_CASES]
-        + [c.copy() for c in OVERLAPPING_BINARY_PARTIAL_CASES]
-        + [c.copy() for c in OVERLAPPING_BINARY_HIGHD_CASES]
-        + [c.copy() for c in OVERLAPPING_BINARY_UNBALANCED_CASES]
-        + [c.copy() for c in OVERLAPPING_GAUSSIAN_CASES]
-        + [c.copy() for c in OVERLAPPING_GAUSSIAN_QUANTILE_CASES]
-    )
-
-
 # Category mapping for grouped access
 OVERLAPPING_CASES = {
     "overlapping_binary_heavy": OVERLAPPING_BINARY_HEAVY_CASES,

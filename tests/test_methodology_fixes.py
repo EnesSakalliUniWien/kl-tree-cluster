@@ -9,11 +9,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2
-
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_reference_distribution import (
     compute_projected_pvalue,
 )
+from scipy.stats import chi2
 
 # =============================================================================
 # Fix 3: Shared Satterthwaite helper tests
@@ -67,9 +66,8 @@ class TestSpectralKFloor:
 
     def test_spectral_minimum_projection_dimension_decoupled_from_global(self, monkeypatch):
         """The spectral path should pass config.SPECTRAL_MINIMUM_DIMENSION into the spectral estimator."""
-        import networkx as nx
-
         import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
+        import networkx as nx
         from kl_clustering_analysis import config
         from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
             compute_child_parent_spectral_context,
@@ -115,7 +113,6 @@ class TestSpectralKFloor:
     ):
         """Low-leverage one-active nodes should be blocked when they dominate the tree."""
         import networkx as nx
-
         from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.single_feature_subtree_policy.single_feature_subtree_projection_policy import (
             _build_single_feature_subtree_audit,
         )
@@ -241,7 +238,7 @@ class TestNonBinarySkippedFlag:
 
     def test_adjusted_wald_marks_leaves_as_skipped(self):
         """Adjusted Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
             annotate_sibling_divergence,
         )
 

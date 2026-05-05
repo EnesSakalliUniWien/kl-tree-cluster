@@ -11,8 +11,8 @@ from datetime import datetime, timezone
 from textwrap import dedent
 
 import matplotlib.pyplot as plt
-
 from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
+from kl_clustering_analysis import config
 
 # ---------------------------------------------------------------------------
 # Category key → parent group mapping
@@ -132,15 +132,15 @@ _OVERVIEW_TEXT = dedent(
       Gate 2 -- Child-parent divergence:
         Projected Wald chi-squared test on KL(child || parent).
       Gate 3 -- Sibling divergence:
-        Calibrated Wald test (cousin-adjusted) on KL(left || right)
+        Calibrated projected Wald test on KL(left || right)
         with Benjamini-Hochberg false discovery rate correction.
 
     Default configuration:
-      Distance metric:              Hamming
-      Linkage method:               average
-      Significance level (alpha):   0.05  (edge and sibling)
-      Sibling test method:          cousin_adjusted_wald
-      Felsenstein branch-length adjustment: enabled
+      Distance metric:              {distance_metric}
+      Linkage method:               {linkage_method}
+      Edge alpha:                   {edge_alpha}
+      Sibling alpha:                {sibling_alpha}
+      Branch-length variance scaling: {branch_length_scaling}
 """
 )
 
@@ -330,7 +330,7 @@ _REALDATA_TEXT = dedent(
     """\
     Real Data  (1 case)
 
-    Source:  feature_matrix.tsv -- a binary Gene Ontology term annotation
+    Source:  data/feature_matrices/feature_matrix.tsv -- a binary Gene Ontology term annotation
     matrix from the repository root.
 
     No ground-truth cluster labels are available.  This case is included
@@ -457,7 +457,14 @@ def generate_overview_page(
     if timestamp is None:
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    overview = _OVERVIEW_TEXT.format(n_cases=n_cases) + f"\n    Report generated: {timestamp}\n"
+    overview = _OVERVIEW_TEXT.format(
+        n_cases=n_cases,
+        distance_metric=config.TREE_DISTANCE_METRIC,
+        linkage_method=config.TREE_LINKAGE_METHOD,
+        edge_alpha=config.EDGE_ALPHA,
+        sibling_alpha=config.SIBLING_ALPHA,
+        branch_length_scaling="enabled" if config.FELSENSTEIN_SCALING else "disabled",
+    ) + f"\n    Report generated: {timestamp}\n"
     return _text_page(overview, fontsize=10.5, title_fontsize=16.0)
 
 

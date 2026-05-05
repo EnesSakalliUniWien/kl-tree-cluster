@@ -9,48 +9,41 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from benchmarks.shared.plots.cover_page import GROUP_ORDER, category_group
+from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.stats import norm, spearmanr
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from benchmarks.shared.plots.cover_page import GROUP_ORDER, category_group
-from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
-
-_COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
-    "test_case": ("test_case", "Test"),
-    "case_id": ("case_id", "Case_Name"),
-    "case_category": ("case_category", "Case_Category"),
-    "method": ("method", "Method"),
-    "params": ("params", "Params"),
-    "true_clusters": ("true_clusters", "True"),
-    "found_clusters": ("found_clusters", "Found"),
-    "samples": ("samples", "Samples"),
-    "features": ("features", "Features"),
-    "noise": ("noise", "Noise"),
-    "ari": ("ari", "ARI"),
-    "nmi": ("nmi", "NMI"),
-    "purity": ("purity", "Purity"),
-    "macro_recall": ("macro_recall", "Macro_Recall"),
-    "macro_f1": ("macro_f1", "Macro_F1"),
-    "worst_cluster_recall": ("worst_cluster_recall", "Worst_Cluster_Recall"),
-    "outlier_precision": ("outlier_precision", "Outlier_Precision"),
-    "outlier_recall": ("outlier_recall", "Outlier_Recall"),
-    "outlier_f1": ("outlier_f1", "Outlier_F1"),
-    "singleton_outlier_isolated": (
-        "singleton_outlier_isolated",
-        "Singleton_Outlier_Isolated",
-    ),
-    "grouped_outlier_cluster_recovered": (
-        "grouped_outlier_cluster_recovered",
-        "Grouped_Outlier_Cluster_Recovered",
-    ),
-    "cluster_count_abs_error": ("cluster_count_abs_error", "Cluster_Count_Abs_Error"),
-    "over_split": ("over_split", "Over_Split"),
-    "under_split": ("under_split", "Under_Split"),
-    "status": ("status", "Status"),
-    "skip_reason": ("skip_reason", "Skip_Reason"),
-    "labels_length": ("labels_length", "Labels_Length"),
-}
+_RESULT_COLUMNS: tuple[str, ...] = (
+    "test_case",
+    "case_id",
+    "case_category",
+    "method",
+    "params",
+    "true_clusters",
+    "found_clusters",
+    "samples",
+    "features",
+    "noise",
+    "ari",
+    "nmi",
+    "purity",
+    "macro_recall",
+    "macro_f1",
+    "worst_cluster_recall",
+    "outlier_precision",
+    "outlier_recall",
+    "outlier_f1",
+    "singleton_outlier_isolated",
+    "grouped_outlier_cluster_recovered",
+    "cluster_count_abs_error",
+    "over_split",
+    "under_split",
+    "status",
+    "skip_reason",
+    "labels_length",
+)
 
 _NUMERIC_COLUMNS = (
     "test_case",
@@ -75,6 +68,30 @@ _NUMERIC_COLUMNS = (
     "under_split",
     "labels_length",
 )
+
+_CSV_WRITER_COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
+    "case_category": ("Case_Category",),
+    "params": ("Params",),
+    "samples": ("Samples",),
+    "features": ("Features",),
+    "noise": ("Noise",),
+    "nmi": ("NMI",),
+    "purity": ("Purity",),
+    "macro_recall": ("Macro_Recall",),
+    "macro_f1": ("Macro_F1",),
+    "worst_cluster_recall": ("Worst_Cluster_Recall",),
+    "outlier_precision": ("Outlier_Precision",),
+    "outlier_recall": ("Outlier_Recall",),
+    "outlier_f1": ("Outlier_F1",),
+    "singleton_outlier_isolated": ("Singleton_Outlier_Isolated",),
+    "grouped_outlier_cluster_recovered": ("Grouped_Outlier_Cluster_Recovered",),
+    "cluster_count_abs_error": ("Cluster_Count_Abs_Error",),
+    "over_split": ("Over_Split",),
+    "under_split": ("Under_Split",),
+    "status": ("Status",),
+    "skip_reason": ("Skip_Reason",),
+    "labels_length": ("Labels_Length",),
+}
 
 _CONTINUOUS_EFFECT_LABELS = {
     "noise_z": "noise",
@@ -156,23 +173,18 @@ class BenchmarkRelationshipArtifacts:
 
 
 def normalize_results_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    """Map legacy and current result columns to a canonical schema."""
+    """Normalize current-schema result columns."""
     normalized = pd.DataFrame(index=df.index)
-    used: set[str] = set()
 
-    for canonical, aliases in _COLUMN_ALIASES.items():
-        for alias in aliases:
-            if alias in df.columns:
-                normalized[canonical] = df[alias]
-                used.add(alias)
-                break
-
-    for canonical in _COLUMN_ALIASES:
-        if canonical not in normalized.columns:
-            normalized[canonical] = np.nan
+    for column in _RESULT_COLUMNS:
+        source_column = column if column in df.columns else None
+        for alias in _CSV_WRITER_COLUMN_ALIASES.get(column, ()):
+            if source_column is None and alias in df.columns:
+                source_column = alias
+        normalized[column] = df[source_column] if source_column is not None else np.nan
 
     for col in df.columns:
-        if col not in used and col not in normalized.columns:
+        if col not in normalized.columns:
             normalized[col] = df[col]
 
     for col in _NUMERIC_COLUMNS:

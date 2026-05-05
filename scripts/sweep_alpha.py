@@ -2,8 +2,8 @@
 """Sweep alpha (significance level) and show how K changes.
 
 Usage:
-    python scripts/sweep_alpha.py                          # feature_matrix.tsv
-    python scripts/sweep_alpha.py --input feature_matrix.tsv
+    python scripts/sweep_alpha.py                          # data/feature_matrices/feature_matrix.tsv
+    python scripts/sweep_alpha.py --input data/feature_matrices/feature_matrix.tsv
     python scripts/sweep_alpha.py --synthetic              # 80-sample 4-cluster synthetic
     python scripts/sweep_alpha.py --alphas 0.001 0.01 0.05 0.1 0.2
 """
@@ -58,7 +58,7 @@ def _run_once(data: pd.DataFrame, alpha: float) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Sweep alpha and show K.")
     parser.add_argument(
-        "--input", type=Path, default=None, help="TSV feature matrix (default: feature_matrix.tsv)"
+        "--input", type=Path, default=None, help="TSV feature matrix (default: data/feature_matrices/feature_matrix.tsv)"
     )
     parser.add_argument(
         "--synthetic", action="store_true", help="Use synthetic 4-cluster data instead of a file."
@@ -78,7 +78,7 @@ def main() -> None:
         data, true_k = _make_synthetic()
         label = f"Synthetic (n={data.shape[0]}, d={data.shape[1]}, true K={true_k})"
     else:
-        path = args.input or Path("feature_matrix.tsv")
+        path = args.input or Path("data/feature_matrices/feature_matrix.tsv")
         if not path.exists():
             print(f"File not found: {path}. Use --synthetic or --input <file>.")
             sys.exit(1)
@@ -87,11 +87,7 @@ def main() -> None:
         label = f"{path.name} (n={data.shape[0]}, d={data.shape[1]})"
 
     print(f"Dataset: {label}")
-    print(
-        f"Config:  Sibling test method=cousin_adjusted_wald, "
-        f"FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}, "
-        "SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)"
-    )
+    print(f"Config:  FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}")
     print(f"Sweeping {len(alphas)} alpha values...\n")
     print(f"{'alpha':>8}  {'K':>4}  {'cluster sizes (top 10)'}")
     print("-" * 60)

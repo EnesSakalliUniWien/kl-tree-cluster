@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-
 from benchmarks.shared.cases.binary import BINARY_CASES
 from benchmarks.shared.cases.gaussian import GAUSSIAN_CASES
 from benchmarks.shared.generators.generate_case_data import generate_case_data
@@ -13,6 +10,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pro
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
 
 
 def _build_case_tree(data_df):
@@ -41,14 +40,22 @@ def _collect_binary_parent_structure(
     tree = _build_case_tree(data_df)
     tree.populate_node_divergences(data_df)
 
-    annotated_df = run_gate_annotation_pipeline(
+    bundle = run_gate_annotation_pipeline(
         tree,
         tree.annotations_df.copy(),
         leaf_data=data_df,
-    ).annotated_df
-    edge_spectral_dims = annotated_df.attrs["_spectral_dims"]
+    )
+    assert bundle.gate_two_result is not None
+    spectral_projection_dimensions_by_node = (
+        bundle.gate_two_result.spectral_context.spectral_projection_dimensions_by_node
+    )
+    assert spectral_projection_dimensions_by_node is not None
     sibling_projection_dimensions_from_edge_comparisons = (
-        derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotated_df) or {}
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(
+            tree,
+            spectral_context=bundle.gate_two_result.spectral_context,
+        )
+        or {}
     )
 
     omitted: list[tuple[str, list[str], tuple[int, int], tuple[bool, bool]]] = []
@@ -59,8 +66,8 @@ def _collect_binary_parent_structure(
             continue
 
         child_dims = (
-            int(edge_spectral_dims.get(children[0], 0)),
-            int(edge_spectral_dims.get(children[1], 0)),
+            int(spectral_projection_dimensions_by_node.get(children[0], 0)),
+            int(spectral_projection_dimensions_by_node.get(children[1], 0)),
         )
         child_is_leaf = (
             bool(tree.nodes[children[0]].get("is_leaf", False)),

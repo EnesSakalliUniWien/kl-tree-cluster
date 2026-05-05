@@ -3,14 +3,17 @@ from __future__ import annotations
 import math
 
 import numpy as np
-
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction import (
-    CalibrationModel,
-    SiblingLocalGaussianInflationCalibrator,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.conditional_deflation import (
     fit_sibling_inflation_calibrator,
     predict_sibling_adjustment,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.types.calibration_model import (
+    CalibrationModel,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.types.sibling_local_gaussian_inflation_calibrator import (
+    SiblingLocalGaussianInflationCalibrator,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
 )
 

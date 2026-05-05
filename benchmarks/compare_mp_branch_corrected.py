@@ -38,13 +38,13 @@ if str(PROJECT_ROOT) not in sys.path:
 # Force sequential execution so monkeypatched spectral workers stay in-process.
 os.environ.setdefault("KL_TE_N_JOBS", "1")
 
+import kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur as mp_worker
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.runners.kl_runner import _run_kl_method
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation import projection_dimension_estimators as k_estimators
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
-    marchenko_pastur as mp_worker,
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation import (
+    projection_dimension_estimators as k_estimators,
 )
 
 

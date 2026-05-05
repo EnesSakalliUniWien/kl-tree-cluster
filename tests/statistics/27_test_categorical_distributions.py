@@ -8,16 +8,21 @@ Verifies that the statistical pipeline correctly handles both:
 from __future__ import annotations
 
 import numpy as np
-
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
-    sibling_divergence_test,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.categorical_shape import (
     _flatten_categorical,
     _is_categorical,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.pooled_proportion import (
     compute_pooled_proportion,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.pooled_variance_estimator import (
     compute_pooled_variance,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.standardized_difference import (
     standardize_proportion_difference,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import (
+    sibling_divergence_test,
 )
 
 

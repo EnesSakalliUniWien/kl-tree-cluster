@@ -13,6 +13,7 @@ Usage:
 
 import sys
 from datetime import datetime
+from importlib.util import find_spec
 from pathlib import Path
 
 # Load shared path bootstrap helper from benchmarks root.
@@ -37,7 +38,6 @@ from sklearn.preprocessing import KBinsDiscretizer, StandardScaler
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
@@ -276,7 +276,7 @@ def plot_umap_embedding(
     embedding = reducer.fit_transform(X)
 
     # Plot true labels
-    scatter1 = ax_true.scatter(
+    ax_true.scatter(
         embedding[:, 0], embedding[:, 1], c=y, cmap="Spectral", s=10, alpha=0.7
     )
     ax_true.set_title(f"{title} - True Labels")
@@ -635,7 +635,8 @@ def main():
     print("=" * 70)
 
     try:
-        import umap
+        if find_spec("umap") is None:
+            raise ImportError
 
         fig, axes = plt.subplots(2, 2, figsize=(14, 12))
 

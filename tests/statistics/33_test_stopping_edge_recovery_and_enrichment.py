@@ -4,7 +4,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing import (
     ChildParentEdgeTreeBHResult,
     TreeBHSiblingGroupOutcome,
@@ -15,18 +14,20 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.stopp
     STOPPING_EDGE_INFO_ATTR_KEY,
     build_stopping_edge_attrs,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.stopping_edge_recovery.types import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.stopping_edge_recovery.types.signal_neighbor_info import (
     SignalNeighborInfo,
-    StoppingEdgeInfo,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation import (
-    interpolate_sibling_null_priors,
+from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.stopping_edge_recovery.types.stopping_edge_info import (
+    StoppingEdgeInfo,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation.edge_metadata import (
     extract_edge_metadata,
     extract_stopping_edge_info,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation.sibling_null_prior_interpolation import (
+    interpolate_sibling_null_priors,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
 )
 

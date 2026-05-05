@@ -6,11 +6,8 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import numpy as np
-from sklearn.datasets import make_blobs
-
 from benchmarks.shared.generators.common import calculate_cluster_sizes
-
-OutlierLabelMode = Literal["singleton", "grouped"]
+from sklearn.datasets import make_blobs
 
 
 @dataclass(frozen=True)
@@ -22,8 +19,8 @@ class GaussianOutlierConfig:
     outlier_count: int = 1
     outlier_distance: float = 8.0
     outlier_std: float = 0.2
-    spatial_mode: OutlierSpatialMode = "clustered"
-    label_mode: OutlierLabelMode = "singleton"
+    spatial_mode: Literal["clustered", "uniform_shell"] = "clustered"
+    label_mode: Literal["singleton", "grouped"] = "singleton"
     balanced_clusters: bool = True
     random_seed: int | None = None
 

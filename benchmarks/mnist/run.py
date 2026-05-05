@@ -23,14 +23,12 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 import numpy as np
 import pandas as pd
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import fetch_openml
 from sklearn.decomposition import PCA
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis import config
 
 
 def load_mnist_subset(
@@ -153,9 +151,9 @@ def main():
 
     # Test key combinations
     configs = []
-    for linkage in ["single", "complete", "average", "weighted", "ward"]:
+    for linkage_name in ["single", "complete", "average", "weighted", "ward"]:
         for distance in ["jaccard", "dice", "rogerstanimoto", "hamming"]:
-            configs.append({"distance": distance, "linkage": linkage})
+            configs.append({"distance": distance, "linkage": linkage_name})
 
     results = []
     for cfg in configs:

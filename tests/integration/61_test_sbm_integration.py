@@ -1,8 +1,5 @@
-import pytest
-import numpy as np
-
-from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
 
 def test_sbm_cases_run_through_pipeline_minimal():

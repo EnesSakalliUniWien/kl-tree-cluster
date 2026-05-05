@@ -17,7 +17,6 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
 from benchmarks.calibration.run import run_calibration_suite
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.config import DEFAULT_METHODS
@@ -339,19 +338,6 @@ def run_benchmarks():
         print(summary)
 
         if "test_case" in df.columns:
-            pivot = df.pivot(index="test_case", columns="method", values="ari")
-            if "kl" in pivot.columns and "kl_rogerstanimoto" in pivot.columns:
-                pivot["diff"] = pivot["kl"] - pivot["kl_rogerstanimoto"]
-
-                diff_cases = pivot[pivot["diff"].abs() > 1e-6]
-                if len(diff_cases) > 0:
-                    print(f"\nFound {len(diff_cases)} cases with different ARI scores:")
-                    print(diff_cases[["kl", "kl_rogerstanimoto", "diff"]])
-                else:
-                    print(
-                        "\nNo significant differences found between 'kl' (hamming) and 'kl_rogerstanimoto'."
-                    )
-
             print(f"\nDetailed results are saved to {output_path}")
 
             # Run failure diagnosis when available.

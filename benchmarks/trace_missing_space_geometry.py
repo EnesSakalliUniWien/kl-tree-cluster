@@ -35,11 +35,11 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis import (  # noqa: E402
     build_projection_basis_with_padding,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing import (  # noqa: E402
-    resolve_sibling_projection_dimension,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (  # noqa: E402
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_z_scores import (  # noqa: E402
     _compute_sibling_z_scores,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension import (  # noqa: E402
+    resolve_sibling_projection_dimension,
 )
 
 
@@ -99,9 +99,10 @@ def _trace_parent(case_num: int, parent: str) -> None:
     z_unit = z / z_norm if z_norm > 0 else z
     n_features = int(z.shape[0])
 
-    edge_dims = prepared.edge_annotated_df.attrs.get("_spectral_dims") or {}
-    edge_projs = prepared.edge_annotated_df.attrs.get("_pca_projections") or {}
-    edge_eigs = prepared.edge_annotated_df.attrs.get("_pca_eigenvalues") or {}
+    spectral_context = prepared.spectral_context
+    edge_dims = spectral_context.spectral_projection_dimensions_by_node or {}
+    edge_projs = spectral_context.principal_component_projections_by_node or {}
+    edge_eigs = spectral_context.principal_component_eigenvalues_by_node or {}
 
     gate2_k = int(edge_dims.get(parent, 0))
     gate2_projection = edge_projs.get(parent)

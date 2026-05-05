@@ -24,17 +24,15 @@ from _bootstrap import ensure_repo_root_on_path
 
 repo_root = ensure_repo_root_on_path(__file__)
 
-import numpy as np
-import pandas as pd
 import matplotlib
+import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
 from benchmarks.branch_length.logic import (
-    run_branch_length_benchmark,
     plot_branch_length_results,
     plot_embedding_by_branch_length,
+    run_branch_length_benchmark,
 )
 
 

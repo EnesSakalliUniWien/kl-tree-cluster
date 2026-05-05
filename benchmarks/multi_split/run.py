@@ -23,20 +23,20 @@ from _bootstrap import ensure_repo_root_on_path
 
 repo_root = ensure_repo_root_on_path(__file__)
 
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from typing import Dict, List, Optional, Tuple, Any
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+from typing import Dict, List, Tuple
 
-from benchmarks.shared.runners.dispatch import run_clustering_result
+import matplotlib.pyplot as plt
 from benchmarks.shared.evolution import (
-    generate_ancestral_sequence,
     evolve_sequence,
+    generate_ancestral_sequence,
 )
+from benchmarks.shared.runners.dispatch import run_clustering_result
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
 
 def generate_multi_group_data(

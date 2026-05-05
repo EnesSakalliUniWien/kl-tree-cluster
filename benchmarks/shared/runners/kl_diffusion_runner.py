@@ -14,13 +14,8 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from benchmarks.shared.runners.kl_runner import _run_kl_on_distance
 from benchmarks.shared.types import MethodRunResult
-from benchmarks.shared.util.decomposition import (
-    _create_report_dataframe,
-    _labels_from_decomposition,
-)
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
 from scipy.linalg import eigh
 from scipy.spatial.distance import pdist
 
@@ -376,30 +371,11 @@ def _run_kl_diffusion_method(
         diffusion_time=diffusion_time,
     )
 
-    Z_t = linkage(diff_dist, method="average")
-    tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_df.index.tolist())
-
-    decomp_t = tree_t.decompose(
-        leaf_data=data_df,
-        alpha_local=significance_level,
-        sibling_alpha=significance_level,
-    )
-
-    report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))
-    labels = np.asarray(_labels_from_decomposition(decomp_t, data_df.index.tolist()))
-
-    return MethodRunResult(
-        labels=labels,
-        found_clusters=int(decomp_t.get("num_clusters", 0)),
-        report_df=report_t,
-        status="ok",
-        skip_reason=None,
-        extra={
-            "tree": tree_t,
-            "decomposition": decomp_t,
-            "annotations": tree_t.annotations_df,
-            "linkage_matrix": Z_t,
-        },
+    return _run_kl_on_distance(
+        data_df,
+        diff_dist,
+        significance_level,
+        tree_linkage_method="average",
     )
 
 
@@ -425,29 +401,10 @@ def _run_kl_diffusion_adaptive_method(
         return_metadata=True,
     )
 
-    Z_t = linkage(diff_dist, method="average")
-    tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_df.index.tolist())
-
-    decomp_t = tree_t.decompose(
-        leaf_data=data_df,
-        alpha_local=significance_level,
-        sibling_alpha=significance_level,
-    )
-
-    report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))
-    labels = np.asarray(_labels_from_decomposition(decomp_t, data_df.index.tolist()))
-
-    return MethodRunResult(
-        labels=labels,
-        found_clusters=int(decomp_t.get("num_clusters", 0)),
-        report_df=report_t,
-        status="ok",
-        skip_reason=None,
-        extra={
-            "tree": tree_t,
-            "decomposition": decomp_t,
-            "annotations": tree_t.annotations_df,
-            "linkage_matrix": Z_t,
-            "adaptive_diffusion": adaptive_metadata,
-        },
+    return _run_kl_on_distance(
+        data_df,
+        diff_dist,
+        significance_level,
+        tree_linkage_method="average",
+        extra={"adaptive_diffusion": adaptive_metadata},
     )

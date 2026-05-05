@@ -214,15 +214,6 @@ def _simulate_passthrough(tree, annotations_df):
     return final_leaf_sets
 
 
-def _compute_ari(labels_true, labels_pred, sample_index):
-    """Compute ARI between two label arrays."""
-    from sklearn.metrics import adjusted_rand_score
-
-    if labels_true is None or len(labels_true) == 0:
-        return float("nan")
-    return adjusted_rand_score(labels_true, labels_pred)
-
-
 def run_diagnostic_for_case(tc):
     """Run full diagnostic for one test case. Returns dict of results."""
     case_name = tc.get("name", "unnamed")

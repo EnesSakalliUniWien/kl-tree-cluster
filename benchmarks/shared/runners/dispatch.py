@@ -6,11 +6,10 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import pdist, squareform
-
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodRunResult
 from kl_clustering_analysis import config
+from scipy.spatial.distance import pdist, squareform
 
 
 def _normalize_method_result(
@@ -83,12 +82,9 @@ def run_clustering_result(
             )
             return _normalize_method_result(result)
 
-        if method_id in {"kl", "kl_rogerstanimoto", "kl_complete", "kl_single", "kl_ward", "kl_v2"}:
+        if method_id in {"kl", "kl_complete", "kl_single"}:
             metric = params.get("tree_distance_metric", config.TREE_DISTANCE_METRIC)
-            if method_id == "kl_ward":
-                # Ward linkage requires euclidean distance; always recompute.
-                kl_distance_condensed = pdist(data_df.values, metric="euclidean")
-            elif distance_condensed is not None:
+            if distance_condensed is not None:
                 # Use precomputed distance (e.g. SBM modularity distance).
                 kl_distance_condensed = np.asarray(distance_condensed, dtype=float)
             else:

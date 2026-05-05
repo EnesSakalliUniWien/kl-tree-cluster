@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import numpy as np
-
 from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 
@@ -27,7 +26,7 @@ class DimensionalGaussianConfig:
     noise_std: float = 1.0
     informative_corr: float = 0.0
     noise_corr: float = 0.0
-    signal_mode: SignalMode = "consolidated"
+    signal_mode: Literal["consolidated", "diffuse"] = "consolidated"
     balanced_clusters: bool = True
     random_seed: int | None = None
 

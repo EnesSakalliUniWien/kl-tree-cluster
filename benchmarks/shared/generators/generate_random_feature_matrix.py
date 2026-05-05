@@ -9,7 +9,6 @@ cluster separation (entropy), and feature diversity.
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-
 from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 # ============================================================================
@@ -68,7 +67,6 @@ def _create_sparse_templates(
     templates = []
     # Divide features among clusters so each cluster "owns" some features
     features_per_cluster = n_cols // n_clusters
-    remainder = n_cols % n_clusters
 
     for cluster_id in range(n_clusters):
         # Base template: all features have low probability (sparse)

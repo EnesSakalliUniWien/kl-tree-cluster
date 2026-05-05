@@ -29,8 +29,8 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
-from scipy.integrate import quad
 from scipy.cluster.hierarchy import linkage
+from scipy.integrate import quad
 from sklearn.metrics import adjusted_rand_score
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -41,9 +41,6 @@ from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.decomposition import _labels_from_decomposition
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
-    run_gate_annotation_pipeline,
-)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection.dimension import (
     resolve_minimum_projection_dimension,
     set_resolved_minimum_projection_dimension,
@@ -51,13 +48,14 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection.floor import (
     estimate_projection_dimension_floor,
 )
+from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import SpectralContext
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
-    annotate_child_parent_divergence,
+    annotate_child_parent_divergence_with_context,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     effective_rank,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
@@ -68,7 +66,6 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pro
 )
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-
 
 VariantName = Literal[
     "A_current_jl",
@@ -118,6 +115,7 @@ class PreparedCase:
     tree: PosetTree
     base_annotations: pd.DataFrame
     edge_annotated_df: pd.DataFrame
+    spectral_context: SpectralContext
     sibling_dims_current: dict[str, int] | None
     sibling_pca_projections_current: dict[str, np.ndarray] | None
     sibling_pca_eigenvalues_current: dict[str, np.ndarray] | None
@@ -334,15 +332,21 @@ def _prepare_case(case_num: int) -> PreparedCase:
     tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
     tree.populate_node_divergences(data_df)
     base_annotations = tree.annotations_df.copy()
-    edge_annotated_df = annotate_child_parent_divergence(
+    edge_annotated_df, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
         base_annotations.copy(),
         significance_level_alpha=BENCHMARK_SIGNIFICANCE_LEVEL,
         leaf_data=data_df,
     )
-    sibling_dims_current = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, edge_annotated_df)
+    sibling_dims_current = derive_sibling_projection_dimensions_from_child_edge_comparisons(
+        tree,
+        spectral_context=spectral_context,
+    )
     sibling_pca_projections_current, sibling_pca_eigenvalues_current = (
-        collect_parent_principal_component_inputs_for_sibling_tests(edge_annotated_df, sibling_dims_current)
+        collect_parent_principal_component_inputs_for_sibling_tests(
+            sibling_dims_current,
+            spectral_context=spectral_context,
+        )
     )
     return PreparedCase(
         case_num=case_num,
@@ -354,6 +358,7 @@ def _prepare_case(case_num: int) -> PreparedCase:
         tree=tree,
         base_annotations=base_annotations,
         edge_annotated_df=edge_annotated_df,
+        spectral_context=spectral_context,
         sibling_dims_current=sibling_dims_current,
         sibling_pca_projections_current=sibling_pca_projections_current,
         sibling_pca_eigenvalues_current=sibling_pca_eigenvalues_current,
@@ -423,14 +428,18 @@ def _build_variant_inputs(
             injected_parent_k,
         )
 
-    edge_spectral_dims = prepared.edge_annotated_df.attrs.get("_spectral_dims", {}) or {}
-    edge_pca_eigenvalues = prepared.edge_annotated_df.attrs.get("_pca_eigenvalues", {}) or {}
+    spectral_projection_dimensions_by_node = (
+        prepared.spectral_context.spectral_projection_dimensions_by_node or {}
+    )
+    principal_component_eigenvalues_by_node = (
+        prepared.spectral_context.principal_component_eigenvalues_by_node or {}
+    )
 
     for parent in _eligible_leaf_leaf_missing_parents(prepared):
         if variant == "B_parent_gate2_random":
-            parent_k = int(edge_spectral_dims.get(parent, 0))
+            parent_k = int(spectral_projection_dimensions_by_node.get(parent, 0))
         elif variant == "C_effective_rank_random":
-            parent_eigs = edge_pca_eigenvalues.get(parent)
+            parent_eigs = principal_component_eigenvalues_by_node.get(parent)
             if parent_eigs is None:
                 parent_k = 0
             else:
@@ -485,9 +494,12 @@ def _run_variant(
         tree=prepared.tree,
         annotations_df=prepared.edge_annotated_df.copy(),
         significance_level_alpha=BENCHMARK_SIGNIFICANCE_LEVEL,
-        spectral_dims=sibling_dims,
-        pca_projections=sibling_pca_projections,
-        pca_eigenvalues=sibling_pca_eigenvalues,
+        sibling_projection_dimensions_from_edge_comparisons=sibling_dims,
+        parent_principal_component_projections=sibling_pca_projections,
+        parent_principal_component_eigenvalues=sibling_pca_eigenvalues,
+        edge_projection_dimensions_by_node=(
+            prepared.spectral_context.spectral_projection_dimensions_by_node
+        ),
     )
 
     decomposer = _PreAnnotatedTreeDecomposition(

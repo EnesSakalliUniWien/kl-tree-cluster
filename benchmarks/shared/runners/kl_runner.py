@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage
-
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import (
     _create_report_dataframe,
@@ -16,15 +14,17 @@ from benchmarks.shared.util.decomposition import (
 )
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from scipy.cluster.hierarchy import linkage
 
 
-def _run_kl_method(
+def _run_kl_on_distance(
     data_df: pd.DataFrame,
     distance_condensed: np.ndarray,
     significance_level: float,
-    tree_linkage_method: str = config.TREE_LINKAGE_METHOD,
+    *,
+    tree_linkage_method: str,
+    extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
-
     Z_t = linkage(distance_condensed, method=tree_linkage_method)
 
     tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_df.index.tolist())
@@ -35,16 +35,34 @@ def _run_kl_method(
     )
     report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))
     labels = np.asarray(_labels_from_decomposition(decomp_t, data_df.index.tolist()))
+    result_extra = {
+        "tree": tree_t,
+        "decomposition": decomp_t,
+        "annotations": tree_t.annotations_df,
+        "linkage_matrix": Z_t,
+    }
+    if extra:
+        result_extra.update(extra)
+
     return MethodRunResult(
         labels=labels,
         found_clusters=int(decomp_t.get("num_clusters", 0)),
         report_df=report_t,
         status="ok",
         skip_reason=None,
-        extra={
-            "tree": tree_t,
-            "decomposition": decomp_t,
-            "annotations": tree_t.annotations_df,
-            "linkage_matrix": Z_t,
-        },
+        extra=result_extra,
+    )
+
+
+def _run_kl_method(
+    data_df: pd.DataFrame,
+    distance_condensed: np.ndarray,
+    significance_level: float,
+    tree_linkage_method: str = config.TREE_LINKAGE_METHOD,
+) -> MethodRunResult:
+    return _run_kl_on_distance(
+        data_df,
+        distance_condensed,
+        significance_level,
+        tree_linkage_method=tree_linkage_method,
     )

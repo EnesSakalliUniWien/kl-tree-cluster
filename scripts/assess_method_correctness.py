@@ -24,7 +24,7 @@ Usage
     # Custom paths:
     python scripts/assess_method_correctness.py \
         --feature-matrix data/HC_feature_matrix_GO_CC.tsv \
-        --assignments data/results_GO_CC_alpha_005/cluster_assignments.csv
+        --assignments benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv
 
     # Compare across alphas:
     python scripts/assess_method_correctness.py --all-alphas
@@ -47,11 +47,11 @@ from scipy.stats import fisher_exact
 # ═══════════════════════════════════════════════════════════════════════════
 
 DEFAULT_FEATURE_MATRIX = Path("data/HC_feature_matrix_GO_CC.tsv")
-DEFAULT_ASSIGNMENTS = Path("data/results_GO_CC_alpha_005/cluster_assignments.csv")
+DEFAULT_ASSIGNMENTS = Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv")
 RESULT_DIRS = {
-    0.01: Path("data/results_GO_CC_alpha_001"),
-    0.05: Path("data/results_GO_CC_alpha_005"),
-    0.10: Path("data/results_GO_CC_alpha_010"),
+    0.01: Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_001"),
+    0.05: Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005"),
+    0.10: Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_010"),
 }
 
 # Known HC gene modules for biological theme recovery
@@ -161,7 +161,6 @@ def _cluster_has_enrichment(
     Fisher exact enrichment for one cluster.
     Returns (has_significant, n_significant_pathways, best_q_value).
     """
-    N = fm.shape[0]
     k = len(cluster_genes)
     bg_genes = [g for g in fm.index if g not in cluster_genes]
     bg_data = fm.loc[bg_genes]
@@ -784,7 +783,6 @@ def overall_assessment(
     sizes = coherence_df.n_genes
     if sizes.max() > 100:
         print(f"    - One dominant cluster ({int(sizes.max())} genes) may indicate under-splitting")
-    n_singleton = 0  # singletons excluded from coherence_df
     print("    - Singletons are excluded from this analysis")
     print("    - Enrichment test power depends on cluster size")
     print("    - Biological theme recovery depends on gene list completeness")
@@ -830,7 +828,7 @@ def parse_args() -> argparse.Namespace:
               python scripts/assess_method_correctness.py --all-alphas
               python scripts/assess_method_correctness.py \\
                   --feature-matrix data/HC_feature_matrix_GO_CC.tsv \\
-                  --assignments data/results_GO_CC_alpha_005/cluster_assignments.csv
+                  --assignments benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv
         """
         ),
     )

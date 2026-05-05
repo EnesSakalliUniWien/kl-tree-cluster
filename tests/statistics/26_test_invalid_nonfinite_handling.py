@@ -4,20 +4,19 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
-    sibling_divergence_test,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import (
+    sibling_divergence_test,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension import (
     resolve_sibling_projection_dimension,
 )
 
@@ -161,7 +160,7 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
     assert audit.get("total_pairs") == 1
     assert audit.get("calibration_method") == "weighted_mean"
     assert audit.get("calibration_n") == 0
-    assert audit.get("test_method") == "cousin_adjusted_wald"
+    assert audit.get("test_method") == "calibrated_projected_wald"
 
 
 def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
@@ -177,7 +176,7 @@ def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
         return np.array([np.nan, 0.0], dtype=float), np.array([1.0, 1.0], dtype=float)
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.standardize_proportion_difference",
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_z_scores.standardize_proportion_difference",
         _fake_standardize_proportion_difference,
     )
 
@@ -250,17 +249,6 @@ def test_collect_sibling_pair_records_ignores_parent_principal_component_basis_a
             },
         }
     )
-    annotations_df.attrs["_pca_projections"] = {
-        "root": np.array(
-            [
-                [3.0, 4.0],
-                [0.0, 1.0],
-            ],
-            dtype=float,
-        )
-    }
-    annotations_df.attrs["_pca_eigenvalues"] = {"root": np.array([2.5, 0.5], dtype=float)}
-
     captured: dict[str, object] = {}
 
     def _fake_sibling_test(

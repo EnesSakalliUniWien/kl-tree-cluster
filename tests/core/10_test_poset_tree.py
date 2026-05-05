@@ -1,7 +1,6 @@
-import pytest
 import networkx as nx
 import numpy as np
-
+import pytest
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
@@ -47,7 +46,7 @@ def test_from_tuples_edges_basic():
 
 
 def test_from_scipy_linkage_binary_data():
-    scipy = pytest.importorskip("scipy")
+    pytest.importorskip("scipy")
     from scipy.cluster.hierarchy import linkage
     from scipy.spatial.distance import pdist
 
