@@ -50,13 +50,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
-from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
-    collect_parent_principal_component_inputs_for_sibling_tests,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
-    derive_sibling_projection_dimensions_from_child_edge_comparisons,
-)
+from debug_scripts._shared.sibling_gate_inputs import derive_sibling_gate_debug_inputs  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -149,16 +143,21 @@ def collect_permutation_pairs(
     effective_n = float(diagnostics.get("effective_n", 0.0))
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
-    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(annotations_df, sibling_dims)
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
+    gate_inputs = derive_sibling_gate_debug_inputs(
+        tree,
+        annotations_df,
+        data_df,
+        alpha_local=config.SIBLING_ALPHA,
+    )
+    sibling_pca = gate_inputs.parent_principal_component_projections
+    sibling_eig = gate_inputs.parent_principal_component_eigenvalues
     records, _ = collect_sibling_pair_records(
         tree,
         annotations_df,
         mean_bl,
-        spectral_dims=sibling_dims,
-        pca_projections=sibling_pca,
-        pca_eigenvalues=sibling_eig,
+        sibling_projection_dimensions_from_edge_comparisons=gate_inputs.projection_dimensions,
+        parent_principal_component_projections=sibling_pca,
+        parent_principal_component_eigenvalues=sibling_eig,
     )
 
     pairs: list[PermutationPair] = []
@@ -171,7 +170,6 @@ def collect_permutation_pairs(
         left, right = children
         pca_proj = sibling_pca.get(record.parent) if sibling_pca else None
         pca_eig = sibling_eig.get(record.parent) if sibling_eig else None
-        child_pca = sibling_child_pca.get(record.parent) if sibling_child_pca else None
 
         bl_left = tree.edges[record.parent, left].get("branch_length")
         bl_right = tree.edges[record.parent, right].get("branch_length")
@@ -191,7 +189,7 @@ def collect_permutation_pairs(
             spectral_k=int(record.degrees_of_freedom),
             pca_projection=pca_proj,
             pca_eigenvalues=pca_eig,
-                n_permutations=n_permutations,
+            n_permutations=n_permutations,
         )
 
         pairs.append(

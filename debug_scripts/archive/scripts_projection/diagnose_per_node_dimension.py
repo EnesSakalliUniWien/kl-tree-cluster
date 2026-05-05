@@ -20,7 +20,7 @@ Analyses:
   - End-to-end pipeline K/ARI comparison (synthetic cases only)
 
 Data sources:
-  --input FILE     Run on a TSV feature matrix (default: feature_matrix.tsv)
+  --input FILE     Run on a TSV feature matrix (default: data/feature_matrices/feature_matrix.tsv)
   --synthetic      Run on synthetic benchmark cases (blobs, binary)
   --all            Run on both (default)
 
@@ -50,9 +50,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral im
     compute_spectral_decomposition,
     effective_rank,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
-    sibling_divergence_test,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import sibling_divergence_test
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 # =====================================================================
@@ -956,7 +954,7 @@ def parse_args() -> argparse.Namespace:
         "--input",
         type=Path,
         default=None,
-        help="TSV feature matrix (default: feature_matrix.tsv if it exists)",
+        help="TSV feature matrix (default: data/feature_matrices/feature_matrix.tsv if it exists)",
     )
     p.add_argument("--synthetic", action="store_true", help="Run on synthetic cases")
     p.add_argument(
@@ -982,8 +980,8 @@ def main() -> None:
         run_file = True
         run_synthetic = True
     else:
-        # Default: both if feature_matrix.tsv exists, else synthetic only
-        default_path = Path("feature_matrix.tsv")
+        # Default: both if data/feature_matrices/feature_matrix.tsv exists, else synthetic only
+        default_path = Path("data/feature_matrices/feature_matrix.tsv")
         if default_path.exists():
             args.input = default_path
             run_file = True

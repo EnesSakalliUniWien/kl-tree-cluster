@@ -23,10 +23,8 @@ from scipy.spatial.distance import pdist
 
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
-    compute_projection_dimension,
-    sibling_divergence_test,
-)
+from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection.dimension import compute_projection_dimension
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import sibling_divergence_test
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
     compute_sibling_spectral_dimensions,
     compute_spectral_decomposition,

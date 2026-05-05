@@ -38,19 +38,13 @@ import numpy as np
 from lab_helpers import build_tree_and_data, compute_ari
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
-    adjusted_wald_annotation as awa_module,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction import (
-    compute_adjusted_sibling_tests,
-)
+import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline as awa_module
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.adjusted_sibling_tests import compute_adjusted_sibling_tests
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     CalibrationModel,
     fit_inflation_model,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
-    SiblingPairRecord,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import SiblingPairRecord
 
 # ── Calibrator summary computed once per case ───────────────────────────────
 
@@ -249,7 +243,7 @@ def apply_strategy(strategy_fn: StrategyFn):
         ),
         patch(
             "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence"
-            ".adjusted_wald_annotation.fit_inflation_model",
+            ".adjusted_wald_annotation.pipeline.fit_inflation_model",
             _capturing_fit_inflation_model,
         ),
     ):

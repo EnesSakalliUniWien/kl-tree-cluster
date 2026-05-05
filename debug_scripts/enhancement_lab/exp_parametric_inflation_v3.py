@@ -46,13 +46,13 @@ sys.path.insert(0, str(_LAB))
 from exp_parametric_inflation import DIAGNOSTIC_CASES  # noqa: E402
 from lab_helpers import build_tree_and_data, compute_ari, run_decomposition  # noqa: E402
 
-from debug_scripts._shared.sibling_child_pca import (  # noqa: E402
-    derive_sibling_child_pca_projections,
-)
 from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.core_utils.data_utils import extract_node_sample_size  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (  # noqa: E402
     compute_mean_branch_length,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (  # noqa: E402
+    annotate_child_parent_divergence_with_context,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base import (  # noqa: E402
     benjamini_hochberg_correction,
@@ -468,11 +468,20 @@ def collect_case_rows(case_name: str) -> list[PairRow]:
     )
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
-    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(
-        annotations_df, sibling_dims
+    _, spectral_context = annotate_child_parent_divergence_with_context(
+        tree,
+        annotations_df,
+        significance_level_alpha=config.SIBLING_ALPHA,
+        leaf_data=data_df,
     )
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(
+        tree,
+        spectral_context=spectral_context,
+    )
+    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(
+        sibling_dims,
+        spectral_context=spectral_context,
+    )
     records, _ = collect_sibling_pair_records(
         tree,
         annotations_df,

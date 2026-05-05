@@ -36,27 +36,15 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inf
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
-    predict_inflation_factor,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.adjusted_sibling_tests import (
     count_null_focal_pairs,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation import (
-    interpolate_sibling_null_priors,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation.sibling_null_prior_interpolation import interpolate_sibling_null_priors
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
-    collect_parent_principal_component_inputs_for_sibling_tests,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
-    derive_sibling_projection_dimensions_from_child_edge_comparisons,
-)
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
-    resolve_minimum_projection_dimension_backend,
-)
+from debug_scripts._shared.sibling_gate_inputs import derive_sibling_gate_debug_inputs
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
@@ -83,27 +71,20 @@ def trace_case(
     tree.populate_node_divergences(leaf_data=data_bin)
 
     # ── Step 1: Gate 2 (edge significance) ──────────────────────────────
-    min_proj_dim = resolve_minimum_projection_dimension_backend(
-        config.PROJECTION_MINIMUM_DIMENSION, leaf_data=data_bin,
-    )
     annotations_df = annotate_child_parent_divergence(
         tree, tree.annotations_df, significance_level_alpha=0.05,
-        leaf_data=data_bin, minimum_projection_dimension=min_proj_dim,
+        leaf_data=data_bin,
     )
 
     # ── Step 2: Derive sibling spectral dims (geometric-mean-of-children) ─
-    spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
-
-    # ── Step 3: Derive parent + child PCA projections ───────────────────
-    pca_projections, pca_eigenvalues = collect_parent_principal_component_inputs_for_sibling_tests(
-        annotations_df,
-        spectral_dims,
-    )
-    child_pca_projections = derive_sibling_child_pca_projections(
+    gate_inputs = derive_sibling_gate_debug_inputs(
         tree,
         annotations_df,
-        spectral_dims,
+        data_bin,
+        alpha_local=0.05,
     )
+    spectral_dims = gate_inputs.projection_dimensions
+    child_pca_projections = gate_inputs.child_principal_component_projections
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
@@ -113,8 +94,12 @@ def trace_case(
         annotations_df,
         mean_bl,
         sibling_projection_dimensions_from_edge_comparisons=spectral_dims,
-        parent_principal_component_projections=pca_projections,
-        parent_principal_component_eigenvalues=pca_eigenvalues,
+        parent_principal_component_projections=(
+            gate_inputs.parent_principal_component_projections
+        ),
+        parent_principal_component_eigenvalues=(
+            gate_inputs.parent_principal_component_eigenvalues
+        ),
     )
 
     n_null, n_focal, n_blocked = count_null_focal_pairs(records)
@@ -196,7 +181,7 @@ def trace_case(
         if r.is_null_like:
             continue
         c_local = predict_sibling_adjustment(calibrator, r.sibling_test_calibration_scale)
-        global_adjustment = predict_inflation_factor(model, r.branch_length_sum, r.n_parent)
+        global_adjustment = model.global_inflation_factor
         t_adj = r.stat / c_local
         p_adj = (
             float(chi2.sf(t_adj, df=r.degrees_of_freedom))
@@ -214,7 +199,7 @@ def trace_case(
     if root_rec:
         rr = root_rec[0]
         c_local = predict_sibling_adjustment(calibrator, rr.sibling_test_calibration_scale)
-        global_adjustment = predict_inflation_factor(model, rr.branch_length_sum, rr.n_parent)
+        global_adjustment = model.global_inflation_factor
         t_adj_local = rr.stat / c_local
         t_adj_global = rr.stat / global_adjustment
         p_local = (

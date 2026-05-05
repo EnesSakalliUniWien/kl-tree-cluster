@@ -41,9 +41,7 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
-    standardize_proportion_difference,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.standardized_difference import standardize_proportion_difference
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_helpers import (
     precompute_descendants,
 )
@@ -51,9 +49,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pai
     extract_sibling_pair_observations as _get_sibling_data,
     identify_binary_sibling_children as _get_binary_children,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
-    sibling_divergence_test,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import sibling_divergence_test
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 

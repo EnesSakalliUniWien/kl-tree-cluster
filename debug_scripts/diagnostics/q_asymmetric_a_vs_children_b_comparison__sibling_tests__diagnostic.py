@@ -12,9 +12,7 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
-    sibling_divergence_test,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import sibling_divergence_test
 
 
 def demonstrate_asymmetric_comparison():

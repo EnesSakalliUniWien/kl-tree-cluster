@@ -19,10 +19,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
     compute_mean_branch_length,
     sanitize_positive_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
-    _flatten_categorical,
-    compute_pooled_proportion,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.categorical_shape import _flatten_categorical
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.pooled_proportion import compute_pooled_proportion
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.random_projection import (
     compute_projection_dimension,
     derive_projection_seed,

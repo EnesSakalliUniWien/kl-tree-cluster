@@ -16,9 +16,7 @@ from debug_scripts.diagnostics.compare_one_active_feature_1d_strength import (
     _run_kl_suite,
     _summarize,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.types import (
-    CalibrationModel,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.types.calibration_model import CalibrationModel
 
 
 def _is_canonical_one_feature_basis(pca_projection: np.ndarray | None) -> bool:
@@ -50,9 +48,7 @@ def _clone_model(method: str, diagnostics: dict[str, object], c_hat: float) -> C
 
 @contextmanager
 def _collect_one_active_records(collector: list[dict[str, float]]) -> None:
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
-        adjusted_wald_annotation as awa,
-    )
+    import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline as awa
 
     original_collect = awa.collect_sibling_pair_records
 
@@ -91,9 +87,7 @@ def _patch_one_active_calibration(
     global_one_active_c: float | None = None,
     shrink_tau: float = 10.0,
 ) -> None:
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
-        adjusted_wald_annotation as awa,
-    )
+    import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline as awa
     from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
         _compute_weighted_inflation,
     )

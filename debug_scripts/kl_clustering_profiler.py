@@ -17,7 +17,7 @@ Usage
     python debug_scripts/kl_clustering_profiler.py --n-samples 200 --n-features 150
 
     # Save detailed trace to file
-    python debug_scripts/kl_clustering_profiler.py --output profiler_results.csv
+    python debug_scripts/kl_clustering_profiler.py --output reports/profiling/profiler_results.csv
 
     # Run with cProfile for function-level breakdown
     python debug_scripts/kl_clustering_profiler.py --profile-level function
@@ -71,7 +71,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator 
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 from kl_clustering_analysis.tree.distributions import populate_distributions
@@ -223,28 +223,33 @@ class KLProfiler:
             "gate3_annotation",
             "Gate 3: Sibling divergence (FDR-corrected tests)",
         ):
-            # Gate 3 uses spectral dims and PCA from Gate 2 annotations
-            # Extract these from the annotations DataFrame
-            from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
-                collect_parent_principal_component_inputs_for_sibling_tests,
-            )
-            from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
-                derive_sibling_projection_dimensions_from_child_edge_comparisons,
+            from debug_scripts._shared.sibling_gate_inputs import (
+                derive_sibling_gate_debug_inputs,
             )
 
-            spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(self.tree, self.annotations_df)
-            pca_projections, pca_eigenvalues = collect_parent_principal_component_inputs_for_sibling_tests(
-                self.annotations_df, spectral_dims
+            gate_inputs = derive_sibling_gate_debug_inputs(
+                self.tree,
+                self.annotations_df,
+                self.data,
+                alpha_local=config.EDGE_ALPHA,
             )
-
             self.annotations_df = annotate_sibling_divergence(
                 tree=self.tree,
                 annotations_df=self.annotations_df,
                 significance_level_alpha=config.SIBLING_ALPHA,
-                spectral_dims=spectral_dims,
-                pca_projections=pca_projections,
-                pca_eigenvalues=pca_eigenvalues,
-                    )
+                sibling_projection_dimensions_from_edge_comparisons=(
+                    gate_inputs.projection_dimensions
+                ),
+                parent_principal_component_projections=(
+                    gate_inputs.parent_principal_component_projections
+                ),
+                parent_principal_component_eigenvalues=(
+                    gate_inputs.parent_principal_component_eigenvalues
+                ),
+                edge_projection_dimensions_by_node=(
+                    gate_inputs.spectral_context.spectral_projection_dimensions_by_node
+                ),
+            )
         return self.annotations_df
 
     def _run_decomposition(self) -> dict:

@@ -47,9 +47,7 @@ from kl_clustering_analysis.core_utils.data_utils import (
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
     compute_projection_dimension_backend,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
-    standardize_proportion_difference,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.standardized_difference import standardize_proportion_difference
 
 
 def _get_gt_label(tree, parent, left, right, y_true, leaf_data):

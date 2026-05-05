@@ -182,12 +182,6 @@ def annotate_child_parent_divergence_with_context(
         tested_edge_flags=child_parent_edge_tested_by_tree_bh,
         ancestor_blocked_edge_flags=ancestor_blocked_edge_flags,
     )
-    if leaf_data is not None:
-        annotated_df.attrs["_spectral_dims"] = node_spectral_dimensions
-        annotated_df.attrs["_pca_projections"] = node_pca_projections
-        annotated_df.attrs["_pca_eigenvalues"] = node_pca_eigenvalues
-        if single_feature_subtree_audit is not None:
-            annotated_df.attrs["_single_feature_subtree_audit"] = single_feature_subtree_audit
     return annotated_df, spectral_context
 
 

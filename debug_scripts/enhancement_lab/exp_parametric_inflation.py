@@ -43,16 +43,16 @@ from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (  # noqa: E402
     compute_mean_branch_length,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (  # noqa: E402
+    annotate_child_parent_divergence_with_context,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_kernel import (  # noqa: E402
     run_projected_wald_kernel,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (  # noqa: E402
-    standardize_proportion_difference,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.standardized_difference import standardize_proportion_difference  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
-from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
     collect_parent_principal_component_inputs_for_sibling_tests,
 )
@@ -93,8 +93,6 @@ def _compute_t_from_leaf_data(
     spectral_k: int,
     pca_projection: np.ndarray | None,
     pca_eigenvalues: np.ndarray | None,
-    child_pca_projections: list[np.ndarray] | None,
-    whitening: str,
 ) -> float:
     n_left = leaf_data_left.shape[0]
     n_right = leaf_data_right.shape[0]
@@ -136,7 +134,6 @@ def permutation_c(
     spectral_k: int,
     pca_projection: np.ndarray | None,
     pca_eigenvalues: np.ndarray | None,
-    child_pca_projections: list[np.ndarray] | None,
     n_permutations: int = N_PERMUTATIONS,
 ) -> tuple[float, float, float]:
     """Return (c_perm_mean, c_perm_median, p_perm) for one node."""
@@ -157,8 +154,6 @@ def permutation_c(
         spectral_k,
         pca_projection,
         pca_eigenvalues,
-        child_pca_projections,
-        whitening,
     )
 
     rng = np.random.default_rng(_node_seed(parent))
@@ -173,8 +168,6 @@ def permutation_c(
             spectral_k,
             pca_projection,
             pca_eigenvalues,
-            child_pca_projections,
-            whitening,
         )
 
     finite = t_perms[np.isfinite(t_perms)]
@@ -295,9 +288,20 @@ def run_case(case_name: str) -> tuple[str, list[NodeResult], ParametricModel | N
 
     # Collect all pair records (same as pipeline does)
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
-    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(annotations_df, sibling_dims)
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
+    _, spectral_context = annotate_child_parent_divergence_with_context(
+        tree,
+        annotations_df,
+        significance_level_alpha=config.SIBLING_ALPHA,
+        leaf_data=data_df,
+    )
+    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(
+        tree,
+        spectral_context=spectral_context,
+    )
+    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(
+        sibling_dims,
+        spectral_context=spectral_context,
+    )
 
     records, _ = collect_sibling_pair_records(
         tree,
@@ -325,7 +329,6 @@ def run_case(case_name: str) -> tuple[str, list[NodeResult], ParametricModel | N
 
         pca_proj = sibling_pca.get(rec.parent) if sibling_pca else None
         pca_eig = sibling_eig.get(rec.parent) if sibling_eig else None
-        child_pca = sibling_child_pca.get(rec.parent) if sibling_child_pca else None
 
         bl_left = tree.edges[rec.parent, left].get("branch_length")
         bl_right = tree.edges[rec.parent, right].get("branch_length")
@@ -345,7 +348,7 @@ def run_case(case_name: str) -> tuple[str, list[NodeResult], ParametricModel | N
             spectral_k=k,
             pca_projection=pca_proj,
             pca_eigenvalues=pca_eig,
-            )
+        )
 
         # Global deflation p-value
         t_adj_global = rec.stat / c_hat_global if c_hat_global > 0 else rec.stat

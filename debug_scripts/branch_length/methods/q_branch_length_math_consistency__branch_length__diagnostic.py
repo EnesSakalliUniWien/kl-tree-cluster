@@ -12,10 +12,8 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
-    compute_pooled_variance,
-    standardize_proportion_difference,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.pooled_variance_estimator import compute_pooled_variance
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.standardized_difference import standardize_proportion_difference
 from kl_clustering_analysis import config
 
 
@@ -201,9 +199,7 @@ def run_comparison_test():
     print("ANALYSIS 5: Empirical Comparison")
     print("=" * 70)
 
-    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic import (
-        sibling_divergence_test,
-    )
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import sibling_divergence_test
 
     np.random.seed(123)
 

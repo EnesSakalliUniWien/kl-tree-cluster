@@ -1,9 +1,4 @@
-"""Debug helper: extract per-child PCA projections from Gate 2 output.
-
-Moved from the former Gate 3 projection-input module during legacy-code cleanup (2026-03-27).
-This function is not used by the production pipeline; it exists solely
-for diagnostic and enhancement-lab scripts.
-"""
+"""Debug helper: extract per-child PCA projections from Gate 2 output."""
 
 from __future__ import annotations
 
@@ -12,20 +7,24 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy as np
-    import pandas as pd
+
+    from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
+        SpectralContext,
+    )
 
 logger = logging.getLogger(__name__)
 
 
 def derive_sibling_child_pca_projections(
     tree,
-    annotated_df: pd.DataFrame,
     sibling_dims: dict[str, int] | None,
+    *,
+    spectral_context: SpectralContext,
 ) -> dict[str, list[np.ndarray]] | None:
     """Extract per-child PCA projections for debug and experimental analysis.
 
     For each binary parent P with children L, R, collects the child PCA
-    projection matrices (from Gate 2's ``_pca_projections``) into a list
+    projection matrices from the typed Gate 2 spectral context into
     ``[V_L, V_R]`` keyed by parent node ID.
 
     Returns
@@ -36,9 +35,9 @@ def derive_sibling_child_pca_projections(
     if sibling_dims is None:
         return None
 
-    pca_projections = annotated_df.attrs.get("_pca_projections")
+    pca_projections = spectral_context.principal_component_projections_by_node
     if not pca_projections:
-        logger.debug("No _pca_projections found on Gate 2 annotations")
+        logger.debug("No principal-component projections found in Gate 2 context")
         return None
 
     child_pca_map: dict[str, list[np.ndarray]] = {}

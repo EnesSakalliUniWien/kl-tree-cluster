@@ -5,9 +5,6 @@ import pandas as pd
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
-    collect_parent_principal_component_inputs_for_sibling_tests,
-)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
@@ -177,24 +174,6 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
     assert set(sibling_projection_dimensions_from_edge_comparisons) == {"root"}
     assert sibling_projection_dimensions_from_edge_comparisons["root"] > 0
     assert "I" not in sibling_projection_dimensions_from_edge_comparisons
-
-    legacy_projection_dimensions = (
-        derive_sibling_projection_dimensions_from_child_edge_comparisons(
-            tree,
-            bundle.annotated_df,
-        )
-    )
-    assert legacy_projection_dimensions == sibling_projection_dimensions_from_edge_comparisons
-
-    legacy_parent_projections, legacy_parent_eigenvalues = (
-        collect_parent_principal_component_inputs_for_sibling_tests(
-            bundle.annotated_df,
-            legacy_projection_dimensions,
-        )
-    )
-    assert legacy_parent_projections is not None
-    assert set(legacy_parent_projections) == {"root"}
-    assert legacy_parent_eigenvalues is not None
 
 
 def test_decompose_without_leaf_data_disables_spectral_metadata_and_merges() -> None:

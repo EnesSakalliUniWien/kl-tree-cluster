@@ -92,9 +92,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.base 
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection import (  # noqa: E402
     projected_wald as projected_wald_module,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (  # noqa: E402
-    adjusted_wald_annotation as adjusted_wald_module,
-)
+import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline as adjusted_wald_module  # noqa: E402
 import kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection as record_collection_module  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (  # noqa: E402
     wald_statistic as wald_statistic_module,

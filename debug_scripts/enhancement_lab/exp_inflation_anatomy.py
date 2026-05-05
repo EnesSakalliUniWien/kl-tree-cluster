@@ -35,9 +35,7 @@ sys.path.insert(0, str(_LAB))
 
 from lab_helpers import build_tree_and_data, compute_ari, run_decomposition  # noqa: E402
 
-from debug_scripts._shared.sibling_child_pca import (  # noqa: E402
-    derive_sibling_child_pca_projections,
-)
+from debug_scripts._shared.sibling_gate_inputs import derive_sibling_gate_debug_inputs  # noqa: E402
 from kl_clustering_analysis import config  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (  # noqa: E402
     compute_mean_branch_length,
@@ -45,20 +43,12 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_kernel import (  # noqa: E402
     run_projected_wald_kernel,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (  # noqa: E402
-    standardize_proportion_difference,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.standardized_difference import standardize_proportion_difference  # noqa: E402
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (  # noqa: E402
     extract_sibling_pair_observations,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
-    collect_parent_principal_component_inputs_for_sibling_tests,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
-    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
 # ---------------------------------------------------------------------------
@@ -134,8 +124,6 @@ def _compute_t_from_leaf_data(
     spectral_k: int,
     pca_projection: np.ndarray | None,
     pca_eigenvalues: np.ndarray | None,
-    child_pca_projections: list[np.ndarray] | None,
-    whitening: str,
 ) -> float:
     n_left = leaf_data_left.shape[0]
     n_right = leaf_data_right.shape[0]
@@ -177,7 +165,6 @@ def permutation_null_distribution(
     spectral_k: int,
     pca_projection: np.ndarray | None,
     pca_eigenvalues: np.ndarray | None,
-    child_pca_projections: list[np.ndarray] | None,
     n_permutations: int = N_PERMUTATIONS,
 ) -> tuple[float, np.ndarray]:
     """Return (t_obs, array of T_perm values) for full distribution analysis."""
@@ -197,8 +184,6 @@ def permutation_null_distribution(
         spectral_k,
         pca_projection,
         pca_eigenvalues,
-        child_pca_projections,
-        whitening,
     )
 
     rng = np.random.default_rng(_node_seed(parent))
@@ -218,8 +203,6 @@ def permutation_null_distribution(
             spectral_k,
             pca_projection,
             pca_eigenvalues,
-            child_pca_projections,
-            whitening,
         )
 
     return t_obs, t_perms
@@ -267,11 +250,15 @@ def run_case(case_name: str) -> CaseInflation:
     c_hat_global = float(audit.get("global_inflation_factor", 1.0))
 
     # Gate 2 config for sibling test
-    sibling_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
-    sibling_pca, sibling_eig = collect_parent_principal_component_inputs_for_sibling_tests(
-        annotations_df, sibling_dims
+    gate_inputs = derive_sibling_gate_debug_inputs(
+        tree,
+        annotations_df,
+        data_df,
+        alpha_local=config.SIBLING_ALPHA,
     )
-    sibling_child_pca = derive_sibling_child_pca_projections(tree, annotations_df, sibling_dims)
+    sibling_dims = gate_inputs.projection_dimensions
+    sibling_pca = gate_inputs.parent_principal_component_projections
+    sibling_eig = gate_inputs.parent_principal_component_eigenvalues
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
@@ -279,10 +266,10 @@ def run_case(case_name: str) -> CaseInflation:
     records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
-        mean_branch_length=mean_bl,
-        spectral_dims=sibling_dims,
-        pca_projections=sibling_pca,
-        pca_eigenvalues=sibling_eig,
+        mean_bl,
+        sibling_projection_dimensions_from_edge_comparisons=sibling_dims,
+        parent_principal_component_projections=sibling_pca,
+        parent_principal_component_eigenvalues=sibling_eig,
     )
 
     nodes: list[NodeInflation] = []
@@ -301,7 +288,6 @@ def run_case(case_name: str) -> CaseInflation:
         spec_k = sibling_dims.get(parent, 0) if sibling_dims else 0
         pca_proj = sibling_pca.get(parent) if sibling_pca else None
         pca_eig = sibling_eig.get(parent) if sibling_eig else None
-        child_pca = sibling_child_pca.get(parent) if sibling_child_pca else None
 
         if spec_k <= 0 or pca_proj is None:
             continue
@@ -327,7 +313,7 @@ def run_case(case_name: str) -> CaseInflation:
             spectral_k=spec_k,
             pca_projection=pca_proj,
             pca_eigenvalues=pca_eig,
-                n_permutations=N_PERMUTATIONS,
+            n_permutations=N_PERMUTATIONS,
         )
 
         finite_perms = t_perms[np.isfinite(t_perms)]

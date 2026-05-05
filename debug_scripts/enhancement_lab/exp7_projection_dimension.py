@@ -46,7 +46,7 @@ import kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_p
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     child_parent_projected_wald as _edge_wald_module,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing import (
@@ -202,37 +202,44 @@ def _decompose_with_spectral_sibling(case_name: str) -> dict:
 
     tree, data_df, y_t, tc = build_tree_and_data(case_name)
 
-    # Step 1: Run edge gate to get spectral dims
-    from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
-        resolve_minimum_projection_dimension_backend,
-    )
     from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
-        annotate_child_parent_divergence,
+        annotate_child_parent_divergence_with_context,
+    )
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+        collect_parent_principal_component_inputs_for_sibling_tests,
+    )
+    from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+        derive_sibling_projection_dimensions_from_child_edge_comparisons,
     )
 
-    min_proj = resolve_minimum_projection_dimension_backend(
-        config.PROJECTION_MINIMUM_DIMENSION,
-        leaf_data=data_df,
-    )
-
-    edge_annotated_df = annotate_child_parent_divergence(
+    # Step 1: Run edge gate to get the typed spectral context
+    edge_annotated_df, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
         tree.annotations_df.copy(),
         significance_level_alpha=config.EDGE_ALPHA,
         leaf_data=data_df,
-        minimum_projection_dimension=min_proj,
     )
 
-    # Extract spectral dims computed by Gate 2
-    spectral_dims = edge_annotated_df.attrs.get("_spectral_dims", None)
+    spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(
+        tree,
+        spectral_context=spectral_context,
+    )
+    pca_projections, pca_eigenvalues = collect_parent_principal_component_inputs_for_sibling_tests(
+        spectral_dims,
+        spectral_context=spectral_context,
+    )
 
     # Step 2: Run sibling gate with spectral dims injected
     annotated_df = annotate_sibling_divergence(
         tree,
         edge_annotated_df,
         significance_level_alpha=config.SIBLING_ALPHA,
-        minimum_projection_dimension=min_proj,
-        spectral_dims=spectral_dims,
+        sibling_projection_dimensions_from_edge_comparisons=spectral_dims,
+        parent_principal_component_projections=pca_projections,
+        parent_principal_component_eigenvalues=pca_eigenvalues,
+        edge_projection_dimensions_by_node=(
+            spectral_context.spectral_projection_dimensions_by_node
+        ),
     )
 
     # Step 3: Build decomposer from the fully-annotated df (skip re-annotation)

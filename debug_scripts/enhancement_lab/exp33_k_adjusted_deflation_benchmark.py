@@ -50,15 +50,11 @@ from debug_scripts.enhancement_lab.lab_helpers import (
     resolve_enhancement_lab_artifact_path,
 )
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction import (
-    compute_adjusted_sibling_tests,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.adjusted_sibling_tests import compute_adjusted_sibling_tests
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     CalibrationModel,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
-    SiblingPairRecord,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import SiblingPairRecord
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 _ROOT = Path(__file__).resolve().parent

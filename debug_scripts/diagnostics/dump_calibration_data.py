@@ -30,13 +30,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
-from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
-    collect_parent_principal_component_inputs_for_sibling_tests,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
-    derive_sibling_projection_dimensions_from_child_edge_comparisons,
-)
+from debug_scripts._shared.sibling_gate_inputs import derive_sibling_gate_debug_inputs  # noqa: E402
 
 DEFAULT_OUTPUT = REPO_ROOT / "debug_scripts" / "diagnostics" / "results" / "calibration_dump.txt"
 DEFAULT_CASES = ["gauss_moderate_3c", "binary_perfect_8c", "gauss_null_small"]
@@ -58,15 +52,11 @@ def main() -> None:
             tree, data_df, _, test_case = build_tree_and_data(case_name)
             decomp = run_decomposition(tree, data_df)
             annotations_df = tree.annotations_df
-            spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
-            pca_projections, pca_eigenvalues = collect_parent_principal_component_inputs_for_sibling_tests(
-                annotations_df,
-                spectral_dims,
-            )
-            child_pca_projections = derive_sibling_child_pca_projections(
+            gate_inputs = derive_sibling_gate_debug_inputs(
                 tree,
                 annotations_df,
-                spectral_dims,
+                data_df,
+                alpha_local=config.SIBLING_ALPHA,
             )
             mean_branch_length = (
                 compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
@@ -75,10 +65,16 @@ def main() -> None:
                 tree,
                 annotations_df,
                 mean_branch_length,
-                spectral_dims=spectral_dims,
-                pca_projections=pca_projections,
-                pca_eigenvalues=pca_eigenvalues,
-                    )
+                sibling_projection_dimensions_from_edge_comparisons=(
+                    gate_inputs.projection_dimensions
+                ),
+                parent_principal_component_projections=(
+                    gate_inputs.parent_principal_component_projections
+                ),
+                parent_principal_component_eigenvalues=(
+                    gate_inputs.parent_principal_component_eigenvalues
+                ),
+            )
 
             valid = [
                 (

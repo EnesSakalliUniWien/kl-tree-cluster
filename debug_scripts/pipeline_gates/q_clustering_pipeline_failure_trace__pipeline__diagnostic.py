@@ -26,7 +26,7 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 
@@ -92,7 +92,7 @@ def debug_clustering():
         # Manually run the annotation
         annotations_df = annotate_child_parent_divergence(
             tree=tree,
-            nodes_statistics_dataframe=annotations_df,
+            annotations_df=annotations_df,
             significance_level_alpha=alpha_local,
         )
 
@@ -190,7 +190,7 @@ def debug_clustering():
         sibling_alpha = 0.05
         annotations_df = annotate_sibling_divergence(
             tree=tree,
-            nodes_statistics_dataframe=annotations_df,
+            annotations_df=annotations_df,
             significance_level_alpha=sibling_alpha,
         )
 

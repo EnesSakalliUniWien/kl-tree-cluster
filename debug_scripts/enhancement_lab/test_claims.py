@@ -39,13 +39,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (  # noqa: E402
     collect_sibling_pair_records,
 )
-from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections  # noqa: E402
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (  # noqa: E402
-    collect_parent_principal_component_inputs_for_sibling_tests,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (  # noqa: E402
-    derive_sibling_projection_dimensions_from_child_edge_comparisons,
-)
+from debug_scripts._shared.sibling_gate_inputs import derive_sibling_gate_debug_inputs  # noqa: E402
 
 # Cases: mix of null (K=1) and signal cases
 TEST_CASES = [
@@ -66,17 +60,24 @@ def collect_pairs_for_case(case_name: str) -> list[dict]:
     annotations_df = tree.annotations_df
 
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
-    pca_proj, pca_eig = collect_parent_principal_component_inputs_for_sibling_tests(annotations_df, spectral_dims)
-    child_pca = derive_sibling_child_pca_projections(tree, annotations_df, spectral_dims)
+    gate_inputs = derive_sibling_gate_debug_inputs(
+        tree,
+        annotations_df,
+        data_df,
+        alpha_local=config.SIBLING_ALPHA,
+    )
 
     records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
         mean_bl,
-        spectral_dims=spectral_dims,
-        pca_projections=pca_proj,
-        pca_eigenvalues=pca_eig,
+        sibling_projection_dimensions_from_edge_comparisons=gate_inputs.projection_dimensions,
+        parent_principal_component_projections=(
+            gate_inputs.parent_principal_component_projections
+        ),
+        parent_principal_component_eigenvalues=(
+            gate_inputs.parent_principal_component_eigenvalues
+        ),
     )
 
     rows = []

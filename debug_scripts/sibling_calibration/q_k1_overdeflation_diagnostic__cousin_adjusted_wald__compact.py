@@ -24,12 +24,11 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation import (
-    _collect_all_pairs,
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+    collect_sibling_pair_records,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model as _fit_inflation_model,
-    predict_inflation_factor,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -64,7 +63,7 @@ for case in cases:
     audit = sdf.attrs.get("sibling_divergence_audit", {})
     diag = audit.get("diagnostics", {})
     mean_bl = compute_mean_branch_length(tree)
-    records, _non_binary = _collect_all_pairs(tree, sdf, mean_bl)
+    records, _non_binary = collect_sibling_pair_records(tree, sdf, mean_bl)
     model = _fit_inflation_model(records)
 
     n_null = sum(1 for r in records if r.is_null_like)
@@ -77,10 +76,6 @@ for case in cases:
     print(
         f"  Calib: method={model.method}, n={model.n_calibration}, median_c={model.global_inflation_factor:.3f}"
     )
-    if model.beta is not None:
-        print(
-            f"  Regression: β₀={model.beta[0]:.3f}, β₁={model.beta[1]:.3f}, β₂={model.beta[2]:.3f}, R²={diag.get('r_squared', 0):.3f}"
-        )
 
     # Show top-3 nodes by n_parent (root and its children)
     focal_recs = sorted(
@@ -89,23 +84,18 @@ for case in cases:
     if focal_recs:
         print("  --- Top focal nodes ---")
         for rec in focal_recs[:5]:
-            c_hat = predict_inflation_factor(model, rec.bl_sum, rec.n_parent)
+            c_hat = model.global_inflation_factor
             t_adj = rec.stat / c_hat
-            p_raw = float(chi2.sf(rec.stat, df=rec.df))
-            p_adj = float(chi2.sf(t_adj, df=rec.df))
+            p_raw = float(chi2.sf(rec.stat, df=rec.degrees_of_freedom))
+            p_adj = float(chi2.sf(t_adj, df=rec.degrees_of_freedom))
             # Simulated fixes
-            c_cap = min(c_hat, model.global_inflation_factor * 3) if model.beta is not None else c_hat
+            c_cap = c_hat
             c_cap = max(c_cap, 1.0)
-            c_noB2 = 1.0
-            if model.beta is not None and rec.bl_sum > 0:
-                c_noB2 = max(float(np.exp(model.beta[0] + model.beta[1] * np.log(rec.bl_sum))), 1.0)
             t_cap = rec.stat / c_cap
-            t_noB2 = rec.stat / c_noB2
-            p_cap = float(chi2.sf(t_cap, df=rec.df))
-            p_noB2 = float(chi2.sf(t_noB2, df=rec.df))
+            p_cap = float(chi2.sf(t_cap, df=rec.degrees_of_freedom))
             print(
-                f"    {rec.parent}: n={rec.n_parent}, BL={rec.bl_sum:.4f}, T={rec.stat:.1f}, k={rec.df}"
+                f"    {rec.parent}: n={rec.n_parent}, BL={rec.branch_length_sum:.4f}, T={rec.stat:.1f}, k={rec.degrees_of_freedom}"
             )
             print(
-                f"      ĉ_reg={c_hat:.2f} → p={p_adj:.4f} | ĉ_cap={c_cap:.2f} → p={p_cap:.4f} | ĉ_noB2={c_noB2:.2f} → p={p_noB2:.4f} | p_raw={p_raw:.4f}"
+                f"      ĉ_global={c_hat:.2f} → p={p_adj:.4f} | ĉ_cap={c_cap:.2f} → p={p_cap:.4f} | p_raw={p_raw:.4f}"
             )

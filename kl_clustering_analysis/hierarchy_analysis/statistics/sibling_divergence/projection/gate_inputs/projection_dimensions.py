@@ -12,9 +12,8 @@ logger = logging.getLogger(__name__)
 
 def derive_sibling_projection_dimensions_from_child_edge_comparisons(
     tree,
-    annotated_df=None,
     *,
-    spectral_context: SpectralContext | None = None,
+    spectral_context: SpectralContext,
 ) -> dict[str, int] | None:
     """Derive Gate 3 projection dimensions from child Gate 2 edge comparisons.
 
@@ -24,14 +23,6 @@ def derive_sibling_projection_dimensions_from_child_edge_comparisons(
     edge-derived dimension, the parent is omitted so Gate 3 can fall back
     downstream.
     """
-    if spectral_context is None and annotated_df is not None:
-        spectral_context = SpectralContext(
-            spectral_projection_dimensions_by_node=annotated_df.attrs.get("_spectral_dims")
-        )
-    if spectral_context is None:
-        logger.debug("Gate 3: no spectral context found for edge-derived dimensions")
-        return None
-
     spectral_projection_dimensions_by_node = (
         spectral_context.spectral_projection_dimensions_by_node
     )

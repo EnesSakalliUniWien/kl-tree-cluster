@@ -164,15 +164,15 @@ print("\n" + "=" * 70)
 print("STAGE 4: Gate 2 — child-parent divergence (edge test)")
 print("=" * 70)
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
-    annotate_child_parent_divergence,
+    annotate_child_parent_divergence_with_context,
 )
 
 ann = tree.annotations_df.copy()
-edge_df = annotate_child_parent_divergence(
+edge_df, spectral_context = annotate_child_parent_divergence_with_context(
     tree, ann, significance_level_alpha=0.001, leaf_data=data
 )
 
-spectral_dims = edge_df.attrs.get("_spectral_dims", {})
+spectral_dims = spectral_context.spectral_projection_dimensions_by_node or {}
 # Summarize spectral dims
 k_vals = list(spectral_dims.values())
 k_nonzero = [v for v in k_vals if v > 0]
@@ -221,7 +221,10 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pro
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
-sib_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, edge_df)
+sib_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(
+    tree,
+    spectral_context=spectral_context,
+)
 print("Sibling spectral dims (geometric mean of children k):")
 for parent, k in sorted((sib_dims or {}).items(), key=str):
     children = list(tree.successors(parent))
@@ -248,11 +251,14 @@ print("\n" + "=" * 70)
 print("STAGE 6: Gate 3 — sibling divergence (adjusted Wald)")
 print("=" * 70)
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 
-sib_pca_proj, sib_pca_eig = collect_parent_principal_component_inputs_for_sibling_tests(edge_df, sib_dims)
+sib_pca_proj, sib_pca_eig = collect_parent_principal_component_inputs_for_sibling_tests(
+    sib_dims,
+    spectral_context=spectral_context,
+)
 final_df = annotate_sibling_divergence(
     tree,
     edge_df.copy(),
@@ -260,6 +266,7 @@ final_df = annotate_sibling_divergence(
     sibling_projection_dimensions_from_edge_comparisons=sib_dims,
     parent_principal_component_projections=sib_pca_proj,
     parent_principal_component_eigenvalues=sib_pca_eig,
+    edge_projection_dimensions_by_node=spectral_dims,
 )
 
 print("\nSibling test results:")

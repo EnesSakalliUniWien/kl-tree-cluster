@@ -62,9 +62,7 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_pro
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral import (
     compute_spectral_decomposition,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance import (
-    standardize_proportion_difference,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.pooled_variance.standardized_difference import standardize_proportion_difference
 
 
 def _count_leaves(tree: nx.DiGraph, node: str) -> int:

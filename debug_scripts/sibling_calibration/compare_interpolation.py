@@ -27,9 +27,6 @@ from scipy.stats import chi2
 
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection_backend import (
-    resolve_minimum_projection_dimension_backend,
-)
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
@@ -47,22 +44,12 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inf
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.adjusted_sibling_tests import (
     count_null_focal_pairs,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation import (
-    interpolate_sibling_null_priors,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.sibling_null_prior_interpolation.sibling_null_prior_interpolation import interpolate_sibling_null_priors
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types import (
-    SiblingPairRecord,
-)
-from debug_scripts._shared.sibling_child_pca import derive_sibling_child_pca_projections
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
-    collect_parent_principal_component_inputs_for_sibling_tests,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
-    derive_sibling_projection_dimensions_from_child_edge_comparisons,
-)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import SiblingPairRecord
+from debug_scripts._shared.sibling_gate_inputs import derive_sibling_gate_debug_inputs
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 CASE = {
@@ -90,21 +77,17 @@ def _build_tree(data_bin):
 
 def _collect_records(tree, data_bin):
     """Run Gate 2 + collect sibling pairs (production args)."""
-    min_proj_dim = resolve_minimum_projection_dimension_backend(
-        config.PROJECTION_MINIMUM_DIMENSION,
-        leaf_data=data_bin,
-    )
     annotations_df = annotate_child_parent_divergence(
         tree,
         tree.annotations_df,
         significance_level_alpha=ALPHA,
         leaf_data=data_bin,
-        minimum_projection_dimension=min_proj_dim,
     )
-    spectral_dims = derive_sibling_projection_dimensions_from_child_edge_comparisons(tree, annotations_df)
-    pca_projections, pca_eigenvalues = collect_parent_principal_component_inputs_for_sibling_tests(annotations_df, spectral_dims)
-    child_pca_projections = derive_sibling_child_pca_projections(
-        tree, annotations_df, spectral_dims
+    gate_inputs = derive_sibling_gate_debug_inputs(
+        tree,
+        annotations_df,
+        data_bin,
+        alpha_local=ALPHA,
     )
     mean_bl = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
@@ -112,9 +95,13 @@ def _collect_records(tree, data_bin):
         tree,
         annotations_df,
         mean_bl,
-        sibling_projection_dimensions_from_edge_comparisons=spectral_dims,
-        parent_principal_component_projections=pca_projections,
-        parent_principal_component_eigenvalues=pca_eigenvalues,
+        sibling_projection_dimensions_from_edge_comparisons=gate_inputs.projection_dimensions,
+        parent_principal_component_projections=(
+            gate_inputs.parent_principal_component_projections
+        ),
+        parent_principal_component_eigenvalues=(
+            gate_inputs.parent_principal_component_eigenvalues
+        ),
     )
     return records, annotations_df
 
