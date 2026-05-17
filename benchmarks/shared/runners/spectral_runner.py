@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
-from sklearn.cluster import SpectralClustering
-
 from benchmarks.shared.types.method_run_result import MethodRunResult
 from benchmarks.shared.util.core import _normalize_labels
-from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
+from benchmarks.shared.util.decomposition import _ok_result_from_labels
+from sklearn.cluster import SpectralClustering
 
 
 def _resolve_n_clusters(n_samples: int, params: dict[str, object]) -> int:
@@ -31,13 +29,7 @@ def _run_spectral_method(
 
     if n_samples <= 1:
         labels = np.zeros(n_samples, dtype=int)
-        return MethodRunResult(
-            labels=labels,
-            found_clusters=1 if n_samples else 0,
-            report_df=_create_report_dataframe_from_labels(labels, pd.Index(range(n_samples))),
-            status="ok",
-            skip_reason=None,
-        )
+        return _ok_result_from_labels(labels, range(n_samples))
 
     try:
         n_clusters = _resolve_n_clusters(n_samples, params)
@@ -61,14 +53,7 @@ def _run_spectral_method(
 
         model = SpectralClustering(**spectral_kwargs)
         labels = _normalize_labels(model.fit_predict(X))
-        report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
-        return MethodRunResult(
-            labels=labels,
-            found_clusters=int(len({x for x in labels if x >= 0})),
-            report_df=report_df,
-            status="ok",
-            skip_reason=None,
-        )
+        return _ok_result_from_labels(labels, range(n_samples))
     except Exception as exc:
         return MethodRunResult(
             labels=None,

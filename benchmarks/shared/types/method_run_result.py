@@ -1,4 +1,4 @@
-"""MethodRunResult dataclass for benchmarking (moved to types package)."""
+"""Benchmark runner result contract."""
 
 from __future__ import annotations
 

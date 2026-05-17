@@ -1,44 +1,28 @@
-"""OPTICS runner (moved to benchmarking.runners).
-
-Same implementation as before; helpers are imported lazily.
-"""
+"""OPTICS runner for precomputed distance matrices."""
 
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
-from sklearn.cluster import OPTICS
-
 from benchmarks.shared.types.method_run_result import MethodRunResult
+from benchmarks.shared.util.core import _normalize_labels
+from benchmarks.shared.util.decomposition import _ok_result_from_labels
+from sklearn.cluster import OPTICS
 
 
 def _run_optics_method(
     distance_matrix: np.ndarray,
     params: dict[str, object],
     seed: int | None = None,
-) -> "MethodRunResult":
-    """Run OPTICS on a precomputed distance matrix and return a
-    `MethodRunResult` (imported lazily to avoid circular imports).
-    """
-    from benchmarks.shared.util.core import _normalize_labels
-    from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
-
+) -> MethodRunResult:
+    """Run OPTICS on a precomputed distance matrix."""
     n_samples = int(distance_matrix.shape[0])
     if n_samples <= 1:
         labels = np.zeros(n_samples, dtype=int)
-        return MethodRunResult(
-            labels=labels,
-            found_clusters=1 if n_samples else 0,
-            report_df=_create_report_dataframe_from_labels(labels, pd.Index(range(n_samples))),
-            status="ok",
-            skip_reason=None,
-        )
+        return _ok_result_from_labels(labels, range(n_samples))
 
-    # Contract parity with other runners: normalize a deterministic default seed.
-    # OPTICS itself is deterministic for fixed distance inputs and does not accept
-    # a random_state parameter.
-    _random_state = 42 if seed is None else int(seed)
-    _ = _random_state
+    # Kept for the shared runner signature; OPTICS is deterministic for fixed
+    # precomputed distances and does not accept a random_state parameter.
+    del seed
 
     try:
         min_samples = int(params.get("min_samples", 5))
@@ -51,14 +35,7 @@ def _run_optics_method(
             min_cluster_size=min_cluster_size,
         )
         labels = _normalize_labels(model.fit_predict(distance_matrix))
-        report_df = _create_report_dataframe_from_labels(labels, pd.Index(range(n_samples)))
-        return MethodRunResult(
-            labels=labels,
-            found_clusters=int(len({x for x in labels if x >= 0})),
-            report_df=report_df,
-            status="ok",
-            skip_reason=None,
-        )
+        return _ok_result_from_labels(labels, range(n_samples))
     except Exception as exc:
         return MethodRunResult(
             labels=None,

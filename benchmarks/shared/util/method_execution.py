@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
-from scipy.spatial.distance import pdist
-
+import pandas as pd
 from benchmarks.shared.metrics import _calculate_ari_nmi_purity_metrics
 from benchmarks.shared.results import (
     BenchmarkResultRow,
@@ -16,10 +15,38 @@ from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.types import MethodSpec
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 from kl_clustering_analysis import config
+from scipy.spatial.distance import pdist
 
 
 def _slugify(value: str) -> str:
     return "".join(ch if ch.isalnum() or ch in "-_." else "_" for ch in value)
+
+
+def _report_for_metric_evaluation(
+    report_df: pd.DataFrame | None,
+    labels: np.ndarray,
+    sample_index: pd.Index,
+) -> pd.DataFrame:
+    """Return a report table aligned to the sample index used for metrics."""
+    def fallback_report() -> pd.DataFrame:
+        return _create_report_dataframe_from_labels(labels, sample_index)
+
+    if report_df is None or "cluster_id" not in report_df.columns:
+        return fallback_report()
+    if len(report_df.index) != len(sample_index):
+        return fallback_report()
+    if report_df.index.has_duplicates or sample_index.has_duplicates:
+        return fallback_report()
+    if report_df.index.equals(sample_index):
+        return report_df
+
+    missing = sample_index.difference(report_df.index)
+    extras = report_df.index.difference(sample_index)
+    if missing.empty and extras.empty:
+        aligned_report = report_df.loc[sample_index].copy()
+        aligned_report.index.name = "sample_id"
+        return aligned_report
+    return fallback_report()
 
 
 def run_single_method_once(
@@ -86,22 +113,7 @@ def run_single_method_once(
 
     if result.status == "ok" and result.labels is not None:
         labels = result.labels
-        report_df = result.report_df
-        if report_df is None or "cluster_id" not in report_df.columns:
-            report_df = _create_report_dataframe_from_labels(labels, data_t.index)
-        elif len(report_df.index) != len(data_t.index):
-            report_df = _create_report_dataframe_from_labels(labels, data_t.index)
-        elif report_df.index.has_duplicates or data_t.index.has_duplicates:
-            report_df = _create_report_dataframe_from_labels(labels, data_t.index)
-        elif not report_df.index.equals(data_t.index):
-            # Reuse runner-provided cluster columns only when row labels are alignable.
-            missing = data_t.index.difference(report_df.index)
-            extras = report_df.index.difference(data_t.index)
-            if missing.empty and extras.empty:
-                report_df = report_df.loc[data_t.index].copy()
-                report_df.index.name = "sample_id"
-            else:
-                report_df = _create_report_dataframe_from_labels(labels, data_t.index)
+        report_df = _report_for_metric_evaluation(result.report_df, labels, data_t.index)
         found_clusters = result.found_clusters
         labels_len = len(labels)
         metrics = _calculate_ari_nmi_purity_metrics(report_df, data_t.index, y_t, meta)
