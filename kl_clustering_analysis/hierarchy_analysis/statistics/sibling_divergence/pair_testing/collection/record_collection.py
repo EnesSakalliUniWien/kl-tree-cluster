@@ -39,10 +39,10 @@ def collect_sibling_pair_records(
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
     *,
-    sibling_projection_dimensions_from_edge_comparisons: dict[str, int] | None = None,
-    parent_principal_component_projections: dict[str, np.ndarray] | None = None,
-    parent_principal_component_eigenvalues: dict[str, np.ndarray] | None = None,
-) -> tuple[list[SiblingPairRecord], list[str]]:
+    sibling_projection_dimensions_from_edge_comparisons: dict[object, int] | None = None,
+    parent_principal_component_projections: dict[object, np.ndarray] | None = None,
+    parent_principal_component_eigenvalues: dict[object, np.ndarray] | None = None,
+) -> tuple[list[SiblingPairRecord], list[object]]:
     """Collect raw sibling-test records for every binary-child parent node."""
     validate_child_parent_edge_annotation_requirements(annotations_df)
     child_parent_edge_significance_by_node = extract_child_parent_edge_significance_by_node(
@@ -55,7 +55,7 @@ def collect_sibling_pair_records(
     ) = extract_child_parent_edge_testing_status_by_node(annotations_df)
 
     records: list[SiblingPairRecord] = []
-    non_binary_nodes: list[str] = []
+    non_binary_nodes: list[object] = []
 
     for parent_node_id in tree.nodes:
         sibling_children = identify_binary_sibling_children(tree, parent_node_id)

@@ -24,21 +24,22 @@ def validate_child_parent_edge_annotation_requirements(
 
 def extract_child_parent_edge_significance_by_node(
     annotations_dataframe: pd.DataFrame,
-) -> dict[str, bool]:
+) -> dict[object, bool]:
     """Return child-parent edge significance decisions keyed by node."""
     return extract_bool_column_dict(
         annotations_dataframe,
         "Child_Parent_Divergence_Significant",
+        coerce_index_to_str=False,
     )
 
 
 def extract_child_parent_edge_pvalues_by_node(
     annotations_dataframe: pd.DataFrame,
-) -> dict[str, float]:
+) -> dict[object, float]:
     """Return BH-corrected child-parent edge p-values keyed by node."""
     edge_p_value_series = annotations_dataframe["Child_Parent_Divergence_P_Value_BH"].astype(float)
     return {
-        str(node_id): (
+        node_id: (
             float(edge_p_value_series[node_id])
             if np.isfinite(edge_p_value_series[node_id])
             else 1.0
@@ -49,19 +50,21 @@ def extract_child_parent_edge_pvalues_by_node(
 
 def extract_child_parent_edge_testing_status_by_node(
     annotations_dataframe: pd.DataFrame,
-) -> tuple[dict[str, bool] | None, dict[str, bool] | None]:
+) -> tuple[dict[object, bool] | None, dict[object, bool] | None]:
     """Return tested and ancestor-blocked child-parent edge status maps."""
-    child_parent_edge_tested_by_node: dict[str, bool] | None = None
-    child_parent_edge_ancestor_blocked_by_node: dict[str, bool] | None = None
+    child_parent_edge_tested_by_node: dict[object, bool] | None = None
+    child_parent_edge_ancestor_blocked_by_node: dict[object, bool] | None = None
     if "Child_Parent_Divergence_Tested" in annotations_dataframe.columns:
         child_parent_edge_tested_by_node = extract_bool_column_dict(
             annotations_dataframe,
             "Child_Parent_Divergence_Tested",
+            coerce_index_to_str=False,
         )
     if "Child_Parent_Divergence_Ancestor_Blocked" in annotations_dataframe.columns:
         child_parent_edge_ancestor_blocked_by_node = extract_bool_column_dict(
             annotations_dataframe,
             "Child_Parent_Divergence_Ancestor_Blocked",
+            coerce_index_to_str=False,
         )
     return (
         child_parent_edge_tested_by_node,
@@ -70,11 +73,11 @@ def extract_child_parent_edge_testing_status_by_node(
 
 
 def determine_whether_sibling_pair_is_gate2_blocked(
-    left_child_id: str,
-    right_child_id: str,
+    left_child_id: object,
+    right_child_id: object,
     *,
-    child_parent_edge_tested_by_node: dict[str, bool] | None,
-    child_parent_edge_ancestor_blocked_by_node: dict[str, bool] | None,
+    child_parent_edge_tested_by_node: dict[object, bool] | None,
+    child_parent_edge_ancestor_blocked_by_node: dict[object, bool] | None,
 ) -> bool:
     """Return whether a sibling pair is blocked by child-parent edge status."""
     left_edge_tested = (
@@ -108,10 +111,10 @@ def determine_whether_sibling_pair_is_gate2_blocked(
 
 
 def determine_whether_sibling_pair_is_null_like(
-    left_child_id: str,
-    right_child_id: str,
+    left_child_id: object,
+    right_child_id: object,
     *,
-    child_parent_edge_significance_by_node: dict[str, bool],
+    child_parent_edge_significance_by_node: dict[object, bool],
 ) -> bool:
     """Return whether the sibling pair is null-like under edge evidence."""
     return not (
@@ -121,10 +124,10 @@ def determine_whether_sibling_pair_is_null_like(
 
 
 def estimate_sibling_null_prior_from_child_parent_edges(
-    left_child_id: str,
-    right_child_id: str,
+    left_child_id: object,
+    right_child_id: object,
     *,
-    child_parent_edge_pvalues_by_node: dict[str, float],
+    child_parent_edge_pvalues_by_node: dict[object, float],
 ) -> float:
     """Estimate the sibling null prior from child-parent edge p-values."""
     return min(

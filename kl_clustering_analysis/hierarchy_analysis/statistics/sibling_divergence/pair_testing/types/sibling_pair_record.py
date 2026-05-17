@@ -9,9 +9,9 @@ from dataclasses import dataclass
 class SiblingPairRecord:
     """Raw per-parent sibling-test record used by calibration pipelines."""
 
-    parent: str
-    left: str
-    right: str
+    parent: object
+    left: object
+    right: object
     stat: float
     degrees_of_freedom: float
     p_value: float

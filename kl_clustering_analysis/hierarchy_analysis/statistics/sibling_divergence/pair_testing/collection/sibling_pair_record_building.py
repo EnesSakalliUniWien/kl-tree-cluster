@@ -9,9 +9,9 @@ from ..types.sibling_pair_record import SiblingPairRecord
 
 def build_sibling_pair_record(
     *,
-    parent_node_id: str,
-    left_child_id: str,
-    right_child_id: str,
+    parent_node_id: object,
+    left_child_id: object,
+    right_child_id: object,
     test_statistic: float,
     degrees_of_freedom: float,
     p_value: float,

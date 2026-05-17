@@ -16,7 +16,7 @@ def run_sibling_divergence_wald_test_with_diagnostics(
     branch_length_left: float | None,
     branch_length_right: float | None,
     mean_branch_length: float | None,
-    parent_node_id: str,
+    parent_node_id: object,
     projection_dimension_from_edge_comparisons: int | None,
     parent_principal_component_projection: np.ndarray | None,
     parent_principal_component_eigenvalues: np.ndarray | None,

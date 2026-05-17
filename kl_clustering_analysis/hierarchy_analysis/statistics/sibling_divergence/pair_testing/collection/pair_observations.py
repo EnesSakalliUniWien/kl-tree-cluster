@@ -13,8 +13,8 @@ from kl_clustering_analysis.core_utils.data_utils import (
 
 def identify_binary_sibling_children(
     tree: nx.DiGraph,
-    parent_node_id: str,
-) -> tuple[str, str] | None:
+    parent_node_id: object,
+) -> tuple[object, object] | None:
     """Return the sibling-child pair when a parent node is binary."""
     children = list(tree.successors(parent_node_id))
     if len(children) != 2:
@@ -24,9 +24,9 @@ def identify_binary_sibling_children(
 
 def extract_sibling_pair_observations(
     tree: nx.DiGraph,
-    parent_node_id: str,
-    left_child_id: str,
-    right_child_id: str,
+    parent_node_id: object,
+    left_child_id: object,
+    right_child_id: object,
 ) -> tuple[np.ndarray, np.ndarray, int, int, float | None, float | None]:
     """Extract sibling distributions, sample sizes, and branch lengths."""
     left_branch = tree.edges[parent_node_id, left_child_id].get("branch_length")

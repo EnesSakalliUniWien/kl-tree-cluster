@@ -6,11 +6,11 @@ import numpy as np
 
 
 def resolve_parent_projection_inputs_for_sibling_test(
-    parent_node_id: str,
+    parent_node_id: object,
     *,
-    sibling_projection_dimensions_from_edge_comparisons: dict[str, int] | None,
-    parent_principal_component_projections: dict[str, np.ndarray] | None,
-    parent_principal_component_eigenvalues: dict[str, np.ndarray] | None,
+    sibling_projection_dimensions_from_edge_comparisons: dict[object, int] | None,
+    parent_principal_component_projections: dict[object, np.ndarray] | None,
+    parent_principal_component_eigenvalues: dict[object, np.ndarray] | None,
 ) -> tuple[int | None, np.ndarray | None, np.ndarray | None]:
     """Resolve projection inputs for one sibling test."""
     projection_dimension_from_edge_comparisons = (
@@ -36,4 +36,3 @@ def resolve_parent_projection_inputs_for_sibling_test(
 
 
 __all__ = ["resolve_parent_projection_inputs_for_sibling_test"]
-
