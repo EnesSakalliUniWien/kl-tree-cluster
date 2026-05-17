@@ -53,13 +53,35 @@ def _resolve_effective_dimension(
     projection_dimension: int,
 ) -> int:
     """Resolve the dimension that can be exposed downstream."""
-    if not eig.use_dual:
-        return int(projection_dimension)
-
-    n_samples = (
-        eig.standardized_data_active.shape[0] if eig.standardized_data_active is not None else 0
+    available_dimensions = min(
+        len(eig.eigenvalues),
+        eig.active_feature_count,
+        _positive_eigenvalue_count(eig.eigenvalues),
     )
-    return min(int(projection_dimension), n_samples)
+
+    if eig.use_dual:
+        n_samples = (
+            eig.standardized_data_active.shape[0]
+            if eig.standardized_data_active is not None
+            else 0
+        )
+        available_dimensions = min(available_dimensions, max(n_samples - 1, 0))
+
+    return min(int(projection_dimension), available_dimensions)
+
+
+def _positive_eigenvalue_count(eigenvalues: np.ndarray) -> int:
+    """Count numerically positive eigenvalues that identify PCA directions."""
+    eigenvalues = np.asarray(eigenvalues, dtype=np.float64)
+    if eigenvalues.size == 0:
+        return 0
+
+    tolerance = (
+        np.finfo(np.float64).eps
+        * max(eigenvalues.shape[0], 1)
+        * max(float(np.max(eigenvalues)), 1.0)
+    )
+    return int(np.count_nonzero(eigenvalues > tolerance))
 
 
 def _recover_dual_feature_eigenvectors(
@@ -75,11 +97,12 @@ def _recover_dual_feature_eigenvectors(
 
     dual_sample_vectors = dual_sample_eigenvectors[:, :effective_dimension]
     top_eigenvalues_floored = np.maximum(eig.eigenvalues[:effective_dimension], 1e-12)
-    recovery_scale = np.sqrt(top_eigenvalues_floored) * np.sqrt(eig.active_feature_count)
+    recovery_scale = np.sqrt(top_eigenvalues_floored) * np.sqrt(
+        standardized_data_active.shape[0]
+    )
     recovered_feature_vectors = standardized_data_active.T @ dual_sample_vectors / recovery_scale
 
     recovered_norms = np.linalg.norm(recovered_feature_vectors, axis=0)
-    recovered_norms[recovered_norms == 0] = 1.0
     return recovered_feature_vectors / recovered_norms
 
 

@@ -43,9 +43,17 @@ class EigenResult:
             if self.eigenvectors_active is not None:
                 raise ValueError("Dual eigendecompositions cannot carry primal eigenvectors.")
 
+            if self.dual_sample_eigenvectors is None:
+                if self.standardized_data_active is not None:
+                    raise ValueError(
+                        "Spectrum-only dual eigendecompositions cannot carry "
+                        "projection recovery data."
+                    )
+                return
+
             if self.standardized_data_active is None:
                 raise ValueError(
-                    "Dual eigendecompositions require standardized active data."
+                    "Dual projection recovery requires standardized active data."
                 )
 
             standardized_data_active = np.asarray(self.standardized_data_active)
@@ -58,20 +66,17 @@ class EigenResult:
                     "Dual standardized data must have one column per active feature."
                 )
 
-            if self.dual_sample_eigenvectors is not None:
-                dual_sample_eigenvectors = np.asarray(self.dual_sample_eigenvectors)
-                if dual_sample_eigenvectors.ndim != 2:
-                    raise ValueError(
-                        "EigenResult.dual_sample_eigenvectors must be a 2D array."
-                    )
-                if dual_sample_eigenvectors.shape[0] != standardized_data_active.shape[0]:
-                    raise ValueError(
-                        "Dual sample eigenvectors must align with the standardized sample count."
-                    )
-                if dual_sample_eigenvectors.shape[1] != eigenvalues.shape[0]:
-                    raise ValueError(
-                        "Dual sample eigenvectors must align with the eigenvalue count."
-                    )
+            dual_sample_eigenvectors = np.asarray(self.dual_sample_eigenvectors)
+            if dual_sample_eigenvectors.ndim != 2:
+                raise ValueError("EigenResult.dual_sample_eigenvectors must be a 2D array.")
+            if dual_sample_eigenvectors.shape[0] != standardized_data_active.shape[0]:
+                raise ValueError(
+                    "Dual sample eigenvectors must align with the standardized sample count."
+                )
+            if dual_sample_eigenvectors.shape[1] != eigenvalues.shape[0]:
+                raise ValueError(
+                    "Dual sample eigenvectors must align with the eigenvalue count."
+                )
             return
 
         if self.dual_sample_eigenvectors is not None or self.standardized_data_active is not None:
