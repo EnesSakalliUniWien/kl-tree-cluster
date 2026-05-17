@@ -22,6 +22,7 @@ from typing import Tuple
 import numpy as np
 from scipy.stats import chi2
 
+
 def compute_projected_pvalue(
     projected_vector: np.ndarray,
     degrees_of_freedom: int | float,

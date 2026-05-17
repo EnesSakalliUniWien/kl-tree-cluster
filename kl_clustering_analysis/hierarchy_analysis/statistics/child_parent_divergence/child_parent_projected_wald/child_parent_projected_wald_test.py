@@ -33,7 +33,7 @@ def run_child_parent_projected_wald_test(
 
     standardized_z_scores = standardized_z_scores.astype(np.float64, copy=False)
 
-    test_statistic, projection_dim, _effective_degrees_of_freedom, p_value = (
+    test_statistic, _projection_dim, effective_degrees_of_freedom, p_value = (
         run_projected_wald_kernel(
             standardized_z_scores,
             spectral_k=spectral_k,
@@ -43,7 +43,7 @@ def run_child_parent_projected_wald_test(
     )
 
     is_invalid = np.isnan(test_statistic)
-    return test_statistic, float(projection_dim), p_value, is_invalid
+    return test_statistic, float(effective_degrees_of_freedom), p_value, is_invalid
 
 
 __all__ = [

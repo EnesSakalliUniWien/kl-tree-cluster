@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from .projected_wald_reference_distribution import compute_projected_pvalue
 from .projected_wald_projection_basis import build_projection_basis_with_padding
+from .projected_wald_reference_distribution import compute_projected_pvalue
 
 
 def run_projected_wald_kernel(

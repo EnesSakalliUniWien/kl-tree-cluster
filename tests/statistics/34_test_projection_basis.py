@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis import (
     build_projection_basis_with_padding,
 )
@@ -66,11 +65,11 @@ def test_projection_basis_pads_short_parent_pca_with_random_rows(monkeypatch) ->
         *,
         use_cache: bool = True,
     ) -> np.ndarray:
-        assert (n_features, n_components, random_state, use_cache) == (4, 2, 19, False)
+        assert (n_features, n_components, random_state, use_cache) == (2, 2, 19, False)
         return np.array(
             [
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
+                [1.0, 0.0],
+                [0.0, 1.0],
             ],
             dtype=np.float64,
         )
@@ -110,3 +109,35 @@ def test_projection_basis_pads_short_parent_pca_with_random_rows(monkeypatch) ->
         ),
     )
     np.testing.assert_array_equal(eigenvalues, pca_eigenvalues)
+
+
+def test_projection_basis_padding_is_orthogonal_to_parent_pca(monkeypatch) -> None:
+    def _fake_generate_projection_matrix(
+        n_features: int,
+        n_components: int,
+        random_state: int | None = None,
+        *,
+        use_cache: bool = True,
+    ) -> np.ndarray:
+        assert (n_components, random_state, use_cache) == (1, 23, False)
+        padding_coordinates = np.zeros((n_components, n_features), dtype=np.float64)
+        padding_coordinates[0, 0] = 1.0
+        return padding_coordinates
+
+    monkeypatch.setattr(
+        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis.generate_projection_matrix",
+        _fake_generate_projection_matrix,
+    )
+
+    pca_projection = np.array([[1.0, 0.0, 0.0]], dtype=np.float64)
+
+    basis, eigenvalues = build_projection_basis_with_padding(
+        n_features=3,
+        k=2,
+        pca_projection=pca_projection,
+        pca_eigenvalues=np.array([4.0], dtype=np.float64),
+        random_state=23,
+    )
+
+    np.testing.assert_allclose(basis @ basis.T, np.eye(2), atol=1e-12)
+    np.testing.assert_array_equal(eigenvalues, np.array([4.0], dtype=np.float64))
