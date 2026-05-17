@@ -206,7 +206,9 @@ def run_kl_clustering(
     tree = PosetTree.from_linkage(Z, leaf_names=sample_names)
 
     # Decompose
+    tree.populate_node_divergences(data)
     results = tree.decompose(
+        annotations_df=tree.annotations_df,
         leaf_data=data,
         alpha_local=significance_level,
         sibling_alpha=significance_level,

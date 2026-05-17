@@ -25,12 +25,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
-from matplotlib.backends.backend_pdf import PdfPages
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from scipy.stats import chi2
-from sklearn.random_projection import johnson_lindenstrauss_min_dim
-
 from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.random_projection.seed import (
@@ -40,6 +34,11 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_
     apply_tree_bh_correction,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from matplotlib.backends.backend_pdf import PdfPages
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from scipy.stats import chi2
+from sklearn.random_projection import johnson_lindenstrauss_min_dim
 
 _JL_MIN_DIMENSION = 2
 _JL_EPSILON = 0.3
@@ -170,7 +169,9 @@ def _run_one_null_replicate(
     )
     linkage_matrix = linkage(distance_condensed, method=config.TREE_LINKAGE_METHOD)
     tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
+    tree.populate_node_divergences(data_df)
     tree.decompose(
+        annotations_df=tree.annotations_df,
         leaf_data=data_df,
         alpha_local=float(alpha),
         sibling_alpha=float(alpha),

@@ -10,15 +10,27 @@ NetworkX `DiGraph` subclass. Central data structure for the entire pipeline.
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `from_linkage(Z, leaf_names)`               | Build tree from SciPy linkage matrix. Computes branch lengths as merge distance deltas.        |
 | `from_agglomerative(X, ...)`                | Build tree from sklearn `AgglomerativeClustering` fit.                                         |
-| `from_undirected_edges(edges)`              | Orient an undirected weighted tree into a directed `PosetTree`.                                |
+| `from_undirected_edges(edges)`              | Orient a non-empty undirected weighted tree into a directed `PosetTree`.                       |
 | `root()`                                    | Return the root node (in-degree 0), cached after first call.                                   |
 | `get_leaves(node, return_labels)`           | Collect leaf labels globally or under a subtree.                                               |
 | `compute_descendant_sets()`                 | Map every node → frozenset of its descendant leaf labels.                                      |
 | `find_lca(a, b)`                            | Lowest common ancestor of two nodes using depth-based walk. O(depth).                          |
-| `find_lca_for_set(nodes)`                   | LCA for a collection of nodes (iterative pairwise reduction).                                  |
-| `populate_node_divergences(leaf_data)`      | Populate distributions, leaf counts, global/local KL divergences. Stores result in `annotations_df`. |
-| `decompose(results_df, leaf_data, **kw)`    | Thin facade: builds `TreeDecomposition`, runs `decompose_tree()` or `decompose_tree_v2()`.     |
+| `find_lca_for_set(nodes)`                   | LCA for a non-empty collection of nodes.                                                       |
+| `populate_node_divergences(leaf_data)`      | Populate distributions and leaf counts. Stores result in `annotations_df`.                     |
+| `decompose(annotations_df, leaf_data, **kw)` | Thin facade: builds `TreeDecomposition` and runs `decompose_tree()`.                           |
 | `build_sample_cluster_assignments(results)` | Per-sample cluster table from decomposition output.                                            |
+
+## topology.py
+
+Strict rooted-tree topology helpers used by `PosetTree`.
+
+| Function                             | What it does                                                                 |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| `is_leaf(tree, node)`                | Read the explicit `is_leaf` node attribute.                                   |
+| `get_leaf_values(tree, ...)`         | Collect leaf labels or ids without label/id fallback coercion.                |
+| `compute_descendant_leaf_sets(tree)` | Bottom-up descendant leaf-set aggregation.                                    |
+| `lowest_common_ancestor(tree, a, b)` | Depth-based LCA for nodes in the same rooted tree.                            |
+| `lowest_common_ancestor_for_set(...)` | LCA for a non-empty node collection.                                          |
 
 ## distributions.py
 

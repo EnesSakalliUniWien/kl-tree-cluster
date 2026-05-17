@@ -108,7 +108,9 @@ def bootstrap_consensus(
     # ---------- 0. original tree ----------
     Z_orig = linkage(pdist(data.values, metric=metric), method=linkage_method)
     tree_orig = PosetTree.from_linkage(Z_orig, leaf_names=sample_ids)
+    tree_orig.populate_node_divergences(data)
     results_orig = tree_orig.decompose(
+        annotations_df=tree_orig.annotations_df,
         leaf_data=data,
         alpha_local=alpha_local,
         sibling_alpha=sibling_alpha,
@@ -151,7 +153,9 @@ def bootstrap_consensus(
         try:
             Z_b = linkage(pdist(X_boot.values, metric=metric), method=linkage_method)
             tree_b = PosetTree.from_linkage(Z_b, leaf_names=boot_labels)
+            tree_b.populate_node_divergences(X_boot)
             res_b = tree_b.decompose(
+                annotations_df=tree_b.annotations_df,
                 leaf_data=X_boot,
                 alpha_local=alpha_local,
                 sibling_alpha=sibling_alpha,
@@ -354,24 +358,15 @@ def _extract_clades(tree) -> Set[FrozenSet[str]]:
     A clade is the set of leaf labels descended from an internal node.
     Single-leaf "clades" are excluded (trivially present in every tree).
     """
+    descendant_sets = tree.compute_descendant_sets(use_labels=True)
     clades: Set[FrozenSet[str]] = set()
     for node in tree.nodes():
         if tree.out_degree(node) == 0:
             continue  # leaf
-        desc = _descendant_leaves(tree, node)
-        if len(desc) > 1:
-            clades.add(frozenset(desc))
+        descendants = descendant_sets[node]
+        if len(descendants) > 1:
+            clades.add(frozenset(descendants))
     return clades
-
-
-def _descendant_leaves(tree, node) -> List[str]:
-    """Return leaf *labels* descended from *node*."""
-    if tree.out_degree(node) == 0:
-        return [tree.nodes[node].get("label", node)]
-    leaves: List[str] = []
-    for child in tree.successors(node):
-        leaves.extend(_descendant_leaves(tree, child))
-    return leaves
 
 
 def _compute_cluster_stability(

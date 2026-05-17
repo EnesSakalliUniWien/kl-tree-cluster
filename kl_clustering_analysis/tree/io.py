@@ -54,10 +54,9 @@ def _build_tree_from_merges(
         ``(n_leaves - 1, 2)`` array of child index pairs produced by scipy or
         sklearn.
     distances
-        Optional ``(n_leaves - 1,)`` array of merge distances.  When supplied,
-        branch lengths are computed via ultrametric subtraction (see
+        ``(n_leaves - 1,)`` array of merge distances. Branch lengths are computed
+        via ultrametric subtraction (see
         :func:`~kl_clustering_analysis.tree.branch_lengths.compute_ultrametric_branch_lengths`).
-        When ``None`` every edge receives a default ``branch_length`` of ``1.0``.
 
     Returns
     -------
@@ -182,10 +181,12 @@ def tree_from_undirected_edges(
     cls = _get_poset_tree_cls()
     U = nx.Graph()
     U.add_weighted_edges_from(edges)
+    if U.number_of_nodes() == 0 or not nx.is_tree(U):
+        raise ValueError("from_undirected_edges requires a non-empty undirected tree.")
 
     # Pick a leaf as root (deterministic choice).
     leaves = [n for n, d in U.degree() if d == 1]
-    root = leaves[0] if leaves else next(iter(U.nodes))
+    root = leaves[0]
 
     G = cls()
     for n in U.nodes():
@@ -198,12 +199,15 @@ def tree_from_undirected_edges(
         for v, attr in U[u].items():
             if v not in visited:
                 visited.add(v)
-                G.add_edge(u, v, weight=float(attr.get("weight", 1.0)))
+                G.add_edge(u, v, weight=float(attr["weight"]))
                 queue.append(v)
 
     # Annotate leaves.
     for n in G.nodes:
-        G.nodes[n]["is_leaf"] = G.out_degree(n) == 0
+        is_leaf_node = G.out_degree(n) == 0
+        G.nodes[n]["is_leaf"] = is_leaf_node
+        if is_leaf_node:
+            G.nodes[n]["label"] = n
     G.graph["root"] = root
 
     return G

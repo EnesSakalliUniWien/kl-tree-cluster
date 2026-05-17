@@ -39,7 +39,7 @@ def extract_leaf_counts(annotations_df: pd.DataFrame, node_ids: list[str]) -> np
     return leaf_counts
 
 
-def extract_node_distribution(tree: nx.DiGraph, node_id: str) -> np.ndarray:
+def extract_node_distribution(tree: nx.DiGraph, node_id: object) -> np.ndarray:
     """Extract distribution for a single node, converted to float64.
 
     Parameters
@@ -71,7 +71,7 @@ def extract_node_distribution(tree: nx.DiGraph, node_id: str) -> np.ndarray:
     return np.asarray(distribution, dtype=np.float64)
 
 
-def extract_node_sample_size(tree: nx.DiGraph, node_id: str) -> int:
+def extract_node_sample_size(tree: nx.DiGraph, node_id: object) -> int:
     """Extract sample size (leaf count) for a node.
 
     Checks for the canonical ``leaf_count`` attribute first, then falls back
@@ -269,7 +269,9 @@ def extract_row_column_maps(
 def extract_bool_column_dict(
     df: object,
     column_name: str,
-) -> dict[str, bool]:
+    *,
+    coerce_index_to_str: bool = True,
+) -> dict[object, bool]:
     """Extract a boolean column from DataFrame as a dictionary.
 
     Parameters
@@ -278,10 +280,14 @@ def extract_bool_column_dict(
         DataFrame containing the column.
     column_name : str
         Name of the column to extract.
+    coerce_index_to_str
+        Convert index values to strings. Keep the default for existing
+        annotation consumers; disable it when the caller must preserve tree
+        node-id identity.
 
     Returns
     -------
-    dict[str, bool]
+    dict[object, bool]
         Dictionary mapping index to boolean values.
     """
     if not isinstance(df, pd.DataFrame):
@@ -297,4 +303,7 @@ def extract_bool_column_dict(
             f"Column {column_name!r} contains missing values. "
             "Ensure all nodes are annotated before extraction."
         )
-    return {str(node_id): bool(value) for node_id, value in series.items()}
+    return {
+        (str(node_id) if coerce_index_to_str else node_id): bool(value)
+        for node_id, value in series.items()
+    }

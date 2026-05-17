@@ -17,10 +17,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from scipy.stats import kstest
-
 from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
@@ -28,6 +24,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils im
     sanitize_positive_branch_length,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from scipy.stats import kstest
 
 
 def _default_null_scenarios() -> list[dict[str, Any]]:
@@ -85,7 +84,9 @@ def _run_tree(
             message="No eligible parent nodes for sibling tests",
             category=UserWarning,
         )
+        tree.populate_node_divergences(data_df)
         tree.decompose(
+            annotations_df=tree.annotations_df,
             leaf_data=data_df,
             alpha_local=float(alpha),
             sibling_alpha=float(alpha),

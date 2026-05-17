@@ -1,6 +1,8 @@
 import networkx as nx
 import numpy as np
+import pandas as pd
 import pytest
+from kl_clustering_analysis.tree.branch_lengths import compute_ultrametric_branch_lengths
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
@@ -45,6 +47,67 @@ def test_from_tuples_edges_basic():
     _assert_laminar_and_inner_nodes_consistent(G)
 
 
+def test_from_undirected_edges_rejects_non_tree_input():
+    edges = [("a", "b", 1.0), ("b", "c", 1.0), ("c", "a", 1.0)]
+
+    with pytest.raises(ValueError, match="undirected tree"):
+        PosetTree.from_undirected_edges(edges)
+
+
+def test_find_lca_for_set_rejects_empty_node_set():
+    edges = [("root", "left", 1.0), ("root", "right", 1.0)]
+    G = PosetTree.from_undirected_edges(edges)
+
+    with pytest.raises(ValueError, match="empty node set"):
+        G.find_lca_for_set([])
+
+
+def test_decompose_requires_explicit_annotations_dataframe():
+    G = PosetTree()
+    G.add_node("root", is_leaf=False)
+    G.add_node("left", is_leaf=True, label="left")
+    G.add_node("right", is_leaf=True, label="right")
+    G.add_edge("root", "left")
+    G.add_edge("root", "right")
+    leaf_data = pd.DataFrame([[0.0], [1.0]], index=["left", "right"])
+
+    with pytest.raises(ValueError, match="annotations_df is required"):
+        G.decompose(leaf_data=leaf_data)
+
+
+def test_populate_node_divergences_requires_leaf_labels():
+    G = PosetTree()
+    G.add_node("root", is_leaf=False)
+    G.add_node("left", is_leaf=True)
+    G.add_node("right", is_leaf=True, label="right")
+    G.add_edge("root", "left")
+    G.add_edge("root", "right")
+    leaf_data = pd.DataFrame([[0.0], [1.0]], index=["left", "right"])
+
+    with pytest.raises(KeyError, match="label"):
+        G.populate_node_divergences(leaf_data)
+
+
+def test_populate_node_divergences_requires_explicit_leaf_flags():
+    G = PosetTree()
+    G.add_node("root", is_leaf=False)
+    G.add_node("left", label="left")
+    G.add_node("right", is_leaf=True, label="right")
+    G.add_edge("root", "left")
+    G.add_edge("root", "right")
+    leaf_data = pd.DataFrame([[0.0], [1.0]], index=["left", "right"])
+
+    with pytest.raises(KeyError, match="is_leaf"):
+        G.populate_node_divergences(leaf_data)
+
+
+def test_compute_ultrametric_branch_lengths_requires_merge_distances():
+    children = np.array([[0, 1]], dtype=int)
+
+    with pytest.raises(ValueError, match="merge distances"):
+        compute_ultrametric_branch_lengths(2, children, distances=None)
+
+
 def test_from_scipy_linkage_binary_data():
     pytest.importorskip("scipy")
     from scipy.cluster.hierarchy import linkage
@@ -72,39 +135,3 @@ def test_from_scipy_linkage_binary_data():
     assert nx.is_tree(G.to_undirected())
 
     _assert_laminar_and_inner_nodes_consistent(G)
-
-
-def test_from_scipy_clusternode():
-    # Skip this test as from_cluster_node method doesn't exist
-    pytest.skip("from_cluster_node method not implemented")
-
-
-def test_from_scipy_sparse_tree():
-    # Skip this test as from_sparse_adjacency method doesn't exist
-    pytest.skip("from_sparse_adjacency method not implemented")
-
-
-def _print_tree_recursive(G, node, prefix="", is_last=True):
-    """Recursively prints the tree structure."""
-    label = G.nodes[node].get("label", node)
-    node_name = f"{label} ({node})"
-    print(prefix + ("└── " if is_last else "├── ") + node_name)
-    children = list(G.successors(node))
-    for i, child in enumerate(children):
-        is_last_child = i == len(children) - 1
-        _print_tree_recursive(
-            G, child, prefix + ("    " if is_last else "│   "), is_last_child
-        )
-
-
-def print_tree(G):
-    """Prints the tree structure of a PosetTree."""
-    roots = [n for n in G.nodes if G.in_degree(n) == 0]
-    for root in roots:
-        _print_tree_recursive(G, root)
-
-
-def test_print_tree():
-    """Tests the tree printing function."""
-    # Skip this test as from_nested_tuples method doesn't exist
-    pytest.skip("from_nested_tuples method not implemented")

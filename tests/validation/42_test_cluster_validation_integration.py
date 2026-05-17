@@ -8,21 +8,22 @@ Tests the full pipeline with:
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from sklearn.metrics import adjusted_rand_score
-
 from benchmarks.shared.generators import generate_random_feature_matrix
 from benchmarks.shared.util.decomposition import _labels_from_decomposition
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from sklearn.metrics import adjusted_rand_score
 
 
 def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
     """Minimal pipeline helper for integration tests."""
     Z = linkage(pdist(data_df.values, metric="hamming"), method="complete")
     tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
+    tree.populate_node_divergences(data_df)
     decomposition = tree.decompose(
+        annotations_df=tree.annotations_df,
         leaf_data=data_df,
         alpha_local=config.EDGE_ALPHA,
         sibling_alpha=significance_level,

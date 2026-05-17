@@ -7,12 +7,19 @@ import networkx as nx
 import numpy as np
 
 from kl_clustering_analysis import config
-from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes, compute_node_depths
+from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments as _build_sample_cluster_assignments,
 )
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.distributions import populate_distributions
+from kl_clustering_analysis.tree.topology import (
+    compute_descendant_leaf_sets,
+    get_leaf_values,
+    is_leaf,
+    lowest_common_ancestor,
+    lowest_common_ancestor_for_set,
+)
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -48,7 +55,7 @@ class PosetTree(nx.DiGraph):
         """Initialize PosetTree with annotations_df property."""
         super().__init__(*args, **kwargs)
         self.annotations_df: pd.DataFrame | None = None
-        self._depths: dict[str, int] | None = None
+        self._depths: dict[object, int] | None = None
 
     @classmethod
     def from_agglomerative(
@@ -99,7 +106,7 @@ class PosetTree(nx.DiGraph):
 
     # ---------------- Poset helpers ----------------
 
-    def root(self) -> str:
+    def root(self) -> object:
         """Return the cached root node, discovering it if necessary."""
         r = self.graph.get("root")
         if r is None:
@@ -112,7 +119,7 @@ class PosetTree(nx.DiGraph):
 
     def get_leaves(
         self,
-        node: str | None = None,
+        node: object | None = None,
         return_labels: bool = True,
         sort: bool = True,
     ) -> list[str]:
@@ -134,29 +141,13 @@ class PosetTree(nx.DiGraph):
         list[str]
             Leaf labels or ids, depending on ``return_labels``.
         """
-        if node is None:
-            leaf_nodes = [n for n in self.nodes if self._is_leaf(n)]
-        else:
-            if self._is_leaf(node):
-                leaf_nodes = [node]
-            else:
-                leaf_nodes = [d for d in nx.descendants(self, node) if self._is_leaf(d)]
+        return get_leaf_values(self, node=node, use_labels=return_labels, sort=sort)
 
-        if return_labels:
-            node_view = self.nodes
-            out = [node_view[n].get("label", n) for n in leaf_nodes]
-        else:
-            out = leaf_nodes
-        return sorted(out) if sort else out
-
-    def _is_leaf(self, node_id: str) -> bool:
+    def _is_leaf(self, node_id: object) -> bool:
         """Check if a node is a leaf."""
-        is_leaf_attr = self.nodes[node_id].get("is_leaf")
-        if is_leaf_attr is not None:
-            return bool(is_leaf_attr)
-        return self.out_degree(node_id) == 0
+        return is_leaf(self, node_id)
 
-    def compute_descendant_sets(self, use_labels: bool = True) -> dict[str, frozenset]:
+    def compute_descendant_sets(self, use_labels: bool = True) -> dict[object, frozenset]:
         """Map each node to the set of leaf labels under it.
 
         Parameters
@@ -171,25 +162,15 @@ class PosetTree(nx.DiGraph):
             Dictionary whose keys are node ids and whose values are the descendant leaf
             labels/ids as a frozenset.
         """
-        desc_sets: dict[str, frozenset] = {}
-        # process leaves first (reverse topological order)
-        for node in bottom_up_nodes(self):
-            node_data = self.nodes[node]
-            if node_data.get("is_leaf", False) or self.out_degree(node) == 0:
-                val = node_data.get("label", node) if use_labels else node
-                desc_sets[node] = frozenset([val])
-            else:
-                child_sets = [desc_sets[c] for c in self.successors(node)]
-                desc_sets[node] = frozenset.union(*child_sets)
-        return desc_sets
+        return compute_descendant_leaf_sets(self, use_labels=use_labels)
 
-    def _get_depths(self) -> dict[str, int]:
+    def _get_depths(self) -> dict[object, int]:
         """Computes and caches node depths from the root."""
         if self._depths is None:
             self._depths = compute_node_depths(self)
         return self._depths
 
-    def find_lca(self, node_a: str, node_b: str) -> str:
+    def find_lca(self, node_a: object, node_b: object) -> object:
         """Find the lowest common ancestor (LCA) of two nodes.
 
         This implementation assumes the graph is a tree (each node has one parent)
@@ -205,45 +186,9 @@ class PosetTree(nx.DiGraph):
         str
             The node id of the lowest common ancestor.
         """
-        if node_a == node_b:
-            return node_a
+        return lowest_common_ancestor(self, node_a, node_b, depths=self._get_depths())
 
-        depths = self._get_depths()
-        depth_a = depths.get(node_a)
-        depth_b = depths.get(node_b)
-
-        if depth_a is None or depth_b is None:
-            # Fallback for nodes not in the main tree structure. This can happen
-            # if the graph is not a single connected tree. The original
-            # implementation is a safe fallback for general DAGs.
-            ancestors_a = set(nx.ancestors(self, node_a))
-            ancestors_a.add(node_a)
-            current = node_b
-            while current not in ancestors_a:
-                parents = list(self.predecessors(current))
-                if not parents:
-                    return self.root()
-                current = parents[0]
-            return current
-
-        # Use depths to find LCA
-        current_a, current_b = node_a, node_b
-        # 1. Bring nodes to the same depth
-        if depth_a > depth_b:
-            for _ in range(depth_a - depth_b):
-                current_a = next(self.predecessors(current_a))
-        elif depth_b > depth_a:
-            for _ in range(depth_b - depth_a):
-                current_b = next(self.predecessors(current_b))
-
-        # 2. Walk up until they meet
-        while current_a != current_b:
-            current_a = next(self.predecessors(current_a))
-            current_b = next(self.predecessors(current_b))
-
-        return current_a
-
-    def find_lca_for_set(self, nodes: Iterable[str]) -> str:
+    def find_lca_for_set(self, nodes: Iterable[object]) -> object:
         """Find the lowest common ancestor for a collection of nodes.
 
         Iteratively applies the two-node LCA function to find the LCA for the set.
@@ -258,21 +203,7 @@ class PosetTree(nx.DiGraph):
         str
             The node id of the lowest common ancestor for the set.
         """
-        node_iterator = iter(nodes)
-        try:
-            # Start with the first node as the initial LCA
-            lca = next(node_iterator)
-        except StopIteration:
-            # If the input iterable is empty, return the tree's root.
-            return self.root()
-
-        root = self.root()
-        for node in node_iterator:
-            lca = self.find_lca(lca, node)
-            # Optimization: if LCA is the root, it cannot get any higher.
-            if lca == root:
-                return root
-        return lca
+        return lowest_common_ancestor_for_set(self, nodes)
 
     def populate_node_divergences(self, leaf_data: "pd.DataFrame") -> None:
         """Populate tree nodes with distributions and build stats DataFrame.
@@ -301,9 +232,9 @@ class PosetTree(nx.DiGraph):
             node_records.append(
                 {
                     "node_id": node_id,
-                    "distribution": node_attrs.get("distribution", None),
-                    "leaf_count": node_attrs.get("leaf_count", 0),
-                    "is_leaf": node_attrs.get("is_leaf", False),
+                    "distribution": node_attrs["distribution"],
+                    "leaf_count": node_attrs["leaf_count"],
+                    "is_leaf": node_attrs["is_leaf"],
                 }
             )
         self.annotations_df = pd.DataFrame.from_records(node_records).set_index(
@@ -323,12 +254,10 @@ class PosetTree(nx.DiGraph):
         Parameters
         ----------
         annotations_df
-            Optional statistics/annotations DataFrame. When omitted, falls back to
-            ``self.annotations_df`` (populated by :meth:`populate_node_divergences`).
+            Required statistics/annotations DataFrame.
         leaf_data
-            Optional leaf-level probability DataFrame. When provided and ``annotations_df``
-            is not supplied, ``populate_node_divergences`` will be invoked to
-            initialize node distributions/KL metrics prior to decomposition.
+            Optional leaf-level probability DataFrame used by statistical gate
+            annotation.
         **decomposer_kwargs
             Extra keyword arguments forwarded to ``TreeDecomposition`` (e.g.,
             ``alpha_local``, ``sibling_alpha``).
@@ -343,14 +272,10 @@ class PosetTree(nx.DiGraph):
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
 
         if annotations_df is None:
-            if self.annotations_df is None:
-                if leaf_data is None:
-                    raise ValueError(
-                        "Tree has no annotations_df; provide annotations_df or leaf_data to populate."
-                    )
-                self.populate_node_divergences(leaf_data)
-            assert self.annotations_df is not None
-            annotations_df = self.annotations_df.copy()
+            raise ValueError(
+                "annotations_df is required. Call populate_node_divergences(leaf_data) "
+                "first and pass tree.annotations_df explicitly."
+            )
 
         decomposer = TreeDecomposition(
             tree=self,
@@ -372,7 +297,7 @@ class PosetTree(nx.DiGraph):
         """Build a per-sample cluster assignment table from decomposition output.
 
         This method is a convenience wrapper around
-        :meth:`kl_clustering_analysis.hierarchy_analysis.tree_decomposition.TreeDecomposition.build_sample_cluster_assignments`.
+        :func:`kl_clustering_analysis.hierarchy_analysis.cluster_assignments.build_sample_cluster_assignments`.
 
         Parameters
         ----------

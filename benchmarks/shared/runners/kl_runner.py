@@ -9,8 +9,7 @@ import numpy as np
 import pandas as pd
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import (
-    _create_report_dataframe,
-    _labels_from_decomposition,
+    _labels_and_report_from_decomposition,
 )
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -25,29 +24,33 @@ def _run_kl_on_distance(
     tree_linkage_method: str,
     extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
-    Z_t = linkage(distance_condensed, method=tree_linkage_method)
+    linkage_matrix = linkage(distance_condensed, method=tree_linkage_method)
 
-    tree_t = PosetTree.from_linkage(Z_t, leaf_names=data_df.index.tolist())
-    decomp_t = tree_t.decompose(
+    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
+    tree.populate_node_divergences(data_df)
+    decomposition = tree.decompose(
+        annotations_df=tree.annotations_df,
         leaf_data=data_df,
         alpha_local=significance_level,
         sibling_alpha=significance_level,
     )
-    report_t = _create_report_dataframe(decomp_t.get("cluster_assignments", {}))
-    labels = np.asarray(_labels_from_decomposition(decomp_t, data_df.index.tolist()))
+    labels, report_df = _labels_and_report_from_decomposition(
+        decomposition,
+        data_df.index.tolist(),
+    )
     result_extra = {
-        "tree": tree_t,
-        "decomposition": decomp_t,
-        "annotations": tree_t.annotations_df,
-        "linkage_matrix": Z_t,
+        "tree": tree,
+        "decomposition": decomposition,
+        "annotations": tree.annotations_df,
+        "linkage_matrix": linkage_matrix,
     }
     if extra:
         result_extra.update(extra)
 
     return MethodRunResult(
         labels=labels,
-        found_clusters=int(decomp_t.get("num_clusters", 0)),
-        report_df=report_t,
+        found_clusters=int(decomposition.get("num_clusters", 0)),
+        report_df=report_df,
         status="ok",
         skip_reason=None,
         extra=result_extra,

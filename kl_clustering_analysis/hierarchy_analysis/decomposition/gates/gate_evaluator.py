@@ -12,10 +12,21 @@ whether to split or merge at each internal node during top-down traversal:
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from kl_clustering_analysis.tree.poset_tree import PosetTree
+
+from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes
+
+
+class TraversalDecision(Enum):
+    """Top-down decomposition action for a tree node."""
+
+    BOUNDARY = "boundary"
+    SPLIT = "split"
+    PASS_THROUGH = "pass_through"
 
 
 class GateEvaluator:
@@ -38,20 +49,16 @@ class GateEvaluator:
         ``{node_id: bool}`` — whether the sibling test was skipped.
     children_map
         ``{node_id: [child_1, child_2, ...]}`` — pre-computed children list.
-    descendant_leaf_sets
-        ``{node_id: set_of_leaf_labels}`` — pre-computed leaf partitions.
     """
 
     def __init__(
         self,
         tree: "PosetTree",
-        local_significant: dict[str, bool],
-        sibling_different: dict[str, bool],
-        sibling_skipped: dict[str, bool],
-        children_map: dict[str, list[str]],
-        descendant_leaf_sets: dict[str, frozenset],
+        local_significant: dict[object, bool],
+        sibling_different: dict[object, bool],
+        sibling_skipped: dict[object, bool],
+        children_map: dict[object, list[object]],
         *,
-        has_descendant_split: dict[str, bool] | None = None,
         passthrough: bool = False,
     ) -> None:
         self.tree = tree
@@ -59,26 +66,27 @@ class GateEvaluator:
         self._sibling_different = sibling_different
         self._sibling_skipped = sibling_skipped
         self._children_map = children_map
-        self._descendant_leaf_sets = descendant_leaf_sets
-        self._has_descendant_split = has_descendant_split or {}
         self._passthrough = passthrough
+        self._has_descendant_split = (
+            self._compute_has_descendant_split() if self._passthrough else {}
+        )
 
     # ------------------------------------------------------------------
     # Shared gate logic
     # ------------------------------------------------------------------
 
-    def _evaluate_gates_1_and_2(self, parent: str) -> tuple[bool, str | None, str | None]:
+    def _passes_split_prerequisites(self, parent: object) -> bool:
         """Run Gates 1 (binary structure) and 2 (child-parent divergence).
 
         Returns
         -------
-        (passed, left_child, right_child)
-            ``passed`` is ``True`` only when both gates are open.
-            When ``False``, the children are ``None``.
+        bool
+            ``True`` only when the node is binary and at least one child
+            significantly diverges from the parent.
         """
         children = self._children_map[parent]
         if len(children) != 2:
-            return False, None, None
+            return False
 
         left_child, right_child = children
 
@@ -91,12 +99,9 @@ class GateEvaluator:
                 f"{left_child!r} or {right_child!r}; annotate before decomposing."
             )
 
-        if not (left_diverges or right_diverges):
-            return False, None, None
+        return bool(left_diverges or right_diverges)
 
-        return True, left_child, right_child
-
-    def _evaluate_gate_3(self, parent: str) -> bool:
+    def _sibling_gate_is_open(self, parent: object) -> bool:
         """Run Gate 3 (sibling divergence).
 
         Returns ``True`` when siblings are significantly different and the
@@ -115,48 +120,37 @@ class GateEvaluator:
 
         return bool(is_different)
 
-    # ------------------------------------------------------------------
-    # Gate evaluation — v1 (hard split)
-    # ------------------------------------------------------------------
+    def _can_split(self, parent: object) -> bool:
+        """Return whether all split gates are open for *parent*."""
+        return self._passes_split_prerequisites(parent) and self._sibling_gate_is_open(parent)
 
-    def should_split(self, parent: str) -> bool:
-        """Evaluate statistical gates and return ``True`` when *parent* should split.
+    def _compute_has_descendant_split(self) -> dict[object, bool]:
+        """Return whether each node has a descendant that can split under all gates."""
+        has_split: dict[object, bool] = {}
+        for node in bottom_up_nodes(self.tree):
+            has_split[node] = any(
+                self._can_split(child) or has_split.get(child, False)
+                for child in self._children_map.get(node, [])
+            )
+        return has_split
 
-        Gates evaluated in order:
+    def decision(self, parent: object) -> TraversalDecision:
+        """Evaluate the top-down clustering action for *parent*.
 
-        1. **Binary structure gate** — parent must have exactly 2 children.
-        2. **Child-parent divergence gate** — at least one child must
-           significantly diverge from the parent.
-        3. **Sibling divergence gate** — siblings must be significantly
-           different.
-
-        All gates must be OPEN to return ``True``.
+        ``SPLIT`` and ``PASS_THROUGH`` both continue traversal into the two
+        children. ``BOUNDARY`` means the node's descendant leaves form a final
+        cluster.
         """
-        passed, _, _ = self._evaluate_gates_1_and_2(parent)
-        if not passed:
-            return False
-        return self._evaluate_gate_3(parent)
+        if not self._passes_split_prerequisites(parent):
+            return TraversalDecision.BOUNDARY
 
-    def should_pass_through(self, parent: str) -> bool:
-        """Return ``True`` when the DFS should continue past a Gate 3 failure.
+        if self._sibling_gate_is_open(parent):
+            return TraversalDecision.SPLIT
 
-        This is checked only when :meth:`should_split` returns ``False`` and
-        ``passthrough`` mode is enabled.  The conditions are:
-
-        1. Gates 1 and 2 **pass** (binary structure + edge signal).
-        2. Gate 3 **fails** (siblings declared same or test skipped).
-        3. At least one descendant has ``Sibling_BH_Different == True``
-           (precomputed in ``has_descendant_split``).
-
-        When all conditions hold, the traversal continues into both children
-        instead of merging — eventually reaching the deeper split.
-        """
         if not self._passthrough:
-            return False
-        passed, _, _ = self._evaluate_gates_1_and_2(parent)
-        if not passed:
-            return False
-        # Gate 3 must be failing (if it passed, should_split would be True)
-        if self._evaluate_gate_3(parent):
-            return False
-        return self._has_descendant_split.get(parent, False)
+            return TraversalDecision.BOUNDARY
+
+        if self._has_descendant_split.get(parent, False):
+            return TraversalDecision.PASS_THROUGH
+
+        return TraversalDecision.BOUNDARY

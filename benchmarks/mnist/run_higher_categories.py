@@ -33,14 +33,13 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 import numpy as np
 import pandas as pd
+from benchmarks.shared.runners.kl_diffusion_runner import _build_diffusion_distance
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 from run import load_mnist_subset, run_kl_clustering
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import BayesianGaussianMixture
-
-from benchmarks.shared.runners.kl_diffusion_runner import _build_diffusion_distance
-from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 HIGHER_CATEGORY_SCHEMES: dict[str, dict[int, str]] = {
     "shape_3": {
@@ -213,7 +212,9 @@ def run_tree_decomposition_on_preprocessed_data(
             method=linkage_method,
         )
     tree = PosetTree.from_linkage(linkage_matrix, leaf_names=sample_names)
+    tree.populate_node_divergences(annotations_df)
     decomposition_results = tree.decompose(
+        annotations_df=tree.annotations_df,
         leaf_data=annotations_df,
         alpha_local=significance_level,
         sibling_alpha=significance_level,
@@ -251,7 +252,9 @@ def _run_diffusion_kl_clustering(
     Z = linkage(diff_dist, method="average")
 
     tree = PosetTree.from_linkage(Z, leaf_names=sample_names)
+    tree.populate_node_divergences(data)
     results = tree.decompose(
+        annotations_df=tree.annotations_df,
         leaf_data=data,
         alpha_local=0.05,
         sibling_alpha=0.05,

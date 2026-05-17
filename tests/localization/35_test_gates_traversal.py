@@ -6,9 +6,13 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-
+from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+    ClusterBoundary,
+    build_cluster_assignments,
+)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.gate_evaluator import (
     GateEvaluator,
+    TraversalDecision,
 )
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -64,8 +68,6 @@ def _make_gate(
     sibling_different: dict[str, bool] | None = None,
     sibling_skipped: dict[str, bool] | None = None,
     children_map: dict[str, list[str]] | None = None,
-    descendant_leaf_sets: dict[str, set[str]] | None = None,
-    has_descendant_split: dict[str, bool] | None = None,
     passthrough: bool = False,
 ) -> GateEvaluator:
     if tree is None:
@@ -73,18 +75,6 @@ def _make_gate(
 
     if children_map is None:
         children_map = {node: list(tree.successors(node)) for node in tree.nodes}
-
-    if descendant_leaf_sets is None:
-        descendant_leaf_sets = {}
-        for node in tree.nodes:
-            if tree.nodes[node].get("is_leaf", False):
-                descendant_leaf_sets[node] = {node}
-            else:
-                descendant_leaf_sets[node] = {
-                    child
-                    for child in nx.descendants(tree, node)
-                    if tree.nodes[child].get("is_leaf", False)
-                }
 
     if local_significant is None:
         local_significant = {node: True for node in tree.nodes}
@@ -101,8 +91,6 @@ def _make_gate(
         sibling_different=sibling_different,
         sibling_skipped=sibling_skipped,
         children_map=children_map,
-        descendant_leaf_sets=descendant_leaf_sets,
-        has_descendant_split=has_descendant_split or {},
         passthrough=passthrough,
     )
 
@@ -147,6 +135,20 @@ def _cluster_leaf_sets(decomposition_results: dict[str, object]) -> list[set[str
     return [set(cluster["leaves"]) for cluster in cluster_assignments.values()]
 
 
+def test_cluster_assignments_use_explicit_boundary_root() -> None:
+    assignments = build_cluster_assignments(
+        [
+            ClusterBoundary(root_node="left_subtree", leaves=frozenset({"L1", "L2"})),
+            ClusterBoundary(root_node="right_leaf", leaves=frozenset({"R"})),
+        ]
+    )
+
+    assert assignments == {
+        0: {"root_node": "left_subtree", "leaves": ["L1", "L2"], "size": 2},
+        1: {"root_node": "right_leaf", "leaves": ["R"], "size": 1},
+    }
+
+
 class TestGateEvaluator:
     def test_gate1_nonbinary_node_returns_false(self) -> None:
         tree = nx.DiGraph()
@@ -156,9 +158,8 @@ class TestGateEvaluator:
         gate = _make_gate(
             tree=tree,
             children_map={"root": ["A", "B", "C"], "A": [], "B": [], "C": []},
-            descendant_leaf_sets={"root": {"A", "B", "C"}, "A": {"A"}, "B": {"B"}, "C": {"C"}},
         )
-        assert gate.should_split("root") is False
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
 
     def test_gate1_single_child_returns_false(self) -> None:
         tree = nx.DiGraph()
@@ -168,9 +169,8 @@ class TestGateEvaluator:
         gate = _make_gate(
             tree=tree,
             children_map={"root": ["A"], "A": []},
-            descendant_leaf_sets={"root": {"A"}, "A": {"A"}},
         )
-        assert gate.should_split("root") is False
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
 
     def test_gate2_neither_child_diverges(self) -> None:
         gate = _make_gate(
@@ -184,7 +184,7 @@ class TestGateEvaluator:
                 "R2": False,
             },
         )
-        assert gate.should_split("root") is False
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
 
     def test_gate2_one_child_diverges(self) -> None:
         gate = _make_gate(
@@ -198,12 +198,12 @@ class TestGateEvaluator:
                 "R2": True,
             },
         )
-        assert gate.should_split("root") is True
+        assert gate.decision("root") is TraversalDecision.SPLIT
 
     def test_gate2_missing_annotations_raises(self) -> None:
         gate = _make_gate(local_significant={})
         with pytest.raises(ValueError, match="Missing child-parent divergence"):
-            gate.should_split("root")
+            gate.decision("root")
 
     def test_gate3_siblings_same(self) -> None:
         gate = _make_gate(
@@ -217,10 +217,10 @@ class TestGateEvaluator:
                 "R2": False,
             },
         )
-        assert gate.should_split("root") is False
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
 
     def test_gate3_siblings_different(self) -> None:
-        assert _make_gate().should_split("root") is True
+        assert _make_gate().decision("root") is TraversalDecision.SPLIT
 
     def test_gate3_skipped_returns_false(self) -> None:
         gate = _make_gate(
@@ -234,17 +234,16 @@ class TestGateEvaluator:
                 "R2": False,
             },
         )
-        assert gate.should_split("root") is False
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
 
     def test_gate3_missing_annotations_raises(self) -> None:
         gate = _make_gate(sibling_different={})
         with pytest.raises(ValueError, match="Sibling divergence annotations missing"):
-            gate.should_split("root")
+            gate.decision("root")
 
     def test_passthrough_disabled_returns_false(self) -> None:
         gate = _make_gate(
             passthrough=False,
-            has_descendant_split={"root": True},
             sibling_different={
                 "root": False,
                 "L": False,
@@ -255,36 +254,28 @@ class TestGateEvaluator:
                 "R2": False,
             },
         )
-        assert gate.should_pass_through("root") is False
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
 
     def test_passthrough_when_gate3_fails_with_descendant_signal(self) -> None:
+        tree = _make_deep_tree()
+        sibling_different = {node: False for node in tree.nodes}
+        sibling_different["B"] = True
         gate = _make_gate(
+            tree=tree,
             passthrough=True,
-            has_descendant_split={"root": True, "L": False, "R": False},
-            sibling_different={
-                "root": False,
-                "L": False,
-                "R": False,
-                "L1": False,
-                "L2": False,
-                "R1": False,
-                "R2": False,
-            },
+            sibling_different=sibling_different,
         )
-        assert gate.should_pass_through("root") is True
+        assert gate.decision("root") is TraversalDecision.PASS_THROUGH
 
     def test_no_passthrough_when_gate3_passes(self) -> None:
         gate = _make_gate(
             passthrough=True,
-            has_descendant_split={"root": True},
         )
-        assert gate.should_split("root") is True
-        assert gate.should_pass_through("root") is False
+        assert gate.decision("root") is TraversalDecision.SPLIT
 
     def test_no_passthrough_when_gates_1_2_fail(self) -> None:
         gate = _make_gate(
             passthrough=True,
-            has_descendant_split={"root": True},
             local_significant={
                 "root": False,
                 "L": False,
@@ -295,12 +286,11 @@ class TestGateEvaluator:
                 "R2": False,
             },
         )
-        assert gate.should_pass_through("root") is False
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
 
     def test_no_passthrough_when_no_descendant_signal(self) -> None:
         gate = _make_gate(
             passthrough=True,
-            has_descendant_split={"root": False},
             sibling_different={
                 "root": False,
                 "L": False,
@@ -311,7 +301,7 @@ class TestGateEvaluator:
                 "R2": False,
             },
         )
-        assert gate.should_pass_through("root") is False
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
 
 
 class TestTreeDecompositionTraversal:
@@ -376,6 +366,32 @@ class TestTreeDecompositionTraversal:
             annotations_df,
             monkeypatch,
             passthrough=False,
+        )
+
+        cluster_leaf_sets = _cluster_leaf_sets(result)
+        assert cluster_leaf_sets == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
+
+    def test_decompose_tree_passthrough_ignores_blocked_descendant_signal(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_deep_tree()
+        local_significant = {node: True for node in tree.nodes}
+        local_significant["C"] = False
+        local_significant["D"] = False
+        sibling_different = {node: False for node in tree.nodes}
+        sibling_different["B"] = True
+
+        annotations_df = _make_annotations(
+            tree,
+            local_significant=local_significant,
+            sibling_different=sibling_different,
+        )
+
+        result = _decompose_with_annotations(
+            tree,
+            annotations_df,
+            monkeypatch,
+            passthrough=True,
         )
 
         cluster_leaf_sets = _cluster_leaf_sets(result)

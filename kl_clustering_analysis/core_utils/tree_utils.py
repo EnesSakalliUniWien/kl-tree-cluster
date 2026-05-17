@@ -11,7 +11,7 @@ from collections.abc import Iterator
 import networkx as nx
 
 
-def bottom_up_nodes(tree: nx.DiGraph) -> Iterator[str]:
+def bottom_up_nodes(tree: nx.DiGraph) -> Iterator[object]:
     """Yield nodes in bottom-up order (leaves first, root last).
 
     This is the single canonical traversal for all bottom-up aggregation
@@ -30,13 +30,13 @@ def bottom_up_nodes(tree: nx.DiGraph) -> Iterator[str]:
 
     Yields
     ------
-    str
+    object
         Node identifiers, leaves first, root last.
     """
     return reversed(list(nx.topological_sort(tree)))
 
 
-def compute_node_depths(tree: nx.DiGraph) -> dict[str, int]:
+def compute_node_depths(tree: nx.DiGraph) -> dict[object, int]:
     """Compute depth of each node from the root via BFS.
 
     Parameters
@@ -58,7 +58,7 @@ def compute_node_depths(tree: nx.DiGraph) -> dict[str, int]:
     if not roots:
         raise ValueError("Tree has no root node (all nodes have parents)")
 
-    depths: dict[str, int] = {}
+    depths: dict[object, int] = {}
     for root in roots:
         depths[root] = 0
 

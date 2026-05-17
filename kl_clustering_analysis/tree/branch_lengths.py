@@ -33,8 +33,7 @@ def compute_ultrametric_branch_lengths(
 
         branch_length(parent → child) = distances[k] − merge_height(child)
 
-    Leaf merge-heights are 0.  When *distances* is ``None`` every edge
-    receives a default branch length of ``1.0``.
+    Leaf merge-heights are 0.
 
     Parameters
     ----------
@@ -43,7 +42,7 @@ def compute_ultrametric_branch_lengths(
     children
         ``(n_leaves - 1, 2)`` array of child-index pairs (from scipy/sklearn).
     distances
-        Optional ``(n_leaves - 1,)`` array of merge distances.
+        ``(n_leaves - 1,)`` array of merge distances.
 
     Returns
     -------
@@ -53,11 +52,7 @@ def compute_ultrametric_branch_lengths(
     edge_lengths: Dict[Tuple[str, str], float] = {}
 
     if distances is None:
-        for k, (a, b) in enumerate(children):
-            parent = node_id(n_leaves + k, n_leaves)
-            edge_lengths[(parent, node_id(int(a), n_leaves))] = 1.0
-            edge_lengths[(parent, node_id(int(b), n_leaves))] = 1.0
-        return edge_lengths
+        raise ValueError("merge distances are required to compute branch lengths.")
 
     # Ultrametric subtraction: track merge heights as we go.
     merge_heights: Dict[str, float] = {node_id(i, n_leaves): 0.0 for i in range(n_leaves)}

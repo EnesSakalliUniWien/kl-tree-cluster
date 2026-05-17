@@ -14,14 +14,15 @@ if TYPE_CHECKING:
 import pandas as pd
 
 from .. import config
-from .cluster_assignments import build_cluster_assignments
+from ..core_utils.data_utils import extract_bool_column_dict
+from .cluster_assignments import ClusterBoundary, build_cluster_assignments
 from .decomposition.core.contracts import GATE_ANNOTATION_METADATA_ATTR
 from .decomposition.core.errors import DecompositionValidationError
 from .decomposition.gates.column_contracts import (
     validate_edge_gate_columns,
     validate_sibling_gate_columns,
 )
-from .decomposition.gates.gate_evaluator import GateEvaluator
+from .decomposition.gates.gate_evaluator import GateEvaluator, TraversalDecision
 from .decomposition.gates.orchestrator import (
     build_gate_annotation_config_metadata,
     build_gate_annotation_leaf_data_metadata,
@@ -87,10 +88,9 @@ class TreeDecomposition:
         self._leaf_data = leaf_data
 
         # ----- root -----
-        self._root = next(node_id for node_id, degree in self.tree.in_degree() if degree == 0)
+        self._root = self.tree.root()
 
-        # ----- pre-cache node metadata -----
-        self._cache_node_metadata()
+        self._node_ids = tuple(self.tree.nodes)
 
         # ----- leaf partitions & counts (poset view) -----
         self._descendant_leaf_sets = self.tree.compute_descendant_sets(use_labels=True)
@@ -121,15 +121,9 @@ class TreeDecomposition:
                 raise ValueError(f"Missing {column_name!r} values for nodes: {preview}.")
 
         # Precompute children list (avoids rebuilding generator repeatedly)
-        self._children: dict[str, list[str]] = {
+        self._children: dict[object, list[object]] = {
             n: list(self.tree.successors(n)) for n in self._node_ids
         }
-
-        # ----- precompute has_descendant_split (bottom-up O(n)) -----
-        self._passthrough = bool(passthrough)
-        self._has_descendant_split: dict[str, bool] = {}
-        if self._passthrough:
-            self._has_descendant_split = self._compute_has_descendant_split()
 
         # ----- construct the GateEvaluator -----
         self._gate = GateEvaluator(
@@ -138,56 +132,10 @@ class TreeDecomposition:
             sibling_different=self._sibling_different,
             sibling_skipped=self._sibling_skipped,
             children_map=self._children,
-            descendant_leaf_sets=self._descendant_leaf_sets,
-            has_descendant_split=self._has_descendant_split,
-            passthrough=self._passthrough,
+            passthrough=bool(passthrough),
         )
 
     # ---------- initialization helpers ----------
-
-    def _compute_has_descendant_split(self) -> dict[str, bool]:
-        """Precompute bottom-up flag: does any descendant have a significant sibling split?
-
-        For each internal node, ``has_descendant_split[node]`` is ``True``
-        when at least one descendant (not the node itself) has
-        ``Sibling_BH_Different == True`` and was not skipped.
-
-        Computed in a single reverse-topological pass (O(n)):
-
-        - Leaves → ``False``
-        - Internal node → ``True`` if any child is itself a split node or
-          has ``has_descendant_split == True``.
-
-        Returns
-        -------
-        dict[str, bool]
-            Mapping from node ID to boolean flag.
-        """
-        from ..core_utils.tree_utils import bottom_up_nodes
-
-        has_split: dict[str, bool] = {}
-
-        for node in bottom_up_nodes(self.tree):
-            children = self._children.get(node, [])
-            if not children:
-                # Leaf node
-                has_split[node] = False
-                continue
-
-            # Check if any child is itself a split point or has a descendant split
-            found = False
-            for child in children:
-                # Child itself is a significant split point
-                child_is_split = self._sibling_different.get(
-                    child, False
-                ) and not self._sibling_skipped.get(child, True)
-                if child_is_split or has_split.get(child, False):
-                    found = True
-                    break
-
-            has_split[node] = found
-
-        return has_split
 
     def _prepare_annotations(self, annotations_df: pd.DataFrame) -> pd.DataFrame:
         """Ensure statistical annotation columns are present on *annotations_df*.
@@ -205,9 +153,7 @@ class TreeDecomposition:
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
         )
-        annotated_df = annotation_bundle.annotated_df
-        annotated_df.attrs[GATE_ANNOTATION_METADATA_ATTR] = annotation_bundle.metadata
-        return annotated_df
+        return annotation_bundle.annotated_df
 
     def _can_reuse_gate_annotations(self, annotations_df: pd.DataFrame) -> bool:
         """Return whether existing gate annotations can be trusted as current."""
@@ -245,67 +191,13 @@ class TreeDecomposition:
             == build_gate_annotation_leaf_data_metadata(self._leaf_data)
         )
 
-    def _extract_required_bool_annotation_column(self, column_name: str) -> dict[str, bool]:
-        """Extract a required boolean annotation column from cached column mappings."""
-        if column_name not in self.annotations_df.columns:
-            raise KeyError(f"Missing required column {column_name!r} in dataframe.")
-
-        raw_mapping = self.annotations_df[column_name].to_dict()
-        missing_nodes = [node_id for node_id, value in raw_mapping.items() if pd.isna(value)]
-        if missing_nodes:
-            preview = ", ".join(map(repr, missing_nodes[:5]))
-            raise ValueError(
-                f"Column {column_name!r} contains missing values for nodes: {preview}. "
-                "Ensure all nodes are annotated before extraction."
-            )
-
-        return {node_id: bool(value) for node_id, value in raw_mapping.items()}
-
-    def _cache_node_metadata(self) -> None:
-        """Cache node attributes for fast repeated access during decomposition.
-
-        Extracts and stores leaf flags and labels.
-        This one-time preprocessing avoids expensive NetworkX lookups in tight loops.
-        """
-        self._node_ids: tuple[str, ...] = tuple()
-        self._is_leaf: dict[str, bool] = {}
-        self._label: dict[str, str] = {}
-
-        node_ids: list[str] = []
-        for node_id, node_data in self.tree.nodes(data=True):
-            node_ids.append(node_id)
-            self._is_leaf[node_id] = node_data["is_leaf"]
-            self._label[node_id] = node_data.get("label", node_id)
-        self._node_ids = tuple(node_ids)
-
-    # ---------- utilities ----------
-
-    # ---------- LCA ----------
-
-    def _find_cluster_root(self, leaf_labels: set[str]) -> str:
-        """Identify the lowest common ancestor for a collection of leaf labels.
-
-        This implementation delegates the LCA calculation to the tree object, which is
-        expected to have an efficient implementation, and caches a label-to-node mapping
-        to accelerate leaf lookups.
-        """
-        if not hasattr(self, "_label_to_node_map"):
-            # This is a one-time cache population for all leaves.
-            self._label_to_node_map = {
-                self._label[n]: n for n in self._node_ids if self._is_leaf.get(n)
-            }
-
-        leaf_nodes = [
-            self._label_to_node_map[label]
-            for label in leaf_labels
-            if label in self._label_to_node_map
-        ]
-
-        if not leaf_nodes:
-            return self._root
-
-        # The `self.tree` object is a PosetTree, which has `find_lca_for_set`.
-        return self.tree.find_lca_for_set(leaf_nodes)
+    def _extract_required_bool_annotation_column(self, column_name: str) -> dict[object, bool]:
+        """Extract a required boolean annotation column keyed by tree node id."""
+        return extract_bool_column_dict(
+            self.annotations_df,
+            column_name,
+            coerce_index_to_str=False,
+        )
 
     # ---------- core decomposition (iterative, no recursion) ----------
 
@@ -319,9 +211,9 @@ class TreeDecomposition:
         two children are appended in right-then-left order so that the left child
         is processed first on the next iteration.
         """
-        nodes_to_visit: list[str] = [self._root]
-        final_leaf_sets: list[set[str]] = []
-        processed: set[str] = set()
+        nodes_to_visit: list[object] = [self._root]
+        final_boundaries: list[ClusterBoundary] = []
+        processed: set[object] = set()
 
         while nodes_to_visit:
             node = nodes_to_visit.pop()
@@ -329,18 +221,18 @@ class TreeDecomposition:
                 continue
             processed.add(node)
 
-            if self._gate.should_split(node) or self._gate.should_pass_through(node):
+            decision = self._gate.decision(node)
+            if decision in (TraversalDecision.SPLIT, TraversalDecision.PASS_THROUGH):
                 left_child, right_child = self._children[node]
                 nodes_to_visit.append(right_child)
                 nodes_to_visit.append(left_child)
                 continue
 
-            final_leaf_sets.append(set(self._descendant_leaf_sets[node]))
+            final_boundaries.append(
+                ClusterBoundary(root_node=node, leaves=self._descendant_leaf_sets[node])
+            )
 
-        cluster_assignments = build_cluster_assignments(
-            final_leaf_sets,
-            self._find_cluster_root,
-        )
+        cluster_assignments = build_cluster_assignments(final_boundaries)
 
         return {
             "cluster_assignments": cluster_assignments,

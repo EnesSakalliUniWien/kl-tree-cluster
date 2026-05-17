@@ -1,31 +1,36 @@
 """Pure functions for building cluster assignment structures.
 
-These functions convert raw leaf-set partitions into structured cluster
-metadata dictionaries and per-sample DataFrames.  They are intentionally
+These functions convert final tree boundaries into structured cluster
+metadata dictionaries and per-sample DataFrames. They are intentionally
 stateless so they can be called from :class:`TreeDecomposition`,
 :class:`PosetTree`, or any other consumer without class coupling.
 """
 
 from __future__ import annotations
 
-from typing import Callable, Set
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 import pandas as pd
 
 
+@dataclass(frozen=True)
+class ClusterBoundary:
+    """A final tree boundary whose descendant leaves form one cluster."""
+
+    root_node: object
+    leaves: frozenset[str]
+
+
 def build_cluster_assignments(
-    final_leaf_sets: list[set[str]],
-    find_cluster_root: Callable[[Set[str]], str],
+    boundaries: Iterable[ClusterBoundary],
 ) -> dict[int, dict[str, object]]:
-    """Build a cluster assignment dictionary from collected leaf sets.
+    """Build a cluster assignment dictionary from final tree boundaries.
 
     Parameters
     ----------
-    final_leaf_sets
-        List of leaf sets, one per cluster.
-    find_cluster_root
-        Callable that maps a set of leaf labels to the cluster root node
-        (typically the lowest common ancestor in the tree).
+    boundaries
+        Final tree boundary nodes and their descendant leaf labels.
 
     Returns
     -------
@@ -34,13 +39,14 @@ def build_cluster_assignments(
         ``root_node``, ``leaves``, and ``size``.
     """
     cluster_assignments: dict[int, dict[str, object]] = {}
-    for cluster_index, leaf_set in enumerate(final_leaf_sets):
-        if not leaf_set:
+    for cluster_index, boundary in enumerate(boundaries):
+        leaves = sorted(boundary.leaves)
+        if not leaves:
             continue
         cluster_assignments[cluster_index] = {
-            "root_node": find_cluster_root(leaf_set),
-            "leaves": sorted(leaf_set),
-            "size": len(leaf_set),
+            "root_node": boundary.root_node,
+            "leaves": leaves,
+            "size": len(leaves),
         }
     return cluster_assignments
 

@@ -18,7 +18,7 @@ from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes
 
 def _calculate_leaf_distribution(
     tree: nx.DiGraph,
-    node_id: str,
+    node_id: object,
     leaf_matrix: npt.NDArray[np.float64],
     label_to_row_idx: Dict[Any, int],
 ) -> None:
@@ -40,7 +40,7 @@ def _calculate_leaf_distribution(
     Raises:
         KeyError: If the leaf label is not present in ``label_to_row_idx``.
     """
-    label = tree.nodes[node_id].get("label", node_id)
+    label = tree.nodes[node_id]["label"]
     try:
         row_idx = label_to_row_idx[label]
     except KeyError as exc:
@@ -53,7 +53,7 @@ def _calculate_leaf_distribution(
 
 def _calculate_hierarchy_node_distribution(
     tree: nx.DiGraph,
-    node_id: str,
+    node_id: object,
 ) -> None:
     """Compute an internal node's distribution from its immediate children.
 
@@ -128,7 +128,7 @@ def populate_distributions(
 
     # Process nodes bottom-up (leaves first, then parents)
     for node_id in bottom_up_nodes(tree):
-        is_leaf = tree.nodes[node_id].get("is_leaf", False)
+        is_leaf = tree.nodes[node_id]["is_leaf"]
 
         if is_leaf:
             _calculate_leaf_distribution(tree, node_id, leaf_feature_matrix, label_to_row_idx)

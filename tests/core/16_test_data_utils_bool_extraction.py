@@ -1,10 +1,9 @@
 """Unit tests for boolean extraction from DataFrame columns."""
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-import networkx as nx
-
 from kl_clustering_analysis.core_utils.data_utils import (
     extract_bool_column_dict,
     extract_node_sample_size,
@@ -27,6 +26,14 @@ def test_extract_bool_column_dict_numpy_bool():
 
     assert result == {"A": True, "B": False}
     assert all(isinstance(v, bool) for v in result.values())
+
+
+def test_extract_bool_column_dict_can_preserve_index_key_type():
+    df = pd.DataFrame({"flag": [True, False]}, index=[10, 20])
+
+    result = extract_bool_column_dict(df, "flag", coerce_index_to_str=False)
+
+    assert result == {10: True, 20: False}
 
 
 def test_extract_bool_column_dict_raises_on_null():

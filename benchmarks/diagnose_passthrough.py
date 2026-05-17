@@ -234,8 +234,10 @@ def run_diagnostic_for_case(tc):
         Z = linkage(distance_condensed, method=config.TREE_LINKAGE_METHOD)
         tree = PosetTree.from_linkage(Z, leaf_names=data_t.index.tolist())
 
-        # Run decomposition (this populates annotations_df)
+        # Run decomposition with explicit annotation preparation.
+        tree.populate_node_divergences(data_t)
         decomp = tree.decompose(
+            annotations_df=tree.annotations_df,
             leaf_data=data_t,
             alpha_local=config.EDGE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,

@@ -38,7 +38,9 @@ root = [n for n in tree.nodes() if tree.in_degree(n) == 0][0]
 print(f"Tree: {tree.number_of_nodes()} nodes, root={root}")
 
 # Decompose
+tree.populate_node_divergences(data)
 results = tree.decompose(
+    annotations_df=tree.annotations_df,
     leaf_data=data,
     alpha_local=config.EDGE_ALPHA,
     sibling_alpha=config.SIBLING_ALPHA,
