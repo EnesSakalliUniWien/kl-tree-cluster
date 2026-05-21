@@ -8,20 +8,27 @@ import numpy as np
 import pandas as pd
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodRunResult
+from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 from kl_clustering_analysis import config
 from scipy.spatial.distance import pdist, squareform
 
 
 def _normalize_method_result(
     result: MethodRunResult,
+    sample_index: pd.Index,
 ) -> MethodRunResult:
     """Normalize method outputs to the stable ``ok/skip`` runner contract."""
     if result.status == "ok" and result.labels is not None:
         labels = np.asarray(result.labels)
+        if len(labels) != len(sample_index):
+            raise ValueError(
+                "Runner labels must align to input samples. "
+                f"Got {len(labels)} labels for {len(sample_index)} samples."
+            )
         return MethodRunResult(
             labels=labels,
             found_clusters=int(result.found_clusters),
-            report_df=result.report_df,
+            report_df=_create_report_dataframe_from_labels(labels, sample_index),
             status="ok",
             skip_reason=None,
             extra=result.extra,
@@ -68,7 +75,7 @@ def run_clustering_result(
                 k_neighbors=params.get("k_neighbors", 15),
                 diffusion_time=params.get("diffusion_time", 3),
             )
-            return _normalize_method_result(result)
+            return _normalize_method_result(result, data_df.index)
         if method_id == "kl_diffusion_adaptive":
             result = spec.runner(
                 data_df,
@@ -80,7 +87,7 @@ def run_clustering_result(
                 bandwidth_type=params.get("bandwidth_type", "-1/(d+2)"),
                 epsilon=params.get("epsilon", "median"),
             )
-            return _normalize_method_result(result)
+            return _normalize_method_result(result, data_df.index)
 
         if method_id in {"kl", "kl_complete", "kl_single"}:
             metric = params.get("tree_distance_metric", config.TREE_DISTANCE_METRIC)
@@ -95,11 +102,11 @@ def run_clustering_result(
                 alpha,
                 tree_linkage_method=params.get("tree_linkage_method", config.TREE_LINKAGE_METHOD),
             )
-            return _normalize_method_result(result)
+            return _normalize_method_result(result, data_df.index)
 
         if method_id in {"kmeans", "spectral"}:
             result = spec.runner(data_df.values, params, seed)
-            return _normalize_method_result(result)
+            return _normalize_method_result(result, data_df.index)
 
         if distance_matrix is None:
             if distance_condensed is None:
@@ -114,7 +121,7 @@ def run_clustering_result(
             result = spec.runner(dm_square, params, seed)
         else:
             result = spec.runner(dm_square, params)
-        return _normalize_method_result(result)
+        return _normalize_method_result(result, data_df.index)
     except Exception as exc:
         return MethodRunResult(
             labels=None,

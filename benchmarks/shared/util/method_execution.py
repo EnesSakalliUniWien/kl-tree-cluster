@@ -28,15 +28,19 @@ def _report_for_metric_evaluation(
     sample_index: pd.Index,
 ) -> pd.DataFrame:
     """Return a report table aligned to the sample index used for metrics."""
-    def fallback_report() -> pd.DataFrame:
+    if report_df is None:
         return _create_report_dataframe_from_labels(labels, sample_index)
-
-    if report_df is None or "cluster_id" not in report_df.columns:
-        return fallback_report()
+    if "cluster_id" not in report_df.columns:
+        raise ValueError("Runner report_df must include a 'cluster_id' column.")
     if len(report_df.index) != len(sample_index):
-        return fallback_report()
-    if report_df.index.has_duplicates or sample_index.has_duplicates:
-        return fallback_report()
+        raise ValueError(
+            "Runner report_df must have one row per sample. "
+            f"Got {len(report_df.index)} rows for {len(sample_index)} samples."
+        )
+    if report_df.index.has_duplicates:
+        raise ValueError("Runner report_df index contains duplicate sample ids.")
+    if sample_index.has_duplicates:
+        raise ValueError("Sample index contains duplicate sample ids.")
     if report_df.index.equals(sample_index):
         return report_df
 
@@ -46,7 +50,10 @@ def _report_for_metric_evaluation(
         aligned_report = report_df.loc[sample_index].copy()
         aligned_report.index.name = "sample_id"
         return aligned_report
-    return fallback_report()
+    raise ValueError(
+        "Runner report_df index must match sample ids. "
+        f"Missing={list(missing[:5])}, extra={list(extras[:5])}."
+    )
 
 
 def run_single_method_once(

@@ -74,9 +74,9 @@ def extract_node_distribution(tree: nx.DiGraph, node_id: object) -> np.ndarray:
 def extract_node_sample_size(tree: nx.DiGraph, node_id: object) -> int:
     """Extract sample size (leaf count) for a node.
 
-    Checks for the canonical ``leaf_count`` attribute first, then falls back
-    to leaf detection or descendant counting if the tree has not been fully
-    annotated yet.
+    Requires the canonical ``leaf_count`` attribute. Sibling-test code consumes
+    annotated trees; missing counts indicate an upstream annotation contract
+    error.
 
     Parameters
     ----------
@@ -90,22 +90,16 @@ def extract_node_sample_size(tree: nx.DiGraph, node_id: object) -> int:
     int
         Number of leaves under this node (or 1 if leaf)
     """
-    node_data = tree.nodes.get(node_id, {})
+    if node_id not in tree.nodes:
+        raise KeyError(f"Node {node_id!r} is not present in the tree.")
 
-    if "leaf_count" in node_data:
-        return int(node_data["leaf_count"])
-
-    if node_data.get("is_leaf", False) or tree.out_degree(node_id) == 0:
-        return 1
-
-    descendants = list(nx.descendants(tree, node_id))
-    count = sum(
-        1
-        for desc in descendants
-        if tree.nodes.get(desc, {}).get("is_leaf", False) or tree.out_degree(desc) == 0
-    )
-
-    return max(1, count)
+    node_data = tree.nodes[node_id]
+    if "leaf_count" not in node_data:
+        raise ValueError(
+            f"Missing required 'leaf_count' attribute for node {node_id!r}. "
+            "Annotate the tree before extracting sibling-test sample sizes."
+        )
+    return int(node_data["leaf_count"])
 
 
 def assign_divergence_results(

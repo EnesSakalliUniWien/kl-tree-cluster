@@ -72,17 +72,33 @@ def build_sample_cluster_assignments(
         - ``cluster_root``: node identifier that forms the cluster boundary
         - ``cluster_size``: number of samples in the cluster
     """
-    raw_cluster_assignments = decomposition_results.get("cluster_assignments", {})
-    if not isinstance(raw_cluster_assignments, dict) or not raw_cluster_assignments:
+    if "cluster_assignments" not in decomposition_results:
+        raise KeyError("Missing required decomposition field 'cluster_assignments'.")
+
+    raw_cluster_assignments = decomposition_results["cluster_assignments"]
+    if not isinstance(raw_cluster_assignments, dict):
+        raise TypeError("'cluster_assignments' must be a dictionary.")
+    if not raw_cluster_assignments:
         return pd.DataFrame(columns=["cluster_id", "cluster_root", "cluster_size"])
 
     rows: dict[str, dict[str, object]] = {}
     for cluster_identifier, cluster_metadata in raw_cluster_assignments.items():
         if not isinstance(cluster_metadata, dict):
-            continue
-        root = cluster_metadata.get("root_node")
-        size = cluster_metadata.get("size", 0)
-        for sample_identifier in cluster_metadata.get("leaves", []):
+            raise TypeError(
+                f"Cluster {cluster_identifier!r} metadata must be a dictionary."
+            )
+        missing_fields = {"root_node", "leaves", "size"} - set(cluster_metadata)
+        if missing_fields:
+            missing = ", ".join(sorted(missing_fields))
+            raise KeyError(
+                f"Cluster {cluster_identifier!r} metadata is missing required field(s): {missing}."
+            )
+        leaves = cluster_metadata["leaves"]
+        if not isinstance(leaves, list):
+            raise TypeError(f"Cluster {cluster_identifier!r} 'leaves' must be a list.")
+        root = cluster_metadata["root_node"]
+        size = cluster_metadata["size"]
+        for sample_identifier in leaves:
             rows[sample_identifier] = {
                 "cluster_id": cluster_identifier,
                 "cluster_root": root,

@@ -217,11 +217,11 @@ class TestNonBinarySkippedFlag:
         d = 20
         for node in ["L0", "L1", "L2", "L3"]:
             tree.nodes[node]["distribution"] = rng.random(d) * 0.5
-            tree.nodes[node]["n_descendant_leaves"] = 5
+            tree.nodes[node]["leaf_count"] = 1
             tree.nodes[node]["label"] = node
         for node in ["N2", "N3", "N4"]:
             tree.nodes[node]["distribution"] = rng.random(d) * 0.5
-            tree.nodes[node]["n_descendant_leaves"] = 10
+            tree.nodes[node]["leaf_count"] = 4 if node == "N4" else 2
             tree.nodes[node]["label"] = node
 
         return tree

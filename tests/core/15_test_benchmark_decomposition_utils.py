@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 from benchmarks.shared.util.decomposition import (
     _labels_and_report_from_decomposition,
     _ok_result_from_labels,
+)
+from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+    build_sample_cluster_assignments,
 )
 
 
@@ -42,3 +46,15 @@ def test_ok_result_from_labels_counts_non_noise_clusters() -> None:
     assert np.array_equal(result.labels, np.array([2, 2, -1, 4], dtype=int))
     assert result.report_df is not None
     assert result.report_df.loc["noise", "cluster_size"] == 1
+
+
+def test_build_sample_cluster_assignments_requires_cluster_assignments_key() -> None:
+    with pytest.raises(KeyError, match="cluster_assignments"):
+        build_sample_cluster_assignments({})
+
+
+def test_build_sample_cluster_assignments_rejects_malformed_cluster_metadata() -> None:
+    decomposition = {"cluster_assignments": {1: {"root_node": "left", "leaves": ["S1"]}}}
+
+    with pytest.raises(KeyError, match="size"):
+        build_sample_cluster_assignments(decomposition)

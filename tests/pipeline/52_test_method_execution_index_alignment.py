@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from benchmarks.shared.types import MethodRunResult, MethodSpec
 from benchmarks.shared.util import method_execution
@@ -73,7 +74,7 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert method_audit is None
 
 
-def test_run_single_method_once_falls_back_when_report_index_not_sample_ids(monkeypatch):
+def test_run_single_method_once_rejects_report_index_not_sample_ids(monkeypatch):
     data_t = pd.DataFrame(
         [[0, 1], [1, 0], [0, 0], [1, 1]],
         index=["S0", "S1", "S2", "S3"],
@@ -102,31 +103,27 @@ def test_run_single_method_once_falls_back_when_report_index_not_sample_ids(monk
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
 
     spec = MethodSpec(name="K-Means", runner=lambda **_kwargs: None, param_grid=[{}])
-    result_row, computed_result, _ = method_execution.run_single_method_once(
-        method_id="kmeans",
-        spec=spec,
-        params={},
-        case_idx=1,
-        case_name="positional_index_case",
-        tc_seed=42,
-        significance_level=0.05,
-        data_t=data_t,
-        y_t=y_t,
-        x_original=data_t.values.astype(float),
-        meta={
-            "n_clusters": 2,
-            "n_samples": 4,
-            "n_features": 2,
-            "noise": 0.0,
-            "category": "regression",
-        },
-        distance_matrix=None,
-        distance_condensed=None,
-        precomputed_distance_condensed=None,
-        matrix_audit=False,
-    )
-
-    assert np.isclose(result_row.ari, 1.0)
-    assert np.isclose(result_row.nmi, 1.0)
-    assert np.isclose(result_row.purity, 1.0)
-    assert computed_result is not None
+    with pytest.raises(ValueError, match="Runner report_df index must match sample ids"):
+        method_execution.run_single_method_once(
+            method_id="kmeans",
+            spec=spec,
+            params={},
+            case_idx=1,
+            case_name="positional_index_case",
+            tc_seed=42,
+            significance_level=0.05,
+            data_t=data_t,
+            y_t=y_t,
+            x_original=data_t.values.astype(float),
+            meta={
+                "n_clusters": 2,
+                "n_samples": 4,
+                "n_features": 2,
+                "noise": 0.0,
+                "category": "regression",
+            },
+            distance_matrix=None,
+            distance_condensed=None,
+            precomputed_distance_condensed=None,
+            matrix_audit=False,
+        )

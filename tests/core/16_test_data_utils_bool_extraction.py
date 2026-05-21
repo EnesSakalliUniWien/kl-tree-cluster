@@ -97,7 +97,7 @@ def test_extract_node_sample_size_prefers_leaf_count():
     assert extract_node_sample_size(tree, "node") == 7
 
 
-def test_extract_node_sample_size_counts_descendant_leaves_without_legacy_keys():
+def test_extract_node_sample_size_requires_leaf_count():
     tree = nx.DiGraph()
     tree.add_edge("root", "left")
     tree.add_edge("root", "right")
@@ -106,4 +106,5 @@ def test_extract_node_sample_size_counts_descendant_leaves_without_legacy_keys()
     tree.nodes["root"]["sample_size"] = 99
     tree.nodes["root"]["n_leaves"] = 123
 
-    assert extract_node_sample_size(tree, "root") == 2
+    with pytest.raises(ValueError, match="Missing required 'leaf_count'"):
+        extract_node_sample_size(tree, "root")

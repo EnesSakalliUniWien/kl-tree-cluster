@@ -15,6 +15,7 @@ def _create_categorical_templates(
     n_clusters: int,
     n_cols: int,
     n_categories: int,
+    rng: np.random.Generator,
     sparsity: Optional[float] = None,
 ) -> List[np.ndarray]:
     """Creates distinct categorical distribution templates for each cluster.
@@ -51,7 +52,7 @@ def _create_categorical_templates(
                 # Use Dirichlet with concentration on different categories
                 alpha = np.ones(n_categories)
                 alpha[dominant_cat] = 3.0  # Higher concentration on dominant
-                probs = np.random.dirichlet(alpha)
+                probs = rng.dirichlet(alpha)
 
             template[feat_idx] = probs
 
@@ -60,9 +61,9 @@ def _create_categorical_templates(
     return templates
 
 
-def _sample_from_categorical(probs: np.ndarray) -> int:
+def _sample_from_categorical(probs: np.ndarray, rng: np.random.Generator) -> int:
     """Sample a category from a probability distribution."""
-    return np.random.choice(len(probs), p=probs)
+    return int(rng.choice(len(probs), p=probs))
 
 
 def _apply_categorical_noise(
@@ -119,21 +120,28 @@ def generate_categorical_feature_matrix(
         - cluster_assignments: Dict mapping sample names to cluster IDs
         - distributions: (n_rows, n_cols, n_categories) array of probability distributions
     """
-    if random_seed is not None:
-        np.random.seed(random_seed)
+    if n_rows <= 0:
+        raise ValueError(f"n_rows must be positive, got {n_rows}.")
+    if n_cols <= 0:
+        raise ValueError(f"n_cols must be positive, got {n_cols}.")
+    if n_clusters <= 0:
+        raise ValueError(f"n_clusters must be positive, got {n_clusters}.")
+    if n_clusters > n_rows:
+        raise ValueError(f"n_clusters must be <= n_rows, got {n_clusters} > {n_rows}.")
+    if n_categories < 2:
+        raise ValueError(f"n_categories must be >= 2, got {n_categories}.")
 
-    n_clusters = max(1, min(n_clusters, n_rows))
-    n_categories = max(2, n_categories)
+    rng = np.random.default_rng(random_seed)
 
     sample_dict: Dict[str, np.ndarray] = {}
     cluster_assignments: Dict[str, int] = {}
     distributions: List[np.ndarray] = []
 
-    cluster_sizes = calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters)
+    cluster_sizes = calculate_cluster_sizes(n_rows, n_clusters, balanced_clusters, rng=rng)
 
     # Generate cluster templates
     templates = _create_categorical_templates(
-        n_clusters, n_cols, n_categories, category_sparsity
+        n_clusters, n_cols, n_categories, rng, category_sparsity
     )
 
     # Apply noise based on entropy_param
@@ -157,7 +165,7 @@ def generate_categorical_feature_matrix(
         for _ in range(size):
             # Sample categories from the distribution
             sample = np.array([
-                _sample_from_categorical(template[feat_idx])
+                _sample_from_categorical(template[feat_idx], rng)
                 for feat_idx in range(n_cols)
             ])
 
