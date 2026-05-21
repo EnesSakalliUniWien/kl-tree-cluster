@@ -15,14 +15,14 @@ def test_benchmark_graph_and_density_methods_smoke():
     )
 
     assert len(df_results) == 2
-    assert set(df_results["Method"]) == {"Leiden", "DBSCAN"}
+    assert set(df_results["method"]) == {"leiden", "dbscan"}
 
-    dbscan_row = df_results[df_results["Method"] == "DBSCAN"].iloc[0]
-    assert dbscan_row["Status"] == "ok"
-    assert dbscan_row["Labels_Length"] == dbscan_row["Samples"]
+    dbscan_row = df_results[df_results["method"] == "dbscan"].iloc[0]
+    assert dbscan_row["status"] == "ok"
+    assert dbscan_row["labels_length"] == dbscan_row["samples"]
 
-    ok_rows = df_results[df_results["Status"] == "ok"]
-    assert (ok_rows["Labels_Length"] == ok_rows["Samples"]).all()
+    ok_rows = df_results[df_results["status"] == "ok"]
+    assert (ok_rows["labels_length"] == ok_rows["samples"]).all()
 
 
 def test_benchmark_louvain_and_adaptive_diffusion_methods_smoke():
@@ -36,6 +36,6 @@ def test_benchmark_louvain_and_adaptive_diffusion_methods_smoke():
     )
 
     assert len(df_results) == 2
-    assert set(df_results["Method"]) == {"Louvain", "KL (Adaptive Diffusion)"}
-    assert set(df_results["Status"]) == {"ok"}
-    assert (df_results["Labels_Length"] == df_results["Samples"]).all()
+    assert set(df_results["method"]) == {"louvain", "kl_diffusion_adaptive"}
+    assert set(df_results["status"]) == {"ok"}
+    assert (df_results["labels_length"] == df_results["samples"]).all()

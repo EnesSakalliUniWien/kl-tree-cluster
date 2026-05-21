@@ -284,13 +284,13 @@ def _parse_args() -> argparse.Namespace:
 def _load_changed_kl_case_nums(baseline_run: Path, candidate_run: Path) -> list[int]:
     baseline_df = pd.read_csv(baseline_run / "full_benchmark_comparison.csv")
     candidate_df = pd.read_csv(candidate_run / "full_benchmark_comparison.csv")
-    key = ["test_case", "case_id", "method", "Params"]
+    key = ["test_case", "case_id", "method", "params"]
     merged = baseline_df.merge(candidate_df, on=key, suffixes=("_old", "_new"))
     changed = merged[
         (
             (merged["ari_old"].round(12) != merged["ari_new"].round(12))
             | (merged["found_clusters_old"] != merged["found_clusters_new"])
-            | (merged["Status_old"] != merged["Status_new"])
+            | (merged["status_old"] != merged["status_new"])
         )
         & (merged["method"] == "kl")
     ][["test_case"]].drop_duplicates()

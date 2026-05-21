@@ -49,29 +49,17 @@ def _compute_resume_coverage(
     if existing_results.empty:
         return set(), {}, 0
 
-    case_col = "test_case" if "test_case" in existing_results.columns else "Test"
-    if case_col not in existing_results.columns:
+    if "test_case" not in existing_results.columns:
         return set(), {}, 0
 
-    method_col = "method" if "method" in existing_results.columns else "Method"
-    if method_col not in existing_results.columns:
+    if "method" not in existing_results.columns:
         return set(), {}, 0
 
     expected_set = set(expected_methods)
-    name_to_id = {spec.name: method_id for method_id, spec in METHOD_SPECS.items()}
 
-    case_keys = pd.to_numeric(existing_results[case_col], errors="coerce")
-    methods_raw = existing_results[method_col].astype(str)
-
-    def _normalize_method(value: str) -> str | None:
-        if value in expected_set:
-            return value
-        mapped = name_to_id.get(value)
-        if mapped in expected_set:
-            return mapped
-        return None
-
-    methods_norm = methods_raw.map(_normalize_method)
+    case_keys = pd.to_numeric(existing_results["test_case"], errors="coerce")
+    methods_raw = existing_results["method"].astype(str)
+    methods_norm = methods_raw.where(methods_raw.isin(expected_set))
     progress = pd.DataFrame({"case_key": case_keys, "method_id": methods_norm})
     progress = progress.dropna(subset=["case_key", "method_id"])
     if progress.empty:
@@ -252,20 +240,6 @@ def run_benchmarks():
             )
 
             if not df_res.empty:
-                df_res = df_res.rename(
-                    columns={
-                        "Method": "method",
-                        "ARI": "ari",
-                        "Case_Name": "case_id",
-                        "Test": "test_case",
-                        "True": "true_clusters",
-                        "Found": "found_clusters",
-                    }
-                )
-
-                name_map = {spec.name: method_id for method_id, spec in METHOD_SPECS.items()}
-                df_res["method"] = df_res["method"].map(lambda x: name_map.get(str(x), str(x)))
-
                 all_results = pd.concat([all_results, df_res], ignore_index=True)
 
                 write_header = not output_path.exists()

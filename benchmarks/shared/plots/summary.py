@@ -17,17 +17,12 @@ def create_validation_plot(df_results):
         fig.suptitle("Validation Results (empty)")
         return fig
 
-    has_method_labels = "Method" in df_results.columns
     x = np.arange(len(df_results))
-    if has_method_labels:
-        x_labels = [str(m) for m in df_results["Method"].tolist()]
-        x_title = "Method"
-    else:
-        x_labels = [str(i + 1) for i in range(len(df_results))]
-        x_title = "Run"
+    x_labels = [str(m) for m in df_results["method"].tolist()]
+    x_title = "method"
 
-    axes[0].plot(x, df_results["True"], label="True", marker="o")
-    axes[0].plot(x, df_results["Found"], label="Found", marker="o")
+    axes[0].plot(x, df_results["true_clusters"], label="True", marker="o")
+    axes[0].plot(x, df_results["found_clusters"], label="Found", marker="o")
     axes[0].set_title("Clusters: True vs Found")
     axes[0].set_xlabel(x_title)
     axes[0].set_ylabel("Count")
@@ -36,21 +31,21 @@ def create_validation_plot(df_results):
     axes[0].set_xticks(x)
     axes[0].set_xticklabels(x_labels, rotation=30, ha="right", fontsize=8)
 
-    axes[1].plot(x, df_results["ARI"], marker="o")
+    axes[1].plot(x, df_results["ari"], marker="o")
     axes[1].set_title("ARI")
     axes[1].set_ylim(-0.05, 1.05)
     axes[1].grid(True, alpha=0.3)
     axes[1].set_xticks(x)
     axes[1].set_xticklabels(x_labels, rotation=30, ha="right", fontsize=8)
 
-    axes[2].plot(x, df_results["NMI"], marker="o")
+    axes[2].plot(x, df_results["nmi"], marker="o")
     axes[2].set_title("NMI")
     axes[2].set_ylim(-0.05, 1.05)
     axes[2].grid(True, alpha=0.3)
     axes[2].set_xticks(x)
     axes[2].set_xticklabels(x_labels, rotation=30, ha="right", fontsize=8)
 
-    axes[3].plot(x, df_results["Purity"], marker="o")
+    axes[3].plot(x, df_results["purity"], marker="o")
     axes[3].set_title("Purity (Homogeneity)")
     axes[3].set_ylim(-0.05, 1.05)
     axes[3].grid(True, alpha=0.3)

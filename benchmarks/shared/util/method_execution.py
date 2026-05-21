@@ -154,10 +154,10 @@ def run_single_method_once(
         under_split = np.nan
 
     result_row = build_benchmark_result_row(
-        case_idx=case_idx,
-        case_name=case_name,
+        test_case=case_idx,
+        case_id=case_name,
         case_category=meta.get("category", "unknown"),
-        method_name=spec.name,
+        method=method_id,
         run_params=run_params,
         true_clusters=true_clusters,
         found_clusters=found_clusters,

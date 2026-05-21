@@ -28,30 +28,30 @@ def log_detailed_results(df_results: pd.DataFrame) -> None:
     """Log the detailed results table row by row to avoid truncation."""
     logger.info("Detailed Results:")
     columns = [
-        "Test",
-        "Case_Name",
-        "Method",
-        "Params",
-        "True",
-        "Found",
-        "Samples",
-        "Features",
-        "Noise",
-        "ARI",
-        "NMI",
-        "Purity",
-        "Macro_Recall",
-        "Macro_F1",
-        "Worst_Cluster_Recall",
-        "Outlier_Precision",
-        "Outlier_Recall",
-        "Outlier_F1",
-        "Singleton_Outlier_Isolated",
-        "Grouped_Outlier_Cluster_Recovered",
-        "Cluster_Count_Abs_Error",
-        "Over_Split",
-        "Under_Split",
-        "Status",
+        "test_case",
+        "case_id",
+        "method",
+        "params",
+        "true_clusters",
+        "found_clusters",
+        "samples",
+        "features",
+        "noise",
+        "ari",
+        "nmi",
+        "purity",
+        "macro_recall",
+        "macro_f1",
+        "worst_cluster_recall",
+        "outlier_precision",
+        "outlier_recall",
+        "outlier_f1",
+        "singleton_outlier_isolated",
+        "grouped_outlier_cluster_recovered",
+        "cluster_count_abs_error",
+        "over_split",
+        "under_split",
+        "status",
     ]
     available = [col for col in columns if col in df_results.columns]
     results_str = df_results[available].to_string(index=False)
@@ -96,7 +96,7 @@ def generate_benchmark_plots(
     # top-level PDF assembly. Allow per-case runs to skip these to avoid
     # duplicated/misaligned explanation pages in concatenated reports.
     if include_cover_pages:
-        n_cases = df_results["Test"].nunique() if "Test" in df_results.columns else len(df_results)
+        n_cases = df_results["test_case"].nunique()
         cover_figs = [generate_overview_page(n_cases=n_cases)]
         for group in GROUP_ORDER:
             section_fig = generate_section_page(group)

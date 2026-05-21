@@ -60,25 +60,29 @@ df_results, fig = benchmark_cluster_algorithm(
 print("\n" + "=" * 70)
 print("RESULTS SUMMARY")
 print("=" * 70)
-kl = df_results[df_results["Method"] == "KL Divergence"].copy()
-kl = kl.sort_values("Case_Name")
+kl = df_results[df_results["method"] == "kl"].copy()
+kl = kl.sort_values("case_id")
 
 print(f"\n{'Case':<36s} {'True':>4s} {'Found':>5s} {'ARI':>7s} {'NMI':>7s} {'Status'}")
 print("-" * 70)
 for _, row in kl.iterrows():
-    ari_val = row["ARI"]
-    nmi_val = row["NMI"]
+    ari_val = row["ari"]
+    nmi_val = row["nmi"]
     ari_str = f"{ari_val:.3f}" if not (ari_val != ari_val) else "  N/A"
     nmi_str = f"{nmi_val:.3f}" if not (nmi_val != nmi_val) else "  N/A"
-    true_str = f"{row['True']:>4.0f}" if row["True"] > 0 else " N/A"
-    marker = " ✓" if row["True"] > 0 and row["Found"] == row["True"] else ""
+    true_str = f"{row['true_clusters']:>4.0f}" if row["true_clusters"] > 0 else " N/A"
+    marker = (
+        " ✓"
+        if row["true_clusters"] > 0 and row["found_clusters"] == row["true_clusters"]
+        else ""
+    )
     print(
-        f"{row['Case_Name']:<36s} {true_str} {row['Found']:>5.0f} {ari_str:>7s} {nmi_str:>7s} {row['Status']}{marker}"
+        f"{row['case_id']:<36s} {true_str} {row['found_clusters']:>5.0f} {ari_str:>7s} {nmi_str:>7s} {row['status']}{marker}"
     )
 
-kl_with_truth = kl[kl["True"] > 0]
-exact_k = (kl_with_truth["Found"] == kl_with_truth["True"]).sum()
+kl_with_truth = kl[kl["true_clusters"] > 0]
+exact_k = (kl_with_truth["found_clusters"] == kl_with_truth["true_clusters"]).sum()
 print(f"\nExact K: {exact_k}/{len(kl_with_truth)}")
-ari_valid = kl["ARI"].dropna()
+ari_valid = kl["ari"].dropna()
 print(f"Mean ARI: {ari_valid.mean():.3f}" if len(ari_valid) > 0 else "Mean ARI: N/A")
-print(f"Median ARI: {kl['ARI'].median():.3f}")
+print(f"Median ARI: {kl['ari'].median():.3f}")

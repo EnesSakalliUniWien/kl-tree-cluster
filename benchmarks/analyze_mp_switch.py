@@ -239,22 +239,22 @@ def main():
     print("=" * 90)
 
     b_kl = baseline[baseline["method"] == "kl"][
-        ["case_id", "Case_Category", "ari", "true_clusters", "found_clusters"]
+        ["case_id", "case_category", "ari", "true_clusters", "found_clusters"]
     ].copy()
     m_kl = mp[mp["method"] == "kl"][
-        ["case_id", "Case_Category", "ari", "true_clusters", "found_clusters"]
+        ["case_id", "case_category", "ari", "true_clusters", "found_clusters"]
     ].copy()
     b_kl = b_kl.rename(columns={"ari": "ari_base", "found_clusters": "found_base"})
     m_kl = m_kl.rename(columns={"ari": "ari_mp", "found_clusters": "found_mp"})
-    cat_merged = b_kl.merge(m_kl, on=["case_id", "Case_Category", "true_clusters"], how="outer")
+    cat_merged = b_kl.merge(m_kl, on=["case_id", "case_category", "true_clusters"], how="outer")
 
     print(
         f"\n  {'Category':<30s} {'n':>3s} {'Base ARI':>9s} {'MP ARI':>9s} {'Delta':>7s} {'Base ExK':>8s} {'MP ExK':>7s}"
     )
     print(f"  {'-'*30} {'-'*3} {'-'*9} {'-'*9} {'-'*7} {'-'*8} {'-'*7}")
 
-    for cat in sorted(cat_merged["Case_Category"].dropna().unique()):
-        sub = cat_merged[cat_merged["Case_Category"] == cat]
+    for cat in sorted(cat_merged["case_category"].dropna().unique()):
+        sub = cat_merged[cat_merged["case_category"] == cat]
         n = len(sub)
         ari_b = sub["ari_base"].dropna().mean()
         ari_m = sub["ari_mp"].dropna().mean()

@@ -6,10 +6,10 @@ from benchmarks.shared.results.models import BenchmarkRunStatus
 
 def _build_row(status):
     return build_benchmark_result_row(
-        case_idx=1,
-        case_name="case",
+        test_case=1,
+        case_id="case",
         case_category="cat",
-        method_name="Method",
+        method="method",
         run_params={},
         true_clusters=2,
         found_clusters=2,

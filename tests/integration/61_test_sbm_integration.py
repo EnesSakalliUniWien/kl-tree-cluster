@@ -13,8 +13,8 @@ def test_sbm_cases_run_through_pipeline_minimal():
         test_cases=sbm_cases, methods=["louvain", "leiden"], verbose=False
     )
 
-    assert "Method" in df.columns
-    assert "ARI" in df.columns
+    assert "method" in df.columns
+    assert "ari" in df.columns
     assert df.shape[0] >= len(sbm_cases)
     # Ensure status contract stays normalized.
-    assert set(df["Status"]).issubset({"ok", "skip"})
+    assert set(df["status"]).issubset({"ok", "skip"})

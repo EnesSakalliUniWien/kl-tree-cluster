@@ -47,8 +47,8 @@ def test_forced_runner_failure_populates_skip_reason_everywhere(monkeypatch):
         plot_manifold=False,
     )
     assert len(df_pipeline) == 1
-    assert str(df_pipeline.iloc[0]["Status"]) == "skip"
-    assert _non_empty_text(df_pipeline.iloc[0]["Skip_Reason"])
+    assert str(df_pipeline.iloc[0]["status"]) == "skip"
+    assert _non_empty_text(df_pipeline.iloc[0]["skip_reason"])
 
     df_branch = run_branch_length_benchmark(
         n_leaves=20,

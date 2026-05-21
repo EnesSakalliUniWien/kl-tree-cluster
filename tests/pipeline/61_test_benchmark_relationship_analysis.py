@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pytest
 from benchmarks.shared.relationship_analysis import (
     analyze_benchmark_relationships,
     normalize_results_dataframe,
@@ -245,7 +246,7 @@ def test_normalize_results_dataframe_preserves_unrecognized_columns() -> None:
     assert normalized.loc[0, "Custom_Label"] == "kept"
 
 
-def test_normalize_results_dataframe_accepts_full_runner_csv_columns() -> None:
+def test_normalize_results_dataframe_rejects_old_full_runner_csv_columns() -> None:
     df = pd.DataFrame(
         {
             "Test": [1],
@@ -273,25 +274,8 @@ def test_normalize_results_dataframe_accepts_full_runner_csv_columns() -> None:
         }
     )
 
-    normalized = normalize_results_dataframe(df)
-
-    assert normalized.loc[0, "test_case"] == 1
-    assert normalized.loc[0, "case_id"] == "case_1"
-    assert normalized.loc[0, "case_category"] == "improved_gaussian"
-    assert normalized.loc[0, "method"] == "KL Divergence"
-    assert normalized.loc[0, "params"] == "tree_distance_metric=hamming"
-    assert normalized.loc[0, "true_clusters"] == 3
-    assert normalized.loc[0, "found_clusters"] == 3
-    assert normalized.loc[0, "samples"] == 30
-    assert normalized.loc[0, "features"] == 20
-    assert normalized.loc[0, "noise"] == 0.4
-    assert normalized.loc[0, "ari"] == 0.75
-    assert normalized.loc[0, "nmi"] == 0.8
-    assert normalized.loc[0, "purity"] == 0.9
-    assert normalized.loc[0, "macro_recall"] == 0.7
-    assert normalized.loc[0, "cluster_count_abs_error"] == 0
-    assert normalized.loc[0, "status"] == "ok"
-    assert normalized.loc[0, "labels_length"] == 30
+    with pytest.raises(ValueError, match="canonical snake_case columns"):
+        normalize_results_dataframe(df)
 
 
 def test_prepare_relationship_frame_derives_split_flags() -> None:

@@ -59,29 +59,17 @@ def _resume_coverage(
     if df_existing.empty:
         return set(), {}, 0
 
-    case_col = "test_case" if "test_case" in df_existing.columns else "Test"
-    if case_col not in df_existing.columns:
+    if "test_case" not in df_existing.columns:
         return set(), {}, 0
 
-    method_col = "method" if "method" in df_existing.columns else "Method"
-    if method_col not in df_existing.columns:
+    if "method" not in df_existing.columns:
         return set(), {}, 0
 
     expected_set = set(expected_methods)
-    name_to_id = {spec.name: method_id for method_id, spec in METHOD_SPECS.items()}
 
-    case_keys = pd.to_numeric(df_existing[case_col], errors="coerce")
-    methods_raw = df_existing[method_col].astype(str)
-
-    def _normalize_method(value: str) -> str | None:
-        if value in expected_set:
-            return value
-        mapped = name_to_id.get(value)
-        if mapped in expected_set:
-            return mapped
-        return None
-
-    methods_norm = methods_raw.map(_normalize_method)
+    case_keys = pd.to_numeric(df_existing["test_case"], errors="coerce")
+    methods_raw = df_existing["method"].astype(str)
+    methods_norm = methods_raw.where(methods_raw.isin(expected_set))
     progress = pd.DataFrame({"case_key": case_keys, "method_id": methods_norm})
     progress = progress.dropna(subset=["case_key", "method_id"])
     if progress.empty:
@@ -177,12 +165,11 @@ def main() -> None:
         write_header = not out_csv.exists()
         case_df.to_csv(out_csv, mode="a", header=write_header, index=False)
 
-        if not case_df.empty and "Method" in case_df.columns and "ARI" in case_df.columns:
+        if not case_df.empty:
             for method_id in methods_for_case:
-                method_name = METHOD_SPECS[method_id].name
-                row = case_df[case_df["Method"] == method_name]
+                row = case_df[case_df["method"] == method_id]
                 if not row.empty:
-                    ari = float(row["ARI"].iloc[0])
+                    ari = float(row["ari"].iloc[0])
                     print(f"    {method_id}: ARI={ari:.4f}", flush=True)
 
     print("-" * 60)
@@ -194,9 +181,9 @@ def main() -> None:
     print("Isolated benchmark run complete.")
     print(f"CSV: {out_csv}")
 
-    if "Method" in final_df.columns and "ARI" in final_df.columns:
-        print("\nMean ARI by Method:")
-        print(final_df.groupby("Method")["ARI"].mean().sort_values(ascending=False))
+    if "method" in final_df.columns and "ari" in final_df.columns:
+        print("\nMean ARI by method:")
+        print(final_df.groupby("method")["ari"].mean().sort_values(ascending=False))
 
 
 if __name__ == "__main__":

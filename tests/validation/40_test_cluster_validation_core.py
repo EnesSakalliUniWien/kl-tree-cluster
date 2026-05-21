@@ -21,24 +21,24 @@ def test_cluster_algorithm_validation():
         methods=["kl"],
     )
 
-    kl_results = df_results[df_results["Method"] == "KL Divergence"].reset_index(drop=True)
+    kl_results = df_results[df_results["method"] == "kl"].reset_index(drop=True)
     assert len(kl_results) >= len(SMALL_TEST_CASES)
 
     for case_name in ("clear", "moderate", "noisy"):
-        rows = kl_results[(kl_results["Case_Name"] == case_name)]
-        best = rows.sort_values(["ARI", "Params"], ascending=[False, True]).iloc[0]
+        rows = kl_results[(kl_results["case_id"] == case_name)]
+        best = rows.sort_values(["ari", "params"], ascending=[False, True]).iloc[0]
 
-        assert best["Status"] == "ok"
-        assert best["Found"] >= 1
+        assert best["status"] == "ok"
+        assert best["found_clusters"] >= 1
         # ARI ranges from -0.5 to 1.0; negative values indicate assignments
         # worse than random.  On very small / noisy data this is expected.
-        assert -1 <= best["ARI"] <= 1
-        assert 0 <= best["NMI"] <= 1
-        assert 0 <= best["Purity"] <= 1
-        assert 0 <= best["Macro_Recall"] <= 1
-        assert 0 <= best["Macro_F1"] <= 1
-        assert 0 <= best["Worst_Cluster_Recall"] <= 1
-        assert best["Cluster_Count_Abs_Error"] >= 0
+        assert -1 <= best["ari"] <= 1
+        assert 0 <= best["nmi"] <= 1
+        assert 0 <= best["purity"] <= 1
+        assert 0 <= best["macro_recall"] <= 1
+        assert 0 <= best["macro_f1"] <= 1
+        assert 0 <= best["worst_cluster_recall"] <= 1
+        assert best["cluster_count_abs_error"] >= 0
 
 
 def test_benchmark_cluster_algorithm_expected_columns():
@@ -51,38 +51,39 @@ def test_benchmark_cluster_algorithm_expected_columns():
     )
 
     expected_columns = {
-        "Test",
-        "Case_Name",
-        "Method",
-        "Params",
-        "True",
-        "Found",
-        "Samples",
-        "Features",
-        "Noise",
-        "ARI",
-        "NMI",
-        "Purity",
-        "Macro_Recall",
-        "Macro_F1",
-        "Worst_Cluster_Recall",
-        "Outlier_Precision",
-        "Outlier_Recall",
-        "Outlier_F1",
-        "Singleton_Outlier_Isolated",
-        "Grouped_Outlier_Cluster_Recovered",
-        "Cluster_Count_Abs_Error",
-        "Over_Split",
-        "Under_Split",
-        "Status",
-        "Skip_Reason",
-        "Labels_Length",
+        "test_case",
+        "case_id",
+        "case_category",
+        "method",
+        "params",
+        "true_clusters",
+        "found_clusters",
+        "samples",
+        "features",
+        "noise",
+        "ari",
+        "nmi",
+        "purity",
+        "macro_recall",
+        "macro_f1",
+        "worst_cluster_recall",
+        "outlier_precision",
+        "outlier_recall",
+        "outlier_f1",
+        "singleton_outlier_isolated",
+        "grouped_outlier_cluster_recovered",
+        "cluster_count_abs_error",
+        "over_split",
+        "under_split",
+        "status",
+        "skip_reason",
+        "labels_length",
     }
     assert expected_columns.issubset(df_results.columns)
-    kl_results = df_results[df_results["Method"] == "KL Divergence"]
+    kl_results = df_results[df_results["method"] == "kl"]
     assert len(kl_results) >= 1
     assert fig is None
-    assert (kl_results["ARI"].between(-1, 1)).all()
+    assert (kl_results["ari"].between(-1, 1)).all()
 
 
 def test_benchmark_cluster_algorithm_handles_empty_cases():

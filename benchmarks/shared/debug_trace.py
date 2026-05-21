@@ -25,20 +25,14 @@ def diagnose_benchmark_failures(
         logger.error(f"Failed to read results CSV: {e}")
         return
 
-    # Filter for poor performers
-    # Check for 'ari' vs 'ARI' column
-    ari_col = "ari" if "ari" in df.columns else "ARI"
-
-    if ari_col not in df.columns:
+    if "ari" not in df.columns:
         logger.warning(f"ARI column not found in {df.columns}")
         return
 
-    keys = df.columns
-    method_col = "Method" if "Method" in keys else "method"
-    if method_col in keys:
-        bad_cases = df[(df[method_col] == "kl") & (df[ari_col] < 0.2)]
+    if "method" in df.columns:
+        bad_cases = df[(df["method"] == "kl") & (df["ari"] < 0.2)]
     else:
-        bad_cases = df[df[ari_col] < 0.2]
+        bad_cases = df[df["ari"] < 0.2]
 
     if bad_cases.empty:
         logger.info("No failure cases found (ARI < 0.2).")
@@ -55,11 +49,11 @@ def diagnose_benchmark_failures(
     ]
 
     for _, row in bad_cases.iterrows():
-        case_num = row.get("test_case", row.get("Test", "N/A"))
-        case_id = row.get("case_id", row.get("Case_Name", "Unknown"))
-        ari_val = row[ari_col]
-        true_k = row.get("true_clusters", row.get("True", "?"))
-        found_k = row.get("found_clusters", row.get("Found", "?"))
+        case_num = row.get("test_case", "N/A")
+        case_id = row.get("case_id", "Unknown")
+        ari_val = row["ari"]
+        true_k = row.get("true_clusters", "?")
+        found_k = row.get("found_clusters", "?")
 
         # Locate audit file
         # Pattern: case_{num}_kl_divergence_stats.csv

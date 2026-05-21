@@ -219,14 +219,14 @@ def _load_full_benchmark_rows(
     candidate_csv = candidate_run / "full_benchmark_comparison.csv"
     baseline_df = pd.read_csv(baseline_csv)
     candidate_df = pd.read_csv(candidate_csv)
-    key = ["test_case", "case_id", "method", "Params"]
+    key = ["test_case", "case_id", "method", "params"]
     merged = baseline_df.merge(candidate_df, on=key, suffixes=("_old", "_new"))
     changed_mask = (
         merged["ari_old"].round(12) != merged["ari_new"].round(12)
     ) | (
         merged["found_clusters_old"] != merged["found_clusters_new"]
     ) | (
-        merged["Status_old"] != merged["Status_new"]
+        merged["status_old"] != merged["status_new"]
     )
     changed = merged[changed_mask & (merged["method"] == method)].copy()
     changed = changed[
@@ -237,8 +237,8 @@ def _load_full_benchmark_rows(
             "found_clusters_old",
             "ari_new",
             "found_clusters_new",
-            "Status_old",
-            "Status_new",
+            "status_old",
+            "status_new",
         ]
     ].drop_duplicates()
     return changed.sort_values("test_case").reset_index(drop=True)

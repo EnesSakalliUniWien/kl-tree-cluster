@@ -69,35 +69,26 @@ _NUMERIC_COLUMNS = (
     "labels_length",
 )
 
-_CSV_WRITER_COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
-    "test_case": ("Test",),
-    "case_id": ("Case_Name",),
-    "case_category": ("Case_Category",),
-    "method": ("Method",),
-    "params": ("Params",),
-    "true_clusters": ("True",),
-    "found_clusters": ("Found",),
-    "samples": ("Samples",),
-    "features": ("Features",),
-    "noise": ("Noise",),
-    "ari": ("ARI",),
-    "nmi": ("NMI",),
-    "purity": ("Purity",),
-    "macro_recall": ("Macro_Recall",),
-    "macro_f1": ("Macro_F1",),
-    "worst_cluster_recall": ("Worst_Cluster_Recall",),
-    "outlier_precision": ("Outlier_Precision",),
-    "outlier_recall": ("Outlier_Recall",),
-    "outlier_f1": ("Outlier_F1",),
-    "singleton_outlier_isolated": ("Singleton_Outlier_Isolated",),
-    "grouped_outlier_cluster_recovered": ("Grouped_Outlier_Cluster_Recovered",),
-    "cluster_count_abs_error": ("Cluster_Count_Abs_Error",),
-    "over_split": ("Over_Split",),
-    "under_split": ("Under_Split",),
-    "status": ("Status",),
-    "skip_reason": ("Skip_Reason",),
-    "labels_length": ("Labels_Length",),
-}
+_OLD_RESULT_COLUMNS = frozenset(
+    {
+        "Test",
+        "Case_Name",
+        "Case_Category",
+        "Method",
+        "Params",
+        "True",
+        "Found",
+        "Samples",
+        "Features",
+        "Noise",
+        "ARI",
+        "NMI",
+        "Purity",
+        "Status",
+        "Skip_Reason",
+        "Labels_Length",
+    }
+)
 
 _CONTINUOUS_EFFECT_LABELS = {
     "noise_z": "noise",
@@ -180,14 +171,17 @@ class BenchmarkRelationshipArtifacts:
 
 def normalize_results_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """Normalize current-schema result columns."""
+    old_columns = sorted(_OLD_RESULT_COLUMNS.intersection(df.columns))
+    if old_columns:
+        raise ValueError(
+            "Benchmark results must use canonical snake_case columns; "
+            f"found old result columns: {old_columns}."
+        )
+
     normalized = pd.DataFrame(index=df.index)
 
     for column in _RESULT_COLUMNS:
-        source_column = column if column in df.columns else None
-        for alias in _CSV_WRITER_COLUMN_ALIASES.get(column, ()):
-            if source_column is None and alias in df.columns:
-                source_column = alias
-        normalized[column] = df[source_column] if source_column is not None else np.nan
+        normalized[column] = df[column] if column in df.columns else np.nan
 
     for col in df.columns:
         if col not in normalized.columns:
