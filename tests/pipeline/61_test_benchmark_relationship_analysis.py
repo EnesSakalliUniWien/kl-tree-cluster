@@ -227,33 +227,38 @@ def test_normalize_results_dataframe_uses_current_schema_only() -> None:
     assert list(normalized["status"]) == ["ok"]
 
 
-def test_normalize_results_dataframe_does_not_map_noncanonical_columns() -> None:
-    df = pd.DataFrame({"Test": [1], "Case_Name": ["legacy_case"], "ARI": [0.5]})
+def test_normalize_results_dataframe_preserves_unrecognized_columns() -> None:
+    df = pd.DataFrame(
+        {
+            "test_case": [1],
+            "case_id": ["case_1"],
+            "ari": [0.5],
+            "Custom_Label": ["kept"],
+        }
+    )
 
     normalized = normalize_results_dataframe(df)
 
-    assert pd.isna(normalized.loc[0, "test_case"])
-    assert normalized.loc[0, "case_id"] == ""
-    assert pd.isna(normalized.loc[0, "ari"])
-    assert normalized.loc[0, "Test"] == 1
-    assert normalized.loc[0, "Case_Name"] == "legacy_case"
-    assert normalized.loc[0, "ARI"] == 0.5
+    assert normalized.loc[0, "test_case"] == 1
+    assert normalized.loc[0, "case_id"] == "case_1"
+    assert normalized.loc[0, "ari"] == 0.5
+    assert normalized.loc[0, "Custom_Label"] == "kept"
 
 
 def test_normalize_results_dataframe_accepts_full_runner_csv_columns() -> None:
     df = pd.DataFrame(
         {
-            "test_case": [1],
-            "case_id": ["case_1"],
+            "Test": [1],
+            "Case_Name": ["case_1"],
             "Case_Category": ["improved_gaussian"],
-            "method": ["kl"],
+            "Method": ["KL Divergence"],
             "Params": ["tree_distance_metric=hamming"],
-            "true_clusters": [3],
-            "found_clusters": [3],
+            "True": [3],
+            "Found": [3],
             "Samples": [30],
             "Features": [20],
             "Noise": [0.4],
-            "ari": [0.75],
+            "ARI": [0.75],
             "NMI": [0.8],
             "Purity": [0.9],
             "Macro_Recall": [0.7],
@@ -270,11 +275,17 @@ def test_normalize_results_dataframe_accepts_full_runner_csv_columns() -> None:
 
     normalized = normalize_results_dataframe(df)
 
+    assert normalized.loc[0, "test_case"] == 1
+    assert normalized.loc[0, "case_id"] == "case_1"
     assert normalized.loc[0, "case_category"] == "improved_gaussian"
+    assert normalized.loc[0, "method"] == "KL Divergence"
     assert normalized.loc[0, "params"] == "tree_distance_metric=hamming"
+    assert normalized.loc[0, "true_clusters"] == 3
+    assert normalized.loc[0, "found_clusters"] == 3
     assert normalized.loc[0, "samples"] == 30
     assert normalized.loc[0, "features"] == 20
     assert normalized.loc[0, "noise"] == 0.4
+    assert normalized.loc[0, "ari"] == 0.75
     assert normalized.loc[0, "nmi"] == 0.8
     assert normalized.loc[0, "purity"] == 0.9
     assert normalized.loc[0, "macro_recall"] == 0.7

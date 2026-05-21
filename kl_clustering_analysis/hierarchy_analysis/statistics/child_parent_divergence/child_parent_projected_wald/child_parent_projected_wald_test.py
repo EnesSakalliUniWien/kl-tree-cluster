@@ -48,5 +48,4 @@ def run_child_parent_projected_wald_test(
 
 __all__ = [
     "run_child_parent_projected_wald_test",
-    "run_projected_wald_kernel",
 ]

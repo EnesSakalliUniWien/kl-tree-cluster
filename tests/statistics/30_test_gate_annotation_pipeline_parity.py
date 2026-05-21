@@ -51,7 +51,7 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
     return tree, base_df
 
 
-def test_gate_adapter_pipeline_matches_sequential_gate_annotations(monkeypatch) -> None:
+def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatch) -> None:
     tree, base_df = _build_small_binary_tree()
 
     edge_df = annotate_child_parent_divergence(
@@ -75,22 +75,22 @@ def test_gate_adapter_pipeline_matches_sequential_gate_annotations(monkeypatch) 
     assert isinstance(bundle, GateAnnotationBundle)
     assert isinstance(bundle.gate_two_result, Gate2Result)
     assert isinstance(bundle.gate_two_result.spectral_context, SpectralContext)
-    adapter_df = bundle.annotated_df
+    pipeline_df = bundle.annotated_df
 
     sequential_gate_cols = [
         col
         for col in sequential_df.columns
         if col.startswith("Child_Parent_") or col.startswith("Sibling_")
     ]
-    adapter_gate_cols = [
+    pipeline_gate_cols = [
         col
-        for col in adapter_df.columns
+        for col in pipeline_df.columns
         if col.startswith("Child_Parent_") or col.startswith("Sibling_")
     ]
 
-    assert adapter_gate_cols == sequential_gate_cols
+    assert pipeline_gate_cols == sequential_gate_cols
     pdt.assert_frame_equal(
-        adapter_df[sequential_gate_cols],
+        pipeline_df[sequential_gate_cols],
         sequential_df[sequential_gate_cols],
         check_dtype=False,
     )
@@ -100,8 +100,8 @@ def test_gate_adapter_pipeline_matches_sequential_gate_annotations(monkeypatch) 
         col for col in sequential_gate_cols if col.startswith("Child_Parent_")
     )
     expected_sibling_cols = tuple(col for col in sequential_gate_cols if col.startswith("Sibling_"))
-    actual_edge_cols = tuple(col for col in adapter_df.columns if col.startswith("Child_Parent_"))
-    actual_sibling_cols = tuple(col for col in adapter_df.columns if col.startswith("Sibling_"))
+    actual_edge_cols = tuple(col for col in pipeline_df.columns if col.startswith("Child_Parent_"))
+    actual_sibling_cols = tuple(col for col in pipeline_df.columns if col.startswith("Sibling_"))
     assert actual_edge_cols == expected_edge_cols
     assert actual_sibling_cols == expected_sibling_cols
     assert bundle.local_gate_columns == expected_edge_cols

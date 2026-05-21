@@ -8,12 +8,11 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.backends.backend_pdf import PdfPages
-
 from benchmarks.shared.results import ComputedResultRecord
 from benchmarks.shared.util.pdf.layout import prepare_pdf_figure
+from matplotlib.backends.backend_pdf import PdfPages
 
-from .cover_page import generate_cover_pages
+from .cover_page import GROUP_ORDER, generate_overview_page, generate_section_page
 from .export import (
     create_manifold_plots_from_results,
     create_tree_plots_from_results,
@@ -98,7 +97,11 @@ def generate_benchmark_plots(
     # duplicated/misaligned explanation pages in concatenated reports.
     if include_cover_pages:
         n_cases = df_results["Test"].nunique() if "Test" in df_results.columns else len(df_results)
-        cover_figs = generate_cover_pages(n_cases=n_cases)
+        cover_figs = [generate_overview_page(n_cases=n_cases)]
+        for group in GROUP_ORDER:
+            section_fig = generate_section_page(group)
+            if section_fig is not None:
+                cover_figs.append(section_fig)
         for cfig in cover_figs:
             pdf.savefig(cfig)
             plt.close(cfig)

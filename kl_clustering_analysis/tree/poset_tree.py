@@ -8,10 +8,6 @@ import numpy as np
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
-    build_sample_cluster_assignments as _build_sample_cluster_assignments,
-)
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.distributions import populate_distributions
 from kl_clustering_analysis.tree.topology import (
     compute_descendant_leaf_sets,
@@ -272,10 +268,15 @@ class PosetTree(nx.DiGraph):
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
 
         if annotations_df is None:
+            annotations_df = self.annotations_df
+
+        if annotations_df is None:
             raise ValueError(
                 "annotations_df is required. Call populate_node_divergences(leaf_data) "
                 "first and pass tree.annotations_df explicitly."
             )
+
+        from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
         decomposer = TreeDecomposition(
             tree=self,
@@ -310,4 +311,8 @@ class PosetTree(nx.DiGraph):
             A pandas DataFrame indexed by ``sample_id`` with cluster assignment columns.
         """
 
-        return _build_sample_cluster_assignments(decomposition_results)
+        from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+            build_sample_cluster_assignments,
+        )
+
+        return build_sample_cluster_assignments(decomposition_results)

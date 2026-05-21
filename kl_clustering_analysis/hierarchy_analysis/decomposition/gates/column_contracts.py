@@ -1,4 +1,4 @@
-"""Shared column-prefix and contract helpers for gate adapters."""
+"""Shared column-prefix and contract helpers for gate annotation outputs."""
 
 from __future__ import annotations
 

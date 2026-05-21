@@ -53,11 +53,6 @@ _register(
     "binary_null",
     "binary_multiscale",
     "binary_noise_features",
-    # Legacy names kept for backward compat
-    "binary_perfect_separation",
-    "binary_unbalanced",
-    "binary_large_matrices",
-    "binary_high_noise",
 )
 _register("sbm", "sbm", "sbm_graphs")
 _register(
@@ -479,23 +474,6 @@ def generate_section_page(group: str) -> plt.Figure | None:
     return _text_page(text, fontsize=9.5)
 
 
-def generate_cover_pages(
-    n_cases: int = 97,
-    timestamp: str | None = None,
-) -> list[plt.Figure]:
-    """Return ALL cover/section pages as a flat list (legacy API).
-
-    Order: overview, then one page per group in GROUP_ORDER, with the
-    evaluation metrics appended to the last page.
-    """
-    figs: list[plt.Figure] = [generate_overview_page(n_cases, timestamp)]
-    for group in GROUP_ORDER:
-        fig = generate_section_page(group)
-        if fig is not None:
-            figs.append(fig)
-    return figs
-
-
 def write_cover_pages_to_pdf(
     pdf_path: str | None = None,
     *,
@@ -511,9 +489,14 @@ def write_cover_pages_to_pdf(
 
     from matplotlib.backends.backend_pdf import PdfPages
 
-    pages = generate_cover_pages(n_cases=n_cases, timestamp=timestamp)
     with PdfPages(pdf_path) as pp:
-        for fig in pages:
+        fig = generate_overview_page(n_cases=n_cases, timestamp=timestamp)
+        pp.savefig(fig)
+        plt.close(fig)
+        for group in GROUP_ORDER:
+            fig = generate_section_page(group)
+            if fig is None:
+                continue
             pp.savefig(fig)
             plt.close(fig)
     return pdf_path
@@ -538,7 +521,6 @@ def write_section_page_to_pdf(group: str, pdf_path: str) -> str | None:
 
 __all__ = [
     "category_group",
-    "generate_cover_pages",
     "generate_overview_page",
     "generate_section_page",
     "write_cover_pages_to_pdf",

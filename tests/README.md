@@ -8,13 +8,13 @@ statistics, traversal, pipeline contracts, integration, and visualization.
 ```text
 tests/
 ├── conftest.py
-├── test_cases_config.py
 ├── core/
 ├── statistics/
 ├── localization/
 ├── validation/
 ├── pipeline/
 ├── integration/
+├── lab/
 └── visualization/
 ```
 
@@ -23,7 +23,6 @@ tests/
 ### Shared fixtures and repo-wide regressions
 
 - `conftest.py`
-- `test_cases_config.py`
 - `test_methodology_fixes.py`
 
 ### Core tree/decomposition primitives (`core/`)
@@ -40,7 +39,7 @@ tests/
 - `26_test_invalid_nonfinite_handling.py`
 - `27_test_categorical_distributions.py`
 - `29_test_method_k_estimators_parity.py`
-- `30_test_gate_adapter_parity.py`
+- `30_test_gate_annotation_pipeline_parity.py`
 - `31_test_registry_config_wiring.py`
 
 ### Traversal and localization behavior (`localization/`)
@@ -73,6 +72,10 @@ tests/
 - `60_test_benchmark_methods_smoke.py`
 - `61_test_sbm_integration.py`
 - `62_test_phylogenetic_generator.py`
+
+### Enhancement-lab regressions (`lab/`)
+
+- `62_test_v3_global_baseline_regression.py`
 
 ### Visualization and layout (`visualization/`)
 
@@ -107,8 +110,8 @@ pytest tests/validation/
 # 5) Pipeline contracts + reporting artifacts
 pytest tests/pipeline/
 
-# 6) Integration smoke + visualization
-pytest tests/integration/ tests/visualization/
+# 6) Integration smoke + lab regressions + visualization
+pytest tests/integration/ tests/lab/ tests/visualization/
 
 # 7) Full suite
 pytest
@@ -119,3 +122,5 @@ pytest
 - Grouping is by intent, not by a strict import dependency graph.
 - If you touched decomposition logic, start with `tests/core/`, `tests/statistics/`, and `tests/localization/`.
 - For benchmark or artifact-generation changes, prioritize `tests/pipeline/` and `tests/integration/`.
+- For enhancement-lab calibration experiments, use `tests/lab/`; production calibration contracts belong
+  in `tests/statistics/` or `tests/integration/`.

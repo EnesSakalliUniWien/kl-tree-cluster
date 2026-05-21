@@ -19,8 +19,8 @@ from benchmarks.shared.config import DEFAULT_METHODS
 # focused and testable.
 from benchmarks.shared.logging import log_validation_completion, log_validation_start
 
-# Metrics helpers extracted to their own module for reuse and easier testing.
-from benchmarks.shared.plots import generate_benchmark_plots
+# Plot generation lives in the runtime module; avoid importing the full plots barrel.
+from benchmarks.shared.plots.runtime import generate_benchmark_plots
 from benchmarks.shared.results import (
     BenchmarkResultRow,
     ComputedResultRecord,

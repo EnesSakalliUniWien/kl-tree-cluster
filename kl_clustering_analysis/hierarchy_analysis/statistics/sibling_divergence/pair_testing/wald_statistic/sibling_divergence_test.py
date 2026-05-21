@@ -29,22 +29,12 @@ def sibling_divergence_test(
     mean_branch_length: float | None = None,
     *,
     test_id: str | None = None,
-    spectral_k: int | None = None,
     projection_dimension_from_edge_comparisons: int | None = None,
-    pca_projection: np.ndarray | None = None,
     parent_principal_component_projection: np.ndarray | None = None,
-    pca_eigenvalues: np.ndarray | None = None,
     parent_principal_component_eigenvalues: np.ndarray | None = None,
     projection_diagnostics: dict[str, object] | None = None,
 ) -> tuple[float, float, float]:
     """Two-sample Wald test for sibling divergence."""
-    if projection_dimension_from_edge_comparisons is None:
-        projection_dimension_from_edge_comparisons = spectral_k
-    if parent_principal_component_projection is None:
-        parent_principal_component_projection = pca_projection
-    if parent_principal_component_eigenvalues is None:
-        parent_principal_component_eigenvalues = pca_eigenvalues
-
     branch_length_sum = _resolve_sibling_branch_length_sum(
         branch_length_left,
         branch_length_right,

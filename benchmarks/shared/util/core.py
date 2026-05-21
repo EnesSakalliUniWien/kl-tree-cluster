@@ -32,6 +32,15 @@ def _resolve_n_neighbors(n_samples: int, n_neighbors: int | None) -> int:
     return max(1, min(int(n_neighbors), n_samples - 1))
 
 
+def _resolve_requested_cluster_count(n_samples: int, params: dict[str, object]) -> int:
+    """Resolve a requested cluster count with the benchmark default and sample bounds."""
+    raw = params.get("n_clusters")
+    if raw is None or str(raw).strip().lower() in {"true", "expected", "auto"}:
+        raw = max(2, min(10, int(round(np.sqrt(max(n_samples, 2) / 2.0)))))
+    n_clusters = int(raw)
+    return max(1, min(n_clusters, n_samples))
+
+
 def _knn_edge_weights(
     distance_matrix: np.ndarray, n_neighbors: int
 ) -> list[tuple[int, int, float]]:
@@ -60,5 +69,6 @@ __all__ = [
     "_normalize_labels",
     "_estimate_dbscan_eps",
     "_resolve_n_neighbors",
+    "_resolve_requested_cluster_count",
     "_knn_edge_weights",
 ]

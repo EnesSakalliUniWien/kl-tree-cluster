@@ -70,11 +70,17 @@ _NUMERIC_COLUMNS = (
 )
 
 _CSV_WRITER_COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
+    "test_case": ("Test",),
+    "case_id": ("Case_Name",),
     "case_category": ("Case_Category",),
+    "method": ("Method",),
     "params": ("Params",),
+    "true_clusters": ("True",),
+    "found_clusters": ("Found",),
     "samples": ("Samples",),
     "features": ("Features",),
     "noise": ("Noise",),
+    "ari": ("ARI",),
     "nmi": ("NMI",),
     "purity": ("Purity",),
     "macro_recall": ("Macro_Recall",),

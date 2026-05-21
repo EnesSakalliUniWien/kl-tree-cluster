@@ -10,7 +10,7 @@ clustering pipeline.
 | `tree_decomposition.py` | Public decomposition engine. Prepares annotations, caches node metadata, evaluates gates, and emits cluster assignments. |
 | `cluster_assignments.py` | Builds cluster-root and per-sample assignment tables from explicit final tree boundaries. |
 | `bootstrap_consensus.py` | Bootstrap-based stability helpers layered on top of decomposition results. |
-| `decomposition/gates/orchestrator.py` | Runs Gate 2 then Gate 3 adapters and returns a node-indexed annotation bundle. |
+| `decomposition/gates/orchestrator.py` | Runs Gate 2 then Gate 3 and returns a node-indexed annotation bundle. |
 | `decomposition/gates/gate_evaluator.py` | Encapsulates binary-structure, child-parent, sibling, and passthrough decisions as one traversal action. |
 | `decomposition/gates/column_contracts.py` | Shared checks for the gate-column contract carried through the pipeline metadata. |
 
@@ -24,5 +24,5 @@ clustering pipeline.
 
 ## Notes
 
-- The current runtime centers on the gate adapters under `decomposition/gates/`.
+- The current runtime centers on the gate annotation pipeline under `decomposition/gates/`.
 - Statistical test details live in `statistics/README.md`.

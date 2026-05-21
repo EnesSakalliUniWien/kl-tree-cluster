@@ -7,12 +7,11 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.backends.backend_pdf import PdfPages
-
 from benchmarks.shared.results import ComputedResultRecord
-from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from benchmarks.shared.util.params import format_params_for_display
+from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from kl_clustering_analysis.plot.cluster_tree_visualization import plot_tree_with_clusters
+from matplotlib.backends.backend_pdf import PdfPages
 
 from .embedding import (
     create_clustering_comparison_plot_3d,
@@ -229,7 +228,6 @@ def _create_tree_figures_for_case(
             font_size=9,
             title=title,
             ax=ax,
-            show=False,
         )
         fig.subplots_adjust(top=0.84, bottom=0.06, left=0.03, right=0.97)
         figs.append(fig)

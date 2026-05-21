@@ -82,11 +82,12 @@ STAGES: tuple[Stage, ...] = (
     ),
     Stage(
         6,
-        "Integration smoke + visualization",
+        "Integration smoke + lab regressions + visualization",
         (
             "tests/integration/60_test_benchmark_methods_smoke.py",
             "tests/integration/61_test_sbm_integration.py",
             "tests/integration/62_test_phylogenetic_generator.py",
+            "tests/lab/62_test_v3_global_baseline_regression.py",
             "tests/visualization/70_test_cluster_tree_layout.py",
             "tests/visualization/71_test_cluster_tree_visualization.py",
         ),

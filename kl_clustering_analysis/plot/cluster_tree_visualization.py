@@ -525,22 +525,6 @@ def _finalize_axes(ax: "plt.Axes", title: str, font_size: int) -> None:
     ax.set_axis_off()
 
 
-def _warn_if_show_requested(show: bool) -> None:
-    """Warn on deprecated direct showing behavior."""
-    if not show:
-        return
-
-    import warnings
-
-    warnings.warn(
-        (
-            "plot_tree_with_clusters: 'show' is deprecated and will be removed; "
-            "save figures externally instead."
-        ),
-        DeprecationWarning,
-    )
-
-
 def plot_tree_with_clusters(
     tree,
     decomposition_results: Dict,
@@ -556,7 +540,6 @@ def plot_tree_with_clusters(
     layout: str = "rectangular",
     figsize: Optional[Tuple[float, float]] = None,
     ax: Optional["plt.Axes"] = None,
-    show: bool = False,
 ):
     """
     Plot hierarchical tree with cluster assignments.
@@ -636,6 +619,4 @@ def plot_tree_with_clusters(
         cluster_id_to_color=cluster_id_to_color,
         font_size=font_size,
     )
-    _warn_if_show_requested(show)
-
     return fig, ax

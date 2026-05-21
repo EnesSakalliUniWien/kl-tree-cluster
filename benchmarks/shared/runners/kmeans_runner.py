@@ -4,19 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 from benchmarks.shared.types.method_run_result import MethodRunResult
-from benchmarks.shared.util.core import _normalize_labels
+from benchmarks.shared.util.core import _normalize_labels, _resolve_requested_cluster_count
 from benchmarks.shared.util.decomposition import _ok_result_from_labels
 from sklearn.cluster import KMeans
-
-
-def _resolve_n_clusters(n_samples: int, params: dict[str, object]) -> int:
-    """Resolve target K with safe bounds."""
-    raw = params.get("n_clusters")
-    if raw is None or str(raw).strip().lower() in {"true", "expected", "auto"}:
-        # Fallback heuristic when caller does not provide K.
-        raw = max(2, min(10, int(round(np.sqrt(max(n_samples, 2) / 2.0)))))
-    n_clusters = int(raw)
-    return max(1, min(n_clusters, n_samples))
 
 
 def _run_kmeans_method(
@@ -33,7 +23,7 @@ def _run_kmeans_method(
         return _ok_result_from_labels(labels, range(n_samples))
 
     try:
-        n_clusters = _resolve_n_clusters(n_samples, params)
+        n_clusters = _resolve_requested_cluster_count(n_samples, params)
         n_init = int(params.get("n_init", 10))
         random_state = 42 if seed is None else int(seed)
         model = KMeans(

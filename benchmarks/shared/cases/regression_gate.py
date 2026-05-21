@@ -7,15 +7,7 @@ fast gate in local development and CI.
 
 from __future__ import annotations
 
-from benchmarks.phylogenetic.cases import PHYLOGENETIC_CASES
-
-from .binary import BINARY_CASES
-from .categorical import CATEGORICAL_CASES
-from .dimensionality import DIMENSIONALITY_CASES
-from .gaussian import GAUSSIAN_CASES
-from .outliers import OUTLIER_CASES
-from .overlapping import OVERLAPPING_CASES
-from .sbm import SBM_CASES
+from . import get_default_test_cases
 
 REGRESSION_GATE_CASE_NAMES: tuple[str, ...] = (
     "gauss_extreme_noise_3c",
@@ -37,53 +29,9 @@ REGRESSION_GATE_CASE_NAMES: tuple[str, ...] = (
     "overlap_unbal_4c_small",
 )
 
-_ALL_CASE_CATEGORIES = {
-    **GAUSSIAN_CASES,
-    **DIMENSIONALITY_CASES,
-    **OUTLIER_CASES,
-    **BINARY_CASES,
-    **SBM_CASES,
-    **CATEGORICAL_CASES,
-    **PHYLOGENETIC_CASES,
-    **OVERLAPPING_CASES,
-}
-
-
-def _normalize_case_list(cases: list[dict], category: str) -> list[dict]:
-    """Attach stable metadata and ensure names are present within a category."""
-    normalized: list[dict] = []
-    seen_names: dict[str, int] = {}
-
-    for idx, case in enumerate(cases, start=1):
-        item = case.copy()
-        item.setdefault("category", category)
-
-        base_name = item.get("name") or f"{category}_{idx}"
-        seen_names[base_name] = seen_names.get(base_name, 0) + 1
-        if seen_names[base_name] > 1:
-            item["name"] = f"{base_name}__{seen_names[base_name]}"
-        else:
-            item["name"] = base_name
-
-        normalized.append(item)
-
-    return normalized
-
-
 def _build_case_index() -> dict[str, dict]:
     """Return all benchmark cases keyed by normalized unique case name."""
-    indexed: dict[str, dict] = {}
-    seen_global: dict[str, int] = {}
-
-    for category, group in _ALL_CASE_CATEGORIES.items():
-        for case in _normalize_case_list(group, category):
-            name = str(case["name"])
-            seen_global[name] = seen_global.get(name, 0) + 1
-            if seen_global[name] > 1:
-                case["name"] = f"{name}__{seen_global[name]}"
-            indexed[str(case["name"])] = case
-
-    return indexed
+    return {str(case["name"]): case for case in get_default_test_cases()}
 
 
 def get_regression_gate_case_names() -> list[str]:

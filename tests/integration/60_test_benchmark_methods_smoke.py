@@ -1,13 +1,7 @@
-"""
-Smoke test for benchmark method adapters.
-"""
+"""Smoke test for benchmark method runners."""
 
+from benchmarks.shared.cases import SMALL_TEST_CASES
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
-
-try:
-    from .test_cases_config import SMALL_TEST_CASES
-except ImportError:
-    from test_cases_config import SMALL_TEST_CASES  # type: ignore
 
 
 def test_benchmark_graph_and_density_methods_smoke():

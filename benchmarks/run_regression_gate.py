@@ -33,6 +33,7 @@ from benchmarks.shared.cases.regression_gate import (
     get_regression_gate_test_cases,
 )
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
+from benchmarks.shared.relationship_analysis import normalize_results_dataframe
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.time import format_timestamp_utc
 
@@ -113,17 +114,7 @@ def _resolve_case_list(raw_case_names: str) -> list[dict]:
 
 
 def _normalize_results(df_results: pd.DataFrame) -> pd.DataFrame:
-    df_out = df_results.rename(
-        columns={
-            "Test": "test_case",
-            "Case_Name": "case_id",
-            "Case_Category": "Case_Category",
-            "Method": "method",
-            "True": "true_clusters",
-            "Found": "found_clusters",
-            "ARI": "ari",
-        }
-    ).copy()
+    df_out = normalize_results_dataframe(df_results)
 
     name_map = {spec.name: method_id for method_id, spec in METHOD_SPECS.items()}
     df_out["method"] = df_out["method"].map(lambda value: name_map.get(str(value), str(value)))

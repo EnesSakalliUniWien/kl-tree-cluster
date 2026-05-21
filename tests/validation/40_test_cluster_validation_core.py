@@ -7,12 +7,8 @@ Tests basic functionality of the validation framework:
 - Empty case handling
 """
 
+from benchmarks.shared.cases import SMALL_TEST_CASES
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
-
-try:
-    from .test_cases_config import SMALL_TEST_CASES
-except ImportError:
-    from test_cases_config import SMALL_TEST_CASES  # type: ignore
 
 
 def test_cluster_algorithm_validation():

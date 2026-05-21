@@ -133,9 +133,9 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
         branch_length_right: float | None = None,
         mean_branch_length: float | None = None,
         *,
-        spectral_k: int | None = None,
-        pca_projection: np.ndarray | None = None,
-        pca_eigenvalues: np.ndarray | None = None,
+        projection_dimension_from_edge_comparisons: int | None = None,
+        parent_principal_component_projection: np.ndarray | None = None,
+        parent_principal_component_eigenvalues: np.ndarray | None = None,
         **kwargs,
     ) -> tuple[float, float, float]:
         return np.nan, np.nan, np.nan
@@ -338,7 +338,9 @@ def test_resolve_sibling_projection_dimension_rejects_nonpositive_dimension(
         total_sample_size: int,
         n_features: int,
     ) -> int:
-        raise AssertionError("JL fallback should not run for invalid spectral_k")
+        raise AssertionError(
+            "JL fallback should not run for invalid edge-derived projection dimension"
+        )
 
     monkeypatch.setattr(
         "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension.compute_projection_dimension",
@@ -361,7 +363,9 @@ def test_resolve_sibling_projection_dimension_uses_supplied_edge_derived_dimensi
         total_sample_size: int,
         n_features: int,
     ) -> int:
-        raise AssertionError("JL fallback should not run for positive spectral_k")
+        raise AssertionError(
+            "JL fallback should not run for positive edge-derived projection dimension"
+        )
 
     monkeypatch.setattr(
         "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension.compute_projection_dimension",

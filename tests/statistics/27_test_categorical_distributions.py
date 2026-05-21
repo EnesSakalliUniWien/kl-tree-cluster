@@ -180,9 +180,9 @@ class TestSiblingDivergenceTestBinary:
             theta,
             100.0,
             100.0,
-            spectral_k=d,
-            pca_projection=np.eye(d),
-            pca_eigenvalues=np.ones(d),
+            projection_dimension_from_edge_comparisons=d,
+            parent_principal_component_projection=np.eye(d),
+            parent_principal_component_eigenvalues=np.ones(d),
         )
         assert p_value > 0.05
 
@@ -196,9 +196,9 @@ class TestSiblingDivergenceTestBinary:
             theta_right,
             500.0,
             500.0,
-            spectral_k=d,
-            pca_projection=np.eye(d),
-            pca_eigenvalues=np.ones(d),
+            projection_dimension_from_edge_comparisons=d,
+            parent_principal_component_projection=np.eye(d),
+            parent_principal_component_eigenvalues=np.ones(d),
         )
         assert p_value < 0.05
 
@@ -222,9 +222,9 @@ class TestSiblingDivergenceTestCategorical:
             theta,
             100.0,
             100.0,
-            spectral_k=z_dim,
-            pca_projection=np.eye(z_dim),
-            pca_eigenvalues=np.ones(z_dim),
+            projection_dimension_from_edge_comparisons=z_dim,
+            parent_principal_component_projection=np.eye(z_dim),
+            parent_principal_component_eigenvalues=np.ones(z_dim),
         )
         assert p_value > 0.05
 
@@ -250,9 +250,9 @@ class TestSiblingDivergenceTestCategorical:
             theta_right,
             500.0,
             500.0,
-            spectral_k=z_dim,
-            pca_projection=np.eye(z_dim),
-            pca_eigenvalues=np.ones(z_dim),
+            projection_dimension_from_edge_comparisons=z_dim,
+            parent_principal_component_projection=np.eye(z_dim),
+            parent_principal_component_eigenvalues=np.ones(z_dim),
         )
         assert p_value < 0.05
 
@@ -277,9 +277,9 @@ class TestSiblingDivergenceTestCategorical:
             theta_right,
             100.0,
             100.0,
-            spectral_k=z_dim,
-            pca_projection=np.eye(z_dim),
-            pca_eigenvalues=np.ones(z_dim),
+            projection_dimension_from_edge_comparisons=z_dim,
+            parent_principal_component_projection=np.eye(z_dim),
+            parent_principal_component_eigenvalues=np.ones(z_dim),
         )
         assert stat >= 0
         assert df > 0
