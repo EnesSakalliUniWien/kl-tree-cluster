@@ -12,6 +12,7 @@ GAUSSIAN_CASES = {
     "gaussian_extreme_noise": [
         {
             "name": "gauss_extreme_noise_3c",
+            "generator": "blobs",
             "n_samples": 30,
             "n_features": 30,
             "n_clusters": 3,
@@ -20,6 +21,7 @@ GAUSSIAN_CASES = {
         },
         {
             "name": "gauss_extreme_noise_highd",
+            "generator": "blobs",
             "n_samples": 40,
             "n_features": 20000,
             "n_clusters": 4,
@@ -28,6 +30,7 @@ GAUSSIAN_CASES = {
         },
         {
             "name": "gauss_extreme_noise_many",
+            "generator": "blobs",
             "n_samples": 300,
             "n_features": 2000,
             "n_clusters": 30,
@@ -39,6 +42,7 @@ GAUSSIAN_CASES = {
         # Clear separation (should get 100% correct)
         {
             "name": "gauss_clear_small",
+            "generator": "blobs",
             "n_samples": 30,
             "n_features": 20,
             "n_clusters": 3,
@@ -47,6 +51,7 @@ GAUSSIAN_CASES = {
         },
         {
             "name": "gauss_clear_medium",
+            "generator": "blobs",
             "n_samples": 60,
             "n_features": 40,
             "n_clusters": 4,
@@ -55,6 +60,7 @@ GAUSSIAN_CASES = {
         },
         {
             "name": "gauss_clear_large",
+            "generator": "blobs",
             "n_samples": 100,
             "n_features": 80,
             "n_clusters": 5,
@@ -64,6 +70,7 @@ GAUSSIAN_CASES = {
         # Moderate overlap (80-95% ARI expected)
         {
             "name": "gauss_moderate_3c",
+            "generator": "blobs",
             "n_samples": 45,
             "n_features": 30,
             "n_clusters": 3,
@@ -72,6 +79,7 @@ GAUSSIAN_CASES = {
         },
         {
             "name": "gauss_moderate_5c",
+            "generator": "blobs",
             "n_samples": 75,
             "n_features": 50,
             "n_clusters": 5,
@@ -81,6 +89,7 @@ GAUSSIAN_CASES = {
         # Challenging (50-80% ARI expected)
         {
             "name": "gauss_noisy_3c",
+            "generator": "blobs",
             "n_samples": 60,
             "n_features": 40,
             "n_clusters": 3,
@@ -89,6 +98,7 @@ GAUSSIAN_CASES = {
         },
         {
             "name": "gauss_noisy_many",
+            "generator": "blobs",
             "n_samples": 120,
             "n_features": 80,
             "n_clusters": 8,
@@ -100,6 +110,7 @@ GAUSSIAN_CASES = {
     "gaussian_null": [
         {
             "name": "gauss_null_small",
+            "generator": "blobs",
             "n_samples": 60,
             "n_features": 30,
             "n_clusters": 1,
@@ -108,6 +119,7 @@ GAUSSIAN_CASES = {
         },
         {
             "name": "gauss_null_large",
+            "generator": "blobs",
             "n_samples": 200,
             "n_features": 80,
             "n_clusters": 1,

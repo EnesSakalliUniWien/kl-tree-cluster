@@ -38,6 +38,12 @@ from benchmarks.shared.generators.generate_temporal_evolution import (
 )
 
 
+def _require_case_value(test_case: dict, key: str, generator_name: str) -> Any:
+    if key not in test_case:
+        raise ValueError(f"{generator_name} generator requires '{key}'.")
+    return test_case[key]
+
+
 def _one_hot_encode_categorical(
     matrix: np.ndarray,
     n_categories: int,
@@ -64,30 +70,28 @@ def _one_hot_encode_categorical(
 
 
 def _validate_binary_params(test_case: dict) -> Tuple[int, int]:
-    """Validate and normalize parameters for the binary generator.
+    """Validate canonical benchmark-case geometry for the binary generator.
 
-    Returns (n_rows, n_cols).
+    Returns (n_samples, n_features).
     """
-    n_rows = test_case.get("n_rows", test_case.get("n_samples"))
-    n_cols = test_case.get("n_cols", test_case.get("n_features"))
-    if n_rows is None or n_cols is None:
-        raise ValueError("Binary generator requires 'n_rows'/'n_cols' or 'n_samples'/'n_features'.")
-    return int(n_rows), int(n_cols)
+    n_samples = int(_require_case_value(test_case, "n_samples", "Binary"))
+    n_features = int(_require_case_value(test_case, "n_features", "Binary"))
+    return n_samples, n_features
 
 
 def _generate_binary_case(
     test_case: dict, seed: Optional[int]
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
     """Generate the 'binary' style test case using the feature matrix generator."""
-    n_rows, n_cols = _validate_binary_params(test_case)
+    n_samples, n_features = _validate_binary_params(test_case)
     entropy = test_case.get("entropy_param", 0.5)
     balanced = test_case.get("balanced_clusters", True)
     feature_sparsity = test_case.get("feature_sparsity", None)
     noise_features = int(test_case.get("noise_features", 0))
 
     data_dict, cluster_assignments = generate_random_feature_matrix(
-        n_rows=n_rows,
-        n_cols=n_cols,
+        n_rows=n_samples,
+        n_cols=n_features,
         entropy_param=entropy,
         n_clusters=test_case["n_clusters"],
         random_seed=seed,
@@ -105,11 +109,11 @@ def _generate_binary_case(
 
     actual_cols = matrix.shape[1]
     metadata = {
-        "n_samples": n_rows,
+        "n_samples": n_samples,
         "n_features": actual_cols,
         "n_clusters": test_case["n_clusters"],
         "noise": entropy,
-        "name": test_case.get("name", f"binary_{n_rows}x{n_cols}"),
+        "name": test_case.get("name", f"binary_{n_samples}x{n_features}"),
         "generator": "binary",
         "noise_features": noise_features,
     }
@@ -208,7 +212,7 @@ def _resolve_dimensional_feature_counts(test_case: dict) -> Tuple[int, int]:
     if informative_dims is None:
         raise ValueError("Dimensional Gaussian generator requires 'informative_dims'.")
 
-    n_features = test_case.get("n_features", test_case.get("n_cols"))
+    n_features = test_case.get("n_features")
     noise_dims = test_case.get("noise_dims")
     if n_features is None and noise_dims is None:
         raise ValueError(
@@ -368,15 +372,10 @@ def _generate_sbm_case(
         sbm_modularity_norm = sbm_modularity_shifted / (sbm_modularity_shifted.max() + 1e-10)
         precomputed_distance_matrix = 1.0 - sbm_modularity_norm
     else:
-        # Fallback for empty graphs (no modularity signal): invert adjacency directly.
         precomputed_distance_matrix = 1.0 - adj
     np.fill_diagonal(precomputed_distance_matrix, 0.0)
 
-    precomputed_distance_condensed = None
-    try:
-        precomputed_distance_condensed = squareform(precomputed_distance_matrix)
-    except ValueError:
-        precomputed_distance_condensed = None
+    precomputed_distance_condensed = squareform(precomputed_distance_matrix)
 
     metadata = {
         "n_samples": n_nodes,
@@ -399,18 +398,14 @@ def _generate_sbm_case(
 
 
 def _validate_categorical_params(test_case: dict) -> Tuple[int, int, int]:
-    """Validate and normalize parameters for the categorical generator.
+    """Validate canonical benchmark-case geometry for the categorical generator.
 
-    Returns (n_rows, n_cols, n_categories).
+    Returns (n_samples, n_features, n_categories).
     """
-    n_rows = test_case.get("n_rows", test_case.get("n_samples"))
-    n_cols = test_case.get("n_cols", test_case.get("n_features"))
-    n_categories = test_case.get("n_categories", 3)
-    if n_rows is None or n_cols is None:
-        raise ValueError(
-            "Categorical generator requires 'n_rows'/'n_cols' or 'n_samples'/'n_features'."
-        )
-    return int(n_rows), int(n_cols), int(n_categories)
+    n_samples = int(_require_case_value(test_case, "n_samples", "Categorical"))
+    n_features = int(_require_case_value(test_case, "n_features", "Categorical"))
+    n_categories = int(_require_case_value(test_case, "n_categories", "Categorical"))
+    return n_samples, n_features, n_categories
 
 
 def _generate_categorical_case(
@@ -421,14 +416,14 @@ def _generate_categorical_case(
     Returns a DataFrame where each cell contains a category index (0 to K-1),
     and the distributions array contains the underlying probability distributions.
     """
-    n_rows, n_cols, n_categories = _validate_categorical_params(test_case)
+    n_samples, n_features, n_categories = _validate_categorical_params(test_case)
     entropy = test_case.get("entropy_param", 0.5)
     balanced = test_case.get("balanced_clusters", True)
     category_sparsity = test_case.get("category_sparsity", None)
 
     sample_dict, cluster_assignments, distributions = generate_categorical_feature_matrix(
-        n_rows=n_rows,
-        n_cols=n_cols,
+        n_rows=n_samples,
+        n_cols=n_features,
         n_categories=n_categories,
         entropy_param=entropy,
         n_clusters=test_case["n_clusters"],
@@ -446,13 +441,13 @@ def _generate_categorical_case(
     true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
     metadata = {
-        "n_samples": n_rows,
+        "n_samples": n_samples,
         "n_features": n_binary,
-        "n_features_original": n_cols,
+        "n_features_original": n_features,
         "n_categories": n_categories,
         "n_clusters": test_case["n_clusters"],
         "noise": entropy,
-        "name": test_case.get("name", f"categorical_{n_rows}x{n_cols}x{n_categories}"),
+        "name": test_case.get("name", f"categorical_{n_samples}x{n_features}x{n_categories}"),
         "generator": "categorical",
         "distributions": distributions,  # (n_rows, n_cols, n_categories)
     }
@@ -469,12 +464,14 @@ def _generate_phylogenetic_case(
     Each taxon (leaf) becomes a cluster, and samples are drawn from
     the evolved distributions at each leaf.
     """
-    n_taxa = test_case.get("n_taxa", test_case.get("n_clusters", 4))
-    n_features = test_case.get("n_features", test_case.get("n_cols", 50))
-    n_categories = test_case.get("n_categories", 4)
-    samples_per_taxon = test_case.get("samples_per_taxon", 10)
-    mutation_rate = test_case.get("mutation_rate", 0.3)
-    root_concentration = test_case.get("root_concentration", 1.0)
+    n_taxa = int(_require_case_value(test_case, "n_taxa", "Phylogenetic"))
+    n_features = int(_require_case_value(test_case, "n_features", "Phylogenetic"))
+    n_categories = int(_require_case_value(test_case, "n_categories", "Phylogenetic"))
+    samples_per_taxon = int(_require_case_value(test_case, "samples_per_taxon", "Phylogenetic"))
+    mutation_rate = float(_require_case_value(test_case, "mutation_rate", "Phylogenetic"))
+    root_concentration = float(
+        _require_case_value(test_case, "root_concentration", "Phylogenetic")
+    )
 
     sample_dict, cluster_assignments, distributions, phylo_meta = generate_phylogenetic_data(
         n_taxa=n_taxa,
@@ -502,7 +499,7 @@ def _generate_phylogenetic_case(
         "n_taxa": n_taxa,
         "samples_per_taxon": samples_per_taxon,
         "mutation_rate": mutation_rate,
-        "noise": mutation_rate,  # For compatibility
+        "noise": mutation_rate,
         "name": test_case.get("name", f"phylo_{n_taxa}taxa_{n_features}feat"),
         "generator": "phylogenetic",
         "distributions": distributions,
@@ -521,13 +518,15 @@ def _generate_temporal_evolution_case(
     Simulates sequence evolution along a growing branch over time.
     Each time point becomes a cluster, with increasing divergence from ancestor.
     """
-    n_time_points = test_case.get("n_time_points", test_case.get("n_clusters", 8))
-    n_features = test_case.get("n_features", test_case.get("n_cols", 200))
-    n_categories = test_case.get("n_categories", 4)
-    samples_per_time = test_case.get("samples_per_time", 20)
-    mutation_rate = test_case.get("mutation_rate", 0.3)
-    shift_strength = test_case.get("shift_strength", (0.15, 0.5))
-    root_concentration = test_case.get("root_concentration", 1.0)
+    n_time_points = int(_require_case_value(test_case, "n_time_points", "Temporal evolution"))
+    n_features = int(_require_case_value(test_case, "n_features", "Temporal evolution"))
+    n_categories = int(_require_case_value(test_case, "n_categories", "Temporal evolution"))
+    samples_per_time = int(_require_case_value(test_case, "samples_per_time", "Temporal evolution"))
+    mutation_rate = float(_require_case_value(test_case, "mutation_rate", "Temporal evolution"))
+    shift_strength = _require_case_value(test_case, "shift_strength", "Temporal evolution")
+    root_concentration = float(
+        _require_case_value(test_case, "root_concentration", "Temporal evolution")
+    )
 
     sample_dict, cluster_assignments, distributions, evo_meta = generate_temporal_evolution_data(
         n_time_points=n_time_points,
@@ -557,7 +556,7 @@ def _generate_temporal_evolution_case(
         "samples_per_time": samples_per_time,
         "mutation_rate": mutation_rate,
         "shift_strength": shift_strength,
-        "noise": mutation_rate,  # For compatibility
+        "noise": mutation_rate,
         "name": test_case.get("name", f"temporal_{n_time_points}tp_{n_features}feat"),
         "generator": "temporal_evolution",
         "distributions": distributions,
@@ -618,7 +617,7 @@ def generate_case_data(
 
     This function dispatches to specialized helpers based on ``test_case['generator']``.
     """
-    generator = test_case.get("generator", "blobs")
+    generator = _require_case_value(test_case, "generator", "Benchmark case")
     seed = test_case.get("seed")
 
     if generator == "binary":

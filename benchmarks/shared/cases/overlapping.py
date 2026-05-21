@@ -9,8 +9,8 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
     {
         "name": "overlap_heavy_4c_small_feat",
         "generator": "binary",
-        "n_rows": 500,
-        "n_cols": 50,
+        "n_samples": 500,
+        "n_features": 50,
         "n_clusters": 4,
         "entropy_param": 0.40,
         "balanced_clusters": True,
@@ -20,8 +20,8 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
     {
         "name": "overlap_heavy_4c_med_feat",
         "generator": "binary",
-        "n_rows": 500,
-        "n_cols": 200,
+        "n_samples": 500,
+        "n_features": 200,
         "n_clusters": 4,
         "entropy_param": 0.40,
         "balanced_clusters": True,
@@ -31,8 +31,8 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
     {
         "name": "overlap_heavy_8c_large_feat",
         "generator": "binary",
-        "n_rows": 800,
-        "n_cols": 500,
+        "n_samples": 800,
+        "n_features": 500,
         "n_clusters": 8,
         "entropy_param": 0.40,
         "balanced_clusters": True,
@@ -42,8 +42,8 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
     {
         "name": "overlap_extreme_4c",
         "generator": "binary",
-        "n_rows": 600,
-        "n_cols": 150,
+        "n_samples": 600,
+        "n_features": 150,
         "n_clusters": 4,
         "entropy_param": 0.48,
         "balanced_clusters": True,
@@ -53,8 +53,8 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
     # {  # Commented out — too slow (600x1000)
     #     "name": "overlap_extreme_6c_highd",
     #     "generator": "binary",
-    #     "n_rows": 600,
-    #     "n_cols": 1000,
+    #     "n_samples": 600,
+    #     "n_features": 1000,
     #     "n_clusters": 6,
     #     "entropy_param": 0.45,
     #     "balanced_clusters": True,
@@ -68,8 +68,8 @@ OVERLAPPING_BINARY_MODERATE_CASES = [
     {
         "name": "overlap_mod_4c_small",
         "generator": "binary",
-        "n_rows": 400,
-        "n_cols": 80,
+        "n_samples": 400,
+        "n_features": 80,
         "n_clusters": 4,
         "entropy_param": 0.30,
         "balanced_clusters": True,
@@ -79,8 +79,8 @@ OVERLAPPING_BINARY_MODERATE_CASES = [
     {
         "name": "overlap_mod_6c_med",
         "generator": "binary",
-        "n_rows": 600,
-        "n_cols": 250,
+        "n_samples": 600,
+        "n_features": 250,
         "n_clusters": 6,
         "entropy_param": 0.30,
         "balanced_clusters": True,
@@ -90,8 +90,8 @@ OVERLAPPING_BINARY_MODERATE_CASES = [
     {
         "name": "overlap_mod_8c_large",
         "generator": "binary",
-        "n_rows": 800,
-        "n_cols": 400,
+        "n_samples": 800,
+        "n_features": 400,
         "n_clusters": 8,
         "entropy_param": 0.28,
         "balanced_clusters": True,
@@ -101,8 +101,8 @@ OVERLAPPING_BINARY_MODERATE_CASES = [
     # {  # Commented out — too slow (1000x800)
     #     "name": "overlap_mod_10c_highd",
     #     "generator": "binary",
-    #     "n_rows": 1000,
-    #     "n_cols": 800,
+    #     "n_samples": 1000,
+    #     "n_features": 800,
     #     "n_clusters": 10,
     #     "entropy_param": 0.32,
     #     "balanced_clusters": True,
@@ -116,8 +116,8 @@ OVERLAPPING_BINARY_PARTIAL_CASES = [
     {
         "name": "overlap_part_4c_small",
         "generator": "binary",
-        "n_rows": 400,
-        "n_cols": 60,
+        "n_samples": 400,
+        "n_features": 60,
         "n_clusters": 4,
         "entropy_param": 0.24,
         "balanced_clusters": True,
@@ -127,8 +127,8 @@ OVERLAPPING_BINARY_PARTIAL_CASES = [
     {
         "name": "overlap_part_6c_med",
         "generator": "binary",
-        "n_rows": 600,
-        "n_cols": 200,
+        "n_samples": 600,
+        "n_features": 200,
         "n_clusters": 6,
         "entropy_param": 0.25,
         "balanced_clusters": True,
@@ -138,8 +138,8 @@ OVERLAPPING_BINARY_PARTIAL_CASES = [
     {
         "name": "overlap_part_8c_large",
         "generator": "binary",
-        "n_rows": 800,
-        "n_cols": 350,
+        "n_samples": 800,
+        "n_features": 350,
         "n_clusters": 8,
         "entropy_param": 0.22,
         "balanced_clusters": True,
@@ -149,8 +149,8 @@ OVERLAPPING_BINARY_PARTIAL_CASES = [
     # {  # Commented out — too slow (1000x600)
     #     "name": "overlap_part_10c_highd",
     #     "generator": "binary",
-    #     "n_rows": 1000,
-    #     "n_cols": 600,
+    #     "n_samples": 1000,
+    #     "n_features": 600,
     #     "n_clusters": 10,
     #     "entropy_param": 0.23,
     #     "balanced_clusters": True,
@@ -164,8 +164,8 @@ OVERLAPPING_BINARY_HIGHD_CASES = [
     {
         "name": "overlap_hd_4c_1k",
         "generator": "binary",
-        "n_rows": 500,
-        "n_cols": 1000,
+        "n_samples": 500,
+        "n_features": 1000,
         "n_clusters": 4,
         "entropy_param": 0.35,
         "balanced_clusters": True,
@@ -175,8 +175,8 @@ OVERLAPPING_BINARY_HIGHD_CASES = [
     # {  # Commented out — too slow (600x2000)
     #     "name": "overlap_hd_6c_2k",
     #     "generator": "binary",
-    #     "n_rows": 600,
-    #     "n_cols": 2000,
+    #     "n_samples": 600,
+    #     "n_features": 2000,
     #     "n_clusters": 6,
     #     "entropy_param": 0.33,
     #     "balanced_clusters": True,
@@ -186,8 +186,8 @@ OVERLAPPING_BINARY_HIGHD_CASES = [
     # {  # Commented out — too slow (800x3000)
     #     "name": "overlap_hd_8c_3k",
     #     "generator": "binary",
-    #     "n_rows": 800,
-    #     "n_cols": 3000,
+    #     "n_samples": 800,
+    #     "n_features": 3000,
     #     "n_clusters": 8,
     #     "entropy_param": 0.30,
     #     "balanced_clusters": True,
@@ -197,8 +197,8 @@ OVERLAPPING_BINARY_HIGHD_CASES = [
     # {  # Commented out — too slow (1000x5000)
     #     "name": "overlap_hd_10c_5k",
     #     "generator": "binary",
-    #     "n_rows": 1000,
-    #     "n_cols": 5000,
+    #     "n_samples": 1000,
+    #     "n_features": 5000,
     #     "n_clusters": 10,
     #     "entropy_param": 0.28,
     #     "balanced_clusters": True,
@@ -212,8 +212,8 @@ OVERLAPPING_BINARY_UNBALANCED_CASES = [
     {
         "name": "overlap_unbal_4c_small",
         "generator": "binary",
-        "n_rows": 400,
-        "n_cols": 100,
+        "n_samples": 400,
+        "n_features": 100,
         "n_clusters": 4,
         "entropy_param": 0.35,
         "balanced_clusters": False,
@@ -223,8 +223,8 @@ OVERLAPPING_BINARY_UNBALANCED_CASES = [
     {
         "name": "overlap_unbal_6c_med",
         "generator": "binary",
-        "n_rows": 600,
-        "n_cols": 300,
+        "n_samples": 600,
+        "n_features": 300,
         "n_clusters": 6,
         "entropy_param": 0.30,
         "balanced_clusters": False,
@@ -234,8 +234,8 @@ OVERLAPPING_BINARY_UNBALANCED_CASES = [
     {
         "name": "overlap_unbal_8c_large",
         "generator": "binary",
-        "n_rows": 800,
-        "n_cols": 500,
+        "n_samples": 800,
+        "n_features": 500,
         "n_clusters": 8,
         "entropy_param": 0.32,
         "balanced_clusters": False,
@@ -245,8 +245,8 @@ OVERLAPPING_BINARY_UNBALANCED_CASES = [
     # {  # Commented out — too slow (1000x1000)
     #     "name": "overlap_unbal_10c_highd",
     #     "generator": "binary",
-    #     "n_rows": 1000,
-    #     "n_cols": 1000,
+    #     "n_samples": 1000,
+    #     "n_features": 1000,
     #     "n_clusters": 10,
     #     "entropy_param": 0.28,
     #     "balanced_clusters": False,
@@ -259,6 +259,7 @@ OVERLAPPING_GAUSSIAN_CASES = [
     # High cluster_std means Gaussian blobs overlap significantly
     {
         "name": "gauss_overlap_3c_small",
+        "generator": "blobs",
         "n_samples": 300,
         "n_features": 30,
         "n_clusters": 3,
@@ -267,6 +268,7 @@ OVERLAPPING_GAUSSIAN_CASES = [
     },
     {
         "name": "gauss_overlap_4c_med",
+        "generator": "blobs",
         "n_samples": 400,
         "n_features": 80,
         "n_clusters": 4,
@@ -275,6 +277,7 @@ OVERLAPPING_GAUSSIAN_CASES = [
     },
     {
         "name": "gauss_overlap_6c_large",
+        "generator": "blobs",
         "n_samples": 600,
         "n_features": 150,
         "n_clusters": 6,
@@ -283,6 +286,7 @@ OVERLAPPING_GAUSSIAN_CASES = [
     },
     {
         "name": "gauss_overlap_8c_highd",
+        "generator": "blobs",
         "n_samples": 800,
         "n_features": 300,
         "n_clusters": 8,
@@ -292,6 +296,7 @@ OVERLAPPING_GAUSSIAN_CASES = [
     # Extreme overlap - essentially uniform distribution
     {
         "name": "gauss_overlap_extreme_4c",
+        "generator": "blobs",
         "n_samples": 500,
         "n_features": 100,
         "n_clusters": 4,
@@ -300,6 +305,7 @@ OVERLAPPING_GAUSSIAN_CASES = [
     },
     {
         "name": "gauss_overlap_extreme_6c",
+        "generator": "blobs",
         "n_samples": 600,
         "n_features": 200,
         "n_clusters": 6,
@@ -308,6 +314,7 @@ OVERLAPPING_GAUSSIAN_CASES = [
     },
     {
         "name": "gauss_overlap_many_10c",
+        "generator": "blobs",
         "n_samples": 1000,
         "n_features": 150,
         "n_clusters": 10,
@@ -316,6 +323,7 @@ OVERLAPPING_GAUSSIAN_CASES = [
     },
     {
         "name": "gauss_overlap_dense_8c",
+        "generator": "blobs",
         "n_samples": 800,
         "n_features": 50,
         "n_clusters": 8,

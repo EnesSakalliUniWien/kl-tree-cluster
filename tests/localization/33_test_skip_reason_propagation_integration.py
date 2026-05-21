@@ -31,6 +31,7 @@ def test_forced_runner_failure_populates_skip_reason_everywhere(monkeypatch):
 
     pipeline_case = {
         "name": "forced_fail_case",
+        "generator": "blobs",
         "n_samples": 12,
         "n_features": 8,
         "n_clusters": 3,

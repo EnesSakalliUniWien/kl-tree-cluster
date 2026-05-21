@@ -20,6 +20,7 @@ from .sbm import SBM_CASES
 SMALL_TEST_CASES = [
     {
         "name": "clear",
+        "generator": "blobs",
         "n_samples": 24,
         "n_features": 12,
         "n_clusters": 3,
@@ -28,6 +29,7 @@ SMALL_TEST_CASES = [
     },
     {
         "name": "moderate",
+        "generator": "blobs",
         "n_samples": 30,
         "n_features": 16,
         "n_clusters": 3,
@@ -36,6 +38,7 @@ SMALL_TEST_CASES = [
     },
     {
         "name": "noisy",
+        "generator": "blobs",
         "n_samples": 30,
         "n_features": 16,
         "n_clusters": 3,
