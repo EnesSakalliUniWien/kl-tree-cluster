@@ -10,40 +10,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from benchmarks.shared.plots.cover_page import GROUP_ORDER, category_group
+from benchmarks.shared.result_records import RESULT_COLUMNS
 from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.stats import norm, spearmanr
 from sklearn.linear_model import LinearRegression, LogisticRegression
-
-_RESULT_COLUMNS: tuple[str, ...] = (
-    "test_case",
-    "case_id",
-    "case_category",
-    "method",
-    "params",
-    "true_clusters",
-    "found_clusters",
-    "samples",
-    "features",
-    "noise",
-    "ari",
-    "nmi",
-    "purity",
-    "macro_recall",
-    "macro_f1",
-    "worst_cluster_recall",
-    "outlier_precision",
-    "outlier_recall",
-    "outlier_f1",
-    "singleton_outlier_isolated",
-    "grouped_outlier_cluster_recovered",
-    "cluster_count_abs_error",
-    "over_split",
-    "under_split",
-    "status",
-    "skip_reason",
-    "labels_length",
-)
 
 _NUMERIC_COLUMNS = (
     "test_case",
@@ -87,6 +58,16 @@ _OLD_RESULT_COLUMNS = frozenset(
         "Status",
         "Skip_Reason",
         "Labels_Length",
+    }
+)
+
+_AUDIT_SUMMARY_REQUIRED_COLUMNS = frozenset(
+    {
+        "node_id",
+        "leaf_count",
+        "parent_node",
+        "Sibling_Divergence_P_Value",
+        "Sibling_BH_Different",
     }
 )
 
@@ -177,15 +158,17 @@ def normalize_results_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             "Benchmark results must use canonical snake_case columns; "
             f"found old result columns: {old_columns}."
         )
+    unknown_columns = sorted(set(df.columns).difference(RESULT_COLUMNS))
+    if unknown_columns:
+        raise ValueError(
+            "Benchmark results must use the canonical result schema; "
+            f"found unknown columns: {unknown_columns}."
+        )
 
     normalized = pd.DataFrame(index=df.index)
 
-    for column in _RESULT_COLUMNS:
+    for column in RESULT_COLUMNS:
         normalized[column] = df[column] if column in df.columns else np.nan
-
-    for col in df.columns:
-        if col not in normalized.columns:
-            normalized[col] = df[col]
 
     for col in _NUMERIC_COLUMNS:
         normalized[col] = pd.to_numeric(normalized[col], errors="coerce")
@@ -674,8 +657,7 @@ def _extract_audit_summary(audit_path: Path) -> dict[str, float] | None:
     except Exception:
         return None
 
-    required = {"node_id", "leaf_count", "parent_node"}
-    if not required.issubset(df.columns):
+    if not _AUDIT_SUMMARY_REQUIRED_COLUMNS.issubset(df.columns):
         return None
 
     try:
@@ -686,17 +668,16 @@ def _extract_audit_summary(audit_path: Path) -> dict[str, float] | None:
 
     children = df[df["parent_node"] == root_id].copy()
     root_p = _select_root_split_pvalue(children)
-    root_split_rejected = _infer_root_split_rejected(children, root_p)
+    root_split_rejected = _root_split_rejected_from_sibling_decision(children)
 
     sibling_valid = pd.Series(True, index=df.index, dtype=bool)
     if "Sibling_Divergence_Skipped" in df.columns:
         sibling_valid &= ~_coerce_bool_series(df["Sibling_Divergence_Skipped"])
     if "Sibling_Divergence_Invalid" in df.columns:
         sibling_valid &= ~_coerce_bool_series(df["Sibling_Divergence_Invalid"])
-    if "Sibling_BH_Different" in df.columns:
-        sibling_valid &= df["Sibling_BH_Different"].notna()
+    sibling_valid &= df["Sibling_BH_Different"].notna()
     sibling_total = int(sibling_valid.sum())
-    if "Sibling_BH_Different" in df.columns and sibling_total > 0:
+    if sibling_total > 0:
         sig_sibling_fraction = float(_coerce_bool_series(df.loc[sibling_valid, "Sibling_BH_Different"]).mean())
     else:
         sig_sibling_fraction = np.nan
@@ -755,14 +736,12 @@ def _select_root_split_pvalue(children: pd.DataFrame) -> float:
     return np.nan
 
 
-def _infer_root_split_rejected(children: pd.DataFrame, root_p: float) -> bool:
+def _root_split_rejected_from_sibling_decision(children: pd.DataFrame) -> bool:
     if children.empty:
         return True
-    if "Sibling_BH_Different" in children.columns and children["Sibling_BH_Different"].notna().any():
-        return not bool(_coerce_bool_series(children["Sibling_BH_Different"]).any())
-    if np.isfinite(root_p):
-        return bool(root_p >= 0.05)
-    return True
+    if not children["Sibling_BH_Different"].notna().any():
+        return True
+    return not bool(_coerce_bool_series(children["Sibling_BH_Different"]).any())
 
 
 def _coerce_bool_series(series: pd.Series) -> pd.Series:

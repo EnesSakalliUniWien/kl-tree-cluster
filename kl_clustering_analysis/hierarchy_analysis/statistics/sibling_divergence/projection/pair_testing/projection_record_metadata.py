@@ -8,19 +8,35 @@ import numpy as np
 def determine_projection_metadata_for_sibling_test(
     *,
     projection_diagnostics: dict[str, object],
-    projection_dimension_from_edge_comparisons: int | None,
     parent_principal_component_projection: np.ndarray | None,
 ) -> tuple[str, float, bool]:
     """Resolve projection metadata for one sibling test record."""
-    projection_dimension_source = str(projection_diagnostics.get("source", ""))
+    required_keys = {"source", "resolved_projection_dimension"}
+    missing_keys = sorted(required_keys.difference(projection_diagnostics))
+    if missing_keys:
+        raise ValueError(
+            "Missing projection diagnostics fields for sibling test metadata: "
+            f"{missing_keys!r}."
+        )
+
+    projection_dimension_source = str(projection_diagnostics["source"])
     resolved_projection_dimension = float(
-        projection_diagnostics.get("resolved_projection_dimension", np.nan)
+        projection_diagnostics["resolved_projection_dimension"]
     )
-    if not projection_dimension_source and projection_dimension_from_edge_comparisons is not None:
-        projection_dimension_source = "derived_from_edge_comparisons"
-        resolved_projection_dimension = float(projection_dimension_from_edge_comparisons)
-    elif not projection_dimension_source and projection_dimension_from_edge_comparisons is None:
-        projection_dimension_source = "johnson_lindenstrauss_fallback"
+    valid_sources = {
+        "derived_from_edge_comparisons",
+        "johnson_lindenstrauss_projection",
+    }
+    if projection_dimension_source not in valid_sources:
+        raise ValueError(
+            "Invalid projection diagnostics source for sibling test metadata: "
+            f"{projection_dimension_source!r}."
+        )
+    if not np.isfinite(resolved_projection_dimension) or resolved_projection_dimension <= 0:
+        raise ValueError(
+            "Invalid resolved projection dimension for sibling test metadata: "
+            f"{resolved_projection_dimension!r}."
+        )
 
     used_parent_principal_component_basis = bool(
         projection_dimension_source == "derived_from_edge_comparisons"
@@ -53,4 +69,3 @@ __all__ = [
     "determine_projection_metadata_for_sibling_test",
     "resolve_sibling_test_calibration_scale",
 ]
-

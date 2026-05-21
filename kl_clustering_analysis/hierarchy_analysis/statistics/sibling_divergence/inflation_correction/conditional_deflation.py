@@ -85,7 +85,7 @@ def fit_sibling_inflation_calibrator(
             log_center=0.0,
             center=1.0,
             spread=0.0,
-            spread_status="global_fallback_no_data",
+            spread_status="global_no_data",
             max_adjustment=max(1.0, float(model.max_observed_ratio)),
             record_count=0,
             sample_log_scales=np.array([], dtype=float),
@@ -111,7 +111,7 @@ def fit_sibling_inflation_calibrator(
             log_center=0.0,
             center=1.0,
             spread=0.0,
-            spread_status="global_fallback_no_positive_weights",
+            spread_status="global_no_positive_weights",
             max_adjustment=max(
                 1.0,
                 float(np.max(sample_adjustments)),
@@ -132,7 +132,7 @@ def fit_sibling_inflation_calibrator(
     spread = _weighted_std(sample_log_scales, sibling_null_priors)
     if not np.isfinite(spread) or spread <= 1e-12:
         spread = 0.0
-        spread_status = "global_fallback_zero_log_scale_spread"
+        spread_status = "global_zero_log_scale_spread"
     else:
         spread_status = "weighted_log_scale_std"
 

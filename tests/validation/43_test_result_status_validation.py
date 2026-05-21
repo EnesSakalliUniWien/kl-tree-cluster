@@ -1,11 +1,13 @@
+import math
+
 import pytest
 
 from benchmarks.shared.result_records.factory import build_benchmark_result_row
 from benchmarks.shared.result_records.models import BenchmarkRunStatus
 
 
-def _build_row(status):
-    return build_benchmark_result_row(
+def _build_row(status, **overrides):
+    kwargs = dict(
         test_case=1,
         case_id="case",
         case_category="cat",
@@ -34,6 +36,8 @@ def _build_row(status):
         skip_reason=None,
         labels_length=8,
     )
+    kwargs.update(overrides)
+    return build_benchmark_result_row(**kwargs)
 
 
 def test_build_benchmark_result_row_accepts_ok_and_skip():
@@ -47,6 +51,21 @@ def test_build_benchmark_result_row_accepts_ok_and_skip():
 def test_build_benchmark_result_row_accepts_status_enum():
     row = _build_row(BenchmarkRunStatus.OK)
     assert row.status == BenchmarkRunStatus.OK
+
+
+def test_build_benchmark_result_row_requires_explicit_unknown_cluster_count():
+    with pytest.raises(ValueError, match="true_clusters must be an integer"):
+        _build_row("ok", true_clusters=None)
+
+
+def test_build_benchmark_result_row_preserves_missing_noise_as_nan():
+    row = _build_row("ok", noise=math.nan)
+    assert math.isnan(row.noise)
+
+
+def test_build_benchmark_result_row_rejects_missing_noise_value():
+    with pytest.raises(ValueError, match="noise must be a float"):
+        _build_row("ok", noise=None)
 
 
 @pytest.mark.parametrize("status", ["error", "skipped", "unknown", "", "OKAY"])

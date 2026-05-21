@@ -19,6 +19,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pai
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension import (
     resolve_sibling_projection_dimension,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_record_metadata import (
+    determine_projection_metadata_for_sibling_test,
+)
 
 
 def _make_two_edge_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
@@ -138,6 +141,9 @@ def test_sibling_nonfinite_keeps_nan_and_uses_conservative_correction(
         parent_principal_component_eigenvalues: np.ndarray | None = None,
         **kwargs,
     ) -> tuple[float, float, float]:
+        projection_diagnostics = kwargs["projection_diagnostics"]
+        projection_diagnostics["source"] = "johnson_lindenstrauss_projection"
+        projection_diagnostics["resolved_projection_dimension"] = 2
         return np.nan, np.nan, np.nan
 
     monkeypatch.setattr(
@@ -192,7 +198,7 @@ def test_sibling_divergence_nonfinite_z_returns_nan(monkeypatch) -> None:
     assert np.isnan(pval)
 
 
-def test_resolve_sibling_projection_dimension_uses_johnson_lindenstrauss_fallback_for_missing_dimension(
+def test_resolve_sibling_projection_dimension_uses_johnson_lindenstrauss_projection_for_missing_dimension(
     monkeypatch,
 ) -> None:
     calls: list[tuple[int, int]] = []
@@ -217,11 +223,11 @@ def test_resolve_sibling_projection_dimension_uses_johnson_lindenstrauss_fallbac
     )
 
     assert resolved_k == 7
-    assert source == "johnson_lindenstrauss_fallback"
+    assert source == "johnson_lindenstrauss_projection"
     assert calls == [(7, 5)]
 
 
-def test_collect_sibling_pair_records_ignores_parent_principal_component_basis_and_uses_johnson_lindenstrauss_fallback_when_edge_derived_dimension_is_missing(
+def test_collect_sibling_pair_records_ignores_parent_principal_component_basis_and_uses_johnson_lindenstrauss_projection_when_edge_derived_dimension_is_missing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     tree = nx.DiGraph()
@@ -274,6 +280,9 @@ def test_collect_sibling_pair_records_ignores_parent_principal_component_basis_a
         captured["parent_principal_component_eigenvalues"] = (
             parent_principal_component_eigenvalues
         )
+        projection_diagnostics = kwargs["projection_diagnostics"]
+        projection_diagnostics["source"] = "johnson_lindenstrauss_projection"
+        projection_diagnostics["resolved_projection_dimension"] = 2
         return 1.0, 1.0, 0.5
 
     monkeypatch.setattr(
@@ -295,11 +304,20 @@ def test_collect_sibling_pair_records_ignores_parent_principal_component_basis_a
     assert captured["projection_dimension_from_edge_comparisons"] is None
     assert captured["parent_principal_component_projection"] is None
     assert captured["parent_principal_component_eigenvalues"] is None
-    assert (
-        records[0].projection_dimension_source == "johnson_lindenstrauss_fallback"
-    )
-    assert np.isnan(records[0].resolved_projection_dimension)
+    assert records[0].projection_dimension_source == "johnson_lindenstrauss_projection"
+    assert records[0].resolved_projection_dimension == 2.0
     assert records[0].used_parent_principal_component_basis is False
+
+
+def test_projection_record_metadata_requires_projection_diagnostics() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Missing projection diagnostics fields for sibling test metadata",
+    ):
+        determine_projection_metadata_for_sibling_test(
+            projection_diagnostics={},
+            parent_principal_component_projection=None,
+        )
 
 
 def test_annotate_sibling_divergence_persists_jl_projection_diagnostics() -> None:
@@ -313,21 +331,21 @@ def test_annotate_sibling_divergence_persists_jl_projection_diagnostics() -> Non
 
     assert (
         out.loc["root", "Sibling_Projection_Dimension_Source"]
-        == "johnson_lindenstrauss_fallback"
+        == "johnson_lindenstrauss_projection"
     )
     assert float(out.loc["root", "Sibling_Resolved_Projection_Dimension"]) > 0.0
     assert bool(out.loc["root", "Sibling_Used_Parent_Principal_Component_Basis"]) is False
 
     audit = out.attrs.get("sibling_divergence_audit", {})
     assert audit.get("calibration_projection_dimension_source_counts") == {
-        "johnson_lindenstrauss_fallback": 1
+        "johnson_lindenstrauss_projection": 1
     }
     assert audit.get("excluded_from_calibration_projection_dimension_source_counts") == {}
     assert audit.get("projection_dimension_source_counts") == {
-        "johnson_lindenstrauss_fallback": 1
+        "johnson_lindenstrauss_projection": 1
     }
     assert audit.get("tested_projection_dimension_source_counts") == {
-        "johnson_lindenstrauss_fallback": 1
+        "johnson_lindenstrauss_projection": 1
     }
 
 
@@ -339,7 +357,7 @@ def test_resolve_sibling_projection_dimension_rejects_nonpositive_dimension(
         n_features: int,
     ) -> int:
         raise AssertionError(
-            "JL fallback should not run for invalid edge-derived projection dimension"
+            "JL projection resolver should not run for invalid edge-derived projection dimension"
         )
 
     monkeypatch.setattr(
@@ -356,7 +374,7 @@ def test_resolve_sibling_projection_dimension_rejects_nonpositive_dimension(
         )
 
 
-def test_resolve_sibling_projection_dimension_uses_supplied_edge_derived_dimension_without_johnson_lindenstrauss_fallback(
+def test_resolve_sibling_projection_dimension_uses_supplied_edge_derived_dimension_without_johnson_lindenstrauss_projection(
     monkeypatch,
 ) -> None:
     def _fail_compute_projection_dimension(
@@ -364,7 +382,7 @@ def test_resolve_sibling_projection_dimension_uses_supplied_edge_derived_dimensi
         n_features: int,
     ) -> int:
         raise AssertionError(
-            "JL fallback should not run for positive edge-derived projection dimension"
+            "JL projection resolver should not run for positive edge-derived projection dimension"
         )
 
     monkeypatch.setattr(

@@ -55,8 +55,8 @@ def _collect_binary_parent_structure(
             tree,
             spectral_context=bundle.gate_two_result.spectral_context,
         )
-        or {}
     )
+    assert sibling_projection_dimensions_from_edge_comparisons is not None
 
     omitted: list[tuple[str, list[str], tuple[int, int], tuple[bool, bool]]] = []
     included: list[tuple[str, list[str], tuple[int, int], tuple[bool, bool], int]] = []

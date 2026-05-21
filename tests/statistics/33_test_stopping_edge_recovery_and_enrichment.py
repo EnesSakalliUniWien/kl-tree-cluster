@@ -179,7 +179,7 @@ def test_recover_stopping_edge_info_rejects_multi_parent_graph() -> None:
         recover_stopping_edge_info(tree, tree_bh_result, child_node_ids)
 
 
-def test_enrich_blocked_weights_replaces_legacy_weight_and_populates_audit_fields() -> None:
+def test_enrich_blocked_weights_populates_audit_fields() -> None:
     tree = _build_tree()
     annotations_df = pd.DataFrame(
         {

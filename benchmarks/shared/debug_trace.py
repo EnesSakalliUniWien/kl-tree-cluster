@@ -1,8 +1,19 @@
-import pandas as pd
-from pathlib import Path
 import logging
+from pathlib import Path
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+AUDIT_CONTRACT_COLUMNS = frozenset(
+    {
+        "node_id",
+        "leaf_count",
+        "parent_node",
+        "Sibling_Divergence_P_Value",
+        "Sibling_BH_Different",
+    }
+)
 
 
 def diagnose_benchmark_failures(
@@ -75,19 +86,27 @@ def analyze_single_case(csv_path: Path) -> dict:
 
     try:
         df = pd.read_csv(csv_path)
-    except Exception:
-        return {"mode": "ERROR", "reason": "Corrupt audit file"}
+    except Exception as exc:
+        return {"mode": "ERROR", "reason": f"Unreadable audit file: {exc}"}
 
-    if "leaf_count" not in df.columns:
-        return {"mode": "ERROR", "reason": "Invalid columns"}
+    missing_columns = sorted(AUDIT_CONTRACT_COLUMNS.difference(df.columns))
+    if missing_columns:
+        return {
+            "mode": "ERROR",
+            "reason": f"Invalid audit contract; missing columns: {', '.join(missing_columns)}",
+        }
 
-    # Find root
-    try:
-        root_idx = df["leaf_count"].idxmax()
-        root_node = df.loc[root_idx]
-        root_id = root_node["node_id"]
-    except Exception:
-        return {"mode": "ERROR", "reason": "Root finding failed"}
+    if df.empty:
+        return {"mode": "ERROR", "reason": "Invalid audit contract; audit file is empty"}
+
+    leaf_counts = pd.to_numeric(df["leaf_count"], errors="coerce")
+    if leaf_counts.notna().sum() == 0:
+        return {"mode": "ERROR", "reason": "Invalid audit contract; leaf_count has no numeric values"}
+
+    root_idx = leaf_counts.idxmax()
+    root_id = df.loc[root_idx, "node_id"]
+    if pd.isna(root_id):
+        return {"mode": "ERROR", "reason": "Invalid audit contract; root node_id is missing"}
 
     # Children
     children = df[df["parent_node"] == root_id]
@@ -96,22 +115,17 @@ def analyze_single_case(csv_path: Path) -> dict:
     root_p = float("nan")
 
     if len(children) > 0:
-        root_p = children["Sibling_Divergence_P_Value"].min()
-        # Determine if split was accepted.
-        # Ideally check 'Sibling_BH_Different'.
-        # If missing, fallback to raw p-value check (imperfect but useful)
-        if "Sibling_BH_Different" in children.columns:
-            if children["Sibling_BH_Different"].any():
-                root_split_rejected = False
-        elif root_p < 0.05:  # Fallback heuristic
+        sibling_p_values = pd.to_numeric(
+            children["Sibling_Divergence_P_Value"], errors="coerce"
+        ).dropna()
+        if not sibling_p_values.empty:
+            root_p = float(sibling_p_values.min())
+        if _coerce_bool_series(children["Sibling_BH_Different"]).any():
             root_split_rejected = False
 
     # Significant splits analysis
-    sig_splits = pd.DataFrame()
-    if "Sibling_BH_Different" in df.columns:
-        sig_splits = df[
-            (df["Sibling_BH_Different"] == True) & (df["parent_node"] != root_id)
-        ]
+    sibling_different = _coerce_bool_series(df["Sibling_BH_Different"])
+    sig_splits = df[sibling_different & (df["parent_node"] != root_id)]
 
     # Classification
     if root_split_rejected:
@@ -131,3 +145,10 @@ def analyze_single_case(csv_path: Path) -> dict:
         }
     else:
         return {"mode": "MIXED", "reason": "Root split OK, moderate complexity."}
+
+
+def _coerce_bool_series(series: pd.Series) -> pd.Series:
+    if series.dtype == bool:
+        return series.fillna(False)
+    lowered = series.astype(str).str.strip().str.lower()
+    return lowered.isin({"1", "true", "t", "yes"})

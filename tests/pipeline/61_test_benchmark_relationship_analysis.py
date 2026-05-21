@@ -228,7 +228,7 @@ def test_normalize_results_dataframe_uses_current_schema_only() -> None:
     assert list(normalized["status"]) == ["ok"]
 
 
-def test_normalize_results_dataframe_preserves_unrecognized_columns() -> None:
+def test_normalize_results_dataframe_rejects_unrecognized_columns() -> None:
     df = pd.DataFrame(
         {
             "test_case": [1],
@@ -238,12 +238,8 @@ def test_normalize_results_dataframe_preserves_unrecognized_columns() -> None:
         }
     )
 
-    normalized = normalize_results_dataframe(df)
-
-    assert normalized.loc[0, "test_case"] == 1
-    assert normalized.loc[0, "case_id"] == "case_1"
-    assert normalized.loc[0, "ari"] == 0.5
-    assert normalized.loc[0, "Custom_Label"] == "kept"
+    with pytest.raises(ValueError, match="found unknown columns: \\['Custom_Label'\\]"):
+        normalize_results_dataframe(df)
 
 
 def test_normalize_results_dataframe_rejects_old_full_runner_csv_columns() -> None:
@@ -396,6 +392,61 @@ def test_attach_audit_factors_does_not_cross_assign_single_method_audits(tmp_pat
 
 def test_attach_audit_factors_rejects_old_kl_divergence_audit_filename(tmp_path: Path) -> None:
     _write_synthetic_audit(tmp_path, case_num=1, method_slug="kl_divergence", accepted=True)
+
+    artifacts = analyze_benchmark_relationships(
+        pd.DataFrame(
+            [
+                {
+                    "test_case": 1,
+                    "case_id": "case_1",
+                    "case_category": "improved_gaussian",
+                    "method": "kl",
+                    "params": "",
+                    "true_clusters": 2,
+                    "found_clusters": 2,
+                    "samples": 10,
+                    "features": 5,
+                    "noise": 0.1,
+                    "ari": 0.8,
+                    "nmi": 0.8,
+                    "purity": 0.9,
+                    "status": "ok",
+                }
+            ]
+        ),
+        tmp_path,
+        include_plots=False,
+    )
+
+    augmented_rows = pd.read_csv(artifacts.augmented_rows_csv)
+    assert augmented_rows.loc[0, "audit_available"] == 0.0
+
+
+def test_attach_audit_factors_rejects_missing_sibling_decision_column(tmp_path: Path) -> None:
+    audit_dir = tmp_path / "audit"
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "node_id": "N0",
+                "leaf_count": 2,
+                "parent_node": None,
+                "Sibling_Divergence_P_Value": None,
+            },
+            {
+                "node_id": "N1",
+                "leaf_count": 1,
+                "parent_node": "N0",
+                "Sibling_Divergence_P_Value": 0.001,
+            },
+            {
+                "node_id": "N2",
+                "leaf_count": 1,
+                "parent_node": "N0",
+                "Sibling_Divergence_P_Value": 0.001,
+            },
+        ]
+    ).to_csv(audit_dir / "case_1_kl_stats.csv", index=False)
 
     artifacts = analyze_benchmark_relationships(
         pd.DataFrame(

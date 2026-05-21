@@ -51,10 +51,10 @@ def build_benchmark_result_row(
     labels_length: int,
 ) -> BenchmarkResultRow:
     """Build a typed benchmark row with normalized output fields."""
-    _true = true_clusters if true_clusters is not None else 0
-    _noise = (
-        noise if noise is not None and not (isinstance(noise, float) and noise != noise) else 0.0
-    )
+    if true_clusters is None:
+        raise ValueError("true_clusters must be an integer; use 0 when cluster truth is unknown.")
+    if noise is None:
+        raise ValueError("noise must be a float; use NaN when noise metadata is unavailable.")
     return BenchmarkResultRow(
         test_case=int(test_case),
         case_id=str(case_id),
@@ -62,11 +62,11 @@ def build_benchmark_result_row(
         method=str(method),
         params_raw=dict(run_params),
         params_display=format_params_for_display(run_params),
-        true_clusters=int(_true),
+        true_clusters=int(true_clusters),
         found_clusters=int(found_clusters),
         samples=int(samples),
         features=int(features),
-        noise=float(_noise),
+        noise=float(noise),
         ari=float(ari),
         nmi=float(nmi),
         purity=float(purity),

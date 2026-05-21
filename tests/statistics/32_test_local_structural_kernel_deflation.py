@@ -110,7 +110,7 @@ def test_predict_sibling_adjustment_tracks_nearby_sibling_scales() -> None:
     assert far_out < near_center
 
 
-def test_predict_sibling_adjustment_falls_back_to_global_with_zero_log_scale_spread() -> None:
+def test_predict_sibling_adjustment_uses_global_with_zero_log_scale_spread() -> None:
     records = [
         _make_record(
             "p0",
@@ -141,11 +141,11 @@ def test_predict_sibling_adjustment_falls_back_to_global_with_zero_log_scale_spr
     )
 
     assert calibrator.spread == 0.0
-    assert calibrator.spread_status == "global_fallback_zero_log_scale_spread"
+    assert calibrator.spread_status == "global_zero_log_scale_spread"
     assert predicted == model.global_inflation_factor
 
 
-def test_fit_sibling_inflation_calibrator_falls_back_to_global_when_no_positive_weights() -> None:
+def test_fit_sibling_inflation_calibrator_uses_global_when_no_positive_weights() -> None:
     records = [
         _make_record(
             "p0",
@@ -177,5 +177,5 @@ def test_fit_sibling_inflation_calibrator_falls_back_to_global_when_no_positive_
     )
 
     assert calibrator.record_count == 0
-    assert calibrator.spread_status == "global_fallback_no_positive_weights"
+    assert calibrator.spread_status == "global_no_positive_weights"
     assert predicted == model.global_inflation_factor

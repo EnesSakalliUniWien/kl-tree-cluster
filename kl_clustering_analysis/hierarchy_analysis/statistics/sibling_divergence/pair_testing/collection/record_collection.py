@@ -118,7 +118,6 @@ def collect_sibling_pair_records(
             used_parent_principal_component_basis,
         ) = determine_projection_metadata_for_sibling_test(
             projection_diagnostics=projection_diagnostics,
-            projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
             parent_principal_component_projection=parent_principal_component_projection,
         )
 

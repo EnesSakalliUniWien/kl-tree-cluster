@@ -37,7 +37,7 @@ def estimate_projection_dimension_floor(
     -------
     int
         Dataset-level minimum projection dimension used as the floor for the
-        JL fallback path.
+        JL projection path.
 
     Notes
     -----

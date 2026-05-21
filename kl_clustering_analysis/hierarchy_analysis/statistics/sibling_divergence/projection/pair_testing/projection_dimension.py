@@ -19,7 +19,7 @@ def resolve_sibling_projection_dimension(
         total_sample_size = int(left_sample_size + right_sample_size)
         return (
             compute_projection_dimension(total_sample_size, n_features),
-            "johnson_lindenstrauss_fallback",
+            "johnson_lindenstrauss_projection",
         )
 
     if projection_dimension_from_edge_comparisons <= 0:

@@ -28,7 +28,7 @@ class SiblingPairRecord:
     """Rough sibling split scale used to match nearby calibration examples.
 
     Prefer the projection dimension derived from edge comparisons when
-    available; otherwise fall back to the sibling test degrees of freedom.
+    available; otherwise use the sibling test degrees of freedom.
     """
     projection_dimension_source: str = ""
     """Which path supplied the sibling test projection dimension."""
