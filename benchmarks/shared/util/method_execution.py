@@ -188,6 +188,7 @@ def run_single_method_once(
         meta_run["found_clusters"] = found_clusters
         computed_result = build_computed_result_record(
             test_case_num=case_idx,
+            method=method_id,
             method_name=spec.name,
             params=run_params,
             ari=float(ari) if np.isfinite(ari) else np.nan,
@@ -218,7 +219,7 @@ def run_single_method_once(
 
     method_audit = None
     if matrix_audit:
-        method_name = _slugify(spec.name)
+        method_name = _slugify(method_id)
         params_slug = _slugify(result_row.params_display)
         method_tag = method_name if not params_slug else f"{method_name}__{params_slug}"
         matrices: dict[str, object] = {}

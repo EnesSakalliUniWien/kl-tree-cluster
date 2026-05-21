@@ -54,10 +54,10 @@ DEFAULT_SENTINEL_CASES = [2, 59, 1, 61]
 
 
 AUDIT_SUFFIX_BY_METHOD = {
-    "kl": "kl_divergence_stats",
-    "kl_complete": "kl_(complete)_stats",
-    "kl_diffusion": "kl_(diffusion)_stats",
-    "kl_single": "kl_(single)_stats",
+    "kl": "kl_stats",
+    "kl_complete": "kl_complete_stats",
+    "kl_diffusion": "kl_diffusion_stats",
+    "kl_single": "kl_single_stats",
 }
 
 TRACKED_AUDIT_COLUMNS = [

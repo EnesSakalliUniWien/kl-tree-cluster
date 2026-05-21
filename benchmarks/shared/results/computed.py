@@ -14,6 +14,7 @@ class ComputedResultRecord:
     """Structured record for successful per-method benchmark outputs."""
 
     test_case_num: int
+    method: str
     method_name: str
     params: dict[str, object]
     ari: float
@@ -37,6 +38,7 @@ class ComputedResultRecord:
 def build_computed_result_record(
     *,
     test_case_num: int,
+    method: str,
     method_name: str,
     params: dict[str, object],
     ari: float,
@@ -59,6 +61,7 @@ def build_computed_result_record(
     """Build a typed computed-result record."""
     return ComputedResultRecord(
         test_case_num=int(test_case_num),
+        method=str(method),
         method_name=str(method_name),
         params=dict(params),
         ari=float(ari),

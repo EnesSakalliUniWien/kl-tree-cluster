@@ -41,7 +41,7 @@ def export_decomposition_audit(
 
     for res in computed_results:
         case_id = res.test_case_num
-        method = res.method_name.replace(" ", "_").lower()
+        method = res.method
         tree = res.tree
 
         # 1. Export Primary Node Stats

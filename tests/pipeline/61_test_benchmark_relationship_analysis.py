@@ -293,10 +293,10 @@ def test_prepare_relationship_frame_derives_split_flags() -> None:
 
 
 def test_analyze_benchmark_relationships_writes_expected_artifacts(tmp_path: Path) -> None:
-    _write_synthetic_audit(tmp_path, case_num=1, method_slug="kl_divergence", accepted=False)
-    _write_synthetic_audit(tmp_path, case_num=1, method_slug="k-means", accepted=True)
-    _write_synthetic_audit(tmp_path, case_num=2, method_slug="kl_divergence", accepted=False)
-    _write_synthetic_audit(tmp_path, case_num=2, method_slug="k-means", accepted=True)
+    _write_synthetic_audit(tmp_path, case_num=1, method_slug="kl", accepted=False)
+    _write_synthetic_audit(tmp_path, case_num=1, method_slug="kmeans", accepted=True)
+    _write_synthetic_audit(tmp_path, case_num=2, method_slug="kl", accepted=False)
+    _write_synthetic_audit(tmp_path, case_num=2, method_slug="kmeans", accepted=True)
 
     artifacts = analyze_benchmark_relationships(
         _make_synthetic_results(),
@@ -344,7 +344,7 @@ def test_analyze_benchmark_relationships_writes_expected_artifacts(tmp_path: Pat
 
 
 def test_attach_audit_factors_does_not_cross_assign_single_method_audits(tmp_path: Path) -> None:
-    _write_synthetic_audit(tmp_path, case_num=1, method_slug="kl_divergence", accepted=True)
+    _write_synthetic_audit(tmp_path, case_num=1, method_slug="kl", accepted=True)
 
     artifacts = analyze_benchmark_relationships(
         pd.DataFrame(
@@ -394,6 +394,38 @@ def test_attach_audit_factors_does_not_cross_assign_single_method_audits(tmp_pat
     assert kmeans_row["audit_available"] == 0.0
 
 
+def test_attach_audit_factors_rejects_old_kl_divergence_audit_filename(tmp_path: Path) -> None:
+    _write_synthetic_audit(tmp_path, case_num=1, method_slug="kl_divergence", accepted=True)
+
+    artifacts = analyze_benchmark_relationships(
+        pd.DataFrame(
+            [
+                {
+                    "test_case": 1,
+                    "case_id": "case_1",
+                    "case_category": "improved_gaussian",
+                    "method": "kl",
+                    "params": "",
+                    "true_clusters": 2,
+                    "found_clusters": 2,
+                    "samples": 10,
+                    "features": 5,
+                    "noise": 0.1,
+                    "ari": 0.8,
+                    "nmi": 0.8,
+                    "purity": 0.9,
+                    "status": "ok",
+                }
+            ]
+        ),
+        tmp_path,
+        include_plots=False,
+    )
+
+    augmented_rows = pd.read_csv(artifacts.augmented_rows_csv)
+    assert augmented_rows.loc[0, "audit_available"] == 0.0
+
+
 def test_analyze_benchmark_relationships_handles_missing_branch_length_column(tmp_path: Path) -> None:
     audit_dir = tmp_path / "audit"
     audit_dir.mkdir(parents=True, exist_ok=True)
@@ -430,7 +462,7 @@ def test_analyze_benchmark_relationships_handles_missing_branch_length_column(tm
                 "parent_label": "root",
             },
         ]
-    ).to_csv(audit_dir / "case_1_kl_divergence_stats.csv", index=False)
+    ).to_csv(audit_dir / "case_1_kl_stats.csv", index=False)
 
     artifacts = analyze_benchmark_relationships(
         pd.DataFrame(

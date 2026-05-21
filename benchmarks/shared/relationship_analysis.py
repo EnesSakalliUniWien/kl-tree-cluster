@@ -661,38 +661,7 @@ def _resolve_audit_file(
     if not case_files:
         return None
 
-    aliases = _method_aliases(method)
-    for alias in aliases:
-        candidate = case_files.get(alias)
-        if candidate is not None:
-            return candidate
-    return None
-
-
-def _method_aliases(method: str) -> list[str]:
-    raw = str(method).strip().lower()
-    aliases = {
-        _normalize_method_key(raw),
-        _normalize_method_key(raw.replace("_", " ")),
-        _normalize_method_key(raw.replace("_", "-")),
-    }
-    if raw == "kl":
-        aliases.update(
-            {
-                _normalize_method_key("kl_divergence"),
-                _normalize_method_key("kl divergence"),
-            }
-        )
-    if raw.startswith("kl_"):
-        suffix = raw.split("_", 1)[1]
-        aliases.update(
-            {
-                _normalize_method_key(f"kl_{suffix}"),
-                _normalize_method_key(f"kl ({suffix})"),
-                _normalize_method_key(f"kl-{suffix}"),
-            }
-        )
-    return [alias for alias in aliases if alias]
+    return case_files.get(_normalize_method_key(method))
 
 
 def _normalize_method_key(value: str) -> str:

@@ -55,10 +55,7 @@ def diagnose_benchmark_failures(
         true_k = row.get("true_clusters", "?")
         found_k = row.get("found_clusters", "?")
 
-        # Locate audit file
-        # Pattern: case_{num}_kl_divergence_stats.csv
-        # Note: case_num might be integer
-        audit_file = audit_root / f"case_{case_num}_kl_divergence_stats.csv"
+        audit_file = audit_root / f"case_{case_num}_kl_stats.csv"
 
         diagnosis = analyze_single_case(audit_file)
 
