@@ -21,7 +21,7 @@ from benchmarks.shared.logging import log_validation_completion, log_validation_
 
 # Plot generation lives in the runtime module; avoid importing the full plots barrel.
 from benchmarks.shared.plots.runtime import generate_benchmark_plots
-from benchmarks.shared.results import (
+from benchmarks.shared.result_records import (
     BenchmarkResultRow,
     ComputedResultRecord,
     benchmark_rows_to_dataframe,

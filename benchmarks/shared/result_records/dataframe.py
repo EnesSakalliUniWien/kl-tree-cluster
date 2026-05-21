@@ -6,7 +6,7 @@ from typing import Iterable
 
 import pandas as pd
 
-from benchmarks.shared.results.models import BenchmarkResultRow
+from benchmarks.shared.result_records.models import BenchmarkResultRow
 
 RESULT_COLUMNS = [
     "test_case",

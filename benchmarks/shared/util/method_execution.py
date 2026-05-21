@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from benchmarks.shared.metrics import _calculate_ari_nmi_purity_metrics
-from benchmarks.shared.results import (
+from benchmarks.shared.result_records import (
     BenchmarkResultRow,
     ComputedResultRecord,
     build_benchmark_result_row,

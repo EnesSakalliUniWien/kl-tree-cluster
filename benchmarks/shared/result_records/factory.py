@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from benchmarks.shared.results.models import BenchmarkResultRow, BenchmarkRunStatus
+from benchmarks.shared.result_records.models import BenchmarkResultRow, BenchmarkRunStatus
 from benchmarks.shared.util.params import format_params_for_display
 
 

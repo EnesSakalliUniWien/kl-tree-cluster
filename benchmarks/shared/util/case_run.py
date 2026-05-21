@@ -10,7 +10,7 @@ from benchmarks.shared.audit_utils import (
     export_decomposition_audit,
 )
 from benchmarks.shared.logging import log_test_case_start
-from benchmarks.shared.results import BenchmarkResultRow, ComputedResultRecord
+from benchmarks.shared.result_records import BenchmarkResultRow, ComputedResultRecord
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.method_execution import run_single_method_once

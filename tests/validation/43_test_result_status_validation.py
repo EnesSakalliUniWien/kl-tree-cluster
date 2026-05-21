@@ -1,7 +1,7 @@
 import pytest
 
-from benchmarks.shared.results.factory import build_benchmark_result_row
-from benchmarks.shared.results.models import BenchmarkRunStatus
+from benchmarks.shared.result_records.factory import build_benchmark_result_row
+from benchmarks.shared.result_records.models import BenchmarkRunStatus
 
 
 def _build_row(status):
