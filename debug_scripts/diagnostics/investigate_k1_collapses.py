@@ -395,7 +395,6 @@ def investigate_case(case_name: str):
             print(
                 f"    Depth {depth}: n={info.get('n_edges','?')}, "
                 f"ĉ={c_str}, mean_w={mw_str}"
-                f"{', fallback=global' if info.get('fallback') else ''}"
             )
 
     # Print summary

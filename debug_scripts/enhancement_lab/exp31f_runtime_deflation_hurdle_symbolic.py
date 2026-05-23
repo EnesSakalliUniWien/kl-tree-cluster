@@ -317,10 +317,10 @@ def _predict_regressor_amount(
     model: SymbolicRegressor | None,
     frame: pd.DataFrame,
     feature_names: list[str],
-    fallback: float,
+    baseline: float,
 ) -> np.ndarray:
     if model is None:
-        return np.full(len(frame), max(float(fallback), 0.0), dtype=np.float64)
+        return np.full(len(frame), max(float(baseline), 0.0), dtype=np.float64)
     x = frame[feature_names].to_numpy(dtype=np.float64)
     return np.maximum(model.predict(x).astype(np.float64), 0.0)
 
@@ -446,12 +446,12 @@ def _leave_group_out_predictions(
             args=args,
             random_state=args.random_seed + 10_000 + fold_idx,
         )
-        fallback_amount = float(train.loc[train["gate_target"], "extra_log_deflation"].mean())
-        if not np.isfinite(fallback_amount):
-            fallback_amount = 0.0
+        baseline_amount = float(train.loc[train["gate_target"], "extra_log_deflation"].mean())
+        if not np.isfinite(baseline_amount):
+            baseline_amount = 0.0
         test_gate = _predict_classifier_prob(classifier, test, feature_names)
         test_amount = _predict_regressor_amount(
-            regressor, test, feature_names, fallback=fallback_amount
+            regressor, test, feature_names, baseline=baseline_amount
         )
         test_soft = test_gate * test_amount
 
@@ -513,7 +513,7 @@ def _summary_row(
         positive_regression = {"mae": math.nan, "rmse": math.nan, "r2": math.nan}
 
     gate_program = str(gate_model._program)
-    amount_program = str(amount_model._program) if amount_model is not None else "constant_fallback"
+    amount_program = str(amount_model._program) if amount_model is not None else "constant_baseline"
     equation_frame = pd.DataFrame(
         [
             {
@@ -649,7 +649,7 @@ def main() -> None:
     prediction_frames: list[pd.DataFrame] = []
 
     for mode in modes:
-        path = resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)
+        path = resolve_enhancement_lab_artifact_path(mode.rows_csv)
         frame = _prepare_frame(path, positive_threshold=args.positive_threshold)
         feature_names = _usable_feature_columns(frame, _RUNTIME_FEATURE_COLUMNS)
         if not feature_names:

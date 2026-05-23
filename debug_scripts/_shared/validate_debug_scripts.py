@@ -38,7 +38,7 @@ REQUIRED_HEADER_FIELDS = (
 )
 
 
-def _collect_targets(include_archive: bool, include_root_legacy: bool) -> list[Path]:
+def _collect_targets(include_archive: bool) -> list[Path]:
     targets = []
     for path in sorted(DEBUG_ROOT.rglob("*.py")):
         rel_parts = path.relative_to(DEBUG_ROOT).parts
@@ -48,9 +48,7 @@ def _collect_targets(include_archive: bool, include_root_legacy: bool) -> list[P
         if top == "_shared":
             continue
         if top not in ACTIVE_DIRS and top not in {"archive"}:
-            # Legacy root-level scripts (or unknown dirs) are ignored unless requested.
-            if not include_root_legacy:
-                continue
+            continue
         if top == "archive" and not include_archive:
             continue
         targets.append(path)
@@ -68,11 +66,9 @@ def _parse_docstring(path: Path) -> tuple[str | None, str | None]:
     return doc, None
 
 
-def validate(include_archive: bool, include_root_legacy: bool) -> tuple[int, list[str]]:
+def validate(include_archive: bool) -> tuple[int, list[str]]:
     errors: list[str] = []
-    targets = _collect_targets(
-        include_archive=include_archive, include_root_legacy=include_root_legacy
-    )
+    targets = _collect_targets(include_archive=include_archive)
 
     if not targets:
         errors.append("No target scripts found under debug_scripts/.")
@@ -113,24 +109,11 @@ def main() -> int:
         action="store_true",
         help="Also validate scripts under debug_scripts/archive.",
     )
-    parser.add_argument(
-        "--include-root-legacy",
-        action="store_true",
-        help="Also validate legacy root-level scripts during migration.",
-    )
     args = parser.parse_args()
 
-    code, errors = validate(
-        include_archive=args.include_archive,
-        include_root_legacy=args.include_root_legacy,
-    )
+    code, errors = validate(include_archive=args.include_archive)
     if code == 0:
-        checked = len(
-            _collect_targets(
-                include_archive=args.include_archive,
-                include_root_legacy=args.include_root_legacy,
-            )
-        )
+        checked = len(_collect_targets(include_archive=args.include_archive))
         print(f"OK: validated {checked} debug scripts.")
         return 0
 

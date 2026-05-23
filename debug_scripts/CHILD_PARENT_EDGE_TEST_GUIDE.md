@@ -84,7 +84,7 @@ lambda_plus = sigma2 * (1 + sqrt(gamma))^2
 
 # Count eigenvalues above MP threshold
 k = count(eigenvalues > lambda_plus)
-k = max(k, SPECTRAL_MINIMUM_DIMENSION)  # Floor of 2
+k = max(k, 2)  # Fixed Gate 2 floor, then capped by active feature count
 ```
 
 **Numerical Example:**
@@ -103,10 +103,7 @@ k = max(1, 2) = 2  # Apply floor
 ### Step 3: Build Projection Matrix
 
 ```python
-# Random projection (if no pre-computed PCA)
-R = random_orthogonal_matrix(k, d, seed=42)  # Shape: (k, d)
-
-# Or use PCA basis if available
+# Use the PCA basis from the spectral context.
 R = pca_projection[:k, :]  # Shape: (k, d)
 ```
 
@@ -333,7 +330,7 @@ Summary:
 
 **Cause:** spectral_k = 0 (no signal eigenvalues detected)
 
-**Fix:** Check data quality, increase sample size, or lower SPECTRAL_MINIMUM_DIMENSION
+**Fix:** Check data quality or increase sample size.
 
 ### Issue 2: Too Many Significant Edges
 
@@ -351,30 +348,11 @@ Summary:
 
 ## RELATED FILES
 
-- `kl_clustering_analysis/hierarchy_analysis/statistics/child_parent_divergence/child_parent_projected_wald.py`
-- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald.py`
-- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/chi2_pvalue.py`
-- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_basis.py`
-- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/k_estimators.py`
-
----
-
-## DEMONSTRATION SCRIPT
-
-Run the numerical walkthrough:
-```bash
-python debug_scripts/demo_child_parent_edge_test.py
-```
-
-This script shows:
-1. Input data generation
-2. Tree construction
-3. Edge selection
-4. Z-score computation
-5. Spectral dimension estimation
-6. Projection matrix construction
-7. Wald test computation
-8. Full tree annotation
+- `kl_clustering_analysis/hierarchy_analysis/statistics/child_parent_divergence/child_parent_projected_wald/`
+- `kl_clustering_analysis/hierarchy_analysis/statistics/child_parent_divergence/child_parent_projected_wald/child_parent_projected_wald_test.py`
+- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_projection_basis.py`
+- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_kernel.py`
+- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py`
 
 ---
 

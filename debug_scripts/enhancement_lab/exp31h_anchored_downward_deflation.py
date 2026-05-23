@@ -539,7 +539,7 @@ def main() -> None:
 
     for mode in modes:
         frame = _prepare_frame(
-            resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True),
+            resolve_enhancement_lab_artifact_path(mode.rows_csv),
             logit_eps=args.logit_eps,
         )
         summary, coefficients, cases, evaluated = _evaluate_mode(

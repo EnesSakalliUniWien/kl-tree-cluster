@@ -301,7 +301,7 @@ def _write_markdown(summary: pd.DataFrame, anchors: pd.DataFrame, output_path: P
 def _analyze_mode(
     mode: ModeSpec, *, scope_name: str, max_depth: int
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    frame = pd.read_csv(resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)).copy()
+    frame = pd.read_csv(resolve_enhancement_lab_artifact_path(mode.rows_csv)).copy()
     frame["risk_score"] = _compute_risk_score(frame)
     frame["is_target_anchor"] = _target_mask(frame, max_depth=max_depth)
 

@@ -21,6 +21,9 @@ from scipy.spatial.distance import pdist
 
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence,
 )
@@ -272,7 +275,10 @@ def _print_dim_histogram(dims: dict[str, int]) -> None:
 
 def main() -> None:
     print("Diagnose spectral-dimension flips between two PosetTree builds")
-    print(f"  SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}")
+    print(
+        "  GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION="
+        f"{GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION}"
+    )
     print("  SIBLING_CALIBRATION=satterthwaite")
     print()
     for case in CASES:

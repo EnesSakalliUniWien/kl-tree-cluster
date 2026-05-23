@@ -352,7 +352,7 @@ def main() -> None:
     prediction_frames: list[pd.DataFrame] = []
 
     for mode in modes:
-        path = resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)
+        path = resolve_enhancement_lab_artifact_path(mode.rows_csv)
         frame = _prepare_frame(path, positive_threshold=args.positive_threshold)
         summary, evaluated, coefficients = _evaluate_mode(
             frame,

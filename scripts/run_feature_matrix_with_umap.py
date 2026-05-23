@@ -46,7 +46,6 @@ from kl_clustering_analysis.tree.io import tree_from_linkage
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import cut_tree, dendrogram, linkage
 from scipy.spatial.distance import pdist
-from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
 
@@ -101,9 +100,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--embedding-method",
-        choices=("auto", "umap", "svd"),
-        default="auto",
-        help="Embedding for the cluster plot. 'auto' tries UMAP and falls back to SVD.",
+        choices=("umap", "svd"),
+        default="umap",
+        help="Embedding for the cluster plot.",
     )
     parser.add_argument(
         "--tree-method",
@@ -162,8 +161,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--adaptive-neighbor-k",
         type=int,
-        default=None,
-        help="Optional sparse neighbor support for adaptive diffusion. Omit to choose automatically.",
+        default=15,
+        help="Sparse neighbor support for adaptive diffusion.",
     )
     parser.add_argument(
         "--adaptive-bandwidth-type",
@@ -231,7 +230,7 @@ def _run_decomposition(
     diffusion_k_neighbors: int,
     diffusion_time: int,
     diffusion_components: int,
-    adaptive_neighbor_k: int | None,
+    adaptive_neighbor_k: int,
     adaptive_bandwidth_type: str,
     adaptive_epsilon: str,
     adaptive_metric: str,
@@ -297,7 +296,7 @@ def _build_linkage_tree(
     diffusion_k_neighbors: int,
     diffusion_time: int,
     diffusion_components: int,
-    adaptive_neighbor_k: int | None,
+    adaptive_neighbor_k: int,
     adaptive_bandwidth_type: str,
     adaptive_epsilon: str,
     adaptive_metric: str,
@@ -550,28 +549,23 @@ def _compute_embedding(
     min_dist: float,
     random_state: int,
 ) -> tuple[np.ndarray, str, tuple[str, str], str | None]:
-    fallback_reason: str | None = None
+    if method == "umap":
+        import umap
 
-    if method in {"auto", "umap"}:
-        try:
-            import umap
+        reducer = umap.UMAP(
+            n_components=2,
+            n_neighbors=n_neighbors,
+            min_dist=min_dist,
+            random_state=random_state,
+        )
+        embedding = reducer.fit_transform(data_df.values)
+        return embedding, "umap", ("UMAP-1", "UMAP-2"), None
 
-            reducer = umap.UMAP(
-                n_components=2,
-                n_neighbors=n_neighbors,
-                min_dist=min_dist,
-                random_state=random_state,
-            )
-            embedding = reducer.fit_transform(data_df.values)
-            return embedding, "umap", ("UMAP-1", "UMAP-2"), None
-        except Exception as exc:
-            if method == "umap":
-                raise RuntimeError(f"UMAP embedding failed: {exc}") from exc
-            fallback_reason = f"UMAP unavailable; fell back to TruncatedSVD ({exc})"
+    from sklearn.decomposition import TruncatedSVD
 
     reducer = TruncatedSVD(n_components=2, random_state=random_state)
     embedding = reducer.fit_transform(data_df.values)
-    return embedding, "svd", ("SVD-1", "SVD-2"), fallback_reason
+    return embedding, "svd", ("SVD-1", "SVD-2"), None
 
 
 def _save_embedding_plot(

@@ -1,6 +1,6 @@
 # Debug Scripts Structure
 
-This folder is being migrated from ad-hoc one-off scripts to a searchable and enforceable structure.
+This folder contains searchable diagnostic scripts with an enforceable structure.
 
 ## Naming Contract
 
@@ -36,7 +36,7 @@ Each active script must include a module-level header with:
 - `case_studies/`: targeted benchmark case analyses.
 - `diagnostics/`: cross-cutting behavior and failure diagnostics.
 - `reports/`: generated report artifacts.
-- `archive/`: legacy scripts kept for traceability (not required to satisfy active naming/header contract).
+- `archive/`: non-runnable historical scripts kept outside the active validation target.
 
 ## Validation
 
@@ -52,19 +52,13 @@ Also include archive scripts:
 python debug_scripts/_shared/validate_debug_scripts.py --include-archive
 ```
 
-Also include legacy root-level scripts during migration:
-
-```bash
-python debug_scripts/_shared/validate_debug_scripts.py --include-root-legacy
-```
-
 ## Current Migration Scope
 
-This migration pass standardized and relocated previously identified ad-hoc scripts into:
+Active scripts live in:
 
 - `smoke/`
 - `case_studies/`
 - `sibling_calibration/`
 - `branch_length/methods/`
 - `projection_power/`
-- `archive/` (legacy/non-runnable scripts)
+- `archive/` (non-runnable historical scripts)

@@ -173,7 +173,7 @@ for i in range(case_config["n_clusters"]):
         X_i_std = (X_i - mean) / std
         X_j_std = (X_j - mean) / std
 
-        # Random projection with orthonormal rows
+        # Orthonormal diagnostic projection.
         np.random.seed(42)
         G = np.random.standard_normal((k, X.shape[1]))
         Q, _ = qr(G.T, mode="economic")

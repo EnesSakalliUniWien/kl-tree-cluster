@@ -31,6 +31,9 @@ from scipy.stats import chi2
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 # ─────────────────────────────────────────────────────────────────────
@@ -139,7 +142,7 @@ def _extract_edge_data(data: pd.DataFrame, alpha: float = 0.01) -> dict | None:
 
 def oracle_spectral(data: dict) -> np.ndarray:
     """Current: spectral_k <= MIN_DIM."""
-    min_dim = getattr(config, "SPECTRAL_MINIMUM_DIMENSION", 2)
+    min_dim = GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION
     mask = np.zeros(data["n_edges"], dtype=bool)
     for i in range(data["n_edges"]):
         if not data["valid"][i]:

@@ -286,7 +286,6 @@ def _fit_tree_load_thresholds() -> Thresholds:
 @contextmanager
 def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
     from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
-        child_parent_divergence,
         child_parent_projected_wald,
     )
     from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation import (
@@ -311,10 +310,6 @@ def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
     original_compute_child_parent_context = (
         child_parent_spectral_context.compute_child_parent_spectral_context
     )
-    original_compute_child_parent_context_alias = (
-        child_parent_divergence.compute_child_parent_spectral_context
-    )
-
     pending_one_active_meta: dict[str, dict[str, Any]] = {}
     stats: dict[str, Any] = {
         "thresholds": {
@@ -510,10 +505,6 @@ def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
     child_parent_spectral_context.compute_child_parent_spectral_context = (
         patched_compute_child_parent_spectral_context
     )
-    child_parent_divergence.compute_child_parent_spectral_context = (
-        patched_compute_child_parent_spectral_context
-    )
-
     try:
         yield stats
     finally:
@@ -526,9 +517,6 @@ def _patch_tree_load_guard(thresholds: Thresholds) -> dict[str, Any]:
         wald_statistic.run_projected_wald_kernel = original_sibling_projected_wald_kernel
         child_parent_spectral_context.compute_child_parent_spectral_context = (
             original_compute_child_parent_context
-        )
-        child_parent_divergence.compute_child_parent_spectral_context = (
-            original_compute_child_parent_context_alias
         )
         pending_one_active_meta.clear()
 

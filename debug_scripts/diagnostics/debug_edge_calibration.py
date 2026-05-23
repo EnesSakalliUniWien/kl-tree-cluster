@@ -36,6 +36,9 @@ from scipy.stats import chi2
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 OUT_DIR = Path("benchmarks/results/05_diagnostics_validation_audits/debug_diagnostics_results")
@@ -93,7 +96,10 @@ def main() -> None:
     print(f"  Edge Calibration Debug — seed={args.seed}, n={args.n}, p={args.p}, α={args.alpha}")
     print(f"  EDGE_CALIBRATION={config.EDGE_CALIBRATION}")
     print("  SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
-    print(f"  SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}")
+    print(
+        "  GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION="
+        f"{GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION}"
+    )
     print("═══════════════════════════════════════════════════════════════\n")
 
     data = _generate_null(args.n, args.p, args.seed)
@@ -152,7 +158,7 @@ def main() -> None:
     # ══════════════════════════════════════════════════════════════════
 
     # Spectral dimension breakdown
-    min_dim = config.SPECTRAL_MINIMUM_DIMENSION
+    min_dim = GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION
     k_vals: list[int] = []
     print("Stage 1: Spectral dimension (Marchenko-Pastur)")
     if spectral_dims:

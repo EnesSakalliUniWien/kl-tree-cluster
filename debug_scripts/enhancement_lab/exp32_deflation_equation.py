@@ -1011,7 +1011,7 @@ def write_markdown_report(
 
 def main() -> None:
     args = parse_args()
-    rows_csv = resolve_enhancement_lab_artifact_path(args.rows_csv, for_input=True)
+    rows_csv = resolve_enhancement_lab_artifact_path(args.rows_csv)
     prefix = resolve_enhancement_lab_artifact_path(args.output_prefix)
     prefix.parent.mkdir(parents=True, exist_ok=True)
 

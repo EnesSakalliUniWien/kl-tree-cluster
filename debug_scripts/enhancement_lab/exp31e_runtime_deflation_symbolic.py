@@ -512,7 +512,7 @@ def main() -> None:
     prediction_frames: list[pd.DataFrame] = []
 
     for mode in modes:
-        path = resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)
+        path = resolve_enhancement_lab_artifact_path(mode.rows_csv)
         frame = _prepare_frame(path, include_null_like=args.include_null_like)
         feature_names = _usable_feature_columns(frame, _RUNTIME_FEATURE_COLUMNS)
         if not feature_names:

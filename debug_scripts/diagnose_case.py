@@ -27,6 +27,9 @@ os.environ.setdefault("KL_TE_N_JOBS", "1")
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
@@ -162,7 +165,7 @@ def diagnose_case(case_name: str) -> None:
     # ── Spectral dimensions (before decompose) ──
     print(
         "\nConfig: SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "
-        f"SPECTRAL_MINIMUM_DIMENSION={config.SPECTRAL_MINIMUM_DIMENSION}, "
+        f"GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION={GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION}, "
         f"Sibling test method=cousin_adjusted_wald"
     )
 

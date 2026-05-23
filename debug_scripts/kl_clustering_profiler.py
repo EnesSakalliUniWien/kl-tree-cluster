@@ -519,7 +519,7 @@ class KLProfiler:
                     "component": "general",
                     "issue": f"High dimensionality (d={self.n_features})",
                     "recommendation": "For d > 500, consider: (1) Feature selection or dimensionality reduction (PCA, autoencoders), "
-                    "(2) Sparse data structures if data is sparse, (3) Random projection for faster distance computation.",
+                    "(2) Sparse data structures if data is sparse, (3) reducing benchmark case size before full runs.",
                     "priority": "MEDIUM",
                 }
             )

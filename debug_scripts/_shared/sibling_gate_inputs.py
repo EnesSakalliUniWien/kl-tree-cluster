@@ -45,7 +45,7 @@ def derive_sibling_gate_debug_inputs(
     *,
     alpha_local: float | None = None,
 ) -> SiblingGateDebugInputs:
-    """Derive sibling-gate inputs without relying on legacy DataFrame attrs."""
+    """Derive sibling-gate inputs from the typed spectral context."""
     _, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
         annotations_df,

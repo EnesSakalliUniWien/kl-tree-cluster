@@ -26,7 +26,7 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 print(
     f"Config: EIGENVALUE_WHITENING={config.EIGENVALUE_WHITENING}, "
-    f"SPECTRAL_METHOD={config.SPECTRAL_METHOD}, "
+    "Gate 2 spectral path=fixed Marchenko-Pastur, "
     "Sibling test method=fixed cousin_adjusted_wald, "
     f"FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}"
 )

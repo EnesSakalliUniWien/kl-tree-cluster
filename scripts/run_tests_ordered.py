@@ -27,76 +27,52 @@ STAGES: tuple[Stage, ...] = (
         1,
         "Core structure + decomposition",
         (
-            "tests/core/10_test_poset_tree.py",
-            "tests/core/12_test_cluster_assignments.py",
-            "tests/core/13_test_cluster_decomposer_threshold.py",
+            "tests/core",
         ),
     ),
     Stage(
         2,
         "Statistical engines + calibration",
         (
-            "tests/statistics/21_test_random_projection.py",
-            "tests/statistics/22_test_edge_branch_length_regression.py",
-            "tests/statistics/23_test_weighted_calibration.py",
-            "tests/statistics/24_test_weighted_calibration_diagnostic.py",
-            "tests/statistics/25_test_per_test_projection_seeding.py",
-            "tests/statistics/26_test_invalid_nonfinite_handling.py",
-            "tests/statistics/27_test_categorical_distributions.py",
+            "tests/statistics",
+            "tests/test_methodology_fixes.py",
         ),
     ),
     Stage(
         3,
         "Localization + post-hoc merge behavior",
         (
-            "tests/localization/31_test_posthoc_merge.py",
-            "tests/localization/32_test_posthoc_merge_calibration.py",
-            "tests/localization/33_test_skip_reason_propagation_integration.py",
+            "tests/localization",
         ),
     ),
     Stage(
         4,
         "Cluster validation stack",
         (
-            "tests/validation/40_test_cluster_validation_core.py",
-            "tests/validation/41_test_independent_cluster_validation.py",
-            "tests/validation/42_test_cluster_validation_integration.py",
-            "tests/validation/43_test_result_status_validation.py",
+            "tests/validation",
         ),
     ),
     Stage(
         5,
         "Pipeline contracts + reporting artifacts",
         (
-            "tests/pipeline/50_test_attention_pipeline.py",
-            "tests/pipeline/51_test_dispatch_contract.py",
-            "tests/pipeline/52_test_method_execution_index_alignment.py",
-            "tests/pipeline/53_test_runner_contract_alignment.py",
-            "tests/pipeline/54_test_compare_sibling_methods_contract.py",
-            "tests/pipeline/55_test_case_run_audit_env_restore.py",
-            "tests/pipeline/56_test_run_weighted_full_import_safety.py",
-            "tests/pipeline/57_test_pdf_utils.py",
-            "tests/pipeline/58_test_pipeline_pdf_behavior.py",
-            "tests/pipeline/59_test_pipeline_pdf_naming.py",
+            "tests/pipeline",
         ),
     ),
     Stage(
         6,
         "Integration smoke + lab regressions + visualization",
         (
-            "tests/integration/60_test_benchmark_methods_smoke.py",
-            "tests/integration/61_test_sbm_integration.py",
-            "tests/integration/62_test_phylogenetic_generator.py",
-            "tests/lab/62_test_v3_global_baseline_regression.py",
-            "tests/visualization/70_test_cluster_tree_layout.py",
-            "tests/visualization/71_test_cluster_tree_visualization.py",
+            "tests/integration",
+            "tests/lab",
+            "tests/visualization",
         ),
     ),
 )
 
 
 def run_pytest(test_files: tuple[str, ...]) -> int:
-    cmd = ["pytest", *test_files]
+    cmd = [sys.executable, "-m", "pytest", *test_files]
     completed = subprocess.run(cmd)
     return completed.returncode
 

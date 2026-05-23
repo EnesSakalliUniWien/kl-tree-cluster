@@ -174,9 +174,9 @@ STRATEGIES: dict[str, StrategyFn] = {
     "global": _strategy_global,
     "no_deflation": _strategy_no_deflation,
     "half_global": _strategy_half_global,
-    "legacy_df_mis_0.3": _make_df_mismatch_strategy(0.3),
-    "legacy_df_mis_0.5": _make_df_mismatch_strategy(0.5),
-    "legacy_df_mis_0.7": _make_df_mismatch_strategy(0.7),
+    "df_mismatch_0.3": _make_df_mismatch_strategy(0.3),
+    "df_mismatch_0.5": _make_df_mismatch_strategy(0.5),
+    "df_mismatch_0.7": _make_df_mismatch_strategy(0.7),
     "ratio_cap": _strategy_ratio_cap,
 }
 

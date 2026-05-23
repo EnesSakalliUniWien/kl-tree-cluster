@@ -496,7 +496,7 @@ def _analyze_mode(
     gap_threshold: float,
     edge_eps: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    frame = pd.read_csv(resolve_enhancement_lab_artifact_path(mode.rows_csv, for_input=True)).copy()
+    frame = pd.read_csv(resolve_enhancement_lab_artifact_path(mode.rows_csv)).copy()
     frame["heldout_probability"] = _heldout_probability(frame)
     frame["heldout_probability_source"] = _heldout_probability_source(frame)
     frame["predictive_score"] = _predictive_score(frame)

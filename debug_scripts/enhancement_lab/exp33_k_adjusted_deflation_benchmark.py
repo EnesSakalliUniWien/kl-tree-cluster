@@ -233,7 +233,7 @@ def make_k_adjusted_resolver(
 
     def resolver(rec: SiblingPairRecord) -> tuple[float, str]:
         if rec.degrees_of_freedom <= 0:
-            return c_global, "k_adjusted_fallback"
+            return c_global, "k_adjusted_global"
 
         log_k_i = math.log(rec.degrees_of_freedom)
         # Per-node inflation: c_global · (k_i / k̄)^γ
