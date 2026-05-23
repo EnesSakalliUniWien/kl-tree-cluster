@@ -7,7 +7,7 @@ from collections.abc import Iterable
 import numpy as np
 from scipy.stats import chi2
 
-from .empirical_null_scale_estimation import predict_scale_factor
+from .empirical_null_scale_estimation import predict_empirical_scale_factor
 from .types.calibration_model import EmpiricalNullScaleModel
 from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
 
@@ -41,13 +41,14 @@ def _compute_adjusted_sibling_test(
             f"adjustment; parent={sibling_test_record.parent!r}."
         )
 
-    scale_factor = predict_scale_factor(model, sibling_test_record)
-    if not np.isfinite(scale_factor) or scale_factor < 1.0:
+    empirical_scale_factor = predict_empirical_scale_factor(model, sibling_test_record)
+    if not np.isfinite(empirical_scale_factor) or empirical_scale_factor < 1.0:
         raise ValueError(
-            f"Sibling scale factor must be finite and >= 1.0; got {scale_factor!r}."
+            "Sibling empirical scale factor must be finite and >= 1.0; "
+            f"got {empirical_scale_factor!r}."
         )
 
-    adjusted_statistic = sibling_test_record.stat / scale_factor
+    adjusted_statistic = sibling_test_record.stat / empirical_scale_factor
     adjusted_degrees_of_freedom = float(sibling_test_record.degrees_of_freedom)
     adjusted_p_value = float(chi2.sf(adjusted_statistic, df=adjusted_degrees_of_freedom))
     return (

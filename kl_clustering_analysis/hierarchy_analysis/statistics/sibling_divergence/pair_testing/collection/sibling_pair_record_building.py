@@ -13,6 +13,7 @@ def build_sibling_pair_record(
     left_child_id: object,
     right_child_id: object,
     test_statistic: float,
+    reference_scale: float,
     degrees_of_freedom: float,
     p_value: float,
     branch_length_sum: float,
@@ -29,6 +30,11 @@ def build_sibling_pair_record(
     if not np.isfinite(test_statistic):
         raise ValueError(
             "Sibling pair record requires a finite test statistic; "
+            f"parent={parent_node_id!r}."
+        )
+    if not np.isfinite(reference_scale) or reference_scale <= 0:
+        raise ValueError(
+            "Sibling pair record requires a finite positive reference_scale; "
             f"parent={parent_node_id!r}."
         )
     if not np.isfinite(degrees_of_freedom) or degrees_of_freedom < 0:
@@ -56,6 +62,7 @@ def build_sibling_pair_record(
         left=left_child_id,
         right=right_child_id,
         stat=test_statistic,
+        reference_scale=float(reference_scale),
         degrees_of_freedom=float(degrees_of_freedom),
         p_value=p_value,
         branch_length_sum=branch_length_sum,

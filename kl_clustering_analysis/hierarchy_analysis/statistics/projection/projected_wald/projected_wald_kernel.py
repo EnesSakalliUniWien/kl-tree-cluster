@@ -2,10 +2,23 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 
 from .projected_wald_projection_basis import build_pca_projection_basis
 from .projected_wald_reference_distribution import compute_projected_pvalue
+
+
+@dataclass(frozen=True)
+class ProjectedWaldResult:
+    """Projected-Wald statistic and its complete reference law."""
+
+    statistic: float
+    projection_dimension: int
+    reference_scale: float
+    degrees_of_freedom: float
+    p_value: float
 
 
 def run_projected_wald_kernel(
@@ -14,13 +27,13 @@ def run_projected_wald_kernel(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
-) -> tuple[float, int, float, float]:
+) -> ProjectedWaldResult:
     """Project a standardized vector and compute Wald statistic/p-value.
 
     Returns
     -------
-    tuple[float, int, float, float]
-        ``(statistic, nominal_k, effective_df, p_value)``
+    ProjectedWaldResult
+        Statistic and reference law ``T ~ reference_scale * chi2(degrees_of_freedom)``.
     """
     if spectral_k is None or spectral_k < 0:
         raise ValueError("Projected Wald kernel requires a non-negative spectral_k.")
@@ -41,7 +54,13 @@ def run_projected_wald_kernel(
                 "Zero-dimensional spectral context can only be used with a zero "
                 "projected-Wald contrast."
             )
-        return 0.0, 0, 0.0, 1.0
+        return ProjectedWaldResult(
+            statistic=0.0,
+            projection_dimension=0,
+            reference_scale=1.0,
+            degrees_of_freedom=0.0,
+            p_value=1.0,
+        )
     if projection_dim > n_features:
         raise ValueError(
             f"Projected Wald spectral_k={projection_dim} exceeds feature count {n_features}."
@@ -55,18 +74,20 @@ def run_projected_wald_kernel(
 
     projected_diff = projection_matrix @ standardized_diff
 
-    test_statistic, effective_df, p_value = compute_projected_pvalue(
+    reference = compute_projected_pvalue(
         projected_diff,
         eigenvalues=whitening_eigenvalues,
     )
-    return (
-        float(test_statistic),
-        int(projection_matrix.shape[0]),
-        float(effective_df),
-        float(p_value),
+    return ProjectedWaldResult(
+        statistic=float(reference.statistic),
+        projection_dimension=int(projection_matrix.shape[0]),
+        reference_scale=float(reference.reference_scale),
+        degrees_of_freedom=float(reference.degrees_of_freedom),
+        p_value=float(reference.p_value),
     )
 
 
 __all__ = [
+    "ProjectedWaldResult",
     "run_projected_wald_kernel",
 ]

@@ -10,6 +10,8 @@ Subpackages are organized by statistical responsibility:
 """
 
 from .projected_wald import (
+    ProjectedQuadraticReference,
+    ProjectedWaldResult,
     build_pca_projection_basis,
     compute_projected_pvalue,
     run_projected_wald_kernel,
@@ -32,6 +34,8 @@ __all__ = [
     "estimate_k_marchenko_pastur",
     "marchenko_pastur_signal_count",
     # projected_wald
+    "ProjectedQuadraticReference",
+    "ProjectedWaldResult",
     "run_projected_wald_kernel",
     # projection_basis
     "build_pca_projection_basis",

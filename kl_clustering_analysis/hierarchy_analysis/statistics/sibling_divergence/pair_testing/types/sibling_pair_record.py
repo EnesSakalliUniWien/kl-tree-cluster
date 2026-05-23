@@ -13,6 +13,8 @@ class SiblingPairRecord:
     left: object
     right: object
     stat: float
+    reference_scale: float
+    """Satterthwaite scale in the projected quadratic reference law."""
     degrees_of_freedom: float
     p_value: float
     branch_length_sum: float

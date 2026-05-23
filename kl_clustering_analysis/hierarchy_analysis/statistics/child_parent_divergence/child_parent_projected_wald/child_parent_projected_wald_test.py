@@ -33,16 +33,14 @@ def run_child_parent_projected_wald_test(
 
     standardized_z_scores = standardized_z_scores.astype(np.float64, copy=False)
 
-    test_statistic, _projection_dim, effective_degrees_of_freedom, p_value = (
-        run_projected_wald_kernel(
-            standardized_z_scores,
-            spectral_k=spectral_k,
-            pca_projection=pca_projection,
-            pca_eigenvalues=pca_eigenvalues,
-        )
+    result = run_projected_wald_kernel(
+        standardized_z_scores,
+        spectral_k=spectral_k,
+        pca_projection=pca_projection,
+        pca_eigenvalues=pca_eigenvalues,
     )
 
-    return test_statistic, float(effective_degrees_of_freedom), p_value, False
+    return result.statistic, float(result.degrees_of_freedom), result.p_value, False
 
 
 __all__ = [

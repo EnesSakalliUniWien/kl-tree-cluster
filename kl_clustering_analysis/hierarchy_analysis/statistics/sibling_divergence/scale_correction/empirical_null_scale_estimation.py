@@ -25,6 +25,11 @@ def _validate_calibration_record(record: SiblingPairRecord) -> None:
             "Sibling scale calibration requires non-negative degrees of freedom; "
             f"parent={record.parent!r}."
         )
+    if not np.isfinite(record.reference_scale) or record.reference_scale <= 0:
+        raise ValueError(
+            "Sibling scale calibration requires finite positive reference_scale; "
+            f"parent={record.parent!r}."
+        )
     if record.stat < 0:
         raise ValueError(
             "Sibling scale calibration requires non-negative statistics; "
@@ -82,6 +87,10 @@ def fit_empirical_null_scale_model(
         )
 
     statistics = np.array([record.stat for record in positive_df_records], dtype=float)
+    reference_scales = np.array(
+        [record.reference_scale for record in positive_df_records],
+        dtype=float,
+    )
     degrees_of_freedom = np.array(
         [record.degrees_of_freedom for record in positive_df_records],
         dtype=float,
@@ -97,6 +106,7 @@ def fit_empirical_null_scale_model(
         )
 
     statistics = statistics[positive_weight_mask]
+    reference_scales = reference_scales[positive_weight_mask]
     degrees_of_freedom = degrees_of_freedom[positive_weight_mask]
     null_weights = null_weights[positive_weight_mask]
     calibration_scales = np.array(
@@ -107,17 +117,19 @@ def fit_empirical_null_scale_model(
         ],
         dtype=float,
     )
+    reference_expectations = reference_scales * degrees_of_freedom
     stat_df_ratios = statistics / degrees_of_freedom
-    max_observed_ratio = float(np.max(stat_df_ratios))
+    stat_reference_ratios = statistics / reference_expectations
+    max_observed_statistic_ratio = float(np.max(stat_df_ratios))
 
-    baseline_scale_factor = _scale_mle(
+    baseline_empirical_scale_factor = _scale_mle(
         statistics,
         degrees_of_freedom,
         null_weights,
     )
 
     # One-sided post-selection correction: never increase the sibling statistic.
-    baseline_scale_factor = max(baseline_scale_factor, 1.0)
+    baseline_empirical_scale_factor = max(baseline_empirical_scale_factor, 1.0)
 
     sample_contexts = np.log(calibration_scales)
     context_center = _weighted_mean(sample_contexts, null_weights)
@@ -133,12 +145,17 @@ def fit_empirical_null_scale_model(
         "effective_sample_size": float(
             np.sum(null_weights) ** 2 / np.sum(null_weights**2)
         ),
-        "max_observed_ratio": max_observed_ratio,
-        "median_ratio": float(np.median(stat_df_ratios)),
-        "mean_ratio": float(np.mean(stat_df_ratios)),
+        "max_observed_statistic_ratio": max_observed_statistic_ratio,
+        "median_statistic_ratio": float(np.median(stat_df_ratios)),
+        "mean_statistic_ratio": float(np.mean(stat_df_ratios)),
+        "median_reference_ratio": float(np.median(stat_reference_ratios)),
+        "mean_reference_ratio": float(np.mean(stat_reference_ratios)),
         "weighted_sum_statistic": float(np.sum(null_weights * statistics)),
         "weighted_sum_degrees_of_freedom": float(
             np.sum(null_weights * degrees_of_freedom)
+        ),
+        "weighted_sum_reference_expectation": float(
+            np.sum(null_weights * reference_expectations)
         ),
         "mean_sibling_null_weight": float(np.mean(null_weights)),
         "min_sibling_null_weight": float(np.min(null_weights)),
@@ -150,23 +167,24 @@ def fit_empirical_null_scale_model(
     return EmpiricalNullScaleModel(
         method="context_weighted_empirical_null_scale",
         n_calibration=int(len(statistics)),
-        baseline_scale_factor=baseline_scale_factor,
-        max_observed_ratio=max_observed_ratio,
+        baseline_empirical_scale_factor=baseline_empirical_scale_factor,
+        max_observed_statistic_ratio=max_observed_statistic_ratio,
         context_center=context_center,
         context_bandwidth=context_bandwidth,
         sample_contexts=sample_contexts,
         sample_weights=null_weights,
         sample_statistics=statistics,
+        sample_reference_scales=reference_scales,
         sample_degrees_of_freedom=degrees_of_freedom,
         diagnostics=diagnostics,
     )
 
 
-def predict_scale_factor(
+def predict_empirical_scale_factor(
     model: EmpiricalNullScaleModel,
     record: SiblingPairRecord,
 ) -> float:
-    """Predict the post-selection scale factor for one sibling record."""
+    """Predict the empirical-null scale factor for one sibling record."""
     if record.degrees_of_freedom == 0:
         return 1.0
     if (
@@ -181,7 +199,7 @@ def predict_scale_factor(
         raise ValueError("Cannot predict sibling scale from an empty calibration model.")
 
     if model.context_bandwidth == 0.0:
-        return float(max(model.baseline_scale_factor, 1.0))
+        return float(max(model.baseline_empirical_scale_factor, 1.0))
 
     log_target = float(np.log(record.sibling_calibration_scale))
     scaled_offsets = (model.sample_contexts - log_target) / model.context_bandwidth
@@ -205,5 +223,5 @@ def predict_scale_factor(
 __all__ = [
     "EmpiricalNullScaleModel",
     "fit_empirical_null_scale_model",
-    "predict_scale_factor",
+    "predict_empirical_scale_factor",
 ]

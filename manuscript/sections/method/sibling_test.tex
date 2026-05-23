@@ -207,6 +207,18 @@ p_u^{\mathrm{sib}}
 \chi^2_2 \ge \frac{5.25}{3}
 \right).
 \end{equation}
+In general, the projected-Wald kernel records this unselected reference as
+\begin{equation}
+T_u^{\mathrm{raw}}
+\approx
+a_u \chi^2_{\nu_u},
+\qquad
+a_u =
+\frac{\sum_i \lambda_{u,i}^2}{\sum_i \lambda_{u,i}},
+\qquad
+\nu_u =
+\frac{(\sum_i \lambda_{u,i})^2}{\sum_i \lambda_{u,i}^2}.
+\end{equation}
 This is the practical difference between whitening and Satterthwaite
 calibration: whitening rescales the coordinates before summing, whereas
 Satterthwaite keeps the raw quadratic form and adjusts the reference
@@ -234,10 +246,11 @@ approximately 39\% at $\alpha = 0.05$.
 
 \paragraph{Context-weighted empirical-null scale.}
 The sibling calibration corrects for this extra optimism by estimating the
-post-selection scale of the projected-Wald statistic from the empirical null
-visible inside the fitted hierarchy. For every binary parent $q$, let
-$T_q^{\mathrm{raw}}$ be the raw sibling statistic, let $\nu_q$ be the effective
-sibling degrees of freedom returned by the projected-Wald kernel, let
+runtime empirical-null scale of the projected-Wald statistic from the empirical
+null visible inside the fitted hierarchy. For every binary parent $q$, let
+$T_q^{\mathrm{raw}}$ be the raw sibling statistic, let $a_q$ and $\nu_q$ be the
+Satterthwaite reference scale and effective degrees of freedom returned by the
+projected-Wald kernel, let
 $\pi_q \in [0,1]$ be the sibling null weight implied by the two child-parent
 edge tests, and let $z_q$ denote the calibration context of the sibling
 comparison. In the current implementation,
@@ -251,6 +264,10 @@ T_q^{\mathrm{raw}} \mid H_0
 \approx
 c(z_q)\,\chi^2_{\nu_q}.
 \end{equation}
+Here $c(z_q)$ is the total empirical runtime scale. It is not forced to equal
+the Satterthwaite scale $a_q$ times a separate selection multiplier, because the
+same fitted hierarchy changes both the apparent sibling contrast and the useful
+finite-sample scale of the projected quadratic form.
 For a focal sibling pair $u$, define context weights
 \begin{equation}
 w_q(u)

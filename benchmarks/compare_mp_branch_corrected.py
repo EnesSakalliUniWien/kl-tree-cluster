@@ -232,9 +232,9 @@ def _run_case(case: dict[str, object], *, experimental: bool) -> dict[str, objec
         "ari": _safe_ari(y_true, result.labels),
         "found_clusters": int(result.found_clusters),
         "projection_sources": dict(audit.get("projection_dimension_source_counts", {})),
-        "baseline_scale_factor": float(
-            audit["baseline_scale_factor"]
-        ) if "baseline_scale_factor" in audit else float("nan"),
+        "baseline_empirical_scale_factor": float(
+            audit["baseline_empirical_scale_factor"]
+        ) if "baseline_empirical_scale_factor" in audit else float("nan"),
     }
 
 
@@ -258,9 +258,11 @@ def _compare_cases(cases: list[dict[str, object]]) -> pd.DataFrame:
                 ),
                 "projection_sources_current": current["projection_sources"],
                 "projection_sources_branch_corrected": experimental["projection_sources"],
-                "baseline_scale_current": current["baseline_scale_factor"],
-                "baseline_scale_branch_corrected": experimental[
-                    "baseline_scale_factor"
+                "baseline_empirical_scale_current": current[
+                    "baseline_empirical_scale_factor"
+                ],
+                "baseline_empirical_scale_branch_corrected": experimental[
+                    "baseline_empirical_scale_factor"
                 ],
             }
         )

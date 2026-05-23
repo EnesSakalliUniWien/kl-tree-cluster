@@ -92,7 +92,7 @@ def collect_sibling_pair_records(
             parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
         )
 
-        test_statistic, degrees_of_freedom, p_value = sibling_divergence_test(
+        test_statistic, reference_scale, degrees_of_freedom, p_value = sibling_divergence_test(
             left_distribution,
             right_distribution,
             float(left_sample_size),
@@ -144,6 +144,7 @@ def collect_sibling_pair_records(
                 left_child_id=left_child_id,
                 right_child_id=right_child_id,
                 test_statistic=test_statistic,
+                reference_scale=reference_scale,
                 degrees_of_freedom=float(degrees_of_freedom),
                 p_value=p_value,
                 branch_length_sum=compute_sibling_branch_length_sum(

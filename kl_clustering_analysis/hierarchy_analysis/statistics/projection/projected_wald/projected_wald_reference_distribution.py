@@ -16,16 +16,26 @@ calibrated by Satterthwaite moment matching under that PCA basis.
 
 from __future__ import annotations
 
-from typing import Tuple
+from dataclasses import dataclass
 
 import numpy as np
 from scipy.stats import chi2
 
 
+@dataclass(frozen=True)
+class ProjectedQuadraticReference:
+    """Reference law for one projected quadratic statistic."""
+
+    statistic: float
+    reference_scale: float
+    degrees_of_freedom: float
+    p_value: float
+
+
 def compute_projected_pvalue(
     projected_vector: np.ndarray,
     eigenvalues: np.ndarray | None = None,
-) -> Tuple[float, float, float]:
+) -> ProjectedQuadraticReference:
     """Compute test statistic and p-value from a projected z-score vector.
 
     Parameters
@@ -38,7 +48,7 @@ def compute_projected_pvalue(
     Returns
     -------
     Tuple[float, float, float]
-        ``(test_statistic, effective_df, p_value)``
+        Reference law ``T ~ reference_scale * chi2(degrees_of_freedom)``.
     """
     projected_components = np.asarray(projected_vector, dtype=np.float64)
     if projected_components.ndim != 1:
@@ -66,7 +76,7 @@ def compute_projected_pvalue(
 def _compute_satterthwaite_pvalue(
     projected_pca_components: np.ndarray,
     eigenvalues: np.ndarray,
-) -> Tuple[float, float, float]:
+) -> ProjectedQuadraticReference:
     """Moment-matched chi-squared for unwhitened PCA projections.
 
     The PCA part ``T_pca = Σ (vᵢᵀz)²`` is a weighted sum of χ²(1)
@@ -99,7 +109,12 @@ def _compute_satterthwaite_pvalue(
         chi2.sf(test_statistic / satterthwaite_scale, df=satterthwaite_degrees_of_freedom)
     )
 
-    return test_statistic, float(satterthwaite_degrees_of_freedom), p_value
+    return ProjectedQuadraticReference(
+        statistic=test_statistic,
+        reference_scale=float(satterthwaite_scale),
+        degrees_of_freedom=float(satterthwaite_degrees_of_freedom),
+        p_value=p_value,
+    )
 
 
-__all__ = ["compute_projected_pvalue"]
+__all__ = ["ProjectedQuadraticReference", "compute_projected_pvalue"]

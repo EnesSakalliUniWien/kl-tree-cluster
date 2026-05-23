@@ -185,8 +185,8 @@ def test_sibling_nonfinite_results_raise_before_correction(
         projection_dimension_from_edge_comparisons: int | None = None,
         parent_principal_component_projection: np.ndarray | None = None,
         parent_principal_component_eigenvalues: np.ndarray | None = None,
-    ) -> tuple[float, float, float]:
-        return np.nan, np.nan, np.nan
+    ) -> tuple[float, float, float, float]:
+        return np.nan, np.nan, np.nan, np.nan
 
     monkeypatch.setattr(
         "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection.sibling_divergence_test",
@@ -310,7 +310,7 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         projection_dimension_from_edge_comparisons: int | None = None,
         parent_principal_component_projection: np.ndarray | None = None,
         parent_principal_component_eigenvalues: np.ndarray | None = None,
-    ) -> tuple[float, float, float]:
+    ) -> tuple[float, float, float, float]:
         captured["projection_dimension_from_edge_comparisons"] = (
             projection_dimension_from_edge_comparisons
         )
@@ -320,7 +320,7 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         captured["parent_principal_component_eigenvalues"] = (
             parent_principal_component_eigenvalues
         )
-        return 1.0, 1.0, 0.5
+        return 1.0, 1.0, 1.0, 0.5
 
     monkeypatch.setattr(
         "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection.sibling_divergence_test",

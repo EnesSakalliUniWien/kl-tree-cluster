@@ -6,7 +6,7 @@ import pytest
 
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.scale_correction.empirical_null_scale_estimation import (
     fit_empirical_null_scale_model,
-    predict_scale_factor,
+    predict_empirical_scale_factor,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
@@ -18,6 +18,7 @@ def _make_record(
     *,
     stat: float,
     degrees_of_freedom: float,
+    reference_scale: float = 1.0,
     is_null_like: bool = True,
     is_gate2_blocked: bool = False,
     sibling_null_weight: float = 1.0,
@@ -28,6 +29,7 @@ def _make_record(
         left=f"{parent}L",
         right=f"{parent}R",
         stat=stat,
+        reference_scale=reference_scale,
         degrees_of_freedom=degrees_of_freedom,
         p_value=0.5,
         branch_length_sum=0.1,
@@ -101,8 +103,26 @@ def test_fit_empirical_null_scale_model_uses_all_weighted_records() -> None:
 
     assert model.n_calibration == 2
     assert math.isclose(
-        model.baseline_scale_factor,
+        model.baseline_empirical_scale_factor,
         ((0.5 * 4.0) + (0.25 * 20.0)) / ((0.5 * 1.0) + (0.25 * 4.0)),
+    )
+
+
+def test_fit_empirical_null_scale_model_tracks_reference_scale_separately() -> None:
+    records = [
+        _make_record("p0", stat=4.0, reference_scale=2.0, degrees_of_freedom=1.0),
+        _make_record("p1", stat=12.0, reference_scale=3.0, degrees_of_freedom=2.0),
+    ]
+
+    model = fit_empirical_null_scale_model(records)
+
+    assert math.isclose(
+        model.baseline_empirical_scale_factor,
+        (4.0 + 12.0) / (1.0 + 2.0),
+    )
+    assert math.isclose(
+        model.diagnostics["weighted_sum_reference_expectation"],
+        (2.0 * 1.0) + (3.0 * 2.0),
     )
 
 
@@ -118,16 +138,24 @@ def test_fit_empirical_null_scale_model_uses_context_weighted_scale() -> None:
     expected_scale = (2.0 + 9.0 + 20.0) / (1.0 + 3.0 + 5.0)
     expected_mean_ratio = (2.0 + 3.0 + 4.0) / 3.0
 
-    assert math.isclose(model.baseline_scale_factor, expected_scale, rel_tol=1e-9)
-    assert model.max_observed_ratio == 4.0
+    assert math.isclose(
+        model.baseline_empirical_scale_factor,
+        expected_scale,
+        rel_tol=1e-9,
+    )
+    assert model.max_observed_statistic_ratio == 4.0
     assert model.n_calibration == 3
     assert model.method == "context_weighted_empirical_null_scale"
     assert model.diagnostics["fit_status"] == "context_weighted_empirical_null_scale"
     assert model.diagnostics["n_contributing"] == 3
-    assert math.isclose(model.diagnostics["mean_ratio"], expected_mean_ratio, rel_tol=1e-9)
+    assert math.isclose(
+        model.diagnostics["mean_statistic_ratio"],
+        expected_mean_ratio,
+        rel_tol=1e-9,
+    )
     assert model.diagnostics["weighted_sum_statistic"] == 31.0
     assert model.diagnostics["weighted_sum_degrees_of_freedom"] == 9.0
-    assert predict_scale_factor(model, records[0]) >= 1.0
+    assert predict_empirical_scale_factor(model, records[0]) >= 1.0
 
 
 def test_fit_empirical_null_scale_model_keeps_zero_ratios_as_calibration_data() -> None:
@@ -139,7 +167,7 @@ def test_fit_empirical_null_scale_model_keeps_zero_ratios_as_calibration_data() 
     model = fit_empirical_null_scale_model(records)
 
     assert model.n_calibration == 2
-    assert model.baseline_scale_factor == 1.0
+    assert model.baseline_empirical_scale_factor == 1.0
 
 
 def test_fit_empirical_null_scale_model_enforces_one_sided_scale_floor() -> None:
@@ -150,5 +178,5 @@ def test_fit_empirical_null_scale_model_enforces_one_sided_scale_floor() -> None
 
     model = fit_empirical_null_scale_model(records)
 
-    assert model.baseline_scale_factor == 1.0
-    assert model.max_observed_ratio == 0.6
+    assert model.baseline_empirical_scale_factor == 1.0
+    assert model.max_observed_statistic_ratio == 0.6

@@ -38,14 +38,15 @@ def test_child_parent_projected_wald_returns_satterthwaite_effective_df() -> Non
 
 
 def test_projected_wald_kernel_accepts_exact_zero_dimensional_context() -> None:
-    statistic, nominal_k, effective_df, p_value = run_projected_wald_kernel(
+    result = run_projected_wald_kernel(
         np.zeros(4, dtype=np.float64),
         spectral_k=0,
         pca_projection=np.zeros((0, 4), dtype=np.float64),
         pca_eigenvalues=np.zeros(0, dtype=np.float64),
     )
 
-    assert statistic == 0.0
-    assert nominal_k == 0
-    assert effective_df == 0.0
-    assert p_value == 1.0
+    assert result.statistic == 0.0
+    assert result.projection_dimension == 0
+    assert result.reference_scale == 1.0
+    assert result.degrees_of_freedom == 0.0
+    assert result.p_value == 1.0

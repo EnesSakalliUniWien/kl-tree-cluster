@@ -175,7 +175,7 @@ class TestSiblingDivergenceTestBinary:
         """Identical binary distributions should have high p-value."""
         theta = np.array([0.3, 0.5, 0.7])
         d = theta.shape[0]
-        stat, df, p_value = sibling_divergence_test(
+        stat, reference_scale, df, p_value = sibling_divergence_test(
             theta,
             theta,
             100.0,
@@ -191,7 +191,7 @@ class TestSiblingDivergenceTestBinary:
         theta_left = np.array([0.1, 0.1, 0.1, 0.1, 0.1])
         theta_right = np.array([0.9, 0.9, 0.9, 0.9, 0.9])
         d = theta_left.shape[0]
-        stat, df, p_value = sibling_divergence_test(
+        stat, reference_scale, df, p_value = sibling_divergence_test(
             theta_left,
             theta_right,
             500.0,
@@ -217,7 +217,7 @@ class TestSiblingDivergenceTestCategorical:
         )
         # categorical whitening: d*(K-1) = 3*3 = 9 z-score dimensions
         z_dim = theta.shape[0] * (theta.shape[1] - 1)
-        stat, df, p_value = sibling_divergence_test(
+        stat, reference_scale, df, p_value = sibling_divergence_test(
             theta,
             theta,
             100.0,
@@ -245,7 +245,7 @@ class TestSiblingDivergenceTestCategorical:
             ]
         )
         z_dim = theta_left.shape[0] * (theta_left.shape[1] - 1)
-        stat, df, p_value = sibling_divergence_test(
+        stat, reference_scale, df, p_value = sibling_divergence_test(
             theta_left,
             theta_right,
             500.0,
@@ -272,7 +272,7 @@ class TestSiblingDivergenceTestCategorical:
         )
         # categorical whitening: d*(K-1) = 2*3 = 6 z-score dimensions
         z_dim = theta_left.shape[0] * (theta_left.shape[1] - 1)
-        stat, df, p_value = sibling_divergence_test(
+        stat, reference_scale, df, p_value = sibling_divergence_test(
             theta_left,
             theta_right,
             100.0,

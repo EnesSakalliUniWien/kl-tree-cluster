@@ -24,7 +24,7 @@ def sibling_divergence_test(
     projection_dimension_from_edge_comparisons: int | None = None,
     parent_principal_component_projection: np.ndarray | None = None,
     parent_principal_component_eigenvalues: np.ndarray | None = None,
-) -> tuple[float, float, float]:
+) -> tuple[float, float, float, float]:
     """Two-sample Wald test for sibling divergence."""
     branch_length_sum = _resolve_sibling_branch_length_sum(
         branch_length_left,
@@ -57,14 +57,19 @@ def sibling_divergence_test(
 
     z_scores = z_scores.astype(np.float64, copy=False)
 
-    test_statistic, _k_nominal, effective_df, p_value = run_projected_wald_kernel(
+    result = run_projected_wald_kernel(
         z_scores,
         spectral_k=resolved_projection_dimension,
         pca_projection=parent_principal_component_projection,
         pca_eigenvalues=parent_principal_component_eigenvalues,
     )
 
-    return test_statistic, effective_df, p_value
+    return (
+        result.statistic,
+        result.reference_scale,
+        result.degrees_of_freedom,
+        result.p_value,
+    )
 
 
 __all__ = ["sibling_divergence_test"]

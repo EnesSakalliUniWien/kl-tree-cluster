@@ -122,15 +122,15 @@ def diagnose_case(name, data_df, linkage_method="average"):
     if audit:
         print(
             f"\n  Calibration: method={audit.get('calibration_method', '?')}, "
-            f"baseline_scale_factor={audit.get('baseline_scale_factor', '?')}, "
+            f"baseline_empirical_scale_factor={audit.get('baseline_empirical_scale_factor', '?')}, "
             f"n_calibration={audit.get('calibration_n', '?')}"
         )
         diag = audit.get("diagnostics", {})
         if "regression_beta" in diag:
             print(f"  Regression beta={diag['regression_beta']}")
             print(f"  R2={diag.get('regression_r2', '?')}")
-        if "max_observed_ratio" in diag:
-            print(f"  max_observed_ratio={diag['max_observed_ratio']}")
+        if "max_observed_statistic_ratio" in diag:
+            print(f"  max_observed_statistic_ratio={diag['max_observed_statistic_ratio']}")
 
     # Show distribution of Gate 3 raw p-values for nodes where Gate 2 passed
     if "Sibling_Raw_P_value" in td.columns:

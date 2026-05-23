@@ -133,11 +133,12 @@ The edge-stage structural dimension is selected by a local
 Marchenko--Pastur signal-count rule \citep{marchenko1967distribution},
 rather than fixed globally. Eigenvalues above the Marchenko--Pastur upper
 noise edge are treated as signal-bearing directions, while eigenvalues below
-that threshold are treated as part of the local noise bulk. With
+that threshold are treated as part of the local noise bulk. Because the
+eigendecomposition is performed on a local correlation representation, the null
+variance scale is one and the MP upper edge is
 \begin{equation}
-\hat{\sigma}_u^2 = \mathrm{median}\{\lambda_{u,i} : \lambda_{u,i} > 0\},
-\qquad
-b_u^{\mathrm{MP}} = \hat{\sigma}_u^2 \left(1 + \sqrt{\frac{d_u}{m_u}}\right)^2,
+b_u^{\mathrm{MP}} =
+\left(1 + \sqrt{\frac{d_u}{m_u}}\right)^2,
 \end{equation}
 the projection dimension is
 \begin{equation}

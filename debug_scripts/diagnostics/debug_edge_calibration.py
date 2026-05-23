@@ -193,13 +193,8 @@ def main() -> None:
     print("Stage 3-4: Calibration model")
     print(f"  Null-like edges: {n_null_like}/{n_edges}")
     print(f"  Model fit: n_cal={model.n_calibration}")
-    if model.beta is not None:
-        print(f"    β₀={model.beta[0]:.4f}, β₁={model.beta[1]:.4f}")
-        print(f"    exp(β₀) = {np.exp(model.beta[0]):.4f}")
-    print(f"    Baseline ĉ: {model.baseline_scale_factor:.4f}")
-    print(f"    Max observed T/k: {model.max_observed_ratio:.4f}")
-    if "r_squared" in diag:
-        print(f"    R² = {diag['r_squared']:.4f}")
+    print(f"    Baseline ĉ: {model.baseline_empirical_scale_factor:.4f}")
+    print(f"    Max observed T/k: {model.max_observed_statistic_ratio:.4f}")
     print(f"    Fit status: {diag.get('fit_status', '?')}")
     print()
 
@@ -225,9 +220,9 @@ def main() -> None:
     # Pipeline audit
     if audit:
         print(
-            f"  Pipeline audit: n_cal={audit.get('n_calibration')}, "
-            f"ĉ={audit.get('baseline_scale_factor', 0):.4f}, "
-            f"max_ratio={audit.get('max_observed_ratio', 0):.4f}"
+            f"  Pipeline audit: n_cal={audit.get('calibration_n')}, "
+            f"ĉ={audit.get('baseline_empirical_scale_factor', 0):.4f}, "
+            f"max_ratio={diag.get('max_observed_statistic_ratio', 0):.4f}"
         )
         print()
 
@@ -341,18 +336,12 @@ def main() -> None:
         ax.scatter(null_n, null_ratio, s=20, alpha=0.6, color="gray", label="Null-like edges")
         ax.axhline(1.0, color="green", ls=":", lw=1, alpha=0.6)
         ax.axhline(
-            model.baseline_scale_factor,
+            model.baseline_empirical_scale_factor,
             color="orange",
             ls="-",
             lw=1.5,
-            label=f"Baseline ĉ = {model.baseline_scale_factor:.3f}",
+            label=f"Baseline ĉ = {model.baseline_empirical_scale_factor:.3f}",
         )
-        if model.beta is not None and abs(model.beta[1]) > 1e-8:
-            n_range = np.linspace(max(null_n.min(), 2), null_n.max(), 100)
-            pred = np.exp(model.beta[0] + model.beta[1] * np.log(n_range))
-            ax.plot(
-                n_range, pred, "r-", lw=1.5, label=f"Regression (R²={diag.get('r_squared', 0):.3f})"
-            )
         ax.legend(fontsize=7)
     ax.set_xlabel("n_parent (leaf count)")
     ax.set_ylabel("T/k (null-like edges)")
@@ -393,11 +382,11 @@ def main() -> None:
     ax.scatter(plc[valid], c_hat_per_edge[valid], s=15, alpha=0.5, c="steelblue")
     ax.axhline(1.0, color="green", ls=":", lw=1)
     ax.axhline(
-        model.max_observed_ratio,
+        model.max_observed_statistic_ratio,
         color="red",
         ls="--",
         lw=1,
-        label=f"Observed max = {model.max_observed_ratio:.3f}",
+        label=f"Observed max = {model.max_observed_statistic_ratio:.3f}",
     )
     ax.set_xlabel("n_parent")
     ax.set_ylabel("Predicted ĉ_i")

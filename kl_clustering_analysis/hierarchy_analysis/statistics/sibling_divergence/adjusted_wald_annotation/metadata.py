@@ -57,7 +57,7 @@ def build_sibling_divergence_audit(
         "gate2_blocked_pairs": n_blocked,
         "calibration_method": model.method,
         "calibration_n": model.n_calibration,
-        "baseline_scale_factor": model.baseline_scale_factor,
+        "baseline_empirical_scale_factor": model.baseline_empirical_scale_factor,
         "calibration_mode": "context_weighted_empirical_null_scale",
         "projection_dimension_source_counts": projection_dimension_source_counts,
         "tested_projection_dimension_source_counts": tested_projection_dimension_source_counts,

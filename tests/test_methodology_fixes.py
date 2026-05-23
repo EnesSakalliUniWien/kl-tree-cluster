@@ -43,13 +43,16 @@ class TestComputeProjectedPvalue:
         """Eigenvalue-aware projected tests use Satterthwaite calibration."""
         projected = np.array([1.0, 2.0, 3.0])
         eigenvalues = np.array([2.0, 1.0, 0.5])
-        stat, df, pval = compute_projected_pvalue(projected, eigenvalues=eigenvalues)
+        reference = compute_projected_pvalue(projected, eigenvalues=eigenvalues)
         expected_stat = float(np.sum(projected**2))
         expected_df = float(np.sum(eigenvalues) ** 2) / float(np.sum(eigenvalues**2))
         expected_scale = float(np.sum(eigenvalues**2)) / float(np.sum(eigenvalues))
-        assert abs(stat - expected_stat) < 1e-10
-        assert abs(df - expected_df) < 1e-10
-        assert abs(pval - float(chi2.sf(expected_stat / expected_scale, df=expected_df))) < 1e-10
+        assert abs(reference.statistic - expected_stat) < 1e-10
+        assert abs(reference.reference_scale - expected_scale) < 1e-10
+        assert abs(reference.degrees_of_freedom - expected_df) < 1e-10
+        assert abs(
+            reference.p_value - float(chi2.sf(expected_stat / expected_scale, df=expected_df))
+        ) < 1e-10
 
 
 # =============================================================================
