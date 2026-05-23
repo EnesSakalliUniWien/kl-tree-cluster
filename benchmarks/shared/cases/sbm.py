@@ -8,6 +8,8 @@ SBM_CASES = {
             "sizes": [30, 30],
             "p_intra": 0.12,
             "p_inter": 0.005,
+            "directed": False,
+            "allow_self_loops": False,
             "seed": 123,
         },
         {
@@ -16,6 +18,8 @@ SBM_CASES = {
             "sizes": [50, 40, 30],
             "p_intra": 0.08,
             "p_inter": 0.02,
+            "directed": False,
+            "allow_self_loops": False,
             "seed": 124,
         },
         {
@@ -24,6 +28,8 @@ SBM_CASES = {
             "sizes": [40, 40, 40],
             "p_intra": 0.05,
             "p_inter": 0.04,
+            "directed": False,
+            "allow_self_loops": False,
             "seed": 125,
         },
     ],

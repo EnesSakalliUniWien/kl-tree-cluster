@@ -53,6 +53,7 @@ def benchmark_cluster_algorithm(
     concat_output: str | None = None,
     matrix_audit: bool = False,
     include_cover_pages: bool = True,
+    include_validation_page: bool = True,
 ):
     """
     Benchmark the cluster decomposition algorithm across multiple test cases.
@@ -90,6 +91,8 @@ def benchmark_cluster_algorithm(
     include_cover_pages : bool, default=True
         When streaming plots to PDF, include global benchmark cover/section pages.
         Set False for per-case PDFs that will be merged later by an outer runner.
+    include_validation_page : bool, default=True
+        When streaming plots to PDF, include the validation metric summary page.
 
     Returns
     -------
@@ -155,6 +158,8 @@ def benchmark_cluster_algorithm(
             )
 
         for i, tc in enumerate(test_cases, 1):
+            if "test_case_num" not in tc:
+                tc["test_case_num"] = i
             case_result_rows, case_computed_results = run_single_case(
                 tc=tc,
                 case_position=i,
@@ -194,6 +199,7 @@ def benchmark_cluster_algorithm(
             plot_umap,
             plot_manifold,
             include_cover_pages=include_cover_pages,
+            include_validation_page=include_validation_page,
             **plot_kwargs,
         )
 

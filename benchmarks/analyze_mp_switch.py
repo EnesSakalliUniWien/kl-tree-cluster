@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-"""Analyze the historical switch to Marchenko-Pastur spectral estimation.
+"""Compare benchmark runs around Marchenko-Pastur spectral estimation.
 
-Compares benchmark runs across all cases and methods. Originally used to
-compare the legacy effective_rank baseline against the Marchenko-Pastur
-default.
+Compares two benchmark runs across all cases and methods.
 
 Usage:
     python benchmarks/analyze_mp_switch.py [--baseline RUN_DIR] [--mp RUN_DIR]
@@ -66,7 +64,7 @@ def per_case_comparison(baseline: pd.DataFrame, mp: pd.DataFrame, method: str = 
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze MP vs effective_rank benchmark results")
+    parser = argparse.ArgumentParser(description="Compare two benchmark result directories")
     parser.add_argument("--baseline", type=str, default=None, help="Baseline run directory name")
     parser.add_argument("--mp", type=str, default=None, help="MP run directory name")
     args = parser.parse_args()
@@ -97,8 +95,8 @@ def main():
         mp_dir = results_dir / args.mp
         base_dir = results_dir / args.baseline
 
-    print(f"Baseline (effective_rank): {base_dir.name}")
-    print(f"Current  (marchenko_pastur): {mp_dir.name}")
+    print(f"Baseline: {base_dir.name}")
+    print(f"Current : {mp_dir.name}")
     print()
 
     baseline = load_run(base_dir)

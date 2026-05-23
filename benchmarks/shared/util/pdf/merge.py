@@ -3,8 +3,18 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 from pathlib import Path
+
+
+def _load_pdf_writer():
+    try:
+        from pypdf import PdfWriter
+    except ImportError as exc:
+        raise RuntimeError(
+            "PDF report merging requires pypdf. Install the visualization extra: "
+            "`pip install -e .[viz]`."
+        ) from exc
+    return PdfWriter
 
 
 def merge_existing_pdfs(
@@ -13,7 +23,7 @@ def merge_existing_pdfs(
     *,
     verbose: bool = True,
 ) -> bool:
-    """Merge existing PDFs into one file using pdfunite/ghostscript when available."""
+    """Merge existing PDFs into one file using the declared Python PDF dependency."""
     existing = [p for p in pdf_paths if p.exists()]
     if not existing:
         if verbose:
@@ -28,36 +38,16 @@ def merge_existing_pdfs(
             print(f"Single PDF report copied to {output_pdf}")
         return True
 
-    pdfunite = shutil.which("pdfunite")
-    if pdfunite:
-        cmd = [pdfunite, *[str(p) for p in existing], str(output_pdf)]
-        subprocess.run(cmd, check=True)
-        if verbose:
-            print(f"Concatenated {len(existing)} case PDFs to {output_pdf}")
-        return True
-
-    gs = shutil.which("gs")
-    if gs:
-        cmd = [
-            gs,
-            "-dBATCH",
-            "-dNOPAUSE",
-            "-q",
-            "-sDEVICE=pdfwrite",
-            f"-sOutputFile={output_pdf}",
-            *[str(p) for p in existing],
-        ]
-        subprocess.run(cmd, check=True)
-        if verbose:
-            print(f"Concatenated {len(existing)} case PDFs to {output_pdf}")
-        return True
-
+    PdfWriter = _load_pdf_writer()
+    writer = PdfWriter()
+    for pdf_path in existing:
+        writer.append(str(pdf_path))
+    with output_pdf.open("wb") as handle:
+        writer.write(handle)
+    writer.close()
     if verbose:
-        print(
-            "Could not concatenate PDFs automatically (missing 'pdfunite' and 'gs'). "
-            f"Case-level PDFs remain in {existing[0].parent}"
-        )
-    return False
+        print(f"Concatenated {len(existing)} case PDFs to {output_pdf}")
+    return True
 
 
 __all__ = ["merge_existing_pdfs"]

@@ -23,34 +23,16 @@ def _run_louvain_method(
         labels = np.zeros(n_samples, dtype=int)
         return _ok_result_from_labels(labels, range(n_samples))
 
-    try:
-        n_neighbors = _resolve_n_neighbors(n_samples, params.get("n_neighbors"))
-        resolution = float(params.get("resolution", 1.0))
-        random_state = 42 if seed is None else int(seed)
-    except (TypeError, ValueError) as exc:
-        return MethodRunResult(
-            labels=None,
-            found_clusters=0,
-            report_df=None,
-            status="skip",
-            skip_reason=f"Louvain input preparation failed: {type(exc).__name__}: {exc}",
-        )
+    n_neighbors = _resolve_n_neighbors(n_samples, int(params["n_neighbors"]))
+    resolution = float(params["resolution"])
+    random_state = 42 if seed is None else int(seed)
     edges = _knn_edge_weights(distance_matrix, n_neighbors)
     if not edges:
         labels = np.zeros(n_samples, dtype=int)
         return _ok_result_from_labels(labels, range(n_samples))
 
-    try:
-        import networkx as nx
-        from networkx.algorithms.community import louvain_communities
-    except ImportError as exc:
-        return MethodRunResult(
-            labels=None,
-            found_clusters=0,
-            report_df=None,
-            status="skip",
-            skip_reason=f"Louvain unavailable: {type(exc).__name__}: {exc}",
-        )
+    import networkx as nx
+    from networkx.algorithms.community import louvain_communities
 
     graph = nx.Graph()
     graph.add_nodes_from(range(n_samples))

@@ -36,6 +36,7 @@ from benchmarks.shared.evolution import (
     generate_ancestral_sequence,
 )
 from benchmarks.shared.runners.dispatch import run_clustering_result
+from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
 
@@ -163,7 +164,7 @@ def run_multi_split_benchmark(
             run_result = run_clustering_result(
                 data_df,
                 "kl",
-                {},
+                METHOD_SPECS["kl"].param_grid[0],
                 base_seed + rep,
             )
             pred_labels = run_result.labels

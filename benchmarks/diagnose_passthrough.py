@@ -216,7 +216,7 @@ def _simulate_passthrough(tree, annotations_df):
 
 def run_diagnostic_for_case(tc):
     """Run full diagnostic for one test case. Returns dict of results."""
-    case_name = tc.get("name", "unnamed")
+    case_name = str(tc["name"])
     true_k = tc.get("n_clusters", 0)
 
     try:
@@ -360,7 +360,7 @@ def main():
 
     results = []
     for i, tc in enumerate(subset, 1):
-        name = tc.get("name", "unnamed")
+        name = str(tc["name"])
         print(f"  [{i:2d}/{len(subset)}] {name:<36s} ... ", end="", flush=True)
         result = run_diagnostic_for_case(tc)
         results.append(result)

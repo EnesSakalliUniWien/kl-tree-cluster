@@ -55,9 +55,12 @@ def test_dimensional_gaussian_case_generation_returns_binary_benchmark_matrix() 
         "informative_dims": 10,
         "n_features": 70,
         "separation": 2.6,
+        "informative_std": 1.0,
+        "noise_std": 1.0,
         "informative_corr": 0.2,
         "noise_corr": 0.1,
         "signal_mode": "diffuse",
+        "balanced_clusters": True,
         "seed": 7,
     }
 

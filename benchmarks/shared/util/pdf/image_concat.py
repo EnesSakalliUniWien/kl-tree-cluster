@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -14,9 +13,6 @@ from PIL import Image
 
 from .layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 
-logger = logging.getLogger(__name__)
-
-
 def _get_case_from_filename(path: Path) -> int | None:
     """Extract the case number from a plot filename."""
     match = re.search(r"case_(\d+)", path.name)
@@ -26,13 +22,10 @@ def _get_case_from_filename(path: Path) -> int | None:
 def _group_files_by_case(plots_root: Path, pattern: str) -> Dict[int, List[Path]]:
     """Group matching plot files by extracted case number."""
     files_by_case = defaultdict(list)
-    try:
-        for path in plots_root.glob(pattern):
-            case_num = _get_case_from_filename(path)
-            if case_num is not None:
-                files_by_case[case_num].append(path)
-    except Exception as exc:  # pragma: no cover - defensive logging
-        logger.error("Error while scanning for plot files: %s", exc)
+    for path in plots_root.glob(pattern):
+        case_num = _get_case_from_filename(path)
+        if case_num is not None:
+            files_by_case[case_num].append(path)
     return files_by_case
 
 
@@ -48,7 +41,7 @@ def concat_plots_to_pdf(
 
     if not files_by_case:
         if verbose:
-            logger.info("No plots found for pattern '%s' in %s", pattern, plots_root)
+            print(f"No plots found for pattern {pattern!r} in {plots_root}")
         return None
 
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
@@ -69,22 +62,19 @@ def concat_plots_to_pdf(
             plt.close(title_fig)
 
             for path in sorted(files_by_case[case_num]):
-                try:
-                    with Image.open(path) as img:
-                        fig = plt.figure(figsize=PDF_PAGE_SIZE_INCHES, dpi=dpi)
-                        ax = fig.add_axes([0.03, 0.03, 0.94, 0.94], frameon=False)
-                        ax.imshow(img, aspect="equal", resample=True)
-                        ax.set_xticks([])
-                        ax.set_yticks([])
-                        prepare_pdf_figure(fig)
-                        pdf.savefig(fig)
-                        plt.close(fig)
-                except Exception as exc:  # pragma: no cover - defensive logging
-                    logger.error("Failed to add image %s to PDF: %s", path, exc)
+                with Image.open(path) as img:
+                    fig = plt.figure(figsize=PDF_PAGE_SIZE_INCHES, dpi=dpi)
+                    ax = fig.add_axes([0.03, 0.03, 0.94, 0.94], frameon=False)
+                    ax.imshow(img, aspect="equal", resample=True)
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                    prepare_pdf_figure(fig)
+                    pdf.savefig(fig)
+                    plt.close(fig)
 
     if verbose:
         total = sum(len(v) for v in files_by_case.values())
-        logger.info("Created PDF with %s plots: %s", total, output_pdf)
+        print(f"Created PDF with {total} plots: {output_pdf}")
     return output_pdf
 
 

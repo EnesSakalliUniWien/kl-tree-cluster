@@ -69,6 +69,6 @@ def test_build_benchmark_result_row_rejects_missing_noise_value():
 
 
 @pytest.mark.parametrize("status", ["error", "skipped", "unknown", "", "OKAY"])
-def test_build_benchmark_result_row_rejects_legacy_or_invalid_status(status):
+def test_build_benchmark_result_row_rejects_invalid_status(status):
     with pytest.raises(ValueError, match="Invalid benchmark status"):
         _build_row(status)

@@ -22,22 +22,13 @@ def _run_kmeans_method(
         labels = np.zeros(n_samples, dtype=int)
         return _ok_result_from_labels(labels, range(n_samples))
 
-    try:
-        n_clusters = _resolve_requested_cluster_count(n_samples, params)
-        n_init = int(params.get("n_init", 10))
-        random_state = 42 if seed is None else int(seed)
-        model = KMeans(
-            n_clusters=n_clusters,
-            n_init=n_init,
-            random_state=random_state,
-        )
-        labels = _normalize_labels(model.fit_predict(X))
-        return _ok_result_from_labels(labels, range(n_samples))
-    except Exception as exc:
-        return MethodRunResult(
-            labels=None,
-            found_clusters=0,
-            report_df=None,
-            status="skip",
-            skip_reason=f"K-Means failed: {exc}",
-        )
+    n_clusters = _resolve_requested_cluster_count(n_samples, params)
+    n_init = int(params["n_init"])
+    random_state = 42 if seed is None else int(seed)
+    model = KMeans(
+        n_clusters=n_clusters,
+        n_init=n_init,
+        random_state=random_state,
+    )
+    labels = _normalize_labels(model.fit_predict(X))
+    return _ok_result_from_labels(labels, range(n_samples))

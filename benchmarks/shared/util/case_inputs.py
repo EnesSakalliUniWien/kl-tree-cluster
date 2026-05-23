@@ -34,11 +34,11 @@ def prepare_case_inputs(
 
     distance_condensed = None
     distance_matrix = None
-    precomputed_distance_condensed = meta.get("precomputed_distance_condensed")
+    precomputed_distance_condensed = meta["precomputed_distance_condensed"]
     if precomputed_distance_condensed is not None and needs_distance_condensed:
         distance_condensed = np.asarray(precomputed_distance_condensed, dtype=float)
 
-    precomputed_distance_matrix = meta.get("precomputed_distance_matrix")
+    precomputed_distance_matrix = meta["precomputed_distance_matrix"]
     if precomputed_distance_matrix is not None and needs_distance_matrix:
         distance_matrix = np.asarray(precomputed_distance_matrix, dtype=float)
         np.fill_diagonal(distance_matrix, 0.0)

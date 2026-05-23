@@ -142,7 +142,8 @@ def run_branch_length_benchmark(
     if branch_lengths is None:
         branch_lengths = [0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0]
 
-    method_params = method_params or {}
+    if method_params is None:
+        method_params = METHOD_SPECS[method].param_grid[0]
     n_samples_per_group = n_leaves // 2
 
     results = []

@@ -84,10 +84,10 @@ def _generate_binary_case(
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
     """Generate the 'binary' style test case using the feature matrix generator."""
     n_samples, n_features = _validate_binary_params(test_case)
-    entropy = test_case.get("entropy_param", 0.5)
-    balanced = test_case.get("balanced_clusters", True)
-    feature_sparsity = test_case.get("feature_sparsity", None)
-    noise_features = int(test_case.get("noise_features", 0))
+    entropy = test_case["entropy_param"]
+    balanced = test_case["balanced_clusters"]
+    feature_sparsity = test_case["feature_sparsity"]
+    noise_features = int(test_case["noise_features"])
 
     data_dict, cluster_assignments = generate_random_feature_matrix(
         n_rows=n_samples,
@@ -113,9 +113,12 @@ def _generate_binary_case(
         "n_features": actual_cols,
         "n_clusters": test_case["n_clusters"],
         "noise": entropy,
-        "name": test_case.get("name", f"binary_{n_samples}x{n_features}"),
+        "name": str(test_case["name"]),
         "generator": "binary",
         "noise_features": noise_features,
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
     }
 
     return data_df, true_labels, matrix.astype(float), metadata
@@ -147,8 +150,11 @@ def _generate_blobs_case(
         "n_features": n_features,
         "n_clusters": test_case["n_clusters"],
         "noise": test_case["cluster_std"],
-        "name": test_case.get("name", f"blobs_{n_samples}x{n_features}"),
+        "name": str(test_case["name"]),
         "generator": "blobs",
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
     }
     # Return binarized data as x_original so UMAP and baseline methods
     # (K-Means, Spectral) operate on the same feature space as the KL pipeline.
@@ -170,7 +176,7 @@ def _generate_blobs_quantile_case(
     """
     n_samples = int(test_case["n_samples"])
     n_features = int(test_case["n_features"])
-    n_categories = int(test_case.get("n_categories", 4))
+    n_categories = int(test_case["n_categories"])
     blobs_result = make_blobs(
         n_samples=n_samples,
         n_features=n_features,
@@ -199,8 +205,11 @@ def _generate_blobs_quantile_case(
         "n_categories": n_categories,
         "n_clusters": test_case["n_clusters"],
         "noise": test_case["cluster_std"],
-        "name": test_case.get("name", f"blobs_q{n_categories}_{n_samples}x{n_features}"),
+        "name": str(test_case["name"]),
         "generator": "blobs_quantile",
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
     }
     # Return one-hot encoded data as x_original so UMAP and baseline methods
     # (K-Means, Spectral) operate on the same feature space as the KL pipeline.
@@ -208,23 +217,21 @@ def _generate_blobs_quantile_case(
 
 
 def _resolve_dimensional_feature_counts(test_case: dict) -> Tuple[int, int]:
-    informative_dims = test_case.get("informative_dims")
+    informative_dims = test_case["informative_dims"]
     if informative_dims is None:
         raise ValueError("Dimensional Gaussian generator requires 'informative_dims'.")
 
-    n_features = test_case.get("n_features")
-    noise_dims = test_case.get("noise_dims")
-    if n_features is None and noise_dims is None:
-        raise ValueError(
-            "Dimensional Gaussian generator requires either 'n_features' or 'noise_dims'."
-        )
+    n_features_present = "n_features" in test_case
+    noise_dims_present = "noise_dims" in test_case
+    if not n_features_present and not noise_dims_present:
+        raise ValueError("Dimensional Gaussian generator requires 'n_features' or 'noise_dims'.")
 
     informative_dims = int(informative_dims)
-    if n_features is not None:
-        n_features = int(n_features)
+    if n_features_present:
+        n_features = int(test_case["n_features"])
         noise_dims = n_features - informative_dims
     else:
-        noise_dims = int(noise_dims)
+        noise_dims = int(test_case["noise_dims"])
         n_features = informative_dims + noise_dims
 
     if informative_dims <= 0:
@@ -246,13 +253,13 @@ def _generate_dimensional_gaussian_case(
         n_clusters=int(test_case["n_clusters"]),
         informative_dims=informative_dims,
         noise_dims=noise_dims,
-        separation=float(test_case.get("separation", 2.5)),
-        informative_std=float(test_case.get("informative_std", 1.0)),
-        noise_std=float(test_case.get("noise_std", 1.0)),
-        informative_corr=float(test_case.get("informative_corr", 0.0)),
-        noise_corr=float(test_case.get("noise_corr", 0.0)),
-        signal_mode=str(test_case.get("signal_mode", "consolidated")),
-        balanced_clusters=bool(test_case.get("balanced_clusters", True)),
+        separation=float(test_case["separation"]),
+        informative_std=float(test_case["informative_std"]),
+        noise_std=float(test_case["noise_std"]),
+        informative_corr=float(test_case["informative_corr"]),
+        noise_corr=float(test_case["noise_corr"]),
+        signal_mode=str(test_case["signal_mode"]),
+        balanced_clusters=bool(test_case["balanced_clusters"]),
         random_seed=seed,
     )
 
@@ -266,16 +273,19 @@ def _generate_dimensional_gaussian_case(
         "n_samples": n_samples,
         "n_features": int(x_binary.shape[1]),
         "n_clusters": int(test_case["n_clusters"]),
-        "noise": float(test_case.get("noise_std", 1.0)),
-        "name": test_case.get("name", f"dimensional_gaussian_{n_samples}x{x_binary.shape[1]}"),
+        "noise": float(test_case["noise_std"]),
+        "name": str(test_case["name"]),
         "generator": "dimensional_gaussian",
         "informative_dims": informative_dims,
         "noise_dims": noise_dims,
-        "separation": float(test_case.get("separation", 2.5)),
-        "informative_corr": float(test_case.get("informative_corr", 0.0)),
-        "noise_corr": float(test_case.get("noise_corr", 0.0)),
-        "signal_mode": str(test_case.get("signal_mode", "consolidated")),
+        "separation": float(test_case["separation"]),
+        "informative_corr": float(test_case["informative_corr"]),
+        "noise_corr": float(test_case["noise_corr"]),
+        "signal_mode": str(test_case["signal_mode"]),
         "binarization": "median",
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
         **sim_meta,
     }
     return data_df, y, x_binary.astype(float), metadata
@@ -286,19 +296,19 @@ def _generate_gaussian_outlier_case(
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
     n_samples = int(test_case["n_samples"])
     n_features = int(test_case["n_features"])
-    n_inlier_clusters = int(test_case.get("n_inlier_clusters", test_case["n_clusters"]))
+    n_inlier_clusters = int(test_case["n_inlier_clusters"])
 
     config = GaussianOutlierConfig(
         n_samples=n_samples,
         n_features=n_features,
         n_inlier_clusters=n_inlier_clusters,
-        cluster_std=float(test_case.get("cluster_std", 0.7)),
-        outlier_count=int(test_case.get("outlier_count", 1)),
-        outlier_distance=float(test_case.get("outlier_distance", 8.0)),
-        outlier_std=float(test_case.get("outlier_std", 0.2)),
-        spatial_mode=str(test_case.get("outlier_spatial_mode", "clustered")),
-        label_mode=str(test_case.get("outlier_label_mode", "singleton")),
-        balanced_clusters=bool(test_case.get("balanced_clusters", True)),
+        cluster_std=float(test_case["cluster_std"]),
+        outlier_count=int(test_case["outlier_count"]),
+        outlier_distance=float(test_case["outlier_distance"]),
+        outlier_std=float(test_case["outlier_std"]),
+        spatial_mode=str(test_case["outlier_spatial_mode"]),
+        label_mode=str(test_case["outlier_label_mode"]),
+        balanced_clusters=bool(test_case["balanced_clusters"]),
         random_seed=seed,
     )
 
@@ -314,10 +324,13 @@ def _generate_gaussian_outlier_case(
         "n_features": n_features,
         "n_clusters": int(np.unique(y).size),
         "n_inlier_clusters": n_inlier_clusters,
-        "noise": float(test_case.get("outlier_count", 1)) / float(n_samples),
-        "name": test_case.get("name", f"gaussian_outliers_{n_samples}x{n_features}"),
+        "noise": float(test_case["outlier_count"]) / float(n_samples),
+        "name": str(test_case["name"]),
         "generator": "gaussian_outliers",
         "binarization": "median",
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
         **sim_meta,
     }
     return data_df, y, x_binary.astype(float), metadata
@@ -332,14 +345,11 @@ def _generate_sbm_case(
     (adjacency rows). Also returns ground-truth labels and the raw adjacency matrix
     as X_original for downstream use.
     """
-    sizes = test_case.get("sizes")
-    if sizes is None:
-        raise ValueError("SBM generator requires a 'sizes' list in the test case")
-
-    p_intra = test_case.get("p_intra", 0.1)
-    p_inter = test_case.get("p_inter", 0.01)
-    directed = bool(test_case.get("directed", False))
-    allow_self_loops = bool(test_case.get("allow_self_loops", False))
+    sizes = test_case["sizes"]
+    p_intra = test_case["p_intra"]
+    p_inter = test_case["p_inter"]
+    directed = bool(test_case["directed"])
+    allow_self_loops = bool(test_case["allow_self_loops"])
 
     G, ground_truth, A, sbm_meta = generate_sbm(
         sizes=sizes,
@@ -382,7 +392,7 @@ def _generate_sbm_case(
         "n_features": n_nodes,
         "n_clusters": int(sbm_meta["n_blocks"]),
         "noise": float(p_inter),
-        "name": test_case.get("name", f"sbm_{n_nodes}"),
+        "name": str(test_case["name"]),
         "generator": "sbm",
         "adjacency": A,
         "requires_precomputed_kl_distance": True,
@@ -417,9 +427,8 @@ def _generate_categorical_case(
     and the distributions array contains the underlying probability distributions.
     """
     n_samples, n_features, n_categories = _validate_categorical_params(test_case)
-    entropy = test_case.get("entropy_param", 0.5)
-    balanced = test_case.get("balanced_clusters", True)
-    category_sparsity = test_case.get("category_sparsity", None)
+    entropy = test_case["entropy_param"]
+    balanced = test_case["balanced_clusters"]
 
     sample_dict, cluster_assignments, distributions = generate_categorical_feature_matrix(
         n_rows=n_samples,
@@ -429,7 +438,6 @@ def _generate_categorical_case(
         n_clusters=test_case["n_clusters"],
         random_seed=seed,
         balanced_clusters=balanced,
-        category_sparsity=category_sparsity,
     )
 
     original_names = list(sample_dict.keys())
@@ -447,9 +455,12 @@ def _generate_categorical_case(
         "n_categories": n_categories,
         "n_clusters": test_case["n_clusters"],
         "noise": entropy,
-        "name": test_case.get("name", f"categorical_{n_samples}x{n_features}x{n_categories}"),
+        "name": str(test_case["name"]),
         "generator": "categorical",
         "distributions": distributions,  # (n_rows, n_cols, n_categories)
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
     }
 
     return data_df, true_labels, matrix.astype(float), metadata
@@ -500,11 +511,14 @@ def _generate_phylogenetic_case(
         "samples_per_taxon": samples_per_taxon,
         "mutation_rate": mutation_rate,
         "noise": mutation_rate,
-        "name": test_case.get("name", f"phylo_{n_taxa}taxa_{n_features}feat"),
+        "name": str(test_case["name"]),
         "generator": "phylogenetic",
         "distributions": distributions,
-        "tree_structure": phylo_meta.get("tree_structure"),
-        "leaf_distributions": phylo_meta.get("leaf_distributions"),
+        "tree_structure": phylo_meta["tree_structure"],
+        "leaf_distributions": phylo_meta["leaf_distributions"],
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
     }
 
     return data_df, true_labels, matrix.astype(float), metadata
@@ -557,11 +571,14 @@ def _generate_temporal_evolution_case(
         "mutation_rate": mutation_rate,
         "shift_strength": shift_strength,
         "noise": mutation_rate,
-        "name": test_case.get("name", f"temporal_{n_time_points}tp_{n_features}feat"),
+        "name": str(test_case["name"]),
         "generator": "temporal_evolution",
         "distributions": distributions,
-        "divergence_from_ancestor": evo_meta.get("divergence_from_ancestor"),
-        "divergence_matrix": evo_meta.get("divergence_matrix"),
+        "divergence_from_ancestor": evo_meta["divergence_from_ancestor"],
+        "divergence_matrix": evo_meta["divergence_matrix"],
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
     }
 
     return data_df, true_labels, matrix.astype(float), metadata
@@ -574,12 +591,11 @@ def _generate_preloaded_case(
 
     Required test_case keys:
         - file_path: path to the data file (absolute or relative to repo root)
-        - sep: separator character (default: '\\t')
-    Optional:
-        - n_clusters: expected number of clusters (for display only; no ground truth)
+        - sep: separator character
+        - n_clusters: expected number of clusters for display
     """
     file_path = test_case["file_path"]
-    sep = test_case.get("sep", "\t")
+    sep = test_case["sep"]
 
     # Resolve relative paths against the repo root
     path = Path(file_path)
@@ -598,14 +614,17 @@ def _generate_preloaded_case(
     x_original = data_df.values.copy()
 
     metadata = {
-        "name": test_case.get("name", path.stem),
+        "name": str(test_case["name"]),
         "n_samples": n_samples,
         "n_features": n_features,
-        "n_clusters": test_case.get("n_clusters"),
+        "n_clusters": test_case["n_clusters"],
         "noise": np.nan,
         "generator": "preloaded",
         "source_file": str(path),
         "sparsity": float(1 - data_df.values.mean()),
+        "requires_precomputed_kl_distance": False,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": None,
     }
     return data_df, y, x_original, metadata
 
@@ -617,8 +636,9 @@ def generate_case_data(
 
     This function dispatches to specialized helpers based on ``test_case['generator']``.
     """
+    _require_case_value(test_case, "name", "Benchmark case")
     generator = _require_case_value(test_case, "generator", "Benchmark case")
-    seed = test_case.get("seed")
+    seed = test_case["seed"] if generator != "preloaded" else None
 
     if generator == "binary":
         data_df, y, x_original, metadata = _generate_binary_case(test_case, seed)
@@ -643,9 +663,7 @@ def generate_case_data(
     else:
         raise ValueError(f"Unknown generator: {generator}")
 
-    # Preserve caller-supplied case metadata for downstream audit/reporting.
     if "category" in test_case:
-        metadata.setdefault("category", test_case["category"])
-    metadata.setdefault("case_name", metadata.get("name"))
+        metadata["category"] = test_case["category"]
 
     return data_df, y, x_original, metadata

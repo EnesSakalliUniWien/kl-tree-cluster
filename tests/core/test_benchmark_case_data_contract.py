@@ -26,15 +26,29 @@ def test_case_data_requires_explicit_generator() -> None:
         )
 
 
-def test_binary_case_data_rejects_legacy_geometry_names() -> None:
+def test_case_data_requires_explicit_name() -> None:
+    with pytest.raises(ValueError, match="Benchmark case generator requires 'name'"):
+        generate_case_data(
+            {
+                "generator": "blobs",
+                "n_samples": 12,
+                "n_features": 4,
+                "n_clusters": 3,
+                "cluster_std": 0.5,
+            }
+        )
+
+
+def test_binary_case_data_rejects_old_geometry_names() -> None:
     with pytest.raises(ValueError, match="Binary generator requires 'n_samples'"):
         generate_case_data(
             {
-                "name": "legacy_binary_shape",
+                "name": "old_binary_shape",
                 "generator": "binary",
                 "n_rows": 12,
                 "n_cols": 4,
                 "n_clusters": 3,
+                "seed": 1,
             }
         )
 
@@ -48,5 +62,6 @@ def test_categorical_case_data_requires_category_count() -> None:
                 "n_samples": 12,
                 "n_features": 4,
                 "n_clusters": 3,
+                "seed": 1,
             }
         )

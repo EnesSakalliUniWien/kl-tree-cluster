@@ -15,6 +15,7 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
         "entropy_param": 0.40,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8000,
     },
     {
@@ -26,6 +27,7 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
         "entropy_param": 0.40,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8001,
     },
     {
@@ -37,6 +39,7 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
         "entropy_param": 0.40,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8002,
     },
     {
@@ -48,6 +51,7 @@ OVERLAPPING_BINARY_HEAVY_CASES = [
         "entropy_param": 0.48,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8003,
     },
     # {  # Commented out — too slow (600x1000)
@@ -74,6 +78,7 @@ OVERLAPPING_BINARY_MODERATE_CASES = [
         "entropy_param": 0.30,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8100,
     },
     {
@@ -85,6 +90,7 @@ OVERLAPPING_BINARY_MODERATE_CASES = [
         "entropy_param": 0.30,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8101,
     },
     {
@@ -96,6 +102,7 @@ OVERLAPPING_BINARY_MODERATE_CASES = [
         "entropy_param": 0.28,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8102,
     },
     # {  # Commented out — too slow (1000x800)
@@ -122,6 +129,7 @@ OVERLAPPING_BINARY_PARTIAL_CASES = [
         "entropy_param": 0.24,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8200,
     },
     {
@@ -133,6 +141,7 @@ OVERLAPPING_BINARY_PARTIAL_CASES = [
         "entropy_param": 0.25,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8201,
     },
     {
@@ -144,6 +153,7 @@ OVERLAPPING_BINARY_PARTIAL_CASES = [
         "entropy_param": 0.22,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8202,
     },
     # {  # Commented out — too slow (1000x600)
@@ -170,6 +180,7 @@ OVERLAPPING_BINARY_HIGHD_CASES = [
         "entropy_param": 0.35,
         "balanced_clusters": True,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8300,
     },
     # {  # Commented out — too slow (600x2000)
@@ -218,6 +229,7 @@ OVERLAPPING_BINARY_UNBALANCED_CASES = [
         "entropy_param": 0.35,
         "balanced_clusters": False,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8400,
     },
     {
@@ -229,6 +241,7 @@ OVERLAPPING_BINARY_UNBALANCED_CASES = [
         "entropy_param": 0.30,
         "balanced_clusters": False,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8401,
     },
     {
@@ -240,6 +253,7 @@ OVERLAPPING_BINARY_UNBALANCED_CASES = [
         "entropy_param": 0.32,
         "balanced_clusters": False,
         "feature_sparsity": 0.05,
+        "noise_features": 0,
         "seed": 8402,
     },
     # {  # Commented out — too slow (1000x1000)

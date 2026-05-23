@@ -24,10 +24,11 @@ def test_run_case_with_optional_isolation_disables_cover_pages(monkeypatch):
         pdf_path="/tmp/tiny_case.pdf",
         isolate_umap_cases=True,
         timeout_sec=1,
-        retry_count=0,
+        include_validation_page=False,
     )
 
     assert captured.get("include_cover_pages") is False
+    assert captured.get("include_validation_page") is False
 
 
 def test_run_case_worker_disables_cover_pages(monkeypatch):
@@ -56,7 +57,9 @@ def test_run_case_worker_disables_cover_pages(monkeypatch):
         case_plot_manifold=False,
         enable_plots=True,
         pdf_path="/tmp/tiny_case.pdf",
+        include_validation_page=False,
     )
 
     assert captured.get("include_cover_pages") is False
+    assert captured.get("include_validation_page") is False
     assert q.payloads and q.payloads[0].get("ok") is True

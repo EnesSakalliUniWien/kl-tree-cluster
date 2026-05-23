@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 from scipy.spatial.distance import pdist, squareform
 
 from benchmarks.shared.runners.dispatch import run_clustering_result
@@ -22,37 +23,29 @@ def _toy_dataframe() -> pd.DataFrame:
     )
 
 
-def test_dispatch_result_normalizes_runner_skip_status():
+def test_dispatch_result_rejects_invalid_runner_params():
     df = _toy_dataframe()
-    result = run_clustering_result(
-        data_df=df,
-        method_id="kmeans",
-        params={"n_clusters": "bad"},
-        seed=42,
-    )
-    assert result.labels is None
-    assert int(result.found_clusters) == 0
-    assert result.status == "skip"
-    assert isinstance(result.skip_reason, str)
-    assert result.skip_reason.strip()
+    with pytest.raises(ValueError):
+        run_clustering_result(
+            data_df=df,
+            method_id="kmeans",
+            params={"n_clusters": "bad"},
+            seed=42,
+        )
 
 
-def test_dispatch_result_propagates_runner_skip_reason():
+def test_dispatch_result_rejects_invalid_spectral_params():
     df = _toy_dataframe()
-    result = run_clustering_result(
-        data_df=df,
-        method_id="spectral",
-        params={"n_clusters": "bad"},
-        seed=42,
-    )
-    assert result.labels is None
-    assert int(result.found_clusters) == 0
-    assert result.status == "skip"
-    assert isinstance(result.skip_reason, str)
-    assert "Spectral failed" in result.skip_reason
+    with pytest.raises(ValueError):
+        run_clustering_result(
+            data_df=df,
+            method_id="spectral",
+            params={"n_clusters": "bad"},
+            seed=42,
+        )
 
 
-def test_dispatch_result_normalizes_unexpected_exception(monkeypatch):
+def test_dispatch_result_propagates_unexpected_exception(monkeypatch):
     def _raise_runner(*_args, **_kwargs):
         raise RuntimeError("boom")
 
@@ -67,16 +60,13 @@ def test_dispatch_result_normalizes_unexpected_exception(monkeypatch):
     )
 
     df = _toy_dataframe()
-    result = run_clustering_result(
-        data_df=df,
-        method_id="kmeans",
-        params={"n_clusters": 2},
-        seed=42,
-    )
-    assert result.status == "skip"
-    assert result.labels is None
-    assert result.found_clusters == 0
-    assert result.skip_reason == "kmeans runner failed: RuntimeError: boom"
+    with pytest.raises(RuntimeError, match="boom"):
+        run_clustering_result(
+            data_df=df,
+            method_id="kmeans",
+            params={"n_clusters": 2},
+            seed=42,
+        )
 
 
 def test_run_clustering_result_uses_provided_kl_distance_condensed():

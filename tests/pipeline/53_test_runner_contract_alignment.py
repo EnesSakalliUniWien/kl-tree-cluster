@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from benchmarks.shared.runners.louvain_runner import _run_louvain_method
 from benchmarks.shared.runners.optics_runner import _run_optics_method
@@ -47,19 +48,29 @@ def test_singleton_behavior_is_consistent_across_runners():
     _assert_singleton_ok(_run_spectral_method(singleton_features, {}, seed=7))
 
 
-def test_failure_paths_use_skip_and_populate_skip_reason():
+def test_invalid_runner_params_raise():
     distance = _toy_distance_matrix()
     features = _toy_feature_matrix()
 
-    louvain_res = _run_louvain_method(distance, {"resolution": "bad"}, seed=42)
-    optics_res = _run_optics_method(distance, {"min_samples": "bad"}, seed=42)
-    spectral_res = _run_spectral_method(features, {"n_clusters": "bad"}, seed=42)
-
-    for res in (louvain_res, optics_res, spectral_res):
-        assert res.status == "skip"
-        assert isinstance(res.skip_reason, str)
-        assert res.skip_reason.strip()
-        assert res.labels is None
+    with pytest.raises(KeyError):
+        _run_louvain_method(distance, {"resolution": "bad"}, seed=42)
+    with pytest.raises(ValueError):
+        _run_optics_method(
+            distance,
+            {"min_samples": "bad", "xi": 0.05, "min_cluster_size": 2},
+            seed=42,
+        )
+    with pytest.raises(ValueError):
+        _run_spectral_method(
+            features,
+            {
+                "n_clusters": "bad",
+                "affinity": "nearest_neighbors",
+                "assign_labels": "cluster_qr",
+                "n_neighbors": 2,
+            },
+            seed=42,
+        )
 
 
 def test_deterministic_seed_handling_is_consistent():
@@ -74,15 +85,22 @@ def test_deterministic_seed_handling_is_consistent():
         assert np.array_equal(np.asarray(l1.labels), np.asarray(l2.labels))
 
     # OPTICS
-    o1 = _run_optics_method(distance, {"min_samples": 2, "xi": 0.05}, seed=123)
-    o2 = _run_optics_method(distance, {"min_samples": 2, "xi": 0.05}, seed=123)
+    optics_params = {"min_samples": 2, "xi": 0.05, "min_cluster_size": 2}
+    o1 = _run_optics_method(distance, optics_params, seed=123)
+    o2 = _run_optics_method(distance, optics_params, seed=123)
     assert o1.status == o2.status == "ok"
     assert o1.skip_reason is None and o2.skip_reason is None
     assert np.array_equal(np.asarray(o1.labels), np.asarray(o2.labels))
 
     # Spectral
-    s1 = _run_spectral_method(features, {"n_clusters": 2, "affinity": "nearest_neighbors"}, seed=123)
-    s2 = _run_spectral_method(features, {"n_clusters": 2, "affinity": "nearest_neighbors"}, seed=123)
+    spectral_params = {
+        "n_clusters": 2,
+        "affinity": "nearest_neighbors",
+        "assign_labels": "cluster_qr",
+        "n_neighbors": 2,
+    }
+    s1 = _run_spectral_method(features, spectral_params, seed=123)
+    s2 = _run_spectral_method(features, spectral_params, seed=123)
     assert s1.status == s2.status == "ok"
     assert s1.skip_reason is None and s2.skip_reason is None
     assert np.array_equal(np.asarray(s1.labels), np.asarray(s2.labels))

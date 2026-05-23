@@ -10,7 +10,7 @@ def _normalize_labels(labels: np.ndarray) -> np.ndarray:
     labels_arr = np.asarray(labels, dtype=int)
     unique = sorted({int(x) for x in labels_arr if x >= 0})
     mapping = {label: idx for idx, label in enumerate(unique)}
-    return np.array([mapping.get(int(x), -1) for x in labels_arr], dtype=int)
+    return np.array([mapping[int(x)] if x >= 0 else -1 for x in labels_arr], dtype=int)
 
 
 def _estimate_dbscan_eps(distance_matrix: np.ndarray, min_samples: int) -> float:
@@ -24,21 +24,16 @@ def _estimate_dbscan_eps(distance_matrix: np.ndarray, min_samples: int) -> float
     return eps if eps > 0 else 1e-9
 
 
-def _resolve_n_neighbors(n_samples: int, n_neighbors: int | None) -> int:
+def _resolve_n_neighbors(n_samples: int, n_neighbors: int) -> int:
     if n_samples <= 1:
         return 0
-    if n_neighbors is None:
-        return max(2, min(10, n_samples - 1))
-    return max(1, min(int(n_neighbors), n_samples - 1))
+    return int(n_neighbors)
 
 
 def _resolve_requested_cluster_count(n_samples: int, params: dict[str, object]) -> int:
-    """Resolve a requested cluster count with the benchmark default and sample bounds."""
-    raw = params.get("n_clusters")
-    if raw is None or str(raw).strip().lower() in {"true", "expected", "auto"}:
-        raw = max(2, min(10, int(round(np.sqrt(max(n_samples, 2) / 2.0)))))
-    n_clusters = int(raw)
-    return max(1, min(n_clusters, n_samples))
+    """Resolve the explicit requested cluster count."""
+    del n_samples
+    return int(params["n_clusters"])
 
 
 def _knn_edge_weights(

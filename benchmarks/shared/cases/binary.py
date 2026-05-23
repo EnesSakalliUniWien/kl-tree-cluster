@@ -17,6 +17,7 @@ BINARY_CASES = {
             "entropy_param": 0.25,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 314,
         },
         {
@@ -28,6 +29,7 @@ BINARY_CASES = {
             "entropy_param": 0.25,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 314,
         },
     ],
@@ -41,6 +43,7 @@ BINARY_CASES = {
             "entropy_param": 0.1,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 500,
         },
         {
@@ -52,6 +55,7 @@ BINARY_CASES = {
             "entropy_param": 0.1,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 502,
         },
     ],
@@ -65,6 +69,7 @@ BINARY_CASES = {
             "entropy_param": 0.00,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 1000,
         },
         {
@@ -76,6 +81,7 @@ BINARY_CASES = {
             "entropy_param": 0.00,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 1001,
         },
         {
@@ -87,6 +93,7 @@ BINARY_CASES = {
             "entropy_param": 0.00,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 1002,
         },
     ],
@@ -100,6 +107,7 @@ BINARY_CASES = {
             "entropy_param": 0.05,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 2000,
         },
         {
@@ -111,6 +119,7 @@ BINARY_CASES = {
             "entropy_param": 0.05,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 2001,
         },
         {
@@ -122,6 +131,7 @@ BINARY_CASES = {
             "entropy_param": 0.10,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 2002,
         },
         {
@@ -133,6 +143,7 @@ BINARY_CASES = {
             "entropy_param": 0.10,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 2003,
         },
     ],
@@ -146,6 +157,7 @@ BINARY_CASES = {
             "entropy_param": 0.12,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 3000,
         },
         {
@@ -157,6 +169,7 @@ BINARY_CASES = {
             "entropy_param": 0.15,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 3001,
         },
         {
@@ -168,6 +181,7 @@ BINARY_CASES = {
             "entropy_param": 0.12,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 3002,
         },
     ],
@@ -181,6 +195,7 @@ BINARY_CASES = {
             "entropy_param": 0.20,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 4000,
         },
         {
@@ -192,6 +207,7 @@ BINARY_CASES = {
             "entropy_param": 0.15,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 4001,
         },
     ],
@@ -205,6 +221,7 @@ BINARY_CASES = {
             "entropy_param": 0.10,
             "balanced_clusters": False,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 5000,
         },
         {
@@ -216,6 +233,7 @@ BINARY_CASES = {
             "entropy_param": 0.12,
             "balanced_clusters": False,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 5001,
         },
     ],
@@ -229,6 +247,7 @@ BINARY_CASES = {
             "entropy_param": 0.10,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 7000,
         },
         {
@@ -240,6 +259,7 @@ BINARY_CASES = {
             "entropy_param": 0.10,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 7002,
         },
         {
@@ -251,6 +271,7 @@ BINARY_CASES = {
             "entropy_param": 0.10,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 7003,
         },
     ],
@@ -265,6 +286,7 @@ BINARY_CASES = {
             "entropy_param": 0.0,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 10000,
         },
         {
@@ -276,6 +298,7 @@ BINARY_CASES = {
             "entropy_param": 0.0,
             "balanced_clusters": True,
             "feature_sparsity": 0.05,
+            "noise_features": 0,
             "seed": 10001,
         },
     ],
@@ -290,6 +313,7 @@ BINARY_CASES = {
             "entropy_param": 0.08,
             "balanced_clusters": True,
             "feature_sparsity": 0.03,
+            "noise_features": 0,
             "seed": 11000,
         },
         {
@@ -301,6 +325,7 @@ BINARY_CASES = {
             "entropy_param": 0.10,
             "balanced_clusters": True,
             "feature_sparsity": 0.03,
+            "noise_features": 0,
             "seed": 11001,
         },
     ],

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -18,25 +18,16 @@ def _classify_figure(fig) -> str:
     """Best-effort classifier for a Matplotlib figure."""
     parts: list[str] = []
 
-    suptitle = getattr(fig, "_suptitle", None)
+    suptitle = fig._suptitle
     if suptitle is not None:
-        try:
-            parts.append(str(suptitle.get_text()))
-        except Exception:
-            pass
+        parts.append(str(suptitle.get_text()))
 
-    try:
-        parts.extend(str(t.get_text()) for t in getattr(fig, "texts", []))
-    except Exception:
-        pass
+    parts.extend(str(t.get_text()) for t in fig.texts)
 
-    try:
-        for ax in fig.axes:
-            parts.append(str(ax.get_title()))
-            parts.append(str(ax.get_xlabel()))
-            parts.append(str(ax.get_ylabel()))
-    except Exception:
-        pass
+    for ax in fig.axes:
+        parts.append(str(ax.get_title()))
+        parts.append(str(ax.get_xlabel()))
+        parts.append(str(ax.get_ylabel()))
 
     text = " ".join(p for p in parts if p).lower()
 
@@ -62,8 +53,8 @@ def split_collected_figs_to_pdfs(
 
     for item in figs_with_info:
         if isinstance(item, dict):
-            fig = item.get("figure")
-            case_num = item.get("test_case_num", 1)
+            fig = item["figure"]
+            case_num = item["test_case_num"]
         else:
             fig = item
             case_num = 1

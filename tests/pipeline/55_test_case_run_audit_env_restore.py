@@ -58,7 +58,7 @@ def test_run_single_case_restores_matrix_audit_env(monkeypatch, initial_value):
     selected_methods = ["kl"]
     param_sets = {"kl": [{}]}
     case_run.run_single_case(
-        tc={"name": "env_restore_case", "seed": 7},
+        tc={"name": "env_restore_case", "seed": 7, "test_case_num": 1},
         case_position=1,
         total_cases=1,
         selected_methods=selected_methods,
@@ -74,4 +74,3 @@ def test_run_single_case_restores_matrix_audit_env(monkeypatch, initial_value):
         assert env_name not in os.environ
     else:
         assert os.environ.get(env_name) == initial_value
-

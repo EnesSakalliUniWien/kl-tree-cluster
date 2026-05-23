@@ -24,23 +24,14 @@ def _run_optics_method(
     # precomputed distances and does not accept a random_state parameter.
     del seed
 
-    try:
-        min_samples = int(params.get("min_samples", 5))
-        xi = float(params.get("xi", 0.05))
-        min_cluster_size = params.get("min_cluster_size", min_samples)
-        model = OPTICS(
-            metric="precomputed",
-            min_samples=min_samples,
-            xi=xi,
-            min_cluster_size=min_cluster_size,
-        )
-        labels = _normalize_labels(model.fit_predict(distance_matrix))
-        return _ok_result_from_labels(labels, range(n_samples))
-    except Exception as exc:
-        return MethodRunResult(
-            labels=None,
-            found_clusters=0,
-            report_df=None,
-            status="skip",
-            skip_reason=f"OPTICS failed: {type(exc).__name__}: {exc}",
-        )
+    min_samples = int(params["min_samples"])
+    xi = float(params["xi"])
+    min_cluster_size = params["min_cluster_size"]
+    model = OPTICS(
+        metric="precomputed",
+        min_samples=min_samples,
+        xi=xi,
+        min_cluster_size=min_cluster_size,
+    )
+    labels = _normalize_labels(model.fit_predict(distance_matrix))
+    return _ok_result_from_labels(labels, range(n_samples))

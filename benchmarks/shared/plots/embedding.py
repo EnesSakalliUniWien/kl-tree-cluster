@@ -7,12 +7,13 @@ import logging
 import os
 import textwrap
 import warnings
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 from sklearn.cluster import KMeans, SpectralClustering
-from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
@@ -138,7 +139,6 @@ def _cache_key_for_array(
     suffix = f"_{n_components}d"
     if cache_key:
         return f"embedding_{cache_key}{suffix}"
-    # Content-addressable fallback: hash of shape + first/last bytes.
     h = hashlib.sha256()
     h.update(f"{X.shape}".encode())
     h.update(X.tobytes()[:4096])
@@ -155,12 +155,9 @@ def _load_cached_embedding(
         return None
     path = cache_dir / f"{key}.npy"
     if path.exists():
-        try:
-            arr = np.load(path)
-            logger.debug("Loaded cached embedding from %s", path)
-            return arr
-        except Exception:
-            logger.debug("Cache file %s unreadable; will recompute.", path)
+        arr = np.load(path)
+        logger.debug("Loaded cached embedding from %s", path)
+        return arr
     return None
 
 
@@ -173,11 +170,8 @@ def _save_cached_embedding(
     if cache_dir is None:
         return
     path = cache_dir / f"{key}.npy"
-    try:
-        np.save(path, embedding)
-        logger.debug("Saved embedding cache to %s", path)
-    except Exception as exc:
-        logger.debug("Failed to write embedding cache %s: %s", path, exc)
+    np.save(path, embedding)
+    logger.debug("Saved embedding cache to %s", path)
 
 
 def _fit_embedding_2d(
@@ -200,44 +194,32 @@ def _fit_embedding_2d(
     backend = (os.getenv("KL_TE_EMBEDDING_BACKEND") or "umap").strip().lower()
 
     if backend in {"umap", "auto"}:
-        try:
-            import umap
+        import umap
 
-            reducer = umap.UMAP(
-                n_components=2,
-                random_state=42,
-                n_neighbors=min(15, max(2, len(X_scaled) - 1)),
-                min_dist=0.1,
-                low_memory=True,
-            )
-            result = reducer.fit_transform(X_scaled)
-            _save_cached_embedding(cache_dir, ck, result)
-            return result
-        except Exception as exc:
-            raise RuntimeError(
-                "UMAP embedding was requested but failed to initialize/fit."
-            ) from exc
+        reducer = umap.UMAP(
+            n_components=2,
+            random_state=42,
+            n_neighbors=min(15, max(2, len(X_scaled) - 1)),
+            min_dist=0.1,
+            low_memory=True,
+        )
+        result = reducer.fit_transform(X_scaled)
+        _save_cached_embedding(cache_dir, ck, result)
+        return result
 
     if backend == "tsne":
-        try:
-            from sklearn.manifold import TSNE
+        from sklearn.manifold import TSNE
 
-            tsne = TSNE(
-                n_components=2,
-                random_state=42,
-                perplexity=min(30, max(2, len(X_scaled) - 1)),
-            )
-            result = tsne.fit_transform(X_scaled)
-            _save_cached_embedding(cache_dir, ck, result)
-            return result
-        except Exception:
-            pass
+        tsne = TSNE(
+            n_components=2,
+            random_state=42,
+            perplexity=min(30, max(2, len(X_scaled) - 1)),
+        )
+        result = tsne.fit_transform(X_scaled)
+        _save_cached_embedding(cache_dir, ck, result)
+        return result
 
-    # Stable fallback: PCA
-    pca = PCA(n_components=min(2, X_scaled.shape[1], len(X_scaled)))
-    result = pca.fit_transform(X_scaled)
-    _save_cached_embedding(cache_dir, ck, result)
-    return result
+    raise ValueError(f"Unknown KL_TE_EMBEDDING_BACKEND={backend!r}.")
 
 
 def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> str:
@@ -248,7 +230,11 @@ def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> 
         # Preserve compact metric suffixes like "[A=0.923, N=0.811]" when
         # shortening long method+param labels.
         candidate_main, candidate_suffix = name.rsplit(" [", 1)
-        if candidate_suffix.startswith("A=") or candidate_suffix.startswith("ARI="):
+        if (
+            candidate_suffix.startswith("K=")
+            or candidate_suffix.startswith("A=")
+            or candidate_suffix.startswith("ARI=")
+        ):
             name = candidate_main
             metrics_suffix = f" [{candidate_suffix}"
 
@@ -290,10 +276,13 @@ def create_clustering_comparison_plots(
     n_cols: int = 3,
     max_panels_per_page: int = 6,
     cache_key: str | None = None,
+    extra_panels: list[tuple[str, Callable[[Axes], None]]] | None = None,
 ) -> list[plt.Figure]:
     """Create paginated 2D embedding plots comparing clusterings.
 
     Long method lists are split across multiple pages so subplots stay readable.
+    Extra panels, such as fitted decomposition trees, are placed before the
+    embedding panels and count toward the same pagination budget.
     """
     X = np.asarray(X_original, dtype=float)
     scaler = StandardScaler()
@@ -329,16 +318,20 @@ def create_clustering_comparison_plots(
     spec = build_cluster_color_spec(color_clusters, unassigned_color="#CCCCCC")
     colors = spec.colors
 
-    entries = list(labels_to_plot.items())
+    tree_entries = list(extra_panels or [])
+    label_entries = list(labels_to_plot.items())
+    entries = [("extra", item) for item in tree_entries] + [
+        ("labels", item) for item in label_entries
+    ]
     max_panels_per_page = max(1, int(max_panels_per_page))
     n_pages = (len(entries) + max_panels_per_page - 1) // max_panels_per_page
     figures: list[plt.Figure] = []
 
     meta_text = (
-        f"samples={meta.get('n_samples', '?')}, "
-        f"features={meta.get('n_features', '?')}, "
-        f"generator={meta.get('generator', 'unknown')}, "
-        f"noise={meta.get('noise', 'n/a')}"
+        f"samples={meta['n_samples']}, "
+        f"features={meta['n_features']}, "
+        f"generator={meta['generator']}, "
+        f"noise={meta['noise']}"
     )
 
     for page_idx in range(n_pages):
@@ -365,8 +358,16 @@ def create_clustering_comparison_plots(
         )
         fig.text(0.5, 0.945, meta_text, ha="center", va="center", fontsize=10)
 
-        for i, (method_name, labels) in enumerate(page_entries):
+        for i, (entry_type, entry_payload) in enumerate(page_entries):
             ax = flat_axes[i]
+            if entry_type == "extra":
+                title, renderer = entry_payload
+                renderer(ax)
+                if title:
+                    ax.set_title(title, fontsize=10, weight="bold", pad=8)
+                continue
+
+            method_name, labels = entry_payload
             if labels is None:
                 ax.set_title(
                     f"{_format_method_subplot_title(method_name)}\n(Labels Missing)",
@@ -418,7 +419,14 @@ def create_clustering_comparison_plots(
         for j in range(n_panels, len(flat_axes)):
             flat_axes[j].axis("off")
 
-        fig.tight_layout(rect=(0.02, 0.04, 0.98, 0.90), h_pad=1.5, w_pad=1.15)
+        fig.subplots_adjust(
+            left=0.06,
+            right=0.97,
+            bottom=0.08,
+            top=0.86,
+            hspace=0.56,
+            wspace=0.28,
+        )
         figures.append(fig)
 
     return figures
@@ -446,43 +454,32 @@ def _fit_embedding_3d(
     backend = (os.getenv("KL_TE_EMBEDDING_BACKEND_3D") or "umap").strip().lower()
 
     if backend in {"umap", "auto"}:
-        try:
-            import umap
+        import umap
 
-            reducer = umap.UMAP(
-                n_components=3,
-                random_state=42,
-                n_neighbors=min(15, max(2, len(X_scaled) - 1)),
-                min_dist=0.1,
-                low_memory=True,
-            )
-            result = reducer.fit_transform(X_scaled)
-            _save_cached_embedding(cache_dir, ck, result)
-            return result
-        except Exception as exc:
-            raise RuntimeError(
-                "3D UMAP embedding was requested but failed to initialize/fit."
-            ) from exc
+        reducer = umap.UMAP(
+            n_components=3,
+            random_state=42,
+            n_neighbors=min(15, max(2, len(X_scaled) - 1)),
+            min_dist=0.1,
+            low_memory=True,
+        )
+        result = reducer.fit_transform(X_scaled)
+        _save_cached_embedding(cache_dir, ck, result)
+        return result
 
     if backend == "tsne":
-        try:
-            from sklearn.manifold import TSNE
+        from sklearn.manifold import TSNE
 
-            tsne = TSNE(
-                n_components=3,
-                random_state=42,
-                perplexity=min(30, max(2, len(X_scaled) - 1)),
-            )
-            result = tsne.fit_transform(X_scaled)
-            _save_cached_embedding(cache_dir, ck, result)
-            return result
-        except Exception:
-            pass
+        tsne = TSNE(
+            n_components=3,
+            random_state=42,
+            perplexity=min(30, max(2, len(X_scaled) - 1)),
+        )
+        result = tsne.fit_transform(X_scaled)
+        _save_cached_embedding(cache_dir, ck, result)
+        return result
 
-    pca = PCA(n_components=min(3, X_scaled.shape[1], len(X_scaled)))
-    result = pca.fit_transform(X_scaled)
-    _save_cached_embedding(cache_dir, ck, result)
-    return result
+    raise ValueError(f"Unknown KL_TE_EMBEDDING_BACKEND_3D={backend!r}.")
 
 
 def create_clustering_comparison_plot_3d(
@@ -492,7 +489,7 @@ def create_clustering_comparison_plot_3d(
     test_case_num: int,
     meta: dict,
 ):
-    """Create a 3D embedding plot (UMAP/TSNE/PCA) comparing clusterings."""
+    """Create a 3D embedding plot (UMAP/TSNE) comparing clusterings."""
     X = np.asarray(X_original, dtype=float)
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
@@ -523,10 +520,10 @@ def create_clustering_comparison_plot_3d(
 
     fig = plt.figure(figsize=(18, 12))
     meta_text = (
-        f"samples={meta.get('n_samples', '?')}, "
-        f"features={meta.get('n_features', '?')}, "
-        f"generator={meta.get('generator', 'unknown')}, "
-        f"noise={meta.get('noise', 'n/a')}"
+        f"samples={meta['n_samples']}, "
+        f"features={meta['n_features']}, "
+        f"generator={meta['generator']}, "
+        f"noise={meta['noise']}"
     )
     fig.suptitle(
         (

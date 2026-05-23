@@ -47,6 +47,7 @@ def test_grouped_outlier_case_generation_returns_binary_matrix_and_metadata() ->
         "outlier_std": 0.2,
         "outlier_spatial_mode": "clustered",
         "outlier_label_mode": "grouped",
+        "balanced_clusters": True,
         "seed": 7,
     }
 

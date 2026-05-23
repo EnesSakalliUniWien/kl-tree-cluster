@@ -17,7 +17,6 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from benchmarks.calibration.run import run_calibration_suite
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.config import DEFAULT_METHODS
 from benchmarks.shared.env import get_env_bool, get_env_int
@@ -25,6 +24,7 @@ from benchmarks.shared.plots.cover_page import (
     GROUP_ORDER,
     category_group,
     generate_overview_page,
+    write_case_manifest_pages_to_pdf,
     write_section_page_to_pdf,
 )
 from benchmarks.shared.relationship_analysis import analyze_benchmark_relationships
@@ -33,7 +33,6 @@ from benchmarks.shared.util.case_execution import run_case_with_optional_isolati
 from benchmarks.shared.util.method_selection import resolve_methods_from_env
 from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
 from benchmarks.shared.util.time import format_timestamp_utc
-from kl_clustering_analysis import config
 
 try:
     from benchmarks.shared.debug_trace import diagnose_benchmark_failures
@@ -83,6 +82,51 @@ def _compute_resume_coverage(
     return completed_cases, missing_methods_by_case, len(methods_by_case)
 
 
+def _resolve_generated_case_geometry(case: dict) -> tuple[int, int]:
+    """Return generated sample/feature counts from the canonical case schema."""
+    generator = case["generator"]
+    if generator == "sbm":
+        n_nodes = sum(int(size) for size in case["sizes"])
+        return n_nodes, n_nodes
+    if generator == "phylogenetic":
+        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(
+            case["n_features"]
+        ) * int(case["n_categories"])
+    if generator == "temporal_evolution":
+        return int(case["n_time_points"]) * int(case["samples_per_time"]), int(
+            case["n_features"]
+        ) * int(case["n_categories"])
+    if generator in {"categorical", "blobs_quantile"}:
+        return int(case["n_samples"]), int(case["n_features"]) * int(case["n_categories"])
+    if generator == "binary":
+        return int(case["n_samples"]), int(case["n_features"]) + int(case["noise_features"])
+    if generator in {"blobs", "dimensional_gaussian", "gaussian_outliers"}:
+        return int(case["n_samples"]), int(case["n_features"])
+    raise ValueError(f"Unknown benchmark case generator {generator!r}.")
+
+
+def _stamp_full_run_case_identity(
+    results: pd.DataFrame,
+    *,
+    case_key: int,
+    case_id: str,
+) -> pd.DataFrame:
+    """Map one-case pipeline output back to the full benchmark case identity."""
+    if results.empty:
+        return results
+    if "case_id" not in results.columns:
+        raise ValueError("Benchmark result rows must include case_id.")
+    observed_case_ids = set(results["case_id"].dropna().astype(str))
+    if observed_case_ids != {case_id}:
+        raise ValueError(
+            f"Benchmark returned case_id values {sorted(observed_case_ids)!r}; "
+            f"expected only {case_id!r}."
+        )
+    results = results.copy()
+    results["test_case"] = int(case_key)
+    return results
+
+
 def run_benchmarks():
     # Default to single-threaded spectral decomposition workers to avoid
     # thread oversubscription (outer benchmark parallelism + BLAS threads).
@@ -112,41 +156,24 @@ def run_benchmarks():
     enable_manifold = get_env_bool("KL_TE_ENABLE_MANIFOLD", default=False) and enable_plots
     isolate_umap_cases = get_env_bool("KL_TE_UMAP_ISOLATE_CASES", default=enable_umap)
     case_timeout_sec = get_env_int("KL_TE_CASE_TIMEOUT_SEC", 1800)
-    case_retry_count = max(0, get_env_int("KL_TE_CASE_RETRY_COUNT", 4))
     if enable_umap and "KL_TE_EMBEDDING_BACKEND" not in os.environ:
         os.environ["KL_TE_EMBEDDING_BACKEND"] = "umap"
     if enable_umap and "KL_TE_EMBEDDING_BACKEND_3D" not in os.environ:
         os.environ["KL_TE_EMBEDDING_BACKEND_3D"] = "umap"
     if enable_umap and "KL_TE_FORCE_UMAP_FOR_LARGE" not in os.environ:
         os.environ["KL_TE_FORCE_UMAP_FOR_LARGE"] = "1"
-    run_calibration = get_env_bool("KL_TE_RUN_CALIBRATION", default=False)
-    calibration_null_reps = get_env_int("KL_TE_CAL_NULL_REPS", 30)
-    calibration_treebh_reps = get_env_int("KL_TE_CAL_TREEBH_REPS", 200)
     run_relationship_analysis = get_env_bool("KL_TE_RUN_RELATIONSHIP_ANALYSIS", default=True)
     enable_relationship_plots = get_env_bool(
         "KL_TE_ENABLE_RELATIONSHIP_PLOTS",
         default=enable_plots,
     )
     if enable_umap:
-        try:
-            import umap  # noqa: F401
-        except Exception as exc:
-            raise RuntimeError(
-                "UMAP is required but not available. "
-                "Install a compatible stack (e.g., NumPy <= 2.3 with numba/umap) "
-                "or set KL_TE_ENABLE_PLOTS=0."
-            ) from exc
+        import umap  # noqa: F401
     print(
         f"Plot settings: enable_plots={enable_plots}, "
         f"enable_umap={enable_umap}, enable_manifold={enable_manifold}, "
-        f"isolate_umap_cases={isolate_umap_cases}, "
-        f"case_retry_count={case_retry_count}"
+        f"isolate_umap_cases={isolate_umap_cases}"
     )
-    if run_calibration:
-        print(
-            "Calibration settings: "
-            f"null_reps={calibration_null_reps}, treebh_reps={calibration_treebh_reps}"
-        )
     print(
         "Relationship analysis settings: "
         f"enabled={run_relationship_analysis}, plots={enable_relationship_plots}"
@@ -165,25 +192,19 @@ def run_benchmarks():
 
     # Load existing results if any to resume
     if output_path.exists():
-        try:
-            all_results = pd.read_csv(output_path)
-            completed_case_keys, missing_methods_by_case, tracked_case_count = (
-                _compute_resume_coverage(
-                    all_results,
-                    methods_to_test,
-                )
+        all_results = pd.read_csv(output_path)
+        completed_case_keys, missing_methods_by_case, tracked_case_count = (
+            _compute_resume_coverage(
+                all_results,
+                methods_to_test,
             )
-            partial_case_count = max(0, tracked_case_count - len(completed_case_keys))
-            print(
-                "Resuming... "
-                f"Found {len(completed_case_keys)} fully completed test indices "
-                f"and {partial_case_count} partial cases."
-            )
-        except Exception as e:
-            print(f"Error reading existing results, starting fresh: {e}")
-            all_results = pd.DataFrame()
-            completed_case_keys = set()
-            missing_methods_by_case = {}
+        )
+        partial_case_count = max(0, tracked_case_count - len(completed_case_keys))
+        print(
+            "Resuming... "
+            f"Found {len(completed_case_keys)} fully completed test indices "
+            f"and {partial_case_count} partial cases."
+        )
     else:
         all_results = pd.DataFrame()
         completed_case_keys = set()
@@ -191,8 +212,8 @@ def run_benchmarks():
 
     for i, case in enumerate(test_cases):
         case_key = i + 1
-        case_id = case.get("name", case.get("id", f"case_{i}"))
-        case_type = case.get("type", "unknown")
+        case_id = case["name"]
+        case_type = case["category"]
 
         if case_key in completed_case_keys:
             print(
@@ -201,7 +222,10 @@ def run_benchmarks():
             )
             continue
 
-        methods_for_case = missing_methods_by_case.get(case_key, methods_to_test)
+        if case_key in missing_methods_by_case:
+            methods_for_case = missing_methods_by_case[case_key]
+        else:
+            methods_for_case = methods_to_test
         if case_key in missing_methods_by_case:
             print(
                 f"[{i + 1}/{len(test_cases)}] Resuming partial case: {case_id} "
@@ -216,69 +240,52 @@ def run_benchmarks():
 
         case["test_case_num"] = case_key
 
-        try:
-            pdf_path = str((pdf_dir / f"{case_id}.pdf").absolute()) if enable_plots else None
+        pdf_path = str((pdf_dir / f"{case_id}.pdf").absolute()) if enable_plots else None
 
-            # Use both *_features/samples and *_cols/rows keys to detect large cases.
-            n_features = int(case.get("n_features", case.get("n_cols", 0)) or 0)
-            n_samples = int(case.get("n_samples", case.get("n_rows", 0)) or 0)
-            is_large = n_features > 400 or n_samples > 1000
-            case_plot_umap = enable_umap
-            case_plot_manifold = enable_manifold and not is_large
+        n_samples, n_features = _resolve_generated_case_geometry(case)
+        is_large = n_features > 400 or n_samples > 1000
+        case_plot_umap = enable_umap
+        case_plot_manifold = enable_manifold and not is_large
 
-            df_res = run_case_with_optional_isolation(
-                case=case,
-                case_id=str(case_id),
-                methods_to_test=methods_for_case,
-                case_plot_umap=case_plot_umap,
-                case_plot_manifold=case_plot_manifold,
-                enable_plots=enable_plots,
-                pdf_path=pdf_path,
-                isolate_umap_cases=isolate_umap_cases,
-                timeout_sec=case_timeout_sec,
-                retry_count=case_retry_count,
-            )
+        df_res = run_case_with_optional_isolation(
+            case=case,
+            case_id=str(case_id),
+            methods_to_test=methods_for_case,
+            case_plot_umap=case_plot_umap,
+            case_plot_manifold=case_plot_manifold,
+            enable_plots=enable_plots,
+            pdf_path=pdf_path,
+            isolate_umap_cases=isolate_umap_cases,
+            timeout_sec=case_timeout_sec,
+            include_validation_page=False,
+        )
+        df_res = _stamp_full_run_case_identity(
+            df_res,
+            case_key=case_key,
+            case_id=str(case_id),
+        )
 
-            if not df_res.empty:
-                all_results = pd.concat([all_results, df_res], ignore_index=True)
+        if not df_res.empty:
+            all_results = pd.concat([all_results, df_res], ignore_index=True)
 
-                write_header = not output_path.exists()
-                df_res.to_csv(output_path, mode="a", header=write_header, index=False)
+            write_header = not output_path.exists()
+            df_res.to_csv(output_path, mode="a", header=write_header, index=False)
 
-                print("  Results:", flush=True)
-                for method in methods_for_case:
-                    row = df_res[df_res["method"] == method]
-                    if not row.empty:
-                        ari_val = row["ari"].values[0]
-                        print(f"    {method}: ARI={ari_val:.4f}", flush=True)
-                    else:
-                        print(f"    {method}: No result", flush=True)
-            else:
-                print("  No results returned.", flush=True)
+            print("  Results:", flush=True)
+            for method in methods_for_case:
+                row = df_res[df_res["method"] == method]
+                if not row.empty:
+                    ari_val = row["ari"].values[0]
+                    print(f"    {method}: ARI={ari_val:.4f}", flush=True)
+                else:
+                    print(f"    {method}: No result", flush=True)
+        else:
+            print("  No results returned.", flush=True)
 
-        except Exception as e:
-            print(f"FAILED: {e}", flush=True)
-        finally:
-            gc.collect()
+        gc.collect()
 
     print("-" * 50)
     print("Benchmark Complete.")
-
-    calibration_pdf: Path | None = None
-    if run_calibration:
-        print("\nRunning calibration suite (null/Type-I + TreeBH)...")
-        try:
-            cal_outputs = run_calibration_suite(
-                run_dir=run_dir,
-                alpha=float(config.SIBLING_ALPHA),
-                n_reps_null=max(1, int(calibration_null_reps)),
-                n_reps_treebh=max(1, int(calibration_treebh_reps)),
-            )
-            calibration_pdf = Path(cal_outputs["plots_pdf"])
-            print(f"Calibration report written: {cal_outputs['report_md']}")
-            print(f"Calibration plots written: {cal_outputs['plots_pdf']}")
-        except Exception as e:
-            print(f"Calibration suite failed: {e}")
 
     relationship_outputs = None
     relationship_pdf: Path | None = None
@@ -289,23 +296,20 @@ def run_benchmarks():
 
         if run_relationship_analysis:
             print("\nRunning benchmark relationship analysis...")
-            try:
-                relationship_outputs = analyze_benchmark_relationships(
-                    df,
-                    run_dir,
-                    source_path=output_path,
-                    include_plots=enable_relationship_plots,
-                )
-                relationship_pdf = (
-                    Path(relationship_outputs.plots_pdf)
-                    if relationship_outputs.plots_pdf is not None
-                    else None
-                )
-                print(f"Relationship report written: {relationship_outputs.report_md}")
-                if relationship_pdf is not None:
-                    print(f"Relationship plots written: {relationship_pdf}")
-            except Exception as e:
-                print(f"Relationship analysis failed: {e}")
+            relationship_outputs = analyze_benchmark_relationships(
+                df,
+                run_dir,
+                source_path=output_path,
+                include_plots=enable_relationship_plots,
+            )
+            relationship_pdf = (
+                Path(relationship_outputs.plots_pdf)
+                if relationship_outputs.plots_pdf is not None
+                else None
+            )
+            print(f"Relationship report written: {relationship_outputs.report_md}")
+            if relationship_pdf is not None:
+                print(f"Relationship plots written: {relationship_pdf}")
 
         summary = df.groupby(["method"])["ari"].mean()
         print("\nMean ARI by Method:")
@@ -342,24 +346,32 @@ def run_benchmarks():
         plt.close(overview_fig)
         print(f"Generated overview page: {cover_pdf}")
 
-        # --- Build section page PDFs ---
+        manifest_pdf = run_dir / "_case_generation_manifest.pdf"
+        write_case_manifest_pages_to_pdf(test_cases, manifest_pdf)
+        print(f"Generated case manifest: {manifest_pdf}")
+
+        # --- Build section page PDFs for groups that actually occur in this run ---
+        present_groups = {
+            category_group(case["category"])
+            for case in test_cases
+        }
         section_pdfs: dict[str, Path] = {}
         for group in GROUP_ORDER:
+            if group not in present_groups:
+                continue
             sec_path = run_dir / f"_section_{group}.pdf"
             result = write_section_page_to_pdf(group, str(sec_path))
             if result is not None:
                 section_pdfs[group] = sec_path
 
         # --- Assemble merge order: overview, then (section + cases) per group ---
-        ordered_case_pdfs: list[Path] = [cover_pdf]
+        ordered_case_pdfs: list[Path] = [cover_pdf, manifest_pdf]
 
         # Determine each case's group from its category
         seen_groups: set[str] = set()
         for case in test_cases:
-            case_id = case.get("name", case.get("id"))
-            if not case_id:
-                continue
-            cat = case.get("category", "")
+            case_id = case["name"]
+            cat = case["category"]
             group = category_group(cat)
 
             # Insert the section page before the first case of each group
@@ -369,17 +381,9 @@ def run_benchmarks():
 
             ordered_case_pdfs.append(pdf_dir / f"{case_id}.pdf")
 
-        # Append section pages for any groups that had no cases (shouldn't happen)
-        for group in GROUP_ORDER:
-            if group not in seen_groups and group in section_pdfs:
-                ordered_case_pdfs.append(section_pdfs[group])
-
         if relationship_pdf is not None and relationship_pdf.exists():
             ordered_case_pdfs.append(relationship_pdf)
             print(f"Appending relationship plots to full report: {relationship_pdf}")
-        if calibration_pdf is not None and calibration_pdf.exists():
-            ordered_case_pdfs.append(calibration_pdf)
-            print(f"Appending calibration plots to full report: {calibration_pdf}")
         merge_existing_pdfs(ordered_case_pdfs, report_pdf, verbose=True)
 
 

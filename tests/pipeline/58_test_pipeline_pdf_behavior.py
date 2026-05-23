@@ -4,7 +4,7 @@ from pathlib import Path
 from benchmarks.shared import pipeline
 
 
-def test_removed_legacy_plot_kwargs_raise_type_error():
+def test_removed_plot_kwargs_raise_type_error():
     with pytest.raises(TypeError):
         pipeline.benchmark_cluster_algorithm(
             test_cases=[],
@@ -37,6 +37,7 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
         save_png=True,
         collect_figs=False,
         include_cover_pages=True,
+        include_validation_page=True,
         *,
         pdf=None,
     ):
@@ -44,6 +45,7 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
         called["save_png"] = save_png
         called["collect_figs"] = collect_figs
         called["include_cover_pages"] = include_cover_pages
+        called["include_validation_page"] = include_validation_page
         called["pdf"] = pdf
         return None, {"validation": [], "trees": [], "umap": [], "manifold": []}
 
@@ -62,4 +64,31 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
     assert called.get("save_png") is False
     assert called.get("collect_figs") is False
     assert called.get("include_cover_pages") is True
+    assert called.get("include_validation_page") is True
     assert called.get("pdf") is not None
+
+
+def test_pipeline_preserves_explicit_case_identity(monkeypatch):
+    seen_case_numbers: list[int] = []
+
+    def fake_run_single_case(**kwargs):
+        seen_case_numbers.append(kwargs["tc"]["test_case_num"])
+        return [], []
+
+    monkeypatch.setattr(pipeline, "run_single_case", fake_run_single_case)
+    monkeypatch.setattr(
+        pipeline,
+        "generate_benchmark_plots",
+        lambda *args, **kwargs: (None, {"validation": [], "trees": [], "umap": [], "manifold": []}),
+    )
+
+    pipeline.benchmark_cluster_algorithm(
+        test_cases=[
+            {"name": "case_a", "seed": 1, "test_case_num": 41},
+            {"name": "case_b", "seed": 2, "test_case_num": 42},
+        ],
+        verbose=False,
+        methods=[],
+    )
+
+    assert seen_case_numbers == [41, 42]

@@ -70,6 +70,7 @@ def generate_benchmark_plots(
     save_png: bool = True,
     collect_figs: bool = False,
     include_cover_pages: bool = True,
+    include_validation_page: bool = True,
     *,
     pdf: PdfPages | None = None,
 ):
@@ -107,12 +108,13 @@ def generate_benchmark_plots(
             plt.close(cfig)
         logger.info("Wrote %d cover/setup pages to PDF.", len(cover_figs))
 
-    fig = create_validation_plot(df_results)
-
-    prepare_pdf_figure(fig)
-    pdf.savefig(fig)
-    plt.close(fig)
     fig = None
+    if include_validation_page:
+        fig = create_validation_plot(df_results)
+        prepare_pdf_figure(fig)
+        pdf.savefig(fig)
+        plt.close(fig)
+        fig = None
 
     if verbose:
         logger.info("Generating tree plots...")

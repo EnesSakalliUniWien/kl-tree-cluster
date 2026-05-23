@@ -14,7 +14,6 @@ from benchmarks.shared.result_records import (
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.types import MethodSpec
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
-from kl_clustering_analysis import config
 from scipy.spatial.distance import pdist
 
 
@@ -77,28 +76,26 @@ def run_single_method_once(
     """Execute one method+params run and return typed outputs."""
     run_params = dict(params)
     if method_id in {"kmeans", "spectral"}:
-        raw_k = run_params.get("n_clusters")
-        if raw_k is None or str(raw_k).strip().lower() in {"true", "expected", "auto"}:
-            true_k = meta.get("n_clusters")
-            if true_k is not None:
-                run_params["n_clusters"] = int(true_k)
+        raw_k = run_params["n_clusters"]
+        if str(raw_k).strip().lower() in {"true", "expected", "auto"}:
+            run_params["n_clusters"] = int(meta["n_clusters"])
 
     meta_run = meta.copy()
     distance_condensed_for_run = None
-    if method_id.startswith("kl"):
-        metric = run_params.get("tree_distance_metric", config.TREE_DISTANCE_METRIC)
-        requires_precomputed_kl_distance = bool(meta.get("requires_precomputed_kl_distance", False))
+    if method_id in {"kl", "kl_complete", "kl_single"}:
+        metric = str(run_params["tree_distance_metric"])
+        requires_precomputed_kl_distance = bool(meta["requires_precomputed_kl_distance"])
         if requires_precomputed_kl_distance:
             if distance_condensed is None:
                 raise ValueError(
-                    f"Case '{meta.get('name', '?')}' requires "
+                    f"Case '{meta['name']}' requires "
                     "'precomputed_distance_condensed' for KL but it is missing."
                 )
             distance_condensed_for_run = distance_condensed
         elif precomputed_distance_condensed is not None:
             if distance_condensed is None:
                 raise ValueError(
-                    f"Case '{meta.get('name', '?')}' provides "
+                    f"Case '{meta['name']}' provides "
                     "'precomputed_distance_condensed' but it was not loaded."
                 )
             distance_condensed_for_run = distance_condensed
@@ -115,8 +112,8 @@ def run_single_method_once(
         distance_condensed=distance_condensed_for_run,
     )
 
-    true_clusters_raw = meta.get("n_clusters")
-    true_clusters = int(true_clusters_raw) if true_clusters_raw is not None else 0
+    true_clusters_raw = meta["n_clusters"]
+    true_clusters = int(true_clusters_raw)
 
     if result.status == "ok" and result.labels is not None:
         labels = result.labels
@@ -144,7 +141,7 @@ def run_single_method_once(
         singleton_outlier_isolated = np.nan
         grouped_outlier_cluster_recovered = np.nan
 
-    if result.status == "ok" and true_clusters_raw is not None:
+    if result.status == "ok":
         cluster_count_abs_error = float(abs(int(found_clusters) - true_clusters))
         over_split = float(int(found_clusters > true_clusters))
         under_split = float(int(found_clusters < true_clusters))
@@ -156,14 +153,14 @@ def run_single_method_once(
     result_row = build_benchmark_result_row(
         test_case=case_idx,
         case_id=case_name,
-        case_category=meta.get("category", "unknown"),
+        case_category=meta["category"],
         method=method_id,
         run_params=run_params,
         true_clusters=true_clusters,
         found_clusters=found_clusters,
         samples=meta["n_samples"],
         features=meta["n_features"],
-        noise=meta.get("noise", np.nan),
+        noise=meta["noise"],
         ari=ari,
         nmi=nmi,
         purity=purity,

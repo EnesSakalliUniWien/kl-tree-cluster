@@ -10,9 +10,11 @@ raise ImportError with a helpful message if NetworkX is not available.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
+import networkx as nx
+from networkx.generators.community import stochastic_block_model
 
 
 def _validate_sizes(sizes: List[int]) -> None:
@@ -28,11 +30,11 @@ def _build_probability_matrix(n_blocks: int, p_intra: float, p_inter: float) -> 
 
 def generate_sbm(
     sizes: List[int],
-    p_intra: float = 0.1,
-    p_inter: float = 0.01,
-    seed: Optional[int] = None,
-    directed: bool = False,
-    allow_self_loops: bool = False,
+    p_intra: float,
+    p_inter: float,
+    seed: int,
+    directed: bool,
+    allow_self_loops: bool,
 ) -> Tuple[Any, np.ndarray, np.ndarray, Dict[str, Any]]:
     """Generate a graph with planted community structure via an SBM.
 
@@ -41,15 +43,15 @@ def generate_sbm(
     sizes : list[int]
         Number of nodes in each block (community). The sum is the number of
         nodes in the returned graph.
-    p_intra : float, default 0.1
+    p_intra : float
         Probability of an edge between two nodes in the same block.
-    p_inter : float, default 0.01
+    p_inter : float
         Probability of an edge between nodes in different blocks.
-    seed : int | None
+    seed : int
         RNG seed for reproducibility.
-    directed : bool, default False
+    directed : bool
         Whether to produce a directed graph.
-    allow_self_loops : bool, default False
+    allow_self_loops : bool
         Whether to allow self-loops in the graph.
 
     Returns
@@ -67,16 +69,7 @@ def generate_sbm(
     Notes
     -----
     This is a thin wrapper around :func:`networkx.generators.community.stochastic_block_model`.
-    If NetworkX is not installed, a helpful ImportError is raised.
     """
-    try:
-        import networkx as nx  # local import to keep dependency optional
-        from networkx.generators.community import stochastic_block_model
-    except Exception as exc:  # pragma: no cover - networkx import path
-        raise ImportError(
-            "NetworkX is required to generate SBM graphs. Install it via `pip install networkx`."
-        ) from exc
-
     _validate_sizes(sizes)
     if not (0.0 <= p_inter <= 1.0 and 0.0 <= p_intra <= 1.0):
         raise ValueError("p_intra and p_inter must be probabilities in [0, 1]")
@@ -95,7 +88,7 @@ def generate_sbm(
         ground_truth.extend([block_idx] * int(size))
     ground_truth = np.asarray(ground_truth, dtype=int)
 
-    # Adjacency matrix (float for compatibility with other code paths)
+    # Shared benchmark runners consume numeric matrices.
     A = nx.to_numpy_array(G, dtype=float)
 
     metadata: Dict[str, Any] = {

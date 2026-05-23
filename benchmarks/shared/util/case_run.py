@@ -30,8 +30,8 @@ def run_single_case(
     verbose: bool,
 ) -> tuple[list[BenchmarkResultRow], list[ComputedResultRecord]]:
     """Run one benchmark case across all selected methods and params."""
-    case_idx = tc.get("test_case_num", case_position)
-    case_name = tc.get("name", f"Case {case_idx}")
+    case_idx = tc["test_case_num"]
+    case_name = str(tc["name"])
     if verbose:
         log_test_case_start(case_idx, total_cases, case_name)
 
@@ -69,7 +69,7 @@ def run_single_case(
                     params=params,
                     case_idx=case_idx,
                     case_name=case_name,
-                    tc_seed=tc.get("seed"),
+                    tc_seed=tc["seed"],
                     significance_level=significance_level,
                     data_t=data_t,
                     y_t=y_t,

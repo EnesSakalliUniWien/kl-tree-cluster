@@ -15,7 +15,7 @@ def test_build_adaptive_diffusion_distance_returns_finite_condensed_matrix():
 
     condensed, metadata = _build_adaptive_diffusion_distance(
         data,
-        k_neighbors=None,
+        k_neighbors=10,
         diffusion_time=2,
         n_components=5,
         metric="hamming",
@@ -27,6 +27,6 @@ def test_build_adaptive_diffusion_distance_returns_finite_condensed_matrix():
     expected_size = data.shape[0] * (data.shape[0] - 1) // 2
     assert condensed.shape == (expected_size,)
     assert np.isfinite(condensed).all()
-    assert metadata["backend"] in {"pydiffmap", "local_scaling_fallback"}
+    assert metadata["backend"] == "pydiffmap"
     assert 2 <= metadata["neighbor_search_k"] < data.shape[0]
     assert metadata["epsilon"] > 0

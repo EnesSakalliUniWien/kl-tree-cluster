@@ -45,7 +45,7 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     result_row, computed_result, method_audit = method_execution.run_single_method_once(
         method_id="kl",
         spec=spec,
-        params={},
+        params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
         case_idx=1,
         case_name="index_alignment_case",
         tc_seed=42,
@@ -59,6 +59,7 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
             "n_features": 2,
             "noise": 0.0,
             "category": "regression",
+            "requires_precomputed_kl_distance": False,
         },
         distance_matrix=None,
         distance_condensed=None,
@@ -107,7 +108,7 @@ def test_run_single_method_once_rejects_report_index_not_sample_ids(monkeypatch)
         method_execution.run_single_method_once(
             method_id="kmeans",
             spec=spec,
-            params={},
+            params={"n_clusters": 2, "n_init": 10},
             case_idx=1,
             case_name="positional_index_case",
             tc_seed=42,

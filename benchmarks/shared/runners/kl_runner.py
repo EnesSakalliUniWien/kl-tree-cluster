@@ -49,7 +49,7 @@ def _run_kl_on_distance(
 
     return MethodRunResult(
         labels=labels,
-        found_clusters=int(decomposition.get("num_clusters", 0)),
+        found_clusters=int(decomposition["num_clusters"]),
         report_df=report_df,
         status="ok",
         skip_reason=None,

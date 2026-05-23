@@ -8,6 +8,7 @@ caller can interleave them into the merged PDF at the right positions.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from textwrap import dedent
 
 import matplotlib.pyplot as plt
@@ -97,11 +98,8 @@ _register("real_data", "real_data")
 
 
 def category_group(subcategory: str) -> str:
-    """Return the parent group name for a subcategory key.
-
-    Falls back to the subcategory itself if not registered.
-    """
-    return _CATEGORY_GROUP.get(subcategory, subcategory)
+    """Return the parent group name for a registered subcategory key."""
+    return _CATEGORY_GROUP[subcategory]
 
 
 # Text content for each section
@@ -245,7 +243,7 @@ _SBM_TEXT = dedent(
       number of clusters         2 to 3
 
     The pre-computed modularity distance is passed directly to the
-    KL runner.  There is no fallback to pdist() on raw adjacency data.
+    KL runner; raw adjacency data is not re-distance-transformed.
 """
 )
 
@@ -474,6 +472,117 @@ def generate_section_page(group: str) -> plt.Figure | None:
     return _text_page(text, fontsize=9.5)
 
 
+def _resolve_case_geometry(case: dict) -> tuple[int, int]:
+    generator = case["generator"]
+    if generator == "sbm":
+        n_nodes = sum(int(size) for size in case["sizes"])
+        return n_nodes, n_nodes
+    if generator == "phylogenetic":
+        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(
+            case["n_features"]
+        ) * int(case["n_categories"])
+    if generator == "temporal_evolution":
+        return int(case["n_time_points"]) * int(case["samples_per_time"]), int(
+            case["n_features"]
+        ) * int(case["n_categories"])
+    if generator in {"categorical", "blobs_quantile"}:
+        return int(case["n_samples"]), int(case["n_features"]) * int(case["n_categories"])
+    if generator == "binary":
+        return int(case["n_samples"]), int(case["n_features"]) + int(case["noise_features"])
+    if generator in {"blobs", "dimensional_gaussian", "gaussian_outliers"}:
+        return int(case["n_samples"]), int(case["n_features"])
+    raise ValueError(f"Unknown benchmark case generator {generator!r}.")
+
+
+def _case_cluster_count(case: dict) -> int:
+    if case["generator"] == "sbm":
+        return len(case["sizes"])
+    if "n_clusters" in case:
+        return int(case["n_clusters"])
+    if "n_taxa" in case:
+        return int(case["n_taxa"])
+    raise ValueError(f"Case {case['name']!r} does not declare a cluster count.")
+
+
+def _case_parameter_summary(case: dict) -> str:
+    ordered_keys = (
+        "cluster_std",
+        "entropy_param",
+        "feature_sparsity",
+        "noise_features",
+        "separation",
+        "informative_dims",
+        "noise_dims",
+        "p_in",
+        "p_out",
+        "mutation_rate",
+        "mutation_rate_low",
+        "mutation_rate_high",
+        "overlap_strength",
+        "overlap_fraction",
+        "minority_fraction",
+    )
+    parts: list[str] = []
+    for key in ordered_keys:
+        if key in case:
+            parts.append(f"{key}={case[key]}")
+    return ", ".join(parts[:3]) if parts else "-"
+
+
+def generate_case_manifest_pages(
+    test_cases: list[dict],
+    *,
+    rows_per_page: int = 28,
+) -> list[plt.Figure]:
+    """Return compact case manifest pages describing generated benchmark inputs."""
+    if rows_per_page <= 0:
+        raise ValueError("rows_per_page must be positive.")
+
+    figures: list[plt.Figure] = []
+    header = f"{'#':>3}  {'case_id':<34} {'group':<12} {'generator':<22} {'n':>5} {'p':>6} {'K':>3}  key parameters"
+    divider = "-" * len(header)
+    for page_idx, start in enumerate(range(0, len(test_cases), rows_per_page), start=1):
+        chunk = test_cases[start : start + rows_per_page]
+        lines = [
+            f"Case Generation Manifest  (page {page_idx})",
+            "",
+            "One row per benchmark case. Section pages describe the generator family; this manifest",
+            "records the concrete generated shape and the main difficulty parameters used in this run.",
+            "",
+            header,
+            divider,
+        ]
+        for offset, case in enumerate(chunk, start=start + 1):
+            n_samples, n_features = _resolve_case_geometry(case)
+            case_id = str(case["name"])[:34]
+            group = category_group(case["category"])
+            generator = str(case["generator"])[:22]
+            k_true = _case_cluster_count(case)
+            params = _case_parameter_summary(case)
+            lines.append(
+                f"{offset:>3}  {case_id:<34} {group:<12} {generator:<22} "
+                f"{n_samples:>5} {n_features:>6} {k_true:>3}  {params}"
+            )
+        figures.append(_text_page("\n".join(lines), fontsize=6.6, title_fontsize=13.0))
+    return figures
+
+
+def write_case_manifest_pages_to_pdf(
+    test_cases: list[dict],
+    pdf_path: str | Path,
+    *,
+    rows_per_page: int = 28,
+) -> str:
+    """Write the generated-case manifest pages to a standalone PDF."""
+    from matplotlib.backends.backend_pdf import PdfPages
+
+    with PdfPages(str(pdf_path)) as pp:
+        for fig in generate_case_manifest_pages(test_cases, rows_per_page=rows_per_page):
+            pp.savefig(fig)
+            plt.close(fig)
+    return str(pdf_path)
+
+
 def write_cover_pages_to_pdf(
     pdf_path: str | None = None,
     *,
@@ -523,6 +632,8 @@ __all__ = [
     "category_group",
     "generate_overview_page",
     "generate_section_page",
+    "generate_case_manifest_pages",
+    "write_case_manifest_pages_to_pdf",
     "write_cover_pages_to_pdf",
     "write_section_page_to_pdf",
     "GROUP_ORDER",

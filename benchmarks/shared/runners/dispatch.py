@@ -43,7 +43,7 @@ def _normalize_method_result(
 
     return MethodRunResult(
         labels=None,
-        found_clusters=int(getattr(result, "found_clusters", 0) or 0),
+        found_clusters=int(result.found_clusters),
         report_df=None,
         status="skip",
         skip_reason=str(skip_reason),
@@ -67,70 +67,60 @@ def run_clustering_result(
     """
     spec = METHOD_SPECS[method_id]
     alpha = config.SIBLING_ALPHA if significance_level is None else float(significance_level)
-    try:
-        if method_id == "kl_diffusion":
-            result = spec.runner(
-                data_df,
-                alpha,
-                k_neighbors=params.get("k_neighbors", 15),
-                diffusion_time=params.get("diffusion_time", 3),
-            )
-            return _normalize_method_result(result, data_df.index)
-        if method_id == "kl_diffusion_adaptive":
-            result = spec.runner(
-                data_df,
-                alpha,
-                k_neighbors=params.get("k_neighbors"),
-                diffusion_time=params.get("diffusion_time", 3),
-                n_components=params.get("n_components", 30),
-                metric=params.get("metric", "hamming"),
-                bandwidth_type=params.get("bandwidth_type", "-1/(d+2)"),
-                epsilon=params.get("epsilon", "median"),
-            )
-            return _normalize_method_result(result, data_df.index)
-
-        if method_id in {"kl", "kl_complete", "kl_single"}:
-            metric = params.get("tree_distance_metric", config.TREE_DISTANCE_METRIC)
-            if distance_condensed is not None:
-                # Use precomputed distance (e.g. SBM modularity distance).
-                kl_distance_condensed = np.asarray(distance_condensed, dtype=float)
-            else:
-                kl_distance_condensed = pdist(data_df.values, metric=metric)
-            result = spec.runner(
-                data_df,
-                kl_distance_condensed,
-                alpha,
-                tree_linkage_method=params.get("tree_linkage_method", config.TREE_LINKAGE_METHOD),
-            )
-            return _normalize_method_result(result, data_df.index)
-
-        if method_id in {"kmeans", "spectral"}:
-            result = spec.runner(data_df.values, params, seed)
-            return _normalize_method_result(result, data_df.index)
-
-        if distance_matrix is None:
-            if distance_condensed is None:
-                dm_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
-            else:
-                dm_condensed = np.asarray(distance_condensed, dtype=float)
-            dm_square = squareform(dm_condensed)
-        else:
-            dm_square = np.asarray(distance_matrix, dtype=float)
-
-        if method_id in {"leiden", "louvain", "optics"}:
-            result = spec.runner(dm_square, params, seed)
-        else:
-            result = spec.runner(dm_square, params)
-        return _normalize_method_result(result, data_df.index)
-    except Exception as exc:
-        return MethodRunResult(
-            labels=None,
-            found_clusters=0,
-            report_df=None,
-            status="skip",
-            skip_reason=f"{method_id} runner failed: {type(exc).__name__}: {exc}",
-            extra={},
+    if method_id == "kl_diffusion":
+        result = spec.runner(
+            data_df,
+            alpha,
+            k_neighbors=int(params["k_neighbors"]),
+            diffusion_time=int(params["diffusion_time"]),
         )
+        return _normalize_method_result(result, data_df.index)
+    if method_id == "kl_diffusion_adaptive":
+        result = spec.runner(
+            data_df,
+            alpha,
+            k_neighbors=int(params["k_neighbors"]),
+            diffusion_time=int(params["diffusion_time"]),
+            n_components=int(params["n_components"]),
+            metric=str(params["metric"]),
+            bandwidth_type=params["bandwidth_type"],
+            epsilon=params["epsilon"],
+        )
+        return _normalize_method_result(result, data_df.index)
+
+    if method_id in {"kl", "kl_complete", "kl_single"}:
+        metric = str(params["tree_distance_metric"])
+        if distance_condensed is not None:
+            # Use precomputed distance (e.g. SBM modularity distance).
+            kl_distance_condensed = np.asarray(distance_condensed, dtype=float)
+        else:
+            kl_distance_condensed = pdist(data_df.values, metric=metric)
+        result = spec.runner(
+            data_df,
+            kl_distance_condensed,
+            alpha,
+            tree_linkage_method=str(params["tree_linkage_method"]),
+        )
+        return _normalize_method_result(result, data_df.index)
+
+    if method_id in {"kmeans", "spectral"}:
+        result = spec.runner(data_df.values, params, seed)
+        return _normalize_method_result(result, data_df.index)
+
+    if distance_matrix is None:
+        if distance_condensed is None:
+            dm_condensed = pdist(data_df.values, metric=config.TREE_DISTANCE_METRIC)
+        else:
+            dm_condensed = np.asarray(distance_condensed, dtype=float)
+        dm_square = squareform(dm_condensed)
+    else:
+        dm_square = np.asarray(distance_matrix, dtype=float)
+
+    if method_id in {"leiden", "louvain", "optics"}:
+        result = spec.runner(dm_square, params, seed)
+    else:
+        result = spec.runner(dm_square, params)
+    return _normalize_method_result(result, data_df.index)
 
 
 __all__ = ["run_clustering_result"]

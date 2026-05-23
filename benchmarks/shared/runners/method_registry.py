@@ -8,34 +8,19 @@ from __future__ import annotations
 
 import importlib
 
-from benchmarks.shared.types import MethodRunResult, MethodSpec
+from benchmarks.shared.types import MethodSpec
 
 
-def _safe_import_runner(module: str, attr: str):
-    try:
-        mod = importlib.import_module(module)
-        return getattr(mod, attr)
-    except Exception as exc:  # pragma: no cover - optional dependencies
-        # Capture `exc` in a default argument so linters and static analyzers
-        # do not mark it as undefined when the nested function is inspected.
-        def _skip_runner(*args, _exc=exc, **kwargs):
-            return MethodRunResult(
-                labels=None,
-                found_clusters=0,
-                report_df=None,
-                status="skip",
-                skip_reason=f"Missing runner {module}.{attr}: {_exc}",
-                extra={},
-            )
-
-        return _skip_runner
+def _import_runner(module: str, attr: str):
+    mod = importlib.import_module(module)
+    return mod.__dict__[attr]
 
 
 # Note: import names are updated to point to the new benchmarks.shared.runners package.
 METHOD_SPECS: dict[str, MethodSpec] = {
     "kl": MethodSpec(
         name="KL Divergence",
-        runner=_safe_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
         param_grid=[
             # Default: Hamming + Average (UPGMA)
             {
@@ -46,7 +31,7 @@ METHOD_SPECS: dict[str, MethodSpec] = {
     ),
     "kl_complete": MethodSpec(
         name="KL (Complete)",
-        runner=_safe_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -56,7 +41,7 @@ METHOD_SPECS: dict[str, MethodSpec] = {
     ),
     "kl_single": MethodSpec(
         name="KL (Single)",
-        runner=_safe_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -66,7 +51,7 @@ METHOD_SPECS: dict[str, MethodSpec] = {
     ),
     "kl_diffusion": MethodSpec(
         name="KL (Diffusion)",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.kl_diffusion_runner",
             "_run_kl_diffusion_method",
         ),
@@ -74,13 +59,13 @@ METHOD_SPECS: dict[str, MethodSpec] = {
     ),
     "kl_diffusion_adaptive": MethodSpec(
         name="KL (Adaptive Diffusion)",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.kl_diffusion_runner",
             "_run_kl_diffusion_adaptive_method",
         ),
         param_grid=[
             {
-                "k_neighbors": None,
+                "k_neighbors": 10,
                 "diffusion_time": 3,
                 "n_components": 30,
                 "metric": "hamming",
@@ -91,23 +76,23 @@ METHOD_SPECS: dict[str, MethodSpec] = {
     ),
     "leiden": MethodSpec(
         name="Leiden",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.leiden_runner",
             "_run_leiden_method",
         ),
-        param_grid=[{"n_neighbors": None, "resolution": 1.0}],
+        param_grid=[{"n_neighbors": 10, "resolution": 1.0}],
     ),
     "louvain": MethodSpec(
         name="Louvain",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.louvain_runner",
             "_run_louvain_method",
         ),
-        param_grid=[{"n_neighbors": None, "resolution": 1.0}],
+        param_grid=[{"n_neighbors": 10, "resolution": 1.0}],
     ),
     "kmeans": MethodSpec(
         name="K-Means",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.kmeans_runner",
             "_run_kmeans_method",
         ),
@@ -116,7 +101,7 @@ METHOD_SPECS: dict[str, MethodSpec] = {
     ),
     "spectral": MethodSpec(
         name="Spectral",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.spectral_runner",
             "_run_spectral_method",
         ),
@@ -126,21 +111,21 @@ METHOD_SPECS: dict[str, MethodSpec] = {
                 "n_clusters": "true",
                 "affinity": "nearest_neighbors",
                 "assign_labels": "cluster_qr",
-                "n_neighbors": None,
+                "n_neighbors": 10,
             }
         ],
     ),
     "dbscan": MethodSpec(
         name="DBSCAN",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.dbscan_runner",
             "_run_dbscan_method",
         ),
-        param_grid=[{"min_samples": 5, "eps": None}],
+        param_grid=[{"min_samples": 5, "eps": "median_k_distance"}],
     ),
     "optics": MethodSpec(
         name="OPTICS",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.optics_runner",
             "_run_optics_method",
         ),
@@ -148,10 +133,10 @@ METHOD_SPECS: dict[str, MethodSpec] = {
     ),
     "hdbscan": MethodSpec(
         name="HDBSCAN",
-        runner=_safe_import_runner(
+        runner=_import_runner(
             "benchmarks.shared.runners.hdbscan_runner",
             "_run_hdbscan_method",
         ),
-        param_grid=[{"min_cluster_size": 5, "min_samples": None}],
+        param_grid=[{"min_cluster_size": 5, "min_samples": 5, "cluster_selection_epsilon": 0.0}],
     ),
 }

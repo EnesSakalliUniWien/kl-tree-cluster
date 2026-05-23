@@ -26,6 +26,7 @@ SMALL_TEST_CASES = [
         "n_clusters": 3,
         "cluster_std": 0.4,
         "seed": 0,
+        "category": "small_smoke",
     },
     {
         "name": "moderate",
@@ -35,6 +36,7 @@ SMALL_TEST_CASES = [
         "n_clusters": 3,
         "cluster_std": 1.0,
         "seed": 1,
+        "category": "small_smoke",
     },
     {
         "name": "noisy",
@@ -44,6 +46,7 @@ SMALL_TEST_CASES = [
         "n_clusters": 3,
         "cluster_std": 1.6,
         "seed": 2,
+        "category": "small_smoke",
     },
 ]
 
@@ -67,13 +70,12 @@ def _normalize_case_list(cases: list[dict], category: str) -> list[dict]:
 
     for idx, case in enumerate(cases, start=1):
         item = case.copy()
-        item.setdefault("category", category)
+        item["category"] = category
+        base_name = item["name"]
 
-        base_name = item.get("name")
-        if not base_name:
-            base_name = f"{category}_{idx}"
-
-        seen_names[base_name] = seen_names.get(base_name, 0) + 1
+        if base_name not in seen_names:
+            seen_names[base_name] = 0
+        seen_names[base_name] += 1
         if seen_names[base_name] > 1:
             item["name"] = f"{base_name}__{seen_names[base_name]}"
         else:
@@ -92,7 +94,9 @@ def get_default_test_cases() -> list[dict]:
     for category, group in ALL_CASE_CATEGORIES.items():
         for case in _normalize_case_list(group, category):
             name = str(case["name"])
-            seen_global[name] = seen_global.get(name, 0) + 1
+            if name not in seen_global:
+                seen_global[name] = 0
+            seen_global[name] += 1
             if seen_global[name] > 1:
                 case["name"] = f"{name}__{seen_global[name]}"
             flattened.append(case)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import gc
 import multiprocessing as mp
 import os
 
@@ -24,6 +23,7 @@ def _run_case_worker(
     case_plot_manifold: bool,
     enable_plots: bool,
     pdf_path: str | None,
+    include_validation_page: bool,
 ) -> None:
     """Execute one case in a fresh process and return rows via a queue."""
     # Reduce native runtime contention in spawned workers. This materially
@@ -45,6 +45,7 @@ def _run_case_worker(
             concat_output=pdf_path,
             matrix_audit=False,
             include_cover_pages=False,
+            include_validation_page=include_validation_page,
         )
         queue.put({"ok": True, "rows": df_res.to_dict(orient="records")})
     except Exception as exc:
@@ -60,6 +61,7 @@ def run_case_isolated(
     enable_plots: bool,
     pdf_path: str | None,
     timeout_sec: int,
+    include_validation_page: bool,
 ) -> pd.DataFrame:
     """Run a single benchmark case in an isolated subprocess."""
     ctx = mp.get_context("spawn")
@@ -74,6 +76,7 @@ def run_case_isolated(
             case_plot_manifold,
             enable_plots,
             pdf_path,
+            include_validation_page,
         ),
     )
     proc.start()
@@ -93,11 +96,11 @@ def run_case_isolated(
     if proc.exitcode != 0 and payload is None:
         raise RuntimeError(f"Case subprocess exited with code {proc.exitcode}.")
     if payload is None:
-        return pd.DataFrame()
-    if not payload.get("ok", False):
-        raise RuntimeError(payload.get("error", "Unknown case subprocess failure."))
+        raise RuntimeError("Case subprocess completed without returning a result payload.")
+    if not payload["ok"]:
+        raise RuntimeError(payload["error"])
 
-    rows = payload.get("rows", [])
+    rows = payload["rows"]
     return pd.DataFrame(rows)
 
 
@@ -112,53 +115,21 @@ def run_case_with_optional_isolation(
     pdf_path: str | None,
     isolate_umap_cases: bool,
     timeout_sec: int,
-    retry_count: int,
+    include_validation_page: bool = True,
 ) -> pd.DataFrame:
-    """Run a benchmark case with optional subprocess isolation and retry fallback."""
+    """Run a benchmark case, optionally in a subprocess."""
     if case_plot_umap and isolate_umap_cases:
-        df_res = None
-        last_err: Exception | None = None
-        for attempt in range(1, retry_count + 2):
-            try:
-                df_res = run_case_isolated(
-                    case=case,
-                    methods_to_test=methods_to_test,
-                    case_plot_umap=case_plot_umap,
-                    case_plot_manifold=case_plot_manifold,
-                    enable_plots=enable_plots,
-                    pdf_path=pdf_path,
-                    timeout_sec=timeout_sec,
-                )
-                break
-            except RuntimeError as exc:
-                last_err = exc
-                msg = str(exc)
-                if "exited with code -11" in msg:
-                    if attempt <= retry_count:
-                        print(
-                            f"  WARN: isolated subprocess SIGSEGV on '{case_id}' "
-                            f"(attempt {attempt}/{retry_count + 1}); retrying...",
-                            flush=True,
-                        )
-                        gc.collect()
-                        continue
-                    print(
-                        f"  WARN: isolated subprocess kept SIGSEGV-ing on '{case_id}' "
-                        f"after {retry_count + 1} attempts; falling back "
-                        "to in-process execution for this case.",
-                        flush=True,
-                    )
-                    break
-                raise
-
-        if df_res is None and isinstance(last_err, RuntimeError):
-            if "exited with code -11" not in str(last_err):
-                raise last_err
-    else:
-        df_res = None
-
-    if df_res is not None:
-        return df_res
+        del case_id
+        return run_case_isolated(
+            case=case,
+            methods_to_test=methods_to_test,
+            case_plot_umap=case_plot_umap,
+            case_plot_manifold=case_plot_manifold,
+            enable_plots=enable_plots,
+            pdf_path=pdf_path,
+            timeout_sec=timeout_sec,
+            include_validation_page=include_validation_page,
+        )
 
     df_res, _ = _get_benchmark_fn()(
         test_cases=[case],
@@ -170,6 +141,7 @@ def run_case_with_optional_isolation(
         concat_output=pdf_path,
         matrix_audit=False,  # Disable heavy TensorBoard exports to prevent memory crashes
         include_cover_pages=False,
+        include_validation_page=include_validation_page,
     )
     return df_res
 

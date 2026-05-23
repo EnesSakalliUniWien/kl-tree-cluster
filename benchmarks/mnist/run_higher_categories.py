@@ -202,7 +202,12 @@ def run_tree_decomposition_on_preprocessed_data(
     if tree_construction == "diffusion":
         if verbose:
             print("  Building hierarchy with diffusion HAC")
-        diff_dist = _build_diffusion_distance(annotations_df)
+        diff_dist = _build_diffusion_distance(
+            annotations_df,
+            k_neighbors=15,
+            diffusion_time=3,
+            n_components=30,
+        )
         linkage_matrix = linkage(diff_dist, method="average")
     else:
         if verbose:
@@ -225,7 +230,7 @@ def run_tree_decomposition_on_preprocessed_data(
     for cluster_identifier, cluster_metadata in cluster_assignments.items():
         for leaf_name in cluster_metadata["leaves"]:
             label_map[leaf_name] = int(cluster_identifier)
-    return np.array([label_map.get(sample_name, -1) for sample_name in sample_names], dtype=int)
+    return np.array([label_map[sample_name] for sample_name in sample_names], dtype=int)
 
 
 def _run_diffusion_kl_clustering(
@@ -248,7 +253,12 @@ def _run_diffusion_kl_clustering(
 
     if verbose:
         print("  Building hierarchy with diffusion HAC")
-    diff_dist = _build_diffusion_distance(data)
+    diff_dist = _build_diffusion_distance(
+        data,
+        k_neighbors=15,
+        diffusion_time=3,
+        n_components=30,
+    )
     Z = linkage(diff_dist, method="average")
 
     tree = PosetTree.from_linkage(Z, leaf_names=sample_names)

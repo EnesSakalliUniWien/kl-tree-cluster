@@ -20,9 +20,9 @@ def _run_dbscan_method(
         labels = np.zeros(n_samples, dtype=int)
         return _ok_result_from_labels(labels, range(n_samples))
 
-    min_samples = int(params.get("min_samples", 5))
-    eps = params.get("eps")
-    if eps is None:
+    min_samples = int(params["min_samples"])
+    eps = params["eps"]
+    if eps == "median_k_distance":
         eps = _estimate_dbscan_eps(distance_matrix, min_samples)
     model = DBSCAN(metric="precomputed", eps=float(eps), min_samples=min_samples)
     labels = _normalize_labels(model.fit_predict(distance_matrix))
