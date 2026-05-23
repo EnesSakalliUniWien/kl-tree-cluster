@@ -51,11 +51,11 @@ def run_child_parent_tests_across_tree(
         node_pca_eigenvalues: np.ndarray | None = None
 
         if spectral_dims is not None:
-            node_spectral_dimension = spectral_dims.get(parent_ids[edge_index])
+            node_spectral_dimension = spectral_dims[parent_ids[edge_index]]
         if pca_projections is not None:
-            node_pca_projection = pca_projections.get(parent_ids[edge_index])
+            node_pca_projection = pca_projections[parent_ids[edge_index]]
         if pca_eigenvalues is not None:
-            node_pca_eigenvalues = pca_eigenvalues.get(parent_ids[edge_index])
+            node_pca_eigenvalues = pca_eigenvalues[parent_ids[edge_index]]
 
         (
             edge_test_statistic,

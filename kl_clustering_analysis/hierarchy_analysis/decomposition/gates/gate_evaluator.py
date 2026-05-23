@@ -67,13 +67,38 @@ class GateEvaluator:
         self._sibling_skipped = sibling_skipped
         self._children_map = children_map
         self._passthrough = passthrough
-        self._has_descendant_split = (
-            self._compute_has_descendant_split() if self._passthrough else {}
-        )
+        self._node_ids = tuple(self.tree.nodes)
+        self._validate_contract()
+        if self._passthrough:
+            self._split_prerequisites_by_node = self._compute_split_prerequisites_by_node()
+            self._can_split_by_node = self._compute_can_split_by_node(
+                self._split_prerequisites_by_node
+            )
+            self._has_descendant_split = self._compute_has_descendant_split(
+                self._can_split_by_node
+            )
+        else:
+            self._split_prerequisites_by_node = {}
+            self._can_split_by_node = {}
+            self._has_descendant_split = {}
 
     # ------------------------------------------------------------------
     # Shared gate logic
     # ------------------------------------------------------------------
+
+    def _validate_contract(self) -> None:
+        """Validate injected maps once at the component boundary."""
+        node_ids = self._node_ids
+        for name, mapping in (
+            ("children_map", self._children_map),
+            ("local_significant", self._local_significant),
+            ("sibling_different", self._sibling_different),
+            ("sibling_skipped", self._sibling_skipped),
+        ):
+            missing = [node for node in node_ids if node not in mapping]
+            if missing:
+                preview = ", ".join(map(repr, missing[:5]))
+                raise ValueError(f"Missing {name} values for nodes: {preview}.")
 
     def _passes_split_prerequisites(self, parent: object) -> bool:
         """Run Gates 1 (binary structure) and 2 (child-parent divergence).
@@ -90,16 +115,9 @@ class GateEvaluator:
 
         left_child, right_child = children
 
-        left_diverges = self._local_significant.get(left_child)
-        right_diverges = self._local_significant.get(right_child)
-
-        if left_diverges is None or right_diverges is None:
-            raise ValueError(
-                "Missing child-parent divergence annotations for "
-                f"{left_child!r} or {right_child!r}; annotate before decomposing."
-            )
-
-        return bool(left_diverges or right_diverges)
+        return bool(
+            self._local_significant[left_child] or self._local_significant[right_child]
+        )
 
     def _sibling_gate_is_open(self, parent: object) -> bool:
         """Run Gate 3 (sibling divergence).
@@ -107,30 +125,41 @@ class GateEvaluator:
         Returns ``True`` when siblings are significantly different and the
         test was not skipped.
         """
-        is_different = self._sibling_different.get(parent)
-
-        if is_different is None:
-            raise ValueError(
-                "Sibling divergence annotations missing for node "
-                f"{parent!r}; run annotate_sibling_divergence first."
-            )
-
-        if self._sibling_skipped.get(parent, False):
+        if self._sibling_skipped[parent]:
             return False
 
-        return bool(is_different)
+        return bool(self._sibling_different[parent])
 
     def _can_split(self, parent: object) -> bool:
         """Return whether all split gates are open for *parent*."""
         return self._passes_split_prerequisites(parent) and self._sibling_gate_is_open(parent)
 
-    def _compute_has_descendant_split(self) -> dict[object, bool]:
+    def _compute_split_prerequisites_by_node(self) -> dict[object, bool]:
+        """Return cached Gates 1+2 status for every node."""
+        return {node: self._passes_split_prerequisites(node) for node in self._node_ids}
+
+    def _compute_can_split_by_node(
+        self,
+        split_prerequisites_by_node: dict[object, bool],
+    ) -> dict[object, bool]:
+        """Return cached full split-gate status for every node."""
+        return {
+            node: (
+                split_prerequisites_by_node[node] and self._sibling_gate_is_open(node)
+            )
+            for node in self._node_ids
+        }
+
+    def _compute_has_descendant_split(
+        self,
+        can_split_by_node: dict[object, bool],
+    ) -> dict[object, bool]:
         """Return whether each node has a descendant that can split under all gates."""
         has_split: dict[object, bool] = {}
         for node in bottom_up_nodes(self.tree):
             has_split[node] = any(
-                self._can_split(child) or has_split.get(child, False)
-                for child in self._children_map.get(node, [])
+                can_split_by_node[child] or has_split[child]
+                for child in self._children_map[node]
             )
         return has_split
 
@@ -141,16 +170,19 @@ class GateEvaluator:
         children. ``BOUNDARY`` means the node's descendant leaves form a final
         cluster.
         """
+        if self._passthrough:
+            if not self._split_prerequisites_by_node[parent]:
+                return TraversalDecision.BOUNDARY
+            if self._can_split_by_node[parent]:
+                return TraversalDecision.SPLIT
+            if self._has_descendant_split[parent]:
+                return TraversalDecision.PASS_THROUGH
+            return TraversalDecision.BOUNDARY
+
         if not self._passes_split_prerequisites(parent):
             return TraversalDecision.BOUNDARY
 
         if self._sibling_gate_is_open(parent):
             return TraversalDecision.SPLIT
-
-        if not self._passthrough:
-            return TraversalDecision.BOUNDARY
-
-        if self._has_descendant_split.get(parent, False):
-            return TraversalDecision.PASS_THROUGH
 
         return TraversalDecision.BOUNDARY

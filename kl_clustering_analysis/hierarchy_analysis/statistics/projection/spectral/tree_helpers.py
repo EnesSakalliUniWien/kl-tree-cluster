@@ -16,9 +16,6 @@ from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes
 
 def is_leaf(tree: nx.DiGraph, node_id: str) -> bool:
     """Check whether *node_id* is a leaf in *tree*."""
-    is_leaf_attr = tree.nodes[node_id].get("is_leaf")
-    if is_leaf_attr is not None:
-        return bool(is_leaf_attr)
     return tree.out_degree(node_id) == 0
 
 
@@ -50,17 +47,21 @@ def precompute_descendants(
 
     for node_id in bottom_up_nodes(tree):
         if is_leaf(tree, node_id):
-            lbl = tree.nodes[node_id].get("label", node_id)
-            desc_indices[node_id] = [label_to_idx[lbl]] if lbl in label_to_idx else []
+            lbl = tree.nodes[node_id]["label"]
+            if lbl not in label_to_idx:
+                raise ValueError(
+                    f"Leaf label {lbl!r} for node {node_id!r} is missing from leaf_data."
+                )
+            desc_indices[node_id] = [label_to_idx[lbl]]
             desc_internal[node_id] = []
         else:
             indices: list[int] = []
             internals: list[str] = []
             for child in tree.successors(node_id):
-                indices.extend(desc_indices.get(child, []))
+                indices.extend(desc_indices[child])
                 if not is_leaf(tree, child):
                     internals.append(child)
-                internals.extend(desc_internal.get(child, []))
+                internals.extend(desc_internal[child])
             desc_indices[node_id] = indices
             desc_internal[node_id] = internals
 
@@ -113,11 +114,13 @@ def build_subtree_data(
     if include_internal:
         internal_rows = []
         for inode in desc_internal[node_id]:
-            dist = tree.nodes[inode].get("distribution")
-            if dist is not None:
-                dist_arr = np.asarray(dist, dtype=np.float64)
-                if dist_arr.shape == (d,):
-                    internal_rows.append(dist_arr)
+            dist_arr = np.asarray(tree.nodes[inode]["distribution"], dtype=np.float64)
+            if dist_arr.shape != (d,):
+                raise ValueError(
+                    f"Internal distribution for node {inode!r} has shape {dist_arr.shape}; "
+                    f"expected {(d,)}."
+                )
+            internal_rows.append(dist_arr)
         if internal_rows:
             return np.vstack([leaf_rows, np.array(internal_rows)])
     return leaf_rows

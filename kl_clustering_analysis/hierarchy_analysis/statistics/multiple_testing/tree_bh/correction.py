@@ -18,6 +18,32 @@ from .helpers import (
 from .models import ChildParentEdgeTreeBHResult
 
 
+def _validate_tree_bh_inputs(
+    p_values: np.ndarray,
+    child_ids: list[str],
+    alpha: float,
+) -> tuple[np.ndarray, float]:
+    """Validate Tree-BH boundary inputs before hierarchical traversal."""
+    p_values_array = np.asarray(p_values, dtype=float)
+    alpha_value = float(alpha)
+
+    if p_values_array.ndim != 1:
+        raise ValueError(f"Tree-BH p-values must be a 1-D array; got shape {p_values_array.shape}.")
+    if p_values_array.shape[0] != len(child_ids):
+        raise ValueError(
+            "Tree-BH p-values must align one-to-one with child_ids: "
+            f"{p_values_array.shape[0]} p-value(s), {len(child_ids)} child id(s)."
+        )
+    if not np.isfinite(alpha_value) or not (0.0 < alpha_value <= 1.0):
+        raise ValueError(f"Tree-BH alpha must be finite and in (0, 1]; got {alpha!r}.")
+    if np.any(~np.isfinite(p_values_array)):
+        raise ValueError("Tree-BH p-values must be finite before correction.")
+    if np.any((p_values_array < 0.0) | (p_values_array > 1.0)):
+        raise ValueError("Tree-BH p-values must lie in [0, 1].")
+
+    return p_values_array, alpha_value
+
+
 def apply_tree_bh_correction(
     tree: nx.DiGraph,
     p_values: np.ndarray,
@@ -31,6 +57,7 @@ def apply_tree_bh_correction(
     group, it applies BH at a sibling-group-specific level obtained by scaling
     the base alpha by ancestor rejection proportions.
     """
+    p_values, alpha = _validate_tree_bh_inputs(p_values, child_ids, alpha)
     hypothesis_count = len(p_values)
     (
         child_parent_edge_null_rejected_by_tree_bh,

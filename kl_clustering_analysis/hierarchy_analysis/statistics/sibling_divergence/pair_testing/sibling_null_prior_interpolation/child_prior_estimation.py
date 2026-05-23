@@ -1,4 +1,4 @@
-"""Per-child sibling null prior estimation, including fallback logic."""
+"""Per-child sibling null prior estimation."""
 
 from __future__ import annotations
 
@@ -19,34 +19,6 @@ from .kernel_interpolation import (
 )
 from .types.child_sibling_null_prior_estimate import ChildSiblingNullPriorEstimate
 from .types.neighborhood_reference_set import NeighborhoodReferenceSet
-
-
-def _fallback_child_sibling_null_prior(
-    child_id: str,
-    record: SiblingPairRecord,
-    annotations_dataframe: pd.DataFrame,
-) -> ChildSiblingNullPriorEstimate:
-    """Use the BH-corrected edge p-value when no stopping-edge context is available."""
-    if child_id in annotations_dataframe.index:
-        bh_corrected_edge_pvalue = float(
-            np.asarray(
-                annotations_dataframe.at[child_id, "Child_Parent_Divergence_P_Value_BH"],
-                dtype=float,
-            ).item()
-        )
-    else:
-        bh_corrected_edge_pvalue = float("nan")
-    if np.isfinite(bh_corrected_edge_pvalue):
-        child_sibling_null_prior = bh_corrected_edge_pvalue
-    else:
-        child_sibling_null_prior = float(record.sibling_null_prior_from_edge_pvalue)
-
-    return ChildSiblingNullPriorEstimate(
-        sibling_null_prior=child_sibling_null_prior,
-        neighborhood_estimate=child_sibling_null_prior,
-        ancestor_support=child_sibling_null_prior,
-        neighborhood_interpolation_weight=0.0,
-    )
 
 
 def _compute_child_sibling_null_prior(
@@ -74,7 +46,7 @@ def _compute_child_sibling_null_prior(
             reference_sets,
             kernel_bandwidths,
             tree_distance,
-            fallback_p_value=ancestor_p_value,
+            baseline_p_value=ancestor_p_value,
         )
     )
 
@@ -124,25 +96,25 @@ def _estimate_sibling_pair_null_priors(
     for child in (record.left, record.right):
         child_id = str(child)
         stopping_info = stopping_edge_info_by_child.get(child_id)
-        estimate = (
-            _fallback_child_sibling_null_prior(child_id, record, annotations_dataframe)
-            if stopping_info is None
-            else _compute_child_sibling_null_prior(
-                child_id=child_id,
-                annotations_dataframe=annotations_dataframe,
-                stopping_info=stopping_info,
-                edge_metadata=edge_metadata,
-                reference_sets=reference_sets,
-                kernel_bandwidths=kernel_bandwidths,
-                tree_distance=tree_distance,
+        if stopping_info is None:
+            raise ValueError(
+                "Blocked sibling record requires stopping-edge context for both children; "
+                f"missing child {child_id!r} in parent {record.parent!r}."
             )
+        estimate = _compute_child_sibling_null_prior(
+            child_id=child_id,
+            annotations_dataframe=annotations_dataframe,
+            stopping_info=stopping_info,
+            edge_metadata=edge_metadata,
+            reference_sets=reference_sets,
+            kernel_bandwidths=kernel_bandwidths,
+            tree_distance=tree_distance,
         )
         estimates.append(estimate)
     return estimates[0], estimates[1]
 
 
 __all__ = [
-    "_fallback_child_sibling_null_prior",
     "_compute_child_sibling_null_prior",
     "_estimate_sibling_pair_null_priors",
 ]

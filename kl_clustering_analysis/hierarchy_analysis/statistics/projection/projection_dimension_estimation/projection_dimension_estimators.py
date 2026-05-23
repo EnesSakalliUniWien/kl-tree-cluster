@@ -103,10 +103,10 @@ def marchenko_pastur_signal_count(
 
     The upper bound is computed as::
 
-        λ_max = σ₀² (1 + √c)²
+        λ_max = (1 + √c)²
 
-    where σ₀² is the median positive eigenvalue (noise-floor estimate) and
-    c = n_active_features / n_descendant_rows.
+    because the input spectrum comes from a correlation matrix whose null
+    variance scale is exactly 1.  Here c = n_active_features / n_descendant_rows.
 
     Args:
         eigenvalues (np.ndarray): Eigenvalues of the node-local correlation
@@ -123,43 +123,34 @@ def marchenko_pastur_signal_count(
 
     Returns:
         int: Count of eigenvalues exceeding λ_max, floored at 1 to guarantee
-            a valid projection dimension. Returns 1 for degenerate inputs or
-            when the entire spectrum falls within the noise floor.
+            a valid projection dimension when the entire spectrum remains in
+            the null bulk.
 
     References:
         Marchenko & Pastur (1967). Distribution of eigenvalues for some sets
         of random matrices. Mathematical USSR-Sbornik, 1(4), 457-483.
     """
     if n_descendant_rows <= 0 or n_active_features <= 0:
-        return 1
+        raise ValueError(
+            "Marchenko-Pastur signal count requires positive row and feature counts."
+        )
 
     # Convert to float64 for numerical stability in eigenvalue comparison
     eigenvalues_f64 = np.asarray(eigenvalues, dtype=np.float64)
-
-    # Retain only physically meaningful (positive) eigenvalues
-    positive_eigenvalues = eigenvalues_f64[eigenvalues_f64 > 0]
-
-    # Estimate noise-floor variance from the median of positive eigenvalues.
-    # Under the null (pure noise), the median is a robust proxy for the
-    # Marchenko-Pastur bulk-spectrum center.
-    noise_floor_variance = (
-        float(np.median(positive_eigenvalues)) if positive_eigenvalues.size > 0 else 0.0
-    )
-    if noise_floor_variance <= 0:
-        return 1
 
     # Aspect ratio: active features vs descendant rows for this node.
     # Grows as the node gets smaller (fewer descendant rows), raising λ_max.
     node_aspect_ratio = float(n_active_features) / float(n_descendant_rows)
 
-    # Marchenko-Pastur upper bound: highest eigenvalue expected under null
+    # Marchenko-Pastur upper bound for a correlation matrix: highest eigenvalue expected under null.
     # Eigenvalues above this threshold indicate true signal.
-    mp_upper_bound = noise_floor_variance * (1.0 + np.sqrt(node_aspect_ratio)) ** 2
+    mp_upper_bound = (1.0 + np.sqrt(node_aspect_ratio)) ** 2
 
     # Count eigenvalues exceeding the MP threshold
     n_signal_eigenvalues = int(np.sum(eigenvalues_f64 > mp_upper_bound))
 
-    # Ensure at least 1 dimension is retained (fallback for degenerate cases)
+    # Retain one dimension for degenerate spectra so downstream tests have
+    # positive degrees of freedom.
     return max(n_signal_eigenvalues, 1)
 
 

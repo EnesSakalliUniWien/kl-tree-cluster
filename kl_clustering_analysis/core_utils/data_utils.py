@@ -59,7 +59,10 @@ def extract_node_distribution(tree: nx.DiGraph, node_id: object) -> np.ndarray:
     ValueError
         If distribution is not available for the node
     """
-    node_data = tree.nodes.get(node_id, {})
+    if node_id not in tree.nodes:
+        raise KeyError(f"Node {node_id!r} is not present in the tree.")
+
+    node_data = tree.nodes[node_id]
     distribution = node_data.get("distribution")
 
     if distribution is None:
@@ -109,9 +112,9 @@ def assign_divergence_results(
     p_values_corrected: np.ndarray,
     reject_null: np.ndarray,
     degrees_of_freedom: np.ndarray,
-    invalid_test_flags: np.ndarray | None = None,
-    tested_edge_flags: np.ndarray | None = None,
-    ancestor_blocked_edge_flags: np.ndarray | None = None,
+    invalid_test_flags: np.ndarray,
+    tested_edge_flags: np.ndarray,
+    ancestor_blocked_edge_flags: np.ndarray,
 ) -> pd.DataFrame:
     """Assign child-parent divergence test results to the annotations dataframe.
 
@@ -133,14 +136,14 @@ def assign_divergence_results(
     degrees_of_freedom
         Effective degrees of freedom for each edge
     invalid_test_flags
-        Optional boolean flags (aligned to ``child_ids``) indicating tests
-        that were invalid and routed through the conservative p-value path.
+        Boolean flags aligned to ``child_ids`` indicating tests that were
+        invalid and routed through the conservative p-value path.
     tested_edge_flags
-        Optional boolean flags aligned to ``child_ids`` indicating whether the
-        edge was actually tested by the multiple-testing procedure.
+        Boolean flags aligned to ``child_ids`` indicating whether the edge was
+        actually tested by the multiple-testing procedure.
     ancestor_blocked_edge_flags
-        Optional boolean flags aligned to ``child_ids`` indicating TreeBH
-        descendants that were not tested because an ancestor family failed.
+        Boolean flags aligned to ``child_ids`` indicating TreeBH descendants
+        that were not tested because an ancestor family failed.
 
     Returns
     -------
@@ -161,40 +164,32 @@ def assign_divergence_results(
     annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value_BH"] = p_values_corrected
     annotations_df.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null
     annotations_df.loc[child_ids, "Child_Parent_Divergence_df"] = degrees_of_freedom
-    if tested_edge_flags is None:
-        annotations_df.loc[child_ids, "Child_Parent_Divergence_Tested"] = True
-    else:
-        tested_array = np.asarray(tested_edge_flags, dtype=bool)
-        if tested_array.shape[0] != len(child_ids):
-            raise ValueError(
-                "tested_edge_flags must be aligned to child_ids. "
-                "Got "
-                f"len(tested_edge_flags)={tested_array.shape[0]}, len(child_ids)={len(child_ids)}."
-            )
-        annotations_df.loc[child_ids, "Child_Parent_Divergence_Tested"] = tested_array
+    tested_array = np.asarray(tested_edge_flags, dtype=bool)
+    if tested_array.shape[0] != len(child_ids):
+        raise ValueError(
+            "tested_edge_flags must be aligned to child_ids. "
+            "Got "
+            f"len(tested_edge_flags)={tested_array.shape[0]}, len(child_ids)={len(child_ids)}."
+        )
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_Tested"] = tested_array
 
-    if ancestor_blocked_edge_flags is not None:
-        blocked_array = np.asarray(ancestor_blocked_edge_flags, dtype=bool)
-        if blocked_array.shape[0] != len(child_ids):
-            raise ValueError(
-                "ancestor_blocked_edge_flags must be aligned to child_ids. "
-                "Got "
-                f"len(ancestor_blocked_edge_flags)={blocked_array.shape[0]}, len(child_ids)={len(child_ids)}."
-            )
-        annotations_df.loc[child_ids, "Child_Parent_Divergence_Ancestor_Blocked"] = blocked_array
+    blocked_array = np.asarray(ancestor_blocked_edge_flags, dtype=bool)
+    if blocked_array.shape[0] != len(child_ids):
+        raise ValueError(
+            "ancestor_blocked_edge_flags must be aligned to child_ids. "
+            "Got "
+            f"len(ancestor_blocked_edge_flags)={blocked_array.shape[0]}, len(child_ids)={len(child_ids)}."
+        )
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_Ancestor_Blocked"] = blocked_array
 
-    if invalid_test_flags is not None:
-        invalid_array = np.asarray(invalid_test_flags, dtype=bool)
-
-        if invalid_array.shape[0] != len(child_ids):
-
-            raise ValueError(
-                "invalid_test_flags must be aligned to child_ids. "
-                "Got "
-                f"len(invalid_test_flags)={invalid_array.shape[0]}, len(child_ids)={len(child_ids)}."
-            )
-
-        annotations_df.loc[child_ids, "Child_Parent_Divergence_Invalid"] = invalid_array
+    invalid_array = np.asarray(invalid_test_flags, dtype=bool)
+    if invalid_array.shape[0] != len(child_ids):
+        raise ValueError(
+            "invalid_test_flags must be aligned to child_ids. "
+            "Got "
+            f"len(invalid_test_flags)={invalid_array.shape[0]}, len(child_ids)={len(child_ids)}."
+        )
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_Invalid"] = invalid_array
 
     return annotations_df
 
@@ -220,6 +215,7 @@ def initialize_sibling_divergence_columns(df: pd.DataFrame) -> pd.DataFrame:
     df["Sibling_Divergence_Invalid"] = False
     df["Sibling_BH_Different"] = False  # Reject H₀: siblings are different
     df["Sibling_BH_Same"] = False  # Fail to reject: siblings are similar
+    df["Sibling_Test_Method"] = ""
     df["Sibling_Projection_Dimension_Source"] = ""
     df["Sibling_Resolved_Projection_Dimension"] = np.nan
     df["Sibling_Used_Parent_Principal_Component_Basis"] = False

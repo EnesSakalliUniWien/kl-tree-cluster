@@ -18,6 +18,7 @@ def test_plot_tree_with_significance_legend():
     """Ensure significance-aware tree plotting produces legends without error."""
     G = nx.DiGraph()
     G.add_edges_from([("root", "a"), ("root", "b")])
+    nx.set_node_attributes(G, {node: node for node in G.nodes()}, "label")
 
     cluster_assignments = {
         0: {"leaves": ["a"], "root_node": "a", "size": 1},
@@ -51,6 +52,7 @@ def test_tree_style_grouping_uses_significance_and_skips():
     """Edge and halo grouping follows sibling + child-parent test outcomes."""
     G = nx.DiGraph()
     G.add_edges_from([("root", "a"), ("root", "b"), ("a", "c"), ("a", "d")])
+    nx.set_node_attributes(G, {node: node for node in G.nodes()}, "label")
 
     leaves = {n for n in G.nodes() if G.out_degree(n) == 0}
 

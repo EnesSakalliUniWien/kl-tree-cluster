@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
+import pytest
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.conditional_deflation import (
     fit_sibling_inflation_calibrator,
     predict_sibling_adjustment,
@@ -145,7 +146,7 @@ def test_predict_sibling_adjustment_uses_global_with_zero_log_scale_spread() -> 
     assert predicted == model.global_inflation_factor
 
 
-def test_fit_sibling_inflation_calibrator_uses_global_when_no_positive_weights() -> None:
+def test_fit_sibling_inflation_calibrator_rejects_no_positive_weights() -> None:
     records = [
         _make_record(
             "p0",
@@ -167,15 +168,46 @@ def test_fit_sibling_inflation_calibrator_uses_global_when_no_positive_weights()
         n_calibration=0,
         global_inflation_factor=1.0,
         max_observed_ratio=3.0,
-        diagnostics={"fit_status": "neutral_no_positive_weights"},
     )
 
-    calibrator = fit_sibling_inflation_calibrator(records, model)
-    predicted = predict_sibling_adjustment(
-        calibrator,
-        sibling_test_calibration_scale=16.0,
+    with pytest.raises(ValueError, match="no positive finite sibling-null-prior weights"):
+        fit_sibling_inflation_calibrator(records, model)
+
+
+def test_fit_sibling_inflation_calibrator_rejects_no_positive_ratios() -> None:
+    records = [
+        _make_record(
+            "p0",
+            stat=0.0,
+            degrees_of_freedom=2.0,
+            sibling_null_prior_from_edge_pvalue=1.0,
+            sibling_test_calibration_scale=2.0,
+        )
+    ]
+    model = CalibrationModel(
+        method="weighted_mean",
+        n_calibration=0,
+        global_inflation_factor=1.0,
+        max_observed_ratio=1.0,
     )
 
-    assert calibrator.record_count == 0
-    assert calibrator.spread_status == "global_no_positive_weights"
-    assert predicted == model.global_inflation_factor
+    with pytest.raises(ValueError, match="no positive statistic/degrees-of-freedom ratios"):
+        fit_sibling_inflation_calibrator(records, model)
+
+
+def test_predict_sibling_adjustment_rejects_empty_calibrator() -> None:
+    calibrator = SiblingLocalGaussianInflationCalibrator(
+        global_adjustment=1.0,
+        log_center=0.0,
+        center=1.0,
+        spread=0.0,
+        spread_status="empty",
+        max_adjustment=1.0,
+        record_count=0,
+        sample_log_scales=np.array([], dtype=float),
+        sample_weights=np.array([], dtype=float),
+        sample_adjustments=np.array([], dtype=float),
+    )
+
+    with pytest.raises(ValueError, match="has no calibration records"):
+        predict_sibling_adjustment(calibrator, sibling_test_calibration_scale=1.0)

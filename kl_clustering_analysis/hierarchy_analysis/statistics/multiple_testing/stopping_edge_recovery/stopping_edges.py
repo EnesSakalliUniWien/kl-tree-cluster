@@ -82,9 +82,9 @@ def _walk_to_stopping_edge(
         sibling_group_outcome = tree_bh_result.sibling_group_outcomes.get(parent_id)
         if sibling_group_outcome is not None:
             sibling_group_children = sibling_group_outcome.tested_child_ids
-            try:
+            if current_child_node in sibling_group_children:
                 within_sibling_group_index = sibling_group_children.index(current_child_node)
-            except ValueError:
+            else:
                 within_sibling_group_index = -1
 
             if (

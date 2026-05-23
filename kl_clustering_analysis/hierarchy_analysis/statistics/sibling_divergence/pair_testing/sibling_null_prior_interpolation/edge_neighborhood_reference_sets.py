@@ -24,7 +24,7 @@ def _collect_reference_sets(
         edge_metadata.child_parent_edge_tested,
         edge_metadata.child_parent_edge_significant,
         edge_metadata.child_parent_edge_bh_p_values,
-        strict=False,
+        strict=True,
     ):
 
         if not child_was_tested or not np.isfinite(child_parent_edge_bh_p_value):

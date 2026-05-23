@@ -53,10 +53,7 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
     return tree, annotations_df, leaf_data
 
 
-@pytest.mark.parametrize("use_leaf_data", [False, True])
-def test_pipeline_supports_current_gate_annotation_modes(
-    use_leaf_data: bool
-) -> None:
+def test_pipeline_supports_current_gate_annotation_contract() -> None:
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
 
     bundle = run_gate_annotation_pipeline(
@@ -64,7 +61,7 @@ def test_pipeline_supports_current_gate_annotation_modes(
         annotations_df.copy(),
         alpha_local=0.01,
         sibling_alpha=0.01,
-        leaf_data=leaf_data if use_leaf_data else None,
+        leaf_data=leaf_data,
     )
     out = bundle.annotated_df
     for col in EDGE_GATE_COLUMNS:
@@ -75,3 +72,15 @@ def test_pipeline_supports_current_gate_annotation_modes(
     assert "edge" in bundle.metadata
     assert "sibling" in bundle.metadata
 
+
+def test_pipeline_requires_leaf_data_for_spectral_gate_context() -> None:
+    tree, annotations_df, _leaf_data = _build_small_tree_with_leaf_data()
+
+    with pytest.raises(ValueError, match="require leaf_data"):
+        run_gate_annotation_pipeline(
+            tree,
+            annotations_df.copy(),
+            alpha_local=0.01,
+            sibling_alpha=0.01,
+            leaf_data=None,
+        )

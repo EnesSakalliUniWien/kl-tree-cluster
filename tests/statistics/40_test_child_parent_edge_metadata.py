@@ -55,4 +55,31 @@ def test_child_parent_edge_metadata_preserves_tree_node_id_identity() -> None:
         1,
         2,
         child_parent_edge_pvalues_by_node=pvalues_by_node,
+        child_parent_edge_tested_by_node=tested_by_node,
+        child_parent_edge_ancestor_blocked_by_node=blocked_by_node,
     ) == pytest.approx(0.03)
+
+
+def test_child_parent_edge_prior_allows_missing_pvalue_only_for_untested_edge() -> None:
+    pvalues_by_node = {"L": float("nan"), "R": 0.25}
+    tested_by_node = {"L": False, "R": True}
+    blocked_by_node = {"L": True, "R": False}
+
+    assert estimate_sibling_null_prior_from_child_parent_edges(
+        "L",
+        "R",
+        child_parent_edge_pvalues_by_node=pvalues_by_node,
+        child_parent_edge_tested_by_node=tested_by_node,
+        child_parent_edge_ancestor_blocked_by_node=blocked_by_node,
+    ) == pytest.approx(0.25)
+
+    tested_by_node["L"] = True
+    blocked_by_node["L"] = False
+    with pytest.raises(ValueError, match="unless the child edge was not tested"):
+        estimate_sibling_null_prior_from_child_parent_edges(
+            "L",
+            "R",
+            child_parent_edge_pvalues_by_node=pvalues_by_node,
+            child_parent_edge_tested_by_node=tested_by_node,
+            child_parent_edge_ancestor_blocked_by_node=blocked_by_node,
+        )

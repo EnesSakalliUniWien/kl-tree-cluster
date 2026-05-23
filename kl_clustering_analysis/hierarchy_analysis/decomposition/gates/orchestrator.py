@@ -13,6 +13,9 @@ from kl_clustering_analysis import config
 from ...statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
+from ...statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 from ...statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
@@ -22,17 +25,12 @@ from ...statistics.sibling_divergence.projection.gate_inputs.parent_principal_co
 from ...statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from ..backends.random_projection.dimension import (
-    get_resolved_minimum_projection_dimension,
-    resolve_minimum_projection_dimension,
-)
 from ..core.contracts import (
     GATE_ANNOTATION_METADATA_ATTR,
     Gate2Result,
     GateAnnotationBundle,
 )
 from .column_contracts import (
-    sibling_gate_columns,
     validate_edge_gate_columns,
     validate_sibling_gate_columns,
 )
@@ -40,28 +38,14 @@ from .column_contracts import (
 
 @dataclass(frozen=True)
 class _SiblingGateInputs:
-    projection_dimensions_from_edge_comparisons: dict[str, int] | None
-    parent_principal_component_projections: dict[str, np.ndarray] | None
-    parent_principal_component_eigenvalues: dict[str, np.ndarray] | None
-
-
-def _build_column_names_metadata(
-    *,
-    edge_columns: tuple[str, ...],
-    sibling_columns: tuple[str, ...],
-) -> dict[str, list[str]]:
-    """Normalize column collections into the pipeline metadata shape."""
-    return {
-        "edge": list(edge_columns),
-        "sibling": list(sibling_columns),
-    }
+    projection_dimensions_from_edge_comparisons: dict[str, int]
+    parent_principal_component_projections: dict[str, np.ndarray]
+    parent_principal_component_eigenvalues: dict[str, np.ndarray]
 
 
 def _build_edge_metadata(
     *,
     alpha_local: float,
-    edge_columns: tuple[str, ...],
-    sibling_columns: tuple[str, ...],
 ) -> dict[str, object]:
     """Build metadata for Gate 2 output.
 
@@ -70,37 +54,17 @@ def _build_edge_metadata(
     return {
         "gate": "edge",
         "alpha": float(alpha_local),
-        "column_names": _build_column_names_metadata(
-            edge_columns=edge_columns,
-            sibling_columns=sibling_columns,
-        ),
     }
 
 
 def _build_sibling_metadata(
     *,
     sibling_alpha: float,
-    sibling_inputs: _SiblingGateInputs,
-    edge_columns: tuple[str, ...],
-    sibling_columns: tuple[str, ...],
 ) -> dict[str, object]:
     """Build metadata for Gate 3 output."""
     return {
         "gate": "sibling",
         "alpha": float(sibling_alpha),
-        "uses_projection_dimensions_from_edge_comparisons": (
-            sibling_inputs.projection_dimensions_from_edge_comparisons is not None
-        ),
-        "uses_parent_principal_component_projections": (
-            sibling_inputs.parent_principal_component_projections is not None
-        ),
-        "uses_parent_principal_component_eigenvalues": (
-            sibling_inputs.parent_principal_component_eigenvalues is not None
-        ),
-        "column_names": _build_column_names_metadata(
-            edge_columns=edge_columns,
-            sibling_columns=sibling_columns,
-        ),
     }
 
 
@@ -108,13 +72,8 @@ def build_gate_annotation_config_metadata() -> dict[str, object]:
     """Capture config values that affect gate annotation outputs."""
     return {
         "felsenstein_scaling": bool(config.FELSENSTEIN_SCALING),
-        "projection_eps": float(config.PROJECTION_EPS),
-        "projection_minimum_dimension": config.PROJECTION_MINIMUM_DIMENSION,
-        "resolved_projection_minimum_dimension": get_resolved_minimum_projection_dimension(),
-        "spectral_minimum_dimension": int(config.SPECTRAL_MINIMUM_DIMENSION),
+        "spectral_minimum_dimension": GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
         "include_internal_in_spectral": bool(config.INCLUDE_INTERNAL_IN_SPECTRAL),
-        "single_feature_subtree_mode": str(config.SINGLE_FEATURE_SUBTREE_MODE),
-        "projection_random_seed": config.PROJECTION_RANDOM_SEED,
     }
 
 
@@ -152,32 +111,30 @@ def build_gate_annotation_leaf_data_metadata(
 def _resolve_sibling_gate_inputs(
     tree,
     gate_two_result: Gate2Result,
-    *,
-    sibling_projection_dimensions_from_edge_comparisons: dict[str, int] | None,
-    parent_principal_component_projections: dict[str, np.ndarray] | None,
-    parent_principal_component_eigenvalues: dict[str, np.ndarray] | None,
 ) -> _SiblingGateInputs:
-    """Resolve optional Gate 3 inputs from explicit args or Gate 2 context."""
+    """Resolve Gate 3 inputs from Gate 2 context."""
     resolved_projection_dimensions_from_edge_comparisons = (
-        sibling_projection_dimensions_from_edge_comparisons
-    )
-    if resolved_projection_dimensions_from_edge_comparisons is None:
-        resolved_projection_dimensions_from_edge_comparisons = (
-            derive_sibling_projection_dimensions_from_child_edge_comparisons(
-                tree,
-                spectral_context=gate_two_result.spectral_context,
-            )
-        )
-
-    resolved_parent_principal_component_projections = parent_principal_component_projections
-    resolved_parent_principal_component_eigenvalues = parent_principal_component_eigenvalues
-    if resolved_parent_principal_component_projections is None:
-        (
-            resolved_parent_principal_component_projections,
-            resolved_parent_principal_component_eigenvalues,
-        ) = collect_parent_principal_component_inputs_for_sibling_tests(
-            resolved_projection_dimensions_from_edge_comparisons,
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(
+            tree,
             spectral_context=gate_two_result.spectral_context,
+        )
+    )
+    (
+        resolved_parent_principal_component_projections,
+        resolved_parent_principal_component_eigenvalues,
+    ) = collect_parent_principal_component_inputs_for_sibling_tests(
+        resolved_projection_dimensions_from_edge_comparisons,
+        spectral_context=gate_two_result.spectral_context,
+    )
+    expected_parent_keys = set(resolved_projection_dimensions_from_edge_comparisons)
+    projection_keys = set(resolved_parent_principal_component_projections)
+    eigenvalue_keys = set(resolved_parent_principal_component_eigenvalues)
+    if projection_keys != expected_parent_keys or eigenvalue_keys != expected_parent_keys:
+        raise ValueError(
+            "Gate 3 parent PCA inputs must be keyed exactly by sibling projection parents. "
+            f"expected={sorted(expected_parent_keys)!r}, "
+            f"projection_keys={sorted(projection_keys)!r}, "
+            f"eigenvalue_keys={sorted(eigenvalue_keys)!r}."
         )
 
     return _SiblingGateInputs(
@@ -200,20 +157,12 @@ def run_gate_annotation_pipeline(
     alpha_local: float = config.EDGE_ALPHA,
     sibling_alpha: float = config.SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
-    sibling_projection_dimensions_from_edge_comparisons: dict[str, int] | None = None,
-    parent_principal_component_projections: dict[str, np.ndarray] | None = None,
-    parent_principal_component_eigenvalues: dict[str, np.ndarray] | None = None,
 ) -> GateAnnotationBundle:
     """Run Gate 2 (edge) and Gate 3 (sibling) annotation pipeline.
 
     Gate 2 uses Tree-BH (Tree-structured Benjamini-Hochberg) for FDR correction.
     This is the only supported multiple-testing method.
     """
-    resolve_minimum_projection_dimension(
-        config.PROJECTION_MINIMUM_DIMENSION,
-        leaf_data=leaf_data,
-    )
-
     # Run Gate 2: child-parent edge tests
     edge_annotated_df, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
@@ -222,27 +171,18 @@ def run_gate_annotation_pipeline(
         leaf_data=leaf_data,
     )
     edge_columns = validate_edge_gate_columns(edge_annotated_df)
-    edge_sibling_columns = sibling_gate_columns(edge_annotated_df)
     edge_metadata = _build_edge_metadata(
         alpha_local=alpha_local,
-        edge_columns=edge_columns,
-        sibling_columns=edge_sibling_columns,
     )
     gate_two_result = Gate2Result(
         annotated_df=edge_annotated_df,
         spectral_context=spectral_context,
-        local_gate_columns=edge_columns,
         metadata=edge_metadata,
     )
 
     sibling_inputs = _resolve_sibling_gate_inputs(
         tree,
         gate_two_result,
-        sibling_projection_dimensions_from_edge_comparisons=(
-            sibling_projection_dimensions_from_edge_comparisons
-        ),
-        parent_principal_component_projections=parent_principal_component_projections,
-        parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
     )
 
     # Run Gate 3: sibling divergence tests
@@ -263,16 +203,13 @@ def run_gate_annotation_pipeline(
             gate_two_result.spectral_context.spectral_projection_dimensions_by_node
         ),
     )
-    output_edge_columns = validate_edge_gate_columns(
+    validate_edge_gate_columns(
         annotated_df,
         error_context="Sibling gate input/output edge columns differ from required contract",
     )
-    sibling_columns = validate_sibling_gate_columns(annotated_df)
+    validate_sibling_gate_columns(annotated_df)
     sibling_metadata = _build_sibling_metadata(
         sibling_alpha=sibling_alpha,
-        sibling_inputs=sibling_inputs,
-        edge_columns=output_edge_columns,
-        sibling_columns=sibling_columns,
     )
 
     metadata = {
@@ -286,8 +223,6 @@ def run_gate_annotation_pipeline(
 
     return GateAnnotationBundle(
         annotated_df=annotated_df,
-        local_gate_columns=output_edge_columns,
-        sibling_gate_columns=sibling_columns,
         metadata=metadata,
         gate_two_result=gate_two_result,
     )

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from functools import partial
-from typing import Dict
 
 import networkx as nx
 import numpy as np
@@ -31,20 +30,41 @@ from .fdr_annotation import (
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
 )
-from .metadata import build_sibling_divergence_audit, write_record_projection_metadata
+from .metadata import (
+    build_no_focal_sibling_divergence_audit,
+    build_sibling_divergence_audit,
+    write_record_projection_metadata,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_focal_sibling_records(records: list[SiblingPairRecord]) -> None:
+    """Validate focal sibling records before calibration fitting."""
+    for record in records:
+        if record.is_null_like:
+            continue
+        if not np.isfinite(record.stat):
+            raise ValueError(
+                "Sibling record must have a finite statistic before adjustment; "
+                f"parent={record.parent!r}."
+            )
+        if record.degrees_of_freedom < 0:
+            raise ValueError(
+                "Sibling record must have non-negative degrees of freedom before "
+                f"adjustment; parent={record.parent!r}."
+            )
 
 
 def annotate_sibling_divergence(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     *,
+    sibling_projection_dimensions_from_edge_comparisons: dict[str, int],
+    parent_principal_component_projections: dict[str, np.ndarray],
+    parent_principal_component_eigenvalues: dict[str, np.ndarray],
+    edge_projection_dimensions_by_node: dict[str, int],
     significance_level_alpha: float = config.SIBLING_ALPHA,
-    sibling_projection_dimensions_from_edge_comparisons: Dict[str, int] | None = None,
-    parent_principal_component_projections: Dict[str, np.ndarray] | None = None,
-    parent_principal_component_eigenvalues: Dict[str, np.ndarray] | None = None,
-    edge_projection_dimensions_by_node: dict[str, int] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using calibrated projected Wald."""
     annotations_df = init_sibling_annotation_df(annotations_df)
@@ -69,7 +89,29 @@ def annotate_sibling_divergence(
         return early_annotations_df
 
     write_record_projection_metadata(annotations_df, records)
+    _validate_focal_sibling_records(records)
     n_null, n_focal, n_blocked = count_null_focal_pairs(records)
+
+    skipped_parents = [record.parent for record in records if record.is_null_like]
+    if n_focal == 0:
+        annotations_df = apply_sibling_bh_results(
+            annotations_df,
+            [],
+            [],
+            significance_level_alpha,
+            logger=logger,
+            audit_label="Calibrated projected Wald",
+            skipped_parents=skipped_parents,
+        )
+        annotations_df.attrs["sibling_divergence_audit"] = (
+            build_no_focal_sibling_divergence_audit(
+                records=records,
+                n_null=n_null,
+                n_focal=n_focal,
+                n_blocked=n_blocked,
+            )
+        )
+        return annotations_df
 
     if n_blocked > 0:
         records = interpolate_sibling_null_priors(
@@ -94,8 +136,6 @@ def annotate_sibling_divergence(
             resolve_inflation_adjustment=partial(_resolve_calibration, calibrator=calibrator),
         )
     )
-
-    skipped_parents = [record.parent for record in records if record.is_null_like]
 
     annotations_df = apply_sibling_bh_results(
         annotations_df,

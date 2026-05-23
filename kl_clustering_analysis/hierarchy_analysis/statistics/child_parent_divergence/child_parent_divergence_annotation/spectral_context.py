@@ -6,30 +6,76 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from kl_clustering_analysis import config
-
 from ...projection.spectral.tree_estimator import compute_spectral_decomposition
-from ..single_feature_subtree_policy.single_feature_subtree_projection_policy import (
-    _apply_single_feature_subtree_projection_policy,
-)
+
+GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = 2
 
 
-def _compute_child_parent_spectral_context_with_audit(
+def _validate_spectral_context_outputs(
+    spectral_projection_dimensions_by_node: dict[str, int],
+    principal_component_projections_by_node: dict[str, np.ndarray],
+    principal_component_eigenvalues_by_node: dict[str, np.ndarray],
+) -> None:
+    """Validate the paired Gate 2 PCA outputs before they enter Gate 3."""
+    projection_nodes = set(principal_component_projections_by_node)
+    eigenvalue_nodes = set(principal_component_eigenvalues_by_node)
+    if projection_nodes != eigenvalue_nodes:
+        missing_eigenvalues = sorted(projection_nodes - eigenvalue_nodes)
+        missing_projections = sorted(eigenvalue_nodes - projection_nodes)
+        raise ValueError(
+            "Gate 2 spectral context requires matching PCA projection/eigenvalue node keys. "
+            f"Missing eigenvalues for {missing_eigenvalues}; "
+            f"missing projections for {missing_projections}."
+        )
+
+    dimension_nodes = set(spectral_projection_dimensions_by_node)
+    missing_dimensions = sorted(projection_nodes - dimension_nodes)
+    if missing_dimensions:
+        raise ValueError(
+            "Gate 2 spectral context has PCA outputs without spectral dimensions for "
+            f"node(s): {missing_dimensions}."
+        )
+    missing_projection_outputs = sorted(
+        node_id
+        for node_id, projection_dimension in spectral_projection_dimensions_by_node.items()
+        if int(projection_dimension) > 0 and node_id not in projection_nodes
+    )
+    if missing_projection_outputs:
+        raise ValueError(
+            "Gate 2 spectral context has positive spectral dimensions without PCA outputs "
+            f"for node(s): {missing_projection_outputs}."
+        )
+
+    for node_id in sorted(projection_nodes):
+        projection = np.asarray(principal_component_projections_by_node[node_id])
+        eigenvalues = np.asarray(principal_component_eigenvalues_by_node[node_id])
+        if projection.ndim != 2:
+            raise ValueError(
+                f"Gate 2 PCA projection for node {node_id!r} must be a 2-D matrix; "
+                f"got shape {projection.shape}."
+            )
+        if eigenvalues.ndim != 1:
+            raise ValueError(
+                f"Gate 2 PCA eigenvalues for node {node_id!r} must be a 1-D vector; "
+                f"got shape {eigenvalues.shape}."
+            )
+        if projection.shape[0] != eigenvalues.shape[0]:
+            raise ValueError(
+                f"Gate 2 PCA projection/eigenvalue row count mismatch for node {node_id!r}: "
+                f"{projection.shape[0]} projection row(s), {eigenvalues.shape[0]} eigenvalue(s)."
+            )
+        if projection.shape[0] != int(spectral_projection_dimensions_by_node[node_id]):
+            raise ValueError(
+                f"Gate 2 PCA projection row count for node {node_id!r} must match its "
+                "spectral projection dimension."
+            )
+
+
+def compute_child_parent_spectral_context(
     tree: nx.DiGraph,
     leaf_data: pd.DataFrame,
-) -> tuple[
-    dict[str, int] | None,
-    dict[str, np.ndarray] | None,
-    dict[str, np.ndarray] | None,
-    dict[str, object] | None,
-]:
-    """Prepare Marchenko-Pastur spectral context plus optional policy audit."""
-    spectral_minimum_projection_dimension = getattr(
-        config,
-        "SPECTRAL_MINIMUM_DIMENSION",
-        2,
-    )
-
+) -> tuple[dict[str, int], dict[str, np.ndarray], dict[str, np.ndarray]]:
+    """Prepare Marchenko-Pastur spectral context for Gate 2."""
     (
         node_spectral_dimensions,
         computed_node_pca_projections,
@@ -37,52 +83,26 @@ def _compute_child_parent_spectral_context_with_audit(
     ) = compute_spectral_decomposition(
         tree,
         leaf_data,
-        minimum_projection_dimension=spectral_minimum_projection_dimension,
-        compute_projections=True,
+        minimum_projection_dimension=GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     )
 
-    node_pca_projections = dict(computed_node_pca_projections or {})
-    node_pca_eigenvalues = dict(computed_node_pca_eigenvalues or {})
-    single_feature_subtree_audit: dict[str, object] | None = None
+    node_pca_projections = dict(computed_node_pca_projections)
+    node_pca_eigenvalues = dict(computed_node_pca_eigenvalues)
 
-    single_feature_subtree_mode = str(getattr(config, "SINGLE_FEATURE_SUBTREE_MODE", "off"))
-    if single_feature_subtree_mode == "block_low_information_subtrees":
-        (
-            node_spectral_dimensions,
-            node_pca_projections,
-            node_pca_eigenvalues,
-            single_feature_subtree_audit,
-        ) = _apply_single_feature_subtree_projection_policy(
-            tree,
-            leaf_data,
-            node_spectral_dimensions,
-            node_pca_projections,
-            node_pca_eigenvalues,
-        )
-
-    node_pca_projections = node_pca_projections if node_pca_projections else None
-    node_pca_eigenvalues = node_pca_eigenvalues if node_pca_eigenvalues else None
+    _validate_spectral_context_outputs(
+        node_spectral_dimensions,
+        node_pca_projections,
+        node_pca_eigenvalues,
+    )
 
     return (
         node_spectral_dimensions,
         node_pca_projections,
         node_pca_eigenvalues,
-        single_feature_subtree_audit,
     )
-
-
-def compute_child_parent_spectral_context(
-    tree: nx.DiGraph,
-    leaf_data: pd.DataFrame,
-) -> tuple[dict[str, int] | None, dict[str, np.ndarray] | None, dict[str, np.ndarray] | None]:
-    """Prepare Marchenko-Pastur spectral context for Gate 2."""
-    node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues, _ = (
-        _compute_child_parent_spectral_context_with_audit(tree, leaf_data)
-    )
-    return node_spectral_dimensions, node_pca_projections, node_pca_eigenvalues
 
 
 __all__ = [
-    "_compute_child_parent_spectral_context_with_audit",
+    "GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION",
     "compute_child_parent_spectral_context",
 ]

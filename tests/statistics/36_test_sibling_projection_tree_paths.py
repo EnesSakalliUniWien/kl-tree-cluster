@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
+from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import SpectralContext
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -122,7 +124,7 @@ def _build_mixed_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
     return tree, annotations_df, leaf_data
 
 
-def test_cherry_with_leaf_data_omits_leaf_pair_parent_from_edge_derived_sibling_projection_dimensions() -> None:
+def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> None:
     tree, annotations_df, leaf_data = _build_cherry_tree()
 
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
@@ -142,7 +144,9 @@ def test_cherry_with_leaf_data_omits_leaf_pair_parent_from_edge_derived_sibling_
             spectral_context=bundle.gate_two_result.spectral_context,
         )
     )
-    assert sibling_projection_dimensions_from_edge_comparisons is None
+    assert sibling_projection_dimensions_from_edge_comparisons == {
+        "root": spectral_projection_dimensions_by_node["root"]
+    }
 
     assert np.isfinite(out.loc["root", "Sibling_Degrees_of_Freedom"])
     assert np.isfinite(out.loc["root", "Sibling_Divergence_P_Value"])
@@ -171,18 +175,30 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
         )
     )
     assert sibling_projection_dimensions_from_edge_comparisons is not None
-    assert set(sibling_projection_dimensions_from_edge_comparisons) == {"root"}
+    assert set(sibling_projection_dimensions_from_edge_comparisons) == {"root", "I"}
     assert sibling_projection_dimensions_from_edge_comparisons["root"] > 0
-    assert "I" not in sibling_projection_dimensions_from_edge_comparisons
+    assert sibling_projection_dimensions_from_edge_comparisons["I"] == (
+        spectral_projection_dimensions_by_node["I"]
+    )
 
 
-def test_decompose_without_leaf_data_disables_spectral_metadata_and_merges() -> None:
+def test_decompose_without_leaf_data_raises_for_missing_spectral_contract() -> None:
     tree, annotations_df, _leaf_data = _build_cherry_tree()
 
-    result = tree.decompose(annotations_df=annotations_df.copy(), leaf_data=None)
+    with pytest.raises(ValueError, match="require leaf_data"):
+        tree.decompose(annotations_df=annotations_df.copy(), leaf_data=None)
 
-    assert result["num_clusters"] == 1
-    assert tree.annotations_df is not None
-    assert "_spectral_dims" not in tree.annotations_df.attrs
-    assert np.isnan(tree.annotations_df.loc["root", "Sibling_Degrees_of_Freedom"])
-    assert np.isnan(tree.annotations_df.loc["root", "Sibling_Divergence_P_Value"])
+
+def test_edge_derived_sibling_dimensions_require_all_child_spectral_dimensions() -> None:
+    tree, _annotations_df, _leaf_data = _build_cherry_tree()
+    spectral_context = SpectralContext(
+        spectral_projection_dimensions_by_node={"A": 1},
+        principal_component_projections_by_node={},
+        principal_component_eigenvalues_by_node={},
+    )
+
+    with pytest.raises(ValueError, match="missing 'B'"):
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(
+            tree,
+            spectral_context=spectral_context,
+        )

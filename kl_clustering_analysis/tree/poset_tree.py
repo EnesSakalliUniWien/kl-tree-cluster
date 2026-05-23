@@ -60,7 +60,6 @@ class PosetTree(nx.DiGraph):
         leaf_names: list[str] | None = None,
         linkage: str = "average",
         metric: str = "euclidean",
-        compute_distances: bool = True,
     ) -> "PosetTree":
         """Construct a tree from an :class:`sklearn.cluster.AgglomerativeClustering` fit.
 
@@ -73,7 +72,6 @@ class PosetTree(nx.DiGraph):
             leaf_names=leaf_names,
             linkage=linkage,
             metric=metric,
-            compute_distances=compute_distances,
         )
 
     @classmethod

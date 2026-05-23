@@ -42,29 +42,23 @@ def apply_sibling_bh_results(
     degrees_of_freedom_values = np.array([r[1] for r in results])
     p_values = np.array([r[2] for r in results])
 
-    invalid_test_flags = (
-        (~np.isfinite(test_statistics))
-        | (~np.isfinite(degrees_of_freedom_values))
-        | (~np.isfinite(p_values))
-    )
-
-    p_values_for_correction = np.where(np.isfinite(p_values), p_values, 1.0)
+    invalid_test_flags = np.zeros(len(results), dtype=bool)
+    if not np.isfinite(test_statistics).all():
+        raise ValueError("Sibling test statistics must be finite before BH correction.")
+    if not np.isfinite(degrees_of_freedom_values).all() or np.any(
+        degrees_of_freedom_values < 0
+    ):
+        raise ValueError(
+            "Sibling test degrees of freedom must be finite and non-negative before BH correction."
+        )
+    if not np.isfinite(p_values).all():
+        raise ValueError("Sibling p-values must be finite before BH correction.")
 
     reject, corrected_p_values, _ = benjamini_hochberg_correction(
-        p_values_for_correction,
+        p_values,
         alpha=alpha,
     )
-    reject = np.where(invalid_test_flags, False, reject)
-
-    n_invalid = int(np.sum(invalid_test_flags))
-    if n_invalid:
-        logger.warning(
-            "%s audit: total_tests=%d, invalid_tests=%d. "
-            "Conservative correction path applied (p=1.0, reject=False).",
-            audit_label,
-            len(results),
-            n_invalid,
-        )
+    del logger, audit_label
 
     annotations_df.loc[parents, "Sibling_Test_Statistic"] = test_statistics
     annotations_df.loc[parents, "Sibling_Degrees_of_Freedom"] = degrees_of_freedom_values

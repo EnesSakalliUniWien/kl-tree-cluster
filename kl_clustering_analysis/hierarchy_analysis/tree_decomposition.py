@@ -17,7 +17,6 @@ from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import ClusterBoundary, build_cluster_assignments
 from .decomposition.core.contracts import GATE_ANNOTATION_METADATA_ATTR
-from .decomposition.core.errors import DecompositionValidationError
 from .decomposition.gates.column_contracts import (
     validate_edge_gate_columns,
     validate_sibling_gate_columns,
@@ -110,16 +109,6 @@ class TreeDecomposition:
             "Sibling_Divergence_Skipped"
         )
 
-        for column_name, mapping in (
-            ("Child_Parent_Divergence_Significant", self._local_significant),
-            ("Sibling_BH_Different", self._sibling_different),
-            ("Sibling_Divergence_Skipped", self._sibling_skipped),
-        ):
-            missing = set(self._node_ids) - set(mapping.keys())
-            if missing:
-                preview = ", ".join(map(repr, list(missing)[:5]))
-                raise ValueError(f"Missing {column_name!r} values for nodes: {preview}.")
-
         # Precompute children list (avoids rebuilding generator repeatedly)
         self._children: dict[object, list[object]] = {
             n: list(self.tree.successors(n)) for n in self._node_ids
@@ -160,11 +149,11 @@ class TreeDecomposition:
         if annotations_df.empty:
             return False
 
-        try:
-            validate_edge_gate_columns(annotations_df)
-            validate_sibling_gate_columns(annotations_df)
-        except DecompositionValidationError:
+        if GATE_ANNOTATION_METADATA_ATTR not in annotations_df.attrs:
             return False
+
+        validate_edge_gate_columns(annotations_df)
+        validate_sibling_gate_columns(annotations_df)
 
         required_gate_decision_columns = (
             "Child_Parent_Divergence_Significant",
@@ -178,16 +167,18 @@ class TreeDecomposition:
         if set(self._node_ids) - set(annotations_df.index):
             return False
 
-        metadata = annotations_df.attrs.get(GATE_ANNOTATION_METADATA_ATTR)
+        metadata = annotations_df.attrs[GATE_ANNOTATION_METADATA_ATTR]
         if not isinstance(metadata, dict):
-            return False
+            raise TypeError(
+                f"{GATE_ANNOTATION_METADATA_ATTR} must be a dict, got {type(metadata).__name__}."
+            )
 
         return (
-            metadata.get("pipeline") == "gate_annotation"
-            and metadata.get("edge", {}).get("alpha") == self.alpha_local
-            and metadata.get("sibling", {}).get("alpha") == self.sibling_alpha
-            and metadata.get("config") == build_gate_annotation_config_metadata()
-            and metadata.get("leaf_data")
+            metadata["pipeline"] == "gate_annotation"
+            and metadata["edge"]["alpha"] == self.alpha_local
+            and metadata["sibling"]["alpha"] == self.sibling_alpha
+            and metadata["config"] == build_gate_annotation_config_metadata()
+            and metadata["leaf_data"]
             == build_gate_annotation_leaf_data_metadata(self._leaf_data)
         )
 

@@ -3,13 +3,12 @@ Utilities for consistent cluster color assignment across plots.
 
 Key improvements over a plain ``cmap="tab10"`` approach:
 - Uses *discrete* palettes (not interpolated continuous mapping)
-- Handles many clusters (>20) with a deterministic fallback palette
+- Uses a named large-N palette when many cluster colors are required
 - Supports an explicit "unassigned" color for labels like -1 via ``under=``
 """
 
 from __future__ import annotations
 
-import colorsys
 from dataclasses import dataclass
 from typing import Dict, Iterable, List
 
@@ -31,23 +30,12 @@ class ClusterColorSpec:
     id_to_color: Dict[int, str]
 
 
-def _golden_ratio_palette(n: int, *, s: float = 0.65, v: float = 0.95) -> List[str]:
-    """Generate n visually distinct colors with deterministic hue spacing."""
-    if n <= 0:
-        return []
-    phi = (1 + 5**0.5) / 2  # golden ratio
-    hues = (np.arange(n) / phi) % 1.0
-    colors = [colorsys.hsv_to_rgb(float(h), s, v) for h in hues]
-    return [mcolors.to_hex(rgb) for rgb in colors]
-
-
 def _discrete_colors_from_matplotlib_cmap(name: str, n: int) -> List[str]:
     cmap = plt.get_cmap(name)
     if hasattr(cmap, "colors") and cmap.colors is not None:
         base = list(cmap.colors)
         if len(base) >= n:
             return [mcolors.to_hex(base[i]) for i in range(n)]
-    # Fall back to sampling (may interpolate for ListedColormap with small LUT)
     return [mcolors.to_hex(cmap(i / max(n - 1, 1))) for i in range(n)]
 
 
@@ -91,13 +79,9 @@ def build_cluster_color_spec(
         elif n_clusters <= 20:
             colors = _discrete_colors_from_matplotlib_cmap("tab20", n_clusters)
         else:
-            # Optional: use seaborn husl for large N if available.
-            try:
-                import seaborn as sns  # type: ignore
+            import seaborn as sns
 
-                colors = [mcolors.to_hex(c) for c in sns.husl_palette(n_clusters)]
-            except Exception:
-                colors = _golden_ratio_palette(n_clusters)
+            colors = [mcolors.to_hex(c) for c in sns.husl_palette(n_clusters)]
 
     cmap = ListedColormap(colors)
     # Older Matplotlib versions don't accept bad/under kwargs in __init__.
@@ -120,16 +104,6 @@ def build_cluster_color_spec(
 
 def present_cluster_ids(labels: Iterable[int]) -> List[int]:
     """Sorted unique cluster IDs from label sequence (excludes -1)."""
-    unique: set[int] = set()
-    for label in labels:
-        if label is None:
-            continue
-        try:
-            label_value = float(label)
-        except (TypeError, ValueError):
-            continue
-        if not np.isfinite(label_value):
-            continue
-        unique.add(int(label_value))
+    unique = {int(label) for label in labels}
     unique.discard(-1)
     return sorted(unique)

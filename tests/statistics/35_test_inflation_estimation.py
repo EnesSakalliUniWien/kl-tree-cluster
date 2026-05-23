@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import math
 
+import pytest
+
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_estimation import (
     fit_inflation_model,
 )
@@ -34,49 +36,44 @@ def _make_record(
     )
 
 
-def test_fit_inflation_model_returns_neutral_model_when_no_valid_pairs() -> None:
+def test_fit_inflation_model_rejects_no_valid_pairs() -> None:
     records = [
         _make_record("bad_stat", stat=float("nan"), degrees_of_freedom=2.0, sibling_null_prior_from_edge_pvalue=1.0),
         _make_record("bad_df", stat=3.0, degrees_of_freedom=0.0, sibling_null_prior_from_edge_pvalue=1.0),
     ]
 
-    model = fit_inflation_model(records)
-
-    assert model.method == "weighted_mean"
-    assert model.n_calibration == 0
-    assert model.global_inflation_factor == 1.0
-    assert model.max_observed_ratio == 1.0
-    assert model.diagnostics["fit_status"] == "neutral_no_data"
+    with pytest.raises(ValueError, match="no finite positive-degree-of-freedom"):
+        fit_inflation_model(records)
 
 
-def test_fit_inflation_model_returns_neutral_model_when_only_positive_ratios_have_zero_weight() -> None:
+def test_fit_inflation_model_rejects_only_positive_ratios_with_zero_weight() -> None:
     records = [
         _make_record("zero_ratio", stat=0.0, degrees_of_freedom=2.0, sibling_null_prior_from_edge_pvalue=1.0),
         _make_record("zero_weight", stat=4.0, degrees_of_freedom=2.0, sibling_null_prior_from_edge_pvalue=0.0),
     ]
 
-    model = fit_inflation_model(records)
-
-    assert model.method == "weighted_mean"
-    assert model.n_calibration == 0
-    assert model.global_inflation_factor == 1.0
-    assert model.max_observed_ratio == 1.0
-    assert model.diagnostics["fit_status"] == "neutral_no_positive_weights"
+    with pytest.raises(ValueError, match="no positive finite sibling-null-prior weights"):
+        fit_inflation_model(records)
 
 
-def test_fit_inflation_model_returns_neutral_model_when_no_positive_weights() -> None:
+def test_fit_inflation_model_rejects_no_positive_weights() -> None:
     records = [
         _make_record("p0", stat=4.0, degrees_of_freedom=2.0, sibling_null_prior_from_edge_pvalue=0.0),
         _make_record("p1", stat=9.0, degrees_of_freedom=3.0, sibling_null_prior_from_edge_pvalue=0.0),
     ]
 
-    model = fit_inflation_model(records)
+    with pytest.raises(ValueError, match="no positive finite sibling-null-prior weights"):
+        fit_inflation_model(records)
 
-    assert model.method == "weighted_mean"
-    assert model.n_calibration == 0
-    assert model.global_inflation_factor == 1.0
-    assert model.max_observed_ratio == 1.0
-    assert model.diagnostics["fit_status"] == "neutral_no_positive_weights"
+
+def test_fit_inflation_model_rejects_no_positive_ratios() -> None:
+    records = [
+        _make_record("p0", stat=0.0, degrees_of_freedom=2.0, sibling_null_prior_from_edge_pvalue=1.0),
+        _make_record("p1", stat=0.0, degrees_of_freedom=3.0, sibling_null_prior_from_edge_pvalue=1.0),
+    ]
+
+    with pytest.raises(ValueError, match="no positive statistic/degrees-of-freedom ratios"):
+        fit_inflation_model(records)
 
 
 def test_fit_inflation_model_uses_weighted_mean_and_contributing_pair_count() -> None:

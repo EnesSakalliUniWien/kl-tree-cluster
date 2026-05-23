@@ -22,3 +22,17 @@ def test_marchenko_pastur_k_fixed_fixture() -> None:
     )
 
     assert k_estimated == 2
+
+
+def test_marchenko_pastur_uses_correlation_unit_noise_scale() -> None:
+    """Correlation spectra use MP upper edge with sigma^2 fixed at one."""
+    eigenvalues = np.array([2.4, 2.1, 1.9, 1.7], dtype=np.float64)
+
+    k_estimated = estimate_k_marchenko_pastur(
+        eigenvalues,
+        n_samples=100,
+        n_features=4,
+        minimum_projection_dimension=1,
+    )
+
+    assert k_estimated == 4

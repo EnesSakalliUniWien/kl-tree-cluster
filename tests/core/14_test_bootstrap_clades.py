@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from kl_clustering_analysis.hierarchy_analysis.bootstrap_consensus import _extract_clades
+import pandas as pd
+import pytest
+
+from kl_clustering_analysis.hierarchy_analysis.bootstrap_consensus import (
+    _extract_clades,
+    bootstrap_consensus,
+)
 
 
 class _DescendantSetTree:
@@ -27,3 +33,13 @@ def test_extract_clades_uses_precomputed_descendant_sets() -> None:
         frozenset({"A", "B", "C"}),
         frozenset({"A", "B"}),
     }
+
+
+def test_bootstrap_consensus_does_not_rewrite_zero_alpha_to_default() -> None:
+    data = pd.DataFrame(
+        [[0, 0], [0, 1], [1, 0], [1, 1]],
+        index=["A", "B", "C", "D"],
+    )
+
+    with pytest.raises(ValueError, match="alpha"):
+        bootstrap_consensus(data, n_boot=1, alpha_local=0.0, random_seed=0)

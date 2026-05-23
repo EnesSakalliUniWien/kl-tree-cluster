@@ -29,7 +29,7 @@ def _compute_ancestor_trust_weight(
 def _compute_child_log_neighborhood_matching_scale(
     child_id: str,
     annotations_dataframe: pd.DataFrame,
-    edge_projection_dimensions: dict[str, int] | None,
+    edge_projection_dimensions: dict[str, int],
 ) -> float:
     """Log of the scale used to match nearby child nodes."""
     scale = edge_neighborhood_matching_scale(
@@ -46,7 +46,7 @@ def _estimate_null_pvalue_from_stable_neighbors(
     reference_sets: NeighborhoodReferenceSet,
     kernel_bandwidths: AdaptiveKernelBandwidths,
     tree_distance: Callable[[str, str], float],
-    fallback_p_value: float,
+    baseline_p_value: float,
 ) -> tuple[float, float]:
     """Kernel-weighted average p-value over stable neighbors.
 
@@ -55,7 +55,7 @@ def _estimate_null_pvalue_from_stable_neighbors(
     (trusted_neighbor_weight_sum, neighborhood_p_value_estimate)
     """
     if not reference_sets.stable_nodes:
-        return 0.0, fallback_p_value
+        return 0.0, baseline_p_value
 
     stable_distances = np.asarray(
         [tree_distance(child_id, stable_node) for stable_node in reference_sets.stable_nodes],
@@ -77,7 +77,7 @@ def _estimate_null_pvalue_from_stable_neighbors(
     neighborhood_p_value_estimate = (
         float(np.real(np.average(reference_sets.stable_p_values, weights=neighbor_weights)))
         if trusted_neighbor_weight_sum > 0
-        else fallback_p_value
+        else baseline_p_value
     )
 
     return trusted_neighbor_weight_sum, neighborhood_p_value_estimate

@@ -80,17 +80,9 @@ def fit_sibling_inflation_calibrator(
     """Fit the local Gaussian sibling adjuster from valid sibling records."""
     valid = _positive_ratio_records(records)
     if not valid:
-        return SiblingLocalGaussianInflationCalibrator(
-            global_adjustment=model.global_inflation_factor,
-            log_center=0.0,
-            center=1.0,
-            spread=0.0,
-            spread_status="global_no_data",
-            max_adjustment=max(1.0, float(model.max_observed_ratio)),
-            record_count=0,
-            sample_log_scales=np.array([], dtype=float),
-            sample_weights=np.array([], dtype=float),
-            sample_adjustments=np.array([], dtype=float),
+        raise ValueError(
+            "Cannot fit local sibling inflation calibrator: records contain no positive "
+            "statistic/degrees-of-freedom ratios."
         )
 
     sibling_test_calibration_scales = np.array(
@@ -106,21 +98,9 @@ def fit_sibling_inflation_calibrator(
     )
     positive_weight_mask = np.isfinite(sibling_null_priors) & (sibling_null_priors > 0)
     if not np.any(positive_weight_mask):
-        return SiblingLocalGaussianInflationCalibrator(
-            global_adjustment=model.global_inflation_factor,
-            log_center=0.0,
-            center=1.0,
-            spread=0.0,
-            spread_status="global_no_positive_weights",
-            max_adjustment=max(
-                1.0,
-                float(np.max(sample_adjustments)),
-                float(model.max_observed_ratio),
-            ),
-            record_count=0,
-            sample_log_scales=np.array([], dtype=float),
-            sample_weights=np.array([], dtype=float),
-            sample_adjustments=np.array([], dtype=float),
+        raise ValueError(
+            "Cannot fit local sibling inflation calibrator: records contain no positive "
+            "finite sibling-null-prior weights."
         )
 
     sibling_test_calibration_scales = sibling_test_calibration_scales[positive_weight_mask]
@@ -175,7 +155,10 @@ def predict_sibling_adjustment(
     then reweighted with a Gaussian kernel in that one-dimensional log-scale
     space.
     """
-    if calibrator.record_count == 0 or calibrator.spread <= 0:
+    if calibrator.record_count == 0:
+        raise ValueError("Local sibling inflation calibrator has no calibration records.")
+
+    if calibrator.spread <= 0:
         return float(np.clip(calibrator.global_adjustment, 1.0, calibrator.max_adjustment))
 
     log_target = float(np.log(max(float(sibling_test_calibration_scale), 1.0)))

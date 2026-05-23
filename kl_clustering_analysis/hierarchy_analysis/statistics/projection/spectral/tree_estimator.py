@@ -9,10 +9,10 @@ random matrix theory to separate signal eigenvalues from the noise bulk of
 the local correlation matrix. For correlation matrices, $\sigma^2 = 1$
 exactly, so the Marchenko-Pastur support is $(1 \pm \sqrt{d/n})^2$. When no
 eigenvalues exceed the upper bound, the raw signal count is conceptually 0,
-but the implementation floors the returned dimension to at least 1 and then
-applies ``config.SPECTRAL_MINIMUM_DIMENSION``. Pure-noise nodes therefore get
-a small fallback dimension and are expected to fail to reject rather than
-taking a literal ``k = 0`` skip path.
+but the returned dimension is floored to the caller's minimum and capped by
+the number of active features. Pure-noise nodes therefore run a low-rank test
+and are expected to fail to reject. Nodes with no active feature directions
+are represented explicitly as zero-dimensional PCA contexts.
 """
 
 from __future__ import annotations
@@ -49,20 +49,24 @@ def _build_spectral_tasks(
     if include_internal:
         for node_id in internal_node_ids:
             node_internal_distributions: list[np.ndarray] = []
-            for internal_node_id in descendant_internal_nodes_by_node.get(node_id, []):
-                distribution = tree.nodes[internal_node_id].get("distribution")
-                if distribution is None:
-                    continue
+            for internal_node_id in descendant_internal_nodes_by_node[node_id]:
+                distribution = tree.nodes[internal_node_id]["distribution"]
                 distribution_array = np.asarray(distribution, dtype=np.float64)
-                if distribution_array.shape == (feature_count,):
-                    node_internal_distributions.append(distribution_array)
+                if distribution_array.shape != (feature_count,):
+                    raise ValueError(
+                        f"Internal distribution for node {internal_node_id!r} has "
+                        f"shape {distribution_array.shape}; expected {(feature_count,)}."
+                    )
+                node_internal_distributions.append(distribution_array)
             internal_distributions_by_node[node_id] = tuple(node_internal_distributions)
 
     return [
         NodeSpectralTask(
             node_id=node_id,
-            row_indices=tuple(descendant_leaf_indices_by_node.get(node_id, [])),
-            internal_distributions=internal_distributions_by_node.get(node_id, ()),
+            row_indices=tuple(descendant_leaf_indices_by_node[node_id]),
+            internal_distributions=(
+                internal_distributions_by_node[node_id] if include_internal else ()
+            ),
         )
         for node_id in internal_node_ids
     ]
@@ -103,9 +107,13 @@ def _aggregate_spectral_results(
     """Write per-node worker outputs into decomposition result dicts."""
     for node_result in spectral_results:
         spectral_dims[node_result.node_id] = node_result.projection_dimension
-        if node_result.projection_matrix is not None and node_result.eigenvalues is not None:
-            pca_projections[node_result.node_id] = node_result.projection_matrix
-            pca_eigenvalues[node_result.node_id] = node_result.eigenvalues
+        if node_result.projection_matrix is None or node_result.eigenvalues is None:
+            raise ValueError(
+                "Spectral decomposition must return PCA projection and eigenvalues for "
+                f"internal node {node_result.node_id!r}."
+            )
+        pca_projections[node_result.node_id] = node_result.projection_matrix
+        pca_eigenvalues[node_result.node_id] = node_result.eigenvalues
 
 
 def compute_spectral_decomposition(
@@ -113,7 +121,6 @@ def compute_spectral_decomposition(
     leaf_data: pd.DataFrame,
     *,
     minimum_projection_dimension: int = 1,
-    compute_projections: bool = True,
     include_internal: bool | None = None,
 ) -> Tuple[Dict[str, int], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
     """Compute spectral dimensions, PCA projections, and eigenvalues.
@@ -132,15 +139,11 @@ def compute_spectral_decomposition(
     Parameters
     ----------
     tree
-        Directed hierarchy with leaf labels accessible via
-        ``tree.nodes[n].get("label", n)``.
+        Directed hierarchy with leaf labels stored at ``tree.nodes[n]["label"]``.
     leaf_data
         DataFrame with leaf labels as index and features as columns.
     minimum_projection_dimension
         Floor on the returned dimension.
-    compute_projections
-        If True, also returns PCA projection matrices (k_v × d) and
-        eigenvalue arrays.
     include_internal
         If True, include internal node distribution vectors in the data
         matrix used for eigendecomposition.  If None, reads from
@@ -167,8 +170,6 @@ def compute_spectral_decomposition(
     descendant_leaf_indices_by_node, descendant_internal_nodes_by_node = precompute_descendants(
         tree, leaf_label_to_index
     )
-
-    compute_eigendecomposition_outputs = compute_projections
 
     spectral_dims: Dict[str, int] = {}
     pca_projections: Dict[str, np.ndarray] = {}
@@ -200,7 +201,7 @@ def compute_spectral_decomposition(
         dimension_method="marchenko_pastur",
         minimum_projection_dimension=minimum_projection_dimension,
         feature_count=feature_count,
-        compute_eigendecomposition_outputs=compute_eigendecomposition_outputs,
+        compute_eigendecomposition_outputs=True,
     )
 
     _aggregate_spectral_results(
@@ -229,11 +230,10 @@ def compute_spectral_decomposition(
             feature_count,
         )
 
-    if compute_projections:
-        logger.info(
-            "Computed PCA projections for %d internal nodes [%.2fs total]",
-            len(pca_projections),
-        )
+    logger.info(
+        "Computed PCA projections for %d internal nodes [%.2fs total]",
+        len(pca_projections),
+    )
 
     return spectral_dims, pca_projections, pca_eigenvalues
 

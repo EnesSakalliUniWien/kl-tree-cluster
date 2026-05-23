@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from kl_clustering_analysis.core_utils.data_utils import (
     extract_bool_column_dict,
+    extract_node_distribution,
     extract_node_sample_size,
     extract_row_column_maps,
 )
@@ -108,3 +109,10 @@ def test_extract_node_sample_size_requires_leaf_count():
 
     with pytest.raises(ValueError, match="Missing required 'leaf_count'"):
         extract_node_sample_size(tree, "root")
+
+
+def test_extract_node_distribution_rejects_missing_node():
+    tree = nx.DiGraph()
+
+    with pytest.raises(KeyError, match="not present"):
+        extract_node_distribution(tree, "missing")

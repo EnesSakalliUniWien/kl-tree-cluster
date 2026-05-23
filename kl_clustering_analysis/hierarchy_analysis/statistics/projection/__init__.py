@@ -10,7 +10,7 @@ Subpackages are organized by statistical responsibility:
 """
 
 from .projected_wald import (
-    build_projection_basis_with_padding,
+    build_pca_projection_basis,
     compute_projected_pvalue,
     run_projected_wald_kernel,
 )
@@ -34,7 +34,7 @@ __all__ = [
     # projected_wald
     "run_projected_wald_kernel",
     # projection_basis
-    "build_projection_basis_with_padding",
+    "build_pca_projection_basis",
     # tree_helpers
     "build_subtree_data",
     "is_leaf",

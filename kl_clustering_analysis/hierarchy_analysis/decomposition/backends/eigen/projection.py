@@ -12,7 +12,7 @@ def build_pca_projection(
     *,
     projection_dimension: int,
     n_features_total: int,
-) -> tuple[np.ndarray | None, np.ndarray | None]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Build a full-width PCA projection matrix and top eigenvalues."""
     effective_dimension = _resolve_effective_dimension(
         eig,
@@ -20,7 +20,9 @@ def build_pca_projection(
     )
 
     if effective_dimension <= 0:
-        return None, None
+        raise ValueError(
+            "PCA projection requires at least one positive active eigen-direction."
+        )
 
     active_eigenvectors = eig.eigenvectors_active
 
@@ -35,7 +37,7 @@ def build_pca_projection(
         )
 
     if active_eigenvectors is None:
-        return None, None
+        raise ValueError("PCA projection requires eigenvectors from the eigensolver.")
 
     projection_matrix = _expand_active_projection_to_full_space(
         active_eigenvectors[:, :effective_dimension],

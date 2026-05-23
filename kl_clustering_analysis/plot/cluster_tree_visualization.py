@@ -3,7 +3,7 @@ Cluster tree visualization (NetworkX + matplotlib).
 
 Design goals:
 - Simple, systematic plotting
-- Radial layout via Graphviz ``twopi`` when available
+- Radial layout via Graphviz ``twopi``
 - Leaf node colors match cluster IDs (consistent with UMAP plots)
 """
 
@@ -36,43 +36,9 @@ SIBLING_DIFFERENT_COL = "Sibling_BH_Different"
 SIBLING_SKIPPED_COL = "Sibling_Divergence_Skipped"
 
 
-def _normalize_optional_bool(value: object) -> Optional[bool]:
-    """Convert heterogeneous truthy/falsy values to bool or None."""
-    if value is None:
-        return None
-    if isinstance(value, (bool, np.bool_)):
-        return bool(value)
-    if isinstance(value, (int, np.integer)):
-        if value in (0, 1):
-            return bool(value)
-        return None
-    if isinstance(value, (float, np.floating)):
-        if not np.isfinite(float(value)):
-            return None
-        if value in (0.0, 1.0):
-            return bool(int(value))
-        return None
-    if isinstance(value, str):
-        token = value.strip().lower()
-        if token in {"true", "t", "yes", "y", "1"}:
-            return True
-        if token in {"false", "f", "no", "n", "0"}:
-            return False
-    return None
-
-
-def _lookup_annotation_value(annotations_df, node_id: object, column_name: str) -> object | None:
+def _lookup_annotation_value(annotations_df, node_id: object, column_name: str) -> object:
     """Lookup a per-node value in ``annotations_df``."""
-    if annotations_df is None:
-        return None
-    if column_name not in annotations_df.columns:
-        raise KeyError(column_name)
-    try:
-        return annotations_df.at[node_id, column_name]
-    except KeyError:
-        if isinstance(node_id, str):
-            return None
-        return annotations_df.at[str(node_id), column_name]
+    return annotations_df.at[node_id, column_name]
 
 
 def _group_internal_nodes_for_halo(
@@ -91,12 +57,10 @@ def _group_internal_nodes_for_halo(
         if G.in_degree(node) == 0:
             continue
 
-        flag = _normalize_optional_bool(
-            _lookup_annotation_value(annotations_df, node, CHILD_PARENT_SIGNIFICANT_COL)
-        )
-        if flag is True:
+        flag = bool(_lookup_annotation_value(annotations_df, node, CHILD_PARENT_SIGNIFICANT_COL))
+        if flag:
             significant.append(node)
-        elif flag is False:
+        else:
             tested_not_significant.append(node)
 
     return significant, tested_not_significant
@@ -114,22 +78,16 @@ def _group_edges_for_sibling_style(
     }
 
     for parent, child in G.edges():
-        skipped = _normalize_optional_bool(
-            _lookup_annotation_value(annotations_df, parent, SIBLING_SKIPPED_COL)
-        )
-        if skipped is True:
+        skipped = bool(_lookup_annotation_value(annotations_df, parent, SIBLING_SKIPPED_COL))
+        if skipped:
             groups["missing"].append((parent, child))
             continue
 
-        different = _normalize_optional_bool(
-            _lookup_annotation_value(annotations_df, parent, SIBLING_DIFFERENT_COL)
-        )
-        if different is True:
+        different = bool(_lookup_annotation_value(annotations_df, parent, SIBLING_DIFFERENT_COL))
+        if different:
             groups["different"].append((parent, child))
-        elif different is False:
-            groups["not_different"].append((parent, child))
         else:
-            groups["missing"].append((parent, child))
+            groups["not_different"].append((parent, child))
 
     return groups
 
@@ -143,17 +101,11 @@ def _map_nodes_to_clusters(
     node_to_cluster: Dict = {}
     for cluster_id, info in cluster_assignments.items():
         for leaf in info["leaves"]:
-            if leaf in label_to_node:
-                node_id = label_to_node[leaf]
-            elif leaf in tree.nodes():
-                node_id = leaf
-            else:
-                continue
+            node_id = label_to_node[leaf]
             node_to_cluster[node_id] = cluster_id
 
         root = info["root_node"]
-        if root not in node_to_cluster:
-            node_to_cluster[root] = cluster_id
+        node_to_cluster[root] = cluster_id
     return node_to_cluster
 
 
@@ -161,8 +113,7 @@ def _build_label_to_node(tree) -> Dict:
     """Map display labels back to node ids."""
     label_to_node: Dict = {}
     for node in tree.nodes():
-        node_attrs = tree.nodes[node] if hasattr(tree, "nodes") else {}
-        label = node_attrs.get("label", node) if isinstance(node_attrs, dict) else node
+        label = tree.nodes[node]["label"]
         label_to_node[label] = node
     return label_to_node
 
@@ -176,15 +127,8 @@ def _build_leaf_node_colors(
     """Return leaf colors keyed by cluster assignment."""
     leaf_node_colors: list[str] = []
     for node in leaf_nodes:
-        if node not in node_to_cluster:
-            leaf_node_colors.append(unassigned_color)
-            continue
-
-        try:
-            cluster_id = int(node_to_cluster[node])
-        except (TypeError, ValueError):
-            cluster_id = None
-        leaf_node_colors.append(cluster_id_to_color.get(cluster_id, unassigned_color))
+        cluster_id = int(node_to_cluster[node])
+        leaf_node_colors.append(cluster_id_to_color[cluster_id])
     return leaf_node_colors
 
 
@@ -268,8 +212,8 @@ def _rectangular_tree_layout(
 
         for node in component_nodes:
             pos[node] = (
-                x_by_node.get(node, x_offset),
-                -float(depth.get(node, 0)) * y_gap,
+                x_by_node[node],
+                -float(depth[node]) * y_gap,
             )
 
         x_offset = leaf_cursor + x_gap
@@ -278,19 +222,8 @@ def _rectangular_tree_layout(
 
 
 def _graphviz_twopi_layout(G: nx.Graph, args: str = "") -> Dict:
-    """Compute a Graphviz ``twopi`` layout with graceful fallbacks."""
-    try:
-        return nx.nx_agraph.graphviz_layout(G, prog="twopi", args=args)
-    except Exception:
-        pass
-
-    try:
-        return nx.nx_pydot.graphviz_layout(G, prog="twopi")
-    except Exception:
-        pass
-
-    # Deterministic fallback that still looks like a tree.
-    return _rectangular_tree_layout(nx.DiGraph(G))
+    """Compute a Graphviz ``twopi`` layout."""
+    return nx.nx_agraph.graphviz_layout(G, prog="twopi", args=args)
 
 
 def _resolve_layout(G: nx.DiGraph, layout: str) -> Dict[object, Tuple[float, float]]:
@@ -528,7 +461,7 @@ def _finalize_axes(ax: "plt.Axes", title: str, font_size: int) -> None:
 def plot_tree_with_clusters(
     tree,
     decomposition_results: Dict,
-    annotations_df=None,
+    annotations_df,
     use_labels: bool = True,
     width: int = 900,
     height: int = 600,

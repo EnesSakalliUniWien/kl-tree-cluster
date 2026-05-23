@@ -6,8 +6,6 @@ from collections import Counter
 
 import pandas as pd
 
-from kl_clustering_analysis import config
-
 from ..inflation_correction.types.calibration_model import CalibrationModel
 from ..inflation_correction.types.sibling_local_gaussian_inflation_calibrator import (
     SiblingLocalGaussianInflationCalibrator,
@@ -32,6 +30,15 @@ def write_record_projection_metadata(
     ]
 
 
+def _projection_dimension_source_counts(records: list[SiblingPairRecord]) -> dict[str, int]:
+    return {
+        str(source): int(count)
+        for source, count in sorted(
+            Counter(record.projection_dimension_source for record in records).items()
+        )
+    }
+
+
 def build_sibling_divergence_audit(
     *,
     records: list[SiblingPairRecord],
@@ -44,37 +51,16 @@ def build_sibling_divergence_audit(
     n_blocked: int,
 ) -> dict[str, object]:
     """Build the audit metadata attached to the annotations frame."""
-    projection_dimension_source_counts = {
-        str(source): int(count)
-        for source, count in sorted(
-            Counter(record.projection_dimension_source for record in records).items()
-        )
-    }
-    calibration_projection_dimension_source_counts = {
-        str(source): int(count)
-        for source, count in sorted(
-            Counter(record.projection_dimension_source for record in calibration_records).items()
-        )
-    }
-    excluded_from_calibration_projection_dimension_source_counts = {
-        str(source): int(count)
-        for source, count in sorted(
-            Counter(
-                record.projection_dimension_source
-                for record in excluded_from_calibration_records
-            ).items()
-        )
-    }
-    tested_projection_dimension_source_counts = {
-        str(source): int(count)
-        for source, count in sorted(
-            Counter(
-                record.projection_dimension_source
-                for record in records
-                if not record.is_null_like
-            ).items()
-        )
-    }
+    projection_dimension_source_counts = _projection_dimension_source_counts(records)
+    calibration_projection_dimension_source_counts = _projection_dimension_source_counts(
+        calibration_records
+    )
+    excluded_from_calibration_projection_dimension_source_counts = (
+        _projection_dimension_source_counts(excluded_from_calibration_records)
+    )
+    tested_projection_dimension_source_counts = _projection_dimension_source_counts(
+        [record for record in records if not record.is_null_like]
+    )
 
     return {
         "total_pairs": len(records),
@@ -98,13 +84,42 @@ def build_sibling_divergence_audit(
             excluded_from_calibration_projection_dimension_source_counts
         ),
         "tested_projection_dimension_source_counts": tested_projection_dimension_source_counts,
-        "single_feature_subtree_mode": config.SINGLE_FEATURE_SUBTREE_MODE,
         "diagnostics": model.diagnostics,
         "test_method": "calibrated_projected_wald",
     }
 
 
+def build_no_focal_sibling_divergence_audit(
+    *,
+    records: list[SiblingPairRecord],
+    n_null: int,
+    n_focal: int,
+    n_blocked: int,
+) -> dict[str, object]:
+    """Build audit metadata when no focal sibling tests require calibration."""
+    if n_focal != 0:
+        raise ValueError("No-focal sibling audit requires n_focal == 0.")
+    return {
+        "total_pairs": len(records),
+        "null_like_pairs": n_null,
+        "focal_pairs": n_focal,
+        "gate2_blocked_pairs": n_blocked,
+        "calibration_method": "not_required_no_focal_tests",
+        "calibration_n": 0,
+        "deflation_mode": "not_required_no_focal_tests",
+        "projection_dimension_source_counts": _projection_dimension_source_counts(records),
+        "calibration_pair_count": 0,
+        "excluded_from_calibration_pair_count": 0,
+        "calibration_projection_dimension_source_counts": {},
+        "excluded_from_calibration_projection_dimension_source_counts": {},
+        "tested_projection_dimension_source_counts": {},
+        "diagnostics": {"fit_status": "not_required_no_focal_tests"},
+        "test_method": "calibrated_projected_wald",
+    }
+
+
 __all__ = [
+    "build_no_focal_sibling_divergence_audit",
     "build_sibling_divergence_audit",
     "write_record_projection_metadata",
 ]

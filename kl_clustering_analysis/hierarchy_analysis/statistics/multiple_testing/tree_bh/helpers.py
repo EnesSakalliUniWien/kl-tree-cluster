@@ -27,9 +27,13 @@ def group_child_indices_by_parent(
 
     for index, child_id in enumerate(child_ids):
         predecessors = list(tree.predecessors(child_id))
-        if predecessors:
-            parent_id = str(predecessors[0])
-            sibling_group_indices[parent_id].append(index)
+        if len(predecessors) != 1:
+            raise ValueError(
+                f"Tree-BH child {child_id!r} must have exactly one parent; "
+                f"found {len(predecessors)}."
+            )
+        parent_id = str(predecessors[0])
+        sibling_group_indices[parent_id].append(index)
 
     return dict(sibling_group_indices)
 
@@ -37,7 +41,13 @@ def group_child_indices_by_parent(
 def compute_child_depths(tree: nx.DiGraph, child_ids: list[str]) -> np.ndarray:
     """Return tree depths aligned to child_ids."""
     node_depths = compute_node_depths(tree)
-    return np.array([node_depths.get(child_id, 0) for child_id in child_ids])
+    missing_child_ids = [child_id for child_id in child_ids if child_id not in node_depths]
+    if missing_child_ids:
+        raise ValueError(
+            "Tree-BH child_ids must all be present in the tree; "
+            f"missing {missing_child_ids}."
+        )
+    return np.array([node_depths[child_id] for child_id in child_ids])
 
 
 def initialize_tree_bh_arrays(

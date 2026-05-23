@@ -12,15 +12,25 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts impo
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
+    validate_edge_gate_columns,
+    validate_sibling_gate_columns,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
-    annotate_child_parent_divergence,
+    annotate_child_parent_divergence_with_context,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
+)
 
 
-def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
+def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame, pd.DataFrame]:
     tree = nx.DiGraph()
     tree.add_edge("root", "A", branch_length=0.25)
     tree.add_edge("root", "B", branch_length=0.20)
@@ -48,21 +58,46 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
             }
         }
     )
-    return tree, base_df
+    leaf_data = pd.DataFrame(
+        [a_dist, b_dist],
+        index=["A", "B"],
+        columns=[f"feature_{feature_index}" for feature_index in range(len(a_dist))],
+    )
+    return tree, base_df, leaf_data
 
 
 def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatch) -> None:
-    tree, base_df = _build_small_binary_tree()
+    tree, base_df, leaf_data = _build_small_binary_tree()
 
-    edge_df = annotate_child_parent_divergence(
+    edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
         base_df.copy(),
         significance_level_alpha=0.01,
+        leaf_data=leaf_data,
+    )
+    sibling_projection_dimensions = (
+        derive_sibling_projection_dimensions_from_child_edge_comparisons(
+            tree,
+            spectral_context=spectral_context,
+        )
+    )
+    (
+        parent_principal_component_projections,
+        parent_principal_component_eigenvalues,
+    ) = collect_parent_principal_component_inputs_for_sibling_tests(
+        sibling_projection_dimensions,
+        spectral_context=spectral_context,
     )
     sequential_df = annotate_sibling_divergence(
         tree,
         edge_df,
         significance_level_alpha=0.01,
+        sibling_projection_dimensions_from_edge_comparisons=sibling_projection_dimensions,
+        parent_principal_component_projections=parent_principal_component_projections,
+        parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
+        edge_projection_dimensions_by_node=(
+            spectral_context.spectral_projection_dimensions_by_node
+        ),
     )
 
     bundle = run_gate_annotation_pipeline(
@@ -70,6 +105,7 @@ def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatc
         base_df.copy(),
         alpha_local=0.01,
         sibling_alpha=0.01,
+        leaf_data=leaf_data,
     )
 
     assert isinstance(bundle, GateAnnotationBundle)
@@ -104,8 +140,8 @@ def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatc
     actual_sibling_cols = tuple(col for col in pipeline_df.columns if col.startswith("Sibling_"))
     assert actual_edge_cols == expected_edge_cols
     assert actual_sibling_cols == expected_sibling_cols
-    assert bundle.local_gate_columns == expected_edge_cols
-    assert bundle.sibling_gate_columns == expected_sibling_cols
+    assert validate_edge_gate_columns(pipeline_df) == expected_edge_cols
+    assert validate_sibling_gate_columns(pipeline_df) == expected_sibling_cols
     assert "pipeline" in bundle.metadata
     assert "edge" in bundle.metadata
     assert "sibling" in bundle.metadata

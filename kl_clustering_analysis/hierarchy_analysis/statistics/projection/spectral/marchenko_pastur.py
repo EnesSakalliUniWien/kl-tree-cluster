@@ -36,10 +36,12 @@ def _get_n_jobs(n_tasks: int) -> int:
     """
     configured_jobs = os.environ.get("KL_TE_N_JOBS")
     if configured_jobs is not None:
-        try:
-            return max(int(configured_jobs), 1)
-        except ValueError:
-            pass
+        configured_job_count = int(configured_jobs)
+        if configured_job_count < 1:
+            raise ValueError(
+                f"KL_TE_N_JOBS must be a positive integer; got {configured_jobs!r}."
+            )
+        return configured_job_count
     if n_tasks < _DEFAULT_MIN_NODES_FOR_PARALLEL:
         return 1
     return -1  # joblib: use all available cores
@@ -72,9 +74,9 @@ def _process_node(
     if len(descendant_leaf_row_indices) < 2:
         return NodeSpectralResult(
             node_id=spectral_task.node_id,
-            projection_dimension=max(minimum_projection_dimension, 1),
-            projection_matrix=None,
-            eigenvalues=None,
+            projection_dimension=0,
+            projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
+            eigenvalues=np.zeros(0, dtype=np.float64),
         )
 
     # Slice on-demand: only this thread's copy is live during the call.
@@ -98,9 +100,9 @@ def _process_node(
     if eigendecomposition_result is None:
         return NodeSpectralResult(
             node_id=spectral_task.node_id,
-            projection_dimension=max(minimum_projection_dimension, 1),
-            projection_matrix=None,
-            eigenvalues=None,
+            projection_dimension=0,
+            projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
+            eigenvalues=np.zeros(0, dtype=np.float64),
         )
 
     projection_dimension = estimate_k_marchenko_pastur(
@@ -118,6 +120,7 @@ def _process_node(
             projection_dimension=projection_dimension,
             n_features_total=feature_count,
         )
+        projection_dimension = int(projection_matrix.shape[0])
 
     return NodeSpectralResult(
         node_id=spectral_task.node_id,

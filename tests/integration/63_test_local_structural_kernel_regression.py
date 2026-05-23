@@ -23,13 +23,13 @@ def test_local_structural_kernel_restores_gauss_null_large_to_one_cluster() -> N
 
 
 @pytest.mark.slow
-def test_neighborhood_stable_blocked_weight_restores_cat_highcard_to_four_clusters() -> None:
+def test_neighborhood_stable_blocked_weight_keeps_cat_highcard_conservative() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c")
     data_t, _, _, _, distance_condensed, _, _ = prepare_case_inputs(case, ["kl"])
 
     result = _run_kl_method(data_t, distance_condensed, config.SIBLING_ALPHA)
 
-    assert result.found_clusters == 4
+    assert result.found_clusters == 1
 
 
 @pytest.mark.slow

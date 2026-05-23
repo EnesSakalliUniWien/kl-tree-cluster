@@ -1,38 +1,17 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis import (
-    build_projection_basis_with_padding,
+    build_pca_projection_basis,
 )
 
 
-def test_projection_basis_without_pca_uses_random_backend(monkeypatch) -> None:
-    captured: dict[str, object] = {}
-
-    def _fake_generate_projection_matrix(
-        n_features: int,
-        n_components: int,
-        random_state: int | None = None,
-        *,
-        use_cache: bool = True,
-    ) -> np.ndarray:
-        captured["args"] = (n_features, n_components, random_state, use_cache)
-        return np.full((n_components, n_features), 7.0, dtype=np.float64)
-
-    monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis.generate_projection_matrix",
-        _fake_generate_projection_matrix,
-    )
-
-    basis, eigenvalues = build_projection_basis_with_padding(
-        n_features=5,
-        k=3,
-        random_state=11,
-    )
-
-    np.testing.assert_array_equal(basis, np.full((3, 5), 7.0, dtype=np.float64))
-    assert eigenvalues is None
-    assert captured["args"] == (5, 3, 11, False)
+def test_projection_basis_requires_parent_pca() -> None:
+    with pytest.raises(ValueError, match="require a PCA projection basis"):
+        build_pca_projection_basis(
+            k=3,
+        )
 
 
 def test_projection_basis_truncates_parent_pca_to_target_dimension() -> None:
@@ -46,8 +25,7 @@ def test_projection_basis_truncates_parent_pca_to_target_dimension() -> None:
     )
     pca_eigenvalues = np.array([5.0, 3.0, 1.0], dtype=np.float64)
 
-    basis, eigenvalues = build_projection_basis_with_padding(
-        n_features=3,
+    basis, eigenvalues = build_pca_projection_basis(
         k=2,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
@@ -57,28 +35,7 @@ def test_projection_basis_truncates_parent_pca_to_target_dimension() -> None:
     np.testing.assert_array_equal(eigenvalues, pca_eigenvalues[:2])
 
 
-def test_projection_basis_pads_short_parent_pca_with_random_rows(monkeypatch) -> None:
-    def _fake_generate_projection_matrix(
-        n_features: int,
-        n_components: int,
-        random_state: int | None = None,
-        *,
-        use_cache: bool = True,
-    ) -> np.ndarray:
-        assert (n_features, n_components, random_state, use_cache) == (2, 2, 19, False)
-        return np.array(
-            [
-                [1.0, 0.0],
-                [0.0, 1.0],
-            ],
-            dtype=np.float64,
-        )
-
-    monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis.generate_projection_matrix",
-        _fake_generate_projection_matrix,
-    )
-
+def test_projection_basis_rejects_short_parent_pca() -> None:
     pca_projection = np.array(
         [
             [1.0, 0.0, 0.0, 0.0],
@@ -86,58 +43,28 @@ def test_projection_basis_pads_short_parent_pca_with_random_rows(monkeypatch) ->
         ],
         dtype=np.float64,
     )
-    pca_eigenvalues = np.array([9.0, 4.0], dtype=np.float64)
 
-    basis, eigenvalues = build_projection_basis_with_padding(
-        n_features=4,
-        k=4,
-        pca_projection=pca_projection,
-        pca_eigenvalues=pca_eigenvalues,
-        random_state=19,
-    )
-
-    np.testing.assert_array_equal(
-        basis,
-        np.array(
-            [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-            dtype=np.float64,
-        ),
-    )
-    np.testing.assert_array_equal(eigenvalues, pca_eigenvalues)
+    with pytest.raises(ValueError, match="2 row\\(s\\), but 4 projection dimension"):
+        build_pca_projection_basis(
+            k=4,
+            pca_projection=pca_projection,
+            pca_eigenvalues=np.array([9.0, 4.0], dtype=np.float64),
+        )
 
 
-def test_projection_basis_padding_is_orthogonal_to_parent_pca(monkeypatch) -> None:
-    def _fake_generate_projection_matrix(
-        n_features: int,
-        n_components: int,
-        random_state: int | None = None,
-        *,
-        use_cache: bool = True,
-    ) -> np.ndarray:
-        assert (n_components, random_state, use_cache) == (1, 23, False)
-        padding_coordinates = np.zeros((n_components, n_features), dtype=np.float64)
-        padding_coordinates[0, 0] = 1.0
-        return padding_coordinates
+def test_projection_basis_requires_matching_eigenvalues() -> None:
+    pca_projection = np.eye(3, dtype=np.float64)
 
-    monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis.generate_projection_matrix",
-        _fake_generate_projection_matrix,
-    )
+    with pytest.raises(ValueError, match="requires matching eigenvalues"):
+        build_pca_projection_basis(
+            k=2,
+            pca_projection=pca_projection,
+            pca_eigenvalues=None,
+        )
 
-    pca_projection = np.array([[1.0, 0.0, 0.0]], dtype=np.float64)
-
-    basis, eigenvalues = build_projection_basis_with_padding(
-        n_features=3,
-        k=2,
-        pca_projection=pca_projection,
-        pca_eigenvalues=np.array([4.0], dtype=np.float64),
-        random_state=23,
-    )
-
-    np.testing.assert_allclose(basis @ basis.T, np.eye(2), atol=1e-12)
-    np.testing.assert_array_equal(eigenvalues, np.array([4.0], dtype=np.float64))
+    with pytest.raises(ValueError, match="1 value\\(s\\), but 2 projection dimension"):
+        build_pca_projection_basis(
+            k=2,
+            pca_projection=pca_projection,
+            pca_eigenvalues=np.array([5.0], dtype=np.float64),
+        )

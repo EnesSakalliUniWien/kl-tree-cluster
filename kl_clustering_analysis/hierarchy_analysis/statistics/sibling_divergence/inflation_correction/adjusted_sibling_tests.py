@@ -21,8 +21,23 @@ def _compute_adjusted_sibling_test(
     if sibling_test_record.is_null_like:
         return None
 
-    if not np.isfinite(sibling_test_record.stat) or sibling_test_record.degrees_of_freedom <= 0:
-        return (np.nan, np.nan, np.nan), "invalid"
+    if not np.isfinite(sibling_test_record.stat):
+        raise ValueError(
+            "Sibling record must have a finite statistic before "
+            f"adjustment; parent={sibling_test_record.parent!r}."
+        )
+    if sibling_test_record.degrees_of_freedom == 0:
+        if sibling_test_record.stat != 0.0 or sibling_test_record.p_value != 1.0:
+            raise ValueError(
+                "Zero-dimensional sibling records must carry statistic=0 and p_value=1; "
+                f"parent={sibling_test_record.parent!r}."
+            )
+        return (0.0, 0.0, 1.0), "zero_dimensional_spectral_context"
+    if sibling_test_record.degrees_of_freedom < 0:
+        raise ValueError(
+            "Sibling record must have non-negative degrees of freedom before "
+            f"adjustment; parent={sibling_test_record.parent!r}."
+        )
 
     estimated_inflation_factor, adjustment_method_label = resolve_inflation_adjustment(
         sibling_test_record

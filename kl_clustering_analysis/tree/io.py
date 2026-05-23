@@ -77,7 +77,7 @@ def _build_tree_from_merges(
         left_id = node_id(int(a), n_leaves)
         right_id = node_id(int(b), n_leaves)
 
-        G.add_node(nid, is_leaf=False)
+        G.add_node(nid, is_leaf=False, label=nid)
         G.add_edge(nid, left_id, branch_length=edge_lengths[(nid, left_id)])
         G.add_edge(nid, right_id, branch_length=edge_lengths[(nid, right_id)])
 
@@ -128,7 +128,6 @@ def tree_from_agglomerative(
     leaf_names: Optional[List[str]] = None,
     linkage: str = "average",
     metric: str = "euclidean",
-    compute_distances: bool = True,
 ) -> "PosetTree":
     """Build a :class:`PosetTree` from an :class:`AgglomerativeClustering` fit.
 
@@ -138,7 +137,7 @@ def tree_from_agglomerative(
         Feature matrix of shape ``(n_samples, n_features)``.
     leaf_names
         Optional list of labels; defaults to ``leaf_0 … leaf_{n-1}``.
-    linkage, metric, compute_distances
+    linkage, metric
         Passed through to :class:`AgglomerativeClustering`.
 
     Returns
@@ -154,12 +153,12 @@ def tree_from_agglomerative(
         n_clusters=1,
         linkage=linkage,
         metric=metric,
-        compute_distances=compute_distances,
+        compute_distances=True,
     )
     model.fit(X)
 
     children = model.children_
-    distances = getattr(model, "distances_", None)
+    distances = model.distances_
 
     return _build_tree_from_merges(cls, n, leaf_names, children, distances)
 
@@ -206,8 +205,7 @@ def tree_from_undirected_edges(
     for n in G.nodes:
         is_leaf_node = G.out_degree(n) == 0
         G.nodes[n]["is_leaf"] = is_leaf_node
-        if is_leaf_node:
-            G.nodes[n]["label"] = n
+        G.nodes[n]["label"] = n
     G.graph["root"] = root
 
     return G

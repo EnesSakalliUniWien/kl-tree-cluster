@@ -1,8 +1,4 @@
-"""
-Central configuration for the KL-TE clustering analysis library.
-"""
-
-from typing import Literal
+"""Central configuration for the KL-TE clustering analysis library."""
 
 # --- Statistical Parameters ---
 
@@ -37,28 +33,6 @@ TREE_DISTANCE_METRIC: str = "hamming"
 # Average (UPGMA) produces more balanced trees than complete linkage
 TREE_LINKAGE_METHOD: str = "average"
 
-# --- Random Projection Parameters ---
-
-# Distortion tolerance for Johnson-Lindenstrauss projection.
-# Smaller eps preserves distances more tightly but increases k.
-PROJECTION_EPS: float = 0.3
-
-# Minimum projected dimension for the JL path.
-# May be an integer or "auto" to derive a floor from the global effective rank.
-PROJECTION_MINIMUM_DIMENSION: int | str = "auto"
-
-# Random seed for deterministic per-test projection seeding.
-PROJECTION_RANDOM_SEED: int | None = 42
-
-# --- Spectral Dimension Estimation ---
-
-# Minimum projection dimension for the SPECTRAL (Gate 2) path only.
-# With Marchenko-Pastur, noise nodes get k=1 (no signal eigenvalues above
-# the MP bound).  The floor of 2 prevents χ²(1) tests, which have a
-# singularity at 0 that can cause numerical instability.  At pure-noise
-# subtrees, the χ²(2) test correctly fails to reject.
-SPECTRAL_MINIMUM_DIMENSION: int = 2
-
 # Include internal-node distribution vectors in the spectral data matrix.
 # Internal distributions are convex combinations of leaf data — they do NOT
 # increase rank but inflate n_desc, which tightens the MP noise bounds
@@ -67,26 +41,6 @@ SPECTRAL_MINIMUM_DIMENSION: int = 2
 # on null data (edge_T1 goes from 2% to 89%).
 # Keeping True is recommended for consistency.
 INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
-
-# --- Single-Feature Subtree Handling ---
-#
-# Optional handling for subtrees where only one feature varies.
-# These are not multivariate PCA failures: the local rank is genuinely 1.
-#
-# Options:
-#   "off"                            - disable the single-feature subtree policy;
-#                                      useful as a baseline comparison.
-#   "block_low_information_subtrees" - compare low-variance and high-variance
-#                                      single-feature subtrees within the current
-#                                      tree, then only allow deterministic 1D
-#                                      handling when the low-information group
-#                                      does not dominate the tree. Thresholds are
-#                                      estimated fresh per clustering run; no
-#                                      fixed magic numbers are used. Preferred
-#                                      production default.
-SINGLE_FEATURE_SUBTREE_MODE: Literal["off", "block_low_information_subtrees"] = (
-    "block_low_information_subtrees"
-)
 
 # --- Pass-Through Traversal ---
 

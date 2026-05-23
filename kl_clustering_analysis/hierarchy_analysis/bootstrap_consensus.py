@@ -25,6 +25,7 @@ Example
 
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Any, Dict, FrozenSet, List, Set
 
 import numpy as np
@@ -95,11 +96,16 @@ def bootstrap_consensus(
     """
     from kl_clustering_analysis.tree.poset_tree import PosetTree  # local import to avoid cycles
 
-    alpha_local = alpha_local or config.EDGE_ALPHA
-    sibling_alpha = sibling_alpha or config.SIBLING_ALPHA
-    metric = metric or config.TREE_DISTANCE_METRIC
-    linkage_method = linkage_method or config.TREE_LINKAGE_METHOD
-    decompose_kwargs = decompose_kwargs or {}
+    if alpha_local is None:
+        alpha_local = config.EDGE_ALPHA
+    if sibling_alpha is None:
+        sibling_alpha = config.SIBLING_ALPHA
+    if metric is None:
+        metric = config.TREE_DISTANCE_METRIC
+    if linkage_method is None:
+        linkage_method = config.TREE_LINKAGE_METHOD
+    if decompose_kwargs is None:
+        decompose_kwargs = {}
 
     sample_ids = list(data.index)
     n = len(sample_ids)
@@ -150,23 +156,19 @@ def bootstrap_consensus(
             continue
 
         # --- build tree & decompose ---
-        try:
-            Z_b = linkage(pdist(X_boot.values, metric=metric), method=linkage_method)
-            tree_b = PosetTree.from_linkage(Z_b, leaf_names=boot_labels)
-            tree_b.populate_node_divergences(X_boot)
-            res_b = tree_b.decompose(
-                annotations_df=tree_b.annotations_df,
-                leaf_data=X_boot,
-                alpha_local=alpha_local,
-                sibling_alpha=sibling_alpha,
-                **decompose_kwargs,
-            )
-        except Exception:
-            # If decomposition fails on a degenerate resample, skip
-            continue
+        Z_b = linkage(pdist(X_boot.values, metric=metric), method=linkage_method)
+        tree_b = PosetTree.from_linkage(Z_b, leaf_names=boot_labels)
+        tree_b.populate_node_divergences(X_boot)
+        res_b = tree_b.decompose(
+            annotations_df=tree_b.annotations_df,
+            leaf_data=X_boot,
+            alpha_local=alpha_local,
+            sibling_alpha=sibling_alpha,
+            **decompose_kwargs,
+        )
 
         # --- accumulate co-association ---
-        cluster_assignments_b = res_b.get("cluster_assignments", {})
+        cluster_assignments_b = res_b["cluster_assignments"]
         label_to_cluster = _build_label_map(cluster_assignments_b)
         present_list, present_idx_list, cluster_count_matrix = _build_original_cluster_count_matrix(
             boot_labels,
@@ -184,7 +186,7 @@ def bootstrap_consensus(
             co_count[np.ix_(idx, idx)] += present_weights
             co_same[np.ix_(idx, idx)] += same_weights.astype(np.float64, copy=False)
 
-        k_distribution.append(res_b.get("num_clusters", 0))
+        k_distribution.append(res_b["num_clusters"])
 
         # --- clade support ---
         # A clade from the original tree is "recovered" if the subset of
@@ -195,7 +197,7 @@ def bootstrap_consensus(
         temp_to_original = dict(zip(boot_labels, boot_original_labels))
         boot_clades_original: Set[FrozenSet[str]] = set()
         for boot_clade in boot_clades:
-            original_members = {temp_to_original.get(leaf, leaf) for leaf in boot_clade}
+            original_members = {temp_to_original[leaf] for leaf in boot_clade}
             if len(original_members) > 1:
                 boot_clades_original.add(frozenset(original_members))
         for orig_clade in clade_hits:
@@ -217,7 +219,7 @@ def bootstrap_consensus(
 
     # Cluster stability (mean intra-cluster co-association)
     cluster_stability = _compute_cluster_stability(
-        results_orig.get("cluster_assignments", {}), co_assoc_df, id_to_idx
+        results_orig["cluster_assignments"], co_assoc_df, id_to_idx
     )
 
     result = {
@@ -232,7 +234,7 @@ def bootstrap_consensus(
     if include_coassociation_logs:
         co_count_df = pd.DataFrame(co_count, index=sample_ids, columns=sample_ids)
         co_same_df = pd.DataFrame(co_same, index=sample_ids, columns=sample_ids)
-        original_cluster_by_sample = _build_label_map(results_orig.get("cluster_assignments", {}))
+        original_cluster_by_sample = _build_label_map(results_orig["cluster_assignments"])
         pair_log_df = _build_coassociation_pair_log(
             sample_ids,
             co_assoc=co_assoc,
@@ -268,13 +270,11 @@ def _build_original_cluster_count_matrix(
     id_to_idx: Dict[str, int],
 ) -> tuple[List[str], List[int], np.ndarray]:
     """Build original-sample × cluster duplicate-count matrix for one bootstrap replicate."""
-    original_to_counts: Dict[str, Dict[int, int]] = {}
+    original_to_counts: dict[str, defaultdict[int, int]] = {}
     for temp_label, original_label in zip(boot_labels, boot_original_labels):
-        cluster_id = label_to_cluster.get(temp_label)
-        if cluster_id is None:
-            continue
-        counts = original_to_counts.setdefault(original_label, {})
-        counts[cluster_id] = counts.get(cluster_id, 0) + 1
+        cluster_id = label_to_cluster[temp_label]
+        counts = original_to_counts.setdefault(original_label, defaultdict(int))
+        counts[cluster_id] += 1
 
     if not original_to_counts:
         return [], [], np.zeros((0, 0), dtype=np.int32)

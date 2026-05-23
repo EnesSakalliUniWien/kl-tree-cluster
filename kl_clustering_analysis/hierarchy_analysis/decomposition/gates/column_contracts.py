@@ -6,9 +6,7 @@ import pandas as pd
 
 from ..core.contracts import (
     EDGE_GATE_COLUMNS,
-    EDGE_GATE_OPTIONAL_COLUMNS,
     SIBLING_GATE_COLUMNS,
-    SIBLING_GATE_OPTIONAL_COLUMNS,
 )
 from ..core.errors import DecompositionValidationError
 
@@ -45,7 +43,7 @@ def validate_edge_gate_columns(
 ) -> tuple[str, ...]:
     produced = edge_gate_columns(df)
     missing = [col for col in EDGE_GATE_COLUMNS if col not in produced]
-    allowed = set(EDGE_GATE_COLUMNS) | set(EDGE_GATE_OPTIONAL_COLUMNS)
+    allowed = set(EDGE_GATE_COLUMNS)
     extras = [col for col in produced if col not in allowed]
     if missing or extras:
         detail = _format_contract_detail(missing, extras)
@@ -60,7 +58,7 @@ def validate_sibling_gate_columns(
 ) -> tuple[str, ...]:
     produced = sibling_gate_columns(df)
     missing = [col for col in SIBLING_GATE_COLUMNS if col not in produced]
-    allowed = set(SIBLING_GATE_COLUMNS) | set(SIBLING_GATE_OPTIONAL_COLUMNS)
+    allowed = set(SIBLING_GATE_COLUMNS)
     extras = [col for col in produced if col not in allowed]
     if missing or extras:
         detail = _format_contract_detail(missing, extras)

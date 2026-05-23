@@ -31,7 +31,7 @@ from .pair_observations import (
     identify_binary_sibling_children,
 )
 from .sibling_pair_record_building import build_sibling_pair_record
-from .sibling_test_execution import run_sibling_divergence_wald_test_with_diagnostics
+from ..wald_statistic.sibling_divergence_test import sibling_divergence_test
 
 
 def collect_sibling_pair_records(
@@ -39,9 +39,9 @@ def collect_sibling_pair_records(
     annotations_df: pd.DataFrame,
     mean_branch_length: float | None,
     *,
-    sibling_projection_dimensions_from_edge_comparisons: dict[object, int] | None = None,
-    parent_principal_component_projections: dict[object, np.ndarray] | None = None,
-    parent_principal_component_eigenvalues: dict[object, np.ndarray] | None = None,
+    sibling_projection_dimensions_from_edge_comparisons: dict[object, int],
+    parent_principal_component_projections: dict[object, np.ndarray],
+    parent_principal_component_eigenvalues: dict[object, np.ndarray],
 ) -> tuple[list[SiblingPairRecord], list[object]]:
     """Collect raw sibling-test records for every binary-child parent node."""
     validate_child_parent_edge_annotation_requirements(annotations_df)
@@ -91,20 +91,14 @@ def collect_sibling_pair_records(
             parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
         )
 
-        (
-            test_statistic,
-            degrees_of_freedom,
-            p_value,
-            projection_diagnostics,
-        ) = run_sibling_divergence_wald_test_with_diagnostics(
-            left_distribution=left_distribution,
-            right_distribution=right_distribution,
-            left_sample_size=float(left_sample_size),
-            right_sample_size=float(right_sample_size),
+        test_statistic, degrees_of_freedom, p_value = sibling_divergence_test(
+            left_distribution,
+            right_distribution,
+            float(left_sample_size),
+            float(right_sample_size),
             branch_length_left=branch_length_left,
             branch_length_right=branch_length_right,
             mean_branch_length=mean_branch_length,
-            parent_node_id=parent_node_id,
             projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
             parent_principal_component_projection=parent_principal_component_projection,
             parent_principal_component_eigenvalues=(
@@ -117,7 +111,7 @@ def collect_sibling_pair_records(
             resolved_projection_dimension,
             used_parent_principal_component_basis,
         ) = determine_projection_metadata_for_sibling_test(
-            projection_diagnostics=projection_diagnostics,
+            projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
             parent_principal_component_projection=parent_principal_component_projection,
         )
 
@@ -139,6 +133,10 @@ def collect_sibling_pair_records(
                 left_child_id,
                 right_child_id,
                 child_parent_edge_pvalues_by_node=child_parent_edge_pvalues_by_node,
+                child_parent_edge_tested_by_node=child_parent_edge_tested_by_node,
+                child_parent_edge_ancestor_blocked_by_node=(
+                    child_parent_edge_ancestor_blocked_by_node
+                ),
             )
         )
         sibling_test_calibration_scale = resolve_sibling_test_calibration_scale(

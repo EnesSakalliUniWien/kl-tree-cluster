@@ -25,9 +25,19 @@ def interpolate_sibling_null_priors(
     edge_projection_dimensions_by_node: dict[str, int] | None = None,
 ) -> list[SiblingPairRecord]:
     """Interpolate sibling null priors for blocked nodes from tree-local neighborhoods."""
+    if not any(record.is_gate2_blocked for record in records):
+        return records
+
     stopping_edge_info_by_child = extract_stopping_edge_info(annotations_dataframe)
     if stopping_edge_info_by_child is None:
-        return records
+        raise ValueError(
+            "Blocked sibling records require serialized stopping-edge context."
+        )
+    if edge_projection_dimensions_by_node is None:
+        raise ValueError(
+            "Sibling null-prior interpolation requires Gate 2 spectral dimensions "
+            "when blocked sibling records are present."
+        )
 
     edge_metadata = extract_edge_metadata(
         annotations_dataframe,

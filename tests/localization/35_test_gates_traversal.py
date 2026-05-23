@@ -201,9 +201,8 @@ class TestGateEvaluator:
         assert gate.decision("root") is TraversalDecision.SPLIT
 
     def test_gate2_missing_annotations_raises(self) -> None:
-        gate = _make_gate(local_significant={})
-        with pytest.raises(ValueError, match="Missing child-parent divergence"):
-            gate.decision("root")
+        with pytest.raises(ValueError, match="Missing local_significant values"):
+            _make_gate(local_significant={})
 
     def test_gate3_siblings_same(self) -> None:
         gate = _make_gate(
@@ -237,9 +236,8 @@ class TestGateEvaluator:
         assert gate.decision("root") is TraversalDecision.BOUNDARY
 
     def test_gate3_missing_annotations_raises(self) -> None:
-        gate = _make_gate(sibling_different={})
-        with pytest.raises(ValueError, match="Sibling divergence annotations missing"):
-            gate.decision("root")
+        with pytest.raises(ValueError, match="Missing sibling_different values"):
+            _make_gate(sibling_different={})
 
     def test_passthrough_disabled_returns_false(self) -> None:
         gate = _make_gate(
@@ -265,6 +263,26 @@ class TestGateEvaluator:
             passthrough=True,
             sibling_different=sibling_different,
         )
+        assert gate.decision("root") is TraversalDecision.PASS_THROUGH
+
+    def test_passthrough_decision_uses_cached_gate_results(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_deep_tree()
+        sibling_different = {node: False for node in tree.nodes}
+        sibling_different["B"] = True
+        gate = _make_gate(
+            tree=tree,
+            passthrough=True,
+            sibling_different=sibling_different,
+        )
+
+        def _fail_recompute(*_args, **_kwargs):
+            raise AssertionError("passthrough decision recomputed gate predicates")
+
+        monkeypatch.setattr(gate, "_passes_split_prerequisites", _fail_recompute)
+        monkeypatch.setattr(gate, "_sibling_gate_is_open", _fail_recompute)
+
         assert gate.decision("root") is TraversalDecision.PASS_THROUGH
 
     def test_no_passthrough_when_gate3_passes(self) -> None:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -50,6 +50,11 @@ def extract_edge_metadata(
             "Missing required child-parent edge metadata columns for sibling null-prior "
             f"interpolation: {missing_columns!r}."
         )
+    if edge_projection_dimensions_by_node is None:
+        raise ValueError(
+            "Sibling null-prior interpolation requires Gate 2 spectral dimensions "
+            "for every child edge."
+        )
 
     child_parent_edge_tested = (
         annotations_dataframe["Child_Parent_Divergence_Tested"].astype(bool).to_numpy()
@@ -66,45 +71,33 @@ def extract_edge_metadata(
         child_parent_edge_tested=child_parent_edge_tested,
         child_parent_edge_significant=child_parent_edge_significant,
         child_parent_edge_bh_p_values=child_parent_edge_bh_p_values,
-        edge_projection_dimensions=edge_projection_dimensions_by_node,
+        edge_projection_dimensions=dict(edge_projection_dimensions_by_node),
     )
 
 
 def edge_neighborhood_matching_scale(
     node_id: str,
     annotations_dataframe: pd.DataFrame,
-    edge_projection_dimensions: dict[str, int] | None,
+    edge_projection_dimensions: dict[str, int],
 ) -> float:
     """Return the edge-level neighborhood-matching scale.
 
-    Prefer the edge projection dimension computed from Gate 2. When no
-    positive edge projection dimension is available, fall back to the
-    edge-level projected Wald degrees of freedom.
+    The scale is the Gate 2 spectral projection dimension for the child edge.
     """
-    edge_projection_dimension = None
-    if edge_projection_dimensions is not None:
-        edge_projection_dimension = edge_projection_dimensions.get(str(node_id))
-    if (
-        edge_projection_dimension is not None
-        and np.isfinite(edge_projection_dimension)
-        and float(edge_projection_dimension) > 0
-    ):
-        return float(edge_projection_dimension)
-
-    edge_degrees_of_freedom = None
-    if "Child_Parent_Divergence_df" in annotations_dataframe.columns:
-        edge_degrees_of_freedom_raw = cast(
-            Any, annotations_dataframe.at[node_id, "Child_Parent_Divergence_df"]
+    del annotations_dataframe
+    child_id = str(node_id)
+    if child_id not in edge_projection_dimensions:
+        raise ValueError(
+            "Sibling null-prior interpolation requires a Gate 2 spectral dimension "
+            f"for child edge {child_id!r}."
         )
-        edge_degrees_of_freedom = float(np.asarray(edge_degrees_of_freedom_raw, dtype=float).item())
-    if (
-        edge_degrees_of_freedom is not None
-        and np.isfinite(edge_degrees_of_freedom)
-        and edge_degrees_of_freedom > 0
-    ):
-        return float(edge_degrees_of_freedom)
-
-    return 1.0
+    edge_projection_dimension = float(edge_projection_dimensions[child_id])
+    if not np.isfinite(edge_projection_dimension) or edge_projection_dimension < 0.0:
+        raise ValueError(
+            "Sibling null-prior interpolation requires finite nonnegative Gate 2 "
+            f"spectral dimensions; got {edge_projection_dimension!r} for child edge {child_id!r}."
+        )
+    return edge_projection_dimension
 
 
 __all__ = [

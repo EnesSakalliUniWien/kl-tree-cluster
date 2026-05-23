@@ -42,8 +42,7 @@ def run_child_parent_projected_wald_test(
         )
     )
 
-    is_invalid = np.isnan(test_statistic)
-    return test_statistic, float(effective_degrees_of_freedom), p_value, is_invalid
+    return test_statistic, float(effective_degrees_of_freedom), p_value, False
 
 
 __all__ = [
