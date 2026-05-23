@@ -158,7 +158,7 @@ def estimate_sibling_null_weight_from_child_parent_edges(
     child_parent_edge_tested_by_node: dict[object, bool],
     child_parent_edge_ancestor_blocked_by_node: dict[object, bool],
 ) -> float:
-    """Return the sibling null weight implied by the two child-parent edges."""
+    """Return the monotone empirical-null weight implied by both child edges."""
 
     def _edge_null_weight(child_id: object) -> float:
         p_value = float(
@@ -197,7 +197,9 @@ def estimate_sibling_null_weight_from_child_parent_edges(
             )
         return 1.0
 
-    return min(_edge_null_weight(left_child_id), _edge_null_weight(right_child_id))
+    left_weight = _edge_null_weight(left_child_id)
+    right_weight = _edge_null_weight(right_child_id)
+    return float(left_weight * right_weight)
 
 
 __all__ = [

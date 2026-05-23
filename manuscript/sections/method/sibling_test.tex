@@ -254,6 +254,14 @@ projected-Wald kernel, let
 $\pi_q \in [0,1]$ be the sibling null weight implied by the two child-parent
 edge tests, and let $z_q$ denote the calibration context of the sibling
 comparison. In the current implementation,
+\begin{equation}
+\pi_q =
+p_{q \to l(q)}^{\mathrm{edge,BH}}\,
+p_{q \to r(q)}^{\mathrm{edge,BH}},
+\end{equation}
+so both child-parent edges must look empirically null-like for the sibling pair
+to carry high calibration weight. This is a monotone empirical weight, not a
+posterior null probability. Also,
 \[
 z_q = \log s_q,
 \]
