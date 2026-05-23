@@ -199,9 +199,6 @@ def run_gate_annotation_pipeline(
         parent_principal_component_eigenvalues=(
             sibling_inputs.parent_principal_component_eigenvalues
         ),
-        edge_projection_dimensions_by_node=(
-            gate_two_result.spectral_context.spectral_projection_dimensions_by_node
-        ),
     )
     validate_edge_gate_columns(
         annotated_df,

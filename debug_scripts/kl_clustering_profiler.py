@@ -246,9 +246,6 @@ class KLProfiler:
                 parent_principal_component_eigenvalues=(
                     gate_inputs.parent_principal_component_eigenvalues
                 ),
-                edge_projection_dimensions_by_node=(
-                    gate_inputs.spectral_context.spectral_projection_dimensions_by_node
-                ),
             )
         return self.annotations_df
 

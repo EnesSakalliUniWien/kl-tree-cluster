@@ -34,15 +34,23 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame, pd.DataFrame]:
     tree = nx.DiGraph()
     tree.add_edge("root", "A", branch_length=0.25)
     tree.add_edge("root", "B", branch_length=0.20)
+    tree.add_edge("cal", "C", branch_length=0.10)
+    tree.add_edge("cal", "D", branch_length=0.10)
 
     root_dist = np.array([0.50, 0.50, 0.50, 0.50, 0.50, 0.50], dtype=np.float64)
     a_dist = np.array([0.12, 0.12, 0.12, 0.88, 0.88, 0.88], dtype=np.float64)
     b_dist = np.array([0.88, 0.88, 0.88, 0.12, 0.12, 0.12], dtype=np.float64)
+    cal_dist = np.array([0.50, 0.50, 0.50, 0.50, 0.50, 0.50], dtype=np.float64)
+    c_dist = np.array([0.45, 0.45, 0.45, 0.55, 0.55, 0.55], dtype=np.float64)
+    d_dist = np.array([0.55, 0.55, 0.55, 0.45, 0.45, 0.45], dtype=np.float64)
 
     for node, dist, leaf_count, is_leaf in (
         ("root", root_dist, 200, False),
         ("A", a_dist, 100, True),
         ("B", b_dist, 100, True),
+        ("cal", cal_dist, 200, False),
+        ("C", c_dist, 100, True),
+        ("D", d_dist, 100, True),
     ):
         tree.nodes[node]["distribution"] = dist
         tree.nodes[node]["leaf_count"] = leaf_count
@@ -55,12 +63,15 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame, pd.DataFrame]:
                 "root": 200,
                 "A": 100,
                 "B": 100,
+                "cal": 200,
+                "C": 100,
+                "D": 100,
             }
         }
     )
     leaf_data = pd.DataFrame(
-        [a_dist, b_dist],
-        index=["A", "B"],
+        [a_dist, b_dist, c_dist, d_dist],
+        index=["A", "B", "C", "D"],
         columns=[f"feature_{feature_index}" for feature_index in range(len(a_dist))],
     )
     return tree, base_df, leaf_data
@@ -95,9 +106,6 @@ def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatc
         sibling_projection_dimensions_from_edge_comparisons=sibling_projection_dimensions,
         parent_principal_component_projections=parent_principal_component_projections,
         parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
-        edge_projection_dimensions_by_node=(
-            spectral_context.spectral_projection_dimensions_by_node
-        ),
     )
 
     bundle = run_gate_annotation_pipeline(

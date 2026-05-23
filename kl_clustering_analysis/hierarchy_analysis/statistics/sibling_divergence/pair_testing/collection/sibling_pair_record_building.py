@@ -19,26 +19,51 @@ def build_sibling_pair_record(
     parent_sample_size: int,
     is_null_like: bool,
     is_gate2_blocked: bool,
-    sibling_null_prior_from_edge_pvalue: float,
-    sibling_test_calibration_scale: float,
+    sibling_null_weight: float,
+    sibling_calibration_scale: float,
     projection_dimension_source: str,
     resolved_projection_dimension: float,
     used_parent_principal_component_basis: bool,
 ) -> SiblingPairRecord:
     """Construct a sibling-pair record from resolved statistical inputs."""
+    if not np.isfinite(test_statistic):
+        raise ValueError(
+            "Sibling pair record requires a finite test statistic; "
+            f"parent={parent_node_id!r}."
+        )
+    if not np.isfinite(degrees_of_freedom) or degrees_of_freedom < 0:
+        raise ValueError(
+            "Sibling pair record requires finite non-negative degrees of freedom; "
+            f"parent={parent_node_id!r}."
+        )
+    if not np.isfinite(p_value) or p_value < 0.0 or p_value > 1.0:
+        raise ValueError(
+            "Sibling pair record requires a finite p-value in [0, 1]; "
+            f"parent={parent_node_id!r}."
+        )
+    if not np.isfinite(sibling_null_weight) or not 0.0 <= sibling_null_weight <= 1.0:
+        raise ValueError(
+            "Sibling pair record requires a finite sibling_null_weight in [0, 1]; "
+            f"parent={parent_node_id!r}."
+        )
+    if not np.isfinite(sibling_calibration_scale) or sibling_calibration_scale < 0.0:
+        raise ValueError(
+            "Sibling pair record requires a finite non-negative sibling_calibration_scale; "
+            f"parent={parent_node_id!r}."
+        )
     return SiblingPairRecord(
         parent=parent_node_id,
         left=left_child_id,
         right=right_child_id,
         stat=test_statistic,
-        degrees_of_freedom=float(degrees_of_freedom) if np.isfinite(degrees_of_freedom) else 0.0,
+        degrees_of_freedom=float(degrees_of_freedom),
         p_value=p_value,
         branch_length_sum=branch_length_sum,
         n_parent=parent_sample_size,
         is_null_like=is_null_like,
         is_gate2_blocked=is_gate2_blocked,
-        sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
-        sibling_test_calibration_scale=sibling_test_calibration_scale,
+        sibling_null_weight=sibling_null_weight,
+        sibling_calibration_scale=sibling_calibration_scale,
         projection_dimension_source=projection_dimension_source,
         resolved_projection_dimension=resolved_projection_dimension,
         used_parent_principal_component_basis=used_parent_principal_component_basis,

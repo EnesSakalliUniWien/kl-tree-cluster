@@ -214,13 +214,13 @@ distribution instead. \Cref{app:projected-wald-example} expands this
 example in full matrix form and shows the corresponding plain, whitened, and
 Satterthwaite-calibrated calculations side by side.
 
-\paragraph{Post-selection inflation.}
+\paragraph{Post-selection scale distortion.}
 Raw sibling $p$-values are still not enough on their own because the sibling
 pair being tested is not fixed in advance. The same data are used first to
 construct the hierarchy and thereby expose pairs of child subtrees that already
 look well separated, and then again to test whether those selected siblings are
 significantly different. This data reuse creates \emph{post-selection
-inflation}. Even under a null setting with no true cluster structure, the tree
+scale distortion}. Even under a null setting with no true cluster structure, the tree
 construction step tends to present unusually separated sibling pairs because it
 was built from the observed dissimilarities. The sibling statistic
 is therefore evaluated conditionally on a favorable selection event rather than
@@ -232,109 +232,69 @@ decisions become too common. Empirical null simulations confirm this effect:
 without correction, the Wald sibling test produces Type~I error rates of
 approximately 39\% at $\alpha = 0.05$.
 
-\paragraph{Calibration via continuous edge-weight deflation.}
-The sibling calibration then corrects for this extra optimism by estimating a
-global adjustment factor from the sibling statistics themselves, using the
-edge-test $p$-values as continuous weights. For every binary parent $q$, let
-$T_q^{\mathrm{raw}}$ be the raw sibling statistic and let $\nu_q$ be the
-effective sibling degrees of freedom returned by the projected-Wald kernel. The
-inflation ratio is
-\begin{equation}
-r_q = \frac{T_q^{\mathrm{raw}}}{\nu_q}.
-\end{equation}
-Under a pure-null calibration model, these ratios should fluctuate around a
-common inflation level. The weighting rule is
-\begin{equation}
-w_q = \min\!\left(p^{\mathrm{edge}}_{l(q)},\;
-                    p^{\mathrm{edge}}_{r(q)}\right),
-\end{equation}
-where $p^{\mathrm{edge}}_{l(q)}$ and $p^{\mathrm{edge}}_{r(q)}$ are the
-Benjamini--Hochberg-corrected edge-test $p$-values of the two children. Pairs where neither
-child is edge-significant receive large weights and dominate the estimate,
-while pairs with genuine cluster signal receive small weights and are
-down-weighted. For this calibration step, child edges that were blocked or never tested
-are treated as $p=1$ for this calibration weight only. The global inflation
-factor is then the
-weighted mean
-\begin{equation}\label{eq:chat-global}
-\hat{c}
-=
-\frac{\sum_q w_q \, r_q}{\sum_q w_q},
-\qquad
-\text{clamped to } [1,\;\max_q r_q].
-\end{equation}
-
-\paragraph{Why continuous weights, not a binary oracle.}
-An earlier design classified sibling pairs into discrete \emph{null-like}
-(neither child edge-significant) and \emph{focal} groups, then fitted the
-calibration model only on null-like pairs.  This approach has a circular
-dependency: on null data, the edge test itself is inflated by post-selection
-bias and declares essentially every edge significant---leaving zero null-like
-calibration pairs and forcing $\hat{c}=1$ (no correction).  Empirical tracing
-on pure-noise data ($n=100$, $p=50$, $K_{\mathrm{true}}=1$) confirmed this
-failure: the edge test marked 198 of 199 edges significant, the calibration
-received zero null-like pairs, and the method returned $K=17$. Continuous
-weighting avoids this dead zone: even when all edge $p$-values are similarly
-small, the weights are approximately equal, and the weighted mean of $r_q$
-still recovers the true inflation $\hat{c} \approx 3$.
-
-\paragraph{Runtime deflation and sibling false-discovery-rate correction.}
-The method first fits one global weighted-mean inflation level
-$\hat{c}_{\mathrm{global}}$. It then localizes that correction in the
-decomposition-derived sibling structural dimension
-$k_q^{\mathrm{struct}}$. This structural dimension is the same quantity used to
-choose the sibling projection dimension. As a result, the
-calibration neighborhood is defined in the same geometric coordinate system as
-the test itself.
-
-For all valid sibling pairs in the calibration pool, define
+\paragraph{Context-weighted empirical-null scale.}
+The sibling calibration corrects for this extra optimism by estimating the
+post-selection scale of the projected-Wald statistic from the empirical null
+visible inside the fitted hierarchy. For every binary parent $q$, let
+$T_q^{\mathrm{raw}}$ be the raw sibling statistic, let $\nu_q$ be the effective
+sibling degrees of freedom returned by the projected-Wald kernel, let
+$\pi_q \in [0,1]$ be the sibling null weight implied by the two child-parent
+edge tests, and let $z_q$ denote the calibration context of the sibling
+comparison. In the current implementation,
 \[
-\ell_q = \log\!\bigl(\max(k_q^{\mathrm{struct}}, 1)\bigr),
-\qquad
-\bar{\ell}
-=
-\frac{\sum_q w_q \ell_q}{\sum_q w_q},
-\qquad
-h
-=
-\sqrt{\frac{\sum_q w_q (\ell_q - \bar{\ell})^2}{\sum_q w_q}}.
+z_q = \log s_q,
 \]
-Thus $\exp(\bar{\ell})$ is the edge-weighted geometric-mean structural
-dimension, and $h$ is the edge-weighted standard deviation in log-$k$ space.
-For a focal sibling pair $u$, the runtime assigns each calibration pair $q$
-the local similarity weight
+where $s_q$ is the resolved sibling projection dimension. The method assumes the
+post-selection null family
+\begin{equation}\label{eq:sibling-context-scale-model}
+T_q^{\mathrm{raw}} \mid H_0
+\approx
+c(z_q)\,\chi^2_{\nu_q}.
+\end{equation}
+For a focal sibling pair $u$, define context weights
 \begin{equation}
-\tilde{w}_q(u)
+w_q(u)
 =
-w_q \exp\!\left(
+\pi_q K(z_q,z_u),
+\end{equation}
+where the default kernel is Gaussian in the scalar context,
+\begin{equation}
+K(z_q,z_u)
+=
+\exp\!\left[
 -\frac{1}{2}
 \left(
-\frac{\ell_q - \ell_u}{h}
+\frac{z_q-z_u}{h}
 \right)^2
-\right),
+\right],
 \end{equation}
-where $\ell_u = \log(\max(k_u^{\mathrm{struct}}, 1))$. The node-specific
-inflation factor is then the locally weighted mean
-\begin{equation}
-\hat{c}_u
+and $h$ is the null-weighted empirical standard deviation of the observed
+contexts. The local empirical-null scale estimate is the weighted chi-square
+scale maximum-likelihood estimator
+\begin{equation}\label{eq:sibling-context-scale-estimator}
+\hat{c}(z_u)
 =
-\frac{\sum_q \tilde{w}_q(u)\, r_q}{\sum_q \tilde{w}_q(u)},
-\qquad
-\text{clamped to } [1,\;\max_q r_q].
+\max\left\{
+1,\,
+\frac{\sum_q w_q(u)T_q^{\mathrm{raw}}}
+{\sum_q w_q(u)\nu_q}
+\right\}.
 \end{equation}
-If the pool has no valid spread in structural dimension, the runtime falls
-back to the global constant $\hat{c}_u = \hat{c}_{\mathrm{global}}$.
+The denominator is required to have positive effective calibration mass. If no
+positive-degree sibling records carry positive null weight, the calibration
+contract is not satisfied and the implementation raises an error.
 
+\paragraph{Runtime correction and sibling false-discovery-rate correction.}
 For each focal pair $u$, the adjusted runtime test is
 \begin{equation}
-T_u^{\mathrm{adj}} = \frac{T_u^{\mathrm{raw}}}{\hat{c}_u},
+T_u^{\mathrm{adj}} = \frac{T_u^{\mathrm{raw}}}{\hat{c}(z_u)},
 \qquad
 p_u^{\mathrm{sib}}
 =
 \Pr\!\left(\chi^2_{\nu_u} \ge T_u^{\mathrm{adj}}\right).
 \end{equation}
 This adjusted test should be read as a practical calibration layer for
-post-selection inflation rather than as a
+post-selection scale distortion rather than as a
 separate finite-sample exact theorem for the adjusted sibling statistic.
 
 The sibling multiplicity correction is ordinary

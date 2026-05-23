@@ -267,6 +267,9 @@ class TestNonBinarySkippedFlag:
         df["Child_Parent_Divergence_Invalid"] = False
         df["Child_Parent_Divergence_Tested"] = True
         df["Child_Parent_Divergence_Ancestor_Blocked"] = False
+        df.loc[["L2", "L3"], "Child_Parent_Divergence_Significant"] = False
+        df.loc[["L2", "L3"], "Child_Parent_Divergence_P_Value_BH"] = 1.0
+        df.loc[["L2", "L3"], "Child_Parent_Divergence_P_Value"] = 1.0
         return df
 
     def test_adjusted_wald_marks_leaves_as_skipped(self):
@@ -292,9 +295,6 @@ class TestNonBinarySkippedFlag:
             parent_principal_component_eigenvalues={
                 parent: np.ones(1, dtype=float)
                 for parent in sibling_parent_ids
-            },
-            edge_projection_dimensions_by_node={
-                node: 1 for node in tree.nodes
             },
         )
 

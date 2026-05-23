@@ -48,14 +48,22 @@ def _make_sibling_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
     tree = nx.DiGraph()
     tree.add_edge("root", "L")
     tree.add_edge("root", "R")
+    tree.add_edge("cal", "CL")
+    tree.add_edge("cal", "CR")
 
     tree.nodes["root"]["distribution"] = np.array([0.5, 0.5], dtype=float)
     tree.nodes["L"]["distribution"] = np.array([0.4, 0.6], dtype=float)
     tree.nodes["R"]["distribution"] = np.array([0.6, 0.4], dtype=float)
+    tree.nodes["cal"]["distribution"] = np.array([0.5, 0.5], dtype=float)
+    tree.nodes["CL"]["distribution"] = np.array([0.5, 0.5], dtype=float)
+    tree.nodes["CR"]["distribution"] = np.array([0.5, 0.5], dtype=float)
 
     tree.nodes["root"]["leaf_count"] = 10
     tree.nodes["L"]["leaf_count"] = 5
     tree.nodes["R"]["leaf_count"] = 5
+    tree.nodes["cal"]["leaf_count"] = 10
+    tree.nodes["CL"]["leaf_count"] = 5
+    tree.nodes["CR"]["leaf_count"] = 5
 
     nodes_df = pd.DataFrame(
         {
@@ -63,36 +71,57 @@ def _make_sibling_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
                 "root": np.nan,
                 "L": 0.01,
                 "R": 1.0,
+                "cal": np.nan,
+                "CL": 1.0,
+                "CR": 1.0,
             },
             "Child_Parent_Divergence_P_Value_BH": {
                 "root": np.nan,
                 "L": 0.01,
                 "R": 1.0,
+                "cal": np.nan,
+                "CL": 1.0,
+                "CR": 1.0,
             },
             "Child_Parent_Divergence_Significant": {
                 "root": False,
                 "L": True,
                 "R": False,
+                "cal": False,
+                "CL": False,
+                "CR": False,
             },
             "Child_Parent_Divergence_df": {
                 "root": np.nan,
                 "L": 1.0,
                 "R": 1.0,
+                "cal": np.nan,
+                "CL": 1.0,
+                "CR": 1.0,
             },
             "Child_Parent_Divergence_Invalid": {
                 "root": False,
                 "L": False,
                 "R": False,
+                "cal": False,
+                "CL": False,
+                "CR": False,
             },
             "Child_Parent_Divergence_Tested": {
                 "root": False,
                 "L": True,
                 "R": True,
+                "cal": False,
+                "CL": True,
+                "CR": True,
             },
             "Child_Parent_Divergence_Ancestor_Blocked": {
                 "root": False,
                 "L": False,
                 "R": False,
+                "cal": False,
+                "CL": False,
+                "CR": False,
             },
         }
     )
@@ -164,7 +193,7 @@ def test_sibling_nonfinite_results_raise_before_correction(
         _fake_sibling_test,
     )
 
-    with pytest.raises(ValueError, match="finite statistic"):
+    with pytest.raises(ValueError, match="finite test statistic"):
         annotate_sibling_divergence(
             tree=tree,
             annotations_df=nodes_df,
@@ -172,7 +201,6 @@ def test_sibling_nonfinite_results_raise_before_correction(
             sibling_projection_dimensions_from_edge_comparisons={"root": 2},
             parent_principal_component_projections={"root": np.eye(2, dtype=float)},
             parent_principal_component_eigenvalues={"root": np.ones(2, dtype=float)},
-            edge_projection_dimensions_by_node={"root": 2, "L": 2, "R": 2},
         )
 
 
@@ -331,10 +359,15 @@ def test_annotate_sibling_divergence_persists_derived_projection_metadata() -> N
         tree=tree,
         annotations_df=nodes_df,
         significance_level_alpha=0.05,
-        sibling_projection_dimensions_from_edge_comparisons={"root": 2},
-        parent_principal_component_projections={"root": np.eye(2, dtype=float)},
-        parent_principal_component_eigenvalues={"root": np.ones(2, dtype=float)},
-        edge_projection_dimensions_by_node={"root": 2, "L": 2, "R": 2},
+        sibling_projection_dimensions_from_edge_comparisons={"root": 2, "cal": 2},
+        parent_principal_component_projections={
+            "root": np.eye(2, dtype=float),
+            "cal": np.eye(2, dtype=float),
+        },
+        parent_principal_component_eigenvalues={
+            "root": np.ones(2, dtype=float),
+            "cal": np.ones(2, dtype=float),
+        },
     )
 
     assert (
@@ -345,12 +378,8 @@ def test_annotate_sibling_divergence_persists_derived_projection_metadata() -> N
     assert bool(out.loc["root", "Sibling_Used_Parent_Principal_Component_Basis"]) is True
 
     audit = out.attrs.get("sibling_divergence_audit", {})
-    assert audit.get("calibration_projection_dimension_source_counts") == {
-        "derived_from_edge_comparisons": 1
-    }
-    assert audit.get("excluded_from_calibration_projection_dimension_source_counts") == {}
     assert audit.get("projection_dimension_source_counts") == {
-        "derived_from_edge_comparisons": 1
+        "derived_from_edge_comparisons": 2
     }
     assert audit.get("tested_projection_dimension_source_counts") == {
         "derived_from_edge_comparisons": 1

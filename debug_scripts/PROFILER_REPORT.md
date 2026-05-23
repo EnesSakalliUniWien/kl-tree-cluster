@@ -47,7 +47,7 @@ The KL-TE clustering profiler analyzed the performance of the complete clusterin
   
 - **Gate 3 (Sibling Divergence):**
   - Sibling Wald statistic computation
-  - Global inflation factor estimation
+  - Empirical-null scale estimation
   - Benjamini-Hochberg FDR correction
   - Cousin-adjusted p-value computation
 

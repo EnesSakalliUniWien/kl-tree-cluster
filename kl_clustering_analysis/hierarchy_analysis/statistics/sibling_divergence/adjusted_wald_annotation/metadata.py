@@ -6,10 +6,7 @@ from collections import Counter
 
 import pandas as pd
 
-from ..inflation_correction.types.calibration_model import CalibrationModel
-from ..inflation_correction.types.sibling_local_gaussian_inflation_calibrator import (
-    SiblingLocalGaussianInflationCalibrator,
-)
+from ..scale_correction.types.calibration_model import EmpiricalNullScaleModel
 from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
 
 
@@ -42,22 +39,13 @@ def _projection_dimension_source_counts(records: list[SiblingPairRecord]) -> dic
 def build_sibling_divergence_audit(
     *,
     records: list[SiblingPairRecord],
-    calibration_records: list[SiblingPairRecord],
-    excluded_from_calibration_records: list[SiblingPairRecord],
-    model: CalibrationModel,
-    calibrator: SiblingLocalGaussianInflationCalibrator,
+    model: EmpiricalNullScaleModel,
     n_null: int,
     n_focal: int,
     n_blocked: int,
 ) -> dict[str, object]:
     """Build the audit metadata attached to the annotations frame."""
     projection_dimension_source_counts = _projection_dimension_source_counts(records)
-    calibration_projection_dimension_source_counts = _projection_dimension_source_counts(
-        calibration_records
-    )
-    excluded_from_calibration_projection_dimension_source_counts = (
-        _projection_dimension_source_counts(excluded_from_calibration_records)
-    )
     tested_projection_dimension_source_counts = _projection_dimension_source_counts(
         [record for record in records if not record.is_null_like]
     )
@@ -69,20 +57,9 @@ def build_sibling_divergence_audit(
         "gate2_blocked_pairs": n_blocked,
         "calibration_method": model.method,
         "calibration_n": model.n_calibration,
-        "global_inflation_factor": model.global_inflation_factor,
-        "deflation_mode": "local_gaussian_adjuster",
-        "local_adjuster_center": calibrator.center,
-        "local_adjuster_spread": calibrator.spread,
-        "local_adjuster_spread_status": calibrator.spread_status,
+        "baseline_scale_factor": model.baseline_scale_factor,
+        "calibration_mode": "context_weighted_empirical_null_scale",
         "projection_dimension_source_counts": projection_dimension_source_counts,
-        "calibration_pair_count": len(calibration_records),
-        "excluded_from_calibration_pair_count": len(excluded_from_calibration_records),
-        "calibration_projection_dimension_source_counts": (
-            calibration_projection_dimension_source_counts
-        ),
-        "excluded_from_calibration_projection_dimension_source_counts": (
-            excluded_from_calibration_projection_dimension_source_counts
-        ),
         "tested_projection_dimension_source_counts": tested_projection_dimension_source_counts,
         "diagnostics": model.diagnostics,
         "test_method": "calibrated_projected_wald",
@@ -106,12 +83,8 @@ def build_no_focal_sibling_divergence_audit(
         "gate2_blocked_pairs": n_blocked,
         "calibration_method": "not_required_no_focal_tests",
         "calibration_n": 0,
-        "deflation_mode": "not_required_no_focal_tests",
+        "calibration_mode": "not_required_no_focal_tests",
         "projection_dimension_source_counts": _projection_dimension_source_counts(records),
-        "calibration_pair_count": 0,
-        "excluded_from_calibration_pair_count": 0,
-        "calibration_projection_dimension_source_counts": {},
-        "excluded_from_calibration_projection_dimension_source_counts": {},
         "tested_projection_dimension_source_counts": {},
         "diagnostics": {"fit_status": "not_required_no_focal_tests"},
         "test_method": "calibrated_projected_wald",

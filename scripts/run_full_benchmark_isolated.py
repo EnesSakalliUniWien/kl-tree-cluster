@@ -141,7 +141,8 @@ def main() -> None:
 
         case_df = None
         last_exc: Exception | None = None
-        for attempt in range(1, max(1, args.retry_count) + 2):
+        max_attempts = max(1, args.retry_count + 1)
+        for attempt in range(1, max_attempts + 1):
             try:
                 case_df = run_case_isolated(
                     case=case_with_num,
@@ -151,11 +152,12 @@ def main() -> None:
                     enable_plots=False,
                     pdf_path=None,
                     timeout_sec=max(1, args.timeout_sec),
+                    include_validation_page=False,
                 )
                 break
             except Exception as exc:
                 last_exc = exc
-                print(f"  attempt {attempt}/{args.retry_count + 1} failed: {exc}", flush=True)
+                print(f"  attempt {attempt}/{max_attempts} failed: {exc}", flush=True)
 
         if case_df is None:
             print(f"  FAILED after retries: {last_exc}", flush=True)

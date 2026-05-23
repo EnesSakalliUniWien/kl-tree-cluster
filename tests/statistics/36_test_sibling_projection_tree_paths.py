@@ -16,6 +16,13 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
     tree = PosetTree()
     tree.add_node(
+        "top",
+        is_leaf=False,
+        distribution=np.array([0.20, 0.20, 0.20, 0.80, 0.80, 0.80], dtype=float),
+        label="top",
+        leaf_count=400,
+    )
+    tree.add_node(
         "root",
         is_leaf=False,
         distribution=np.array([0.50, 0.50, 0.50, 0.50, 0.50, 0.50], dtype=float),
@@ -36,15 +43,45 @@ def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
         label="B",
         leaf_count=100,
     )
+    tree.add_node(
+        "cal",
+        is_leaf=False,
+        distribution=np.array([0.50, 0.50, 0.50, 0.50, 0.50, 0.50], dtype=float),
+        label="cal",
+        leaf_count=200,
+    )
+    tree.add_node(
+        "C",
+        is_leaf=True,
+        distribution=np.array([0.45, 0.45, 0.45, 0.55, 0.55, 0.55], dtype=float),
+        label="C",
+        leaf_count=100,
+    )
+    tree.add_node(
+        "D",
+        is_leaf=True,
+        distribution=np.array([0.55, 0.55, 0.55, 0.45, 0.45, 0.45], dtype=float),
+        label="D",
+        leaf_count=100,
+    )
+    tree.add_edge("top", "root", branch_length=0.10)
+    tree.add_edge("top", "cal", branch_length=0.10)
     tree.add_edge("root", "A", branch_length=0.25)
     tree.add_edge("root", "B", branch_length=0.20)
+    tree.add_edge("cal", "C", branch_length=0.10)
+    tree.add_edge("cal", "D", branch_length=0.10)
+    tree.graph["root"] = "top"
 
     annotations_df = pd.DataFrame(
         {
             "leaf_count": {
+                "top": 400,
                 "root": 200,
                 "A": 100,
                 "B": 100,
+                "cal": 200,
+                "C": 100,
+                "D": 100,
             }
         }
     )
@@ -52,8 +89,10 @@ def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
         [
             [0, 0, 0, 1, 1, 1],
             [1, 1, 1, 0, 0, 0],
+            [0.45, 0.45, 0.45, 0.55, 0.55, 0.55],
+            [0.55, 0.55, 0.55, 0.45, 0.45, 0.45],
         ],
-        index=["A", "B"],
+        index=["A", "B", "C", "D"],
         dtype=float,
     )
     return tree, annotations_df, leaf_data
@@ -61,6 +100,13 @@ def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
 
 def _build_mixed_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
     tree = PosetTree()
+    tree.add_node(
+        "top",
+        is_leaf=False,
+        distribution=np.array([0.20, 0.20, 0.20, 0.80, 0.80, 0.80], dtype=float),
+        label="top",
+        leaf_count=500,
+    )
     tree.add_node(
         "root",
         is_leaf=False,
@@ -96,19 +142,49 @@ def _build_mixed_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
         label="L3",
         leaf_count=100,
     )
+    tree.add_node(
+        "cal",
+        is_leaf=False,
+        distribution=np.array([0.50, 0.50, 0.50, 0.50, 0.50, 0.50], dtype=float),
+        label="cal",
+        leaf_count=200,
+    )
+    tree.add_node(
+        "C",
+        is_leaf=True,
+        distribution=np.array([0.45, 0.45, 0.45, 0.55, 0.55, 0.55], dtype=float),
+        label="C",
+        leaf_count=100,
+    )
+    tree.add_node(
+        "D",
+        is_leaf=True,
+        distribution=np.array([0.55, 0.55, 0.55, 0.45, 0.45, 0.45], dtype=float),
+        label="D",
+        leaf_count=100,
+    )
+    tree.add_edge("top", "root")
+    tree.add_edge("top", "cal")
     tree.add_edge("root", "I")
     tree.add_edge("root", "L3")
     tree.add_edge("I", "L1")
     tree.add_edge("I", "L2")
+    tree.add_edge("cal", "C")
+    tree.add_edge("cal", "D")
+    tree.graph["root"] = "top"
 
     annotations_df = pd.DataFrame(
         {
             "leaf_count": {
+                "top": 500,
                 "root": 300,
                 "I": 200,
                 "L1": 100,
                 "L2": 100,
                 "L3": 100,
+                "cal": 200,
+                "C": 100,
+                "D": 100,
             }
         }
     )
@@ -117,8 +193,10 @@ def _build_mixed_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
             [0, 0, 0, 1, 1, 1],
             [1, 1, 1, 0, 0, 0],
             [1, 1, 1, 1, 0, 0],
+            [0.45, 0.45, 0.45, 0.55, 0.55, 0.55],
+            [0.55, 0.55, 0.55, 0.45, 0.45, 0.45],
         ],
-        index=["L1", "L2", "L3"],
+        index=["L1", "L2", "L3", "C", "D"],
         dtype=float,
     )
     return tree, annotations_df, leaf_data
@@ -136,7 +214,11 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
     assert spectral_projection_dimensions_by_node is not None
     assert spectral_projection_dimensions_by_node["A"] == 0
     assert spectral_projection_dimensions_by_node["B"] == 0
+    assert spectral_projection_dimensions_by_node["C"] == 0
+    assert spectral_projection_dimensions_by_node["D"] == 0
     assert spectral_projection_dimensions_by_node["root"] > 0
+    assert spectral_projection_dimensions_by_node["cal"] > 0
+    assert spectral_projection_dimensions_by_node["top"] > 0
 
     sibling_projection_dimensions_from_edge_comparisons = (
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
@@ -145,7 +227,9 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
         )
     )
     assert sibling_projection_dimensions_from_edge_comparisons == {
-        "root": spectral_projection_dimensions_by_node["root"]
+        "root": spectral_projection_dimensions_by_node["root"],
+        "cal": spectral_projection_dimensions_by_node["cal"],
+        "top": spectral_projection_dimensions_by_node["top"],
     }
 
     assert np.isfinite(out.loc["root", "Sibling_Degrees_of_Freedom"])
@@ -165,8 +249,12 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
     assert spectral_projection_dimensions_by_node["L1"] == 0
     assert spectral_projection_dimensions_by_node["L2"] == 0
     assert spectral_projection_dimensions_by_node["L3"] == 0
+    assert spectral_projection_dimensions_by_node["C"] == 0
+    assert spectral_projection_dimensions_by_node["D"] == 0
     assert spectral_projection_dimensions_by_node["I"] > 0
     assert spectral_projection_dimensions_by_node["root"] > 0
+    assert spectral_projection_dimensions_by_node["cal"] > 0
+    assert spectral_projection_dimensions_by_node["top"] > 0
 
     sibling_projection_dimensions_from_edge_comparisons = (
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
@@ -175,10 +263,21 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
         )
     )
     assert sibling_projection_dimensions_from_edge_comparisons is not None
-    assert set(sibling_projection_dimensions_from_edge_comparisons) == {"root", "I"}
+    assert set(sibling_projection_dimensions_from_edge_comparisons) == {
+        "root",
+        "I",
+        "cal",
+        "top",
+    }
     assert sibling_projection_dimensions_from_edge_comparisons["root"] > 0
     assert sibling_projection_dimensions_from_edge_comparisons["I"] == (
         spectral_projection_dimensions_by_node["I"]
+    )
+    assert sibling_projection_dimensions_from_edge_comparisons["cal"] == (
+        spectral_projection_dimensions_by_node["cal"]
+    )
+    assert 0 < sibling_projection_dimensions_from_edge_comparisons["top"] <= (
+        spectral_projection_dimensions_by_node["top"]
     )
 
 
@@ -197,7 +296,7 @@ def test_edge_derived_sibling_dimensions_require_all_child_spectral_dimensions()
         principal_component_eigenvalues_by_node={},
     )
 
-    with pytest.raises(ValueError, match="missing 'B'"):
+    with pytest.raises(ValueError, match="missing 'root'"):
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
             tree,
             spectral_context=spectral_context,

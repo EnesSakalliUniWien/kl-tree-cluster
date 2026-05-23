@@ -38,9 +38,9 @@ so the edge comparison is not an ordinary two-sample problem. The feature space
 can be high-dimensional and strongly correlated, so evidence has to be combined
 carefully rather than coordinate by coordinate. Because many candidate splits
 are tested across the tree, multiplicity must be controlled. In addition, the
-sibling test is affected by post-selection inflation, since the same data are
+sibling test is affected by post-selection scale distortion, since the same data are
 used both to build the hierarchy and to evaluate the splits that the hierarchy
-exposes. Here post-selection inflation means that a split can look more
+exposes. Here post-selection scale distortion means that a split can look more
 statistically convincing than it really is because it was selected from the
 same data on which it is later tested. The rest of this section develops the
 method in that order.

@@ -10,7 +10,6 @@ All active diagnostic scripts should use:
 
 Examples:
 
-- `q_k1_overdeflation_diagnostic__cousin_adjusted_wald__compact.py`
 - `q_case18_power_data_extraction__power__case18.py`
 
 ## Header Contract
@@ -28,7 +27,7 @@ Each active script must include a module-level header with:
 - `_shared/`: shared tooling and validators.
 - `smoke/`: quick sanity checks.
 - `pipeline_gates/`: edge -> sibling -> split/merge gate diagnostics.
-- `sibling_calibration/`: sibling test calibration and inflation diagnostics.
+- `sibling_calibration/`: sibling test calibration and scale diagnostics.
 - `branch_length/methods/`: branch-length method derivation and method-focused diagnostics.
 - `tree_construction/`: tree-building and topology diagnostics.
 - `sbm/`: stochastic block model (SBM) specific diagnostics and transformations.

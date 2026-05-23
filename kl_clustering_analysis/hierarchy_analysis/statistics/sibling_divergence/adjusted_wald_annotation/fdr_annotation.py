@@ -51,8 +51,8 @@ def apply_sibling_bh_results(
         raise ValueError(
             "Sibling test degrees of freedom must be finite and non-negative before BH correction."
         )
-    if not np.isfinite(p_values).all():
-        raise ValueError("Sibling p-values must be finite before BH correction.")
+    if not np.isfinite(p_values).all() or np.any((p_values < 0.0) | (p_values > 1.0)):
+        raise ValueError("Sibling p-values must be finite values in [0, 1] before BH correction.")
 
     reject, corrected_p_values, _ = benjamini_hochberg_correction(
         p_values,

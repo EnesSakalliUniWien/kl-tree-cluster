@@ -13,14 +13,13 @@ from ...projection.pair_testing.parent_projection_resolution import (
 )
 from ...projection.pair_testing.projection_record_metadata import (
     determine_projection_metadata_for_sibling_test,
-    resolve_sibling_test_calibration_scale,
 )
 from ..types.sibling_pair_record import SiblingPairRecord
 from .child_parent_edge_metadata import (
     determine_whether_sibling_pair_is_gate2_blocked,
     determine_whether_sibling_pair_is_null_like,
-    estimate_sibling_null_prior_from_child_parent_edges,
-    extract_child_parent_edge_pvalues_by_node,
+    estimate_sibling_null_weight_from_child_parent_edges,
+    extract_child_parent_edge_p_values_by_node,
     extract_child_parent_edge_significance_by_node,
     extract_child_parent_edge_testing_status_by_node,
     validate_child_parent_edge_annotation_requirements,
@@ -48,7 +47,9 @@ def collect_sibling_pair_records(
     child_parent_edge_significance_by_node = extract_child_parent_edge_significance_by_node(
         annotations_df
     )
-    child_parent_edge_pvalues_by_node = extract_child_parent_edge_pvalues_by_node(annotations_df)
+    child_parent_edge_p_values_by_node = extract_child_parent_edge_p_values_by_node(
+        annotations_df
+    )
     (
         child_parent_edge_tested_by_node,
         child_parent_edge_ancestor_blocked_by_node,
@@ -128,22 +129,15 @@ def collect_sibling_pair_records(
             right_child_id,
             child_parent_edge_significance_by_node=child_parent_edge_significance_by_node,
         )
-        sibling_null_prior_from_edge_pvalue = (
-            estimate_sibling_null_prior_from_child_parent_edges(
-                left_child_id,
-                right_child_id,
-                child_parent_edge_pvalues_by_node=child_parent_edge_pvalues_by_node,
-                child_parent_edge_tested_by_node=child_parent_edge_tested_by_node,
-                child_parent_edge_ancestor_blocked_by_node=(
-                    child_parent_edge_ancestor_blocked_by_node
-                ),
-            )
+        sibling_null_weight = estimate_sibling_null_weight_from_child_parent_edges(
+            left_child_id,
+            right_child_id,
+            child_parent_edge_p_values_by_node=child_parent_edge_p_values_by_node,
+            child_parent_edge_tested_by_node=child_parent_edge_tested_by_node,
+            child_parent_edge_ancestor_blocked_by_node=(
+                child_parent_edge_ancestor_blocked_by_node
+            ),
         )
-        sibling_test_calibration_scale = resolve_sibling_test_calibration_scale(
-            projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
-            degrees_of_freedom=float(degrees_of_freedom),
-        )
-
         records.append(
             build_sibling_pair_record(
                 parent_node_id=parent_node_id,
@@ -159,8 +153,8 @@ def collect_sibling_pair_records(
                 parent_sample_size=extract_node_sample_size(tree, parent_node_id),
                 is_null_like=is_null_like,
                 is_gate2_blocked=is_gate2_blocked,
-                sibling_null_prior_from_edge_pvalue=sibling_null_prior_from_edge_pvalue,
-                sibling_test_calibration_scale=sibling_test_calibration_scale,
+                sibling_null_weight=sibling_null_weight,
+                sibling_calibration_scale=resolved_projection_dimension,
                 projection_dimension_source=projection_dimension_source,
                 resolved_projection_dimension=resolved_projection_dimension,
                 used_parent_principal_component_basis=used_parent_principal_component_basis,

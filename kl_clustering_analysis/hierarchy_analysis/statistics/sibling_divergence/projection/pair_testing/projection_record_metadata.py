@@ -36,24 +36,6 @@ def determine_projection_metadata_for_sibling_test(
     )
 
 
-def resolve_sibling_test_calibration_scale(
-    *,
-    projection_dimension_from_edge_comparisons: int | None,
-    degrees_of_freedom: float,
-) -> float:
-    """Resolve the calibration scale used for local sibling deflation."""
-    del degrees_of_freedom
-    if projection_dimension_from_edge_comparisons is None:
-        raise ValueError("Sibling calibration scale requires Gate 2 projection dimension.")
-    if projection_dimension_from_edge_comparisons < 0:
-        raise ValueError(
-            "Sibling calibration scale requires a non-negative Gate 2 projection dimension; "
-            f"got {projection_dimension_from_edge_comparisons!r}."
-        )
-    return float(projection_dimension_from_edge_comparisons)
-
-
 __all__ = [
     "determine_projection_metadata_for_sibling_test",
-    "resolve_sibling_test_calibration_scale",
 ]

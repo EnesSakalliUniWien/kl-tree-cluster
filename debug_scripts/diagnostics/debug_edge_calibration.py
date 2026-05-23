@@ -196,7 +196,7 @@ def main() -> None:
     if model.beta is not None:
         print(f"    β₀={model.beta[0]:.4f}, β₁={model.beta[1]:.4f}")
         print(f"    exp(β₀) = {np.exp(model.beta[0]):.4f}")
-    print(f"    Global ĉ (median T/k): {model.global_inflation_factor:.4f}")
+    print(f"    Baseline ĉ: {model.baseline_scale_factor:.4f}")
     print(f"    Max observed T/k: {model.max_observed_ratio:.4f}")
     if "r_squared" in diag:
         print(f"    R² = {diag['r_squared']:.4f}")
@@ -226,7 +226,7 @@ def main() -> None:
     if audit:
         print(
             f"  Pipeline audit: n_cal={audit.get('n_calibration')}, "
-            f"ĉ={audit.get('global_inflation_factor', 0):.4f}, "
+            f"ĉ={audit.get('baseline_scale_factor', 0):.4f}, "
             f"max_ratio={audit.get('max_observed_ratio', 0):.4f}"
         )
         print()
@@ -341,11 +341,11 @@ def main() -> None:
         ax.scatter(null_n, null_ratio, s=20, alpha=0.6, color="gray", label="Null-like edges")
         ax.axhline(1.0, color="green", ls=":", lw=1, alpha=0.6)
         ax.axhline(
-            model.global_inflation_factor,
+            model.baseline_scale_factor,
             color="orange",
             ls="-",
             lw=1.5,
-            label=f"Median ĉ = {model.global_inflation_factor:.3f}",
+            label=f"Baseline ĉ = {model.baseline_scale_factor:.3f}",
         )
         if model.beta is not None and abs(model.beta[1]) > 1e-8:
             n_range = np.linspace(max(null_n.min(), 2), null_n.max(), 100)
@@ -397,14 +397,14 @@ def main() -> None:
         color="red",
         ls="--",
         lw=1,
-        label=f"Clamp (max = {model.max_observed_ratio:.3f})",
+        label=f"Observed max = {model.max_observed_ratio:.3f}",
     )
     ax.set_xlabel("n_parent")
     ax.set_ylabel("Predicted ĉ_i")
     ax.set_title("E. Per-edge predicted inflation ĉ_i")
     ax.legend(fontsize=7)
 
-    # ── F: Deflation scatter (T/k raw → T/k adj) ─────────────────────
+    # ── F: Adjustment scatter (T/k raw -> T/k adj) ───────────────────
     ax = axes[1, 2]
     ax.scatter(T_over_k_raw, T_over_k_adj, s=10, alpha=0.4, c="steelblue")
     lim = max(T_over_k_raw.max(), T_over_k_adj.max()) * 1.05
@@ -413,7 +413,7 @@ def main() -> None:
     ax.axvline(1.0, color="green", ls=":", lw=0.8, alpha=0.5)
     ax.set_xlabel("T/k (raw)")
     ax.set_ylabel("T/k (calibrated)")
-    ax.set_title("F. Deflation: T/k raw → T/k adj")
+    ax.set_title("F. Adjustment: T/k raw -> T/k adj")
     ax.legend(fontsize=7)
     ax.set_aspect("equal")
     ax.set_xlim(0, lim)

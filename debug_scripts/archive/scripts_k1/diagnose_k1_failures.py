@@ -122,7 +122,7 @@ def diagnose_case(name, data_df, linkage_method="average"):
     if audit:
         print(
             f"\n  Calibration: method={audit.get('calibration_method', '?')}, "
-            f"global_inflation_factor={audit.get('global_inflation_factor', '?')}, "
+            f"baseline_scale_factor={audit.get('baseline_scale_factor', '?')}, "
             f"n_calibration={audit.get('calibration_n', '?')}"
         )
         diag = audit.get("diagnostics", {})

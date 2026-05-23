@@ -89,8 +89,8 @@
   \draw[<->, line width=2pt, green!70!black] (L) -- (R) node[midway, below=2pt, black] {Test $H_0: \theta_L = \theta_R$};
   \node[gate3box] at (0,-2.5) {
     \textbf{Calibration Step}\\
-    $T_{adj} = T / \hat{c}$\\
-    Post-selection Inflation Correction
+    $T_{adj} = T / \hat{c}(z)$\\
+    Post-selection Scale Correction
   };
 \end{scope}
 
@@ -103,9 +103,9 @@
 
 % Scatter plot placeholder for calibration
 \draw[->] (0,0) -- (6,0) node[right] {$n_{parent}$};
-\draw[->] (0,0) -- (0,4) node[above] {$T/k$ (Inflation Ratio)};
+\draw[->] (0,0) -- (0,4) node[above] {$T/\nu$ (Scale Ratio)};
 
-% Calibration points (null-like pairs)
+% Weighted sibling calibration records
 \foreach \i in {1,...,15}{
   \fill[gray!50] ({rand*2.5+3},{rand*0.5+2.5}) circle (2pt);
 }
@@ -114,15 +114,15 @@
   \fill[orange!60] ({rand*1+4},{rand*0.5+3.5}) circle (2pt);
 }
 
-% Regression Line / Adjustment factor
-\draw[dashed, red, thick] (0,2.5) -- (5.5,2.5) node[right, red] {$\hat{c}$ (Global Inflation)};
+% Context-weighted empirical-null scale
+\draw[dashed, red, thick] (0,2.5) -- (5.5,2.5) node[right, red] {$\hat{c}(z)$};
 
 % Annotation
 \node[anchor=west, text width=5cm, align=left, font=\scriptsize] at (0.5, 1) {
   \textbf{Calibration Logic:}\\
-  1. Identify "null-like" pairs (where Gate 2 failed).\\
-  2. Estimate global inflation factor $\hat{c}$.\\
-  3. Deflate focal pairs: $T_{adj} = T/\hat{c}$.
+  1. Assign sibling null weights $\pi_q$.\\
+  2. Estimate local scale $\hat{c}(z_u)$.\\
+  3. Test $T_{adj} = T/\hat{c}(z_u)$.
 };
 
 \end{tikzpicture}
