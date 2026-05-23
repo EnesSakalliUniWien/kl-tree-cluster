@@ -2,28 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased] - 2026-03-17
-
-### Investigated
-- **Gate 3 projection dimension investigation** (exp15–exp19): Systematic investigation of Gate 3 k-selection under Marchenko-Pastur Gate 2 dimensions. The original enhancement-lab report claimed a severe `min_child` regression and recommended `jl_floor_qrt`. After repairing the stale lab harness on 2026-03-20, the live reruns no longer reproduce that conclusion: `exp16` now gives mean ARI `0.998` for `min_child`, `0.994` for `jl_floor_qrt`, and `0.979` for pure JL; repaired `exp19` ranks `jl_floor_qrt` below several alternatives at `0.994`. The old recommendation should be treated as superseded pending broader validation. See `debug_scripts/enhancement_lab/SPECTRAL_DIM_REPORT.md`.
-
-### Added
-- **Enhancement lab experiments 15–19** (`debug_scripts/enhancement_lab/`):
-  - `exp15_spectral_dim_regression.py`: Per-node regression diagnosis
-  - `exp16_spectral_dim_strategies.py`: 8-strategy comparison
-  - `exp17_literature_strategies.py`: 12 literature-inspired strategies
-  - `exp18_eigenvector_relationships.py`: Eigenvector/eigenvalue parent-child mapping
-  - `exp19_spectral_equations.py`: 16 spectral equations, 3-phase laboratory
-- **Spectral dimension report** (`SPECTRAL_DIM_REPORT.md`): Comprehensive documentation of the Gate 3 projection dimension investigation, findings, and recommendations.
-
 ## [Unreleased] - 2026-02-17
 
 ### Added
-- **Spectral dimension estimation** (`spectral_dimension.py`): Per-node eigendecomposition of the local correlation matrix replaces the JL-based projection dimension for Gate 2 (edge test). Uses the effective rank (Shannon entropy of eigenvalue spectrum) as projection dimension `k`, with PCA-based whitened projection `T = Σ (vᵢᵀz)² / λᵢ ~ χ²(k)` for exact null calibration. Controlled by `config.SPECTRAL_METHOD = "effective_rank"` (default).
+- **Spectral dimension estimation** (`spectral_dimension.py`): Per-node eigendecomposition of the local correlation matrix provides the projection dimension and parent PCA basis for both edge and sibling tests. The maintained projected-Wald path uses unwhitened PCA components with Satterthwaite calibration from the matching eigenvalues.
 - **Dual-form eigendecomposition** (`spectral_dimension.py`): When `n_desc < d_active`, computes the `n×n` Gram matrix instead of the `d×d` correlation matrix — O(n²d + n³) vs O(d³). For subtrees with n=10 leaves and d=2000 features, this is 10×10 eigh instead of 2000×2000, eliminating the performance bottleneck on high-dimensional cases.
 - **Internal node distributions in spectral decomposition** (`spectral_dimension.py`): The data matrix for eigendecomposition now includes both leaf rows AND internal descendant node distribution vectors. This enriches the covariance estimate, especially for nodes high in the tree where internal descendants capture intermediate subtree structure.
-- **Information cap on projection dimension** (`random_projection.py`): `compute_projection_dimension()` now caps k at `n_samples` when `d ≥ 4n` (severely rank-deficient data). Prevents the JL formula from returning `k ≫ n`, which would add pure-noise χ² components that absorb degrees of freedom without contributing signal. Only activates for sibling tests (Gate 3); Gate 2 uses spectral dimensions.
-- **Historical sibling-calibration experiments**: This release window included exploratory weighted and tree-guided sibling-calibration prototypes. Both were later retired; the maintained code path now keeps only `config.SIBLING_TEST_METHOD = "cousin_adjusted_wald"`.
 
 ### Refactored
 - **Step 3.4 — `gates.py` extraction**: Gate logic (`should_split`, `should_split_v2`, `_check_edge_significance`) extracted from `TreeDecomposition` into `GateEvaluator` class in `gates.py` (343 lines). `tree_decomposition.py` reduced from 992 to 757 lines (−234 lines). `decompose_tree()` and `decompose_tree_v2()` now delegate to free functions `iterate_worklist`, `process_node`, `process_node_v2` in `gates.py`. `GateEvaluator` constructor accepts injected `children_map`, `descendant_leaf_sets`, `root` to decouple from `PosetTree` internals. Five dead inline methods removed.
@@ -43,12 +27,12 @@ All notable changes to this project are documented in this file.
   - `_CalibrationModel` gains `max_observed_ratio: float` field; diagnostics dict includes `max_observed_ratio` key.
 
 ### Changed
-- Remove deprecated `n_permutations` parameter from the decomposition API; callers passing it will no longer be accepted. Tests updated accordingly.
+- Remove obsolete `n_permutations` parameter from the decomposition API; callers passing it will no longer be accepted. Tests updated accordingly.
 - Pipeline plotting behavior: default no longer writes intermediate PNGs; when `concat_plots_pdf=True` the pipeline collects Figures and writes categorized PDFs (`k_distance_plots.pdf`, `tree_plots.pdf`, `umap_plots.pdf`) instead of emitting PNGs.
 - PDF utilities: improved diagnosis, figure classification (manifold plots grouped with UMAP), and robust headless handling (Agg backend).
 
 ### Removed
-- `kl_clustering_analysis.threshold` package removed — helper functionality that was required by debug scripts is now replaced with a small conservative fallback (debug-only) or should be implemented separately where needed.
+- `kl_clustering_analysis.threshold` package removed — helper functionality that was required by debug scripts now lives in those scripts or should be implemented directly where needed.
 
 ### Fixed
 - Various import-time and optional-dependency issues (runners now import optional dependencies lazily and return skip results when missing) to improve test/CI stability.

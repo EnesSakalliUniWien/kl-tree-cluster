@@ -61,8 +61,8 @@ The current starter setup uses:
 - local `KLTE` terminology and weak-phrase rules
 
 The local `KLTE` rules intentionally flag repository-internal labels such as
-`Gate 2`, `Gate 3`, `TreeBH`, `JL`, and `erank` so the manuscript can replace
-them with clearer prose. The packaged styles are intentionally narrowed for
+`Gate 2`, `Gate 3`, `TreeBH`, and `erank` so the manuscript can replace them
+with clearer prose. The packaged styles are intentionally narrowed for
 LaTeX math writing, so the lint output focuses on terminology and weak phrasing
 instead of generic passive-voice or spelling noise.
 

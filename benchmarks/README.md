@@ -20,9 +20,6 @@ python benchmarks/run_subset.py
 python benchmarks/mnist/run.py
 python benchmarks/umap_datasets/run.py
 
-# Run statistical calibration suite (null/Type-I + TreeBH)
-python benchmarks/calibration/run.py
-
 # Analyze benchmark-factor relationships for the latest run
 python benchmarks/analyze_relationships.py
 ```
@@ -445,12 +442,6 @@ Use the canonical runner outputs for diagnosis:
 - `benchmarks/results/run_<timestamp>/failure_report.md`
 - `benchmarks/results/run_<timestamp>/audit/`
 
-For targeted regression analysis between stored runs, use:
-
-```bash
-python benchmarks/diagnose_benchmark_regression.py
-```
-
 ### Common Failure Patterns
 
 | Symptom                      | Likely Cause                              | Investigation                              |
@@ -479,18 +470,8 @@ config.SIBLING_ALPHA = 0.05
 config.TREE_DISTANCE_METRIC = "hamming"  # or "rogerstanimoto"
 ```
 
-## Calibration Integration in Full Benchmark PDF
+## Calibration Diagnostics
 
-`benchmarks/full/run.py` can append calibration pages to `full_benchmark_report.pdf`.
-
-Enable with environment flags:
-
-```bash
-KL_TE_RUN_CALIBRATION=1 \
-KL_TE_CAL_NULL_REPS=30 \
-KL_TE_CAL_TREEBH_REPS=200 \
-python benchmarks/full/run.py
-```
-
-Outputs are written under the current run directory:
-`benchmarks/results/run_<timestamp>/calibration/`
+Calibration diagnostics are maintained as explicit standalone scripts under
+`benchmarks/calibration/`. The full benchmark runner only runs the clustering
+comparison and relationship analysis.

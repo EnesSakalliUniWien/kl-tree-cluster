@@ -32,11 +32,11 @@ Tree distance & Hamming \\
 Linkage & Average linkage \\
 Edge significance level & $\alpha_{\mathrm{edge}} = 0.001$ \\
 Sibling significance level & $\alpha_{\mathrm{sib}} = 0.01$ \\
-Edge test & Projected Wald test with parent-specific whitening \\
+Edge test & Satterthwaite-calibrated projected Wald test using the parent-specific PCA spectrum \\
 Edge dimension rule & Marchenko--Pastur signal count from the parent's local spectrum \\
 Sibling test & Projected Wald test with continuous edge-weight deflation \\
 Sibling dimension rule & Geometric mean of positive child edge dimensions \\
-Sibling basis / calibration & Parent PCA head + random padding; Satterthwaite raw test; weighted $\hat c$ localized by a Gaussian kernel in log-structural-dimension space \\
+Sibling basis / calibration & Parent PCA head capped to available rank; Satterthwaite raw test; weighted $\hat c$ localized by a Gaussian kernel in log-structural-dimension space \\
 Minimum spectral dimension & 2 \\
 Include internal spectral rows & On \\
 Edge multiple-testing correction & Hierarchical BH correction on the tree \\
@@ -48,12 +48,12 @@ Pass-through traversal & On \\
 \label{tab:defaults}
 \end{table}
 
-Two aspects of these defaults deserve special emphasis. First, the two tests do not
+Two aspects of these defaults deserve emphasis. First, the two tests do not
 combine information in the same way. The child-parent edge test asks whether a
 child leaves the background defined by its parent. The sibling test then asks
 whether the two children are different enough from one another to justify
 keeping the split. Second, once those test tables exist, the final clustering
-step is simple: the method walks down the tree and keeps only the splits that
+step is direct: the method walks down the tree and keeps only the splits that
 remain supported after correction.
 
 The representation layer should also be read as part of the method. Binary data

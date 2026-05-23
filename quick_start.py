@@ -1,14 +1,11 @@
 import numpy as np
 import pandas as pd
+from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
-
-from kl_clustering_analysis import config
-
-# Import the necessary functions from your library
-from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
 def main():
@@ -49,10 +46,13 @@ def main():
     tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
     print("Step 3: Converted hierarchy to PosetTree structure.")
 
-    # 4. PosetTree.decompose()
-    # The decompose method now handles divergence calculation and annotation internally
+    # 4. PosetTree.populate_node_divergences() + PosetTree.decompose()
+    # The initial node distribution table is explicit; decompose augments it
+    # with the statistical gate annotations used for cluster extraction.
+    tree.populate_node_divergences(data)
     significance_level = 0.05
     decomposition_results = tree.decompose(
+        annotations_df=tree.annotations_df,
         leaf_data=data,
         alpha_local=significance_level,
         sibling_alpha=significance_level,

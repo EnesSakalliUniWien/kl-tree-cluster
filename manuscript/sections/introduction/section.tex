@@ -13,7 +13,7 @@ the final node containing the full data set. Such a representation exposes
 coarse-to-fine structure, keeps near-miss cluster boundaries visible, and makes
 it possible to discuss not only the final grouping but also the intermediate
 grouping decisions that led to it. In practice, however, most hierarchical
-workflows still cut the tree using simple geometric rules such as a fixed
+workflows still cut the tree using geometric rules such as a fixed
 height, an inconsistency threshold, or a manually chosen number of clusters.
 Those choices are often difficult to defend when the goal is not only
 descriptive grouping but also reproducible statistical claims.
@@ -43,7 +43,7 @@ candidate splits are tested across the same hierarchy.
 
 Four inferential complications shape the design. The child is a subset of its
 parent, so the edge comparison is nested rather than an ordinary two-sample
-test. The edge evidence is high-dimensional and correlated, so a simple sum of
+test. The edge evidence is high-dimensional and correlated, so a direct sum of
 squared feature scores would overcount repeated or noisy directions. Many candidate edges
 are examined across the tree, so valid local $p$-values still require control
 for many tests. Finally, sibling comparisons are evaluated on a hierarchy

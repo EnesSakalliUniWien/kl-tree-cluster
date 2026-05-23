@@ -9,5 +9,4 @@ swap:
   Gate 2: edge test
   Gate 3: sibling test
   TreeBH: hierarchical BH correction
-  JL: Johnson-Lindenstrauss
   erank: effective rank

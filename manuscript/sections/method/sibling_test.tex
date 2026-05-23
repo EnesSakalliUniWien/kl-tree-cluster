@@ -10,8 +10,8 @@ can contain one deviating branch, or a weak left-right asymmetry, without
 supporting two stable child clusters. The sibling test supplies that missing
 question: once a branch has left its ancestral context, are the two children
 actually distinct enough to become separate clusters?
-Because the hierarchy is a rooted binary tree, this sibling relation is always
-simple: every non-root node has exactly one parent and therefore at most one
+Because the hierarchy is a rooted binary tree, this sibling relation has a
+fixed form: every non-root node has exactly one parent and therefore at most one
 sibling, namely the other child of that same parent. The sibling test is thus
 always a single pairwise comparison, not a comparison against a larger sibling
 set.
@@ -62,12 +62,12 @@ k_{r(u)}^{\mathrm{edge}}
 \right).
 \end{equation}
 If exactly one child has a positive edge-stage spectral dimension, that value
-is reused directly; if neither child has a positive dimension, the sibling
-test is skipped and the node is treated conservatively as a merge. This
-standardized vector answers the first sibling question: how large is the
-left-right contrast after accounting for feature-specific sampling noise? The
-next question is how to combine those coordinatewise contrasts into one summary
-score.
+is reused directly; if neither child has a positive edge-derived dimension, the
+parent's own edge-stage spectral dimension is used. The sibling test is run only
+for binary sibling pairs with complete Gate 2 spectral context. This standardized
+vector answers the first sibling question: how large is the left-right contrast after accounting for
+feature-specific sampling noise? The next question is how to combine those
+coordinatewise contrasts into one summary score.
 
 \paragraph{Projected sibling statistic.}
 The sibling test then combines this multi-feature contrast into a single
@@ -77,10 +77,9 @@ the parent during the edge stage.
 The projection basis starts with the parent node, not a fresh random draw. The
 first available parent PCA directions, where PCA refers to principal-component
 directions summarizing the main variation at that parent, are used up to
-$k_u^{\mathrm{sib}}$. If the requested sibling dimension exceeds the available
-parent PCA rank, the remaining rows are filled with orthonormal padding
-directions. Version-specific basis-construction details are summarized in
-\Cref{sec:software-implementation}.
+$k_u^{\mathrm{sib}}$. The requested sibling dimension is capped to the available
+parent PCA rank, so the projection basis and eigenvalue vector have the same
+dimension.
 
 If $P_u \in \mathbb{R}^{k_u^{\mathrm{sib}} \times p}$ denotes this sibling
 projection basis, the raw sibling statistic is
@@ -102,7 +101,7 @@ PCA-derived part of the test and plain $\chi^2(1)$ contributions for any added
 orthogonal-complement directions.
 
 \paragraph{Worked sibling example.}
-A small numerical example helps separate three ideas that are easy to conflate:
+A small numerical example helps separate three ideas that can be conflated:
 projection, per-component whitening, and Satterthwaite calibration. Suppose
 the standardized sibling difference vector is
 \begin{equation}
@@ -222,8 +221,8 @@ construct the hierarchy and thereby expose pairs of child subtrees that already
 look well separated, and then again to test whether those selected siblings are
 significantly different. This data reuse creates \emph{post-selection
 inflation}. Even under a null setting with no true cluster structure, the tree
-construction step tends to present unusually separated sibling pairs simply
-because it was built from the observed dissimilarities. The sibling statistic
+construction step tends to present unusually separated sibling pairs because it
+was built from the observed dissimilarities. The sibling statistic
 is therefore evaluated conditionally on a favorable selection event rather than
 under the unconditional null distribution for a pre-specified pair. The
 practical consequence is anti-conservative inference: the observed sibling
@@ -300,7 +299,7 @@ h
 =
 \sqrt{\frac{\sum_q w_q (\ell_q - \bar{\ell})^2}{\sum_q w_q}}.
 \]
-So $\exp(\bar{\ell})$ is the edge-weighted geometric-mean structural
+Thus $\exp(\bar{\ell})$ is the edge-weighted geometric-mean structural
 dimension, and $h$ is the edge-weighted standard deviation in log-$k$ space.
 For a focal sibling pair $u$, the runtime assigns each calibration pair $q$
 the local similarity weight

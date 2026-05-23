@@ -114,14 +114,15 @@ converts it into a chi-square p-value, and applies Benjamini–Hochberg correcti
 
 ### Worked Example
 
-See [worked_example.md](worked_example.md) for a detailed step-by-step numerical example of the KL-divergence hierarchical clustering process.
+See the worked examples in the manuscript method sections for step-by-step
+edge-test and sibling-test calculations.
 
 ### Documentation
 
 The repository keeps the durable entrypoint docs in a small set of files:
 
 - `README.md` for installation and the end-to-end workflow.
-- `worked_example.md` for a numeric walk-through.
+- `manuscript/sections/method/edge_test.tex` and `manuscript/sections/method/sibling_test.tex` for numeric walk-throughs.
 - `tests/README.md` and `benchmarks/README.md` for the validation and benchmark harnesses.
 - Package READMEs under `kl_clustering_analysis/` for module-level maps.
 - `manuscript/README.md` for the paper workspace and build tooling.

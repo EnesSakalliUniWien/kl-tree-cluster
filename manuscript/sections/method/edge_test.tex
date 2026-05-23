@@ -154,47 +154,60 @@ Marchenko--Pastur law itself: it keeps weak-signal or pure-noise subtrees on
 the same projected-Wald path, avoids a degenerate $k=0$ skip case, and avoids
 the numerically fragile $\chi^2(1)$ regime.
 
-\paragraph{Step 5: Project and whiten the edge evidence.}
+\paragraph{Step 5: Project and calibrate the edge evidence.}
 Let $v_{u,1},\dots,v_{u,k_u^{\mathrm{edge}}}$ denote the leading eigenvectors.
 After the coordinatewise standardization step, the vector
 $z_{u \to c}^{\mathrm{edge}} \in \mathbb{R}^p$ is projected onto these
-parent-local directions. The edge test then rescales those projected
-coordinates so that noisy directions do not automatically count more than
-stable ones. The resulting test statistic is
+parent-local directions. The implemented edge test keeps the projected
+quadratic form on its raw PCA scale and accounts for unequal component
+variances in the reference law. With
+$w_{u \to c,i} = v_{u,i}^\top z_{u \to c}^{\mathrm{edge}}$, the raw edge
+statistic for the PCA part is
 \begin{equation}
-T_{u \to c}^{\mathrm{edge}}
+T_{u \to c}^{\mathrm{edge,raw}}
 =
 \sum_{i=1}^{k_u^{\mathrm{edge}}}
-\frac{(v_{u,i}^\top z_{u \to c}^{\mathrm{edge}})^2}{\lambda_{u,i}}.
+w_{u \to c,i}^2.
 \end{equation}
-Writing
-$w_{u \to c,i} = v_{u,i}^\top z_{u \to c}^{\mathrm{edge}}$ for the projected
-coordinate along the $i$th parent-local spectral direction, each summand is
+If fewer usable PCA directions are available than the target dimension, the
+implementation adds orthonormal complement directions and treats those padded
+coordinates as unit-variance components. Thus the reference distribution is a
+weighted sum of $\chi^2(1)$ variables with weights
+$\lambda_{u,1},\dots,\lambda_{u,k_{\mathrm{pca}}}$ for the PCA coordinates and
+weight $1$ for each padded coordinate. The code uses a Satterthwaite
+moment match. If $n_{\mathrm{pad}}$ padded coordinates are present, define
 \begin{equation}
-\frac{w_{u \to c,i}^2}{\lambda_{u,i}}.
-\end{equation}
-This is the practical role of the projection-and-whitening step. The projection
-rewrites the edge deviation in directions that are actually present in the
-subtree below $u$, and the whitening step stops high-variance background
-directions from dominating the test merely because they are noisy.
-Under the local correlation-model approximation used here, the
-resulting statistic is calibrated against a $\chi^2_{k_u^{\mathrm{edge}}}$
-reference law:
-\begin{equation}
-T_{u \to c}^{\mathrm{edge}} \sim \chi^2_{k_u^{\mathrm{edge}}},
+\mu_u
+=
+\sum_{i=1}^{k_{\mathrm{pca}}} \lambda_{u,i}
++ n_{\mathrm{pad}},
 \qquad
+\sigma_u^2
+=
+2\left(
+\sum_{i=1}^{k_{\mathrm{pca}}} \lambda_{u,i}^2
++ n_{\mathrm{pad}}
+\right).
+\end{equation}
+The moment-matched reference is $s_u\chi^2_{\nu_u}$ with
+\begin{equation}
+s_u = \frac{\sigma_u^2}{2\mu_u},
+\qquad
+\nu_u = \frac{2\mu_u^2}{\sigma_u^2},
+\end{equation}
+and the reported edge p-value is
+\begin{equation}
 p_{u \to c}^{\mathrm{edge}}
 =
 \Pr\!\left(
-\chi^2_{k_u^{\mathrm{edge}}}
+\chi^2_{\nu_u}
 \ge
-T_{u \to c}^{\mathrm{edge}}
+\frac{T_{u \to c}^{\mathrm{edge,raw}}}{s_u}
 \right).
 \end{equation}
-This calibration is exact in the pure PCA-whitened case. In the mixed-basis
-path, if fewer usable PCA directions are available than the
-nominal target dimension, the method simply uses the available
-parent-local rows rather than padding with unrelated random directions.
+The PCA spectrum is required: the projection rows and eigenvalues are paired
+before the projected-Wald reference-law helper is called. The sibling test uses
+the same PCA/Satterthwaite kernel.
 \paragraph{Worked child-parent example.}
 The worked example below is intended to show the logic of the edge test, not
 just the algebra. It starts with a parent-child comparison that is visibly
@@ -287,17 +300,23 @@ v_{R,1}^\top z_{R \to U_1}^{\mathrm{edge}}
 =
 4.
 \end{equation}
-Therefore the first whitened contribution to the edge-test statistic is
+Therefore the first raw PCA contribution to the edge-test statistic is
 \begin{equation}
-\frac{w_{R \to U_1,1}^2}{\lambda_{R,1}}
+T_{R \to U_1}^{\mathrm{edge,raw}}
 =
-\frac{4^2}{4}
+4^2
 =
-4.
+16.
 \end{equation}
+In this one-direction demonstration, the null reference for that raw
+contribution is $4\chi^2_1$, equivalently a $\chi^2_1$ comparison after
+dividing the raw statistic by $4$. Additional orthogonal-complement padding
+directions, when present, add their own squared projected coordinates and unit
+weights to the same moment-matched reference law.
 This example shows the full logic of the child-parent edge test in the same
 order as the formulas: standardize the raw difference, express it in the main
-parent-level directions, and then down-weight directions that are mostly noise.
+parent-level directions, and then calibrate the projected quadratic form
+against the parent-level spectrum.
 In larger real subtrees the method can use more than one such
 direction, but the core interpretation is already visible in this toy example.
 These $p$-values are computed for every edge in the tree.
