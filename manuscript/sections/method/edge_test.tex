@@ -103,11 +103,11 @@ column standardization. In practice, this matrix identifies the main patterns
 of co-variation visible below the parent. When $m_u < d_u$, the method
 switches to the dual standardized Gram matrix
 \begin{equation}
-G_u = \frac{1}{d_u}\widetilde{M}_u \widetilde{M}_u^\top,
+G_u = \frac{1}{m_u}\widetilde{M}_u \widetilde{M}_u^\top,
 \end{equation}
 whose nonzero eigenvalues encode the same spectral information as those of
-$C_u$ up to the normalization convention, so the same local summary is
-recovered in a computationally cheaper form.
+$C_u$ on the same correlation scale, so the same local summary is recovered in
+a computationally cheaper form.
 
 \paragraph{Why the dual Gram formulation is used.}
 The switch from $C_u$ to $G_u$ is not a change of model but a change of
@@ -123,7 +123,7 @@ then lifts the resulting eigenvectors back into feature space. Concretely, if
 $u_{u,i}$ is a unit eigenvector of $G_u$ with eigenvalue $\lambda_{u,i} > 0$,
 then the corresponding feature-space direction is recovered by
 \begin{equation}
-v_{u,i} = \frac{\widetilde{M}_u^\top u_{u,i}}{\sqrt{\lambda_{u,i}}\sqrt{d_u}},
+v_{u,i} = \frac{\widetilde{M}_u^\top u_{u,i}}{\sqrt{\lambda_{u,i}}\sqrt{m_u}},
 \end{equation}
 followed by normalization. This construction therefore obtains the same
 parent-local principal directions while replacing a potentially very large
