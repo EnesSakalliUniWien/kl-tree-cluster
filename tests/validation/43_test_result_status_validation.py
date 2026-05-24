@@ -1,7 +1,6 @@
 import math
 
 import pytest
-
 from benchmarks.shared.result_records.factory import build_benchmark_result_row
 from benchmarks.shared.result_records.models import BenchmarkRunStatus
 

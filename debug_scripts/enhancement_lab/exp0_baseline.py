@@ -81,17 +81,6 @@ def main() -> None:
             else:
                 print("  (none)")
 
-        # Calibration audit
-        audit = result["annotations_df"].attrs.get("sibling_divergence_audit", {})
-        if audit:
-            print("\n--- Calibration audit ---")
-            for k, v in audit.items():
-                if k == "diagnostics" and isinstance(v, dict):
-                    for dk, dv in v.items():
-                        print(f"  diagnostics.{dk}: {dv}")
-                else:
-                    print(f"  {k}: {v}")
-
     # ── Section 3: Deep dive on NaN under-split ──
     nan_cases = df_fail[df_fail["found_k"] == 1]
     if len(nan_cases):

@@ -1,7 +1,16 @@
 % !TEX root = ../../main.tex
 
-\section{Evaluation Questions}
+\section{Evaluation Plan and Missing Results}
 
+This section is a prospective evaluation plan, not a completed results section.
+[TODO: replace this section with completed experiments, report sample sizes and
+random seeds, and connect each result to the method claims made in the
+Introduction and Discussion.]
+Existing benchmark scripts and result folders are useful development evidence,
+but they are not yet a locked manuscript result. A submission-ready results
+section needs a fixed commit, a fixed configuration manifest, random seeds,
+case definitions, and output files that can be traced directly from every
+reported claim.
 An empirical evaluation of KL-TE should cover four main blocks.
 
 \subsection{Does the Method Stay Calibrated Under the Null?}
@@ -17,15 +26,8 @@ severe over-splitting once the tree walk is applied.
 \subsection{Does the Method Recover Planted Structure?}
 
 The second requirement is a controlled power study with planted binary subtrees.
-This should vary:
-
-\begin{itemize}[leftmargin=1.5em]
-  \item sample size per cluster,
-  \item effect size in feature rates,
-  \item number of informative features,
-  \item tree imbalance, and
-  \item background noise level.
-\end{itemize}
+This should vary sample size per cluster, effect size in feature rates, the
+number of informative features, tree imbalance, and background noise level.
 
 Power should be measured both for recovery of important tree splits and for the
 final clustering outcome. Adjusted Rand Index and exact split recovery are both
@@ -34,14 +36,10 @@ useful endpoints.
 \subsection{Where Is the Method Robust or Fragile?}
 
 For a paper centered on one implemented method, the key empirical question is
-robustness. The most useful stress tests are:
-
-\begin{itemize}[leftmargin=1.5em]
-  \item sensitivity to small child leaf counts in the child-parent edge test,
-  \item sensitivity to sparse high-dimensional feature matrices,
-  \item sensitivity to tree imbalance and shallow-versus-deep signal placement, and
-  \item sensitivity of the final partition to the pass-through rule.
-\end{itemize}
+robustness. The most useful stress tests are sensitivity to small child leaf
+counts in the child-parent edge test, sparse high-dimensional feature matrices,
+tree imbalance, shallow-versus-deep signal placement, and the pass-through rule
+used by the final traversal.
 
 These analyses should show where the implemented method is well calibrated,
 where it becomes under-powered, and where it tends to over-split or
@@ -59,3 +57,23 @@ method claims in the text, focusing on:
   \item comparison to standard clustering baselines, and
   \item qualitative inspection of annotated trees.
 \end{itemize}
+
+\subsection{Which Defaults Need Ablation?}
+
+The defaults in \Cref{tab:method-constants} should not be presented as
+validated constants until they are tested. The minimum spectral dimension, the
+Marchenko--Pastur dimension rule, the sibling projection-dimension rule, the
+context bandwidth, the effective-sample penalty, the edge and sibling testing
+levels, and the pass-through traversal should each appear in at least one
+ablation or sensitivity analysis.
+[VALIDATION GAP: no manuscript-ready ablation table currently validates the
+method constants in \Cref{tab:method-constants}.]
+
+\subsection{What Counts as Submission-Ready Evidence?}
+
+A result should enter the paper only when the corresponding script, case
+registry, random seeds, software version, and output file are identified. Each
+reported number should map to one reproducible result artifact, and each
+interpretive claim should cite the table or figure that supports it.
+[EMPIRICAL GAP: add a locked evaluation run, a result manifest, and a
+manuscript table mapping each claim to the corresponding output file.]

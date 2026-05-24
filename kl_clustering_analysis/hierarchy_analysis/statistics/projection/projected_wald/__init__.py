@@ -1,8 +1,7 @@
 """Projected Wald test utilities."""
 
-from .projected_wald_kernel import run_projected_wald_kernel
+from .projected_wald_kernel import ProjectedWaldResult, run_projected_wald_kernel
 from .projected_wald_projection_basis import build_pca_projection_basis
-from .projected_wald_kernel import ProjectedWaldResult
 from .projected_wald_reference_distribution import (
     ProjectedQuadraticReference,
     compute_projected_pvalue,

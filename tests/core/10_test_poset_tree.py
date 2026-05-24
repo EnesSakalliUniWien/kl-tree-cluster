@@ -71,7 +71,7 @@ def test_decompose_requires_explicit_annotations_dataframe():
     G.add_edge("root", "right")
     leaf_data = pd.DataFrame([[0.0], [1.0]], index=["left", "right"])
 
-    with pytest.raises(ValueError, match="annotations_df is required"):
+    with pytest.raises(ValueError, match="annotations_df or gate_annotation_bundle is required"):
         G.decompose(leaf_data=leaf_data)
 
 

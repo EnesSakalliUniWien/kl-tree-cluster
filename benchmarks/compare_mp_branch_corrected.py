@@ -220,7 +220,6 @@ def _run_case(case: dict[str, object], *, experimental: bool) -> dict[str, objec
         result = _run_kl_method(data_t, distance_condensed, config.SIBLING_ALPHA)
 
     annotations = result.extra["annotations"]
-    audit = annotations.attrs.get("sibling_divergence_audit", {})
     return {
         "case_name": str(case["name"]),
         "case_category": str(case.get("category", "")),
@@ -231,10 +230,9 @@ def _run_case(case: dict[str, object], *, experimental: bool) -> dict[str, objec
         ),
         "ari": _safe_ari(y_true, result.labels),
         "found_clusters": int(result.found_clusters),
-        "projection_sources": dict(audit.get("projection_dimension_source_counts", {})),
-        "baseline_empirical_scale_factor": float(
-            audit["baseline_empirical_scale_factor"]
-        ) if "baseline_empirical_scale_factor" in audit else float("nan"),
+        "sibling_projection_dimension_median": float(
+            annotations["Sibling_Projection_Dimension"].median()
+        ) if "Sibling_Projection_Dimension" in annotations else float("nan"),
     }
 
 
@@ -256,13 +254,11 @@ def _compare_cases(cases: list[dict[str, object]]) -> pd.DataFrame:
                 "cluster_delta": (
                     experimental["found_clusters"] - current["found_clusters"]
                 ),
-                "projection_sources_current": current["projection_sources"],
-                "projection_sources_branch_corrected": experimental["projection_sources"],
-                "baseline_empirical_scale_current": current[
-                    "baseline_empirical_scale_factor"
+                "sibling_projection_dimension_median_current": current[
+                    "sibling_projection_dimension_median"
                 ],
-                "baseline_empirical_scale_branch_corrected": experimental[
-                    "baseline_empirical_scale_factor"
+                "sibling_projection_dimension_median_branch_corrected": experimental[
+                    "sibling_projection_dimension_median"
                 ],
             }
         )

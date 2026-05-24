@@ -245,17 +245,7 @@ def main() -> None:
     print(f"  Pairwise Hamming distances — min: {hamm_dists.min():.4f}, "
           f"max: {hamm_dists.max():.4f}, mean: {hamm_dists.mean():.4f}, std: {hamm_dists.std():.4f}")
 
-    # 8. Calibration / inflation audit (cousin-adjusted wald)
-    if hasattr(sdf, "attrs"):
-        audit = sdf.attrs.get("sibling_divergence_audit")
-        if audit:
-            print(f"\n{'─'*100}")
-            print("Sibling divergence calibration audit")
-            print(f"{'─'*100}")
-            for k, v in audit.items():
-                print(f"  {k}: {v}")
-
-    # 9. UMAP plot
+    # 8. UMAP plot
     print(f"\n{'─'*100}")
     print("Generating UMAP plot …")
     try:
@@ -293,7 +283,8 @@ def main() -> None:
         "n_features": p,
         "alpha": alpha,
         "num_clusters": num_k,
-        "sibling_test_method": "cousin_adjusted_wald",
+        "sibling_test_method": "orthonormal_projected_wald_reference",
+        "sibling_inflation": "context_weighted_empirical_null",
         "distance_metric": config.TREE_DISTANCE_METRIC,
         "linkage_method": config.TREE_LINKAGE_METHOD,
         "n_internal_nodes": len(internal),

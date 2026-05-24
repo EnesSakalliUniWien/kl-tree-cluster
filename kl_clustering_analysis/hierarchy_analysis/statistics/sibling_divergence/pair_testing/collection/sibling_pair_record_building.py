@@ -19,12 +19,9 @@ def build_sibling_pair_record(
     branch_length_sum: float,
     parent_sample_size: int,
     is_null_like: bool,
-    is_gate2_blocked: bool,
+    is_edge_blocked: bool,
     sibling_null_weight: float,
-    sibling_calibration_scale: float,
-    projection_dimension_source: str,
-    resolved_projection_dimension: float,
-    used_parent_principal_component_basis: bool,
+    sibling_projection_dimension: float,
 ) -> SiblingPairRecord:
     """Construct a sibling-pair record from resolved statistical inputs."""
     if not np.isfinite(test_statistic):
@@ -52,9 +49,9 @@ def build_sibling_pair_record(
             "Sibling pair record requires a finite sibling_null_weight in [0, 1]; "
             f"parent={parent_node_id!r}."
         )
-    if not np.isfinite(sibling_calibration_scale) or sibling_calibration_scale < 0.0:
+    if not np.isfinite(sibling_projection_dimension) or sibling_projection_dimension < 0.0:
         raise ValueError(
-            "Sibling pair record requires a finite non-negative sibling_calibration_scale; "
+            "Sibling pair record requires a finite non-negative sibling_projection_dimension; "
             f"parent={parent_node_id!r}."
         )
     return SiblingPairRecord(
@@ -68,12 +65,9 @@ def build_sibling_pair_record(
         branch_length_sum=branch_length_sum,
         n_parent=parent_sample_size,
         is_null_like=is_null_like,
-        is_gate2_blocked=is_gate2_blocked,
+        is_edge_blocked=is_edge_blocked,
         sibling_null_weight=sibling_null_weight,
-        sibling_calibration_scale=sibling_calibration_scale,
-        projection_dimension_source=projection_dimension_source,
-        resolved_projection_dimension=resolved_projection_dimension,
-        used_parent_principal_component_basis=used_parent_principal_component_basis,
+        sibling_projection_dimension=sibling_projection_dimension,
     )
 
 

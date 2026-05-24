@@ -141,14 +141,14 @@ The repository keeps the durable entrypoint docs in a small set of files:
 
 - Python `>=3.11`
 - A virtual environment tool such as `uv` or `venv`
-- Optional: SageMath if you want the Sage-specific tooling (`uv sync --extra sage`)
 
 ### Install Dependencies
 
 Using `uv` (recommended):
 
 ```bash
-uv sync
+uv venv --python 3.11 .venv
+uv sync --extra dev --extra benchmark --extra viz --locked
 ```
 
 Using `pip` inside a virtual environment:

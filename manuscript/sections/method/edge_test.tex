@@ -130,12 +130,15 @@ parent-local principal directions while replacing a potentially very large
 $d_u \times d_u$ eigendecomposition by a much smaller $m_u \times m_u$ one.
 
 The edge-stage structural dimension is selected by a local
-Marchenko--Pastur signal-count rule \citep{marchenko1967distribution},
-rather than fixed globally. Eigenvalues above the Marchenko--Pastur upper
-noise edge are treated as signal-bearing directions, while eigenvalues below
-that threshold are treated as part of the local noise bulk. Because the
-eigendecomposition is performed on a local correlation representation, the null
-variance scale is one and the MP upper edge is
+Marchenko--Pastur signal-count rule
+\citep{marchenko1967distribution,johnstone2018pca}, rather than fixed
+globally. Eigenvalues above the Marchenko--Pastur upper noise edge are treated
+as candidate signal-bearing directions, while eigenvalues below that threshold
+are treated as part of the local noise bulk. This is a dimension-selection rule
+for the implemented local spectrum, not a proof that the retained directions
+are true population components. Because the eigendecomposition is performed on
+a local correlation representation, the working null variance scale is one and
+the MP upper edge used by the implementation is
 \begin{equation}
 b_u^{\mathrm{MP}} =
 \left(1 + \sqrt{\frac{d_u}{m_u}}\right)^2,
@@ -154,14 +157,17 @@ $2$ is a practical regularizer rather than part of the
 Marchenko--Pastur law itself: it keeps weak-signal or pure-noise subtrees on
 the same projected-Wald path, avoids a degenerate $k=0$ skip case, and avoids
 the numerically fragile $\chi^2(1)$ regime.
+[TODO: justify the minimum spectral dimension of 2 with sensitivity analysis,
+or state it explicitly as an implementation default rather than a statistically
+derived rule.]
 
-\paragraph{Step 5: Project and calibrate the edge evidence.}
+\paragraph{Step 5: Project and compute the edge p-value.}
 Let $v_{u,1},\dots,v_{u,k_u^{\mathrm{edge}}}$ denote the leading eigenvectors.
 After the coordinatewise standardization step, the vector
 $z_{u \to c}^{\mathrm{edge}} \in \mathbb{R}^p$ is projected onto these
-parent-local directions. The implemented edge test keeps the projected
-quadratic form on its raw PCA scale and accounts for unequal component
-variances in the reference law. With
+parent-local directions. The implemented edge test uses the PCA eigenvectors as
+orthonormal directions; the eigenvalues select the local subspace but do not
+weight the null law. With
 $w_{u \to c,i} = v_{u,i}^\top z_{u \to c}^{\mathrm{edge}}$, the raw edge
 statistic for the PCA part is
 \begin{equation}
@@ -170,45 +176,23 @@ T_{u \to c}^{\mathrm{edge,raw}}
 \sum_{i=1}^{k_u^{\mathrm{edge}}}
 w_{u \to c,i}^2.
 \end{equation}
-If fewer usable PCA directions are available than the target dimension, the
-implementation adds orthonormal complement directions and treats those padded
-coordinates as unit-variance components. Thus the reference distribution is a
-weighted sum of $\chi^2(1)$ variables with weights
-$\lambda_{u,1},\dots,\lambda_{u,k_{\mathrm{pca}}}$ for the PCA coordinates and
-weight $1$ for each padded coordinate. The code uses a Satterthwaite
-moment match. If $n_{\mathrm{pad}}$ padded coordinates are present, define
-\begin{equation}
-\mu_u
-=
-\sum_{i=1}^{k_{\mathrm{pca}}} \lambda_{u,i}
-+ n_{\mathrm{pad}},
-\qquad
-\sigma_u^2
-=
-2\left(
-\sum_{i=1}^{k_{\mathrm{pca}}} \lambda_{u,i}^2
-+ n_{\mathrm{pad}}
-\right).
-\end{equation}
-The moment-matched reference is $s_u\chi^2_{\nu_u}$ with
-\begin{equation}
-s_u = \frac{\sigma_u^2}{2\mu_u},
-\qquad
-\nu_u = \frac{2\mu_u^2}{\sigma_u^2},
-\end{equation}
-and the reported edge p-value is
+Because the projection rows are orthonormal, the null reference for the
+projected quadratic is $\chi^2_{k_u^{\mathrm{edge}}}$, including any
+orthonormal complement directions added when fewer usable PCA directions are
+available than the target dimension. The reported edge p-value is
 \begin{equation}
 p_{u \to c}^{\mathrm{edge}}
 =
 \Pr\!\left(
-\chi^2_{\nu_u}
+\chi^2_{k_u^{\mathrm{edge}}}
 \ge
-\frac{T_{u \to c}^{\mathrm{edge,raw}}}{s_u}
+T_{u \to c}^{\mathrm{edge,raw}}
 \right).
 \end{equation}
-The PCA spectrum is required: the projection rows and eigenvalues are paired
-before the projected-Wald reference-law helper is called. The sibling test uses
-the same PCA/Satterthwaite kernel.
+The PCA spectrum is still required as part of the projection contract: the
+projection rows and eigenvalues are paired before the projected-Wald
+reference-law helper is called. The sibling test uses the same projected
+chi-square kernel.
 \paragraph{Worked child-parent example.}
 The worked example below is intended to show the logic of the edge test, not
 just the algebra. It starts with a parent-child comparison that is visibly
@@ -309,15 +293,17 @@ T_{R \to U_1}^{\mathrm{edge,raw}}
 =
 16.
 \end{equation}
-In this one-direction demonstration, the null reference for that raw
-contribution is $4\chi^2_1$, equivalently a $\chi^2_1$ comparison after
-dividing the raw statistic by $4$. Additional orthogonal-complement padding
-directions, when present, add their own squared projected coordinates and unit
-weights to the same moment-matched reference law.
+In this one-direction demonstration, the null reference for that projected
+contribution is $\chi^2_1$ because the projection direction is orthonormal.
+If the implementation uses the default minimum dimension of 2, an additional
+orthonormal direction is included and the reference becomes $\chi^2_2$ for the
+two projected coordinates. The eigenvalue $4$ explains why this direction was
+selected by the local spectrum; it does not multiply the projected-Wald null
+law.
 This example shows the full logic of the child-parent edge test in the same
 order as the formulas: standardize the raw difference, express it in the main
-parent-level directions, and then calibrate the projected quadratic form
-against the parent-level spectrum.
+parent-level directions, and then compare the projected quadratic form with
+the chi-square reference determined by the projection dimension.
 In larger real subtrees the method can use more than one such
 direction, but the core interpretation is already visible in this toy example.
 These $p$-values are computed for every edge in the tree.

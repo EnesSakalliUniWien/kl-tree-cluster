@@ -16,7 +16,7 @@ from ...statistics.child_parent_divergence.child_parent_divergence_annotation.ch
 from ...statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
-from ...statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
+from ...statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 from ...statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
@@ -25,10 +25,13 @@ from ...statistics.sibling_divergence.projection.gate_inputs.parent_principal_co
 from ...statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from ..core.contracts import (
-    GATE_ANNOTATION_METADATA_ATTR,
+from .annotation_bundle import (
     Gate2Result,
     GateAnnotationBundle,
+    GateAnnotationConfigMetadata,
+    GateAnnotationLeafDataMetadata,
+    GateAnnotationMetadata,
+    GateMetadata,
 )
 from .column_contracts import (
     validate_edge_gate_columns,
@@ -46,43 +49,37 @@ class _SiblingGateInputs:
 def _build_edge_metadata(
     *,
     alpha_local: float,
-) -> dict[str, object]:
+) -> GateMetadata:
     """Build metadata for Gate 2 output.
 
     Tree-BH is the only supported FDR method, so not stored in metadata.
     """
-    return {
-        "gate": "edge",
-        "alpha": float(alpha_local),
-    }
+    return GateMetadata(gate="edge", alpha=float(alpha_local))
 
 
 def _build_sibling_metadata(
     *,
     sibling_alpha: float,
-) -> dict[str, object]:
+) -> GateMetadata:
     """Build metadata for Gate 3 output."""
-    return {
-        "gate": "sibling",
-        "alpha": float(sibling_alpha),
-    }
+    return GateMetadata(gate="sibling", alpha=float(sibling_alpha))
 
 
-def build_gate_annotation_config_metadata() -> dict[str, object]:
+def build_gate_annotation_config_metadata() -> GateAnnotationConfigMetadata:
     """Capture config values that affect gate annotation outputs."""
-    return {
-        "felsenstein_scaling": bool(config.FELSENSTEIN_SCALING),
-        "spectral_minimum_dimension": GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
-        "include_internal_in_spectral": bool(config.INCLUDE_INTERNAL_IN_SPECTRAL),
-    }
+    return GateAnnotationConfigMetadata(
+        felsenstein_scaling=bool(config.FELSENSTEIN_SCALING),
+        spectral_minimum_dimension=GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        include_internal_in_spectral=bool(config.INCLUDE_INTERNAL_IN_SPECTRAL),
+    )
 
 
 def build_gate_annotation_leaf_data_metadata(
     leaf_data: pd.DataFrame | None,
-) -> dict[str, object]:
+) -> GateAnnotationLeafDataMetadata:
     """Capture enough leaf-data identity to validate reusable annotations."""
     if leaf_data is None:
-        return {"present": False}
+        return GateAnnotationLeafDataMetadata(present=False)
 
     content_hash = hashlib.sha256()
     content_hash.update(str(tuple(leaf_data.shape)).encode("utf-8"))
@@ -101,11 +98,11 @@ def build_gate_annotation_leaf_data_metadata(
         .to_numpy(dtype=np.uint64)
         .tobytes()
     )
-    return {
-        "present": True,
-        "shape": [int(leaf_data.shape[0]), int(leaf_data.shape[1])],
-        "content_hash": content_hash.hexdigest(),
-    }
+    return GateAnnotationLeafDataMetadata(
+        present=True,
+        shape=(int(leaf_data.shape[0]), int(leaf_data.shape[1])),
+        content_hash=content_hash.hexdigest(),
+    )
 
 
 def _resolve_sibling_gate_inputs(
@@ -170,7 +167,7 @@ def run_gate_annotation_pipeline(
         significance_level_alpha=alpha_local,
         leaf_data=leaf_data,
     )
-    edge_columns = validate_edge_gate_columns(edge_annotated_df)
+    validate_edge_gate_columns(edge_annotated_df)
     edge_metadata = _build_edge_metadata(
         alpha_local=alpha_local,
     )
@@ -209,14 +206,13 @@ def run_gate_annotation_pipeline(
         sibling_alpha=sibling_alpha,
     )
 
-    metadata = {
-        "pipeline": "gate_annotation",
-        "edge": edge_metadata,
-        "sibling": sibling_metadata,
-        "config": build_gate_annotation_config_metadata(),
-        "leaf_data": build_gate_annotation_leaf_data_metadata(leaf_data),
-    }
-    annotated_df.attrs[GATE_ANNOTATION_METADATA_ATTR] = metadata
+    metadata = GateAnnotationMetadata(
+        pipeline="gate_annotation",
+        edge=edge_metadata,
+        sibling=sibling_metadata,
+        config=build_gate_annotation_config_metadata(),
+        leaf_data=build_gate_annotation_leaf_data_metadata(leaf_data),
+    )
 
     return GateAnnotationBundle(
         annotated_df=annotated_df,

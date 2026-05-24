@@ -113,24 +113,13 @@ y_{\mathrm{pad}}^\top y_{\mathrm{pad}}
 This is the per-component whitening path: the PCA coordinates are each divided
 by their own null variance before being squared and summed.
 
-For the Satterthwaite calibration, the same raw statistic $5.25$ is kept, but
-its null law is approximated by a scaled chi-square. The effective weights are
-$4$, $1$, and $1$, so
+For the orthonormal projected-Wald calibration, the same raw statistic $5.25$
+is kept. The PCA eigenvalues select the directions, but the null law is not
+weighted by them because the projected coordinates are inner products with
+orthonormal vectors. With three projected coordinates,
 \begin{equation}
-\mu = 4 + 1 + 1 = 6,
-\qquad
-\sigma^2 = 2(4^2 + 1^2 + 1^2) = 36.
-\end{equation}
-Moment matching to $c\chi^2(\nu)$ gives
-\begin{equation}
-c = \frac{\sigma^2}{2\mu} = 3,
-\qquad
-\nu = \frac{2\mu^2}{\sigma^2} = 2,
-\end{equation}
-and therefore
-\begin{equation}
-p = \Pr\!\left(\chi^2_2 \ge \frac{5.25}{3}\right).
+p = \Pr\!\left(\chi^2_3 \ge 5.25\right).
 \end{equation}
 The practical distinction is the same as in the main text: whitening changes
-the coordinates before summation, whereas Satterthwaite keeps the raw
-quadratic form and changes the reference distribution instead.
+the coordinates before summation, whereas the implemented projected-Wald test
+keeps the raw orthonormal projection and uses its chi-square dimension.

@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from copy import deepcopy
+from dataclasses import replace
 
 import kl_clustering_analysis.hierarchy_analysis.tree_decomposition as tree_decomposition_module
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
-    GATE_ANNOTATION_METADATA_ATTR,
-)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -102,9 +99,9 @@ def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
 def test_decompose_reuses_matching_gate_annotations(monkeypatch) -> None:
     tree, annotations_df, leaf_data = _build_cherry_tree()
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
-    annotated_df = bundle.annotated_df
 
-    assert annotated_df.attrs[GATE_ANNOTATION_METADATA_ATTR] == bundle.metadata
+    assert bundle.metadata.pipeline == "gate_annotation"
+    assert bundle.annotated_df.attrs == {}
 
     def fail_if_called(*_args, **_kwargs):
         raise AssertionError("Gate annotation pipeline should not rerun")
@@ -115,7 +112,7 @@ def test_decompose_reuses_matching_gate_annotations(monkeypatch) -> None:
         fail_if_called,
     )
 
-    result = tree.decompose(annotations_df=annotated_df, leaf_data=leaf_data)
+    result = tree.decompose(gate_annotation_bundle=bundle, leaf_data=leaf_data)
 
     assert result["num_clusters"] >= 1
 
@@ -123,10 +120,13 @@ def test_decompose_reuses_matching_gate_annotations(monkeypatch) -> None:
 def test_decompose_recomputes_stale_gate_annotations(monkeypatch) -> None:
     tree, annotations_df, leaf_data = _build_cherry_tree()
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
-    stale_df = bundle.annotated_df.copy()
-    stale_metadata = deepcopy(stale_df.attrs[GATE_ANNOTATION_METADATA_ATTR])
-    stale_metadata["edge"]["alpha"] = -1.0
-    stale_df.attrs[GATE_ANNOTATION_METADATA_ATTR] = stale_metadata
+    stale_bundle = replace(
+        bundle,
+        metadata=replace(
+            bundle.metadata,
+            edge=replace(bundle.metadata.edge, alpha=-1.0),
+        ),
+    )
 
     calls = 0
 
@@ -141,7 +141,7 @@ def test_decompose_recomputes_stale_gate_annotations(monkeypatch) -> None:
         counted_pipeline,
     )
 
-    result = tree.decompose(annotations_df=stale_df, leaf_data=leaf_data)
+    result = tree.decompose(gate_annotation_bundle=stale_bundle, leaf_data=leaf_data)
 
     assert calls == 1
     assert result["num_clusters"] >= 1
@@ -166,7 +166,7 @@ def test_decompose_recomputes_annotations_when_leaf_data_changes(monkeypatch) ->
         counted_pipeline,
     )
 
-    result = tree.decompose(annotations_df=bundle.annotated_df, leaf_data=changed_leaf_data)
+    result = tree.decompose(gate_annotation_bundle=bundle, leaf_data=changed_leaf_data)
 
     assert calls == 1
     assert result["num_clusters"] >= 1

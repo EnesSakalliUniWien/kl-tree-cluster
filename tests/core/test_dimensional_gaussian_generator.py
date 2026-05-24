@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from benchmarks.shared.generators.generate_dimensional_gaussian import (

@@ -566,14 +566,9 @@ def run_case(case_name: str) -> list[dict]:
                 ari = float("nan")
                 gate_loss = float("nan")
 
-            # Calibration audit
-            stats = tree.annotations_df
-            audit = stats.attrs.get("sibling_divergence_audit", {})
-            c_hat = audit.get("baseline_empirical_scale_factor", float("nan"))
-
             print(
                 f"    cut@K ARI={cut_ari:.3f}, K_found={K_found} (true={true_k}), "
-                f"decomp ARI={ari:.3f}, gate loss={gate_loss:.3f}, ĉ={c_hat:.1f}"
+                f"decomp ARI={ari:.3f}, gate loss={gate_loss:.3f}"
             )
 
             # Cluster composition

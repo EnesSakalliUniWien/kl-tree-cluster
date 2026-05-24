@@ -45,10 +45,7 @@ def bootstrap_consensus(
     metric: str | None = None,
     linkage_method: str | None = None,
     random_seed: int = 42,
-    verbose: bool = False,
     decompose_kwargs: dict | None = None,
-    include_coassociation_logs: bool = False,
-    coassociation_log_top_n: int | None = 500,
 ) -> Dict[str, Any]:
     """Run bootstrap consensus on a binary DataFrame.
 
@@ -67,8 +64,6 @@ def bootstrap_consensus(
         Linkage method.  Defaults to ``config.TREE_LINKAGE_METHOD``.
     random_seed
         Seed for the bootstrap RNG.
-    verbose
-        Print progress every 10 replicates.
     decompose_kwargs
         Extra keyword arguments forwarded to ``decompose()``.
 
@@ -87,12 +82,6 @@ def bootstrap_consensus(
             list[int] — number of clusters found in each replicate.
         ``n_boot``
             Echo of how many replicates were run.
-        ``co_association_present_weight_matrix`` (optional)
-            Pairwise denominator weights used in co-association ratios.
-        ``co_association_same_weight_matrix`` (optional)
-            Pairwise same-cluster weights used in co-association ratios.
-        ``co_association_pair_log`` (optional)
-            Long-format top pair log with co-association and raw weights.
     """
     from kl_clustering_analysis.tree.poset_tree import PosetTree  # local import to avoid cycles
 
@@ -138,10 +127,7 @@ def bootstrap_consensus(
     # Clade hit counts
     clade_hits: Dict[FrozenSet[str], int] = {c: 0 for c in original_clades}
 
-    for b in range(n_boot):
-        if verbose and (b + 1) % 10 == 0:
-            print(f"  bootstrap {b + 1}/{n_boot}")
-
+    for _ in range(n_boot):
         # --- resample rows with replacement ---
         # Keep multiplicities (true bootstrap weighting) by retaining all draws.
         # Use unique temporary labels so repeated originals can coexist as leaves.
@@ -231,23 +217,6 @@ def bootstrap_consensus(
         "n_boot": n_boot,
     }
 
-    if include_coassociation_logs:
-        co_count_df = pd.DataFrame(co_count, index=sample_ids, columns=sample_ids)
-        co_same_df = pd.DataFrame(co_same, index=sample_ids, columns=sample_ids)
-        original_cluster_by_sample = _build_label_map(results_orig["cluster_assignments"])
-        pair_log_df = _build_coassociation_pair_log(
-            sample_ids,
-            co_assoc=co_assoc,
-            co_count=co_count,
-            co_same=co_same,
-            n_boot=n_boot,
-            original_cluster_by_sample=original_cluster_by_sample,
-            top_n=coassociation_log_top_n,
-        )
-        result["co_association_present_weight_matrix"] = co_count_df
-        result["co_association_same_weight_matrix"] = co_same_df
-        result["co_association_pair_log"] = pair_log_df
-
     return result
 
 
@@ -292,64 +261,6 @@ def _build_original_cluster_count_matrix(
         for cluster_id, count in original_to_counts[original_label].items():
             matrix[i, cluster_to_col[cluster_id]] = int(count)
     return present_originals, present_idx, matrix
-
-
-def _build_coassociation_pair_log(
-    sample_ids: List[str],
-    *,
-    co_assoc: np.ndarray,
-    co_count: np.ndarray,
-    co_same: np.ndarray,
-    n_boot: int | None = None,
-    original_cluster_by_sample: Dict[str, int] | None = None,
-    top_n: int | None = 500,
-) -> pd.DataFrame:
-    """Create a long-format co-association audit table from pairwise matrices."""
-    n = len(sample_ids)
-    if n < 2:
-        return pd.DataFrame(
-            columns=[
-                "sample_a",
-                "sample_b",
-                "co_association",
-                "present_weight",
-                "same_weight",
-            ]
-        )
-
-    i_idx, j_idx = np.triu_indices(n, k=1)
-    sample_arr = np.asarray(sample_ids, dtype=object)
-    log_df = pd.DataFrame(
-        {
-            "sample_a": sample_arr[i_idx],
-            "sample_b": sample_arr[j_idx],
-            "co_association": co_assoc[i_idx, j_idx],
-            "present_weight": co_count[i_idx, j_idx],
-            "same_weight": co_same[i_idx, j_idx],
-        }
-    )
-    log_df = log_df[log_df["present_weight"] > 0].copy()
-    if n_boot is not None and n_boot > 0:
-        n_boot_f = float(n_boot)
-        log_df["present_weight_per_boot"] = log_df["present_weight"] / n_boot_f
-        log_df["same_weight_per_boot"] = log_df["same_weight"] / n_boot_f
-    log_df["ambiguity_to_half"] = (log_df["co_association"] - 0.5).abs()
-    if original_cluster_by_sample:
-        cluster_a = log_df["sample_a"].map(original_cluster_by_sample)
-        cluster_b = log_df["sample_b"].map(original_cluster_by_sample)
-        log_df["original_cluster_a"] = cluster_a
-        log_df["original_cluster_b"] = cluster_b
-        log_df["same_original_cluster"] = (
-            cluster_a.notna() & cluster_b.notna() & (cluster_a == cluster_b)
-        )
-    log_df.sort_values(
-        by=["co_association", "present_weight", "same_weight", "sample_a", "sample_b"],
-        ascending=[False, False, False, True, True],
-        inplace=True,
-    )
-    if top_n is not None and top_n > 0:
-        log_df = log_df.head(int(top_n))
-    return log_df.reset_index(drop=True)
 
 
 def _extract_clades(tree) -> Set[FrozenSet[str]]:

@@ -4,8 +4,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
     EDGE_GATE_COLUMNS,
     SIBLING_GATE_COLUMNS,
 )
@@ -81,9 +80,9 @@ def test_pipeline_supports_current_gate_annotation_contract() -> None:
         assert col in out.columns
     for col in SIBLING_GATE_COLUMNS:
         assert col in out.columns
-    assert bundle.metadata["pipeline"] == "gate_annotation"
-    assert "edge" in bundle.metadata
-    assert "sibling" in bundle.metadata
+    assert bundle.metadata.pipeline == "gate_annotation"
+    assert bundle.metadata.edge.gate == "edge"
+    assert bundle.metadata.sibling.gate == "sibling"
 
 
 def test_pipeline_requires_leaf_data_for_spectral_gate_context() -> None:

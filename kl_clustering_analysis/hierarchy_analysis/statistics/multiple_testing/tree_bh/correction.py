@@ -49,7 +49,6 @@ def apply_tree_bh_correction(
     p_values: np.ndarray,
     child_ids: list[str],
     alpha: float = 0.05,
-    verbose: bool = False,
 ) -> ChildParentEdgeTreeBHResult:
     """Apply Tree-BH hierarchical FDR correction.
 
@@ -84,17 +83,7 @@ def apply_tree_bh_correction(
     tree_bh_base_alpha_by_depth: dict[int, float] = {}
     sibling_group_outcomes = {}
 
-    if verbose:
-        print(
-            f"Tree-BH: {hypothesis_count} edges, {len(set(child_depths))} depths, "
-            f"{len(sibling_group_indices_by_parent)} sibling groups"
-        )
-        print(f"Roots: {root_nodes}")
-
     for depth in sorted(set(child_depths)):
-        if verbose:
-            print(f"\n--- Depth {depth} ---")
-
         sibling_groups_at_depth = collect_eligible_sibling_groups_at_depth(
             sibling_group_indices_by_parent,
             child_depths,
@@ -102,8 +91,6 @@ def apply_tree_bh_correction(
             eligible_parent_nodes,
         )
         if not sibling_groups_at_depth:
-            if verbose:
-                print(f"  No sibling groups to test at depth {depth}")
             continue
 
         for parent_id, sibling_group_child_indices in sibling_groups_at_depth:
@@ -114,12 +101,6 @@ def apply_tree_bh_correction(
                 alpha,
                 root_nodes,
             )
-
-            if verbose:
-                print(
-                    f"  Sibling group under {parent_id}: {len(sibling_group_child_indices)} children, "
-                    f"alpha_adj = {sibling_group_alpha:.6f}"
-                )
 
             sibling_group_p_values = p_values[sibling_group_child_indices]
             sibling_group_bh_result = run_bh_within_sibling_group(
@@ -133,7 +114,7 @@ def apply_tree_bh_correction(
                 child_hypotheses_rejected_by_bh,
                 child_hypothesis_corrected_p_values_by_bh,
             ) = sibling_group_bh_result
-            rejection_count, test_count = record_sibling_group_outcome(
+            record_sibling_group_outcome(
                 parent_id=parent_id,
                 depth=depth,
                 sibling_group_child_indices=sibling_group_child_indices,
@@ -155,12 +136,6 @@ def apply_tree_bh_correction(
                 sibling_group_outcomes=sibling_group_outcomes,
                 sibling_group_alpha=sibling_group_alpha,
             )
-
-            if verbose:
-                print(
-                    f"    Rejected {rejection_count}/{test_count} "
-                    f"(proportion: {rejection_count / test_count:.2%})"
-                )
 
         tree_bh_base_alpha_by_depth[int(depth)] = alpha
 

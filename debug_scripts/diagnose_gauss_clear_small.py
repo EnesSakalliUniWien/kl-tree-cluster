@@ -159,20 +159,6 @@ def main():
         else:
             print("\n  No sibling tests were run (all skipped).")
 
-    # ── Calibration audit ──
-    audit = stats.attrs.get("sibling_divergence_audit", {})
-    if audit:
-        print("\n--- Sibling calibration audit ---")
-        for k, v in audit.items():
-            if k == "diagnostics" and isinstance(v, dict):
-                print(f"  {k}:")
-                for dk, dv in v.items():
-                    print(f"    {dk}: {dv}")
-            else:
-                print(f"  {k}: {v}")
-    else:
-        print("\n  No sibling calibration audit found.")
-
     # ── Summary ──
     print("\n" + "=" * 60)
     print("DIAGNOSIS SUMMARY")

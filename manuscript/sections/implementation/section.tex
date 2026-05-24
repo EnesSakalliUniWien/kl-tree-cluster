@@ -1,6 +1,6 @@
 % !TEX root = ../../main.tex
 
-\section{Online Methods}
+\section{Implementation Details}
 
 \subsection{Software implementation}
 \label{sec:software-implementation}
@@ -20,7 +20,10 @@ child PCA projections, but the default basis constructor does not use them.
 
 \Cref{tab:defaults} summarizes the default settings used in the software
 described here. These settings define how the tree is built, how evidence is
-combined across the tree, and how final cluster decisions are made.
+combined across the tree, and how final cluster decisions are made. The table
+is descriptive rather than justificatory; \Cref{tab:method-constants} records
+which defaults are analytically motivated, which are empirical working choices,
+and which still require validation.
 
 \begin{table}[ht]
 \centering
@@ -32,11 +35,11 @@ Tree distance & Hamming \\
 Linkage & Average linkage \\
 Edge significance level & $\alpha_{\mathrm{edge}} = 0.001$ \\
 Sibling significance level & $\alpha_{\mathrm{sib}} = 0.01$ \\
-Edge test & Satterthwaite-calibrated projected Wald test using the parent-specific PCA spectrum \\
+Edge test & Projected Wald test using the parent-specific orthonormal PCA basis \\
 Edge dimension rule & Marchenko--Pastur signal count from the parent's local spectrum \\
-Sibling test & Projected Wald test with global null-like calibration \\
+Sibling test & Projected Wald test with context-weighted empirical-null inflation \\
 Sibling dimension rule & Geometric mean of positive child edge dimensions \\
-Sibling basis / calibration & Parent PCA head capped to available rank; Satterthwaite raw test; global $\hat c$ estimated from null-like sibling pairs \\
+Sibling basis / inflation & Parent PCA head capped to available rank; projected chi-square raw test; empirical inflation $\hat c$ estimated from sibling records \\
 Minimum spectral dimension & 2 \\
 Include internal spectral rows & On \\
 Edge multiple-testing correction & Hierarchical BH correction on the tree \\

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-"""Sweep edge α: find the threshold where Gate 2 passes real splits but blocks noise.
+"""Sweep edge alpha: find the threshold where the edge test passes real splits but blocks noise.
 
 For each test case (null + real), runs the full pipeline at various edge α values
-(with EDGE_CALIBRATION=False) and records:
+and records:
   - K found
-  - Number of edges passing Gate 2
+  - number of significant child-parent edges
   - ARI (if true labels available)
 
-This tells us: at what α does Gate 2 become permissive enough for real data
+This tells us: at what alpha does the edge test become permissive enough for real data
 while still providing some filtering on null data?
 """
 from __future__ import annotations
@@ -101,39 +101,37 @@ def _weak_data(n_per=25, k=2, p=40, noise=0.3, seed=42):
 
 
 def _run_at_alpha(data, edge_alpha, sibling_alpha=0.05):
-    """Run pipeline with specified edge alpha (no edge calibration)."""
-    orig_cal = config.EDGE_CALIBRATION
-    config.EDGE_CALIBRATION = False
-    try:
-        dist = pdist(data.values, metric=config.TREE_DISTANCE_METRIC)
-        Z = linkage(dist, method=config.TREE_LINKAGE_METHOD)
-        tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            decomp = tree.decompose(
-                leaf_data=data,
-                alpha_local=edge_alpha,
-                sibling_alpha=sibling_alpha,
-            )
-        stats = tree.annotations_df
+    """Run pipeline with specified edge alpha."""
+    dist = pdist(data.values, metric=config.TREE_DISTANCE_METRIC)
+    Z = linkage(dist, method=config.TREE_LINKAGE_METHOD)
+    tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
+    tree.populate_node_divergences(data)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        decomp = tree.decompose(
+            annotations_df=tree.annotations_df,
+            leaf_data=data,
+            alpha_local=edge_alpha,
+            sibling_alpha=sibling_alpha,
+        )
+    stats = tree.annotations_df
 
-        # Count edges passing Gate 2
-        n_sig = 0
-        if "Child_Parent_Divergence_Significant" in stats.columns:
-            n_sig = int(stats["Child_Parent_Divergence_Significant"].sum())
+    n_sig = 0
+    if "Child_Parent_Divergence_Significant" in stats.columns:
+        n_sig = int(stats["Child_Parent_Divergence_Significant"].sum())
 
-        # Raw edge p-values (pre-BH)
-        raw = stats.attrs.get("_edge_raw_test_data", {})
-        raw_pvals = np.asarray(raw.get("p_values", []), dtype=float) if raw else np.array([])
+    raw_pvals = (
+        stats["Child_Parent_Divergence_P_Value"].dropna().to_numpy(dtype=float)
+        if "Child_Parent_Divergence_P_Value" in stats.columns
+        else np.array([], dtype=float)
+    )
 
-        return {
-            "K": decomp.get("num_clusters", -1),
-            "n_sig_edges": n_sig,
-            "cluster_assignments": decomp.get("cluster_assignments", {}),
-            "raw_pvals": raw_pvals,
-        }
-    finally:
-        config.EDGE_CALIBRATION = orig_cal
+    return {
+        "K": decomp.get("num_clusters", -1),
+        "n_sig_edges": n_sig,
+        "cluster_assignments": decomp.get("cluster_assignments", {}),
+        "raw_pvals": raw_pvals,
+    }
 
 
 def _compute_ari(labels_true, cluster_assignments, data):

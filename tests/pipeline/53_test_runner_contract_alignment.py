@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from benchmarks.shared.runners.louvain_runner import _run_louvain_method
 from benchmarks.shared.runners.optics_runner import _run_optics_method
 from benchmarks.shared.runners.spectral_runner import _run_spectral_method

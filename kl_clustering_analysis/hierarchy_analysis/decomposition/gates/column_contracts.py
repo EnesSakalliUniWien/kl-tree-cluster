@@ -4,14 +4,33 @@ from __future__ import annotations
 
 import pandas as pd
 
-from ..core.contracts import (
-    EDGE_GATE_COLUMNS,
-    SIBLING_GATE_COLUMNS,
-)
 from ..core.errors import DecompositionValidationError
 
 EDGE_COLUMN_PREFIX = "Child_Parent_"
 SIBLING_COLUMN_PREFIX = "Sibling_"
+
+EDGE_GATE_COLUMNS: tuple[str, ...] = (
+    "Child_Parent_Divergence_P_Value",
+    "Child_Parent_Divergence_P_Value_BH",
+    "Child_Parent_Divergence_Significant",
+    "Child_Parent_Divergence_df",
+    "Child_Parent_Divergence_Invalid",
+    "Child_Parent_Divergence_Tested",
+    "Child_Parent_Divergence_Ancestor_Blocked",
+)
+
+SIBLING_GATE_COLUMNS: tuple[str, ...] = (
+    "Sibling_Divergence_Skipped",
+    "Sibling_Test_Statistic",
+    "Sibling_Degrees_of_Freedom",
+    "Sibling_Divergence_P_Value",
+    "Sibling_Divergence_P_Value_Corrected",
+    "Sibling_Divergence_Invalid",
+    "Sibling_BH_Different",
+    "Sibling_BH_Same",
+    "Sibling_Test_Method",
+    "Sibling_Projection_Dimension",
+)
 
 
 def prefixed_columns(df: pd.DataFrame, prefix: str) -> tuple[str, ...]:
@@ -68,7 +87,9 @@ def validate_sibling_gate_columns(
 
 __all__ = [
     "EDGE_COLUMN_PREFIX",
+    "EDGE_GATE_COLUMNS",
     "SIBLING_COLUMN_PREFIX",
+    "SIBLING_GATE_COLUMNS",
     "prefixed_columns",
     "edge_gate_columns",
     "sibling_gate_columns",

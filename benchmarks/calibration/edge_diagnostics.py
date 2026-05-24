@@ -21,7 +21,7 @@ from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
-    sanitize_positive_branch_length,
+    extract_branch_length_observation,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
@@ -131,14 +131,14 @@ def _extract_edge_rows(
             else False
         )
 
-        n_child = float(tree.nodes[child].get("leaf_count", np.nan))
-        n_parent = float(tree.nodes[parent].get("leaf_count", np.nan))
+        n_child = float(tree.nodes[child]["leaf_count"])
+        n_parent = float(tree.nodes[parent]["leaf_count"])
         sample_ratio = n_child / n_parent if n_parent > 0 else np.nan
 
-        bl_raw = tree.edges[parent, child].get("branch_length")
-        branch_length = sanitize_positive_branch_length(bl_raw)
+        branch_length = extract_branch_length_observation(tree, parent, child)
         bl_usable = bool(
             branch_length is not None
+            and branch_length > 0.0
             and mean_bl is not None
             and np.isfinite(mean_bl)
             and mean_bl > 0

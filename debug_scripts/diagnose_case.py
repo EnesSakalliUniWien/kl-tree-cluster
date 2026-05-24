@@ -166,7 +166,8 @@ def diagnose_case(case_name: str) -> None:
     print(
         "\nConfig: SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "
         f"GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION={GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION}, "
-        f"Sibling test method=cousin_adjusted_wald"
+        "sibling reference=orthonormal projected-Wald, "
+        "inflation=context-weighted empirical-null"
     )
 
     # ── Run decomposition ──
@@ -257,17 +258,6 @@ def diagnose_case(case_name: str) -> None:
     print(f"  Gate 3 pass: {gate3_pass}/{len(internal)}")
     print(f"  Both gates pass (split candidates): {len(split_nodes)}/{len(internal)}")
 
-    # ── Spectral dimensions distribution ──
-    spectral_dims = stats.attrs.get("_spectral_dims", {})
-    if spectral_dims:
-        dims_internal = [v for k, v in spectral_dims.items() if tree.out_degree(k) > 0]
-        if dims_internal:
-            print("\n--- Spectral dimensions (Gate 2) ---")
-            print(
-                f"  min={min(dims_internal)}, max={max(dims_internal)}, "
-                f"median={np.median(dims_internal):.0f}, mean={np.mean(dims_internal):.1f}"
-            )
-
     # ── Top split nodes (where the DFS actually splits) ──
     if split_nodes:
         print("\n--- Top 10 split-candidate nodes (both gates pass) ---")
@@ -328,18 +318,6 @@ def diagnose_case(case_name: str) -> None:
                     f"df={row['Sibling_Degrees_of_Freedom']:.0f}, "
                     f"diff={row['Sibling_BH_Different']}, {g2_str}"
                 )
-
-    # ── Calibration audit ──
-    audit = stats.attrs.get("sibling_divergence_audit", {})
-    if audit:
-        print("\n--- Sibling calibration audit ---")
-        for k, v in audit.items():
-            if k == "diagnostics" and isinstance(v, dict):
-                print(f"  {k}:")
-                for dk, dv in v.items():
-                    print(f"    {dk}: {dv}")
-            else:
-                print(f"  {k}: {v}")
 
     # ── DFS tree trace (top 3 levels) ──
     print("\n--- DFS decision tree (first 3 levels from root) ---")

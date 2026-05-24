@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
-
 from kl_clustering_analysis.hierarchy_analysis.bootstrap_consensus import (
     _extract_clades,
     bootstrap_consensus,

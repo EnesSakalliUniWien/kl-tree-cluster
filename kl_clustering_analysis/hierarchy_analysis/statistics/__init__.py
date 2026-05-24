@@ -5,7 +5,9 @@ from .multiple_testing import (
     apply_tree_bh_correction,
     benjamini_hochberg_correction,
 )
-from .sibling_divergence.adjusted_wald_annotation.pipeline import annotate_sibling_divergence
+from .sibling_divergence.inflated_projected_wald_annotation.pipeline import (
+    annotate_sibling_divergence,
+)
 
 __all__ = [
     # Core statistics

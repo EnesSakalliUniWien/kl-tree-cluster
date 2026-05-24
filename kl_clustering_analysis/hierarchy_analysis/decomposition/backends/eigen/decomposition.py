@@ -26,6 +26,8 @@ def eigendecompose_correlation(
     Constant features are removed first. When ``n_samples < n_active_features``,
     the decomposition switches to the smaller dual sample-space Gram matrix;
     otherwise it decomposes the feature-space correlation matrix directly.
+    Returns ``None`` only for the zero-rank case where no finite, varying
+    feature remains after preparation.
     """
     prepared_data = prepare_correlation_data(data_matrix)
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.runners.kl_runner import _run_kl_method
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
@@ -17,12 +16,14 @@ def test_global_sibling_calibration_restores_gauss_null_large_to_one_cluster() -
 
     assert result.found_clusters == 1
     annotations = result.extra["annotations"]
-    audit = annotations.attrs["sibling_divergence_audit"]
-    assert audit["calibration_mode"] == "context_weighted_empirical_null_scale"
+    assert (
+        "context_weighted_empirical_null_inflation"
+        in set(annotations["Sibling_Test_Method"].dropna())
+    )
 
 
 @pytest.mark.slow
-def test_strict_sibling_calibration_keeps_cat_highcard_conservative() -> None:
+def test_inflation_calibration_keeps_cat_highcard_conservative() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c")
     data_t, _, _, _, distance_condensed, _, _ = prepare_case_inputs(case, ["kl"])
 

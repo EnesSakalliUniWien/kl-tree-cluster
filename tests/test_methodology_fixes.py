@@ -2,7 +2,7 @@
 
 1. Fix 1: spectral_k floor raised from 1 to 4
 2. Fix 2: Non-binary and leaf nodes marked as Sibling_Divergence_Skipped=True
-3. Fix 3: Shared Satterthwaite helper (compute_projected_pvalue)
+3. Fix 3: Shared projected chi-square helper (compute_projected_pvalue)
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_w
 from scipy.stats import chi2
 
 # =============================================================================
-# Fix 3: Shared Satterthwaite helper tests
+# Fix 3: Shared projected chi-square helper tests
 # =============================================================================
 
 
@@ -39,19 +39,18 @@ class TestComputeProjectedPvalue:
         with pytest.raises(ValueError, match="same length"):
             compute_projected_pvalue(projected, eigenvalues=np.array([]))
 
-    def test_satterthwaite_calibration_with_eigenvalues(self):
-        """Eigenvalue-aware projected tests use Satterthwaite calibration."""
+    def test_projected_chi_square_calibration_uses_orthonormal_dimension(self):
+        """PCA eigenvalues select the basis but do not weight the null law."""
         projected = np.array([1.0, 2.0, 3.0])
         eigenvalues = np.array([2.0, 1.0, 0.5])
         reference = compute_projected_pvalue(projected, eigenvalues=eigenvalues)
         expected_stat = float(np.sum(projected**2))
-        expected_df = float(np.sum(eigenvalues) ** 2) / float(np.sum(eigenvalues**2))
-        expected_scale = float(np.sum(eigenvalues**2)) / float(np.sum(eigenvalues))
+        expected_df = float(projected.shape[0])
         assert abs(reference.statistic - expected_stat) < 1e-10
-        assert abs(reference.reference_scale - expected_scale) < 1e-10
+        assert reference.reference_scale == 1.0
         assert abs(reference.degrees_of_freedom - expected_df) < 1e-10
         assert abs(
-            reference.p_value - float(chi2.sf(expected_stat / expected_scale, df=expected_df))
+            reference.p_value - float(chi2.sf(expected_stat, df=expected_df))
         ) < 1e-10
 
 
@@ -275,9 +274,9 @@ class TestNonBinarySkippedFlag:
         df.loc[["L2", "L3"], "Child_Parent_Divergence_P_Value"] = 1.0
         return df
 
-    def test_adjusted_wald_marks_leaves_as_skipped(self):
+    def test_inflated_projected_wald_marks_leaves_as_skipped(self):
         """Adjusted Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
+        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
             annotate_sibling_divergence,
         )
 

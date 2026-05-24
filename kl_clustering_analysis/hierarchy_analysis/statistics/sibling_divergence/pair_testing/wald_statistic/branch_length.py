@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ....branch_length_utils import sanitize_positive_branch_length
+from ....branch_length_utils import compute_sibling_branch_length_sum
 
 
 def _resolve_sibling_branch_length_sum(
@@ -14,12 +14,14 @@ def _resolve_sibling_branch_length_sum(
     if mean_branch_length is None:
         return None
 
-    sanitized_left = sanitize_positive_branch_length(branch_length_left)
-    sanitized_right = sanitize_positive_branch_length(branch_length_right)
-    if sanitized_left is None or sanitized_right is None:
+    branch_length_sum = compute_sibling_branch_length_sum(
+        branch_length_left,
+        branch_length_right,
+    )
+    if branch_length_sum == 0.0:
         return None
 
-    return sanitized_left + sanitized_right
+    return branch_length_sum
 
 
 __all__ = ["_resolve_sibling_branch_length_sum"]

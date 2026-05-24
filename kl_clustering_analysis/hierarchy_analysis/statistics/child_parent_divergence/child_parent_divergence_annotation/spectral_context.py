@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -9,6 +11,15 @@ import pandas as pd
 from ...projection.spectral.tree_estimator import compute_spectral_decomposition
 
 GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = 2
+
+
+@dataclass
+class SpectralContext:
+    """Gate 2 spectral outputs reused by Gate 3 sibling tests."""
+
+    spectral_projection_dimensions_by_node: dict[str, int]
+    principal_component_projections_by_node: dict[str, np.ndarray]
+    principal_component_eigenvalues_by_node: dict[str, np.ndarray]
 
 
 def _validate_spectral_context_outputs(
@@ -104,5 +115,6 @@ def compute_child_parent_spectral_context(
 
 __all__ = [
     "GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION",
+    "SpectralContext",
     "compute_child_parent_spectral_context",
 ]

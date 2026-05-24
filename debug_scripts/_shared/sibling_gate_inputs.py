@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
 
-    from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
+    from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
         SpectralContext,
     )
 

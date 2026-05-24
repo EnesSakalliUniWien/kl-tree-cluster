@@ -6,6 +6,10 @@ The method has a clear inferential structure: build a hierarchy, annotate it
 with child-parent and sibling tests, control for multiple testing, and convert
 the annotated tree into a final partition. What remains essential is empirical
 characterization of how this method behaves in practice.
+[TODO: after the evaluation section is completed, replace this prospective
+discussion with an interpretation of the observed results. Do not claim
+calibration, power, or robustness here until the corresponding experiments are
+reported.]
 
 Several questions matter for the paper. Under the null, the edge and
 sibling tests should control false discoveries not only at the test level but
@@ -27,3 +31,19 @@ benchmark comparisons tied directly to the exact implementation summarized in
 \Cref{tab:defaults}. Together, these studies would show where the method
 is well calibrated, where it remains powerful, and where its practical limits
 begin.
+
+\subsection{Current Limitations}
+
+Several limitations are already clear from the method specification. First, the
+binary working representation makes one-hot categorical dependence and
+continuous-discretization choices part of the statistical problem, not merely
+preprocessing details. Second, the local Marchenko--Pastur rule, the minimum
+projection dimension, and the sibling projection rule are working spectral
+rules whose finite-sample behavior must be validated in the regimes used by the
+method. Third, the context-weighted empirical-null inflation is an empirical
+calibration model rather than an exact selective-inference theorem. Fourth, the
+final partition depends on the pass-through traversal rule, so full-pipeline
+calibration must be evaluated at both the local-test level and the
+number-of-clusters level.
+[TODO: once the evaluation is complete, replace this limitation list with
+evidence-backed statements about which limitations dominate in practice.]

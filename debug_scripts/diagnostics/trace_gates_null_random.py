@@ -28,17 +28,18 @@ def _generate_null(n=100, p=50, seed=42):
 
 
 def _run(data, label):
-    orig_ec = config.EDGE_CALIBRATION
-    config.EDGE_CALIBRATION = False
-    try:
-        Z = linkage(
-            pdist(data.values, metric=config.TREE_DISTANCE_METRIC),
-            method=config.TREE_LINKAGE_METHOD,
-        )
-        tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
-        result = tree.decompose(leaf_data=data, alpha_local=0.05, sibling_alpha=0.05)
-    finally:
-        config.EDGE_CALIBRATION = orig_ec
+    Z = linkage(
+        pdist(data.values, metric=config.TREE_DISTANCE_METRIC),
+        method=config.TREE_LINKAGE_METHOD,
+    )
+    tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
+    tree.populate_node_divergences(data)
+    result = tree.decompose(
+        annotations_df=tree.annotations_df,
+        leaf_data=data,
+        alpha_local=0.05,
+        sibling_alpha=0.05,
+    )
 
     K = result["num_clusters"]
     stats = tree.annotations_df

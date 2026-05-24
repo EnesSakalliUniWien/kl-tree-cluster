@@ -16,7 +16,7 @@ import pandas as pd
 from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
 from .cluster_assignments import ClusterBoundary, build_cluster_assignments
-from .decomposition.core.contracts import GATE_ANNOTATION_METADATA_ATTR
+from .decomposition.gates.annotation_bundle import GateAnnotationBundle
 from .decomposition.gates.column_contracts import (
     validate_edge_gate_columns,
     validate_sibling_gate_columns,
@@ -55,6 +55,7 @@ class TreeDecomposition:
         tree: PosetTree,
         annotations_df: pd.DataFrame | None = None,
         *,
+        gate_annotation_bundle: GateAnnotationBundle | None = None,
         alpha_local: float = config.EDGE_ALPHA,
         sibling_alpha: float = config.SIBLING_ALPHA,
         leaf_data: pd.DataFrame | None = None,
@@ -68,8 +69,11 @@ class TreeDecomposition:
             Directed hierarchy (typically a :class:`~tree.poset_tree.PosetTree`).
         annotations_df
             DataFrame of statistical annotations (e.g., columns produced by
-            ``hierarchy_analysis.statistics`` helpers). May be ``None`` if the caller
-            plans to rely on on-the-fly calculations.
+            ``hierarchy_analysis.statistics`` helpers). Used as input to the
+            gate annotation pipeline.
+        gate_annotation_bundle
+            Explicit reusable output from ``run_gate_annotation_pipeline``.
+            This is the only cache-valid gate annotation contract.
         alpha_local
             Significance level used when the local Kullback-Leibler divergence gate
             falls back to raw chi-square tests.
@@ -80,8 +84,17 @@ class TreeDecomposition:
             spectral dimension estimation.  When ``None``, spectral projection
             is disabled and tests are skipped (treated as merge).
         """
+        if annotations_df is not None and gate_annotation_bundle is not None:
+            raise ValueError("Pass either annotations_df or gate_annotation_bundle, not both.")
+
         self.tree = tree
-        self.annotations_df = annotations_df if annotations_df is not None else pd.DataFrame()
+        self._gate_annotation_bundle = gate_annotation_bundle
+        if gate_annotation_bundle is not None:
+            self.annotations_df = gate_annotation_bundle.annotated_df
+        elif annotations_df is not None:
+            self.annotations_df = annotations_df
+        else:
+            self.annotations_df = pd.DataFrame()
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
@@ -129,11 +142,14 @@ class TreeDecomposition:
     def _prepare_annotations(self, annotations_df: pd.DataFrame) -> pd.DataFrame:
         """Ensure statistical annotation columns are present on *annotations_df*.
 
-        Reuses precomputed gate annotations only when their contract and run
-        metadata match this decomposition request.
+        Reuses precomputed gate annotations only when they are supplied as an
+        explicit ``GateAnnotationBundle`` whose metadata matches this
+        decomposition request.
         """
-        if self._can_reuse_gate_annotations(annotations_df):
-            return annotations_df
+        if self._gate_annotation_bundle is not None and self._can_reuse_gate_annotation_bundle(
+            self._gate_annotation_bundle
+        ):
+            return self._gate_annotation_bundle.annotated_df
 
         annotation_bundle = run_gate_annotation_pipeline(
             self.tree,
@@ -142,14 +158,16 @@ class TreeDecomposition:
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
         )
+        self._gate_annotation_bundle = annotation_bundle
         return annotation_bundle.annotated_df
 
-    def _can_reuse_gate_annotations(self, annotations_df: pd.DataFrame) -> bool:
+    def _can_reuse_gate_annotation_bundle(
+        self,
+        gate_annotation_bundle: GateAnnotationBundle,
+    ) -> bool:
         """Return whether existing gate annotations can be trusted as current."""
+        annotations_df = gate_annotation_bundle.annotated_df
         if annotations_df.empty:
-            return False
-
-        if GATE_ANNOTATION_METADATA_ATTR not in annotations_df.attrs:
             return False
 
         validate_edge_gate_columns(annotations_df)
@@ -167,19 +185,14 @@ class TreeDecomposition:
         if set(self._node_ids) - set(annotations_df.index):
             return False
 
-        metadata = annotations_df.attrs[GATE_ANNOTATION_METADATA_ATTR]
-        if not isinstance(metadata, dict):
-            raise TypeError(
-                f"{GATE_ANNOTATION_METADATA_ATTR} must be a dict, got {type(metadata).__name__}."
-            )
+        metadata = gate_annotation_bundle.metadata
 
         return (
-            metadata["pipeline"] == "gate_annotation"
-            and metadata["edge"]["alpha"] == self.alpha_local
-            and metadata["sibling"]["alpha"] == self.sibling_alpha
-            and metadata["config"] == build_gate_annotation_config_metadata()
-            and metadata["leaf_data"]
-            == build_gate_annotation_leaf_data_metadata(self._leaf_data)
+            metadata.pipeline == "gate_annotation"
+            and metadata.edge.alpha == self.alpha_local
+            and metadata.sibling.alpha == self.sibling_alpha
+            and metadata.config == build_gate_annotation_config_metadata()
+            and metadata.leaf_data == build_gate_annotation_leaf_data_metadata(self._leaf_data)
         )
 
     def _extract_required_bool_annotation_column(self, column_name: str) -> dict[object, bool]:

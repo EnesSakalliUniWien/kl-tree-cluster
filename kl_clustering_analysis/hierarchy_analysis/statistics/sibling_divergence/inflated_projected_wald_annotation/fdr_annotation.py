@@ -8,7 +8,6 @@ initialization, skipped-node marking, and early returns.
 
 from __future__ import annotations
 
-import logging
 import warnings
 from typing import Sequence
 
@@ -26,8 +25,6 @@ def apply_sibling_bh_results(
     results: list[tuple[float, float, float]],
     alpha: float,
     *,
-    logger: logging.Logger,
-    audit_label: str,
     method_labels: list[str] | None = None,
     skipped_parents: list[str] | None = None,
 ) -> pd.DataFrame:
@@ -58,7 +55,6 @@ def apply_sibling_bh_results(
         p_values,
         alpha=alpha,
     )
-    del logger, audit_label
 
     annotations_df.loc[parents, "Sibling_Test_Statistic"] = test_statistics
     annotations_df.loc[parents, "Sibling_Degrees_of_Freedom"] = degrees_of_freedom_values
@@ -84,15 +80,11 @@ def init_sibling_annotation_df(annotations_df: pd.DataFrame) -> pd.DataFrame:
 def mark_non_binary_as_skipped(
     annotations_df: pd.DataFrame,
     non_binary_nodes: Sequence[str],
-    *,
-    logger: logging.Logger | None = None,
 ) -> None:
     """Mark non-binary or leaf nodes as skipped sibling tests."""
     if not non_binary_nodes:
         return
     annotations_df.loc[list(non_binary_nodes), "Sibling_Divergence_Skipped"] = True
-    if logger is not None:
-        logger.debug("Non-binary/leaf nodes marked as skipped: %d", len(non_binary_nodes))
 
 
 def early_return_if_no_records(

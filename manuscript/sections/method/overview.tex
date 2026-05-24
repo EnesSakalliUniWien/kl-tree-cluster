@@ -3,15 +3,10 @@
 \subsection{Tree Representation and Inferential Objective}
 
 The method begins with a hierarchical clustering tree built from the samples.
-Here, a tree is a rooted diagram of nested sample groups. The leaves of the
-tree are the observed samples themselves. Each internal node is created when
-two smaller groups are merged during agglomerative clustering, so an internal
-node represents the union of all leaves below it rather than a new data point.
-The root is the unique top node containing every sample. An edge connects a
-parent node to one of its immediate child subtrees, so the tree records how
-small groups sit inside larger groups. In this paper, the tree should therefore
-be read as a structured list of candidate groups and candidate splits, not as a
-claim that every branch already corresponds to a real cluster.
+The tree should be read as a structured list of candidate groups and candidate
+splits, not as a claim that every branch already corresponds to a real cluster.
+The formal node, edge, and descendant-set definitions are given in the next
+subsections.
 
 Once the tree is understood in that way, the inferential problem becomes
 concrete. Each internal node proposes a possible split of the sample set into
@@ -54,7 +49,7 @@ cluster set.
 
 \begin{figure}[p]
 \centering
-\resizebox{0.93\textwidth}{!}{\input{figures/pipeline_overview_single_page}}
+\resizebox{0.77\textwidth}{!}{\input{figures/pipeline_overview_single_page}}
 \caption{Overview of the KL-TE method. Samples are represented in a discrete
 sample-feature matrix, organized into a candidate hierarchy, summarized by
 subtree-level distributions, evaluated with child-parent and sibling tests, and

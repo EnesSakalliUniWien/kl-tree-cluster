@@ -39,20 +39,25 @@ $H_{0,j}^{\mathrm{edge}}(u,c)$ & Coordinatewise child-parent edge null for featu
 $z_{u \to c}^{\mathrm{edge}}$ & Standardized child-parent edge vector. \\
 $T_{u \to c}^{\mathrm{edge}}$ & Projected edge statistic for edge $(u,c)$. \\
 $p_{u \to c}^{\mathrm{edge}}$ & Raw edge p-value. \\
+$p_{u \to c}^{\mathrm{edge,BH}}$ & Tree-BH-adjusted edge p-value used for edge decisions and sibling calibration weights. \\
 $S^{\mathrm{edge}}(c)$ & Edge significance indicator after multiplicity correction. \\
 $H_0^{\mathrm{sib}}(u)$ & Sibling null at parent $u$. \\
 $\bar\theta_{u,j}$ & Pooled sibling proportion at coordinate $j$. \\
 $z_u^{\mathrm{sib}}$ & Standardized sibling contrast vector at parent $u$. \\
 $k_u^{\mathrm{edge}}, k_u^{\mathrm{sib}}$ & Edge-stage and sibling-stage projection dimensions. \\
 $T_u^{\mathrm{raw}}$ & Raw projected sibling statistic. \\
-$a_u$ & Satterthwaite reference scale for the projected sibling quadratic form. \\
-$\nu_u$ & Effective sibling degrees of freedom. \\
-$z_q$ & Sibling calibration context used by the empirical-null scale estimator. \\
-$\pi_q$ & Empirical sibling null weight used in scale estimation. \\
-$\hat c(z_u)$ & Context-weighted empirical-null scale estimate for sibling parent $u$. \\
+$a_u$ & Projected quadratic reference scale; $a_u=1$ for the current orthonormal PCA basis. \\
+$\nu_u$ & Sibling reference degrees of freedom; $\nu_u=k_u^{\mathrm{sib}}$ for the current orthonormal PCA basis. \\
+$z_q$ & Sibling calibration context used by the empirical-null inflation estimator. \\
+$s_q$ & Resolved sibling projection dimension whose logarithm defines $z_q$. \\
+$\pi_q$ & Empirical sibling null weight used in inflation estimation. \\
+$w_q(u)$ & Context weight assigned to calibration record $q$ when estimating inflation for sibling parent $u$. \\
+$h$ & Null-weighted bandwidth used in the sibling calibration kernel. \\
+$n_{\mathrm{cal}}, n_{\mathrm{eff}}$ & Number of contributing sibling calibration records and their effective sample size. \\
+$\hat c(z_u)$ & Context-weighted empirical-null inflation estimate for sibling parent $u$. \\
 $S^{\mathrm{sib}}(u)$ & Sibling significance indicator after correction. \\
 $\mathrm{Split}(u)$ & Indicator that traversal keeps the split at node $u$. \\
-$D^{\mathrm{sib}}(u)$ & Indicator that some proper descendant of $u$ has a significant non-skipped sibling split. \\
+$D^{\mathrm{sib}}(u)$ & Indicator that some proper descendant of $u$ has a significant sibling split among nodes where the sibling test was run. \\
 $\mathcal{C}$ & Final set of terminal cluster nodes returned by traversal. \\
 \bottomrule
 \end{tabularx}

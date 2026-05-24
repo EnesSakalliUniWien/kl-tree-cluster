@@ -48,7 +48,7 @@ def sibling_divergence_test(
             f"found {int(np.sum(~np.isfinite(z_scores)))} non-finite component(s)."
         )
 
-    resolved_projection_dimension, _ = resolve_sibling_projection_dimension(
+    sibling_projection_dimension, _ = resolve_sibling_projection_dimension(
         projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
         left_sample_size=left_sample_size,
         right_sample_size=right_sample_size,
@@ -59,7 +59,7 @@ def sibling_divergence_test(
 
     result = run_projected_wald_kernel(
         z_scores,
-        spectral_k=resolved_projection_dimension,
+        spectral_k=sibling_projection_dimension,
         pca_projection=parent_principal_component_projection,
         pca_eigenvalues=parent_principal_component_eigenvalues,
     )

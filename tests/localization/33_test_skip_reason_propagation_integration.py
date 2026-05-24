@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from benchmarks.branch_length.logic import run_branch_length_benchmark
 from benchmarks.multi_split.run import run_multi_split_benchmark
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm

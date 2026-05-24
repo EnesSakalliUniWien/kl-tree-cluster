@@ -1,8 +1,6 @@
-"""Public pipeline for calibrated projected Wald sibling annotation."""
+"""Public pipeline for inflated projected-Wald sibling annotation."""
 
 from __future__ import annotations
-
-import logging
 
 import networkx as nx
 import numpy as np
@@ -11,12 +9,11 @@ import pandas as pd
 from kl_clustering_analysis import config
 
 from ...branch_length_utils import compute_mean_branch_length
-from ..scale_correction.adjusted_sibling_tests import (
-    compute_adjusted_sibling_tests,
-    count_null_focal_pairs,
+from ..inflation_correction.empirical_null_inflation_estimation import (
+    fit_empirical_null_inflation_model,
 )
-from ..scale_correction.empirical_null_scale_estimation import (
-    fit_empirical_null_scale_model,
+from ..inflation_correction.inflation_adjusted_sibling_tests import (
+    compute_inflation_adjusted_sibling_tests,
 )
 from ..pair_testing.collection.record_collection import collect_sibling_pair_records
 from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
@@ -26,13 +23,9 @@ from .fdr_annotation import (
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
 )
-from .metadata import (
-    build_no_focal_sibling_divergence_audit,
-    build_sibling_divergence_audit,
-    write_record_projection_metadata,
+from .projection_dimension_annotation import (
+    write_record_projection_dimensions,
 )
-
-logger = logging.getLogger(__name__)
 
 
 def _validate_focal_sibling_records(records: list[SiblingPairRecord]) -> None:
@@ -61,7 +54,7 @@ def annotate_sibling_divergence(
     parent_principal_component_eigenvalues: dict[str, np.ndarray],
     significance_level_alpha: float = config.SIBLING_ALPHA,
 ) -> pd.DataFrame:
-    """Test sibling divergence using calibrated projected Wald."""
+    """Test sibling divergence using context-weighted empirical-null inflation."""
     annotations_df = init_sibling_annotation_df(annotations_df)
 
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
@@ -77,65 +70,46 @@ def annotate_sibling_divergence(
         parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
     )
 
-    mark_non_binary_as_skipped(annotations_df, non_binary, logger=logger)
+    mark_non_binary_as_skipped(annotations_df, non_binary)
 
     early_annotations_df = early_return_if_no_records(annotations_df, records)
     if early_annotations_df is not None:
         return early_annotations_df
 
-    write_record_projection_metadata(annotations_df, records)
+    write_record_projection_dimensions(annotations_df, records)
     _validate_focal_sibling_records(records)
-    n_null, n_focal, n_blocked = count_null_focal_pairs(records)
+    n_focal = sum(not record.is_null_like for record in records)
 
     skipped_parents = [record.parent for record in records if record.is_null_like]
     if n_focal == 0:
-        annotations_df = apply_sibling_bh_results(
+        return apply_sibling_bh_results(
             annotations_df,
             [],
             [],
             significance_level_alpha,
-            logger=logger,
-            audit_label="Calibrated projected Wald",
             skipped_parents=skipped_parents,
         )
-        annotations_df.attrs["sibling_divergence_audit"] = (
-            build_no_focal_sibling_divergence_audit(
-                records=records,
-                n_null=n_null,
-                n_focal=n_focal,
-                n_blocked=n_blocked,
-            )
-        )
-        return annotations_df
 
-    model = fit_empirical_null_scale_model(records)
+    model = fit_empirical_null_inflation_model(records)
 
-    tested_parent_ids, adjusted_test_summaries, adjustment_method_labels = (
-        compute_adjusted_sibling_tests(
-            records,
-            model=model,
-        )
+    (
+        tested_parent_ids,
+        inflation_adjusted_test_summaries,
+        inflation_adjustment_method_labels,
+    ) = compute_inflation_adjusted_sibling_tests(
+        records,
+        model=model,
+        significance_level_alpha=significance_level_alpha,
     )
 
     annotations_df = apply_sibling_bh_results(
         annotations_df,
         tested_parent_ids,
-        adjusted_test_summaries,
+        inflation_adjusted_test_summaries,
         significance_level_alpha,
-        logger=logger,
-        audit_label="Calibrated projected Wald",
-        method_labels=adjustment_method_labels,
+        method_labels=inflation_adjustment_method_labels,
         skipped_parents=skipped_parents,
     )
-
-    annotations_df.attrs["sibling_divergence_audit"] = build_sibling_divergence_audit(
-        records=records,
-        model=model,
-        n_null=n_null,
-        n_focal=n_focal,
-        n_blocked=n_blocked,
-    )
-    annotations_df.attrs["_calibration_model"] = model
 
     return annotations_df
 

@@ -11,7 +11,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_w
 )
 
 
-def test_child_parent_projected_wald_returns_satterthwaite_effective_df() -> None:
+def test_child_parent_projected_wald_uses_projection_dimension_as_df() -> None:
     """Child-parent metadata must expose the df used by the Wald reference law."""
     child_distribution = np.array([0.25, 0.55, 0.20])
     parent_distribution = np.array([0.20, 0.50, 0.30])
@@ -28,13 +28,10 @@ def test_child_parent_projected_wald_returns_satterthwaite_effective_df() -> Non
         pca_eigenvalues=pca_eigenvalues,
     )
 
-    expected_effective_df = float(np.sum(pca_eigenvalues) ** 2 / np.sum(pca_eigenvalues**2))
-
     assert not is_invalid
     assert np.isfinite(statistic)
     assert np.isfinite(p_value)
-    assert not np.isclose(expected_effective_df, 2.0)
-    assert np.isclose(degrees_of_freedom, expected_effective_df)
+    assert np.isclose(degrees_of_freedom, 2.0)
 
 
 def test_projected_wald_kernel_accepts_exact_zero_dimensional_context() -> None:

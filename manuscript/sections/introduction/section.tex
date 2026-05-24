@@ -50,6 +50,23 @@ for many tests. Finally, sibling comparisons are evaluated on a hierarchy
 constructed from the same data, so the raw sibling statistics are selected and
 inflated. KL-TE is one response to these four problems.
 
+This goal is related to, but distinct from, existing approaches for attaching
+uncertainty statements to hierarchical clustering. Multiscale-bootstrap methods
+such as \texttt{pvclust} estimate cluster-level uncertainty by repeatedly
+rebuilding dendrograms under resampling \citep{suzuki2006pvclust}. Sequential
+hierarchical clustering significance procedures test splits while controlling
+tree-aware error rates under explicit null models \citep{kimes2017statistical}.
+Recent selective inference work conditions on the clustering event and computes
+valid post-selection p-values for selected hierarchical clusters under Gaussian
+mean models \citep{gao2024selective}.
+
+KL-TE does not currently derive an exact selective law for its tree-selected
+sibling tests. Instead, it implements a discrete-data projected-Wald testing
+pipeline with an empirical-null inflation layer for the sibling stage. That
+difference is important: the present draft should be read as a methods
+specification and validation plan, not as a proof of exact selective Type~I
+error control.
+
 KL-TE works on a discrete feature representation. Binary data
 enter directly. Categorical data are represented through one-hot or indicator-expanded
 binary features. Continuous data are discretized before the same tree-and-test

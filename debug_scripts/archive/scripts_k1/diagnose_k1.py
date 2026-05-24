@@ -69,11 +69,11 @@ print(f"\n5. Other: {len(other)} cases")
 for _, r in other.iterrows():
     print(f"   {r['case_id']}: n={r['Samples']}, K={r['true_clusters']}, p={r['Features']}, noise={r['Noise']}")
 
-# Now compare: which K=1 cases are NEW (not K=1 with cousin_adjusted_wald)?
+# Now compare: which K=1 cases are NEW relative to archived baseline results?
 # From copilot-instructions.md, the previous run had 10 K=1 cases
 # We now have 18. Let's identify the 8 new ones.
 print("\n" + "=" * 80)
-print("COMPARISON WITH PREVIOUS RESULTS (cousin_adjusted_wald had K=1 in 10 cases)")
+print("COMPARISON WITH ARCHIVED BASELINE RESULTS (10 K=1 cases)")
 print("=" * 80)
 
 # The previous known K=1 cases were mostly SBM and phylogenetic.
@@ -117,7 +117,10 @@ try:
 
     print(f"  Tree nodes: {tree.number_of_nodes()}")
     print(f"  Tree edges: {tree.number_of_edges()}")
-    print("  Config: Sibling test method=fixed cousin_adjusted_wald")
+    print(
+        "  Config: sibling reference=orthonormal projected-Wald, "
+        "inflation=context-weighted empirical-null"
+    )
 
     # Run decompose
     results = tree.decompose(
@@ -129,20 +132,8 @@ try:
     print(f"\n  Found clusters: {len(results)}")
     print(f"  Cluster sizes: {[len(v) for v in results.values()]}")
 
-    # Check the annotations_df for calibration audit
-    annotations_df = tree.annotations_df
-    if annotations_df is not None and hasattr(annotations_df, 'attrs'):
-        audit = annotations_df.attrs.get("sibling_divergence_audit", {})
-        print(f"\n  Calibration audit:")
-        for k, v in audit.items():
-            if k != "diagnostics":
-                print(f"    {k}: {v}")
-            else:
-                print(f"    diagnostics:")
-                for dk, dv in v.items():
-                    print(f"      {dk}: {dv}")
-
     # Show root node stats
+    annotations_df = tree.annotations_df
     root = [n for n in tree.nodes if tree.in_degree(n) == 0][0]
     print(f"\n  Root node: {root}")
     if annotations_df is not None and root in annotations_df.index:

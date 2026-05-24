@@ -385,7 +385,8 @@ def main() -> None:
 
     print(
         "Config: SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed), "
-        f"SIBLING_METHOD={"cousin_adjusted_wald"}, "
+        "SIBLING_REFERENCE=orthonormal_projected_wald, "
+        "SIBLING_INFLATION=context_weighted_empirical_null, "
         f"TREE_DISTANCE={config.TREE_DISTANCE_METRIC}, "
         f"TREE_LINKAGE={config.TREE_LINKAGE_METHOD}"
     )

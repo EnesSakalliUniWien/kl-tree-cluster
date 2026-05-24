@@ -64,10 +64,11 @@ k_{r(u)}^{\mathrm{edge}}
 If exactly one child has a positive edge-stage spectral dimension, that value
 is reused directly; if neither child has a positive edge-derived dimension, the
 parent's own edge-stage spectral dimension is used. The sibling test is run only
-for binary sibling pairs with complete Gate 2 spectral context. This standardized
-vector answers the first sibling question: how large is the left-right contrast after accounting for
-feature-specific sampling noise? The next question is how to combine those
-coordinatewise contrasts into one summary score.
+for binary sibling pairs with complete edge-stage spectral context. This
+standardized vector answers the first sibling question: how large is the
+left-right contrast after accounting for feature-specific sampling noise? The
+next question is how to combine those coordinatewise contrasts into one summary
+score.
 
 \paragraph{Projected sibling statistic.}
 The sibling test then combines this multi-feature contrast into a single
@@ -89,21 +90,20 @@ T_u^{\mathrm{raw}}
 \|P_u z_u^{\mathrm{sib}}\|_2^2.
 \end{equation}
 
-\paragraph{Reference-law calibration.}
-The default p-value calculation is deliberately conservative. After
-projection, the method asks whether the observed squared contrast is larger
-than would be expected from ordinary within-parent sampling noise, while still
-allowing different projected directions to have different variances. In the
-method described here, this is done with a Satterthwaite moment match, meaning
-an approximation that replaces the exact null law by a scaled chi-square law
-with the same first two moments, for the
-PCA-derived part of the test and plain $\chi^2(1)$ contributions for any added
-orthogonal-complement directions.
+\paragraph{Reference law.}
+After projection, the method asks whether the observed squared contrast is
+larger than would be expected from ordinary within-parent sampling noise. The
+PCA eigenvalues select the parent-local subspace; they do not weight the null
+law because the statistic is computed from inner products with orthonormal
+projection rows. Thus, for a fixed selected subspace,
+\[
+T_u^{\mathrm{raw}} \mid H_0 \sim \chi^2_{k_u^{\mathrm{sib}}}.
+\]
 
 \paragraph{Worked sibling example.}
 A small numerical example helps separate three ideas that can be conflated:
-projection, per-component whitening, and Satterthwaite calibration. Suppose
-the standardized sibling difference vector is
+projection, per-component whitening, and the orthonormal projected-Wald
+reference law. Suppose the standardized sibling difference vector is
 \begin{equation}
 z_u^{\mathrm{sib}} =
 \begin{bmatrix}
@@ -139,11 +139,12 @@ T_u^{\mathrm{raw}}
 =
 5.25.
 \end{equation}
-If those three projected coordinates were all unit-variance Gaussian noise,
-this statistic would be compared directly to $\chi^2_3$. Now suppose the
-first two projected directions are parent PCA directions with eigenvalues
-$\lambda_1 = 4$ and $\lambda_2 = 1$, while the third coordinate is an added
-unit-variance direction. In matrix form,
+Under the implemented orthonormal projected-Wald reference, this statistic is
+compared directly to $\chi^2_3$. If one instead chose a different whitening
+statistic, eigenvalues would enter before summation. For example, suppose the
+first two projected directions have eigenvalues $\lambda_1 = 4$ and
+$\lambda_2 = 1$, while the third coordinate is an added unit direction. In
+matrix form,
 \begin{equation}
 \Lambda =
 \begin{bmatrix}
@@ -182,49 +183,20 @@ T_u^{\mathrm{white}}
 \end{equation}
 The first direction contributes less after whitening because a contrast of
 size $2.0$ is less surprising along a direction whose null variance is already
-$4$. The implemented sibling default instead keeps the raw quadratic form
-$T_u^{\mathrm{raw}} = 5.25$ and changes the reference law. The PCA part is a
-weighted sum of $\chi^2(1)$ terms with weights $4$ and $1$, and the added
-direction contributes one ordinary $\chi^2(1)$ term. Hence
+$4$. The implemented sibling default does not use this whitened statistic. It
+keeps the raw orthonormal projection, so the calibration is
 \begin{equation}
-\mathbb{E}[T_u^{\mathrm{raw}}] = 4 + 1 + 1 = 6,
-\qquad
-\mathrm{Var}(T_u^{\mathrm{raw}}) = 2(4^2 + 1^2 + 1^2) = 36.
-\end{equation}
-Matching those moments to $c\chi^2(\nu)$ gives
-\begin{equation}
-c = \frac{36}{2 \cdot 6} = 3,
-\qquad
-\nu = \frac{2 \cdot 6^2}{36} = 2,
-\end{equation}
-so the calibration becomes
-\begin{equation}
-T_u^{\mathrm{raw}} \approx 3\chi^2(2),
+T_u^{\mathrm{raw}} \sim \chi^2_3,
 \qquad
 p_u^{\mathrm{sib}}
 =
 \Pr\!\left(
-\chi^2_2 \ge \frac{5.25}{3}
+\chi^2_3 \ge 5.25
 \right).
 \end{equation}
 In general, the projected-Wald kernel records this unselected reference as
-\begin{equation}
-T_u^{\mathrm{raw}}
-\approx
-a_u \chi^2_{\nu_u},
-\qquad
-a_u =
-\frac{\sum_i \lambda_{u,i}^2}{\sum_i \lambda_{u,i}},
-\qquad
-\nu_u =
-\frac{(\sum_i \lambda_{u,i})^2}{\sum_i \lambda_{u,i}^2}.
-\end{equation}
-This is the practical difference between whitening and Satterthwaite
-calibration: whitening rescales the coordinates before summing, whereas
-Satterthwaite keeps the raw quadratic form and adjusts the reference
-distribution instead. \Cref{app:projected-wald-example} expands this
-example in full matrix form and shows the corresponding plain, whitened, and
-Satterthwaite-calibrated calculations side by side.
+$a_u=1$ and $\nu_u=k_u^{\mathrm{sib}}$. \Cref{app:projected-wald-example}
+expands this example in full matrix form.
 
 \paragraph{Post-selection scale distortion.}
 Raw sibling $p$-values are still not enough on their own because the sibling
@@ -238,44 +210,52 @@ was built from the observed dissimilarities. The sibling statistic
 is therefore evaluated conditionally on a favorable selection event rather than
 under the unconditional null distribution for a pre-specified pair. The
 practical consequence is anti-conservative inference: the observed sibling
-difference vector $z_u^{\mathrm{sib}}$ is systematically larger than the naive
-reference law expects, so raw $p$-values are too small and false split
-decisions become too common. Empirical null simulations confirm this effect:
-without correction, the Wald sibling test produces Type~I error rates of
-approximately 39\% at $\alpha = 0.05$.
+difference vector $z_u^{\mathrm{sib}}$ can be larger than the naive reference
+law expects, so raw $p$-values can be too small and false split decisions can
+become too common. This motivation is consistent with the wider
+post-selection-inference literature, where tests must account for the fact
+that the reported hypothesis was selected using the data
+\citep{fithian2014optimal,lee2016exact,gao2024selective}.
+[RESULTS GAP: archived diagnostic files suggest that uncorrected sibling
+testing can be anti-conservative, but the manuscript does not yet contain a
+reproducible null simulation with sample size, random seeds, confidence
+intervals, and the exact implemented correction. Do not report a numeric
+Type~I error rate until that study is added.]
 
-\paragraph{Context-weighted empirical-null scale.}
-The sibling calibration corrects for this extra optimism by estimating the
-runtime empirical-null scale of the projected-Wald statistic from the empirical
+\paragraph{Context-weighted empirical-null inflation.}
+The sibling calibration accounts for this extra optimism by estimating the
+runtime empirical inflation of the projected-Wald statistic from the empirical
 null visible inside the fitted hierarchy. For every binary parent $q$, let
 $T_q^{\mathrm{raw}}$ be the raw sibling statistic, let $a_q$ and $\nu_q$ be the
-Satterthwaite reference scale and effective degrees of freedom returned by the
-projected-Wald kernel, let
+reference scale and degrees of freedom returned by the projected-Wald kernel
+($a_q=1$ and $\nu_q=k_q$ for the current orthonormal PCA basis), let
 $\pi_q \in [0,1]$ be the sibling null weight implied by the two child-parent
 edge tests, and let $z_q$ denote the calibration context of the sibling
 comparison. In the current implementation,
 \begin{equation}
 \pi_q =
+\left(
 p_{q \to l(q)}^{\mathrm{edge,BH}}\,
-p_{q \to r(q)}^{\mathrm{edge,BH}},
+p_{q \to r(q)}^{\mathrm{edge,BH}}
+\right)^{1/2},
 \end{equation}
 so both child-parent edges must look empirically null-like for the sibling pair
 to carry high calibration weight. This is a monotone empirical weight, not a
-posterior null probability. Also,
+posterior null probability. The geometric mean keeps the two-edge evidence on
+the p-value scale instead of squaring already-small p-values. Also,
 \[
 z_q = \log s_q,
 \]
-where $s_q$ is the resolved sibling projection dimension. The method assumes the
-post-selection null family
+where $s_q$ is the resolved sibling projection dimension. The method uses the
+working post-selection null family
 \begin{equation}\label{eq:sibling-context-scale-model}
 T_q^{\mathrm{raw}} \mid H_0
 \approx
-c(z_q)\,\chi^2_{\nu_q}.
+a_q\,c(z_q)\,\chi^2_{\nu_q}.
 \end{equation}
-Here $c(z_q)$ is the total empirical runtime scale. It is not forced to equal
-the Satterthwaite scale $a_q$ times a separate selection multiplier, because the
-same fitted hierarchy changes both the apparent sibling contrast and the useful
-finite-sample scale of the projected quadratic form.
+Here $a_q$ is the analytic projected-quadratic reference scale. In the current
+orthonormal projection implementation it is one, so $c(z_q)$ is the empirical
+post-selection inflation.
 For a focal sibling pair $u$, define context weights
 \begin{equation}
 w_q(u)
@@ -294,25 +274,36 @@ K(z_q,z_u)
 \right],
 \end{equation}
 and $h$ is the null-weighted empirical standard deviation of the observed
-contexts. The local empirical-null scale estimate is the weighted chi-square
-scale maximum-likelihood estimator
+contexts. The local empirical-null inflation estimate is the weighted
+chi-square scale maximum-likelihood estimator after accounting for the analytic
+projected-Wald reference scale:
 \begin{equation}\label{eq:sibling-context-scale-estimator}
 \hat{c}(z_u)
 =
 \max\left\{
 1,\,
 \frac{\sum_q w_q(u)T_q^{\mathrm{raw}}}
-{\sum_q w_q(u)\nu_q}
+{\sum_q w_q(u)a_q\nu_q}
 \right\}.
 \end{equation}
+Let $n_{\mathrm{eff}}$ be the effective sample size of the contributing sibling
+null weights. To penalize degenerate one-record calibration, the implementation
+multiplies $\hat c(z_u)$ by
+\[
+1 + \min\!\left(1,\frac{0.01}{\alpha_{\mathrm{sib}}}\right)
+\frac{1}{6}\log\!\left(\frac{n_{\mathrm{cal}}}{n_{\mathrm{eff}}}\right).
+\]
+[TODO: justify the effective-sample penalty form, the divisor 6, and the
+reference level 0.01 with calibration evidence or a derivation. If this remains
+an implementation safeguard, label it as such and report sensitivity.]
 The denominator is required to have positive effective calibration mass. If no
 positive-degree sibling records carry positive null weight, the calibration
 contract is not satisfied and the implementation raises an error.
 
-\paragraph{Runtime correction and sibling false-discovery-rate correction.}
-For each focal pair $u$, the adjusted runtime test is
+\paragraph{Runtime inflation adjustment and sibling false-discovery-rate correction.}
+For each focal pair $u$, the inflation-adjusted runtime test is
 \begin{equation}
-T_u^{\mathrm{adj}} = \frac{T_u^{\mathrm{raw}}}{\hat{c}(z_u)},
+T_u^{\mathrm{adj}} = \frac{T_u^{\mathrm{raw}}}{a_u\hat{c}(z_u)},
 \qquad
 p_u^{\mathrm{sib}}
 =

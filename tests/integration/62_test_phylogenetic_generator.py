@@ -1,5 +1,4 @@
 import numpy as np
-
 from benchmarks.shared.generators.generate_phylogenetic import generate_phylogenetic_data
 
 

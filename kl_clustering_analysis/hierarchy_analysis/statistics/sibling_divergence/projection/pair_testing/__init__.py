@@ -1,1 +1,1 @@
-"""Projection metadata helpers used during sibling pair testing."""
+"""Projection input helpers used during sibling pair testing."""

@@ -26,7 +26,7 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis.hierarchy_analysis.statistics.kl_tests.edge_significance import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 

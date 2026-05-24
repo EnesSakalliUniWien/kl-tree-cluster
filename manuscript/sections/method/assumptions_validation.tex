@@ -1,0 +1,75 @@
+% !TEX root = ../../main.tex
+
+\subsection{Assumptions, Tuning Parameters, and Validation Status}
+\label{sec:assumptions-validation}
+
+The preceding subsections define the implemented algorithm. This subsection
+separates mathematical assumptions from implementation choices and records
+which parts still require validation before the manuscript can support
+submission-level claims.
+
+\paragraph{Statistical assumptions.}
+The coordinatewise edge and sibling standardizations use Bernoulli or indicator
+variance formulas. They are exact for independent Bernoulli coordinates with
+fixed subtree membership and become approximations for indicator-expanded
+categorical variables, discretized continuous variables, correlated features,
+and data-dependent subtrees. The projected-Wald reference further treats the
+selected orthonormal projection rows as fixed when evaluating the projected
+quadratic form. This yields a chi-square reference for a fixed subspace under
+an isotropic standardized null, but it is not by itself an exact selective
+inference result for a hierarchy learned from the same data.
+
+\paragraph{High-dimensional spectral assumptions.}
+The Marchenko--Pastur rule is used as a local signal-dimension heuristic for
+correlation-scale spectra. Random-matrix theory gives a useful reference for
+noise eigenvalue bulk behavior in high-dimensional settings
+\citep{marchenko1967distribution,johnstone2018pca}, but the implementation
+applies the rule to local subtree matrices that include both leaf rows and
+internal-node distribution rows. Those local matrices are structured,
+overlapping summaries rather than independent observations from a classical
+spiked covariance model. The MP threshold should therefore be presented as a
+dimension-selection rule requiring finite-sample validation, not as a proven
+optimal detector in this setting.
+
+\paragraph{Empirical-null inflation assumptions.}
+The sibling inflation model assumes that tree-selected sibling statistics
+share a context-dependent multiplicative scale distortion. The estimator uses
+edge-corrected p-values to assign empirical-null weights and uses the sibling
+projection dimension as the scalar context. These choices define a practical
+calibration model. They do not estimate posterior null probabilities and do not
+provide an exact selective p-value. Their role is to reduce observed
+anti-conservatism from reusing the data to construct and test the hierarchy.
+
+\begingroup
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.23\linewidth}>{\raggedright\arraybackslash}p{0.21\linewidth}>{\raggedright\arraybackslash}p{0.19\linewidth}>{\raggedright\arraybackslash}p{0.31\linewidth}@{}}
+\caption{Method choices that are currently part of the implementation but not
+yet fully validated as manuscript-level scientific defaults.}
+\label{tab:method-constants}\\
+\toprule
+Choice & Mathematical role & Current value & Validation status \\
+\midrule
+\endfirsthead
+\toprule
+Choice & Mathematical role & Current value & Validation status \\
+\midrule
+\endhead
+$\alpha_{\mathrm{edge}}$ & Tree-BH edge testing level & $0.001$ & Unvalidated default; needs sensitivity over null and planted-signal regimes. \\
+$\alpha_{\mathrm{sib}}$ & BH level for focal sibling pairs & $0.01$ & Unvalidated default; needs calibration and power trade-off study. \\
+Marchenko--Pastur upper edge & Local projection-dimension rule & $(1+\sqrt{d_u/m_u})^2$ & Theoretically motivated for noise spectra; finite local subtree use is unvalidated. \\
+Minimum spectral dimension & Projection-dimension floor & $2$ & Implementation regularizer; needs ablation against floors $0$, $1$, and $2$. \\
+Internal spectral rows & Spectral matrix augmentation & enabled & Empirically motivated in code comments; needs reproducible ablation. \\
+Sibling dimension rule & Transfers edge dimensions to sibling test & geometric mean of child edge dimensions & Needs sensitivity against parent dimension and min/max alternatives. \\
+Empirical-null weight $\pi_q$ & Weights calibration records by edge-null evidence & geometric mean of two edge-adjusted p-values & Monotone empirical weight; not a posterior probability; needs calibration check. \\
+Context bandwidth $h$ & Localizes inflation estimates over $\log k$ & null-weighted empirical standard deviation & Needs sensitivity and behavior under few unique dimensions. \\
+Effective-sample penalty & Penalizes degenerate calibration weights & divisor $6$, reference $\alpha=0.01$ & Heuristic safeguard; requires derivation or simulation-based validation. \\
+Pass-through traversal & Allows deeper splits after shallow sibling failure & enabled & Algorithmic policy; needs ablation on over-split and under-split behavior. \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+[VALIDATION GAP: each row of \Cref{tab:method-constants} requires either a
+derivation, a null calibration study, a sensitivity analysis, or a justified
+decision to label the value as an implementation default rather than a
+statistical optimum.]

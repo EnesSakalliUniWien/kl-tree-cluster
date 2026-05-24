@@ -43,7 +43,7 @@ __all__ = [
     "build_subtree_data",
     "is_leaf",
     "precompute_descendants",
-    # satterthwaite
+    # projected_wald_reference
     "compute_projected_pvalue",
     # spectral_dimension
     "compute_spectral_decomposition",

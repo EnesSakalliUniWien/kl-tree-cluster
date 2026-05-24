@@ -11,12 +11,10 @@ from kl_clustering_analysis.core_utils.data_utils import extract_node_sample_siz
 from ...projection.pair_testing.parent_projection_resolution import (
     resolve_parent_projection_inputs_for_sibling_test,
 )
-from ...projection.pair_testing.projection_record_metadata import (
-    determine_projection_metadata_for_sibling_test,
-)
 from ..types.sibling_pair_record import SiblingPairRecord
+from ..wald_statistic.sibling_divergence_test import sibling_divergence_test
 from .child_parent_edge_metadata import (
-    determine_whether_sibling_pair_is_gate2_blocked,
+    determine_whether_sibling_pair_is_edge_blocked,
     determine_whether_sibling_pair_is_null_like,
     estimate_sibling_null_weight_from_child_parent_edges,
     extract_child_parent_edge_p_values_by_node,
@@ -30,7 +28,6 @@ from .pair_observations import (
     identify_binary_sibling_children,
 )
 from .sibling_pair_record_building import build_sibling_pair_record
-from ..wald_statistic.sibling_divergence_test import sibling_divergence_test
 
 
 def collect_sibling_pair_records(
@@ -107,16 +104,7 @@ def collect_sibling_pair_records(
             ),
         )
 
-        (
-            projection_dimension_source,
-            resolved_projection_dimension,
-            used_parent_principal_component_basis,
-        ) = determine_projection_metadata_for_sibling_test(
-            projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
-            parent_principal_component_projection=parent_principal_component_projection,
-        )
-
-        is_gate2_blocked = determine_whether_sibling_pair_is_gate2_blocked(
+        is_edge_blocked = determine_whether_sibling_pair_is_edge_blocked(
             left_child_id,
             right_child_id,
             child_parent_edge_tested_by_node=child_parent_edge_tested_by_node,
@@ -153,12 +141,9 @@ def collect_sibling_pair_records(
                 ),
                 parent_sample_size=extract_node_sample_size(tree, parent_node_id),
                 is_null_like=is_null_like,
-                is_gate2_blocked=is_gate2_blocked,
+                is_edge_blocked=is_edge_blocked,
                 sibling_null_weight=sibling_null_weight,
-                sibling_calibration_scale=resolved_projection_dimension,
-                projection_dimension_source=projection_dimension_source,
-                resolved_projection_dimension=resolved_projection_dimension,
-                used_parent_principal_component_basis=used_parent_principal_component_basis,
+                sibling_projection_dimension=float(projection_dimension_from_edge_comparisons),
             )
         )
 

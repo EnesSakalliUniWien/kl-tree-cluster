@@ -25,9 +25,9 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 print(
-    f"Config: EIGENVALUE_WHITENING={config.EIGENVALUE_WHITENING}, "
-    "Gate 2 spectral path=fixed Marchenko-Pastur, "
-    "Sibling test method=fixed cousin_adjusted_wald, "
+    "Config: Gate 2 spectral path=fixed Marchenko-Pastur, "
+    "sibling reference=orthonormal projected-Wald, "
+    "inflation=context-weighted empirical-null, "
     f"FELSENSTEIN_SCALING={config.FELSENSTEIN_SCALING}"
 )
 
@@ -45,10 +45,6 @@ def diagnose_case(name, data_df, linkage_method="average"):
     K = decomp["num_clusters"]
     td = tree.annotations_df
 
-    # Spectral info from attrs
-    spectral_dims = td.attrs.get("_spectral_dims", {})
-    pca_projs = td.attrs.get("_pca_projections", {})
-
     # Gate 2 summary
     sig_col = "Child_Parent_Divergence_Significant"
     internal = [n for n in tree.nodes if tree.out_degree(n) > 0]
@@ -60,12 +56,12 @@ def diagnose_case(name, data_df, linkage_method="average"):
     root = next(n for n, d in tree.in_degree() if d == 0)
 
     print(
-        f"\n  {'Node':>8s} {'nLeaf':>5s} {'specK':>5s} {'pcaK':>4s} "
+        f"\n  {'Node':>8s} {'nLeaf':>5s} {'projK':>5s} "
         f"{'G2_L':>5s} {'G2_R':>5s} {'G3_raw_p':>10s} {'G3_bh_p':>10s} "
         f"{'diff':>5s} {'skip':>5s} {'Decision':>10s}"
     )
     print(
-        f"  {'-'*8} {'-'*5} {'-'*5} {'-'*4} "
+        f"  {'-'*8} {'-'*5} {'-'*5} "
         f"{'-'*5} {'-'*5} {'-'*10} {'-'*10} "
         f"{'-'*5} {'-'*5} {'-'*10}"
     )
@@ -80,8 +76,11 @@ def diagnose_case(name, data_df, linkage_method="average"):
 
         left, right = children
         n_leaves = tree.nodes[node].get("leaf_count", "?")
-        sk = spectral_dims.get(node, "?")
-        pk = pca_projs[node].shape[0] if node in pca_projs else "?"
+        proj_k = (
+            td.loc[node].get("Sibling_Projection_Dimension", "?")
+            if node in td.index
+            else "?"
+        )
 
         g2_l = td.loc[left, sig_col] if left in td.index and sig_col in td.columns else "?"
         g2_r = td.loc[right, sig_col] if right in td.index and sig_col in td.columns else "?"
@@ -107,7 +106,7 @@ def diagnose_case(name, data_df, linkage_method="average"):
             return str(v)
 
         print(
-            f"  {node:>8s} {str(n_leaves):>5s} {str(sk):>5s} {str(pk):>4s} "
+            f"  {node:>8s} {str(n_leaves):>5s} {str(proj_k):>5s} "
             f"{str(g2_l):>5s} {str(g2_r):>5s} {fmt_p(raw_p):>10s} {fmt_p(bh_p):>10s} "
             f"{str(sib_diff):>5s} {str(sib_skip):>5s} {decision:>10s}"
         )
@@ -116,21 +115,6 @@ def diagnose_case(name, data_df, linkage_method="average"):
             queue.extend(children)
 
         shown += 1
-
-    # Calibration audit
-    audit = td.attrs.get("sibling_divergence_audit")
-    if audit:
-        print(
-            f"\n  Calibration: method={audit.get('calibration_method', '?')}, "
-            f"baseline_empirical_scale_factor={audit.get('baseline_empirical_scale_factor', '?')}, "
-            f"n_calibration={audit.get('calibration_n', '?')}"
-        )
-        diag = audit.get("diagnostics", {})
-        if "regression_beta" in diag:
-            print(f"  Regression beta={diag['regression_beta']}")
-            print(f"  R2={diag.get('regression_r2', '?')}")
-        if "max_observed_statistic_ratio" in diag:
-            print(f"  max_observed_statistic_ratio={diag['max_observed_statistic_ratio']}")
 
     # Show distribution of Gate 3 raw p-values for nodes where Gate 2 passed
     if "Sibling_Raw_P_value" in td.columns:

@@ -28,7 +28,7 @@
   urlcolor=blue
 }
 
-\title{KL-TE: Statistically Filtered Hierarchical Clustering with Projected Wald Tests}
+\title{KL-TE: Statistically Filtered Hierarchical Clustering with Projected-Wald Tests}
 \author{Draft workspace}
 \date{\today}
 
@@ -50,9 +50,9 @@ parent-specific summary step, and false-discovery correction across
 edges. The sibling test asks whether the two children are genuinely distinct
 from one another; it reuses information from the edge stage, compares the
 siblings along the main directions of variation seen at the parent, and
-applies one global correction for the bias created by testing on a tree built
-from the same data before false-discovery correction across focal sibling
-pairs. Categorical inputs
+applies a context-weighted empirical-null inflation adjustment for the bias
+created by testing on a tree built from the same data before false-discovery
+correction across focal sibling pairs. Categorical inputs
 are handled through indicator expansion, while continuous inputs enter through
 explicit discretization before the same tree-and-test procedure is applied. The
 corrected test annotations are converted into clusters by a top-down

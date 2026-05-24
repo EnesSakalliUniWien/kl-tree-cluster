@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-
 from benchmarks.shared.types import MethodRunResult, MethodSpec
 from benchmarks.shared.util import method_execution
 

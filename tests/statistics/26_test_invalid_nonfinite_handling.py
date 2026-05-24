@@ -7,7 +7,7 @@ import pytest
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
@@ -347,12 +347,10 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         captured["parent_principal_component_eigenvalues"],
         np.ones(2, dtype=float),
     )
-    assert records[0].projection_dimension_source == "derived_from_edge_comparisons"
-    assert records[0].resolved_projection_dimension == 2.0
-    assert records[0].used_parent_principal_component_basis is True
+    assert records[0].sibling_projection_dimension == 2.0
 
 
-def test_annotate_sibling_divergence_persists_derived_projection_metadata() -> None:
+def test_annotate_sibling_divergence_persists_projection_dimension() -> None:
     tree, nodes_df = _make_sibling_tree()
 
     out = annotate_sibling_divergence(
@@ -370,20 +368,7 @@ def test_annotate_sibling_divergence_persists_derived_projection_metadata() -> N
         },
     )
 
-    assert (
-        out.loc["root", "Sibling_Projection_Dimension_Source"]
-        == "derived_from_edge_comparisons"
-    )
-    assert float(out.loc["root", "Sibling_Resolved_Projection_Dimension"]) > 0.0
-    assert bool(out.loc["root", "Sibling_Used_Parent_Principal_Component_Basis"]) is True
-
-    audit = out.attrs.get("sibling_divergence_audit", {})
-    assert audit.get("projection_dimension_source_counts") == {
-        "derived_from_edge_comparisons": 2
-    }
-    assert audit.get("tested_projection_dimension_source_counts") == {
-        "derived_from_edge_comparisons": 1
-    }
+    assert float(out.loc["root", "Sibling_Projection_Dimension"]) > 0.0
 
 
 def test_resolve_sibling_projection_dimension_rejects_negative_dimension() -> None:

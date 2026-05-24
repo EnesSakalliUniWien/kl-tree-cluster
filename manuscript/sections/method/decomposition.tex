@@ -26,9 +26,10 @@ if and only if all three conditions hold:
 If these conditions hold, traversal continues into both children. Otherwise the
 method would ordinarily stop and declare $u$ a terminal cluster.
 
-One traversal variant also allows pass-through splitting. Let
+The implementation documented here uses a pass-through traversal. Let
 $D^{\mathrm{sib}}(u)$ be the indicator that some proper descendant of $u$ has a
-significant non-skipped sibling split. Then the traversal still descends into
+significant sibling split among nodes for which the sibling test was run. Then
+the traversal still descends into
 both children when
 \begin{equation}
 \mathrm{Split}(u) = 0,

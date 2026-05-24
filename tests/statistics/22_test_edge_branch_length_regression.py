@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import networkx as nx
 import numpy as np
-
+import pytest
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
@@ -100,8 +100,22 @@ def test_positive_branch_lengths_apply_tree_mean_normalization(monkeypatch) -> N
     assert captured == [(1.0, 2.0), (3.0, 2.0)]
 
 
-def test_non_positive_branch_lengths_disable_adjustment(monkeypatch) -> None:
-    """Non-positive branch lengths are invalid for Felsenstein scaling.
+def test_zero_branch_length_is_observed_but_does_not_define_normalization(
+    monkeypatch,
+) -> None:
+    """Zero-length edges are valid observations but do not set the positive mean."""
+    tree = _make_two_edge_tree(left_branch_length=0.0, right_branch_length=None)
+
+    assert compute_mean_branch_length(tree) is None
+
+    captured = _run_edge_projection_with_capture(tree, monkeypatch)
+    assert captured == [(0.0, None), (None, None)]
+
+
+def test_negative_branch_lengths_raise_instead_of_disabling_adjustment(
+    monkeypatch,
+) -> None:
+    """Negative branch lengths are malformed tree metadata.
 
     Complex real-world failure mode:
     - tree has edge attributes, but values are 0 or negative
@@ -110,30 +124,30 @@ def test_non_positive_branch_lengths_disable_adjustment(monkeypatch) -> None:
     """
     tree = _make_two_edge_tree(left_branch_length=0.0, right_branch_length=-2.0)
 
-    # Regression contract: no positive branch lengths => no BL normalization.
-    assert compute_mean_branch_length(tree) is None
+    with pytest.raises(ValueError, match="finite non-negative branch length"):
+        compute_mean_branch_length(tree)
 
-    captured = _run_edge_projection_with_capture(tree, monkeypatch)
-    assert captured == [(None, None), (None, None)]
+    with pytest.raises(ValueError, match="finite non-negative branch length"):
+        _run_edge_projection_with_capture(tree, monkeypatch)
 
 
-def test_mixed_positive_and_invalid_branch_lengths_use_only_positive(monkeypatch) -> None:
-    """Only strictly positive finite branch lengths should drive normalization."""
+def test_mixed_positive_and_invalid_branch_lengths_raise(monkeypatch) -> None:
+    """Invalid present branch lengths must not be silently dropped."""
     tree = _make_two_edge_tree(left_branch_length=-1.0, right_branch_length=3.0)
 
-    # Regression contract: mean is computed from valid positive edges only.
-    assert compute_mean_branch_length(tree) == 3.0
+    with pytest.raises(ValueError, match="finite non-negative branch length"):
+        compute_mean_branch_length(tree)
 
-    captured = _run_edge_projection_with_capture(tree, monkeypatch)
-    assert captured == [(None, 3.0), (3.0, 3.0)]
+    with pytest.raises(ValueError, match="finite non-negative branch length"):
+        _run_edge_projection_with_capture(tree, monkeypatch)
 
 
-def test_non_finite_branch_length_values_are_ignored_for_adjustment(monkeypatch) -> None:
-    """NaN branch length metadata should not activate BL scaling."""
+def test_non_finite_branch_length_values_raise(monkeypatch) -> None:
+    """NaN branch length metadata is malformed tree metadata."""
     tree = _make_two_edge_tree(left_branch_length=float("nan"), right_branch_length=4.0)
 
-    # Regression contract: non-finite values do not contribute to mean BL.
-    assert compute_mean_branch_length(tree) == 4.0
+    with pytest.raises(ValueError, match="finite non-negative branch length"):
+        compute_mean_branch_length(tree)
 
-    captured = _run_edge_projection_with_capture(tree, monkeypatch)
-    assert captured == [(None, 4.0), (4.0, 4.0)]
+    with pytest.raises(ValueError, match="finite non-negative branch length"):
+        _run_edge_projection_with_capture(tree, monkeypatch)

@@ -1,11 +1,10 @@
 import numpy as np
 import pandas as pd
 import pytest
-from scipy.spatial.distance import pdist, squareform
-
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types.method_spec import MethodSpec
+from scipy.spatial.distance import pdist, squareform
 
 
 def _toy_dataframe() -> pd.DataFrame:

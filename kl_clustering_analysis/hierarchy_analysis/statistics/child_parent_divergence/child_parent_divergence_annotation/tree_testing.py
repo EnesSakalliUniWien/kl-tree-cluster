@@ -7,7 +7,10 @@ import numpy as np
 
 from kl_clustering_analysis import config
 
-from ...branch_length_utils import compute_mean_branch_length, sanitize_positive_branch_length
+from ...branch_length_utils import (
+    compute_mean_branch_length,
+    extract_branch_length_observation,
+)
 from ..child_parent_projected_wald.child_parent_projected_wald_test import (
     run_child_parent_projected_wald_test,
 )
@@ -39,9 +42,10 @@ def run_child_parent_tests_across_tree(
         branch_length: float | None = None
 
         if tree.has_edge(parent_ids[edge_index], child_ids[edge_index]):
-
-            branch_length = sanitize_positive_branch_length(
-                tree.edges[parent_ids[edge_index], child_ids[edge_index]].get("branch_length")
+            branch_length = extract_branch_length_observation(
+                tree,
+                parent_ids[edge_index],
+                child_ids[edge_index],
             )
 
         node_spectral_dimension: int | None = None

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-
 from benchmarks.shared.metrics import _calculate_ari_nmi_purity_metrics
 
 

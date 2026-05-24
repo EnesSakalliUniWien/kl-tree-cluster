@@ -20,6 +20,10 @@ from kl_clustering_analysis.tree.topology import (
 if TYPE_CHECKING:
     import pandas as pd
 
+    from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
+        GateAnnotationBundle,
+    )
+
 
 # ============================================================
 # 1) PosetTree (NetworkX.DiGraph subclass)
@@ -102,13 +106,14 @@ class PosetTree(nx.DiGraph):
 
     def root(self) -> object:
         """Return the cached root node, discovering it if necessary."""
-        r = self.graph.get("root")
-        if r is None:
-            roots = [u for u, d in self.in_degree() if d == 0]
-            if len(roots) != 1:
-                raise ValueError(f"Expected one root, got {roots}")
-            r = roots[0]
-            self.graph["root"] = r
+        if "root" in self.graph:
+            return self.graph["root"]
+
+        roots = [u for u, d in self.in_degree() if d == 0]
+        if len(roots) != 1:
+            raise ValueError(f"Expected one root, got {roots}")
+        r = roots[0]
+        self.graph["root"] = r
         return r
 
     def get_leaves(
@@ -240,6 +245,7 @@ class PosetTree(nx.DiGraph):
     def decompose(
         self,
         annotations_df: pd.DataFrame | None = None,
+        gate_annotation_bundle: GateAnnotationBundle | None = None,
         leaf_data: pd.DataFrame | None = None,
         **decomposer_kwargs,
     ) -> dict[str, object]:
@@ -248,7 +254,10 @@ class PosetTree(nx.DiGraph):
         Parameters
         ----------
         annotations_df
-            Required statistics/annotations DataFrame.
+            Required statistics/annotations DataFrame when no gate annotation
+            bundle is provided.
+        gate_annotation_bundle
+            Explicit reusable output from ``run_gate_annotation_pipeline``.
         leaf_data
             Optional leaf-level probability DataFrame used by statistical gate
             annotation.
@@ -265,13 +274,18 @@ class PosetTree(nx.DiGraph):
         alpha_local = decomposer_kwargs.pop("alpha_local", config.EDGE_ALPHA)
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
 
-        if annotations_df is None:
+        if annotations_df is not None and gate_annotation_bundle is not None:
+            raise ValueError("Pass either annotations_df or gate_annotation_bundle, not both.")
+
+        if annotations_df is None and gate_annotation_bundle is None:
             annotations_df = self.annotations_df
 
-        if annotations_df is None:
+        if annotations_df is None and gate_annotation_bundle is None:
             raise ValueError(
-                "annotations_df is required. Call populate_node_divergences(leaf_data) "
-                "first and pass tree.annotations_df explicitly."
+                "annotations_df or gate_annotation_bundle is required. Call "
+                "populate_node_divergences(leaf_data) first and pass "
+                "tree.annotations_df explicitly, or pass the bundle returned by "
+                "run_gate_annotation_pipeline."
             )
 
         from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
@@ -279,6 +293,7 @@ class PosetTree(nx.DiGraph):
         decomposer = TreeDecomposition(
             tree=self,
             annotations_df=annotations_df,
+            gate_annotation_bundle=gate_annotation_bundle,
             alpha_local=alpha_local,
             sibling_alpha=sibling_alpha,
             leaf_data=leaf_data,

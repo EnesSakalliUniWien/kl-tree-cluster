@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.child_parent_edge_metadata import (
-    determine_whether_sibling_pair_is_gate2_blocked,
+    determine_whether_sibling_pair_is_edge_blocked,
     determine_whether_sibling_pair_is_null_like,
     estimate_sibling_null_weight_from_child_parent_edges,
     extract_child_parent_edge_significance_by_node,
@@ -31,7 +31,7 @@ def test_child_parent_edge_metadata_preserves_tree_node_id_identity() -> None:
     assert blocked_by_node == {0: False, 1: True, 2: False}
 
     assert (
-        determine_whether_sibling_pair_is_gate2_blocked(
+        determine_whether_sibling_pair_is_edge_blocked(
             1,
             2,
             child_parent_edge_tested_by_node=tested_by_node,
@@ -49,7 +49,7 @@ def test_child_parent_edge_metadata_preserves_tree_node_id_identity() -> None:
     )
 
 
-def test_sibling_null_weight_uses_product_of_child_edge_weights() -> None:
+def test_sibling_null_weight_uses_geometric_mean_of_child_edge_weights() -> None:
     edge_p_values = {"L": 0.25, "R": 0.8}
     edge_tested = {"L": True, "R": True}
     edge_blocked = {"L": False, "R": False}
@@ -62,4 +62,4 @@ def test_sibling_null_weight_uses_product_of_child_edge_weights() -> None:
         child_parent_edge_ancestor_blocked_by_node=edge_blocked,
     )
 
-    assert weight == 0.2
+    assert weight == (0.25 * 0.8) ** 0.5

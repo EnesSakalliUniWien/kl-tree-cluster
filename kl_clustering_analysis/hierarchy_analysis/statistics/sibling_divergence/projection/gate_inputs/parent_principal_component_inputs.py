@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import SpectralContext
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    SpectralContext,
+)
 
 if TYPE_CHECKING:
     import numpy as np

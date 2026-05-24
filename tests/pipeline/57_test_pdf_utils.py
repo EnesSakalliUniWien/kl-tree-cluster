@@ -1,16 +1,16 @@
 from pathlib import Path
+
 import matplotlib
 
 matplotlib.use("Agg")
-from matplotlib import pyplot as plt
-from PIL import Image
-from pypdf import PdfReader
-
 from benchmarks.shared.plots.cover_page import write_case_manifest_pages_to_pdf
 from benchmarks.shared.util.pdf.figure_split import (
     split_collected_figs_to_pdfs,
 )
 from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
+from matplotlib import pyplot as plt
+from PIL import Image
+from pypdf import PdfReader
 
 
 def _write_dummy_png(path: Path, color=(255, 0, 0)):

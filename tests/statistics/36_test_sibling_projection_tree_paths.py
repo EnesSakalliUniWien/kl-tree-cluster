@@ -3,9 +3,11 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import SpectralContext
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    SpectralContext,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,

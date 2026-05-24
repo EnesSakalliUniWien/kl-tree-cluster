@@ -1,4 +1,4 @@
-"""Child-parent edge metadata helpers used by sibling pair testing."""
+"""Child-parent edge annotation helpers used by sibling pair testing."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from kl_clustering_analysis.core_utils.data_utils import extract_bool_column_dict
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
     EDGE_GATE_COLUMNS,
 )
 
@@ -79,7 +79,7 @@ def _require_child_node_value(
     return values_by_node[child_id]
 
 
-def determine_whether_sibling_pair_is_gate2_blocked(
+def determine_whether_sibling_pair_is_edge_blocked(
     left_child_id: object,
     right_child_id: object,
     *,
@@ -199,11 +199,11 @@ def estimate_sibling_null_weight_from_child_parent_edges(
 
     left_weight = _edge_null_weight(left_child_id)
     right_weight = _edge_null_weight(right_child_id)
-    return float(left_weight * right_weight)
+    return float(np.sqrt(left_weight * right_weight))
 
 
 __all__ = [
-    "determine_whether_sibling_pair_is_gate2_blocked",
+    "determine_whether_sibling_pair_is_edge_blocked",
     "determine_whether_sibling_pair_is_null_like",
     "estimate_sibling_null_weight_from_child_parent_edges",
     "extract_child_parent_edge_p_values_by_node",

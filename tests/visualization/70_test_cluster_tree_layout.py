@@ -1,5 +1,4 @@
 import networkx as nx
-
 from kl_clustering_analysis.plot.cluster_tree_visualization import _rectangular_tree_layout
 
 

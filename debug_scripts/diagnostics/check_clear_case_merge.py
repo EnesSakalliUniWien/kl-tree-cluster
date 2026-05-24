@@ -32,7 +32,9 @@ for merge in [True, False]:
     kl = df[df["Method"] == "KL Divergence"]
     row = kl.iloc[0]
     print(
-        f"method={'cousin_adjusted_wald':<25s} merge={merge!s:<6s}  K={row['Found']}/{row['True']}  ARI={row['ARI']:.3f}"
+        "reference=orthonormal_projected_wald "
+        "inflation=context_weighted_empirical_null "
+        f"merge={merge!s:<6s}  K={row['Found']}/{row['True']}  ARI={row['ARI']:.3f}"
     )
 
 # Restore defaults

@@ -7,18 +7,17 @@ to ensure clustering quality metrics are computed correctly.
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from sklearn.metrics.cluster import contingency_matrix
-from sklearn.preprocessing import LabelEncoder
-from scipy.optimize import linear_sum_assignment
-
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from scipy.cluster.hierarchy import linkage
+from scipy.optimize import linear_sum_assignment
+from scipy.spatial.distance import pdist
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+from sklearn.metrics.cluster import contingency_matrix
+from sklearn.preprocessing import LabelEncoder
 
 
 def _create_test_case_data(

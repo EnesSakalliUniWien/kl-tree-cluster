@@ -11,15 +11,13 @@ from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import SpectralContext
 
-from .child_parent_divergence_audit import build_child_parent_divergence_audit
 from .child_parent_divergence_tree_bh import (
     apply_child_parent_divergence_tree_bh_correction,
-    attach_child_parent_stopping_edge_recovery_metadata,
 )
-from .spectral_context import compute_child_parent_spectral_context
+from .spectral_context import SpectralContext, compute_child_parent_spectral_context
 from .tree_testing import run_child_parent_tests_across_tree
+
 
 def annotate_child_parent_divergence(
     tree: nx.DiGraph,
@@ -99,16 +97,6 @@ def annotate_child_parent_divergence_with_context(
         pca_eigenvalues=node_pca_eigenvalues,
     )
 
-    annotations_df.attrs["_edge_raw_test_data"] = {
-        "child_ids": child_ids,
-        "parent_ids": parent_ids,
-        "test_stats": edge_test_statistics.copy(),
-        "degrees_of_freedom": edge_degrees_of_freedom.copy(),
-        "p_values": edge_p_values.copy(),
-        "child_leaf_counts": child_leaf_counts.copy(),
-        "parent_leaf_counts": parent_leaf_counts.copy(),
-    }
-
     if invalid_test_flags.any():
         invalid_child_ids = [
             child_ids[edge_index]
@@ -142,29 +130,11 @@ def annotate_child_parent_divergence_with_context(
         child_parent_edge_corrected_p_values_by_tree_bh,
         child_parent_edge_tested_by_tree_bh,
         ancestor_blocked_edge_flags,
-        tree_bh_result,
     ) = apply_child_parent_divergence_tree_bh_correction(
         tree=tree,
         p_values_for_correction=edge_p_values,
         child_ids=child_ids,
         edge_alpha=edge_alpha,
-    )
-
-    annotations_df.attrs["child_parent_divergence_audit"] = build_child_parent_divergence_audit(
-        total_tests=len(child_ids),
-        child_parent_edge_tested_by_tree_bh=child_parent_edge_tested_by_tree_bh,
-        ancestor_blocked_edge_flags=ancestor_blocked_edge_flags,
-    )
-
-    attach_child_parent_stopping_edge_recovery_metadata(
-        annotations_df,
-        tree=tree,
-        child_ids=child_ids,
-        child_parent_edge_null_rejected_by_tree_bh=child_parent_edge_null_rejected_by_tree_bh,
-        child_parent_edge_tested_by_tree_bh=child_parent_edge_tested_by_tree_bh,
-        child_parent_edge_corrected_p_values_by_tree_bh=child_parent_edge_corrected_p_values_by_tree_bh,
-        tree_bh_result=tree_bh_result,
-        ancestor_blocked_edge_flags=ancestor_blocked_edge_flags,
     )
 
     annotated_df = assign_divergence_results(

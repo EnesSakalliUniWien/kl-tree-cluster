@@ -143,9 +143,9 @@ def main() -> None:
         "elapsed_seconds": time.time() - started,
         "cases": list(args.cases),
         "config": {
-            "sibling_test_method": "cousin_adjusted_wald",
+            "sibling_test_method": "orthonormal_projected_wald_reference",
             "SPECTRAL_DIMENSION_ESTIMATOR": "marchenko_pastur",
-            "SIBLING_CALIBRATION": "satterthwaite",
+            "SIBLING_CALIBRATION": "context_weighted_empirical_null_inflation",
         },
         "summary": summarize(rows),
         "csv": str(out_csv),

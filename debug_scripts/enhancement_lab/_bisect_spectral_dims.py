@@ -57,7 +57,11 @@ def run_case(case_name: str, disable_auto_derive: bool) -> dict:
     }
 
 
-print(f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, METHOD={"cousin_adjusted_wald"}")
+print(
+    f"Config: SIBLING_ALPHA={config.SIBLING_ALPHA}, "
+    "REFERENCE=orthonormal_projected_wald, "
+    "INFLATION=context_weighted_empirical_null"
+)
 print(f"{'Case':<35} {'TK':>3} {'K_a':>4} {'ARI_a':>7} {'K_n':>4} {'ARI_n':>7} {'delta':>7}")
 print("-" * 75)
 

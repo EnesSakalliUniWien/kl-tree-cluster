@@ -4,22 +4,24 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pandas.testing as pdt
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import (
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
     Gate2Result,
     GateAnnotationBundle,
-    SpectralContext,
-)
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
-    run_gate_annotation_pipeline,
 )
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
     validate_edge_gate_columns,
     validate_sibling_gate_columns,
 )
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.adjusted_wald_annotation.pipeline import (
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    SpectralContext,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
@@ -150,6 +152,6 @@ def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatc
     assert actual_sibling_cols == expected_sibling_cols
     assert validate_edge_gate_columns(pipeline_df) == expected_edge_cols
     assert validate_sibling_gate_columns(pipeline_df) == expected_sibling_cols
-    assert "pipeline" in bundle.metadata
-    assert "edge" in bundle.metadata
-    assert "sibling" in bundle.metadata
+    assert bundle.metadata.pipeline == "gate_annotation"
+    assert bundle.metadata.edge.gate == "edge"
+    assert bundle.metadata.sibling.gate == "sibling"

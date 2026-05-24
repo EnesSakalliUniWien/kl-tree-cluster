@@ -5,7 +5,7 @@ from typing import Dict, List
 import networkx as nx
 import numpy as np
 
-from ...branch_length_utils import sanitize_positive_branch_length
+from ...branch_length_utils import extract_branch_length_observation
 from ..tree_bh import ChildParentEdgeTreeBHResult
 from ._tree import get_unique_parent_id
 from .types.stopping_edge_info import StoppingEdgeInfo
@@ -19,7 +19,11 @@ def _resolve_stopping_edge_p_value(
     child_node_id_to_hypothesis_index: Dict[str, int],
 ) -> float:
     """Return the best available p-value for the tested edge that stopped descent."""
-    stopping_hypothesis_index = child_node_id_to_hypothesis_index.get(current_child_id)
+    stopping_hypothesis_index = (
+        child_node_id_to_hypothesis_index[current_child_id]
+        if current_child_id in child_node_id_to_hypothesis_index
+        else None
+    )
     if stopping_hypothesis_index is not None and np.isfinite(
         tree_bh_result.child_parent_edge_corrected_p_values_by_tree_bh[stopping_hypothesis_index]
     ):
@@ -71,15 +75,21 @@ def _walk_to_stopping_edge(
         if parent_id is None:
             return None
 
-        branch_length = sanitize_positive_branch_length(
-            tree.edges[parent_id, current_child_node].get("branch_length")
+        branch_length = extract_branch_length_observation(
+            tree,
+            parent_id,
+            current_child_node,
         )
         if branch_length is None:
             all_branch_lengths_available = False
         else:
             cumulative_branch_length += branch_length
 
-        sibling_group_outcome = tree_bh_result.sibling_group_outcomes.get(parent_id)
+        sibling_group_outcome = (
+            tree_bh_result.sibling_group_outcomes[parent_id]
+            if parent_id in tree_bh_result.sibling_group_outcomes
+            else None
+        )
         if sibling_group_outcome is not None:
             sibling_group_children = sibling_group_outcome.tested_child_ids
             if current_child_node in sibling_group_children:

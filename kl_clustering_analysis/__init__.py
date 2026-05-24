@@ -8,9 +8,7 @@ KL-divergence measures with NetworkX and advanced visualization capabilities.
 __version__ = "0.1.0"
 
 # Core modules
-from . import hierarchy_analysis
-from . import plot
-from . import tree
+from . import hierarchy_analysis, plot, tree
 
 __all__ = [
     "hierarchy_analysis",

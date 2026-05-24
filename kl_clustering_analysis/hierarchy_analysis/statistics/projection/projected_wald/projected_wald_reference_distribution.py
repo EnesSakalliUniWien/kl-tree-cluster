@@ -1,17 +1,18 @@
-"""Satterthwaite-calibrated chi-square reference for projected test statistics.
+"""Chi-square reference for orthonormal projected test statistics.
 
 Provides :func:`compute_projected_pvalue`, used by both the edge test (Gate 2)
 and the sibling test (Gate 3) to avoid code duplication.
 
-When eigenvalues are available, the projected quadratic form is kept unwhitened:
+The projected quadratic form is
 
 ``T = Σ (vᵢᵀz)²``
 
-and referenced against a moment-matched ``c × χ²(ν)`` where
-``c = Σλ²/Σλ`` and ``ν = (Σλ)²/Σλ²``.
+where the rows ``vᵢ`` are orthonormal PCA directions. Under an isotropic
+standardized null, PCA eigenvalues choose the subspace but do not weight the
+quadratic reference law, so ``T ~ χ²(k)``.
 
-Eigenvalues must cover the projected vector components; the statistic is
-calibrated by Satterthwaite moment matching under that PCA basis.
+Eigenvalues must cover the projected vector components to prove the PCA context
+is complete, but they are not used as null weights.
 """
 
 from __future__ import annotations
@@ -48,7 +49,7 @@ def compute_projected_pvalue(
     Returns
     -------
     Tuple[float, float, float]
-        Reference law ``T ~ reference_scale * chi2(degrees_of_freedom)``.
+        Reference law ``T ~ chi2(degrees_of_freedom)`` with reference_scale 1.
     """
     projected_components = np.asarray(projected_vector, dtype=np.float64)
     if projected_components.ndim != 1:
@@ -70,49 +71,24 @@ def compute_projected_pvalue(
             f"{component_eigenvalues.shape[0]} eigenvalue(s)."
         )
 
-    return _compute_satterthwaite_pvalue(projected_components, component_eigenvalues)
-
-
-def _compute_satterthwaite_pvalue(
-    projected_pca_components: np.ndarray,
-    eigenvalues: np.ndarray,
-) -> ProjectedQuadraticReference:
-    """Moment-matched chi-squared for unwhitened PCA projections.
-
-    The PCA part ``T_pca = Σ (vᵢᵀz)²`` is a weighted sum of χ²(1)
-    with weights λᵢ.  Satterthwaite: ``T_pca ≈ c_pca × χ²(ν_pca)``.
-
-    """
-    component_eigenvalues = np.asarray(eigenvalues, dtype=np.float64)
     if not np.isfinite(component_eigenvalues).all() or np.any(component_eigenvalues <= 0):
         raise ValueError("Projected Wald PCA eigenvalues must be finite and positive.")
 
-    sum_eigenvalues = float(np.sum(component_eigenvalues))
-    sum_squared_eigenvalues = float(np.sum(component_eigenvalues**2))
+    return _compute_orthonormal_projection_pvalue(projected_components)
 
-    combined_statistic_mean = sum_eigenvalues
-    combined_statistic_variance = 2.0 * sum_squared_eigenvalues
 
-    if combined_statistic_mean <= 0 or combined_statistic_variance <= 0:
-        raise ValueError("Projected Wald Satterthwaite moments must be positive.")
-
-    satterthwaite_scale = combined_statistic_variance / (2.0 * combined_statistic_mean)
-    satterthwaite_degrees_of_freedom = (
-        2.0 * combined_statistic_mean**2 / combined_statistic_variance
-    )
-
-    # Unwhitened test statistic
+def _compute_orthonormal_projection_pvalue(
+    projected_pca_components: np.ndarray,
+) -> ProjectedQuadraticReference:
+    """Chi-squared reference for an orthonormal PCA subspace."""
     test_statistic = float(np.sum(projected_pca_components**2))
-
-    # p-value: P(c × χ²(ν) > T) = P(χ²(ν) > T/c)
-    p_value = float(
-        chi2.sf(test_statistic / satterthwaite_scale, df=satterthwaite_degrees_of_freedom)
-    )
+    degrees_of_freedom = float(projected_pca_components.shape[0])
+    p_value = float(chi2.sf(test_statistic, df=degrees_of_freedom))
 
     return ProjectedQuadraticReference(
         statistic=test_statistic,
-        reference_scale=float(satterthwaite_scale),
-        degrees_of_freedom=float(satterthwaite_degrees_of_freedom),
+        reference_scale=1.0,
+        degrees_of_freedom=degrees_of_freedom,
         p_value=p_value,
     )
 

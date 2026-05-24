@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import math
 
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.contracts import SpectralContext
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    SpectralContext,
+)
 
 
 def _require_child_spectral_dimension(
