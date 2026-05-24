@@ -18,6 +18,7 @@ FAILURE_CLASS_GATE_OVER_SPLIT = "gate_over_split"
 FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE = (
     "tree_recoverable_statistical_failure"
 )
+FAILURE_CLASS_ORACLE_MATCHED_BELOW_SOLVED = "oracle_matched_below_solved"
 
 
 @dataclass(frozen=True)
@@ -376,6 +377,7 @@ def classify_tree_recoverability_failure(
     oracle_true_k_subtree_ari: float,
     solved_ari_threshold: float = 0.95,
     recoverable_ari_threshold: float = 0.8,
+    oracle_gap_tolerance: float = 1e-9,
 ) -> str:
     """Classify whether a KL miss is tree-limited or gate/stopping-limited."""
     metrics = {
@@ -395,6 +397,8 @@ def classify_tree_recoverability_failure(
             "solved_ari_threshold must be greater than or equal to "
             "recoverable_ari_threshold."
         )
+    if oracle_gap_tolerance < 0.0:
+        raise ValueError("oracle_gap_tolerance must be non-negative.")
 
     found = int(kl_found_clusters)
     truth = int(true_clusters)
@@ -407,6 +411,8 @@ def classify_tree_recoverability_failure(
         return FAILURE_CLASS_SOLVED
     if float(oracle_true_k_subtree_ari) < recoverable_ari_threshold:
         return FAILURE_CLASS_TREE_UNRECOVERABLE
+    if float(kl_ari) >= float(oracle_true_k_subtree_ari) - oracle_gap_tolerance:
+        return FAILURE_CLASS_ORACLE_MATCHED_BELOW_SOLVED
     if found < truth:
         return FAILURE_CLASS_GATE_UNDER_SPLIT
     if found > truth:
@@ -417,6 +423,7 @@ def classify_tree_recoverability_failure(
 __all__ = [
     "FAILURE_CLASS_GATE_OVER_SPLIT",
     "FAILURE_CLASS_GATE_UNDER_SPLIT",
+    "FAILURE_CLASS_ORACLE_MATCHED_BELOW_SOLVED",
     "FAILURE_CLASS_SOLVED",
     "FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE",
     "FAILURE_CLASS_TREE_UNRECOVERABLE",
