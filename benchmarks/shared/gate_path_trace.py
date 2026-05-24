@@ -9,6 +9,9 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from benchmarks.shared.sibling_inflation_diagnostic import (
+    collect_sibling_inflation_inputs,
+)
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes, compute_node_depths
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
@@ -17,21 +20,8 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bu
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.gate_evaluator import (
     TraversalDecision,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    compute_mean_branch_length,
-)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
-    fit_empirical_null_inflation_model,
     predict_empirical_inflation_factor,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
-    collect_sibling_pair_records,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
-    collect_parent_principal_component_inputs_for_sibling_tests,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
-    derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
@@ -280,39 +270,22 @@ def collect_sibling_inflation_trace(
     feature_space: FeatureSpace | None,
 ) -> dict[object, SiblingInflationTrace]:
     """Reconstruct raw sibling records and predicted inflation factors."""
-    gate_two_result = gate_annotation_bundle.gate_two_result
-    if gate_two_result is None:
-        raise ValueError("Gate path trace requires GateAnnotationBundle.gate_two_result.")
-
-    projection_dimensions = derive_sibling_projection_dimensions_from_child_edge_comparisons(
+    inputs = collect_sibling_inflation_inputs(
         tree,
-        spectral_context=gate_two_result.spectral_context,
-    )
-    parent_projections, parent_eigenvalues = (
-        collect_parent_principal_component_inputs_for_sibling_tests(
-            projection_dimensions,
-            spectral_context=gate_two_result.spectral_context,
-        )
-    )
-    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-    records, _non_binary = collect_sibling_pair_records(
-        tree,
-        gate_two_result.annotated_df,
-        mean_branch_length,
-        sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
-        parent_principal_component_projections=parent_projections,
-        parent_principal_component_eigenvalues=parent_eigenvalues,
+        gate_annotation_bundle,
         feature_space=feature_space,
     )
-    n_focal = sum(not record.is_null_like for record in records)
-    model = fit_empirical_null_inflation_model(records) if n_focal > 0 else None
 
     trace_by_parent: dict[object, SiblingInflationTrace] = {}
-    for record in records:
+    for record in inputs.records:
         inflation_factor = np.nan
         inflation_applied = False
-        if model is not None and not record.is_null_like and record.degrees_of_freedom > 0:
-            inflation_factor = predict_empirical_inflation_factor(model, record)
+        if (
+            inputs.model is not None
+            and not record.is_null_like
+            and record.degrees_of_freedom > 0
+        ):
+            inflation_factor = predict_empirical_inflation_factor(inputs.model, record)
             inflation_applied = True
         trace_by_parent[record.parent] = SiblingInflationTrace(
             parent=record.parent,
