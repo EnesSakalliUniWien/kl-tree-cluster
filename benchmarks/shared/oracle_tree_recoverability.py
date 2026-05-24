@@ -11,6 +11,14 @@ import pandas as pd
 from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes
 from sklearn.metrics import adjusted_rand_score
 
+FAILURE_CLASS_SOLVED = "solved"
+FAILURE_CLASS_TREE_UNRECOVERABLE = "tree_unrecoverable"
+FAILURE_CLASS_GATE_UNDER_SPLIT = "gate_under_split"
+FAILURE_CLASS_GATE_OVER_SPLIT = "gate_over_split"
+FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE = (
+    "tree_recoverable_statistical_failure"
+)
+
 
 @dataclass(frozen=True)
 class OracleTreeCutResult:
@@ -360,7 +368,59 @@ def oracle_subtree_cut(
     )
 
 
+def classify_tree_recoverability_failure(
+    *,
+    kl_ari: float,
+    kl_found_clusters: int,
+    true_clusters: int,
+    oracle_true_k_subtree_ari: float,
+    solved_ari_threshold: float = 0.95,
+    recoverable_ari_threshold: float = 0.8,
+) -> str:
+    """Classify whether a KL miss is tree-limited or gate/stopping-limited."""
+    metrics = {
+        "kl_ari": kl_ari,
+        "oracle_true_k_subtree_ari": oracle_true_k_subtree_ari,
+    }
+    for name, value in metrics.items():
+        if not np.isfinite(float(value)):
+            raise ValueError(f"{name} must be finite for failure classification.")
+
+    if not (0.0 <= solved_ari_threshold <= 1.0):
+        raise ValueError("solved_ari_threshold must lie in [0, 1].")
+    if not (0.0 <= recoverable_ari_threshold <= 1.0):
+        raise ValueError("recoverable_ari_threshold must lie in [0, 1].")
+    if solved_ari_threshold < recoverable_ari_threshold:
+        raise ValueError(
+            "solved_ari_threshold must be greater than or equal to "
+            "recoverable_ari_threshold."
+        )
+
+    found = int(kl_found_clusters)
+    truth = int(true_clusters)
+    if found < 1:
+        raise ValueError(f"kl_found_clusters must be positive, got {found}.")
+    if truth < 1:
+        raise ValueError(f"true_clusters must be positive, got {truth}.")
+
+    if float(kl_ari) >= solved_ari_threshold:
+        return FAILURE_CLASS_SOLVED
+    if float(oracle_true_k_subtree_ari) < recoverable_ari_threshold:
+        return FAILURE_CLASS_TREE_UNRECOVERABLE
+    if found < truth:
+        return FAILURE_CLASS_GATE_UNDER_SPLIT
+    if found > truth:
+        return FAILURE_CLASS_GATE_OVER_SPLIT
+    return FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE
+
+
 __all__ = [
+    "FAILURE_CLASS_GATE_OVER_SPLIT",
+    "FAILURE_CLASS_GATE_UNDER_SPLIT",
+    "FAILURE_CLASS_SOLVED",
+    "FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE",
+    "FAILURE_CLASS_TREE_UNRECOVERABLE",
     "OracleTreeCutResult",
+    "classify_tree_recoverability_failure",
     "oracle_subtree_cut",
 ]

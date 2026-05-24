@@ -28,7 +28,10 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.oracle_tree_recoverability import oracle_subtree_cut
+from benchmarks.shared.oracle_tree_recoverability import (
+    classify_tree_recoverability_failure,
+    oracle_subtree_cut,
+)
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.method_execution import (
@@ -76,6 +79,21 @@ def _parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help="Output directory. Defaults to benchmarks/results/oracle_tree_recoverability_<timestamp>/.",
+    )
+    parser.add_argument(
+        "--solved-ari-threshold",
+        type=float,
+        default=0.95,
+        help="KL ARI at or above this value is classified as solved.",
+    )
+    parser.add_argument(
+        "--recoverable-ari-threshold",
+        type=float,
+        default=0.8,
+        help=(
+            "Oracle true-K ARI at or above this value means the tree is treated "
+            "as recoverable for failure classification."
+        ),
     )
     return parser.parse_args()
 
@@ -213,6 +231,9 @@ def _run_case(case_index: int, case: dict) -> dict[str, object]:
 def _attach_benchmark_comparison(
     oracle_df: pd.DataFrame,
     benchmark_df: pd.DataFrame,
+    *,
+    solved_ari_threshold: float,
+    recoverable_ari_threshold: float,
 ) -> pd.DataFrame:
     if benchmark_df.empty:
         return oracle_df
@@ -227,12 +248,30 @@ def _attach_benchmark_comparison(
         }
     )
     merged = oracle_df.merge(comparison, on="case_id", how="left", validate="one_to_one")
+    missing_comparison = merged["kl_ari"].isna() | merged["kl_found_clusters"].isna()
+    if missing_comparison.any():
+        missing_cases = merged.loc[missing_comparison, "case_id"].astype(str).tolist()
+        raise ValueError(
+            "benchmark CSV does not contain matching KL rows for every oracle case. "
+            f"Missing={missing_cases[:10]}."
+        )
     merged["kl_to_oracle_subtree_gap"] = (
         merged["oracle_subtree_ari"] - merged["kl_ari"]
     )
     merged["kl_to_oracle_true_k_gap"] = (
         merged["oracle_true_k_subtree_ari"] - merged["kl_ari"]
     )
+    merged["failure_class"] = [
+        classify_tree_recoverability_failure(
+            kl_ari=float(row.kl_ari),
+            kl_found_clusters=int(row.kl_found_clusters),
+            true_clusters=int(row.true_clusters),
+            oracle_true_k_subtree_ari=float(row.oracle_true_k_subtree_ari),
+            solved_ari_threshold=solved_ari_threshold,
+            recoverable_ari_threshold=recoverable_ari_threshold,
+        )
+        for row in merged.itertuples(index=False)
+    ]
     return merged
 
 
@@ -253,7 +292,12 @@ def main() -> None:
 
     oracle_df = pd.DataFrame(rows)
     benchmark_df = _load_kl_benchmark_rows(args.benchmark_csv)
-    oracle_df = _attach_benchmark_comparison(oracle_df, benchmark_df)
+    oracle_df = _attach_benchmark_comparison(
+        oracle_df,
+        benchmark_df,
+        solved_ari_threshold=float(args.solved_ari_threshold),
+        recoverable_ari_threshold=float(args.recoverable_ari_threshold),
+    )
     oracle_df.to_csv(output_csv, index=False)
 
     elapsed_sec = time.perf_counter() - started_at
@@ -262,7 +306,9 @@ def main() -> None:
         "n_cases": len(cases),
         "elapsed_sec": round(elapsed_sec, 6),
         "benchmark_csv": str(args.benchmark_csv) if args.benchmark_csv else "",
+        "recoverable_ari_threshold": float(args.recoverable_ari_threshold),
         "results_csv": str(output_csv),
+        "solved_ari_threshold": float(args.solved_ari_threshold),
     }
     metadata_json.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n")
 
@@ -285,6 +331,9 @@ def main() -> None:
             f"mean={oracle_df['kl_to_oracle_subtree_gap'].mean():.4f} "
             f"median={oracle_df['kl_to_oracle_subtree_gap'].median():.4f}"
         )
+    if "failure_class" in oracle_df.columns:
+        print("failure_class counts:")
+        print(oracle_df["failure_class"].value_counts().sort_index())
 
 
 if __name__ == "__main__":

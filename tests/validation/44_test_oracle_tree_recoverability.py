@@ -2,8 +2,17 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
-from benchmarks.shared.oracle_tree_recoverability import oracle_subtree_cut
+from benchmarks.shared.oracle_tree_recoverability import (
+    FAILURE_CLASS_GATE_OVER_SPLIT,
+    FAILURE_CLASS_GATE_UNDER_SPLIT,
+    FAILURE_CLASS_SOLVED,
+    FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE,
+    FAILURE_CLASS_TREE_UNRECOVERABLE,
+    classify_tree_recoverability_failure,
+    oracle_subtree_cut,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
 
@@ -81,3 +90,37 @@ def test_oracle_subtree_cut_handles_single_class_truth() -> None:
 
     assert result.ari == 1.0
     assert result.found_clusters == 1
+
+
+@pytest.mark.parametrize(
+    (
+        "kl_ari",
+        "kl_found_clusters",
+        "true_clusters",
+        "oracle_true_k_subtree_ari",
+        "expected",
+    ),
+    [
+        (0.99, 5, 4, 1.0, FAILURE_CLASS_SOLVED),
+        (0.10, 4, 4, 0.40, FAILURE_CLASS_TREE_UNRECOVERABLE),
+        (0.10, 2, 4, 0.90, FAILURE_CLASS_GATE_UNDER_SPLIT),
+        (0.10, 9, 4, 0.90, FAILURE_CLASS_GATE_OVER_SPLIT),
+        (0.10, 4, 4, 0.90, FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE),
+    ],
+)
+def test_classify_tree_recoverability_failure(
+    kl_ari: float,
+    kl_found_clusters: int,
+    true_clusters: int,
+    oracle_true_k_subtree_ari: float,
+    expected: str,
+) -> None:
+    assert (
+        classify_tree_recoverability_failure(
+            kl_ari=kl_ari,
+            kl_found_clusters=kl_found_clusters,
+            true_clusters=true_clusters,
+            oracle_true_k_subtree_ari=oracle_true_k_subtree_ari,
+        )
+        == expected
+    )
