@@ -100,6 +100,11 @@ verification, and maintenance events here in chronological order.
   and deleting cache/build products. Promoted only the small benchmark CSV/MD
   files cited by wiki or diagnostic notes into `raw/assets/benchmark-results/`
   so evidence paths remain durable without restoring `benchmarks/results/`.
+- Added [[manuscript-life-science-readiness]] after checking the
+  scientific-writing and life-science routing constraints. The page records
+  that the draft is methods-coherent but cannot make a biological application
+  claim until one real-data track has a locked manifest, outputs, figures, and
+  interpretation table.
 
 ## Evidence
 

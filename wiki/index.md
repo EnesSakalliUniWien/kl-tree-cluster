@@ -67,6 +67,9 @@ renamed, or promoted.
 - [[oracle-gate-path-diagnostic]] - mathematical recoverability and gate-path
   analysis separating tree failures, sibling-calibration under-splits, direct
   sibling false splits, and pass-through fragmentation.
+- [[manuscript-life-science-readiness]] - readiness check for turning the
+  methods draft and biological feature matrices into a gap-marked or completed
+  life-science application section.
 
 ### Questions
 
