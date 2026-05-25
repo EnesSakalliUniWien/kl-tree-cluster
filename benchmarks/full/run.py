@@ -100,7 +100,14 @@ def _resolve_generated_case_geometry(case: dict) -> tuple[int, int]:
         return int(case["n_samples"]), int(case["n_features"]) * int(case["n_categories"])
     if generator == "binary":
         return int(case["n_samples"]), int(case["n_features"]) + int(case["noise_features"])
-    if generator in {"blobs", "dimensional_gaussian", "gaussian_outliers"}:
+    if generator in {
+        "blobs",
+        "blobs_continuous",
+        "dimensional_gaussian",
+        "dimensional_gaussian_continuous",
+        "gaussian_outliers",
+        "gaussian_outliers_continuous",
+    }:
         return int(case["n_samples"]), int(case["n_features"])
     raise ValueError(f"Unknown benchmark case generator {generator!r}.")
 

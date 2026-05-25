@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
-
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
-
+from kl_clustering_analysis.tree.feature_space import (
+    FeatureSpace,
+    contains_categorical_feature_columns,
+    validate_feature_space,
+)
+from scipy.spatial.distance import pdist, squareform
 
 DISTANCE_MATRIX_METHODS = {"leiden", "louvain", "dbscan", "optics", "hdbscan"}
 
@@ -26,6 +29,15 @@ def prepare_case_inputs(
 ]:
     """Generate case data and resolve shared distance representations."""
     data_t, y_t, x_original, meta = generate_case_data(tc)
+    feature_space = meta.get("feature_space")
+    if feature_space is not None:
+        if not isinstance(feature_space, FeatureSpace):
+            raise ValueError("Benchmark feature_space metadata must be a FeatureSpace.")
+        validate_feature_space(tuple(data_t.columns), feature_space)
+    elif contains_categorical_feature_columns(tuple(data_t.columns)):
+        raise ValueError(
+            "Categorical benchmark data must carry explicit feature_space metadata."
+        )
 
     needs_distance_matrix = any(
         method_id in DISTANCE_MATRIX_METHODS for method_id in selected_methods

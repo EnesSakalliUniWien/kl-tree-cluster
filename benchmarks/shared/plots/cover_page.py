@@ -36,10 +36,17 @@ _register(
     "gaussian_extreme_noise",
     "improved_gaussian",
     "gaussian_null",
+    "gaussian_extreme_noise_continuous",
+    "improved_gaussian_continuous",
+    "gaussian_null_continuous",
     "gaussian_dimensionality_consolidated",
     "gaussian_dimensionality_diffuse",
+    "gaussian_dimensionality_consolidated_continuous",
+    "gaussian_dimensionality_diffuse_continuous",
     "gaussian_outlier_singleton",
     "gaussian_outlier_contamination",
+    "gaussian_outlier_singleton_continuous",
+    "gaussian_outlier_contamination_continuous",
 )
 _register(
     "binary",
@@ -110,12 +117,12 @@ _OVERVIEW_TEXT = dedent(
     KL-Divergence Hierarchical Clustering -- Benchmark Report
 
     This report evaluates the KL-divergence hierarchical clustering algorithm
-    across {n_cases} synthetic and real-world test cases drawn from 7 data
-    categories.  Each case is generated with known ground-truth cluster labels
-    so that recovery accuracy can be measured objectively.
+    across {n_cases} registered benchmark cases.  Each case is generated with
+    known ground-truth cluster labels so that recovery accuracy can be measured
+    objectively.
 
     Pipeline:
-      binary matrix -> Hamming distance -> average linkage -> PosetTree
+      benchmark matrix -> case-specific tree distance -> average linkage -> PosetTree
       -> populate_node_divergences() -> three statistical gates
       -> decompose() -> cluster assignments
 
@@ -139,11 +146,14 @@ _OVERVIEW_TEXT = dedent(
 
 _GAUSSIAN_TEXT = dedent(
     """\
-    Gaussian Cases  (21 cases)
+    Gaussian Cases  (42 A/B cases)
 
     Data generation:
-      sklearn.make_blobs with configurable cluster standard deviation, then
-      median-binarized per feature: (X > median(X, axis=0)).astype(int).
+      Gaussian blob, dimensional Gaussian, and Gaussian-outlier families keep
+      the historical median-binary cases and add continuous A/B companions.
+      Continuous companions keep raw coordinates, carry an explicit continuous
+      FeatureSpace, and provide Euclidean tree distances through benchmark
+      metadata.
 
     Parameter ranges:
       number of samples       30 to 300
@@ -153,48 +163,47 @@ _GAUSSIAN_TEXT = dedent(
 
     Subcategories:
 
-      1. improved_gaussian (7 cases)
+      1. improved_gaussian (7 binary + 7 continuous cases)
          Progressive difficulty from well-separated (standard deviation 0.5)
          through moderate overlap (1.2 to 1.5) to challenging noise (2.0
          to 2.5).  Targets statistical power edge cases: small sample
          sizes, moderate cluster counts.
 
-      2. gaussian_extreme_noise (3 cases)
+      2. gaussian_extreme_noise (3 binary + 3 continuous cases)
          High noise (standard deviation 2.0 to 7.5) and/or very high
          dimensionality (up to 20 000 features, up to 30 clusters).
          Probes failure modes where signal is buried in noise.
 
-      3. gaussian_null (2 cases)
+      3. gaussian_null (2 binary + 2 continuous cases)
          Single-cluster data (K=1) with no structure.  Tests the
          algorithm's ability to correctly return K=1.
 
-      4. gaussian_dimensionality_consolidated (3 cases)
+      4. gaussian_dimensionality_consolidated (3 binary + 3 continuous cases)
         Fixed informative subspace with increasing irrelevant dimensions.
         Signal is concentrated in cluster-owned feature blocks, following
         common high-dimensional benchmark practice where p grows mainly
         through noise features rather than extra informative ones.
 
-      5. gaussian_dimensionality_diffuse (3 cases)
+      5. gaussian_dimensionality_diffuse (3 binary + 3 continuous cases)
         Fixed informative subspace with correlated signal spread across the
         relevant dimensions, plus increasing irrelevant dimensions.
         This stresses recovery when the signal is weakly distributed rather
         than localized in a small block.
 
-      6. gaussian_outlier_singleton (1 case)
+      6. gaussian_outlier_singleton (1 binary + 1 continuous case)
         A standard clustered Gaussian benchmark with one extreme singleton
         outlier added far from the inlier clusters. This tests whether the
         method isolates a lone anomalous point as its own leaf/split.
 
-      7. gaussian_outlier_contamination (2 cases)
+      7. gaussian_outlier_contamination (2 binary + 2 continuous cases)
         Small outlier contamination using either a tiny remote Gaussian group
         or a shell of dispersed anomalous points around the inlier support.
         This tests whether the method can separate clustered contamination
         and low-rate diffuse anomalies.
 
     Design notes:
-      Median binarization forces theta close to 0.5, maximizing Wald
-      variance and reducing test power.  Signal survives only when
-      per-cluster theta deviates sufficiently from the global median.
+      The A/B split separates discretization effects from the continuous
+      empirical-Gaussian path without deleting the historical binary cases.
 """
 )
 
@@ -296,13 +305,14 @@ _PHYLOGENETIC_TEXT = dedent(
 
 _OVERLAPPING_TEXT = dedent(
     """\
-    Overlapping Cases  (29 cases)
+    Overlapping Cases  (25 cases)
 
     Data generation:
       Binary subcategories use generate_random_feature_matrix with high
       entropy parameter (0.22 to 0.48) so cluster feature profiles
-      significantly overlap.  Gaussian subcategories use make_blobs with
-      cluster standard deviation 3.0 to 6.0.
+      significantly overlap. Gaussian subcategories use make_blobs with
+      cluster standard deviation 3.0 to 6.0; quantile cases encode Gaussian
+      coordinates as categorical one-hot blocks.
 
     Parameter ranges:
       number of samples     300 to 1 000
@@ -310,9 +320,10 @@ _OVERLAPPING_TEXT = dedent(
       number of clusters    3 to 10
 
     Subcategories:
-      heavy overlap (5)            moderate overlap (4)
-      partial overlap (4)          high dimensional (4)
-      unbalanced (4)               Gaussian overlap (8)
+      heavy overlap (4)            moderate overlap (3)
+      partial overlap (3)          high dimensional (1)
+      unbalanced (3)               Gaussian overlap (8)
+      Gaussian quantile (3)
 
     Purpose:  tests the algorithm's ability to correctly merge overlapping
     groups rather than over-split.
@@ -348,8 +359,8 @@ _EVALUATION_TEXT = dedent(
       Exact K                        count     found K equals true K
 
     Primary method:
-      KL-divergence hierarchical clustering with Hamming distance and
-      average linkage.
+      KL-divergence hierarchical clustering with the case-specific tree
+      distance and average linkage.
 
     Competing methods (when included):
       Community detection (Leiden, Louvain)
@@ -443,7 +454,7 @@ def _text_page(
 
 
 def generate_overview_page(
-    n_cases: int = 97,
+    n_cases: int = 122,
     timestamp: str | None = None,
 ) -> plt.Figure:
     """Return a single overview/title page figure."""
@@ -489,7 +500,14 @@ def _resolve_case_geometry(case: dict) -> tuple[int, int]:
         return int(case["n_samples"]), int(case["n_features"]) * int(case["n_categories"])
     if generator == "binary":
         return int(case["n_samples"]), int(case["n_features"]) + int(case["noise_features"])
-    if generator in {"blobs", "dimensional_gaussian", "gaussian_outliers"}:
+    if generator in {
+        "blobs",
+        "blobs_continuous",
+        "dimensional_gaussian",
+        "dimensional_gaussian_continuous",
+        "gaussian_outliers",
+        "gaussian_outliers_continuous",
+    }:
         return int(case["n_samples"]), int(case["n_features"])
     raise ValueError(f"Unknown benchmark case generator {generator!r}.")
 
@@ -586,7 +604,7 @@ def write_case_manifest_pages_to_pdf(
 def write_cover_pages_to_pdf(
     pdf_path: str | None = None,
     *,
-    n_cases: int = 97,
+    n_cases: int = 122,
     timestamp: str | None = None,
 ) -> str | None:
     """Write the cover pages to a standalone PDF file.

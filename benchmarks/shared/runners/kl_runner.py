@@ -12,6 +12,7 @@ from benchmarks.shared.util.decomposition import (
     _labels_and_report_from_decomposition,
 )
 from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 
@@ -19,20 +20,25 @@ from scipy.cluster.hierarchy import linkage
 def _run_kl_on_distance(
     data_df: pd.DataFrame,
     distance_condensed: np.ndarray,
-    significance_level: float,
+    sibling_significance_level: float,
     *,
     tree_linkage_method: str,
+    feature_space: FeatureSpace | None = None,
     extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
     linkage_matrix = linkage(distance_condensed, method=tree_linkage_method)
 
     tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
-    tree.populate_node_divergences(data_df)
+    tree.populate_node_divergences(
+        data_df,
+        feature_space=feature_space,
+    )
     decomposition = tree.decompose(
         annotations_df=tree.annotations_df,
         leaf_data=data_df,
-        alpha_local=significance_level,
-        sibling_alpha=significance_level,
+        feature_space=feature_space,
+        alpha_local=config.EDGE_ALPHA,
+        sibling_alpha=sibling_significance_level,
     )
     labels, report_df = _labels_and_report_from_decomposition(
         decomposition,
@@ -60,12 +66,15 @@ def _run_kl_on_distance(
 def _run_kl_method(
     data_df: pd.DataFrame,
     distance_condensed: np.ndarray,
-    significance_level: float,
+    sibling_significance_level: float,
     tree_linkage_method: str = config.TREE_LINKAGE_METHOD,
+    *,
+    feature_space: FeatureSpace | None = None,
 ) -> MethodRunResult:
     return _run_kl_on_distance(
         data_df,
         distance_condensed,
-        significance_level,
+        sibling_significance_level,
         tree_linkage_method=tree_linkage_method,
+        feature_space=feature_space,
     )

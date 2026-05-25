@@ -102,3 +102,22 @@ DIMENSIONALITY_CASES = {
         },
     ],
 }
+
+
+def _continuous_dimensional_variant(case: dict) -> dict:
+    """Return the continuous-coordinate A/B companion for a median-binary case."""
+    variant = case.copy()
+    variant["name"] = f"{case['name']}_continuous"
+    variant["generator"] = "dimensional_gaussian_continuous"
+    variant["baseline_case_name"] = case["name"]
+    return variant
+
+
+DIMENSIONALITY_CASES["gaussian_dimensionality_consolidated_continuous"] = [
+    _continuous_dimensional_variant(case)
+    for case in DIMENSIONALITY_CASES["gaussian_dimensionality_consolidated"]
+]
+DIMENSIONALITY_CASES["gaussian_dimensionality_diffuse_continuous"] = [
+    _continuous_dimensional_variant(case)
+    for case in DIMENSIONALITY_CASES["gaussian_dimensionality_diffuse"]
+]

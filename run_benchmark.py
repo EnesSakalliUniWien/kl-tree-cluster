@@ -32,13 +32,12 @@ from sklearn.metrics import adjusted_rand_score
 _PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
 
 
 def run_single_case(
@@ -84,18 +83,25 @@ def run_single_case(
         t0 = time.time()
 
         # Generate data
-        data, y_true, _, _ = generate_case_data(tc)
+        data, y_true, _, metadata = generate_case_data(tc)
+        feature_space = metadata.get("feature_space")
 
         # Build tree
-        Z = linkage(
-            pdist(data.values, metric=config.TREE_DISTANCE_METRIC),
-            method=config.TREE_LINKAGE_METHOD,
+        precomputed_distance_condensed = metadata.get("precomputed_distance_condensed")
+        distance_condensed = (
+            np.asarray(precomputed_distance_condensed, dtype=float)
+            if precomputed_distance_condensed is not None
+            else pdist(data.values, metric=config.TREE_DISTANCE_METRIC)
         )
+        Z = linkage(distance_condensed, method=config.TREE_LINKAGE_METHOD)
         tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
+        tree.populate_node_divergences(data, feature_space=feature_space)
 
         # Run decomposition
         results = tree.decompose(
+            annotations_df=tree.annotations_df,
             leaf_data=data,
+            feature_space=feature_space,
             alpha_local=config.EDGE_ALPHA,
             sibling_alpha=config.SIBLING_ALPHA,
         )
@@ -120,7 +126,7 @@ def run_single_case(
             "config": {
                 "edge_alpha": config.EDGE_ALPHA,
                 "sibling_alpha": config.SIBLING_ALPHA,
-                "sibling_method": "cousin_adjusted_wald",
+                "sibling_method": "context_weighted_empirical_null_inflation",
                 "spectral_dimension_estimator": "marchenko_pastur",
             },
         }
@@ -136,7 +142,7 @@ def run_single_case(
             print("\nConfig:")
             print(f"  EDGE_ALPHA={config.EDGE_ALPHA}")
             print(f"  SIBLING_ALPHA={config.SIBLING_ALPHA}")
-            print("  Sibling test method=fixed cousin_adjusted_wald")
+            print("  Sibling test method=context_weighted_empirical_null_inflation")
             print("  SPECTRAL_DIMENSION_ESTIMATOR=marchenko_pastur (fixed)")
 
         return result
@@ -154,7 +160,7 @@ def run_quick_benchmark(
     quick_cases = [
         "binary_perfect_4c",
         "gauss_clear_medium",
-        "sparse_72x72",
+        "sparse_features_72x72",
         "sbm_moderate",
         "overlap_mod_4c_small",
     ]
@@ -202,7 +208,7 @@ def run_full_benchmark(
     print(
         f"Config: EDGE_ALPHA={alpha_local or config.EDGE_ALPHA}, "
         f"SIBLING_ALPHA={sibling_alpha or config.SIBLING_ALPHA}, "
-        "SIBLING_METHOD=fixed cousin_adjusted_wald"
+        "SIBLING_METHOD=context_weighted_empirical_null_inflation"
     )
     print()
 

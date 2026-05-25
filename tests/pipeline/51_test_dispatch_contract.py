@@ -14,7 +14,7 @@ def _toy_dataframe() -> pd.DataFrame:
                 [0.0, 0.0],
                 [0.1, 0.0],
                 [1.0, 1.0],
-                [1.1, 1.0],
+                [0.9, 1.0],
             ],
             dtype=float,
         ),
@@ -44,7 +44,7 @@ def test_dispatch_result_rejects_invalid_spectral_params():
         )
 
 
-def test_dispatch_result_propagates_unexpected_exception(monkeypatch):
+def test_dispatch_result_records_unexpected_exception_as_skip(monkeypatch):
     def _raise_runner(*_args, **_kwargs):
         raise RuntimeError("boom")
 
@@ -59,13 +59,16 @@ def test_dispatch_result_propagates_unexpected_exception(monkeypatch):
     )
 
     df = _toy_dataframe()
-    with pytest.raises(RuntimeError, match="boom"):
-        run_clustering_result(
-            data_df=df,
-            method_id="kmeans",
-            params={"n_clusters": 2},
-            seed=42,
-        )
+    result = run_clustering_result(
+        data_df=df,
+        method_id="kmeans",
+        params={"n_clusters": 2},
+        seed=42,
+    )
+
+    assert result.status == "skip"
+    assert result.labels is None
+    assert result.skip_reason == "boom"
 
 
 def test_run_clustering_result_uses_provided_kl_distance_condensed():

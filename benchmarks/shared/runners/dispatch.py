@@ -10,6 +10,7 @@ from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from scipy.spatial.distance import pdist, squareform
 
 
@@ -51,6 +52,17 @@ def _normalize_method_result(
     )
 
 
+def _method_failure_result(error: Exception) -> MethodRunResult:
+    return MethodRunResult(
+        labels=None,
+        found_clusters=0,
+        report_df=None,
+        status="skip",
+        skip_reason=str(error),
+        extra={},
+    )
+
+
 def run_clustering_result(
     data_df: pd.DataFrame,
     method_id: str,
@@ -60,6 +72,7 @@ def run_clustering_result(
     significance_level: float | None = None,
     distance_matrix: Optional[np.ndarray] = None,
     distance_condensed: Optional[np.ndarray] = None,
+    feature_space: FeatureSpace | None = None,
 ) -> MethodRunResult:
     """Run one benchmark method and return a normalized ``MethodRunResult``.
 
@@ -68,24 +81,32 @@ def run_clustering_result(
     spec = METHOD_SPECS[method_id]
     alpha = config.SIBLING_ALPHA if significance_level is None else float(significance_level)
     if method_id == "kl_diffusion":
-        result = spec.runner(
-            data_df,
-            alpha,
-            k_neighbors=int(params["k_neighbors"]),
-            diffusion_time=int(params["diffusion_time"]),
-        )
+        try:
+            result = spec.runner(
+                data_df,
+                alpha,
+                k_neighbors=int(params["k_neighbors"]),
+                diffusion_time=int(params["diffusion_time"]),
+                feature_space=feature_space,
+            )
+        except Exception as exc:
+            return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
     if method_id == "kl_diffusion_adaptive":
-        result = spec.runner(
-            data_df,
-            alpha,
-            k_neighbors=int(params["k_neighbors"]),
-            diffusion_time=int(params["diffusion_time"]),
-            n_components=int(params["n_components"]),
-            metric=str(params["metric"]),
-            bandwidth_type=params["bandwidth_type"],
-            epsilon=params["epsilon"],
-        )
+        try:
+            result = spec.runner(
+                data_df,
+                alpha,
+                k_neighbors=int(params["k_neighbors"]),
+                diffusion_time=int(params["diffusion_time"]),
+                n_components=int(params["n_components"]),
+                metric=str(params["metric"]),
+                bandwidth_type=params["bandwidth_type"],
+                epsilon=params["epsilon"],
+                feature_space=feature_space,
+            )
+        except Exception as exc:
+            return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
 
     if method_id in {"kl", "kl_complete", "kl_single"}:
@@ -95,16 +116,24 @@ def run_clustering_result(
             kl_distance_condensed = np.asarray(distance_condensed, dtype=float)
         else:
             kl_distance_condensed = pdist(data_df.values, metric=metric)
-        result = spec.runner(
-            data_df,
-            kl_distance_condensed,
-            alpha,
-            tree_linkage_method=str(params["tree_linkage_method"]),
-        )
+        try:
+            result = spec.runner(
+                data_df,
+                kl_distance_condensed,
+                alpha,
+                tree_linkage_method=str(params["tree_linkage_method"]),
+                feature_space=feature_space,
+            )
+        except Exception as exc:
+            return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
 
     if method_id in {"kmeans", "spectral"}:
-        result = spec.runner(data_df.values, params, seed)
+        int(params["n_clusters"])
+        try:
+            result = spec.runner(data_df.values, params, seed)
+        except Exception as exc:
+            return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
 
     if distance_matrix is None:
@@ -117,9 +146,15 @@ def run_clustering_result(
         dm_square = np.asarray(distance_matrix, dtype=float)
 
     if method_id in {"leiden", "louvain", "optics"}:
-        result = spec.runner(dm_square, params, seed)
+        try:
+            result = spec.runner(dm_square, params, seed)
+        except Exception as exc:
+            return _method_failure_result(exc)
     else:
-        result = spec.runner(dm_square, params)
+        try:
+            result = spec.runner(dm_square, params)
+        except Exception as exc:
+            return _method_failure_result(exc)
     return _normalize_method_result(result, data_df.index)
 
 

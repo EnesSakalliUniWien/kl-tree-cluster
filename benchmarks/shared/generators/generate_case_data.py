@@ -14,9 +14,6 @@ from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import squareform
-from sklearn.datasets import make_blobs
-
 from benchmarks.shared.generators.generate_categorical_matrix import (
     generate_categorical_feature_matrix,
 )
@@ -36,6 +33,13 @@ from benchmarks.shared.generators.generate_sbm import generate_sbm
 from benchmarks.shared.generators.generate_temporal_evolution import (
     generate_temporal_evolution_data,
 )
+from kl_clustering_analysis.tree.feature_space import (
+    FeatureSpace,
+    continuous_feature_space_from_columns,
+    infer_feature_space_from_columns,
+)
+from scipy.spatial.distance import pdist, squareform
+from sklearn.datasets import make_blobs
 
 
 def _require_case_value(test_case: dict, key: str, generator_name: str) -> Any:
@@ -48,7 +52,7 @@ def _one_hot_encode_categorical(
     matrix: np.ndarray,
     n_categories: int,
     sample_names: list[str],
-) -> Tuple[pd.DataFrame, int]:
+) -> tuple[pd.DataFrame, int, FeatureSpace]:
     """One-hot encode a (n_rows, n_cols) category-index matrix into binary.
 
     Each original feature with K categories becomes K binary indicator columns.
@@ -56,7 +60,8 @@ def _one_hot_encode_categorical(
     pipeline (all values in {0, 1}).
 
     Returns:
-        (data_df, n_binary_features) where data_df has shape (n_rows, n_cols * K).
+        (data_df, n_binary_features, feature_space) where data_df has shape
+        (n_rows, n_cols * K).
     """
     n_rows, n_cols = matrix.shape
     n_binary = n_cols * n_categories
@@ -66,7 +71,25 @@ def _one_hot_encode_categorical(
             binary[:, j * n_categories + k] = (matrix[:, j] == k).astype(int)
     feature_names = [f"F{j}_c{k}" for j in range(n_cols) for k in range(n_categories)]
     data_df = pd.DataFrame(binary, index=sample_names, columns=feature_names)
-    return data_df, n_binary
+    feature_space = infer_feature_space_from_columns(tuple(data_df.columns))
+    return data_df, n_binary, feature_space
+
+
+def _continuous_dataframe_and_metadata(
+    matrix: np.ndarray,
+    sample_names: list[str],
+    feature_names: list[str],
+) -> tuple[pd.DataFrame, FeatureSpace, np.ndarray]:
+    """Return continuous benchmark data with its explicit diagonal Gaussian contract."""
+    continuous_matrix = np.asarray(matrix, dtype=np.float64)
+    data_df = pd.DataFrame(
+        continuous_matrix,
+        index=sample_names,
+        columns=feature_names,
+    )
+    feature_space = continuous_feature_space_from_columns(tuple(data_df.columns))
+    distance_condensed = pdist(continuous_matrix, metric="euclidean")
+    return data_df, feature_space, distance_condensed
 
 
 def _validate_binary_params(test_case: dict) -> Tuple[int, int]:
@@ -161,6 +184,43 @@ def _generate_blobs_case(
     return data_df, y, X_bin, metadata
 
 
+def _generate_blobs_continuous_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Generate Gaussian blobs in continuous coordinates for A/B benchmarking."""
+    n_samples = int(test_case["n_samples"])
+    n_features = int(test_case["n_features"])
+    blobs_result = make_blobs(
+        n_samples=n_samples,
+        n_features=n_features,
+        centers=test_case["n_clusters"],
+        cluster_std=test_case["cluster_std"],
+        random_state=seed,
+    )
+    X: np.ndarray = blobs_result[0]
+    y: np.ndarray = blobs_result[1]
+    data_df, feature_space, distance_condensed = _continuous_dataframe_and_metadata(
+        X,
+        [f"S{j}" for j in range(n_samples)],
+        [f"F{j}" for j in range(n_features)],
+    )
+    metadata = {
+        "n_samples": n_samples,
+        "n_features": n_features,
+        "n_clusters": test_case["n_clusters"],
+        "noise": test_case["cluster_std"],
+        "name": str(test_case["name"]),
+        "generator": "blobs_continuous",
+        "feature_representation": "continuous",
+        "feature_space": feature_space,
+        "distance_metric": "euclidean",
+        "requires_precomputed_kl_distance": True,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": distance_condensed,
+    }
+    return data_df, y, X.astype(float, copy=False), metadata
+
+
 def _generate_blobs_quantile_case(
     test_case: dict, seed: Optional[int]
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
@@ -196,13 +256,18 @@ def _generate_blobs_quantile_case(
     # X_cat now contains category indices 0..n_categories-1
 
     sample_names = [f"S{j}" for j in range(n_samples)]
-    data_df, n_binary = _one_hot_encode_categorical(X_cat, n_categories, sample_names)
+    data_df, n_binary, feature_space = _one_hot_encode_categorical(
+        X_cat,
+        n_categories,
+        sample_names,
+    )
 
     metadata = {
         "n_samples": n_samples,
         "n_features": n_binary,
         "n_features_original": n_features,
         "n_categories": n_categories,
+        "feature_space": feature_space,
         "n_clusters": test_case["n_clusters"],
         "noise": test_case["cluster_std"],
         "name": str(test_case["name"]),
@@ -291,6 +356,59 @@ def _generate_dimensional_gaussian_case(
     return data_df, y, x_binary.astype(float), metadata
 
 
+def _generate_dimensional_gaussian_continuous_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Generate dimensional Gaussian data without median binarization."""
+    n_samples = int(test_case["n_samples"])
+    informative_dims, noise_dims = _resolve_dimensional_feature_counts(test_case)
+    config = DimensionalGaussianConfig(
+        n_samples=n_samples,
+        n_clusters=int(test_case["n_clusters"]),
+        informative_dims=informative_dims,
+        noise_dims=noise_dims,
+        separation=float(test_case["separation"]),
+        informative_std=float(test_case["informative_std"]),
+        noise_std=float(test_case["noise_std"]),
+        informative_corr=float(test_case["informative_corr"]),
+        noise_corr=float(test_case["noise_corr"]),
+        signal_mode=str(test_case["signal_mode"]),
+        balanced_clusters=bool(test_case["balanced_clusters"]),
+        random_seed=seed,
+    )
+
+    x_continuous, y, sim_meta = generate_dimensional_gaussian(config)
+    n_features = int(x_continuous.shape[1])
+    data_df, feature_space, distance_condensed = _continuous_dataframe_and_metadata(
+        x_continuous,
+        [f"S{j}" for j in range(n_samples)],
+        [f"F{j}" for j in range(n_features)],
+    )
+
+    metadata = {
+        "n_samples": n_samples,
+        "n_features": n_features,
+        "n_clusters": int(test_case["n_clusters"]),
+        "noise": float(test_case["noise_std"]),
+        "name": str(test_case["name"]),
+        "generator": "dimensional_gaussian_continuous",
+        "feature_representation": "continuous",
+        "feature_space": feature_space,
+        "distance_metric": "euclidean",
+        "informative_dims": informative_dims,
+        "noise_dims": noise_dims,
+        "separation": float(test_case["separation"]),
+        "informative_corr": float(test_case["informative_corr"]),
+        "noise_corr": float(test_case["noise_corr"]),
+        "signal_mode": str(test_case["signal_mode"]),
+        "requires_precomputed_kl_distance": True,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": distance_condensed,
+        **sim_meta,
+    }
+    return data_df, y, x_continuous.astype(float, copy=False), metadata
+
+
 def _generate_gaussian_outlier_case(
     test_case: dict, seed: Optional[int]
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
@@ -334,6 +452,53 @@ def _generate_gaussian_outlier_case(
         **sim_meta,
     }
     return data_df, y, x_binary.astype(float), metadata
+
+
+def _generate_gaussian_outlier_continuous_case(
+    test_case: dict, seed: Optional[int]
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray, Dict[str, Any]]:
+    """Generate Gaussian outlier data without median binarization."""
+    n_samples = int(test_case["n_samples"])
+    n_features = int(test_case["n_features"])
+    n_inlier_clusters = int(test_case["n_inlier_clusters"])
+
+    config = GaussianOutlierConfig(
+        n_samples=n_samples,
+        n_features=n_features,
+        n_inlier_clusters=n_inlier_clusters,
+        cluster_std=float(test_case["cluster_std"]),
+        outlier_count=int(test_case["outlier_count"]),
+        outlier_distance=float(test_case["outlier_distance"]),
+        outlier_std=float(test_case["outlier_std"]),
+        spatial_mode=str(test_case["outlier_spatial_mode"]),
+        label_mode=str(test_case["outlier_label_mode"]),
+        balanced_clusters=bool(test_case["balanced_clusters"]),
+        random_seed=seed,
+    )
+
+    x_continuous, y, sim_meta = generate_gaussian_outliers(config)
+    data_df, feature_space, distance_condensed = _continuous_dataframe_and_metadata(
+        x_continuous,
+        [f"S{j}" for j in range(n_samples)],
+        [f"F{j}" for j in range(n_features)],
+    )
+    metadata = {
+        "n_samples": n_samples,
+        "n_features": n_features,
+        "n_clusters": int(np.unique(y).size),
+        "n_inlier_clusters": n_inlier_clusters,
+        "noise": float(test_case["outlier_count"]) / float(n_samples),
+        "name": str(test_case["name"]),
+        "generator": "gaussian_outliers_continuous",
+        "feature_representation": "continuous",
+        "feature_space": feature_space,
+        "distance_metric": "euclidean",
+        "requires_precomputed_kl_distance": True,
+        "precomputed_distance_matrix": None,
+        "precomputed_distance_condensed": distance_condensed,
+        **sim_meta,
+    }
+    return data_df, y, x_continuous.astype(float, copy=False), metadata
 
 
 def _generate_sbm_case(
@@ -381,8 +546,10 @@ def _generate_sbm_case(
         sbm_modularity_shifted = sbm_modularity - sbm_modularity.min()
         sbm_modularity_norm = sbm_modularity_shifted / (sbm_modularity_shifted.max() + 1e-10)
         precomputed_distance_matrix = 1.0 - sbm_modularity_norm
+        distance_metric = "sbm_shifted_modularity"
     else:
         precomputed_distance_matrix = 1.0 - adj
+        distance_metric = "sbm_adjacency_complement"
     np.fill_diagonal(precomputed_distance_matrix, 0.0)
 
     precomputed_distance_condensed = squareform(precomputed_distance_matrix)
@@ -394,6 +561,7 @@ def _generate_sbm_case(
         "noise": float(p_inter),
         "name": str(test_case["name"]),
         "generator": "sbm",
+        "distance_metric": distance_metric,
         "adjacency": A,
         "requires_precomputed_kl_distance": True,
         "precomputed_distance_matrix": precomputed_distance_matrix,
@@ -445,7 +613,11 @@ def _generate_categorical_case(
     matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
 
     # One-hot encode: category indices → binary indicators for Bernoulli KL pipeline
-    data_df, n_binary = _one_hot_encode_categorical(matrix, n_categories, original_names)
+    data_df, n_binary, feature_space = _one_hot_encode_categorical(
+        matrix,
+        n_categories,
+        original_names,
+    )
     true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
     metadata = {
@@ -453,6 +625,7 @@ def _generate_categorical_case(
         "n_features": n_binary,
         "n_features_original": n_features,
         "n_categories": n_categories,
+        "feature_space": feature_space,
         "n_clusters": test_case["n_clusters"],
         "noise": entropy,
         "name": str(test_case["name"]),
@@ -498,7 +671,11 @@ def _generate_phylogenetic_case(
     matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
 
     # One-hot encode: category indices → binary indicators for Bernoulli KL pipeline
-    data_df, n_binary = _one_hot_encode_categorical(matrix, n_categories, original_names)
+    data_df, n_binary, feature_space = _one_hot_encode_categorical(
+        matrix,
+        n_categories,
+        original_names,
+    )
     true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
     metadata = {
@@ -506,6 +683,7 @@ def _generate_phylogenetic_case(
         "n_features": n_binary,
         "n_features_original": n_features,
         "n_categories": n_categories,
+        "feature_space": feature_space,
         "n_clusters": n_taxa,
         "n_taxa": n_taxa,
         "samples_per_taxon": samples_per_taxon,
@@ -557,7 +735,11 @@ def _generate_temporal_evolution_case(
     matrix = np.array([sample_dict[name] for name in original_names], dtype=int)
 
     # One-hot encode: category indices → binary indicators for Bernoulli KL pipeline
-    data_df, n_binary = _one_hot_encode_categorical(matrix, n_categories, original_names)
+    data_df, n_binary, feature_space = _one_hot_encode_categorical(
+        matrix,
+        n_categories,
+        original_names,
+    )
     true_labels = np.array([cluster_assignments[name] for name in original_names], dtype=int)
 
     metadata = {
@@ -565,6 +747,7 @@ def _generate_temporal_evolution_case(
         "n_features": n_binary,
         "n_features_original": n_features,
         "n_categories": n_categories,
+        "feature_space": feature_space,
         "n_clusters": n_time_points,
         "n_time_points": n_time_points,
         "samples_per_time": samples_per_time,
@@ -644,12 +827,18 @@ def generate_case_data(
         data_df, y, x_original, metadata = _generate_binary_case(test_case, seed)
     elif generator == "blobs":
         data_df, y, x_original, metadata = _generate_blobs_case(test_case, seed)
+    elif generator == "blobs_continuous":
+        data_df, y, x_original, metadata = _generate_blobs_continuous_case(test_case, seed)
     elif generator == "blobs_quantile":
         data_df, y, x_original, metadata = _generate_blobs_quantile_case(test_case, seed)
     elif generator == "dimensional_gaussian":
         data_df, y, x_original, metadata = _generate_dimensional_gaussian_case(test_case, seed)
+    elif generator == "dimensional_gaussian_continuous":
+        data_df, y, x_original, metadata = _generate_dimensional_gaussian_continuous_case(test_case, seed)
     elif generator == "gaussian_outliers":
         data_df, y, x_original, metadata = _generate_gaussian_outlier_case(test_case, seed)
+    elif generator == "gaussian_outliers_continuous":
+        data_df, y, x_original, metadata = _generate_gaussian_outlier_continuous_case(test_case, seed)
     elif generator == "sbm":
         data_df, y, x_original, metadata = _generate_sbm_case(test_case, seed)
     elif generator == "categorical":

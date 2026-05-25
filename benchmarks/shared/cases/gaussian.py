@@ -128,3 +128,26 @@ GAUSSIAN_CASES = {
         },
     ],
 }
+
+
+def _continuous_gaussian_variant(case: dict) -> dict:
+    """Return the continuous-coordinate A/B companion for a median-binary case."""
+    variant = case.copy()
+    variant["name"] = f"{case['name']}_continuous"
+    variant["generator"] = "blobs_continuous"
+    variant["baseline_case_name"] = case["name"]
+    return variant
+
+
+GAUSSIAN_CASES["gaussian_extreme_noise_continuous"] = [
+    _continuous_gaussian_variant(case)
+    for case in GAUSSIAN_CASES["gaussian_extreme_noise"]
+]
+GAUSSIAN_CASES["improved_gaussian_continuous"] = [
+    _continuous_gaussian_variant(case)
+    for case in GAUSSIAN_CASES["improved_gaussian"]
+]
+GAUSSIAN_CASES["gaussian_null_continuous"] = [
+    _continuous_gaussian_variant(case)
+    for case in GAUSSIAN_CASES["gaussian_null"]
+]

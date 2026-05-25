@@ -17,8 +17,32 @@ from benchmarks.shared.util.decomposition import _create_report_dataframe_from_l
 from scipy.spatial.distance import pdist
 
 
+KL_TREE_DISTANCE_SOURCE_KEY = "tree_distance_source"
+KL_TREE_DISTANCE_SOURCE_FEATURE_METRIC = "feature_metric"
+KL_TREE_DISTANCE_SOURCE_PRECOMPUTED = "precomputed"
+
+
 def _slugify(value: str) -> str:
     return "".join(ch if ch.isalnum() or ch in "-_." else "_" for ch in value)
+
+
+def _require_precomputed_kl_distance_metric(
+    *,
+    meta: dict[str, object],
+    case_name: str,
+) -> str:
+    """Return the named metric/source for a required precomputed KL distance."""
+    if "distance_metric" not in meta:
+        raise ValueError(
+            f"Case '{case_name}' requires precomputed KL distance metadata but "
+            "does not define 'distance_metric'."
+        )
+    distance_metric = str(meta["distance_metric"])
+    if not distance_metric:
+        raise ValueError(
+            f"Case '{case_name}' requires non-empty precomputed KL distance metadata."
+        )
+    return distance_metric
 
 
 def _report_for_metric_evaluation(
@@ -55,6 +79,47 @@ def _report_for_metric_evaluation(
     )
 
 
+def _build_method_failure_row(
+    *,
+    method_id: str,
+    recorded_run_params: dict[str, object],
+    case_idx: int,
+    case_name: str,
+    meta: dict[str, object],
+    error: Exception,
+) -> BenchmarkResultRow:
+    """Represent a method runtime failure as a benchmark skip row."""
+    return build_benchmark_result_row(
+        test_case=case_idx,
+        case_id=case_name,
+        case_category=meta["category"],
+        method=method_id,
+        run_params=recorded_run_params,
+        true_clusters=int(meta["n_clusters"]),
+        found_clusters=0,
+        samples=int(meta["n_samples"]),
+        features=int(meta["n_features"]),
+        noise=float(meta["noise"]),
+        ari=np.nan,
+        nmi=np.nan,
+        purity=np.nan,
+        macro_recall=np.nan,
+        macro_f1=np.nan,
+        worst_cluster_recall=np.nan,
+        outlier_precision=np.nan,
+        outlier_recall=np.nan,
+        outlier_f1=np.nan,
+        singleton_outlier_isolated=np.nan,
+        grouped_outlier_cluster_recovered=np.nan,
+        cluster_count_abs_error=np.nan,
+        over_split=np.nan,
+        under_split=np.nan,
+        status="skip",
+        skip_reason=str(error),
+        labels_length=0,
+    )
+
+
 def run_single_method_once(
     *,
     method_id: str,
@@ -81,7 +146,9 @@ def run_single_method_once(
             run_params["n_clusters"] = int(meta["n_clusters"])
 
     meta_run = meta.copy()
+    feature_space = meta.get("feature_space")
     distance_condensed_for_run = None
+    recorded_run_params = dict(run_params)
     if method_id in {"kl", "kl_complete", "kl_single"}:
         metric = str(run_params["tree_distance_metric"])
         requires_precomputed_kl_distance = bool(meta["requires_precomputed_kl_distance"])
@@ -92,6 +159,13 @@ def run_single_method_once(
                     "'precomputed_distance_condensed' for KL but it is missing."
                 )
             distance_condensed_for_run = distance_condensed
+            recorded_run_params["tree_distance_metric"] = _require_precomputed_kl_distance_metric(
+                meta=meta,
+                case_name=str(meta["name"]),
+            )
+            recorded_run_params[KL_TREE_DISTANCE_SOURCE_KEY] = (
+                KL_TREE_DISTANCE_SOURCE_PRECOMPUTED
+            )
         elif precomputed_distance_condensed is not None:
             if distance_condensed is None:
                 raise ValueError(
@@ -99,18 +173,44 @@ def run_single_method_once(
                     "'precomputed_distance_condensed' but it was not loaded."
                 )
             distance_condensed_for_run = distance_condensed
+            recorded_run_params["tree_distance_metric"] = _require_precomputed_kl_distance_metric(
+                meta=meta,
+                case_name=str(meta["name"]),
+            )
+            recorded_run_params[KL_TREE_DISTANCE_SOURCE_KEY] = (
+                KL_TREE_DISTANCE_SOURCE_PRECOMPUTED
+            )
         else:
             distance_condensed_for_run = pdist(data_t.values, metric=metric)
+            recorded_run_params["tree_distance_metric"] = metric
+            recorded_run_params[KL_TREE_DISTANCE_SOURCE_KEY] = (
+                KL_TREE_DISTANCE_SOURCE_FEATURE_METRIC
+            )
 
-    result = run_clustering_result(
-        data_df=data_t,
-        method_id=method_id,
-        params=run_params,
-        seed=tc_seed,
-        significance_level=significance_level,
-        distance_matrix=distance_matrix,
-        distance_condensed=distance_condensed_for_run,
-    )
+    try:
+        result = run_clustering_result(
+            data_df=data_t,
+            method_id=method_id,
+            params=run_params,
+            seed=tc_seed,
+            significance_level=significance_level,
+            distance_matrix=distance_matrix,
+            distance_condensed=distance_condensed_for_run,
+            feature_space=feature_space,
+        )
+    except Exception as exc:
+        return (
+            _build_method_failure_row(
+                method_id=method_id,
+                recorded_run_params=recorded_run_params,
+                case_idx=case_idx,
+                case_name=case_name,
+                meta=meta,
+                error=exc,
+            ),
+            None,
+            None,
+        )
 
     true_clusters_raw = meta["n_clusters"]
     true_clusters = int(true_clusters_raw)
@@ -155,7 +255,7 @@ def run_single_method_once(
         case_id=case_name,
         case_category=meta["category"],
         method=method_id,
-        run_params=run_params,
+        run_params=recorded_run_params,
         true_clusters=true_clusters,
         found_clusters=found_clusters,
         samples=meta["n_samples"],
@@ -187,7 +287,7 @@ def run_single_method_once(
             test_case_num=case_idx,
             method=method_id,
             method_name=spec.name,
-            params=run_params,
+            params=recorded_run_params,
             ari=float(ari) if np.isfinite(ari) else np.nan,
             nmi=float(nmi) if np.isfinite(nmi) else np.nan,
             purity=float(purity) if np.isfinite(purity) else np.nan,

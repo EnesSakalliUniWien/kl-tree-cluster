@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from benchmarks.shared.runners.kl_runner import _run_kl_on_distance
 from benchmarks.shared.types import MethodRunResult
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from scipy.linalg import eigh
 from scipy.spatial.distance import pdist
 
@@ -219,9 +220,11 @@ def _build_adaptive_diffusion_distance(
 
 def _run_kl_diffusion_method(
     data_df: pd.DataFrame,
-    significance_level: float,
+    sibling_significance_level: float,
     k_neighbors: int,
     diffusion_time: int,
+    *,
+    feature_space: FeatureSpace | None = None,
 ) -> MethodRunResult:
     """Run KL decomposition on a diffusion-distance HAC tree."""
 
@@ -235,20 +238,23 @@ def _run_kl_diffusion_method(
     return _run_kl_on_distance(
         data_df,
         diff_dist,
-        significance_level,
+        sibling_significance_level,
         tree_linkage_method="average",
+        feature_space=feature_space,
     )
 
 
 def _run_kl_diffusion_adaptive_method(
     data_df: pd.DataFrame,
-    significance_level: float,
+    sibling_significance_level: float,
     k_neighbors: int,
     diffusion_time: int,
     n_components: int,
     metric: str,
     bandwidth_type: str | float | None,
     epsilon: str | float,
+    *,
+    feature_space: FeatureSpace | None = None,
 ) -> MethodRunResult:
     """Run KL decomposition on an adaptive variable-bandwidth diffusion tree."""
     diff_dist, adaptive_metadata = _build_adaptive_diffusion_distance(
@@ -265,7 +271,8 @@ def _run_kl_diffusion_adaptive_method(
     return _run_kl_on_distance(
         data_df,
         diff_dist,
-        significance_level,
+        sibling_significance_level,
         tree_linkage_method="average",
+        feature_space=feature_space,
         extra={"adaptive_diffusion": adaptive_metadata},
     )
