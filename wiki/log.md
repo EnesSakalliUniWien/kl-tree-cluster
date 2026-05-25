@@ -105,6 +105,11 @@ verification, and maintenance events here in chronological order.
   that the draft is methods-coherent but cannot make a biological application
   claim until one real-data track has a locked manifest, outputs, figures, and
   interpretation table.
+- Added [[open-mathematical-questions]] as the consolidated method backlog from
+  the conversation and current manuscript/wiki gap markers. It separates
+  calibration hierarchy, external conditional nulls, projected-Wald/PCA
+  assumptions, feature-space covariance, sibling FDR, traversal, recoverability,
+  and manuscript-evidence questions.
 
 ## Evidence
 

@@ -73,6 +73,9 @@ renamed, or promoted.
 
 ### Questions
 
+- [[open-mathematical-questions]] - consolidated mathematical backlog for
+  calibration, projection, feature-space covariance, FDR, traversal, hierarchy
+  recoverability, and manuscript evidence gaps.
 - [[generated-index]] - when to replace hand-maintained `wiki/index.md` with a
   generated index.
 - [[markdown-validation]] - whether to add markdownlint or remark validation
