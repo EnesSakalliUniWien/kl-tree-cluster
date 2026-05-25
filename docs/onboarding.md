@@ -41,6 +41,7 @@ short: follow it before opening deep implementation directories.
 | User-facing real-data commands | `scripts/analysis/` |
 | Canonical tracked input matrices | `data/feature_matrices/` |
 | External reference tables | `data/reference/` |
+| Curated evidence snapshots from generated outputs | `raw/assets/` |
 | Durable project memory and open questions | `wiki/` |
 | Paper draft and derivation notes | `manuscript/` |
 | Local-only/generated work | `local_data/`, root `analysis/`, `benchmarks/results/`, `reports/` |
@@ -48,6 +49,8 @@ short: follow it before opening deep implementation directories.
 ## Do Not Start Here
 
 - `benchmarks/results/`: generated outputs and historical run products.
+- `raw/assets/benchmark-results/`: small promoted evidence snapshots cited by
+  wiki or analysis notes.
 - `manuscript/build/`: build output.
 - root `analysis/`: ignored local analysis workspace if present.
 - hidden tool directories such as `.venv/`, `.pytest_cache/`, `.ruff_cache/`,

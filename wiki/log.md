@@ -95,6 +95,11 @@ verification, and maintenance events here in chronological order.
   `oracle/`, `calibration/`, `failure/`, and `analysis/`. Updated imports,
   tests, benchmark docs, and the oracle gate-path wiki evidence paths without
   keeping old-path compatibility wrappers.
+- Removed local workspace clutter from the repository root by moving large
+  ignored artifacts to `/Users/berksakalli/Projects/kl-te-cluster-local-artifacts`
+  and deleting cache/build products. Promoted only the small benchmark CSV/MD
+  files cited by wiki or diagnostic notes into `raw/assets/benchmark-results/`
+  so evidence paths remain durable without restoring `benchmarks/results/`.
 
 ## Evidence
 

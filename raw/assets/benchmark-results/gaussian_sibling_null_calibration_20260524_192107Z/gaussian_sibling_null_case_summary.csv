@@ -1,0 +1,3 @@
+case_id,n_targets,n_continuous_fixed_subspace,n_noncontinuous_z_proxy,median_current_empirical_inflation_factor,median_external_mean_over_reference,n_external_blocks_at_alpha,min_external_empirical_tail_p_value
+gauss_extreme_noise_highd,1,0,1,7131.425,0.9988538821155152,0,1.999960000799984e-05
+gauss_extreme_noise_highd_continuous,1,1,0,14608.333333333334,1.0005109066753761,0,1.999960000799984e-05

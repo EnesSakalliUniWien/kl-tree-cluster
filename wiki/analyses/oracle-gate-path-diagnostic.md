@@ -11,13 +11,13 @@ sources:
   - benchmarks/diagnostics/oracle/run_oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/run_gate_path_trace.py
   - benchmarks/diagnostics/calibration/run_sibling_inflation_diagnostic.py
-  - benchmarks/results/oracle_tree_recoverability_20260524_155532Z/oracle_tree_recoverability.csv
-  - benchmarks/results/gate_path_trace_20260524_155551Z/gate_path_trace.csv
-  - benchmarks/results/gate_path_trace_20260524_155551Z/gate_path_trace_summary.csv
-  - benchmarks/results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_targets.csv
-  - benchmarks/results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_summary.csv
-  - benchmarks/results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_targets.csv
-  - benchmarks/results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_summary.csv
+  - raw/assets/benchmark-results/oracle_tree_recoverability_20260524_155532Z/oracle_tree_recoverability.csv
+  - raw/assets/benchmark-results/gate_path_trace_20260524_155551Z/gate_path_trace.csv
+  - raw/assets/benchmark-results/gate_path_trace_20260524_155551Z/gate_path_trace_summary.csv
+  - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_targets.csv
+  - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_summary.csv
+  - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_targets.csv
+  - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_summary.csv
   - kl_clustering_analysis/config.py
   - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
   - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
@@ -595,40 +595,40 @@ partition.
 - `benchmarks/shared/kl_tree_context.py` centralizes the benchmark KL tree
   construction contract so oracle and trace diagnostics use the same distance
   and linkage path.
-- `benchmarks/results/oracle_tree_recoverability_20260524_155532Z/oracle_tree_recoverability.csv`
+- `raw/assets/benchmark-results/oracle_tree_recoverability_20260524_155532Z/oracle_tree_recoverability.csv`
   records the corrected five-way classification for the full KL benchmark.
-- `benchmarks/results/gate_path_trace_20260524_155551Z/gate_path_trace.csv`
+- `raw/assets/benchmark-results/gate_path_trace_20260524_155551Z/gate_path_trace.csv`
   records the node-level gate evidence for the twelve true gate/stopping
   failures.
-- `benchmarks/results/gate_path_trace_20260524_155551Z/gate_path_trace_summary.csv`
+- `raw/assets/benchmark-results/gate_path_trace_20260524_155551Z/gate_path_trace_summary.csv`
   records the case-level trace counts: under-split blocker counts, direct
   oracle-boundary splits, and fragmentation inside oracle boundaries.
-- `benchmarks/results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_targets.csv`
+- `raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_targets.csv`
   records current, leave-one-out, strict-null, and blocked-or-null-like
   estimates for focal sibling tests.
-- `benchmarks/results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_summary.csv`
+- `raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_summary.csv`
   records case-level counts of inflation blocking, FDR blocking, and
   unavailable strict-null calibration.
-- `benchmarks/results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_targets.csv`
+- `raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_targets.csv`
   records the calibration-support status and required action for the two
   high-dimensional Gaussian blockers.
-- `benchmarks/results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_summary.csv`
+- `raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_summary.csv`
   records case-level support counts for the high-dimensional Gaussian
   calibration-support check.
-- `benchmarks/results/gaussian_sibling_null_calibration_20260524_192107Z/gaussian_sibling_null_targets.csv`
+- `raw/assets/benchmark-results/gaussian_sibling_null_calibration_20260524_192107Z/gaussian_sibling_null_targets.csv`
   records that the fixed-subspace Gaussian mean ratio is approximately one
   for both high-dimensional Gaussian blockers, while the runtime empirical
   inflation factors remain in the thousands.
-- `benchmarks/results/gaussian_sibling_null_calibration_20260524_192107Z/gaussian_sibling_null_case_summary.csv`
+- `raw/assets/benchmark-results/gaussian_sibling_null_calibration_20260524_192107Z/gaussian_sibling_null_case_summary.csv`
   records the case-level external-null summary for the two blocker contexts.
-- `benchmarks/results/selection_conditioned_sibling_null_20260524_200829Z/selection_conditioned_sibling_null_targets.csv`
+- `raw/assets/benchmark-results/selection_conditioned_sibling_null_20260524_200829Z/selection_conditioned_sibling_null_targets.csv`
   records that local edge-gate conditioning raises \(c\) only to about
   2.8--3.4 for the two high-dimensional Gaussian blockers.
-- `benchmarks/results/selection_conditioned_sibling_null_20260524_200829Z/selection_conditioned_sibling_null_case_summary.csv`
+- `raw/assets/benchmark-results/selection_conditioned_sibling_null_20260524_200829Z/selection_conditioned_sibling_null_case_summary.csv`
   records acceptance rates near `EDGE_ALPHA = 0.001` and confirms that the
   selection-conditioned diagnostic does not block either target at
   `SIBLING_ALPHA`.
-- `benchmarks/results/tree_bh_selection_conditioned_sibling_null_20260524_215606Z/tree_bh_selection_conditioned_sibling_null_targets.csv`
+- `raw/assets/benchmark-results/tree_bh_selection_conditioned_sibling_null_20260524_215606Z/tree_bh_selection_conditioned_sibling_null_targets.csv`
   records the fixed-tree root Tree-BH selection diagnostic and the unsupported
   production calibration status for the two high-dimensional Gaussian
   blockers.

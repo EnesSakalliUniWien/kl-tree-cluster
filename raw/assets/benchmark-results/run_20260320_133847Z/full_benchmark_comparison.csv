@@ -1,0 +1,991 @@
+test_case,case_id,Case_Category,method,Params,true_clusters,found_clusters,Samples,Features,Noise,ari,NMI,Purity,Macro_Recall,Macro_F1,Worst_Cluster_Recall,Cluster_Count_Abs_Error,Over_Split,Under_Split,Status,Skip_Reason,Labels_Length
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,2,30,30,5.0,0.5538461538461539,0.7336804366512115,0.5793801642856955,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,2,30,30,5.0,0.5538461538461539,0.7336804366512115,0.5793801642856955,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,2,30,30,5.0,0.5538461538461539,0.7336804366512115,0.5793801642856955,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,leiden,"n_neighbors=None, resolution=1.0",3,3,30,30,5.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,louvain,"n_neighbors=None, resolution=1.0",3,3,30,30,5.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,kmeans,"n_clusters=3, n_init=10",3,3,30,30,5.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,30,30,5.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,dbscan,"eps=None, min_samples=5",3,3,30,30,5.0,0.8981703936425799,0.8996935451597475,0.8983263672602777,0.9666666666666667,0.9665831244778612,0.9,0.0,0.0,0.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,3,30,30,5.0,0.7941684250911184,0.8276550383443085,0.8983263672602777,0.9666666666666667,0.9665831244778612,0.9,0.0,0.0,0.0,ok,,30
+1,gauss_extreme_noise_3c,gaussian_extreme_noise,hdbscan,"min_cluster_size=5, min_samples=None",3,2,30,30,5.0,0.46177422101140814,0.603814377868065,0.5634426190186324,0.7666666666666666,0.7531792444073145,0.4,1.0,0.0,1.0,ok,,30
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,26,40,20000,7.5,0.11484823625922888,0.6040536748033108,1.0,1.0,1.0,1.0,22.0,1.0,0.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,26,40,20000,7.5,0.11484823625922888,0.6040536748033108,1.0,1.0,1.0,1.0,22.0,1.0,0.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,40,20000,7.5,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,leiden,"n_neighbors=None, resolution=1.0",4,4,40,20000,7.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,louvain,"n_neighbors=None, resolution=1.0",4,4,40,20000,7.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,kmeans,"n_clusters=4, n_init=10",4,4,40,20000,7.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,40,20000,7.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,dbscan,"eps=None, min_samples=5",4,4,40,20000,7.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,40,20000,7.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+2,gauss_extreme_noise_highd,gaussian_extreme_noise,hdbscan,"min_cluster_size=5, min_samples=None",4,4,40,20000,7.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+3,gauss_extreme_noise_many,gaussian_extreme_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",30,30,300,2000,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",30,30,300,2000,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",30,30,300,2000,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,leiden,"n_neighbors=None, resolution=1.0",30,20,300,2000,2.0,0.6988371028294112,0.9241577226946701,0.8590085574712816,0.6666666666666666,0.5611111111111111,0.0,10.0,0.0,1.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,louvain,"n_neighbors=None, resolution=1.0",30,20,300,2000,2.0,0.6988371028294112,0.9241577226946701,0.8590085574712816,0.6666666666666666,0.5611111111111111,0.0,10.0,0.0,1.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,kmeans,"n_clusters=30, n_init=10",30,30,300,2000,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=30, n_neighbors=None",30,30,300,2000,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,dbscan,"eps=None, min_samples=5",30,29,300,2000,2.0,0.829024438666757,0.9516323810275517,0.9447053051775917,0.9366666666666666,0.946864112266589,0.6,1.0,0.0,1.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",30,30,300,2000,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+3,gauss_extreme_noise_many,gaussian_extreme_noise,hdbscan,"min_cluster_size=5, min_samples=None",30,30,300,2000,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+4,gauss_clear_small,improved_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,leiden,"n_neighbors=None, resolution=1.0",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,louvain,"n_neighbors=None, resolution=1.0",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,kmeans,"n_clusters=3, n_init=10",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,dbscan,"eps=None, min_samples=5",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+4,gauss_clear_small,improved_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",3,3,30,20,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,30
+5,gauss_clear_medium,improved_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,60,40,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,60,40,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,60,40,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,leiden,"n_neighbors=None, resolution=1.0",4,4,60,40,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,louvain,"n_neighbors=None, resolution=1.0",4,4,60,40,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,kmeans,"n_clusters=4, n_init=10",4,4,60,40,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,60,40,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,dbscan,"eps=None, min_samples=5",4,4,60,40,0.6,0.9421000981354269,0.9568274608770692,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,60,40,0.6,0.9083850931677019,0.9413541300285139,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+5,gauss_clear_medium,improved_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",4,4,60,40,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+6,gauss_clear_large,improved_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",5,5,100,80,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+6,gauss_clear_large,improved_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",5,5,100,80,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+6,gauss_clear_large,improved_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",5,5,100,80,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+6,gauss_clear_large,improved_gaussian,leiden,"n_neighbors=None, resolution=1.0",5,5,100,80,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+6,gauss_clear_large,improved_gaussian,louvain,"n_neighbors=None, resolution=1.0",5,5,100,80,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+6,gauss_clear_large,improved_gaussian,kmeans,"n_clusters=5, n_init=10",5,5,100,80,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+6,gauss_clear_large,improved_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=5, n_neighbors=None",5,5,100,80,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+6,gauss_clear_large,improved_gaussian,dbscan,"eps=None, min_samples=5",5,4,100,80,0.7,0.8968959396349012,0.9084676059057913,0.9069715459013454,0.96,0.9610354557722978,0.9,1.0,0.0,1.0,ok,,100
+6,gauss_clear_large,improved_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",5,5,100,80,0.7,0.7985557785983928,0.876990064973524,0.9144870630426678,0.9099999999999999,0.9052007899934168,0.55,0.0,0.0,0.0,ok,,100
+6,gauss_clear_large,improved_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",5,5,100,80,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+7,gauss_moderate_3c,improved_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,3,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,3,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,leiden,"n_neighbors=None, resolution=1.0",3,3,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,louvain,"n_neighbors=None, resolution=1.0",3,3,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,kmeans,"n_clusters=3, n_init=10",3,3,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,dbscan,"eps=None, min_samples=5",3,2,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,1.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,4,45,30,1.2,0.832023355041545,0.8693261859675724,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,45
+7,gauss_moderate_3c,improved_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",3,3,45,30,1.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,45
+8,gauss_moderate_5c,improved_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",5,5,75,50,1.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",5,5,75,50,1.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",5,5,75,50,1.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,leiden,"n_neighbors=None, resolution=1.0",5,5,75,50,1.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,louvain,"n_neighbors=None, resolution=1.0",5,5,75,50,1.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,kmeans,"n_clusters=5, n_init=10",5,5,75,50,1.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=5, n_neighbors=None",5,5,75,50,1.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,dbscan,"eps=None, min_samples=5",5,4,75,50,1.5,0.9054782855520863,0.9351520577865824,0.9328121393857491,0.96,0.9595959595959596,0.8,1.0,0.0,1.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",5,5,75,50,1.5,0.9339678762641285,0.9598618726441063,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+8,gauss_moderate_5c,improved_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",5,5,75,50,1.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,75
+9,gauss_noisy_3c,improved_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,leiden,"n_neighbors=None, resolution=1.0",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,louvain,"n_neighbors=None, resolution=1.0",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,kmeans,"n_clusters=3, n_init=10",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,dbscan,"eps=None, min_samples=5",3,3,60,40,2.5,0.9146782357194505,0.9294420403048248,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+9,gauss_noisy_3c,improved_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",3,3,60,40,2.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+10,gauss_noisy_many,improved_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,120,80,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,7,120,80,2.0,0.864,0.9565217391304347,0.9166666666666666,0.875,0.8333333333333333,0.0,1.0,0.0,1.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,120,80,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,leiden,"n_neighbors=None, resolution=1.0",8,8,120,80,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,louvain,"n_neighbors=None, resolution=1.0",8,8,120,80,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,kmeans,"n_clusters=8, n_init=10",8,8,120,80,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,120,80,2.0,0.8850645359557467,0.9489982315603064,0.9404484276244902,0.9333333333333333,0.9282296650717703,0.4666666666666667,0.0,0.0,0.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,dbscan,"eps=None, min_samples=5",8,8,120,80,2.0,0.9801601674111634,0.9827055084270336,0.9944444444444445,0.9916666666666667,0.9916573971078977,0.9333333333333333,0.0,0.0,0.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,9,120,80,2.0,0.7618629524683721,0.8810318582521912,0.9021861012055532,0.8916666666666666,0.8917547568710359,0.4666666666666667,1.0,1.0,0.0,ok,,120
+10,gauss_noisy_many,improved_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",8,8,120,80,2.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+11,gauss_null_small,gaussian_null,kl,"tree_distance_metric=hamming, tree_linkage_method=average",1,1,60,30,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",1,1,60,30,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",1,1,60,30,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,leiden,"n_neighbors=None, resolution=1.0",1,5,60,30,1.0,0.0,0.0,1.0,1.0,1.0,1.0,4.0,1.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,louvain,"n_neighbors=None, resolution=1.0",1,5,60,30,1.0,0.0,0.0,1.0,1.0,1.0,1.0,4.0,1.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,kmeans,"n_clusters=1, n_init=10",1,1,60,30,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=1, n_neighbors=None",1,1,60,30,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,dbscan,"eps=None, min_samples=5",1,1,60,30,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,optics,"min_cluster_size=5, min_samples=5, xi=0.05",1,1,60,30,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+11,gauss_null_small,gaussian_null,hdbscan,"min_cluster_size=5, min_samples=None",1,3,60,30,1.0,0.0,0.0,1.0,1.0,1.0,1.0,2.0,1.0,0.0,ok,,60
+12,gauss_null_large,gaussian_null,kl,"tree_distance_metric=hamming, tree_linkage_method=average",1,1,200,80,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",1,1,200,80,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",1,1,200,80,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,leiden,"n_neighbors=None, resolution=1.0",1,8,200,80,1.0,0.0,0.0,1.0,1.0,1.0,1.0,7.0,1.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,louvain,"n_neighbors=None, resolution=1.0",1,9,200,80,1.0,0.0,0.0,1.0,1.0,1.0,1.0,8.0,1.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,kmeans,"n_clusters=1, n_init=10",1,1,200,80,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=1, n_neighbors=None",1,1,200,80,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,dbscan,"eps=None, min_samples=5",1,1,200,80,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,optics,"min_cluster_size=5, min_samples=5, xi=0.05",1,1,200,80,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+12,gauss_null_large,gaussian_null,hdbscan,"min_cluster_size=5, min_samples=None",1,2,200,80,1.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,200
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,160,24,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,160,24,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,160,24,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,leiden,"n_neighbors=None, resolution=1.0",4,5,160,24,1.0,0.6237602387453172,0.6147136466682688,0.6574857264971082,0.85,0.8497181447787018,0.7,1.0,1.0,0.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,louvain,"n_neighbors=None, resolution=1.0",4,5,160,24,1.0,0.5835009557601729,0.5682357644168315,0.6010648786989642,0.825,0.8234490426654606,0.65,1.0,1.0,0.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,kmeans,"n_clusters=4, n_init=10",4,4,160,24,1.0,0.7033335314041238,0.6929046901515762,0.6886349625198281,0.88125,0.8802351954613035,0.725,0.0,0.0,0.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,160,24,1.0,0.6393779483489246,0.6069060486046889,0.6062210286671135,0.85,0.8489945548674688,0.775,0.0,0.0,0.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,dbscan,"eps=None, min_samples=5",4,1,160,24,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,3,160,24,1.0,0.04164773023595413,0.2508941399952222,0.18324503243006457,0.425,0.3915315950199671,0.125,1.0,0.0,1.0,ok,,160
+13,dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,hdbscan,"min_cluster_size=5, min_samples=None",4,3,160,24,1.0,0.005588822355289421,0.09887683367875263,0.06782073955621774,0.31875,0.2514662841758328,0.025,1.0,0.0,1.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,160,72,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,160,72,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,160,72,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,leiden,"n_neighbors=None, resolution=1.0",4,6,160,72,1.0,0.07605888429752067,0.15303039901584076,0.16995733923097261,0.4625,0.46803950419118956,0.375,2.0,1.0,0.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,louvain,"n_neighbors=None, resolution=1.0",4,6,160,72,1.0,0.07721021118821554,0.15074502452462635,0.16364421161305867,0.47500000000000003,0.4817076879409618,0.325,2.0,1.0,0.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,kmeans,"n_clusters=4, n_init=10",4,4,160,72,1.0,0.021198211624441132,0.045091016752569296,0.044890775638793345,0.35624999999999996,0.353781512605042,0.25,0.0,0.0,0.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,160,72,1.0,0.06480315233594101,0.10908245920752613,0.10660891390740558,0.4375,0.44549099836333883,0.375,0.0,0.0,0.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,dbscan,"eps=None, min_samples=5",4,1,160,72,1.0,-0.0007357621752106016,0.002852017024487374,0.001590505692581391,0.25625,0.12225459435230839,0.0,3.0,0.0,1.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,160,72,1.0,0.001016839860122517,0.026117776066311358,0.014565295772910321,0.275,0.14657104437471985,0.0,3.0,0.0,1.0,ok,,160
+14,dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,hdbscan,"min_cluster_size=5, min_samples=None",4,3,160,72,1.0,0.007522141982834703,0.09819108890513724,0.06950555584551565,0.325,0.2569334552002619,0.025,1.0,0.0,1.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,160,272,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,160,272,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,160,272,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,leiden,"n_neighbors=None, resolution=1.0",4,3,160,272,1.0,-0.006101694915254237,0.008204395860619369,0.00701181399176183,0.29375,0.23636363636363636,0.0,1.0,0.0,1.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,louvain,"n_neighbors=None, resolution=1.0",4,4,160,272,1.0,-0.002071437145257815,0.03828052518682313,0.03438743456166148,0.33125,0.30439329369934953,0.125,0.0,0.0,0.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,kmeans,"n_clusters=4, n_init=10",4,4,160,272,1.0,0.03249202882470422,0.06724794582500598,0.06621266592396224,0.38125,0.3861724404093205,0.35,0.0,0.0,0.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,160,272,1.0,0.011533175702703881,0.03138726819844949,0.031190813886284266,0.325,0.32012136414310327,0.2,0.0,0.0,0.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,dbscan,"eps=None, min_samples=5",4,1,160,272,1.0,0.005975601985259238,0.025151467632185908,0.01631057643335846,0.30000000000000004,0.19182136131288674,0.0,3.0,0.0,1.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,160,272,1.0,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,160
+15,dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,hdbscan,"min_cluster_size=5, min_samples=None",4,10,160,272,1.0,0.023029261618048833,0.16566016899560765,0.2065070749901906,0.4375,0.43165792540792536,0.3,6.0,1.0,0.0,ok,,160
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,1,180,36,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,1,180,36,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,1,180,36,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,leiden,"n_neighbors=None, resolution=1.0",6,7,180,36,1.0,0.042395158848654246,0.14615037175882278,0.14969940172339147,0.3055555555555555,0.310366919092395,0.23333333333333334,1.0,1.0,0.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,louvain,"n_neighbors=None, resolution=1.0",6,6,180,36,1.0,0.05233133069632062,0.14795146449491553,0.1433368367664768,0.3166666666666667,0.31645711814330485,0.2,0.0,0.0,0.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,kmeans,"n_clusters=6, n_init=10",6,6,180,36,1.0,0.037742213607385826,0.10088166122037764,0.10037042700652207,0.2722222222222222,0.27187694216161057,0.13333333333333333,0.0,0.0,0.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,180,36,1.0,0.10847465156858922,0.18442280953376072,0.18219291187349604,0.4055555555555555,0.3962988002838929,0.2,0.0,0.0,0.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,dbscan,"eps=None, min_samples=5",6,1,180,36,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,2,180,36,1.0,0.004985404141751422,0.06567365736372037,0.04118534955772502,0.21666666666666667,0.13813745356298548,0.0,4.0,0.0,1.0,ok,,180
+16,dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,hdbscan,"min_cluster_size=5, min_samples=None",6,2,180,36,1.0,0.005128017325494654,0.06124764336417584,0.037356653967664855,0.21666666666666667,0.11623175923309155,0.0,4.0,0.0,1.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,1,180,136,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,1,180,136,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,1,180,136,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,leiden,"n_neighbors=None, resolution=1.0",6,4,180,136,1.0,0.0037158799457293838,0.03525117943553784,0.0306519062928256,0.2333333333333333,0.18323875861515493,0.0,2.0,0.0,1.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,louvain,"n_neighbors=None, resolution=1.0",6,6,180,136,1.0,0.009340820590541352,0.06227026679766806,0.05894013435599637,0.25,0.23168295542856013,0.1,0.0,0.0,0.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,kmeans,"n_clusters=6, n_init=10",6,6,180,136,1.0,0.020128718966885648,0.06427307268999387,0.06353981172710003,0.3055555555555555,0.3017868058124457,0.13333333333333333,0.0,0.0,0.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,180,136,1.0,0.012595343735978863,0.06853859223292638,0.06797932997021487,0.26666666666666666,0.2701336294210055,0.23333333333333334,0.0,0.0,0.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,dbscan,"eps=None, min_samples=5",6,1,180,136,1.0,8.57884559622119e-06,0.017941467893449765,0.009504273677275698,0.17777777777777778,0.06815153245764326,0.0,5.0,0.0,1.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,1,180,136,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+17,dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,hdbscan,"min_cluster_size=5, min_samples=None",6,3,180,136,1.0,-6.514524131551294e-05,0.05770034576827572,0.036616571188912456,0.1944444444444445,0.11114345273272001,0.0,3.0,0.0,1.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,2,180,536,1.0,0.001467997651203758,0.013266160711629527,0.00918446163539849,0.2111111111111111,0.1052827380952381,0.0,4.0,0.0,1.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,94,180,536,1.0,-0.0016440985624569676,0.3821379660199971,0.6703496602573481,0.6,0.5848889972964312,0.26666666666666666,88.0,1.0,0.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,1,180,536,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,leiden,"n_neighbors=None, resolution=1.0",6,4,180,536,1.0,-0.0040954497045060335,0.035861134183746396,0.028237690886483827,0.2222222222222222,0.15871293589183497,0.0,2.0,0.0,1.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,louvain,"n_neighbors=None, resolution=1.0",6,4,180,536,1.0,-0.004162811856973743,0.032352069465544045,0.024674117568826984,0.20555555555555557,0.1320730597904511,0.0,2.0,0.0,1.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,kmeans,"n_clusters=6, n_init=10",6,6,180,536,1.0,-0.0028327564112326843,0.04515270876391355,0.04234136965805944,0.22777777777777777,0.20758015624720105,0.06666666666666667,0.0,0.0,0.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,180,536,1.0,0.0016969673858122085,0.051261222319698534,0.05008051729815996,0.25000000000000006,0.24798443585891886,0.16666666666666666,0.0,0.0,0.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,dbscan,"eps=None, min_samples=5",6,2,180,536,1.0,-0.004213432717924413,0.01443935635543846,0.011632949845889641,0.21666666666666667,0.1451388888888889,0.0,4.0,0.0,1.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,1,180,536,1.0,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+18,dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,hdbscan,"min_cluster_size=5, min_samples=None",6,9,180,536,1.0,-0.005915041652041245,0.09410006838264437,0.09511904393971947,0.26666666666666666,0.24945393457549073,0.06666666666666667,3.0,1.0,0.0,ok,,180
+19,binary_balanced_low_noise,binary_balanced_low_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,3,72,72,0.25,0.7053941908713693,0.8571428571428571,0.75,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,72,72,0.25,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,72,72,0.25,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,leiden,"n_neighbors=None, resolution=1.0",4,4,72,72,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,louvain,"n_neighbors=None, resolution=1.0",4,4,72,72,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,kmeans,"n_clusters=4, n_init=10",4,4,72,72,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,72,72,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,dbscan,"eps=None, min_samples=5",4,1,72,72,0.25,-0.0005118785944416007,0.025972302820674115,0.014175176863104912,0.2638888888888889,0.1272727272727273,0.0,3.0,0.0,1.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,72,72,0.25,0.026262036766851474,0.15265689421866016,0.09212144589500532,0.3333333333333333,0.23214285714285715,0.0,3.0,0.0,1.0,ok,,72
+19,binary_balanced_low_noise,binary_balanced_low_noise,hdbscan,"min_cluster_size=5, min_samples=None",4,6,72,72,0.25,0.4168811837842571,0.5526721318536159,0.6548965613106538,0.7777777777777778,0.7904109025032939,0.7222222222222222,2.0,1.0,0.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,72,120,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,72,120,0.25,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,3,72,120,0.25,0.7053941908713693,0.8571428571428571,0.75,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,leiden,"n_neighbors=None, resolution=1.0",4,4,72,120,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,louvain,"n_neighbors=None, resolution=1.0",4,4,72,120,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,kmeans,"n_clusters=4, n_init=10",4,4,72,120,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,72,120,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,dbscan,"eps=None, min_samples=5",4,3,72,120,0.25,0.7053941908713693,0.8571428571428571,0.75,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,72,120,0.25,0.18203370994628634,0.383391865016861,0.259812863614484,0.4444444444444444,0.3371710526315789,0.0,3.0,0.0,1.0,ok,,72
+20,binary_balanced_low_noise__2,binary_balanced_low_noise,hdbscan,"min_cluster_size=5, min_samples=None",4,4,72,120,0.25,0.46921001926782274,0.5690508686097898,0.5957313599943028,0.7222222222222222,0.6968479252165982,0.2777777777777778,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,72,72,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,72,72,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,72,72,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,leiden,"n_neighbors=None, resolution=1.0",4,4,72,72,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,louvain,"n_neighbors=None, resolution=1.0",4,4,72,72,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,kmeans,"n_clusters=4, n_init=10",4,4,72,72,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,72,72,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,dbscan,"eps=None, min_samples=5",4,4,72,72,0.1,0.9437357241636496,0.9420248847020887,0.9808688367905314,0.9861111111111112,0.9861003861003861,0.9444444444444444,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,72,72,0.1,0.9194097616345063,0.9457217297142854,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+21,sparse_features_72x72,binary_sparse_features,hdbscan,"min_cluster_size=5, min_samples=None",4,4,72,72,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,72
+22,sparse_features_100x500,binary_sparse_features,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,leiden,"n_neighbors=None, resolution=1.0",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,louvain,"n_neighbors=None, resolution=1.0",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,kmeans,"n_clusters=4, n_init=10",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,dbscan,"eps=None, min_samples=5",4,4,100,500,0.1,0.7995168223967031,0.8129774961511944,0.8732458558316466,0.9099999999999999,0.9137511628697012,0.84,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+22,sparse_features_100x500,binary_sparse_features,hdbscan,"min_cluster_size=5, min_samples=None",4,4,100,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+23,binary_perfect_2c,improved_binary_perfect,kl,"tree_distance_metric=hamming, tree_linkage_method=average",2,3,40,50,0.0,0.951188986232791,0.9331846863505017,0.9999999999999997,1.0,1.0,1.0,1.0,1.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",2,3,40,50,0.0,0.951188986232791,0.9331846863505017,0.9999999999999997,1.0,1.0,1.0,1.0,1.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",2,3,40,50,0.0,0.951188986232791,0.9331846863505017,0.9999999999999997,1.0,1.0,1.0,1.0,1.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,leiden,"n_neighbors=None, resolution=1.0",2,2,40,50,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,louvain,"n_neighbors=None, resolution=1.0",2,2,40,50,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,kmeans,"n_clusters=2, n_init=10",2,2,40,50,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=2, n_neighbors=None",2,2,40,50,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,dbscan,"eps=None, min_samples=5",2,2,40,50,0.0,0.8532382650029708,0.8065818590222218,0.9311278124459127,0.975,0.9749843652282677,0.95,0.0,0.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,optics,"min_cluster_size=5, min_samples=5, xi=0.05",2,2,40,50,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+23,binary_perfect_2c,improved_binary_perfect,hdbscan,"min_cluster_size=5, min_samples=None",2,2,40,50,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+24,binary_perfect_4c,improved_binary_perfect,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,5,80,100,0.0,0.9833998739230931,0.9824149590685972,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,5,80,100,0.0,0.9833998739230931,0.9824149590685973,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,5,80,100,0.0,0.9833998739230931,0.9824149590685972,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,leiden,"n_neighbors=None, resolution=1.0",4,4,80,100,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,louvain,"n_neighbors=None, resolution=1.0",4,4,80,100,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,kmeans,"n_clusters=4, n_init=10",4,4,80,100,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,80,100,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,dbscan,"eps=None, min_samples=5",4,4,80,100,0.0,0.9494198389252698,0.9462537107311622,0.9827819531114782,0.9875,0.9874921826141339,0.95,0.0,0.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,80,100,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+24,binary_perfect_4c,improved_binary_perfect,hdbscan,"min_cluster_size=5, min_samples=None",4,4,80,100,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+25,binary_perfect_8c,improved_binary_perfect,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,9,160,200,0.0,0.992863234436016,0.9940687859280469,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,9,160,200,0.0,0.992863234436016,0.9940687859280469,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,9,160,200,0.0,0.992863234436016,0.9940687859280469,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,leiden,"n_neighbors=None, resolution=1.0",8,8,160,200,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,louvain,"n_neighbors=None, resolution=1.0",8,8,160,200,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,kmeans,"n_clusters=8, n_init=10",8,8,160,200,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,160,200,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,dbscan,"eps=None, min_samples=5",8,8,160,200,0.0,0.9417496221210232,0.9432140940485675,0.9632260740533264,0.96875,0.9700854700854701,0.95,0.0,0.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,160,200,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+25,binary_perfect_8c,improved_binary_perfect,hdbscan,"min_cluster_size=5, min_samples=None",8,8,160,200,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+26,binary_low_noise_2c,improved_binary_low_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",2,2,40,50,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",2,3,40,50,0.05,0.9074122922711686,0.8950557046281158,0.9999999999999997,1.0,1.0,1.0,1.0,1.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",2,2,40,50,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,leiden,"n_neighbors=None, resolution=1.0",2,2,40,50,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,louvain,"n_neighbors=None, resolution=1.0",2,2,40,50,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,kmeans,"n_clusters=2, n_init=10",2,2,40,50,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=2, n_neighbors=None",2,2,40,50,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,dbscan,"eps=None, min_samples=5",2,2,40,50,0.05,0.8066115702479338,0.8313799153836415,0.9999999999999999,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",2,2,40,50,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+26,binary_low_noise_2c,improved_binary_low_noise,hdbscan,"min_cluster_size=5, min_samples=None",2,2,40,50,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,40
+27,binary_low_noise_4c,improved_binary_low_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,80,100,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,80,100,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,80,100,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,leiden,"n_neighbors=None, resolution=1.0",4,4,80,100,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,louvain,"n_neighbors=None, resolution=1.0",4,4,80,100,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,kmeans,"n_clusters=4, n_init=10",4,4,80,100,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,80,100,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,dbscan,"eps=None, min_samples=5",4,4,80,100,0.05,0.7293087004132961,0.7749082098637573,0.8357286318740461,0.9,0.9046348980559507,0.85,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,80,100,0.05,0.9327659574468085,0.9517420318399953,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+27,binary_low_noise_4c,improved_binary_low_noise,hdbscan,"min_cluster_size=5, min_samples=None",4,4,80,100,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+28,binary_low_noise_8c,improved_binary_low_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,160,200,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,160,200,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,160,200,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,leiden,"n_neighbors=None, resolution=1.0",8,8,160,200,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,louvain,"n_neighbors=None, resolution=1.0",8,8,160,200,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,kmeans,"n_clusters=8, n_init=10",8,8,160,200,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,160,200,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,dbscan,"eps=None, min_samples=5",8,8,160,200,0.1,0.8597973389031474,0.895679238608817,0.9198120312590143,0.9375,0.9417116509221772,0.8,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,160,200,0.1,0.7614719702084807,0.8855951670026923,0.8918318172807344,0.875,0.875,0.5,0.0,0.0,0.0,ok,,160
+28,binary_low_noise_8c,improved_binary_low_noise,hdbscan,"min_cluster_size=5, min_samples=None",8,8,160,200,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+29,binary_low_noise_12c,improved_binary_low_noise,kl,"tree_distance_metric=hamming, tree_linkage_method=average",12,12,240,300,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",12,12,240,300,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",12,12,240,300,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,leiden,"n_neighbors=None, resolution=1.0",12,12,240,300,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,louvain,"n_neighbors=None, resolution=1.0",12,12,240,300,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,kmeans,"n_clusters=12, n_init=10",12,12,240,300,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=12, n_neighbors=None",12,12,240,300,0.1,0.7089967871422849,0.8832060524775251,0.8564128001170256,0.7791666666666667,0.7537643409854363,0.0,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,dbscan,"eps=None, min_samples=5",12,12,240,300,0.1,0.7286949701760541,0.8591580266535157,0.8643194696373251,0.8875000000000001,0.9044763887539177,0.7,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,optics,"min_cluster_size=5, min_samples=5, xi=0.05",12,12,240,300,0.1,0.9168934879315099,0.963662817801031,0.9699102922403883,0.9500000000000001,0.9450549450549451,0.4,0.0,0.0,0.0,ok,,240
+29,binary_low_noise_12c,improved_binary_low_noise,hdbscan,"min_cluster_size=5, min_samples=None",12,12,240,300,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+30,binary_moderate_4c,improved_binary_moderate,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,80,100,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,80,100,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,80,100,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,leiden,"n_neighbors=None, resolution=1.0",4,4,80,100,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,louvain,"n_neighbors=None, resolution=1.0",4,4,80,100,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,kmeans,"n_clusters=4, n_init=10",4,4,80,100,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,80,100,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,dbscan,"eps=None, min_samples=5",4,4,80,100,0.12,0.8489938717114028,0.8479095473819834,0.9047180468885213,0.9375,0.9394961763382815,0.9,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,80,100,0.12,0.9178108815694703,0.9448408939706024,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+30,binary_moderate_4c,improved_binary_moderate,hdbscan,"min_cluster_size=5, min_samples=None",4,4,80,100,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,80
+31,binary_moderate_6c,improved_binary_moderate,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,120,150,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,56,120,150,0.15,0.13253810470510272,0.6269910233510719,1.0000000000000004,1.0,1.0,1.0,50.0,1.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,6,120,150,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,leiden,"n_neighbors=None, resolution=1.0",6,6,120,150,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,louvain,"n_neighbors=None, resolution=1.0",6,6,120,150,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,kmeans,"n_clusters=6, n_init=10",6,6,120,150,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,120,150,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,dbscan,"eps=None, min_samples=5",6,6,120,150,0.15,0.7637238177801393,0.8235357873254475,0.8583498647306629,0.8916666666666666,0.9005285172117347,0.8,0.0,0.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,6,120,150,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+31,binary_moderate_6c,improved_binary_moderate,hdbscan,"min_cluster_size=5, min_samples=None",6,6,120,150,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+32,binary_moderate_8c,improved_binary_moderate,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,200,250,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,200,250,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,200,250,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,leiden,"n_neighbors=None, resolution=1.0",8,8,200,250,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,louvain,"n_neighbors=None, resolution=1.0",8,8,200,250,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,kmeans,"n_clusters=8, n_init=10",8,8,200,250,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,200,250,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,dbscan,"eps=None, min_samples=5",8,8,200,250,0.12,0.8243460518057497,0.8736261972004085,0.8978118849398156,0.9099999999999999,0.9184365100495949,0.8,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,200,250,0.12,0.9758758637410595,0.9851826862540953,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+32,binary_moderate_8c,improved_binary_moderate,hdbscan,"min_cluster_size=5, min_samples=None",8,8,200,250,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+33,binary_hard_4c,improved_binary_hard,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,100,200,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,100,200,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,100,200,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,leiden,"n_neighbors=None, resolution=1.0",4,4,100,200,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,louvain,"n_neighbors=None, resolution=1.0",4,4,100,200,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,kmeans,"n_clusters=4, n_init=10",4,4,100,200,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,200,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,dbscan,"eps=None, min_samples=5",4,4,100,200,0.2,0.9441414331389881,0.932313355461585,0.97,0.98,0.9801805337519623,0.96,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,100,200,0.2,0.9867096254530809,0.9850826357350427,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+33,binary_hard_4c,improved_binary_hard,hdbscan,"min_cluster_size=5, min_samples=None",4,4,100,200,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+34,binary_hard_8c,improved_binary_hard,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,leiden,"n_neighbors=None, resolution=1.0",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,louvain,"n_neighbors=None, resolution=1.0",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,kmeans,"n_clusters=8, n_init=10",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,dbscan,"eps=None, min_samples=5",8,8,280,400,0.15,0.8383122874340153,0.8760600419088297,0.9004987321871247,0.9178571428571428,0.9254835337919218,0.8571428571428571,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+34,binary_hard_8c,improved_binary_hard,hdbscan,"min_cluster_size=5, min_samples=None",8,8,280,400,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,280
+35,binary_unbalanced_low,improved_binary_unbalanced,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,100,150,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,100,150,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,100,150,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,leiden,"n_neighbors=None, resolution=1.0",4,4,100,150,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,louvain,"n_neighbors=None, resolution=1.0",4,4,100,150,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,kmeans,"n_clusters=4, n_init=10",4,4,100,150,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,150,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,dbscan,"eps=None, min_samples=5",4,4,100,150,0.1,0.8342987615645656,0.8435610874573627,0.9027563338733443,0.9490530303030303,0.9496971860489907,0.875,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,100,150,0.1,0.8693625313793839,0.9299043165065223,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+35,binary_unbalanced_low,improved_binary_unbalanced,hdbscan,"min_cluster_size=5, min_samples=None",4,4,100,150,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+36,binary_unbalanced_med,improved_binary_unbalanced,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,150,200,0.12,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,6,150,200,0.12,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,6,150,200,0.12,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,leiden,"n_neighbors=None, resolution=1.0",6,6,150,200,0.12,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,louvain,"n_neighbors=None, resolution=1.0",6,6,150,200,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,kmeans,"n_clusters=6, n_init=10",6,6,150,200,0.12,1.0,1.0000000000000002,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,150,200,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,dbscan,"eps=None, min_samples=5",6,6,150,200,0.12,0.7539091142671742,0.8151778026653285,0.8505776374866935,0.8825352514868644,0.8910170743074001,0.8076923076923077,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,6,150,200,0.12,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+36,binary_unbalanced_med,improved_binary_unbalanced,hdbscan,"min_cluster_size=5, min_samples=None",6,6,150,200,0.12,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+37,binary_2clusters,improved_binary_edge_cases,kl,"tree_distance_metric=hamming, tree_linkage_method=average",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,leiden,"n_neighbors=None, resolution=1.0",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,louvain,"n_neighbors=None, resolution=1.0",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,kmeans,"n_clusters=2, n_init=10",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=2, n_neighbors=None",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,dbscan,"eps=None, min_samples=5",2,2,50,60,0.1,0.5660225442834138,0.5949025587832018,0.7599999999999995,0.88,0.8782467532467533,0.76,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,optics,"min_cluster_size=5, min_samples=5, xi=0.05",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+37,binary_2clusters,improved_binary_edge_cases,hdbscan,"min_cluster_size=5, min_samples=None",2,2,50,60,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,50
+38,binary_many_features,improved_binary_edge_cases,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,leiden,"n_neighbors=None, resolution=1.0",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,louvain,"n_neighbors=None, resolution=1.0",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,kmeans,"n_clusters=4, n_init=10",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,dbscan,"eps=None, min_samples=5",4,4,100,2000,0.1,0.7653233999322723,0.7965309511402046,0.8575488750216348,0.92,0.9231856810956225,0.88,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+38,binary_many_features,improved_binary_edge_cases,hdbscan,"min_cluster_size=5, min_samples=None",4,4,100,2000,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+39,binary_many_clusters,improved_binary_edge_cases,kl,"tree_distance_metric=hamming, tree_linkage_method=average",15,15,300,400,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",15,15,300,400,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",15,15,300,400,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,leiden,"n_neighbors=None, resolution=1.0",15,15,300,400,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,louvain,"n_neighbors=None, resolution=1.0",15,15,300,400,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,kmeans,"n_clusters=15, n_init=10",15,15,300,400,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=15, n_neighbors=None",15,15,300,400,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,dbscan,"eps=None, min_samples=5",15,15,300,400,0.1,0.7912445211914659,0.8876470409364835,0.8948871691551206,0.8999999999999998,0.9175309491098965,0.8,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,optics,"min_cluster_size=5, min_samples=5, xi=0.05",15,15,300,400,0.1,0.9840439724638455,0.9925369992395591,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+39,binary_many_clusters,improved_binary_edge_cases,hdbscan,"min_cluster_size=5, min_samples=None",15,15,300,400,0.1,0.9964293817695459,0.9975624362538892,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+40,binary_null_small,binary_null,kl,"tree_distance_metric=hamming, tree_linkage_method=average",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,leiden,"n_neighbors=None, resolution=1.0",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,louvain,"n_neighbors=None, resolution=1.0",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,kmeans,"n_clusters=1, n_init=10",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=1, n_neighbors=None",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,dbscan,"eps=None, min_samples=5",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,optics,"min_cluster_size=5, min_samples=5, xi=0.05",1,1,60,80,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,60
+40,binary_null_small,binary_null,hdbscan,"min_cluster_size=5, min_samples=None",1,2,60,80,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,60
+41,binary_null_medium,binary_null,kl,"tree_distance_metric=hamming, tree_linkage_method=average",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,leiden,"n_neighbors=None, resolution=1.0",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,louvain,"n_neighbors=None, resolution=1.0",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,kmeans,"n_clusters=1, n_init=10",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=1, n_neighbors=None",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,dbscan,"eps=None, min_samples=5",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,optics,"min_cluster_size=5, min_samples=5, xi=0.05",1,1,200,150,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+41,binary_null_medium,binary_null,hdbscan,"min_cluster_size=5, min_samples=None",1,2,200,150,0.0,0.0,0.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,200
+42,binary_multiscale_4c,binary_multiscale,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,120,160,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,120,160,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,120,160,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,leiden,"n_neighbors=None, resolution=1.0",4,4,120,160,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,louvain,"n_neighbors=None, resolution=1.0",4,4,120,160,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,kmeans,"n_clusters=4, n_init=10",4,4,120,160,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,120,160,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,dbscan,"eps=None, min_samples=5",4,4,120,160,0.08,0.7708944932206399,0.7969502724310696,0.8581704165945511,0.9000000000000001,0.9040777230432403,0.8,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,120,160,0.08,0.5317967463794402,0.6941584620587817,0.7045565997075034,0.8,0.8011204481792717,0.5,0.0,0.0,0.0,ok,,120
+42,binary_multiscale_4c,binary_multiscale,hdbscan,"min_cluster_size=5, min_samples=None",4,4,120,160,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+43,binary_multiscale_6c,binary_multiscale,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,180,240,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,6,180,240,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,6,180,240,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,leiden,"n_neighbors=None, resolution=1.0",6,6,180,240,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,louvain,"n_neighbors=None, resolution=1.0",6,6,180,240,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,kmeans,"n_clusters=6, n_init=10",6,6,180,240,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,180,240,0.1,0.7692627552081167,0.9009369455424586,0.8710490642551528,0.7666666666666666,0.736111111111111,0.0,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,dbscan,"eps=None, min_samples=5",6,6,180,240,0.1,0.7713467733286998,0.8221969717341162,0.8574294175291942,0.888888888888889,0.8986956026429711,0.8333333333333334,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,6,180,240,0.1,0.9663312329540111,0.9772560026180123,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+43,binary_multiscale_6c,binary_multiscale,hdbscan,"min_cluster_size=5, min_samples=None",6,6,180,240,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+44,binary_noise_feat_50i_200n,binary_noise_features,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,120,450,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,74,120,450,0.08,0.039453746676450685,0.4913869734932416,1.0000000000000002,1.0,1.0,1.0,70.0,1.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,120,450,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,leiden,"n_neighbors=None, resolution=1.0",4,4,120,450,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,louvain,"n_neighbors=None, resolution=1.0",4,4,120,450,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,kmeans,"n_clusters=4, n_init=10",4,4,120,450,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,120,450,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,dbscan,"eps=None, min_samples=5",4,4,120,450,0.08,0.9430636936830653,0.9328316346455684,0.9714385292821944,0.9833333333333334,0.9834609075997813,0.9666666666666667,0.0,0.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,120,450,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+44,binary_noise_feat_50i_200n,binary_noise_features,hdbscan,"min_cluster_size=5, min_samples=None",4,4,120,450,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+45,binary_noise_feat_80i_400n,binary_noise_features,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,160,880,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,1,160,880,0.1,0.0,0.0,0.0,0.16666666666666666,0.0481283422459893,0.0,5.0,0.0,1.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,6,160,880,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,leiden,"n_neighbors=None, resolution=1.0",6,6,160,880,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,louvain,"n_neighbors=None, resolution=1.0",6,6,160,880,0.1,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,kmeans,"n_clusters=6, n_init=10",6,6,160,880,0.1,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,160,880,0.1,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,dbscan,"eps=None, min_samples=5",6,6,160,880,0.1,0.8893792101261233,0.902096914709776,0.9359313808902222,0.9501424501424501,0.9522053154798132,0.8518518518518519,0.0,0.0,0.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,6,160,880,0.1,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+45,binary_noise_feat_80i_400n,binary_noise_features,hdbscan,"min_cluster_size=5, min_samples=None",6,6,160,880,0.1,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+46,binary_noise_feat_30i_500n,binary_noise_features,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,leiden,"n_neighbors=None, resolution=1.0",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,louvain,"n_neighbors=None, resolution=1.0",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,kmeans,"n_clusters=3, n_init=10",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,dbscan,"eps=None, min_samples=5",3,3,100,1030,0.05,0.8752737313148624,0.8506349461920293,0.9242815600147514,0.960190136660725,0.9604347041847042,0.9393939393939394,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+46,binary_noise_feat_30i_500n,binary_noise_features,hdbscan,"min_cluster_size=5, min_samples=None",3,3,100,1030,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+47,sbm_clear_small,sbm_graphs,kl,"tree_distance_metric=hamming, tree_linkage_method=average",2,2,60,60,0.005,0.9333154537269401,0.8941355940977421,0.893777204104374,0.9833333333333334,0.9833287024173382,0.9666666666666667,0.0,0.0,0.0,ok,,60
+47,sbm_clear_small,sbm_graphs,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",2,1,60,60,0.005,0.0,0.0,0.0,0.5,0.3333333333333333,0.0,1.0,0.0,1.0,ok,,60
+47,sbm_clear_small,sbm_graphs,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",2,1,60,60,0.005,0.0,0.0,0.0,0.5,0.3333333333333333,0.0,1.0,0.0,1.0,ok,,60
+47,sbm_clear_small,sbm_graphs,leiden,"n_neighbors=None, resolution=1.0",2,5,60,60,0.005,0.4758391594885859,0.550990131421309,0.8498953076615163,0.9666666666666667,0.9666295884315907,0.9333333333333333,3.0,1.0,0.0,ok,,60
+47,sbm_clear_small,sbm_graphs,louvain,"n_neighbors=None, resolution=1.0",2,5,60,60,0.005,0.35067019980271175,0.4864061065749776,0.7869392683830316,0.95,0.949874686716792,0.9,3.0,1.0,0.0,ok,,60
+47,sbm_clear_small,sbm_graphs,kmeans,"n_clusters=2, n_init=10",2,2,60,60,0.005,0.6893250359023456,0.6615161167901188,0.6548575458269758,0.9166666666666667,0.916083916083916,0.8333333333333334,0.0,0.0,0.0,ok,,60
+47,sbm_clear_small,sbm_graphs,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=2, n_neighbors=None",2,2,60,60,0.005,0.8067574556111016,0.7610260716417302,0.7582766571931678,0.95,0.949874686716792,0.9,0.0,0.0,0.0,ok,,60
+47,sbm_clear_small,sbm_graphs,dbscan,"eps=None, min_samples=5",2,1,60,60,0.005,0.0,0.0,0.0,0.5,0.3333333333333333,0.0,1.0,0.0,1.0,ok,,60
+47,sbm_clear_small,sbm_graphs,optics,"min_cluster_size=5, min_samples=5, xi=0.05",2,2,60,60,0.005,0.10973936899862825,0.24605790225870552,0.23645279766002736,0.7,0.6703296703296704,0.4,0.0,0.0,0.0,ok,,60
+47,sbm_clear_small,sbm_graphs,hdbscan,"min_cluster_size=5, min_samples=None",2,4,60,60,0.005,0.22141932492223274,0.26960432204717255,0.42139967877373463,0.8166666666666667,0.8141368628555337,0.7,2.0,1.0,0.0,ok,,60
+48,sbm_moderate,sbm_graphs,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,1,120,120,0.02,0.0,0.0,0.0,0.3333333333333333,0.19607843137254902,0.0,2.0,0.0,1.0,ok,,120
+48,sbm_moderate,sbm_graphs,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,120,120,0.02,0.022229628878229744,0.10832079284110767,0.06733880906229037,0.4000000000000001,0.32571109871723375,0.1,0.0,0.0,0.0,ok,,120
+48,sbm_moderate,sbm_graphs,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,1,120,120,0.02,0.0,0.0,0.0,0.3333333333333333,0.19607843137254902,0.0,2.0,0.0,1.0,ok,,120
+48,sbm_moderate,sbm_graphs,leiden,"n_neighbors=None, resolution=1.0",3,6,120,120,0.02,0.12761316734337774,0.18676796196425507,0.24435923663171058,0.6316666666666667,0.6274179994326963,0.6,3.0,1.0,0.0,ok,,120
+48,sbm_moderate,sbm_graphs,louvain,"n_neighbors=None, resolution=1.0",3,8,120,120,0.02,0.07878032437261782,0.15414492144770853,0.22388532314768156,0.5916666666666667,0.5933525774426219,0.475,5.0,1.0,0.0,ok,,120
+48,sbm_moderate,sbm_graphs,kmeans,"n_clusters=3, n_init=10",3,3,120,120,0.02,0.03517022229753098,0.11620902783173787,0.10288532443364302,0.47444444444444445,0.445477384865034,0.23333333333333334,0.0,0.0,0.0,ok,,120
+48,sbm_moderate,sbm_graphs,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,120,120,0.02,0.27055180497725506,0.21832156629582297,0.21738984445885773,0.65,0.6486871234412218,0.55,0.0,0.0,0.0,ok,,120
+48,sbm_moderate,sbm_graphs,dbscan,"eps=None, min_samples=5",3,1,120,120,0.02,-0.006637468266118874,0.025447926421867884,0.01372489504330173,0.32,0.19047619047619047,0.0,2.0,0.0,1.0,ok,,120
+48,sbm_moderate,sbm_graphs,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,4,120,120,0.02,0.05796557771614533,0.16057299932095268,0.17215813319447587,0.5116666666666666,0.4997231450719823,0.375,1.0,1.0,0.0,ok,,120
+48,sbm_moderate,sbm_graphs,hdbscan,"min_cluster_size=5, min_samples=None",3,6,120,120,0.02,0.036542982111719025,0.13508465833720157,0.15290073736811585,0.49333333333333335,0.49269143554857847,0.3,3.0,1.0,0.0,ok,,120
+49,sbm_hard,sbm_graphs,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,1,120,120,0.04,0.0,0.0,0.0,0.3333333333333333,0.16666666666666666,0.0,2.0,0.0,1.0,ok,,120
+49,sbm_hard,sbm_graphs,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,1,120,120,0.04,0.0,0.0,0.0,0.3333333333333333,0.16666666666666666,0.0,2.0,0.0,1.0,ok,,120
+49,sbm_hard,sbm_graphs,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,1,120,120,0.04,0.0,0.0,0.0,0.3333333333333333,0.16666666666666666,0.0,2.0,0.0,1.0,ok,,120
+49,sbm_hard,sbm_graphs,leiden,"n_neighbors=None, resolution=1.0",3,7,120,120,0.04,-0.005929100700995889,0.022845471549388405,0.03140873718103123,0.43333333333333335,0.43409183119668254,0.4,4.0,1.0,0.0,ok,,120
+49,sbm_hard,sbm_graphs,louvain,"n_neighbors=None, resolution=1.0",3,8,120,120,0.04,-0.005301881353170475,0.025657169321676686,0.03615846851883396,0.43333333333333335,0.43039291602796087,0.35,5.0,1.0,0.0,ok,,120
+49,sbm_hard,sbm_graphs,kmeans,"n_clusters=3, n_init=10",3,3,120,120,0.04,-0.002233900877808486,0.009162594720365642,0.006859930224821027,0.3666666666666667,0.2779678679982631,0.1,0.0,0.0,0.0,ok,,120
+49,sbm_hard,sbm_graphs,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,120,120,0.04,0.0018366624931940615,0.018259997664804694,0.017309799159143623,0.375,0.35169168402999246,0.175,0.0,0.0,0.0,ok,,120
+49,sbm_hard,sbm_graphs,dbscan,"eps=None, min_samples=5",3,1,120,120,0.04,0.0,0.016088727304375623,0.008397256395568166,0.3416666666666666,0.1839750472976428,0.0,2.0,0.0,1.0,ok,,120
+49,sbm_hard,sbm_graphs,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,6,120,120,0.04,-0.003981420039814201,0.030647915386333748,0.031619677439958964,0.4000000000000001,0.35513271506236005,0.15,3.0,1.0,0.0,ok,,120
+49,sbm_hard,sbm_graphs,hdbscan,"min_cluster_size=5, min_samples=None",3,5,120,120,0.04,0.007024014405263908,0.10540440313657144,0.10830965428840535,0.43333333333333335,0.3734713144517066,0.175,2.0,1.0,0.0,ok,,120
+50,cat_clear_3cat_4c,categorical_clear,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,3,100,150,0.05,0.7079646017699115,0.8571428571428572,0.7500000000000001,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,3,100,150,0.05,0.7079646017699115,0.8571428571428572,0.7500000000000001,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,3,100,150,0.05,0.7079646017699115,0.8571428571428572,0.7500000000000001,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,leiden,"n_neighbors=None, resolution=1.0",4,4,100,150,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,louvain,"n_neighbors=None, resolution=1.0",4,4,100,150,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,kmeans,"n_clusters=4, n_init=10",4,4,100,150,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,150,0.05,0.97305763367046,0.9695647763178207,0.9694248603634983,0.99,0.9899959983993598,0.96,0.0,0.0,0.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,dbscan,"eps=None, min_samples=5",4,3,100,150,0.05,0.5966487399439975,0.7451650856026715,0.6997803618703453,0.65,0.5998633897304994,0.0,1.0,0.0,1.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,2,100,150,0.05,0.3576477411403647,0.5993288296936019,0.47625851014660636,0.5800000000000001,0.5070816864295125,0.0,2.0,0.0,1.0,ok,,100
+50,cat_clear_3cat_4c,categorical_clear,hdbscan,"min_cluster_size=5, min_samples=None",4,3,100,150,0.05,0.6623360081518278,0.8050343205377996,0.7144955852409498,0.73,0.6542696025778733,0.0,1.0,0.0,1.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,100,200,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,100,200,0.05,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,100,200,0.05,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,leiden,"n_neighbors=None, resolution=1.0",4,4,100,200,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,louvain,"n_neighbors=None, resolution=1.0",4,4,100,200,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,kmeans,"n_clusters=4, n_init=10",4,4,100,200,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,200,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,dbscan,"eps=None, min_samples=5",4,4,100,200,0.05,0.8714150314178397,0.8995971422764047,0.9597401573458801,0.98,0.9799679487179488,0.92,0.0,0.0,0.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,2,100,200,0.05,0.6754189708303432,0.8190083811681558,0.7144955852409498,0.74,0.6593716433941998,0.0,2.0,0.0,1.0,ok,,100
+51,cat_clear_4cat_4c,categorical_clear,hdbscan,"min_cluster_size=5, min_samples=None",4,4,100,200,0.05,0.7752649814811654,0.7868733109914835,0.8230776770500491,0.9199999999999999,0.9180379856871126,0.76,0.0,0.0,0.0,ok,,100
+52,cat_clear_5cat_6c,categorical_clear,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,5,150,400,0.08,0.8185140073081608,0.9310809437291901,0.8710490642551528,0.8333333333333334,0.7777777777777777,0.0,1.0,0.0,1.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,1,150,400,0.08,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,5,150,400,0.08,0.5640124006766882,0.8143475063771053,0.6975645629474759,0.6733333333333333,0.596995596995597,0.0,1.0,0.0,1.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,leiden,"n_neighbors=None, resolution=1.0",6,6,150,400,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,louvain,"n_neighbors=None, resolution=1.0",6,6,150,400,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,kmeans,"n_clusters=6, n_init=10",6,6,150,400,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,150,400,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,dbscan,"eps=None, min_samples=5",6,5,150,400,0.08,0.7642306521051154,0.8712666453909415,0.8358017568050207,0.8066666666666666,0.771306146572104,0.04,1.0,0.0,1.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,2,150,400,0.08,0.3257918552036199,0.6524693142571201,0.4841962570206112,0.5,0.39999999999999997,0.0,4.0,0.0,1.0,ok,,150
+52,cat_clear_5cat_6c,categorical_clear,hdbscan,"min_cluster_size=5, min_samples=None",6,3,150,400,0.08,0.32166614792971204,0.5889928593589148,0.4647538827746287,0.52,0.4347486444260638,0.0,3.0,0.0,1.0,ok,,150
+53,cat_mod_3cat_4c,categorical_moderate,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,3,120,180,0.15,0.7090464547677262,0.8571428571428571,0.7499999999999999,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,120,180,0.15,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,120,180,0.15,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,leiden,"n_neighbors=None, resolution=1.0",4,4,120,180,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,louvain,"n_neighbors=None, resolution=1.0",4,4,120,180,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,kmeans,"n_clusters=4, n_init=10",4,4,120,180,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,120,180,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,dbscan,"eps=None, min_samples=5",4,3,120,180,0.15,0.6264670150494381,0.7313141692423132,0.6944749581497428,0.725,0.6924041622361299,0.13333333333333333,1.0,0.0,1.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,2,120,180,0.15,0.34348945326007607,0.5864551641653,0.4555295330167819,0.5583333333333333,0.477337957426453,0.0,2.0,0.0,1.0,ok,,120
+53,cat_mod_3cat_4c,categorical_moderate,hdbscan,"min_cluster_size=5, min_samples=None",4,3,120,180,0.15,0.6190062628086619,0.7166650413803551,0.6723984101761612,0.7000000000000001,0.6468235033780747,0.03333333333333333,1.0,0.0,1.0,ok,,120
+54,cat_mod_4cat_6c,categorical_moderate,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,4,180,400,0.18,0.6675451908792003,0.836317876114826,0.7284522932473891,0.6666666666666666,0.5555829937852409,0.0,2.0,0.0,1.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,3,180,400,0.18,0.5550084202767833,0.7432930691321256,0.5995013575025421,0.5,0.33336077156301874,0.0,3.0,0.0,1.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,2,180,400,0.18,0.2702387885847408,0.5242524223457243,0.3552453212757644,0.3333333333333333,0.17777777777777778,0.0,4.0,0.0,1.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,leiden,"n_neighbors=None, resolution=1.0",6,5,180,400,0.18,0.8193743693239153,0.9310809437291901,0.8710490642551528,0.8333333333333334,0.7777777777777777,0.0,1.0,0.0,1.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,louvain,"n_neighbors=None, resolution=1.0",6,5,180,400,0.18,0.8193743693239153,0.9310809437291901,0.8710490642551528,0.8333333333333334,0.7777777777777777,0.0,1.0,0.0,1.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,kmeans,"n_clusters=6, n_init=10",6,6,180,400,0.18,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,180,400,0.18,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,dbscan,"eps=None, min_samples=5",6,4,180,400,0.18,0.6357708177063506,0.7844334976919113,0.7038199235724499,0.6444444444444445,0.552072122490565,0.0,2.0,0.0,1.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,1,180,400,0.18,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,180
+54,cat_mod_4cat_6c,categorical_moderate,hdbscan,"min_cluster_size=5, min_samples=None",6,6,180,400,0.18,0.5298226176874516,0.6583519606573978,0.6403415407963972,0.6555555555555556,0.6179817388824514,0.13333333333333333,0.0,0.0,0.0,ok,,180
+55,cat_highcard_10cat_4c,categorical_high_cardinality,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,200,500,0.1,0.9733367884034787,0.9646006742033851,0.9644955852409498,0.99,0.9899474641341686,0.96,0.0,0.0,0.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,200,500,0.1,0.883976957773298,0.8940499487284432,0.8919208850769771,0.955,0.9554385530477358,0.86,0.0,0.0,0.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,200,500,0.1,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,leiden,"n_neighbors=None, resolution=1.0",4,4,200,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,louvain,"n_neighbors=None, resolution=1.0",4,4,200,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,kmeans,"n_clusters=4, n_init=10",4,4,200,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,200,500,0.1,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,dbscan,"eps=None, min_samples=5",4,1,200,500,0.1,0.0,0.009831313655878542,0.005027278349168958,0.255,0.11020552799433025,0.0,3.0,0.0,1.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,200,500,0.1,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,200
+55,cat_highcard_10cat_4c,categorical_high_cardinality,hdbscan,"min_cluster_size=5, min_samples=None",4,2,200,500,0.1,0.018205553219806006,0.07236096322917576,0.050818985820962025,0.33,0.22164778796234194,0.0,2.0,0.0,1.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,200,800,0.12,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,200,800,0.12,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,200,800,0.12,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,leiden,"n_neighbors=None, resolution=1.0",4,4,200,800,0.12,0.8584375450556446,0.8349430307733974,0.8348225418140118,0.945,0.9452901160464187,0.92,0.0,0.0,0.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,louvain,"n_neighbors=None, resolution=1.0",4,4,200,800,0.12,0.8584569898395628,0.836088089483986,0.8359094872497934,0.945,0.9453270569775425,0.92,0.0,0.0,0.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,kmeans,"n_clusters=4, n_init=10",4,4,200,800,0.12,0.6230712870749776,0.58559811546216,0.5847514179752559,0.84,0.838657662984905,0.72,0.0,0.0,0.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,200,800,0.12,0.8946376467821598,0.8685450593729666,0.8681336968419345,0.96,0.9600711733794739,0.92,0.0,0.0,0.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,dbscan,"eps=None, min_samples=5",4,1,200,800,0.12,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,200,800,0.12,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,200
+56,cat_highcard_20cat_4c,categorical_high_cardinality,hdbscan,"min_cluster_size=5, min_samples=None",4,3,200,800,0.12,0.002911210337951262,0.08392486935227682,0.053000375964373916,0.3,0.2001546748955753,0.0,1.0,0.0,1.0,ok,,200
+57,cat_unbal_3cat_4c,categorical_unbalanced,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,3,150,180,0.12,0.7645678443014696,0.8733680110370279,0.7752025680017612,0.75,0.6715686274509804,0.0,1.0,0.0,1.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,3,150,180,0.12,0.7645678443014696,0.8733680110370279,0.7752025680017612,0.75,0.6715686274509804,0.0,1.0,0.0,1.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,3,150,180,0.12,0.7645678443014696,0.8733680110370279,0.7752025680017612,0.75,0.6715686274509804,0.0,1.0,0.0,1.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,leiden,"n_neighbors=None, resolution=1.0",4,4,150,180,0.12,0.969039236190764,0.9564165557098506,0.9564165557098506,0.9850446428571429,0.9850446428571429,0.96875,0.0,0.0,0.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,louvain,"n_neighbors=None, resolution=1.0",4,4,150,180,0.12,0.969039236190764,0.9564165557098506,0.9564165557098506,0.9850446428571429,0.9850446428571429,0.96875,0.0,0.0,0.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,kmeans,"n_clusters=4, n_init=10",4,4,150,180,0.12,0.9842889197678556,0.978132681603157,0.9778492475553608,0.9921875,0.9925106192711827,0.96875,0.0,0.0,0.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,150,180,0.12,0.9842777250184658,0.9781356879714989,0.9782772789161778,0.9928571428571429,0.992530657748049,0.9714285714285714,0.0,0.0,0.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,dbscan,"eps=None, min_samples=5",4,3,150,180,0.12,0.6659951199598657,0.7521413622532963,0.7163789366217266,0.6877263804457954,0.6475252525252525,0.03125,1.0,0.0,1.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,150,180,0.12,0.4979208775415278,0.6665444813745878,0.49986255414180786,0.5,0.35233785822021113,0.0,3.0,0.0,1.0,ok,,150
+57,cat_unbal_3cat_4c,categorical_unbalanced,hdbscan,"min_cluster_size=5, min_samples=None",4,4,150,180,0.12,0.6876719635544236,0.7696693630764065,0.7456743956957809,0.7488591269841269,0.6884599831548319,0.08571428571428572,0.0,0.0,0.0,ok,,150
+58,cat_overlap_3cat_4c,categorical_overlapping,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,400,300,0.35,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,400,300,0.35,0.6744365978543162,0.762001710679702,0.7290383816136226,0.7875000000000001,0.7641082447773898,0.26,0.0,0.0,0.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,400,300,0.35,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,leiden,"n_neighbors=None, resolution=1.0",4,4,400,300,0.35,0.9736686868686869,0.9646398643645447,0.9646398643645447,0.99,0.99,0.98,0.0,0.0,0.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,louvain,"n_neighbors=None, resolution=1.0",4,4,400,300,0.35,0.9736686868686869,0.9646398643645447,0.9646398643645447,0.99,0.99,0.98,0.0,0.0,0.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,kmeans,"n_clusters=4, n_init=10",4,4,400,300,0.35,0.9801510934032177,0.9722115226324496,0.9722027562066992,0.9924999999999999,0.9924998124953124,0.98,0.0,0.0,0.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,400,300,0.35,0.9933165272203728,0.9898917498726852,0.9898828240244267,0.9975,0.9974999374984375,0.99,0.0,0.0,0.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,dbscan,"eps=None, min_samples=5",4,3,400,300,0.35,0.657944459833483,0.7626677295014054,0.7100817055242176,0.7225,0.6726995394198564,0.06,1.0,0.0,1.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,400,300,0.35,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,400
+58,cat_overlap_3cat_4c,categorical_overlapping,hdbscan,"min_cluster_size=5, min_samples=None",4,2,400,300,0.35,0.0010512692655747673,0.03580020369493559,0.019474575063416755,0.2675,0.13498924961451203,0.0,2.0,0.0,1.0,ok,,400
+59,cat_highd_3cat_500feat,categorical_high_dimensional,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,200,1500,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,200,1500,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,3,200,1500,0.12,0.7111756168359942,0.8571428571428568,0.7499999999999996,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,leiden,"n_neighbors=None, resolution=1.0",4,4,200,1500,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,louvain,"n_neighbors=None, resolution=1.0",4,4,200,1500,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,kmeans,"n_clusters=4, n_init=10",4,4,200,1500,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,200,1500,0.12,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,dbscan,"eps=None, min_samples=5",4,4,200,1500,0.12,0.863640915307191,0.857391628488314,0.9133211931546987,0.95,0.9513921430802874,0.92,0.0,0.0,0.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,3,200,1500,0.12,0.7111756168359942,0.8571428571428568,0.7499999999999996,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,200
+59,cat_highd_3cat_500feat,categorical_high_dimensional,hdbscan,"min_cluster_size=5, min_samples=None",4,3,200,1500,0.12,0.7111756168359942,0.8571428571428568,0.7499999999999996,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,200
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,300,4000,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,6,300,4000,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,6,300,4000,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,leiden,"n_neighbors=None, resolution=1.0",6,6,300,4000,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,louvain,"n_neighbors=None, resolution=1.0",6,6,300,4000,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,kmeans,"n_clusters=6, n_init=10",6,6,300,4000,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,300,4000,0.15,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,dbscan,"eps=None, min_samples=5",6,6,300,4000,0.15,0.9296361007554287,0.9339138720436259,0.9636324114589111,0.9733333333333333,0.9738717356844505,0.92,0.0,0.0,0.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,5,300,4000,0.15,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,1.0,ok,,300
+60,cat_highd_4cat_1000feat,categorical_high_dimensional,hdbscan,"min_cluster_size=5, min_samples=None",6,4,300,4000,0.15,0.6805555555555556,0.8519590445170669,0.7420981285103052,0.6666666666666666,0.5555555555555555,0.0,2.0,0.0,1.0,ok,,300
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,17,100,400,0.2,0.8229517141038465,0.8373628965236382,1.0000000000000002,1.0,1.0,1.0,13.0,1.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,23,100,400,0.2,0.5059797608095676,0.7044114757703454,1.0000000000000002,1.0,1.0,1.0,19.0,1.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,100,400,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,leiden,"n_neighbors=None, resolution=1.0",4,4,100,400,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,louvain,"n_neighbors=None, resolution=1.0",4,4,100,400,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,kmeans,"n_clusters=4, n_init=10",4,4,100,400,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,400,0.2,0.6528835690968444,0.8151106242780365,0.7500000000000001,0.7,0.6388888888888888,0.0,0.0,0.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,dbscan,"eps=None, min_samples=5",4,4,100,400,0.2,0.7650386338085976,0.7914597242963739,0.8525802827231801,0.8999999999999999,0.9046793092815295,0.84,0.0,0.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,100,400,0.2,0.9433962264150944,0.9568274608770692,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+61,phylo_dna_4taxa_low_mut,phylogenetic_dna,hdbscan,"min_cluster_size=5, min_samples=None",4,4,100,400,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,leiden,"n_neighbors=None, resolution=1.0",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,louvain,"n_neighbors=None, resolution=1.0",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,kmeans,"n_clusters=8, n_init=10",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,dbscan,"eps=None, min_samples=5",8,8,160,800,0.2,0.8918093675307736,0.9197418977218331,0.9437785398811032,0.95,0.9524861399861401,0.85,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+62,phylo_dna_8taxa_low_mut,phylogenetic_dna,hdbscan,"min_cluster_size=5, min_samples=None",8,8,160,800,0.2,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,160,800,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,160,800,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,160,800,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,leiden,"n_neighbors=None, resolution=1.0",8,8,160,800,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,louvain,"n_neighbors=None, resolution=1.0",8,8,160,800,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,kmeans,"n_clusters=8, n_init=10",8,8,160,800,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,160,800,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,dbscan,"eps=None, min_samples=5",8,8,160,800,0.4,0.6320884092462122,0.7893850215773832,0.8021714079760248,0.8375,0.8586882928988192,0.65,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,160,800,0.4,0.5831431761907074,0.8139580953019131,0.7929661695650966,0.78125,0.786653895274585,0.35,0.0,0.0,0.0,ok,,160
+63,phylo_dna_8taxa_med_mut,phylogenetic_dna,hdbscan,"min_cluster_size=5, min_samples=None",8,7,160,800,0.4,0.8658227848101265,0.9565217391304347,0.9166666666666666,0.875,0.8333333333333333,0.0,1.0,0.0,1.0,ok,,160
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,kl,"tree_distance_metric=hamming, tree_linkage_method=average",16,16,240,2000,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",16,16,240,2000,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",16,17,240,2000,0.25,0.995556712338954,0.9972469802360288,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,leiden,"n_neighbors=None, resolution=1.0",16,16,240,2000,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,louvain,"n_neighbors=None, resolution=1.0",16,16,240,2000,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,kmeans,"n_clusters=16, n_init=10",16,16,240,2000,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=16, n_neighbors=None",16,16,240,2000,0.25,0.565382707885601,0.8670476178918726,0.8236487987851167,0.6166666666666667,0.5994688735177867,0.0,0.0,0.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,dbscan,"eps=None, min_samples=5",16,16,240,2000,0.25,0.8199606579020919,0.9146242018970752,0.921008601835544,0.9125,0.9254259727763785,0.7333333333333333,0.0,0.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,optics,"min_cluster_size=5, min_samples=5, xi=0.05",16,16,240,2000,0.25,0.943795062559794,0.9765321798543696,0.9826915594812721,0.9708333333333333,0.9691539365452408,0.5333333333333333,0.0,0.0,0.0,ok,,240
+64,phylo_dna_16taxa_low_mut,phylogenetic_dna,hdbscan,"min_cluster_size=5, min_samples=None",16,14,240,2000,0.25,0.8204357625845229,0.9614192611309683,0.9257048827786958,0.875,0.84375,0.0,2.0,0.0,1.0,ok,,240
+65,phylo_protein_4taxa,phylogenetic_protein,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,120,1000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,13,120,1000,0.3,0.7853241703910318,0.8338313651007542,1.0000000000000002,1.0,1.0,1.0,9.0,1.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,120,1000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,leiden,"n_neighbors=None, resolution=1.0",4,4,120,1000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,louvain,"n_neighbors=None, resolution=1.0",4,4,120,1000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,kmeans,"n_clusters=4, n_init=10",4,4,120,1000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,120,1000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,dbscan,"eps=None, min_samples=5",4,4,120,1000,0.3,0.6019171159374329,0.7043864259885234,0.7581935225646601,0.8416666666666667,0.8509068287549301,0.7333333333333333,0.0,0.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,120,1000,0.3,0.38427780957832475,0.6159558635883439,0.5921394583417352,0.6666666666666666,0.6481203007518797,0.26666666666666666,0.0,0.0,0.0,ok,,120
+65,phylo_protein_4taxa,phylogenetic_protein,hdbscan,"min_cluster_size=5, min_samples=None",4,4,120,1000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,120
+66,phylo_protein_8taxa,phylogenetic_protein,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,160,2000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,160,2000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,160,2000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,leiden,"n_neighbors=None, resolution=1.0",8,8,160,2000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,louvain,"n_neighbors=None, resolution=1.0",8,8,160,2000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,kmeans,"n_clusters=8, n_init=10",8,8,160,2000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,160,2000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,dbscan,"eps=None, min_samples=5",8,8,160,2000,0.35,0.8500407377231316,0.8869421356331472,0.911478697925681,0.9249999999999999,0.9313154247364773,0.85,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,160,2000,0.35,0.8628285500661413,0.9351124193659506,0.9375,0.90625,0.8909090909090909,0.25,0.0,0.0,0.0,ok,,160
+66,phylo_protein_8taxa,phylogenetic_protein,hdbscan,"min_cluster_size=5, min_samples=None",8,8,160,2000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+67,phylo_protein_12taxa,phylogenetic_protein,kl,"tree_distance_metric=hamming, tree_linkage_method=average",12,12,180,3000,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",12,12,180,3000,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",12,12,180,3000,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,leiden,"n_neighbors=None, resolution=1.0",12,12,180,3000,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,louvain,"n_neighbors=None, resolution=1.0",12,12,180,3000,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,kmeans,"n_clusters=12, n_init=10",12,12,180,3000,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=12, n_neighbors=None",12,12,180,3000,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,dbscan,"eps=None, min_samples=5",12,12,180,3000,0.4,0.8628243279556516,0.9160242991113698,0.9298844169085372,0.9333333333333335,0.9404533844189017,0.8,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,optics,"min_cluster_size=5, min_samples=5, xi=0.05",12,12,180,3000,0.4,0.9780771586037967,0.9894397040635377,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+67,phylo_protein_12taxa,phylogenetic_protein,hdbscan,"min_cluster_size=5, min_samples=None",12,12,180,3000,0.4,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,180
+68,phylo_divergent_4taxa,phylogenetic_divergent,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,100,400,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,67,100,400,0.7,0.041084634346754315,0.5010110283703476,0.9999999999999997,1.0,1.0,1.0,63.0,1.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,100,400,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,leiden,"n_neighbors=None, resolution=1.0",4,4,100,400,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,louvain,"n_neighbors=None, resolution=1.0",4,4,100,400,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,kmeans,"n_clusters=4, n_init=10",4,4,100,400,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,400,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,dbscan,"eps=None, min_samples=5",4,4,100,400,0.7,0.8351485410672362,0.8388949084047941,0.8972801359965835,0.9299999999999999,0.9322813111806872,0.88,0.0,0.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,100,400,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+68,phylo_divergent_4taxa,phylogenetic_divergent,hdbscan,"min_cluster_size=5, min_samples=None",4,4,100,400,0.7,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+69,phylo_divergent_8taxa,phylogenetic_divergent,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,160,800,0.8,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,160,800,0.8,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,160,800,0.8,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,leiden,"n_neighbors=None, resolution=1.0",8,8,160,800,0.8,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,louvain,"n_neighbors=None, resolution=1.0",8,8,160,800,0.8,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,kmeans,"n_clusters=8, n_init=10",8,8,160,800,0.8,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,160,800,0.8,0.6234639218569478,0.8285155406128089,0.7893430125921668,0.70625,0.6768065377334904,0.0,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,dbscan,"eps=None, min_samples=5",8,8,160,800,0.8,0.8598966804969012,0.8913853472048575,0.9159610491090887,0.925,0.9313154247364774,0.85,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,160,800,0.8,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+69,phylo_divergent_8taxa,phylogenetic_divergent,hdbscan,"min_cluster_size=5, min_samples=None",8,8,160,800,0.8,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+70,phylo_conserved_4taxa,phylogenetic_conserved,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,3,100,400,0.05,0.7079646017699115,0.8571428571428572,0.7500000000000001,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,3,100,400,0.05,0.7079646017699115,0.8571428571428572,0.7500000000000001,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,3,100,400,0.05,0.7079646017699115,0.8571428571428572,0.7500000000000001,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,leiden,"n_neighbors=None, resolution=1.0",4,4,100,400,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,louvain,"n_neighbors=None, resolution=1.0",4,4,100,400,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,kmeans,"n_clusters=4, n_init=10",4,4,100,400,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,100,400,0.05,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,dbscan,"eps=None, min_samples=5",4,4,100,400,0.05,0.6166419814771855,0.7140749819761001,0.7693852347179294,0.84,0.8486479090759151,0.72,0.0,0.0,0.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,100,400,0.05,0.34850644427596666,0.5774519803476207,0.5692209775362534,0.69,0.689539241622575,0.4,0.0,0.0,0.0,ok,,100
+70,phylo_conserved_4taxa,phylogenetic_conserved,hdbscan,"min_cluster_size=5, min_samples=None",4,9,100,400,0.05,0.33500586735726134,0.6080839740695604,0.7844688599011811,0.86,0.8669182483381022,0.72,5.0,1.0,0.0,ok,,100
+71,phylo_conserved_8taxa,phylogenetic_conserved,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,48,160,800,0.08,0.6902258651777392,0.8122894153495497,0.9999999999999998,1.0,1.0,1.0,40.0,1.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,29,160,800,0.08,0.7367735275951638,0.8540955996243613,0.9999999999999998,1.0,1.0,1.0,21.0,1.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,9,160,800,0.08,0.992863234436016,0.9940687859280467,0.9999999999999998,1.0,1.0,1.0,1.0,1.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,leiden,"n_neighbors=None, resolution=1.0",8,8,160,800,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,louvain,"n_neighbors=None, resolution=1.0",8,8,160,800,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,kmeans,"n_clusters=8, n_init=10",8,8,160,800,0.08,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,160,800,0.08,0.7267279101207766,0.8878231898677187,0.8333333333333334,0.71875,0.6488095238095237,0.0,0.0,0.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,dbscan,"eps=None, min_samples=5",8,8,160,800,0.08,0.724483555313944,0.832809473883347,0.8520877404725844,0.8687499999999999,0.8832431471306261,0.7,0.0,0.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,160,800,0.08,0.9551552318896129,0.970702879703621,0.9889575207805804,0.99375,0.9937460913070669,0.95,0.0,0.0,0.0,ok,,160
+71,phylo_conserved_8taxa,phylogenetic_conserved,hdbscan,"min_cluster_size=5, min_samples=None",8,7,160,800,0.08,0.8658227848101265,0.9565217391304348,0.9166666666666666,0.875,0.8333333333333333,0.0,1.0,0.0,1.0,ok,,160
+72,phylo_large_32taxa,phylogenetic_large,kl,"tree_distance_metric=hamming, tree_linkage_method=average",32,32,320,2000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",32,32,320,2000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",32,285,320,2000,0.3,0.04746956588316362,0.7633110529552918,1.0000000000000002,1.0,1.0,1.0,253.0,1.0,0.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,leiden,"n_neighbors=None, resolution=1.0",32,14,320,2000,0.3,0.5371269951422624,0.8580627792928326,0.7514097655573919,0.4375,0.27604166666666663,0.0,18.0,0.0,1.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,louvain,"n_neighbors=None, resolution=1.0",32,14,320,2000,0.3,0.5371269951422624,0.8580627792928326,0.7514097655573919,0.4375,0.27604166666666663,0.0,18.0,0.0,1.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,kmeans,"n_clusters=32, n_init=10",32,32,320,2000,0.3,0.9596943199097251,0.9914598656228102,0.9874999999999999,0.9625,0.9548611111111112,0.0,0.0,0.0,0.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=32, n_neighbors=None",32,32,320,2000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,dbscan,"eps=None, min_samples=5",32,32,320,2000,0.3,0.8937736083875156,0.9573042272855963,0.959810148422626,0.953125,0.9613878446115287,0.8,0.0,0.0,0.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,optics,"min_cluster_size=5, min_samples=5, xi=0.05",32,32,320,2000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,320
+72,phylo_large_32taxa,phylogenetic_large,hdbscan,"min_cluster_size=5, min_samples=None",32,32,320,2000,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,320
+73,phylo_large_64taxa,phylogenetic_large,kl,"tree_distance_metric=hamming, tree_linkage_method=average",64,64,512,4000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",64,64,512,4000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",64,172,512,4000,0.35,0.7599235181644359,0.9310472578658875,0.9999999999999998,1.0,1.0,1.0,108.0,1.0,0.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,leiden,"n_neighbors=None, resolution=1.0",64,19,512,4000,0.35,0.3514973898708673,0.8142246373668091,0.6866601069857802,0.296875,0.14947916666666666,0.0,45.0,0.0,1.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,louvain,"n_neighbors=None, resolution=1.0",64,19,512,4000,0.35,0.3514973898708673,0.8142246373668091,0.6866601069857802,0.296875,0.14947916666666666,0.0,45.0,0.0,1.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,kmeans,"n_clusters=64, n_init=10",64,64,512,4000,0.35,0.9610508675819676,0.9933509156090449,0.9895833333333333,0.96484375,0.95625,0.0,0.0,0.0,0.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=64, n_neighbors=None",64,64,512,4000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,dbscan,"eps=None, min_samples=5",64,64,512,4000,0.35,0.8696622526409761,0.9670104091649967,0.965266387478079,0.955078125,0.9658997252747252,0.625,0.0,0.0,0.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,optics,"min_cluster_size=5, min_samples=5, xi=0.05",64,64,512,4000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,512
+73,phylo_large_64taxa,phylogenetic_large,hdbscan,"min_cluster_size=5, min_samples=None",64,64,512,4000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,512
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,500,50,0.4,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,500,50,0.4,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,500,50,0.4,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,leiden,"n_neighbors=None, resolution=1.0",4,12,500,50,0.4,0.051467210901614546,0.09964551189410502,0.13733553746901372,0.476,0.4635886681341227,0.248,8.0,1.0,0.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,louvain,"n_neighbors=None, resolution=1.0",4,10,500,50,0.4,0.04973041377658989,0.0872419673086119,0.11477981518454024,0.442,0.43718183199831434,0.328,6.0,1.0,0.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,kmeans,"n_clusters=4, n_init=10",4,4,500,50,0.4,0.1549292574545486,0.15265382811410907,0.15221113091925328,0.522,0.5172828801331854,0.336,0.0,0.0,0.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,500,50,0.4,0.0678644559733984,0.07787216722075115,0.0769677303268303,0.42600000000000005,0.4204432665291993,0.288,0.0,0.0,0.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,dbscan,"eps=None, min_samples=5",4,1,500,50,0.4,9.12337574562633e-06,0.0042703168342205534,0.0023636962385715317,0.258,0.12227807635285397,0.0,3.0,0.0,1.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,10,500,50,0.4,0.0020269093081234004,0.08245434468398126,0.06296985395178668,0.32200000000000006,0.25741211225479443,0.096,6.0,1.0,0.0,ok,,500
+74,overlap_heavy_4c_small_feat,overlapping_binary_heavy,hdbscan,"min_cluster_size=5, min_samples=None",4,2,500,50,0.4,0.0021633797678572175,0.03051617610517322,0.017600684246463418,0.278,0.15100723427935447,0.0,2.0,0.0,1.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,500,200,0.4,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,500,200,0.4,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,500,200,0.4,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,leiden,"n_neighbors=None, resolution=1.0",4,8,500,200,0.4,0.18332868818507947,0.2276385519450187,0.2820037406927502,0.636,0.6366281252867751,0.512,4.0,1.0,0.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,louvain,"n_neighbors=None, resolution=1.0",4,9,500,200,0.4,0.1369463271586755,0.16329949064062085,0.20677068424475245,0.5700000000000001,0.5684285531200561,0.512,5.0,1.0,0.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,kmeans,"n_clusters=4, n_init=10",4,4,500,200,0.4,0.7652459917980442,0.7115687667484456,0.7115318732088515,0.906,0.9059133223576432,0.872,0.0,0.0,0.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,500,200,0.4,0.43576265520279833,0.4037065253136258,0.40220027509182216,0.744,0.7420733137580601,0.624,0.0,0.0,0.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,dbscan,"eps=None, min_samples=5",4,1,500,200,0.4,-5.2967383308248236e-05,0.002126059936976768,0.001119516028793849,0.254,0.11168726095910562,0.0,3.0,0.0,1.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,500,200,0.4,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+75,overlap_heavy_4c_med_feat,overlapping_binary_heavy,hdbscan,"min_cluster_size=5, min_samples=None",4,4,500,200,0.4,0.0019235416381471544,0.05545336069021645,0.03732796061514471,0.28,0.19094084719722604,0.04,0.0,0.0,0.0,ok,,500
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,1,800,500,0.4,0.0,0.0,0.0,0.125,0.027777777777777776,0.0,7.0,0.0,1.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,1,800,500,0.4,0.0,0.0,0.0,0.125,0.027777777777777776,0.0,7.0,0.0,1.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,1,800,500,0.4,0.0,0.0,0.0,0.125,0.027777777777777776,0.0,7.0,0.0,1.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,leiden,"n_neighbors=None, resolution=1.0",8,10,800,500,0.4,0.032208762857546376,0.06444873718777001,0.06767387319485457,0.25875,0.24171747553735717,0.15,2.0,1.0,0.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,louvain,"n_neighbors=None, resolution=1.0",8,12,800,500,0.4,0.02682381992069789,0.06956187155386272,0.07377391604990867,0.22500000000000003,0.21889802689394128,0.11,4.0,1.0,0.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,kmeans,"n_clusters=8, n_init=10",8,8,800,500,0.4,0.0919773725744254,0.12771479907142452,0.12684420200607274,0.32375000000000004,0.3126764483588174,0.15,0.0,0.0,0.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,800,500,0.4,0.02543288791981683,0.05865603948967628,0.058469991262173976,0.21375,0.213236762241984,0.1,0.0,0.0,0.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,dbscan,"eps=None, min_samples=5",8,1,800,500,0.4,1.9616569693570015e-05,0.006211144113987732,0.0032296218460866237,0.13,0.03703445041953088,0.0,7.0,0.0,1.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,1,800,500,0.4,0.0,0.0,0.0,0.125,0.027777777777777776,0.0,7.0,0.0,1.0,ok,,800
+76,overlap_heavy_8c_large_feat,overlapping_binary_heavy,hdbscan,"min_cluster_size=5, min_samples=None",8,2,800,500,0.4,2.5903540819434452e-05,0.011471175986780406,0.00592700370421318,0.13,0.03760506468839803,0.0,6.0,0.0,1.0,ok,,800
+77,overlap_extreme_4c,overlapping_binary_heavy,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,600,150,0.48,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,600,150,0.48,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,600,150,0.48,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,leiden,"n_neighbors=None, resolution=1.0",4,12,600,150,0.48,0.0028008502764100144,0.023009195280084778,0.031722687025460584,0.34,0.33615715820540504,0.24,8.0,1.0,0.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,louvain,"n_neighbors=None, resolution=1.0",4,14,600,150,0.48,-0.000378238648248162,0.01778310495023709,0.02546521821507135,0.325,0.3242900618839921,0.2866666666666667,10.0,1.0,0.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,kmeans,"n_clusters=4, n_init=10",4,4,600,150,0.48,0.008178358680530778,0.014584947598879095,0.014578990924946892,0.30833333333333335,0.30772357541779644,0.25333333333333335,0.0,0.0,0.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,600,150,0.48,0.0008781504814131568,0.006970241736615069,0.006905573830475302,0.29000000000000004,0.28768646603739406,0.23333333333333334,0.0,0.0,0.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,dbscan,"eps=None, min_samples=5",4,1,600,150,0.48,-7.403266509992348e-06,0.003288382262507079,0.001670687563351711,0.25166666666666665,0.1035568533633549,0.0,3.0,0.0,1.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,600,150,0.48,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,600
+77,overlap_extreme_4c,overlapping_binary_heavy,hdbscan,"min_cluster_size=5, min_samples=None",4,2,600,150,0.48,0.0018514850833146067,0.028191924773942837,0.0166751674029836,0.2783333333333333,0.15352601632581647,0.0,2.0,0.0,1.0,ok,,600
+78,overlap_mod_4c_small,overlapping_binary_moderate,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,400,80,0.3,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,400,80,0.3,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,400,80,0.3,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,leiden,"n_neighbors=None, resolution=1.0",4,4,400,80,0.3,0.9342758107479898,0.9066619995003844,0.9066373908199109,0.975,0.9750241218151666,0.96,0.0,0.0,0.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,louvain,"n_neighbors=None, resolution=1.0",4,4,400,80,0.3,0.9342758107479898,0.9066619995003844,0.9066373908199109,0.975,0.9750241218151666,0.96,0.0,0.0,0.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,kmeans,"n_clusters=4, n_init=10",4,4,400,80,0.3,0.960138306852042,0.9418932895943284,0.9418340871985352,0.985,0.9850113219728538,0.98,0.0,0.0,0.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,400,80,0.3,0.9147207763029682,0.8857463046843382,0.885586535730929,0.9675,0.9675672549247721,0.95,0.0,0.0,0.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,dbscan,"eps=None, min_samples=5",4,1,400,80,0.3,7.207311096376164e-05,0.00947700746177458,0.0050736120001538595,0.26,0.12014453477868112,0.0,3.0,0.0,1.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,2,400,80,0.3,0.001316252403726051,0.054598523507193165,0.030353884263532506,0.28,0.1589788205767982,0.0,2.0,0.0,1.0,ok,,400
+78,overlap_mod_4c_small,overlapping_binary_moderate,hdbscan,"min_cluster_size=5, min_samples=None",4,2,400,80,0.3,0.002048393969147058,0.02659251305241173,0.016373073225565322,0.28,0.15911502516175413,0.0,2.0,0.0,1.0,ok,,400
+79,overlap_mod_6c_med,overlapping_binary_moderate,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,4,600,250,0.3,0.6516314457437639,0.7905069208817112,0.6893138470615626,0.6566666666666667,0.5458862304963751,0.0,2.0,0.0,1.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,1,600,250,0.3,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,1,600,250,0.3,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,leiden,"n_neighbors=None, resolution=1.0",6,6,600,250,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,louvain,"n_neighbors=None, resolution=1.0",6,6,600,250,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,kmeans,"n_clusters=6, n_init=10",6,6,600,250,0.3,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,600,250,0.3,0.9919732133832615,0.9895722505267358,0.9895630455268364,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,dbscan,"eps=None, min_samples=5",6,1,600,250,0.3,0.00017480318653418573,0.007589144020569905,0.004235528838147727,0.17833333333333334,0.06960321780681063,0.0,5.0,0.0,1.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,1,600,250,0.3,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,600
+79,overlap_mod_6c_med,overlapping_binary_moderate,hdbscan,"min_cluster_size=5, min_samples=None",6,3,600,250,0.3,0.00010685345631611241,0.023608564285633456,0.013500416714723898,0.18166666666666667,0.08467568086551032,0.0,3.0,0.0,1.0,ok,,600
+80,overlap_mod_8c_large,overlapping_binary_moderate,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,800,400,0.28,0.9914106479870332,0.9898947859377112,0.9898888353539548,0.9962500000000001,0.9962499374984375,0.99,0.0,0.0,0.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,7,800,400,0.28,0.8610528599643552,0.9457452211733312,0.9061343193612764,0.8712500000000001,0.8299282752002355,0.0,1.0,0.0,1.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,1,800,400,0.28,0.0,0.0,0.0,0.125,0.027777777777777776,0.0,7.0,0.0,1.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,leiden,"n_neighbors=None, resolution=1.0",8,8,800,400,0.28,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,louvain,"n_neighbors=None, resolution=1.0",8,8,800,400,0.28,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,kmeans,"n_clusters=8, n_init=10",8,8,800,400,0.28,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,800,400,0.28,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,dbscan,"eps=None, min_samples=5",8,2,800,400,0.28,0.07195277768458712,0.2564673845354452,0.16533248057997899,0.2475,0.16773220130932898,0.0,6.0,0.0,1.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,1,800,400,0.28,0.0,0.0,0.0,0.125,0.027777777777777776,0.0,7.0,0.0,1.0,ok,,800
+80,overlap_mod_8c_large,overlapping_binary_moderate,hdbscan,"min_cluster_size=5, min_samples=None",8,4,800,400,0.28,0.00016643235420702297,0.02370104813299679,0.012950764057655675,0.1375,0.05200942371726266,0.0,4.0,0.0,1.0,ok,,800
+81,overlap_part_4c_small,overlapping_binary_partial,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,400,60,0.24,0.9534938148705171,0.935198400415452,0.9350892599364866,0.9824999999999999,0.982571108003439,0.97,0.0,0.0,0.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,400,60,0.24,0.9339209183776513,0.9099595807357427,0.9098282662880203,0.975,0.9750940376150461,0.96,0.0,0.0,0.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,400,60,0.24,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,leiden,"n_neighbors=None, resolution=1.0",4,4,400,60,0.24,0.9933165272203728,0.9898917498726852,0.9898828240244267,0.9975,0.9974999374984375,0.99,0.0,0.0,0.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,louvain,"n_neighbors=None, resolution=1.0",4,4,400,60,0.24,0.9933165272203728,0.9898917498726852,0.9898828240244267,0.9975,0.9974999374984375,0.99,0.0,0.0,0.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,kmeans,"n_clusters=4, n_init=10",4,4,400,60,0.24,0.9866670908875584,0.9797922416352375,0.9797656480488534,0.995,0.9949871852856927,0.98,0.0,0.0,0.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,400,60,0.24,0.9799502601004343,0.9696747947170882,0.9696486506334862,0.9924999999999999,0.9925121896611772,0.99,0.0,0.0,0.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,dbscan,"eps=None, min_samples=5",4,1,400,60,0.24,0.0008773504017866045,0.006736954258782161,0.004363439083789837,0.2725,0.16208968958030798,0.0,3.0,0.0,1.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,5,400,60,0.24,0.013443943743050921,0.19882534552894487,0.1442567025706341,0.37,0.31359613837489947,0.1,1.0,1.0,0.0,ok,,400
+81,overlap_part_4c_small,overlapping_binary_partial,hdbscan,"min_cluster_size=5, min_samples=None",4,3,400,60,0.24,5.4476277366230655e-05,0.028010525469168164,0.0161235714797447,0.2675,0.1438350234026522,0.02,1.0,0.0,1.0,ok,,400
+82,overlap_part_6c_med,overlapping_binary_partial,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,600,200,0.25,0.9959865525047962,0.994786149513209,0.9947815227634181,0.9983333333333334,0.998333291665625,0.99,0.0,0.0,0.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,6,600,200,0.25,0.9919732133832615,0.9895722505267358,0.9895630455268364,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,1,600,200,0.25,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,leiden,"n_neighbors=None, resolution=1.0",6,6,600,200,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,louvain,"n_neighbors=None, resolution=1.0",6,6,600,200,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,kmeans,"n_clusters=6, n_init=10",6,6,600,200,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,600,200,0.25,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,dbscan,"eps=None, min_samples=5",6,4,600,200,0.25,0.4919636755953209,0.6902722490483358,0.6182096381752228,0.6116666666666667,0.5678747153915822,0.0,2.0,0.0,1.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,1,600,200,0.25,0.0,0.0,0.0,0.16666666666666666,0.047619047619047616,0.0,5.0,0.0,1.0,ok,,600
+82,overlap_part_6c_med,overlapping_binary_partial,hdbscan,"min_cluster_size=5, min_samples=None",6,2,600,200,0.25,-9.393696924624911e-05,0.006486225684396235,0.0034975986763635747,0.17333333333333334,0.06362583130209744,0.0,4.0,0.0,1.0,ok,,600
+83,overlap_part_8c_large,overlapping_binary_partial,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,800,350,0.22,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,800,350,0.22,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,2,800,350,0.22,0.07630057803468208,0.30678964749335624,0.18118814773319925,0.25,0.15625,0.0,6.0,0.0,1.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,leiden,"n_neighbors=None, resolution=1.0",8,8,800,350,0.22,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,louvain,"n_neighbors=None, resolution=1.0",8,8,800,350,0.22,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,kmeans,"n_clusters=8, n_init=10",8,8,800,350,0.22,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,800,350,0.22,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,dbscan,"eps=None, min_samples=5",8,8,800,350,0.22,0.7733314777776776,0.8397696177909336,0.862443581578841,0.88375,0.897571809590902,0.8,0.0,0.0,0.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,1,800,350,0.22,0.07630057803468208,0.30678964749335624,0.18118814773319925,0.25,0.15625,0.0,7.0,0.0,1.0,ok,,800
+83,overlap_part_8c_large,overlapping_binary_partial,hdbscan,"min_cluster_size=5, min_samples=None",8,14,800,350,0.22,0.8172476832317354,0.8487165535351752,0.9069301009691703,0.9299999999999999,0.9333791407246073,0.77,6.0,1.0,0.0,ok,,800
+84,overlap_hd_4c_1k,overlapping_binary_highd,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,500,1000,0.35,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,283,500,1000,0.35,0.010484127031674045,0.3961265053043126,1.0000000000000004,1.0,1.0,1.0,279.0,1.0,0.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,500,1000,0.35,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,leiden,"n_neighbors=None, resolution=1.0",4,4,500,1000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,louvain,"n_neighbors=None, resolution=1.0",4,4,500,1000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,kmeans,"n_clusters=4, n_init=10",4,4,500,1000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,500,1000,0.35,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,dbscan,"eps=None, min_samples=5",4,4,500,1000,0.35,0.9234824866048045,0.9028921921040358,0.9469182623877341,0.964,0.9647577273334126,0.944,0.0,0.0,0.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,500,1000,0.35,0.0,0.0,0.0,0.25,0.1,0.0,3.0,0.0,1.0,ok,,500
+84,overlap_hd_4c_1k,overlapping_binary_highd,hdbscan,"min_cluster_size=5, min_samples=None",4,3,500,1000,0.35,0.6642649720825278,0.750221937922297,0.6875766713878522,0.728,0.6661108688619312,0.04,1.0,0.0,1.0,ok,,500
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,1,400,100,0.35,0.0,0.0,0.0,0.25,0.1138996138996139,0.0,3.0,0.0,1.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,1,400,100,0.35,0.0,0.0,0.0,0.25,0.1138996138996139,0.0,3.0,0.0,1.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,1,400,100,0.35,0.0,0.0,0.0,0.25,0.1138996138996139,0.0,3.0,0.0,1.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,leiden,"n_neighbors=None, resolution=1.0",4,4,400,100,0.35,0.7778715049902721,0.7377220556648061,0.7384563037248635,0.9151230757534816,0.9129812234430672,0.8679245283018868,0.0,0.0,0.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,louvain,"n_neighbors=None, resolution=1.0",4,4,400,100,0.35,0.7432684407680279,0.6993079791225992,0.6988255997910792,0.8972619280766254,0.8978567725851121,0.8604651162790697,0.0,0.0,0.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,kmeans,"n_clusters=4, n_init=10",4,4,400,100,0.35,0.8345973931763525,0.7806297832576256,0.7811685449791369,0.9355378552558404,0.9341618363989597,0.9056603773584906,0.0,0.0,0.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,400,100,0.35,0.7438796340358238,0.6950034428218914,0.6955631086706723,0.8990365855774785,0.8975246991418598,0.8490566037735849,0.0,0.0,0.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,dbscan,"eps=None, min_samples=5",4,1,400,100,0.35,0.0007802555220278632,0.0012832361587435724,0.0006917196554115232,0.25448364209696495,0.12973839313411228,0.0,3.0,0.0,1.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,1,400,100,0.35,-0.00023323310401876182,0.023276510173167484,0.01220571807157859,0.2617924528301887,0.13753226911121647,0.0,3.0,0.0,1.0,ok,,400
+85,overlap_unbal_4c_small,overlapping_binary_unbalanced,hdbscan,"min_cluster_size=5, min_samples=None",4,3,400,100,0.35,-0.00040403220096085594,0.029022311560807996,0.01859165152263326,0.2646632976600402,0.18034138910694927,0.046511627906976744,1.0,0.0,1.0,ok,,400
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,600,300,0.3,0.9817306285757762,0.9742725983954852,0.9743202343216708,0.9909443586492577,0.9908512468397106,0.9753086419753086,0.0,0.0,0.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,1,600,300,0.3,0.0,0.0,0.0,0.16666666666666666,0.0528284244974287,0.0,5.0,0.0,1.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,1,600,300,0.3,0.0,0.0,0.0,0.16666666666666666,0.0528284244974287,0.0,5.0,0.0,1.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,leiden,"n_neighbors=None, resolution=1.0",6,6,600,300,0.3,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,louvain,"n_neighbors=None, resolution=1.0",6,6,600,300,0.3,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,kmeans,"n_clusters=6, n_init=10",6,6,600,300,0.3,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,600,300,0.3,1.0,0.9999999999999999,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,dbscan,"eps=None, min_samples=5",6,2,600,300,0.3,0.1039963223542561,0.2886717735848018,0.19671044939422525,0.3178331517792302,0.23839710939880718,0.0,4.0,0.0,1.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,1,600,300,0.3,0.0,0.0,0.0,0.16666666666666666,0.0528284244974287,0.0,5.0,0.0,1.0,ok,,600
+86,overlap_unbal_6c_med,overlapping_binary_unbalanced,hdbscan,"min_cluster_size=5, min_samples=None",6,2,600,300,0.3,0.00033305968774687645,0.011140840831975259,0.005919573279820009,0.17281316820402368,0.06947744615087414,0.0,4.0,0.0,1.0,ok,,600
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,800,500,0.32,0.9295804687948276,0.9227976893093622,0.9225806854397576,0.9684752008097034,0.9688197720725518,0.9405940594059405,0.0,0.0,0.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,1,800,500,0.32,0.0,0.0,0.0,0.125,0.029977997799779978,0.0,7.0,0.0,1.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,1,800,500,0.32,0.0,0.0,0.0,0.125,0.029977997799779978,0.0,7.0,0.0,1.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,leiden,"n_neighbors=None, resolution=1.0",8,8,800,500,0.32,0.9971587386549765,0.9966295726956775,0.9966175140566168,0.9987244897959184,0.9987432108121763,0.9897959183673469,0.0,0.0,0.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,louvain,"n_neighbors=None, resolution=1.0",8,8,800,500,0.32,0.9971587386549765,0.9966295726956775,0.9966175140566168,0.9987244897959184,0.9987432108121763,0.9897959183673469,0.0,0.0,0.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,kmeans,"n_clusters=8, n_init=10",8,8,800,500,0.32,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,800,500,0.32,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,dbscan,"eps=None, min_samples=5",8,1,800,500,0.32,0.0005616343419592728,0.004279738540075538,0.0023807497983038815,0.1355902452724209,0.04943090645942799,0.0,7.0,0.0,1.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,1,800,500,0.32,0.0,0.0,0.0,0.125,0.029977997799779978,0.0,7.0,0.0,1.0,ok,,800
+87,overlap_unbal_8c_large,overlapping_binary_unbalanced,hdbscan,"min_cluster_size=5, min_samples=None",8,2,800,500,0.32,0.00014175729911101198,0.007657618029564549,0.004013334978926924,0.12950715633076518,0.042465220830530004,0.0,6.0,0.0,1.0,ok,,800
+88,gauss_overlap_3c_small,overlapping_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,3,300,30,3.5,0.9702555619013858,0.9589753057921956,0.9588443516038357,0.9899999999999999,0.9899977494936362,0.97,0.0,0.0,0.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,300,30,3.5,0.9702515159254026,0.9532461731380948,0.9532317115294054,0.9899999999999999,0.9899997499937498,0.98,0.0,0.0,0.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,2,300,30,3.5,0.5697841726618705,0.7336804366512119,0.5793801642856958,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,leiden,"n_neighbors=None, resolution=1.0",3,3,300,30,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,louvain,"n_neighbors=None, resolution=1.0",3,3,300,30,3.5,0.9800680223095938,0.9701911554558438,0.9701322777938319,0.9933333333333333,0.9933326665999934,0.98,0.0,0.0,0.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,kmeans,"n_clusters=3, n_init=10",3,3,300,30,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,300,30,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,dbscan,"eps=None, min_samples=5",3,3,300,30,3.5,0.8376761822316794,0.8414534854036664,0.9264276245436145,0.9766666666666666,0.9766614154851508,0.95,0.0,0.0,0.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,5,300,30,3.5,0.07177232484234856,0.30168309327198384,0.28249604914810456,0.5433333333333333,0.511895943827294,0.22,2.0,1.0,0.0,ok,,300
+88,gauss_overlap_3c_small,overlapping_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",3,2,300,30,3.5,0.5685795511364448,0.7275536547958428,0.5814908869404602,0.6699999999999999,0.5628994337560846,0.01,1.0,0.0,1.0,ok,,300
+89,gauss_overlap_4c_med,overlapping_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,400,80,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,400,80,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,4,400,80,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,leiden,"n_neighbors=None, resolution=1.0",4,4,400,80,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,louvain,"n_neighbors=None, resolution=1.0",4,4,400,80,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,kmeans,"n_clusters=4, n_init=10",4,4,400,80,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,400,80,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,dbscan,"eps=None, min_samples=5",4,4,400,80,4.0,0.8717193408671327,0.858894983484258,0.9132064259488458,0.9375,0.93958030330576,0.9,0.0,0.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,7,400,80,4.0,0.019383349374858548,0.24990796329678874,0.20416704694881355,0.4275,0.4033269760542488,0.21,3.0,1.0,0.0,ok,,400
+89,gauss_overlap_4c_med,overlapping_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",4,4,400,80,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,400
+90,gauss_overlap_6c_large,overlapping_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,600,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,6,600,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,6,600,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,leiden,"n_neighbors=None, resolution=1.0",6,6,600,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,louvain,"n_neighbors=None, resolution=1.0",6,6,600,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,kmeans,"n_clusters=6, n_init=10",6,6,600,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,600,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,dbscan,"eps=None, min_samples=5",6,6,600,150,3.5,0.8198604415785602,0.8548170833368751,0.8900500987930691,0.9233333333333333,0.9279551306750283,0.83,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,6,600,150,3.5,0.8177094140540866,0.9141060323901022,0.8794333622144264,0.8450000000000001,0.8022391630251029,0.07,0.0,0.0,0.0,ok,,600
+90,gauss_overlap_6c_large,overlapping_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",6,6,600,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+91,gauss_overlap_8c_highd,overlapping_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,800,300,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,800,300,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,8,800,300,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,leiden,"n_neighbors=None, resolution=1.0",8,8,800,300,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,louvain,"n_neighbors=None, resolution=1.0",8,8,800,300,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,kmeans,"n_clusters=8, n_init=10",8,8,800,300,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,800,300,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,dbscan,"eps=None, min_samples=5",8,8,800,300,3.5,0.8029384578818103,0.870707579524597,0.8922402408015452,0.905,0.9121950606064319,0.69,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,800,300,3.5,0.9931188782787994,0.9940687859280469,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+91,gauss_overlap_8c_highd,overlapping_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",8,8,800,300,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+92,gauss_overlap_extreme_4c,overlapping_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",4,4,500,100,6.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",4,4,500,100,6.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",4,3,500,100,6.0,0.7130534790109259,0.8571428571428569,0.7499999999999999,0.75,0.6666666666666666,0.0,1.0,0.0,1.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,leiden,"n_neighbors=None, resolution=1.0",4,4,500,100,6.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,louvain,"n_neighbors=None, resolution=1.0",4,4,500,100,6.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,kmeans,"n_clusters=4, n_init=10",4,4,500,100,6.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=4, n_neighbors=None",4,4,500,100,6.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,dbscan,"eps=None, min_samples=5",4,4,500,100,6.0,0.9276928511978539,0.9113064528753344,0.9546593327316087,0.968,0.9684922810503283,0.936,0.0,0.0,0.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",4,4,500,100,6.0,0.9919841545111349,0.9871556136168174,0.9972451124978364,0.998,0.997999967999488,0.992,0.0,0.0,0.0,ok,,500
+92,gauss_overlap_extreme_4c,overlapping_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",4,2,500,100,6.0,0.3319946452476573,0.5771596324111234,0.4056390622295664,0.5,0.375,0.0,2.0,0.0,1.0,ok,,500
+93,gauss_overlap_extreme_6c,overlapping_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,leiden,"n_neighbors=None, resolution=1.0",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,louvain,"n_neighbors=None, resolution=1.0",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,kmeans,"n_clusters=6, n_init=10",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=6, n_neighbors=None",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,dbscan,"eps=None, min_samples=5",6,6,600,200,5.5,0.8065411393876716,0.848693996985657,0.883454221521891,0.92,0.9250605526856236,0.85,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+93,gauss_overlap_extreme_6c,overlapping_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",6,6,600,200,5.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,600
+94,gauss_overlap_many_10c,overlapping_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",10,10,1000,150,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",10,10,1000,150,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",10,10,1000,150,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,leiden,"n_neighbors=None, resolution=1.0",10,10,1000,150,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,louvain,"n_neighbors=None, resolution=1.0",10,10,1000,150,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,kmeans,"n_clusters=10, n_init=10",10,10,1000,150,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=10, n_neighbors=None",10,10,1000,150,4.0,0.7568409768353394,0.9082398306677895,0.8795880017344079,0.719,0.6818353831598865,0.0,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,dbscan,"eps=None, min_samples=5",10,10,1000,150,4.0,0.7975080957208668,0.8663062433824227,0.8818157758907377,0.909,0.9205028690978146,0.85,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",10,10,1000,150,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,1000
+94,gauss_overlap_many_10c,overlapping_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",10,10,1000,150,4.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,1000
+95,gauss_overlap_dense_8c,overlapping_gaussian,kl,"tree_distance_metric=hamming, tree_linkage_method=average",8,8,800,50,3.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",8,8,800,50,3.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",8,9,800,50,3.0,0.9985716813937815,0.9983196380378427,1.0,1.0,1.0,1.0,1.0,1.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,leiden,"n_neighbors=None, resolution=1.0",8,8,800,50,3.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,louvain,"n_neighbors=None, resolution=1.0",8,8,800,50,3.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,kmeans,"n_clusters=8, n_init=10",8,8,800,50,3.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=8, n_neighbors=None",8,8,800,50,3.0,0.6902467088244506,0.8696197949126212,0.8333333333333337,0.63,0.5877050599489244,0.0,0.0,0.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,dbscan,"eps=None, min_samples=5",8,8,800,50,3.0,0.7805930274782404,0.8490699703935906,0.8710633725415736,0.8925,0.9034405107303538,0.74,0.0,0.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,optics,"min_cluster_size=5, min_samples=5, xi=0.05",8,8,800,50,3.0,0.01538423754902664,0.23695692416826533,0.1596967704959131,0.275,0.2761899675780402,0.07,0.0,0.0,0.0,ok,,800
+95,gauss_overlap_dense_8c,overlapping_gaussian,hdbscan,"min_cluster_size=5, min_samples=None",8,7,800,50,3.0,0.8699755899104963,0.956521739130435,0.9166666666666669,0.875,0.8333333333333333,0.0,1.0,0.0,1.0,ok,,800
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,3,300,90,3.5,0.9899831669528851,0.9829929733076641,0.9829780604130467,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,300,90,3.5,0.9899831669528851,0.9829929733076641,0.9829780604130467,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,2,300,90,3.5,0.5697841726618705,0.7336804366512119,0.5793801642856958,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,leiden,"n_neighbors=None, resolution=1.0",3,3,300,90,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,louvain,"n_neighbors=None, resolution=1.0",3,3,300,90,3.5,0.9899831669528851,0.9829929733076641,0.9829780604130467,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,kmeans,"n_clusters=3, n_init=10",3,3,300,90,3.5,0.9899831669528851,0.9829929733076641,0.9829780604130467,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,300,90,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,dbscan,"eps=None, min_samples=5",3,3,300,90,3.5,0.8875888809305639,0.8783976863270264,0.9522240480047797,0.9666666666666667,0.9665831244778612,0.9,0.0,0.0,0.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,4,300,90,3.5,0.041345010912961486,0.22944598376857034,0.18677268222654278,0.49333333333333335,0.437293099057805,0.12,1.0,1.0,0.0,ok,,300
+96,gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,hdbscan,"min_cluster_size=5, min_samples=None",3,2,300,90,3.5,0.5697841726618705,0.7336804366512119,0.5793801642856958,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,3,300,120,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,300,120,3.5,0.9899831669528851,0.9829929733076641,0.9829780604130467,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,2,300,120,3.5,0.5697841726618705,0.7336804366512119,0.5793801642856958,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,leiden,"n_neighbors=None, resolution=1.0",3,3,300,120,3.5,0.9899831669528851,0.9829929733076641,0.9829780604130467,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,louvain,"n_neighbors=None, resolution=1.0",3,3,300,120,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,kmeans,"n_clusters=3, n_init=10",3,3,300,120,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,300,120,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,dbscan,"eps=None, min_samples=5",3,3,300,120,3.5,0.9261941068039365,0.903379393459588,0.9569492541560969,0.98,0.9799819837854069,0.94,0.0,0.0,0.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,6,300,120,3.5,0.010646718204162277,0.1868106403313664,0.151010223450097,0.4466666666666666,0.3745480070078147,0.13,3.0,1.0,0.0,ok,,300
+97,gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,hdbscan,"min_cluster_size=5, min_samples=None",3,2,300,120,3.5,0.5637280793086361,0.7080015174517925,0.5665950713624827,0.6699999999999999,0.5619892651390752,0.01,1.0,0.0,1.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,kl,"tree_distance_metric=hamming, tree_linkage_method=average",3,2,300,150,3.5,0.5697841726618705,0.7336804366512119,0.5793801642856958,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",3,3,300,150,3.5,0.5528263908931778,0.6687569282739227,0.5821626775505704,0.6833333333333332,0.6135265700483091,0.1,0.0,0.0,0.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",3,2,300,150,3.5,0.5697841726618705,0.7336804366512119,0.5793801642856958,0.6666666666666666,0.5555555555555555,0.0,1.0,0.0,1.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,leiden,"n_neighbors=None, resolution=1.0",3,3,300,150,3.5,0.9899831669528851,0.9829929733076641,0.9829780604130467,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,louvain,"n_neighbors=None, resolution=1.0",3,3,300,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,kmeans,"n_clusters=3, n_init=10",3,3,300,150,3.5,0.9899831669528851,0.9829929733076641,0.9829780604130467,0.9966666666666667,0.9966665833312499,0.99,0.0,0.0,0.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=3, n_neighbors=None",3,3,300,150,3.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,dbscan,"eps=None, min_samples=5",3,3,300,150,3.5,0.8757120735794733,0.8586619310219583,0.9302402436385914,0.9766666666666666,0.9766520742130499,0.94,0.0,0.0,0.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,optics,"min_cluster_size=5, min_samples=5, xi=0.05",3,3,300,150,3.5,0.24456116312704576,0.4627271445706246,0.4839746745758767,0.6866666666666666,0.6856051062400268,0.44,0.0,0.0,0.0,ok,,300
+98,gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,hdbscan,"min_cluster_size=5, min_samples=None",3,4,300,150,3.5,0.5111877427011511,0.5439250167262879,0.5309414668948969,0.7033333333333333,0.6644320418316524,0.23,1.0,1.0,0.0,ok,,300
+99,feature_matrix_go_terms,real_data,kl,"tree_distance_metric=hamming, tree_linkage_method=average",0,41,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,kl_complete,"tree_distance_metric=hamming, tree_linkage_method=complete",0,74,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,kl_single,"tree_distance_metric=hamming, tree_linkage_method=single",0,1,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,leiden,"n_neighbors=None, resolution=1.0",0,9,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,louvain,"n_neighbors=None, resolution=1.0",0,9,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,kmeans,"n_clusters=true, n_init=10",0,10,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,spectral,"affinity=nearest_neighbors, assign_labels=cluster_qr, n_clusters=true, n_neighbors=None",0,10,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,dbscan,"eps=None, min_samples=5",0,1,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,optics,"min_cluster_size=5, min_samples=5, xi=0.05",0,5,626,456,0.0,,,,,,,,,,ok,,626
+99,feature_matrix_go_terms,real_data,hdbscan,"min_cluster_size=5, min_samples=None",0,39,626,456,0.0,,,,,,,,,,ok,,626

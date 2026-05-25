@@ -3,10 +3,10 @@
 Date: 2026-03-20
 
 Reference run:
-- [run_20260320_133847Z](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z)
-- [full_benchmark_comparison.csv](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/full_benchmark_comparison.csv)
-- [benchmark_relationship_method_section_summary.csv](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/benchmark_relationship_method_section_summary.csv)
-- [failure_report.md](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/failure_report.md)
+- [run_20260320_133847Z](raw/assets/benchmark-results/run_20260320_133847Z)
+- [full_benchmark_comparison.csv](raw/assets/benchmark-results/run_20260320_133847Z/full_benchmark_comparison.csv)
+- [benchmark_relationship_method_section_summary.csv](raw/assets/benchmark-results/run_20260320_133847Z/benchmark_relationship_method_section_summary.csv)
+- [failure_report.md](raw/assets/benchmark-results/run_20260320_133847Z/failure_report.md)
 
 ## Summary
 
@@ -179,9 +179,9 @@ This means one fix is unlikely to close both gaps.
 
 ## Representative audit files
 
-- [case_56_kl_divergence_stats.csv](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/audit/case_56_kl_divergence_stats.csv)
-- [case_58_kl_divergence_stats.csv](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/audit/case_58_kl_divergence_stats.csv)
-- [case_78_kl_divergence_stats.csv](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/audit/case_78_kl_divergence_stats.csv)
-- [case_79_kl_divergence_stats.csv](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/audit/case_79_kl_divergence_stats.csv)
-- [case_84_kl_divergence_stats.csv](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/audit/case_84_kl_divergence_stats.csv)
-- [case_98_kl_divergence_stats.csv](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/run_20260320_133847Z/audit/case_98_kl_divergence_stats.csv)
+- [case_56_kl_divergence_stats.csv](raw/assets/benchmark-results/run_20260320_133847Z/audit/case_56_kl_divergence_stats.csv)
+- [case_58_kl_divergence_stats.csv](raw/assets/benchmark-results/run_20260320_133847Z/audit/case_58_kl_divergence_stats.csv)
+- [case_78_kl_divergence_stats.csv](raw/assets/benchmark-results/run_20260320_133847Z/audit/case_78_kl_divergence_stats.csv)
+- [case_79_kl_divergence_stats.csv](raw/assets/benchmark-results/run_20260320_133847Z/audit/case_79_kl_divergence_stats.csv)
+- [case_84_kl_divergence_stats.csv](raw/assets/benchmark-results/run_20260320_133847Z/audit/case_84_kl_divergence_stats.csv)
+- [case_98_kl_divergence_stats.csv](raw/assets/benchmark-results/run_20260320_133847Z/audit/case_98_kl_divergence_stats.csv)
