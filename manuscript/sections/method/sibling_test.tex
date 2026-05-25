@@ -287,18 +287,74 @@ projected-Wald reference scale:
 \right\}.
 \end{equation}
 Let $n_{\mathrm{eff}}$ be the effective sample size of the contributing sibling
-null weights. To penalize degenerate one-record calibration, the implementation
-multiplies $\hat c(z_u)$ by
+null weights. The current implementation reports this effective sample size as
+diagnostic information but does not multiply $\hat c(z_u)$ by an additional
+effective-sample penalty. Earlier drafts considered a penalty of the form
 \[
 1 + \min\!\left(1,\frac{0.01}{\alpha_{\mathrm{sib}}}\right)
-\frac{1}{6}\log\!\left(\frac{n_{\mathrm{cal}}}{n_{\mathrm{eff}}}\right).
+\frac{1}{6}\log\!\left(\frac{n_{\mathrm{cal}}}{n_{\mathrm{eff}}}\right),
 \]
-[TODO: justify the effective-sample penalty form, the divisor 6, and the
-reference level 0.01 with calibration evidence or a derivation. If this remains
-an implementation safeguard, label it as such and report sensitivity.]
-The denominator is required to have positive effective calibration mass. If no
-positive-degree sibling records carry positive null weight, the calibration
-contract is not satisfied and the implementation raises an error.
+but that expression is not part of the implemented estimator.
+[TODO: either remove this proposed penalty entirely or validate it as a
+separate estimator variant with a derivation or simulation study before
+including it in the method.]
+
+\paragraph{Calibration-support contract.}
+For a focal sibling pair $u$, the empirical-null interpretation of
+$\hat c(z_u)$ requires calibration records other than the focal record itself.
+Let $f_q$ denote the feature family of sibling record $q$, let
+$S_{l(q)}^{\mathrm{edge}}$ and $S_{r(q)}^{\mathrm{edge}}$ be the two
+child-parent edge rejection indicators, and let
+$B_q^{\mathrm{edge}}$ indicate that the sibling record is edge-blocked by the
+ancestor testing path. Define the non-focal local support set
+\[
+\mathcal C_{-u}
+=
+\left\{
+q\neq u:
+f_q=f_u,\ \nu_q>0,\ w_q(u)>0
+\right\}.
+\]
+The strict empirical-null support set is
+\[
+\mathcal C_{0,u}
+=
+\left\{
+q\in\mathcal C_{-u}:
+S_{l(q)}^{\mathrm{edge}}=0,\
+S_{r(q)}^{\mathrm{edge}}=0
+\right\},
+\]
+and the weak stopped-or-null support set is
+\[
+\mathcal C_{\mathrm{stop},u}
+=
+\left\{
+q\in\mathcal C_{-u}:
+q\in\mathcal C_{0,u}\ \text{or}\ B_q^{\mathrm{edge}}=1
+\right\}.
+\]
+The focal record is never admissible as its own calibration support. If
+$\mathcal C_{0,u}$ has positive calibration mass, the local estimate has strict
+internal empirical-null support. If $\mathcal C_{0,u}$ is empty but
+$\mathcal C_{\mathrm{stop},u}$ has positive mass, the estimate has only weak
+stopped-or-null support. If both are empty but $\mathcal C_{-u}$ has positive
+mass, the data provide selected non-null context but not empirical-null
+calibration. If $\mathcal C_{-u}$ has no positive mass, the local empirical-null
+calibration contract is unsatisfied. The current implementation raises a
+calibration-data error when the available records are only selected non-null
+contexts. The current diagnostics do not justify a separately named external
+calibration model for this case; production therefore fails closed. Any future
+external selection-conditioned model would first require validation under the
+full hierarchy-selection event, rather than being used as a fallback. The
+method must not silently substitute a neutral inflation factor.
+The present evidence establishes this as a necessary support contract, not as a
+sufficient finite-sample guarantee. Minimum effective sample size thresholds
+remain a validation gap.
+The denominator is required to have positive effective calibration mass from
+strict-null or stopped-edge records. If no such positive-degree sibling records
+carry positive null weight, the calibration contract is not satisfied and the
+implementation raises an error.
 
 \paragraph{Runtime inflation adjustment and sibling false-discovery-rate correction.}
 For each focal pair $u$, the inflation-adjusted runtime test is

@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 ## [Unreleased] - 2026-02-17
 
 ### Added
-- **Spectral dimension estimation** (`spectral_dimension.py`): Per-node eigendecomposition of the local correlation matrix provides the projection dimension and parent PCA basis for both edge and sibling tests. The maintained projected-Wald path uses unwhitened PCA components with Satterthwaite calibration from the matching eigenvalues.
+- **Spectral dimension estimation** (`spectral_dimension.py`): Per-node eigendecomposition of the local null-whitened tangent correlation matrix provides the projection dimension and parent PCA basis for both edge and sibling projected-Wald tests.
 - **Dual-form eigendecomposition** (`spectral_dimension.py`): When `n_desc < d_active`, computes the `n×n` Gram matrix instead of the `d×d` correlation matrix — O(n²d + n³) vs O(d³). For subtrees with n=10 leaves and d=2000 features, this is 10×10 eigh instead of 2000×2000, eliminating the performance bottleneck on high-dimensional cases.
 - **Internal node distributions in spectral decomposition** (`spectral_dimension.py`): The data matrix for eigendecomposition now includes both leaf rows AND internal descendant node distribution vectors. This enriches the covariance estimate, especially for nodes high in the tree where internal descendants capture intermediate subtree structure.
 
@@ -19,12 +19,6 @@ All notable changes to this project are documented in this file.
 - **`merge_similarity_graphs` p-value direction** (`signal_localization.py`): When duplicate similarity edges existed across localization levels, kept the **lower** p-value. For similarity edges, higher p-value = stronger evidence of similarity (fail to reject H₀). Fixed to keep the **higher** p-value. Previously caused false cross-boundary merges by under-reporting similarity strength.
 
 ## [Unreleased] - 2026-02-14
-
-### Fixed
-- **Cousin-adjusted Wald regression extrapolation** (`cousin_adjusted_wald.py`): The log-linear calibration regression `log(T/k) = β₀ + β₁·log(BL_sum) + β₂·log(n_parent)` could extrapolate ĉ far beyond observed calibration data at the root node (where `n_parent` is largest). The β₂ coefficient (~1.3–1.5) caused predicted ĉ = 3–17× at the root while the maximum observed T/k ratio from null-like pairs was only ~1.4×. This over-deflation caused the root sibling test to always fail → K=1 collapse in ~30/95 benchmark cases.
-  - **Fix**: `_predict_c()` now clamps the regression prediction at `model.max_observed_ratio` — the maximum T/k ratio actually observed in null-like calibration pairs. This prevents the regression from extrapolating beyond its training domain while preserving calibration within the observed range.
-  - **Impact**: K=1 collapses eliminated for all non-SBM/non-phylogenetic cases. Exact K matches improved from 49/95 to 57/95. Mean ARI improved from 0.63 to 0.75, with no regressions on the previously working cases.
-  - `_CalibrationModel` gains `max_observed_ratio: float` field; diagnostics dict includes `max_observed_ratio` key.
 
 ### Changed
 - Remove obsolete `n_permutations` parameter from the decomposition API; callers passing it will no longer be accepted. Tests updated accordingly.

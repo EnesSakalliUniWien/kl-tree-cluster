@@ -5,7 +5,7 @@ This directory contains the benchmark infrastructure for KL-Divergence Hierarchi
 ## Quick Start
 
 ```bash
-# Run full benchmark (currently 101 cases, 9 default methods)
+# Run full benchmark (currently 122 cases, 9 default methods)
 python benchmarks/full/run.py
 
 # Run specific benchmark suites
@@ -98,10 +98,11 @@ case suite and compares the default benchmark methods.
 
 **Data generation**: The full suite uses
 `benchmarks.shared.cases.get_default_test_cases()`, which currently resolves to
-101 cases. Each case specifies a generator, sample count, feature count,
+122 cases. Each case specifies a generator, sample count, feature count,
 cluster count, and noise level. The dispatcher (`generate_case_data`) routes to
-the appropriate generator, binarizes or one-hot-encodes as needed, and feeds
-the resulting matrix to each clustering method.
+the appropriate generator, binarizes, one-hot-encodes, or keeps continuous
+coordinates under an explicit `FeatureSpace`, and feeds the resulting matrix to
+each clustering method.
 
 **Experiment setup**:
 
@@ -175,7 +176,7 @@ For a focused diagnosis of the current KL gap on categorical and overlapping fam
 **Purpose**: Fast iteration benchmark — runs ~15 representative cases from the full suite for quick validation during development.
 
 **Data generation**: Draws from the same default case pool used by the full
-suite (`get_default_test_cases()`), which currently contains 101 cases.
+suite (`get_default_test_cases()`), which currently contains 122 cases.
 Hand-picked subset covers Gaussian, Binary, Categorical, SBM, and Overlapping
 families.
 
@@ -245,19 +246,23 @@ families.
 
 ## Test Case Categories
 
-The full suite currently resolves to 101 cases from the shared case registry.
+The full suite currently resolves to 122 cases from the shared case registry.
 The major families represented in that registry are summarized below.
 
-### Gaussian (18 cases)
+### Gaussian
 
-Generated via `sklearn.make_blobs` with configurable `cluster_std`, then **median-binarized** per feature: `(X > median(X, axis=0)).astype(int)`. Tests the algorithm on data where cluster structure originates from continuous Gaussian blobs but is observed through a lossy binary lens.
+The Gaussian blob, dimensional Gaussian, and Gaussian-outlier families keep the
+original median-binarized cases and add `*_continuous` A/B companions. The
+continuous companions keep the raw coordinates, carry an explicit continuous
+`FeatureSpace`, and provide Euclidean tree distances through benchmark metadata.
+This lets the Bernoulli/discretized path and the empirical-Gaussian path be
+compared without deleting the historical binary cases.
 
-| Subcategory              | Cases | n_samples | n_features | K    | cluster_std |
-| ------------------------ | ----- | --------- | ---------- | ---- | ----------- |
-| `gaussian_clear`         | 3     | 30–50     | 30–50      | 3–5  | 0.5–1.0     |
-| `gaussian_mixed`         | 5     | 25–65     | 25–65      | 2–6  | 0.7–2.0     |
-| `gaussian_extreme_noise` | 3     | 30–300    | 30–20000   | 3–30 | 2.0–7.5     |
-| `improved_gaussian`      | 7     | 30–120    | 20–80      | 3–8  | 0.5–2.5     |
+| Family | Binary cases | Continuous A/B cases |
+| ------ | ------------ | -------------------- |
+| Gaussian blobs (`blobs`) | `gaussian_extreme_noise`, `improved_gaussian`, `gaussian_null` | `gaussian_extreme_noise_continuous`, `improved_gaussian_continuous`, `gaussian_null_continuous` |
+| Dimensional Gaussian | `gaussian_dimensionality_consolidated`, `gaussian_dimensionality_diffuse` | `gaussian_dimensionality_consolidated_continuous`, `gaussian_dimensionality_diffuse_continuous` |
+| Gaussian outliers | `gaussian_outlier_singleton`, `gaussian_outlier_contamination` | `gaussian_outlier_singleton_continuous`, `gaussian_outlier_contamination_continuous` |
 
 ### Binary (21 cases)
 
