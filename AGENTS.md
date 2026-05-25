@@ -22,8 +22,10 @@ synthesis:
 - `manuscript/` for the paper, derivations, terminology, and submission gaps.
 - `kl_clustering_analysis/`, `benchmarks/`, `tests/`, `scripts/`, and
   `notebooks/` for implementation and validation behavior.
-- `data/`, `reports/`, `analysis/`, `docs/`, and `local_data/` for datasets,
-  outputs, audits, and local notes.
+- `data/`, `reports/`, `docs/`, and `local_data/` for datasets, outputs,
+  audits, and local notes.
+- root `analysis/` is ignored local workspace if present; do not treat it as
+  shared source unless a tracked file explicitly documents it.
 
 Do not overwrite or normalize raw evidence while synthesizing it. If a new
 external document enters the project, place it under `raw/inbox/` first, then

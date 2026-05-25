@@ -5,6 +5,7 @@ status: reviewed
 updated: 2026-05-25
 sources:
   - README.md
+  - docs/onboarding.md
   - manuscript/guides/full_method_logic_map.md
   - manuscript/sections/method/overview.tex
 tags:
@@ -36,6 +37,9 @@ Tracked feature matrices now have one canonical domain:
 exports, and large local datasets are not tracked by default unless they are
 explicitly retained as evidence.
 
+New contributors should start with `docs/onboarding.md` for the first-pass
+route through package code, benchmarks, tests, wiki, and manuscript context.
+
 The manuscript describes the inferential objective: the hierarchy proposes
 candidate splits, but the statistical method decides whether each split has
 enough evidence to remain in the final partition. The durable method concepts
@@ -48,6 +52,8 @@ The main implementation entities are [[poset-tree]] and
 ## Evidence
 
 - `README.md` maps the package, pipeline workflow, and testing entry points.
+- `docs/onboarding.md` defines the new-contributor route and the main code,
+  benchmark, and testing paths.
 - `data/README.md` and `reports/README.md` define the current data/report
   storage contract.
 - `manuscript/guides/full_method_logic_map.md` states the mathematical

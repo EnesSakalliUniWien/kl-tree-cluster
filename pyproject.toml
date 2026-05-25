@@ -1,10 +1,10 @@
 [project]
 name = "kl-clustering-analysis"
 version = "0.1.0"
-description = "KL-divergence based hierarchical clustering analysis with NetworkX and advanced visualization"
+description = "KL-TE hierarchy decomposition with projected-Wald gate testing"
 requires-python = ">=3.11"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "KL-TE contributors"}
 ]
 readme = "README.md"
 

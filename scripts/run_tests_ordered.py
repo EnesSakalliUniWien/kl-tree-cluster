@@ -61,10 +61,9 @@ STAGES: tuple[Stage, ...] = (
     ),
     Stage(
         6,
-        "Integration smoke + lab regressions + visualization",
+        "Integration smoke + visualization",
         (
             "tests/integration",
-            "tests/lab",
             "tests/visualization",
         ),
     ),

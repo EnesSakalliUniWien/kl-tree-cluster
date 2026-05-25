@@ -87,6 +87,10 @@ verification, and maintenance events here in chronological order.
   `data/feature_matrices/`, duplicate HC/CMS matrix aliases were removed, and
   generated report/log/notebook/profiling artifacts were removed from tracked
   source control.
+- Added a new-contributor onboarding route in `docs/onboarding.md`, filled the
+  statistics and benchmark-shared directory maps, and corrected stale package
+  metadata/test documentation so a cold-start reader has one route through the
+  project.
 
 ## Evidence
 

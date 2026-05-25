@@ -1,9 +1,4 @@
-"""
-KL-divergence based hierarchical clustering analysis.
-
-This package provides tools for hierarchical clustering analysis using
-KL-divergence measures with NetworkX and advanced visualization capabilities.
-"""
+"""KL-TE hierarchy decomposition package."""
 
 __version__ = "0.1.0"
 

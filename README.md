@@ -124,6 +124,8 @@ edge-test and sibling-test calculations.
 The repository keeps the durable entrypoint docs in a small set of files:
 
 - `README.md` for installation and the end-to-end workflow.
+- `docs/onboarding.md` for the first 30 minutes and contributor route through
+  the repository.
 - `manuscript/sections/method/edge_test.tex` and `manuscript/sections/method/sibling_test.tex` for numeric walk-throughs.
 - `tests/README.md` and `benchmarks/README.md` for the validation and benchmark harnesses.
 - Package READMEs under `kl_clustering_analysis/` for module-level maps.
@@ -142,6 +144,9 @@ The repository keeps the durable entrypoint docs in a small set of files:
 
 - Python `>=3.11`
 - A virtual environment tool such as `uv` or `venv`
+
+New contributors should read `docs/onboarding.md` after this README. It gives a
+short route through the package, benchmarks, wiki, manuscript, and tests.
 
 ### Install Dependencies
 
