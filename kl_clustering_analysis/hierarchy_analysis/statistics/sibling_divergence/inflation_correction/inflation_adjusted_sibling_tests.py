@@ -18,7 +18,6 @@ def _compute_inflation_adjusted_sibling_test(
     sibling_test_record: SiblingPairRecord,
     *,
     model: EmpiricalNullInflationModel,
-    significance_level_alpha: float,
 ) -> tuple[InflationAdjustedSiblingTestSummary, str]:
     """Return one inflation-adjusted sibling-test summary."""
     if not np.isfinite(sibling_test_record.stat):
@@ -42,7 +41,6 @@ def _compute_inflation_adjusted_sibling_test(
     empirical_inflation_factor = predict_empirical_inflation_factor(
         model,
         sibling_test_record,
-        significance_level_alpha=significance_level_alpha,
     )
     if not np.isfinite(empirical_inflation_factor) or empirical_inflation_factor < 1.0:
         raise ValueError(
@@ -80,7 +78,6 @@ def compute_inflation_adjusted_sibling_tests(
     sibling_test_records: Iterable[SiblingPairRecord],
     *,
     model: EmpiricalNullInflationModel,
-    significance_level_alpha: float,
 ) -> tuple[list[str], list[InflationAdjustedSiblingTestSummary], list[str]]:
     """Return inflation-adjusted sibling-test summaries for tested parents."""
     tested_parent_ids: list[str] = []
@@ -94,7 +91,6 @@ def compute_inflation_adjusted_sibling_tests(
         test_summary, method_label = _compute_inflation_adjusted_sibling_test(
             sibling_test_record,
             model=model,
-            significance_level_alpha=significance_level_alpha,
         )
         tested_parent_ids.append(sibling_test_record.parent)
         inflation_adjusted_test_summaries.append(test_summary)

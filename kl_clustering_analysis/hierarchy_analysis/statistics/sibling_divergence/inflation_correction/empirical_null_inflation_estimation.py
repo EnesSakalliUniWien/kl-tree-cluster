@@ -12,9 +12,6 @@ from .types.inflation_model import EmpiricalNullInflationModel
 # Context-weighted empirical-null inflation estimation
 # =============================================================================
 
-EFFECTIVE_SAMPLE_LOG_PENALTY_DIVISOR = 6.0
-EFFECTIVE_SAMPLE_LOG_PENALTY_REFERENCE_ALPHA = 0.01
-
 
 def _validate_calibration_record(record: SiblingPairRecord) -> None:
     """Validate one candidate record for empirical-null inflation estimation."""
@@ -53,15 +50,29 @@ def _validate_calibration_record(record: SiblingPairRecord) -> None:
             "Positive-degree sibling calibration records require positive "
             f"sibling_projection_dimension; parent={record.parent!r}."
         )
+    if record.degrees_of_freedom > 0 and record.n_parent <= 0:
+        raise ValueError(
+            "Positive-degree sibling calibration records require positive "
+            f"parent sample size; parent={record.parent!r}."
+        )
+    if record.feature_family not in {"bernoulli", "categorical", "continuous", "mixed"}:
+        raise ValueError(
+            "Sibling inflation calibration requires feature_family to be "
+            f"'bernoulli', 'categorical', 'continuous', or 'mixed'; "
+            f"parent={record.parent!r}, feature_family={record.feature_family!r}."
+        )
 
 
-def _weighted_mean(values: np.ndarray, weights: np.ndarray) -> float:
-    return float(np.sum(values * weights) / np.sum(weights))
+def _weighted_mean_columns(values: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    return np.sum(values * weights[:, None], axis=0) / np.sum(weights)
 
 
-def _weighted_std(values: np.ndarray, weights: np.ndarray) -> float:
-    center = _weighted_mean(values, weights)
-    return float(np.sqrt(max(_weighted_mean((values - center) ** 2, weights), 0.0)))
+def _weighted_std_columns(values: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    center = _weighted_mean_columns(values, weights)
+    variances = np.sum(((values - center) ** 2) * weights[:, None], axis=0) / np.sum(
+        weights
+    )
+    return np.sqrt(np.maximum(variances, 0.0))
 
 
 def _inflation_mle(
@@ -72,42 +83,17 @@ def _inflation_mle(
     return float(np.sum(weights * statistics) / np.sum(weights * reference_expectations))
 
 
+def _has_internal_empirical_null_support(record: SiblingPairRecord) -> bool:
+    """Return whether a record is admissible empirical-null calibration."""
+    return bool(record.is_null_like or record.is_edge_blocked)
+
+
 def _effective_sample_size(weights: np.ndarray) -> float:
     positive_weights = weights[weights > 0.0]
     if positive_weights.size == 0:
         raise ValueError("Effective sample size requires positive weights.")
     log_weights = np.log(positive_weights)
     return float(np.exp(2.0 * logsumexp(log_weights) - logsumexp(2.0 * log_weights)))
-
-
-def _effective_sample_degeneracy_penalty(
-    *,
-    n_calibration: int,
-    effective_sample_size: float,
-    significance_level_alpha: float,
-) -> float:
-    if n_calibration <= 0:
-        raise ValueError("Effective-sample penalty requires positive n_calibration.")
-    if not np.isfinite(effective_sample_size) or effective_sample_size <= 0.0:
-        raise ValueError(
-            "Effective-sample penalty requires finite positive effective_sample_size."
-        )
-    if not np.isfinite(significance_level_alpha) or not (
-        0.0 < significance_level_alpha <= 1.0
-    ):
-        raise ValueError("Effective-sample penalty requires alpha in (0, 1].")
-    alpha_scale = min(
-        1.0,
-        EFFECTIVE_SAMPLE_LOG_PENALTY_REFERENCE_ALPHA / float(significance_level_alpha),
-    )
-    return float(
-        1.0
-        + (
-            alpha_scale
-            * np.log(float(n_calibration) / effective_sample_size)
-            / EFFECTIVE_SAMPLE_LOG_PENALTY_DIVISOR
-        )
-    )
 
 
 def fit_empirical_null_inflation_model(
@@ -127,36 +113,54 @@ def fit_empirical_null_inflation_model(
             "Cannot fit sibling inflation model: no positive-degree calibration records."
         )
 
-    statistics = np.array([record.stat for record in positive_df_records], dtype=float)
-    reference_scales = np.array(
-        [record.reference_scale for record in positive_df_records],
-        dtype=float,
-    )
-    degrees_of_freedom = np.array(
-        [record.degrees_of_freedom for record in positive_df_records],
-        dtype=float,
-    )
-    null_weights = np.array(
-        [record.sibling_null_weight for record in positive_df_records],
-        dtype=float,
-    )
-    positive_weight_mask = null_weights > 0.0
-    if not np.any(positive_weight_mask):
+    positive_weight_records = [
+        record for record in positive_df_records if record.sibling_null_weight > 0.0
+    ]
+    if not positive_weight_records:
         raise ValueError(
             "Cannot fit sibling inflation model: no positive sibling-null calibration weight."
         )
 
-    statistics = statistics[positive_weight_mask]
-    reference_scales = reference_scales[positive_weight_mask]
-    degrees_of_freedom = degrees_of_freedom[positive_weight_mask]
-    null_weights = null_weights[positive_weight_mask]
-    calibration_scales = np.array(
-        [
-            record.sibling_projection_dimension
-            for record in positive_df_records
-            if record.sibling_null_weight > 0.0
-        ],
+    supported_records = [
+        record
+        for record in positive_weight_records
+        if _has_internal_empirical_null_support(record)
+    ]
+    if not supported_records:
+        selected_nonnull_count = sum(
+            not _has_internal_empirical_null_support(record)
+            for record in positive_weight_records
+        )
+        raise ValueError(
+            "Cannot fit sibling inflation model: no strict-null or stopped-edge "
+            "empirical-null calibration records with positive weight. "
+            f"Found {selected_nonnull_count} selected non-null positive-weight "
+            "record(s), which are not valid empirical-null calibration support."
+        )
+
+    statistics = np.array([record.stat for record in supported_records], dtype=float)
+    reference_scales = np.array(
+        [record.reference_scale for record in supported_records],
         dtype=float,
+    )
+    degrees_of_freedom = np.array(
+        [record.degrees_of_freedom for record in supported_records],
+        dtype=float,
+    )
+    null_weights = np.array(
+        [record.sibling_null_weight for record in supported_records],
+        dtype=float,
+    )
+    calibration_scales = np.array(
+        [record.sibling_projection_dimension for record in supported_records],
+        dtype=float,
+    )
+    calibration_parent_sample_sizes = np.array(
+        [record.n_parent for record in supported_records],
+        dtype=float,
+    )
+    calibration_feature_families = tuple(
+        record.feature_family for record in supported_records
     )
     reference_expectations = reference_scales * degrees_of_freedom
 
@@ -169,22 +173,29 @@ def fit_empirical_null_inflation_model(
     # One-sided post-selection correction: never increase the sibling statistic.
     baseline_empirical_inflation_factor = max(baseline_empirical_inflation_factor, 1.0)
 
-    sample_contexts = np.log(calibration_scales)
-    context_center = _weighted_mean(sample_contexts, null_weights)
-    context_bandwidth = _weighted_std(sample_contexts, null_weights)
-    if context_bandwidth <= 1e-12:
-        context_bandwidth = 0.0
+    sample_contexts = np.column_stack(
+        [
+            np.log(calibration_scales),
+            np.log(calibration_parent_sample_sizes),
+        ]
+    )
+    context_center = _weighted_mean_columns(sample_contexts, null_weights)
+    context_bandwidth = _weighted_std_columns(sample_contexts, null_weights)
+    context_bandwidth = np.where(context_bandwidth <= 1e-12, 0.0, context_bandwidth)
 
     effective_sample_size = _effective_sample_size(null_weights)
 
     return EmpiricalNullInflationModel(
-        method="context_weighted_empirical_null_inflation",
+        method="context_weighted_supported_empirical_null_inflation",
         n_calibration=int(len(statistics)),
+        n_strict_null_calibration=sum(record.is_null_like for record in supported_records),
+        n_stopped_or_null_calibration=len(supported_records),
         baseline_empirical_inflation_factor=baseline_empirical_inflation_factor,
         effective_sample_size=effective_sample_size,
         context_center=context_center,
         context_bandwidth=context_bandwidth,
         sample_contexts=sample_contexts,
+        sample_feature_families=calibration_feature_families,
         sample_weights=null_weights,
         sample_statistics=statistics,
         sample_reference_scales=reference_scales,
@@ -195,8 +206,6 @@ def fit_empirical_null_inflation_model(
 def predict_empirical_inflation_factor(
     model: EmpiricalNullInflationModel,
     record: SiblingPairRecord,
-    *,
-    significance_level_alpha: float,
 ) -> float:
     """Predict the empirical post-selection inflation for one sibling record."""
     if record.degrees_of_freedom == 0:
@@ -211,45 +220,80 @@ def predict_empirical_inflation_factor(
         )
     if model.n_calibration == 0:
         raise ValueError("Cannot predict sibling inflation from an empty calibration model.")
-
-    effective_sample_degeneracy_penalty = _effective_sample_degeneracy_penalty(
-        n_calibration=model.n_calibration,
-        effective_sample_size=model.effective_sample_size,
-        significance_level_alpha=significance_level_alpha,
-    )
-    if model.context_bandwidth == 0.0:
-        return float(
-            max(
-                model.baseline_empirical_inflation_factor
-                * effective_sample_degeneracy_penalty,
-                1.0,
-            )
+    if record.feature_family not in {"bernoulli", "categorical", "continuous", "mixed"}:
+        raise ValueError(
+            "Positive-degree sibling records require feature_family to be "
+            f"'bernoulli', 'categorical', 'continuous', or 'mixed'; "
+            f"parent={record.parent!r}, feature_family={record.feature_family!r}."
         )
 
-    log_target = float(np.log(record.sibling_projection_dimension))
-    scaled_offsets = (model.sample_contexts - log_target) / model.context_bandwidth
-    log_kernel_weights = -0.5 * scaled_offsets**2
+    family_mask = np.array(
+        [
+            feature_family == record.feature_family
+            for feature_family in model.sample_feature_families
+        ],
+        dtype=bool,
+    )
+    if not np.any(family_mask):
+        raise ValueError(
+            "Empirical-null inflation prediction has no calibration records for "
+            f"feature_family={record.feature_family!r}."
+        )
+    family_reference_expectations = (
+        model.sample_reference_scales[family_mask] * model.sample_degrees_of_freedom[family_mask]
+    )
+    family_baseline_inflation_factor = max(
+        _inflation_mle(
+            model.sample_statistics[family_mask],
+            family_reference_expectations,
+            model.sample_weights[family_mask],
+        ),
+        1.0,
+    )
+
+    active_context_axes = np.array([True, record.feature_family != "bernoulli"])
+    active_context_axes = active_context_axes & (model.context_bandwidth > 0.0)
+    if not np.any(active_context_axes):
+        return float(max(family_baseline_inflation_factor, 1.0))
+
+    if record.n_parent <= 0:
+        raise ValueError(
+            "Positive-degree sibling records require positive parent sample size "
+            f"for empirical-null inflation prediction; parent={record.parent!r}."
+        )
+    target_context = np.array(
+        [
+            np.log(record.sibling_projection_dimension),
+            np.log(float(record.n_parent)),
+        ],
+        dtype=float,
+    )
+    family_contexts = model.sample_contexts[family_mask]
+    family_weights = model.sample_weights[family_mask]
+    family_statistics = model.sample_statistics[family_mask]
+    scaled_offsets = (
+        family_contexts[:, active_context_axes] - target_context[active_context_axes]
+    ) / model.context_bandwidth[active_context_axes]
+    log_kernel_weights = -0.5 * np.sum(scaled_offsets**2, axis=1)
     log_kernel_weights = log_kernel_weights - float(np.max(log_kernel_weights))
-    local_weights = model.sample_weights * np.exp(log_kernel_weights)
+    local_weights = family_weights * np.exp(log_kernel_weights)
     if float(np.sum(local_weights)) <= 0.0:
         raise ValueError(
             "Empirical-null inflation prediction has zero effective calibration "
             f"weight; parent={record.parent!r}."
         )
 
-    reference_expectations = model.sample_reference_scales * model.sample_degrees_of_freedom
+    reference_expectations = family_reference_expectations
     local_inflation_factor = _inflation_mle(
-        model.sample_statistics,
+        family_statistics,
         reference_expectations,
         local_weights,
     )
-    return float(max(local_inflation_factor * effective_sample_degeneracy_penalty, 1.0))
+    return float(max(local_inflation_factor, 1.0))
 
 
 __all__ = [
     "EmpiricalNullInflationModel",
-    "EFFECTIVE_SAMPLE_LOG_PENALTY_DIVISOR",
-    "EFFECTIVE_SAMPLE_LOG_PENALTY_REFERENCE_ALPHA",
     "fit_empirical_null_inflation_model",
     "predict_empirical_inflation_factor",
 ]

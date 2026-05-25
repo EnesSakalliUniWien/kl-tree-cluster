@@ -22,6 +22,7 @@ def build_sibling_pair_record(
     is_edge_blocked: bool,
     sibling_null_weight: float,
     sibling_projection_dimension: float,
+    feature_family: str,
 ) -> SiblingPairRecord:
     """Construct a sibling-pair record from resolved statistical inputs."""
     if not np.isfinite(test_statistic):
@@ -54,6 +55,12 @@ def build_sibling_pair_record(
             "Sibling pair record requires a finite non-negative sibling_projection_dimension; "
             f"parent={parent_node_id!r}."
         )
+    if feature_family not in {"bernoulli", "categorical", "continuous", "mixed"}:
+        raise ValueError(
+            "Sibling pair record requires feature_family to be 'bernoulli', "
+            f"'categorical', 'continuous', or 'mixed'; got {feature_family!r} for "
+            f"parent={parent_node_id!r}."
+        )
     return SiblingPairRecord(
         parent=parent_node_id,
         left=left_child_id,
@@ -68,6 +75,7 @@ def build_sibling_pair_record(
         is_edge_blocked=is_edge_blocked,
         sibling_null_weight=sibling_null_weight,
         sibling_projection_dimension=sibling_projection_dimension,
+        feature_family=feature_family,
     )
 
 

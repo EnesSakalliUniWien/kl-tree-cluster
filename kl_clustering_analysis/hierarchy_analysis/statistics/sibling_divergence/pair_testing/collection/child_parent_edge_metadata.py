@@ -155,27 +155,21 @@ def estimate_sibling_null_weight_from_child_parent_edges(
     right_child_id: object,
     *,
     child_parent_edge_p_values_by_node: dict[object, float],
+    child_parent_edge_significance_by_node: dict[object, bool],
     child_parent_edge_tested_by_node: dict[object, bool],
     child_parent_edge_ancestor_blocked_by_node: dict[object, bool],
 ) -> float:
-    """Return the monotone empirical-null weight implied by both child edges."""
+    """Return the empirical-null weight implied by both child edges.
+
+    Tested child edges use their adjusted p-value as the monotone evidence
+    weight: large values are stronger empirical-null evidence, while tiny
+    values retain only tiny influence. Tree-BH-stopped descendants inherit
+    null-like support from the ancestor that did not open the subtree. Exact
+    zero is treated as numerical underflow for a significant tested edge, not
+    as a literal posterior probability of zero.
+    """
 
     def _edge_null_weight(child_id: object) -> float:
-        p_value = float(
-            _require_child_node_value(
-                child_parent_edge_p_values_by_node,
-                child_id,
-                "Child_Parent_Divergence_P_Value_BH",
-            )
-        )
-        if np.isfinite(p_value):
-            if not 0.0 <= p_value <= 1.0:
-                raise ValueError(
-                    "Child-parent BH p-values must lie in [0, 1] for sibling "
-                    f"null-weight estimation; child={child_id!r}, p_value={p_value!r}."
-                )
-            return p_value
-
         edge_tested = bool(
             _require_child_node_value(
                 child_parent_edge_tested_by_node,
@@ -190,16 +184,51 @@ def estimate_sibling_null_weight_from_child_parent_edges(
                 "Child_Parent_Divergence_Ancestor_Blocked",
             )
         )
-        if edge_tested and not edge_blocked:
-            raise ValueError(
-                "Tested child-parent edges must provide a finite Tree-BH p-value "
-                f"for sibling null-weight estimation; child={child_id!r}."
+        if not edge_tested or edge_blocked:
+            return 1.0
+
+        significant_edge = bool(
+            _require_child_node_value(
+                child_parent_edge_significance_by_node,
+                child_id,
+                "Child_Parent_Divergence_Significant",
             )
-        return 1.0
+        )
+
+        p_value = float(
+            _require_child_node_value(
+                child_parent_edge_p_values_by_node,
+                child_id,
+                "Child_Parent_Divergence_P_Value_BH",
+            )
+        )
+        if np.isfinite(p_value):
+            if not 0.0 <= p_value <= 1.0:
+                raise ValueError(
+                    "Child-parent BH p-values must lie in [0, 1] for sibling "
+                    f"null-weight estimation; child={child_id!r}, p_value={p_value!r}."
+                )
+            if p_value == 0.0:
+                if not significant_edge:
+                    raise ValueError(
+                        "A non-significant tested child-parent edge cannot have zero "
+                        "Tree-BH p-value for sibling null-weight estimation; "
+                        f"child={child_id!r}."
+                    )
+                return float(np.nextafter(0.0, 1.0))
+            return p_value
+
+        raise ValueError(
+            "Tested child-parent edges must provide a finite Tree-BH "
+            f"p-value for sibling null-weight estimation; child={child_id!r}."
+        )
 
     left_weight = _edge_null_weight(left_child_id)
     right_weight = _edge_null_weight(right_child_id)
-    return float(np.sqrt(left_weight * right_weight))
+    joint_weight = float(left_weight * right_weight)
+    if joint_weight == 0.0 and left_weight > 0.0 and right_weight > 0.0:
+        return float(np.nextafter(0.0, 1.0))
+    return joint_weight
 
 
 __all__ = [

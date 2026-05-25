@@ -24,8 +24,8 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
     a_dist = np.array([0.12, 0.12, 0.12, 0.88, 0.88, 0.88], dtype=np.float64)
     b_dist = np.array([0.88, 0.88, 0.88, 0.12, 0.12, 0.12], dtype=np.float64)
     cal_dist = np.array([0.50, 0.50, 0.50, 0.50, 0.50, 0.50], dtype=np.float64)
-    c_dist = np.array([0.45, 0.45, 0.45, 0.55, 0.55, 0.55], dtype=np.float64)
-    d_dist = np.array([0.55, 0.55, 0.55, 0.45, 0.45, 0.45], dtype=np.float64)
+    c_dist = np.array([0.49, 0.49, 0.49, 0.51, 0.51, 0.51], dtype=np.float64)
+    d_dist = np.array([0.51, 0.51, 0.51, 0.49, 0.49, 0.49], dtype=np.float64)
 
     for node, dist, leaf_count, is_leaf in (
         ("root", root_dist, 200, False),
@@ -56,8 +56,8 @@ def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.Dat
         [
             [0, 0, 0, 1, 1, 1],
             [1, 1, 1, 0, 0, 0],
-            [0.45, 0.45, 0.45, 0.55, 0.55, 0.55],
-            [0.55, 0.55, 0.55, 0.45, 0.45, 0.45],
+            [0.49, 0.49, 0.49, 0.51, 0.51, 0.51],
+            [0.51, 0.51, 0.51, 0.49, 0.49, 0.49],
         ],
         index=["A", "B", "C", "D"],
         dtype=np.float64,

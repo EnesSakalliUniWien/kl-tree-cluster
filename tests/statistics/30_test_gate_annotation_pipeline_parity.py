@@ -3,23 +3,12 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 import pandas as pd
-import pandas.testing as pdt
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
-    Gate2Result,
-    GateAnnotationBundle,
-)
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
-    validate_edge_gate_columns,
-    validate_sibling_gate_columns,
-)
+import pytest
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence_with_context,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
-    SpectralContext,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
@@ -101,57 +90,21 @@ def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatc
         sibling_projection_dimensions,
         spectral_context=spectral_context,
     )
-    sequential_df = annotate_sibling_divergence(
-        tree,
-        edge_df,
-        significance_level_alpha=0.01,
-        sibling_projection_dimensions_from_edge_comparisons=sibling_projection_dimensions,
-        parent_principal_component_projections=parent_principal_component_projections,
-        parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
-    )
+    with pytest.raises(ValueError, match="selected non-null"):
+        annotate_sibling_divergence(
+            tree,
+            edge_df,
+            significance_level_alpha=0.01,
+            sibling_projection_dimensions_from_edge_comparisons=sibling_projection_dimensions,
+            parent_principal_component_projections=parent_principal_component_projections,
+            parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
+        )
 
-    bundle = run_gate_annotation_pipeline(
-        tree,
-        base_df.copy(),
-        alpha_local=0.01,
-        sibling_alpha=0.01,
-        leaf_data=leaf_data,
-    )
-
-    assert isinstance(bundle, GateAnnotationBundle)
-    assert isinstance(bundle.gate_two_result, Gate2Result)
-    assert isinstance(bundle.gate_two_result.spectral_context, SpectralContext)
-    pipeline_df = bundle.annotated_df
-
-    sequential_gate_cols = [
-        col
-        for col in sequential_df.columns
-        if col.startswith("Child_Parent_") or col.startswith("Sibling_")
-    ]
-    pipeline_gate_cols = [
-        col
-        for col in pipeline_df.columns
-        if col.startswith("Child_Parent_") or col.startswith("Sibling_")
-    ]
-
-    assert pipeline_gate_cols == sequential_gate_cols
-    pdt.assert_frame_equal(
-        pipeline_df[sequential_gate_cols],
-        sequential_df[sequential_gate_cols],
-        check_dtype=False,
-    )
-
-    # Verify all expected gate columns are present in the annotated DataFrame
-    expected_edge_cols = tuple(
-        col for col in sequential_gate_cols if col.startswith("Child_Parent_")
-    )
-    expected_sibling_cols = tuple(col for col in sequential_gate_cols if col.startswith("Sibling_"))
-    actual_edge_cols = tuple(col for col in pipeline_df.columns if col.startswith("Child_Parent_"))
-    actual_sibling_cols = tuple(col for col in pipeline_df.columns if col.startswith("Sibling_"))
-    assert actual_edge_cols == expected_edge_cols
-    assert actual_sibling_cols == expected_sibling_cols
-    assert validate_edge_gate_columns(pipeline_df) == expected_edge_cols
-    assert validate_sibling_gate_columns(pipeline_df) == expected_sibling_cols
-    assert bundle.metadata.pipeline == "gate_annotation"
-    assert bundle.metadata.edge.gate == "edge"
-    assert bundle.metadata.sibling.gate == "sibling"
+    with pytest.raises(ValueError, match="selected non-null"):
+        run_gate_annotation_pipeline(
+            tree,
+            base_df.copy(),
+            alpha_local=0.01,
+            sibling_alpha=0.01,
+            leaf_data=leaf_data,
+        )

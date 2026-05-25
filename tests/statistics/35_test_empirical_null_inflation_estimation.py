@@ -4,8 +4,6 @@ import math
 
 import pytest
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
-    EFFECTIVE_SAMPLE_LOG_PENALTY_DIVISOR,
-    EFFECTIVE_SAMPLE_LOG_PENALTY_REFERENCE_ALPHA,
     fit_empirical_null_inflation_model,
     predict_empirical_inflation_factor,
 )
@@ -24,6 +22,8 @@ def _make_record(
     is_edge_blocked: bool = False,
     sibling_null_weight: float = 1.0,
     sibling_projection_dimension: float = 2.0,
+    n_parent: int = 32,
+    feature_family: str = "bernoulli",
 ) -> SiblingPairRecord:
     return SiblingPairRecord(
         parent=parent,
@@ -34,11 +34,12 @@ def _make_record(
         degrees_of_freedom=degrees_of_freedom,
         p_value=0.5,
         branch_length_sum=0.1,
-        n_parent=32,
+        n_parent=n_parent,
         is_null_like=is_null_like,
         is_edge_blocked=is_edge_blocked,
         sibling_null_weight=sibling_null_weight,
         sibling_projection_dimension=sibling_projection_dimension,
+        feature_family=feature_family,
     )
 
 
@@ -82,7 +83,7 @@ def test_fit_empirical_null_inflation_model_rejects_invalid_null_weight() -> Non
         fit_empirical_null_inflation_model(records)
 
 
-def test_fit_empirical_null_inflation_model_uses_all_weighted_records() -> None:
+def test_fit_empirical_null_inflation_model_excludes_selected_nonnull_records() -> None:
     records = [
         _make_record(
             "blocked",
@@ -102,11 +103,27 @@ def test_fit_empirical_null_inflation_model_uses_all_weighted_records() -> None:
 
     model = fit_empirical_null_inflation_model(records)
 
-    assert model.n_calibration == 2
+    assert model.n_calibration == 1
+    assert model.n_stopped_or_null_calibration == 1
     assert math.isclose(
         model.baseline_empirical_inflation_factor,
-        ((0.5 * 4.0) + (0.25 * 20.0)) / ((0.5 * 1.0) + (0.25 * 4.0)),
+        4.0 / 1.0,
     )
+
+
+def test_fit_empirical_null_inflation_model_rejects_selected_nonnull_only_support() -> None:
+    records = [
+        _make_record(
+            "selected",
+            stat=20.0,
+            degrees_of_freedom=4.0,
+            is_null_like=False,
+            sibling_null_weight=0.25,
+        ),
+    ]
+
+    with pytest.raises(ValueError, match="selected non-null"):
+        fit_empirical_null_inflation_model(records)
 
 
 def test_fit_empirical_null_inflation_model_uses_reference_scale_in_inflation_denominator() -> None:
@@ -140,17 +157,59 @@ def test_fit_empirical_null_inflation_model_uses_context_weighted_inflation() ->
         rel_tol=1e-9,
     )
     assert model.n_calibration == 3
-    assert model.method == "context_weighted_empirical_null_inflation"
+    assert model.method == "context_weighted_supported_empirical_null_inflation"
     assert model.sample_statistics.tolist() == [2.0, 9.0, 20.0]
     assert model.sample_degrees_of_freedom.tolist() == [1.0, 3.0, 5.0]
     assert (
         predict_empirical_inflation_factor(
             model,
             records[0],
-            significance_level_alpha=EFFECTIVE_SAMPLE_LOG_PENALTY_REFERENCE_ALPHA,
         )
         >= 1.0
     )
+
+
+def test_predict_empirical_inflation_conditions_on_parent_sample_size() -> None:
+    records = [
+        _make_record(
+            "small_0",
+            stat=80.0,
+            degrees_of_freedom=2.0,
+            sibling_projection_dimension=5.0,
+            n_parent=2,
+            feature_family="categorical",
+        ),
+        _make_record(
+            "small_1",
+            stat=60.0,
+            degrees_of_freedom=2.0,
+            sibling_projection_dimension=5.0,
+            n_parent=3,
+            feature_family="categorical",
+        ),
+        _make_record(
+            "large_0",
+            stat=10.0,
+            degrees_of_freedom=5.0,
+            sibling_projection_dimension=5.0,
+            n_parent=100,
+            feature_family="categorical",
+        ),
+    ]
+
+    model = fit_empirical_null_inflation_model(records)
+
+    small_parent_inflation = predict_empirical_inflation_factor(
+        model,
+        records[0],
+    )
+    large_parent_inflation = predict_empirical_inflation_factor(
+        model,
+        records[2],
+    )
+
+    assert large_parent_inflation < small_parent_inflation
+    assert large_parent_inflation < model.baseline_empirical_inflation_factor
 
 
 def test_fit_empirical_null_inflation_model_keeps_zero_ratios_as_calibration_data() -> None:
@@ -185,49 +244,3 @@ def test_fit_empirical_null_inflation_model_reports_underflow_stable_effective_s
     model = fit_empirical_null_inflation_model(records)
 
     assert math.isclose(model.effective_sample_size, 1.8)
-
-
-def test_predict_empirical_inflation_applies_effective_sample_penalty() -> None:
-    records = [
-        _make_record("p0", stat=4.0, degrees_of_freedom=1.0, sibling_null_weight=1.0),
-        _make_record("p1", stat=8.0, degrees_of_freedom=2.0, sibling_null_weight=1e-12),
-    ]
-
-    model = fit_empirical_null_inflation_model(records)
-    effective_sample_degeneracy_log = math.log(
-        model.n_calibration / model.effective_sample_size
-    )
-
-    assert math.isclose(
-        predict_empirical_inflation_factor(
-            model,
-            records[0],
-            significance_level_alpha=EFFECTIVE_SAMPLE_LOG_PENALTY_REFERENCE_ALPHA,
-        ),
-        model.baseline_empirical_inflation_factor
-        * (
-            1.0
-            + effective_sample_degeneracy_log / EFFECTIVE_SAMPLE_LOG_PENALTY_DIVISOR
-        ),
-    )
-
-
-def test_predict_empirical_inflation_scales_penalty_by_sibling_alpha() -> None:
-    records = [
-        _make_record("p0", stat=4.0, degrees_of_freedom=1.0, sibling_null_weight=1.0),
-        _make_record("p1", stat=8.0, degrees_of_freedom=2.0, sibling_null_weight=1e-12),
-    ]
-
-    model = fit_empirical_null_inflation_model(records)
-    strict = predict_empirical_inflation_factor(
-        model,
-        records[0],
-        significance_level_alpha=0.01,
-    )
-    loose = predict_empirical_inflation_factor(
-        model,
-        records[0],
-        significance_level_alpha=0.05,
-    )
-
-    assert strict > loose > model.baseline_empirical_inflation_factor

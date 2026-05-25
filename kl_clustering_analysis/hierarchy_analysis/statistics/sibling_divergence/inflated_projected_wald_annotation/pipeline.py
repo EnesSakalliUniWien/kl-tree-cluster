@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ...branch_length_utils import compute_mean_branch_length
 from ..inflation_correction.empirical_null_inflation_estimation import (
@@ -18,7 +19,7 @@ from ..inflation_correction.inflation_adjusted_sibling_tests import (
 from ..pair_testing.collection.record_collection import collect_sibling_pair_records
 from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
 from .fdr_annotation import (
-    apply_sibling_bh_results,
+    apply_traversal_aligned_sibling_bh_results,
     early_return_if_no_records,
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
@@ -53,6 +54,7 @@ def annotate_sibling_divergence(
     parent_principal_component_projections: dict[str, np.ndarray],
     parent_principal_component_eigenvalues: dict[str, np.ndarray],
     significance_level_alpha: float = config.SIBLING_ALPHA,
+    feature_space: FeatureSpace | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using context-weighted empirical-null inflation."""
     annotations_df = init_sibling_annotation_df(annotations_df)
@@ -68,6 +70,7 @@ def annotate_sibling_divergence(
         ),
         parent_principal_component_projections=parent_principal_component_projections,
         parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
+        feature_space=feature_space,
     )
 
     mark_non_binary_as_skipped(annotations_df, non_binary)
@@ -82,7 +85,8 @@ def annotate_sibling_divergence(
 
     skipped_parents = [record.parent for record in records if record.is_null_like]
     if n_focal == 0:
-        return apply_sibling_bh_results(
+        return apply_traversal_aligned_sibling_bh_results(
+            tree,
             annotations_df,
             [],
             [],
@@ -99,10 +103,10 @@ def annotate_sibling_divergence(
     ) = compute_inflation_adjusted_sibling_tests(
         records,
         model=model,
-        significance_level_alpha=significance_level_alpha,
     )
 
-    annotations_df = apply_sibling_bh_results(
+    annotations_df = apply_traversal_aligned_sibling_bh_results(
+        tree,
         annotations_df,
         tested_parent_ids,
         inflation_adjusted_test_summaries,

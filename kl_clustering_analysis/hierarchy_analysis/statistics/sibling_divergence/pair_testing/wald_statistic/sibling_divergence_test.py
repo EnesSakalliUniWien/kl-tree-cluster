@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import numpy as np
+from numpy.typing import NDArray
+
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ....projection.projected_wald.projected_wald_kernel import run_projected_wald_kernel
 from ...projection.pair_testing.projection_dimension import (
@@ -24,6 +29,8 @@ def sibling_divergence_test(
     projection_dimension_from_edge_comparisons: int | None = None,
     parent_principal_component_projection: np.ndarray | None = None,
     parent_principal_component_eigenvalues: np.ndarray | None = None,
+    feature_space: FeatureSpace | None = None,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
 ) -> tuple[float, float, float, float]:
     """Two-sample Wald test for sibling divergence."""
     branch_length_sum = _resolve_sibling_branch_length_sum(
@@ -39,6 +46,8 @@ def sibling_divergence_test(
         right_sample_size,
         branch_length_sum=branch_length_sum,
         mean_branch_length=mean_branch_length,
+        feature_space=feature_space,
+        continuous_covariance_by_block=continuous_covariance_by_block,
     )
 
     n_features = int(z_scores.shape[0])

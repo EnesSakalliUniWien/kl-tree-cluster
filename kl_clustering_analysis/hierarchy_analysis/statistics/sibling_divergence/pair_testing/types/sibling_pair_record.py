@@ -25,6 +25,8 @@ class SiblingPairRecord:
     """Weight that this sibling pair represents empirical-null structure."""
     sibling_projection_dimension: float = 0.0
     """Projection dimension used by the sibling test and inflation context."""
+    feature_family: str = "bernoulli"
+    """Feature-space family label for the sibling contrast covariance model."""
 
 
 __all__ = ["SiblingPairRecord"]

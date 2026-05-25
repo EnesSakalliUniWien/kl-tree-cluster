@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-import numpy as np
+from collections.abc import Mapping
 
-from ....categorical_mahalanobis import categorical_whitened_vector
-from ..pooled_variance.categorical_shape import _is_categorical
-from ..pooled_variance.standardized_difference import standardize_proportion_difference
+import numpy as np
+from numpy.typing import NDArray
+
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
+
+from ....contrast_covariance import compute_whitened_wald_contrast
 
 
 def _compute_sibling_z_scores(
@@ -17,29 +20,21 @@ def _compute_sibling_z_scores(
     *,
     branch_length_sum: float | None,
     mean_branch_length: float | None,
+    feature_space: FeatureSpace | None = None,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
 ) -> np.ndarray:
     """Return the standardized sibling contrast vector."""
-    left_array = np.asarray(left_distribution)
-
-    if _is_categorical(left_array):
-        return categorical_whitened_vector(
-            np.asarray(left_distribution, dtype=np.float64),
-            np.asarray(right_distribution, dtype=np.float64),
-            float(left_sample_size),
-            float(right_sample_size),
-            branch_length_sum=branch_length_sum,
-            mean_branch_length=mean_branch_length,
-        )
-
-    z_scores, _ = standardize_proportion_difference(
+    return compute_whitened_wald_contrast(
         left_distribution,
         right_distribution,
-        left_sample_size,
-        right_sample_size,
+        float(left_sample_size),
+        float(right_sample_size),
+        comparison="sibling",
+        feature_space=feature_space,
         branch_length_sum=branch_length_sum,
         mean_branch_length=mean_branch_length,
+        continuous_covariance_by_block=continuous_covariance_by_block,
     )
-    return z_scores
 
 
 __all__ = ["_compute_sibling_z_scores"]

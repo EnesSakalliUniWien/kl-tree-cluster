@@ -8,28 +8,34 @@ from kl_clustering_analysis import config
 
 
 @pytest.mark.slow
-def test_global_sibling_calibration_restores_gauss_null_large_to_one_cluster() -> None:
+def test_strict_sibling_calibration_rejects_gauss_null_large_without_support() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "gauss_null_large")
     data_t, _, _, _, distance_condensed, _, _ = prepare_case_inputs(case, ["kl"])
 
-    result = _run_kl_method(data_t, distance_condensed, config.SIBLING_ALPHA)
-
-    assert result.found_clusters == 1
-    annotations = result.extra["annotations"]
-    assert (
-        "context_weighted_empirical_null_inflation"
-        in set(annotations["Sibling_Test_Method"].dropna())
-    )
+    with pytest.raises(ValueError, match="selected non-null"):
+        _run_kl_method(data_t, distance_condensed, config.SIBLING_ALPHA)
 
 
 @pytest.mark.slow
-def test_inflation_calibration_keeps_cat_highcard_conservative() -> None:
+def test_traversal_aligned_sibling_fdr_does_not_flat_penalize_cat_highcard_root() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c")
-    data_t, _, _, _, distance_condensed, _, _ = prepare_case_inputs(case, ["kl"])
+    data_t, _, _, meta, distance_condensed, _, _ = prepare_case_inputs(case, ["kl"])
 
-    result = _run_kl_method(data_t, distance_condensed, config.SIBLING_ALPHA)
+    result = _run_kl_method(
+        data_t,
+        distance_condensed,
+        config.SIBLING_ALPHA,
+        feature_space=meta["feature_space"],
+    )
 
-    assert result.found_clusters == 1
+    annotations = result.extra["annotations"]
+    root = result.extra["tree"].root()
+    assert result.found_clusters == 2
+    assert bool(annotations.loc[root, "Sibling_BH_Different"])
+    assert (
+        annotations.loc[root, "Sibling_Divergence_P_Value_Corrected"]
+        == pytest.approx(annotations.loc[root, "Sibling_Divergence_P_Value"])
+    )
 
 
 @pytest.mark.slow

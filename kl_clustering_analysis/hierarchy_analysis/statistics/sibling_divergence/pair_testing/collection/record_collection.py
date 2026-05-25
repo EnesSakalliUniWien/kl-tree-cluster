@@ -7,6 +7,10 @@ import numpy as np
 import pandas as pd
 
 from kl_clustering_analysis.core_utils.data_utils import extract_node_sample_size
+from kl_clustering_analysis.tree.distributions import (
+    require_node_continuous_covariance_by_block,
+)
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ...projection.pair_testing.parent_projection_resolution import (
     resolve_parent_projection_inputs_for_sibling_test,
@@ -38,6 +42,7 @@ def collect_sibling_pair_records(
     sibling_projection_dimensions_from_edge_comparisons: dict[object, int],
     parent_principal_component_projections: dict[object, np.ndarray],
     parent_principal_component_eigenvalues: dict[object, np.ndarray],
+    feature_space: FeatureSpace | None = None,
 ) -> tuple[list[SiblingPairRecord], list[object]]:
     """Collect raw sibling-test records for every binary-child parent node."""
     validate_child_parent_edge_annotation_requirements(annotations_df)
@@ -102,6 +107,12 @@ def collect_sibling_pair_records(
             parent_principal_component_eigenvalues=(
                 parent_principal_component_eigenvalues_for_parent
             ),
+            feature_space=feature_space,
+            continuous_covariance_by_block=require_node_continuous_covariance_by_block(
+                tree,
+                parent_node_id,
+                feature_space,
+            ),
         )
 
         is_edge_blocked = determine_whether_sibling_pair_is_edge_blocked(
@@ -121,6 +132,7 @@ def collect_sibling_pair_records(
             left_child_id,
             right_child_id,
             child_parent_edge_p_values_by_node=child_parent_edge_p_values_by_node,
+            child_parent_edge_significance_by_node=child_parent_edge_significance_by_node,
             child_parent_edge_tested_by_node=child_parent_edge_tested_by_node,
             child_parent_edge_ancestor_blocked_by_node=(
                 child_parent_edge_ancestor_blocked_by_node
@@ -144,6 +156,9 @@ def collect_sibling_pair_records(
                 is_edge_blocked=is_edge_blocked,
                 sibling_null_weight=sibling_null_weight,
                 sibling_projection_dimension=float(projection_dimension_from_edge_comparisons),
+                feature_family=(
+                    "bernoulli" if feature_space is None else feature_space.family_label
+                ),
             )
         )
 

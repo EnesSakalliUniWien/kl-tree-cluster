@@ -15,9 +15,14 @@ class EmpiricalNullInflationModel:
     n_calibration: int
     baseline_empirical_inflation_factor: float
     effective_sample_size: float
-    context_center: float = 0.0
-    context_bandwidth: float = 0.0
-    sample_contexts: np.ndarray = field(default_factory=lambda: np.array([], dtype=float))
+    n_strict_null_calibration: int = 0
+    n_stopped_or_null_calibration: int = 0
+    context_center: np.ndarray = field(default_factory=lambda: np.array([], dtype=float))
+    context_bandwidth: np.ndarray = field(default_factory=lambda: np.array([], dtype=float))
+    sample_contexts: np.ndarray = field(
+        default_factory=lambda: np.empty((0, 0), dtype=float)
+    )
+    sample_feature_families: tuple[str, ...] = ()
     sample_weights: np.ndarray = field(default_factory=lambda: np.array([], dtype=float))
     sample_statistics: np.ndarray = field(default_factory=lambda: np.array([], dtype=float))
     sample_reference_scales: np.ndarray = field(

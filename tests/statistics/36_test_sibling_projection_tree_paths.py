@@ -6,6 +6,9 @@ import pytest
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+    annotate_child_parent_divergence_with_context,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     SpectralContext,
 )
@@ -207,13 +210,14 @@ def _build_mixed_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
 def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> None:
     tree, annotations_df, leaf_data = _build_cherry_tree()
 
-    bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
-    out = bundle.annotated_df
-    assert bundle.gate_two_result is not None
-    spectral_projection_dimensions_by_node = (
-        bundle.gate_two_result.spectral_context.spectral_projection_dimensions_by_node
+    _edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+        tree,
+        annotations_df.copy(),
+        leaf_data=leaf_data,
     )
-    assert spectral_projection_dimensions_by_node is not None
+    spectral_projection_dimensions_by_node = (
+        spectral_context.spectral_projection_dimensions_by_node
+    )
     assert spectral_projection_dimensions_by_node["A"] == 0
     assert spectral_projection_dimensions_by_node["B"] == 0
     assert spectral_projection_dimensions_by_node["C"] == 0
@@ -225,7 +229,7 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
     sibling_projection_dimensions_from_edge_comparisons = (
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
             tree,
-            spectral_context=bundle.gate_two_result.spectral_context,
+            spectral_context=spectral_context,
         )
     )
     assert sibling_projection_dimensions_from_edge_comparisons == {
@@ -234,8 +238,8 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
         "top": spectral_projection_dimensions_by_node["top"],
     }
 
-    assert np.isfinite(out.loc["root", "Sibling_Degrees_of_Freedom"])
-    assert np.isfinite(out.loc["root", "Sibling_Divergence_P_Value"])
+    with pytest.raises(ValueError, match="selected non-null"):
+        run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
 
 
 def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibling_projection_dimensions() -> None:
