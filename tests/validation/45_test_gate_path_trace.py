@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from benchmarks.shared.gate_path_trace import build_gate_path_trace_dataframe
+from benchmarks.diagnostics.gate_path_trace import build_gate_path_trace_dataframe
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
     EDGE_GATE_COLUMNS,
     SIBLING_GATE_COLUMNS,

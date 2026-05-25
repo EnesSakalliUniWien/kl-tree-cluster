@@ -35,7 +35,7 @@ from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
 from benchmarks.shared.util.time import format_timestamp_utc
 
 try:
-    from benchmarks.shared.debug_trace import diagnose_benchmark_failures
+    from benchmarks.diagnostics.debug_trace import diagnose_benchmark_failures
 except ImportError:
     diagnose_benchmark_failures = None
 
@@ -335,7 +335,7 @@ def run_benchmarks():
                     str(run_dir / "failure_report.md"),
                 )
             else:
-                print("\nSkipping failure diagnosis: benchmarks.shared.debug_trace not found.")
+                print("\nSkipping failure diagnosis: benchmarks.diagnostics.debug_trace not found.")
         else:
             print("Could not pivot results: 'case_id' column missing.")
             print(df.head())

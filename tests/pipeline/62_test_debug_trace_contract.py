@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from benchmarks.shared.debug_trace import analyze_single_case
+from benchmarks.diagnostics.debug_trace import analyze_single_case
 
 
 def _write_audit(path: Path, rows: list[dict[str, object]]) -> None:

@@ -83,7 +83,6 @@ line-length = 100
 src = ["benchmarks", "kl_clustering_analysis", "scripts", "tests"]
 force-exclude = true
 extend-exclude = [
-    "debug_scripts",
     "manuscript",
     "notebooks",
 ]
@@ -96,5 +95,5 @@ ignore = ["E402", "E501"]
 ignore_notebooks = true
 known_first_party = ["benchmarks", "kl_clustering_analysis"]
 pep621_dev_dependency_groups = ["dev", "benchmark", "viz", "all"]
-extend_exclude = ["^debug_scripts/", "^manuscript/", "^notebooks/"]
+extend_exclude = ["^manuscript/", "^notebooks/"]
 package_module_name_map = { "python-louvain" = "community", "scikit-bio" = "skbio" }

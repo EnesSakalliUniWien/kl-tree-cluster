@@ -1,7 +1,8 @@
 # Profiling Outputs
 
-CSV outputs from clustering profiler runs.
+Historical CSV outputs from local clustering profiler runs. The profiler script
+is no longer tracked; these files remain as archived profiling artifacts.
 
-- `profiler_results.csv`: baseline profiling output used by `debug_scripts/kl_clustering_profiler.py`.
+- `profiler_results.csv`: baseline profiling output.
 - `profiler_results_detailed.csv`: detailed local profiling output.
 - `profiler_results_large.csv`: larger local profiling output.

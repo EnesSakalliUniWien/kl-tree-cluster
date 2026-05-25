@@ -38,7 +38,7 @@ Additional cleanup completed after the initial audit:
 - `analysis/peps.h5mu` moved to `local_data/analysis/`.
 - `analysis/results/` moved to `benchmarks/results/10_analysis_pipeline_runs/`.
 - Top-level `results/` Swiss-roll outputs moved to `benchmarks/results/06_method_experiments_sweeps/swiss_roll_diffusion/`.
-- `debug_scripts/results/` and `debug_scripts/diagnostics/results/` outputs moved to `benchmarks/results/05_diagnostics_validation_audits/`.
+- Historical diagnostic outputs moved to `benchmarks/results/05_diagnostics_validation_audits/`.
 - Manuscript root build outputs moved to `manuscript/build/root_outputs/`.
 - `.DS_Store` files were removed from the working tree.
 - Directory READMEs were added for `data/`, feature matrices, references, reports, profiling, logs, notebook figures, and moved alpha runs.
@@ -96,7 +96,9 @@ Tracked notebook PNG outputs were moved from `notebooks/` to:
 
 ### 1. Entrypoints Are Spread Across Multiple Locations
 
-Runnable scripts exist at root, `scripts/`, `benchmarks/`, `notebooks/`, `analysis/`, and `debug_scripts/`.
+Runnable scripts exist at root, `scripts/`, `benchmarks/`, `notebooks`, and
+`analysis`. One-off benchmark diagnostics now live under
+`benchmarks/diagnostics/`.
 
 Examples:
 
@@ -114,7 +116,7 @@ Recommendation:
 - Define entrypoint categories:
   - `scripts/` for user-facing utilities.
   - `benchmarks/` for benchmark runners.
-  - `debug_scripts/` for one-off diagnostics.
+  - `benchmarks/diagnostics/` for benchmark investigation utilities.
   - `notebooks/` for notebooks only, not reusable scripts.
 - Move or document root entrypoints.
 
@@ -124,7 +126,6 @@ Examples include empty result/run folders in:
 
 - `benchmarks/results/03_gene_go_feature_matrix_runs/`
 - `benchmarks/results/04_generic_benchmark_runs/*/plots`
-- `debug_scripts/reports`
 - `benchmarks/results/06_method_experiments_sweeps/swiss_roll_diffusion/swiss_roll_diffusion_20260323_164908`
 
 Recommendation:
@@ -154,15 +155,11 @@ Recommendation:
 - Move canonical fixtures into a named fixture directory.
 - Remove or untrack non-canonical outputs.
 
-### 4. Debug Scripts Are Numerous and Mixed by Topic
+### 4. Benchmark Diagnostics Need Clear Ownership
 
-`debug_scripts/` contains many useful but one-off files, including archived scripts, enhancement labs, case studies, diagnostics, and smoke tests.
-
-Recommendation:
-
-- Keep current subfolder taxonomy but add a stronger README map.
-- Move deprecated one-offs into `debug_scripts/archive/`.
-- Promote reusable diagnostics into `scripts/` or `benchmarks/` if they are still part of the workflow.
+Reusable diagnostics are now part of `benchmarks/diagnostics/`. New
+investigation scripts should either be promoted there with tests and explicit
+inputs, or kept out of the tracked repository.
 
 ## Suggested Next Cleanup Order
 
@@ -170,7 +167,7 @@ Recommendation:
 2. Decide whether canonical fixture data should remain tracked under `data/`.
 3. Decide whether `reports/notebook_figures/` should be tracked or treated as generated output.
 4. Remove empty generated folders.
-5. Add or refresh README maps for `scripts/` and `debug_scripts/`.
+5. Add or refresh README maps for `scripts/` and `benchmarks/diagnostics/`.
 
 ## Commands Used For Audit
 
