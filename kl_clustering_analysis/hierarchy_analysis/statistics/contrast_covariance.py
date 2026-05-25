@@ -1,0 +1,563 @@
+"""Contrast covariance construction for projected Wald tests."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Literal
+
+import numpy as np
+from numpy.typing import NDArray
+from scipy import linalg
+
+from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
+    felsenstein_sibling_multiplier,
+    validate_branch_length_observation,
+)
+from kl_clustering_analysis.tree.feature_space import (
+    FeatureBlock,
+    FeatureSpace,
+    bernoulli_feature_space_from_columns,
+    validate_feature_matrix,
+    validate_feature_vector,
+)
+
+ComparisonKind = Literal["sibling", "child_parent"]
+FeatureSpaceLabel = Literal["bernoulli", "categorical", "continuous", "mixed"]
+
+
+@dataclass(frozen=True)
+class ContrastCovariance:
+    """A Wald contrast and its block covariance in independent coordinates."""
+
+    contrast_vector: NDArray[np.float64]
+    covariance_blocks: tuple[NDArray[np.float64], ...]
+    feature_family: FeatureSpaceLabel
+    comparison: ComparisonKind
+
+    @property
+    def degrees_of_freedom(self) -> int:
+        return int(self.contrast_vector.shape[0])
+
+    def whitened_vector(self) -> NDArray[np.float64]:
+        """Return ``V^{-1/2} contrast`` using the explicit covariance blocks."""
+        whitened_blocks: list[NDArray[np.float64]] = []
+        offset = 0
+        for covariance_block in self.covariance_blocks:
+            block_width = int(covariance_block.shape[0])
+            contrast_block = self.contrast_vector[offset : offset + block_width]
+            cho, lower = linalg.cho_factor(
+                covariance_block,
+                lower=True,
+                check_finite=False,
+            )
+            whitened_blocks.append(
+                linalg.solve_triangular(
+                    cho,
+                    contrast_block,
+                    lower=lower,
+                    check_finite=False,
+                )
+            )
+            offset += block_width
+        if offset != self.contrast_vector.shape[0]:
+            raise ValueError(
+                "Contrast covariance blocks do not cover the contrast vector: "
+                f"covered={offset}, contrast_dimension={self.contrast_vector.shape[0]}."
+            )
+        return np.concatenate(whitened_blocks, axis=0)
+
+
+def build_contrast_covariance(
+    first_distribution: NDArray[np.floating],
+    second_distribution: NDArray[np.floating],
+    first_sample_size: float,
+    second_sample_size: float,
+    *,
+    comparison: ComparisonKind,
+    feature_space: FeatureSpace | None = None,
+    branch_length_sum: float | None = None,
+    branch_length: float | None = None,
+    mean_branch_length: float | None = None,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
+    ridge: float = 1e-12,
+) -> ContrastCovariance:
+    """Build the canonical contrast-covariance object.
+
+    Distributions are flat raw-coordinate vectors. The feature-space blocks
+    define the contrast chart and covariance model for each coordinate block.
+    """
+    first = _as_flat_distribution_array(
+        first_distribution,
+        value_name="first_distribution",
+    )
+    second = _as_flat_distribution_array(
+        second_distribution,
+        value_name="second_distribution",
+    )
+    if first.shape != second.shape:
+        raise ValueError(
+            "Compared distributions must have identical shape. "
+            f"Got {first.shape} vs {second.shape}."
+        )
+
+    active_feature_space = _resolve_distribution_feature_space(first, feature_space)
+    first = validate_feature_vector(
+        first,
+        active_feature_space,
+        value_name="first_distribution",
+    )
+    second = validate_feature_vector(
+        second,
+        active_feature_space,
+        value_name="second_distribution",
+    )
+    _validate_sample_sizes(first_sample_size, second_sample_size)
+    ridge_value = _validate_ridge(ridge)
+    continuous_covariance_blocks = _validate_continuous_covariance_by_block(
+        active_feature_space,
+        continuous_covariance_by_block,
+    )
+
+    if comparison == "sibling":
+        if branch_length is not None:
+            raise ValueError(
+                "branch_length is only valid for child_parent contrasts; "
+                "sibling contrasts use branch_length_sum."
+            )
+        variance_scale = _sibling_variance_scale(first_sample_size, second_sample_size)
+        covariance_distribution = (
+            first_sample_size * first + second_sample_size * second
+        ) / (first_sample_size + second_sample_size)
+        variance_scale *= _sibling_branch_multiplier(
+            branch_length_sum=branch_length_sum,
+            mean_branch_length=mean_branch_length,
+        )
+    elif comparison == "child_parent":
+        if branch_length_sum is not None:
+            raise ValueError(
+                "branch_length_sum is only valid for sibling contrasts; "
+                "child_parent contrasts use branch_length."
+            )
+        variance_scale = _child_parent_variance_scale(first_sample_size, second_sample_size)
+        covariance_distribution = second
+        variance_scale *= _child_parent_branch_multiplier(
+            branch_length=branch_length,
+            mean_branch_length=mean_branch_length,
+        )
+    else:
+        raise ValueError(f"Unknown comparison kind: {comparison!r}.")
+
+    return _feature_space_contrast_covariance(
+        first,
+        second,
+        covariance_distribution,
+        feature_space=active_feature_space,
+        variance_scale=variance_scale,
+        comparison=comparison,
+        continuous_covariance_by_block=continuous_covariance_blocks,
+        ridge=ridge_value,
+    )
+
+
+def compute_whitened_wald_contrast(
+    first_distribution: NDArray[np.floating],
+    second_distribution: NDArray[np.floating],
+    first_sample_size: float,
+    second_sample_size: float,
+    *,
+    comparison: ComparisonKind,
+    feature_space: FeatureSpace | None = None,
+    branch_length_sum: float | None = None,
+    branch_length: float | None = None,
+    mean_branch_length: float | None = None,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
+    ridge: float = 1e-12,
+) -> NDArray[np.float64]:
+    """Return the covariance-whitened Wald contrast vector."""
+    return build_contrast_covariance(
+        first_distribution,
+        second_distribution,
+        first_sample_size,
+        second_sample_size,
+        comparison=comparison,
+        feature_space=feature_space,
+        branch_length_sum=branch_length_sum,
+        branch_length=branch_length,
+        mean_branch_length=mean_branch_length,
+        continuous_covariance_by_block=continuous_covariance_by_block,
+        ridge=ridge,
+    ).whitened_vector()
+
+
+def build_null_whitened_tangent_matrix(
+    distributions: NDArray[np.floating],
+    null_distribution: NDArray[np.floating],
+    *,
+    feature_space: FeatureSpace | None = None,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
+    ridge: float = 1e-12,
+) -> NDArray[np.float64]:
+    """Map distributions into the null-whitened tangent coordinates used by Wald."""
+    distribution_matrix = np.asarray(distributions, dtype=np.float64)
+    if distribution_matrix.ndim != 2:
+        raise ValueError(
+            "Tangent data must be a raw-coordinate 2-D matrix. "
+            f"Got shape {distribution_matrix.shape}."
+        )
+    null = _as_flat_distribution_array(
+        null_distribution,
+        value_name="null_distribution",
+    )
+    active_feature_space = _resolve_distribution_feature_space(null, feature_space)
+    distribution_matrix = validate_feature_matrix(
+        distribution_matrix,
+        active_feature_space,
+        value_name="distributions",
+    )
+    null = validate_feature_vector(
+        null,
+        active_feature_space,
+        value_name="null_distribution",
+    )
+    ridge_value = _validate_ridge(ridge)
+    continuous_covariance_blocks = _validate_continuous_covariance_by_block(
+        active_feature_space,
+        continuous_covariance_by_block,
+    )
+
+    tangent_blocks = [
+        _block_null_whitened_tangent_matrix(
+            distribution_matrix,
+            null,
+            block,
+            continuous_covariance_by_block=continuous_covariance_blocks,
+            ridge=ridge_value,
+        )
+        for block in active_feature_space.blocks
+    ]
+    return np.column_stack(tangent_blocks)
+
+
+def _resolve_distribution_feature_space(
+    distribution: NDArray[np.float64],
+    feature_space: FeatureSpace | None,
+) -> FeatureSpace:
+    if feature_space is not None:
+        if feature_space.raw_dimension != distribution.shape[0]:
+            raise ValueError(
+                "feature_space raw dimension does not match distribution width. "
+                f"feature_space.raw_dimension={feature_space.raw_dimension}, "
+                f"distribution_width={distribution.shape[0]}."
+            )
+        return feature_space
+    return bernoulli_feature_space_from_columns(
+        tuple(f"x{column_index}" for column_index in range(distribution.shape[0]))
+    )
+
+
+def _as_flat_distribution_array(
+    distribution: NDArray[np.floating],
+    *,
+    value_name: str,
+) -> NDArray[np.float64]:
+    array = np.asarray(distribution, dtype=np.float64)
+    if array.ndim != 1:
+        raise ValueError(
+            f"{value_name} must be a flat raw-coordinate distribution vector. "
+            f"Got shape {array.shape}."
+        )
+    if not np.isfinite(array).all():
+        raise ValueError(f"{value_name} must contain only finite values.")
+    return array
+
+
+def _validate_sample_sizes(first_sample_size: float, second_sample_size: float) -> None:
+    if (
+        not np.isfinite(first_sample_size)
+        or not np.isfinite(second_sample_size)
+        or first_sample_size <= 0.0
+        or second_sample_size <= 0.0
+    ):
+        raise ValueError(
+            "Sample sizes must be finite positive values. "
+            f"Got first_sample_size={first_sample_size}, "
+            f"second_sample_size={second_sample_size}."
+        )
+
+
+def _validate_ridge(ridge: float) -> float:
+    ridge_value = float(ridge)
+    if not np.isfinite(ridge_value) or ridge_value < 0.0:
+        raise ValueError(f"ridge must be finite and non-negative. Got ridge={ridge!r}.")
+    return ridge_value
+
+
+def _validate_continuous_covariance_by_block(
+    feature_space: FeatureSpace,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None,
+) -> dict[str, NDArray[np.float64]]:
+    continuous_blocks = feature_space.continuous_blocks
+    if not continuous_blocks:
+        if continuous_covariance_by_block is not None:
+            raise ValueError(
+                "continuous_covariance_by_block was provided, but feature_space has "
+                "no continuous blocks."
+            )
+        return {}
+    if continuous_covariance_by_block is None:
+        raise ValueError(
+            "Continuous feature blocks require continuous_covariance_by_block."
+        )
+
+    expected_block_names = {block.name for block in continuous_blocks}
+    actual_block_names = set(continuous_covariance_by_block)
+    if actual_block_names != expected_block_names:
+        raise ValueError(
+            "continuous_covariance_by_block keys must exactly match continuous "
+            "feature block names. "
+            f"expected={sorted(expected_block_names)!r}, "
+            f"actual={sorted(actual_block_names)!r}."
+        )
+
+    covariance_blocks: dict[str, NDArray[np.float64]] = {}
+    for block in continuous_blocks:
+        covariance = np.asarray(
+            continuous_covariance_by_block[block.name],
+            dtype=np.float64,
+        )
+        expected_shape = (block.raw_dimension, block.raw_dimension)
+        if covariance.shape != expected_shape:
+            raise ValueError(
+                f"Continuous covariance block {block.name!r} has shape "
+                f"{covariance.shape}; expected {expected_shape}."
+            )
+        if not np.isfinite(covariance).all():
+            raise ValueError(
+                f"Continuous covariance block {block.name!r} must contain only finite values."
+            )
+        if not np.allclose(covariance, covariance.T, atol=1e-10, rtol=1e-8):
+            raise ValueError(
+                f"Continuous covariance block {block.name!r} must be symmetric."
+            )
+        covariance_blocks[block.name] = covariance
+    return covariance_blocks
+
+
+def _sibling_variance_scale(first_sample_size: float, second_sample_size: float) -> float:
+    return 1.0 / first_sample_size + 1.0 / second_sample_size
+
+
+def _child_parent_variance_scale(child_sample_size: float, parent_sample_size: float) -> float:
+    nested_factor = 1.0 / child_sample_size - 1.0 / parent_sample_size
+    if nested_factor <= 0.0:
+        raise ValueError(
+            "Invalid tree structure: child sample size must be strictly less than "
+            "parent sample size. "
+            f"Got child_sample_size={child_sample_size}, "
+            f"parent_sample_size={parent_sample_size}, "
+            f"nested_factor={nested_factor:.6f}."
+        )
+    return nested_factor
+
+
+def _sibling_branch_multiplier(
+    *,
+    branch_length_sum: float | None,
+    mean_branch_length: float | None,
+) -> float:
+    if branch_length_sum is None:
+        return 1.0
+    branch_length_sum_value = validate_branch_length_observation(
+        branch_length_sum,
+        value_name="branch_length_sum",
+    )
+    if branch_length_sum_value == 0.0:
+        return 1.0
+    return felsenstein_sibling_multiplier(branch_length_sum_value, mean_branch_length)
+
+
+def _child_parent_branch_multiplier(
+    *,
+    branch_length: float | None,
+    mean_branch_length: float | None,
+) -> float:
+    if branch_length is None:
+        return 1.0
+    branch_length_value = validate_branch_length_observation(
+        branch_length,
+        value_name="branch_length",
+    )
+    if branch_length_value == 0.0:
+        return 1.0
+    if mean_branch_length is None:
+        raise ValueError(
+            "mean_branch_length is required when child-parent branch_length is positive."
+        )
+    mean_branch_length_value = validate_branch_length_observation(
+        mean_branch_length,
+        value_name="mean_branch_length",
+    )
+    if mean_branch_length_value <= 0.0:
+        raise ValueError(
+            "mean_branch_length must be positive when child-parent branch_length is positive."
+        )
+    return 1.0 + branch_length_value / mean_branch_length_value
+
+
+def _feature_space_contrast_covariance(
+    first: NDArray[np.float64],
+    second: NDArray[np.float64],
+    covariance_distribution: NDArray[np.float64],
+    *,
+    feature_space: FeatureSpace,
+    variance_scale: float,
+    comparison: ComparisonKind,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.float64]],
+    ridge: float,
+) -> ContrastCovariance:
+    contrast_blocks: list[NDArray[np.float64]] = []
+    covariance_blocks: list[NDArray[np.float64]] = []
+    for block in feature_space.blocks:
+        block_contrast, block_covariance = _block_contrast_covariance(
+            first,
+            second,
+            covariance_distribution,
+            block,
+            variance_scale=variance_scale,
+            continuous_covariance_by_block=continuous_covariance_by_block,
+            ridge=ridge,
+        )
+        contrast_blocks.append(block_contrast)
+        covariance_blocks.append(block_covariance)
+
+    return ContrastCovariance(
+        contrast_vector=np.concatenate(contrast_blocks, axis=0),
+        covariance_blocks=tuple(covariance_blocks),
+        feature_family=_feature_family_label(feature_space),
+        comparison=comparison,
+    )
+
+
+def _block_contrast_covariance(
+    first: NDArray[np.float64],
+    second: NDArray[np.float64],
+    covariance_distribution: NDArray[np.float64],
+    block: FeatureBlock,
+    *,
+    variance_scale: float,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.float64]],
+    ridge: float,
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    column_indices = list(block.column_indices)
+    block_first = first[column_indices]
+    block_second = second[column_indices]
+    block_covariance_distribution = covariance_distribution[column_indices]
+
+    if block.family == "bernoulli":
+        probability = float(block_covariance_distribution[0])
+        variance = probability * (1.0 - probability) * variance_scale + ridge
+        return (
+            np.array([float(block_first[0] - block_second[0])], dtype=np.float64),
+            np.array([[variance]], dtype=np.float64),
+        )
+
+    if block.family == "categorical":
+        reduced_first = block_first[:-1]
+        reduced_second = block_second[:-1]
+        reduced_probability = block_covariance_distribution[:-1]
+        covariance = (
+            np.diag(reduced_probability)
+            - np.outer(reduced_probability, reduced_probability)
+        ) * variance_scale + ridge * np.eye(block.contrast_dimension, dtype=np.float64)
+        return (
+            (reduced_first - reduced_second).astype(np.float64, copy=False),
+            covariance,
+        )
+
+    if block.family == "continuous":
+        covariance = (
+            continuous_covariance_by_block[block.name] * variance_scale
+            + ridge * np.eye(block.raw_dimension, dtype=np.float64)
+        )
+        return (
+            (block_first - block_second).astype(np.float64, copy=False),
+            covariance,
+        )
+
+    raise ValueError(f"Unknown feature family: {block.family!r}.")
+
+
+def _block_null_whitened_tangent_matrix(
+    distributions: NDArray[np.float64],
+    null_distribution: NDArray[np.float64],
+    block: FeatureBlock,
+    *,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.float64]],
+    ridge: float,
+) -> NDArray[np.float64]:
+    column_indices = list(block.column_indices)
+    block_values = distributions[:, column_indices]
+    block_null = null_distribution[column_indices]
+
+    if block.family == "bernoulli":
+        probability = float(block_null[0])
+        variance = probability * (1.0 - probability) + ridge
+        return (block_values - probability) / np.sqrt(variance)
+
+    if block.family == "categorical":
+        reduced_null = block_null[:-1]
+        covariance_block = (
+            np.diag(reduced_null)
+            - np.outer(reduced_null, reduced_null)
+            + ridge * np.eye(block.contrast_dimension, dtype=np.float64)
+        )
+        cho, lower = linalg.cho_factor(
+            covariance_block,
+            lower=True,
+            check_finite=False,
+        )
+        tangent_block = block_values[:, :-1] - reduced_null
+        return linalg.solve_triangular(
+            cho,
+            tangent_block.T,
+            lower=lower,
+            check_finite=False,
+        ).T
+
+    if block.family == "continuous":
+        covariance_block = (
+            continuous_covariance_by_block[block.name]
+            + ridge * np.eye(block.raw_dimension, dtype=np.float64)
+        )
+        cho, lower = linalg.cho_factor(
+            covariance_block,
+            lower=True,
+            check_finite=False,
+        )
+        tangent_block = block_values - block_null
+        return linalg.solve_triangular(
+            cho,
+            tangent_block.T,
+            lower=lower,
+            check_finite=False,
+        ).T
+
+    raise ValueError(f"Unknown feature family: {block.family!r}.")
+
+
+def _feature_family_label(feature_space: FeatureSpace) -> FeatureSpaceLabel:
+    family_label = feature_space.family_label
+    if family_label in {"bernoulli", "categorical", "continuous", "mixed"}:
+        return family_label
+    raise ValueError(f"Unknown feature family label: {family_label!r}.")
+
+
+__all__ = [
+    "ComparisonKind",
+    "ContrastCovariance",
+    "FeatureSpaceLabel",
+    "build_contrast_covariance",
+    "build_null_whitened_tangent_matrix",
+    "compute_whitened_wald_contrast",
+]

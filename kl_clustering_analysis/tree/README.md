@@ -16,7 +16,7 @@ NetworkX `DiGraph` subclass. Central data structure for the entire pipeline.
 | `compute_descendant_sets()`                 | Map every node → frozenset of its descendant leaf labels.                                      |
 | `find_lca(a, b)`                            | Lowest common ancestor of two nodes using depth-based walk. O(depth).                          |
 | `find_lca_for_set(nodes)`                   | LCA for a non-empty collection of nodes.                                                       |
-| `populate_node_divergences(leaf_data)`      | Populate distributions and leaf counts. Stores result in `annotations_df`.                     |
+| `populate_node_divergences(leaf_data, feature_space=None)` | Populate flat raw-coordinate distributions and leaf counts. Categorical and continuous data require an explicit feature-space contract. Stores result in `annotations_df`. |
 | `decompose(annotations_df, leaf_data, **kw)` | Thin facade: builds `TreeDecomposition` and runs `decompose_tree()`.                           |
 | `build_sample_cluster_assignments(results)` | Per-sample cluster table from decomposition output.                                            |
 
@@ -38,6 +38,6 @@ Bottom-up distribution population (called by `populate_node_divergences`).
 
 | Function                                             | What it does                                                                                                                                          |
 | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `populate_distributions(tree, leaf_data)`            | Postorder traversal: leaves get raw feature vectors, internal nodes get leaf-count-weighted means. Sets `distribution` and `leaf_count` on each node. |
+| `populate_distributions(tree, leaf_data, feature_space=None)` | Postorder traversal: leaves get validated flat raw-coordinate vectors under the active `FeatureSpace`, and internal nodes get leaf-count-weighted means. Sets `distribution` and `leaf_count` on each node; continuous blocks also get empirical descendant covariance under `continuous_covariance_by_block`. |
 | `_calculate_leaf_distribution(tree, node, data)`     | Set distribution for a single leaf from `leaf_data`.                                                                                                  |
 | `_calculate_hierarchy_node_distribution(tree, node)` | Compute an internal node's distribution as a leaf-count-weighted average of its children's distributions; also updates the parent's total descendant leaf count. |

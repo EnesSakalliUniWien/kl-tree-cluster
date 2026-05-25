@@ -1,0 +1,341 @@
+"""Canonical contrast-covariance object for projected Wald tests."""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+    build_contrast_covariance,
+    build_null_whitened_tangent_matrix,
+    compute_whitened_wald_contrast,
+)
+from kl_clustering_analysis.tree.feature_space import (
+    FeatureBlock,
+    FeatureSpace,
+    infer_feature_space_from_columns,
+)
+
+
+def _block_diagonal_entries(blocks: tuple[np.ndarray, ...]) -> np.ndarray:
+    return np.array([block[0, 0] for block in blocks], dtype=np.float64)
+
+
+def _make_categorical_space(n_features: int, n_categories: int) -> FeatureSpace:
+    columns = tuple(f"F{i}_c{k}" for i in range(n_features) for k in range(n_categories))
+    return infer_feature_space_from_columns(columns)
+
+
+def _make_continuous_space() -> FeatureSpace:
+    return FeatureSpace(
+        column_names=("X0", "X1"),
+        blocks=(
+            FeatureBlock(
+                name="X",
+                family="continuous",
+                column_indices=(0, 1),
+                chart="identity",
+                covariance="empirical_gaussian",
+                contrast_dimension=2,
+            ),
+        ),
+    )
+
+
+def test_sibling_bernoulli_contrast_covariance_matches_null_variance() -> None:
+    left = np.array([0.2, 0.7], dtype=np.float64)
+    right = np.array([0.5, 0.4], dtype=np.float64)
+    n_left = 40.0
+    n_right = 60.0
+
+    contrast_covariance = build_contrast_covariance(
+        left,
+        right,
+        n_left,
+        n_right,
+        comparison="sibling",
+        ridge=0.0,
+    )
+
+    pooled = (n_left * left + n_right * right) / (n_left + n_right)
+    expected_variance = pooled * (1.0 - pooled) * (1.0 / n_left + 1.0 / n_right)
+
+    assert contrast_covariance.feature_family == "bernoulli"
+    assert contrast_covariance.degrees_of_freedom == left.size
+    np.testing.assert_allclose(contrast_covariance.contrast_vector, left - right)
+    np.testing.assert_allclose(
+        _block_diagonal_entries(contrast_covariance.covariance_blocks),
+        expected_variance,
+    )
+
+
+def test_child_parent_bernoulli_contrast_covariance_uses_nested_variance() -> None:
+    child = np.array([0.3, 0.8], dtype=np.float64)
+    parent = np.array([0.5, 0.6], dtype=np.float64)
+    n_child = 25.0
+    n_parent = 100.0
+
+    contrast_covariance = build_contrast_covariance(
+        child,
+        parent,
+        n_child,
+        n_parent,
+        comparison="child_parent",
+        ridge=0.0,
+    )
+
+    nested_factor = 1.0 / n_child - 1.0 / n_parent
+    expected_variance = parent * (1.0 - parent) * nested_factor
+
+    assert contrast_covariance.feature_family == "bernoulli"
+    assert contrast_covariance.degrees_of_freedom == child.size
+    np.testing.assert_allclose(contrast_covariance.contrast_vector, child - parent)
+    np.testing.assert_allclose(
+        _block_diagonal_entries(contrast_covariance.covariance_blocks),
+        expected_variance,
+    )
+
+
+def test_sibling_categorical_contrast_covariance_uses_multinomial_blocks() -> None:
+    left_blocks = np.array([[0.2, 0.3, 0.5], [0.6, 0.1, 0.3]], dtype=np.float64)
+    right_blocks = np.array([[0.4, 0.2, 0.4], [0.3, 0.3, 0.4]], dtype=np.float64)
+    left = left_blocks.ravel()
+    right = right_blocks.ravel()
+    feature_space = _make_categorical_space(n_features=2, n_categories=3)
+    n_left = 50.0
+    n_right = 150.0
+
+    contrast_covariance = build_contrast_covariance(
+        left,
+        right,
+        n_left,
+        n_right,
+        comparison="sibling",
+        feature_space=feature_space,
+        ridge=0.0,
+    )
+
+    pooled = (n_left * left_blocks + n_right * right_blocks) / (n_left + n_right)
+    variance_scale = 1.0 / n_left + 1.0 / n_right
+    expected_first_block = (
+        np.diag(pooled[0, :-1]) - np.outer(pooled[0, :-1], pooled[0, :-1])
+    ) * variance_scale
+
+    assert contrast_covariance.feature_family == "categorical"
+    assert contrast_covariance.degrees_of_freedom == 4
+    np.testing.assert_allclose(
+        contrast_covariance.contrast_vector,
+        (left_blocks[:, :-1] - right_blocks[:, :-1]).ravel(),
+    )
+    np.testing.assert_allclose(contrast_covariance.covariance_blocks[0], expected_first_block)
+
+
+def test_child_parent_categorical_contrast_covariance_uses_parent_multinomial_blocks() -> None:
+    child_blocks = np.array([[0.3, 0.2, 0.5], [0.4, 0.4, 0.2]], dtype=np.float64)
+    parent_blocks = np.array([[0.5, 0.2, 0.3], [0.3, 0.5, 0.2]], dtype=np.float64)
+    child = child_blocks.ravel()
+    parent = parent_blocks.ravel()
+    feature_space = _make_categorical_space(n_features=2, n_categories=3)
+    n_child = 30.0
+    n_parent = 120.0
+
+    contrast_covariance = build_contrast_covariance(
+        child,
+        parent,
+        n_child,
+        n_parent,
+        comparison="child_parent",
+        feature_space=feature_space,
+        ridge=0.0,
+    )
+
+    nested_factor = 1.0 / n_child - 1.0 / n_parent
+    expected_second_block = (
+        np.diag(parent_blocks[1, :-1]) - np.outer(parent_blocks[1, :-1], parent_blocks[1, :-1])
+    ) * nested_factor
+
+    assert contrast_covariance.feature_family == "categorical"
+    assert contrast_covariance.degrees_of_freedom == 4
+    np.testing.assert_allclose(
+        contrast_covariance.contrast_vector,
+        (child_blocks[:, :-1] - parent_blocks[:, :-1]).ravel(),
+    )
+    np.testing.assert_allclose(contrast_covariance.covariance_blocks[1], expected_second_block)
+
+
+def test_mixed_feature_space_contrast_covariance_combines_block_charts() -> None:
+    feature_space = infer_feature_space_from_columns(
+        ("B0", "F0_c0", "F0_c1", "F0_c2", "B1")
+    )
+    left = np.array([0.2, 0.1, 0.3, 0.6, 0.8], dtype=np.float64)
+    right = np.array([0.5, 0.2, 0.2, 0.6, 0.4], dtype=np.float64)
+
+    contrast_covariance = build_contrast_covariance(
+        left,
+        right,
+        25.0,
+        50.0,
+        comparison="sibling",
+        feature_space=feature_space,
+    )
+
+    assert contrast_covariance.feature_family == "mixed"
+    assert contrast_covariance.degrees_of_freedom == 4
+    np.testing.assert_allclose(
+        contrast_covariance.contrast_vector,
+        np.array([-0.3, -0.1, 0.1, 0.4], dtype=np.float64),
+    )
+    assert [block.shape for block in contrast_covariance.covariance_blocks] == [
+        (1, 1),
+        (2, 2),
+        (1, 1),
+    ]
+
+
+def test_continuous_contrast_covariance_uses_empirical_gaussian_block() -> None:
+    feature_space = _make_continuous_space()
+    covariance = np.array([[4.0, 1.0], [1.0, 9.0]], dtype=np.float64)
+    left = np.array([1.5, -0.5], dtype=np.float64)
+    right = np.array([0.5, 2.0], dtype=np.float64)
+    n_left = 20.0
+    n_right = 30.0
+    ridge = 1e-6
+
+    contrast_covariance = build_contrast_covariance(
+        left,
+        right,
+        n_left,
+        n_right,
+        comparison="sibling",
+        feature_space=feature_space,
+        continuous_covariance_by_block={"X": covariance},
+        ridge=ridge,
+    )
+
+    expected_covariance = covariance * (1.0 / n_left + 1.0 / n_right) + ridge * np.eye(2)
+    assert contrast_covariance.feature_family == "continuous"
+    assert contrast_covariance.degrees_of_freedom == 2
+    np.testing.assert_allclose(contrast_covariance.contrast_vector, left - right)
+    np.testing.assert_allclose(contrast_covariance.covariance_blocks[0], expected_covariance)
+
+
+def test_continuous_contrast_requires_covariance_block() -> None:
+    feature_space = _make_continuous_space()
+
+    with pytest.raises(ValueError, match="continuous_covariance_by_block"):
+        build_contrast_covariance(
+            np.array([0.2, 0.1], dtype=np.float64),
+            np.array([0.4, 0.3], dtype=np.float64),
+            20.0,
+            30.0,
+            comparison="sibling",
+            feature_space=feature_space,
+        )
+
+
+def test_continuous_null_whitened_tangent_uses_empirical_covariance() -> None:
+    feature_space = _make_continuous_space()
+    covariance = np.array([[4.0, 1.0], [1.0, 9.0]], dtype=np.float64)
+    observations = np.array([[2.0, 1.0], [1.0, 4.0]], dtype=np.float64)
+    null_distribution = np.array([1.0, 2.0], dtype=np.float64)
+    ridge = 1e-6
+
+    tangent_rows = build_null_whitened_tangent_matrix(
+        observations,
+        null_distribution,
+        feature_space=feature_space,
+        continuous_covariance_by_block={"X": covariance},
+        ridge=ridge,
+    )
+
+    cholesky = np.linalg.cholesky(covariance + ridge * np.eye(2))
+    expected_rows = np.linalg.solve(cholesky, (observations - null_distribution).T).T
+    np.testing.assert_allclose(tangent_rows, expected_rows)
+
+
+def test_bernoulli_is_two_category_multinomial_for_sibling_whitening() -> None:
+    left = np.array([0.2, 0.7], dtype=np.float64)
+    right = np.array([0.5, 0.4], dtype=np.float64)
+    n_left = 40.0
+    n_right = 60.0
+
+    bernoulli_z = compute_whitened_wald_contrast(
+        left,
+        right,
+        n_left,
+        n_right,
+        comparison="sibling",
+        ridge=0.0,
+    )
+    categorical_z = compute_whitened_wald_contrast(
+        np.column_stack([left, 1.0 - left]).ravel(),
+        np.column_stack([right, 1.0 - right]).ravel(),
+        n_left,
+        n_right,
+        comparison="sibling",
+        feature_space=_make_categorical_space(n_features=2, n_categories=2),
+        ridge=0.0,
+    )
+
+    np.testing.assert_allclose(bernoulli_z, categorical_z)
+
+
+def test_sibling_contrast_rejects_child_parent_branch_length_parameter() -> None:
+    with pytest.raises(ValueError, match="branch_length is only valid"):
+        build_contrast_covariance(
+            np.array([0.2], dtype=np.float64),
+            np.array([0.4], dtype=np.float64),
+            20.0,
+            30.0,
+            comparison="sibling",
+            branch_length=1.0,
+        )
+
+
+def test_child_parent_contrast_rejects_sibling_branch_length_sum_parameter() -> None:
+    with pytest.raises(ValueError, match="branch_length_sum is only valid"):
+        build_contrast_covariance(
+            np.array([0.2], dtype=np.float64),
+            np.array([0.4], dtype=np.float64),
+            20.0,
+            30.0,
+            comparison="child_parent",
+            branch_length_sum=1.0,
+        )
+
+
+def test_bernoulli_contrast_rejects_values_outside_unit_interval() -> None:
+    with pytest.raises(ValueError, match="Bernoulli block 'x1' values must lie"):
+        build_contrast_covariance(
+            np.array([0.2, 1.1], dtype=np.float64),
+            np.array([0.4, 0.6], dtype=np.float64),
+            20.0,
+            30.0,
+            comparison="sibling",
+        )
+
+
+def test_null_whitened_categorical_tangent_matches_child_parent_wald_coordinates() -> None:
+    child_blocks = np.array([[0.3, 0.2, 0.5], [0.4, 0.4, 0.2]], dtype=np.float64)
+    parent_blocks = np.array([[0.5, 0.2, 0.3], [0.3, 0.5, 0.2]], dtype=np.float64)
+    child = child_blocks.ravel()
+    parent = parent_blocks.ravel()
+    feature_space = _make_categorical_space(n_features=2, n_categories=3)
+    n_child = 30.0
+    n_parent = 120.0
+    nested_factor = 1.0 / n_child - 1.0 / n_parent
+
+    tangent_row = build_null_whitened_tangent_matrix(
+        child[None, :],
+        parent,
+        feature_space=feature_space,
+    )[0]
+    wald_z = compute_whitened_wald_contrast(
+        child,
+        parent,
+        n_child,
+        n_parent,
+        comparison="child_parent",
+        feature_space=feature_space,
+    )
+
+    np.testing.assert_allclose(wald_z, tangent_row / np.sqrt(nested_factor))

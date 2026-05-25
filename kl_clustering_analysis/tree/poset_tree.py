@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
         GateAnnotationBundle,
     )
+    from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 
 # ============================================================
@@ -204,19 +205,26 @@ class PosetTree(nx.DiGraph):
         """
         return lowest_common_ancestor_for_set(self, nodes)
 
-    def populate_node_divergences(self, leaf_data: "pd.DataFrame") -> None:
+    def populate_node_divergences(
+        self,
+        leaf_data: "pd.DataFrame",
+        *,
+        feature_space: "FeatureSpace | None" = None,
+    ) -> None:
         """Populate tree nodes with distributions and build stats DataFrame.
 
         Populates each node with:
         - distribution: weighted mean of leaf/child distributions
         - leaf_count: number of descendant leaves
 
-        Assumes each feature is a Bernoulli probability in [0,1].
+        Node distributions are stored as flat raw-coordinate vectors. The
+        optional feature-space contract supplies Bernoulli/categorical/continuous block
+        structure for downstream covariance code.
 
         Parameters
         ----------
         leaf_data
-            DataFrame where rows are leaf labels and columns are feature probabilities.
+            DataFrame where rows are leaf labels and columns are raw feature coordinates.
 
         Notes
         -----
@@ -224,7 +232,11 @@ class PosetTree(nx.DiGraph):
         """
         import pandas as pd
 
-        populate_distributions(self, leaf_data)
+        populate_distributions(
+            self,
+            leaf_data,
+            feature_space=feature_space,
+        )
         node_records = []
         for node_id in self.nodes():
             node_attrs = self.nodes[node_id]
@@ -247,6 +259,7 @@ class PosetTree(nx.DiGraph):
         annotations_df: pd.DataFrame | None = None,
         gate_annotation_bundle: GateAnnotationBundle | None = None,
         leaf_data: pd.DataFrame | None = None,
+        feature_space: FeatureSpace | None = None,
         **decomposer_kwargs,
     ) -> dict[str, object]:
         """Run ``TreeDecomposition`` directly from the tree.
@@ -297,6 +310,7 @@ class PosetTree(nx.DiGraph):
             alpha_local=alpha_local,
             sibling_alpha=sibling_alpha,
             leaf_data=leaf_data,
+            feature_space=feature_space,
             **decomposer_kwargs,
         )
 
