@@ -683,7 +683,7 @@ DEFAULT_CASES = [
     "gauss_clear_small",  # Easy baseline
     "trivial_2c",  # Trivial
     "block_4c",  # Clean block-diagonal
-    "sparse_72x72",  # Sparse 4-cluster
+    "sparse_features_72x72",  # Sparse 4-cluster
     "gauss_overlap_3c_small",  # Moderate overlap
     "overlap_heavy_4c_small_feat",  # Hard overlap
 ]

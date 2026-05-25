@@ -80,7 +80,7 @@ def main():
         "binary_perfect_4c",
         "trivial_2c",
         "block_4c",
-        "sparse_72x72",
+        "sparse_features_72x72",
     ]
 
     case_dict = {c["name"]: c for c in cases}
