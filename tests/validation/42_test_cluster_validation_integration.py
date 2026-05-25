@@ -57,8 +57,8 @@ def test_complex_random_feature_matrix_balanced_clusters():
     )
 
     assert decomposition["num_clusters"] >= 2
-    # With calibrated cousin F-test, fewer spurious splits occur.
-    # ARI threshold relaxed accordingly since fewer clusters may be found.
+    # The strict sibling calibration can stop before recovering every planted
+    # cluster in this noisy fixture, so the integration threshold stays modest.
     assert ari > 0.4
 
 
@@ -86,9 +86,7 @@ def test_complex_random_feature_matrix_unbalanced_clusters():
         ari = adjusted_rand_score(
             np.array(true_labels)[assigned_mask], np.array(predicted)[assigned_mask]
         )
-        # ARI threshold accounts for entropy=0.25 noise + unbalanced clusters.
-        # Without Felsenstein variance inflation (FELSENSTEIN_SCALING=False),
-        # the test is more aggressive, which can over-split noisy data.
+        # ARI threshold accounts for entropy=0.25 noise and unbalanced clusters.
         assert ari > 0.25
 
     assigned_clusters = {label for label in predicted if label != -1}
