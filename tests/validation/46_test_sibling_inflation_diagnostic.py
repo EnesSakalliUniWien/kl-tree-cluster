@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 import pandas as pd
+import pytest
 
 from benchmarks.shared.sibling_inflation_diagnostic import (
     build_sibling_inflation_diagnostic_tables,
@@ -22,6 +23,7 @@ def _record(
     degrees_of_freedom: float,
     sibling_null_weight: float,
     is_null_like: bool,
+    is_edge_blocked: bool = False,
     n_parent: int = 40,
     sibling_projection_dimension: float = 2.0,
 ) -> SiblingPairRecord:
@@ -36,20 +38,22 @@ def _record(
         branch_length_sum=0.0,
         n_parent=n_parent,
         is_null_like=is_null_like,
-        is_edge_blocked=False,
+        is_edge_blocked=is_edge_blocked,
         sibling_null_weight=sibling_null_weight,
         sibling_projection_dimension=sibling_projection_dimension,
         feature_family="bernoulli",
     )
 
 
-def _trace() -> pd.DataFrame:
+def _trace(*node_ids: str) -> pd.DataFrame:
+    if not node_ids:
+        node_ids = ("target",)
     return pd.DataFrame(
         [
             {
                 "case_id": "synthetic",
                 "failure_class": "gate_under_split",
-                "node_id": "target",
+                "node_id": node_id,
                 "actual_decision": "boundary",
                 "trace_relation": "actual_stops_above_oracle_boundary",
                 "actual_boundary": True,
@@ -64,6 +68,7 @@ def _trace() -> pd.DataFrame:
                 "left_edge_p_value_bh": 1e-12,
                 "right_edge_p_value_bh": 1e-12,
             }
+            for node_id in node_ids
         ]
     )
 
@@ -123,3 +128,96 @@ def test_sibling_inflation_diagnostic_exposes_blocking_inflation_threshold() -> 
         "local_weight_share"
     ]
     assert tables.summary.iloc[0]["n_blocker_candidates"] == 1
+
+
+def test_sibling_inflation_diagnostic_reports_calibration_variants() -> None:
+    records = (
+        _record(
+            "target",
+            stat=1000.0,
+            degrees_of_freedom=2.0,
+            sibling_null_weight=1.0,
+            is_null_like=False,
+        ),
+        _record(
+            "null_low",
+            stat=2.0,
+            degrees_of_freedom=2.0,
+            sibling_null_weight=1.0,
+            is_null_like=True,
+        ),
+        _record(
+            "edge_blocked_high",
+            stat=20.0,
+            degrees_of_freedom=2.0,
+            sibling_null_weight=1.0,
+            is_null_like=True,
+            is_edge_blocked=True,
+        ),
+    )
+    model = fit_empirical_null_inflation_model(list(records))
+
+    tables = build_sibling_inflation_diagnostic_tables(
+        records=records,
+        model=model,
+        trace_df=_trace(),
+        sibling_alpha=0.01,
+        max_contributors=2,
+    )
+
+    target = tables.targets.iloc[0]
+    assert target["leave_one_out_status"] == "ok"
+    assert target["strict_null_like_status"] == "ok"
+    assert target["edge_blocked_or_null_like_status"] == "ok"
+    assert target["current_empirical_inflation_factor"] == target[
+        "leave_one_out_inflation_factor"
+    ]
+    assert target["leave_one_out_inflation_factor"] == target[
+        "strict_null_like_inflation_factor"
+    ]
+    assert target["edge_blocked_or_null_like_inflation_factor"] == target[
+        "leave_one_out_inflation_factor"
+    ]
+    assert target["strict_null_like_calibration_records"] == 2
+    assert target["edge_blocked_or_null_like_calibration_records"] == 2
+    assert target["calibration_support_status"] == "strict_empirical_null_supported"
+    assert bool(target["empirical_null_supported"])
+    assert not bool(target["current_blocks_at_alpha"])
+    assert not bool(target["leave_one_out_blocks_at_alpha"])
+    assert tables.summary.iloc[0]["n_leave_one_out_blocks"] == 0
+    assert tables.summary.iloc[0]["n_strict_empirical_null_supported"] == 1
+
+
+def test_sibling_inflation_diagnostic_rejects_selected_nonnull_only_support() -> None:
+    records = (
+        _record(
+            "target",
+            stat=1000.0,
+            degrees_of_freedom=2.0,
+            sibling_null_weight=1.0,
+            is_null_like=False,
+        ),
+        _record(
+            "selected_context",
+            stat=100.0,
+            degrees_of_freedom=2.0,
+            sibling_null_weight=1.0,
+            is_null_like=False,
+        ),
+    )
+    with pytest.raises(ValueError, match="selected non-null"):
+        fit_empirical_null_inflation_model(list(records))
+
+
+def test_sibling_inflation_diagnostic_rejects_target_only_support() -> None:
+    records = (
+        _record(
+            "target",
+            stat=1000.0,
+            degrees_of_freedom=2.0,
+            sibling_null_weight=1.0,
+            is_null_like=False,
+        ),
+    )
+    with pytest.raises(ValueError, match="selected non-null"):
+        fit_empirical_null_inflation_model(list(records))

@@ -137,7 +137,9 @@ def _calibration_records(records: tuple[SiblingPairRecord, ...]) -> tuple[Siblin
     return tuple(
         record
         for record in records
-        if record.degrees_of_freedom > 0.0 and record.sibling_null_weight > 0.0
+        if record.degrees_of_freedom > 0.0
+        and record.sibling_null_weight > 0.0
+        and (record.is_null_like or record.is_edge_blocked)
     )
 
 
@@ -261,6 +263,158 @@ def _local_inflation_from_weights(
     )
 
 
+def _variant_unavailable(prefix: str, status: str) -> dict[str, object]:
+    return {
+        f"{prefix}_status": status,
+        f"{prefix}_inflation_factor": np.nan,
+        f"{prefix}_p_value": np.nan,
+        f"{prefix}_blocks_at_alpha": False,
+        f"{prefix}_inflation_excess_ratio": np.nan,
+        f"{prefix}_effective_sample_size": np.nan,
+        f"{prefix}_calibration_records": 0,
+        f"{prefix}_calibration_weight_sum": 0.0,
+    }
+
+
+def _variant_result(
+    *,
+    prefix: str,
+    target_record: SiblingPairRecord,
+    model: EmpiricalNullInflationModel,
+    calibration_records: tuple[SiblingPairRecord, ...],
+    sibling_alpha: float,
+    inflation_at_alpha: float,
+    include_record,
+) -> dict[str, object]:
+    family_mask, local_weights = _local_calibration_weights(model, target_record)
+    family_records = tuple(
+        record
+        for record, selected in zip(calibration_records, family_mask, strict=True)
+        if selected
+    )
+    selected_mask = np.array([bool(include_record(record)) for record in family_records])
+    if not np.any(selected_mask):
+        return _variant_unavailable(prefix, "no_calibration_records")
+
+    selected_weights = local_weights[selected_mask]
+    positive_weight_mask = selected_weights > 0.0
+    if not np.any(positive_weight_mask):
+        return _variant_unavailable(prefix, "zero_calibration_weight")
+
+    selected_records = tuple(
+        record
+        for record, selected in zip(family_records, selected_mask, strict=True)
+        if selected
+    )
+    weighted_records = tuple(
+        record
+        for record, positive in zip(selected_records, positive_weight_mask, strict=True)
+        if positive
+    )
+    weights = selected_weights[positive_weight_mask]
+    statistics = np.array([record.stat for record in weighted_records], dtype=float)
+    reference_expectations = np.array(
+        [_reference_expectation(record) for record in weighted_records],
+        dtype=float,
+    )
+    denominator = float(np.sum(weights * reference_expectations))
+    if denominator <= 0.0:
+        return _variant_unavailable(prefix, "nonpositive_reference_weight")
+
+    inflation_factor = max(
+        _weighted_inflation_mle(statistics, reference_expectations, weights),
+        1.0,
+    )
+    p_value = _inflation_adjusted_p_value(target_record, inflation_factor)
+    inflation_excess_ratio = (
+        float(inflation_factor / inflation_at_alpha)
+        if np.isfinite(inflation_at_alpha) and inflation_at_alpha > 0.0
+        else np.nan
+    )
+    return {
+        f"{prefix}_status": "ok",
+        f"{prefix}_inflation_factor": float(inflation_factor),
+        f"{prefix}_p_value": p_value,
+        f"{prefix}_blocks_at_alpha": p_value >= sibling_alpha,
+        f"{prefix}_inflation_excess_ratio": inflation_excess_ratio,
+        f"{prefix}_effective_sample_size": _effective_sample_size(weights),
+        f"{prefix}_calibration_records": int(len(weighted_records)),
+        f"{prefix}_calibration_weight_sum": float(np.sum(weights)),
+    }
+
+
+def _calibration_variant_results(
+    *,
+    record: SiblingPairRecord,
+    model: EmpiricalNullInflationModel,
+    calibration_records: tuple[SiblingPairRecord, ...],
+    sibling_alpha: float,
+    inflation_at_alpha: float,
+) -> dict[str, object]:
+    return {
+        **_variant_result(
+            prefix="leave_one_out",
+            target_record=record,
+            model=model,
+            calibration_records=calibration_records,
+            sibling_alpha=sibling_alpha,
+            inflation_at_alpha=inflation_at_alpha,
+            include_record=lambda candidate: candidate.parent != record.parent,
+        ),
+        **_variant_result(
+            prefix="strict_null_like",
+            target_record=record,
+            model=model,
+            calibration_records=calibration_records,
+            sibling_alpha=sibling_alpha,
+            inflation_at_alpha=inflation_at_alpha,
+            include_record=lambda candidate: (
+                candidate.parent != record.parent and candidate.is_null_like
+            ),
+        ),
+        **_variant_result(
+            prefix="edge_blocked_or_null_like",
+            target_record=record,
+            model=model,
+            calibration_records=calibration_records,
+            sibling_alpha=sibling_alpha,
+            inflation_at_alpha=inflation_at_alpha,
+            include_record=lambda candidate: (
+                candidate.parent != record.parent
+                and (candidate.is_null_like or candidate.is_edge_blocked)
+            ),
+        ),
+    }
+
+
+def _calibration_support_contract(variant_results: dict[str, object]) -> dict[str, object]:
+    strict_status = str(variant_results["strict_null_like_status"])
+    blocked_or_null_status = str(variant_results["edge_blocked_or_null_like_status"])
+
+    if strict_status == "ok":
+        status = "strict_empirical_null_supported"
+        level = "strict"
+        action = "internal_empirical_null_estimate_available"
+        empirical_null_supported = True
+    elif blocked_or_null_status == "ok":
+        status = "stopped_or_strict_empirical_null_supported"
+        level = "weak"
+        action = "internal_stopped_or_null_estimate_available"
+        empirical_null_supported = True
+    else:
+        status = "unsupported_without_empirical_null_support"
+        level = "unsupported"
+        action = "raise_calibration_data_error; diagnose_full_selection_conditioning"
+        empirical_null_supported = False
+
+    return {
+        "calibration_support_status": status,
+        "calibration_support_level": level,
+        "calibration_support_action": action,
+        "empirical_null_supported": empirical_null_supported,
+    }
+
+
 def _trace_row_by_parent(trace_df: pd.DataFrame, parent: object) -> pd.Series:
     matches = trace_df[trace_df["node_id"] == parent]
     if len(matches) != 1:
@@ -302,6 +456,7 @@ def _target_row(
     *,
     record: SiblingPairRecord,
     model: EmpiricalNullInflationModel,
+    calibration_records: tuple[SiblingPairRecord, ...],
     trace_row: pd.Series,
     sibling_alpha: float,
 ) -> dict[str, object]:
@@ -341,6 +496,13 @@ def _target_row(
         blocking_stage = "gate_decision"
     else:
         blocking_stage = "not_blocked"
+    variant_results = _calibration_variant_results(
+        record=record,
+        model=model,
+        calibration_records=calibration_records,
+        sibling_alpha=sibling_alpha,
+        inflation_at_alpha=inflation_at_alpha,
+    )
 
     return {
         "case_id": str(trace_row["case_id"]),
@@ -391,6 +553,8 @@ def _target_row(
         "local_effective_sample_size": local_effective_sample_size,
         "local_calibration_weight_sum": float(np.sum(local_weights)),
         "local_calibration_records": int(local_weights.size),
+        **variant_results,
+        **_calibration_support_contract(variant_results),
     }
 
 
@@ -483,6 +647,13 @@ def _summary_rows(targets: pd.DataFrame) -> pd.DataFrame:
                 "n_current_p_blocks",
                 "n_corrected_p_blocks",
                 "n_fdr_crosses_alpha",
+                "n_leave_one_out_blocks",
+                "n_strict_null_like_blocks",
+                "n_strict_null_like_unavailable",
+                "n_edge_blocked_or_null_like_blocks",
+                "n_edge_blocked_or_null_like_unavailable",
+                "n_strict_empirical_null_supported",
+                "n_unsupported_without_empirical_null_support",
                 "max_current_empirical_inflation_factor",
                 "median_current_empirical_inflation_factor",
                 "min_inflation_excess_ratio",
@@ -507,6 +678,33 @@ def _summary_rows(targets: pd.DataFrame) -> pd.DataFrame:
                     group["annotation_corrected_blocks_at_alpha"].sum()
                 ),
                 "n_fdr_crosses_alpha": int(group["fdr_crosses_alpha"].sum()),
+                "n_leave_one_out_blocks": int(
+                    (group["leave_one_out_blocks_at_alpha"] == True).sum()
+                ),
+                "n_strict_null_like_blocks": int(
+                    (group["strict_null_like_blocks_at_alpha"] == True).sum()
+                ),
+                "n_strict_null_like_unavailable": int(
+                    (group["strict_null_like_status"] != "ok").sum()
+                ),
+                "n_edge_blocked_or_null_like_blocks": int(
+                    (group["edge_blocked_or_null_like_blocks_at_alpha"] == True).sum()
+                ),
+                "n_edge_blocked_or_null_like_unavailable": int(
+                    (group["edge_blocked_or_null_like_status"] != "ok").sum()
+                ),
+                "n_strict_empirical_null_supported": int(
+                    (
+                        group["calibration_support_status"]
+                        == "strict_empirical_null_supported"
+                    ).sum()
+                ),
+                "n_unsupported_without_empirical_null_support": int(
+                    (
+                        group["calibration_support_status"]
+                        == "unsupported_without_empirical_null_support"
+                    ).sum()
+                ),
                 "max_current_empirical_inflation_factor": float(
                     group["current_empirical_inflation_factor"].max()
                 ),
@@ -550,6 +748,7 @@ def build_sibling_inflation_diagnostic_tables(
         target = _target_row(
             record=record,
             model=model,
+            calibration_records=calibration_records,
             trace_row=trace_row,
             sibling_alpha=sibling_alpha,
         )
