@@ -4,7 +4,7 @@
 Compares two benchmark runs across all cases and methods.
 
 Usage:
-    python benchmarks/diagnostics/analyze_mp_switch.py [--baseline RUN_DIR] [--mp RUN_DIR]
+    python benchmarks/diagnostics/analysis/analyze_mp_switch.py [--baseline RUN_DIR] [--mp RUN_DIR]
 """
 
 from __future__ import annotations
@@ -13,7 +13,10 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+_SCRIPT_PATH = Path(__file__).resolve()
+BENCHMARKS_ROOT = next(parent for parent in _SCRIPT_PATH.parents if parent.name == "benchmarks")
+PROJECT_ROOT = BENCHMARKS_ROOT.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 import numpy as np
 import pandas as pd
@@ -69,7 +72,7 @@ def main():
     parser.add_argument("--mp", type=str, default=None, help="MP run directory name")
     args = parser.parse_args()
 
-    results_dir = Path(__file__).resolve().parent / "results"
+    results_dir = BENCHMARKS_ROOT / "results"
 
     # Auto-detect: latest two full runs (931+ lines)
     if args.mp is None or args.baseline is None:

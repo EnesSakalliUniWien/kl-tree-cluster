@@ -5,7 +5,7 @@ import math
 import pandas as pd
 import pytest
 
-from benchmarks.diagnostics.sibling_inflation_diagnostic import (
+from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
     build_sibling_inflation_diagnostic_tables,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (

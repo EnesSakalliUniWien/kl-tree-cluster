@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from benchmarks.diagnostics.oracle_tree_recoverability import (
+from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     FAILURE_CLASS_GATE_OVER_SPLIT,
     FAILURE_CLASS_GATE_UNDER_SPLIT,
     FAILURE_CLASS_ORACLE_MATCHED_BELOW_SOLVED,

@@ -91,6 +91,10 @@ verification, and maintenance events here in chronological order.
   statistics and benchmark-shared directory maps, and corrected stale package
   metadata/test documentation so a cold-start reader has one route through the
   project.
+- Split benchmark diagnostics into purpose-named subdirectories:
+  `oracle/`, `calibration/`, `failure/`, and `analysis/`. Updated imports,
+  tests, benchmark docs, and the oracle gate-path wiki evidence paths without
+  keeping old-path compatibility wrappers.
 
 ## Evidence
 

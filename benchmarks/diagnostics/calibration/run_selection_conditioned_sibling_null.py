@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Diagnose empirical-null inflation on oracle-recoverable sibling blockers."""
+"""Run a local selection-conditioned sibling-null diagnostic."""
 
 from __future__ import annotations
 
@@ -14,9 +14,7 @@ from pathlib import Path
 import pandas as pd
 
 _script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
 if str(_benchmarks_root) not in sys.path:
     sys.path.insert(0, str(_benchmarks_root))
 from _bootstrap import ensure_repo_root_on_path
@@ -25,13 +23,19 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.diagnostics.gate_path_trace import build_gate_path_trace_dataframe
+from benchmarks.diagnostics.oracle.gate_path_trace import build_gate_path_trace_dataframe
 from benchmarks.shared.kl_tree_context import build_kl_tree_context
-from benchmarks.diagnostics.oracle_tree_recoverability import (
+from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     FAILURE_CLASS_GATE_UNDER_SPLIT,
     oracle_subtree_cut,
 )
-from benchmarks.diagnostics.sibling_inflation_diagnostic import (
+from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null import (
+    CONTINUOUS_LOCAL_EDGE_SELECTION_SCOPE,
+    NONCONTINUOUS_LOCAL_EDGE_Z_PROXY_SCOPE,
+    SelectionConditionedSiblingNullContext,
+    simulate_local_edge_selection_conditioned_null,
+)
+from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
     build_sibling_inflation_diagnostic_tables,
     collect_sibling_inflation_inputs,
 )
@@ -49,12 +53,17 @@ _THREAD_ENV_VARS = (
     "NUMEXPR_NUM_THREADS",
 )
 
+_DEFAULT_GAUSSIAN_BLOCKERS = (
+    "gauss_extreme_noise_highd",
+    "gauss_extreme_noise_highd_continuous",
+)
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Build target and calibration-contributor tables for the sibling "
-            "empirical-null inflation estimator."
+            "Estimate the sibling statistic under a fixed-tree, fixed-projection "
+            "Gaussian z-null conditioned on the local child-parent edge gate opening."
         )
     )
     parser.add_argument(
@@ -79,22 +88,32 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--case-names",
-        default="",
-        help="Optional comma-separated case names after failure-class filtering.",
+        default=",".join(_DEFAULT_GAUSSIAN_BLOCKERS),
+        help="Comma-separated case names after failure-class filtering.",
     )
     parser.add_argument(
-        "--max-contributors",
+        "--target-mode",
+        choices=("blockers", "current_blocks", "all_focal"),
+        default="blockers",
+        help="Which focal sibling tests receive a selection-conditioned diagnostic.",
+    )
+    parser.add_argument(
+        "--n-candidates",
         type=int,
-        default=10,
-        help="Maximum local calibration contributor rows per target.",
+        default=1_000_000,
+        help="Null candidates per sibling context before edge-gate conditioning.",
     )
     parser.add_argument(
-        "--contributors-for-all-crossings",
-        action="store_true",
-        help=(
-            "Emit contributor rows for every focal test whose raw p-value crosses "
-            "alpha after inflation or sibling FDR, not only oracle blocker nodes."
-        ),
+        "--chunk-size",
+        type=int,
+        default=100_000,
+        help="Number of null candidates simulated per chunk.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=20260524,
+        help="Base random seed.",
     )
     parser.add_argument(
         "--output-dir",
@@ -102,7 +121,7 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help=(
             "Output directory. Defaults to "
-            "benchmarks/results/sibling_inflation_diagnostic_<timestamp>/."
+            "benchmarks/results/selection_conditioned_sibling_null_<timestamp>/."
         ),
     )
     return parser.parse_args()
@@ -196,19 +215,93 @@ def _make_output_dir(explicit_output_dir: Path | None) -> Path:
     else:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
         output_dir = (
-            repo_root / "benchmarks" / "results" / f"sibling_inflation_diagnostic_{stamp}"
+            repo_root
+            / "benchmarks"
+            / "results"
+            / f"selection_conditioned_sibling_null_{stamp}"
         )
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir
+
+
+def _standardized_contrast_dimension(context) -> int:
+    if context.feature_space is None:
+        return int(context.data.shape[1])
+    return int(context.feature_space.contrast_dimension)
+
+
+def _select_target_rows(targets: pd.DataFrame, *, target_mode: str) -> pd.DataFrame:
+    if target_mode == "blockers":
+        selected = targets[targets["blocker_candidate"].astype(bool)].copy()
+    elif target_mode == "current_blocks":
+        selected = targets[targets["current_blocks_at_alpha"].astype(bool)].copy()
+    elif target_mode == "all_focal":
+        selected = targets.copy()
+    else:
+        raise ValueError(f"Unknown target_mode={target_mode!r}.")
+    if selected.empty:
+        raise ValueError(f"No sibling targets matched target_mode={target_mode!r}.")
+    return selected
+
+
+def _target_context(
+    *,
+    context,
+    row: pd.Series,
+    edge_projection_dimension: int,
+) -> SelectionConditionedSiblingNullContext:
+    left_child = row["left_child"]
+    right_child = row["right_child"]
+    return SelectionConditionedSiblingNullContext(
+        case_id=str(row["case_id"]),
+        parent=row["parent"],
+        feature_family=str(row["feature_family"]),
+        standardized_contrast_dimension=_standardized_contrast_dimension(context),
+        edge_projection_dimension=int(edge_projection_dimension),
+        sibling_projection_dimension=int(row["sibling_projection_dimension"]),
+        degrees_of_freedom=float(row["degrees_of_freedom"]),
+        reference_scale=float(row["reference_scale"]),
+        observed_statistic=float(row["raw_sibling_statistic"]),
+        observed_p_value=float(row["raw_sibling_p_value"]),
+        edge_alpha=float(config.EDGE_ALPHA),
+        sibling_alpha=float(config.SIBLING_ALPHA),
+        parent_sample_size=int(row["parent_sample_size"]),
+        left_sample_size=int(context.tree.nodes[left_child]["leaf_count"]),
+        right_sample_size=int(context.tree.nodes[right_child]["leaf_count"]),
+    )
+
+
+def _append_selection_conditioned_columns(
+    targets: pd.DataFrame,
+    results: list[dict[str, object]],
+) -> pd.DataFrame:
+    result_df = pd.DataFrame.from_records(results)
+    if result_df.empty:
+        raise ValueError("Selection-conditioned diagnostic produced no result rows.")
+    merged = targets.merge(
+        result_df,
+        on=["case_id", "parent"],
+        how="inner",
+        validate="one_to_one",
+        suffixes=("", "_selection"),
+    )
+    if len(merged) != len(targets):
+        raise ValueError(
+            "Selection-conditioned diagnostic did not cover every target row: "
+            f"{len(merged)} of {len(targets)} rows matched."
+        )
+    return merged
 
 
 def _diagnose_case(
     case: dict[str, object],
     classification_row,
     *,
-    max_contributors: int,
-    contributors_for_all_crossings: bool,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    target_mode: str,
+    n_candidates: int,
+    chunk_size: int,
+    seed: int,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     context = build_kl_tree_context(case, populate_node_distributions=True)
     gate_annotation_bundle = run_gate_annotation_pipeline(
         context.tree,
@@ -218,6 +311,10 @@ def _diagnose_case(
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
+    gate_two_result = gate_annotation_bundle.gate_two_result
+    if gate_two_result is None:
+        raise ValueError("Selection-conditioned diagnostic requires gate_two_result.")
+
     decomposer = TreeDecomposition(
         tree=context.tree,
         gate_annotation_bundle=gate_annotation_bundle,
@@ -270,16 +367,79 @@ def _diagnose_case(
         model=inputs.model,
         trace_df=trace_df,
         sibling_alpha=config.SIBLING_ALPHA,
-        max_contributors=max_contributors,
-        contributors_for_all_crossings=contributors_for_all_crossings,
+        max_contributors=0,
+        contributors_for_all_crossings=False,
     )
-    for frame in (tables.targets, tables.contributors, tables.summary):
+    targets = _select_target_rows(tables.targets, target_mode=target_mode)
+
+    spectral_dimensions = (
+        gate_two_result.spectral_context.spectral_projection_dimensions_by_node
+    )
+    result_rows: list[dict[str, object]] = []
+    for row_index, (_target_index, row) in enumerate(targets.iterrows(), start=1):
+        parent = row["parent"]
+        if parent not in spectral_dimensions:
+            raise ValueError(
+                f"Missing Gate 2 spectral dimension for target parent {parent!r}."
+            )
+        diagnostic_context = _target_context(
+            context=context,
+            row=row,
+            edge_projection_dimension=int(spectral_dimensions[parent]),
+        )
+        result = simulate_local_edge_selection_conditioned_null(
+            diagnostic_context,
+            n_candidates=n_candidates,
+            seed=seed + row_index,
+            chunk_size=chunk_size,
+        )
+        result_rows.append(result.as_row())
+
+    merged = _append_selection_conditioned_columns(targets, result_rows)
+    for frame in (merged, tables.summary):
         if frame.empty:
             continue
         frame.insert(2, "tree_distance_metric", context.tree_distance_metric)
         frame.insert(3, "tree_distance_source", context.tree_distance_source)
         frame.insert(4, "tree_linkage_method", context.tree_linkage_method)
-    return tables.targets, tables.contributors, tables.summary
+    return merged, tables.summary
+
+
+def _summary_from_targets(targets: pd.DataFrame) -> pd.DataFrame:
+    rows: list[dict[str, object]] = []
+    for case_id, group in targets.groupby("case_id", sort=False):
+        rows.append(
+            {
+                "case_id": case_id,
+                "n_targets": int(len(group)),
+                "n_continuous_local_edge_selection": int(
+                    (
+                        group["conditioning_scope"]
+                        == CONTINUOUS_LOCAL_EDGE_SELECTION_SCOPE
+                    ).sum()
+                ),
+                "n_noncontinuous_local_edge_z_proxy": int(
+                    (
+                        group["conditioning_scope"]
+                        == NONCONTINUOUS_LOCAL_EDGE_Z_PROXY_SCOPE
+                    ).sum()
+                ),
+                "median_current_empirical_inflation_factor": float(
+                    group["current_empirical_inflation_factor"].median()
+                ),
+                "median_selection_conditioned_c_hat": float(
+                    group["selection_conditioned_c_hat"].median()
+                ),
+                "median_acceptance_rate": float(group["acceptance_rate"].median()),
+                "n_selection_blocks_at_alpha": int(
+                    group["selection_blocks_at_alpha"].sum()
+                ),
+                "min_selection_empirical_tail_p_value": float(
+                    group["selection_empirical_tail_p_value"].min()
+                ),
+            }
+        )
+    return pd.DataFrame.from_records(rows)
 
 
 def main() -> None:
@@ -294,37 +454,37 @@ def main() -> None:
         case_names=_parse_csv_list(args.case_names),
     )
     output_dir = _make_output_dir(args.output_dir)
-    targets_csv = output_dir / "sibling_inflation_targets.csv"
-    contributors_csv = output_dir / "sibling_inflation_contributors.csv"
-    summary_csv = output_dir / "sibling_inflation_summary.csv"
-    metadata_json = output_dir / "sibling_inflation_metadata.json"
+    targets_csv = output_dir / "selection_conditioned_sibling_null_targets.csv"
+    case_summary_csv = output_dir / "selection_conditioned_sibling_null_case_summary.csv"
+    sibling_summary_csv = output_dir / "sibling_inflation_summary.csv"
+    metadata_json = output_dir / "selection_conditioned_sibling_null_metadata.json"
 
     started_at = time.perf_counter()
     target_frames: list[pd.DataFrame] = []
-    contributor_frames: list[pd.DataFrame] = []
-    summary_frames: list[pd.DataFrame] = []
+    sibling_summary_frames: list[pd.DataFrame] = []
     for index, (case, classification_row) in enumerate(selected, start=1):
         print(
             f"[{index}/{len(selected)}] {case['name']} "
             f"({classification_row.failure_class})",
             flush=True,
         )
-        targets, contributors, summary = _diagnose_case(
+        targets, sibling_summary = _diagnose_case(
             case,
             classification_row,
-            max_contributors=int(args.max_contributors),
-            contributors_for_all_crossings=bool(args.contributors_for_all_crossings),
+            target_mode=str(args.target_mode),
+            n_candidates=int(args.n_candidates),
+            chunk_size=int(args.chunk_size),
+            seed=int(args.seed) + index * 1_000_000,
         )
         target_frames.append(targets)
-        contributor_frames.append(contributors)
-        summary_frames.append(summary)
+        sibling_summary_frames.append(sibling_summary)
 
     targets_df = pd.concat(target_frames, ignore_index=True)
-    contributors_df = pd.concat(contributor_frames, ignore_index=True)
-    summary_df = pd.concat(summary_frames, ignore_index=True)
+    case_summary_df = _summary_from_targets(targets_df)
+    sibling_summary_df = pd.concat(sibling_summary_frames, ignore_index=True)
     targets_df.to_csv(targets_csv, index=False)
-    contributors_df.to_csv(contributors_csv, index=False)
-    summary_df.to_csv(summary_csv, index=False)
+    case_summary_df.to_csv(case_summary_csv, index=False)
+    sibling_summary_df.to_csv(sibling_summary_csv, index=False)
 
     elapsed_sec = time.perf_counter() - started_at
     metadata = {
@@ -332,23 +492,29 @@ def main() -> None:
         "classification_csv": str(classification_path),
         "failure_classes": _parse_csv_list(args.failure_classes),
         "case_names": [str(case["name"]) for case, _row in selected],
+        "target_mode": str(args.target_mode),
         "n_cases": len(selected),
+        "n_candidates": int(args.n_candidates),
+        "chunk_size": int(args.chunk_size),
+        "seed": int(args.seed),
+        "edge_alpha": float(config.EDGE_ALPHA),
         "sibling_alpha": float(config.SIBLING_ALPHA),
-        "max_contributors": int(args.max_contributors),
-        "contributors_for_all_crossings": bool(args.contributors_for_all_crossings),
+        "conditioning_scope": (
+            "fixed_tree_fixed_projection_local_child_parent_edge_selection"
+        ),
         "elapsed_sec": round(elapsed_sec, 6),
         "targets_csv": str(targets_csv),
-        "contributors_csv": str(contributors_csv),
-        "summary_csv": str(summary_csv),
+        "case_summary_csv": str(case_summary_csv),
+        "sibling_summary_csv": str(sibling_summary_csv),
     }
     metadata_json.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n")
 
-    print(f"Sibling inflation diagnostic complete in {elapsed_sec:.2f}s")
+    print(f"Selection-conditioned sibling null complete in {elapsed_sec:.2f}s")
     print(f"Targets: {targets_csv}")
-    print(f"Contributors: {contributors_csv}")
-    print(f"Summary: {summary_csv}")
+    print(f"Case summary: {case_summary_csv}")
+    print(f"Sibling summary: {sibling_summary_csv}")
     print(f"Metadata: {metadata_json}")
-    print(summary_df.to_string(index=False))
+    print(case_summary_df.to_string(index=False))
 
 
 if __name__ == "__main__":

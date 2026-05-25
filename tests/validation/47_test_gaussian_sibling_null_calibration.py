@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from benchmarks.diagnostics.gaussian_sibling_null_calibration import (
+from benchmarks.diagnostics.calibration.gaussian_sibling_null_calibration import (
     CONTINUOUS_FIXED_SUBSPACE_SCOPE,
     NONCONTINUOUS_Z_PROXY_SCOPE,
     GaussianSiblingNullContext,

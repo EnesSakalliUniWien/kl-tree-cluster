@@ -2,15 +2,15 @@
 title: Oracle Gate-Path Diagnostic
 type: analysis
 status: reviewed
-updated: 2026-05-24
+updated: 2026-05-25
 sources:
-  - benchmarks/diagnostics/oracle_tree_recoverability.py
-  - benchmarks/diagnostics/gate_path_trace.py
-  - benchmarks/diagnostics/sibling_inflation_diagnostic.py
+  - benchmarks/diagnostics/oracle/oracle_tree_recoverability.py
+  - benchmarks/diagnostics/oracle/gate_path_trace.py
+  - benchmarks/diagnostics/calibration/sibling_inflation_diagnostic.py
   - benchmarks/shared/kl_tree_context.py
-  - benchmarks/diagnostics/run_oracle_tree_recoverability.py
-  - benchmarks/diagnostics/run_gate_path_trace.py
-  - benchmarks/diagnostics/run_sibling_inflation_diagnostic.py
+  - benchmarks/diagnostics/oracle/run_oracle_tree_recoverability.py
+  - benchmarks/diagnostics/oracle/run_gate_path_trace.py
+  - benchmarks/diagnostics/calibration/run_sibling_inflation_diagnostic.py
   - benchmarks/results/oracle_tree_recoverability_20260524_155532Z/oracle_tree_recoverability.csv
   - benchmarks/results/gate_path_trace_20260524_155551Z/gate_path_trace.csv
   - benchmarks/results/gate_path_trace_20260524_155551Z/gate_path_trace_summary.csv
@@ -397,7 +397,7 @@ method raises a calibration-data error instead of estimating \(\hat c\), using
 
 The next mathematical question was whether the huge inflation factors could be
 explained by the projected-Wald reference law itself. The diagnostic
-`benchmarks/diagnostics/run_gaussian_sibling_null_calibration.py` isolates the fixed
+`benchmarks/diagnostics/calibration/run_gaussian_sibling_null_calibration.py` isolates the fixed
 orthonormal-subspace null:
 
 \[
@@ -570,26 +570,26 @@ partition.
 
 ## Evidence
 
-- `benchmarks/diagnostics/oracle_tree_recoverability.py` implements the exact
+- `benchmarks/diagnostics/oracle/oracle_tree_recoverability.py` implements the exact
   subtree-cut oracle and the failure classification.
-- `benchmarks/diagnostics/gate_path_trace.py` constructs the node-level comparison
+- `benchmarks/diagnostics/oracle/gate_path_trace.py` constructs the node-level comparison
   between actual traversal, oracle boundaries, edge gates, sibling gates,
   inflation, and pass-through status.
-- `benchmarks/diagnostics/sibling_inflation_diagnostic.py` constructs the
+- `benchmarks/diagnostics/calibration/sibling_inflation_diagnostic.py` constructs the
   leave-one-out, strict-null, and blocked-or-null-like inflation variants and
   records explicit calibration-support statuses.
-- `benchmarks/diagnostics/gaussian_sibling_null_calibration.py` defines the
+- `benchmarks/diagnostics/calibration/gaussian_sibling_null_calibration.py` defines the
   fixed-subspace Gaussian sibling-null diagnostic contract and keeps the
   non-continuous case labeled as a standardized-\(z\) proxy rather than a
   feature-family null.
-- `benchmarks/diagnostics/run_gaussian_sibling_null_calibration.py` runs that external
+- `benchmarks/diagnostics/calibration/run_gaussian_sibling_null_calibration.py` runs that external
   diagnostic on selected sibling blocker contexts.
-- `benchmarks/diagnostics/selection_conditioned_sibling_null.py` defines the
+- `benchmarks/diagnostics/calibration/selection_conditioned_sibling_null.py` defines the
   level-1 local edge-selection null diagnostic for sibling blocker contexts.
-- `benchmarks/diagnostics/run_selection_conditioned_sibling_null.py` runs the fixed-tree,
+- `benchmarks/diagnostics/calibration/run_selection_conditioned_sibling_null.py` runs the fixed-tree,
   fixed-projection local edge-selection diagnostic on selected sibling
   blockers.
-- `benchmarks/diagnostics/run_tree_bh_selection_conditioned_sibling_null.py` runs the
+- `benchmarks/diagnostics/calibration/run_tree_bh_selection_conditioned_sibling_null.py` runs the
   fixed-tree root Tree-BH edge-path diagnostic without fitting unsupported
   sibling calibration.
 - `benchmarks/shared/kl_tree_context.py` centralizes the benchmark KL tree

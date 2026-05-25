@@ -2,10 +2,10 @@
 """Sweep alpha (significance level) and show how K changes.
 
 Usage:
-    python benchmarks/diagnostics/sweep_alpha.py
-    python benchmarks/diagnostics/sweep_alpha.py --input data/feature_matrices/feature_matrix.tsv
-    python benchmarks/diagnostics/sweep_alpha.py --synthetic
-    python benchmarks/diagnostics/sweep_alpha.py --alphas 0.001 0.01 0.05 0.1 0.2
+    python benchmarks/diagnostics/analysis/sweep_alpha.py
+    python benchmarks/diagnostics/analysis/sweep_alpha.py --input data/feature_matrices/feature_matrix.tsv
+    python benchmarks/diagnostics/analysis/sweep_alpha.py --synthetic
+    python benchmarks/diagnostics/analysis/sweep_alpha.py --alphas 0.001 0.01 0.05 0.1 0.2
 """
 
 from __future__ import annotations
@@ -21,7 +21,10 @@ from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
 
 # Ensure repo root is importable.
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+_SCRIPT_PATH = Path(__file__).resolve()
+BENCHMARKS_ROOT = next(parent for parent in _SCRIPT_PATH.parents if parent.name == "benchmarks")
+PROJECT_ROOT = BENCHMARKS_ROOT.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.poset_tree import PosetTree

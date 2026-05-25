@@ -14,9 +14,7 @@ from pathlib import Path
 import pandas as pd
 
 _script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
 if str(_benchmarks_root) not in sys.path:
     sys.path.insert(0, str(_benchmarks_root))
 from _bootstrap import ensure_repo_root_on_path
@@ -26,7 +24,7 @@ repo_root = ensure_repo_root_on_path(__file__)
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
 from benchmarks.shared.kl_tree_context import build_kl_tree_context
-from benchmarks.diagnostics.oracle_tree_recoverability import (
+from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     classify_tree_recoverability_failure,
     oracle_subtree_cut,
 )

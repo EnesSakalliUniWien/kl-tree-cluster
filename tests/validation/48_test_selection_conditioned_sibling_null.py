@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from benchmarks.diagnostics.selection_conditioned_sibling_null import (
+from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null import (
     CONTINUOUS_LOCAL_EDGE_SELECTION_SCOPE,
     NONCONTINUOUS_LOCAL_EDGE_Z_PROXY_SCOPE,
     SelectionConditionedSiblingNullContext,

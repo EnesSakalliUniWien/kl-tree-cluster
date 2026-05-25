@@ -10,9 +10,12 @@ import pandas as pd
 
 from benchmarks.shared.relationship_analysis import analyze_benchmark_relationships
 
+_SCRIPT_PATH = Path(__file__).resolve()
+BENCHMARKS_ROOT = next(parent for parent in _SCRIPT_PATH.parents if parent.name == "benchmarks")
+
 
 def _resolve_run_dir(run_dir: str | None) -> Path:
-    results_dir = Path(__file__).resolve().parent / "results"
+    results_dir = BENCHMARKS_ROOT / "results"
     if run_dir is not None:
         candidate = Path(run_dir)
         if not candidate.is_absolute():

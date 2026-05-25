@@ -29,8 +29,11 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
-# Make project root importable
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# Make project root importable.
+_SCRIPT_PATH = Path(__file__).resolve()
+BENCHMARKS_ROOT = next(parent for parent in _SCRIPT_PATH.parents if parent.name == "benchmarks")
+PROJECT_ROOT = BENCHMARKS_ROOT.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 # Suppress noisy warnings during batch runs
 

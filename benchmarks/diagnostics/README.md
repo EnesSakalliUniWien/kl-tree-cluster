@@ -8,13 +8,19 @@ method.
 Use `benchmarks/shared/` for reusable benchmark execution contracts. Add files
 here only when they are diagnostic entrypoints or diagnostic-only helpers.
 
+## Layout
+
+- `oracle/`: subtree-cut recoverability and gate-path traces.
+- `calibration/`: sibling inflation and selection-conditioned null diagnostics.
+- `failure/`: benchmark failure-report tracing used by the full benchmark.
+- `analysis/`: standalone run-comparison and exploratory analysis commands.
+
 Maintained entrypoints:
 
-- `run_oracle_tree_recoverability.py`
-- `run_gate_path_trace.py`
-- `run_sibling_inflation_diagnostic.py`
-- `run_gaussian_sibling_null_calibration.py`
-- `run_selection_conditioned_sibling_null.py`
-- `run_tree_bh_selection_conditioned_sibling_null.py`
-- `analyze_relationships.py`
-
+- `oracle/run_oracle_tree_recoverability.py`
+- `oracle/run_gate_path_trace.py`
+- `calibration/run_sibling_inflation_diagnostic.py`
+- `calibration/run_gaussian_sibling_null_calibration.py`
+- `calibration/run_selection_conditioned_sibling_null.py`
+- `calibration/run_tree_bh_selection_conditioned_sibling_null.py`
+- `analysis/analyze_relationships.py`

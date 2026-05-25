@@ -9,7 +9,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from benchmarks.diagnostics.sibling_inflation_diagnostic import (
+from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
     collect_sibling_inflation_inputs,
 )
 from kl_clustering_analysis import config

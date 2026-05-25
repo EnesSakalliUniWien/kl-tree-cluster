@@ -14,9 +14,7 @@ from pathlib import Path
 import pandas as pd
 
 _script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
 if str(_benchmarks_root) not in sys.path:
     sys.path.insert(0, str(_benchmarks_root))
 from _bootstrap import ensure_repo_root_on_path
@@ -25,20 +23,20 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.diagnostics.gaussian_sibling_null_calibration import (
+from benchmarks.diagnostics.calibration.gaussian_sibling_null_calibration import (
     CONTINUOUS_FIXED_SUBSPACE_SCOPE,
     GaussianSiblingNullContext,
     NONCONTINUOUS_Z_PROXY_SCOPE,
     append_external_gaussian_null_columns,
     simulate_fixed_subspace_gaussian_null,
 )
-from benchmarks.diagnostics.gate_path_trace import build_gate_path_trace_dataframe
+from benchmarks.diagnostics.oracle.gate_path_trace import build_gate_path_trace_dataframe
 from benchmarks.shared.kl_tree_context import build_kl_tree_context
-from benchmarks.diagnostics.oracle_tree_recoverability import (
+from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     FAILURE_CLASS_GATE_UNDER_SPLIT,
     oracle_subtree_cut,
 )
-from benchmarks.diagnostics.sibling_inflation_diagnostic import (
+from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
     build_sibling_inflation_diagnostic_tables,
     collect_sibling_inflation_inputs,
 )

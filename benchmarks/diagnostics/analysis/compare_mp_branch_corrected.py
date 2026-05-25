@@ -31,7 +31,9 @@ import pandas as pd
 from scipy.integrate import quad
 from sklearn.metrics import adjusted_rand_score
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_SCRIPT_PATH = Path(__file__).resolve()
+BENCHMARKS_ROOT = next(parent for parent in _SCRIPT_PATH.parents if parent.name == "benchmarks")
+PROJECT_ROOT = BENCHMARKS_ROOT.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
