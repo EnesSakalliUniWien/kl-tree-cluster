@@ -11,6 +11,7 @@ from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
 )
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from .child_parent_divergence_tree_bh import (
     apply_child_parent_divergence_tree_bh_correction,
@@ -25,6 +26,7 @@ def annotate_child_parent_divergence(
     *,
     significance_level_alpha: float = config.EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
+    feature_space: FeatureSpace | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using the projected Wald pipeline.
 
@@ -36,6 +38,7 @@ def annotate_child_parent_divergence(
         annotations_df,
         significance_level_alpha=significance_level_alpha,
         leaf_data=leaf_data,
+        feature_space=feature_space,
     )
     return annotated_df
 
@@ -46,6 +49,7 @@ def annotate_child_parent_divergence_with_context(
     *,
     significance_level_alpha: float = config.EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
+    feature_space: FeatureSpace | None = None,
 ) -> tuple[pd.DataFrame, SpectralContext]:
     """Test child-parent divergence and return typed Gate 2 spectral context."""
     annotations_df = annotations_df.copy()
@@ -73,6 +77,7 @@ def annotate_child_parent_divergence_with_context(
     ) = compute_child_parent_spectral_context(
         tree,
         leaf_data,
+        feature_space=feature_space,
     )
 
     spectral_context = SpectralContext(
@@ -95,6 +100,7 @@ def annotate_child_parent_divergence_with_context(
         spectral_dims=node_spectral_dimensions,
         pca_projections=node_pca_projections,
         pca_eigenvalues=node_pca_eigenvalues,
+        feature_space=feature_space,
     )
 
     if invalid_test_flags.any():

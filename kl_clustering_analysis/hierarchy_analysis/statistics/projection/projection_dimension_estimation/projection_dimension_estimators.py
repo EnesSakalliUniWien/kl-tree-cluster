@@ -105,12 +105,14 @@ def marchenko_pastur_signal_count(
 
         λ_max = (1 + √c)²
 
-    because the input spectrum comes from a correlation matrix whose null
-    variance scale is exactly 1.  Here c = n_active_features / n_descendant_rows.
+    because the input spectrum comes from a covariance matrix in null-whitened
+    tangent coordinates, whose null variance scale is exactly 1.  Here
+    c = n_active_features / n_descendant_rows.
 
     Args:
-        eigenvalues (np.ndarray): Eigenvalues of the node-local correlation
-            matrix (descendant leaf rows + internal distribution vectors).
+        eigenvalues (np.ndarray): Eigenvalues of the node-local covariance
+            matrix in null-whitened tangent coordinates (descendant leaf rows
+            + internal distribution vectors).
             Negative values (numerical noise from eigen-solvers) are ignored.
         n_descendant_rows (int): Number of rows in the node-local descendant
             feature matrix — one row per descendant leaf sample (e.g. patient
@@ -142,7 +144,7 @@ def marchenko_pastur_signal_count(
     # Grows as the node gets smaller (fewer descendant rows), raising λ_max.
     node_aspect_ratio = float(n_active_features) / float(n_descendant_rows)
 
-    # Marchenko-Pastur upper bound for a correlation matrix: highest eigenvalue expected under null.
+    # Marchenko-Pastur upper bound for unit-scale null-whitened covariance.
     # Eigenvalues above this threshold indicate true signal.
     mp_upper_bound = (1.0 + np.sqrt(node_aspect_ratio)) ** 2
 
@@ -167,7 +169,7 @@ def estimate_k_marchenko_pastur(
     minimum-dimension floor and caps the result at ``n_features``.
 
     Args:
-        eigenvalues (np.ndarray): Eigenvalues of the node-local correlation
+        eigenvalues (np.ndarray): Eigenvalues of the node-local covariance
             matrix, as returned by the eigen-decomposition backend.
         n_samples (int): Number of rows in the node-local descendant feature
             matrix (descendant leaf rows + internal distribution vectors).

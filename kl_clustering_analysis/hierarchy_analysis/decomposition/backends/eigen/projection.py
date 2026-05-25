@@ -29,7 +29,7 @@ def build_pca_projection(
     if (
         eig.use_dual
         and eig.dual_sample_eigenvectors is not None
-        and eig.standardized_data_active is not None
+        and eig.centered_data_active is not None
     ):
         active_eigenvectors = _recover_dual_feature_eigenvectors(
             eig,
@@ -63,8 +63,8 @@ def _resolve_effective_dimension(
 
     if eig.use_dual:
         n_samples = (
-            eig.standardized_data_active.shape[0]
-            if eig.standardized_data_active is not None
+            eig.centered_data_active.shape[0]
+            if eig.centered_data_active is not None
             else 0
         )
         available_dimensions = min(available_dimensions, max(n_samples - 1, 0))
@@ -93,16 +93,14 @@ def _recover_dual_feature_eigenvectors(
 ) -> np.ndarray:
     """Recover feature-space eigenvectors from dual sample-space eigenvectors."""
     dual_sample_eigenvectors = eig.dual_sample_eigenvectors
-    standardized_data_active = eig.standardized_data_active
-    if dual_sample_eigenvectors is None or standardized_data_active is None:
+    centered_data_active = eig.centered_data_active
+    if dual_sample_eigenvectors is None or centered_data_active is None:
         raise ValueError("Dual projection recovery requires dual sample vectors and data.")
 
     dual_sample_vectors = dual_sample_eigenvectors[:, :effective_dimension]
     top_eigenvalues_floored = np.maximum(eig.eigenvalues[:effective_dimension], 1e-12)
-    recovery_scale = np.sqrt(top_eigenvalues_floored) * np.sqrt(
-        standardized_data_active.shape[0]
-    )
-    recovered_feature_vectors = standardized_data_active.T @ dual_sample_vectors / recovery_scale
+    recovery_scale = np.sqrt(top_eigenvalues_floored) * np.sqrt(centered_data_active.shape[0])
+    recovered_feature_vectors = centered_data_active.T @ dual_sample_vectors / recovery_scale
 
     recovered_norms = np.linalg.norm(recovered_feature_vectors, axis=0)
     return recovered_feature_vectors / recovered_norms

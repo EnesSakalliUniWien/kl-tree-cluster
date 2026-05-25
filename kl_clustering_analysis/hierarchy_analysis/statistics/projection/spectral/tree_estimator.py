@@ -6,13 +6,15 @@ output dicts consumed by the rest of the pipeline.
 
 The only supported estimator is Marchenko-Pastur rank selection. It uses
 random matrix theory to separate signal eigenvalues from the noise bulk of
-the local correlation matrix. For correlation matrices, $\sigma^2 = 1$
-exactly, so the Marchenko-Pastur support is $(1 \pm \sqrt{d/n})^2$. When no
-eigenvalues exceed the upper bound, the raw signal count is conceptually 0,
-but the returned dimension is floored to the caller's minimum and capped by
-the number of active features. Pure-noise nodes therefore run a low-rank test
-and are expected to fail to reject. Nodes with no active feature directions
-are represented explicitly as zero-dimensional PCA contexts.
+the local covariance matrix after each descendant row is mapped into the
+null-whitened tangent coordinates used by the Wald statistic. In that
+coordinate system the null covariance scale is one, so the Marchenko-Pastur
+support is $(1 \pm \sqrt{d/n})^2$. When no eigenvalues exceed the upper
+bound, the raw signal count is conceptually 0, but the returned dimension is
+floored to the caller's minimum and capped by the number of active features.
+Pure-noise nodes therefore run a low-rank test and are expected to fail to
+reject. Nodes with no active feature directions are represented explicitly as
+zero-dimensional PCA contexts.
 """
 
 from __future__ import annotations
@@ -24,6 +26,15 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
+
+from kl_clustering_analysis.tree.distributions import (
+    require_node_continuous_covariance_by_block,
+)
+from kl_clustering_analysis.tree.feature_space import (
+    FeatureSpace,
+    resolve_feature_space,
+    validate_feature_matrix,
+)
 
 from .marchenko_pastur import _get_n_jobs, _process_node
 from .node_spectral_result import NodeSpectralResult
@@ -41,10 +52,12 @@ def _build_spectral_tasks(
     *,
     include_internal: bool,
     feature_count: int,
+    feature_space: FeatureSpace,
 ) -> list[NodeSpectralTask]:
     """Build per-node spectral tasks from precomputed descendant metadata."""
 
     internal_distributions_by_node: Dict[str, tuple[np.ndarray, ...]] = {}
+    expected_internal_distribution_shape = (feature_space.raw_dimension,)
 
     if include_internal:
         for node_id in internal_node_ids:
@@ -52,10 +65,11 @@ def _build_spectral_tasks(
             for internal_node_id in descendant_internal_nodes_by_node[node_id]:
                 distribution = tree.nodes[internal_node_id]["distribution"]
                 distribution_array = np.asarray(distribution, dtype=np.float64)
-                if distribution_array.shape != (feature_count,):
+                if distribution_array.shape != expected_internal_distribution_shape:
                     raise ValueError(
                         f"Internal distribution for node {internal_node_id!r} has "
-                        f"shape {distribution_array.shape}; expected {(feature_count,)}."
+                        f"shape {distribution_array.shape}; expected "
+                        f"{expected_internal_distribution_shape}."
                     )
                 node_internal_distributions.append(distribution_array)
             internal_distributions_by_node[node_id] = tuple(node_internal_distributions)
@@ -66,6 +80,13 @@ def _build_spectral_tasks(
             row_indices=tuple(descendant_leaf_indices_by_node[node_id]),
             internal_distributions=(
                 internal_distributions_by_node[node_id] if include_internal else ()
+            ),
+            null_distribution=np.asarray(tree.nodes[node_id]["distribution"], dtype=np.float64),
+            feature_space=feature_space,
+            continuous_covariance_by_block=require_node_continuous_covariance_by_block(
+                tree,
+                node_id,
+                feature_space,
             ),
         )
         for node_id in internal_node_ids
@@ -122,19 +143,16 @@ def compute_spectral_decomposition(
     *,
     minimum_projection_dimension: int = 1,
     include_internal: bool | None = None,
+    feature_space: FeatureSpace | None = None,
 ) -> Tuple[Dict[str, int], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
     """Compute spectral dimensions, PCA projections, and eigenvalues.
 
-    Performs exactly one eigendecomposition per internal node of the local
-    **correlation** matrix, extracting the dimension estimate, the top-k
-    eigenvector projection matrix, and the corresponding eigenvalues for
-    whitening.
-
-    The correlation matrix is used (not the covariance) because the Wald
-    z-vector is per-feature standardised, so its covariance under H₀ equals
-    the Pearson correlation C = D^{-1/2} Σ D^{-1/2}.  Only features with
-    non-zero variance ("active" features) are included; constant features
-    receive zero weight in the projection.
+    Performs exactly one eigendecomposition per internal node after mapping
+    descendant distributions into the same null-whitened tangent coordinates
+    used by the projected Wald statistic. The covariance matrix is then
+    computed in that coordinate system without re-standardizing columns. Only
+    active directions with non-zero empirical variance are included; constant
+    directions receive zero weight in the projection.
 
     Parameters
     ----------
@@ -163,9 +181,14 @@ def compute_spectral_decomposition(
 
         include_internal = config.INCLUDE_INTERNAL_IN_SPECTRAL
 
-    feature_count = leaf_data.shape[1]
+    active_feature_space = resolve_feature_space(tuple(leaf_data.columns), feature_space)
+    feature_count = active_feature_space.contrast_dimension
+    leaf_feature_matrix = validate_feature_matrix(
+        leaf_data.to_numpy(dtype=np.float64, copy=False),
+        active_feature_space,
+        value_name="leaf_data",
+    )
     leaf_label_to_index = {label: i for i, label in enumerate(leaf_data.index)}
-    leaf_feature_matrix = leaf_data.values.astype(np.float64)
 
     descendant_leaf_indices_by_node, descendant_internal_nodes_by_node = precompute_descendants(
         tree, leaf_label_to_index
@@ -190,6 +213,7 @@ def compute_spectral_decomposition(
         descendant_internal_nodes_by_node,
         include_internal=bool(include_internal),
         feature_count=feature_count,
+        feature_space=active_feature_space,
     )
 
     # Data is sliced lazily inside each worker (not pre-materialised here).

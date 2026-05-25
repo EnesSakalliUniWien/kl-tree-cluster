@@ -13,8 +13,9 @@ import os
 
 import numpy as np
 
-from ....decomposition.backends.eigen.decomposition import eigendecompose_correlation
+from ....decomposition.backends.eigen.decomposition import eigendecompose_covariance
 from ....decomposition.backends.eigen.projection import build_pca_projection
+from ...contrast_covariance import build_null_whitened_tangent_matrix
 from ..projection_dimension_estimation.projection_dimension_estimators import (
     estimate_k_marchenko_pastur,
 )
@@ -81,18 +82,30 @@ def _process_node(
 
     # Slice on-demand: only this thread's copy is live during the call.
     descendant_leaf_feature_rows = full_feature_matrix[descendant_leaf_row_indices, :]
+    descendant_leaf_feature_rows = build_null_whitened_tangent_matrix(
+        descendant_leaf_feature_rows,
+        spectral_task.null_distribution,
+        feature_space=spectral_task.feature_space,
+        continuous_covariance_by_block=spectral_task.continuous_covariance_by_block,
+    )
 
     if internal_distribution_vectors:
+        internal_feature_rows = build_null_whitened_tangent_matrix(
+            np.asarray(internal_distribution_vectors, dtype=np.float64),
+            spectral_task.null_distribution,
+            feature_space=spectral_task.feature_space,
+            continuous_covariance_by_block=spectral_task.continuous_covariance_by_block,
+        )
         descendant_feature_matrix = np.vstack(
             [
                 descendant_leaf_feature_rows,
-                np.array(internal_distribution_vectors, dtype=np.float64),
+                internal_feature_rows,
             ]
         )
     else:
         descendant_feature_matrix = descendant_leaf_feature_rows
 
-    eigendecomposition_result = eigendecompose_correlation(
+    eigendecomposition_result = eigendecompose_covariance(
         descendant_feature_matrix,
         compute_eigenvectors=compute_eigendecomposition_outputs,
     )

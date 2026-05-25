@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald.child_parent_projected_wald_test import (
     run_child_parent_projected_wald_test,
 )
@@ -47,3 +48,13 @@ def test_projected_wald_kernel_accepts_exact_zero_dimensional_context() -> None:
     assert result.reference_scale == 1.0
     assert result.degrees_of_freedom == 0.0
     assert result.p_value == 1.0
+
+
+def test_projected_wald_kernel_rejects_projection_width_mismatch() -> None:
+    with pytest.raises(ValueError, match="PCA projection width"):
+        run_projected_wald_kernel(
+            np.zeros(4, dtype=np.float64),
+            spectral_k=2,
+            pca_projection=np.zeros((2, 6), dtype=np.float64),
+            pca_eigenvalues=np.ones(2, dtype=np.float64),
+        )

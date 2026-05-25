@@ -180,7 +180,7 @@ class TestSpectralKFloor:
 
         assert spectral_dimensions["root"] == 1
         np.testing.assert_array_equal(pca_projections["root"], np.array([[1.0, 0.0]]))
-        np.testing.assert_array_equal(pca_eigenvalues["root"], np.array([1.0]))
+        np.testing.assert_allclose(pca_eigenvalues["root"], np.array([1.0]), atol=1e-10)
 
     def test_spectral_decomposition_requires_leaf_data_for_every_leaf_label(self):
         """Missing leaf rows must fail instead of silently shrinking a subtree."""

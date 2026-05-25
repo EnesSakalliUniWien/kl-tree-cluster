@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import numpy as np
+from numpy.typing import NDArray
+
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
+
+from ...contrast_covariance import compute_whitened_wald_contrast
 
 
 def compute_child_parent_standardized_z_scores(
@@ -12,32 +19,21 @@ def compute_child_parent_standardized_z_scores(
     n_parent: int,
     branch_length: float | None = None,
     mean_branch_length: float | None = None,
+    feature_space: FeatureSpace | None = None,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
 ) -> np.ndarray:
     """Compute standardized z-scores for child vs parent."""
-    nested_factor = 1.0 / n_child - 1.0 / n_parent
-    if nested_factor <= 0:
-        raise ValueError(
-            f"Invalid tree structure: child sample size ({n_child}) must be strictly "
-            f"less than parent sample size ({n_parent}). Got nested_factor={nested_factor:.6f}. "
-            f"This indicates a degenerate or incorrectly constructed tree."
-        )
-
-    variance = parent_dist * (1 - parent_dist) * nested_factor
-
-    if (
-        branch_length is not None
-        and np.isfinite(branch_length)
-        and branch_length > 0
-        and mean_branch_length is not None
-        and np.isfinite(mean_branch_length)
-        and mean_branch_length > 0
-    ):
-        normalized_branch_length_multiplier = 1.0 + branch_length / mean_branch_length
-        variance = variance * normalized_branch_length_multiplier
-
-    variance = np.maximum(variance, 1e-10)
-    z_scores = (child_dist - parent_dist) / np.sqrt(variance)
-    return z_scores.ravel()
+    return compute_whitened_wald_contrast(
+        child_dist,
+        parent_dist,
+        float(n_child),
+        float(n_parent),
+        comparison="child_parent",
+        feature_space=feature_space,
+        branch_length=branch_length,
+        mean_branch_length=mean_branch_length,
+        continuous_covariance_by_block=continuous_covariance_by_block,
+    )
 
 
 __all__ = ["compute_child_parent_standardized_z_scores"]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import pandas as pd
 
@@ -35,6 +36,7 @@ class GateAnnotationLeafDataMetadata:
     present: bool
     shape: tuple[int, int] | None = None
     content_hash: str | None = None
+    feature_space_signature: tuple[Any, ...] | None = None
 
 
 @dataclass(frozen=True)

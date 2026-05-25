@@ -51,14 +51,14 @@ def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
     tree.add_node(
         "C",
         is_leaf=True,
-        distribution=np.array([0.45, 0.45, 0.45, 0.55, 0.55, 0.55], dtype=float),
+        distribution=np.array([0.49, 0.49, 0.49, 0.51, 0.51, 0.51], dtype=float),
         label="C",
         leaf_count=100,
     )
     tree.add_node(
         "D",
         is_leaf=True,
-        distribution=np.array([0.55, 0.55, 0.55, 0.45, 0.45, 0.45], dtype=float),
+        distribution=np.array([0.51, 0.51, 0.51, 0.49, 0.49, 0.49], dtype=float),
         label="D",
         leaf_count=100,
     )
@@ -87,8 +87,8 @@ def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
         [
             [0, 0, 0, 1, 1, 1],
             [1, 1, 1, 0, 0, 0],
-            [0.45, 0.45, 0.45, 0.55, 0.55, 0.55],
-            [0.55, 0.55, 0.55, 0.45, 0.45, 0.45],
+            [0.49, 0.49, 0.49, 0.51, 0.51, 0.51],
+            [0.51, 0.51, 0.51, 0.49, 0.49, 0.49],
         ],
         index=["A", "B", "C", "D"],
         dtype=float,

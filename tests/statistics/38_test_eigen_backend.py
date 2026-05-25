@@ -2,29 +2,29 @@ from __future__ import annotations
 
 import numpy as np
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
-    eigendecompose_correlation,
+    eigendecompose_covariance,
 )
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.operators import (
-    build_primal_correlation_matrix,
+    build_primal_covariance_matrix,
 )
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.projection import (
     build_pca_projection,
 )
 
 
-def _feature_correlation_eigensystem(data_matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    correlation_matrix = build_primal_correlation_matrix(data_matrix)
-    eigenvalues, eigenvectors = np.linalg.eigh(correlation_matrix)
+def _feature_covariance_eigensystem(data_matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    covariance_matrix = build_primal_covariance_matrix(data_matrix)
+    eigenvalues, eigenvectors = np.linalg.eigh(covariance_matrix)
     order = np.argsort(eigenvalues)[::-1]
     return np.maximum(eigenvalues[order], 0.0), eigenvectors[:, order]
 
 
-def test_dual_decomposition_exposes_feature_correlation_eigenvalue_scale() -> None:
+def test_dual_decomposition_exposes_feature_covariance_eigenvalue_scale() -> None:
     rng = np.random.default_rng(20260516)
     data_matrix = rng.normal(size=(5, 9))
 
-    eig = eigendecompose_correlation(data_matrix, compute_eigenvectors=False)
-    expected_eigenvalues, _ = _feature_correlation_eigensystem(data_matrix)
+    eig = eigendecompose_covariance(data_matrix, compute_eigenvectors=False)
+    expected_eigenvalues, _ = _feature_covariance_eigensystem(data_matrix)
 
     assert eig is not None
     assert eig.use_dual is True
@@ -36,12 +36,12 @@ def test_dual_decomposition_exposes_feature_correlation_eigenvalue_scale() -> No
     )
 
 
-def test_dual_projection_uses_the_same_scale_as_primal_correlation() -> None:
+def test_dual_projection_uses_the_same_scale_as_primal_covariance() -> None:
     rng = np.random.default_rng(20260517)
     data_matrix = rng.normal(size=(5, 9))
 
-    eig = eigendecompose_correlation(data_matrix, compute_eigenvectors=True)
-    expected_eigenvalues, expected_eigenvectors = _feature_correlation_eigensystem(data_matrix)
+    eig = eigendecompose_covariance(data_matrix, compute_eigenvectors=True)
+    expected_eigenvalues, expected_eigenvectors = _feature_covariance_eigensystem(data_matrix)
     projection, projection_eigenvalues = build_pca_projection(
         eig,
         projection_dimension=3,
@@ -67,7 +67,7 @@ def test_dual_projection_exposes_only_positive_rank_directions() -> None:
         rng = np.random.default_rng(20260518 + n_samples)
         data_matrix = rng.normal(size=(n_samples, 9))
 
-        eig = eigendecompose_correlation(data_matrix, compute_eigenvectors=True)
+        eig = eigendecompose_covariance(data_matrix, compute_eigenvectors=True)
 
         assert eig is not None
         assert eig.use_dual is True
@@ -98,7 +98,7 @@ def test_single_active_feature_returns_explicit_one_dimensional_basis() -> None:
         dtype=np.float64,
     )
 
-    eig = eigendecompose_correlation(data_matrix, compute_eigenvectors=True)
+    eig = eigendecompose_covariance(data_matrix, compute_eigenvectors=True)
     projection, projection_eigenvalues = build_pca_projection(
         eig,
         projection_dimension=2,
@@ -107,8 +107,8 @@ def test_single_active_feature_returns_explicit_one_dimensional_basis() -> None:
 
     assert eig is not None
     assert eig.active_feature_count == 1
-    np.testing.assert_allclose(eig.eigenvalues, np.array([1.0]))
+    np.testing.assert_allclose(eig.eigenvalues, np.array([1.25]))
     assert projection is not None
     assert projection_eigenvalues is not None
     np.testing.assert_allclose(np.abs(projection), np.array([[1.0, 0.0, 0.0]]))
-    np.testing.assert_allclose(projection_eigenvalues, np.array([1.0]))
+    np.testing.assert_allclose(projection_eigenvalues, np.array([1.25]))

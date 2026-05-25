@@ -18,7 +18,7 @@ class EigenResult:
     use_dual: bool
     eigenvectors_active: Optional[np.ndarray] = None
     dual_sample_eigenvectors: Optional[np.ndarray] = None
-    standardized_data_active: Optional[np.ndarray] = None
+    centered_data_active: Optional[np.ndarray] = None
 
     def __post_init__(self) -> None:
         eigenvalues = np.asarray(self.eigenvalues)
@@ -44,34 +44,34 @@ class EigenResult:
                 raise ValueError("Dual eigendecompositions cannot carry primal eigenvectors.")
 
             if self.dual_sample_eigenvectors is None:
-                if self.standardized_data_active is not None:
+                if self.centered_data_active is not None:
                     raise ValueError(
                         "Spectrum-only dual eigendecompositions cannot carry "
                         "projection recovery data."
                     )
                 return
 
-            if self.standardized_data_active is None:
+            if self.centered_data_active is None:
                 raise ValueError(
-                    "Dual projection recovery requires standardized active data."
+                    "Dual projection recovery requires centered active data."
                 )
 
-            standardized_data_active = np.asarray(self.standardized_data_active)
-            if standardized_data_active.ndim != 2:
+            centered_data_active = np.asarray(self.centered_data_active)
+            if centered_data_active.ndim != 2:
                 raise ValueError(
-                    "EigenResult.standardized_data_active must be a 2D array in dual mode."
+                    "EigenResult.centered_data_active must be a 2D array in dual mode."
                 )
-            if standardized_data_active.shape[1] != self.active_feature_count:
+            if centered_data_active.shape[1] != self.active_feature_count:
                 raise ValueError(
-                    "Dual standardized data must have one column per active feature."
+                    "Dual centered data must have one column per active feature."
                 )
 
             dual_sample_eigenvectors = np.asarray(self.dual_sample_eigenvectors)
             if dual_sample_eigenvectors.ndim != 2:
                 raise ValueError("EigenResult.dual_sample_eigenvectors must be a 2D array.")
-            if dual_sample_eigenvectors.shape[0] != standardized_data_active.shape[0]:
+            if dual_sample_eigenvectors.shape[0] != centered_data_active.shape[0]:
                 raise ValueError(
-                    "Dual sample eigenvectors must align with the standardized sample count."
+                    "Dual sample eigenvectors must align with the centered sample count."
                 )
             if dual_sample_eigenvectors.shape[1] != eigenvalues.shape[0]:
                 raise ValueError(
@@ -79,7 +79,7 @@ class EigenResult:
                 )
             return
 
-        if self.dual_sample_eigenvectors is not None or self.standardized_data_active is not None:
+        if self.dual_sample_eigenvectors is not None or self.centered_data_active is not None:
             raise ValueError(
                 "Primal eigendecompositions cannot carry dual-only sample state."
             )

@@ -73,6 +73,11 @@ def run_projected_wald_kernel(
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
     )
+    if projection_matrix.shape[1] != n_features:
+        raise ValueError(
+            "PCA projection width must match the projected-Wald z-score dimension. "
+            f"Got projection width {projection_matrix.shape[1]} for z dimension {n_features}."
+        )
 
     projected_diff = projection_matrix @ standardized_diff
 

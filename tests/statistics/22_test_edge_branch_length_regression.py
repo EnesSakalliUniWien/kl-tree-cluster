@@ -53,6 +53,8 @@ def _run_edge_projection_with_capture(
         spectral_k: int | None = None,
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
+        feature_space: object | None = None,
+        continuous_covariance_by_block: object | None = None,
     ) -> tuple[float, float, float, bool]:
         captured.append((branch_length, mean_branch_length))
         return 0.0, 1.0, 1.0, False

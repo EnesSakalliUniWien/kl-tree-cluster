@@ -1,4 +1,4 @@
-"""Input preparation for local feature-correlation eigendecomposition."""
+"""Input preparation for local feature-covariance eigendecomposition."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import numpy as np
 
 
 @dataclass(frozen=True)
-class PreparedCorrelationData:
+class PreparedCovarianceData:
     """Dense local data with constant features removed."""
 
     active_data: np.ndarray
@@ -18,11 +18,11 @@ class PreparedCorrelationData:
     n_active_features: int
 
 
-def prepare_correlation_data(data_matrix: np.ndarray) -> PreparedCorrelationData:
+def prepare_covariance_data(data_matrix: np.ndarray) -> PreparedCovarianceData:
     """Convert input to float64 and expose the active-feature submatrix."""
     feature_matrix = np.asarray(data_matrix, dtype=np.float64)
     if feature_matrix.ndim != 2:
-        raise ValueError("Correlation eigendecomposition requires a 2D data matrix.")
+        raise ValueError("Covariance eigendecomposition requires a 2D data matrix.")
 
     n_samples, n_features = feature_matrix.shape
     if n_samples == 0 or n_features == 0:
@@ -32,7 +32,7 @@ def prepare_correlation_data(data_matrix: np.ndarray) -> PreparedCorrelationData
         is_active_feature = np.isfinite(feature_variances) & (feature_variances > 0)
 
     active_data = feature_matrix[:, is_active_feature]
-    return PreparedCorrelationData(
+    return PreparedCovarianceData(
         active_data=active_data,
         is_active_feature=is_active_feature,
         n_samples=n_samples,
@@ -41,4 +41,4 @@ def prepare_correlation_data(data_matrix: np.ndarray) -> PreparedCorrelationData
     )
 
 
-__all__ = ["PreparedCorrelationData", "prepare_correlation_data"]
+__all__ = ["PreparedCovarianceData", "prepare_covariance_data"]

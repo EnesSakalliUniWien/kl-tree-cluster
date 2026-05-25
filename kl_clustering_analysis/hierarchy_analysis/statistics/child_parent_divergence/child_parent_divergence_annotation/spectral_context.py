@@ -8,6 +8,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
+
 from ...projection.spectral.tree_estimator import compute_spectral_decomposition
 
 GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = 2
@@ -85,6 +87,8 @@ def _validate_spectral_context_outputs(
 def compute_child_parent_spectral_context(
     tree: nx.DiGraph,
     leaf_data: pd.DataFrame,
+    *,
+    feature_space: FeatureSpace | None = None,
 ) -> tuple[dict[str, int], dict[str, np.ndarray], dict[str, np.ndarray]]:
     """Prepare Marchenko-Pastur spectral context for Gate 2."""
     (
@@ -94,6 +98,7 @@ def compute_child_parent_spectral_context(
     ) = compute_spectral_decomposition(
         tree,
         leaf_data,
+        feature_space=feature_space,
         minimum_projection_dimension=GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     )
 

@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ...statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
@@ -76,6 +77,8 @@ def build_gate_annotation_config_metadata() -> GateAnnotationConfigMetadata:
 
 def build_gate_annotation_leaf_data_metadata(
     leaf_data: pd.DataFrame | None,
+    *,
+    feature_space: FeatureSpace | None = None,
 ) -> GateAnnotationLeafDataMetadata:
     """Capture enough leaf-data identity to validate reusable annotations."""
     if leaf_data is None:
@@ -102,6 +105,9 @@ def build_gate_annotation_leaf_data_metadata(
         present=True,
         shape=(int(leaf_data.shape[0]), int(leaf_data.shape[1])),
         content_hash=content_hash.hexdigest(),
+        feature_space_signature=(
+            None if feature_space is None else feature_space.signature
+        ),
     )
 
 
@@ -154,6 +160,7 @@ def run_gate_annotation_pipeline(
     alpha_local: float = config.EDGE_ALPHA,
     sibling_alpha: float = config.SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
+    feature_space: FeatureSpace | None = None,
 ) -> GateAnnotationBundle:
     """Run Gate 2 (edge) and Gate 3 (sibling) annotation pipeline.
 
@@ -166,6 +173,7 @@ def run_gate_annotation_pipeline(
         annotations_df,
         significance_level_alpha=alpha_local,
         leaf_data=leaf_data,
+        feature_space=feature_space,
     )
     validate_edge_gate_columns(edge_annotated_df)
     edge_metadata = _build_edge_metadata(
@@ -196,6 +204,7 @@ def run_gate_annotation_pipeline(
         parent_principal_component_eigenvalues=(
             sibling_inputs.parent_principal_component_eigenvalues
         ),
+        feature_space=feature_space,
     )
     validate_edge_gate_columns(
         annotated_df,
@@ -211,7 +220,10 @@ def run_gate_annotation_pipeline(
         edge=edge_metadata,
         sibling=sibling_metadata,
         config=build_gate_annotation_config_metadata(),
-        leaf_data=build_gate_annotation_leaf_data_metadata(leaf_data),
+        leaf_data=build_gate_annotation_leaf_data_metadata(
+            leaf_data,
+            feature_space=feature_space,
+        ),
     )
 
     return GateAnnotationBundle(

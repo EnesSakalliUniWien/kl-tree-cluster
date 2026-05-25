@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import numpy as np
+from numpy.typing import NDArray
+
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ...projection.projected_wald.projected_wald_kernel import run_projected_wald_kernel
 from .child_parent_standardized_z_scores import (
@@ -20,6 +25,8 @@ def run_child_parent_projected_wald_test(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
+    feature_space: FeatureSpace | None = None,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
 ) -> tuple[float, float, float, bool]:
     """Compute projected Wald test for one child-parent edge."""
     standardized_z_scores = compute_child_parent_standardized_z_scores(
@@ -29,6 +36,8 @@ def run_child_parent_projected_wald_test(
         n_parent,
         branch_length,
         mean_branch_length,
+        feature_space=feature_space,
+        continuous_covariance_by_block=continuous_covariance_by_block,
     )
 
     standardized_z_scores = standardized_z_scores.astype(np.float64, copy=False)

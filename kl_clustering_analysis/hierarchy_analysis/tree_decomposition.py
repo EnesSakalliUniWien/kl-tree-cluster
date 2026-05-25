@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ..tree.feature_space import FeatureSpace
     from ..tree.poset_tree import PosetTree
 
 import pandas as pd
@@ -59,6 +60,7 @@ class TreeDecomposition:
         alpha_local: float = config.EDGE_ALPHA,
         sibling_alpha: float = config.SIBLING_ALPHA,
         leaf_data: pd.DataFrame | None = None,
+        feature_space: FeatureSpace | None = None,
         passthrough: bool = config.PASSTHROUGH,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
@@ -80,9 +82,8 @@ class TreeDecomposition:
         sibling_alpha
             Significance level used by sibling-independence annotations and gating.
         leaf_data
-            Raw binary data matrix (samples × features).  Required for per-node
-            spectral dimension estimation.  When ``None``, spectral projection
-            is disabled and tests are skipped (treated as merge).
+            Raw feature matrix required for per-node spectral dimension estimation.
+            Missing leaf data is a contract error for the gate annotation pipeline.
         """
         if annotations_df is not None and gate_annotation_bundle is not None:
             raise ValueError("Pass either annotations_df or gate_annotation_bundle, not both.")
@@ -98,6 +99,7 @@ class TreeDecomposition:
         self.alpha_local = float(alpha_local)
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
+        self._feature_space = feature_space
 
         # ----- root -----
         self._root = self.tree.root()
@@ -157,6 +159,7 @@ class TreeDecomposition:
             alpha_local=self.alpha_local,
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
+            feature_space=self._feature_space,
         )
         self._gate_annotation_bundle = annotation_bundle
         return annotation_bundle.annotated_df
@@ -192,7 +195,11 @@ class TreeDecomposition:
             and metadata.edge.alpha == self.alpha_local
             and metadata.sibling.alpha == self.sibling_alpha
             and metadata.config == build_gate_annotation_config_metadata()
-            and metadata.leaf_data == build_gate_annotation_leaf_data_metadata(self._leaf_data)
+            and metadata.leaf_data
+            == build_gate_annotation_leaf_data_metadata(
+                self._leaf_data,
+                feature_space=self._feature_space,
+            )
         )
 
     def _extract_required_bool_annotation_column(self, column_name: str) -> dict[object, bool]:

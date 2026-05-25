@@ -6,6 +6,10 @@ import networkx as nx
 import numpy as np
 
 from kl_clustering_analysis import config
+from kl_clustering_analysis.tree.distributions import (
+    require_node_continuous_covariance_by_block,
+)
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ...branch_length_utils import (
     compute_mean_branch_length,
@@ -25,6 +29,7 @@ def run_child_parent_tests_across_tree(
     spectral_dims: dict[str, int] | None = None,
     pca_projections: dict[str, np.ndarray] | None = None,
     pca_eigenvalues: dict[str, np.ndarray] | None = None,
+    feature_space: FeatureSpace | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute projected Wald results for all child-parent edges in the tree."""
     n_edge_tests = len(child_ids)
@@ -40,8 +45,9 @@ def run_child_parent_tests_across_tree(
         parent_dist = tree.nodes[parent_ids[edge_index]]["distribution"]
 
         branch_length: float | None = None
-
-        if tree.has_edge(parent_ids[edge_index], child_ids[edge_index]):
+        if config.FELSENSTEIN_SCALING and tree.has_edge(
+            parent_ids[edge_index], child_ids[edge_index]
+        ):
             branch_length = extract_branch_length_observation(
                 tree,
                 parent_ids[edge_index],
@@ -60,6 +66,11 @@ def run_child_parent_tests_across_tree(
             node_pca_projection = pca_projections[parent_ids[edge_index]]
         if pca_eigenvalues is not None:
             node_pca_eigenvalues = pca_eigenvalues[parent_ids[edge_index]]
+        continuous_covariance_by_block = require_node_continuous_covariance_by_block(
+            tree,
+            parent_ids[edge_index],
+            feature_space,
+        )
 
         (
             edge_test_statistic,
@@ -76,6 +87,8 @@ def run_child_parent_tests_across_tree(
             spectral_k=node_spectral_dimension,
             pca_projection=node_pca_projection,
             pca_eigenvalues=node_pca_eigenvalues,
+            feature_space=feature_space,
+            continuous_covariance_by_block=continuous_covariance_by_block,
         )
 
         test_statistics[edge_index], degrees_of_freedom[edge_index], p_values[edge_index] = (

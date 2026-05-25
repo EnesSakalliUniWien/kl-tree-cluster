@@ -1,4 +1,4 @@
-"""Symmetric eigensolver helpers for correlation representations."""
+"""Symmetric eigensolver helpers for covariance representations."""
 
 from __future__ import annotations
 

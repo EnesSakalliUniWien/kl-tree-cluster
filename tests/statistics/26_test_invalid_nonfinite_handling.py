@@ -139,10 +139,11 @@ def test_child_parent_nonfinite_results_raise_before_correction(
         parent_ids: list[str],
         child_leaf_counts: np.ndarray,
         parent_leaf_counts: np.ndarray,
-        spectral_dims=None,
-        pca_projections=None,
-        pca_eigenvalues=None,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+            spectral_dims=None,
+            pca_projections=None,
+            pca_eigenvalues=None,
+            feature_space=None,
+        ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         return (
             np.array([np.nan, 3.0], dtype=float),  # stats
             np.array([np.nan, 1.0], dtype=float),  # dfs
@@ -185,6 +186,8 @@ def test_sibling_nonfinite_results_raise_before_correction(
         projection_dimension_from_edge_comparisons: int | None = None,
         parent_principal_component_projection: np.ndarray | None = None,
         parent_principal_component_eigenvalues: np.ndarray | None = None,
+        feature_space: object | None = None,
+        continuous_covariance_by_block: object | None = None,
     ) -> tuple[float, float, float, float]:
         return np.nan, np.nan, np.nan, np.nan
 
@@ -205,20 +208,25 @@ def test_sibling_nonfinite_results_raise_before_correction(
 
 
 def test_sibling_divergence_nonfinite_z_raises(monkeypatch) -> None:
-    def _fake_standardize_proportion_difference(
-        theta_1: np.ndarray,
-        theta_2: np.ndarray,
-        n_1: float,
-        n_2: float,
-        eps: float = 1e-10,
+    def _fake_compute_whitened_wald_contrast(
+        first_distribution: np.ndarray,
+        second_distribution: np.ndarray,
+        first_sample_size: float,
+        second_sample_size: float,
+        *,
+        comparison: str,
         branch_length_sum: float | None = None,
+        branch_length: float | None = None,
         mean_branch_length: float | None = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        return np.array([np.nan, 0.0], dtype=float), np.array([1.0, 1.0], dtype=float)
+        feature_space: object | None = None,
+        continuous_covariance_by_block: object | None = None,
+        ridge: float = 1e-12,
+    ) -> np.ndarray:
+        return np.array([np.nan, 0.0], dtype=float)
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_z_scores.standardize_proportion_difference",
-        _fake_standardize_proportion_difference,
+        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_z_scores.compute_whitened_wald_contrast",
+        _fake_compute_whitened_wald_contrast,
     )
 
     with pytest.raises(ValueError, match="z-scores must be finite"):
@@ -310,6 +318,8 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         projection_dimension_from_edge_comparisons: int | None = None,
         parent_principal_component_projection: np.ndarray | None = None,
         parent_principal_component_eigenvalues: np.ndarray | None = None,
+        feature_space: object | None = None,
+        continuous_covariance_by_block: object | None = None,
     ) -> tuple[float, float, float, float]:
         captured["projection_dimension_from_edge_comparisons"] = (
             projection_dimension_from_edge_comparisons
