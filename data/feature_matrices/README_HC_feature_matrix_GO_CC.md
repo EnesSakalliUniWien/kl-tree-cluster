@@ -29,7 +29,7 @@ Binary gene × pathway membership matrix for **hypertrophic cardiomyopathy (HC)*
 ```python
 import pandas as pd
 
-data = pd.read_csv("data/HC_feature_matrix_GO_CC.tsv", sep="\t", index_col=0)
+data = pd.read_csv("data/feature_matrices/HC_feature_matrix_GO_CC.tsv", sep="\t", index_col=0)
 # data.shape → (317, 1834)
 ```
 
@@ -81,18 +81,18 @@ The `benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_00
 
 ```bash
 # Clustering
-python scripts/run_feature_matrix_with_umap.py \
-    --input data/HC_feature_matrix_GO_CC.tsv \
+python scripts/analysis/run_feature_matrix_with_umap.py \
+    --input data/feature_matrices/HC_feature_matrix_GO_CC.tsv \
     --output-dir benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005 \
     --alpha-local 0.05 --sibling-alpha 0.05
 
 # Biological analysis
-python scripts/analyze_hc_clusters.py \
-    --feature-matrix data/HC_feature_matrix_GO_CC.tsv \
+python scripts/analysis/analyze_hc_clusters.py \
+    --feature-matrix data/feature_matrices/HC_feature_matrix_GO_CC.tsv \
     --assignments benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv \
     -o benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/bio_analysis
 ```
 
 ## Note
 
-This file is **byte-identical** to `HC_feature_matrix_Reactome_Pathways.tsv`. Both contain the same 317 × 1 834 Reactome pathway membership matrix. The two filenames were kept for provenance tracking.
+This file is the canonical tracked HC gene-pathway matrix. The duplicate `HC_feature_matrix_Reactome_Pathways.tsv` filename was removed to avoid two names for the same matrix.

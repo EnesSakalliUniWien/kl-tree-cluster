@@ -81,6 +81,12 @@ verification, and maintenance events here in chronological order.
   selection-conditioned production model. Missing internal empirical-null
   support remains a fail-closed production error; deeper full-selection
   conditioning is a research diagnostic, not a fallback.
+- Consolidated repository structure: user-facing analysis commands now live in
+  `scripts/analysis/`, benchmark diagnostics remain under
+  `benchmarks/diagnostics/`, canonical feature matrices live under
+  `data/feature_matrices/`, duplicate HC/CMS matrix aliases were removed, and
+  generated report/log/notebook/profiling artifacts were removed from tracked
+  source control.
 
 ## Evidence
 

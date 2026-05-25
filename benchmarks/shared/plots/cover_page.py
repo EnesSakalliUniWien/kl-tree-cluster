@@ -114,9 +114,9 @@ def category_group(subcategory: str) -> str:
 
 _OVERVIEW_TEXT = dedent(
     """\
-    KL-Divergence Hierarchical Clustering -- Benchmark Report
+    KL-TE Clustering -- Benchmark Report
 
-    This report evaluates the KL-divergence hierarchical clustering algorithm
+    This report evaluates the KL-TE hierarchy decomposition method
     across {n_cases} registered benchmark cases.  Each case is generated with
     known ground-truth cluster labels so that recovery accuracy can be measured
     objectively.

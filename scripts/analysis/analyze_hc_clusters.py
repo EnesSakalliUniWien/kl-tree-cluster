@@ -18,16 +18,16 @@ produces:
 Usage
 -----
     # Analyse the α=0.05 run:
-    python scripts/analyze_hc_clusters.py
+    python scripts/analysis/analyze_hc_clusters.py
 
     # Custom paths / alpha:
-    python scripts/analyze_hc_clusters.py \
-        --feature-matrix HC_feature_matrix_GO_CC.tsv \
+    python scripts/analysis/analyze_hc_clusters.py \
+        --feature-matrix data/feature_matrices/HC_feature_matrix_GO_CC.tsv \
         --assignments benchmarks/results/HC_GO_CC_005/cluster_assignments.csv \
         --output-dir benchmarks/results/HC_GO_CC_005/bio_analysis
 
     # Compare across alphas:
-    python scripts/analyze_hc_clusters.py --all-alphas
+    python scripts/analysis/analyze_hc_clusters.py --all-alphas
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ from scipy.stats import fisher_exact
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-DEFAULT_FEATURE_MATRIX = Path("data/HC_feature_matrix_GO_CC.tsv")
+DEFAULT_FEATURE_MATRIX = Path("data/feature_matrices/HC_feature_matrix_GO_CC.tsv")
 RESULT_DIRS = {
     0.01: "benchmarks/results/HC_GO_CC_001",
     0.05: "benchmarks/results/HC_GO_CC_005",
@@ -593,10 +593,10 @@ def parse_args() -> argparse.Namespace:
         epilog=textwrap.dedent(
             """\
             Examples:
-              python scripts/analyze_hc_clusters.py
-              python scripts/analyze_hc_clusters.py --all-alphas
-              python scripts/analyze_hc_clusters.py \\
-                  --feature-matrix data/HC_feature_matrix_GO_CC.tsv \\
+              python scripts/analysis/analyze_hc_clusters.py
+              python scripts/analysis/analyze_hc_clusters.py --all-alphas
+              python scripts/analysis/analyze_hc_clusters.py \\
+                  --feature-matrix data/feature_matrices/HC_feature_matrix_GO_CC.tsv \\
                   --assignments benchmarks/results/HC_GO_CC_005/cluster_assignments.csv
         """
         ),
@@ -605,7 +605,10 @@ def parse_args() -> argparse.Namespace:
         "--feature-matrix",
         type=Path,
         default=DEFAULT_FEATURE_MATRIX,
-        help="Path to the binary gene×pathway TSV (default: data/HC_feature_matrix_GO_CC.tsv)",
+        help=(
+            "Path to the binary gene×pathway TSV "
+            "(default: data/feature_matrices/HC_feature_matrix_GO_CC.tsv)"
+        ),
     )
     p.add_argument(
         "--assignments",

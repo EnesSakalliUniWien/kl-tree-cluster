@@ -32,9 +32,8 @@ Additional cleanup completed after the initial audit:
 
 - Root feature matrices moved to `data/feature_matrices/`.
 - Endotype/reference data moved to `data/reference/`.
-- Profiling CSVs moved to `reports/profiling/`.
-- Logs moved to `reports/logs/`.
-- Notebook-generated PNGs moved to `reports/notebook_figures/`.
+- Profiling CSVs, logs, and notebook-generated PNGs were removed from version
+  control unless they are deliberately retained evidence.
 - `analysis/peps.h5mu` moved to `local_data/analysis/`.
 - `analysis/results/` moved to `benchmarks/results/10_analysis_pipeline_runs/`.
 - Top-level `results/` Swiss-roll outputs moved to `benchmarks/results/06_method_experiments_sweeps/swiss_roll_diffusion/`.
@@ -50,13 +49,11 @@ Additional cleanup completed after the initial audit:
 The repository root was cleared of misplaced data and generated outputs. The former root artifacts now live at:
 
 - `data/feature_matrices/feature_matrix.tsv` - tracked, used as the default dataset by scripts and benchmarks.
-- `data/feature_matrices/feature_matrix_julia_GOBP.tsv` - untracked generated/input matrix.
-- `data/feature_matrices/feature_matrix_julia_GOCC_GOBP_GOMF_combined.tsv` - untracked generated/input matrix.
+- `data/feature_matrices/feature_matrix_julia_GOBP.tsv` - tracked generated/input matrix.
+- `data/feature_matrices/feature_matrix_julia_GOCC_GOBP_GOMF_combined.tsv` - tracked generated/input matrix.
 - `data/reference/adg6375_File_S7_endotypes_julia.txt` - untracked reference/data file.
-- `reports/profiling/profiler_results.csv` - tracked profiling output.
-- `reports/profiling/profiler_results_detailed.csv` - untracked profiling output.
-- `reports/profiling/profiler_results_large.csv` - untracked profiling output.
-- `reports/logs/comparison_output.log`, `reports/logs/main.log` - log files.
+- `reports/README.md` - policy marker for retained evidence; generated logs,
+  profiling CSVs, and notebook figures are not tracked by default.
 
 Script defaults and references were updated to the new feature-matrix and profiler locations.
 
@@ -88,37 +85,35 @@ The existing `manuscript/build/` remains the manuscript build output area.
 
 ### 5. Notebook Images
 
-Tracked notebook PNG outputs were moved from `notebooks/` to:
+Tracked notebook PNG outputs were removed from version control. Notebook image
+exports should be regenerated unless a specific file is cited as retained
+evidence.
 
-- `reports/notebook_figures/`
+- `reports/README.md`
 
 ## Remaining Inconsistencies
 
-### 1. Entrypoints Are Spread Across Multiple Locations
+### 1. Entrypoints Are Categorized By Domain
 
-Runnable scripts exist at root, `scripts/`, `benchmarks/`, `notebooks`, and
-`analysis`. One-off benchmark diagnostics now live under
-`benchmarks/diagnostics/`.
+Runnable scripts are now grouped by domain. User-facing matrix-analysis
+utilities live under `scripts/analysis/`; benchmark runners and diagnostics live
+under `benchmarks/`; test orchestration lives under `scripts/run_tests_ordered.py`.
+Notebook-only Python helpers were removed from `notebooks/`.
 
 Examples:
 
 - `quick_start.py`
-- `run_benchmark.py`
-- `scripts/run_feature_matrix_with_umap.py`
-- `scripts/run_full_benchmark_isolated.py`
 - `benchmarks/run_subset.py`
 - `benchmarks/run_regression_gate.py`
-- `notebooks/run_benchmark.py`
-- `analysis/run_all.py`
+- `scripts/analysis/run_feature_matrix_with_umap.py`
+- `scripts/analysis/analyze_hc_clusters.py`
+- `scripts/analysis/assess_method_correctness.py`
 
 Recommendation:
 
-- Define entrypoint categories:
-  - `scripts/` for user-facing utilities.
-  - `benchmarks/` for benchmark runners.
-  - `benchmarks/diagnostics/` for benchmark investigation utilities.
-  - `notebooks/` for notebooks only, not reusable scripts.
-- Move or document root entrypoints.
+- Keep this separation: `scripts/analysis/` for user-facing analysis commands,
+  `benchmarks/` for benchmark execution, `benchmarks/diagnostics/` for
+  investigation commands, and `notebooks/` for notebooks only.
 
 ### 2. Empty Directories May Remain
 
@@ -142,17 +137,13 @@ Recommendation:
 - `*.log`
 - `analysis/`
 
-But tracked generated artifacts still exist, including:
-
-- `data/feature_matrices/feature_matrix.tsv`
-- `reports/profiling/profiler_results.csv`
-- `reports/logs/comparison_output.log`
-- PNGs under `reports/notebook_figures/`
+Tracked generated-like artifacts are limited to canonical feature matrices and
+explicit documentation/evidence files.
 
 Recommendation:
 
-- Decide which tracked generated artifacts are canonical fixtures.
-- Move canonical fixtures into a named fixture directory.
+- Keep canonical feature matrices in `data/feature_matrices/`.
+- Keep generated reports untracked unless they are cited retained evidence.
 - Remove or untrack non-canonical outputs.
 
 ### 4. Benchmark Diagnostics Need Clear Ownership
@@ -164,10 +155,8 @@ inputs, or kept out of the tracked repository.
 ## Suggested Next Cleanup Order
 
 1. Add a short path policy to `README.md`.
-2. Decide whether canonical fixture data should remain tracked under `data/`.
-3. Decide whether `reports/notebook_figures/` should be tracked or treated as generated output.
-4. Remove empty generated folders.
-5. Add or refresh README maps for `scripts/` and `benchmarks/diagnostics/`.
+2. Remove empty generated folders.
+3. Add or refresh README maps for `scripts/` and `benchmarks/diagnostics/`.
 
 ## Commands Used For Audit
 

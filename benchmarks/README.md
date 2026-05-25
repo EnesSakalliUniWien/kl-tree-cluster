@@ -1,6 +1,6 @@
 # KL-TE Clustering Benchmarks
 
-This directory contains the benchmark infrastructure for KL-Divergence Hierarchical Clustering.
+This directory contains the benchmark infrastructure for KL-TE clustering.
 
 ## Quick Start
 

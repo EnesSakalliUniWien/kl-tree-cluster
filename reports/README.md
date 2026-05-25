@@ -1,9 +1,8 @@
 # Reports
 
-Generated reports and diagnostic artifacts that are useful to keep but are not source data.
+Generated reports and diagnostic artifacts are not tracked by default.
 
-- `profiling/`: profiler CSV outputs.
-- `logs/`: selected run logs that were previously in the repository root.
-- `notebook_figures/`: exported notebook figures moved out of `notebooks/`.
-- `coverage/`: local coverage database files.
-- `dedup/`: duplicate-code and unused-code scans.
+Use this directory only for retained evidence that is intentionally cited by the
+manuscript, wiki, or a review note. Routine logs, profiling CSVs, coverage
+files, notebook image exports, and duplicate-code scans should stay local or be
+regenerated from the source command.

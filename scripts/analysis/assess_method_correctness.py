@@ -19,15 +19,15 @@ clusters by measuring:
 
 Usage
 -----
-    python scripts/assess_method_correctness.py
+    python scripts/analysis/assess_method_correctness.py
 
     # Custom paths:
-    python scripts/assess_method_correctness.py \
-        --feature-matrix data/HC_feature_matrix_GO_CC.tsv \
+    python scripts/analysis/assess_method_correctness.py \
+        --feature-matrix data/feature_matrices/HC_feature_matrix_GO_CC.tsv \
         --assignments benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv
 
     # Compare across alphas:
-    python scripts/assess_method_correctness.py --all-alphas
+    python scripts/analysis/assess_method_correctness.py --all-alphas
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ from scipy.stats import fisher_exact
 # Constants
 # ═══════════════════════════════════════════════════════════════════════════
 
-DEFAULT_FEATURE_MATRIX = Path("data/HC_feature_matrix_GO_CC.tsv")
+DEFAULT_FEATURE_MATRIX = Path("data/feature_matrices/HC_feature_matrix_GO_CC.tsv")
 DEFAULT_ASSIGNMENTS = Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv")
 RESULT_DIRS = {
     0.01: Path("benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_001"),
@@ -824,10 +824,10 @@ def parse_args() -> argparse.Namespace:
         epilog=textwrap.dedent(
             """\
             Examples:
-              python scripts/assess_method_correctness.py
-              python scripts/assess_method_correctness.py --all-alphas
-              python scripts/assess_method_correctness.py \\
-                  --feature-matrix data/HC_feature_matrix_GO_CC.tsv \\
+              python scripts/analysis/assess_method_correctness.py
+              python scripts/analysis/assess_method_correctness.py --all-alphas
+              python scripts/analysis/assess_method_correctness.py \\
+                  --feature-matrix data/feature_matrices/HC_feature_matrix_GO_CC.tsv \\
                   --assignments benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005/cluster_assignments.csv
         """
         ),
@@ -836,7 +836,10 @@ def parse_args() -> argparse.Namespace:
         "--feature-matrix",
         type=Path,
         default=DEFAULT_FEATURE_MATRIX,
-        help="Binary gene×pathway TSV (default: data/HC_feature_matrix_GO_CC.tsv)",
+        help=(
+            "Binary gene×pathway TSV "
+            "(default: data/feature_matrices/HC_feature_matrix_GO_CC.tsv)"
+        ),
     )
     p.add_argument(
         "--assignments",
