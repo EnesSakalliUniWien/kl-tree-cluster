@@ -287,17 +287,10 @@ projected-Wald reference scale:
 \right\}.
 \end{equation}
 Let $n_{\mathrm{eff}}$ be the effective sample size of the contributing sibling
-null weights. The current implementation reports this effective sample size as
-diagnostic information but does not multiply $\hat c(z_u)$ by an additional
-effective-sample penalty. Earlier drafts considered a penalty of the form
-\[
-1 + \min\!\left(1,\frac{0.01}{\alpha_{\mathrm{sib}}}\right)
-\frac{1}{6}\log\!\left(\frac{n_{\mathrm{cal}}}{n_{\mathrm{eff}}}\right),
-\]
-but that expression is not part of the implemented estimator.
-[TODO: either remove this proposed penalty entirely or validate it as a
-separate estimator variant with a derivation or simulation study before
-including it in the method.]
+null weights. The implementation reports this effective sample size as
+diagnostic information. It is not an additional multiplier in
+\(\hat c(z_u)\), and it is not currently used as a hard threshold for accepting
+or rejecting calibration support.
 
 \paragraph{Calibration-support contract.}
 For a focal sibling pair $u$, the empirical-null interpretation of

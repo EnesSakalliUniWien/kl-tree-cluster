@@ -301,10 +301,10 @@ contract and then split the development path:
    separate tracks; neither is explained by the under-split inflation
    diagnostic.
 
-The manuscript/code contract also needed correction: the manuscript previously
-described an effective-sample penalty multiplier as implemented. The code only
-records effective sample size; it does not apply that multiplier. The draft now
-marks the penalty as proposed and unimplemented unless separately validated.
+The manuscript/code contract also needed correction: effective sample size is
+recorded by the code as calibration-support diagnostics only. The active method
+contract therefore treats effective sample size as diagnostic information, not
+as a method constant or penalty term.
 
 ### Calibration-Support Contract
 

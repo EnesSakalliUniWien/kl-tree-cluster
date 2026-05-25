@@ -22,7 +22,6 @@ The scaffold is deliberately strict:
 - `sibling_projection_dimension_rule`
 - `empirical_null_weight_rule`
 - `context_bandwidth_rule`
-- `effective_sample_penalty`
 - `pass_through_traversal`
 
 ## Usage

@@ -59,7 +59,7 @@ partition.
 - Sibling projection dimension: geometric mean of child edge dimensions.
 - Empirical-null weight from edge-adjusted p-values.
 - Context bandwidth over log projection dimension.
-- Effective-sample penalty.
+- Effective calibration sample size as a diagnostic.
 - Pass-through traversal.
 
 ## Empirical Claims Not Yet Manuscript-Ready

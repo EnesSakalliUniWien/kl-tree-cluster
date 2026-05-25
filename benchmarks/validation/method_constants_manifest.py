@@ -157,20 +157,6 @@ CONSTANT_SPECS: tuple[dict[str, Any], ...] = (
         ),
     },
     {
-        "constant_id": "effective_sample_penalty",
-        "display_name": "Effective-sample penalty",
-        "default_value": "effective-sample penalty",
-        "validation_question": (
-            "Does the effective-sample penalty stabilize small-context inflation "
-            "estimates without overcorrecting well-supported contexts?"
-        ),
-        "additional_required_output_fields": (
-            "penalty_grid",
-            "small_context_behavior",
-            "large_context_behavior",
-        ),
-    },
-    {
         "constant_id": "pass_through_traversal",
         "display_name": "Pass-through traversal",
         "default_value": True,

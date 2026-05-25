@@ -159,24 +159,6 @@
       "records_per_context_summary",
       "inflation_sensitivity_summary"
     ],
-    "effective_sample_penalty": [
-      "validation_design",
-      "source_artifact_paths",
-      "code_commit",
-      "run_command",
-      "random_seed_policy",
-      "n_replicates",
-      "baseline_setting",
-      "candidate_setting",
-      "primary_endpoint",
-      "effect_estimate",
-      "confidence_interval",
-      "decision_rule",
-      "limitations",
-      "penalty_grid",
-      "small_context_behavior",
-      "large_context_behavior"
-    ],
     "pass_through_traversal": [
       "validation_design",
       "source_artifact_paths",
@@ -593,56 +575,6 @@
           "bandwidth_grid",
           "records_per_context_summary",
           "inflation_sensitivity_summary"
-        ],
-        "notes": "No validation evidence has been attached for this constant."
-      }
-    },
-    {
-      "constant_id": "effective_sample_penalty",
-      "display_name": "Effective-sample penalty",
-      "default_value": "effective-sample penalty",
-      "validation_question": "Does the effective-sample penalty stabilize small-context inflation estimates without overcorrecting well-supported contexts?",
-      "required_output_fields": [
-        "validation_design",
-        "source_artifact_paths",
-        "code_commit",
-        "run_command",
-        "random_seed_policy",
-        "n_replicates",
-        "baseline_setting",
-        "candidate_setting",
-        "primary_endpoint",
-        "effect_estimate",
-        "confidence_interval",
-        "decision_rule",
-        "limitations",
-        "penalty_grid",
-        "small_context_behavior",
-        "large_context_behavior"
-      ],
-      "evidence_status": "missing",
-      "evidence": {
-        "status": "missing",
-        "source_path": null,
-        "source_artifacts": [],
-        "metrics": {},
-        "missing_required_fields": [
-          "validation_design",
-          "source_artifact_paths",
-          "code_commit",
-          "run_command",
-          "random_seed_policy",
-          "n_replicates",
-          "baseline_setting",
-          "candidate_setting",
-          "primary_endpoint",
-          "effect_estimate",
-          "confidence_interval",
-          "decision_rule",
-          "limitations",
-          "penalty_grid",
-          "small_context_behavior",
-          "large_context_behavior"
         ],
         "notes": "No validation evidence has been attached for this constant."
       }

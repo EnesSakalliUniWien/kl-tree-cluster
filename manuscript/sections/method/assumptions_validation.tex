@@ -63,7 +63,7 @@ Internal spectral rows & Spectral matrix augmentation & enabled & Empirically mo
 Sibling dimension rule & Transfers edge dimensions to sibling test & geometric mean of child edge dimensions & Needs sensitivity against parent dimension and min/max alternatives. \\
 Empirical-null weight $\pi_q$ & Weights calibration records by edge-null evidence & geometric mean of two edge-adjusted p-values & Monotone empirical weight; not a posterior probability; needs calibration check. \\
 Context bandwidth $h$ & Localizes inflation estimates over $\log k$ & null-weighted empirical standard deviation & Needs sensitivity and behavior under few unique dimensions. \\
-Effective-sample penalty & Penalizes degenerate calibration weights & divisor $6$, reference $\alpha=0.01$ & Heuristic safeguard; requires derivation or simulation-based validation. \\
+Effective calibration sample size & Reports degeneracy of calibration weights & diagnostic only & Needs threshold study if later used as a hard support rule. \\
 Pass-through traversal & Allows deeper splits after shallow sibling failure & enabled & Algorithmic policy; needs ablation on over-split and under-split behavior. \\
 \bottomrule
 \end{longtable}
