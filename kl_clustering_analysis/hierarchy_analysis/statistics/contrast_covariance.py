@@ -286,7 +286,7 @@ def build_null_whitened_tangent_matrix(
             active_feature_space,
             continuous_covariance_by_block,
         )
-        return _build_diagonal_null_whitened_tangent_matrix(
+        return _build_trusted_null_whitened_tangent_matrix(
             distribution_matrix,
             null,
             active_feature_space,
@@ -301,10 +301,11 @@ def build_null_whitened_tangent_matrix(
             active_feature_space,
             continuous_covariance_by_block=continuous_covariance_by_block,
         )
-        return _build_grouped_categorical_null_whitened_tangent_matrix(
+        return _build_trusted_null_whitened_tangent_matrix(
             distribution_matrix,
             null,
             active_feature_space,
+            {},
             ridge=ridge_value,
         )
 
@@ -323,15 +324,50 @@ def build_null_whitened_tangent_matrix(
         continuous_covariance_by_block,
     )
 
+    return _build_trusted_null_whitened_tangent_matrix(
+        distribution_matrix,
+        null,
+        active_feature_space,
+        continuous_covariance_blocks,
+        ridge=ridge_value,
+    )
+
+
+def _build_trusted_null_whitened_tangent_matrix(
+    distribution_matrix: NDArray[np.float64],
+    null_distribution: NDArray[np.float64],
+    feature_space: FeatureSpace,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.float64]],
+    *,
+    ridge: float,
+) -> NDArray[np.float64]:
+    """Map already-validated distributions into Wald tangent coordinates."""
+    if _uses_diagonal_null_whitening(feature_space):
+        return _build_diagonal_null_whitened_tangent_matrix(
+            distribution_matrix,
+            null_distribution,
+            feature_space,
+            continuous_covariance_by_block,
+            ridge=ridge,
+        )
+
+    if _uses_grouped_categorical_null_whitening(feature_space):
+        return _build_grouped_categorical_null_whitened_tangent_matrix(
+            distribution_matrix,
+            null_distribution,
+            feature_space,
+            ridge=ridge,
+        )
+
     tangent_blocks = [
         _block_null_whitened_tangent_matrix(
             distribution_matrix,
-            null,
+            null_distribution,
             block,
-            continuous_covariance_by_block=continuous_covariance_blocks,
-            ridge=ridge_value,
+            continuous_covariance_by_block=continuous_covariance_by_block,
+            ridge=ridge,
         )
-        for block in active_feature_space.blocks
+        for block in feature_space.blocks
     ]
     return np.column_stack(tangent_blocks)
 
