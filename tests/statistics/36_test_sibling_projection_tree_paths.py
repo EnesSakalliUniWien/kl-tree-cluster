@@ -215,16 +215,16 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
         annotations_df.copy(),
         leaf_data=leaf_data,
     )
-    spectral_projection_dimensions_by_node = (
-        spectral_context.spectral_projection_dimensions_by_node
+    test_projection_dimensions_by_node = (
+        spectral_context.test_projection_dimensions_by_node
     )
-    assert spectral_projection_dimensions_by_node["A"] == 0
-    assert spectral_projection_dimensions_by_node["B"] == 0
-    assert spectral_projection_dimensions_by_node["C"] == 0
-    assert spectral_projection_dimensions_by_node["D"] == 0
-    assert spectral_projection_dimensions_by_node["root"] > 0
-    assert spectral_projection_dimensions_by_node["cal"] > 0
-    assert spectral_projection_dimensions_by_node["top"] > 0
+    assert test_projection_dimensions_by_node["A"] == 0
+    assert test_projection_dimensions_by_node["B"] == 0
+    assert test_projection_dimensions_by_node["C"] == 0
+    assert test_projection_dimensions_by_node["D"] == 0
+    assert test_projection_dimensions_by_node["root"] > 0
+    assert test_projection_dimensions_by_node["cal"] > 0
+    assert test_projection_dimensions_by_node["top"] > 0
 
     sibling_projection_dimensions_from_edge_comparisons = (
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
@@ -233,9 +233,9 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
         )
     )
     assert sibling_projection_dimensions_from_edge_comparisons == {
-        "root": spectral_projection_dimensions_by_node["root"],
-        "cal": spectral_projection_dimensions_by_node["cal"],
-        "top": spectral_projection_dimensions_by_node["top"],
+        "root": test_projection_dimensions_by_node["root"],
+        "cal": test_projection_dimensions_by_node["cal"],
+        "top": test_projection_dimensions_by_node["top"],
     }
 
     with pytest.raises(ValueError, match="selected non-null"):
@@ -247,20 +247,18 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
 
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
 
-    assert bundle.gate_two_result is not None
-    spectral_projection_dimensions_by_node = (
-        bundle.gate_two_result.spectral_context.spectral_projection_dimensions_by_node
+    test_projection_dimensions_by_node = (
+        bundle.gate_two_result.spectral_context.test_projection_dimensions_by_node
     )
-    assert spectral_projection_dimensions_by_node is not None
-    assert spectral_projection_dimensions_by_node["L1"] == 0
-    assert spectral_projection_dimensions_by_node["L2"] == 0
-    assert spectral_projection_dimensions_by_node["L3"] == 0
-    assert spectral_projection_dimensions_by_node["C"] == 0
-    assert spectral_projection_dimensions_by_node["D"] == 0
-    assert spectral_projection_dimensions_by_node["I"] > 0
-    assert spectral_projection_dimensions_by_node["root"] > 0
-    assert spectral_projection_dimensions_by_node["cal"] > 0
-    assert spectral_projection_dimensions_by_node["top"] > 0
+    assert test_projection_dimensions_by_node["L1"] == 0
+    assert test_projection_dimensions_by_node["L2"] == 0
+    assert test_projection_dimensions_by_node["L3"] == 0
+    assert test_projection_dimensions_by_node["C"] == 0
+    assert test_projection_dimensions_by_node["D"] == 0
+    assert test_projection_dimensions_by_node["I"] > 0
+    assert test_projection_dimensions_by_node["root"] > 0
+    assert test_projection_dimensions_by_node["cal"] > 0
+    assert test_projection_dimensions_by_node["top"] > 0
 
     sibling_projection_dimensions_from_edge_comparisons = (
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
@@ -268,7 +266,6 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
             spectral_context=bundle.gate_two_result.spectral_context,
         )
     )
-    assert sibling_projection_dimensions_from_edge_comparisons is not None
     assert set(sibling_projection_dimensions_from_edge_comparisons) == {
         "root",
         "I",
@@ -277,13 +274,13 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
     }
     assert sibling_projection_dimensions_from_edge_comparisons["root"] > 0
     assert sibling_projection_dimensions_from_edge_comparisons["I"] == (
-        spectral_projection_dimensions_by_node["I"]
+        test_projection_dimensions_by_node["I"]
     )
     assert sibling_projection_dimensions_from_edge_comparisons["cal"] == (
-        spectral_projection_dimensions_by_node["cal"]
+        test_projection_dimensions_by_node["cal"]
     )
     assert 0 < sibling_projection_dimensions_from_edge_comparisons["top"] <= (
-        spectral_projection_dimensions_by_node["top"]
+        test_projection_dimensions_by_node["top"]
     )
 
 
@@ -297,7 +294,10 @@ def test_decompose_without_leaf_data_raises_for_missing_spectral_contract() -> N
 def test_edge_derived_sibling_dimensions_require_all_child_spectral_dimensions() -> None:
     tree, _annotations_df, _leaf_data = _build_cherry_tree()
     spectral_context = SpectralContext(
-        spectral_projection_dimensions_by_node={"A": 1},
+        test_projection_dimensions_by_node={"A": 1},
+        raw_mp_signal_counts_by_node={"A": 0},
+        effective_independent_rows_by_node={"A": 1},
+        mp_threshold_rows_by_node={"A": 1},
         principal_component_projections_by_node={},
         principal_component_eigenvalues_by_node={},
     )

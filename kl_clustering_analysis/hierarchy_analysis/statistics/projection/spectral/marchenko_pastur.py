@@ -17,7 +17,7 @@ from ....decomposition.backends.eigen.decomposition import eigendecompose_covari
 from ....decomposition.backends.eigen.projection import build_pca_projection
 from ...contrast_covariance import build_null_whitened_tangent_matrix
 from ..projection_dimension_estimation.projection_dimension_estimators import (
-    estimate_k_marchenko_pastur,
+    estimate_marchenko_pastur_dimension,
 )
 from .node_spectral_result import NodeSpectralResult
 from .node_spectral_task import NodeSpectralTask
@@ -51,7 +51,6 @@ def _get_n_jobs(n_tasks: int) -> int:
 def _process_node(
     spectral_task: NodeSpectralTask,
     full_feature_matrix: np.ndarray,
-    dimension_method: str,
     minimum_projection_dimension: int,
     feature_count: int,
     compute_eigendecomposition_outputs: bool,
@@ -75,7 +74,10 @@ def _process_node(
     if len(descendant_leaf_row_indices) < 2:
         return NodeSpectralResult(
             node_id=spectral_task.node_id,
-            projection_dimension=0,
+            raw_mp_signal_count=0,
+            test_projection_dimension=0,
+            effective_independent_rows=len(descendant_leaf_row_indices),
+            mp_threshold_rows=len(descendant_leaf_row_indices),
             projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
             eigenvalues=np.zeros(0, dtype=np.float64),
         )
@@ -113,31 +115,45 @@ def _process_node(
     if eigendecomposition_result is None:
         return NodeSpectralResult(
             node_id=spectral_task.node_id,
-            projection_dimension=0,
+            raw_mp_signal_count=0,
+            test_projection_dimension=0,
+            effective_independent_rows=len(descendant_leaf_row_indices),
+            mp_threshold_rows=descendant_feature_matrix.shape[0],
             projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
             eigenvalues=np.zeros(0, dtype=np.float64),
         )
 
-    projection_dimension = estimate_k_marchenko_pastur(
+    dimension_estimate = estimate_marchenko_pastur_dimension(
         eigendecomposition_result.eigenvalues,
         n_samples=descendant_feature_matrix.shape[0],
         n_features=eigendecomposition_result.active_feature_count,
+        effective_independent_rows=len(descendant_leaf_row_indices),
+        mp_threshold_rows=descendant_feature_matrix.shape[0],
         minimum_projection_dimension=minimum_projection_dimension,
     )
+    test_projection_dimension = dimension_estimate.test_projection_dimension
 
-    projection_matrix, pca_eigenvalues = None, None
+    projection_matrix, pca_eigenvalues = (
+        np.zeros((0, feature_count), dtype=np.float64),
+        np.zeros(0, dtype=np.float64),
+    )
 
-    if compute_eigendecomposition_outputs:
+    if compute_eigendecomposition_outputs and test_projection_dimension > 0:
         projection_matrix, pca_eigenvalues = build_pca_projection(
             eigendecomposition_result,
-            projection_dimension=projection_dimension,
+            projection_dimension=test_projection_dimension,
             n_features_total=feature_count,
         )
-        projection_dimension = int(projection_matrix.shape[0])
+        test_projection_dimension = int(projection_matrix.shape[0])
+    elif not compute_eigendecomposition_outputs:
+        projection_matrix, pca_eigenvalues = None, None
 
     return NodeSpectralResult(
         node_id=spectral_task.node_id,
-        projection_dimension=projection_dimension,
+        raw_mp_signal_count=dimension_estimate.raw_mp_signal_count,
+        test_projection_dimension=test_projection_dimension,
+        effective_independent_rows=dimension_estimate.effective_independent_rows,
+        mp_threshold_rows=dimension_estimate.mp_threshold_rows,
         projection_matrix=projection_matrix,
         eigenvalues=pca_eigenvalues,
     )

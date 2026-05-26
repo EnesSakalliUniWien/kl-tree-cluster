@@ -19,13 +19,16 @@ GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = 2
 class SpectralContext:
     """Gate 2 spectral outputs reused by Gate 3 sibling tests."""
 
-    spectral_projection_dimensions_by_node: dict[str, int]
+    test_projection_dimensions_by_node: dict[str, int]
+    raw_mp_signal_counts_by_node: dict[str, int]
+    effective_independent_rows_by_node: dict[str, int]
+    mp_threshold_rows_by_node: dict[str, int]
     principal_component_projections_by_node: dict[str, np.ndarray]
     principal_component_eigenvalues_by_node: dict[str, np.ndarray]
 
 
 def _validate_spectral_context_outputs(
-    spectral_projection_dimensions_by_node: dict[str, int],
+    test_projection_dimensions_by_node: dict[str, int],
     principal_component_projections_by_node: dict[str, np.ndarray],
     principal_component_eigenvalues_by_node: dict[str, np.ndarray],
 ) -> None:
@@ -41,21 +44,21 @@ def _validate_spectral_context_outputs(
             f"missing projections for {missing_projections}."
         )
 
-    dimension_nodes = set(spectral_projection_dimensions_by_node)
+    dimension_nodes = set(test_projection_dimensions_by_node)
     missing_dimensions = sorted(projection_nodes - dimension_nodes)
     if missing_dimensions:
         raise ValueError(
-            "Gate 2 spectral context has PCA outputs without spectral dimensions for "
+            "Gate 2 spectral context has PCA outputs without test projection dimensions for "
             f"node(s): {missing_dimensions}."
         )
     missing_projection_outputs = sorted(
         node_id
-        for node_id, projection_dimension in spectral_projection_dimensions_by_node.items()
+        for node_id, projection_dimension in test_projection_dimensions_by_node.items()
         if int(projection_dimension) > 0 and node_id not in projection_nodes
     )
     if missing_projection_outputs:
         raise ValueError(
-            "Gate 2 spectral context has positive spectral dimensions without PCA outputs "
+            "Gate 2 spectral context has positive test projection dimensions without PCA outputs "
             f"for node(s): {missing_projection_outputs}."
         )
 
@@ -77,10 +80,10 @@ def _validate_spectral_context_outputs(
                 f"Gate 2 PCA projection/eigenvalue row count mismatch for node {node_id!r}: "
                 f"{projection.shape[0]} projection row(s), {eigenvalues.shape[0]} eigenvalue(s)."
             )
-        if projection.shape[0] != int(spectral_projection_dimensions_by_node[node_id]):
+        if projection.shape[0] != int(test_projection_dimensions_by_node[node_id]):
             raise ValueError(
                 f"Gate 2 PCA projection row count for node {node_id!r} must match its "
-                "spectral projection dimension."
+                "test projection dimension."
             )
 
 
@@ -89,32 +92,36 @@ def compute_child_parent_spectral_context(
     leaf_data: pd.DataFrame,
     *,
     feature_space: FeatureSpace | None = None,
-) -> tuple[dict[str, int], dict[str, np.ndarray], dict[str, np.ndarray]]:
+) -> SpectralContext:
     """Prepare Marchenko-Pastur spectral context for Gate 2."""
-    (
-        node_spectral_dimensions,
-        computed_node_pca_projections,
-        computed_node_pca_eigenvalues,
-    ) = compute_spectral_decomposition(
+    spectral_decomposition = compute_spectral_decomposition(
         tree,
         leaf_data,
         feature_space=feature_space,
         minimum_projection_dimension=GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     )
 
-    node_pca_projections = dict(computed_node_pca_projections)
-    node_pca_eigenvalues = dict(computed_node_pca_eigenvalues)
-
     _validate_spectral_context_outputs(
-        node_spectral_dimensions,
-        node_pca_projections,
-        node_pca_eigenvalues,
+        spectral_decomposition.test_projection_dimensions_by_node,
+        spectral_decomposition.principal_component_projections_by_node,
+        spectral_decomposition.principal_component_eigenvalues_by_node,
     )
 
-    return (
-        node_spectral_dimensions,
-        node_pca_projections,
-        node_pca_eigenvalues,
+    return SpectralContext(
+        test_projection_dimensions_by_node=(
+            spectral_decomposition.test_projection_dimensions_by_node
+        ),
+        raw_mp_signal_counts_by_node=spectral_decomposition.raw_mp_signal_counts_by_node,
+        effective_independent_rows_by_node=(
+            spectral_decomposition.effective_independent_rows_by_node
+        ),
+        mp_threshold_rows_by_node=spectral_decomposition.mp_threshold_rows_by_node,
+        principal_component_projections_by_node=(
+            spectral_decomposition.principal_component_projections_by_node
+        ),
+        principal_component_eigenvalues_by_node=(
+            spectral_decomposition.principal_component_eigenvalues_by_node
+        ),
     )
 
 

@@ -17,10 +17,12 @@ from .projected_wald import (
     run_projected_wald_kernel,
 )
 from .projection_dimension_estimation import (
+    MarchenkoPasturDimensionEstimate,
     effective_rank,
-    estimate_k_marchenko_pastur,
+    estimate_marchenko_pastur_dimension,
     marchenko_pastur_signal_count,
 )
+from .spectral.spectral_decomposition_result import SpectralDecompositionResult
 from .spectral.tree_estimator import compute_spectral_decomposition
 from .spectral.tree_helpers import (
     build_subtree_data,
@@ -29,15 +31,16 @@ from .spectral.tree_helpers import (
 )
 
 __all__ = [
-    # k_estimators
+    # projection_dimension_estimation
+    "MarchenkoPasturDimensionEstimate",
     "effective_rank",
-    "estimate_k_marchenko_pastur",
+    "estimate_marchenko_pastur_dimension",
     "marchenko_pastur_signal_count",
     # projected_wald
     "ProjectedQuadraticReference",
     "ProjectedWaldResult",
     "run_projected_wald_kernel",
-    # projection_basis
+    # projected_wald
     "build_pca_projection_basis",
     # tree_helpers
     "build_subtree_data",
@@ -46,5 +49,6 @@ __all__ = [
     # projected_wald_reference
     "compute_projected_pvalue",
     # spectral_dimension
+    "SpectralDecompositionResult",
     "compute_spectral_decomposition",
 ]

@@ -12,7 +12,10 @@ class NodeSpectralResult:
     """Output payload for one node's spectral decomposition work."""
 
     node_id: str
-    projection_dimension: int
+    raw_mp_signal_count: int
+    test_projection_dimension: int
+    effective_independent_rows: int
+    mp_threshold_rows: int
     projection_matrix: np.ndarray | None
     eigenvalues: np.ndarray | None
 

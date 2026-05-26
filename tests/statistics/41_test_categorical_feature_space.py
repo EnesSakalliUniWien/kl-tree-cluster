@@ -153,6 +153,54 @@ def test_populate_node_divergences_rejects_bernoulli_values_outside_unit_interva
         tree.populate_node_divergences(leaf_data)
 
 
+def test_feature_space_rejects_duplicate_column_and_block_names() -> None:
+    with pytest.raises(ValueError, match="column_names must be unique"):
+        FeatureSpace(
+            column_names=("X", "X"),
+            blocks=(
+                FeatureBlock(
+                    name="X0",
+                    family="bernoulli",
+                    column_indices=(0,),
+                    chart="identity",
+                    covariance="bernoulli",
+                    contrast_dimension=1,
+                ),
+                FeatureBlock(
+                    name="X1",
+                    family="bernoulli",
+                    column_indices=(1,),
+                    chart="identity",
+                    covariance="bernoulli",
+                    contrast_dimension=1,
+                ),
+            ),
+        )
+
+    with pytest.raises(ValueError, match="block names must be unique"):
+        FeatureSpace(
+            column_names=("X0", "X1"),
+            blocks=(
+                FeatureBlock(
+                    name="X",
+                    family="bernoulli",
+                    column_indices=(0,),
+                    chart="identity",
+                    covariance="bernoulli",
+                    contrast_dimension=1,
+                ),
+                FeatureBlock(
+                    name="X",
+                    family="bernoulli",
+                    column_indices=(1,),
+                    chart="identity",
+                    covariance="bernoulli",
+                    contrast_dimension=1,
+                ),
+            ),
+        )
+
+
 def test_populate_node_divergences_stores_continuous_means_and_covariances() -> None:
     tree = _simple_binary_tree()
     leaf_data = _continuous_leaf_data()
@@ -221,7 +269,7 @@ def test_categorical_spectral_decomposition_uses_drop_last_projection_width() ->
     assert feature_space is not None
     tree.populate_node_divergences(leaf_data, feature_space=feature_space)
 
-    spectral_dimensions, pca_projections, pca_eigenvalues = compute_spectral_decomposition(
+    spectral_decomposition = compute_spectral_decomposition(
         tree,
         leaf_data,
         feature_space=feature_space,
@@ -229,9 +277,16 @@ def test_categorical_spectral_decomposition_uses_drop_last_projection_width() ->
         include_internal=True,
     )
 
-    assert spectral_dimensions["root"] <= 4
-    assert pca_projections["root"].shape[1] == 4
-    assert pca_eigenvalues["root"].shape[0] == pca_projections["root"].shape[0]
+    assert spectral_decomposition.test_projection_dimensions_by_node["root"] <= 4
+    assert spectral_decomposition.raw_mp_signal_counts_by_node["root"] >= 0
+    assert spectral_decomposition.effective_independent_rows_by_node["root"] == len(
+        leaf_data
+    )
+    assert spectral_decomposition.mp_threshold_rows_by_node["root"] >= len(leaf_data)
+    root_projection = spectral_decomposition.principal_component_projections_by_node["root"]
+    root_eigenvalues = spectral_decomposition.principal_component_eigenvalues_by_node["root"]
+    assert root_projection.shape[1] == 4
+    assert root_eigenvalues.shape[0] == root_projection.shape[0]
 
 
 def test_categorical_spectral_decomposition_uses_parent_null_whitened_tangent_rows(

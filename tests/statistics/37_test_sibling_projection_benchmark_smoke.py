@@ -45,18 +45,15 @@ def _collect_binary_parent_structure(
         tree.annotations_df.copy(),
         leaf_data=data_df,
     )
-    assert bundle.gate_two_result is not None
-    spectral_projection_dimensions_by_node = (
-        bundle.gate_two_result.spectral_context.spectral_projection_dimensions_by_node
+    test_projection_dimensions_by_node = (
+        bundle.gate_two_result.spectral_context.test_projection_dimensions_by_node
     )
-    assert spectral_projection_dimensions_by_node is not None
     sibling_projection_dimensions_from_edge_comparisons = (
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
             tree,
             spectral_context=bundle.gate_two_result.spectral_context,
         )
     )
-    assert sibling_projection_dimensions_from_edge_comparisons is not None
 
     omitted: list[tuple[str, list[str], tuple[int, int], tuple[bool, bool]]] = []
     included: list[tuple[str, list[str], tuple[int, int], tuple[bool, bool], int, int]] = []
@@ -66,14 +63,14 @@ def _collect_binary_parent_structure(
             continue
 
         child_dims = (
-            int(spectral_projection_dimensions_by_node[children[0]]),
-            int(spectral_projection_dimensions_by_node[children[1]]),
+            int(test_projection_dimensions_by_node[children[0]]),
+            int(test_projection_dimensions_by_node[children[1]]),
         )
         child_is_leaf = (
             bool(tree.nodes[children[0]]["is_leaf"]),
             bool(tree.nodes[children[1]]["is_leaf"]),
         )
-        parent_dim = int(spectral_projection_dimensions_by_node[parent])
+        parent_dim = int(test_projection_dimensions_by_node[parent])
         if parent in sibling_projection_dimensions_from_edge_comparisons:
             included.append(
                 (

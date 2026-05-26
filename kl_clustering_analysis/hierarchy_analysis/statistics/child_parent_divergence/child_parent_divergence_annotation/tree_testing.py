@@ -26,9 +26,9 @@ def run_child_parent_tests_across_tree(
     parent_ids: list[str],
     child_leaf_counts: np.ndarray,
     parent_leaf_counts: np.ndarray,
-    spectral_dims: dict[str, int] | None = None,
-    pca_projections: dict[str, np.ndarray] | None = None,
-    pca_eigenvalues: dict[str, np.ndarray] | None = None,
+    spectral_dims: dict[str, int],
+    pca_projections: dict[str, np.ndarray],
+    pca_eigenvalues: dict[str, np.ndarray],
     feature_space: FeatureSpace | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute projected Wald results for all child-parent edges in the tree."""
@@ -54,18 +54,9 @@ def run_child_parent_tests_across_tree(
                 child_ids[edge_index],
             )
 
-        node_spectral_dimension: int | None = None
-
-        node_pca_projection: np.ndarray | None = None
-
-        node_pca_eigenvalues: np.ndarray | None = None
-
-        if spectral_dims is not None:
-            node_spectral_dimension = spectral_dims[parent_ids[edge_index]]
-        if pca_projections is not None:
-            node_pca_projection = pca_projections[parent_ids[edge_index]]
-        if pca_eigenvalues is not None:
-            node_pca_eigenvalues = pca_eigenvalues[parent_ids[edge_index]]
+        node_spectral_dimension = spectral_dims[parent_ids[edge_index]]
+        node_pca_projection = pca_projections[parent_ids[edge_index]]
+        node_pca_eigenvalues = pca_eigenvalues[parent_ids[edge_index]]
         continuous_covariance_by_block = require_node_continuous_covariance_by_block(
             tree,
             parent_ids[edge_index],

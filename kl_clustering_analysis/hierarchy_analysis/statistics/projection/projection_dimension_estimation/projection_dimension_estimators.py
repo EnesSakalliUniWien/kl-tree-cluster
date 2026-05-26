@@ -1,23 +1,36 @@
 """Canonical projection-dimension estimators for hierarchical decomposition.
 
-Provides three estimators used at Gate 2 (child-parent divergence test) to
-determine how many dimensions to project onto when computing the Wald χ²
-statistic for each internal tree node:
+Provides estimators used by the local spectral context to determine how many
+dimensions to project onto when computing projected Wald statistics for each
+internal tree node:
 
 - ``effective_rank``: continuous measure of spectral spread; used to set the
   global minimum projection dimension from the full dataset's covariance.
 - ``marchenko_pastur_signal_count``: core per-node estimator; counts
   eigenvalues above the Marchenko-Pastur noise threshold.
-- ``estimate_k_marchenko_pastur``: public API wrapper that applies a
-  minimum-dimension floor and an upper cap before returning k.
+- ``estimate_marchenko_pastur_dimension``: canonical MP dimension contract;
+  exposes raw signal count, test dimension, effective independent rows, and the
+  row count actually used by the MP threshold.
 
-All three operate on eigenvalues produced by the eigen-decomposition backend
-in ``spectral/marchenko_pastur.py`` and are called once per internal node.
+All three operate on eigenvalues produced by the eigendecomposition backend in
+``spectral/marchenko_pastur.py`` and are called once per internal node.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
+
+
+@dataclass(frozen=True)
+class MarchenkoPasturDimensionEstimate:
+    """Explicit split between the MP signal count and the Wald test dimension."""
+
+    raw_mp_signal_count: int
+    test_projection_dimension: int
+    effective_independent_rows: int
+    mp_threshold_rows: int
 
 
 def effective_rank(eigenvalues: np.ndarray) -> float:
@@ -86,53 +99,51 @@ def effective_rank(eigenvalues: np.ndarray) -> float:
 
 def marchenko_pastur_signal_count(
     eigenvalues: np.ndarray,
-    n_descendant_rows: int,
+    mp_threshold_rows: int,
     n_active_features: int,
 ) -> int:
     """Count eigenvalues above the Marchenko-Pastur upper bound for a tree node.
 
     Applies Marchenko-Pastur (MP) random matrix theory to separate signal
     components from noise in a node's eigenvalue spectrum. Called once per
-    internal tree node during Gate 2 (child-parent divergence test).
+    internal tree node while preparing the shared spectral context.
 
     The MP upper bound λ_max is the highest eigenvalue expected under pure
-    noise. Eigenvalues above it indicate genuine signal dimensions. Because
-    the aspect ratio c = d/n grows as you descend the tree (fewer descendant
-    rows), λ_max inflates near leaf nodes — making signal detection harder
-    in small subtrees and causing those nodes to return k=1.
+    noise. Eigenvalues above it indicate candidate signal dimensions. Because
+    the aspect ratio c = d/n grows as you descend the tree (fewer effective
+    independent rows), λ_max inflates near leaf nodes and makes signal
+    detection harder in small subtrees.
 
     The upper bound is computed as::
 
         λ_max = (1 + √c)²
 
     because the input spectrum comes from a covariance matrix in null-whitened
-    tangent coordinates, whose null variance scale is exactly 1.  Here
+    tangent coordinates, whose working null variance scale is 1. Here
     c = n_active_features / n_descendant_rows.
 
     Args:
         eigenvalues (np.ndarray): Eigenvalues of the node-local covariance
-            matrix in null-whitened tangent coordinates (descendant leaf rows
-            + internal distribution vectors).
-            Negative values (numerical noise from eigen-solvers) are ignored.
-        n_descendant_rows (int): Number of rows in the node-local descendant
-            feature matrix — one row per descendant leaf sample (e.g. patient
-            S42) plus any internal node distribution vectors stacked below.
-            Equals the full dataset size at the root; shrinks at deeper nodes.
+            matrix in null-whitened tangent coordinates. Negative values
+            (numerical noise from eigensolvers) are ignored.
+        mp_threshold_rows (int): Row count used in the MP aspect ratio. This
+            can be the independent leaf-row count for diagnostics or the
+            augmented spectral row count for the current production contract.
             Must be positive.
         n_active_features (int): Number of non-constant feature columns after
             zero-variance columns are excluded before eigen-decomposition.
             Must be positive.
 
     Returns:
-        int: Count of eigenvalues exceeding λ_max, floored at 1 to guarantee
-            a valid projection dimension when the entire spectrum remains in
-            the null bulk.
+        int: Raw count of eigenvalues exceeding λ_max. This may be zero under
+            a pure-noise local spectrum; downstream test-dimension floors are
+            applied by ``estimate_marchenko_pastur_dimension``.
 
     References:
         Marchenko & Pastur (1967). Distribution of eigenvalues for some sets
         of random matrices. Mathematical USSR-Sbornik, 1(4), 457-483.
     """
-    if n_descendant_rows <= 0 or n_active_features <= 0:
+    if mp_threshold_rows <= 0 or n_active_features <= 0:
         raise ValueError(
             "Marchenko-Pastur signal count requires positive row and feature counts."
         )
@@ -142,68 +153,80 @@ def marchenko_pastur_signal_count(
 
     # Aspect ratio: active features vs descendant rows for this node.
     # Grows as the node gets smaller (fewer descendant rows), raising λ_max.
-    node_aspect_ratio = float(n_active_features) / float(n_descendant_rows)
+    node_aspect_ratio = float(n_active_features) / float(mp_threshold_rows)
 
     # Marchenko-Pastur upper bound for unit-scale null-whitened covariance.
     # Eigenvalues above this threshold indicate true signal.
     mp_upper_bound = (1.0 + np.sqrt(node_aspect_ratio)) ** 2
 
-    # Count eigenvalues exceeding the MP threshold
-    n_signal_eigenvalues = int(np.sum(eigenvalues_f64 > mp_upper_bound))
-
-    # Retain one dimension for degenerate spectra so downstream tests have
-    # positive degrees of freedom.
-    return max(n_signal_eigenvalues, 1)
+    return int(np.sum(eigenvalues_f64 > mp_upper_bound))
 
 
-def estimate_k_marchenko_pastur(
+def estimate_marchenko_pastur_dimension(
     eigenvalues: np.ndarray,
     *,
     n_samples: int,
     n_features: int,
+    effective_independent_rows: int | None = None,
+    mp_threshold_rows: int | None = None,
     minimum_projection_dimension: int = 1,
-) -> int:
-    """Estimate the projection dimension for a tree node via Marchenko-Pastur thresholding.
+) -> MarchenkoPasturDimensionEstimate:
+    """Estimate raw MP signal count and final projected-Wald test dimension.
 
-    Thin wrapper around ``marchenko_pastur_signal_count`` that enforces a
-    minimum-dimension floor and caps the result at ``n_features``.
-
-    Args:
-        eigenvalues (np.ndarray): Eigenvalues of the node-local covariance
-            matrix, as returned by the eigen-decomposition backend.
-        n_samples (int): Number of rows in the node-local descendant feature
-            matrix (descendant leaf rows + internal distribution vectors).
-            Forwarded to ``marchenko_pastur_signal_count`` as
-            ``n_descendant_rows``.
-        n_features (int): Number of active (non-constant) feature columns for
-            this node. Forwarded as ``n_active_features`` and used as the
-            upper cap to prevent over-projection.
-        minimum_projection_dimension (int): Floor on the returned dimension.
-            Defaults to 1.
-
-    Returns:
-        int: Projection dimension clamped to
-            [minimum_projection_dimension, n_features].
+    ``n_samples`` is the number of rows eigendecomposed. When internal
+    distribution rows are stacked for PCA stabilization,
+    ``effective_independent_rows`` should record the descendant leaf count.
+    ``mp_threshold_rows`` records the row count actually used in the MP aspect
+    ratio; diagnostics may set it to the leaf count, while the current
+    production contract keeps the augmented-row threshold explicit.
     """
-    eigenvalues_f64 = np.asarray(eigenvalues, dtype=np.float64)
-    projection_dimension = int(
-        marchenko_pastur_signal_count(
-            eigenvalues_f64,
-            n_descendant_rows=n_samples,
-            n_active_features=n_features,
-        )
+    independent_row_count = (
+        int(n_samples)
+        if effective_independent_rows is None
+        else int(effective_independent_rows)
     )
-    # Floor: guarantee at least minimum_projection_dimension dimensions so
-    # downstream Wald χ² has a valid degrees-of-freedom value.
-    projection_dimension = max(projection_dimension, int(minimum_projection_dimension))
-    # Cap: projection cannot exceed the number of available feature columns;
-    # over-projection would introduce zero-variance directions.
-    projection_dimension = min(projection_dimension, int(n_features))
-    return projection_dimension
+    row_count_for_threshold = (
+        independent_row_count if mp_threshold_rows is None else int(mp_threshold_rows)
+    )
+    if int(n_samples) <= 0 or int(n_features) <= 0:
+        raise ValueError(
+            "Marchenko-Pastur dimension estimation requires positive sample and "
+            f"feature counts. Got n_samples={n_samples!r}, n_features={n_features!r}."
+        )
+    if independent_row_count <= 0 or row_count_for_threshold <= 0:
+        raise ValueError(
+            "Marchenko-Pastur dimension estimation requires positive effective "
+            "and threshold row counts. "
+            f"Got effective_independent_rows={independent_row_count!r}, "
+            f"mp_threshold_rows={row_count_for_threshold!r}."
+        )
+    minimum_dimension = int(minimum_projection_dimension)
+    if minimum_dimension < 0:
+        raise ValueError(
+            "minimum_projection_dimension must be non-negative. "
+            f"Got {minimum_projection_dimension!r}."
+        )
+    raw_mp_signal_count = marchenko_pastur_signal_count(
+        np.asarray(eigenvalues, dtype=np.float64),
+        mp_threshold_rows=row_count_for_threshold,
+        n_active_features=n_features,
+    )
+    test_projection_dimension = max(
+        int(raw_mp_signal_count),
+        minimum_dimension,
+    )
+    test_projection_dimension = min(test_projection_dimension, int(n_features))
+    return MarchenkoPasturDimensionEstimate(
+        raw_mp_signal_count=int(raw_mp_signal_count),
+        test_projection_dimension=int(test_projection_dimension),
+        effective_independent_rows=int(independent_row_count),
+        mp_threshold_rows=int(row_count_for_threshold),
+    )
 
 
 __all__ = [
+    "MarchenkoPasturDimensionEstimate",
     "effective_rank",
+    "estimate_marchenko_pastur_dimension",
     "marchenko_pastur_signal_count",
-    "estimate_k_marchenko_pastur",
 ]

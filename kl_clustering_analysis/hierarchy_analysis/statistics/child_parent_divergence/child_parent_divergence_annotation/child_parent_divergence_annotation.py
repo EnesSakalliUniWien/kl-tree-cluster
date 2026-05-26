@@ -64,26 +64,16 @@ def annotate_child_parent_divergence_with_context(
     if leaf_data is None:
         raise ValueError(
             "Child-parent projected Wald tests require leaf_data so Gate 2 can provide "
-            "spectral dimensions and PCA bases."
+            "test projection dimensions and PCA bases."
         )
 
     child_leaf_counts = extract_leaf_counts(annotations_df, child_ids)
     parent_leaf_counts = extract_leaf_counts(annotations_df, parent_ids)
 
-    (
-        node_spectral_dimensions,
-        node_pca_projections,
-        node_pca_eigenvalues,
-    ) = compute_child_parent_spectral_context(
+    spectral_context = compute_child_parent_spectral_context(
         tree,
         leaf_data,
         feature_space=feature_space,
-    )
-
-    spectral_context = SpectralContext(
-        spectral_projection_dimensions_by_node=node_spectral_dimensions,
-        principal_component_projections_by_node=node_pca_projections,
-        principal_component_eigenvalues_by_node=node_pca_eigenvalues,
     )
 
     (
@@ -97,9 +87,9 @@ def annotate_child_parent_divergence_with_context(
         parent_ids=parent_ids,
         child_leaf_counts=child_leaf_counts,
         parent_leaf_counts=parent_leaf_counts,
-        spectral_dims=node_spectral_dimensions,
-        pca_projections=node_pca_projections,
-        pca_eigenvalues=node_pca_eigenvalues,
+        spectral_dims=spectral_context.test_projection_dimensions_by_node,
+        pca_projections=spectral_context.principal_component_projections_by_node,
+        pca_eigenvalues=spectral_context.principal_component_eigenvalues_by_node,
         feature_space=feature_space,
     )
 

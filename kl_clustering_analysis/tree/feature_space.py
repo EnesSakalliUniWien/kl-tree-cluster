@@ -112,6 +112,11 @@ class FeatureSpace:
             raise ValueError("FeatureSpace requires at least one column.")
         if not self.blocks:
             raise ValueError("FeatureSpace requires at least one block.")
+        if len(set(self.column_names)) != len(self.column_names):
+            raise ValueError("FeatureSpace column_names must be unique.")
+        block_names = [block.name for block in self.blocks]
+        if len(set(block_names)) != len(block_names):
+            raise ValueError("FeatureSpace block names must be unique.")
 
         covered_indices: list[int] = []
         for block in self.blocks:

@@ -9,17 +9,17 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergenc
 )
 
 
-def _require_child_spectral_dimension(
-    spectral_projection_dimensions_by_node: dict[str, int],
+def _require_child_test_projection_dimension(
+    test_projection_dimensions_by_node: dict[str, int],
     child_node: str,
 ) -> int:
-    """Return a child spectral dimension or fail on malformed Gate 2 context."""
-    if child_node not in spectral_projection_dimensions_by_node:
+    """Return a child test projection dimension or fail on malformed Gate 2 context."""
+    if child_node not in test_projection_dimensions_by_node:
         raise ValueError(
             "Gate 3 edge-derived sibling projection dimensions require Gate 2 "
-            f"spectral dimensions for every child node; missing {child_node!r}."
+            f"test projection dimensions for every child node; missing {child_node!r}."
         )
-    return int(spectral_projection_dimensions_by_node[child_node])
+    return int(test_projection_dimensions_by_node[child_node])
 
 
 def _cap_to_parent_projection_dimension(
@@ -45,19 +45,17 @@ def derive_sibling_projection_dimensions_from_child_edge_comparisons(
     tree,
     *,
     spectral_context: SpectralContext,
-) -> dict[str, int] | None:
+) -> dict[str, int]:
     """Derive Gate 3 projection dimensions from child Gate 2 edge comparisons.
 
     Uses geometric mean of the two child edge dimensions for each binary
     sibling parent. When only one child has a positive edge-derived dimension,
     that dimension is reused directly. When neither child has a positive
-    edge-derived dimension, the parent's own Gate 2 spectral dimension is used.
+    edge-derived dimension, the parent's own Gate 2 test projection dimension is used.
     """
-    spectral_projection_dimensions_by_node = (
-        spectral_context.spectral_projection_dimensions_by_node
-    )
-    if not spectral_projection_dimensions_by_node:
-        raise ValueError("Gate 3 requires Gate 2 spectral projection dimensions.")
+    test_projection_dimensions_by_node = spectral_context.test_projection_dimensions_by_node
+    if not test_projection_dimensions_by_node:
+        raise ValueError("Gate 3 requires Gate 2 test projection dimensions.")
 
     sibling_projection_dimensions_from_child_edge_comparisons: dict[str, int] = {}
 
@@ -67,16 +65,16 @@ def derive_sibling_projection_dimensions_from_child_edge_comparisons(
             continue
 
         left, right = children
-        left_projection_dimension = _require_child_spectral_dimension(
-            spectral_projection_dimensions_by_node,
+        left_projection_dimension = _require_child_test_projection_dimension(
+            test_projection_dimensions_by_node,
             left,
         )
-        right_projection_dimension = _require_child_spectral_dimension(
-            spectral_projection_dimensions_by_node,
+        right_projection_dimension = _require_child_test_projection_dimension(
+            test_projection_dimensions_by_node,
             right,
         )
-        parent_projection_dimension = _require_child_spectral_dimension(
-            spectral_projection_dimensions_by_node,
+        parent_projection_dimension = _require_child_test_projection_dimension(
+            test_projection_dimensions_by_node,
             parent,
         )
 

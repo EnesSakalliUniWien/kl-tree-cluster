@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def collect_parent_principal_component_inputs_for_sibling_tests(
-    sibling_projection_dimensions_from_child_edge_comparisons: dict[str, int] | None,
+    sibling_projection_dimensions_from_child_edge_comparisons: dict[str, int],
     *,
     spectral_context: SpectralContext,
 ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
@@ -22,9 +22,6 @@ def collect_parent_principal_component_inputs_for_sibling_tests(
     Returns the subset of Gate 2 principal-component projections and eigenvalues
     corresponding to parents that have valid sibling projection dimensions.
     """
-    if sibling_projection_dimensions_from_child_edge_comparisons is None:
-        raise ValueError("Gate 3 requires sibling projection dimensions from Gate 2.")
-
     principal_component_projections_by_node = (
         spectral_context.principal_component_projections_by_node
     )

@@ -1,17 +1,19 @@
 r"""Tree-level spectral decomposition orchestrator.
 
 Builds per-node spectral tasks, dispatches them in parallel (or
-sequentially for small trees), and assembles results into the three
-output dicts consumed by the rest of the pipeline.
+sequentially for small trees), and assembles the explicit spectral contract
+consumed by the rest of the pipeline.
 
 The only supported estimator is Marchenko-Pastur rank selection. It uses
 random matrix theory to separate signal eigenvalues from the noise bulk of
 the local covariance matrix after each descendant row is mapped into the
 null-whitened tangent coordinates used by the Wald statistic. In that
-coordinate system the null covariance scale is one, so the Marchenko-Pastur
-support is $(1 \pm \sqrt{d/n})^2$. When no eigenvalues exceed the upper
-bound, the raw signal count is conceptually 0, but the returned dimension is
-floored to the caller's minimum and capped by the number of active features.
+coordinate system the working null covariance scale is one, so the
+Marchenko-Pastur support is $(1 \pm \sqrt{d/m_{\mathrm{MP}}})^2$. When no
+eigenvalues exceed the upper bound, the raw signal count is 0, but the test
+dimension is floored to the caller's minimum and capped by the number of
+active features. The effective independent row count is recorded separately
+from the MP threshold row count.
 Pure-noise nodes therefore run a low-rank test and are expected to fail to
 reject. Nodes with no active feature directions are represented explicitly as
 zero-dimensional PCA contexts.
@@ -20,7 +22,7 @@ zero-dimensional PCA contexts.
 from __future__ import annotations
 
 import logging
-from typing import Dict, Tuple, cast
+from typing import Dict, cast
 
 import networkx as nx
 import numpy as np
@@ -39,6 +41,7 @@ from kl_clustering_analysis.tree.feature_space import (
 from .marchenko_pastur import _get_n_jobs, _process_node
 from .node_spectral_result import NodeSpectralResult
 from .node_spectral_task import NodeSpectralTask
+from .spectral_decomposition_result import SpectralDecompositionResult
 from .tree_helpers import is_leaf, precompute_descendants
 
 logger = logging.getLogger(__name__)
@@ -97,7 +100,6 @@ def _run_spectral_tasks_parallel(
     node_spectral_tasks: list[NodeSpectralTask],
     full_feature_matrix: np.ndarray,
     *,
-    dimension_method: str,
     minimum_projection_dimension: int,
     feature_count: int,
     compute_eigendecomposition_outputs: bool,
@@ -108,7 +110,6 @@ def _run_spectral_tasks_parallel(
         delayed(_process_node)(
             task,
             full_feature_matrix,
-            dimension_method,
             minimum_projection_dimension,
             feature_count,
             compute_eigendecomposition_outputs,
@@ -121,13 +122,23 @@ def _run_spectral_tasks_parallel(
 def _aggregate_spectral_results(
     spectral_results: list[NodeSpectralResult],
     *,
-    spectral_dims: dict[str, int],
+    test_projection_dimensions: dict[str, int],
+    raw_mp_signal_counts: dict[str, int],
+    effective_independent_rows: dict[str, int],
+    mp_threshold_rows: dict[str, int],
     pca_projections: dict[str, np.ndarray],
     pca_eigenvalues: dict[str, np.ndarray],
 ) -> None:
     """Write per-node worker outputs into decomposition result dicts."""
     for node_result in spectral_results:
-        spectral_dims[node_result.node_id] = node_result.projection_dimension
+        test_projection_dimensions[node_result.node_id] = (
+            node_result.test_projection_dimension
+        )
+        raw_mp_signal_counts[node_result.node_id] = node_result.raw_mp_signal_count
+        effective_independent_rows[node_result.node_id] = (
+            node_result.effective_independent_rows
+        )
+        mp_threshold_rows[node_result.node_id] = node_result.mp_threshold_rows
         if node_result.projection_matrix is None or node_result.eigenvalues is None:
             raise ValueError(
                 "Spectral decomposition must return PCA projection and eigenvalues for "
@@ -144,8 +155,8 @@ def compute_spectral_decomposition(
     minimum_projection_dimension: int = 1,
     include_internal: bool | None = None,
     feature_space: FeatureSpace | None = None,
-) -> Tuple[Dict[str, int], Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-    """Compute spectral dimensions, PCA projections, and eigenvalues.
+) -> SpectralDecompositionResult:
+    """Compute MP dimension metadata, PCA projections, and eigenvalues.
 
     Performs exactly one eigendecomposition per internal node after mapping
     descendant distributions into the same null-whitened tangent coordinates
@@ -163,18 +174,19 @@ def compute_spectral_decomposition(
     minimum_projection_dimension
         Floor on the returned dimension.
     include_internal
-        If True, include internal node distribution vectors in the data
-        matrix used for eigendecomposition.  If None, reads from
-        ``config.INCLUDE_INTERNAL_IN_SPECTRAL`` (default False).
-        Internal distributions are convex combinations of leaf data — they
-        do NOT increase rank and typically reduce effective rank by ~30%.
+        If True, include internal node distribution vectors in the data matrix
+        used for eigendecomposition. If None, reads from
+        ``config.INCLUDE_INTERNAL_IN_SPECTRAL``. Internal distributions are
+        convex combinations of leaf data; they do not add independent spectral
+        observations.
 
     Returns
     -------
-    (spectral_dims, pca_projections, pca_eigenvalues)
-        spectral_dims : dict[str, int] — node_id → k_v
-        pca_projections : dict[str, np.ndarray] — node_id → (k_v × d) matrix
-        pca_eigenvalues : dict[str, np.ndarray] — node_id → (k_v,) eigenvalues
+    SpectralDecompositionResult
+        Typed per-node spectral output. ``test_projection_dimensions_by_node``
+        is the dimension used by downstream projected-Wald tests; raw MP signal
+        counts, effective independent row counts, and MP threshold row counts
+        are exposed separately.
     """
     if include_internal is None:
         from kl_clustering_analysis import config
@@ -194,7 +206,10 @@ def compute_spectral_decomposition(
         tree, leaf_label_to_index
     )
 
-    spectral_dims: Dict[str, int] = {}
+    test_projection_dimensions: Dict[str, int] = {}
+    raw_mp_signal_counts: Dict[str, int] = {}
+    effective_independent_rows: Dict[str, int] = {}
+    mp_threshold_rows: Dict[str, int] = {}
     pca_projections: Dict[str, np.ndarray] = {}
     pca_eigenvalues: Dict[str, np.ndarray] = {}
 
@@ -202,7 +217,10 @@ def compute_spectral_decomposition(
     internal_node_ids: list[str] = []
     for node_id in tree.nodes:
         if is_leaf(tree, node_id):
-            spectral_dims[node_id] = 0
+            test_projection_dimensions[node_id] = 0
+            raw_mp_signal_counts[node_id] = 0
+            effective_independent_rows[node_id] = 1
+            mp_threshold_rows[node_id] = 1
         else:
             internal_node_ids.append(node_id)
 
@@ -222,7 +240,6 @@ def compute_spectral_decomposition(
     spectral_results = _run_spectral_tasks_parallel(
         spectral_tasks,
         leaf_feature_matrix,
-        dimension_method="marchenko_pastur",
         minimum_projection_dimension=minimum_projection_dimension,
         feature_count=feature_count,
         compute_eigendecomposition_outputs=True,
@@ -230,7 +247,10 @@ def compute_spectral_decomposition(
 
     _aggregate_spectral_results(
         spectral_results,
-        spectral_dims=spectral_dims,
+        test_projection_dimensions=test_projection_dimensions,
+        raw_mp_signal_counts=raw_mp_signal_counts,
+        effective_independent_rows=effective_independent_rows,
+        mp_threshold_rows=mp_threshold_rows,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
     )
@@ -238,7 +258,7 @@ def compute_spectral_decomposition(
     # Log summary statistics
     internal_projection_dimensions = [
         projection_dimension
-        for node_id, projection_dimension in spectral_dims.items()
+        for node_id, projection_dimension in test_projection_dimensions.items()
         if not is_leaf(tree, node_id)
     ]
 
@@ -259,7 +279,14 @@ def compute_spectral_decomposition(
         len(pca_projections),
     )
 
-    return spectral_dims, pca_projections, pca_eigenvalues
+    return SpectralDecompositionResult(
+        test_projection_dimensions_by_node=test_projection_dimensions,
+        raw_mp_signal_counts_by_node=raw_mp_signal_counts,
+        effective_independent_rows_by_node=effective_independent_rows,
+        mp_threshold_rows_by_node=mp_threshold_rows,
+        principal_component_projections_by_node=pca_projections,
+        principal_component_eigenvalues_by_node=pca_eigenvalues,
+    )
 
 
 __all__ = [

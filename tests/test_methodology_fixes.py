@@ -79,8 +79,19 @@ class TestSpectralKFloor:
         captured: list[int] = []
 
         def _fake_compute_spectral_decomposition(*args, **kwargs):
+            from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
+                SpectralDecompositionResult,
+            )
+
             captured.append(kwargs["minimum_projection_dimension"])
-            return {}, {}, {}
+            return SpectralDecompositionResult(
+                test_projection_dimensions_by_node={},
+                raw_mp_signal_counts_by_node={},
+                effective_independent_rows_by_node={},
+                mp_threshold_rows_by_node={},
+                principal_component_projections_by_node={},
+                principal_component_eigenvalues_by_node={},
+            )
 
         monkeypatch.setattr(
             spectral_module,
@@ -107,7 +118,18 @@ class TestSpectralKFloor:
         leaf_data = pd.DataFrame([[0.0], [1.0]], index=["L0", "L1"], columns=["F0"])
 
         def _fake_compute_spectral_decomposition(*args, **kwargs):
-            return {"root": 1}, {"root": np.array([[1.0]])}, {}
+            from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
+                SpectralDecompositionResult,
+            )
+
+            return SpectralDecompositionResult(
+                test_projection_dimensions_by_node={"root": 1},
+                raw_mp_signal_counts_by_node={"root": 1},
+                effective_independent_rows_by_node={"root": 2},
+                mp_threshold_rows_by_node={"root": 2},
+                principal_component_projections_by_node={"root": np.array([[1.0]])},
+                principal_component_eigenvalues_by_node={},
+            )
 
         monkeypatch.setattr(
             spectral_module,
@@ -133,10 +155,17 @@ class TestSpectralKFloor:
         leaf_data = pd.DataFrame([[0.0], [1.0]], index=["L0", "L1"], columns=["F0"])
 
         def _fake_compute_spectral_decomposition(*args, **kwargs):
-            return (
-                {"root": 2},
-                {"root": np.array([[1.0]])},
-                {"root": np.array([1.0, 0.5])},
+            from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
+                SpectralDecompositionResult,
+            )
+
+            return SpectralDecompositionResult(
+                test_projection_dimensions_by_node={"root": 2},
+                raw_mp_signal_counts_by_node={"root": 2},
+                effective_independent_rows_by_node={"root": 2},
+                mp_threshold_rows_by_node={"root": 2},
+                principal_component_projections_by_node={"root": np.array([[1.0]])},
+                principal_component_eigenvalues_by_node={"root": np.array([1.0, 0.5])},
             )
 
         monkeypatch.setattr(
@@ -169,18 +198,26 @@ class TestSpectralKFloor:
             columns=["F0", "F1"],
         )
 
-        spectral_dimensions, pca_projections, pca_eigenvalues = (
-            compute_spectral_decomposition(
-                tree,
-                leaf_data,
-                minimum_projection_dimension=2,
-                include_internal=False,
-            )
+        spectral_decomposition = compute_spectral_decomposition(
+            tree,
+            leaf_data,
+            minimum_projection_dimension=2,
+            include_internal=False,
         )
 
-        assert spectral_dimensions["root"] == 1
-        np.testing.assert_array_equal(pca_projections["root"], np.array([[1.0, 0.0]]))
-        np.testing.assert_allclose(pca_eigenvalues["root"], np.array([1.0]), atol=1e-10)
+        assert spectral_decomposition.test_projection_dimensions_by_node["root"] == 1
+        assert spectral_decomposition.raw_mp_signal_counts_by_node["root"] == 0
+        assert spectral_decomposition.effective_independent_rows_by_node["root"] == 3
+        assert spectral_decomposition.mp_threshold_rows_by_node["root"] == 3
+        np.testing.assert_array_equal(
+            spectral_decomposition.principal_component_projections_by_node["root"],
+            np.array([[1.0, 0.0]]),
+        )
+        np.testing.assert_allclose(
+            spectral_decomposition.principal_component_eigenvalues_by_node["root"],
+            np.array([1.0]),
+            atol=1e-10,
+        )
 
     def test_spectral_decomposition_requires_leaf_data_for_every_leaf_label(self):
         """Missing leaf rows must fail instead of silently shrinking a subtree."""

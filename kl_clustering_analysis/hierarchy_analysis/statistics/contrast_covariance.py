@@ -210,6 +210,39 @@ def build_null_whitened_tangent_matrix(
         value_name="null_distribution",
     )
     active_feature_space = _resolve_distribution_feature_space(null, feature_space)
+    ridge_value = _validate_ridge(ridge)
+    if _uses_diagonal_null_whitening(active_feature_space):
+        distribution_matrix, null = _validate_diagonal_tangent_inputs(
+            distribution_matrix,
+            null,
+            active_feature_space,
+        )
+        continuous_covariance_blocks = _validate_diagonal_continuous_covariance_by_block(
+            active_feature_space,
+            continuous_covariance_by_block,
+        )
+        return _build_diagonal_null_whitened_tangent_matrix(
+            distribution_matrix,
+            null,
+            active_feature_space,
+            continuous_covariance_blocks,
+            ridge=ridge_value,
+        )
+
+    if _uses_grouped_categorical_null_whitening(active_feature_space):
+        distribution_matrix, null = _validate_grouped_categorical_tangent_inputs(
+            distribution_matrix,
+            null,
+            active_feature_space,
+            continuous_covariance_by_block=continuous_covariance_by_block,
+        )
+        return _build_grouped_categorical_null_whitened_tangent_matrix(
+            distribution_matrix,
+            null,
+            active_feature_space,
+            ridge=ridge_value,
+        )
+
     distribution_matrix = validate_feature_matrix(
         distribution_matrix,
         active_feature_space,
@@ -220,7 +253,6 @@ def build_null_whitened_tangent_matrix(
         active_feature_space,
         value_name="null_distribution",
     )
-    ridge_value = _validate_ridge(ridge)
     continuous_covariance_blocks = _validate_continuous_covariance_by_block(
         active_feature_space,
         continuous_covariance_by_block,
@@ -237,6 +269,278 @@ def build_null_whitened_tangent_matrix(
         for block in active_feature_space.blocks
     ]
     return np.column_stack(tangent_blocks)
+
+
+def _uses_diagonal_null_whitening(feature_space: FeatureSpace) -> bool:
+    families = {block.family for block in feature_space.blocks}
+    return families in ({"bernoulli"}, {"continuous"}) and all(
+        block.raw_dimension == 1 for block in feature_space.blocks
+    )
+
+
+def _uses_grouped_categorical_null_whitening(feature_space: FeatureSpace) -> bool:
+    return feature_space.family_label == "categorical"
+
+
+def _validate_diagonal_tangent_inputs(
+    distributions: NDArray[np.float64],
+    null_distribution: NDArray[np.float64],
+    feature_space: FeatureSpace,
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    if distributions.shape[1] != feature_space.raw_dimension:
+        raise ValueError(
+            f"distributions has shape {distributions.shape}; expected "
+            f"(n_samples, {feature_space.raw_dimension})."
+        )
+    if not np.isfinite(distributions).all():
+        raise ValueError("distributions must contain only finite values.")
+    if null_distribution.shape != (feature_space.raw_dimension,):
+        raise ValueError(
+            f"null_distribution has shape {null_distribution.shape}; expected "
+            f"{(feature_space.raw_dimension,)}."
+        )
+
+    if feature_space.family_label == "bernoulli":
+        if np.any(distributions < 0.0) or np.any(distributions > 1.0):
+            raise ValueError(
+                "Bernoulli tangent distributions must lie in [0, 1]. "
+                f"Range=[{float(np.min(distributions)):.6g}, "
+                f"{float(np.max(distributions)):.6g}]."
+            )
+        if np.any(null_distribution < 0.0) or np.any(null_distribution > 1.0):
+            raise ValueError(
+                "Bernoulli null_distribution must lie in [0, 1]. "
+                f"Range=[{float(np.min(null_distribution)):.6g}, "
+                f"{float(np.max(null_distribution)):.6g}]."
+            )
+
+    return distributions, null_distribution
+
+
+def _validate_diagonal_continuous_covariance_by_block(
+    feature_space: FeatureSpace,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None,
+) -> dict[str, NDArray[np.float64]]:
+    if not feature_space.has_continuous_blocks:
+        if continuous_covariance_by_block is not None:
+            raise ValueError(
+                "continuous_covariance_by_block was provided, but feature_space has "
+                "no continuous blocks."
+            )
+        return {}
+
+    if continuous_covariance_by_block is None:
+        raise ValueError(
+            "Continuous feature blocks require continuous_covariance_by_block."
+        )
+
+    expected_block_names = {block.name for block in feature_space.continuous_blocks}
+    actual_block_names = set(continuous_covariance_by_block)
+    if actual_block_names != expected_block_names:
+        raise ValueError(
+            "continuous_covariance_by_block keys must exactly match continuous "
+            "feature block names. "
+            f"expected={sorted(expected_block_names)!r}, "
+            f"actual={sorted(actual_block_names)!r}."
+        )
+
+    covariance_blocks: dict[str, NDArray[np.float64]] = {}
+    for block in feature_space.continuous_blocks:
+        covariance = np.asarray(
+            continuous_covariance_by_block[block.name],
+            dtype=np.float64,
+        )
+        if covariance.shape != (1, 1):
+            raise ValueError(
+                f"Continuous covariance block {block.name!r} has shape "
+                f"{covariance.shape}; expected {(1, 1)}."
+            )
+        if not np.isfinite(covariance[0, 0]):
+            raise ValueError(
+                f"Continuous covariance block {block.name!r} must contain only finite values."
+            )
+        covariance_blocks[block.name] = covariance
+    return covariance_blocks
+
+
+def _build_diagonal_null_whitened_tangent_matrix(
+    distributions: NDArray[np.float64],
+    null_distribution: NDArray[np.float64],
+    feature_space: FeatureSpace,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.float64]],
+    *,
+    ridge: float,
+) -> NDArray[np.float64]:
+    """Vectorize the exact block whitening map for diagonal feature spaces."""
+    if not _uses_diagonal_null_whitening(feature_space):
+        raise ValueError(
+            "Diagonal null whitening requires a pure Bernoulli or one-dimensional "
+            "continuous feature space."
+        )
+
+    column_indices = np.asarray(
+        [block.column_indices[0] for block in feature_space.blocks],
+        dtype=np.int64,
+    )
+    block_values = distributions[:, column_indices]
+    block_null = null_distribution[column_indices]
+
+    if feature_space.family_label == "bernoulli":
+        variances = block_null * (1.0 - block_null) + ridge
+        return (block_values - block_null) / np.sqrt(variances)
+
+    if feature_space.family_label == "continuous":
+        variances = np.asarray(
+            [
+                continuous_covariance_by_block[block.name][0, 0]
+                for block in feature_space.blocks
+            ],
+            dtype=np.float64,
+        )
+        return (block_values - block_null) / np.sqrt(variances + ridge)
+
+    raise ValueError(
+        f"Unknown diagonal feature family: {feature_space.family_label!r}."
+    )
+
+
+def _validate_grouped_categorical_tangent_inputs(
+    distributions: NDArray[np.float64],
+    null_distribution: NDArray[np.float64],
+    feature_space: FeatureSpace,
+    *,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None,
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    if distributions.shape[1] != feature_space.raw_dimension:
+        raise ValueError(
+            f"distributions has shape {distributions.shape}; expected "
+            f"(n_samples, {feature_space.raw_dimension})."
+        )
+    if not np.isfinite(distributions).all():
+        raise ValueError("distributions must contain only finite values.")
+    if null_distribution.shape != (feature_space.raw_dimension,):
+        raise ValueError(
+            f"null_distribution has shape {null_distribution.shape}; expected "
+            f"{(feature_space.raw_dimension,)}."
+        )
+    if continuous_covariance_by_block is not None:
+        raise ValueError(
+            "continuous_covariance_by_block was provided, but feature_space has "
+            "no continuous blocks."
+        )
+    if np.any(distributions < 0.0) or np.any(distributions > 1.0):
+        raise ValueError(
+            "Categorical tangent distributions must lie in [0, 1]. "
+            f"Range=[{float(np.min(distributions)):.6g}, "
+            f"{float(np.max(distributions)):.6g}]."
+        )
+    if np.any(null_distribution < 0.0) or np.any(null_distribution > 1.0):
+        raise ValueError(
+            "Categorical null_distribution must lie in [0, 1]. "
+            f"Range=[{float(np.min(null_distribution)):.6g}, "
+            f"{float(np.max(null_distribution)):.6g}]."
+        )
+
+    for category_count, indexed_blocks in _categorical_blocks_by_category_count(
+        feature_space
+    ).items():
+        column_indices = np.asarray(
+            [block.column_indices for _block_index, block in indexed_blocks],
+            dtype=np.int64,
+        )
+        block_values = distributions[:, column_indices]
+        row_sums = block_values.sum(axis=2)
+        if not np.allclose(row_sums, 1.0, atol=1e-8, rtol=0.0):
+            raise ValueError(
+                "Categorical tangent distribution rows must sum to 1 within each "
+                f"{category_count}-category block. Got row-sum range "
+                f"[{float(np.min(row_sums)):.6g}, {float(np.max(row_sums)):.6g}]."
+            )
+
+        null_blocks = null_distribution[column_indices]
+        null_sums = null_blocks.sum(axis=1)
+        if not np.allclose(null_sums, 1.0, atol=1e-8, rtol=0.0):
+            raise ValueError(
+                "Categorical null_distribution blocks must sum to 1. "
+                f"Got row-sum range "
+                f"[{float(np.min(null_sums)):.6g}, {float(np.max(null_sums)):.6g}]."
+            )
+
+    return distributions, null_distribution
+
+
+def _build_grouped_categorical_null_whitened_tangent_matrix(
+    distributions: NDArray[np.float64],
+    null_distribution: NDArray[np.float64],
+    feature_space: FeatureSpace,
+    *,
+    ridge: float,
+) -> NDArray[np.float64]:
+    """Vectorize the exact simplex block whitening map by category count."""
+    if not _uses_grouped_categorical_null_whitening(feature_space):
+        raise ValueError(
+            "Grouped categorical whitening requires a pure categorical feature space."
+        )
+
+    output = np.empty(
+        (distributions.shape[0], feature_space.contrast_dimension),
+        dtype=np.float64,
+    )
+    output_slices: list[slice] = []
+    offset = 0
+    for block in feature_space.blocks:
+        next_offset = offset + block.contrast_dimension
+        output_slices.append(slice(offset, next_offset))
+        offset = next_offset
+
+    for category_count, indexed_blocks in _categorical_blocks_by_category_count(
+        feature_space
+    ).items():
+        contrast_dimension = category_count - 1
+        column_indices = np.asarray(
+            [block.column_indices for _block_index, block in indexed_blocks],
+            dtype=np.int64,
+        )
+        block_values = distributions[:, column_indices]
+        reduced_null = null_distribution[column_indices][:, :-1]
+
+        covariance_blocks = -np.einsum(
+            "bi,bj->bij",
+            reduced_null,
+            reduced_null,
+            optimize=True,
+        )
+        diagonal = np.arange(contrast_dimension)
+        covariance_blocks[:, diagonal, diagonal] += reduced_null
+        covariance_blocks[:, diagonal, diagonal] += ridge
+
+        cholesky_blocks = np.linalg.cholesky(covariance_blocks)
+        tangent_blocks = block_values[:, :, :-1] - reduced_null[None, :, :]
+        solved = np.linalg.solve(
+            cholesky_blocks,
+            np.transpose(tangent_blocks, (1, 2, 0)),
+        )
+        solved = np.transpose(solved, (2, 0, 1))
+
+        for grouped_block_index, (block_index, _block) in enumerate(indexed_blocks):
+            output[:, output_slices[block_index]] = solved[:, grouped_block_index, :]
+
+    return output
+
+
+def _categorical_blocks_by_category_count(
+    feature_space: FeatureSpace,
+) -> dict[int, list[tuple[int, FeatureBlock]]]:
+    blocks_by_category_count: dict[int, list[tuple[int, FeatureBlock]]] = {}
+    for block_index, block in enumerate(feature_space.blocks):
+        if block.family != "categorical":
+            raise ValueError(
+                "Categorical block grouping requires a pure categorical feature space."
+            )
+        blocks_by_category_count.setdefault(block.raw_dimension, []).append(
+            (block_index, block)
+        )
+    return blocks_by_category_count
 
 
 def _resolve_distribution_feature_space(

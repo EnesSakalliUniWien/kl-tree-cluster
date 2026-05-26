@@ -65,7 +65,7 @@ class GateAnnotationBundle:
 
     annotated_df: pd.DataFrame
     metadata: GateAnnotationMetadata
-    gate_two_result: Gate2Result | None = None
+    gate_two_result: Gate2Result
 
 
 __all__ = [
