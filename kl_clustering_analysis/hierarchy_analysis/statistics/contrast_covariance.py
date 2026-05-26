@@ -492,19 +492,14 @@ def _build_diagonal_whitened_wald_contrast(
             "continuous feature space."
         )
 
-    distribution_matrix, covariance_distribution = _validate_diagonal_tangent_inputs(
-        np.vstack([resolved.first, resolved.second]),
-        resolved.covariance_distribution,
-        resolved.feature_space,
-    )
     column_indices = np.asarray(
         [block.column_indices[0] for block in resolved.feature_space.blocks],
         dtype=np.int64,
     )
-    contrast = distribution_matrix[0, column_indices] - distribution_matrix[1, column_indices]
+    contrast = resolved.first[column_indices] - resolved.second[column_indices]
 
     if resolved.feature_space.family_label == "bernoulli":
-        probabilities = covariance_distribution[column_indices]
+        probabilities = resolved.covariance_distribution[column_indices]
         variances = probabilities * (1.0 - probabilities) * resolved.variance_scale
         variances = variances + resolved.ridge
         return contrast / np.sqrt(variances)
@@ -661,14 +656,6 @@ def _build_grouped_categorical_whitened_wald_contrast(
         raise ValueError(
             "Grouped categorical Wald whitening requires a pure categorical feature space."
         )
-    distribution_matrix, covariance_distribution = (
-        _validate_grouped_categorical_tangent_inputs(
-            np.vstack([resolved.first, resolved.second]),
-            resolved.covariance_distribution,
-            resolved.feature_space,
-            continuous_covariance_by_block=None,
-        )
-    )
 
     output = np.empty(resolved.feature_space.contrast_dimension, dtype=np.float64)
     output_slices: list[slice] = []
@@ -686,9 +673,9 @@ def _build_grouped_categorical_whitened_wald_contrast(
             [block.column_indices for _block_index, block in indexed_blocks],
             dtype=np.int64,
         )
-        first_blocks = distribution_matrix[0, column_indices]
-        second_blocks = distribution_matrix[1, column_indices]
-        reduced_probability = covariance_distribution[column_indices][:, :-1]
+        first_blocks = resolved.first[column_indices]
+        second_blocks = resolved.second[column_indices]
+        reduced_probability = resolved.covariance_distribution[column_indices][:, :-1]
 
         covariance_blocks = -np.einsum(
             "bi,bj->bij",
