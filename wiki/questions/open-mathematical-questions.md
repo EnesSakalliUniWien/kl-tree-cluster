@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-05-25
+updated: 2026-05-26
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -11,6 +11,8 @@ sources:
   - manuscript/sections/method/representation.tex
   - manuscript/sections/experiments/section.tex
   - wiki/analyses/oracle-gate-path-diagnostic.md
+  - wiki/analyses/local-marchenko-pastur-rule.md
+  - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
   - benchmarks/validation/method_constants_manifest.py
 tags:
@@ -80,9 +82,14 @@ compare descendant split evidence against local sibling-same evidence.
 
 The failure modes must stay separated. Diffuse Gaussian, heavy-overlap, and SBM
 cases often look like hierarchy or recoverability failures rather than gate
-failures. Phylogenetic false splitting may require branch-length stopping,
-sibling covariance changes, or hierarchical FDR rather than an inflation
-change. These cases should not be collapsed into one threshold-tuning problem.
+failures. [[dimensional-gaussian-representation-diagnostic]] records the
+clearest current example: continuous coordinates make consolidated dimensional
+Gaussian cases recoverable, but the diffuse continuous case still has an
+unrecoverable average-linkage tree because weak spread-out mean signal is
+dominated by many noise dimensions. Phylogenetic false splitting may require
+branch-length stopping, sibling covariance changes, or hierarchical FDR rather
+than an inflation change. These cases should not be collapsed into one
+threshold-tuning problem.
 
 The current concrete open questions are:
 
@@ -108,6 +115,16 @@ The current concrete open questions are:
 11. Is the fixed-projection proof sufficient, or must the data-selected PCA
     effect be derived or simulated?
 12. Does the local Marchenko--Pastur rule preserve calibration and power?
+    [[local-marchenko-pastur-rule]] partially resolves the algebraic
+    correctness question: the \(d_u/m_u\) edge matches the backend eigenvalue
+    scale, and the code now separates raw MP signal count, projected-Wald test
+    dimension, effective independent row count, and MP threshold row count. A
+    targeted finite-null smoke did not support replacing the active
+    augmented-row threshold: finite-null thresholding matched
+    `binary_many_features`, worsened `cat_highcard_20cat_4c`, and under-split
+    dimensional Gaussian cases. The open question is therefore not a simple
+    finite-null swap, but whether a genuinely selection-aware threshold can be
+    derived or validated.
 13. Is the minimum spectral dimension \(k_{\min}=2\) justified?
 14. Does including internal subtree rows improve stability or bias local tests?
 15. Is the sibling projection dimension rule mathematically justified?
@@ -169,6 +186,13 @@ The current concrete open questions are:
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the oracle,
   gate-path, sibling-inflation, fixed-subspace null, local edge-selection null,
   and root Tree-BH selection diagnostics.
+- `wiki/analyses/local-marchenko-pastur-rule.md` records the MP dimension-rule
+  audit, including backend eigenvalue scale, finite-sample null probes,
+  internal-row effects, and enhancement options.
+- `wiki/analyses/dimensional-gaussian-representation-diagnostic.md` records
+  the continuous-versus-median-binary dimensional Gaussian benchmark result and
+  separates consolidated representation gain from diffuse hierarchy
+  unrecoverability.
 - `wiki/analyses/manuscript-life-science-readiness.md` records the open
   biological application choice.
 - `benchmarks/validation/method_constants_manifest.py` enumerates the active
@@ -178,6 +202,8 @@ The current concrete open questions are:
 
 - [[kl-te-method]]
 - [[projected-wald-statistic]]
+- [[local-marchenko-pastur-rule]]
+- [[dimensional-gaussian-representation-diagnostic]]
 - [[oracle-gate-path-diagnostic]]
 - [[top-down-traversal]]
 - [[manuscript-life-science-readiness]]

@@ -21,14 +21,14 @@ from _bootstrap import ensure_repo_root_on_path
 
 repo_root = ensure_repo_root_on_path(__file__)
 
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
-from benchmarks.diagnostics.oracle.oracle_tree_recoverability import FAILURE_CLASS_GATE_UNDER_SPLIT
 from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null import (
     SelectionConditionedSiblingNullContext,
     simulate_local_edge_selection_conditioned_null,
 )
+from benchmarks.diagnostics.oracle.oracle_tree_recoverability import FAILURE_CLASS_GATE_UNDER_SPLIT
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
+from benchmarks.shared.kl_tree_context import build_kl_tree_context
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
@@ -238,7 +238,7 @@ def _diagnose_case(
             "the binary root sibling group."
         )
 
-    edge_k = int(spectral_context.spectral_projection_dimensions_by_node[root])
+    edge_k = int(spectral_context.test_projection_dimensions_by_node[root])
     diagnostic_context = SelectionConditionedSiblingNullContext(
         case_id=str(context.metadata["name"]),
         parent=target.parent,

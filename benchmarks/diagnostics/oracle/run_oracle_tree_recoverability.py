@@ -21,13 +21,13 @@ from _bootstrap import ensure_repo_root_on_path
 
 repo_root = ensure_repo_root_on_path(__file__)
 
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
 from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     classify_tree_recoverability_failure,
     oracle_subtree_cut,
 )
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
+from benchmarks.shared.kl_tree_context import build_kl_tree_context
 
 _THREAD_ENV_VARS = (
     "OMP_NUM_THREADS",

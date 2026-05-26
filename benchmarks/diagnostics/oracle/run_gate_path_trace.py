@@ -21,20 +21,20 @@ from _bootstrap import ensure_repo_root_on_path
 
 repo_root = ensure_repo_root_on_path(__file__)
 
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
 from benchmarks.diagnostics.oracle.gate_path_trace import (
     build_gate_path_trace_dataframe,
     collect_sibling_inflation_trace,
     summarize_gate_path_trace,
 )
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
 from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     FAILURE_CLASS_GATE_OVER_SPLIT,
     FAILURE_CLASS_GATE_UNDER_SPLIT,
     FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE,
     oracle_subtree_cut,
 )
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
+from benchmarks.shared.kl_tree_context import build_kl_tree_context
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,

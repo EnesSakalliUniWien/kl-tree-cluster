@@ -1,0 +1,99 @@
+case_name,case_category,variant,include_internal_rows,threshold_policy,minimum_projection_dimension,status,error,true_clusters,found_clusters,ari,median_test_projection_dimension,median_raw_mp_signal_count,raw_zero_fraction,median_effective_independent_rows,median_mp_threshold_rows
+gauss_clear_small,improved_gaussian,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,3,,,,,,,
+gauss_clear_small,improved_gaussian,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,3,,,,,,,
+gauss_clear_small,improved_gaussian,internal_leaf_floor1,True,leaf,1,ok,,3,5.0,0.7076733182472742,1.0,0.0,0.9285714285714286,3.0,3.0
+gauss_clear_small,improved_gaussian,leaf_only_floor1,False,leaf,1,ok,,3,5.0,0.7076733182472742,1.0,0.0,0.9285714285714286,3.0,3.0
+gauss_clear_small,improved_gaussian,internal_leaf_floor2,True,leaf,2,ok,,3,3.0,1.0,2.0,0.0,0.9285714285714286,3.0,3.0
+gauss_clear_small,improved_gaussian,leaf_only_floor2,False,leaf,2,ok,,3,3.0,1.0,2.0,0.0,0.9285714285714286,3.0,3.0
+gauss_clear_small,improved_gaussian,internal_augmented_floor2,True,augmented,2,ok,,3,3.0,1.0,2.0,0.0,0.8571428571428571,3.0,4.0
+gauss_clear_large,improved_gaussian,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,5,,,,,,,
+gauss_clear_large,improved_gaussian,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,5,,,,,,,
+gauss_clear_large,improved_gaussian,internal_leaf_floor1,True,leaf,1,ok,,5,5.0,1.0,1.0,0.0,0.9494949494949495,3.0,3.0
+gauss_clear_large,improved_gaussian,leaf_only_floor1,False,leaf,1,ok,,5,5.0,1.0,1.0,0.0,0.9191919191919192,3.0,3.0
+gauss_clear_large,improved_gaussian,internal_leaf_floor2,True,leaf,2,ok,,5,5.0,1.0,2.0,0.0,0.9494949494949495,3.0,3.0
+gauss_clear_large,improved_gaussian,leaf_only_floor2,False,leaf,2,ok,,5,5.0,1.0,2.0,0.0,0.9191919191919192,3.0,3.0
+gauss_clear_large,improved_gaussian,internal_augmented_floor2,True,augmented,2,ok,,5,5.0,1.0,2.0,0.0,0.7373737373737373,3.0,4.0
+gauss_moderate_3c,improved_gaussian,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,3,,,,,,,
+gauss_moderate_3c,improved_gaussian,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,3,,,,,,,
+gauss_moderate_3c,improved_gaussian,internal_leaf_floor1,True,leaf,1,ok,,3,3.0,1.0,1.0,0.0,0.9534883720930233,4.0,4.0
+gauss_moderate_3c,improved_gaussian,leaf_only_floor1,False,leaf,1,ok,,3,3.0,1.0,1.0,0.0,0.9534883720930233,4.0,4.0
+gauss_moderate_3c,improved_gaussian,internal_leaf_floor2,True,leaf,2,ok,,3,3.0,1.0,2.0,0.0,0.9534883720930233,4.0,4.0
+gauss_moderate_3c,improved_gaussian,leaf_only_floor2,False,leaf,2,ok,,3,3.0,1.0,2.0,0.0,0.9534883720930233,4.0,4.0
+gauss_moderate_3c,improved_gaussian,internal_augmented_floor2,True,augmented,2,ok,,3,3.0,1.0,2.0,0.0,0.7674418604651163,4.0,6.0
+sparse_features_72x72,binary_sparse_features,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+sparse_features_72x72,binary_sparse_features,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+sparse_features_72x72,binary_sparse_features,internal_leaf_floor1,True,leaf,1,ok,,4,4.0,1.0,1.0,0.0,0.9436619718309859,7.0,7.0
+sparse_features_72x72,binary_sparse_features,leaf_only_floor1,False,leaf,1,ok,,4,4.0,1.0,1.0,0.0,0.9436619718309859,7.0,7.0
+sparse_features_72x72,binary_sparse_features,internal_leaf_floor2,True,leaf,2,ok,,4,4.0,1.0,2.0,0.0,0.9436619718309859,7.0,7.0
+sparse_features_72x72,binary_sparse_features,leaf_only_floor2,False,leaf,2,ok,,4,4.0,1.0,2.0,0.0,0.9436619718309859,7.0,7.0
+sparse_features_72x72,binary_sparse_features,internal_augmented_floor2,True,augmented,2,ok,,4,4.0,1.0,2.0,0.0,0.8873239436619719,7.0,12.0
+binary_perfect_4c,improved_binary_perfect,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+binary_perfect_4c,improved_binary_perfect,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+binary_perfect_4c,improved_binary_perfect,internal_leaf_floor1,True,leaf,1,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 6 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+binary_perfect_4c,improved_binary_perfect,leaf_only_floor1,False,leaf,1,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 6 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+binary_perfect_4c,improved_binary_perfect,internal_leaf_floor2,True,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 6 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+binary_perfect_4c,improved_binary_perfect,leaf_only_floor2,False,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 6 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+binary_perfect_4c,improved_binary_perfect,internal_augmented_floor2,True,augmented,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 6 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+binary_low_noise_4c,improved_binary_low_noise,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+binary_low_noise_4c,improved_binary_low_noise,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+binary_low_noise_4c,improved_binary_low_noise,internal_leaf_floor1,True,leaf,1,ok,,4,7.0,0.919692522072849,1.0,0.0,0.9493670886075949,10.0,10.0
+binary_low_noise_4c,improved_binary_low_noise,leaf_only_floor1,False,leaf,1,ok,,4,4.0,1.0,1.0,0.0,0.9493670886075949,10.0,10.0
+binary_low_noise_4c,improved_binary_low_noise,internal_leaf_floor2,True,leaf,2,ok,,4,4.0,1.0,2.0,0.0,0.9493670886075949,10.0,10.0
+binary_low_noise_4c,improved_binary_low_noise,leaf_only_floor2,False,leaf,2,ok,,4,4.0,1.0,2.0,0.0,0.9493670886075949,10.0,10.0
+binary_low_noise_4c,improved_binary_low_noise,internal_augmented_floor2,True,augmented,2,ok,,4,4.0,1.0,2.0,0.0,0.8987341772151899,10.0,18.0
+binary_moderate_6c,improved_binary_moderate,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,6,,,,,,,
+binary_moderate_6c,improved_binary_moderate,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,6,,,,,,,
+binary_moderate_6c,improved_binary_moderate,internal_leaf_floor1,True,leaf,1,ok,,6,6.0,1.0,1.0,0.0,0.6470588235294118,5.0,5.0
+binary_moderate_6c,improved_binary_moderate,leaf_only_floor1,False,leaf,1,ok,,6,6.0,1.0,1.0,1.0,0.46218487394957986,5.0,5.0
+binary_moderate_6c,improved_binary_moderate,internal_leaf_floor2,True,leaf,2,ok,,6,6.0,1.0,2.0,0.0,0.6470588235294118,5.0,5.0
+binary_moderate_6c,improved_binary_moderate,leaf_only_floor2,False,leaf,2,ok,,6,6.0,1.0,2.0,1.0,0.46218487394957986,5.0,5.0
+binary_moderate_6c,improved_binary_moderate,internal_augmented_floor2,True,augmented,2,ok,,6,6.0,1.0,2.0,1.0,0.05042016806722689,5.0,8.0
+binary_2clusters,improved_binary_edge_cases,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,2,,,,,,,
+binary_2clusters,improved_binary_edge_cases,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,2,,,,,,,
+binary_2clusters,improved_binary_edge_cases,internal_leaf_floor1,True,leaf,1,ok,,2,2.0,1.0,1.0,0.0,0.9591836734693877,6.0,6.0
+binary_2clusters,improved_binary_edge_cases,leaf_only_floor1,False,leaf,1,ok,,2,2.0,1.0,1.0,0.0,0.9387755102040817,6.0,6.0
+binary_2clusters,improved_binary_edge_cases,internal_leaf_floor2,True,leaf,2,ok,,2,2.0,1.0,2.0,0.0,0.9591836734693877,6.0,6.0
+binary_2clusters,improved_binary_edge_cases,leaf_only_floor2,False,leaf,2,ok,,2,3.0,0.9607686148919136,2.0,0.0,0.9387755102040817,6.0,6.0
+binary_2clusters,improved_binary_edge_cases,internal_augmented_floor2,True,augmented,2,ok,,2,2.0,1.0,2.0,0.0,0.8367346938775511,6.0,10.0
+binary_many_features,improved_binary_edge_cases,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+binary_many_features,improved_binary_edge_cases,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+binary_many_features,improved_binary_edge_cases,internal_leaf_floor1,True,leaf,1,ok,,4,4.0,1.0,1.0,0.0,0.5151515151515151,12.0,12.0
+binary_many_features,improved_binary_edge_cases,leaf_only_floor1,False,leaf,1,ok,,4,4.0,1.0,1.0,1.0,0.1717171717171717,12.0,12.0
+binary_many_features,improved_binary_edge_cases,internal_leaf_floor2,True,leaf,2,ok,,4,4.0,1.0,2.0,0.0,0.5151515151515151,12.0,12.0
+binary_many_features,improved_binary_edge_cases,leaf_only_floor2,False,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 99 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+binary_many_features,improved_binary_edge_cases,internal_augmented_floor2,True,augmented,2,ok,,4,4.0,1.0,3.0,3.0,0.0,12.0,22.0
+sbm_clear_small,sbm_graphs,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+sbm_clear_small,sbm_graphs,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+sbm_clear_small,sbm_graphs,internal_leaf_floor1,True,leaf,1,ok,,0,2.0,0.9333154537269401,1.0,0.0,0.9661016949152542,3.0,3.0
+sbm_clear_small,sbm_graphs,leaf_only_floor1,False,leaf,1,ok,,0,2.0,0.9333154537269401,1.0,0.0,0.9491525423728814,3.0,3.0
+sbm_clear_small,sbm_graphs,internal_leaf_floor2,True,leaf,2,ok,,0,2.0,0.9333154537269401,2.0,0.0,0.9661016949152542,3.0,3.0
+sbm_clear_small,sbm_graphs,leaf_only_floor2,False,leaf,2,ok,,0,2.0,0.9333154537269401,2.0,0.0,0.9491525423728814,3.0,3.0
+sbm_clear_small,sbm_graphs,internal_augmented_floor2,True,augmented,2,ok,,0,2.0,0.9333154537269401,2.0,0.0,0.9661016949152542,3.0,4.0
+cat_clear_3cat_4c,categorical_clear,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+cat_clear_3cat_4c,categorical_clear,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+cat_clear_3cat_4c,categorical_clear,internal_leaf_floor1,True,leaf,1,ok,,4,3.0,0.7079646017699115,1.0,0.0,0.9494949494949495,3.0,3.0
+cat_clear_3cat_4c,categorical_clear,leaf_only_floor1,False,leaf,1,ok,,4,3.0,0.7079646017699115,1.0,0.0,0.9494949494949495,3.0,3.0
+cat_clear_3cat_4c,categorical_clear,internal_leaf_floor2,True,leaf,2,ok,,4,3.0,0.7079646017699115,2.0,0.0,0.9494949494949495,3.0,3.0
+cat_clear_3cat_4c,categorical_clear,leaf_only_floor2,False,leaf,2,ok,,4,3.0,0.7079646017699115,2.0,0.0,0.9494949494949495,3.0,3.0
+cat_clear_3cat_4c,categorical_clear,internal_augmented_floor2,True,augmented,2,ok,,4,3.0,0.7079646017699115,2.0,0.0,0.6060606060606061,3.0,4.0
+overlap_heavy_4c_small_feat,overlapping_binary_heavy,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+overlap_heavy_4c_small_feat,overlapping_binary_heavy,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+overlap_heavy_4c_small_feat,overlapping_binary_heavy,internal_leaf_floor1,True,leaf,1,ok,,4,1.0,0.0,1.0,0.0,0.503006012024048,3.0,3.0
+overlap_heavy_4c_small_feat,overlapping_binary_heavy,leaf_only_floor1,False,leaf,1,ok,,4,1.0,0.0,1.0,1.0,0.4028056112224449,3.0,3.0
+overlap_heavy_4c_small_feat,overlapping_binary_heavy,internal_leaf_floor2,True,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 499 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+overlap_heavy_4c_small_feat,overlapping_binary_heavy,leaf_only_floor2,False,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 499 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+overlap_heavy_4c_small_feat,overlapping_binary_heavy,internal_augmented_floor2,True,augmented,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 499 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+overlap_mod_4c_small,overlapping_binary_moderate,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+overlap_mod_4c_small,overlapping_binary_moderate,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+overlap_mod_4c_small,overlapping_binary_moderate,internal_leaf_floor1,True,leaf,1,ok,,4,4.0,0.7848286798556895,1.0,0.0,0.581453634085213,3.0,3.0
+overlap_mod_4c_small,overlapping_binary_moderate,leaf_only_floor1,False,leaf,1,ok,,4,4.0,0.7848286798556895,1.0,1.0,0.39598997493734334,3.0,3.0
+overlap_mod_4c_small,overlapping_binary_moderate,internal_leaf_floor2,True,leaf,2,ok,,4,4.0,0.7848286798556895,2.0,0.0,0.581453634085213,3.0,3.0
+overlap_mod_4c_small,overlapping_binary_moderate,leaf_only_floor2,False,leaf,2,ok,,4,4.0,0.7848286798556895,2.0,1.0,0.39598997493734334,3.0,3.0
+overlap_mod_4c_small,overlapping_binary_moderate,internal_augmented_floor2,True,augmented,2,ok,,4,4.0,0.7848286798556895,2.0,1.0,0.042606516290726815,3.0,4.0
+gauss_overlap_3c_small,overlapping_gaussian,internal_leaf_floor0,True,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,3,,,,,,,
+gauss_overlap_3c_small,overlapping_gaussian,leaf_only_floor0,False,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,3,,,,,,,
+gauss_overlap_3c_small,overlapping_gaussian,internal_leaf_floor1,True,leaf,1,ok,,3,3.0,0.9702555619013858,1.0,0.0,0.9933110367892977,3.0,3.0
+gauss_overlap_3c_small,overlapping_gaussian,leaf_only_floor1,False,leaf,1,ok,,3,3.0,0.9702555619013858,1.0,0.0,0.979933110367893,3.0,3.0
+gauss_overlap_3c_small,overlapping_gaussian,internal_leaf_floor2,True,leaf,2,ok,,3,3.0,0.9702555619013858,2.0,0.0,0.9933110367892977,3.0,3.0
+gauss_overlap_3c_small,overlapping_gaussian,leaf_only_floor2,False,leaf,2,ok,,3,3.0,0.9702555619013858,2.0,0.0,0.979933110367893,3.0,3.0
+gauss_overlap_3c_small,overlapping_gaussian,internal_augmented_floor2,True,augmented,2,ok,,3,3.0,0.9702555619013858,2.0,0.0,0.8361204013377926,3.0,4.0

@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-05-24
+updated: 2026-05-26
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -67,6 +67,18 @@ renamed, or promoted.
 - [[oracle-gate-path-diagnostic]] - mathematical recoverability and gate-path
   analysis separating tree failures, sibling-calibration under-splits, direct
   sibling false splits, and pass-through fragmentation.
+- [[local-marchenko-pastur-rule]] - audit of the local MP dimension rule,
+  eigenvalue scale, finite-sample null behavior, internal spectral rows, and
+  enhancement options.
+- [[dimensional-gaussian-representation-diagnostic]] - why selected continuous
+  dimensional Gaussian cases improve consolidated signals but not diffuse
+  high-noise signals.
+- [[benchmark-pipeline-contract]] - active benchmark execution order and the
+  strict case-generation, distance, method-dispatch, and report-orchestration
+  contracts.
+- [[spectral-backend-runtime-diagnostic]] - runtime evidence showing that
+  null-whitened tangent matrix materialization, not SciPy eigendecomposition,
+  dominates the current slow spectral workloads.
 - [[manuscript-life-science-readiness]] - readiness check for turning the
   methods draft and biological feature matrices into a gap-marked or completed
   life-science application section.

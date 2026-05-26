@@ -4,7 +4,6 @@ import math
 
 import pandas as pd
 import pytest
-
 from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
     build_sibling_inflation_diagnostic_tables,
 )

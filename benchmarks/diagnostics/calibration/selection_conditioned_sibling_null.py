@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.stats import chi2
 
-
 CONTINUOUS_LOCAL_EDGE_SELECTION_SCOPE = (
     "continuous_fixed_projection_local_edge_selection"
 )

@@ -7,9 +7,6 @@ from dataclasses import dataclass
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.special import logsumexp
-from scipy.stats import chi2
-
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
     GateAnnotationBundle,
@@ -37,6 +34,8 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pro
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
+from scipy.special import logsumexp
+from scipy.stats import chi2
 
 
 @dataclass(frozen=True)
@@ -65,8 +64,6 @@ def collect_sibling_inflation_inputs(
 ) -> SiblingInflationInputs:
     """Collect sibling records and fit the runtime empirical-null model."""
     gate_two_result = gate_annotation_bundle.gate_two_result
-    if gate_two_result is None:
-        raise ValueError("Sibling inflation diagnostic requires gate_two_result.")
 
     projection_dimensions = derive_sibling_projection_dimensions_from_child_edge_comparisons(
         tree,
@@ -679,16 +676,16 @@ def _summary_rows(targets: pd.DataFrame) -> pd.DataFrame:
                 ),
                 "n_fdr_crosses_alpha": int(group["fdr_crosses_alpha"].sum()),
                 "n_leave_one_out_blocks": int(
-                    (group["leave_one_out_blocks_at_alpha"] == True).sum()
+                    group["leave_one_out_blocks_at_alpha"].eq(True).sum()
                 ),
                 "n_strict_null_like_blocks": int(
-                    (group["strict_null_like_blocks_at_alpha"] == True).sum()
+                    group["strict_null_like_blocks_at_alpha"].eq(True).sum()
                 ),
                 "n_strict_null_like_unavailable": int(
                     (group["strict_null_like_status"] != "ok").sum()
                 ),
                 "n_edge_blocked_or_null_like_blocks": int(
-                    (group["edge_blocked_or_null_like_blocks_at_alpha"] == True).sum()
+                    group["edge_blocked_or_null_like_blocks_at_alpha"].eq(True).sum()
                 ),
                 "n_edge_blocked_or_null_like_unavailable": int(
                     (group["edge_blocked_or_null_like_status"] != "ok").sum()

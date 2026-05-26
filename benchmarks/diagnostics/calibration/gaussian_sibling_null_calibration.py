@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2
 
-
 CONTINUOUS_FIXED_SUBSPACE_SCOPE = "continuous_identity_gaussian_fixed_subspace"
 NONCONTINUOUS_Z_PROXY_SCOPE = "standardized_z_gaussian_proxy_not_feature_null"
 

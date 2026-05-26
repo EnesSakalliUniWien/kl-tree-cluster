@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-05-25
+updated: 2026-05-26
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -110,6 +110,95 @@ verification, and maintenance events here in chronological order.
   calibration hierarchy, external conditional nulls, projected-Wald/PCA
   assumptions, feature-space covariance, sibling FDR, traversal, recoverability,
   and manuscript-evidence questions.
+- Added [[local-marchenko-pastur-rule]] and a raw controlled-spectrum evidence
+  note for the MP dimension-rule audit. The analysis records that the
+  production MP edge is algebraically correct for the backend eigenvalue scale,
+  but the finite-sample edge, minimum dimension floor, internal spectral rows,
+  and unit-scale whitening assumption still need validation before being
+  treated as calibrated defaults.
+- Split the MP dimension contract in code: raw MP signal count, projected-Wald
+  test dimension, effective independent row count, and MP threshold row count
+  are now separate typed outputs. The spectral worker records descendant leaf
+  count separately from the current augmented-row MP threshold when internal
+  distributions are stacked for PCA directions. Added
+  `compare_mp_dimension_contracts.py` plus subset and finite-null smoke CSV
+  evidence under `raw/assets/mp-dimension-rule-analysis/`.
+
+### 2026-05-26
+
+- Ran a targeted MP threshold-policy smoke on high-cardinality categorical,
+  dimensional Gaussian, high-dimensional binary, and heavy-overlap binary
+  cases. The tested finite-null threshold is not a drop-in production
+  replacement: it matched the current rule on `binary_many_features`, worsened
+  `cat_highcard_20cat_4c`, and under-split dimensional Gaussian cases. Updated
+  [[local-marchenko-pastur-rule]] and [[open-mathematical-questions]] to keep
+  selection-aware MP calibration as an open research question rather than a
+  production fallback.
+- Added benchmark case-suite selection by mathematical input contract. The
+  full runner now accepts `KL_TE_CASE_SUITE` with `binary`, `categorical`,
+  `continuous`, `discretized_gaussian`, `graph`, or `full`, so native Bernoulli
+  results can be interpreted separately from experimental continuous
+  empirical-Gaussian results and historical discretized-Gaussian stress cases.
+- Systematized generated benchmark metadata: every generated case now names a
+  `source_family` and a `feature_representation`, and generator dispatch uses a
+  single registry instead of a long conditional chain. This separates the
+  stochastic source process from the matrix representation consumed by KL-TE;
+  benchmark result rows preserve both fields.
+- Split benchmark case-data generation by family while preserving
+  `generate_case_data()` as the stable dispatch entry point. The continuous
+  suite now contains 9 selected representation-forwarding examples, not one
+  continuous clone per historical Gaussian stress case; the full suite now
+  resolves to 110 cases.
+- Added [[dimensional-gaussian-representation-diagnostic]] after the full
+  benchmark showed that continuous representation improves consolidated
+  dimensional Gaussian cases but not the diffuse case. The analysis records
+  that consolidated continuous trees are recoverable because Euclidean distance
+  preserves a large block-mean signal, while diffuse continuous trees remain
+  unrecoverable because weak spread-out signal is dominated by noise dimensions.
+- Added [[benchmark-pipeline-contract]] and tightened benchmark docs around the
+  active execution order: full runner orchestration, optional subprocess
+  isolation, shared one-case pipeline, generated-data validation, method
+  dispatch, result-row construction, and report assembly. The page also records
+  the strict precomputed KL tree-distance contract.
+- Moved standalone benchmark experiments under `benchmarks/experiments/`, moved
+  the subset and regression runners under `benchmarks/smoke/` and
+  `benchmarks/regression/`, split active MP diagnostics into
+  `benchmarks/diagnostics/spectral/`, and removed unused ad hoc diagnostics for
+  old MP-switch, passthrough, and alpha-sweep investigations.
+- Moved phylogenetic benchmark cases into `benchmarks/shared/cases/`, edge
+  calibration diagnostics into `benchmarks/diagnostics/calibration/`, and the
+  method-constant manifest into `benchmarks/validation/manifests/` so the
+  benchmark root exposes only active domains.
+- Added [[spectral-backend-runtime-diagnostic]] and
+  `benchmarks/diagnostics/spectral/profile_spectral_backends.py`. The
+  representative profile shows that spectral runtime is dominated by
+  null-whitened tangent matrix materialization, not SciPy eigendecomposition;
+  exact diagonal vectorization matched current matrices and was about
+  \(194\times\) to \(654\times\) faster on Bernoulli/continuous diagonal
+  feature spaces.
+- Installed `ruff` as a project development dependency and into the active
+  Python environment so both `ruff` and `python -m ruff` use an explicit
+  dependency. Ran a broader 18-additional-case spectral backend profile,
+  confirming the same materialization bottleneck in Gaussian, binary,
+  continuous, outlier, SBM, categorical, phylogenetic, overlap, and quantile
+  one-hot cases. The remaining non-diagonal speed target is grouped
+  multinomial/simplex whitening for categorical and phylogenetic blocks.
+- Implemented exact vectorized diagonal null-whitening in
+  `contrast_covariance.py` for pure one-dimensional Bernoulli and continuous
+  empirical-Gaussian feature spaces. The repair preserves the same whitening
+  formulas while avoiding generic per-block Cholesky work and generic
+  per-block validation. Post-repair profiles reduced `binary_many_features`
+  from about 3.25 s to 0.11 s and `gauss_extreme_noise_highd_continuous` from
+  about 91.10 s to 1.05 s in the spectral worker. Updated
+  [[spectral-backend-runtime-diagnostic]] with the post-change evidence.
+- Implemented exact grouped multinomial null-whitening for pure categorical
+  and phylogenetic one-hot feature spaces in `contrast_covariance.py`. The
+  repair preserves the same drop-last simplex covariance map while batching
+  Cholesky/solve work by category count. A production A/B comparison matched
+  the generic block path exactly on selected categorical and phylogenetic
+  cases; post-repair profiles reduced `cat_highd_3cat_500feat` from about
+  14.86 s to 0.31 s, `phylo_dna_16taxa_low_mut` from about 21.83 s to 0.46 s,
+  and `phylo_large_32taxa` from about 27.32 s to 0.70 s in the spectral worker.
 
 ## Evidence
 

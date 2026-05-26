@@ -21,14 +21,6 @@ from _bootstrap import ensure_repo_root_on_path
 
 repo_root = ensure_repo_root_on_path(__file__)
 
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.diagnostics.oracle.gate_path_trace import build_gate_path_trace_dataframe
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
-from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
-    FAILURE_CLASS_GATE_UNDER_SPLIT,
-    oracle_subtree_cut,
-)
 from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null import (
     CONTINUOUS_LOCAL_EDGE_SELECTION_SCOPE,
     NONCONTINUOUS_LOCAL_EDGE_Z_PROXY_SCOPE,
@@ -39,6 +31,14 @@ from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
     build_sibling_inflation_diagnostic_tables,
     collect_sibling_inflation_inputs,
 )
+from benchmarks.diagnostics.oracle.gate_path_trace import build_gate_path_trace_dataframe
+from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
+    FAILURE_CLASS_GATE_UNDER_SPLIT,
+    oracle_subtree_cut,
+)
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
+from benchmarks.shared.kl_tree_context import build_kl_tree_context
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
@@ -312,8 +312,6 @@ def _diagnose_case(
         feature_space=context.feature_space,
     )
     gate_two_result = gate_annotation_bundle.gate_two_result
-    if gate_two_result is None:
-        raise ValueError("Selection-conditioned diagnostic requires gate_two_result.")
 
     decomposer = TreeDecomposition(
         tree=context.tree,
@@ -373,14 +371,14 @@ def _diagnose_case(
     targets = _select_target_rows(tables.targets, target_mode=target_mode)
 
     spectral_dimensions = (
-        gate_two_result.spectral_context.spectral_projection_dimensions_by_node
+        gate_two_result.spectral_context.test_projection_dimensions_by_node
     )
     result_rows: list[dict[str, object]] = []
     for row_index, (_target_index, row) in enumerate(targets.iterrows(), start=1):
         parent = row["parent"]
         if parent not in spectral_dimensions:
             raise ValueError(
-                f"Missing Gate 2 spectral dimension for target parent {parent!r}."
+                f"Missing Gate 2 test projection dimension for target parent {parent!r}."
             )
         diagnostic_context = _target_context(
             context=context,
