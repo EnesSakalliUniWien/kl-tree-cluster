@@ -16,7 +16,6 @@ from benchmarks.shared.types import MethodSpec
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 from scipy.spatial.distance import pdist
 
-
 KL_TREE_DISTANCE_SOURCE_KEY = "tree_distance_source"
 KL_TREE_DISTANCE_SOURCE_FEATURE_METRIC = "feature_metric"
 KL_TREE_DISTANCE_SOURCE_PRECOMPUTED = "precomputed"
@@ -93,6 +92,8 @@ def _build_method_failure_row(
         test_case=case_idx,
         case_id=case_name,
         case_category=meta["category"],
+        source_family=meta["source_family"],
+        feature_representation=meta["feature_representation"],
         method=method_id,
         run_params=recorded_run_params,
         true_clusters=int(meta["n_clusters"]),
@@ -135,7 +136,6 @@ def run_single_method_once(
     meta: dict[str, object],
     distance_matrix: np.ndarray | None,
     distance_condensed: np.ndarray | None,
-    precomputed_distance_condensed: object,
     matrix_audit: bool,
 ) -> tuple[BenchmarkResultRow, ComputedResultRecord | None, tuple[str, dict[str, object]] | None]:
     """Execute one method+params run and return typed outputs."""
@@ -157,20 +157,6 @@ def run_single_method_once(
                 raise ValueError(
                     f"Case '{meta['name']}' requires "
                     "'precomputed_distance_condensed' for KL but it is missing."
-                )
-            distance_condensed_for_run = distance_condensed
-            recorded_run_params["tree_distance_metric"] = _require_precomputed_kl_distance_metric(
-                meta=meta,
-                case_name=str(meta["name"]),
-            )
-            recorded_run_params[KL_TREE_DISTANCE_SOURCE_KEY] = (
-                KL_TREE_DISTANCE_SOURCE_PRECOMPUTED
-            )
-        elif precomputed_distance_condensed is not None:
-            if distance_condensed is None:
-                raise ValueError(
-                    f"Case '{meta['name']}' provides "
-                    "'precomputed_distance_condensed' but it was not loaded."
                 )
             distance_condensed_for_run = distance_condensed
             recorded_run_params["tree_distance_metric"] = _require_precomputed_kl_distance_metric(
@@ -254,6 +240,8 @@ def run_single_method_once(
         test_case=case_idx,
         case_id=case_name,
         case_category=meta["category"],
+        source_family=meta["source_family"],
+        feature_representation=meta["feature_representation"],
         method=method_id,
         run_params=recorded_run_params,
         true_clusters=true_clusters,

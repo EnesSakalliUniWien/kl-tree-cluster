@@ -103,8 +103,8 @@ Notebook-only Python helpers were removed from `notebooks/`.
 Examples:
 
 - `quick_start.py`
-- `benchmarks/run_subset.py`
-- `benchmarks/run_regression_gate.py`
+- `benchmarks/smoke/run_subset.py`
+- `benchmarks/regression/run_gate.py`
 - `scripts/analysis/run_feature_matrix_with_umap.py`
 - `scripts/analysis/analyze_hc_clusters.py`
 - `scripts/analysis/assess_method_correctness.py`

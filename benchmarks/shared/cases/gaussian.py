@@ -8,6 +8,8 @@ difficulty strategy.  The extreme_noise cases are stress tests where signal
 is deliberately buried in noise.
 """
 
+from benchmarks.shared.cases.representations import representation_variants_by_name
+
 GAUSSIAN_CASES = {
     "gaussian_extreme_noise": [
         {
@@ -130,24 +132,26 @@ GAUSSIAN_CASES = {
 }
 
 
-def _continuous_gaussian_variant(case: dict) -> dict:
-    """Return the continuous-coordinate A/B companion for a median-binary case."""
-    variant = case.copy()
-    variant["name"] = f"{case['name']}_continuous"
-    variant["generator"] = "blobs_continuous"
-    variant["baseline_case_name"] = case["name"]
-    return variant
-
-
-GAUSSIAN_CASES["gaussian_extreme_noise_continuous"] = [
-    _continuous_gaussian_variant(case)
-    for case in GAUSSIAN_CASES["gaussian_extreme_noise"]
-]
-GAUSSIAN_CASES["improved_gaussian_continuous"] = [
-    _continuous_gaussian_variant(case)
-    for case in GAUSSIAN_CASES["improved_gaussian"]
-]
-GAUSSIAN_CASES["gaussian_null_continuous"] = [
-    _continuous_gaussian_variant(case)
-    for case in GAUSSIAN_CASES["gaussian_null"]
+GAUSSIAN_CASES["continuous_gaussian_examples"] = [
+    *representation_variants_by_name(
+        GAUSSIAN_CASES["improved_gaussian"],
+        selected_names=("gauss_clear_medium", "gauss_moderate_3c"),
+        generator="blobs_continuous",
+        name_suffix="_continuous",
+        representation_role="continuous_example",
+    ),
+    *representation_variants_by_name(
+        GAUSSIAN_CASES["gaussian_null"],
+        selected_names=("gauss_null_large",),
+        generator="blobs_continuous",
+        name_suffix="_continuous",
+        representation_role="continuous_null_example",
+    ),
+    *representation_variants_by_name(
+        GAUSSIAN_CASES["gaussian_extreme_noise"],
+        selected_names=("gauss_extreme_noise_highd",),
+        generator="blobs_continuous",
+        name_suffix="_continuous",
+        representation_role="continuous_stress_example",
+    ),
 ]

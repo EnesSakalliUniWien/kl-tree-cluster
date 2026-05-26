@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
+import pandas as pd
 from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.feature_space import (
@@ -15,18 +18,22 @@ from scipy.spatial.distance import pdist, squareform
 DISTANCE_MATRIX_METHODS = {"leiden", "louvain", "dbscan", "optics", "hdbscan"}
 
 
+@dataclass(frozen=True)
+class PreparedCaseInputs:
+    """Generated benchmark inputs after matrix and distance-contract validation."""
+
+    data: pd.DataFrame
+    labels: np.ndarray
+    original_features: object
+    metadata: dict[str, object]
+    distance_condensed: np.ndarray | None
+    distance_matrix: np.ndarray | None
+
+
 def prepare_case_inputs(
     tc: dict[str, object],
     selected_methods: list[str],
-) -> tuple[
-    object,
-    object,
-    object,
-    dict[str, object],
-    np.ndarray | None,
-    np.ndarray | None,
-    object,
-]:
+) -> PreparedCaseInputs:
     """Generate case data and resolve shared distance representations."""
     data_t, y_t, x_original, meta = generate_case_data(tc)
     feature_space = meta.get("feature_space")
@@ -42,11 +49,23 @@ def prepare_case_inputs(
     needs_distance_matrix = any(
         method_id in DISTANCE_MATRIX_METHODS for method_id in selected_methods
     )
-    needs_distance_condensed = any(m.startswith("kl") for m in selected_methods) or needs_distance_matrix
+    needs_kl_tree_distance = any(
+        method_id in {"kl", "kl_complete", "kl_single"} for method_id in selected_methods
+    )
+    requires_precomputed_kl_distance = bool(meta["requires_precomputed_kl_distance"])
+    needs_distance_condensed = (
+        needs_distance_matrix or (needs_kl_tree_distance and requires_precomputed_kl_distance)
+    )
 
     distance_condensed = None
     distance_matrix = None
     precomputed_distance_condensed = meta["precomputed_distance_condensed"]
+    if needs_kl_tree_distance and requires_precomputed_kl_distance:
+        if precomputed_distance_condensed is None:
+            raise ValueError(
+                f"Case '{meta['name']}' requires precomputed KL tree distance but "
+                "metadata does not provide precomputed_distance_condensed."
+            )
     if precomputed_distance_condensed is not None and needs_distance_condensed:
         distance_condensed = np.asarray(precomputed_distance_condensed, dtype=float)
 
@@ -58,22 +77,21 @@ def prepare_case_inputs(
     if needs_distance_condensed and distance_condensed is None and distance_matrix is not None:
         distance_condensed = squareform(distance_matrix)
 
-    if needs_distance_condensed and distance_condensed is None:
+    if needs_distance_matrix and distance_condensed is None:
         distance_condensed = pdist(data_t.values, metric=config.TREE_DISTANCE_METRIC)
     if needs_distance_matrix and distance_matrix is None:
         if distance_condensed is None:
             distance_condensed = pdist(data_t.values, metric=config.TREE_DISTANCE_METRIC)
         distance_matrix = squareform(distance_condensed)
 
-    return (
-        data_t,
-        y_t,
-        x_original,
-        meta,
-        distance_condensed,
-        distance_matrix,
-        precomputed_distance_condensed,
+    return PreparedCaseInputs(
+        data=data_t,
+        labels=np.asarray(y_t),
+        original_features=x_original,
+        metadata=meta,
+        distance_condensed=distance_condensed,
+        distance_matrix=distance_matrix,
     )
 
 
-__all__ = ["prepare_case_inputs", "DISTANCE_MATRIX_METHODS"]
+__all__ = ["DISTANCE_MATRIX_METHODS", "PreparedCaseInputs", "prepare_case_inputs"]

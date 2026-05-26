@@ -6,15 +6,51 @@ Import `get_default_test_cases()` to get all cases, or import specific
 category modules for targeted testing.
 """
 
-from benchmarks.phylogenetic.cases import PHYLOGENETIC_CASES
-
 from .binary import BINARY_CASES
 from .categorical import CATEGORICAL_CASES
 from .dimensionality import DIMENSIONALITY_CASES
 from .gaussian import GAUSSIAN_CASES
 from .outliers import OUTLIER_CASES
 from .overlapping import OVERLAPPING_CASES
+from .phylogenetic import PHYLOGENETIC_CASES
 from .sbm import SBM_CASES
+
+BINARY_BENCHMARK_GENERATORS = frozenset({"binary"})
+DISCRETIZED_GAUSSIAN_BENCHMARK_GENERATORS = frozenset(
+    {
+        "blobs",
+        "blobs_quantile",
+        "dimensional_gaussian",
+        "gaussian_outliers",
+    }
+)
+CONTINUOUS_BENCHMARK_GENERATORS = frozenset(
+    {
+        "blobs_continuous",
+        "dimensional_gaussian_continuous",
+        "gaussian_outliers_continuous",
+    }
+)
+CATEGORICAL_BENCHMARK_GENERATORS = frozenset(
+    {
+        "categorical",
+        "blobs_quantile",
+        "phylogenetic",
+        "temporal_evolution",
+    }
+)
+GRAPH_BENCHMARK_GENERATORS = frozenset({"sbm"})
+
+BENCHMARK_CASE_SUITES = frozenset(
+    {
+        "full",
+        "binary",
+        "categorical",
+        "continuous",
+        "discretized_gaussian",
+        "graph",
+    }
+)
 
 # Small test cases for quick smoke tests
 SMALL_TEST_CASES = [
@@ -116,3 +152,36 @@ def get_test_cases_by_category(category: str) -> list[dict]:
 def list_categories() -> list[str]:
     """List all available test case categories."""
     return list(ALL_CASE_CATEGORIES.keys())
+
+
+def get_test_cases_by_suite(suite: str) -> list[dict]:
+    """Return benchmark cases for a mathematical input-contract suite."""
+    normalized_suite = str(suite).strip().lower()
+    if normalized_suite not in BENCHMARK_CASE_SUITES:
+        raise ValueError(
+            f"Unknown benchmark suite: {suite!r}. "
+            f"Available: {sorted(BENCHMARK_CASE_SUITES)}"
+        )
+
+    all_cases = get_default_test_cases()
+    if normalized_suite == "full":
+        return all_cases
+
+    if normalized_suite == "binary":
+        allowed_generators = BINARY_BENCHMARK_GENERATORS
+    elif normalized_suite == "categorical":
+        allowed_generators = CATEGORICAL_BENCHMARK_GENERATORS
+    elif normalized_suite == "continuous":
+        allowed_generators = CONTINUOUS_BENCHMARK_GENERATORS
+    elif normalized_suite == "discretized_gaussian":
+        allowed_generators = DISCRETIZED_GAUSSIAN_BENCHMARK_GENERATORS
+    elif normalized_suite == "graph":
+        allowed_generators = GRAPH_BENCHMARK_GENERATORS
+    else:
+        raise AssertionError(f"Unhandled benchmark suite: {normalized_suite!r}")
+
+    return [
+        case
+        for case in all_cases
+        if str(case["generator"]) in allowed_generators
+    ]

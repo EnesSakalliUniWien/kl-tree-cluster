@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from benchmarks.branch_length.logic import run_branch_length_benchmark
-from benchmarks.multi_split.run import run_multi_split_benchmark
+from benchmarks.experiments.branch_length.logic import run_branch_length_benchmark
+from benchmarks.experiments.multi_split.run import run_multi_split_benchmark
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodSpec

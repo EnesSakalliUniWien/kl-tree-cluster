@@ -5,13 +5,14 @@ from __future__ import annotations
 from typing import Iterable
 
 import pandas as pd
-
 from benchmarks.shared.result_records.models import BenchmarkResultRow
 
 RESULT_COLUMNS = [
     "test_case",
     "case_id",
     "case_category",
+    "source_family",
+    "feature_representation",
     "method",
     "params",
     "true_clusters",
@@ -46,6 +47,8 @@ def benchmark_rows_to_dataframe(rows: Iterable[BenchmarkResultRow]) -> pd.DataFr
             "test_case": row.test_case,
             "case_id": row.case_id,
             "case_category": row.case_category,
+            "source_family": row.source_family,
+            "feature_representation": row.feature_representation,
             "method": row.method,
             "params": row.params_display,
             "true_clusters": row.true_clusters,

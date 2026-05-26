@@ -1,0 +1,1 @@
+"""Fast benchmark regression gates."""

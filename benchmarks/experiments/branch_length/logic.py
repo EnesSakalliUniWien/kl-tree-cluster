@@ -14,20 +14,20 @@ The setup:
 
 from __future__ import annotations
 
+from typing import Any, Dict, List, Optional, Tuple
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from typing import Dict, List, Optional, Tuple, Any
+from benchmarks.shared.evolution import (
+    compute_expected_divergence,
+    evolve_sequence,
+    generate_ancestral_sequence,
+)
+from benchmarks.shared.runners.dispatch import run_clustering_result
+from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.preprocessing import StandardScaler
-
-from benchmarks.shared.runners.method_registry import METHOD_SPECS
-from benchmarks.shared.runners.dispatch import run_clustering_result
-from benchmarks.shared.evolution import (
-    generate_ancestral_sequence,
-    evolve_sequence,
-    compute_expected_divergence,
-)
 
 
 def generate_two_group_data(
@@ -426,7 +426,7 @@ def plot_embedding_by_branch_length(
             run_result = run_clustering_result(
                 data_df,
                 "kl",
-                {},
+                METHOD_SPECS["kl"].param_grid[0],
                 random_seed,
             )
             pred_labels = run_result.labels

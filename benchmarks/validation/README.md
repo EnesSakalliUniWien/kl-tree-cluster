@@ -31,14 +31,14 @@ Create a manifest skeleton:
 ```bash
 python -m benchmarks.validation.method_constants_manifest create \
   benchmarks/results/04_generic_benchmark_runs/run_20260325_134017Z \
-  --output benchmarks/manuscript_results/method_constant_validation_manifest.json
+  --output benchmarks/validation/manifests/method_constant_validation_manifest.json
 ```
 
 Validate a manifest:
 
 ```bash
 python -m benchmarks.validation.method_constants_manifest validate \
-  benchmarks/manuscript_results/method_constant_validation_manifest.json
+  benchmarks/validation/manifests/method_constant_validation_manifest.json
 ```
 
 List constants:

@@ -474,7 +474,7 @@ def _build_parser() -> argparse.ArgumentParser:
     create_parser.add_argument(
         "-o",
         "--output",
-        default="benchmarks/manuscript_results/method_constant_validation_manifest.json",
+        default="benchmarks/validation/manifests/method_constant_validation_manifest.json",
         help="Manifest JSON path to write.",
     )
     create_parser.add_argument(

@@ -73,7 +73,7 @@ def benchmark_cluster_algorithm(
     verbose : bool, default=True
         If True, prints progress and displays validation results
     plot_umap : bool, default=False
-        If True, generates t-SNE plots comparing KL clustering with K-means and spectral clustering
+        If True, generates UMAP plots comparing enabled benchmark methods.
     plot_manifold : bool, default=False
         If True, saves UMAP-vs-Isomap manifold diagnostics for each test case
 
@@ -162,7 +162,6 @@ def benchmark_cluster_algorithm(
                 tc["test_case_num"] = i
             case_result_rows, case_computed_results = run_single_case(
                 tc=tc,
-                case_position=i,
                 total_cases=total_cases,
                 selected_methods=selected_methods,
                 param_sets=param_sets,

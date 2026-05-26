@@ -19,9 +19,9 @@ This is useful for testing:
 
 from __future__ import annotations
 
-import numpy as np
-from typing import Dict, Tuple, Optional, List
+from typing import Dict, List, Optional, Tuple
 
+import numpy as np
 from benchmarks.shared.evolution import (
     compute_js_divergence_per_feature,
     generate_dirichlet_distributions,

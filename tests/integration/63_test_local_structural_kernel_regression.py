@@ -2,30 +2,30 @@ from __future__ import annotations
 
 import pytest
 from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.kl_tree_context import build_kl_tree_context
 from benchmarks.shared.runners.kl_runner import _run_kl_method
-from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from kl_clustering_analysis import config
 
 
 @pytest.mark.slow
 def test_strict_sibling_calibration_rejects_gauss_null_large_without_support() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "gauss_null_large")
-    data_t, _, _, _, distance_condensed, _, _ = prepare_case_inputs(case, ["kl"])
+    context = build_kl_tree_context(case, populate_node_distributions=False)
 
     with pytest.raises(ValueError, match="selected non-null"):
-        _run_kl_method(data_t, distance_condensed, config.SIBLING_ALPHA)
+        _run_kl_method(context.data, context.distance_condensed, config.SIBLING_ALPHA)
 
 
 @pytest.mark.slow
 def test_traversal_aligned_sibling_fdr_does_not_flat_penalize_cat_highcard_root() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c")
-    data_t, _, _, meta, distance_condensed, _, _ = prepare_case_inputs(case, ["kl"])
+    context = build_kl_tree_context(case, populate_node_distributions=False)
 
     result = _run_kl_method(
-        data_t,
-        distance_condensed,
+        context.data,
+        context.distance_condensed,
         config.SIBLING_ALPHA,
-        feature_space=meta["feature_space"],
+        feature_space=context.feature_space,
     )
 
     annotations = result.extra["annotations"]
@@ -41,8 +41,8 @@ def test_traversal_aligned_sibling_fdr_does_not_flat_penalize_cat_highcard_root(
 @pytest.mark.slow
 def test_strict_sibling_calibration_preserves_gauss_clear_small() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "gauss_clear_small")
-    data_t, _, _, _, distance_condensed, _, _ = prepare_case_inputs(case, ["kl"])
+    context = build_kl_tree_context(case, populate_node_distributions=False)
 
-    result = _run_kl_method(data_t, distance_condensed, config.SIBLING_ALPHA)
+    result = _run_kl_method(context.data, context.distance_condensed, config.SIBLING_ALPHA)
 
     assert result.found_clusters == 3

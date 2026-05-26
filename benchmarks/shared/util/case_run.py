@@ -19,7 +19,6 @@ from benchmarks.shared.util.method_execution import run_single_method_once
 def run_single_case(
     *,
     tc: dict[str, object],
-    case_position: int,
     total_cases: int,
     selected_methods: list[str],
     param_sets: dict[str, list[dict[str, object]]],
@@ -46,15 +45,7 @@ def run_single_case(
         os.environ["KL_TE_MATRIX_AUDIT_ROOT"] = str(audit_root_inc)
     try:
         # Generate and process data/distances.
-        (
-            data_t,
-            y_t,
-            x_original,
-            meta,
-            distance_condensed,
-            distance_matrix,
-            precomputed_distance_condensed,
-        ) = prepare_case_inputs(tc, selected_methods)
+        inputs = prepare_case_inputs(tc, selected_methods)
 
         method_audits: list[tuple[str, dict[str, object]]] = []
         case_result_rows: list[BenchmarkResultRow] = []
@@ -71,13 +62,12 @@ def run_single_case(
                     case_name=case_name,
                     tc_seed=tc["seed"],
                     significance_level=significance_level,
-                    data_t=data_t,
-                    y_t=y_t,
-                    x_original=x_original,
-                    meta=meta,
-                    distance_matrix=distance_matrix,
-                    distance_condensed=distance_condensed,
-                    precomputed_distance_condensed=precomputed_distance_condensed,
+                    data_t=inputs.data,
+                    y_t=inputs.labels,
+                    x_original=inputs.original_features,
+                    meta=inputs.metadata,
+                    distance_matrix=inputs.distance_matrix,
+                    distance_condensed=inputs.distance_condensed,
                     matrix_audit=matrix_audit,
                 )
                 case_result_rows.append(result_row)
@@ -91,12 +81,12 @@ def run_single_case(
             export_case_and_method_matrix_audits(
                 case_idx=case_idx,
                 case_name=case_name,
-                data_matrix=data_t.values,
-                y_true=y_t,
-                x_original=x_original,
-                distance_matrix=distance_matrix,
-                distance_condensed=distance_condensed,
-                meta=meta,
+                data_matrix=inputs.data.values,
+                y_true=inputs.labels,
+                x_original=inputs.original_features,
+                distance_matrix=inputs.distance_matrix,
+                distance_condensed=inputs.distance_condensed,
+                meta=inputs.metadata,
                 method_audits=method_audits,
                 output_root=audit_root_inc,
                 verbose=verbose,

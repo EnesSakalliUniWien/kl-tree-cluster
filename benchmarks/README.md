@@ -5,20 +5,28 @@ This directory contains the benchmark infrastructure for KL-TE clustering.
 ## Quick Start
 
 ```bash
-# Run full benchmark (currently 122 cases, 9 default methods)
+# Run full benchmark (currently 110 cases, 9 default methods)
 python benchmarks/full/run.py
 
+# Run a contract-specific case suite
+KL_TE_CASE_SUITE=binary python benchmarks/full/run.py
+KL_TE_CASE_SUITE=continuous python benchmarks/full/run.py
+KL_TE_CASE_SUITE=categorical python benchmarks/full/run.py
+
 # Run specific benchmark suites
-python benchmarks/branch_length/run.py
-python benchmarks/branch_length_3d/run.py
-python benchmarks/multi_split/run.py
+python benchmarks/experiments/branch_length/run.py
+python benchmarks/experiments/branch_length_3d/run.py
+python benchmarks/experiments/multi_split/run.py
 
 # Quick subset for fast iteration (~15 cases)
-python benchmarks/run_subset.py
+python benchmarks/smoke/run_subset.py
+
+# Fast regression gate
+python benchmarks/regression/run_gate.py
 
 # Real-world datasets (MNIST, Penguins, Digits)
-python benchmarks/mnist/run.py
-python benchmarks/umap_datasets/run.py
+python benchmarks/experiments/mnist/run.py
+python benchmarks/experiments/umap_datasets/run.py
 
 # Analyze benchmark-factor relationships for the latest run
 python benchmarks/diagnostics/analysis/analyze_relationships.py
@@ -35,6 +43,7 @@ Benchmark runners should import reusable infrastructure from
 The authoritative default benchmark definition lives in code:
 
 - Cases: `benchmarks.shared.cases.get_default_test_cases()`
+- Contract suites: `benchmarks.shared.cases.get_test_cases_by_suite()`
 - Default methods: `benchmarks.shared.config.DEFAULT_METHODS`
 
 Both `benchmarks/full/run.py` and
@@ -52,18 +61,28 @@ The `benchmarks/shared/` system provides:
 
 The `benchmarks/diagnostics/` system provides failure diagnosis, oracle
 recoverability, gate-path tracing, sibling-calibration diagnostics, and
-standalone benchmark-analysis tools in purpose-named subdirectories.
+standalone benchmark-analysis tools in purpose-named subdirectories. Standalone
+experiments that are not part of the canonical full-suite contract live under
+`benchmarks/experiments/`.
 
 ## Key Files
 
 | File                       | Purpose                                                         |
 | -------------------------- | --------------------------------------------------------------- |
 | `shared/cases/__init__.py` | All test case definitions (Gaussian, binary, SBM, phylogenetic) |
+| `shared/cases/geometry.py` | Canonical case-recipe shape and true-K helpers                  |
 | `shared/pipeline.py`       | `benchmark_cluster_algorithm()` shared execution pipeline       |
-| `full/run.py`              | Canonical full benchmark runner                                 |
+| `full/run.py`              | Canonical suite/report orchestrator                             |
+| `shared/util/case_inputs.py` | Matrix contract validation and shared distance preparation    |
+| `shared/util/method_execution.py` | One method+parameter run and result-row construction     |
 | `shared/runners/kl_runner.py` | KL-specific runner with SBM `distance_condensed` handling    |
 | `shared/metrics.py`        | ARI, NMI, Purity calculations                                   |
 | `shared/generators/`       | Data generators (phylogenetic, Gaussian, etc.)                  |
+| `smoke/run_subset.py`      | Small fast smoke runner                                         |
+| `regression/run_gate.py`   | Historically sensitive benchmark regression gate                |
+| `experiments/`             | Standalone branch-length, MNIST, UMAP, and multi-split studies  |
+| `diagnostics/`             | Oracle, calibration, spectral, failure, and post-run diagnostics |
+| `validation/`              | Method-constant validation manifests and checks                 |
 
 ## Running Benchmarks
 
@@ -83,8 +102,8 @@ cd benchmarks/full && python run.py  # Will fail on imports
 
 Results saved to timestamped directories under each benchmark's `results/` folder:
 ```
-benchmarks/results/run_YYYYMMDD_HHMMSSZ/
-├── full_benchmark_comparison.csv    # Main results
+benchmarks/results/run_YYYYMMDD_HHMMSSZ_<case_suite>/
+├── <case_suite>_benchmark_comparison.csv    # Main results
 ├── failure_report.md              # Failed cases analysis
 ├── benchmark_relationship_report.md   # Factor/method relationship summary
 ├── benchmark_relationship_*.csv       # Method/section summaries + modeled effects
@@ -101,13 +120,16 @@ benchmarks/results/run_YYYYMMDD_HHMMSSZ/
 **Purpose**: Canonical end-to-end benchmark — runs the complete default test
 case suite and compares the default benchmark methods.
 
-**Data generation**: The full suite uses
-`benchmarks.shared.cases.get_default_test_cases()`, which currently resolves to
-122 cases. Each case specifies a generator, sample count, feature count,
+**Data generation**: By default the runner uses the `full` suite from
+`benchmarks.shared.cases.get_test_cases_by_suite()`, which currently resolves to
+110 cases. Each case specifies a generator, sample count, feature count,
 cluster count, and noise level. The dispatcher (`generate_case_data`) routes to
 the appropriate generator, binarizes, one-hot-encodes, or keeps continuous
 coordinates under an explicit `FeatureSpace`, and feeds the resulting matrix to
-each clustering method.
+each clustering method. Generated metadata records both `source_family` and
+`feature_representation` so reports can distinguish, for example,
+Gaussian-source median-binary cases from Gaussian-source continuous cases. The
+benchmark CSV preserves both fields in every result row.
 
 **Experiment setup**:
 
@@ -118,15 +140,20 @@ each clustering method.
   available through `KL_TE_METHODS`, but they are not part of the canonical
   default benchmark unless explicitly requested.
 - Each case runs in an isolated subprocess (optional), with configurable timeout (default 1800 s) and retry count (default 4).
-- Per-case PDF plots (tree, UMAP embedding, manifold comparison) are generated and merged into `full_benchmark_report.pdf`.
+- Per-case PDF plots (tree, UMAP embedding, manifold comparison) are generated and merged into `<case_suite>_benchmark_report.pdf`.
+- Set `KL_TE_CASE_SUITE` to run one mathematical input-contract suite:
+  `binary`, `categorical`, `continuous`, `discretized_gaussian`, `graph`, or
+  `full`.
 
-**Evaluation**: ARI, NMI, Purity, Exact-K match. Results saved to `full_benchmark_comparison.csv` with a `failure_report.md` for cases that error or time out.
+**Evaluation**: ARI, NMI, Purity, Exact-K match. Results saved to
+`<case_suite>_benchmark_comparison.csv` with a `failure_report.md` for cases
+that error or time out.
 Relationship analysis is also generated by default: method/section summaries, effect tables, a markdown report, and a compact PDF that explains how metrics move with noise, sample size, feature count, and true cluster count.
 For a focused diagnosis of the current KL gap on categorical and overlapping families, see `benchmarks/diagnostics/analysis/categorical_overlapping_gap_diagnosis.md`.
 
 ---
 
-### 2. Branch Length ([branch_length/](branch_length/))
+### 2. Branch Length ([experiments/branch_length/](experiments/branch_length/))
 
 **Purpose**: Measures how clustering performance degrades as evolutionary divergence increases between two groups.
 
@@ -142,7 +169,7 @@ For a focused diagnosis of the current KL gap on categorical and overlapping fam
 
 ---
 
-### 3. Branch Length 3D ([branch_length_3d/](branch_length_3d/))
+### 3. Branch Length 3D ([experiments/branch_length_3d/](experiments/branch_length_3d/))
 
 **Purpose**: Extends the branch-length benchmark to a 2D parameter sweep — varies both evolutionary divergence and the number of features simultaneously to create a performance surface.
 
@@ -159,7 +186,7 @@ For a focused diagnosis of the current KL gap on categorical and overlapping fam
 
 ---
 
-### 4. Multi-Split ([multi_split/](multi_split/))
+### 4. Multi-Split ([experiments/multi_split/](experiments/multi_split/))
 
 **Purpose**: Tests the method's ability to recover the correct number of clusters (K) in a balanced star phylogeny.
 
@@ -176,12 +203,12 @@ For a focused diagnosis of the current KL gap on categorical and overlapping fam
 
 ---
 
-### 5. Quick Subset ([run_subset.py](run_subset.py))
+### 5. Quick Subset ([smoke/run_subset.py](smoke/run_subset.py))
 
 **Purpose**: Fast iteration benchmark — runs ~15 representative cases from the full suite for quick validation during development.
 
 **Data generation**: Draws from the same default case pool used by the full
-suite (`get_default_test_cases()`), which currently contains 122 cases.
+suite (`get_default_test_cases()`), which currently contains 110 cases.
 Hand-picked subset covers Gaussian, Binary, Categorical, SBM, and Overlapping
 families.
 
@@ -195,7 +222,7 @@ families.
 
 ---
 
-### 6. MNIST ([mnist/](mnist/))
+### 6. MNIST ([experiments/mnist/](experiments/mnist/))
 
 **Purpose**: Real-world benchmark on handwritten digit images (10 classes).
 
@@ -211,7 +238,7 @@ families.
 
 ---
 
-### 7. UMAP Datasets ([umap_datasets/](umap_datasets/))
+### 7. UMAP Datasets ([experiments/umap_datasets/](experiments/umap_datasets/))
 
 **Purpose**: Benchmarks on the standard datasets featured in the UMAP documentation — Palmer Penguins and Sklearn Digits.
 
@@ -251,27 +278,45 @@ families.
 
 ## Test Case Categories
 
-The full suite currently resolves to 122 cases from the shared case registry.
+The full suite currently resolves to 110 cases from the shared case registry.
 The major families represented in that registry are summarized below.
+
+### Contract Suites
+
+Use these suites when making method claims. They separate mathematical input
+contracts instead of mixing every historical stress case into one score.
+
+| Suite | Cases | Contract | Main interpretation |
+| ----- | ----- | -------- | ------------------- |
+| `binary` | 42 | Native Bernoulli `{0,1}` matrices from the binary generator. | Primary benchmark for the mature Bernoulli KL-TE path. |
+| `categorical` | 27 | Multinomial/categorical blocks represented by explicit one-hot `FeatureSpace` metadata. | Tests block-covariance categorical support, not independent Bernoulli columns. |
+| `continuous` | 9 | Selected raw Gaussian-coordinate examples with explicit continuous `FeatureSpace` and Euclidean tree distances. | Experimental empirical-Gaussian path; report separately from binary and discretized Gaussian results. |
+| `discretized_gaussian` | 32 | Gaussian sources transformed to binary or quantile one-hot features. | Discretization stress tests, not evidence for native continuous performance. |
+| `graph` | 3 | SBM adjacency features with precomputed modularity distance. | Graph-distance/recoverability stress tests. |
+| `full` | 110 | Union of the registry. | Broad smoke/reporting suite; avoid using its aggregate as a single method claim. |
 
 ### Gaussian
 
 The Gaussian blob, dimensional Gaussian, and Gaussian-outlier families keep the
-original median-binarized cases and add `*_continuous` A/B companions. The
-continuous companions keep the raw coordinates, carry an explicit continuous
-`FeatureSpace`, and provide Euclidean tree distances through benchmark metadata.
-This lets the Bernoulli/discretized path and the empirical-Gaussian path be
-compared without deleting the historical binary cases.
+historical median-binarized cases. A small set of selected `*_continuous`
+representation-forwarding examples keeps the raw coordinates, carries an
+explicit continuous `FeatureSpace`, and provides Euclidean tree distances
+through benchmark metadata. These examples are not cloned for every historical
+Gaussian stress case; they are a focused check of the empirical-Gaussian path.
 
-| Family | Binary cases | Continuous A/B cases |
-| ------ | ------------ | -------------------- |
-| Gaussian blobs (`blobs`) | `gaussian_extreme_noise`, `improved_gaussian`, `gaussian_null` | `gaussian_extreme_noise_continuous`, `improved_gaussian_continuous`, `gaussian_null_continuous` |
-| Dimensional Gaussian | `gaussian_dimensionality_consolidated`, `gaussian_dimensionality_diffuse` | `gaussian_dimensionality_consolidated_continuous`, `gaussian_dimensionality_diffuse_continuous` |
-| Gaussian outliers | `gaussian_outlier_singleton`, `gaussian_outlier_contamination` | `gaussian_outlier_singleton_continuous`, `gaussian_outlier_contamination_continuous` |
+| Family | Discretized cases | Selected continuous examples |
+| ------ | ----------------- | ---------------------------- |
+| Gaussian blobs (`blobs`) | `gaussian_extreme_noise`, `improved_gaussian`, `gaussian_null`, `overlapping_gaussian`, `overlapping_gaussian_quantile` | `continuous_gaussian_examples` |
+| Dimensional Gaussian | `gaussian_dimensionality_consolidated`, `gaussian_dimensionality_diffuse` | `continuous_dimensional_gaussian_examples` |
+| Gaussian outliers | `gaussian_outlier_singleton`, `gaussian_outlier_contamination` | `continuous_gaussian_outlier_examples` |
 
-### Binary (21 cases)
+### Core Binary (28 cases)
 
 Generated directly as binary {0,1} matrices via `generate_random_feature_matrix`. Each cluster owns a distinctive subset of features with controlled bit-flip probabilities. `entropy_param` controls noise (0 = perfect separation, 0.5 = random). This is the most natural input format for the Bernoulli KL pipeline.
+
+The `binary` contract suite contains these 28 core binary cases plus the 14
+native-binary overlapping cases described in the [Overlapping](#overlapping-25-cases)
+section.
 
 | Subcategory                  | Cases | n_rows  | n_cols  | K    | entropy   |
 | ---------------------------- | ----- | ------- | ------- | ---- | --------- |
@@ -483,8 +528,9 @@ config.TREE_DISTANCE_METRIC = "hamming"  # or "rogerstanimoto"
 ## Calibration Diagnostics
 
 Calibration diagnostics are maintained as explicit standalone scripts under
-`benchmarks/diagnostics/calibration/` for benchmark-level investigations and
-`benchmarks/calibration/` for edge-calibration helpers. Oracle and gate-path
-diagnostics live under `benchmarks/diagnostics/oracle/`; ad hoc run analyses
-live under `benchmarks/diagnostics/analysis/`. The full benchmark runner only
-runs the clustering comparison and relationship analysis.
+`benchmarks/diagnostics/calibration/`, including edge-calibration helpers.
+Oracle and gate-path diagnostics live under `benchmarks/diagnostics/oracle/`;
+spectral-dimension diagnostics live under `benchmarks/diagnostics/spectral/`;
+post-run result analyses live under `benchmarks/diagnostics/analysis/`. The
+full benchmark runner only runs the clustering comparison and relationship
+analysis.

@@ -7,9 +7,16 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+_script_path = Path(__file__).resolve()
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
+if str(_benchmarks_root) not in sys.path:
+    sys.path.insert(0, str(_benchmarks_root))
+from _bootstrap import ensure_repo_root_on_path
+
+repo_root = ensure_repo_root_on_path(__file__)
 
 from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.cases.geometry import case_recipe_cluster_count
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
 # Default to single-threaded spectral decomposition workers to avoid
@@ -46,7 +53,7 @@ subset = [c for c in all_cases if c["name"] in SUBSET_NAMES]
 print(f"Selected {len(subset)}/{len(all_cases)} cases:")
 print(f"Spectral settings: KL_TE_N_JOBS={spectral_jobs}")
 for c in subset:
-    print(f"  {c['name']:<35s}  K={c.get('n_clusters', '?')}")
+    print(f"  {c['name']:<35s}  K={case_recipe_cluster_count(c)}")
 print()
 
 df_results, fig = benchmark_cluster_algorithm(

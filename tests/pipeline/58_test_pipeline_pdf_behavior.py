@@ -58,7 +58,7 @@ def test_concat_pdf_streams_and_no_pngs(monkeypatch, tmp_path: Path):
         test_cases=[],
         verbose=True,
         concat_plots_pdf=True,
-        methods=[],
+        methods=["kl"],
     )
 
     assert called.get("save_png") is False
@@ -88,7 +88,7 @@ def test_pipeline_preserves_explicit_case_identity(monkeypatch):
             {"name": "case_b", "seed": 2, "test_case_num": 42},
         ],
         verbose=False,
-        methods=[],
+        methods=["kl"],
     )
 
     assert seen_case_numbers == [41, 42]

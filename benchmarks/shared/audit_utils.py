@@ -13,7 +13,6 @@ from typing import Any, Dict, List
 import networkx as nx
 import numpy as np
 import pandas as pd
-
 from benchmarks.shared.result_records import ComputedResultRecord
 
 logger = logging.getLogger(__name__)
@@ -317,12 +316,6 @@ def export_matrix_audit(
                 arr2 = _coerce_2d(arr)
                 stats = _matrix_stats(arr2)
 
-                def safe_int(v):
-                    try:
-                        return int(v)
-                    except:
-                        return 0
-
                 summary_lines = [
                     f"name: {name}",
                     f"shape: {arr.shape}",
@@ -331,7 +324,7 @@ def export_matrix_audit(
                     f"max: {stats['max']}",
                     f"mean: {stats['mean']}",
                     f"std: {stats['std']}",
-                    f"nnz: {safe_int(stats['nnz'])}",
+                    f"nnz: {int(stats['nnz'])}",
                     f"nnz_ratio: {stats['nnz_ratio']:.6f}",
                 ]
                 tf.summary.text(f"{tag_prefix}/{name}/summary", "\n".join(summary_lines), step=step)

@@ -1,5 +1,7 @@
 """Outlier-focused Gaussian benchmark cases."""
 
+from benchmarks.shared.cases.representations import representation_variants_by_name
+
 OUTLIER_CASES = {
     "gaussian_outlier_singleton": [
         {
@@ -56,20 +58,19 @@ OUTLIER_CASES = {
 }
 
 
-def _continuous_outlier_variant(case: dict) -> dict:
-    """Return the continuous-coordinate A/B companion for a median-binary case."""
-    variant = case.copy()
-    variant["name"] = f"{case['name']}_continuous"
-    variant["generator"] = "gaussian_outliers_continuous"
-    variant["baseline_case_name"] = case["name"]
-    return variant
-
-
-OUTLIER_CASES["gaussian_outlier_singleton_continuous"] = [
-    _continuous_outlier_variant(case)
-    for case in OUTLIER_CASES["gaussian_outlier_singleton"]
-]
-OUTLIER_CASES["gaussian_outlier_contamination_continuous"] = [
-    _continuous_outlier_variant(case)
-    for case in OUTLIER_CASES["gaussian_outlier_contamination"]
+OUTLIER_CASES["continuous_gaussian_outlier_examples"] = [
+    *representation_variants_by_name(
+        OUTLIER_CASES["gaussian_outlier_singleton"],
+        selected_names=("gauss_single_outlier_4c",),
+        generator="gaussian_outliers_continuous",
+        name_suffix="_continuous",
+        representation_role="continuous_outlier_example",
+    ),
+    *representation_variants_by_name(
+        OUTLIER_CASES["gaussian_outlier_contamination"],
+        selected_names=("gauss_outlier_cluster_4c",),
+        generator="gaussian_outliers_continuous",
+        name_suffix="_continuous",
+        representation_role="continuous_outlier_contamination_example",
+    ),
 ]

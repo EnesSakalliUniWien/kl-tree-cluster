@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.cases import get_default_test_cases, get_test_cases_by_suite
+from benchmarks.shared.cases.geometry import case_recipe_geometry
+from benchmarks.shared.generators.case_data_contracts import case_metadata
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
@@ -11,6 +13,62 @@ def test_default_benchmark_cases_declare_generator_and_canonical_geometry() -> N
         assert "generator" in case
         assert "n_rows" not in case
         assert "n_cols" not in case
+
+
+def test_generated_case_metadata_names_source_family_and_representation() -> None:
+    for case in get_default_test_cases():
+        _data_df, _labels, _x_original, metadata = generate_case_data(case)
+        assert isinstance(metadata["source_family"], str)
+        assert metadata["source_family"]
+        assert isinstance(metadata["feature_representation"], str)
+        assert metadata["feature_representation"]
+
+
+def test_case_recipe_geometry_matches_generated_metadata() -> None:
+    for case in get_default_test_cases():
+        _data_df, _labels, _x_original, metadata = generate_case_data(case)
+        assert case_recipe_geometry(case) == (
+            int(metadata["n_samples"]),
+            int(metadata["n_features"]),
+        )
+
+
+def test_benchmark_case_suites_separate_input_contracts() -> None:
+    binary_cases = get_test_cases_by_suite("binary")
+    continuous_cases = get_test_cases_by_suite("continuous")
+    categorical_cases = get_test_cases_by_suite("categorical")
+    discretized_gaussian_cases = get_test_cases_by_suite("discretized_gaussian")
+    graph_cases = get_test_cases_by_suite("graph")
+
+    assert binary_cases
+    assert continuous_cases
+    assert categorical_cases
+    assert discretized_gaussian_cases
+    assert graph_cases
+
+    assert {case["generator"] for case in binary_cases} == {"binary"}
+    assert {case["generator"] for case in continuous_cases} == {
+        "blobs_continuous",
+        "dimensional_gaussian_continuous",
+        "gaussian_outliers_continuous",
+    }
+    assert len(continuous_cases) == 9
+    assert {case["generator"] for case in graph_cases} == {"sbm"}
+
+    binary_names = {case["name"] for case in binary_cases}
+    continuous_names = {case["name"] for case in continuous_cases}
+    assert binary_names.isdisjoint(continuous_names)
+    assert continuous_names == {
+        "gauss_clear_medium_continuous",
+        "gauss_moderate_3c_continuous",
+        "gauss_null_large_continuous",
+        "gauss_extreme_noise_highd_continuous",
+        "dim_consolidated_4c_24f_continuous",
+        "dim_consolidated_4c_72f_continuous",
+        "dim_diffuse_6c_136f_continuous",
+        "gauss_single_outlier_4c_continuous",
+        "gauss_outlier_cluster_4c_continuous",
+    }
 
 
 def test_case_data_requires_explicit_generator() -> None:
@@ -36,6 +94,22 @@ def test_case_data_requires_explicit_name() -> None:
                 "n_clusters": 3,
                 "cluster_std": 0.5,
             }
+        )
+
+
+def test_precomputed_kl_distance_requires_explicit_metadata_flag() -> None:
+    with pytest.raises(ValueError, match="requires_precomputed_kl_distance=True"):
+        case_metadata(
+            test_case={"name": "broken_distance_contract"},
+            n_samples=2,
+            n_features=1,
+            n_clusters=1,
+            noise=0.0,
+            generator="test",
+            source_family="test",
+            feature_representation="test",
+            requires_precomputed_kl_distance=False,
+            precomputed_distance_condensed=[1.0],
         )
 
 
@@ -67,7 +141,7 @@ def test_categorical_case_data_requires_category_count() -> None:
         )
 
 
-def test_continuous_gaussian_ab_cases_keep_old_binary_cases() -> None:
+def test_selected_continuous_examples_forward_baseline_case_contracts() -> None:
     cases_by_name = {case["name"]: case for case in get_default_test_cases()}
 
     assert cases_by_name["gauss_clear_medium"]["generator"] == "blobs"
@@ -75,6 +149,10 @@ def test_continuous_gaussian_ab_cases_keep_old_binary_cases() -> None:
     assert (
         cases_by_name["gauss_clear_medium_continuous"]["baseline_case_name"]
         == "gauss_clear_medium"
+    )
+    assert (
+        cases_by_name["gauss_clear_medium_continuous"]["representation_role"]
+        == "continuous_example"
     )
     assert cases_by_name["dim_consolidated_4c_24f"]["generator"] == "dimensional_gaussian"
     assert (
@@ -85,6 +163,10 @@ def test_continuous_gaussian_ab_cases_keep_old_binary_cases() -> None:
         cases_by_name["dim_consolidated_4c_24f_continuous"]["baseline_case_name"]
         == "dim_consolidated_4c_24f"
     )
+    assert (
+        cases_by_name["dim_consolidated_4c_24f_continuous"]["representation_role"]
+        == "continuous_dimensional_example"
+    )
     assert cases_by_name["gauss_single_outlier_4c"]["generator"] == "gaussian_outliers"
     assert (
         cases_by_name["gauss_single_outlier_4c_continuous"]["generator"]
@@ -94,6 +176,26 @@ def test_continuous_gaussian_ab_cases_keep_old_binary_cases() -> None:
         cases_by_name["gauss_single_outlier_4c_continuous"]["baseline_case_name"]
         == "gauss_single_outlier_4c"
     )
+    assert (
+        cases_by_name["gauss_single_outlier_4c_continuous"]["representation_role"]
+        == "continuous_outlier_example"
+    )
+
+
+def test_gaussian_source_cases_name_discretized_or_continuous_representation() -> None:
+    cases_by_name = {case["name"]: case for case in get_default_test_cases()}
+
+    _data_df, _labels, _x_original, binary_metadata = generate_case_data(
+        cases_by_name["gauss_clear_medium"]
+    )
+    assert binary_metadata["source_family"] == "gaussian_blobs"
+    assert binary_metadata["feature_representation"] == "median_binary"
+
+    _data_df, _labels, _x_original, continuous_metadata = generate_case_data(
+        cases_by_name["gauss_clear_medium_continuous"]
+    )
+    assert continuous_metadata["source_family"] == "gaussian_blobs"
+    assert continuous_metadata["feature_representation"] == "continuous"
 
 
 @pytest.mark.parametrize(

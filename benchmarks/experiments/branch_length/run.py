@@ -7,7 +7,7 @@ how clustering performance changes as evolutionary divergence increases,
 while keeping the number of leaves (samples) fixed.
 
 Usage:
-    python benchmarks/branch_length/run.py
+    python benchmarks/experiments/branch_length/run.py
 """
 
 import sys
@@ -15,9 +15,7 @@ from pathlib import Path
 
 # Load shared path bootstrap helper from benchmarks root.
 _script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
 if str(_benchmarks_root) not in sys.path:
     sys.path.insert(0, str(_benchmarks_root))
 from _bootstrap import ensure_repo_root_on_path
@@ -29,7 +27,7 @@ import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from benchmarks.branch_length.logic import (
+from benchmarks.experiments.branch_length.logic import (
     plot_branch_length_results,
     plot_embedding_by_branch_length,
     run_branch_length_benchmark,
@@ -256,8 +254,8 @@ def main():
     base_seed = 42
 
     # Use a single benchmark results root for all suites
-    output_dir = repo_root / "benchmarks" / "results"
-    output_dir.mkdir(exist_ok=True)
+    output_dir = repo_root / "benchmarks" / "results" / "experiments" / "branch_length"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Run replicated benchmark
     print(f"Running {n_replicates} replicates for branch lengths {branch_lengths}...")

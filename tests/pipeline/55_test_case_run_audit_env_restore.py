@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from benchmarks.shared.util import case_run
+from benchmarks.shared.util.case_inputs import PreparedCaseInputs
 
 
 @pytest.mark.parametrize("initial_value", [None, "/tmp/original-audit-root"])
@@ -36,14 +37,13 @@ def test_run_single_case_restores_matrix_audit_env(monkeypatch, initial_value):
         }
         distance_condensed = np.array([0.5], dtype=float)
         distance_matrix = np.array([[0.0, 0.5], [0.5, 0.0]], dtype=float)
-        return (
-            data_t,
-            y_t,
-            x_original,
-            meta,
-            distance_condensed,
-            distance_matrix,
-            None,
+        return PreparedCaseInputs(
+            data=data_t,
+            labels=y_t,
+            original_features=x_original,
+            metadata=meta,
+            distance_condensed=distance_condensed,
+            distance_matrix=distance_matrix,
         )
 
     def _fake_run_single_method_once(**_kwargs):
@@ -58,7 +58,6 @@ def test_run_single_case_restores_matrix_audit_env(monkeypatch, initial_value):
     param_sets = {"kl": [{}]}
     case_run.run_single_case(
         tc={"name": "env_restore_case", "seed": 7, "test_case_num": 1},
-        case_position=1,
         total_cases=1,
         selected_methods=selected_methods,
         param_sets=param_sets,

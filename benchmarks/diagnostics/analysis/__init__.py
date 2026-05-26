@@ -1,1 +1,1 @@
-"""Ad hoc benchmark-analysis entrypoints."""
+"""Post-run benchmark analysis entrypoints and notes."""

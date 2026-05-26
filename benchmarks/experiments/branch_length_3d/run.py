@@ -8,7 +8,7 @@ Creates a surface plot showing ARI as a function of:
 - Z axis (color): ARI score
 
 Usage:
-    python benchmarks/branch_length_3d/run.py
+    python benchmarks/experiments/branch_length_3d/run.py
 """
 
 import sys
@@ -16,23 +16,20 @@ from pathlib import Path
 
 # Load shared path bootstrap helper from benchmarks root.
 _script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
 if str(_benchmarks_root) not in sys.path:
     sys.path.insert(0, str(_benchmarks_root))
 from _bootstrap import ensure_repo_root_on_path
 
 repo_root = ensure_repo_root_on_path(__file__)
 
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
-from benchmarks.branch_length.logic import (
+from benchmarks.experiments.branch_length.logic import (
     run_branch_length_benchmark,
 )
 
@@ -382,10 +379,10 @@ def main():
     base_seed = 42
 
     # Use a single benchmark results root for all suites
-    output_dir = repo_root / "benchmarks" / "results"
-    output_dir.mkdir(exist_ok=True)
+    output_dir = repo_root / "benchmarks" / "results" / "experiments" / "branch_length_3d"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Configuration:")
+    print("Configuration:")
     print(f"  - Leaves (samples): {n_leaves}")
     print(f"  - Branch lengths: {branch_lengths}")
     print(f"  - Feature counts: {feature_counts}")

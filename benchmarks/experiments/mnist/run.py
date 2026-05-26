@@ -4,7 +4,7 @@ MNIST Benchmark for KL Divergence Clustering.
 Downloads a subset of MNIST and runs the KL clustering algorithm on it.
 
 Usage:
-    python benchmarks/mnist/run.py
+    python benchmarks/experiments/mnist/run.py
 """
 
 import sys
@@ -12,9 +12,7 @@ from pathlib import Path
 
 # Load shared path bootstrap helper from benchmarks root.
 _script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
 if str(_benchmarks_root) not in sys.path:
     sys.path.insert(0, str(_benchmarks_root))
 from _bootstrap import ensure_repo_root_on_path
@@ -148,8 +146,8 @@ def main():
     print("=" * 60)
 
     # Use a single benchmark results root for all suites
-    output_dir = repo_root / "benchmarks" / "results"
-    output_dir.mkdir(exist_ok=True)
+    output_dir = repo_root / "benchmarks" / "results" / "experiments" / "mnist"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Test key combinations
     configs = []

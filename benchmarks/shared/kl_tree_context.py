@@ -41,17 +41,16 @@ def _resolve_kl_tree_distance(
     data: pd.DataFrame,
     metadata: dict[str, object],
     distance_condensed: np.ndarray | None,
-    precomputed_distance_condensed: object,
 ) -> tuple[np.ndarray, str, str, str]:
     params = METHOD_SPECS["kl"].param_grid[0]
     tree_linkage_method = str(params["tree_linkage_method"])
     configured_metric = str(params["tree_distance_metric"])
 
     requires_precomputed = bool(metadata["requires_precomputed_kl_distance"])
-    if requires_precomputed or precomputed_distance_condensed is not None:
+    if requires_precomputed:
         if distance_condensed is None:
             raise ValueError(
-                f"Case '{metadata['name']}' requires/provides precomputed KL distance, "
+                f"Case '{metadata['name']}' requires precomputed KL tree distance, "
                 "but no condensed distance was prepared."
             )
         return (
@@ -78,39 +77,30 @@ def build_kl_tree_context(
     populate_node_distributions: bool,
 ) -> KlTreeContext:
     """Generate one benchmark case and build the exact KL hierarchy."""
-    (
-        data,
-        true_labels,
-        original_features,
-        metadata,
-        prepared_distance_condensed,
-        _distance_matrix,
-        precomputed_distance_condensed,
-    ) = prepare_case_inputs(case, ["kl"])
+    inputs = prepare_case_inputs(case, ["kl"])
     (
         distance_for_tree,
         tree_distance_metric,
         tree_distance_source,
         tree_linkage_method,
     ) = _resolve_kl_tree_distance(
-        data=data,
-        metadata=metadata,
-        distance_condensed=prepared_distance_condensed,
-        precomputed_distance_condensed=precomputed_distance_condensed,
+        data=inputs.data,
+        metadata=inputs.metadata,
+        distance_condensed=inputs.distance_condensed,
     )
     linkage_matrix = linkage(distance_for_tree, method=tree_linkage_method)
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data.index.tolist())
-    feature_space = metadata.get("feature_space")
+    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=inputs.data.index.tolist())
+    feature_space = inputs.metadata.get("feature_space")
     if feature_space is not None and not isinstance(feature_space, FeatureSpace):
         raise ValueError("Benchmark feature_space metadata must be a FeatureSpace.")
     if populate_node_distributions:
-        tree.populate_node_divergences(data, feature_space=feature_space)
+        tree.populate_node_divergences(inputs.data, feature_space=feature_space)
 
     return KlTreeContext(
-        data=data,
-        true_labels=np.asarray(true_labels),
-        original_features=original_features,
-        metadata=metadata,
+        data=inputs.data,
+        true_labels=inputs.labels,
+        original_features=inputs.original_features,
+        metadata=inputs.metadata,
         feature_space=feature_space,
         distance_condensed=distance_for_tree,
         tree_distance_metric=tree_distance_metric,

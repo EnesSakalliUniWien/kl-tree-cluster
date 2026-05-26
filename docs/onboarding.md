@@ -16,7 +16,7 @@ short: follow it before opening deep implementation directories.
 3. If you need benchmark behavior, read `benchmarks/README.md`, then run:
 
    ```bash
-   python benchmarks/run_subset.py
+   python benchmarks/smoke/run_subset.py
    ```
 
 4. If you need current mathematical context, start at `wiki/index.md`, then
@@ -36,7 +36,8 @@ short: follow it before opening deep implementation directories.
 | Tree structure and feature-space data contracts | `kl_clustering_analysis/tree/` |
 | Decomposition traversal and gate orchestration | `kl_clustering_analysis/hierarchy_analysis/` |
 | Statistical kernels, projection, inflation, and FDR | `kl_clustering_analysis/hierarchy_analysis/statistics/` |
-| Full and subset benchmark execution | `benchmarks/` |
+| Full, smoke, and regression benchmark execution | `benchmarks/full/`, `benchmarks/smoke/`, `benchmarks/regression/` |
+| Standalone benchmark experiments | `benchmarks/experiments/` |
 | Benchmark-only investigation tools | `benchmarks/diagnostics/` |
 | User-facing real-data commands | `scripts/analysis/` |
 | Canonical tracked input matrices | `data/feature_matrices/` |

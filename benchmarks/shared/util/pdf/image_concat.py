@@ -13,6 +13,7 @@ from PIL import Image
 
 from .layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 
+
 def _get_case_from_filename(path: Path) -> int | None:
     """Extract the case number from a plot filename."""
     match = re.search(r"case_(\d+)", path.name)

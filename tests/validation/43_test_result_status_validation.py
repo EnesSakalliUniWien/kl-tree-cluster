@@ -10,6 +10,8 @@ def _build_row(status, **overrides):
         test_case=1,
         case_id="case",
         case_category="cat",
+        source_family="binary_template",
+        feature_representation="binary",
         method="method",
         run_params={},
         true_clusters=2,

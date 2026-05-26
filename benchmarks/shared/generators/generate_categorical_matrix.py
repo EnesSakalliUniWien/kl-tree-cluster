@@ -5,9 +5,9 @@ This module provides `generate_categorical_feature_matrix` to create datasets
 where each feature has K categories (not just binary 0/1).
 """
 
-import numpy as np
-from typing import Dict, Tuple, Optional, List
+from typing import Dict, List, Optional, Tuple
 
+import numpy as np
 from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 

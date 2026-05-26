@@ -11,22 +11,22 @@ import matplotlib as mpl
 mpl.rcParams["pdf.fonttype"] = 42
 mpl.rcParams["ps.fonttype"] = 42
 
-from .summary import create_validation_plot
 from .embedding import (
-    create_clustering_comparison_plots,
     create_clustering_comparison_plot_3d,
+    create_clustering_comparison_plots,
 )
-from .manifold import create_manifold_alignment_plot
 from .export import (
-    create_umap_plots_from_results,
-    create_umap_3d_plots_from_results,
     create_manifold_plots_from_results,
     create_tree_plots_from_results,
+    create_umap_3d_plots_from_results,
+    create_umap_plots_from_results,
 )
+from .manifold import create_manifold_alignment_plot
 from .runtime import (
     generate_benchmark_plots,
     log_detailed_results,
 )
+from .summary import create_validation_plot
 
 __all__ = [
     "create_validation_plot",

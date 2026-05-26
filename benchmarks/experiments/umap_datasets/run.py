@@ -8,7 +8,7 @@ Benchmarks the KL clustering algorithm on the datasets used in the UMAP document
 Reference: https://umap-learn.readthedocs.io/en/latest/basic_usage.html
 
 Usage:
-    python benchmarks/umap_datasets/run.py
+    python benchmarks/experiments/umap_datasets/run.py
 """
 
 import sys
@@ -18,9 +18,7 @@ from pathlib import Path
 
 # Load shared path bootstrap helper from benchmarks root.
 _script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
 if str(_benchmarks_root) not in sys.path:
     sys.path.insert(0, str(_benchmarks_root))
 from _bootstrap import ensure_repo_root_on_path
@@ -539,8 +537,8 @@ def main():
     print("=" * 70)
 
     # Use a single benchmark results root for all suites
-    output_dir = repo_root / "benchmarks" / "results"
-    output_dir.mkdir(exist_ok=True)
+    output_dir = repo_root / "benchmarks" / "results" / "experiments" / "umap_datasets"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Define preprocessing methods
     preproc_continuous = [

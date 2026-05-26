@@ -5,9 +5,9 @@ Runs the existing MNIST KL clustering pipeline and maps digit labels
 (0-9) into coarser, higher-level categories.
 
 Usage:
-    python benchmarks/mnist/run_higher_categories.py
-    python benchmarks/mnist/run_higher_categories.py --scheme parity_2
-    python benchmarks/mnist/run_higher_categories.py --pixel-categorization bayesian_gmm
+    python benchmarks/experiments/mnist/run_higher_categories.py
+    python benchmarks/experiments/mnist/run_higher_categories.py --scheme parity_2
+    python benchmarks/experiments/mnist/run_higher_categories.py --pixel-categorization bayesian_gmm
 """
 
 from __future__ import annotations
@@ -22,9 +22,7 @@ from pathlib import Path
 
 # Load shared path bootstrap helper from benchmarks root.
 _script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
+_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
 if str(_benchmarks_root) not in sys.path:
     sys.path.insert(0, str(_benchmarks_root))
 from _bootstrap import ensure_repo_root_on_path
@@ -33,9 +31,9 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 import numpy as np
 import pandas as pd
+from benchmarks.experiments.mnist.run import load_mnist_subset, run_kl_clustering
 from benchmarks.shared.runners.kl_diffusion_runner import _build_diffusion_distance
 from kl_clustering_analysis.tree.poset_tree import PosetTree
-from run import load_mnist_subset, run_kl_clustering
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
@@ -923,8 +921,8 @@ def main() -> None:
     )
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    output_directory = repo_root / "benchmarks" / "results"
-    output_directory.mkdir(exist_ok=True)
+    output_directory = repo_root / "benchmarks" / "results" / "experiments" / "mnist"
+    output_directory.mkdir(parents=True, exist_ok=True)
     output_csv_file = (
         output_directory / f"mnist_higher_categories_{arguments.scheme}_{timestamp}.csv"
     )

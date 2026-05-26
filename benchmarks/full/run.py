@@ -17,7 +17,9 @@ repo_root = ensure_repo_root_on_path(__file__)
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.diagnostics.failure.debug_trace import diagnose_benchmark_failures
+from benchmarks.shared.cases import get_test_cases_by_suite
+from benchmarks.shared.cases.geometry import case_recipe_geometry
 from benchmarks.shared.config import DEFAULT_METHODS
 from benchmarks.shared.env import get_env_bool, get_env_int
 from benchmarks.shared.plots.cover_page import (
@@ -33,11 +35,6 @@ from benchmarks.shared.util.case_execution import run_case_with_optional_isolati
 from benchmarks.shared.util.method_selection import resolve_methods_from_env
 from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
 from benchmarks.shared.util.time import format_timestamp_utc
-
-try:
-    from benchmarks.diagnostics.failure.debug_trace import diagnose_benchmark_failures
-except ImportError:
-    diagnose_benchmark_failures = None
 
 
 def _compute_resume_coverage(
@@ -82,36 +79,6 @@ def _compute_resume_coverage(
     return completed_cases, missing_methods_by_case, len(methods_by_case)
 
 
-def _resolve_generated_case_geometry(case: dict) -> tuple[int, int]:
-    """Return generated sample/feature counts from the canonical case schema."""
-    generator = case["generator"]
-    if generator == "sbm":
-        n_nodes = sum(int(size) for size in case["sizes"])
-        return n_nodes, n_nodes
-    if generator == "phylogenetic":
-        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(
-            case["n_features"]
-        ) * int(case["n_categories"])
-    if generator == "temporal_evolution":
-        return int(case["n_time_points"]) * int(case["samples_per_time"]), int(
-            case["n_features"]
-        ) * int(case["n_categories"])
-    if generator in {"categorical", "blobs_quantile"}:
-        return int(case["n_samples"]), int(case["n_features"]) * int(case["n_categories"])
-    if generator == "binary":
-        return int(case["n_samples"]), int(case["n_features"]) + int(case["noise_features"])
-    if generator in {
-        "blobs",
-        "blobs_continuous",
-        "dimensional_gaussian",
-        "dimensional_gaussian_continuous",
-        "gaussian_outliers",
-        "gaussian_outliers_continuous",
-    }:
-        return int(case["n_samples"]), int(case["n_features"])
-    raise ValueError(f"Unknown benchmark case generator {generator!r}.")
-
-
 def _stamp_full_run_case_identity(
     results: pd.DataFrame,
     *,
@@ -140,8 +107,9 @@ def run_benchmarks():
     # Users can still override by setting KL_TE_N_JOBS explicitly.
     spectral_jobs = os.environ.setdefault("KL_TE_N_JOBS", "1")
 
-    print("Fetching default test cases...")
-    test_cases = get_default_test_cases()
+    case_suite = os.environ.get("KL_TE_CASE_SUITE", "full").strip().lower()
+    print(f"Fetching benchmark case suite: {case_suite}")
+    test_cases = get_test_cases_by_suite(case_suite)
     print(f"Found {len(test_cases)} test cases.")
 
     methods_to_test = resolve_methods_from_env(
@@ -189,10 +157,10 @@ def run_benchmarks():
     # Single benchmark results root
     timestamp = format_timestamp_utc()
     base_output_dir = repo_root / "benchmarks" / "results"
-    run_dir = base_output_dir / f"run_{timestamp}"
+    run_dir = base_output_dir / f"run_{timestamp}_{case_suite}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    output_path = run_dir / "full_benchmark_comparison.csv"
+    output_path = run_dir / f"{case_suite}_benchmark_comparison.csv"
     pdf_dir = run_dir / "plots"
     if enable_plots:
         pdf_dir.mkdir(exist_ok=True)
@@ -249,14 +217,13 @@ def run_benchmarks():
 
         pdf_path = str((pdf_dir / f"{case_id}.pdf").absolute()) if enable_plots else None
 
-        n_samples, n_features = _resolve_generated_case_geometry(case)
+        n_samples, n_features = case_recipe_geometry(case)
         is_large = n_features > 400 or n_samples > 1000
         case_plot_umap = enable_umap
         case_plot_manifold = enable_manifold and not is_large
 
         df_res = run_case_with_optional_isolation(
             case=case,
-            case_id=str(case_id),
             methods_to_test=methods_for_case,
             case_plot_umap=case_plot_umap,
             case_plot_manifold=case_plot_manifold,
@@ -325,23 +292,19 @@ def run_benchmarks():
         if "test_case" in df.columns:
             print(f"\nDetailed results are saved to {output_path}")
 
-            # Run failure diagnosis when available.
-            if diagnose_benchmark_failures is not None:
-                print("\nRunning failure diagnosis...")
-                actual_audit_dir = run_dir / "audit"
-                diagnose_benchmark_failures(
-                    str(output_path),
-                    str(actual_audit_dir),
-                    str(run_dir / "failure_report.md"),
-                )
-            else:
-                print("\nSkipping failure diagnosis: benchmarks.diagnostics.failure.debug_trace not found.")
+            print("\nRunning failure diagnosis...")
+            actual_audit_dir = run_dir / "audit"
+            diagnose_benchmark_failures(
+                str(output_path),
+                str(actual_audit_dir),
+                str(run_dir / "failure_report.md"),
+            )
         else:
             print("Could not pivot results: 'case_id' column missing.")
             print(df.head())
 
     if enable_plots:
-        report_pdf = run_dir / "full_benchmark_report.pdf"
+        report_pdf = run_dir / f"{case_suite}_benchmark_report.pdf"
 
         # --- Overview cover page ---
         cover_pdf = run_dir / "_cover_overview.pdf"

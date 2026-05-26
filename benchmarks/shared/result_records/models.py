@@ -20,6 +20,8 @@ class BenchmarkResultRow:
     test_case: int
     case_id: str
     case_category: str
+    source_family: str
+    feature_representation: str
     method: str
     params_raw: dict[str, object]
     params_display: str

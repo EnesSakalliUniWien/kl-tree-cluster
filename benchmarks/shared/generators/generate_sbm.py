@@ -12,8 +12,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
-import numpy as np
 import networkx as nx
+import numpy as np
 from networkx.generators.community import stochastic_block_model
 
 

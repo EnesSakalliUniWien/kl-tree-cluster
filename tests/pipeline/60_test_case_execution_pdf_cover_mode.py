@@ -15,7 +15,6 @@ def test_run_case_with_optional_isolation_disables_cover_pages(monkeypatch):
 
     case_execution.run_case_with_optional_isolation(
         case={"name": "tiny_case"},
-        case_id="tiny_case",
         methods_to_test=["kl"],
         case_plot_umap=False,
         case_plot_manifold=False,

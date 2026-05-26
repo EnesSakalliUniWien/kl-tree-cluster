@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from kl_clustering_analysis.plot.cluster_color_mapping import build_cluster_color_spec
+from skbio.stats.distance import mantel
 from sklearn.decomposition import PCA
 from sklearn.manifold import Isomap
 from sklearn.metrics import pairwise_distances
 from sklearn.preprocessing import StandardScaler
-from skbio.stats.distance import mantel
 
-from kl_clustering_analysis.plot.cluster_color_mapping import build_cluster_color_spec
 from .embedding import (
     _coerce_nonnegative_cluster_count,
     _color_cluster_count,

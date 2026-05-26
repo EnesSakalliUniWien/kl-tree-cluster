@@ -107,7 +107,6 @@ def run_case_isolated(
 def run_case_with_optional_isolation(
     *,
     case: dict,
-    case_id: str,
     methods_to_test: list[str],
     case_plot_umap: bool,
     case_plot_manifold: bool,
@@ -119,7 +118,6 @@ def run_case_with_optional_isolation(
 ) -> pd.DataFrame:
     """Run a benchmark case, optionally in a subprocess."""
     if case_plot_umap and isolate_umap_cases:
-        del case_id
         return run_case_isolated(
             case=case,
             methods_to_test=methods_to_test,

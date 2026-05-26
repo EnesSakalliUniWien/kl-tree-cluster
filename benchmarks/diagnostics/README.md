@@ -12,8 +12,9 @@ here only when they are diagnostic entrypoints or diagnostic-only helpers.
 
 - `oracle/`: subtree-cut recoverability and gate-path traces.
 - `calibration/`: sibling inflation and selection-conditioned null diagnostics.
+- `spectral/`: Marchenko-Pastur and projection-dimension diagnostics.
 - `failure/`: benchmark failure-report tracing used by the full benchmark.
-- `analysis/`: standalone run-comparison and exploratory analysis commands.
+- `analysis/`: post-run result analysis and durable diagnostic notes.
 
 Maintained entrypoints:
 
@@ -24,3 +25,4 @@ Maintained entrypoints:
 - `calibration/run_selection_conditioned_sibling_null.py`
 - `calibration/run_tree_bh_selection_conditioned_sibling_null.py`
 - `analysis/analyze_relationships.py`
+- `spectral/compare_mp_dimension_contracts.py`

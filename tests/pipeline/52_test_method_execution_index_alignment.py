@@ -9,6 +9,22 @@ from benchmarks.shared.types import MethodRunResult, MethodSpec
 from benchmarks.shared.util import method_execution
 
 
+def _benchmark_meta(**overrides):
+    metadata = {
+        "name": "regression_case",
+        "n_clusters": 2,
+        "n_samples": 4,
+        "n_features": 2,
+        "noise": 0.0,
+        "category": "regression",
+        "source_family": "binary_template",
+        "feature_representation": "binary",
+        "requires_precomputed_kl_distance": False,
+    }
+    metadata.update(overrides)
+    return metadata
+
+
 def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     data_t = pd.DataFrame(
         [[0, 1], [1, 0], [0, 0], [1, 1], [0, 1], [1, 0]],
@@ -52,17 +68,13 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
         data_t=data_t,
         y_t=y_t,
         x_original=data_t.values.astype(float),
-        meta={
-            "n_clusters": 3,
-            "n_samples": 6,
-            "n_features": 2,
-            "noise": 0.0,
-            "category": "regression",
-            "requires_precomputed_kl_distance": False,
-        },
+        meta=_benchmark_meta(
+            name="index_alignment_case",
+            n_clusters=3,
+            n_samples=6,
+        ),
         distance_matrix=None,
         distance_condensed=None,
-        precomputed_distance_condensed=None,
         matrix_audit=False,
     )
 
@@ -113,19 +125,15 @@ def test_run_single_method_once_records_precomputed_kl_distance_contract(monkeyp
         data_t=data_t,
         y_t=y_t,
         x_original=data_t.values.astype(float),
-        meta={
-            "name": "continuous_case",
-            "n_clusters": 2,
-            "n_samples": 4,
-            "n_features": 2,
-            "noise": 0.0,
-            "category": "regression",
-            "distance_metric": "euclidean",
-            "requires_precomputed_kl_distance": True,
-        },
+        meta=_benchmark_meta(
+            name="continuous_case",
+            source_family="gaussian_blobs",
+            feature_representation="continuous",
+            distance_metric="euclidean",
+            requires_precomputed_kl_distance=True,
+        ),
         distance_matrix=None,
         distance_condensed=precomputed_distance,
-        precomputed_distance_condensed=precomputed_distance,
         matrix_audit=False,
     )
 
@@ -165,18 +173,14 @@ def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance
             data_t=data_t,
             y_t=y_t,
             x_original=data_t.values.astype(float),
-            meta={
-                "name": "broken_precomputed_case",
-                "n_clusters": 2,
-                "n_samples": 4,
-                "n_features": 2,
-                "noise": 0.0,
-                "category": "regression",
-                "requires_precomputed_kl_distance": True,
-            },
+            meta=_benchmark_meta(
+                name="broken_precomputed_case",
+                source_family="gaussian_blobs",
+                feature_representation="continuous",
+                requires_precomputed_kl_distance=True,
+            ),
             distance_matrix=None,
             distance_condensed=np.ones(6, dtype=float),
-            precomputed_distance_condensed=np.ones(6, dtype=float),
             matrix_audit=False,
         )
 
@@ -210,18 +214,9 @@ def test_run_single_method_once_records_runner_exception_as_skip(monkeypatch):
         data_t=data_t,
         y_t=y_t,
         x_original=data_t.values.astype(float),
-        meta={
-            "name": "unsupported_calibration_case",
-            "n_clusters": 2,
-            "n_samples": 4,
-            "n_features": 2,
-            "noise": 0.0,
-            "category": "regression",
-            "requires_precomputed_kl_distance": False,
-        },
+        meta=_benchmark_meta(name="unsupported_calibration_case"),
         distance_matrix=None,
         distance_condensed=None,
-        precomputed_distance_condensed=None,
         matrix_audit=False,
     )
 
@@ -275,15 +270,8 @@ def test_run_single_method_once_rejects_report_index_not_sample_ids(monkeypatch)
             data_t=data_t,
             y_t=y_t,
             x_original=data_t.values.astype(float),
-            meta={
-                "n_clusters": 2,
-                "n_samples": 4,
-                "n_features": 2,
-                "noise": 0.0,
-                "category": "regression",
-            },
+            meta=_benchmark_meta(),
             distance_matrix=None,
             distance_condensed=None,
-            precomputed_distance_condensed=None,
             matrix_audit=False,
         )

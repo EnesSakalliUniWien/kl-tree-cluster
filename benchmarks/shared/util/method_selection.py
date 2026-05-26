@@ -50,14 +50,23 @@ def resolve_selected_methods_and_param_sets(
     """Validate selected methods and resolve each method's parameter grid."""
     selected_methods = list(methods) if methods is not None else list(default_methods)
     params_by_method = method_params or {}
+    if not selected_methods:
+        raise ValueError("At least one benchmark method must be selected.")
     for method_id in selected_methods:
         if method_id not in method_specs:
             raise ValueError(f"Unknown method: {method_id}")
 
-    param_sets = {
-        method_id: (params_by_method.get(method_id) or method_specs[method_id].param_grid)
-        for method_id in selected_methods
-    }
+    param_sets: dict[str, list[dict[str, object]]] = {}
+    for method_id in selected_methods:
+        if method_id in params_by_method:
+            explicit_params = params_by_method[method_id]
+            if not explicit_params:
+                raise ValueError(
+                    f"Method {method_id!r} was given an empty parameter grid."
+                )
+            param_sets[method_id] = explicit_params
+        else:
+            param_sets[method_id] = method_specs[method_id].param_grid
     return selected_methods, param_sets
 
 

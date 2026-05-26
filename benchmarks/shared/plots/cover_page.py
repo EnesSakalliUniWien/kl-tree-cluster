@@ -12,6 +12,7 @@ from pathlib import Path
 from textwrap import dedent
 
 import matplotlib.pyplot as plt
+from benchmarks.shared.cases.geometry import case_recipe_cluster_count, case_recipe_geometry
 from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from kl_clustering_analysis import config
 
@@ -36,17 +37,13 @@ _register(
     "gaussian_extreme_noise",
     "improved_gaussian",
     "gaussian_null",
-    "gaussian_extreme_noise_continuous",
-    "improved_gaussian_continuous",
-    "gaussian_null_continuous",
+    "continuous_gaussian_examples",
     "gaussian_dimensionality_consolidated",
     "gaussian_dimensionality_diffuse",
-    "gaussian_dimensionality_consolidated_continuous",
-    "gaussian_dimensionality_diffuse_continuous",
+    "continuous_dimensional_gaussian_examples",
     "gaussian_outlier_singleton",
     "gaussian_outlier_contamination",
-    "gaussian_outlier_singleton_continuous",
-    "gaussian_outlier_contamination_continuous",
+    "continuous_gaussian_outlier_examples",
 )
 _register(
     "binary",
@@ -146,14 +143,14 @@ _OVERVIEW_TEXT = dedent(
 
 _GAUSSIAN_TEXT = dedent(
     """\
-    Gaussian Cases  (42 A/B cases)
+    Gaussian-Source Cases
 
     Data generation:
-      Gaussian blob, dimensional Gaussian, and Gaussian-outlier families keep
-      the historical median-binary cases and add continuous A/B companions.
-      Continuous companions keep raw coordinates, carry an explicit continuous
-      FeatureSpace, and provide Euclidean tree distances through benchmark
-      metadata.
+      Gaussian blob, dimensional Gaussian, and Gaussian-outlier source
+      families keep their historical median-binary cases. A small continuous
+      example suite forwards selected source cases to raw-coordinate
+      continuous FeatureSpace inputs with Euclidean tree distances. Continuous
+      examples are deliberately not cloned for every median-binary case.
 
     Parameter ranges:
       number of samples       30 to 300
@@ -163,53 +160,59 @@ _GAUSSIAN_TEXT = dedent(
 
     Subcategories:
 
-      1. improved_gaussian (7 binary + 7 continuous cases)
+      1. improved_gaussian
          Progressive difficulty from well-separated (standard deviation 0.5)
          through moderate overlap (1.2 to 1.5) to challenging noise (2.0
          to 2.5).  Targets statistical power edge cases: small sample
          sizes, moderate cluster counts.
 
-      2. gaussian_extreme_noise (3 binary + 3 continuous cases)
+      2. gaussian_extreme_noise
          High noise (standard deviation 2.0 to 7.5) and/or very high
          dimensionality (up to 20 000 features, up to 30 clusters).
          Probes failure modes where signal is buried in noise.
 
-      3. gaussian_null (2 binary + 2 continuous cases)
+      3. gaussian_null
          Single-cluster data (K=1) with no structure.  Tests the
          algorithm's ability to correctly return K=1.
 
-      4. gaussian_dimensionality_consolidated (3 binary + 3 continuous cases)
+      4. gaussian_dimensionality_consolidated
         Fixed informative subspace with increasing irrelevant dimensions.
         Signal is concentrated in cluster-owned feature blocks, following
         common high-dimensional benchmark practice where p grows mainly
         through noise features rather than extra informative ones.
 
-      5. gaussian_dimensionality_diffuse (3 binary + 3 continuous cases)
+      5. gaussian_dimensionality_diffuse
         Fixed informative subspace with correlated signal spread across the
         relevant dimensions, plus increasing irrelevant dimensions.
         This stresses recovery when the signal is weakly distributed rather
         than localized in a small block.
 
-      6. gaussian_outlier_singleton (1 binary + 1 continuous case)
+      6. gaussian_outlier_singleton
         A standard clustered Gaussian benchmark with one extreme singleton
         outlier added far from the inlier clusters. This tests whether the
         method isolates a lone anomalous point as its own leaf/split.
 
-      7. gaussian_outlier_contamination (2 binary + 2 continuous cases)
+      7. gaussian_outlier_contamination
         Small outlier contamination using either a tiny remote Gaussian group
         or a shell of dispersed anomalous points around the inlier support.
         This tests whether the method can separate clustered contamination
         and low-rate diffuse anomalies.
 
+      8. continuous_*_examples
+        Representative raw-coordinate examples covering clear, moderate,
+        null, high-dimensional, dimensional, and outlier contexts.
+
     Design notes:
-      The A/B split separates discretization effects from the continuous
-      empirical-Gaussian path without deleting the historical binary cases.
+      The representation-forwarding examples separate discretization effects
+      from the continuous empirical-Gaussian path without pretending that
+      every historical median-binary stress case has a validated continuous
+      counterpart.
 """
 )
 
 _BINARY_TEXT = dedent(
     """\
-    Binary Cases  (28 cases)
+    Binary Cases
 
     Data generation:
       generate_random_feature_matrix produces a {0,1} matrix directly.
@@ -224,12 +227,12 @@ _BINARY_TEXT = dedent(
       entropy               0.00 to 0.25
 
     Subcategories:
-      balanced low noise (2)       sparse features (2)
-      perfect separation (3)       low noise (4)
-      moderate noise (3)           hard (2)
-      unbalanced clusters (2)      edge cases (3)
-      null (2  K=1)                multi-scale (2)
-      noise features (3)
+      balanced low noise       sparse features
+      perfect separation       low noise
+      moderate noise           hard
+      unbalanced clusters      edge cases
+      null (K=1)               multi-scale
+      noise features
 
     Noise-feature cases append 200 to 500 uninformative Bernoulli(0.5)
     columns to test robustness to irrelevant features.
@@ -238,7 +241,7 @@ _BINARY_TEXT = dedent(
 
 _SBM_TEXT = dedent(
     """\
-    Stochastic Block Model Cases  (3 cases)
+    Stochastic Block Model Cases
 
     Data generation:
       generate_sbm creates a random graph with planted community structure.
@@ -258,7 +261,7 @@ _SBM_TEXT = dedent(
 
 _CATEGORICAL_TEXT = dedent(
     """\
-    Categorical Cases  (11 cases)
+    Categorical Cases
 
     Data generation:
       generate_categorical_feature_matrix produces an (n x p) matrix of
@@ -274,15 +277,15 @@ _CATEGORICAL_TEXT = dedent(
       entropy                  0.05 to 0.35
 
     Subcategories:
-      clear (3)                moderate (2)
-      high cardinality (2)     unbalanced (1)
-      overlapping (1)          high dimensional (2)
+      clear                moderate
+      high cardinality     unbalanced
+      overlapping          high dimensional
 """
 )
 
 _PHYLOGENETIC_TEXT = dedent(
     """\
-    Phylogenetic Cases  (13 cases)
+    Phylogenetic Cases
 
     Data generation:
       generate_phylogenetic_data simulates trait evolution along a random
@@ -305,7 +308,7 @@ _PHYLOGENETIC_TEXT = dedent(
 
 _OVERLAPPING_TEXT = dedent(
     """\
-    Overlapping Cases  (25 cases)
+    Overlapping Cases
 
     Data generation:
       Binary subcategories use generate_random_feature_matrix with high
@@ -320,10 +323,10 @@ _OVERLAPPING_TEXT = dedent(
       number of clusters    3 to 10
 
     Subcategories:
-      heavy overlap (4)            moderate overlap (3)
-      partial overlap (3)          high dimensional (1)
-      unbalanced (3)               Gaussian overlap (8)
-      Gaussian quantile (3)
+      heavy overlap            moderate overlap
+      partial overlap          high dimensional
+      unbalanced               Gaussian overlap
+      Gaussian quantile
 
     Purpose:  tests the algorithm's ability to correctly merge overlapping
     groups rather than over-split.
@@ -332,7 +335,7 @@ _OVERLAPPING_TEXT = dedent(
 
 _REALDATA_TEXT = dedent(
     """\
-    Real Data  (1 case)
+    Real Data
 
     Source:  data/feature_matrices/feature_matrix.tsv -- a binary Gene Ontology term annotation
     matrix from the repository root.
@@ -454,7 +457,7 @@ def _text_page(
 
 
 def generate_overview_page(
-    n_cases: int = 122,
+    n_cases: int = 110,
     timestamp: str | None = None,
 ) -> plt.Figure:
     """Return a single overview/title page figure."""
@@ -481,45 +484,6 @@ def generate_section_page(group: str) -> plt.Figure | None:
     if group == "real_data":
         text = text + "\n" + _EVALUATION_TEXT
     return _text_page(text, fontsize=9.5)
-
-
-def _resolve_case_geometry(case: dict) -> tuple[int, int]:
-    generator = case["generator"]
-    if generator == "sbm":
-        n_nodes = sum(int(size) for size in case["sizes"])
-        return n_nodes, n_nodes
-    if generator == "phylogenetic":
-        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(
-            case["n_features"]
-        ) * int(case["n_categories"])
-    if generator == "temporal_evolution":
-        return int(case["n_time_points"]) * int(case["samples_per_time"]), int(
-            case["n_features"]
-        ) * int(case["n_categories"])
-    if generator in {"categorical", "blobs_quantile"}:
-        return int(case["n_samples"]), int(case["n_features"]) * int(case["n_categories"])
-    if generator == "binary":
-        return int(case["n_samples"]), int(case["n_features"]) + int(case["noise_features"])
-    if generator in {
-        "blobs",
-        "blobs_continuous",
-        "dimensional_gaussian",
-        "dimensional_gaussian_continuous",
-        "gaussian_outliers",
-        "gaussian_outliers_continuous",
-    }:
-        return int(case["n_samples"]), int(case["n_features"])
-    raise ValueError(f"Unknown benchmark case generator {generator!r}.")
-
-
-def _case_cluster_count(case: dict) -> int:
-    if case["generator"] == "sbm":
-        return len(case["sizes"])
-    if "n_clusters" in case:
-        return int(case["n_clusters"])
-    if "n_taxa" in case:
-        return int(case["n_taxa"])
-    raise ValueError(f"Case {case['name']!r} does not declare a cluster count.")
 
 
 def _case_parameter_summary(case: dict) -> str:
@@ -571,11 +535,11 @@ def generate_case_manifest_pages(
             divider,
         ]
         for offset, case in enumerate(chunk, start=start + 1):
-            n_samples, n_features = _resolve_case_geometry(case)
+            n_samples, n_features = case_recipe_geometry(case)
             case_id = str(case["name"])[:34]
             group = category_group(case["category"])
             generator = str(case["generator"])[:22]
-            k_true = _case_cluster_count(case)
+            k_true = case_recipe_cluster_count(case)
             params = _case_parameter_summary(case)
             lines.append(
                 f"{offset:>3}  {case_id:<34} {group:<12} {generator:<22} "
@@ -604,7 +568,7 @@ def write_case_manifest_pages_to_pdf(
 def write_cover_pages_to_pdf(
     pdf_path: str | None = None,
     *,
-    n_cases: int = 122,
+    n_cases: int = 110,
     timestamp: str | None = None,
 ) -> str | None:
     """Write the cover pages to a standalone PDF file.
