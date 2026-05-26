@@ -27,6 +27,17 @@ FeatureSpaceLabel = Literal["bernoulli", "categorical", "continuous", "mixed"]
 
 
 @dataclass(frozen=True)
+class _ResolvedContrastInputs:
+    first: NDArray[np.float64]
+    second: NDArray[np.float64]
+    covariance_distribution: NDArray[np.float64]
+    feature_space: FeatureSpace
+    variance_scale: float
+    continuous_covariance_by_block: dict[str, NDArray[np.float64]]
+    ridge: float
+
+
+@dataclass(frozen=True)
 class ContrastCovariance:
     """A Wald contrast and its block covariance in independent coordinates."""
 
@@ -87,6 +98,47 @@ def build_contrast_covariance(
     Distributions are flat raw-coordinate vectors. The feature-space blocks
     define the contrast chart and covariance model for each coordinate block.
     """
+    resolved = _resolve_contrast_inputs(
+        first_distribution,
+        second_distribution,
+        first_sample_size,
+        second_sample_size,
+        comparison=comparison,
+        feature_space=feature_space,
+        branch_length_sum=branch_length_sum,
+        branch_length=branch_length,
+        mean_branch_length=mean_branch_length,
+        continuous_covariance_by_block=continuous_covariance_by_block,
+        ridge=ridge,
+    )
+
+    return _feature_space_contrast_covariance(
+        resolved.first,
+        resolved.second,
+        resolved.covariance_distribution,
+        feature_space=resolved.feature_space,
+        variance_scale=resolved.variance_scale,
+        comparison=comparison,
+        continuous_covariance_by_block=resolved.continuous_covariance_by_block,
+        ridge=resolved.ridge,
+    )
+
+
+def _resolve_contrast_inputs(
+    first_distribution: NDArray[np.floating],
+    second_distribution: NDArray[np.floating],
+    first_sample_size: float,
+    second_sample_size: float,
+    *,
+    comparison: ComparisonKind,
+    feature_space: FeatureSpace | None,
+    branch_length_sum: float | None,
+    branch_length: float | None,
+    mean_branch_length: float | None,
+    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None,
+    ridge: float,
+) -> _ResolvedContrastInputs:
+    """Validate and resolve the objects shared by all contrast computations."""
     first = _as_flat_distribution_array(
         first_distribution,
         value_name="first_distribution",
@@ -148,13 +200,12 @@ def build_contrast_covariance(
     else:
         raise ValueError(f"Unknown comparison kind: {comparison!r}.")
 
-    return _feature_space_contrast_covariance(
-        first,
-        second,
-        covariance_distribution,
+    return _ResolvedContrastInputs(
+        first=first,
+        second=second,
+        covariance_distribution=covariance_distribution,
         feature_space=active_feature_space,
         variance_scale=variance_scale,
-        comparison=comparison,
         continuous_covariance_by_block=continuous_covariance_blocks,
         ridge=ridge_value,
     )
@@ -175,7 +226,7 @@ def compute_whitened_wald_contrast(
     ridge: float = 1e-12,
 ) -> NDArray[np.float64]:
     """Return the covariance-whitened Wald contrast vector."""
-    return build_contrast_covariance(
+    resolved = _resolve_contrast_inputs(
         first_distribution,
         second_distribution,
         first_sample_size,
@@ -187,6 +238,20 @@ def compute_whitened_wald_contrast(
         mean_branch_length=mean_branch_length,
         continuous_covariance_by_block=continuous_covariance_by_block,
         ridge=ridge,
+    )
+    fast_z = _compute_vectorized_whitened_wald_contrast(resolved)
+    if fast_z is not None:
+        return fast_z
+
+    return _feature_space_contrast_covariance(
+        resolved.first,
+        resolved.second,
+        resolved.covariance_distribution,
+        feature_space=resolved.feature_space,
+        variance_scale=resolved.variance_scale,
+        comparison=comparison,
+        continuous_covariance_by_block=resolved.continuous_covariance_by_block,
+        ridge=resolved.ridge,
     ).whitened_vector()
 
 
@@ -269,6 +334,19 @@ def build_null_whitened_tangent_matrix(
         for block in active_feature_space.blocks
     ]
     return np.column_stack(tangent_blocks)
+
+
+def _compute_vectorized_whitened_wald_contrast(
+    resolved: _ResolvedContrastInputs,
+) -> NDArray[np.float64] | None:
+    """Return a fast whitened contrast for common feature-space contracts."""
+    if _uses_diagonal_null_whitening(resolved.feature_space):
+        return _build_diagonal_whitened_wald_contrast(resolved)
+
+    if _uses_grouped_categorical_null_whitening(resolved.feature_space):
+        return _build_grouped_categorical_whitened_wald_contrast(resolved)
+
+    return None
 
 
 def _uses_diagonal_null_whitening(feature_space: FeatureSpace) -> bool:
@@ -404,6 +482,53 @@ def _build_diagonal_null_whitened_tangent_matrix(
     )
 
 
+def _build_diagonal_whitened_wald_contrast(
+    resolved: _ResolvedContrastInputs,
+) -> NDArray[np.float64]:
+    """Vectorize one-dimensional Bernoulli/continuous Wald whitening."""
+    if not _uses_diagonal_null_whitening(resolved.feature_space):
+        raise ValueError(
+            "Diagonal Wald whitening requires a pure Bernoulli or one-dimensional "
+            "continuous feature space."
+        )
+
+    distribution_matrix, covariance_distribution = _validate_diagonal_tangent_inputs(
+        np.vstack([resolved.first, resolved.second]),
+        resolved.covariance_distribution,
+        resolved.feature_space,
+    )
+    column_indices = np.asarray(
+        [block.column_indices[0] for block in resolved.feature_space.blocks],
+        dtype=np.int64,
+    )
+    contrast = distribution_matrix[0, column_indices] - distribution_matrix[1, column_indices]
+
+    if resolved.feature_space.family_label == "bernoulli":
+        probabilities = covariance_distribution[column_indices]
+        variances = probabilities * (1.0 - probabilities) * resolved.variance_scale
+        variances = variances + resolved.ridge
+        return contrast / np.sqrt(variances)
+
+    if resolved.feature_space.family_label == "continuous":
+        covariance_blocks = _validate_diagonal_continuous_covariance_by_block(
+            resolved.feature_space,
+            resolved.continuous_covariance_by_block,
+        )
+        variances = np.asarray(
+            [
+                covariance_blocks[block.name][0, 0]
+                for block in resolved.feature_space.blocks
+            ],
+            dtype=np.float64,
+        )
+        variances = variances * resolved.variance_scale + resolved.ridge
+        return contrast / np.sqrt(variances)
+
+    raise ValueError(
+        f"Unknown diagonal feature family: {resolved.feature_space.family_label!r}."
+    )
+
+
 def _validate_grouped_categorical_tangent_inputs(
     distributions: NDArray[np.float64],
     null_distribution: NDArray[np.float64],
@@ -524,6 +649,64 @@ def _build_grouped_categorical_null_whitened_tangent_matrix(
 
         for grouped_block_index, (block_index, _block) in enumerate(indexed_blocks):
             output[:, output_slices[block_index]] = solved[:, grouped_block_index, :]
+
+    return output
+
+
+def _build_grouped_categorical_whitened_wald_contrast(
+    resolved: _ResolvedContrastInputs,
+) -> NDArray[np.float64]:
+    """Vectorize simplex-block Wald whitening by category count."""
+    if not _uses_grouped_categorical_null_whitening(resolved.feature_space):
+        raise ValueError(
+            "Grouped categorical Wald whitening requires a pure categorical feature space."
+        )
+    distribution_matrix, covariance_distribution = (
+        _validate_grouped_categorical_tangent_inputs(
+            np.vstack([resolved.first, resolved.second]),
+            resolved.covariance_distribution,
+            resolved.feature_space,
+            continuous_covariance_by_block=None,
+        )
+    )
+
+    output = np.empty(resolved.feature_space.contrast_dimension, dtype=np.float64)
+    output_slices: list[slice] = []
+    offset = 0
+    for block in resolved.feature_space.blocks:
+        next_offset = offset + block.contrast_dimension
+        output_slices.append(slice(offset, next_offset))
+        offset = next_offset
+
+    for category_count, indexed_blocks in _categorical_blocks_by_category_count(
+        resolved.feature_space
+    ).items():
+        contrast_dimension = category_count - 1
+        column_indices = np.asarray(
+            [block.column_indices for _block_index, block in indexed_blocks],
+            dtype=np.int64,
+        )
+        first_blocks = distribution_matrix[0, column_indices]
+        second_blocks = distribution_matrix[1, column_indices]
+        reduced_probability = covariance_distribution[column_indices][:, :-1]
+
+        covariance_blocks = -np.einsum(
+            "bi,bj->bij",
+            reduced_probability,
+            reduced_probability,
+            optimize=True,
+        )
+        diagonal = np.arange(contrast_dimension)
+        covariance_blocks[:, diagonal, diagonal] += reduced_probability
+        covariance_blocks *= resolved.variance_scale
+        covariance_blocks[:, diagonal, diagonal] += resolved.ridge
+
+        cholesky_blocks = np.linalg.cholesky(covariance_blocks)
+        contrast_blocks = first_blocks[:, :-1] - second_blocks[:, :-1]
+        solved = np.linalg.solve(cholesky_blocks, contrast_blocks[..., None])[:, :, 0]
+
+        for grouped_block_index, (block_index, _block) in enumerate(indexed_blocks):
+            output[output_slices[block_index]] = solved[grouped_block_index]
 
     return output
 

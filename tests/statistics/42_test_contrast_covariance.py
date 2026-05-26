@@ -472,6 +472,108 @@ def test_bernoulli_is_two_category_multinomial_for_sibling_whitening() -> None:
     np.testing.assert_allclose(bernoulli_z, categorical_z)
 
 
+def test_vectorized_bernoulli_wald_whitening_matches_block_formula() -> None:
+    left = np.array([0.2, 0.7, 0.3, 0.8], dtype=np.float64)
+    right = np.array([0.5, 0.4, 0.6, 0.1], dtype=np.float64)
+
+    vectorized_z = compute_whitened_wald_contrast(
+        left,
+        right,
+        40.0,
+        60.0,
+        comparison="sibling",
+        ridge=1e-12,
+    )
+    block_z = build_contrast_covariance(
+        left,
+        right,
+        40.0,
+        60.0,
+        comparison="sibling",
+        ridge=1e-12,
+    ).whitened_vector()
+
+    np.testing.assert_allclose(vectorized_z, block_z, rtol=1e-14, atol=1e-14)
+
+
+def test_vectorized_categorical_wald_whitening_matches_block_formula() -> None:
+    columns = (
+        "F0_c0",
+        "F0_c1",
+        "F0_c2",
+        "F1_c0",
+        "F1_c1",
+        "F1_c2",
+        "F1_c3",
+        "F2_c0",
+        "F2_c1",
+    )
+    feature_space = infer_feature_space_from_columns(columns)
+    left = np.array(
+        [0.2, 0.3, 0.5, 0.1, 0.2, 0.3, 0.4, 0.7, 0.3],
+        dtype=np.float64,
+    )
+    right = np.array(
+        [0.4, 0.4, 0.2, 0.3, 0.3, 0.2, 0.2, 0.2, 0.8],
+        dtype=np.float64,
+    )
+
+    vectorized_z = compute_whitened_wald_contrast(
+        left,
+        right,
+        25.0,
+        80.0,
+        comparison="sibling",
+        feature_space=feature_space,
+        ridge=1e-12,
+    )
+    block_z = build_contrast_covariance(
+        left,
+        right,
+        25.0,
+        80.0,
+        comparison="sibling",
+        feature_space=feature_space,
+        ridge=1e-12,
+    ).whitened_vector()
+
+    np.testing.assert_allclose(vectorized_z, block_z, rtol=1e-13, atol=1e-13)
+
+
+def test_vectorized_diagonal_continuous_wald_whitening_matches_block_formula() -> None:
+    feature_space = continuous_feature_space_from_columns(("X0", "X1", "X2"))
+    covariance_by_block = {
+        "X0": np.array([[4.0]], dtype=np.float64),
+        "X1": np.array([[9.0]], dtype=np.float64),
+        "X2": np.array([[16.0]], dtype=np.float64),
+    }
+    left = np.array([2.0, -1.0, 5.0], dtype=np.float64)
+    right = np.array([1.5, 0.0, 4.0], dtype=np.float64)
+
+    vectorized_z = compute_whitened_wald_contrast(
+        left,
+        right,
+        20.0,
+        30.0,
+        comparison="sibling",
+        feature_space=feature_space,
+        continuous_covariance_by_block=covariance_by_block,
+        ridge=1e-12,
+    )
+    block_z = build_contrast_covariance(
+        left,
+        right,
+        20.0,
+        30.0,
+        comparison="sibling",
+        feature_space=feature_space,
+        continuous_covariance_by_block=covariance_by_block,
+        ridge=1e-12,
+    ).whitened_vector()
+
+    np.testing.assert_allclose(vectorized_z, block_z, rtol=1e-14, atol=1e-14)
+
+
 def test_sibling_contrast_rejects_child_parent_branch_length_parameter() -> None:
     with pytest.raises(ValueError, match="branch_length is only valid"):
         build_contrast_covariance(
