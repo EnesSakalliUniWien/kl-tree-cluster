@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from benchmarks.shared.result_records.models import BenchmarkResultRow, BenchmarkRunStatus
 from benchmarks.shared.util.params import format_params_for_display
+from benchmarks.shared.util.time import normalize_stage_timings
 
 
 def _normalize_status(status: str | BenchmarkRunStatus) -> BenchmarkRunStatus:
@@ -51,12 +52,14 @@ def build_benchmark_result_row(
     status: str | BenchmarkRunStatus,
     skip_reason: str | None,
     labels_length: int,
+    stage_timings: dict[str, object] | None = None,
 ) -> BenchmarkResultRow:
     """Build a typed benchmark row with normalized output fields."""
     if true_clusters is None:
         raise ValueError("true_clusters must be an integer; use 0 when cluster truth is unknown.")
     if noise is None:
         raise ValueError("noise must be a float; use NaN when noise metadata is unavailable.")
+    normalized_stage_timings = normalize_stage_timings(stage_timings)
     return BenchmarkResultRow(
         test_case=int(test_case),
         case_id=str(case_id),
@@ -85,6 +88,29 @@ def build_benchmark_result_row(
         cluster_count_abs_error=float(cluster_count_abs_error),
         over_split=float(over_split),
         under_split=float(under_split),
+        tree_build_sec=normalized_stage_timings["tree_build_sec"],
+        populate_divergences_sec=normalized_stage_timings["populate_divergences_sec"],
+        gate2_sec=normalized_stage_timings["gate2_sec"],
+        gate2_contrast_covariance_sec=normalized_stage_timings[
+            "gate2_contrast_covariance_sec"
+        ],
+        gate2_projection_sec=normalized_stage_timings["gate2_projection_sec"],
+        gate2_wald_statistic_sec=normalized_stage_timings[
+            "gate2_wald_statistic_sec"
+        ],
+        gate2_tree_bh_sec=normalized_stage_timings["gate2_tree_bh_sec"],
+        spectral_context_sec=normalized_stage_timings["spectral_context_sec"],
+        tangent_whitening_sec=normalized_stage_timings["tangent_whitening_sec"],
+        eigensolve_sec=normalized_stage_timings["eigensolve_sec"],
+        pca_projection_sec=normalized_stage_timings["pca_projection_sec"],
+        gate3_sec=normalized_stage_timings["gate3_sec"],
+        gate3_pair_record_collection_sec=normalized_stage_timings[
+            "gate3_pair_record_collection_sec"
+        ],
+        gate3_inflation_fit_sec=normalized_stage_timings["gate3_inflation_fit_sec"],
+        gate3_adjusted_tests_sec=normalized_stage_timings["gate3_adjusted_tests_sec"],
+        gate3_sibling_fdr_sec=normalized_stage_timings["gate3_sibling_fdr_sec"],
+        traversal_sec=normalized_stage_timings["traversal_sec"],
         status=_normalize_status(status),
         skip_reason=(skip_reason or ""),
         labels_length=int(labels_length),

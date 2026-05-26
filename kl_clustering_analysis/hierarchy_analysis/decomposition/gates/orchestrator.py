@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from time import perf_counter
 
 import numpy as np
 import pandas as pd
@@ -167,14 +168,29 @@ def run_gate_annotation_pipeline(
     Gate 2 uses Tree-BH (Tree-structured Benjamini-Hochberg) for FDR correction.
     This is the only supported multiple-testing method.
     """
+    stage_timings = {
+        "gate2_contrast_covariance_sec": 0.0,
+        "gate2_projection_sec": 0.0,
+        "gate2_wald_statistic_sec": 0.0,
+        "gate2_tree_bh_sec": 0.0,
+        "gate3_pair_record_collection_sec": 0.0,
+        "gate3_inflation_fit_sec": 0.0,
+        "gate3_adjusted_tests_sec": 0.0,
+        "gate3_sibling_fdr_sec": 0.0,
+    }
+
     # Run Gate 2: child-parent edge tests
+    gate2_start_sec = perf_counter()
     edge_annotated_df, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
         annotations_df,
         significance_level_alpha=alpha_local,
         leaf_data=leaf_data,
         feature_space=feature_space,
+        stage_timings=stage_timings,
     )
+    gate2_sec = float(perf_counter() - gate2_start_sec)
+    stage_timings.update(spectral_context.stage_timings)
     validate_edge_gate_columns(edge_annotated_df)
     edge_metadata = _build_edge_metadata(
         alpha_local=alpha_local,
@@ -191,6 +207,7 @@ def run_gate_annotation_pipeline(
     )
 
     # Run Gate 3: sibling divergence tests
+    gate3_start_sec = perf_counter()
     annotated_df = annotate_sibling_divergence(
         tree,
         edge_annotated_df,
@@ -205,7 +222,9 @@ def run_gate_annotation_pipeline(
             sibling_inputs.parent_principal_component_eigenvalues
         ),
         feature_space=feature_space,
+        stage_timings=stage_timings,
     )
+    gate3_sec = float(perf_counter() - gate3_start_sec)
     validate_edge_gate_columns(
         annotated_df,
         error_context="Sibling gate input/output edge columns differ from required contract",
@@ -226,10 +245,14 @@ def run_gate_annotation_pipeline(
         ),
     )
 
+    stage_timings["gate2_sec"] = gate2_sec
+    stage_timings["gate3_sec"] = gate3_sec
+
     return GateAnnotationBundle(
         annotated_df=annotated_df,
         metadata=metadata,
         gate_two_result=gate_two_result,
+        stage_timings=stage_timings,
     )
 
 

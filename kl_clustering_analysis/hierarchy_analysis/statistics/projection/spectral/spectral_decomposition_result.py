@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -17,6 +17,7 @@ class SpectralDecompositionResult:
     mp_threshold_rows_by_node: dict[str, int]
     principal_component_projections_by_node: dict[str, np.ndarray]
     principal_component_eigenvalues_by_node: dict[str, np.ndarray]
+    stage_timings: dict[str, float] = field(default_factory=dict)
 
 
 __all__ = ["SpectralDecompositionResult"]

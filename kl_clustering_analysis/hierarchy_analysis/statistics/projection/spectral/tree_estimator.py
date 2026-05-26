@@ -22,6 +22,7 @@ zero-dimensional PCA contexts.
 from __future__ import annotations
 
 import logging
+from time import perf_counter
 from typing import Dict, cast
 
 import networkx as nx
@@ -188,6 +189,7 @@ def compute_spectral_decomposition(
         counts, effective independent row counts, and MP threshold row counts
         are exposed separately.
     """
+    spectral_start_sec = perf_counter()
     if include_internal is None:
         from kl_clustering_analysis import config
 
@@ -254,6 +256,24 @@ def compute_spectral_decomposition(
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
     )
+    spectral_wall_sec = float(perf_counter() - spectral_start_sec)
+    stage_timings = {
+        "tangent_whitening_sec": float(
+            sum(
+                result.stage_timings.get("tangent_whitening_sec", 0.0)
+                for result in spectral_results
+            )
+        ),
+        "eigensolve_sec": float(
+            sum(result.stage_timings.get("eigensolve_sec", 0.0) for result in spectral_results)
+        ),
+        "pca_projection_sec": float(
+            sum(
+                result.stage_timings.get("pca_projection_sec", 0.0)
+                for result in spectral_results
+            )
+        ),
+    }
 
     # Log summary statistics
     internal_projection_dimensions = [
@@ -272,11 +292,13 @@ def compute_spectral_decomposition(
             max(internal_projection_dimensions),
             len(internal_projection_dimensions),
             feature_count,
+            spectral_wall_sec,
         )
 
     logger.info(
         "Computed PCA projections for %d internal nodes [%.2fs total]",
         len(pca_projections),
+        spectral_wall_sec,
     )
 
     return SpectralDecompositionResult(
@@ -286,6 +308,7 @@ def compute_spectral_decomposition(
         mp_threshold_rows_by_node=mp_threshold_rows,
         principal_component_projections_by_node=pca_projections,
         principal_component_eigenvalues_by_node=pca_eigenvalues,
+        stage_timings=stage_timings,
     )
 
 

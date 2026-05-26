@@ -9,6 +9,30 @@ from benchmarks.shared.types import MethodRunResult, MethodSpec
 from benchmarks.shared.util import method_execution
 
 
+def _stage_timings(**overrides):
+    stage_timings = {
+        "tree_build_sec": 0.01,
+        "populate_divergences_sec": 0.02,
+        "gate2_sec": 0.03,
+        "gate2_contrast_covariance_sec": 0.04,
+        "gate2_projection_sec": 0.05,
+        "gate2_wald_statistic_sec": 0.06,
+        "gate2_tree_bh_sec": 0.07,
+        "spectral_context_sec": 0.08,
+        "tangent_whitening_sec": 0.09,
+        "eigensolve_sec": 0.10,
+        "pca_projection_sec": 0.11,
+        "gate3_sec": 0.12,
+        "gate3_pair_record_collection_sec": 0.13,
+        "gate3_inflation_fit_sec": 0.14,
+        "gate3_adjusted_tests_sec": 0.15,
+        "gate3_sibling_fdr_sec": 0.16,
+        "traversal_sec": 0.17,
+    }
+    stage_timings.update(overrides)
+    return stage_timings
+
+
 def _benchmark_meta(**overrides):
     metadata = {
         "name": "regression_case",
@@ -51,7 +75,7 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
             report_df=misordered_report,
             status="ok",
             skip_reason=None,
-            extra={},
+            extra={"stage_timings": _stage_timings()},
         )
 
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
@@ -83,10 +107,19 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert np.isclose(result_row.purity, 1.0)
     assert result_row.params_raw["tree_distance_metric"] == "hamming"
     assert result_row.params_raw["tree_distance_source"] == "feature_metric"
+    assert result_row.tree_build_sec == 0.01
+    assert result_row.gate2_sec == 0.03
+    assert result_row.gate2_contrast_covariance_sec == 0.04
+    assert result_row.gate2_tree_bh_sec == 0.07
+    assert result_row.gate3_sec == 0.12
+    assert result_row.gate3_pair_record_collection_sec == 0.13
+    assert result_row.gate3_sibling_fdr_sec == 0.16
+    assert result_row.traversal_sec == 0.17
     assert computed_result is not None
     assert np.isclose(computed_result.ari, 1.0)
     assert computed_result.params["tree_distance_metric"] == "hamming"
     assert computed_result.params["tree_distance_source"] == "feature_metric"
+    assert computed_result.meta["stage_timings"]["gate2_sec"] == 0.03
     assert method_audit is None
 
 
@@ -108,7 +141,7 @@ def test_run_single_method_once_records_precomputed_kl_distance_contract(monkeyp
             report_df=None,
             status="ok",
             skip_reason=None,
-            extra={},
+            extra={"stage_timings": _stage_timings()},
         )
 
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
@@ -181,6 +214,46 @@ def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance
             ),
             distance_matrix=None,
             distance_condensed=np.ones(6, dtype=float),
+            matrix_audit=False,
+        )
+
+
+def test_run_single_method_once_requires_kl_stage_timings(monkeypatch):
+    data_t = pd.DataFrame(
+        [[0, 1], [1, 0], [0, 0], [1, 1]],
+        index=["S0", "S1", "S2", "S3"],
+        columns=["F0", "F1"],
+    )
+    y_t = np.array([0, 0, 1, 1], dtype=int)
+
+    def _fake_run_clustering_result(**_kwargs):
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
+
+    spec = MethodSpec(name="KL", runner=lambda **_kwargs: None, param_grid=[{}])
+    with pytest.raises(ValueError, match="stage_timings"):
+        method_execution.run_single_method_once(
+            method_id="kl",
+            spec=spec,
+            params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
+            case_idx=1,
+            case_name="missing_timing_case",
+            tc_seed=42,
+            significance_level=0.05,
+            data_t=data_t,
+            y_t=y_t,
+            x_original=data_t.values.astype(float),
+            meta=_benchmark_meta(name="missing_timing_case"),
+            distance_matrix=None,
+            distance_condensed=None,
             matrix_audit=False,
         )
 

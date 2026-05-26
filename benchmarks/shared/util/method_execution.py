@@ -14,6 +14,7 @@ from benchmarks.shared.result_records import (
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.types import MethodSpec
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
+from benchmarks.shared.util.time import BENCHMARK_STAGE_TIMING_KEYS
 from scipy.spatial.distance import pdist
 
 KL_TREE_DISTANCE_SOURCE_KEY = "tree_distance_source"
@@ -121,6 +122,30 @@ def _build_method_failure_row(
     )
 
 
+def _extract_stage_timings(
+    *,
+    method_id: str,
+    result_status: str,
+    result_extra: dict | None,
+) -> dict[str, object] | None:
+    """Return stage timings and enforce the KL-family timing contract."""
+    stage_timings = (
+        result_extra.get("stage_timings")
+        if result_extra and isinstance(result_extra.get("stage_timings"), dict)
+        else None
+    )
+    if method_id.startswith("kl") and result_status == "ok":
+        if stage_timings is None:
+            raise ValueError("Successful KL-family method results must include stage_timings.")
+        missing_timing_keys = sorted(set(BENCHMARK_STAGE_TIMING_KEYS) - set(stage_timings))
+        if missing_timing_keys:
+            raise ValueError(
+                "Successful KL-family method results must include every stage timing key; "
+                f"missing={missing_timing_keys!r}."
+            )
+    return stage_timings
+
+
 def run_single_method_once(
     *,
     method_id: str,
@@ -200,6 +225,11 @@ def run_single_method_once(
 
     true_clusters_raw = meta["n_clusters"]
     true_clusters = int(true_clusters_raw)
+    stage_timings = _extract_stage_timings(
+        method_id=method_id,
+        result_status=result.status,
+        result_extra=result.extra,
+    )
 
     if result.status == "ok" and result.labels is not None:
         labels = result.labels
@@ -266,11 +296,14 @@ def run_single_method_once(
         status=result.status,
         skip_reason=result.skip_reason,
         labels_length=labels_len,
+        stage_timings=stage_timings,
     )
 
     computed_result = None
     if result.status == "ok" and result.labels is not None:
         meta_run["found_clusters"] = found_clusters
+        if stage_timings is not None:
+            meta_run["stage_timings"] = dict(stage_timings)
         computed_result = build_computed_result_record(
             test_case_num=case_idx,
             method=method_id,

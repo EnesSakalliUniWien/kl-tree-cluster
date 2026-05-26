@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -18,6 +18,7 @@ class NodeSpectralResult:
     mp_threshold_rows: int
     projection_matrix: np.ndarray | None
     eigenvalues: np.ndarray | None
+    stage_timings: dict[str, float] = field(default_factory=dict)
 
 
 __all__ = ["NodeSpectralResult"]

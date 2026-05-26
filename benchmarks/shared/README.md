@@ -62,6 +62,9 @@ post-run diagnostics.
   not one continuous clone for every historical Gaussian stress case.
 - Method runners return `MethodRunResult`.
 - `result_records/` owns the CSV row contract and preserves `source_family`
-  plus `feature_representation` in every result row.
+  plus `feature_representation` in every result row. KL-family rows also expose
+  fixed stage timing columns for tree build, node-divergence population, Gate 2,
+  Gate 2 substeps, spectral whitening/eigensolve/projection, Gate 3, Gate 3
+  substeps, and traversal.
 - Missing or unsupported method contexts should be recorded explicitly as
   skipped/unsupported statuses, not hidden by default values.

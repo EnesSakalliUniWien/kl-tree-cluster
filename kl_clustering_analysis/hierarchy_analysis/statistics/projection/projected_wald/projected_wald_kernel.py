@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 from dataclasses import dataclass
+from time import perf_counter
 
 import numpy as np
 
@@ -21,12 +23,26 @@ class ProjectedWaldResult:
     p_value: float
 
 
+def _add_elapsed(
+    stage_timings: MutableMapping[str, float] | None,
+    key: str,
+    start_sec: float,
+) -> None:
+    if stage_timings is None:
+        return
+    stage_timings[key] = float(stage_timings.get(key, 0.0)) + float(
+        perf_counter() - start_sec
+    )
+
+
 def run_projected_wald_kernel(
     z: np.ndarray,
     *,
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
+    stage_timings: MutableMapping[str, float] | None = None,
+    timing_prefix: str | None = None,
 ) -> ProjectedWaldResult:
     """Project a standardized vector and compute Wald statistic/p-value.
 
@@ -68,6 +84,7 @@ def run_projected_wald_kernel(
             f"Projected Wald spectral_k={projection_dim} exceeds feature count {n_features}."
         )
 
+    projection_start_sec = perf_counter()
     projection_matrix, whitening_eigenvalues = build_pca_projection_basis(
         k=projection_dim,
         pca_projection=pca_projection,
@@ -80,11 +97,24 @@ def run_projected_wald_kernel(
         )
 
     projected_diff = projection_matrix @ standardized_diff
+    if timing_prefix is not None:
+        _add_elapsed(
+            stage_timings,
+            f"{timing_prefix}_projection_sec",
+            projection_start_sec,
+        )
 
+    statistic_start_sec = perf_counter()
     reference = compute_projected_pvalue(
         projected_diff,
         eigenvalues=whitening_eigenvalues,
     )
+    if timing_prefix is not None:
+        _add_elapsed(
+            stage_timings,
+            f"{timing_prefix}_wald_statistic_sec",
+            statistic_start_sec,
+        )
     return ProjectedWaldResult(
         statistic=float(reference.statistic),
         projection_dimension=int(projection_matrix.shape[0]),

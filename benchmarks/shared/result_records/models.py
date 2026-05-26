@@ -44,6 +44,23 @@ class BenchmarkResultRow:
     cluster_count_abs_error: float
     over_split: float
     under_split: float
+    tree_build_sec: float
+    populate_divergences_sec: float
+    gate2_sec: float
+    gate2_contrast_covariance_sec: float
+    gate2_projection_sec: float
+    gate2_wald_statistic_sec: float
+    gate2_tree_bh_sec: float
+    spectral_context_sec: float
+    tangent_whitening_sec: float
+    eigensolve_sec: float
+    pca_projection_sec: float
+    gate3_sec: float
+    gate3_pair_record_collection_sec: float
+    gate3_inflation_fit_sec: float
+    gate3_adjusted_tests_sec: float
+    gate3_sibling_fdr_sec: float
+    traversal_sec: float
     status: BenchmarkRunStatus
     skip_reason: str
     labels_length: int

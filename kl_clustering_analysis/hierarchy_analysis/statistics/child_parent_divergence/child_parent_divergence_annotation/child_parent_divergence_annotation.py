@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from time import perf_counter
+
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -27,6 +30,7 @@ def annotate_child_parent_divergence(
     significance_level_alpha: float = config.EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
+    stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using the projected Wald pipeline.
 
@@ -39,6 +43,7 @@ def annotate_child_parent_divergence(
         significance_level_alpha=significance_level_alpha,
         leaf_data=leaf_data,
         feature_space=feature_space,
+        stage_timings=stage_timings,
     )
     return annotated_df
 
@@ -50,6 +55,7 @@ def annotate_child_parent_divergence_with_context(
     significance_level_alpha: float = config.EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
+    stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[pd.DataFrame, SpectralContext]:
     """Test child-parent divergence and return typed Gate 2 spectral context."""
     annotations_df = annotations_df.copy()
@@ -76,22 +82,26 @@ def annotate_child_parent_divergence_with_context(
         feature_space=feature_space,
     )
 
+    test_kwargs = {
+        "tree": tree,
+        "child_ids": child_ids,
+        "parent_ids": parent_ids,
+        "child_leaf_counts": child_leaf_counts,
+        "parent_leaf_counts": parent_leaf_counts,
+        "spectral_dims": spectral_context.test_projection_dimensions_by_node,
+        "pca_projections": spectral_context.principal_component_projections_by_node,
+        "pca_eigenvalues": spectral_context.principal_component_eigenvalues_by_node,
+        "feature_space": feature_space,
+    }
+    if stage_timings is not None:
+        test_kwargs["stage_timings"] = stage_timings
+
     (
         edge_test_statistics,
         edge_degrees_of_freedom,
         edge_p_values,
         invalid_test_flags,
-    ) = run_child_parent_tests_across_tree(
-        tree=tree,
-        child_ids=child_ids,
-        parent_ids=parent_ids,
-        child_leaf_counts=child_leaf_counts,
-        parent_leaf_counts=parent_leaf_counts,
-        spectral_dims=spectral_context.test_projection_dimensions_by_node,
-        pca_projections=spectral_context.principal_component_projections_by_node,
-        pca_eigenvalues=spectral_context.principal_component_eigenvalues_by_node,
-        feature_space=feature_space,
-    )
+    ) = run_child_parent_tests_across_tree(**test_kwargs)
 
     if invalid_test_flags.any():
         invalid_child_ids = [
@@ -121,6 +131,7 @@ def annotate_child_parent_divergence_with_context(
                 f"bad child node(s): {bad_child_ids[:5]!r}."
             )
 
+    tree_bh_start_sec = perf_counter()
     (
         child_parent_edge_null_rejected_by_tree_bh,
         child_parent_edge_corrected_p_values_by_tree_bh,
@@ -132,6 +143,10 @@ def annotate_child_parent_divergence_with_context(
         child_ids=child_ids,
         edge_alpha=edge_alpha,
     )
+    if stage_timings is not None:
+        stage_timings["gate2_tree_bh_sec"] = float(
+            stage_timings.get("gate2_tree_bh_sec", 0.0)
+        ) + float(perf_counter() - tree_bh_start_sec)
 
     annotated_df = assign_divergence_results(
         annotations_df=annotations_df,

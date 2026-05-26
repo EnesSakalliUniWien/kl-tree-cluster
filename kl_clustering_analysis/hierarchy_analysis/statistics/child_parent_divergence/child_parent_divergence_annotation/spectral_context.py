@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from time import perf_counter
 
 import networkx as nx
 import numpy as np
@@ -25,6 +26,7 @@ class SpectralContext:
     mp_threshold_rows_by_node: dict[str, int]
     principal_component_projections_by_node: dict[str, np.ndarray]
     principal_component_eigenvalues_by_node: dict[str, np.ndarray]
+    stage_timings: dict[str, float] = field(default_factory=dict)
 
 
 def _validate_spectral_context_outputs(
@@ -94,6 +96,7 @@ def compute_child_parent_spectral_context(
     feature_space: FeatureSpace | None = None,
 ) -> SpectralContext:
     """Prepare Marchenko-Pastur spectral context for Gate 2."""
+    start_sec = perf_counter()
     spectral_decomposition = compute_spectral_decomposition(
         tree,
         leaf_data,
@@ -106,6 +109,8 @@ def compute_child_parent_spectral_context(
         spectral_decomposition.principal_component_projections_by_node,
         spectral_decomposition.principal_component_eigenvalues_by_node,
     )
+    stage_timings = dict(spectral_decomposition.stage_timings)
+    stage_timings["spectral_context_sec"] = float(perf_counter() - start_sec)
 
     return SpectralContext(
         test_projection_dimensions_by_node=(
@@ -122,6 +127,7 @@ def compute_child_parent_spectral_context(
         principal_component_eigenvalues_by_node=(
             spectral_decomposition.principal_component_eigenvalues_by_node
         ),
+        stage_timings=stage_timings,
     )
 
 

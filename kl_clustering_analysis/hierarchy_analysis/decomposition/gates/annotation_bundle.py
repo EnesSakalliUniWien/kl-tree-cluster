@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import pandas as pd
@@ -66,6 +66,7 @@ class GateAnnotationBundle:
     annotated_df: pd.DataFrame
     metadata: GateAnnotationMetadata
     gate_two_result: Gate2Result
+    stage_timings: dict[str, float] = field(default_factory=dict)
 
 
 __all__ = [

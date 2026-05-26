@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
+from time import perf_counter
 
 import numpy as np
 from numpy.typing import NDArray
@@ -27,8 +28,10 @@ def run_child_parent_projected_wald_test(
     pca_eigenvalues: np.ndarray | None = None,
     feature_space: FeatureSpace | None = None,
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
+    stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[float, float, float, bool]:
     """Compute projected Wald test for one child-parent edge."""
+    contrast_start_sec = perf_counter()
     standardized_z_scores = compute_child_parent_standardized_z_scores(
         child_dist,
         parent_dist,
@@ -39,6 +42,10 @@ def run_child_parent_projected_wald_test(
         feature_space=feature_space,
         continuous_covariance_by_block=continuous_covariance_by_block,
     )
+    if stage_timings is not None:
+        stage_timings["gate2_contrast_covariance_sec"] = float(
+            stage_timings.get("gate2_contrast_covariance_sec", 0.0)
+        ) + float(perf_counter() - contrast_start_sec)
 
     standardized_z_scores = standardized_z_scores.astype(np.float64, copy=False)
 
@@ -47,6 +54,8 @@ def run_child_parent_projected_wald_test(
         spectral_k=spectral_k,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
+        stage_timings=stage_timings,
+        timing_prefix="gate2",
     )
 
     return result.statistic, float(result.degrees_of_freedom), result.p_value, False

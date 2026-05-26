@@ -46,3 +46,24 @@ def test_strict_sibling_calibration_preserves_gauss_clear_small() -> None:
     result = _run_kl_method(context.data, context.distance_condensed, config.SIBLING_ALPHA)
 
     assert result.found_clusters == 3
+    stage_timings = result.extra["stage_timings"]
+    for key in (
+        "tree_build_sec",
+        "populate_divergences_sec",
+        "gate2_sec",
+        "gate2_contrast_covariance_sec",
+        "gate2_projection_sec",
+        "gate2_wald_statistic_sec",
+        "gate2_tree_bh_sec",
+        "spectral_context_sec",
+        "tangent_whitening_sec",
+        "eigensolve_sec",
+        "pca_projection_sec",
+        "gate3_sec",
+        "gate3_pair_record_collection_sec",
+        "gate3_inflation_fit_sec",
+        "gate3_adjusted_tests_sec",
+        "gate3_sibling_fdr_sec",
+        "traversal_sec",
+    ):
+        assert stage_timings[key] >= 0.0

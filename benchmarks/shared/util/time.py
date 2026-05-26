@@ -1,8 +1,32 @@
-"""Time formatting helpers shared by benchmark entrypoints."""
+"""Time helpers shared by benchmark entrypoints."""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime, timezone
+from time import perf_counter
+
+import numpy as np
+
+BENCHMARK_STAGE_TIMING_KEYS = (
+    "tree_build_sec",
+    "populate_divergences_sec",
+    "gate2_sec",
+    "gate2_contrast_covariance_sec",
+    "gate2_projection_sec",
+    "gate2_wald_statistic_sec",
+    "gate2_tree_bh_sec",
+    "spectral_context_sec",
+    "tangent_whitening_sec",
+    "eigensolve_sec",
+    "pca_projection_sec",
+    "gate3_sec",
+    "gate3_pair_record_collection_sec",
+    "gate3_inflation_fit_sec",
+    "gate3_adjusted_tests_sec",
+    "gate3_sibling_fdr_sec",
+    "traversal_sec",
+)
 
 
 def format_timestamp_utc(dt: datetime | None = None) -> str:
@@ -14,4 +38,37 @@ def format_timestamp_utc(dt: datetime | None = None) -> str:
     return dt.astimezone(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
 
 
-__all__ = ["format_timestamp_utc"]
+def elapsed_since(start_sec: float) -> float:
+    """Return elapsed wall-clock seconds since a ``perf_counter`` reading."""
+    return float(perf_counter() - start_sec)
+
+
+def normalize_stage_timings(
+    stage_timings: Mapping[str, object] | None,
+) -> dict[str, float]:
+    """Return canonical benchmark stage timing fields.
+
+    Missing fields are represented as ``NaN`` because non-KL methods do not
+    execute KL-specific stages.
+    """
+    normalized = {key: np.nan for key in BENCHMARK_STAGE_TIMING_KEYS}
+    if stage_timings is None:
+        return normalized
+    for key in BENCHMARK_STAGE_TIMING_KEYS:
+        if key not in stage_timings:
+            continue
+        value = float(stage_timings[key])
+        if not np.isfinite(value) or value < 0.0:
+            raise ValueError(
+                f"Stage timing {key!r} must be finite and non-negative; got {value}."
+            )
+        normalized[key] = value
+    return normalized
+
+
+__all__ = [
+    "BENCHMARK_STAGE_TIMING_KEYS",
+    "elapsed_since",
+    "format_timestamp_utc",
+    "normalize_stage_timings",
+]

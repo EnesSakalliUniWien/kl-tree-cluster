@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+
 import networkx as nx
 import numpy as np
 
@@ -30,6 +32,7 @@ def run_child_parent_tests_across_tree(
     pca_projections: dict[str, np.ndarray],
     pca_eigenvalues: dict[str, np.ndarray],
     feature_space: FeatureSpace | None = None,
+    stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute projected Wald results for all child-parent edges in the tree."""
     n_edge_tests = len(child_ids)
@@ -63,6 +66,16 @@ def run_child_parent_tests_across_tree(
             feature_space,
         )
 
+        test_kwargs = {
+            "spectral_k": node_spectral_dimension,
+            "pca_projection": node_pca_projection,
+            "pca_eigenvalues": node_pca_eigenvalues,
+            "feature_space": feature_space,
+            "continuous_covariance_by_block": continuous_covariance_by_block,
+        }
+        if stage_timings is not None:
+            test_kwargs["stage_timings"] = stage_timings
+
         (
             edge_test_statistic,
             edge_degrees_of_freedom,
@@ -75,11 +88,7 @@ def run_child_parent_tests_across_tree(
             int(parent_leaf_counts[edge_index]),
             branch_length,
             mean_branch_length,
-            spectral_k=node_spectral_dimension,
-            pca_projection=node_pca_projection,
-            pca_eigenvalues=node_pca_eigenvalues,
-            feature_space=feature_space,
-            continuous_covariance_by_block=continuous_covariance_by_block,
+            **test_kwargs,
         )
 
         test_statistics[edge_index], degrees_of_freedom[edge_index], p_values[edge_index] = (

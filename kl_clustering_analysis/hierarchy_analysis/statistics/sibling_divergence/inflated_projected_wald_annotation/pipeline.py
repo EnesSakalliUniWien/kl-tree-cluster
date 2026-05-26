@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from time import perf_counter
+
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -55,12 +58,14 @@ def annotate_sibling_divergence(
     parent_principal_component_eigenvalues: dict[str, np.ndarray],
     significance_level_alpha: float = config.SIBLING_ALPHA,
     feature_space: FeatureSpace | None = None,
+    stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using context-weighted empirical-null inflation."""
     annotations_df = init_sibling_annotation_df(annotations_df)
 
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
 
+    collection_start_sec = perf_counter()
     records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
@@ -72,6 +77,10 @@ def annotate_sibling_divergence(
         parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
         feature_space=feature_space,
     )
+    if stage_timings is not None:
+        stage_timings["gate3_pair_record_collection_sec"] = float(
+            stage_timings.get("gate3_pair_record_collection_sec", 0.0)
+        ) + float(perf_counter() - collection_start_sec)
 
     mark_non_binary_as_skipped(annotations_df, non_binary)
 
@@ -85,7 +94,8 @@ def annotate_sibling_divergence(
 
     skipped_parents = [record.parent for record in records if record.is_null_like]
     if n_focal == 0:
-        return apply_traversal_aligned_sibling_bh_results(
+        sibling_fdr_start_sec = perf_counter()
+        result_df = apply_traversal_aligned_sibling_bh_results(
             tree,
             annotations_df,
             [],
@@ -93,9 +103,20 @@ def annotate_sibling_divergence(
             significance_level_alpha,
             skipped_parents=skipped_parents,
         )
+        if stage_timings is not None:
+            stage_timings["gate3_sibling_fdr_sec"] = float(
+                stage_timings.get("gate3_sibling_fdr_sec", 0.0)
+            ) + float(perf_counter() - sibling_fdr_start_sec)
+        return result_df
 
+    inflation_fit_start_sec = perf_counter()
     model = fit_empirical_null_inflation_model(records)
+    if stage_timings is not None:
+        stage_timings["gate3_inflation_fit_sec"] = float(
+            stage_timings.get("gate3_inflation_fit_sec", 0.0)
+        ) + float(perf_counter() - inflation_fit_start_sec)
 
+    adjusted_tests_start_sec = perf_counter()
     (
         tested_parent_ids,
         inflation_adjusted_test_summaries,
@@ -104,7 +125,12 @@ def annotate_sibling_divergence(
         records,
         model=model,
     )
+    if stage_timings is not None:
+        stage_timings["gate3_adjusted_tests_sec"] = float(
+            stage_timings.get("gate3_adjusted_tests_sec", 0.0)
+        ) + float(perf_counter() - adjusted_tests_start_sec)
 
+    sibling_fdr_start_sec = perf_counter()
     annotations_df = apply_traversal_aligned_sibling_bh_results(
         tree,
         annotations_df,
@@ -114,6 +140,10 @@ def annotate_sibling_divergence(
         method_labels=inflation_adjustment_method_labels,
         skipped_parents=skipped_parents,
     )
+    if stage_timings is not None:
+        stage_timings["gate3_sibling_fdr_sec"] = float(
+            stage_timings.get("gate3_sibling_fdr_sec", 0.0)
+        ) + float(perf_counter() - sibling_fdr_start_sec)
 
     return annotations_df
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
+from time import perf_counter
 
 import numpy as np
 
@@ -27,6 +28,15 @@ logger = logging.getLogger(__name__)
 # Default thread count for joblib.Parallel eigendecomposition.
 # Set KL_TE_N_JOBS env var to override (e.g. "1" to disable parallelism).
 _DEFAULT_MIN_NODES_FOR_PARALLEL = 8
+
+
+def _empty_stage_timings() -> dict[str, float]:
+    """Return the per-node spectral timing keys used by benchmark aggregation."""
+    return {
+        "tangent_whitening_sec": 0.0,
+        "eigensolve_sec": 0.0,
+        "pca_projection_sec": 0.0,
+    }
 
 
 def _get_n_jobs(n_tasks: int) -> int:
@@ -70,6 +80,7 @@ def _process_node(
     """
     descendant_leaf_row_indices = spectral_task.row_indices
     internal_distribution_vectors = spectral_task.internal_distributions
+    stage_timings = _empty_stage_timings()
 
     if len(descendant_leaf_row_indices) < 2:
         return NodeSpectralResult(
@@ -80,23 +91,30 @@ def _process_node(
             mp_threshold_rows=len(descendant_leaf_row_indices),
             projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
             eigenvalues=np.zeros(0, dtype=np.float64),
+            stage_timings=stage_timings,
         )
 
     # Slice on-demand: only this thread's copy is live during the call.
     descendant_leaf_feature_rows = full_feature_matrix[descendant_leaf_row_indices, :]
+    whitening_start_sec = perf_counter()
     descendant_leaf_feature_rows = build_null_whitened_tangent_matrix(
         descendant_leaf_feature_rows,
         spectral_task.null_distribution,
         feature_space=spectral_task.feature_space,
         continuous_covariance_by_block=spectral_task.continuous_covariance_by_block,
     )
+    stage_timings["tangent_whitening_sec"] += float(perf_counter() - whitening_start_sec)
 
     if internal_distribution_vectors:
+        whitening_start_sec = perf_counter()
         internal_feature_rows = build_null_whitened_tangent_matrix(
             np.asarray(internal_distribution_vectors, dtype=np.float64),
             spectral_task.null_distribution,
             feature_space=spectral_task.feature_space,
             continuous_covariance_by_block=spectral_task.continuous_covariance_by_block,
+        )
+        stage_timings["tangent_whitening_sec"] += float(
+            perf_counter() - whitening_start_sec
         )
         descendant_feature_matrix = np.vstack(
             [
@@ -107,10 +125,12 @@ def _process_node(
     else:
         descendant_feature_matrix = descendant_leaf_feature_rows
 
+    eigensolve_start_sec = perf_counter()
     eigendecomposition_result = eigendecompose_covariance(
         descendant_feature_matrix,
         compute_eigenvectors=compute_eigendecomposition_outputs,
     )
+    stage_timings["eigensolve_sec"] = float(perf_counter() - eigensolve_start_sec)
 
     if eigendecomposition_result is None:
         return NodeSpectralResult(
@@ -121,6 +141,7 @@ def _process_node(
             mp_threshold_rows=descendant_feature_matrix.shape[0],
             projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
             eigenvalues=np.zeros(0, dtype=np.float64),
+            stage_timings=stage_timings,
         )
 
     dimension_estimate = estimate_marchenko_pastur_dimension(
@@ -139,10 +160,14 @@ def _process_node(
     )
 
     if compute_eigendecomposition_outputs and test_projection_dimension > 0:
+        projection_start_sec = perf_counter()
         projection_matrix, pca_eigenvalues = build_pca_projection(
             eigendecomposition_result,
             projection_dimension=test_projection_dimension,
             n_features_total=feature_count,
+        )
+        stage_timings["pca_projection_sec"] = float(
+            perf_counter() - projection_start_sec
         )
         test_projection_dimension = int(projection_matrix.shape[0])
     elif not compute_eigendecomposition_outputs:
@@ -156,6 +181,7 @@ def _process_node(
         mp_threshold_rows=dimension_estimate.mp_threshold_rows,
         projection_matrix=projection_matrix,
         eigenvalues=pca_eigenvalues,
+        stage_timings=stage_timings,
     )
 
 
