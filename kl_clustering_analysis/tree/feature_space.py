@@ -344,40 +344,87 @@ def validate_feature_matrix(
     if not np.isfinite(array).all():
         raise ValueError(f"{value_name} must contain only finite values.")
 
-    for block in feature_space.blocks:
-        block_values = array[:, block.column_indices]
-        if block.family == "bernoulli":
-            _validate_unit_interval(block_values, value_name=f"Bernoulli block {block.name!r}")
-        elif block.family == "categorical":
-            _validate_unit_interval(
-                block_values,
-                value_name=f"Categorical block {block.name!r}",
-            )
-            row_sums = block_values.sum(axis=1)
-            if not np.allclose(row_sums, 1.0, atol=1e-8, rtol=0.0):
-                raise ValueError(
-                    f"Categorical block {block.name!r} rows must sum to 1. "
-                    f"Got row-sum range "
-                    f"[{float(np.min(row_sums)):.6g}, {float(np.max(row_sums)):.6g}]."
-                )
-        elif block.family == "continuous":
-            continue
-        else:
-            raise ValueError(f"Unknown feature family: {block.family!r}.")
+    _validate_bernoulli_blocks(array, feature_space)
+    _validate_categorical_blocks(array, feature_space)
 
     return array
 
 
-def _validate_unit_interval(
+def _validate_bernoulli_blocks(
+    array: npt.NDArray[np.float64],
+    feature_space: FeatureSpace,
+) -> None:
+    bernoulli_blocks = [
+        block for block in feature_space.blocks if block.family == "bernoulli"
+    ]
+    if not bernoulli_blocks:
+        return
+
+    column_indices = np.asarray(
+        [block.column_indices[0] for block in bernoulli_blocks],
+        dtype=np.int64,
+    )
+    block_values = array[:, column_indices]
+    if np.any(block_values < 0.0) or np.any(block_values > 1.0):
+        invalid_mask = (block_values < 0.0) | (block_values > 1.0)
+        _row_index, block_offset = np.argwhere(invalid_mask)[0]
+        block = bernoulli_blocks[int(block_offset)]
+        _raise_unit_interval_error(
+            array[:, block.column_indices],
+            value_name=f"Bernoulli block {block.name!r}",
+        )
+
+
+def _validate_categorical_blocks(
+    array: npt.NDArray[np.float64],
+    feature_space: FeatureSpace,
+) -> None:
+    categorical_blocks_by_dimension: dict[int, list[FeatureBlock]] = {}
+    for block in feature_space.blocks:
+        if block.family == "continuous":
+            continue
+        if block.family == "categorical":
+            categorical_blocks_by_dimension.setdefault(block.raw_dimension, []).append(block)
+            continue
+
+    for blocks in categorical_blocks_by_dimension.values():
+        column_indices = np.asarray(
+            [block.column_indices for block in blocks],
+            dtype=np.int64,
+        )
+        block_values = array[:, column_indices]
+        if np.any(block_values < 0.0) or np.any(block_values > 1.0):
+            invalid_mask = (block_values < 0.0) | (block_values > 1.0)
+            _row_index, block_offset, _category_offset = np.argwhere(invalid_mask)[0]
+            block = blocks[int(block_offset)]
+            _raise_unit_interval_error(
+                array[:, block.column_indices],
+                value_name=f"Categorical block {block.name!r}",
+            )
+
+        row_sums = block_values.sum(axis=2)
+        if not np.allclose(row_sums, 1.0, atol=1e-8, rtol=0.0):
+            invalid_mask = ~np.isclose(row_sums, 1.0, atol=1e-8, rtol=0.0)
+            _row_index, block_offset = np.argwhere(invalid_mask)[0]
+            block = blocks[int(block_offset)]
+            block_row_sums = array[:, block.column_indices].sum(axis=1)
+            raise ValueError(
+                f"Categorical block {block.name!r} rows must sum to 1. "
+                f"Got row-sum range "
+                f"[{float(np.min(block_row_sums)):.6g}, "
+                f"{float(np.max(block_row_sums)):.6g}]."
+            )
+
+
+def _raise_unit_interval_error(
     values: npt.NDArray[np.float64],
     *,
     value_name: str,
 ) -> None:
-    if np.any(values < 0.0) or np.any(values > 1.0):
-        raise ValueError(
-            f"{value_name} values must lie in [0, 1]. "
-            f"Range=[{float(np.min(values)):.6g}, {float(np.max(values)):.6g}]."
-        )
+    raise ValueError(
+        f"{value_name} values must lie in [0, 1]. "
+        f"Range=[{float(np.min(values)):.6g}, {float(np.max(values)):.6g}]."
+    )
 
 
 __all__ = [

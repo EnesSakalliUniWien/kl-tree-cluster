@@ -17,7 +17,6 @@ from kl_clustering_analysis.tree.feature_space import (
     FeatureSpace,
     resolve_feature_space,
     validate_feature_matrix,
-    validate_feature_vector,
 )
 
 CONTINUOUS_COVARIANCE_BY_BLOCK = "continuous_covariance_by_block"
@@ -56,10 +55,7 @@ def _calculate_leaf_distribution(
     except KeyError as exc:
         raise KeyError(f"Leaf label {label!r} was not found in leaf_data index.") from exc
 
-    feature_probabilities = validate_feature_vector(
-        leaf_matrix[row_idx],
-        feature_space,
-    )
+    feature_probabilities = leaf_matrix[row_idx]
     tree.nodes[node_id]["distribution"] = feature_probabilities
     tree.nodes[node_id]["leaf_count"] = 1
     if feature_space.has_continuous_blocks:
