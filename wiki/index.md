@@ -49,6 +49,9 @@ renamed, or promoted.
 - [[feature-split-selection-audit-20260601]] - cross-fit audit showing that
   feature-split hierarchy selection/testing restores null support in the null
   case and keeps signal examples interpretable.
+- [[selected-hierarchy-null-audit-20260601]] - same-data selected-hierarchy
+  null audit showing large selected-hierarchy correction factors without using
+  cross-fitting as the method.
 
 ### Concepts
 

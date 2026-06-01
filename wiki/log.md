@@ -289,6 +289,15 @@ verification, and maintenance events here in chronological order.
   The first run is stored under
   `raw/assets/benchmark-results/sample_split_selection_audit_20260601/` and
   summarized in [[feature-split-selection-audit-20260601]].
+- Added `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
+  to estimate the same-data selected-hierarchy sibling null directly. The
+  first Bernoulli/categorical run used 20 null replicates on four
+  representative cases. Selected-hierarchy correction factors were large
+  (`28.8` to `58.5`), blocked the null case, and still rejected the three
+  signal examples under the mean-scaled chi-square summary. The evidence is
+  stored under
+  `raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/` and
+  summarized in [[selected-hierarchy-null-audit-20260601]].
 
 ## Evidence
 

@@ -21,6 +21,7 @@ sources:
   - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_summary.csv
   - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_replicate_summary.csv
   - raw/assets/benchmark-results/sample_split_selection_audit_20260601/sample_split_selection_audit_summary.csv
+  - raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/selected_hierarchy_null_audit_summary.csv
   - kl_clustering_analysis/config.py
   - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
   - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
@@ -440,6 +441,29 @@ and returns one cluster. The binary, categorical, and Gaussian signal examples
 retain perfect or high ARI while recovering many supported records. This is
 evidence that cross-fitting the selection and testing features can restore the
 calibration-support object that the in-sample selected tree destroys.
+
+The selected-hierarchy null audit keeps the same-data method target and
+simulates the selected hierarchy itself. Each null replicate regenerates a
+Bernoulli or categorical feature matrix from the observed pooled null,
+rebuilds the hierarchy, reruns the edge gate, and collects selected focal
+sibling records matching the observed projection dimension. This produces much
+larger correction factors than the fixed-subspace or local-edge diagnostics:
+
+```text
+case_id              selected-hierarchy c  mean-scaled p-value  blocks?
+gauss_null_large                      58.5              0.222     yes
+binary_low_noise_4c                   28.8             <1e-15     no
+cat_clear_3cat_4c                     50.5             4.8e-7     no
+gauss_clear_medium                    30.6             7.8e-6     no
+```
+
+This is evidence that the large correction can come from the selected
+same-data hierarchy rather than from the projected-Wald kernel alone. It still
+does not justify a production fallback: the run uses 20 replicates, root
+targets, projection-dimension context matching, and Bernoulli/categorical null
+generators only. The next method step is to validate this selected-hierarchy
+calibration object systematically before deciding whether it becomes a named
+production calibration model.
 
 ### Fixed-Subspace Gaussian Null Check
 

@@ -1,0 +1,17 @@
+{
+  "seed": 20260601,
+  "n_replicates": 20,
+  "case_names": [
+    "gauss_null_large",
+    "binary_low_noise_4c",
+    "cat_clear_3cat_4c",
+    "gauss_clear_medium"
+  ],
+  "target_mode": "root",
+  "context_match": "projection",
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "elapsed_sec": 6.895369,
+  "summary_csv": "benchmarks/results/selected_hierarchy_null_audit_20260601/selected_hierarchy_null_audit_summary.csv",
+  "note": "Diagnostic-only selected same-data hierarchy null. Production code still fails closed when internal empirical-null support is absent."
+}

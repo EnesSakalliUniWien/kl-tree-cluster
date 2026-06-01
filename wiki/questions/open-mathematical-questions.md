@@ -17,6 +17,7 @@ sources:
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/sources/edge-selection-null-audit-20260601.md
   - wiki/sources/feature-split-selection-audit-20260601.md
+  - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -82,6 +83,18 @@ calibration records, and returns one cluster. Signal examples retain high or
 perfect ARI while recovering many supported records. This points toward
 cross-fit or selected-tree conditional inference as the next mathematical
 development.
+
+The selected-hierarchy null audit then removes cross-fitting from the candidate
+method and simulates the same-data selected hierarchy directly. It regenerates
+Bernoulli or categorical null data, rebuilds the tree in every replicate,
+reruns edge tests, and collects selected focal sibling statistics. In the first
+four representative cases, selected-hierarchy correction factors are large
+(`28.8` to `58.5`). The mean-scaled chi-square p-value blocks
+`gauss_null_large` while still rejecting the three signal examples. This is
+the first evidence that a named selected-hierarchy calibration model may be
+mathematically relevant. It is not yet a production rule because replicate
+counts are small, context matching is preliminary, and continuous/null
+covariance generation is unsupported.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
