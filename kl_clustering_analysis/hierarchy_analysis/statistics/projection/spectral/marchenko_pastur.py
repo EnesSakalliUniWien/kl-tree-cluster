@@ -74,12 +74,11 @@ def _process_node(
     Parameters
     ----------
     spectral_task
-        Per-node task payload with descendants and optional internal vectors.
+        Per-node task payload with descendant leaf rows.
     full_feature_matrix
         Full data matrix shared across threads (read-only view).
     """
     descendant_leaf_row_indices = spectral_task.row_indices
-    internal_distribution_vectors = spectral_task.internal_distributions
     stage_timings = _empty_stage_timings()
 
     if len(descendant_leaf_row_indices) < 2:
@@ -106,26 +105,7 @@ def _process_node(
     )
     stage_timings["tangent_whitening_sec"] += float(perf_counter() - whitening_start_sec)
 
-    if internal_distribution_vectors:
-        whitening_start_sec = perf_counter()
-        internal_feature_rows = _build_trusted_null_whitened_tangent_matrix(
-            np.asarray(internal_distribution_vectors, dtype=np.float64),
-            spectral_task.null_distribution,
-            spectral_task.feature_space,
-            spectral_task.continuous_covariance_by_block or {},
-            ridge=1e-12,
-        )
-        stage_timings["tangent_whitening_sec"] += float(
-            perf_counter() - whitening_start_sec
-        )
-        descendant_feature_matrix = np.vstack(
-            [
-                descendant_leaf_feature_rows,
-                internal_feature_rows,
-            ]
-        )
-    else:
-        descendant_feature_matrix = descendant_leaf_feature_rows
+    descendant_feature_matrix = descendant_leaf_feature_rows
 
     eigensolve_start_sec = perf_counter()
     eigendecomposition_result = eigendecompose_covariance(

@@ -33,15 +33,6 @@ TREE_DISTANCE_METRIC: str = "hamming"
 # Average (UPGMA) produces more balanced trees than complete linkage
 TREE_LINKAGE_METHOD: str = "average"
 
-# Include internal-node distribution vectors in the spectral data matrix.
-# Internal distributions are convex combinations of leaf data — they do NOT
-# increase rank but inflate n_desc, which tightens the MP noise bounds
-# (smaller √(d/n)) and makes signal detection slightly more sensitive.
-# WARNING: Setting to False catastrophically inflates edge-gate false positives
-# on null data (edge_T1 goes from 2% to 89%).
-# Keeping True is recommended for consistency.
-INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
-
 # --- Pass-Through Traversal ---
 
 # When True, the DFS traversal continues past nodes where the sibling gate fails

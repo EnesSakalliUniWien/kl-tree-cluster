@@ -17,25 +17,17 @@ def test_strict_sibling_calibration_rejects_gauss_null_large_without_support() -
 
 
 @pytest.mark.slow
-def test_traversal_aligned_sibling_fdr_does_not_flat_penalize_cat_highcard_root() -> None:
+def test_leaf_only_cat_highcard_requires_explicit_calibration_support() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c")
     context = build_kl_tree_context(case, populate_node_distributions=False)
 
-    result = _run_kl_method(
-        context.data,
-        context.distance_condensed,
-        config.SIBLING_ALPHA,
-        feature_space=context.feature_space,
-    )
-
-    annotations = result.extra["annotations"]
-    root = result.extra["tree"].root()
-    assert result.found_clusters == 2
-    assert bool(annotations.loc[root, "Sibling_BH_Different"])
-    assert (
-        annotations.loc[root, "Sibling_Divergence_P_Value_Corrected"]
-        == pytest.approx(annotations.loc[root, "Sibling_Divergence_P_Value"])
-    )
+    with pytest.raises(ValueError, match="selected non-null"):
+        _run_kl_method(
+            context.data,
+            context.distance_condensed,
+            config.SIBLING_ALPHA,
+            feature_space=context.feature_space,
+        )
 
 
 @pytest.mark.slow

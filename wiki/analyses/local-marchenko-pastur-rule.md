@@ -2,7 +2,7 @@
 title: Local Marchenko-Pastur Rule
 type: analysis
 status: reviewed
-updated: 2026-05-26
+updated: 2026-06-01
 sources:
   - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/decomposition.py
   - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/operators.py
@@ -10,7 +10,6 @@ sources:
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/spectral_decomposition_result.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
-  - kl_clustering_analysis/config.py
   - benchmarks/diagnostics/spectral/compare_mp_dimension_contracts.py
   - manuscript/sections/method/edge_test.tex
   - manuscript/sections/method/assumptions_validation.tex
@@ -19,6 +18,11 @@ sources:
   - raw/assets/mp-dimension-rule-analysis/20260525-dimension-contract-subset.csv
   - raw/assets/mp-dimension-rule-analysis/20260525-dimension-contract-finite-null-smoke.csv
   - raw/assets/mp-dimension-rule-analysis/20260526-threshold-policy-targeted-smoke.csv
+  - raw/assets/mp-dimension-rule-analysis/20260601-leaf-only-mp-contract-targeted.csv
+  - raw/assets/mp-dimension-rule-analysis/20260601-regression-gate-leaf-only-floor-contract.csv
+  - raw/assets/mp-dimension-rule-analysis/20260601-regression-gate-leaf-only-spectral.csv
+  - raw/assets/mp-dimension-rule-analysis/20260601-full-kl-only-leaf-only-spectral.csv
+  - raw/assets/mp-dimension-rule-analysis/20260601-full-kl-only-leaf-only-spectral-failure-report.md
 tags:
   - method
   - spectral
@@ -43,13 +47,33 @@ That does not make the rule a validated calibration-and-power guarantee. The
 calculation is correct for an ideal independent, unit-scale, local null
 spectrum. The code now separates raw MP signal count, projected-Wald test
 dimension, effective independent row count, and the MP threshold row count.
-Production records descendant leaf rows as the effective independent row count
-even when deterministic internal distributions are included for PCA directions,
-but it keeps the current augmented-row MP threshold as the active method
-because promoting the leaf-count threshold regressed an existing
-high-cardinality categorical integration test. The remaining open layers are
-the minimum projection dimension of two, finite-sample upper-edge calibration,
-null-whitening scale, and data-selected PCA directions.
+Production now estimates the inferential PCA basis from descendant leaf rows
+only. Deterministic internal distribution summaries remain useful historical
+diagnostics, but they are no longer part of the active projected-Wald spectral
+contract because the selected-PCA validation showed severe anti-conservative
+calibration when child-mean/internal rows are appended to the projection
+matrix. The remaining open layers are the minimum projection dimension of two,
+finite-sample upper-edge calibration, null-whitening scale, and calibration
+support in high-cardinality or high-dimensional sibling contexts.
+
+The 2026-06-01 regression-gate check shows how the stricter leaf-only contract
+reacts in practice. With \(k_{\min}=2\), the regression gate completed with
+mean ARI \(0.6017\), median ARI \(0.6803\), exact \(K\) in 4 of 17 rows in the
+shared benchmark output, and six explicit unsupported-calibration skips. A
+floor diagnostic on the same 17 cases found that \(k_{\min}=1\) reduced errors
+from six to two but lowered mean ARI from \(0.6017\) to \(0.5182\) and median
+ARI from \(0.6803\) to \(0.5004\). Therefore changing the floor is not a
+validated fix; the exposed problem is missing empirical-null calibration
+support when the stricter leaf-only spectral basis opens all local sibling
+contexts as selected non-null.
+
+The 2026-06-01 full KL-only benchmark with plots and relationship analysis
+disabled completed 110 cases under the same contract. It produced 85 `ok` rows
+and 25 explicit `skip` rows, with valid-row mean ARI \(0.8612\), valid-row
+median ARI \(1.0\), and exact \(K\) in 63 of 110 rows. All but one skip were
+strict sibling-calibration-support failures; the remaining skip was the
+intentional dense continuous covariance limit for the 20,000-feature continuous
+stress case.
 
 ## Details
 
@@ -93,8 +117,7 @@ The code exposes these objects through a typed spectral decomposition result:
 `effective_independent_rows_by_node`, and `mp_threshold_rows_by_node`.
 Downstream edge and sibling tests consume the test dimension; diagnostics and
 validation can inspect whether the MP rule actually saw signal or only the
-regularization floor, and whether the threshold used leaf-only or augmented
-rows.
+regularization floor.
 
 ### What The Controlled Probe Shows
 
@@ -127,26 +150,17 @@ probe, but it did not solve the dependent/internal-row setting. Therefore a
 median-scale rule is a candidate diagnostic or validation arm, not yet a
 production replacement.
 
-### Dimension-Contract Benchmark
+### Dimension-Contract Diagnostics
 
-The representative diagnostic compared:
-
-- internal-row PCA directions with leaf-count MP threshold;
-- leaf-only spectra;
-- the old augmented-row threshold;
-- projection floors \(0,1,2\);
-- a finite-null upper-edge smoke variant on four cases.
-
-On the 14-case representative subset, `internal_leaf_floor2` matched the old
-`internal_augmented_floor2` mean ARI and exact-\(K\) count, but exposed a much
-higher zero-raw-signal fraction. This means the augmented-row threshold often
-converts deterministic internal rows into apparent raw MP signal, while the
-explicit contract shows that downstream success frequently comes from the
-two-dimensional test floor rather than detected spectral spikes. However, a
-full pytest run showed that promoting the leaf-count threshold to production
-regressed `cat_highcard_20cat_4c` from the expected two clusters to one.
-Therefore leaf-count thresholding remains a diagnostic arm until the
-high-cardinality categorical behavior is understood.
+Historical diagnostics compared internal-row PCA directions, leaf-only spectra,
+projection floors \(0,1,2\), and finite-null upper-edge smoke variants. Those
+runs are still useful for failure attribution: the old augmented-row behavior
+could improve selected benchmark ARI, especially in high-cardinality
+categorical settings, but it did so through a spectral basis that is not
+calibrated by the fixed-subspace projected-Wald reference. The active
+diagnostic script now compares only leaf-only MP floor and finite-null variants;
+internal-row effects are represented by the locked selected-PCA validation
+artifact rather than by a production configuration switch.
 
 Floor \(0\) is not currently a valid full-method benchmark. The
 projected-Wald kernel correctly rejects a zero-dimensional spectral context
@@ -162,20 +176,26 @@ not a validation study. A real finite-null calibration would need enough
 replications and case coverage to estimate local upper-edge quantiles
 reliably.
 
-A targeted 2026-05-26 threshold-policy smoke compared the current
-`internal_augmented_floor2` rule with leaf-count and finite-null alternatives
-on high-cardinality categorical, dimensional Gaussian, high-dimensional binary,
-and heavy-overlap binary cases. The result does not justify replacing the
-active augmented-row threshold. On `binary_many_features`, the augmented,
-leaf-count, and finite-null floor-two variants all recovered four clusters
-with ARI \(1.0\). On `cat_highcard_20cat_4c`, the current augmented rule found
-two clusters with ARI about \(0.36\), while finite-null and leaf-count rules
-collapsed to one cluster. On the dimensional Gaussian cases, finite-null and
-leaf-count variants also collapsed to one cluster; the current augmented rule
-failed explicitly because the strict sibling calibration-support contract
-found only selected non-null calibration records. That failure is a separate
-post-selection calibration issue, not evidence that finite-null MP
-thresholding is the correct production replacement.
+A targeted 2026-05-26 threshold-policy smoke showed why this is a real method
+decision rather than a mechanical cleanup. On `binary_many_features`, the old
+augmented behavior, leaf-count behavior, and finite-null floor-two variants all
+recovered four clusters with ARI \(1.0\). On `cat_highcard_20cat_4c`, the old
+augmented behavior found two clusters with ARI about \(0.36\), while the
+leaf-count and finite-null variants collapsed to one cluster. After the
+selected-PCA validation, that benchmark advantage is treated as evidence of an
+unresolved calibration-support problem, not as justification for retaining the
+internal-row spectral basis.
+
+A 2026-06-01 leaf-only diagnostic sharpened the failure mode. For
+`binary_many_features`, `cat_highcard_20cat_4c`, and
+`overlap_heavy_4c_med_feat`, \(k_{\min}=1\) produced admissible supported
+calibration records, while \(k_{\min}=2\) produced zero supported records and
+only selected non-null positive-weight records. The same diagnostic showed
+that floor 1 is not a general solution: on the regression gate it reduced
+unsupported-calibration errors but weakened the aggregate clustering score.
+The correct next mathematical object is therefore not an internal-row fallback
+or an unvalidated floor change, but a calibrated rule for empirical-null
+support or an external conditional-null calibration model.
 
 Selection-aware thresholding remains a different mathematical object from the
 finite-null smoke. A finite-null edge samples fixed local null matrices. A
@@ -194,31 +214,35 @@ not adding it as a production fallback.
 - `decomposition.py` and `operators.py` show that both primal and dual
   eigendecomposition paths divide by the same row count, preserving the
   feature-covariance eigenvalue scale.
-- `marchenko_pastur.py` maps rows through the null-whitened tangent chart,
-  optionally stacks internal distributions for PCA directions, records the
-  descendant leaf count as the effective independent row count, and records the
-  row count used for the current MP threshold separately.
-- `tree_estimator.py` documents the current spectral orchestration and uses
-  `config.INCLUDE_INTERNAL_IN_SPECTRAL` when the caller does not override the
-  internal-row policy.
+- `marchenko_pastur.py` maps descendant leaf rows through the null-whitened
+  tangent chart and records the row count used for the current MP threshold.
+- `tree_estimator.py` documents the current leaf-only spectral orchestration.
 - `edge_test.tex` states the MP edge and the minimum-dimension floor in the
   manuscript method.
-- `assumptions_validation.tex` marks the MP rule, minimum spectral dimension,
-  and internal spectral rows as validation gaps.
+- `assumptions_validation.tex` marks the MP rule and minimum spectral dimension
+  as validation gaps, and records leaf-only spectral rows as the active
+  inferential contract.
 - `method_constants_manifest.py` lists the MP upper-edge threshold as an
   explicit method constant requiring dimension-selection, null-calibration,
   and planted-signal validation outputs.
 - `20260525-controlled-spectrum-summary.md` records the controlled null,
   spiked, internal-row, and noise-scale probes from this audit.
-- `compare_mp_dimension_contracts.py` runs the MP contract variants without
-  adding production config.
+- `compare_mp_dimension_contracts.py` runs leaf-only MP contract variants
+  without adding production config.
 - `20260525-dimension-contract-subset.csv` records the 14-case representative
   contract benchmark.
 - `20260525-dimension-contract-finite-null-smoke.csv` records the finite-null
   smoke on four representative cases.
 - `20260526-threshold-policy-targeted-smoke.csv` records the targeted
   threshold-policy smoke showing that finite-null thresholding is not a
-  drop-in production replacement for the current augmented-row threshold.
+  drop-in production replacement for the old augmented-row behavior.
+- `20260601-leaf-only-mp-contract-targeted.csv`,
+  `20260601-regression-gate-leaf-only-floor-contract.csv`, and
+  `20260601-regression-gate-leaf-only-spectral.csv` record the benchmark
+  reaction after removing internal spectral rows from the production path.
+- `20260601-full-kl-only-leaf-only-spectral.csv` and
+  `20260601-full-kl-only-leaf-only-spectral-failure-report.md` record the
+  full-suite KL-only benchmark reaction under the same production contract.
 
 ## Links
 
@@ -228,15 +252,15 @@ not adding it as a production fallback.
 
 ## Open Questions
 
-1. Should internal distribution rows remain in PCA direction estimation, or
-   should production use leaf-only spectra?
-2. What finite-sample upper-edge calibration, if any, should replace the
+1. What finite-sample upper-edge calibration, if any, should replace the
    asymptotic edge if local Type-I behavior is the target? The targeted smoke
    does not support the tested finite-null edge as a drop-in replacement.
-3. Is a local bulk-scale estimator valid for Bernoulli, categorical, and
+2. Is a local bulk-scale estimator valid for Bernoulli, categorical, and
    continuous null-whitened tangent spectra, or only as a diagnostic?
-4. What explicit semantics would make \(k_{\min}=0\) a valid full-method
+3. What explicit semantics would make \(k_{\min}=0\) a valid full-method
    experiment rather than a projected-Wald contract violation?
-5. How much of the remaining benchmark weakness is caused by MP dimension
+4. How much of the remaining benchmark weakness is caused by MP dimension
    selection versus hierarchy recoverability, sibling FDR, or empirical-null
    inflation support?
+5. Can calibration support be defined from selected leaf-only contexts without
+   reusing selected non-null records as empirical-null evidence?

@@ -18,7 +18,6 @@ The method-constant manifest is deliberately strict:
 - `sibling_alpha`
 - `mp_upper_edge_threshold`
 - `min_spectral_dimension`
-- `include_internal_spectral_rows`
 - `sibling_projection_dimension_rule`
 - `empirical_null_weight_rule`
 - `context_bandwidth_rule`

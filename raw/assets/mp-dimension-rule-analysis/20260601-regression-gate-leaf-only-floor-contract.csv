@@ -1,0 +1,52 @@
+case_name,case_category,variant,threshold_policy,minimum_projection_dimension,status,error,true_clusters,found_clusters,ari,median_test_projection_dimension,median_raw_mp_signal_count,raw_zero_fraction,median_effective_independent_rows,median_mp_threshold_rows
+gauss_extreme_noise_3c,gaussian_extreme_noise,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,3,,,,,,,
+gauss_extreme_noise_3c,gaussian_extreme_noise,leaf_only_floor1,leaf,1,ok,,3,3.0,1.0,1.0,0.0,0.9310344827586207,3.0,3.0
+gauss_extreme_noise_3c,gaussian_extreme_noise,leaf_only_floor2,leaf,2,ok,,3,3.0,1.0,2.0,0.0,0.9310344827586207,3.0,3.0
+gauss_extreme_noise_highd,gaussian_extreme_noise,leaf_only_floor0,leaf,0,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 39 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+gauss_extreme_noise_highd,gaussian_extreme_noise,leaf_only_floor1,leaf,1,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 39 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+gauss_extreme_noise_highd,gaussian_extreme_noise,leaf_only_floor2,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 39 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,leaf_only_floor1,leaf,1,ok,,4,4.0,0.5004075915358738,1.0,0.0,0.9433962264150944,3.0,3.0
+dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,leaf_only_floor2,leaf,2,ok,,4,5.0,0.5302883851206509,2.0,0.0,0.9433962264150944,3.0,3.0
+dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,leaf_only_floor1,leaf,1,ok,,4,2.0,-0.008227517001949874,1.0,1.0,0.03773584905660377,3.0,3.0
+dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,leaf_only_floor2,leaf,2,ok,,4,2.0,-0.008227517001949874,2.0,1.0,0.03773584905660377,3.0,3.0
+dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,6,,,,,,,
+dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,leaf_only_floor1,leaf,1,ok,,6,2.0,0.014226207022167791,1.0,0.0,0.8379888268156425,3.0,3.0
+dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,leaf_only_floor2,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 179 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",6,,,,,,,
+sbm_moderate,sbm_graphs,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+sbm_moderate,sbm_graphs,leaf_only_floor1,leaf,1,ok,,0,2.0,0.20833643392757692,1.0,0.0,0.7478991596638656,3.0,3.0
+sbm_moderate,sbm_graphs,leaf_only_floor2,leaf,2,ok,,0,2.0,0.20833643392757692,2.0,0.0,0.7478991596638656,3.0,3.0
+sbm_hard,sbm_graphs,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+sbm_hard,sbm_graphs,leaf_only_floor1,leaf,1,ok,,0,1.0,0.0,1.0,0.0,0.7815126050420168,3.0,3.0
+sbm_hard,sbm_graphs,leaf_only_floor2,leaf,2,ok,,0,1.0,0.0,2.0,0.0,0.7815126050420168,3.0,3.0
+cat_highcard_20cat_4c,categorical_high_cardinality,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+cat_highcard_20cat_4c,categorical_high_cardinality,leaf_only_floor1,leaf,1,ok,,4,1.0,0.0,1.0,0.0,0.9698492462311558,3.0,3.0
+cat_highcard_20cat_4c,categorical_high_cardinality,leaf_only_floor2,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 199 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+cat_overlap_3cat_4c,categorical_overlapping,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+cat_overlap_3cat_4c,categorical_overlapping,leaf_only_floor1,leaf,1,ok,,4,3.0,0.6802931292570171,1.0,0.0,0.556390977443609,3.0,3.0
+cat_overlap_3cat_4c,categorical_overlapping,leaf_only_floor2,leaf,2,ok,,4,3.0,0.6802931292570171,2.0,0.0,0.556390977443609,3.0,3.0
+phylo_dna_8taxa_med_mut,phylogenetic_dna,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+phylo_dna_8taxa_med_mut,phylogenetic_dna,leaf_only_floor1,leaf,1,ok,,0,8.0,1.0,1.0,0.0,0.9433962264150944,11.0,11.0
+phylo_dna_8taxa_med_mut,phylogenetic_dna,leaf_only_floor2,leaf,2,ok,,0,8.0,1.0,2.0,0.0,0.9433962264150944,11.0,11.0
+phylo_protein_4taxa,phylogenetic_protein,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+phylo_protein_4taxa,phylogenetic_protein,leaf_only_floor1,leaf,1,ok,,0,4.0,1.0,1.0,0.0,0.9743589743589743,17.0,17.0
+phylo_protein_4taxa,phylogenetic_protein,leaf_only_floor2,leaf,2,ok,,0,19.0,0.8293548420698108,2.0,0.0,0.9743589743589743,17.0,17.0
+phylo_protein_12taxa,phylogenetic_protein,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+phylo_protein_12taxa,phylogenetic_protein,leaf_only_floor1,leaf,1,ok,,0,12.0,1.0,1.0,0.0,0.9385474860335196,9.0,9.0
+phylo_protein_12taxa,phylogenetic_protein,leaf_only_floor2,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 179 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",0,,,,,,,
+phylo_conserved_4taxa,phylogenetic_conserved,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+phylo_conserved_4taxa,phylogenetic_conserved,leaf_only_floor1,leaf,1,ok,,0,13.0,0.878435817512043,1.0,0.0,0.96875,18.0,18.0
+phylo_conserved_4taxa,phylogenetic_conserved,leaf_only_floor2,leaf,2,ok,,0,13.0,0.878435817512043,2.0,0.0,0.96875,18.0,18.0
+phylo_conserved_8taxa,phylogenetic_conserved,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,0,,,,,,,
+phylo_conserved_8taxa,phylogenetic_conserved,leaf_only_floor1,leaf,1,ok,,0,8.0,1.0,1.0,0.0,0.9622641509433962,11.0,11.0
+phylo_conserved_8taxa,phylogenetic_conserved,leaf_only_floor2,leaf,2,ok,,0,8.0,1.0,2.0,0.0,0.9622641509433962,11.0,11.0
+overlap_heavy_4c_med_feat,overlapping_binary_heavy,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+overlap_heavy_4c_med_feat,overlapping_binary_heavy,leaf_only_floor1,leaf,1,ok,,4,1.0,0.0,1.0,1.0,0.02404809619238477,3.0,3.0
+overlap_heavy_4c_med_feat,overlapping_binary_heavy,leaf_only_floor2,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 499 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+overlap_extreme_4c,overlapping_binary_heavy,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+overlap_extreme_4c,overlapping_binary_heavy,leaf_only_floor1,leaf,1,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 599 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+overlap_extreme_4c,overlapping_binary_heavy,leaf_only_floor2,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 599 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+overlap_unbal_4c_small,overlapping_binary_unbalanced,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+overlap_unbal_4c_small,overlapping_binary_unbalanced,leaf_only_floor1,leaf,1,ok,,4,4.0,0.5000975768285938,1.0,1.0,0.13283208020050125,3.0,3.0
+overlap_unbal_4c_small,overlapping_binary_unbalanced,leaf_only_floor2,leaf,2,ok,,4,4.0,0.5000975768285938,2.0,1.0,0.13283208020050125,3.0,3.0

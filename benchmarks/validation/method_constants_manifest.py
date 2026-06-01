@@ -101,20 +101,6 @@ CONSTANT_SPECS: tuple[dict[str, Any], ...] = (
         ),
     },
     {
-        "constant_id": "include_internal_spectral_rows",
-        "display_name": "Internal spectral rows",
-        "default_value": True,
-        "validation_question": (
-            "Does including internal subtree rows in local spectral representations "
-            "improve stability without biasing local tests?"
-        ),
-        "additional_required_output_fields": (
-            "row_inclusion_modes",
-            "dimension_shift_summary",
-            "calibration_by_row_mode",
-        ),
-    },
-    {
         "constant_id": "sibling_projection_dimension_rule",
         "display_name": "Sibling projection dimension",
         "default_value": "geometric mean of child edge dimensions",

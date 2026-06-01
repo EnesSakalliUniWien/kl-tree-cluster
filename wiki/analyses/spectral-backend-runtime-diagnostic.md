@@ -70,8 +70,8 @@ profile reduced `cat_highd_3cat_500feat` from about 14.86 s to 0.31 s,
 
 `profile_spectral_backends.py` extracts the same per-node matrices used by the
 production Marchenko--Pastur spectral context: the active tree, feature-space
-contract, internal-row policy, null distribution, and null-whitened tangent
-coordinates all match the production path. It then profiles:
+contract, leaf-only spectral row set, null distribution, and null-whitened
+tangent coordinates all match the production path. It then profiles:
 
 - `current_process_node`: the production per-node worker, including matrix
   construction, eigendecomposition, MP dimension estimation, and projection

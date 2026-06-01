@@ -64,7 +64,7 @@ def test_marchenko_pastur_raw_signal_count_can_be_zero() -> None:
 
 
 def test_marchenko_pastur_dimension_uses_explicit_effective_independent_rows() -> None:
-    """Internal spectral rows do not have to define the MP threshold row count."""
+    """Diagnostics can separate eigendecomposed rows from independent rows."""
     eigenvalues = np.array([2.0, 1.5, 1.0], dtype=np.float64)
 
     augmented_row_estimate = estimate_marchenko_pastur_dimension(

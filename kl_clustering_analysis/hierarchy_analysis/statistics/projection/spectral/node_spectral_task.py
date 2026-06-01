@@ -15,7 +15,6 @@ class NodeSpectralTask:
 
     node_id: str
     row_indices: tuple[int, ...]
-    internal_distributions: tuple[np.ndarray, ...]
     null_distribution: np.ndarray
     feature_space: FeatureSpace
     continuous_covariance_by_block: dict[str, np.ndarray] | None

@@ -119,7 +119,7 @@ verification, and maintenance events here in chronological order.
 - Split the MP dimension contract in code: raw MP signal count, projected-Wald
   test dimension, effective independent row count, and MP threshold row count
   are now separate typed outputs. The spectral worker records descendant leaf
-  count separately from the current augmented-row MP threshold when internal
+  count separately from the former augmented-row MP threshold when internal
   distributions are stacked for PCA directions. Added
   `compare_mp_dimension_contracts.py` plus subset and finite-null smoke CSV
   evidence under `raw/assets/mp-dimension-rule-analysis/`.
@@ -256,6 +256,30 @@ verification, and maintenance events here in chronological order.
   tested settings, while child-mean internal spectral rows caused severe
   anti-conservative rejection rates. The locked JSON/CSV evidence is stored
   under `raw/assets/selected-pca-projected-wald-validation/`.
+- Removed the production internal-spectral-row configuration and made the
+  inferential projected-Wald spectral basis descendant-leaf-only. The
+  regression-gate benchmark completed under this stricter contract with mean
+  ARI `0.6017`, median ARI `0.6803`, exact \(K\) in 4 of 17 rows, and six
+  explicit unsupported-calibration skips. A floor diagnostic showed that
+  \(k_{\min}=1\) reduces skips but lowers aggregate ARI, so the exposed problem
+  is missing empirical-null calibration support rather than an internal-row or
+  floor fallback. Updated [[local-marchenko-pastur-rule]],
+  [[selected-pca-projected-wald-validation]], and
+  [[open-mathematical-questions]] with the benchmark reaction.
+- Ran the full KL-only benchmark with plots and relationship analysis disabled
+  under the leaf-only spectral contract. The run completed 110 cases with 85
+  `ok` rows, 25 explicit `skip` rows, valid-row mean ARI `0.8612`, valid-row
+  median ARI `1.0`, and exact \(K\) in 63 of 110 rows. The full CSV and failure
+  report are stored under `raw/assets/mp-dimension-rule-analysis/`.
+- Decomposed the unsupported sibling-calibration problem to its upstream edge
+  source. A current support audit found that 24 of 25 full-benchmark skipped
+  rows rebuild through edge and sibling-record collection, but every one has
+  zero strict-null or stopped-edge empirical-null calibration records. The
+  edge-selection null audit then showed that pure null data rejects about
+  `99%` of child-parent edges when the hierarchy is selected from the same data,
+  while fixed-tree feature permutations have median rejection rate `0.0`.
+  Added [[edge-selection-null-audit-20260601]] and updated
+  [[oracle-gate-path-diagnostic]] and [[open-mathematical-questions]].
 
 ## Evidence
 

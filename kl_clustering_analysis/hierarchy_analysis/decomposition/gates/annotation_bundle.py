@@ -26,7 +26,6 @@ class GateAnnotationConfigMetadata:
 
     felsenstein_scaling: bool
     spectral_minimum_dimension: int
-    include_internal_in_spectral: bool
 
 
 @dataclass(frozen=True)

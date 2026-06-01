@@ -62,7 +62,7 @@ $\alpha_{\mathrm{edge}}$ & Tree-BH edge testing level & $0.001$ & Unvalidated de
 $\alpha_{\mathrm{sib}}$ & BH level for focal sibling pairs & $0.01$ & Unvalidated default; needs calibration and power trade-off study. \\
 Marchenko--Pastur upper edge & Local projection-dimension rule & $(1+\sqrt{d_u/m_u})^2$ & Theoretically motivated for noise spectra; finite local subtree use is unvalidated. \\
 Minimum spectral dimension & Projection-dimension floor & $2$ & Implementation regularizer; needs ablation against floors $0$, $1$, and $2$. \\
-Internal spectral rows & Spectral matrix augmentation & enabled & Empirically motivated in code comments; needs reproducible ablation. \\
+Spectral row set & Rows used to estimate the local PCA basis & descendant leaves only & Internal summary rows are excluded from the inferential PCA basis after selected-PCA validation showed anti-conservative calibration. \\
 Sibling dimension rule & Transfers edge dimensions to sibling test & geometric mean of child edge dimensions & Needs sensitivity against parent dimension and min/max alternatives. \\
 Empirical-null weight $\pi_q$ & Weights calibration records by edge-null evidence & geometric mean of two edge-adjusted p-values & Monotone empirical weight; not a posterior probability; needs calibration check. \\
 Context bandwidth $h$ & Localizes inflation estimates over $\log k$ & null-weighted empirical standard deviation & Needs sensitivity and behavior under few unique dimensions. \\

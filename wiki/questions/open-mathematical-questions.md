@@ -15,6 +15,7 @@ sources:
   - benchmarks/shared/generators/case_data_contracts.py
   - kl_clustering_analysis/tree/distributions.py
   - wiki/analyses/oracle-gate-path-diagnostic.md
+  - wiki/sources/edge-selection-null-audit-20260601.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -61,13 +62,22 @@ existing fixed-subspace and root/local edge-selection diagnostics do not
 produce inflation factors in the thousands, so they do not justify a production
 external calibration model.
 
+The problem decomposition is now sharper: missing sibling calibration support
+is caused upstream by tree and edge selection. Under pure Bernoulli null data,
+the edge-selection audit shows that using the same data to build the hierarchy
+and test child-parent edges rejects about `99%` of tested edges at
+`EDGE_ALPHA = 0.001`. Holding the hierarchy fixed and permuting feature
+columns gives median rejection rate `0.0`. Thus the production issue is not
+only a sibling inflation estimator question; it is a selected-hierarchy
+conditional inference question.
+
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
 isotropic standardized null. The manuscript still needs either a clean
 assumption statement that treats the selected PCA rows as fixed, or a
 derivation/validation of the data-selected projection effect. This question is
 coupled to the Marchenko--Pastur dimension rule, the minimum spectral dimension
-floor, and the inclusion of internal subtree rows in local spectral matrices.
+floor, and the row set used to estimate the local spectral basis.
 The repository now includes a strict scaffold for this specific validation
 target in
 `benchmarks/validation/selected_pca_projected_wald_calibration.py`. That
@@ -79,10 +89,11 @@ inflation.
 [[selected-pca-projected-wald-validation]] records the first locked run. In the
 tested Gaussian settings, leaf-only selected PCA was calibrated at
 \(\alpha=0.05\), but appending deterministic child-mean internal rows produced
-severe anti-conservative rejection rates from 0.648 to 1.000. The remaining
-method question is therefore no longer generic selected PCA alone; it is whether
-internal spectral rows should stay in the inferential projection basis, receive
-a separate selected-reference derivation, or move to diagnostics only.
+severe anti-conservative rejection rates from 0.648 to 1.000. Production now
+uses descendant leaf rows only for the inferential PCA basis. The remaining
+question exposed by that stricter contract is calibration support: several
+high-dimensional or high-cardinality contexts have selected non-null records
+but no strict empirical-null records.
 
 The feature-space covariance contract is now explicit. Bernoulli coordinates
 use a Bernoulli variance model under fixed membership. Categorical variables
@@ -149,14 +160,18 @@ The current concrete open questions are:
     correctness question: the \(d_u/m_u\) edge matches the backend eigenvalue
     scale, and the code now separates raw MP signal count, projected-Wald test
     dimension, effective independent row count, and MP threshold row count. A
-    targeted finite-null smoke did not support replacing the active
-    augmented-row threshold: finite-null thresholding matched
-    `binary_many_features`, worsened `cat_highcard_20cat_4c`, and under-split
-    dimensional Gaussian cases. The open question is therefore not a simple
-    finite-null swap, but whether a genuinely selection-aware threshold can be
-    derived or validated.
+    targeted finite-null smoke did not support a simple finite-null swap:
+    finite-null thresholding matched `binary_many_features`, worsened
+    `cat_highcard_20cat_4c`, and under-split dimensional Gaussian cases in the
+    historical diagnostic. The open question is whether a genuinely
+    selection-aware threshold can be derived or validated.
 13. Is the minimum spectral dimension \(k_{\min}=2\) justified?
-14. Does including internal subtree rows improve stability or bias local tests?
+    The 2026-06-01 leaf-only regression-gate diagnostic shows the trade-off:
+    \(k_{\min}=2\) keeps higher mean/median ARI among runnable rows but creates
+    six unsupported-calibration skips, while \(k_{\min}=1\) reduces skips to
+    two but lowers aggregate ARI. This is not solved by a default change.
+14. What calibration-support contract should be used when every local sibling
+    record is selected non-null under the leaf-only spectral basis?
 15. Is the sibling projection dimension rule mathematically justified?
 16. How should one-hot categorical dependence be modeled and validated?
 17. Are high-cardinality categorical failures caused by covariance modeling,
@@ -222,7 +237,8 @@ The current concrete open questions are:
   and root Tree-BH selection diagnostics.
 - `wiki/analyses/local-marchenko-pastur-rule.md` records the MP dimension-rule
   audit, including backend eigenvalue scale, finite-sample null probes,
-  internal-row effects, and enhancement options.
+  the leaf-only production row contract, historical internal-row effects, and
+  enhancement options.
 - `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
   the selected-PCA projected-Wald validation scaffold.
 - `wiki/analyses/selected-pca-projected-wald-validation.md` summarizes the

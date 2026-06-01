@@ -282,7 +282,7 @@ def test_child_parent_categorical_z_scores_use_drop_last_multinomial_dimension()
 
 
 def test_categorical_spectral_decomposition_uses_drop_last_projection_width() -> None:
-    """Categorical projected-Wald z vectors and PCA projections use the same coordinates."""
+    """Categorical projected-Wald z vectors and leaf-only PCA use the same coordinates."""
     tree = _simple_binary_tree()
     leaf_data = _categorical_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -294,7 +294,6 @@ def test_categorical_spectral_decomposition_uses_drop_last_projection_width() ->
         leaf_data,
         feature_space=feature_space,
         minimum_projection_dimension=2,
-        include_internal=True,
     )
 
     assert spectral_decomposition.test_projection_dimensions_by_node["root"] <= 4
@@ -302,7 +301,7 @@ def test_categorical_spectral_decomposition_uses_drop_last_projection_width() ->
     assert spectral_decomposition.effective_independent_rows_by_node["root"] == len(
         leaf_data
     )
-    assert spectral_decomposition.mp_threshold_rows_by_node["root"] >= len(leaf_data)
+    assert spectral_decomposition.mp_threshold_rows_by_node["root"] == len(leaf_data)
     root_projection = spectral_decomposition.principal_component_projections_by_node["root"]
     root_eigenvalues = spectral_decomposition.principal_component_eigenvalues_by_node["root"]
     assert root_projection.shape[1] == 4
@@ -339,7 +338,6 @@ def test_categorical_spectral_decomposition_uses_parent_null_whitened_tangent_ro
         leaf_data,
         feature_space=feature_space,
         minimum_projection_dimension=2,
-        include_internal=False,
     )
 
     categorical_rows = validate_feature_matrix(
@@ -383,7 +381,6 @@ def test_continuous_spectral_decomposition_uses_parent_null_whitened_tangent_row
         leaf_data,
         feature_space=feature_space,
         minimum_projection_dimension=1,
-        include_internal=False,
     )
 
     covariance = tree.nodes["root"][CONTINUOUS_COVARIANCE_BY_BLOCK]["X"]

@@ -43,6 +43,9 @@ renamed, or promoted.
   request and its required layers, tooling, workflows, and open questions.
 - [[github-wiki-structure-research]] - design-reference notes for Foam-style
   links, GitHub Docs frontmatter, markdownlint, and remark link validation.
+- [[edge-selection-null-audit-20260601]] - edge-gate null audit showing that
+  data-selected hierarchies can make nearly all child-parent edges significant
+  under a global null, while fixed-tree permutations do not.
 
 ### Concepts
 
@@ -68,8 +71,8 @@ renamed, or promoted.
   analysis separating tree failures, sibling-calibration under-splits, direct
   sibling false splits, and pass-through fragmentation.
 - [[local-marchenko-pastur-rule]] - audit of the local MP dimension rule,
-  eigenvalue scale, finite-sample null behavior, internal spectral rows, and
-  enhancement options.
+  eigenvalue scale, finite-sample null behavior, leaf-only spectral rows, and
+  calibration-support fallout.
 - [[selected-pca-projected-wald-validation]] - locked local Gaussian validation
   showing that leaf-only selected PCA is calibrated in the tested settings while
   child-mean internal spectral rows break the fixed-subspace reference.

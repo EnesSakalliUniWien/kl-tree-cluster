@@ -72,7 +72,6 @@ def build_gate_annotation_config_metadata() -> GateAnnotationConfigMetadata:
     return GateAnnotationConfigMetadata(
         felsenstein_scaling=bool(config.FELSENSTEIN_SCALING),
         spectral_minimum_dimension=EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
-        include_internal_in_spectral=bool(config.INCLUDE_INTERNAL_IN_SPECTRAL),
     )
 
 

@@ -127,9 +127,8 @@ def marchenko_pastur_signal_count(
             matrix in null-whitened tangent coordinates. Negative values
             (numerical noise from eigensolvers) are ignored.
         mp_threshold_rows (int): Row count used in the MP aspect ratio. This
-            can be the independent leaf-row count for diagnostics or the
-            augmented spectral row count for the current production contract.
-            Must be positive.
+            is the descendant leaf-row count in the production spectral
+            contract. Must be positive.
         n_active_features (int): Number of non-constant feature columns after
             zero-variance columns are excluded before eigen-decomposition.
             Must be positive.
@@ -173,12 +172,11 @@ def estimate_marchenko_pastur_dimension(
 ) -> MarchenkoPasturDimensionEstimate:
     """Estimate raw MP signal count and final projected-Wald test dimension.
 
-    ``n_samples`` is the number of rows eigendecomposed. When internal
-    distribution rows are stacked for PCA stabilization,
-    ``effective_independent_rows`` should record the descendant leaf count.
+    ``n_samples`` is the number of rows eigendecomposed.
+    ``effective_independent_rows`` records the descendant leaf count.
     ``mp_threshold_rows`` records the row count actually used in the MP aspect
-    ratio; diagnostics may set it to the leaf count, while the current
-    production contract keeps the augmented-row threshold explicit.
+    ratio. In the production leaf-only spectral contract these counts are the
+    same; diagnostics may vary them explicitly.
     """
     independent_row_count = (
         int(n_samples)

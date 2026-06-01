@@ -1,15 +1,13 @@
 {
   "manifest_schema_version": "method_constant_validation_manifest/v1",
-  "created_utc": "2026-05-24T00:01:18Z",
+  "created_utc": "2026-06-01T17:08:25Z",
   "generated_by": "benchmarks.validation.method_constants_manifest",
   "source_paths": [
     {
       "path": "benchmarks/results/run_20260523_113745Z_isolated_cases",
-      "exists": true,
-      "kind": "directory",
-      "recognized_outputs": [
-        "full_benchmark_comparison.csv"
-      ],
+      "exists": false,
+      "kind": "missing",
+      "recognized_outputs": [],
       "used_as_evidence": false,
       "notes": "Candidate source only; this scaffold does not read metrics from benchmark outputs."
     }
@@ -86,24 +84,6 @@
       "dimension_floor_grid",
       "floor_activation_rate",
       "calibration_by_floor_setting"
-    ],
-    "include_internal_spectral_rows": [
-      "validation_design",
-      "source_artifact_paths",
-      "code_commit",
-      "run_command",
-      "random_seed_policy",
-      "n_replicates",
-      "baseline_setting",
-      "candidate_setting",
-      "primary_endpoint",
-      "effect_estimate",
-      "confidence_interval",
-      "decision_rule",
-      "limitations",
-      "row_inclusion_modes",
-      "dimension_shift_summary",
-      "calibration_by_row_mode"
     ],
     "sibling_projection_dimension_rule": [
       "validation_design",
@@ -375,56 +355,6 @@
           "dimension_floor_grid",
           "floor_activation_rate",
           "calibration_by_floor_setting"
-        ],
-        "notes": "No validation evidence has been attached for this constant."
-      }
-    },
-    {
-      "constant_id": "include_internal_spectral_rows",
-      "display_name": "Internal spectral rows",
-      "default_value": true,
-      "validation_question": "Does including internal subtree rows in local spectral representations improve stability without biasing local tests?",
-      "required_output_fields": [
-        "validation_design",
-        "source_artifact_paths",
-        "code_commit",
-        "run_command",
-        "random_seed_policy",
-        "n_replicates",
-        "baseline_setting",
-        "candidate_setting",
-        "primary_endpoint",
-        "effect_estimate",
-        "confidence_interval",
-        "decision_rule",
-        "limitations",
-        "row_inclusion_modes",
-        "dimension_shift_summary",
-        "calibration_by_row_mode"
-      ],
-      "evidence_status": "missing",
-      "evidence": {
-        "status": "missing",
-        "source_path": null,
-        "source_artifacts": [],
-        "metrics": {},
-        "missing_required_fields": [
-          "validation_design",
-          "source_artifact_paths",
-          "code_commit",
-          "run_command",
-          "random_seed_policy",
-          "n_replicates",
-          "baseline_setting",
-          "candidate_setting",
-          "primary_endpoint",
-          "effect_estimate",
-          "confidence_interval",
-          "decision_rule",
-          "limitations",
-          "row_inclusion_modes",
-          "dimension_shift_summary",
-          "calibration_by_row_mode"
         ],
         "notes": "No validation evidence has been attached for this constant."
       }

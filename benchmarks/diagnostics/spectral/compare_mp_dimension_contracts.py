@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-"""Compare explicit Marchenko-Pastur dimension contracts on benchmark cases.
+"""Compare explicit leaf-only Marchenko-Pastur dimension contracts.
 
 This diagnostic does not add production configuration. It monkeypatches the
 spectral worker in-process and forces ``KL_TE_N_JOBS=1`` so each variant has a
 clear mathematical meaning:
 
-- internal_leaf_floor*: internal rows may stabilize PCA directions, but the MP
-  threshold uses descendant leaf count as effective independent rows.
 - leaf_only_floor*: PCA directions and MP threshold use leaf rows only.
-- internal_augmented_floor2: old behavior where internal rows also lowered the
-  MP threshold row ratio.
-- internal_finite_null_floor2: optional simulated finite-sample upper edge for
+- leaf_only_finite_null_floor2: optional simulated finite-sample upper edge for
   the leaf-count threshold.
 """
 
@@ -59,7 +55,6 @@ class DimensionContractVariant:
     """One diagnostic spectral contract variant."""
 
     name: str
-    include_internal_rows: bool
     minimum_projection_dimension: int
     threshold_policy: str
 
@@ -125,35 +120,17 @@ def _resolve_cases(case_names_arg: str, max_cases: int | None) -> list[dict[str,
 def _variants(include_finite_null: bool) -> list[DimensionContractVariant]:
     variants: list[DimensionContractVariant] = []
     for floor in (0, 1, 2):
-        variants.extend(
-            [
-                DimensionContractVariant(
-                    name=f"internal_leaf_floor{floor}",
-                    include_internal_rows=True,
-                    minimum_projection_dimension=floor,
-                    threshold_policy="leaf",
-                ),
-                DimensionContractVariant(
-                    name=f"leaf_only_floor{floor}",
-                    include_internal_rows=False,
-                    minimum_projection_dimension=floor,
-                    threshold_policy="leaf",
-                ),
-            ]
+        variants.append(
+            DimensionContractVariant(
+                name=f"leaf_only_floor{floor}",
+                minimum_projection_dimension=floor,
+                threshold_policy="leaf",
+            )
         )
-    variants.append(
-        DimensionContractVariant(
-            name="internal_augmented_floor2",
-            include_internal_rows=True,
-            minimum_projection_dimension=2,
-            threshold_policy="augmented",
-        )
-    )
     if include_finite_null:
         variants.append(
             DimensionContractVariant(
-                name="internal_finite_null_floor2",
-                include_internal_rows=True,
+                name="leaf_only_finite_null_floor2",
                 minimum_projection_dimension=2,
                 threshold_policy="finite_null",
             )
@@ -229,28 +206,9 @@ def _patched_variant(
     finite_null_quantile: float,
     seed: int,
 ) -> Iterator[None]:
-    original_include_internal = config.INCLUDE_INTERNAL_IN_SPECTRAL
     original_floor_context = spectral_context_module.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION
     original_floor_orchestrator = gate_orchestrator.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION
     original_estimator = mp_worker.estimate_marchenko_pastur_dimension
-
-    def _estimate_augmented_threshold(
-        eigenvalues: np.ndarray,
-        *,
-        n_samples: int,
-        n_features: int,
-        effective_independent_rows: int | None = None,
-        mp_threshold_rows: int | None = None,
-        minimum_projection_dimension: int = 1,
-    ) -> MarchenkoPasturDimensionEstimate:
-        return estimate_marchenko_pastur_dimension(
-            eigenvalues,
-            n_samples=n_samples,
-            n_features=n_features,
-            effective_independent_rows=effective_independent_rows,
-            mp_threshold_rows=n_samples,
-            minimum_projection_dimension=minimum_projection_dimension,
-        )
 
     def _estimate_leaf_threshold(
         eigenvalues: np.ndarray,
@@ -291,16 +249,13 @@ def _patched_variant(
             seed=seed,
         )
 
-    config.INCLUDE_INTERNAL_IN_SPECTRAL = bool(variant.include_internal_rows)
     spectral_context_module.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = int(
         variant.minimum_projection_dimension
     )
     gate_orchestrator.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = int(
         variant.minimum_projection_dimension
     )
-    if variant.threshold_policy == "augmented":
-        mp_worker.estimate_marchenko_pastur_dimension = _estimate_augmented_threshold
-    elif variant.threshold_policy == "leaf":
+    if variant.threshold_policy == "leaf":
         mp_worker.estimate_marchenko_pastur_dimension = _estimate_leaf_threshold
     elif variant.threshold_policy == "finite_null":
         mp_worker.estimate_marchenko_pastur_dimension = _estimate_finite_null_threshold
@@ -310,7 +265,6 @@ def _patched_variant(
     try:
         yield
     finally:
-        config.INCLUDE_INTERNAL_IN_SPECTRAL = original_include_internal
         spectral_context_module.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = (
             original_floor_context
         )
@@ -421,7 +375,6 @@ def _run_case_variant(
         "case_name": str(case["name"]),
         "case_category": str(case.get("category", "")),
         "variant": variant.name,
-        "include_internal_rows": bool(variant.include_internal_rows),
         "threshold_policy": variant.threshold_policy,
         "minimum_projection_dimension": int(variant.minimum_projection_dimension),
         "status": result.status,
@@ -464,7 +417,6 @@ def _run_comparison(
                     "case_name": str(case["name"]),
                     "case_category": str(case.get("category", "")),
                     "variant": variant.name,
-                    "include_internal_rows": bool(variant.include_internal_rows),
                     "threshold_policy": variant.threshold_policy,
                     "minimum_projection_dimension": int(variant.minimum_projection_dimension),
                     "status": "error",

@@ -18,6 +18,8 @@ sources:
   - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_180332Z/sibling_inflation_summary.csv
   - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_targets.csv
   - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_summary.csv
+  - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_summary.csv
+  - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_replicate_summary.csv
   - kl_clustering_analysis/config.py
   - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
   - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
@@ -392,6 +394,39 @@ edge-blocked/stopped. Positive-weight selected non-null records are rejected as
 calibration data. When the available support is selected-non-null only, the
 method raises a calibration-data error instead of estimating \(\hat c\), using
 \(\hat c=1\), or silently borrowing those records.
+
+### Upstream Edge-Selection Audit
+
+The strict leaf-only production contract exposed a stronger upstream fact: in
+many skipped benchmark cases, every tested child-parent edge is significant,
+so no sibling record can be strict null-like. This is not primarily a sibling
+kernel failure. It is the expected consequence of applying fixed-tree
+child-parent tests to a hierarchy selected from the same feature matrix.
+
+The edge-selection null audit isolates this by comparing two modes on pure
+Bernoulli null data. In the in-sample mode, the hierarchy and edge tests use
+the same null data. In the fixed-tree permutation mode, the topology is held
+fixed while feature columns are permuted before edge testing. With
+`EDGE_ALPHA = 0.001`, Hamming tree distance, and average linkage:
+
+```text
+mode                    scenario     mean edge rejection rate
+in_sample               null64x32                       0.990
+in_sample               null128x64                      0.995
+in_sample               null200x80                      0.998
+fixed_tree_permutation  null64x32                       0.022
+fixed_tree_permutation  null128x64                      0.027
+fixed_tree_permutation  null200x80                      0.000
+```
+
+The fixed-tree permutation check is not a full external null, but it identifies
+the source of the missing support: hierarchy construction selects children
+that differ from their parents by construction. Once Tree-BH opens nearly all
+child-parent edges, the internal empirical-null support set
+\(\mathcal C_{0,u}\) is empty, and selected non-null records are the only
+positive-weight records left. The honest method response is therefore a
+calibration-data error until a selected-tree conditional calibration law is
+defined and validated.
 
 ### Fixed-Subspace Gaussian Null Check
 

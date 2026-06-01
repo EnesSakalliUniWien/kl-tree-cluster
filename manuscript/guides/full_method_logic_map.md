@@ -58,7 +58,7 @@ walks the tree top down to decide the final partition.
 - Sibling alpha: `0.01`.
 - Marchenko-Pastur upper-edge dimension rule.
 - Minimum spectral dimension: `2`.
-- Inclusion of internal spectral rows.
+- Spectral row set: descendant leaves only in the inferential PCA basis.
 - Sibling projection dimension: geometric mean of child edge dimensions.
 - Empirical-null weight from edge-adjusted p-values.
 - Context bandwidth over log projection dimension.

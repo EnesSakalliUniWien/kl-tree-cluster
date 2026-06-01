@@ -1,0 +1,29 @@
+{
+  "seed": 20260601,
+  "edge_alpha": 0.001,
+  "tree_distance_metric": "hamming",
+  "tree_linkage_method": "average",
+  "n_reps": 5,
+  "n_fixed_tree_permutations": 3,
+  "scenarios": [
+    {
+      "name": "null64x32",
+      "n_samples": 64,
+      "n_features": 32,
+      "p_one": 0.5
+    },
+    {
+      "name": "null128x64",
+      "n_samples": 128,
+      "n_features": 64,
+      "p_one": 0.5
+    },
+    {
+      "name": "null200x80",
+      "n_samples": 200,
+      "n_features": 80,
+      "p_one": 0.5
+    }
+  ],
+  "purpose": "Compare edge-gate null behavior when the hierarchy is selected from the same null data versus when the topology is fixed and feature columns are permuted."
+}

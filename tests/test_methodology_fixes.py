@@ -202,7 +202,6 @@ class TestSpectralKFloor:
             tree,
             leaf_data,
             minimum_projection_dimension=2,
-            include_internal=False,
         )
 
         assert spectral_decomposition.test_projection_dimensions_by_node["root"] == 1

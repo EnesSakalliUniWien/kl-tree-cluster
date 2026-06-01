@@ -26,7 +26,6 @@ from scipy import linalg
 
 os.environ.setdefault("KL_TE_N_JOBS", "1")
 
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
 )
@@ -155,16 +154,7 @@ def _materialize_task_matrix(
         continuous_covariance_by_block=task.continuous_covariance_by_block,
     )
 
-    if not task.internal_distributions:
-        return descendant_leaf_rows
-
-    internal_rows = build_null_whitened_tangent_matrix(
-        np.asarray(task.internal_distributions, dtype=np.float64),
-        task.null_distribution,
-        feature_space=task.feature_space,
-        continuous_covariance_by_block=task.continuous_covariance_by_block,
-    )
-    return np.vstack([descendant_leaf_rows, internal_rows])
+    return descendant_leaf_rows
 
 
 def _build_matrix_records(
@@ -195,8 +185,9 @@ def _build_matrix_records(
         value_name="leaf_data",
     )
     leaf_label_to_index = {label: i for i, label in enumerate(context.data.index)}
-    descendant_leaf_indices_by_node, descendant_internal_nodes_by_node = (
-        precompute_descendants(context.tree, leaf_label_to_index)
+    descendant_leaf_indices_by_node = precompute_descendants(
+        context.tree,
+        leaf_label_to_index,
     )
     internal_node_ids = [
         node_id
@@ -210,9 +201,6 @@ def _build_matrix_records(
         context.tree,
         internal_node_ids,
         descendant_leaf_indices_by_node,
-        descendant_internal_nodes_by_node,
-        include_internal=bool(config.INCLUDE_INTERNAL_IN_SPECTRAL),
-        feature_count=feature_count,
         feature_space=feature_space,
     )
 
@@ -298,15 +286,7 @@ def _materialize_task_matrix_vectorized_bernoulli(
         feature_space,
     )
 
-    if not task.internal_distributions:
-        return descendant_leaf_rows
-
-    internal_rows = _vectorized_bernoulli_null_whiten(
-        np.asarray(task.internal_distributions, dtype=np.float64),
-        task.null_distribution,
-        feature_space,
-    )
-    return np.vstack([descendant_leaf_rows, internal_rows])
+    return descendant_leaf_rows
 
 
 def _vectorized_bernoulli_null_whiten(

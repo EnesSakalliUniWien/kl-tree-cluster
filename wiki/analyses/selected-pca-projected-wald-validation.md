@@ -93,10 +93,10 @@ fixed no longer approximates the actual selected reference law.
 
 ## Open Questions
 
-The next method decision is whether production should keep internal spectral
-rows in the projected-Wald PCA basis. This validation argues against treating
-the current internal-row projection as calibrated by the fixed-subspace
-chi-square reference. Possible next steps are to remove internal spectral rows
-from the production projection basis, derive a selected reference law that
-conditions on internal summaries, or keep internal rows only as a diagnostic
-feature outside the inferential path.
+Production now excludes internal spectral rows from the projected-Wald PCA
+basis. The remaining method question exposed by that change is sibling
+calibration support: high-dimensional and high-cardinality contexts can have no
+strict empirical-null calibration records even when the raw sibling evidence is
+strong. That requires either a validated external/null calibration object or an
+explicit unsupported status; it should not be patched by reintroducing internal
+summary rows into the inferential basis.

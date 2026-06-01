@@ -52,39 +52,15 @@ def _build_spectral_tasks(
     tree: nx.DiGraph,
     internal_node_ids: list[str],
     descendant_leaf_indices_by_node: dict[str, list[int]],
-    descendant_internal_nodes_by_node: dict[str, list[str]],
     *,
-    include_internal: bool,
-    feature_count: int,
     feature_space: FeatureSpace,
 ) -> list[NodeSpectralTask]:
     """Build per-node spectral tasks from precomputed descendant metadata."""
-
-    internal_distributions_by_node: Dict[str, tuple[np.ndarray, ...]] = {}
-    expected_internal_distribution_shape = (feature_space.raw_dimension,)
-
-    if include_internal:
-        for node_id in internal_node_ids:
-            node_internal_distributions: list[np.ndarray] = []
-            for internal_node_id in descendant_internal_nodes_by_node[node_id]:
-                distribution = tree.nodes[internal_node_id]["distribution"]
-                distribution_array = np.asarray(distribution, dtype=np.float64)
-                if distribution_array.shape != expected_internal_distribution_shape:
-                    raise ValueError(
-                        f"Internal distribution for node {internal_node_id!r} has "
-                        f"shape {distribution_array.shape}; expected "
-                        f"{expected_internal_distribution_shape}."
-                    )
-                node_internal_distributions.append(distribution_array)
-            internal_distributions_by_node[node_id] = tuple(node_internal_distributions)
 
     return [
         NodeSpectralTask(
             node_id=node_id,
             row_indices=tuple(descendant_leaf_indices_by_node[node_id]),
-            internal_distributions=(
-                internal_distributions_by_node[node_id] if include_internal else ()
-            ),
             null_distribution=np.asarray(tree.nodes[node_id]["distribution"], dtype=np.float64),
             feature_space=feature_space,
             continuous_covariance_by_block=require_node_continuous_covariance_by_block(
@@ -154,7 +130,6 @@ def compute_spectral_decomposition(
     leaf_data: pd.DataFrame,
     *,
     minimum_projection_dimension: int = 1,
-    include_internal: bool | None = None,
     feature_space: FeatureSpace | None = None,
 ) -> SpectralDecompositionResult:
     """Compute MP dimension metadata, PCA projections, and eigenvalues.
@@ -174,12 +149,6 @@ def compute_spectral_decomposition(
         DataFrame with leaf labels as index and features as columns.
     minimum_projection_dimension
         Floor on the returned dimension.
-    include_internal
-        If True, include internal node distribution vectors in the data matrix
-        used for eigendecomposition. If None, reads from
-        ``config.INCLUDE_INTERNAL_IN_SPECTRAL``. Internal distributions are
-        convex combinations of leaf data; they do not add independent spectral
-        observations.
 
     Returns
     -------
@@ -190,11 +159,6 @@ def compute_spectral_decomposition(
         are exposed separately.
     """
     spectral_start_sec = perf_counter()
-    if include_internal is None:
-        from kl_clustering_analysis import config
-
-        include_internal = config.INCLUDE_INTERNAL_IN_SPECTRAL
-
     active_feature_space = resolve_feature_space(tuple(leaf_data.columns), feature_space)
     feature_count = active_feature_space.contrast_dimension
     leaf_feature_matrix = validate_feature_matrix(
@@ -204,9 +168,7 @@ def compute_spectral_decomposition(
     )
     leaf_label_to_index = {label: i for i, label in enumerate(leaf_data.index)}
 
-    descendant_leaf_indices_by_node, descendant_internal_nodes_by_node = precompute_descendants(
-        tree, leaf_label_to_index
-    )
+    descendant_leaf_indices_by_node = precompute_descendants(tree, leaf_label_to_index)
 
     test_projection_dimensions: Dict[str, int] = {}
     raw_mp_signal_counts: Dict[str, int] = {}
@@ -230,9 +192,6 @@ def compute_spectral_decomposition(
         tree,
         internal_node_ids,
         descendant_leaf_indices_by_node,
-        descendant_internal_nodes_by_node,
-        include_internal=bool(include_internal),
-        feature_count=feature_count,
         feature_space=active_feature_space,
     )
 
