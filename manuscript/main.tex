@@ -37,16 +37,18 @@
 \begin{abstract}
 Hierarchical clustering exposes many candidate splits, but a geometric tree
 cut does not say which splits are statistically credible. KL-TE is a
-statistical filtering method for hierarchical clustering on binary,
-categorical, and discretized continuous sample-feature data. It builds a
-candidate hierarchy, summarizes each subtree by its empirical feature
-distribution, and annotates candidate splits with two tests. The child-parent
-edge test asks whether a child departs from its parent under a nested variance
-model. The sibling test asks whether the two children under the same parent are
-distinct after accounting for tree-selection scale distortion with a
-context-weighted empirical-null inflation estimate. A top-down traversal then
-turns the corrected annotations into terminal clusters. This manuscript records
-the implemented method and the validation gaps that must be closed before
+statistical filtering method for hierarchical clustering on typed
+sample-feature data. The current implementation supports Bernoulli coordinates,
+categorical one-hot blocks with a drop-last multinomial covariance model, and
+continuous empirical-Gaussian blocks. It builds a candidate hierarchy,
+summarizes each subtree by its empirical feature distribution, and annotates
+candidate splits with two tests. The child-parent edge test asks whether a child
+departs from its parent under the relevant feature-space covariance model. The
+sibling test asks whether the two children under the same parent are distinct
+after accounting for tree-selection scale distortion with a context-weighted
+empirical-null inflation estimate. A top-down traversal then turns the
+corrected annotations into terminal clusters. This manuscript records the
+implemented method and the validation gaps that must be closed before
 submission-level calibration or power claims can be made.
 \end{abstract}
 

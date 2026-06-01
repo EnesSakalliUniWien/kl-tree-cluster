@@ -57,23 +57,27 @@ valid post-selection p-values for selected hierarchical clusters under Gaussian
 mean models \citep{gao2024selective}.
 
 KL-TE does not currently derive an exact selective law for its tree-selected
-sibling tests. Instead, it implements a discrete-data projected-Wald testing
-pipeline with an empirical-null inflation layer for the sibling stage. That
-difference is important: the present draft should be read as a methods
-specification and validation plan, not as a proof of exact selective Type~I
-error control.
+sibling tests. Instead, it implements a projected-Wald testing pipeline over an
+explicit feature-space contract, with an empirical-null inflation layer for the
+sibling stage. That difference is important: the present draft should be read as
+a methods specification and validation plan, not as a proof of exact selective
+Type~I error control.
 
-KL-TE works on a discrete feature representation. Binary data
-enter directly. Categorical data are represented through one-hot or indicator-expanded
-binary features. Continuous data are discretized before the same tree-and-test
-procedure is applied. Once the representation is fixed, the inferential objects
-are no longer individual samples but subtrees, so each node carries a
-feature-wise distribution estimated from its descendant leaves. Statistical
-test annotations are computed before the actual tree walk that creates cluster
-assignments. This separation between evidence calculation and final traversal
-is useful both computationally and scientifically: the statistical support for
-each potential split is stored explicitly and can be audited independently of
-the resulting partition.
+KL-TE works on typed feature blocks rather than one universal binary
+representation. Bernoulli coordinates enter directly; categorical variables
+enter as one-hot blocks but are tested with their drop-last multinomial
+covariance. Explicit continuous inputs enter as empirical-Gaussian blocks whose
+subtree covariances are estimated from descendant leaves. Discretized Gaussian
+representations remain benchmark variants rather than the continuous-data
+contract.
+Once the representation is fixed, the inferential objects are no longer
+individual samples but subtrees, so each node carries a feature-wise
+distribution estimated from its descendant leaves. Statistical test annotations
+are computed before the actual tree walk that creates cluster assignments. This
+separation between evidence calculation and final traversal is useful both
+computationally and scientifically: the statistical support for each potential
+split is stored explicitly and can be audited independently of the resulting
+partition.
 
 The presentation follows that decision problem in order. It first defines the
 tree and node distributions. It then gives the child-parent edge test, the

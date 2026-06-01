@@ -7,9 +7,10 @@ method. This subsection introduces the tree objects in plain language before
 writing them formally, because the statistical tests operate on subtree
 summaries rather than directly on individual samples. All supported inputs are
 first mapped into one working sample-feature matrix $X$ with an explicit
-feature-space contract. Binary and one-hot cases use Hamming distance and
-average linkage for the candidate tree; explicit continuous benchmark cases use
-the recorded continuous distance matrix.
+feature-space contract. In the current benchmark implementation, Bernoulli and
+one-hot cases use Hamming distance and average linkage for the candidate tree;
+explicit continuous benchmark cases use a precomputed Euclidean distance
+matrix.
 
 For a non-expert reader, the important point is that the tree is a
 bookkeeping device for nested groups of samples. Each leaf corresponds to one
@@ -74,15 +75,16 @@ the same parent. The raw leaf matrix still matters through the descendant sets
 and local spectral matrices, but the primary inferential units are node-level
 distributions.
 
-For binary or indicator coordinates, the node distribution is the feature-wise
-mean over the descendant leaves,
+For every supported feature block, the node distribution is the leaf-count
+weighted empirical barycenter of the descendant rows. In raw coordinates,
 \begin{equation}
-\theta_u = \frac{1}{n_u}\sum_{i \in L(u)} X_i \in [0,1]^p.
+\theta_u = \frac{1}{n_u}\sum_{i \in L(u)} X_i.
 \end{equation}
 Thus $\theta_u$ is not a parameter attached to a single sample. It is the
 empirical summary of the whole subtree rooted at $u$: each coordinate
-$\theta_{u,j}$ is the fraction of descendant leaves in that subtree whose
-$j$th working feature equals $1$.
+$\theta_{u,j}$ is a descendant mean. For Bernoulli and one-hot coordinates this
+mean is a feature or category frequency; for continuous coordinates it is the
+empirical subtree mean in the raw continuous coordinate.
 If $u$ has children $l$ and $r$, then
 \begin{equation}
 n_u = n_{l(u)} + n_{r(u)},
@@ -91,8 +93,9 @@ n_u = n_{l(u)} + n_{r(u)},
 \end{equation}
 The decomposition goal is to identify a set of terminal tree nodes whose leaf
 sets partition the samples and whose defining splits are supported by the two
-statistical tests below. These formulas cover binary data directly and also the
-indicator representations used for categorical and discretized continuous data.
+statistical tests below. This barycentric subtree update is shared by
+Bernoulli, categorical one-hot, and continuous coordinates; the feature-space
+contract determines the contrast chart and covariance model used by the tests.
 
 Categorical features with values $C_{ij} \in \{0,\dots,K-1\}$ are represented
 through one-hot indicators
@@ -112,9 +115,10 @@ features.]
 Continuous inputs can enter through an explicit continuous feature-space
 contract. In that contract, the raw continuous columns form an
 empirical-Gaussian block, and each tree node stores the empirical descendant
-covariance matrix for that block. Historical binary benchmarks still use
-preprocessing maps into a discrete representation. One basic option is median
-binarization,
+covariance matrix for that block. The active continuous benchmark cases keep
+the raw continuous values and use a precomputed Euclidean distance matrix for
+tree construction. Separate discretized Gaussian benchmark variants still exist
+for comparison. One such variant is median binarization,
 \begin{equation}
 X_{ij}^{\mathrm{bin}}
 =
@@ -122,8 +126,7 @@ X_{ij}^{\mathrm{bin}}
 W_{ij} > \mathrm{median}(W_{\cdot j})
 \right\},
 \end{equation}
-while a more granular option is quantile discretization followed by one-hot
-expansion,
+and another is quantile discretization followed by one-hot expansion,
 \begin{equation}
 C_{ij}
 =
@@ -132,7 +135,8 @@ C_{ij}
 t_{jq} = Q_{q/K}(W_{\cdot j}),
 \end{equation}
 with the same indicator map
-$\tilde{X}_{i,j,k} = \mathbf{1}\{C_{ij} = k\}$. After this representation step,
-the testing logic reads the same node-distribution and feature-space contract;
-the tree-distance contract is recorded separately for binary, categorical, and
+$\tilde{X}_{i,j,k} = \mathbf{1}\{C_{ij} = k\}$. These discretized variants are
+not the continuous-data contract itself. After representation is chosen, the
+testing logic reads the node-distribution and feature-space contract; the
+tree-distance contract is recorded separately for binary, categorical, and
 continuous benchmark cases.

@@ -150,8 +150,8 @@ The current concrete open questions are:
     enough for production continuous data?
 19. What validated low-rank or regularized continuous covariance model should
     replace dense empirical covariance for \(p \gg n\) continuous blocks?
-20. How should discretized continuous data be validated under approximate
-    Bernoulli assumptions?
+20. How should discretized Gaussian benchmark variants be validated under
+    approximate Bernoulli or categorical assumptions?
 21. What is the clean general feature-space formulation for mixed Bernoulli,
     categorical, and continuous blocks?
 22. What sibling-FDR target should replace or justify flat BH across focal

@@ -35,14 +35,15 @@ begin.
 \subsection{Current Limitations}
 
 Several limitations are already clear from the method specification. First, the
-binary working representation makes one-hot categorical dependence and
-continuous-discretization choices part of the statistical problem, not merely
-preprocessing details. Second, the local Marchenko--Pastur rule, the minimum
-projection dimension, and the sibling projection rule are working spectral
-rules whose finite-sample behavior must be validated in the regimes used by the
-method. Third, the context-weighted empirical-null inflation is an empirical
-calibration model rather than an exact selective-inference theorem. Fourth, the
-final partition depends on the pass-through traversal rule, so full-pipeline
+feature-space covariance model is part of the statistical problem: one-hot
+categorical dependence, finite-sample empirical-Gaussian covariance, mixed
+feature blocks, and discretized benchmark variants each need separate
+validation. Second, the local Marchenko--Pastur rule, the minimum projection
+dimension, and the sibling projection rule are working spectral rules whose
+finite-sample behavior must be validated in the regimes used by the method.
+Third, the context-weighted empirical-null inflation is an empirical calibration
+model rather than an exact selective-inference theorem. Fourth, the final
+partition depends on the pass-through traversal rule, so full-pipeline
 calibration must be evaluated at both the local-test level and the
 number-of-clusters level.
 [TODO: once the evaluation is complete, replace this limitation list with

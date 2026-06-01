@@ -21,7 +21,7 @@ Formally, it tests the sibling null
 \begin{equation}
 H_0^{\mathrm{sib}}(u): \theta_{l(u)} = \theta_{r(u)}.
 \end{equation}
-For binary or indicator coordinates, the pooled null proportion is
+For Bernoulli coordinates, the pooled null proportion is
 \begin{equation}
 \bar{\theta}_{u,j}
 =
@@ -43,10 +43,14 @@ z_{u,j}^{\mathrm{sib}}
 \left(\frac{1}{n_{l(u)}} + \frac{1}{n_{r(u)}}\right)
 }}.
 \end{equation}
+For categorical and continuous feature blocks, the implementation uses the same
+two-sample sibling scale factor with the block covariance declared by the
+feature-space contract: drop-last multinomial covariance for one-hot
+categorical blocks and empirical-Gaussian covariance for continuous blocks.
 The sibling test then asks how to combine this multi-feature contrast into one
 summary score. The method reuses the spectral information already
 computed during the child-parent stage rather than drawing a fresh random
-projection from scratch. For a binary parent $u$ with children $l(u)$ and
+projection from scratch. For a parent $u$ with two children $l(u)$ and
 $r(u)$, let $k_{l(u)}^{\mathrm{edge}}$ and $k_{r(u)}^{\mathrm{edge}}$ denote
 the positive edge-stage spectral dimensions of the two children. The sibling
 dimension used in code is
@@ -64,7 +68,7 @@ k_{r(u)}^{\mathrm{edge}}
 If exactly one child has a positive edge-stage spectral dimension, that value
 is reused directly; if neither child has a positive edge-derived dimension, the
 parent's own edge-stage spectral dimension is used. The sibling test is run only
-for binary sibling pairs with complete edge-stage spectral context. This
+for two-child sibling pairs with complete edge-stage spectral context. This
 standardized vector answers the first sibling question: how large is the
 left-right contrast after accounting for feature-specific sampling noise? The
 next question is how to combine those coordinatewise contrasts into one summary
@@ -230,7 +234,7 @@ a raw sibling statistic, a weight describing how null-like that sibling context
 looks from the edge stage, and a scalar context used to borrow information
 across similar projection dimensions.
 
-For every binary parent $q$, let $T_q^{\mathrm{raw}}$ be the raw sibling
+For every two-child parent $q$, let $T_q^{\mathrm{raw}}$ be the raw sibling
 statistic. Let $a_q$ and $\nu_q$ be the reference scale and degrees of freedom
 returned by the projected-Wald kernel, with $a_q=1$ and $\nu_q=k_q$ for the
 current orthonormal PCA basis. Let $\pi_q \in [0,1]$ be the sibling null weight

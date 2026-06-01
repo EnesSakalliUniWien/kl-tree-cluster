@@ -38,7 +38,7 @@ Component & Current choice \\
 \endhead
 \bottomrule
 \endfoot
-Tree distance & Hamming \\
+Tree distance & Hamming by default; explicit continuous benchmark cases use precomputed Euclidean distances \\
 Linkage & Average linkage \\
 Edge significance level & $\alpha_{\mathrm{edge}} = 0.001$ \\
 Sibling significance level & $\alpha_{\mathrm{sib}} = 0.01$ \\
@@ -62,6 +62,8 @@ keeping the split. Second, once those test tables exist, the final clustering
 step is direct: the method walks down the tree and keeps only the splits that
 remain supported after correction.
 
-The representation layer should also be read as part of the method. Binary data
-enter directly, categorical data enter through one-hot indicator expansion, and
-continuous data are discretized before the same testing procedure is applied.
+The software follows the representation contract defined in the method:
+Bernoulli coordinates enter directly, categorical variables enter as one-hot
+blocks with drop-last multinomial covariance, and explicit continuous inputs
+enter as empirical-Gaussian blocks. Discretized Gaussian representations are
+benchmark variants only.

@@ -9,10 +9,13 @@ which parts still require validation before the manuscript can support
 submission-level claims.
 
 \paragraph{Statistical assumptions.}
-The coordinatewise edge and sibling standardizations use Bernoulli or indicator
-variance formulas. They are exact for independent Bernoulli coordinates with
-fixed subtree membership and become approximations for indicator-expanded
-categorical variables, discretized continuous variables, correlated features,
+The edge and sibling standardizations use the covariance model declared by the
+active feature-space block. Bernoulli blocks use Bernoulli variances, categorical
+one-hot blocks use a drop-last multinomial covariance, and continuous blocks use
+empirical-Gaussian covariance estimated from descendant leaves. These models are
+exact only under their corresponding fixed-membership sampling assumptions and
+become approximations for correlated features, high-cardinality one-hot blocks,
+finite-sample continuous covariance estimates, discretized benchmark variants,
 and data-dependent subtrees. The projected-Wald reference further treats the
 selected orthonormal projection rows as fixed when evaluating the projected
 quadratic form. This yields a chi-square reference for a fixed subspace under

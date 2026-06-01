@@ -1,7 +1,7 @@
 % Figures for KL-TE: Statistically Filtered Hierarchical Clustering
 
 % Figure 1: High-Level Pipeline Overview
-% This figure illustrates the complete workflow of the KL-TE method, from binary matrix input to cluster extraction.
+% This figure illustrates the complete workflow of the KL-TE method, from typed feature input to cluster extraction.
 % It uses a modular approach where each "card" represents a logical step in the pipeline.
 
 \begin{tikzpicture}[
@@ -24,7 +24,7 @@
 \matrix[matrix of nodes, nodes={draw, minimum size=4mm, anchor=center, font=\tiny}, row sep=-\pgflinewidth, column sep=-\pgflinewidth] (mat) at ($(p1.center)+(0,0.2)$) {
   1 & 1 & 0 & 1 \\ 1 & 1 & 0 & 1 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 1 & 0 \\
 };
-\node[anchor=north, font=\scriptsize] at ($(mat.south)$) {Binary representation $X$};
+\node[anchor=north, font=\scriptsize] at ($(mat.south)$) {Typed representation $X$};
 
 % 2. Build Tree
 \node[panel] (p2) at (5,0) {};

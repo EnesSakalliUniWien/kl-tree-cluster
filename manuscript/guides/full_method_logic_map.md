@@ -5,19 +5,22 @@ It is not a results section.
 
 ## Central Mathematical Object
 
-KL-TE starts from a discrete sample-feature matrix and a rooted binary
-agglomerative hierarchy. Each internal node defines a parent subtree with two
-child subtrees. The method computes subtree feature distributions, annotates
-child-parent edges and sibling pairs with projected-Wald tests, corrects the
-edge and sibling p-values, and walks the tree top down to decide the final
-partition.
+KL-TE starts from a typed sample-feature matrix and a rooted binary
+agglomerative hierarchy. The active feature-space contract may contain
+Bernoulli coordinates, categorical one-hot blocks with drop-last multinomial
+covariance, continuous empirical-Gaussian blocks, or future mixed blocks. Each
+internal node defines a parent subtree with two child subtrees. The method
+computes subtree feature distributions, annotates child-parent edges and sibling
+pairs with projected-Wald tests, corrects the edge and sibling p-values, and
+walks the tree top down to decide the final partition.
 
 ## Main Assumptions
 
-- The working feature representation is binary or indicator-like.
+- The working feature representation has an explicit feature-space contract.
 - Subtree membership is treated as fixed when a local p-value is evaluated.
 - Coordinatewise Bernoulli variance formulas are exact only for independent
-  Bernoulli coordinates with fixed groups.
+  Bernoulli coordinates with fixed groups; categorical and continuous blocks use
+  their declared covariance models and require separate validation.
 - Local PCA directions are treated as fixed once selected.
 - The orthonormal projected-Wald reference uses a chi-square law for a fixed
   projected subspace under an isotropic standardized null.
@@ -26,10 +29,10 @@ partition.
 
 ## Estimator and Statistic Chain
 
-1. Estimate node-level feature rates from descendant leaves.
+1. Estimate node-level feature distributions from descendant leaves.
 2. Form child-parent and sibling contrast vectors.
-3. Standardize each coordinate using the corresponding Bernoulli-style
-   variance model.
+3. Standardize contrasts using the covariance model declared by the active
+   feature-space block.
 4. Build parent-local PCA directions from the local subtree representation.
 5. Select the projection dimension with the local Marchenko-Pastur rule plus
    implementation floor and cap.
@@ -70,7 +73,8 @@ partition.
 - Power under planted binary subtree structure.
 - Robustness to sparse high-dimensional feature matrices.
 - Robustness to one-hot categorical dependence.
-- Robustness to continuous discretization.
+- Robustness to categorical one-hot covariance, continuous empirical-Gaussian
+  covariance, and discretized Gaussian benchmark variants.
 - Real-data interpretability.
 
 ## Required Before Submission

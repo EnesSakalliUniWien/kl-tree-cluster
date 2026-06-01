@@ -239,6 +239,12 @@ verification, and maintenance events here in chronological order.
   benchmark completed with plots disabled after the 20,000-feature continuous
   stress case was recorded as an explicit KL skip; a validated low-rank or
   regularized continuous covariance model remains open.
+- Corrected manuscript and wiki method text that still described KL-TE as a
+  discrete-only or discretize-continuous pipeline. The manuscript now describes
+  the active typed feature-space contract: Bernoulli coordinates, categorical
+  one-hot blocks with drop-last multinomial covariance, and explicit continuous
+  empirical-Gaussian blocks. Discretized Gaussian inputs are now described only
+  as benchmark variants.
 
 ## Evidence
 

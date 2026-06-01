@@ -5,17 +5,18 @@ places where mathematics, implementation, and validation still need to meet.
 
 ## Child-Parent Edge Test
 
-For a parent node `u` and child `c`, the method compares the child feature-rate
-vector to the parent feature-rate vector. Because the child leaves are included
-inside the parent leaves, this is a nested comparison rather than an ordinary
-independent two-sample comparison.
+For a parent node `u` and child `c`, the method compares the child subtree
+distribution to the parent subtree distribution in the active feature-space
+coordinates. Because the child leaves are included inside the parent leaves,
+this is a nested comparison rather than an ordinary independent two-sample
+comparison.
 
 Derivation chain:
 
-1. Define descendant-leaf rates for `u` and `c`.
+1. Define descendant-leaf distributions for `u` and `c`.
 2. Compute the nested child-parent contrast.
-3. Use the nested Bernoulli-style variance formula.
-4. Standardize coordinates.
+3. Use the feature-space covariance model for the nested contrast.
+4. Standardize contrast coordinates.
 5. Project onto parent-local orthonormal PCA directions.
 6. Sum squared projected coordinates.
 7. Compare to a chi-square law with the selected projected dimension.
@@ -24,9 +25,9 @@ Derivation chain:
 finite-sample conditions under which the nested variance formula is unbiased or
 consistent.]
 
-[VALIDATION GAP: correlated one-hot features and discretized continuous
-features violate the independent Bernoulli coordinate model and need simulation
-or sensitivity checks.]
+[VALIDATION GAP: categorical one-hot blocks, finite-sample continuous
+empirical-Gaussian covariance, mixed feature blocks, and discretized benchmark
+variants need simulation or sensitivity checks.]
 
 ## Projection and Eigenvectors
 
@@ -42,15 +43,15 @@ either derive the effect of this selection or validate it empirically.]
 
 ## Sibling Test
 
-For a binary parent, the sibling test compares the two child feature-rate
-vectors after coordinatewise standardization. The projected statistic is
-computed in a parent-local orthonormal basis. The raw sibling statistic is
-anti-conservative when the hierarchy has selected unusually separated sibling
-pairs from the same data.
+For a parent with two children, the sibling test compares the two child
+subtree distributions after feature-space standardization. The projected
+statistic is computed in a parent-local orthonormal basis. The raw sibling
+statistic is anti-conservative when the hierarchy has selected unusually
+separated sibling pairs from the same data.
 
 The implemented correction is context-weighted empirical-null inflation:
 
-1. Build sibling records across binary parents.
+1. Build sibling records across two-child parents.
 2. Assign each record an empirical-null weight from the two child-parent
    adjusted p-values.
 3. Define context by the sibling projection dimension.

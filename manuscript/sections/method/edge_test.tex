@@ -27,20 +27,26 @@ Because $c$ is nested inside $u$, the child and parent estimators are not
 independent. This is what makes the edge test a nested comparison rather than
 an ordinary two-sample comparison.
 
-\paragraph{Step 2: Use the nested variance.}
-In the binary or indicator representation,
+\paragraph{Step 2: Use the nested covariance model.}
+In the Bernoulli case, the nested variance is
 \begin{equation}
 \mathrm{Var}(\hat{\theta}_{c,j} - \hat{\theta}_{u,j})
 =
 \theta_{u,j}(1-\theta_{u,j})
 \left(\frac{1}{n_c} - \frac{1}{n_u}\right),
 \end{equation}
-which is the variance expression used in the code. The subtraction term
+The subtraction term
 $\frac{1}{n_c} - \frac{1}{n_u}$ is the signature of the nested tree setting.
 In an ordinary two-sample test for independent groups, the variance factor
 would look like $\frac{1}{n_1} + \frac{1}{n_2}$. Here the parent already
 contains the child, so part of the uncertainty cancels out, which yields the
 nested factor $\frac{1}{n_c} - \frac{1}{n_u} > 0$.
+
+The implementation applies the same nested scale factor to the covariance model
+declared by the active feature-space block. Bernoulli blocks reduce to the
+coordinatewise formula above, categorical blocks use the drop-last multinomial
+covariance, and continuous blocks use the empirical-Gaussian covariance stored
+for the parent subtree.
 
 \paragraph{Step 3: Standardize the edge contrast coordinatewise.}
 The standardized edge vector is therefore
@@ -50,9 +56,10 @@ z_{u \to c,j}^{\mathrm{edge}}
 \frac{\theta_{c,j} - \theta_{u,j}}
 {\sqrt{\theta_{u,j}(1-\theta_{u,j})\left(\frac{1}{n_c} - \frac{1}{n_u}\right)}}.
 \end{equation}
-This standardization is applied \emph{coordinatewise}. Each feature first gets
-its own z-like score before the method combines evidence across features. For a
-parent-child edge with $p$ binary or indicator coordinates, the method first computes $p$ scalar standardized scores
+For Bernoulli coordinates this standardization is applied
+\emph{coordinatewise}. Each feature first gets its own z-like score before the
+method combines evidence across features. For a parent-child edge with $p$
+Bernoulli coordinates, the method first computes $p$ scalar standardized scores
 $z_{u \to c,1}^{\mathrm{edge}},\dots,z_{u \to c,p}^{\mathrm{edge}}$, one for
 each feature, then stacks them into the vector
 \begin{equation}

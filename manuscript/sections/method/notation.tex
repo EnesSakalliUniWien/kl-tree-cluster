@@ -3,14 +3,14 @@
 \subsection{Notation}
 
 We use one notation layer throughout the method to keep the statistical and
-algorithmic steps aligned. The working sample representation is a discrete
-matrix $X$, the hierarchy is a rooted binary tree $\mathcal{T} = (V,E)$, and
-the main inferential objects are node-level distributions $\theta_u$ estimated
-from descendant leaves. Edge-stage quantities compare a child $c$ to its parent
-$u$, sibling-stage quantities compare $l(u)$ and $r(u)$ under the same parent,
-and traversal quantities convert the resulting significance indicators into the
-final partition. \Cref{tab:notation} summarizes the symbols that carry the
-rest of the method.
+algorithmic steps aligned. The working sample representation is a matrix $X$
+equipped with an explicit feature-space contract, the hierarchy is a rooted
+binary tree $\mathcal{T} = (V,E)$, and the main inferential objects are
+node-level distributions $\theta_u$ estimated from descendant leaves. Edge-stage
+quantities compare a child $c$ to its parent $u$, sibling-stage quantities
+compare $l(u)$ and $r(u)$ under the same parent, and traversal quantities
+convert the resulting significance indicators into the final partition.
+\Cref{tab:notation} summarizes the symbols that carry the rest of the method.
 
 {\small
 \begin{longtable}{@{}p{0.24\textwidth}p{0.70\textwidth}@{}}
@@ -27,9 +27,9 @@ Symbol & Meaning \\
 \bottomrule
 \endfoot
 $n$ & Number of samples. \\
-$p$ & Number of binary or indicator coordinates in the working representation. \\
-$X \in \{0,1\}^{n \times p}$ & Working sample-feature matrix after preprocessing. \\
-$X_i \in \{0,1\}^p$ & Row vector for sample $i$. \\
+$p$ & Number of raw working coordinates before block-specific contrast charts. \\
+$X \in \mathbb{R}^{n \times p}$ & Numeric working sample-feature matrix with a Bernoulli, categorical, continuous, or mixed feature-space contract. \\
+$X_i \in \mathbb{R}^p$ & Row vector for sample $i$. \\
 $\mathcal{T} = (V,E)$ & Rooted binary hierarchy built from the samples. \\
 $u, v, a$ & Generic tree nodes. \\
 $L_i$ & Leaf node corresponding to observed sample $i$. \\
@@ -39,7 +39,7 @@ $l(u), r(u)$ & Left and right child of parent node $u$. \\
 $L(u)$ & Descendant leaf set of node $u$. \\
 $n_u = |L(u)|$ & Number of descendant leaves under node $u$. \\
 $e = (u,c)$ & Directed tree edge from parent $u$ to child $c$, representing immediate subtree containment. \\
-$\theta_u \in [0,1]^p$ & Empirical node distribution at node $u$. \\
+$\theta_u$ & Empirical node distribution at node $u$ in the active feature-space coordinates. \\
 $H_{0,j}^{\mathrm{edge}}(u,c)$ & Coordinatewise child-parent edge null for feature $j$. \\
 $z_{u \to c}^{\mathrm{edge}}$ & Standardized child-parent edge vector. \\
 $T_{u \to c}^{\mathrm{edge}}$ & Projected edge statistic for edge $(u,c)$. \\

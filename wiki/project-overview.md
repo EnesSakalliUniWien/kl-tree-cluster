@@ -2,7 +2,7 @@
 title: Project Overview
 type: project
 status: reviewed
-updated: 2026-05-25
+updated: 2026-06-01
 sources:
   - README.md
   - docs/onboarding.md
@@ -18,9 +18,12 @@ tags:
 ## Summary
 
 This repository implements and documents KL-TE, a clustering workflow that
-starts from a discrete sample-feature matrix and a rooted binary candidate
+starts from a typed sample-feature matrix and a rooted binary candidate
 hierarchy, evaluates local splits with child-parent and sibling tests, and
-returns terminal clusters through a top-down traversal.
+returns terminal clusters through a top-down traversal. The active feature-space
+contract covers Bernoulli coordinates, categorical one-hot blocks with
+drop-last multinomial covariance, and explicit continuous empirical-Gaussian
+blocks.
 
 ## Details
 
