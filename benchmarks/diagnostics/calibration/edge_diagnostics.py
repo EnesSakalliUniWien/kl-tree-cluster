@@ -17,7 +17,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from benchmarks.shared.util.time import format_timestamp_utc
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
@@ -27,6 +26,8 @@ from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import kstest
+
+from benchmarks.shared.util.time import format_timestamp_utc
 
 
 def _default_null_scenarios() -> list[dict[str, Any]]:

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import numpy as np
+from sklearn.cluster import OPTICS
+
 from benchmarks.shared.types.method_run_result import MethodRunResult
 from benchmarks.shared.util.core import _normalize_labels
 from benchmarks.shared.util.decomposition import _ok_result_from_labels
-from sklearn.cluster import OPTICS
 
 
 def _run_optics_method(

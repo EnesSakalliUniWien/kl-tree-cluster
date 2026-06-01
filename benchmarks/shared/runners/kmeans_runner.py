@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import numpy as np
+from sklearn.cluster import KMeans
+
 from benchmarks.shared.types.method_run_result import MethodRunResult
 from benchmarks.shared.util.core import _normalize_labels, _resolve_requested_cluster_count
 from benchmarks.shared.util.decomposition import _ok_result_from_labels
-from sklearn.cluster import KMeans
 
 
 def _run_kmeans_method(

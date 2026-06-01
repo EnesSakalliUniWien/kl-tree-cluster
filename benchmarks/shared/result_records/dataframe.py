@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Iterable
 
 import pandas as pd
+
 from benchmarks.shared.result_records.models import BenchmarkResultRow
 
 RESULT_COLUMNS = [

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+
 from benchmarks.shared.types.method_run_result import MethodRunResult
 from benchmarks.shared.util.core import (
     _knn_edge_weights,

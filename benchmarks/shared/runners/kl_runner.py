@@ -9,11 +9,6 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from benchmarks.shared.types import MethodRunResult
-from benchmarks.shared.util.decomposition import (
-    _labels_and_report_from_decomposition,
-)
-from benchmarks.shared.util.time import elapsed_since
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
@@ -22,6 +17,12 @@ from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDec
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
+
+from benchmarks.shared.types import MethodRunResult
+from benchmarks.shared.util.decomposition import (
+    _labels_and_report_from_decomposition,
+)
+from benchmarks.shared.util.time import elapsed_since
 
 
 def _run_kl_on_distance(

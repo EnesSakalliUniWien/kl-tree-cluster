@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import pdist
+
 from benchmarks.shared.metrics import _calculate_ari_nmi_purity_metrics
 from benchmarks.shared.result_records import (
     BenchmarkResultRow,
@@ -15,7 +17,6 @@ from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.types import MethodSpec
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 from benchmarks.shared.util.time import BENCHMARK_STAGE_TIMING_KEYS
-from scipy.spatial.distance import pdist
 
 KL_TREE_DISTANCE_SOURCE_KEY = "tree_distance_source"
 KL_TREE_DISTANCE_SOURCE_FEATURE_METRIC = "feature_metric"

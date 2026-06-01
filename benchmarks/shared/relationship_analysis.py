@@ -9,12 +9,13 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from benchmarks.shared.plots.cover_page import GROUP_ORDER, category_group
-from benchmarks.shared.result_records import RESULT_COLUMNS
-from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.stats import norm, spearmanr
 from sklearn.linear_model import LinearRegression, LogisticRegression
+
+from benchmarks.shared.plots.cover_page import GROUP_ORDER, category_group
+from benchmarks.shared.result_records import RESULT_COLUMNS
+from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
 
 _NUMERIC_COLUMNS = (
     "test_case",

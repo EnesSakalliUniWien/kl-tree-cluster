@@ -18,11 +18,12 @@ from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
-from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES
 from kl_clustering_analysis.plot.cluster_color_mapping import (
     build_cluster_color_spec,
     present_cluster_ids,
 )
+
+from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES
 
 # Reduce noisy but expected warnings emitted during visualization
 warnings.filterwarnings(

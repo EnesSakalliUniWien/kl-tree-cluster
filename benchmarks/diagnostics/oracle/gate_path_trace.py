@@ -8,9 +8,6 @@ from typing import Any
 import networkx as nx
 import numpy as np
 import pandas as pd
-from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
-    collect_sibling_inflation_inputs,
-)
 from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes, compute_node_depths
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
@@ -23,6 +20,10 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inf
     predict_empirical_inflation_factor,
 )
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
+
+from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
+    collect_sibling_inflation_inputs,
+)
 
 
 @dataclass(frozen=True)

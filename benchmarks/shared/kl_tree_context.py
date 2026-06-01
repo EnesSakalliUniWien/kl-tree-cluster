@@ -6,6 +6,11 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from kl_clustering_analysis.tree.feature_space import FeatureSpace
+from kl_clustering_analysis.tree.poset_tree import PosetTree
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.method_execution import (
@@ -13,10 +18,6 @@ from benchmarks.shared.util.method_execution import (
     KL_TREE_DISTANCE_SOURCE_PRECOMPUTED,
     _require_precomputed_kl_distance_metric,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureSpace
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
 
 
 @dataclass(frozen=True)

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import numpy as np
+
 from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 

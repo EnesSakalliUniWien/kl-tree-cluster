@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import squareform
+
 from benchmarks.shared.generators.case_data_contracts import (
     CaseDataResult,
     case_metadata,
 )
 from benchmarks.shared.generators.generate_sbm import generate_sbm
-from scipy.spatial.distance import squareform
 
 
 def generate_sbm_case(test_case: dict, seed: int | None) -> CaseDataResult:

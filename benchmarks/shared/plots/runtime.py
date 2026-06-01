@@ -8,9 +8,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.backends.backend_pdf import PdfPages
+
 from benchmarks.shared.result_records import ComputedResultRecord
 from benchmarks.shared.util.pdf.layout import prepare_pdf_figure
-from matplotlib.backends.backend_pdf import PdfPages
 
 from .cover_page import GROUP_ORDER, generate_overview_page, generate_section_page
 from .export import (

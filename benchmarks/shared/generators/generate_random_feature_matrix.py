@@ -9,6 +9,7 @@ cluster separation (entropy), and feature diversity.
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+
 from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 # ============================================================================

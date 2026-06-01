@@ -13,6 +13,7 @@ from typing import Any, Dict, List
 import networkx as nx
 import numpy as np
 import pandas as pd
+
 from benchmarks.shared.result_records import ComputedResultRecord
 
 logger = logging.getLogger(__name__)

@@ -8,6 +8,7 @@ where each feature has K categories (not just binary 0/1).
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+
 from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 

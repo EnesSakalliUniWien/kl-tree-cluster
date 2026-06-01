@@ -12,11 +12,12 @@ import numbers
 
 import numpy as np
 import pandas as pd
-from benchmarks.shared.runners.kl_runner import _run_kl_on_distance
-from benchmarks.shared.types import MethodRunResult
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from scipy.linalg import eigh
 from scipy.spatial.distance import pdist
+
+from benchmarks.shared.runners.kl_runner import _run_kl_on_distance
+from benchmarks.shared.types import MethodRunResult
 
 
 def _resolve_neighbor_search_k(

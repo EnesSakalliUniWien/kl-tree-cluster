@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
+
 from benchmarks.shared.evolution import (
     evolve_sequence,
     generate_dirichlet_distributions,

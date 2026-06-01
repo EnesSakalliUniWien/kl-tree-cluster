@@ -6,8 +6,9 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import numpy as np
-from benchmarks.shared.generators.common import calculate_cluster_sizes
 from sklearn.datasets import make_blobs
+
+from benchmarks.shared.generators.common import calculate_cluster_sizes
 
 
 @dataclass(frozen=True)

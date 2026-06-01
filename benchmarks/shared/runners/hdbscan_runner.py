@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+
 from benchmarks.shared.types.method_run_result import MethodRunResult
 from benchmarks.shared.util.core import _normalize_labels
 from benchmarks.shared.util.decomposition import _ok_result_from_labels

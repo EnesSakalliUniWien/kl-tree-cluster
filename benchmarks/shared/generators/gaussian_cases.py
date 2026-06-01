@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.datasets import make_blobs
+
 from benchmarks.shared.generators.case_data_contracts import (
     CaseDataResult,
     case_metadata,
@@ -19,7 +21,6 @@ from benchmarks.shared.generators.generate_gaussian_outliers import (
     GaussianOutlierConfig,
     generate_gaussian_outliers,
 )
-from sklearn.datasets import make_blobs
 
 
 def generate_blobs_case(test_case: dict, seed: int | None) -> CaseDataResult:

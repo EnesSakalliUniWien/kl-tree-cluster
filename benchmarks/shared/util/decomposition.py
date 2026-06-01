@@ -6,10 +6,11 @@ from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
-from benchmarks.shared.types.method_run_result import MethodRunResult
 from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
+
+from benchmarks.shared.types.method_run_result import MethodRunResult
 
 
 def _empty_report_dataframe() -> pd.DataFrame:

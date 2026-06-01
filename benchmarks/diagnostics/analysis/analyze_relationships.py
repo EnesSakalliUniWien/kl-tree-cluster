@@ -7,6 +7,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
+
 from benchmarks.shared.relationship_analysis import analyze_benchmark_relationships
 
 _SCRIPT_PATH = Path(__file__).resolve()

@@ -12,6 +12,8 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
+from kl_clustering_analysis import config
+
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.config import DEFAULT_METHODS
 
@@ -32,7 +34,6 @@ from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_run import run_single_case
 from benchmarks.shared.util.method_selection import resolve_selected_methods_and_param_sets
 from benchmarks.shared.util.pdf.session import open_pdf_pages, resolve_pdf_output_path
-from kl_clustering_analysis import config
 
 # Configure logger (library-friendly: leave handlers/levels to callers)
 logger = logging.getLogger(__name__)

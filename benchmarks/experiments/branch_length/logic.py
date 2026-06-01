@@ -19,6 +19,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+from sklearn.preprocessing import StandardScaler
+
 from benchmarks.shared.evolution import (
     compute_expected_divergence,
     evolve_sequence,
@@ -26,8 +29,6 @@ from benchmarks.shared.evolution import (
 )
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from sklearn.preprocessing import StandardScaler
 
 
 def generate_two_group_data(

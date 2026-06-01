@@ -6,12 +6,13 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
-from benchmarks.shared.runners.method_registry import METHOD_SPECS
-from benchmarks.shared.types import MethodRunResult
-from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from scipy.spatial.distance import pdist, squareform
+
+from benchmarks.shared.runners.method_registry import METHOD_SPECS
+from benchmarks.shared.types import MethodRunResult
+from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
 
 
 def _normalize_method_result(

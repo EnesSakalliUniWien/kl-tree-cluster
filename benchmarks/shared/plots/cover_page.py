@@ -12,9 +12,10 @@ from pathlib import Path
 from textwrap import dedent
 
 import matplotlib.pyplot as plt
+from kl_clustering_analysis import config
+
 from benchmarks.shared.cases.geometry import case_recipe_cluster_count, case_recipe_geometry
 from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
-from kl_clustering_analysis import config
 
 # ---------------------------------------------------------------------------
 # Category key → parent group mapping

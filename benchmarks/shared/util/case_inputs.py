@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from benchmarks.shared.generators import generate_case_data
 from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.feature_space import (
     FeatureSpace,
@@ -14,6 +13,8 @@ from kl_clustering_analysis.tree.feature_space import (
     validate_feature_space,
 )
 from scipy.spatial.distance import pdist, squareform
+
+from benchmarks.shared.generators import generate_case_data
 
 DISTANCE_MATRIX_METHODS = {"leiden", "louvain", "dbscan", "optics", "hdbscan"}
 
