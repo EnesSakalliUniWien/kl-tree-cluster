@@ -6,20 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[3]
 
 from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     classify_tree_recoverability_failure,

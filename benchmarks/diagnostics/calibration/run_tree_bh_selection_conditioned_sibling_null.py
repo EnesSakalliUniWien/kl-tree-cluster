@@ -6,29 +6,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
+repo_root = Path(__file__).resolve().parents[3]
 
-repo_root = ensure_repo_root_on_path(__file__)
-
-from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null import (
-    SelectionConditionedSiblingNullContext,
-    simulate_local_edge_selection_conditioned_null,
-)
-from benchmarks.diagnostics.oracle.oracle_tree_recoverability import FAILURE_CLASS_GATE_UNDER_SPLIT
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
@@ -48,6 +33,15 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pro
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
+
+from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null import (
+    SelectionConditionedSiblingNullContext,
+    simulate_local_edge_selection_conditioned_null,
+)
+from benchmarks.diagnostics.oracle.oracle_tree_recoverability import FAILURE_CLASS_GATE_UNDER_SPLIT
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
+from benchmarks.shared.kl_tree_context import build_kl_tree_context
 
 _THREAD_ENV_VARS = (
     "OMP_NUM_THREADS",

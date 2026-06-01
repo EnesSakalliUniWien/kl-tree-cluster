@@ -6,20 +6,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
+repo_root = Path(__file__).resolve().parents[3]
 
-repo_root = ensure_repo_root_on_path(__file__)
+from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
+from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 from benchmarks.diagnostics.calibration.gaussian_sibling_null_calibration import (
     CONTINUOUS_FIXED_SUBSPACE_SCOPE,
@@ -40,11 +39,6 @@ from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
 from benchmarks.shared.kl_tree_context import build_kl_tree_context
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
-    run_gate_annotation_pipeline,
-)
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 _THREAD_ENV_VARS = (
     "OMP_NUM_THREADS",
@@ -277,7 +271,7 @@ def _diagnose_case(
     gate_annotation_bundle = run_gate_annotation_pipeline(
         context.tree,
         context.tree.annotations_df,
-        alpha_local=config.EDGE_ALPHA,
+        edge_alpha=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
@@ -285,7 +279,7 @@ def _diagnose_case(
     decomposer = TreeDecomposition(
         tree=context.tree,
         gate_annotation_bundle=gate_annotation_bundle,
-        alpha_local=config.EDGE_ALPHA,
+        edge_alpha=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,

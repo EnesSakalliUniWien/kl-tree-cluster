@@ -76,7 +76,7 @@ There are three regimes:
 
 1. Moderate-overlap cases where raw root signal exists, but the corrected sibling decision kills the split.
 2. Cases where the root opens, but one later branch remains merged.
-3. Hard overlap cases where Gate 2 or the raw sibling test already sees too little global separation.
+3. Hard overlap cases where edge gate or the raw sibling test already sees too little global separation.
 
 Representative cases:
 
@@ -86,7 +86,7 @@ Representative cases:
 | `overlap_mod_6c_med` | `4/6`, ARI `0.6516` | `0.00238` | `0.0155` | Root almost opens, but correction still closes it. |
 | `gauss_overlap_3c_small_q5` | `2/3`, ARI `0.5698` | `1.88e-11` | `3.70e-9` | Root opens; later tree stops one split short. |
 | `overlap_unbal_4c_small` | `1/4`, ARI `0.0` | `0.5320` | `0.9302` | No strong global root split signal. |
-| `overlap_hd_4c_1k` | `1/4`, ARI `0.0` | `NaN` | `NaN` | Root sibling test skipped because both root children fail Gate 2. |
+| `overlap_hd_4c_1k` | `1/4`, ARI `0.0` | `NaN` | `NaN` | Root sibling test skipped because both root children fail edge gate. |
 
 Important `overlap_hd_4c_1k` detail:
 
@@ -102,8 +102,8 @@ That is not a multiple-testing artifact. It is a failure to detect a useful root
 
 `kl` is a top-down binary split method:
 
-- Gate 2 requires at least one child-parent divergence.
-- Gate 3 requires sibling difference.
+- edge gate requires at least one child-parent divergence.
+- sibling gate requires sibling difference.
 - if a node fails, traversal merges the whole subtree there
 - pass-through only helps when a descendant is already known to split
 
@@ -174,7 +174,7 @@ This means one fix is unlikely to close both gaps.
    - especially `overlap_mod_4c_small` and `overlap_mod_6c_med`
 
 3. Hard overlap:
-   - inspect Gate 2 and tree construction, not only sibling calibration
+   - inspect edge gate and tree construction, not only sibling calibration
    - especially `overlap_hd_4c_1k` and the heavy-overlap family
 
 ## Representative audit files

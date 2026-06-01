@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,16 +24,8 @@ import numpy as np
 import pandas as pd
 from scipy import linalg
 
-_SCRIPT_PATH = Path(__file__).resolve()
-BENCHMARKS_ROOT = next(parent for parent in _SCRIPT_PATH.parents if parent.name == "benchmarks")
-PROJECT_ROOT = BENCHMARKS_ROOT.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 os.environ.setdefault("KL_TE_N_JOBS", "1")
 
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
@@ -79,13 +70,16 @@ from kl_clustering_analysis.tree.feature_space import (
     validate_feature_matrix,
 )
 
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.kl_tree_context import build_kl_tree_context
+
 DEFAULT_CASE_NAMES = (
     "binary_many_features",
     "cat_highcard_20cat_4c",
     "dim_consolidated_4c_72f_continuous",
     "gauss_extreme_noise_highd_continuous",
 )
-GATE2_MINIMUM_PROJECTION_DIMENSION = 2
+EDGE_GATE_MINIMUM_PROJECTION_DIMENSION = 2
 
 
 @dataclass(frozen=True)
@@ -234,7 +228,7 @@ def _build_matrix_records(
     ]
     materialize_seconds = time.perf_counter() - materialize_start
     vectorized_materialize_seconds, vectorized_max_abs_diff = (
-        _profile_vectorized_diagonal_materialization(
+        _profile_vectorized_bernoulli_materialization(
             tasks,
             records,
             leaf_feature_matrix,
@@ -255,19 +249,19 @@ def _build_matrix_records(
     )
 
 
-def _profile_vectorized_diagonal_materialization(
+def _profile_vectorized_bernoulli_materialization(
     tasks: list[object],
     records: list[SpectralMatrixRecord],
     leaf_feature_matrix: np.ndarray,
     feature_space: FeatureSpace,
 ) -> tuple[float, float]:
-    if not _has_vectorizable_diagonal_blocks(feature_space):
+    if not _has_vectorizable_bernoulli_blocks(feature_space):
         return float("nan"), float("nan")
 
     max_abs_diff = 0.0
     start = time.perf_counter()
     for task, record in zip(tasks, records, strict=True):
-        vectorized_matrix = _materialize_task_matrix_vectorized_diagonal(
+        vectorized_matrix = _materialize_task_matrix_vectorized_bernoulli(
             task,
             leaf_feature_matrix,
             feature_space,
@@ -283,14 +277,13 @@ def _profile_vectorized_diagonal_materialization(
     return time.perf_counter() - start, max_abs_diff
 
 
-def _has_vectorizable_diagonal_blocks(feature_space: FeatureSpace) -> bool:
-    families = {block.family for block in feature_space.blocks}
-    if families not in ({"bernoulli"}, {"continuous"}):
-        return False
-    return all(block.raw_dimension == 1 for block in feature_space.blocks)
+def _has_vectorizable_bernoulli_blocks(feature_space: FeatureSpace) -> bool:
+    return feature_space.family_label == "bernoulli" and all(
+        block.raw_dimension == 1 for block in feature_space.blocks
+    )
 
 
-def _materialize_task_matrix_vectorized_diagonal(
+def _materialize_task_matrix_vectorized_bernoulli(
     task: object,
     full_feature_matrix: np.ndarray,
     feature_space: FeatureSpace,
@@ -299,51 +292,37 @@ def _materialize_task_matrix_vectorized_diagonal(
     if len(row_indices) < 2:
         return np.zeros((0, feature_space.contrast_dimension), dtype=np.float64)
 
-    descendant_leaf_rows = _vectorized_diagonal_null_whiten(
+    descendant_leaf_rows = _vectorized_bernoulli_null_whiten(
         full_feature_matrix[row_indices, :],
         task.null_distribution,
-        task,
         feature_space,
     )
 
     if not task.internal_distributions:
         return descendant_leaf_rows
 
-    internal_rows = _vectorized_diagonal_null_whiten(
+    internal_rows = _vectorized_bernoulli_null_whiten(
         np.asarray(task.internal_distributions, dtype=np.float64),
         task.null_distribution,
-        task,
         feature_space,
     )
     return np.vstack([descendant_leaf_rows, internal_rows])
 
 
-def _vectorized_diagonal_null_whiten(
+def _vectorized_bernoulli_null_whiten(
     distributions: np.ndarray,
     null_distribution: np.ndarray,
-    task: object,
     feature_space: FeatureSpace,
 ) -> np.ndarray:
     rows = np.asarray(distributions, dtype=np.float64)
     null = np.asarray(null_distribution, dtype=np.float64)
-    if feature_space.family_label == "bernoulli":
-        variance = null * (1.0 - null) + 1e-12
-        return (rows - null) / np.sqrt(variance)
-
-    if feature_space.family_label == "continuous":
-        covariance_by_block = task.continuous_covariance_by_block
-        if covariance_by_block is None:
-            raise ValueError("Continuous vectorized materialization requires covariance blocks.")
-        variance = np.asarray(
-            [covariance_by_block[block.name][0, 0] for block in feature_space.blocks],
-            dtype=np.float64,
+    if not _has_vectorizable_bernoulli_blocks(feature_space):
+        raise ValueError(
+            "Vectorized Bernoulli materialization requires pure Bernoulli blocks; "
+            f"got {feature_space.family_label!r}."
         )
-        return (rows - null) / np.sqrt(variance + 1e-12)
-
-    raise ValueError(
-        "Vectorized diagonal materialization only supports pure Bernoulli or "
-        f"pure continuous feature spaces; got {feature_space.family_label!r}."
-    )
+    variance = null * (1.0 - null) + 1e-12
+    return (rows - null) / np.sqrt(variance)
 
 
 def _estimate_dimension(
@@ -359,7 +338,7 @@ def _estimate_dimension(
         n_features=active_feature_count,
         effective_independent_rows=descendant_leaf_rows,
         mp_threshold_rows=matrix_rows,
-        minimum_projection_dimension=GATE2_MINIMUM_PROJECTION_DIMENSION,
+        minimum_projection_dimension=EDGE_GATE_MINIMUM_PROJECTION_DIMENSION,
     )
     return estimate.test_projection_dimension, estimate.raw_mp_signal_count
 
@@ -409,7 +388,7 @@ def _profile_current_process_node(
         result = _process_node(
             task,
             leaf_feature_matrix,
-            GATE2_MINIMUM_PROJECTION_DIMENSION,
+            EDGE_GATE_MINIMUM_PROJECTION_DIMENSION,
             feature_count,
             True,
         )
@@ -662,15 +641,15 @@ def _profile_case(
                 "speedup_vs_full_eigh_projection": speedup_vs_full,
                 "tree_build_and_populate_seconds": tree_seconds,
                 "matrix_materialization_seconds": materialize_seconds,
-                "vectorized_diagonal_materialization_seconds": (
+                "vectorized_bernoulli_materialization_seconds": (
                     vectorized_materialize_seconds
                 ),
-                "vectorized_diagonal_materialization_speedup": (
+                "vectorized_bernoulli_materialization_speedup": (
                     float(materialize_seconds / vectorized_materialize_seconds)
                     if vectorized_materialize_seconds > 0
                     else np.nan
                 ),
-                "vectorized_diagonal_materialization_max_abs_diff": (
+                "vectorized_bernoulli_materialization_max_abs_diff": (
                     vectorized_max_abs_diff
                 ),
                 "nodes": result.nodes,
@@ -704,9 +683,9 @@ def _print_summary(rows: list[dict[str, object]]) -> None:
         "seconds",
         "speedup_vs_full_eigh_projection",
         "matrix_materialization_seconds",
-        "vectorized_diagonal_materialization_seconds",
-        "vectorized_diagonal_materialization_speedup",
-        "vectorized_diagonal_materialization_max_abs_diff",
+        "vectorized_bernoulli_materialization_seconds",
+        "vectorized_bernoulli_materialization_speedup",
+        "vectorized_bernoulli_materialization_max_abs_diff",
         "nodes",
         "median_test_dimension",
         "max_test_dimension",

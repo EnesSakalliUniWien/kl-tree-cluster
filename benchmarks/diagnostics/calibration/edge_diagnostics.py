@@ -88,7 +88,7 @@ def _run_tree(
         tree.decompose(
             annotations_df=tree.annotations_df,
             leaf_data=data_df,
-            alpha_local=float(alpha),
+            edge_alpha=float(alpha),
             sibling_alpha=float(alpha),
         )
     annotations_df = (

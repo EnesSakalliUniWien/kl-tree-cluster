@@ -1,0 +1,110 @@
+{
+  "manifest_schema_version": "feature_covariance_calibration/v1",
+  "created_utc": "2026-06-01T13:39:38Z",
+  "generated_by": "benchmarks.validation.feature_covariance_calibration",
+  "validation_design": "fixed_full_tangent_sibling_wald_null",
+  "targets": [
+    {
+      "target_id": "categorical_multinomial_drop_last_covariance",
+      "display_name": "Categorical multinomial drop-last covariance",
+      "validation_question": "Does the drop-last multinomial covariance produce calibrated sibling-null Wald p-values in high-cardinality categorical blocks?",
+      "required_output_fields": [
+        "validation_design",
+        "code_commit",
+        "git_worktree_status",
+        "run_command",
+        "random_seed_policy",
+        "base_seed",
+        "n_replicates",
+        "alpha",
+        "simulation_grid",
+        "primary_endpoint",
+        "effect_estimate",
+        "confidence_interval",
+        "p_value_uniformity_summary",
+        "limitations",
+        "category_count_grid",
+        "feature_count_grid",
+        "probability_profile_grid"
+      ],
+      "evidence_status": "missing",
+      "evidence": {
+        "status": "missing",
+        "source_path": null,
+        "metrics": {},
+        "missing_required_fields": [
+          "validation_design",
+          "code_commit",
+          "git_worktree_status",
+          "run_command",
+          "random_seed_policy",
+          "base_seed",
+          "n_replicates",
+          "alpha",
+          "simulation_grid",
+          "primary_endpoint",
+          "effect_estimate",
+          "confidence_interval",
+          "p_value_uniformity_summary",
+          "limitations",
+          "category_count_grid",
+          "feature_count_grid",
+          "probability_profile_grid"
+        ],
+        "notes": "No feature-covariance validation evidence has been attached."
+      }
+    },
+    {
+      "target_id": "continuous_empirical_gaussian_covariance",
+      "display_name": "Continuous empirical-Gaussian covariance",
+      "validation_question": "Does the per-node empirical-Gaussian covariance estimator produce calibrated sibling-null Wald p-values in finite samples?",
+      "required_output_fields": [
+        "validation_design",
+        "code_commit",
+        "git_worktree_status",
+        "run_command",
+        "random_seed_policy",
+        "base_seed",
+        "n_replicates",
+        "alpha",
+        "simulation_grid",
+        "primary_endpoint",
+        "effect_estimate",
+        "confidence_interval",
+        "p_value_uniformity_summary",
+        "limitations",
+        "dimension_grid",
+        "sample_size_grid",
+        "covariance_profile_grid",
+        "ridge"
+      ],
+      "evidence_status": "missing",
+      "evidence": {
+        "status": "missing",
+        "source_path": null,
+        "metrics": {},
+        "missing_required_fields": [
+          "validation_design",
+          "code_commit",
+          "git_worktree_status",
+          "run_command",
+          "random_seed_policy",
+          "base_seed",
+          "n_replicates",
+          "alpha",
+          "simulation_grid",
+          "primary_endpoint",
+          "effect_estimate",
+          "confidence_interval",
+          "p_value_uniformity_summary",
+          "limitations",
+          "dimension_grid",
+          "sample_size_grid",
+          "covariance_profile_grid",
+          "ridge"
+        ],
+        "notes": "No feature-covariance validation evidence has been attached."
+      }
+    }
+  ]
+}

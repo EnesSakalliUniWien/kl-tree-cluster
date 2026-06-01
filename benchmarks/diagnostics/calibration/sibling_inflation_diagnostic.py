@@ -63,22 +63,22 @@ def collect_sibling_inflation_inputs(
     feature_space: FeatureSpace | None,
 ) -> SiblingInflationInputs:
     """Collect sibling records and fit the runtime empirical-null model."""
-    gate_two_result = gate_annotation_bundle.gate_two_result
+    edge_gate_result = gate_annotation_bundle.edge_gate_result
 
     projection_dimensions = derive_sibling_projection_dimensions_from_child_edge_comparisons(
         tree,
-        spectral_context=gate_two_result.spectral_context,
+        spectral_context=edge_gate_result.spectral_context,
     )
     parent_projections, parent_eigenvalues = (
         collect_parent_principal_component_inputs_for_sibling_tests(
             projection_dimensions,
-            spectral_context=gate_two_result.spectral_context,
+            spectral_context=edge_gate_result.spectral_context,
         )
     )
     mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
     records, non_binary_nodes = collect_sibling_pair_records(
         tree,
-        gate_two_result.annotated_df,
+        edge_gate_result.annotated_df,
         mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
         parent_principal_component_projections=parent_projections,

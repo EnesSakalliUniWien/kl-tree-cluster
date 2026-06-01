@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import lru_cache
@@ -29,21 +28,11 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import adjusted_rand_score
 
-_SCRIPT_PATH = Path(__file__).resolve()
-BENCHMARKS_ROOT = next(parent for parent in _SCRIPT_PATH.parents if parent.name == "benchmarks")
-PROJECT_ROOT = BENCHMARKS_ROOT.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 os.environ.setdefault("KL_TE_N_JOBS", "1")
 
 import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as gate_orchestrator
 import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_context_module
 import kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur as mp_worker
-from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
-from benchmarks.shared.types import MethodRunResult
-from benchmarks.shared.util.decomposition import _labels_and_report_from_decomposition
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
@@ -58,6 +47,11 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
+
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.types import MethodRunResult
+from benchmarks.shared.util.decomposition import _labels_and_report_from_decomposition
 
 
 @dataclass(frozen=True)
@@ -236,8 +230,8 @@ def _patched_variant(
     seed: int,
 ) -> Iterator[None]:
     original_include_internal = config.INCLUDE_INTERNAL_IN_SPECTRAL
-    original_floor_context = spectral_context_module.GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION
-    original_floor_orchestrator = gate_orchestrator.GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION
+    original_floor_context = spectral_context_module.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION
+    original_floor_orchestrator = gate_orchestrator.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION
     original_estimator = mp_worker.estimate_marchenko_pastur_dimension
 
     def _estimate_augmented_threshold(
@@ -298,10 +292,10 @@ def _patched_variant(
         )
 
     config.INCLUDE_INTERNAL_IN_SPECTRAL = bool(variant.include_internal_rows)
-    spectral_context_module.GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = int(
+    spectral_context_module.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = int(
         variant.minimum_projection_dimension
     )
-    gate_orchestrator.GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = int(
+    gate_orchestrator.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = int(
         variant.minimum_projection_dimension
     )
     if variant.threshold_policy == "augmented":
@@ -317,10 +311,10 @@ def _patched_variant(
         yield
     finally:
         config.INCLUDE_INTERNAL_IN_SPECTRAL = original_include_internal
-        spectral_context_module.GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = (
+        spectral_context_module.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = (
             original_floor_context
         )
-        gate_orchestrator.GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = (
+        gate_orchestrator.EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = (
             original_floor_orchestrator
         )
         mp_worker.estimate_marchenko_pastur_dimension = original_estimator
@@ -338,7 +332,7 @@ def _run_kl_with_gate_bundle(
     gate_bundle = run_gate_annotation_pipeline(
         tree,
         tree.annotations_df.copy(),
-        alpha_local=config.EDGE_ALPHA,
+        edge_alpha=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=data_df,
         feature_space=feature_space,
@@ -347,7 +341,7 @@ def _run_kl_with_gate_bundle(
         gate_annotation_bundle=gate_bundle,
         leaf_data=data_df,
         feature_space=feature_space,
-        alpha_local=config.EDGE_ALPHA,
+        edge_alpha=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
     )
     labels, report_df = _labels_and_report_from_decomposition(
@@ -371,7 +365,7 @@ def _run_kl_with_gate_bundle(
 
 def _spectral_summary(result_extra: dict[str, object]) -> dict[str, float]:
     gate_bundle = result_extra["gate_bundle"]
-    spectral_context = gate_bundle.gate_two_result.spectral_context
+    spectral_context = gate_bundle.edge_gate_result.spectral_context
     test_dimensions = np.asarray(
         list(spectral_context.test_projection_dimensions_by_node.values()),
         dtype=np.float64,
