@@ -38,6 +38,23 @@ a fixed contrast. They do not validate PCA-selected projections, MP dimension
 selection, sibling FDR, traversal, tree construction, or empirical-null
 inflation.
 
+## Selected-PCA Projected-Wald Target
+
+Selected PCA is tracked separately from feature covariance because it asks
+whether the fixed-subspace chi-square reference remains calibrated after the
+projection rows and MP dimension are selected from the same local data used by
+the contrast.
+
+- `selected_pca_projected_wald_reference`
+
+The selected-PCA runner generates fixed-membership Gaussian sibling-null
+simulations. It uses the production null-whitened tangent coordinates, MP
+dimension selection, PCA projection recovery, and projected-Wald kernel. These
+results validate only the local data-selected projection effect. They do not
+validate hierarchy construction, tree-selected sibling pairs, sibling FDR,
+traversal, empirical-null inflation, categorical blocks, or real-data model
+misspecification.
+
 ## Usage
 
 Create a manifest skeleton:
@@ -85,6 +102,30 @@ uv run python -m benchmarks.validation.feature_covariance_calibration validate \
   benchmarks/results/validation/feature_covariance_calibration.json
 ```
 
+Create a missing-evidence manifest for selected-PCA projected-Wald calibration:
+
+```bash
+uv run python -m benchmarks.validation.selected_pca_projected_wald_calibration manifest \
+  --output benchmarks/validation/manifests/selected_pca_projected_wald_validation_manifest.json
+```
+
+Run a selected-PCA projected-Wald calibration simulation:
+
+```bash
+uv run python -m benchmarks.validation.selected_pca_projected_wald_calibration run \
+  --replicates 1000 \
+  --seed 20260601 \
+  --output benchmarks/results/validation/selected_pca_projected_wald_calibration.json \
+  --csv-output benchmarks/results/validation/selected_pca_projected_wald_calibration.csv
+```
+
+Validate a selected-PCA manifest or report:
+
+```bash
+uv run python -m benchmarks.validation.selected_pca_projected_wald_calibration validate \
+  benchmarks/results/validation/selected_pca_projected_wald_calibration.json
+```
+
 ## Evidence Policy
 
 Existing benchmark outputs are recorded under `source_paths` only. They are not
@@ -103,7 +144,7 @@ Future validation jobs should either extend this manifest with complete evidence
 records or generate a separate results artifact that can be validated against the
 same required field contract.
 
-Feature-covariance calibration reports follow the same evidence policy: a smoke
-run proves the runner works, but it is not manuscript evidence unless the report
-records a locked design, seed, commit, dirty-worktree status, command, grid,
-confidence intervals, endpoints, and limitations.
+Feature-covariance and selected-PCA calibration reports follow the same evidence
+policy: a smoke run proves the runner works, but it is not manuscript evidence
+unless the report records a locked design, seed, commit, dirty-worktree status,
+command, grid, confidence intervals, endpoints, and limitations.

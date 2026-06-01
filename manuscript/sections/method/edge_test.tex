@@ -188,10 +188,11 @@ T_{u \to c}^{\mathrm{edge,raw}}
 \sum_{i=1}^{k_u^{\mathrm{edge}}}
 w_{u \to c,i}^2.
 \end{equation}
-Because the projection rows are orthonormal, the null reference for the
-projected quadratic is $\chi^2_{k_u^{\mathrm{edge}}}$, including any
-orthonormal complement directions added when fewer usable PCA directions are
-available than the target dimension. The reported edge p-value is
+Conditional on the selected projection rows as fixed, the orthonormal
+fixed-subspace reference for the projected quadratic is
+$\chi^2_{k_u^{\mathrm{edge}}}$, including any orthonormal complement directions
+added when fewer usable PCA directions are available than the target dimension.
+The reported edge p-value is
 \begin{equation}
 p_{u \to c}^{\mathrm{edge}}
 =

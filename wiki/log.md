@@ -245,6 +245,11 @@ verification, and maintenance events here in chronological order.
   one-hot blocks with drop-last multinomial covariance, and explicit continuous
   empirical-Gaussian blocks. Discretized Gaussian inputs are now described only
   as benchmark variants.
+- Added a selected-PCA projected-Wald validation scaffold. The scaffold isolates
+  the fixed-membership Gaussian sibling-null question where PCA rows and MP
+  projection dimension are selected from the same local null-whitened rows used
+  by the tested contrast; it explicitly does not validate hierarchy selection,
+  sibling FDR, traversal, or empirical-null inflation.
 
 ## Evidence
 

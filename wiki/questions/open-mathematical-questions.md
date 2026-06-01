@@ -68,6 +68,14 @@ assumption statement that treats the selected PCA rows as fixed, or a
 derivation/validation of the data-selected projection effect. This question is
 coupled to the Marchenko--Pastur dimension rule, the minimum spectral dimension
 floor, and the inclusion of internal subtree rows in local spectral matrices.
+The repository now includes a strict scaffold for this specific validation
+target in
+`benchmarks/validation/selected_pca_projected_wald_calibration.py`. That
+scaffold simulates a fixed-membership Gaussian sibling null while selecting the
+PCA rows and MP dimension from the same local null-whitened rows used by the
+contrast. It is intentionally not evidence for hierarchy construction,
+tree-selected sibling pairs, sibling FDR, traversal, or empirical-null
+inflation.
 
 The feature-space covariance contract is now explicit. Bernoulli coordinates
 use a Bernoulli variance model under fixed membership. Categorical variables
@@ -208,6 +216,8 @@ The current concrete open questions are:
 - `wiki/analyses/local-marchenko-pastur-rule.md` records the MP dimension-rule
   audit, including backend eigenvalue scale, finite-sample null probes,
   internal-row effects, and enhancement options.
+- `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
+  the selected-PCA projected-Wald validation scaffold.
 - `wiki/analyses/dimensional-gaussian-representation-diagnostic.md` records
   the continuous-versus-median-binary dimensional Gaussian benchmark result and
   separates consolidated representation gain from diffuse hierarchy

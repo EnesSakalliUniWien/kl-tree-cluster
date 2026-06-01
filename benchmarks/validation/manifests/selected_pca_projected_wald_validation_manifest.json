@@ -1,0 +1,68 @@
+{
+  "manifest_schema_version": "selected_pca_projected_wald_calibration/v1",
+  "created_utc": "2026-06-01T16:45:40Z",
+  "generated_by": "benchmarks.validation.selected_pca_projected_wald_calibration",
+  "validation_design": "fixed_membership_gaussian_sibling_null_with_data_selected_pca",
+  "targets": [
+    {
+      "target_id": "selected_pca_projected_wald_reference",
+      "display_name": "Selected-PCA projected-Wald reference",
+      "validation_question": "Does the fixed-subspace chi-square projected-Wald reference remain calibrated when PCA rows and MP dimension are selected from the same local Gaussian null data used by the sibling contrast?",
+      "required_output_fields": [
+        "validation_design",
+        "code_commit",
+        "git_worktree_status",
+        "run_command",
+        "random_seed_policy",
+        "base_seed",
+        "n_replicates",
+        "alpha",
+        "simulation_grid",
+        "primary_endpoint",
+        "effect_estimate",
+        "confidence_interval",
+        "p_value_uniformity_summary",
+        "projection_dimension_summary",
+        "raw_mp_signal_count_summary",
+        "limitations",
+        "dimension_grid",
+        "sample_size_grid",
+        "covariance_profile_grid",
+        "minimum_projection_dimension_grid",
+        "include_child_mean_rows_grid",
+        "ridge"
+      ],
+      "evidence_status": "missing",
+      "evidence": {
+        "status": "missing",
+        "source_path": null,
+        "metrics": {},
+        "missing_required_fields": [
+          "validation_design",
+          "code_commit",
+          "git_worktree_status",
+          "run_command",
+          "random_seed_policy",
+          "base_seed",
+          "n_replicates",
+          "alpha",
+          "simulation_grid",
+          "primary_endpoint",
+          "effect_estimate",
+          "confidence_interval",
+          "p_value_uniformity_summary",
+          "projection_dimension_summary",
+          "raw_mp_signal_count_summary",
+          "limitations",
+          "dimension_grid",
+          "sample_size_grid",
+          "covariance_profile_grid",
+          "minimum_projection_dimension_grid",
+          "include_child_mean_rows_grid",
+          "ridge"
+        ],
+        "notes": "No selected-PCA projected-Wald evidence has been attached."
+      }
+    }
+  ]
+}

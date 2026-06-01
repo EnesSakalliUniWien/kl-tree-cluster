@@ -7,12 +7,15 @@ The projected quadratic form is
 
 ``T = Σ (vᵢᵀz)²``
 
-where the rows ``vᵢ`` are orthonormal PCA directions. Under an isotropic
-standardized null, PCA eigenvalues choose the subspace but do not weight the
-quadratic reference law, so ``T ~ χ²(k)``.
+where the rows ``vᵢ`` are orthonormal directions. Conditional on a fixed
+projection matrix that is not selected from the tested contrast, an isotropic
+standardized null gives ``T ~ χ²(k)``. PCA eigenvalues document the selected
+subspace but do not weight this fixed-subspace reference law.
 
 Eigenvalues must cover the projected vector components to prove the PCA context
-is complete, but they are not used as null weights.
+is complete, but they are not used as null weights. This helper does not account
+for the extra randomness from selecting PCA rows and projection dimension from
+the same data used by the edge or sibling test.
 """
 
 from __future__ import annotations
@@ -49,7 +52,8 @@ def compute_projected_pvalue(
     Returns
     -------
     Tuple[float, float, float]
-        Reference law ``T ~ chi2(degrees_of_freedom)`` with reference_scale 1.
+        Fixed-subspace reference law ``T ~ chi2(degrees_of_freedom)`` with
+        reference_scale 1.
     """
     projected_components = np.asarray(projected_vector, dtype=np.float64)
     if projected_components.ndim != 1:

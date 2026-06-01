@@ -49,9 +49,9 @@ def run_projected_wald_kernel(
     Returns
     -------
     ProjectedWaldResult
-        Statistic and reference law. For the current orthonormal projection basis,
-        ``reference_scale`` is 1 and ``degrees_of_freedom`` is the projection
-        dimension.
+        Statistic and reference law. Conditional on the supplied orthonormal
+        projection basis as fixed, ``reference_scale`` is 1 and
+        ``degrees_of_freedom`` is the projection dimension.
     """
     if spectral_k is None or spectral_k < 0:
         raise ValueError("Projected Wald kernel requires a non-negative spectral_k.")
