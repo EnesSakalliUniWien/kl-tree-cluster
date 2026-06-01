@@ -16,6 +16,7 @@ sources:
   - kl_clustering_analysis/tree/distributions.py
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/sources/edge-selection-null-audit-20260601.md
+  - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -70,6 +71,17 @@ and test child-parent edges rejects about `99%` of tested edges at
 columns gives median rejection rate `0.0`. Thus the production issue is not
 only a sibling inflation estimator question; it is a selected-hierarchy
 conditional inference question.
+
+The first cross-fit diagnostic supports this interpretation. Because the KL
+tree is a sample-leaf hierarchy, literal sample splitting is undefined without
+a held-out-sample assignment model. The implemented feature-split audit builds
+the tree from one feature block and tests node distributions on a held-out
+feature block over the same leaves. In `gauss_null_large`, this changes the
+edge rejection rate from `1.0` in-sample to `0.0`, restores 199 supported
+calibration records, and returns one cluster. Signal examples retain high or
+perfect ARI while recovering many supported records. This points toward
+cross-fit or selected-tree conditional inference as the next mathematical
+development.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an

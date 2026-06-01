@@ -1,0 +1,15 @@
+{
+  "seed": 20260601,
+  "split_axis": "feature",
+  "case_names": [
+    "gauss_null_large",
+    "binary_low_noise_4c",
+    "cat_clear_3cat_4c",
+    "gauss_clear_medium"
+  ],
+  "selection_fraction": 0.5,
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "output": "benchmarks/results/sample_split_selection_audit_20260601/sample_split_selection_audit_summary.csv",
+  "note": "Literal sample splitting is not implemented because KL-TE uses a sample-leaf hierarchy. Held-out samples require an explicit node assignment model before their node distributions can be tested."
+}

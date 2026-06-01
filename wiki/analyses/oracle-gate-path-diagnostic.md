@@ -20,6 +20,7 @@ sources:
   - raw/assets/benchmark-results/sibling_inflation_diagnostic_20260524_183607Z/sibling_inflation_summary.csv
   - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_summary.csv
   - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_replicate_summary.csv
+  - raw/assets/benchmark-results/sample_split_selection_audit_20260601/sample_split_selection_audit_summary.csv
   - kl_clustering_analysis/config.py
   - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
   - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
@@ -427,6 +428,18 @@ child-parent edges, the internal empirical-null support set
 positive-weight records left. The honest method response is therefore a
 calibration-data error until a selected-tree conditional calibration law is
 defined and validated.
+
+The feature-split selection audit tests the cleanest cross-fit analogue that
+is currently well-defined for a sample-leaf hierarchy. One feature block builds
+the tree, and the held-out feature block supplies node distributions and gate
+tests on the same sample leaves. Literal sample splitting remains undefined
+without an explicit assignment model for held-out samples. In the
+`gauss_null_large` case, feature-split cross-fit changes the edge rejection
+rate from `1.0` to `0.0`, restores 199 supported sibling calibration records,
+and returns one cluster. The binary, categorical, and Gaussian signal examples
+retain perfect or high ARI while recovering many supported records. This is
+evidence that cross-fitting the selection and testing features can restore the
+calibration-support object that the in-sample selected tree destroys.
 
 ### Fixed-Subspace Gaussian Null Check
 

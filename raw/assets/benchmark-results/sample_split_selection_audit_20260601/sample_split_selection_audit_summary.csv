@@ -1,0 +1,13 @@
+case_id,regime,selection_features,test_features,feature_family,tree_distance_metric,tested_edges,significant_edges,edge_rejection_rate,sibling_records,non_binary_nodes,focal_records,positive_weight_records,supported_records,selected_nonnull_records,decomposition_status,found_clusters,ari,status,skip_reason,runtime_sec
+gauss_null_large,in_sample_full_features,80,80,bernoulli,hamming,398,398,1.0,199,200,199,199,0,199,skip,,,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 199 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",0.3059833330044057
+gauss_null_large,feature_split_crossfit,40,40,bernoulli,hamming,2,0,0.0,199,200,0,199,199,0,ok,1.0,1.0,ok,,0.22134254099364625
+gauss_null_large,fixed_tree_feature_permutation,40,40,bernoulli,hamming,2,0,0.0,199,200,0,199,199,0,ok,1.0,1.0,ok,,0.2103544999990845
+binary_low_noise_4c,in_sample_full_features,100,100,bernoulli,hamming,90,74,0.8222222222222222,79,80,37,79,42,37,ok,4.0,1.0,ok,,0.15965137500461424
+binary_low_noise_4c,feature_split_crossfit,50,50,bernoulli,hamming,14,6,0.42857142857142855,79,80,3,79,76,3,ok,4.0,1.0,ok,,0.10998154200206045
+binary_low_noise_4c,fixed_tree_feature_permutation,50,50,bernoulli,hamming,2,0,0.0,79,80,0,79,79,0,ok,1.0,0.0,ok,,0.09640116700029466
+cat_clear_3cat_4c,in_sample_full_features,150,150,categorical,hamming,152,150,0.9868421052631579,99,100,75,99,24,75,ok,3.0,0.7079646017699115,ok,,0.21249791699665366
+cat_clear_3cat_4c,feature_split_crossfit,75,75,categorical,hamming,20,14,0.7,99,100,7,99,92,7,ok,3.0,0.6724297534785023,ok,,0.154549083999882
+cat_clear_3cat_4c,fixed_tree_feature_permutation,75,75,categorical,hamming,2,0,0.0,99,100,0,99,99,0,ok,1.0,0.0,ok,,0.2107043750002049
+gauss_clear_medium,in_sample_full_features,40,40,bernoulli,hamming,36,18,0.5,59,60,9,40,31,9,ok,4.0,1.0,ok,,0.09246824999718228
+gauss_clear_medium,feature_split_crossfit,20,20,bernoulli,hamming,14,6,0.42857142857142855,59,60,3,40,37,3,ok,4.0,1.0,ok,,0.06798849999904633
+gauss_clear_medium,fixed_tree_feature_permutation,20,20,bernoulli,hamming,2,0,0.0,59,60,0,59,59,0,ok,1.0,0.0,ok,,0.07001608300197404

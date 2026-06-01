@@ -280,6 +280,15 @@ verification, and maintenance events here in chronological order.
   while fixed-tree feature permutations have median rejection rate `0.0`.
   Added [[edge-selection-null-audit-20260601]] and updated
   [[oracle-gate-path-diagnostic]] and [[open-mathematical-questions]].
+- Added `benchmarks/diagnostics/calibration/sample_split_selection_audit.py`.
+  The script explicitly rejects literal sample splitting because KL-TE uses a
+  sample-leaf hierarchy and held-out samples have no canonical training-tree
+  node membership. It implements the valid feature-split cross-fit diagnostic:
+  build the tree from one feature block, test gates on a held-out feature block,
+  and compare against in-sample and fixed-tree feature-permutation regimes.
+  The first run is stored under
+  `raw/assets/benchmark-results/sample_split_selection_audit_20260601/` and
+  summarized in [[feature-split-selection-audit-20260601]].
 
 ## Evidence
 

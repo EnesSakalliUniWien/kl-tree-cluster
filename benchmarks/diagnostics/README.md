@@ -24,5 +24,6 @@ Maintained entrypoints:
 - `calibration/run_gaussian_sibling_null_calibration.py`
 - `calibration/run_selection_conditioned_sibling_null.py`
 - `calibration/run_tree_bh_selection_conditioned_sibling_null.py`
+- `calibration/sample_split_selection_audit.py`
 - `analysis/analyze_relationships.py`
 - `spectral/compare_mp_dimension_contracts.py`
