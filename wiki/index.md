@@ -70,6 +70,9 @@ renamed, or promoted.
 - [[local-marchenko-pastur-rule]] - audit of the local MP dimension rule,
   eigenvalue scale, finite-sample null behavior, internal spectral rows, and
   enhancement options.
+- [[selected-pca-projected-wald-validation]] - locked local Gaussian validation
+  showing that leaf-only selected PCA is calibrated in the tested settings while
+  child-mean internal spectral rows break the fixed-subspace reference.
 - [[dimensional-gaussian-representation-diagnostic]] - why selected continuous
   dimensional Gaussian cases improve consolidated signals but not diffuse
   high-noise signals.

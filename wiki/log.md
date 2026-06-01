@@ -250,6 +250,12 @@ verification, and maintenance events here in chronological order.
   projection dimension are selected from the same local null-whitened rows used
   by the tested contrast; it explicitly does not validate hierarchy selection,
   sibling FDR, traversal, or empirical-null inflation.
+- Ran the selected-PCA projected-Wald validation scaffold at commit
+  `492c8520809e6cfad9e4853e91c89a887eac5a21` with seed `20260601` and 1000
+  replicates per setting. Leaf-only Gaussian selected PCA was calibrated in the
+  tested settings, while child-mean internal spectral rows caused severe
+  anti-conservative rejection rates. The locked JSON/CSV evidence is stored
+  under `raw/assets/selected-pca-projected-wald-validation/`.
 
 ## Evidence
 

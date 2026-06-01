@@ -1,0 +1,449 @@
+{
+  "manifest_schema_version": "selected_pca_projected_wald_calibration/v1",
+  "created_utc": "2026-06-01T16:50:03Z",
+  "generated_by": "benchmarks.validation.selected_pca_projected_wald_calibration",
+  "validation_design": "fixed_membership_gaussian_sibling_null_with_data_selected_pca",
+  "code_commit": "492c8520809e6cfad9e4853e91c89a887eac5a21",
+  "git_worktree_status": [],
+  "run_command": "python -m benchmarks.validation.selected_pca_projected_wald_calibration run --replicates 1000 --seed 20260601 --output benchmarks/results/validation/selected_pca_projected_wald_calibration.json --csv-output benchmarks/results/validation/selected_pca_projected_wald_calibration.csv",
+  "random_seed_policy": "A single numpy Generator is initialized from base_seed; all simulation settings draw independent consecutive replicates from that generator.",
+  "base_seed": 20260601,
+  "n_replicates": 1000,
+  "alpha": 0.05,
+  "primary_endpoint": "null_rejection_rate_at_alpha",
+  "targets": [
+    {
+      "target_id": "selected_pca_projected_wald_reference",
+      "display_name": "Selected-PCA projected-Wald reference",
+      "validation_question": "Does the fixed-subspace chi-square projected-Wald reference remain calibrated when PCA rows and MP dimension are selected from the same local Gaussian null data used by the sibling contrast?",
+      "required_output_fields": [
+        "validation_design",
+        "code_commit",
+        "git_worktree_status",
+        "run_command",
+        "random_seed_policy",
+        "base_seed",
+        "n_replicates",
+        "alpha",
+        "simulation_grid",
+        "primary_endpoint",
+        "effect_estimate",
+        "confidence_interval",
+        "p_value_uniformity_summary",
+        "projection_dimension_summary",
+        "raw_mp_signal_count_summary",
+        "limitations",
+        "dimension_grid",
+        "sample_size_grid",
+        "covariance_profile_grid",
+        "minimum_projection_dimension_grid",
+        "include_child_mean_rows_grid",
+        "ridge"
+      ],
+      "evidence_status": "complete",
+      "evidence": {
+        "status": "complete",
+        "source_path": null,
+        "metrics": {
+          "simulation_grid": [
+            {
+              "dimension": 8,
+              "n_left": 80,
+              "n_right": 80,
+              "covariance_profile": "identity",
+              "minimum_projection_dimension": 2,
+              "include_child_mean_rows": false,
+              "contrast_dimension": 8
+            },
+            {
+              "dimension": 8,
+              "n_left": 80,
+              "n_right": 80,
+              "covariance_profile": "identity",
+              "minimum_projection_dimension": 2,
+              "include_child_mean_rows": true,
+              "contrast_dimension": 8
+            },
+            {
+              "dimension": 16,
+              "n_left": 60,
+              "n_right": 60,
+              "covariance_profile": "ar1_0.6",
+              "minimum_projection_dimension": 2,
+              "include_child_mean_rows": false,
+              "contrast_dimension": 16
+            },
+            {
+              "dimension": 16,
+              "n_left": 60,
+              "n_right": 60,
+              "covariance_profile": "ar1_0.6",
+              "minimum_projection_dimension": 2,
+              "include_child_mean_rows": true,
+              "contrast_dimension": 16
+            },
+            {
+              "dimension": 32,
+              "n_left": 50,
+              "n_right": 50,
+              "covariance_profile": "ill_conditioned",
+              "minimum_projection_dimension": 2,
+              "include_child_mean_rows": false,
+              "contrast_dimension": 32
+            },
+            {
+              "dimension": 32,
+              "n_left": 50,
+              "n_right": 50,
+              "covariance_profile": "ill_conditioned",
+              "minimum_projection_dimension": 2,
+              "include_child_mean_rows": true,
+              "contrast_dimension": 32
+            }
+          ],
+          "primary_endpoint": "null_rejection_rate_at_alpha",
+          "results": [
+            {
+              "target_id": "selected_pca_projected_wald_reference",
+              "setting_id": "selected_pca_8dim_80x80_identity_kmin2_leaves",
+              "setting": {
+                "dimension": 8,
+                "n_left": 80,
+                "n_right": 80,
+                "covariance_profile": "identity",
+                "minimum_projection_dimension": 2,
+                "include_child_mean_rows": false,
+                "contrast_dimension": 8
+              },
+              "n_replicates": 1000,
+              "alpha": 0.05,
+              "rejection_count": 47,
+              "rejection_rate": 0.047,
+              "confidence_interval": {
+                "method": "wilson_95",
+                "low": 0.0355271051063845,
+                "high": 0.06193993808152845
+              },
+              "effect_estimate": {
+                "name": "rejection_rate_minus_alpha",
+                "value": -0.0030000000000000027
+              },
+              "p_value_uniformity_summary": {
+                "ks_statistic": 0.015476148020430514,
+                "ks_p_value": 0.9673324033193004,
+                "mean": 0.5022512213561803,
+                "median": 0.5054936434879045,
+                "q05": 0.05261162048212548,
+                "q95": 0.9527853855448225
+              },
+              "projection_dimension_summary": {
+                "min": 2.0,
+                "max": 2.0,
+                "mean": 2.0,
+                "median": 2.0,
+                "q05": 2.0,
+                "q95": 2.0
+              },
+              "raw_mp_signal_count_summary": {
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0,
+                "median": 0.0,
+                "q05": 0.0,
+                "q95": 0.0
+              }
+            },
+            {
+              "target_id": "selected_pca_projected_wald_reference",
+              "setting_id": "selected_pca_8dim_80x80_identity_kmin2_childmeans",
+              "setting": {
+                "dimension": 8,
+                "n_left": 80,
+                "n_right": 80,
+                "covariance_profile": "identity",
+                "minimum_projection_dimension": 2,
+                "include_child_mean_rows": true,
+                "contrast_dimension": 8
+              },
+              "n_replicates": 1000,
+              "alpha": 0.05,
+              "rejection_count": 648,
+              "rejection_rate": 0.648,
+              "confidence_interval": {
+                "method": "wilson_95",
+                "low": 0.6178838670299425,
+                "high": 0.6769834124583332
+              },
+              "effect_estimate": {
+                "name": "rejection_rate_minus_alpha",
+                "value": 0.598
+              },
+              "p_value_uniformity_summary": {
+                "ks_statistic": 0.7304184544230197,
+                "ks_p_value": 0.0,
+                "mean": 0.062523995984833,
+                "median": 0.024100340818015285,
+                "q05": 0.0006339268039649831,
+                "q95": 0.2603431018646745
+              },
+              "projection_dimension_summary": {
+                "min": 2.0,
+                "max": 2.0,
+                "mean": 2.0,
+                "median": 2.0,
+                "q05": 2.0,
+                "q95": 2.0
+              },
+              "raw_mp_signal_count_summary": {
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0,
+                "median": 0.0,
+                "q05": 0.0,
+                "q95": 0.0
+              }
+            },
+            {
+              "target_id": "selected_pca_projected_wald_reference",
+              "setting_id": "selected_pca_16dim_60x60_ar1_0.6_kmin2_leaves",
+              "setting": {
+                "dimension": 16,
+                "n_left": 60,
+                "n_right": 60,
+                "covariance_profile": "ar1_0.6",
+                "minimum_projection_dimension": 2,
+                "include_child_mean_rows": false,
+                "contrast_dimension": 16
+              },
+              "n_replicates": 1000,
+              "alpha": 0.05,
+              "rejection_count": 45,
+              "rejection_rate": 0.045,
+              "confidence_interval": {
+                "method": "wilson_95",
+                "low": 0.03379951228563171,
+                "high": 0.059682837936223455
+              },
+              "effect_estimate": {
+                "name": "rejection_rate_minus_alpha",
+                "value": -0.0050000000000000044
+              },
+              "p_value_uniformity_summary": {
+                "ks_statistic": 0.022416316486577492,
+                "ks_p_value": 0.6877260288408669,
+                "mean": 0.5003499260380084,
+                "median": 0.4788577773739962,
+                "q05": 0.05689207873334529,
+                "q95": 0.9458345978405914
+              },
+              "projection_dimension_summary": {
+                "min": 2.0,
+                "max": 2.0,
+                "mean": 2.0,
+                "median": 2.0,
+                "q05": 2.0,
+                "q95": 2.0
+              },
+              "raw_mp_signal_count_summary": {
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0,
+                "median": 0.0,
+                "q05": 0.0,
+                "q95": 0.0
+              }
+            },
+            {
+              "target_id": "selected_pca_projected_wald_reference",
+              "setting_id": "selected_pca_16dim_60x60_ar1_0.6_kmin2_childmeans",
+              "setting": {
+                "dimension": 16,
+                "n_left": 60,
+                "n_right": 60,
+                "covariance_profile": "ar1_0.6",
+                "minimum_projection_dimension": 2,
+                "include_child_mean_rows": true,
+                "contrast_dimension": 16
+              },
+              "n_replicates": 1000,
+              "alpha": 0.05,
+              "rejection_count": 988,
+              "rejection_rate": 0.988,
+              "confidence_interval": {
+                "method": "wilson_95",
+                "low": 0.9791427315245017,
+                "high": 0.9931223521935965
+              },
+              "effect_estimate": {
+                "name": "rejection_rate_minus_alpha",
+                "value": 0.938
+              },
+              "p_value_uniformity_summary": {
+                "ks_statistic": 0.9462934947531166,
+                "ks_p_value": 0.0,
+                "mean": 0.0036316959430194684,
+                "median": 0.00043910765293698946,
+                "q05": 3.38158691170018e-06,
+                "q95": 0.01662917599413731
+              },
+              "projection_dimension_summary": {
+                "min": 2.0,
+                "max": 2.0,
+                "mean": 2.0,
+                "median": 2.0,
+                "q05": 2.0,
+                "q95": 2.0
+              },
+              "raw_mp_signal_count_summary": {
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0,
+                "median": 0.0,
+                "q05": 0.0,
+                "q95": 0.0
+              }
+            },
+            {
+              "target_id": "selected_pca_projected_wald_reference",
+              "setting_id": "selected_pca_32dim_50x50_ill_conditioned_kmin2_leaves",
+              "setting": {
+                "dimension": 32,
+                "n_left": 50,
+                "n_right": 50,
+                "covariance_profile": "ill_conditioned",
+                "minimum_projection_dimension": 2,
+                "include_child_mean_rows": false,
+                "contrast_dimension": 32
+              },
+              "n_replicates": 1000,
+              "alpha": 0.05,
+              "rejection_count": 50,
+              "rejection_rate": 0.05,
+              "confidence_interval": {
+                "method": "wilson_95",
+                "low": 0.03813026239274882,
+                "high": 0.06531382024425081
+              },
+              "effect_estimate": {
+                "name": "rejection_rate_minus_alpha",
+                "value": 0.0
+              },
+              "p_value_uniformity_summary": {
+                "ks_statistic": 0.03380403917463515,
+                "ks_p_value": 0.19871750192941628,
+                "mean": 0.4861295256658108,
+                "median": 0.4856437259523087,
+                "q05": 0.05281883541655772,
+                "q95": 0.9310656118895956
+              },
+              "projection_dimension_summary": {
+                "min": 2.0,
+                "max": 2.0,
+                "mean": 2.0,
+                "median": 2.0,
+                "q05": 2.0,
+                "q95": 2.0
+              },
+              "raw_mp_signal_count_summary": {
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0,
+                "median": 0.0,
+                "q05": 0.0,
+                "q95": 0.0
+              }
+            },
+            {
+              "target_id": "selected_pca_projected_wald_reference",
+              "setting_id": "selected_pca_32dim_50x50_ill_conditioned_kmin2_childmeans",
+              "setting": {
+                "dimension": 32,
+                "n_left": 50,
+                "n_right": 50,
+                "covariance_profile": "ill_conditioned",
+                "minimum_projection_dimension": 2,
+                "include_child_mean_rows": true,
+                "contrast_dimension": 32
+              },
+              "n_replicates": 1000,
+              "alpha": 0.05,
+              "rejection_count": 1000,
+              "rejection_rate": 1.0,
+              "confidence_interval": {
+                "method": "wilson_95",
+                "low": 0.996173241514445,
+                "high": 1.0
+              },
+              "effect_estimate": {
+                "name": "rejection_rate_minus_alpha",
+                "value": 0.95
+              },
+              "p_value_uniformity_summary": {
+                "ks_statistic": 0.9995775776073155,
+                "ks_p_value": 0.0,
+                "mean": 5.3303878744417545e-06,
+                "median": 1.1450936911524824e-07,
+                "q05": 4.026321548806544e-10,
+                "q95": 1.710020426348877e-05
+              },
+              "projection_dimension_summary": {
+                "min": 2.0,
+                "max": 2.0,
+                "mean": 2.0,
+                "median": 2.0,
+                "q05": 2.0,
+                "q95": 2.0
+              },
+              "raw_mp_signal_count_summary": {
+                "min": 0.0,
+                "max": 0.0,
+                "mean": 0.0,
+                "median": 0.0,
+                "q05": 0.0,
+                "q95": 0.0
+              }
+            }
+          ],
+          "limitations": [
+            "Fixed-membership local Gaussian sibling null only.",
+            "Uses production null-whitened tangent coordinates, MP dimension selection, and projected-Wald kernel.",
+            "Does not validate hierarchy construction, tree-selected sibling pairs, sibling FDR, traversal, empirical-null inflation, categorical blocks, or continuous real-data model misspecification."
+          ],
+          "dimension_grid": [
+            8,
+            16,
+            32
+          ],
+          "sample_size_grid": [
+            [
+              50,
+              50
+            ],
+            [
+              60,
+              60
+            ],
+            [
+              80,
+              80
+            ]
+          ],
+          "covariance_profile_grid": [
+            "ar1_0.6",
+            "identity",
+            "ill_conditioned"
+          ],
+          "minimum_projection_dimension_grid": [
+            2
+          ],
+          "include_child_mean_rows_grid": [
+            false,
+            true
+          ],
+          "ridge": 1e-12
+        },
+        "missing_required_fields": []
+      }
+    }
+  ]
+}

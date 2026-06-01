@@ -76,6 +76,13 @@ PCA rows and MP dimension from the same local null-whitened rows used by the
 contrast. It is intentionally not evidence for hierarchy construction,
 tree-selected sibling pairs, sibling FDR, traversal, or empirical-null
 inflation.
+[[selected-pca-projected-wald-validation]] records the first locked run. In the
+tested Gaussian settings, leaf-only selected PCA was calibrated at
+\(\alpha=0.05\), but appending deterministic child-mean internal rows produced
+severe anti-conservative rejection rates from 0.648 to 1.000. The remaining
+method question is therefore no longer generic selected PCA alone; it is whether
+internal spectral rows should stay in the inferential projection basis, receive
+a separate selected-reference derivation, or move to diagnostics only.
 
 The feature-space covariance contract is now explicit. Bernoulli coordinates
 use a Bernoulli variance model under fixed membership. Categorical variables
@@ -218,6 +225,9 @@ The current concrete open questions are:
   internal-row effects, and enhancement options.
 - `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
   the selected-PCA projected-Wald validation scaffold.
+- `wiki/analyses/selected-pca-projected-wald-validation.md` summarizes the
+  first locked selected-PCA validation run and records the internal-row
+  calibration failure.
 - `wiki/analyses/dimensional-gaussian-representation-diagnostic.md` records
   the continuous-versus-median-binary dimensional Gaussian benchmark result and
   separates consolidated representation gain from diffuse hierarchy

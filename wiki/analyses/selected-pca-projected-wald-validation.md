@@ -1,0 +1,102 @@
+---
+title: Selected PCA Projected-Wald Validation
+type: analysis
+status: reviewed
+updated: 2026-06-01
+sources:
+  - benchmarks/validation/selected_pca_projected_wald_calibration.py
+  - benchmarks/validation/manifests/selected_pca_projected_wald_validation_manifest.json
+  - raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.json
+  - raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.csv
+  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py
+  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
+tags:
+  - method
+  - projection
+  - validation
+---
+
+# Selected PCA Projected-Wald Validation
+
+## Summary
+
+The fixed-subspace projected-Wald reference behaves as expected when PCA rows
+are selected from leaf-only Gaussian null rows in the local sibling-null
+diagnostic, but it fails badly when deterministic child-mean rows are included
+in the same local spectral matrix. The locked run used commit
+`492c8520809e6cfad9e4853e91c89a887eac5a21`, seed `20260601`, 1000 replicates
+per setting, and an empty recorded worktree status.
+
+This is not full-pipeline evidence. It validates one local question: whether
+the chi-square projected-Wald reference remains calibrated when PCA rows and the
+MP dimension are selected from the same fixed-membership Gaussian null context.
+It does not validate hierarchy construction, tree-selected sibling pairs,
+sibling FDR, traversal, empirical-null inflation, categorical blocks, or
+real-data misspecification.
+
+## Details
+
+The diagnostic simulates two sibling samples from the same Gaussian
+distribution. For each replicate, it computes the production
+empirical-Gaussian sibling Wald contrast, maps the local rows into the
+null-whitened tangent coordinates used by the spectral backend, selects PCA rows
+and projection dimension through the production MP path, and evaluates the
+production projected-Wald kernel.
+
+The paired validation grid compares leaf-only local spectral rows against the
+same setting with child-mean rows appended as deterministic internal rows:
+
+| setting | row mode | rejection rate at 0.05 | 95% Wilson interval | mean p-value | KS p-value |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 8-dimensional identity Gaussian, 80x80 | leaves | 0.047 | 0.0355--0.0619 | 0.5023 | 0.9673 |
+| 8-dimensional identity Gaussian, 80x80 | child means | 0.648 | 0.6179--0.6770 | 0.0625 | 0 |
+| 16-dimensional AR(1) Gaussian, 60x60 | leaves | 0.045 | 0.0338--0.0597 | 0.5003 | 0.6877 |
+| 16-dimensional AR(1) Gaussian, 60x60 | child means | 0.988 | 0.9791--0.9931 | 0.0036 | 0 |
+| 32-dimensional ill-conditioned Gaussian, 50x50 | leaves | 0.050 | 0.0381--0.0653 | 0.4861 | 0.1987 |
+| 32-dimensional ill-conditioned Gaussian, 50x50 | child means | 1.000 | 0.9962--1.0000 | 0.0000053 | 0 |
+
+All six settings used mean projection dimension 2 and mean raw MP signal count
+0. The anti-conservative behavior is therefore not caused by the MP rule
+counting many false spikes in this run. It arises even when the selected
+dimension is only the configured spectral floor. The leaf-only rows are
+compatible with the fixed-subspace approximation in this diagnostic; the
+child-mean rows are not.
+
+The mathematical interpretation is direct. In the leaf-only Gaussian null, the
+selected PCA rows are random but selected from independent null variation
+around the parent mean. The fixed-subspace chi-square reference remains
+approximately calibrated in the tested settings. When child means are appended,
+the spectral matrix contains deterministic summaries of exactly the two groups
+used by the sibling contrast. The selected subspace can then align with the
+tested left-right contrast, so conditioning on the supplied projection rows as
+fixed no longer approximates the actual selected reference law.
+
+## Evidence
+
+- `raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.json`
+  records the locked JSON report, including commit, command, seed, worktree
+  status, grid, confidence intervals, p-value uniformity summaries, and
+  limitations.
+- `raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.csv`
+  records the row-level summary table.
+- `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
+  the scaffold and validation contract.
+- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py`
+  documents that internal distribution rows are included in production spectral
+  matrices when configured.
+
+## Links
+
+- [[open-mathematical-questions]]
+- [[local-marchenko-pastur-rule]]
+- [[projected-wald-statistic]]
+
+## Open Questions
+
+The next method decision is whether production should keep internal spectral
+rows in the projected-Wald PCA basis. This validation argues against treating
+the current internal-row projection as calibrated by the fixed-subspace
+chi-square reference. Possible next steps are to remove internal spectral rows
+from the production projection basis, derive a selected reference law that
+conditions on internal summaries, or keep internal rows only as a diagnostic
+feature outside the inferential path.
