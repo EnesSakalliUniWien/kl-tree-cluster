@@ -7,5 +7,5 @@ validation.
 Entrypoint:
 
 ```bash
-python benchmarks/regression/run_gate.py
+uv run python -m benchmarks.regression.run_gate
 ```

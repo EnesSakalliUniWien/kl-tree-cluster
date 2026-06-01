@@ -6,20 +6,12 @@ Creates balanced phylogenies with k groups, each diverging from a common ancesto
 Tests how well the method recovers the correct number of splits.
 
 Usage:
-    python benchmarks/experiments/multi_split/run.py
+    uv run python -m benchmarks.experiments.multi_split.run
 """
 
-import sys
 from pathlib import Path
 
-# Load shared path bootstrap helper from benchmarks root.
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[3]
 
 import matplotlib
 import numpy as np
@@ -29,13 +21,14 @@ matplotlib.use("Agg")
 from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+
 from benchmarks.shared.evolution import (
     evolve_sequence,
     generate_ancestral_sequence,
 )
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
 
 def generate_multi_group_data(

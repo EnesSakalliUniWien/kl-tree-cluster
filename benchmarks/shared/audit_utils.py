@@ -295,8 +295,9 @@ def export_matrix_audit(
         import tensorflow as tf
     except Exception as exc:
         raise RuntimeError(
-            "TensorFlow is required for matrix audits. Install it (e.g., "
-            "`pip install tensorflow`) or disable matrix_audit."
+            "TensorFlow is required for matrix audits but is not part of the "
+            "canonical KL-TE environment. Install TensorFlow deliberately in the "
+            "active uv environment or disable matrix_audit."
         ) from exc
 
     log_dir = output_root / "audit" / "tensorboard"

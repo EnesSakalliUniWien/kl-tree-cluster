@@ -12,7 +12,7 @@ def _load_pdf_writer():
     except ImportError as exc:
         raise RuntimeError(
             "PDF report merging requires pypdf. Install the visualization extra: "
-            "`pip install -e .[viz]`."
+            "`uv sync --extra dev --extra benchmark --extra viz --locked`."
         ) from exc
     return PdfWriter
 

@@ -6,25 +6,32 @@ short: follow it before opening deep implementation directories.
 ## First 30 Minutes
 
 1. Read `README.md` for the method summary and repository path policy.
-2. Run the quick smoke path:
+2. Install the locked development environment:
 
    ```bash
-   python quick_start.py
-   pytest tests/core tests/statistics tests/localization
+   uv venv --python 3.11 .venv
+   uv sync --extra dev --extra benchmark --extra viz --locked
    ```
 
-3. If you need benchmark behavior, read `benchmarks/README.md`, then run:
+3. Run the quick smoke path:
 
    ```bash
-   python benchmarks/smoke/run_subset.py
+   uv run python quick_start.py
+   uv run pytest tests/core tests/statistics tests/localization
    ```
 
-4. If you need current mathematical context, start at `wiki/index.md`, then
+4. If you need benchmark behavior, read `benchmarks/README.md`, then run:
+
+   ```bash
+   uv run python -m benchmarks.smoke.run_subset
+   ```
+
+5. If you need current mathematical context, start at `wiki/index.md`, then
    read `wiki/concepts/kl-te-method.md`,
    `wiki/concepts/projected-wald-statistic.md`, and
    `wiki/analyses/oracle-gate-path-diagnostic.md`.
 
-5. If you need manuscript context, start with
+6. If you need manuscript context, start with
    `manuscript/guides/full_method_logic_map.md` before reading the TeX
    sections.
 
@@ -86,5 +93,4 @@ For benchmark behavior, read in this order:
 - Gate/traversal change: run `tests/core/`, `tests/statistics/`, and
   `tests/localization/`.
 - Benchmark/report change: run `tests/pipeline/` and `tests/integration/`.
-- Before committing: run `pytest`, `python3 scripts/wiki/lint.py`, and
-  `git diff --check`.
+- Before committing: run `uv run pytest`, `make wiki-lint`, and `git diff --check`.

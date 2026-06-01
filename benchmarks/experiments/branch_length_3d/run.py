@@ -8,20 +8,12 @@ Creates a surface plot showing ARI as a function of:
 - Z axis (color): ARI score
 
 Usage:
-    python benchmarks/experiments/branch_length_3d/run.py
+    uv run python -m benchmarks.experiments.branch_length_3d.run
 """
 
-import sys
 from pathlib import Path
 
-# Load shared path bootstrap helper from benchmarks root.
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[3]
 
 import matplotlib
 import numpy as np
@@ -29,6 +21,7 @@ import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
 from benchmarks.experiments.branch_length.logic import (
     run_branch_length_benchmark,
 )

@@ -1,2 +1,0 @@
-# Install this checkout with the common development, benchmark, and visualization extras.
--e .[dev,benchmark,viz]

@@ -5,39 +5,32 @@ Runs the existing MNIST KL clustering pipeline and maps digit labels
 (0-9) into coarser, higher-level categories.
 
 Usage:
-    python benchmarks/experiments/mnist/run_higher_categories.py
-    python benchmarks/experiments/mnist/run_higher_categories.py --scheme parity_2
-    python benchmarks/experiments/mnist/run_higher_categories.py --pixel-categorization bayesian_gmm
+    uv run python -m benchmarks.experiments.mnist.run_higher_categories
+    uv run python -m benchmarks.experiments.mnist.run_higher_categories --scheme parity_2
+    uv run python -m benchmarks.experiments.mnist.run_higher_categories --pixel-categorization bayesian_gmm
 """
 
 from __future__ import annotations
 
 import argparse
 import base64
-import sys
 import warnings
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
-# Load shared path bootstrap helper from benchmarks root.
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[3]
 
 import numpy as np
 import pandas as pd
-from benchmarks.experiments.mnist.run import load_mnist_subset, run_kl_clustering
-from benchmarks.shared.runners.kl_diffusion_runner import _build_diffusion_distance
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import BayesianGaussianMixture
+
+from benchmarks.experiments.mnist.run import load_mnist_subset, run_kl_clustering
+from benchmarks.shared.runners.kl_diffusion_runner import _build_diffusion_distance
 
 HIGHER_CATEGORY_SCHEMES: dict[str, dict[int, str]] = {
     "shape_3": {
@@ -219,7 +212,7 @@ def run_tree_decomposition_on_preprocessed_data(
     decomposition_results = tree.decompose(
         annotations_df=tree.annotations_df,
         leaf_data=annotations_df,
-        alpha_local=significance_level,
+        edge_alpha=significance_level,
         sibling_alpha=significance_level,
     )
 
@@ -264,7 +257,7 @@ def _run_diffusion_kl_clustering(
     results = tree.decompose(
         annotations_df=tree.annotations_df,
         leaf_data=data,
-        alpha_local=0.05,
+        edge_alpha=0.05,
         sibling_alpha=0.05,
     )
 

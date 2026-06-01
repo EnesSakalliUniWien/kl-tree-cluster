@@ -7,26 +7,19 @@ how clustering performance changes as evolutionary divergence increases,
 while keeping the number of leaves (samples) fixed.
 
 Usage:
-    python benchmarks/experiments/branch_length/run.py
+    uv run python -m benchmarks.experiments.branch_length.run
 """
 
-import sys
 from pathlib import Path
 
-# Load shared path bootstrap helper from benchmarks root.
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[3]
 
 import matplotlib
 import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
 from benchmarks.experiments.branch_length.logic import (
     plot_branch_length_results,
     plot_embedding_by_branch_length,

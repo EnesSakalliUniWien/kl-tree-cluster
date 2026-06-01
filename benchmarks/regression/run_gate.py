@@ -10,23 +10,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 from pathlib import Path
 
 import pandas as pd
 
-# Load shared path bootstrap helper from benchmarks root.
-_script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-# Ensure repo root is importable before any benchmarks/kl_clustering imports.
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[2]
 
 from benchmarks.shared.cases.regression_gate import (
     get_regression_gate_case_names,

@@ -28,9 +28,9 @@ surfaces with their own contracts.
 - **Hierarchical tree** – the analysis revolves around a `PosetTree`, a directed structure that records parent/child
   relationships alongside per-node distributions.
 - **Feature space** – observed columns are interpreted through one explicit
-  feature-space object. Binary/categorical blocks define their covariance and
-  contrast coordinates; unsupported continuous contracts fail clearly until the
-  required covariance math exists.
+  feature-space object. Bernoulli coordinates, categorical drop-last simplex
+  blocks, and continuous empirical-Gaussian blocks define their covariance and
+  contrast coordinates before any projected-Wald test is evaluated.
 - **Projected-Wald statistic** – edge and sibling tests compare distributions in
   a projection basis with an explicit covariance model.
 - **Empirical-null inflation** – sibling split p-values are corrected only when
@@ -78,7 +78,9 @@ proceeds through four checkpoints:
    build the hierarchy.
 
 2. **Node distributions** – aggregate descendant leaves into node-level
-   distribution parameters in the declared feature space.
+   distribution parameters in the declared feature space. Internal node
+   distributions are empirical subtree barycenters: leaf-count-weighted means
+   of their child distributions.
 
 3. **Child-parent tests** – evaluate whether each child differs from its parent
    in the projected-Wald geometry, then apply tree-aware multiplicity control.
@@ -87,27 +89,29 @@ proceeds through four checkpoints:
    separated after projected-Wald testing, empirical-null inflation, and sibling
    FDR control.
 
-## Statistical Gates and Independence Checks
+## Statistical Gates and Traversal
 
-The `TreeDecomposition` treats every internal node as a checkpoint—called a gate—that decides whether the tree is
-allowed to split at that spot. Each gate represents a statistical question about the parent/child relationship; if the
-answer is “yes,” the walk continues into the children, and if the answer is “no,” the branch stays merged and forms a
-cluster boundary.
+The `TreeDecomposition` treats every internal node as a split checkpoint. A
+node can split only when one structural prerequisite and both statistical gates
+are satisfied.
 
-- **Gate 1 – child-parent edge check**: both children must have supported and
-  significant child-parent evidence.
-- **Gate 2 – sibling split check**: the parent must have a supported and
+- **Binary structure prerequisite**: the node must have exactly two children.
+- **Edge divergence gate**: at least one child-parent edge must have supported
+  and significant child-parent divergence evidence.
+- **Sibling divergence gate**: the sibling pair must have a supported and
   significant sibling split after empirical-null inflation and sibling FDR.
-- **Optional parent gate**: Setting `parent_gate="strict"` adds one more requirement—only parents already marked
-  significant can split. Leave it `off` to ignore this extra guard.
 
-If any gate fails, the algorithm labels the parent node as the cluster boundary and stops there. When every active gate
-passes, it continues the walk into each child so the process can repeat deeper in the tree.
+If the split is not supported, the algorithm labels the parent node as a
+cluster boundary and stops there. When the split is supported, it continues the
+walk into each child so the process can repeat deeper in the tree. In
+pass-through mode, a closed sibling-divergence gate may still allow traversal to
+descendants when a deeper split is already supported; pass-through is a
+traversal policy, not a third statistical test.
 
 The walk follows a depth-first rule:
 
 1. If $u$ is a leaf, record its cluster label and return.
-2. If both child-parent gates and the sibling split gate pass, recurse on the children.
+2. If the binary prerequisite, edge-divergence gate, and sibling-divergence gate pass, recurse on the children.
 3. Otherwise, stop at $u$ and assign all leaves beneath $u$ to the same cluster.
 
 This recursion ensures that every branch of the tree either terminates at the
@@ -143,27 +147,19 @@ The repository keeps the durable entrypoint docs in a small set of files:
 ### Prerequisites
 
 - Python `>=3.11`
-- A virtual environment tool such as `uv` or `venv`
+- `uv`
 
 New contributors should read `docs/onboarding.md` after this README. It gives a
 short route through the package, benchmarks, wiki, manuscript, and tests.
 
 ### Install Dependencies
 
-Using `uv` (recommended):
+Use the locked `uv` environment. This is the canonical install path for
+development, benchmarks, visualization, and manuscript-adjacent checks.
 
 ```bash
 uv venv --python 3.11 .venv
 uv sync --extra dev --extra benchmark --extra viz --locked
-```
-
-Using `pip` inside a virtual environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install --upgrade pip
-pip install -r requirements.txt
 ```
 
 ## Run the Quick Start Pipeline
@@ -171,7 +167,7 @@ pip install -r requirements.txt
 `quick_start.py` wires together the full analysis pipeline on a synthetic dataset to illustrate each stage.
 
 ```bash
-python quick_start.py
+uv run python quick_start.py
 ```
 
 What the script does:
@@ -182,7 +178,7 @@ What the script does:
    `PosetTree` so each node keeps track of its distribution, significance markers, and children.
 3. **Annotate node distributions** – populates node-level distribution summaries
    used by the statistical gates.
-4. **Decompose clusters** – runs the child-parent and sibling gate pipeline to
+4. **Decompose clusters** – runs the child-parent and sibling-divergence pipeline to
    turn supported split decisions into cluster assignments and prints a
    concise report.
 5. **Validate results** – compares discovered clusters with the synthetic ground truth using Adjusted Rand Index (ARI)
@@ -202,7 +198,7 @@ performed without cleanup.
 
 ## Validation & Testing
 
-- Run the automated tests with `pytest`.
+- Run the automated tests with `uv run pytest`.
 - Use `tests/README.md` for the current suite layout and staged execution order.
 - Consider recording ARI or other metrics alongside your experiments to compare runs.
 
@@ -213,11 +209,8 @@ The benchmarking suite can run additional clustering baselines side-by-side with
 - Graph community detection: Leiden, Louvain
 - Density-based clustering: DBSCAN, OPTICS, HDBSCAN (optional)
 
-Optional dependencies (skipped automatically if missing):
-
-```bash
-pip install leidenalg igraph python-louvain hdbscan
-```
+The optional benchmark dependencies are included by the canonical `uv sync`
+command above through the `benchmark` extra.
 
 ## License
 

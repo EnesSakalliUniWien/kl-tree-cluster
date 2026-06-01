@@ -6,30 +6,30 @@ This directory contains the benchmark infrastructure for KL-TE clustering.
 
 ```bash
 # Run full benchmark (currently 110 cases, 9 default methods)
-python benchmarks/full/run.py
+uv run python -m benchmarks.full.run
 
 # Run a contract-specific case suite
-KL_TE_CASE_SUITE=binary python benchmarks/full/run.py
-KL_TE_CASE_SUITE=continuous python benchmarks/full/run.py
-KL_TE_CASE_SUITE=categorical python benchmarks/full/run.py
+KL_TE_CASE_SUITE=binary uv run python -m benchmarks.full.run
+KL_TE_CASE_SUITE=continuous uv run python -m benchmarks.full.run
+KL_TE_CASE_SUITE=categorical uv run python -m benchmarks.full.run
 
 # Run specific benchmark suites
-python benchmarks/experiments/branch_length/run.py
-python benchmarks/experiments/branch_length_3d/run.py
-python benchmarks/experiments/multi_split/run.py
+uv run python -m benchmarks.experiments.branch_length.run
+uv run python -m benchmarks.experiments.branch_length_3d.run
+uv run python -m benchmarks.experiments.multi_split.run
 
 # Quick subset for fast iteration (~15 cases)
-python benchmarks/smoke/run_subset.py
+uv run python -m benchmarks.smoke.run_subset
 
 # Fast regression gate
-python benchmarks/regression/run_gate.py
+uv run python -m benchmarks.regression.run_gate
 
 # Real-world datasets (MNIST, Penguins, Digits)
-python benchmarks/experiments/mnist/run.py
-python benchmarks/experiments/umap_datasets/run.py
+uv run python -m benchmarks.experiments.mnist.run
+uv run python -m benchmarks.experiments.umap_datasets.run
 
 # Analyze benchmark-factor relationships for the latest run
-python benchmarks/diagnostics/analysis/analyze_relationships.py
+uv run python -m benchmarks.diagnostics.analysis.analyze_relationships
 ```
 
 ## Architecture: Shared System Plus Diagnostics
@@ -86,16 +86,17 @@ experiments that are not part of the canonical full-suite contract live under
 
 ## Running Benchmarks
 
-### Critical: Run from Project Root
+### Critical: Run Module Commands From Project Root
 
-All benchmark scripts **must** be run from the project root:
+All benchmark commands **must** be run from the project root through the locked
+`uv` environment:
 
 ```bash
 # Correct
-python benchmarks/full/run.py
+uv run python -m benchmarks.full.run
 
-# Wrong - don't cd into benchmarks/
-cd benchmarks/full && python run.py  # Will fail on imports
+# Wrong
+cd benchmarks/full && python run.py
 ```
 
 ### Output Structure
@@ -469,14 +470,14 @@ There is **no fallback** to `pdist()` on raw adjacency data.
 
 ## Known Issues & Structural Problems
 
-### Broken/Removed Scripts
-
-- **`benchmarks/temporal/`**: Entirely removed. Had import errors (`run_incremental_temporal_benchmark` doesn't exist) and `temporal_evolution` generator never wired into pipeline.
-
 ### Critical Issues
 
 1. **Categorical/Phylogenetic Type Mismatch**  
-   Categorical generators return integer indices (0 to K-1). Bernoulli pipeline interprets these as probabilities → invalid KL divergences. **Root cause** of phylogenetic over-splitting (72 clusters instead of 8). Fix requires one-hot encoding or dedicated categorical KL path.
+   Categorical and phylogenetic cases now enter the KL runner through explicit
+   one-hot `FeatureSpace` contracts. Remaining failures should be interpreted
+   as calibration, projection-dimension, FDR, traversal, metric, or
+   recoverability problems, not as a Bernoulli/categorical install or schema
+   mismatch.
 
 2. **Gradient Templates Design Flaw**  
    `_create_gradient_templates()` assigns `prob_ones = cluster_id / (n_clusters - 1)`. For k>4, adjacent templates differ by ≈1/k fraction — below noise floor after bit-flip. Prefer `_create_sparse_templates` for k>4.

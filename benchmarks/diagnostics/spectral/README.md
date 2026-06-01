@@ -6,11 +6,11 @@ Marchenko-Pastur threshold behavior.
 Entrypoint:
 
 ```bash
-python benchmarks/diagnostics/spectral/compare_mp_dimension_contracts.py
+uv run python -m benchmarks.diagnostics.spectral.compare_mp_dimension_contracts
 ```
 
 Backend profiling:
 
 ```bash
-python benchmarks/diagnostics/spectral/profile_spectral_backends.py
+uv run python -m benchmarks.diagnostics.spectral.profile_spectral_backends
 ```

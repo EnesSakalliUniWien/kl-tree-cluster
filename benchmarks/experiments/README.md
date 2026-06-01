@@ -3,8 +3,9 @@
 This directory contains standalone experiments that are not part of the
 canonical full benchmark contract.
 
-Use `benchmarks/full/run.py` for comparable method-wide benchmark claims. Use
-these experiment runners when asking a narrower scientific question.
+Use `uv run python -m benchmarks.full.run` for comparable method-wide
+benchmark claims. Use these experiment runners when asking a narrower
+scientific question.
 
 | Path | Question |
 | ---- | -------- |

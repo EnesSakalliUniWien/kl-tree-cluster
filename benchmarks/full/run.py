@@ -1,22 +1,12 @@
 import gc
 import os
-import sys
 from pathlib import Path
 
-# Load shared path bootstrap helper from benchmarks root.
-_script_path = Path(__file__).resolve()
-_benchmarks_root = (
-    _script_path.parent if _script_path.parent.name == "benchmarks" else _script_path.parents[1]
-)
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-# Ensure repo root is importable before any benchmarks/kl_clustering imports.
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[2]
 
 import matplotlib.pyplot as plt
 import pandas as pd
+
 from benchmarks.diagnostics.failure.debug_trace import diagnose_benchmark_failures
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.cases.geometry import case_recipe_geometry

@@ -8,22 +8,14 @@ Benchmarks the KL clustering algorithm on the datasets used in the UMAP document
 Reference: https://umap-learn.readthedocs.io/en/latest/basic_usage.html
 
 Usage:
-    python benchmarks/experiments/umap_datasets/run.py
+    uv run python -m benchmarks.experiments.umap_datasets.run
 """
 
-import sys
 from datetime import datetime
 from importlib.util import find_spec
 from pathlib import Path
 
-# Load shared path bootstrap helper from benchmarks root.
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[3]
 
 import matplotlib
 import numpy as np
@@ -208,7 +200,7 @@ def run_kl_clustering(
     results = tree.decompose(
         annotations_df=tree.annotations_df,
         leaf_data=data,
-        alpha_local=significance_level,
+        edge_alpha=significance_level,
         sibling_alpha=significance_level,
     )
 

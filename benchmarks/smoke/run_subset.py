@@ -4,16 +4,9 @@ Quick subset benchmark — picks ~15 representative cases across categories
 and runs them with plots.
 """
 import os
-import sys
 from pathlib import Path
 
-_script_path = Path(__file__).resolve()
-_benchmarks_root = next(parent for parent in _script_path.parents if parent.name == "benchmarks")
-if str(_benchmarks_root) not in sys.path:
-    sys.path.insert(0, str(_benchmarks_root))
-from _bootstrap import ensure_repo_root_on_path
-
-repo_root = ensure_repo_root_on_path(__file__)
+repo_root = Path(__file__).resolve().parents[2]
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.geometry import case_recipe_cluster_count

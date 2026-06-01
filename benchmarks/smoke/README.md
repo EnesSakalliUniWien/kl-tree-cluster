@@ -6,5 +6,5 @@ benchmark, but their aggregate scores should not be used as method evidence.
 Entrypoint:
 
 ```bash
-python benchmarks/smoke/run_subset.py
+uv run python -m benchmarks.smoke.run_subset
 ```

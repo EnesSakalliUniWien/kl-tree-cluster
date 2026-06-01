@@ -77,39 +77,39 @@ tests/
 - `70_test_cluster_tree_layout.py`
 - `71_test_cluster_tree_visualization.py`
 
-## Recommended `pytest` Execution Order
+## Recommended Test Execution Order
 
 Use the helper script when you want the staged order the repository expects:
 
 ```bash
-python scripts/run_tests_ordered.py --list
-python scripts/run_tests_ordered.py --stage 1
-python scripts/run_tests_ordered.py
+uv run python scripts/run_tests_ordered.py --list
+uv run python scripts/run_tests_ordered.py --stage 1
+uv run python scripts/run_tests_ordered.py
 ```
 
 Or run the suites directly:
 
 ```bash
 # 1) Core structure + decomposition
-pytest tests/core/
+uv run pytest tests/core/
 
 # 2) Statistical engines + calibration
-pytest tests/statistics/
+uv run pytest tests/statistics/
 
 # 3) Traversal and gate behavior
-pytest tests/localization/
+uv run pytest tests/localization/
 
 # 4) Cluster validation stack
-pytest tests/validation/
+uv run pytest tests/validation/
 
 # 5) Pipeline contracts + reporting artifacts
-pytest tests/pipeline/
+uv run pytest tests/pipeline/
 
 # 6) Integration smoke + visualization
-pytest tests/integration/ tests/visualization/
+uv run pytest tests/integration/ tests/visualization/
 
 # 7) Full suite
-pytest
+uv run pytest
 ```
 
 ## Notes
