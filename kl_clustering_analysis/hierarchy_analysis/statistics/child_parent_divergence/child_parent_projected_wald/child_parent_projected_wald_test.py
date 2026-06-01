@@ -43,8 +43,8 @@ def run_child_parent_projected_wald_test(
         continuous_covariance_by_block=continuous_covariance_by_block,
     )
     if stage_timings is not None:
-        stage_timings["gate2_contrast_covariance_sec"] = float(
-            stage_timings.get("gate2_contrast_covariance_sec", 0.0)
+        stage_timings["edge_gate_contrast_covariance_sec"] = float(
+            stage_timings.get("edge_gate_contrast_covariance_sec", 0.0)
         ) + float(perf_counter() - contrast_start_sec)
 
     standardized_z_scores = standardized_z_scores.astype(np.float64, copy=False)
@@ -55,7 +55,7 @@ def run_child_parent_projected_wald_test(
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
         stage_timings=stage_timings,
-        timing_prefix="gate2",
+        timing_prefix="edge_gate",
     )
 
     return result.statistic, float(result.degrees_of_freedom), result.p_value, False

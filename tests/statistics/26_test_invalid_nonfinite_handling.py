@@ -241,8 +241,8 @@ def test_sibling_divergence_nonfinite_z_raises(monkeypatch) -> None:
         )
 
 
-def test_resolve_sibling_projection_dimension_rejects_missing_gate2_dimension() -> None:
-    with pytest.raises(ValueError, match="must be supplied by Gate 2 context"):
+def test_resolve_sibling_projection_dimension_rejects_missing_edge_gate_dimension() -> None:
+    with pytest.raises(ValueError, match="must be supplied by edge-gate context"):
         resolve_sibling_projection_dimension(
             projection_dimension_from_edge_comparisons=None,
             left_sample_size=3.0,

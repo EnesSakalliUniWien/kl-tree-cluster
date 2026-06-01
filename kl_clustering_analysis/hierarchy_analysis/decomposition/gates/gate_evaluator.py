@@ -1,10 +1,11 @@
-"""Statistical gate evaluator for tree decomposition.
+"""Split-decision evaluator for tree decomposition.
 
-:class:`GateEvaluator` encapsulates the three statistical gates that decide
-whether to split or merge at each internal node during top-down traversal:
+:class:`GateEvaluator` encapsulates the structure prerequisite and statistical
+gates that decide whether to split or stop at each internal node during
+top-down traversal:
 
-#. **Binary structure gate** — parent must have exactly two children.
-#. **Child-parent divergence gate** — at least one child must significantly
+#. **Binary structure prerequisite** — parent must have exactly two children.
+#. **Edge divergence gate** — at least one child must significantly
    diverge from the parent (projected Wald chi-square test).
 #. **Sibling divergence gate** — siblings must have significantly different
    distributions.
@@ -41,7 +42,7 @@ class GateEvaluator:
     ----------
     tree
         The hierarchy tree (a :class:`PosetTree`).
-    local_significant
+    edge_divergent
         ``{node_id: bool}`` — child-parent divergence significance.
     sibling_different
         ``{node_id: bool}`` — sibling BH-corrected divergence.
@@ -54,7 +55,7 @@ class GateEvaluator:
     def __init__(
         self,
         tree: "PosetTree",
-        local_significant: dict[object, bool],
+        edge_divergent: dict[object, bool],
         sibling_different: dict[object, bool],
         sibling_skipped: dict[object, bool],
         children_map: dict[object, list[object]],
@@ -62,7 +63,7 @@ class GateEvaluator:
         passthrough: bool = False,
     ) -> None:
         self.tree = tree
-        self._local_significant = local_significant
+        self._edge_divergent = edge_divergent
         self._sibling_different = sibling_different
         self._sibling_skipped = sibling_skipped
         self._children_map = children_map
@@ -91,7 +92,7 @@ class GateEvaluator:
         node_ids = self._node_ids
         for name, mapping in (
             ("children_map", self._children_map),
-            ("local_significant", self._local_significant),
+            ("edge_divergent", self._edge_divergent),
             ("sibling_different", self._sibling_different),
             ("sibling_skipped", self._sibling_skipped),
         ):
@@ -101,7 +102,7 @@ class GateEvaluator:
                 raise ValueError(f"Missing {name} values for nodes: {preview}.")
 
     def _passes_split_prerequisites(self, parent: object) -> bool:
-        """Run Gates 1 (binary structure) and 2 (child-parent divergence).
+        """Run the binary-structure prerequisite and edge-divergence gate.
 
         Returns
         -------
@@ -116,11 +117,11 @@ class GateEvaluator:
         left_child, right_child = children
 
         return bool(
-            self._local_significant[left_child] or self._local_significant[right_child]
+            self._edge_divergent[left_child] or self._edge_divergent[right_child]
         )
 
     def _sibling_gate_is_open(self, parent: object) -> bool:
-        """Run Gate 3 (sibling divergence).
+        """Run the sibling-divergence gate.
 
         Returns ``True`` when siblings are significantly different and the
         test was not skipped.
@@ -135,7 +136,7 @@ class GateEvaluator:
         return self._passes_split_prerequisites(parent) and self._sibling_gate_is_open(parent)
 
     def _compute_split_prerequisites_by_node(self) -> dict[object, bool]:
-        """Return cached Gates 1+2 status for every node."""
+        """Return cached binary-structure plus edge-gate status for every node."""
         return {node: self._passes_split_prerequisites(node) for node in self._node_ids}
 
     def _compute_can_split_by_node(

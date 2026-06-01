@@ -12,7 +12,7 @@ def resolve_sibling_projection_dimension(
 ) -> tuple[int, str]:
     """Resolve the sibling projection dimension and record its provenance."""
     if projection_dimension_from_edge_comparisons is None:
-        raise ValueError("Sibling projection dimension must be supplied by Gate 2 context.")
+        raise ValueError("Sibling projection dimension must be supplied by edge-gate context.")
 
     if projection_dimension_from_edge_comparisons < 0:
         raise ValueError(

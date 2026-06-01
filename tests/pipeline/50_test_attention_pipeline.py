@@ -56,7 +56,7 @@ def _run_statistical_analysis(tree: PosetTree, x: pd.DataFrame) -> pd.DataFrame:
     return run_gate_annotation_pipeline(
         tree,
         tree.annotations_df.copy(),
-        alpha_local=config.EDGE_ALPHA,
+        edge_alpha=config.EDGE_ALPHA,
         sibling_alpha=config.SIBLING_ALPHA,
         leaf_data=x,
     ).annotated_df

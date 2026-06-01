@@ -28,7 +28,7 @@ class TreeBHSiblingGroupOutcome:
 
 @dataclass(frozen=True)
 class ChildParentEdgeTreeBHResult:
-    """Tree-BH correction output for Gate 2 child-parent edge hypotheses."""
+    """Tree-BH correction output for child-parent edge hypotheses."""
 
     child_parent_edge_null_rejected_by_tree_bh: np.ndarray
     child_parent_edge_corrected_p_values_by_tree_bh: np.ndarray

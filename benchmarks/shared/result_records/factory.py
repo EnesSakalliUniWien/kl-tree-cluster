@@ -90,26 +90,26 @@ def build_benchmark_result_row(
         under_split=float(under_split),
         tree_build_sec=normalized_stage_timings["tree_build_sec"],
         populate_divergences_sec=normalized_stage_timings["populate_divergences_sec"],
-        gate2_sec=normalized_stage_timings["gate2_sec"],
-        gate2_contrast_covariance_sec=normalized_stage_timings[
-            "gate2_contrast_covariance_sec"
+        edge_gate_sec=normalized_stage_timings["edge_gate_sec"],
+        edge_gate_contrast_covariance_sec=normalized_stage_timings[
+            "edge_gate_contrast_covariance_sec"
         ],
-        gate2_projection_sec=normalized_stage_timings["gate2_projection_sec"],
-        gate2_wald_statistic_sec=normalized_stage_timings[
-            "gate2_wald_statistic_sec"
+        edge_gate_projection_sec=normalized_stage_timings["edge_gate_projection_sec"],
+        edge_gate_wald_statistic_sec=normalized_stage_timings[
+            "edge_gate_wald_statistic_sec"
         ],
-        gate2_tree_bh_sec=normalized_stage_timings["gate2_tree_bh_sec"],
+        edge_gate_tree_bh_sec=normalized_stage_timings["edge_gate_tree_bh_sec"],
         spectral_context_sec=normalized_stage_timings["spectral_context_sec"],
         tangent_whitening_sec=normalized_stage_timings["tangent_whitening_sec"],
         eigensolve_sec=normalized_stage_timings["eigensolve_sec"],
         pca_projection_sec=normalized_stage_timings["pca_projection_sec"],
-        gate3_sec=normalized_stage_timings["gate3_sec"],
-        gate3_pair_record_collection_sec=normalized_stage_timings[
-            "gate3_pair_record_collection_sec"
+        sibling_gate_sec=normalized_stage_timings["sibling_gate_sec"],
+        sibling_gate_pair_record_collection_sec=normalized_stage_timings[
+            "sibling_gate_pair_record_collection_sec"
         ],
-        gate3_inflation_fit_sec=normalized_stage_timings["gate3_inflation_fit_sec"],
-        gate3_adjusted_tests_sec=normalized_stage_timings["gate3_adjusted_tests_sec"],
-        gate3_sibling_fdr_sec=normalized_stage_timings["gate3_sibling_fdr_sec"],
+        sibling_gate_inflation_fit_sec=normalized_stage_timings["sibling_gate_inflation_fit_sec"],
+        sibling_gate_adjusted_tests_sec=normalized_stage_timings["sibling_gate_adjusted_tests_sec"],
+        sibling_gate_fdr_sec=normalized_stage_timings["sibling_gate_fdr_sec"],
         traversal_sec=normalized_stage_timings["traversal_sec"],
         status=_normalize_status(status),
         skip_reason=(skip_reason or ""),

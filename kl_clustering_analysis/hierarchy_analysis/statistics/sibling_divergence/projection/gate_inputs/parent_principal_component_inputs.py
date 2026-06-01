@@ -1,4 +1,4 @@
-"""Parent principal-component inputs reused by Gate 3 sibling tests."""
+"""Parent principal-component inputs reused by sibling-divergence tests."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ def collect_parent_principal_component_inputs_for_sibling_tests(
 ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
     """Collect parent principal-component inputs for sibling tests.
 
-    Returns the subset of Gate 2 principal-component projections and eigenvalues
+    Returns the subset of edge-gate principal-component projections and eigenvalues
     corresponding to parents that have valid sibling projection dimensions.
     """
     principal_component_projections_by_node = (

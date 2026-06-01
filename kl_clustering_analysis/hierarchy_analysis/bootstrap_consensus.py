@@ -40,7 +40,7 @@ def bootstrap_consensus(
     data: pd.DataFrame,
     *,
     n_boot: int = 100,
-    alpha_local: float | None = None,
+    edge_alpha: float | None = None,
     sibling_alpha: float | None = None,
     metric: str | None = None,
     linkage_method: str | None = None,
@@ -55,7 +55,7 @@ def bootstrap_consensus(
         Binary sample × feature DataFrame.  Index values are sample IDs.
     n_boot
         Number of bootstrap replicates.
-    alpha_local, sibling_alpha
+    edge_alpha, sibling_alpha
         Significance levels forwarded to ``PosetTree.decompose()``.
         Defaults to ``config.EDGE_ALPHA`` / ``config.SIBLING_ALPHA``.
     metric
@@ -85,8 +85,8 @@ def bootstrap_consensus(
     """
     from kl_clustering_analysis.tree.poset_tree import PosetTree  # local import to avoid cycles
 
-    if alpha_local is None:
-        alpha_local = config.EDGE_ALPHA
+    if edge_alpha is None:
+        edge_alpha = config.EDGE_ALPHA
     if sibling_alpha is None:
         sibling_alpha = config.SIBLING_ALPHA
     if metric is None:
@@ -107,7 +107,7 @@ def bootstrap_consensus(
     results_orig = tree_orig.decompose(
         annotations_df=tree_orig.annotations_df,
         leaf_data=data,
-        alpha_local=alpha_local,
+        edge_alpha=edge_alpha,
         sibling_alpha=sibling_alpha,
         **decompose_kwargs,
     )
@@ -148,7 +148,7 @@ def bootstrap_consensus(
         res_b = tree_b.decompose(
             annotations_df=tree_b.annotations_df,
             leaf_data=X_boot,
-            alpha_local=alpha_local,
+            edge_alpha=edge_alpha,
             sibling_alpha=sibling_alpha,
             **decompose_kwargs,
         )

@@ -101,7 +101,7 @@ def apply_traversal_aligned_sibling_bh_results(
     """Apply sibling BH over the edge-reachable traversal frontier.
 
     The clustering traversal can only use a sibling decision at nodes whose
-    structural and child-parent gates are open. Therefore the sibling FDR
+    structural prerequisite and edge-divergence gate are open. Therefore the sibling FDR
     family is built top-down by tree depth over that reachable frontier instead
     of over every internal node in the tree.
     """

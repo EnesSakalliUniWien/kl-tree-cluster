@@ -69,15 +69,15 @@ def test_build_benchmark_result_row_records_stage_timings():
         "ok",
         stage_timings={
             "tree_build_sec": 0.1,
-            "gate2_sec": 0.2,
+            "edge_gate_sec": 0.2,
             "traversal_sec": 0.3,
         },
     )
 
     assert row.tree_build_sec == 0.1
-    assert row.gate2_sec == 0.2
+    assert row.edge_gate_sec == 0.2
     assert row.traversal_sec == 0.3
-    assert math.isnan(row.gate3_sec)
+    assert math.isnan(row.sibling_gate_sec)
 
 
 def test_build_benchmark_result_row_rejects_missing_noise_value():
@@ -87,7 +87,7 @@ def test_build_benchmark_result_row_rejects_missing_noise_value():
 
 def test_build_benchmark_result_row_rejects_invalid_stage_timing():
     with pytest.raises(ValueError, match="Stage timing"):
-        _build_row("ok", stage_timings={"gate2_sec": -0.1})
+        _build_row("ok", stage_timings={"edge_gate_sec": -0.1})
 
 
 @pytest.mark.parametrize("status", ["error", "skipped", "unknown", "", "OKAY"])

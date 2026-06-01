@@ -54,7 +54,7 @@ def main():
     decomposition_results = tree.decompose(
         annotations_df=tree.annotations_df,
         leaf_data=data,
-        alpha_local=significance_level,
+        edge_alpha=significance_level,
         sibling_alpha=significance_level,
     )
     print(

@@ -1,7 +1,7 @@
 """Chi-square reference for orthonormal projected test statistics.
 
-Provides :func:`compute_projected_pvalue`, used by both the edge test (Gate 2)
-and the sibling test (Gate 3) to avoid code duplication.
+Provides :func:`compute_projected_pvalue`, used by both edge-divergence and
+sibling-divergence tests to avoid code duplication.
 
 The projected quadratic form is
 

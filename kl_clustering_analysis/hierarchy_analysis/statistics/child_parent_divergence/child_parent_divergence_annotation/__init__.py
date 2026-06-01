@@ -1,4 +1,4 @@
-"""Child-parent divergence annotation modules for Gate 2."""
+"""Child-parent divergence annotation modules for the edge gate."""
 
 from .child_parent_divergence_annotation import annotate_child_parent_divergence
 from .tree_testing import run_child_parent_tests_across_tree

@@ -276,21 +276,21 @@ def build_null_whitened_tangent_matrix(
     )
     active_feature_space = _resolve_distribution_feature_space(null, feature_space)
     ridge_value = _validate_ridge(ridge)
-    if _uses_diagonal_null_whitening(active_feature_space):
-        distribution_matrix, null = _validate_diagonal_tangent_inputs(
+    if _uses_bernoulli_null_whitening(active_feature_space):
+        distribution_matrix, null = _validate_bernoulli_tangent_inputs(
             distribution_matrix,
             null,
             active_feature_space,
         )
-        continuous_covariance_blocks = _validate_diagonal_continuous_covariance_by_block(
-            active_feature_space,
-            continuous_covariance_by_block,
-        )
-        return _build_trusted_null_whitened_tangent_matrix(
+        if continuous_covariance_by_block is not None:
+            raise ValueError(
+                "continuous_covariance_by_block was provided, but feature_space has "
+                "no continuous blocks."
+            )
+        return _build_bernoulli_null_whitened_tangent_matrix(
             distribution_matrix,
             null,
             active_feature_space,
-            continuous_covariance_blocks,
             ridge=ridge_value,
         )
 
@@ -342,12 +342,11 @@ def _build_trusted_null_whitened_tangent_matrix(
     ridge: float,
 ) -> NDArray[np.float64]:
     """Map already-validated distributions into Wald tangent coordinates."""
-    if _uses_diagonal_null_whitening(feature_space):
-        return _build_diagonal_null_whitened_tangent_matrix(
+    if _uses_bernoulli_null_whitening(feature_space):
+        return _build_bernoulli_null_whitened_tangent_matrix(
             distribution_matrix,
             null_distribution,
             feature_space,
-            continuous_covariance_by_block,
             ridge=ridge,
         )
 
@@ -376,8 +375,8 @@ def _compute_vectorized_whitened_wald_contrast(
     resolved: _ResolvedContrastInputs,
 ) -> NDArray[np.float64] | None:
     """Return a fast whitened contrast for common feature-space contracts."""
-    if _uses_diagonal_null_whitening(resolved.feature_space):
-        return _build_diagonal_whitened_wald_contrast(resolved)
+    if _uses_bernoulli_null_whitening(resolved.feature_space):
+        return _build_bernoulli_whitened_wald_contrast(resolved)
 
     if _uses_grouped_categorical_null_whitening(resolved.feature_space):
         return _build_grouped_categorical_whitened_wald_contrast(resolved)
@@ -385,9 +384,8 @@ def _compute_vectorized_whitened_wald_contrast(
     return None
 
 
-def _uses_diagonal_null_whitening(feature_space: FeatureSpace) -> bool:
-    families = {block.family for block in feature_space.blocks}
-    return families in ({"bernoulli"}, {"continuous"}) and all(
+def _uses_bernoulli_null_whitening(feature_space: FeatureSpace) -> bool:
+    return feature_space.family_label == "bernoulli" and all(
         block.raw_dimension == 1 for block in feature_space.blocks
     )
 
@@ -396,7 +394,7 @@ def _uses_grouped_categorical_null_whitening(feature_space: FeatureSpace) -> boo
     return feature_space.family_label == "categorical"
 
 
-def _validate_diagonal_tangent_inputs(
+def _validate_bernoulli_tangent_inputs(
     distributions: NDArray[np.float64],
     null_distribution: NDArray[np.float64],
     feature_space: FeatureSpace,
@@ -414,83 +412,34 @@ def _validate_diagonal_tangent_inputs(
             f"{(feature_space.raw_dimension,)}."
         )
 
-    if feature_space.family_label == "bernoulli":
-        if np.any(distributions < 0.0) or np.any(distributions > 1.0):
-            raise ValueError(
-                "Bernoulli tangent distributions must lie in [0, 1]. "
-                f"Range=[{float(np.min(distributions)):.6g}, "
-                f"{float(np.max(distributions)):.6g}]."
-            )
-        if np.any(null_distribution < 0.0) or np.any(null_distribution > 1.0):
-            raise ValueError(
-                "Bernoulli null_distribution must lie in [0, 1]. "
-                f"Range=[{float(np.min(null_distribution)):.6g}, "
-                f"{float(np.max(null_distribution)):.6g}]."
-            )
+    if not _uses_bernoulli_null_whitening(feature_space):
+        raise ValueError("Bernoulli null whitening requires pure Bernoulli blocks.")
+    if np.any(distributions < 0.0) or np.any(distributions > 1.0):
+        raise ValueError(
+            "Bernoulli tangent distributions must lie in [0, 1]. "
+            f"Range=[{float(np.min(distributions)):.6g}, "
+            f"{float(np.max(distributions)):.6g}]."
+        )
+    if np.any(null_distribution < 0.0) or np.any(null_distribution > 1.0):
+        raise ValueError(
+            "Bernoulli null_distribution must lie in [0, 1]. "
+            f"Range=[{float(np.min(null_distribution)):.6g}, "
+            f"{float(np.max(null_distribution)):.6g}]."
+        )
 
     return distributions, null_distribution
 
 
-def _validate_diagonal_continuous_covariance_by_block(
-    feature_space: FeatureSpace,
-    continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None,
-) -> dict[str, NDArray[np.float64]]:
-    if not feature_space.has_continuous_blocks:
-        if continuous_covariance_by_block is not None:
-            raise ValueError(
-                "continuous_covariance_by_block was provided, but feature_space has "
-                "no continuous blocks."
-            )
-        return {}
-
-    if continuous_covariance_by_block is None:
-        raise ValueError(
-            "Continuous feature blocks require continuous_covariance_by_block."
-        )
-
-    expected_block_names = {block.name for block in feature_space.continuous_blocks}
-    actual_block_names = set(continuous_covariance_by_block)
-    if actual_block_names != expected_block_names:
-        raise ValueError(
-            "continuous_covariance_by_block keys must exactly match continuous "
-            "feature block names. "
-            f"expected={sorted(expected_block_names)!r}, "
-            f"actual={sorted(actual_block_names)!r}."
-        )
-
-    covariance_blocks: dict[str, NDArray[np.float64]] = {}
-    for block in feature_space.continuous_blocks:
-        covariance = np.asarray(
-            continuous_covariance_by_block[block.name],
-            dtype=np.float64,
-        )
-        if covariance.shape != (1, 1):
-            raise ValueError(
-                f"Continuous covariance block {block.name!r} has shape "
-                f"{covariance.shape}; expected {(1, 1)}."
-            )
-        if not np.isfinite(covariance[0, 0]):
-            raise ValueError(
-                f"Continuous covariance block {block.name!r} must contain only finite values."
-            )
-        covariance_blocks[block.name] = covariance
-    return covariance_blocks
-
-
-def _build_diagonal_null_whitened_tangent_matrix(
+def _build_bernoulli_null_whitened_tangent_matrix(
     distributions: NDArray[np.float64],
     null_distribution: NDArray[np.float64],
     feature_space: FeatureSpace,
-    continuous_covariance_by_block: Mapping[str, NDArray[np.float64]],
     *,
     ridge: float,
 ) -> NDArray[np.float64]:
-    """Vectorize the exact block whitening map for diagonal feature spaces."""
-    if not _uses_diagonal_null_whitening(feature_space):
-        raise ValueError(
-            "Diagonal null whitening requires a pure Bernoulli or one-dimensional "
-            "continuous feature space."
-        )
+    """Vectorize the exact block whitening map for pure Bernoulli feature spaces."""
+    if not _uses_bernoulli_null_whitening(feature_space):
+        raise ValueError("Bernoulli null whitening requires pure Bernoulli blocks.")
 
     column_indices = np.asarray(
         [block.column_indices[0] for block in feature_space.blocks],
@@ -499,65 +448,26 @@ def _build_diagonal_null_whitened_tangent_matrix(
     block_values = distributions[:, column_indices]
     block_null = null_distribution[column_indices]
 
-    if feature_space.family_label == "bernoulli":
-        variances = block_null * (1.0 - block_null) + ridge
-        return (block_values - block_null) / np.sqrt(variances)
-
-    if feature_space.family_label == "continuous":
-        variances = np.asarray(
-            [
-                continuous_covariance_by_block[block.name][0, 0]
-                for block in feature_space.blocks
-            ],
-            dtype=np.float64,
-        )
-        return (block_values - block_null) / np.sqrt(variances + ridge)
-
-    raise ValueError(
-        f"Unknown diagonal feature family: {feature_space.family_label!r}."
-    )
+    variances = block_null * (1.0 - block_null) + ridge
+    return (block_values - block_null) / np.sqrt(variances)
 
 
-def _build_diagonal_whitened_wald_contrast(
+def _build_bernoulli_whitened_wald_contrast(
     resolved: _ResolvedContrastInputs,
 ) -> NDArray[np.float64]:
-    """Vectorize one-dimensional Bernoulli/continuous Wald whitening."""
-    if not _uses_diagonal_null_whitening(resolved.feature_space):
-        raise ValueError(
-            "Diagonal Wald whitening requires a pure Bernoulli or one-dimensional "
-            "continuous feature space."
-        )
+    """Vectorize Wald whitening for pure Bernoulli feature spaces."""
+    if not _uses_bernoulli_null_whitening(resolved.feature_space):
+        raise ValueError("Bernoulli Wald whitening requires pure Bernoulli blocks.")
 
     column_indices = np.asarray(
         [block.column_indices[0] for block in resolved.feature_space.blocks],
         dtype=np.int64,
     )
     contrast = resolved.first[column_indices] - resolved.second[column_indices]
-
-    if resolved.feature_space.family_label == "bernoulli":
-        probabilities = resolved.covariance_distribution[column_indices]
-        variances = probabilities * (1.0 - probabilities) * resolved.variance_scale
-        variances = variances + resolved.ridge
-        return contrast / np.sqrt(variances)
-
-    if resolved.feature_space.family_label == "continuous":
-        covariance_blocks = _validate_diagonal_continuous_covariance_by_block(
-            resolved.feature_space,
-            resolved.continuous_covariance_by_block,
-        )
-        variances = np.asarray(
-            [
-                covariance_blocks[block.name][0, 0]
-                for block in resolved.feature_space.blocks
-            ],
-            dtype=np.float64,
-        )
-        variances = variances * resolved.variance_scale + resolved.ridge
-        return contrast / np.sqrt(variances)
-
-    raise ValueError(
-        f"Unknown diagonal feature family: {resolved.feature_space.family_label!r}."
-    )
+    probabilities = resolved.covariance_distribution[column_indices]
+    variances = probabilities * (1.0 - probabilities) * resolved.variance_scale
+    variances = variances + resolved.ridge
+    return contrast / np.sqrt(variances)
 
 
 def _validate_grouped_categorical_tangent_inputs(
@@ -849,6 +759,12 @@ def _validate_continuous_covariance_by_block(
         if not np.allclose(covariance, covariance.T, atol=1e-10, rtol=1e-8):
             raise ValueError(
                 f"Continuous covariance block {block.name!r} must be symmetric."
+            )
+        eigenvalues = np.linalg.eigvalsh(covariance)
+        if float(np.min(eigenvalues)) < -1e-10:
+            raise ValueError(
+                f"Continuous covariance block {block.name!r} must be positive "
+                "semidefinite."
             )
         covariance_blocks[block.name] = covariance
     return covariance_blocks

@@ -13,20 +13,20 @@ def _stage_timings(**overrides):
     stage_timings = {
         "tree_build_sec": 0.01,
         "populate_divergences_sec": 0.02,
-        "gate2_sec": 0.03,
-        "gate2_contrast_covariance_sec": 0.04,
-        "gate2_projection_sec": 0.05,
-        "gate2_wald_statistic_sec": 0.06,
-        "gate2_tree_bh_sec": 0.07,
+        "edge_gate_sec": 0.03,
+        "edge_gate_contrast_covariance_sec": 0.04,
+        "edge_gate_projection_sec": 0.05,
+        "edge_gate_wald_statistic_sec": 0.06,
+        "edge_gate_tree_bh_sec": 0.07,
         "spectral_context_sec": 0.08,
         "tangent_whitening_sec": 0.09,
         "eigensolve_sec": 0.10,
         "pca_projection_sec": 0.11,
-        "gate3_sec": 0.12,
-        "gate3_pair_record_collection_sec": 0.13,
-        "gate3_inflation_fit_sec": 0.14,
-        "gate3_adjusted_tests_sec": 0.15,
-        "gate3_sibling_fdr_sec": 0.16,
+        "sibling_gate_sec": 0.12,
+        "sibling_gate_pair_record_collection_sec": 0.13,
+        "sibling_gate_inflation_fit_sec": 0.14,
+        "sibling_gate_adjusted_tests_sec": 0.15,
+        "sibling_gate_fdr_sec": 0.16,
         "traversal_sec": 0.17,
     }
     stage_timings.update(overrides)
@@ -108,18 +108,18 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert result_row.params_raw["tree_distance_metric"] == "hamming"
     assert result_row.params_raw["tree_distance_source"] == "feature_metric"
     assert result_row.tree_build_sec == 0.01
-    assert result_row.gate2_sec == 0.03
-    assert result_row.gate2_contrast_covariance_sec == 0.04
-    assert result_row.gate2_tree_bh_sec == 0.07
-    assert result_row.gate3_sec == 0.12
-    assert result_row.gate3_pair_record_collection_sec == 0.13
-    assert result_row.gate3_sibling_fdr_sec == 0.16
+    assert result_row.edge_gate_sec == 0.03
+    assert result_row.edge_gate_contrast_covariance_sec == 0.04
+    assert result_row.edge_gate_tree_bh_sec == 0.07
+    assert result_row.sibling_gate_sec == 0.12
+    assert result_row.sibling_gate_pair_record_collection_sec == 0.13
+    assert result_row.sibling_gate_fdr_sec == 0.16
     assert result_row.traversal_sec == 0.17
     assert computed_result is not None
     assert np.isclose(computed_result.ari, 1.0)
     assert computed_result.params["tree_distance_metric"] == "hamming"
     assert computed_result.params["tree_distance_source"] == "feature_metric"
-    assert computed_result.meta["stage_timings"]["gate2_sec"] == 0.03
+    assert computed_result.meta["stage_timings"]["edge_gate_sec"] == 0.03
     assert method_audit is None
 
 

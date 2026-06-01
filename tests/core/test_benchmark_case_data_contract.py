@@ -217,6 +217,9 @@ def test_continuous_case_data_carries_feature_space_and_euclidean_distance(
     assert isinstance(feature_space, FeatureSpace)
     assert feature_space.family_label == "continuous"
     assert feature_space.raw_dimension == data_df.shape[1]
+    assert len(feature_space.blocks) == 1
+    assert feature_space.blocks[0].name == "continuous"
+    assert feature_space.blocks[0].column_indices == tuple(range(data_df.shape[1]))
     assert data_df.attrs == {}
     assert x_original.shape == data_df.shape
     assert metadata["feature_representation"] == "continuous"

@@ -83,7 +83,7 @@ def test_descendants_remain_testable_for_passthrough_when_parent_sibling_is_same
     assert not bool(out.loc["B", "Sibling_BH_Different"])
 
 
-def test_nodes_with_closed_child_parent_gate_keep_raw_sibling_stat_but_no_fdr_decision() -> None:
+def test_nodes_with_closed_edge_gate_keep_raw_sibling_stat_but_no_fdr_decision() -> None:
     tree = _binary_three_level_tree()
     annotations_df = _annotations(a_children_significant=False)
 

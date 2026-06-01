@@ -120,7 +120,7 @@ def continuous_dataframe_and_metadata(
     sample_names: list[str],
     feature_names: list[str],
 ) -> tuple[pd.DataFrame, FeatureSpace, np.ndarray]:
-    """Return continuous benchmark data with its explicit diagonal Gaussian contract."""
+    """Return continuous benchmark data with one empirical-Gaussian block contract."""
     continuous_matrix = np.asarray(matrix, dtype=np.float64)
     data_df = pd.DataFrame(
         continuous_matrix,

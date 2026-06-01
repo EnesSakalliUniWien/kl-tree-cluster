@@ -12,7 +12,7 @@ import numpy.typing as npt
 
 FeatureFamily = Literal["bernoulli", "categorical", "continuous"]
 FeatureChart = Literal["identity", "simplex_drop_last"]
-CovarianceModel = Literal["bernoulli", "multinomial", "empirical_gaussian"]
+CovarianceModel = Literal["bernoulli", "multinomial_drop_last", "empirical_gaussian"]
 
 _CATEGORICAL_COLUMN_PATTERN = re.compile(r"^F(?P<feature>\d+)_c(?P<category>\d+)$")
 
@@ -59,7 +59,7 @@ class FeatureBlock:
                     f"Categorical block {self.name!r} must contain at least two categories."
                 )
             expected_chart = "simplex_drop_last"
-            expected_covariance = "multinomial"
+            expected_covariance = "multinomial_drop_last"
             expected_contrast_dimension = len(self.column_indices) - 1
         elif self.family == "continuous":
             expected_chart = "identity"
@@ -182,20 +182,17 @@ def bernoulli_feature_space_from_columns(columns: Sequence[object]) -> FeatureSp
 
 
 def continuous_feature_space_from_columns(columns: Sequence[object]) -> FeatureSpace:
-    """Build one empirical-Gaussian continuous block per column."""
+    """Build one empirical-Gaussian block spanning all continuous columns."""
     column_names = tuple(str(column) for column in columns)
-    blocks = tuple(
-        FeatureBlock(
-            name=column_name,
-            family="continuous",
-            column_indices=(column_index,),
-            chart="identity",
-            covariance="empirical_gaussian",
-            contrast_dimension=1,
-        )
-        for column_index, column_name in enumerate(column_names)
+    block = FeatureBlock(
+        name="continuous",
+        family="continuous",
+        column_indices=tuple(range(len(column_names))),
+        chart="identity",
+        covariance="empirical_gaussian",
+        contrast_dimension=len(column_names),
     )
-    return FeatureSpace(column_names=column_names, blocks=blocks)
+    return FeatureSpace(column_names=column_names, blocks=(block,))
 
 
 def contains_categorical_feature_columns(columns: Sequence[object]) -> bool:
@@ -252,7 +249,7 @@ def infer_feature_space_from_columns(columns: Sequence[object]) -> FeatureSpace:
             family="categorical",
             column_indices=column_indices,
             chart="simplex_drop_last",
-            covariance="multinomial",
+            covariance="multinomial_drop_last",
             contrast_dimension=len(column_indices) - 1,
         )
 

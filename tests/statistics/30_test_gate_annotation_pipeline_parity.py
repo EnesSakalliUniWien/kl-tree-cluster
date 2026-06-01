@@ -104,7 +104,7 @@ def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatc
         run_gate_annotation_pipeline(
             tree,
             base_df.copy(),
-            alpha_local=0.01,
+            edge_alpha=0.01,
             sibling_alpha=0.01,
             leaf_data=leaf_data,
         )

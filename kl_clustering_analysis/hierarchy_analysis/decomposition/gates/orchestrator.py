@@ -16,7 +16,7 @@ from ...statistics.child_parent_divergence.child_parent_divergence_annotation.ch
     annotate_child_parent_divergence_with_context,
 )
 from ...statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
-    GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
 from ...statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
@@ -28,7 +28,7 @@ from ...statistics.sibling_divergence.projection.gate_inputs.projection_dimensio
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from .annotation_bundle import (
-    Gate2Result,
+    EdgeGateResult,
     GateAnnotationBundle,
     GateAnnotationConfigMetadata,
     GateAnnotationLeafDataMetadata,
@@ -50,20 +50,20 @@ class _SiblingGateInputs:
 
 def _build_edge_metadata(
     *,
-    alpha_local: float,
+    edge_alpha: float,
 ) -> GateMetadata:
-    """Build metadata for Gate 2 output.
+    """Build metadata for edge-gate output.
 
     Tree-BH is the only supported FDR method, so not stored in metadata.
     """
-    return GateMetadata(gate="edge", alpha=float(alpha_local))
+    return GateMetadata(gate="edge", alpha=float(edge_alpha))
 
 
 def _build_sibling_metadata(
     *,
     sibling_alpha: float,
 ) -> GateMetadata:
-    """Build metadata for Gate 3 output."""
+    """Build metadata for sibling-gate output."""
     return GateMetadata(gate="sibling", alpha=float(sibling_alpha))
 
 
@@ -71,7 +71,7 @@ def build_gate_annotation_config_metadata() -> GateAnnotationConfigMetadata:
     """Capture config values that affect gate annotation outputs."""
     return GateAnnotationConfigMetadata(
         felsenstein_scaling=bool(config.FELSENSTEIN_SCALING),
-        spectral_minimum_dimension=GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        spectral_minimum_dimension=EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
         include_internal_in_spectral=bool(config.INCLUDE_INTERNAL_IN_SPECTRAL),
     )
 
@@ -114,13 +114,13 @@ def build_gate_annotation_leaf_data_metadata(
 
 def _resolve_sibling_gate_inputs(
     tree,
-    gate_two_result: Gate2Result,
+    edge_gate_result: EdgeGateResult,
 ) -> _SiblingGateInputs:
-    """Resolve Gate 3 inputs from Gate 2 context."""
+    """Resolve sibling-gate inputs from edge-gate context."""
     resolved_projection_dimensions_from_edge_comparisons = (
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
             tree,
-            spectral_context=gate_two_result.spectral_context,
+            spectral_context=edge_gate_result.spectral_context,
         )
     )
     (
@@ -128,14 +128,14 @@ def _resolve_sibling_gate_inputs(
         resolved_parent_principal_component_eigenvalues,
     ) = collect_parent_principal_component_inputs_for_sibling_tests(
         resolved_projection_dimensions_from_edge_comparisons,
-        spectral_context=gate_two_result.spectral_context,
+        spectral_context=edge_gate_result.spectral_context,
     )
     expected_parent_keys = set(resolved_projection_dimensions_from_edge_comparisons)
     projection_keys = set(resolved_parent_principal_component_projections)
     eigenvalue_keys = set(resolved_parent_principal_component_eigenvalues)
     if projection_keys != expected_parent_keys or eigenvalue_keys != expected_parent_keys:
         raise ValueError(
-            "Gate 3 parent PCA inputs must be keyed exactly by sibling projection parents. "
+            "Sibling-gate parent PCA inputs must be keyed exactly by sibling projection parents. "
             f"expected={sorted(expected_parent_keys)!r}, "
             f"projection_keys={sorted(projection_keys)!r}, "
             f"eigenvalue_keys={sorted(eigenvalue_keys)!r}."
@@ -158,44 +158,44 @@ def run_gate_annotation_pipeline(
     tree,
     annotations_df: pd.DataFrame,
     *,
-    alpha_local: float = config.EDGE_ALPHA,
+    edge_alpha: float = config.EDGE_ALPHA,
     sibling_alpha: float = config.SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
 ) -> GateAnnotationBundle:
-    """Run Gate 2 (edge) and Gate 3 (sibling) annotation pipeline.
+    """Run the edge-gate and sibling-gate annotation pipeline.
 
-    Gate 2 uses Tree-BH (Tree-structured Benjamini-Hochberg) for FDR correction.
-    This is the only supported multiple-testing method.
+    The edge-divergence gate uses Tree-BH (Tree-structured Benjamini-Hochberg) for FDR
+    correction. This is the only supported edge multiple-testing method.
     """
     stage_timings = {
-        "gate2_contrast_covariance_sec": 0.0,
-        "gate2_projection_sec": 0.0,
-        "gate2_wald_statistic_sec": 0.0,
-        "gate2_tree_bh_sec": 0.0,
-        "gate3_pair_record_collection_sec": 0.0,
-        "gate3_inflation_fit_sec": 0.0,
-        "gate3_adjusted_tests_sec": 0.0,
-        "gate3_sibling_fdr_sec": 0.0,
+        "edge_gate_contrast_covariance_sec": 0.0,
+        "edge_gate_projection_sec": 0.0,
+        "edge_gate_wald_statistic_sec": 0.0,
+        "edge_gate_tree_bh_sec": 0.0,
+        "sibling_gate_pair_record_collection_sec": 0.0,
+        "sibling_gate_inflation_fit_sec": 0.0,
+        "sibling_gate_adjusted_tests_sec": 0.0,
+        "sibling_gate_fdr_sec": 0.0,
     }
 
-    # Run Gate 2: child-parent edge tests
-    gate2_start_sec = perf_counter()
+    # Run edge-divergence gate: child-parent edge tests
+    edge_gate_start_sec = perf_counter()
     edge_annotated_df, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
         annotations_df,
-        significance_level_alpha=alpha_local,
+        significance_level_alpha=edge_alpha,
         leaf_data=leaf_data,
         feature_space=feature_space,
         stage_timings=stage_timings,
     )
-    gate2_sec = float(perf_counter() - gate2_start_sec)
+    edge_gate_sec = float(perf_counter() - edge_gate_start_sec)
     stage_timings.update(spectral_context.stage_timings)
     validate_edge_gate_columns(edge_annotated_df)
     edge_metadata = _build_edge_metadata(
-        alpha_local=alpha_local,
+        edge_alpha=edge_alpha,
     )
-    gate_two_result = Gate2Result(
+    edge_gate_result = EdgeGateResult(
         annotated_df=edge_annotated_df,
         spectral_context=spectral_context,
         metadata=edge_metadata,
@@ -203,11 +203,11 @@ def run_gate_annotation_pipeline(
 
     sibling_inputs = _resolve_sibling_gate_inputs(
         tree,
-        gate_two_result,
+        edge_gate_result,
     )
 
-    # Run Gate 3: sibling divergence tests
-    gate3_start_sec = perf_counter()
+    # Run sibling-divergence gate
+    sibling_gate_start_sec = perf_counter()
     annotated_df = annotate_sibling_divergence(
         tree,
         edge_annotated_df,
@@ -224,7 +224,7 @@ def run_gate_annotation_pipeline(
         feature_space=feature_space,
         stage_timings=stage_timings,
     )
-    gate3_sec = float(perf_counter() - gate3_start_sec)
+    sibling_gate_sec = float(perf_counter() - sibling_gate_start_sec)
     validate_edge_gate_columns(
         annotated_df,
         error_context="Sibling gate input/output edge columns differ from required contract",
@@ -245,13 +245,13 @@ def run_gate_annotation_pipeline(
         ),
     )
 
-    stage_timings["gate2_sec"] = gate2_sec
-    stage_timings["gate3_sec"] = gate3_sec
+    stage_timings["edge_gate_sec"] = edge_gate_sec
+    stage_timings["sibling_gate_sec"] = sibling_gate_sec
 
     return GateAnnotationBundle(
         annotated_df=annotated_df,
         metadata=metadata,
-        gate_two_result=gate_two_result,
+        edge_gate_result=edge_gate_result,
         stage_timings=stage_timings,
     )
 

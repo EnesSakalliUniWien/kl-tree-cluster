@@ -1,4 +1,4 @@
-"""Spectral context preparation for Gate 2 child-parent annotation."""
+"""Spectral context preparation for edge-divergence annotation."""
 
 from __future__ import annotations
 
@@ -13,12 +13,12 @@ from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ...projection.spectral.tree_estimator import compute_spectral_decomposition
 
-GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = 2
+EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = 2
 
 
 @dataclass
 class SpectralContext:
-    """Gate 2 spectral outputs reused by Gate 3 sibling tests."""
+    """Edge-gate spectral outputs reused by sibling-divergence tests."""
 
     test_projection_dimensions_by_node: dict[str, int]
     raw_mp_signal_counts_by_node: dict[str, int]
@@ -34,14 +34,14 @@ def _validate_spectral_context_outputs(
     principal_component_projections_by_node: dict[str, np.ndarray],
     principal_component_eigenvalues_by_node: dict[str, np.ndarray],
 ) -> None:
-    """Validate the paired Gate 2 PCA outputs before they enter Gate 3."""
+    """Validate paired edge-gate PCA outputs before sibling testing."""
     projection_nodes = set(principal_component_projections_by_node)
     eigenvalue_nodes = set(principal_component_eigenvalues_by_node)
     if projection_nodes != eigenvalue_nodes:
         missing_eigenvalues = sorted(projection_nodes - eigenvalue_nodes)
         missing_projections = sorted(eigenvalue_nodes - projection_nodes)
         raise ValueError(
-            "Gate 2 spectral context requires matching PCA projection/eigenvalue node keys. "
+            "Edge-gate spectral context requires matching PCA projection/eigenvalue node keys. "
             f"Missing eigenvalues for {missing_eigenvalues}; "
             f"missing projections for {missing_projections}."
         )
@@ -50,7 +50,7 @@ def _validate_spectral_context_outputs(
     missing_dimensions = sorted(projection_nodes - dimension_nodes)
     if missing_dimensions:
         raise ValueError(
-            "Gate 2 spectral context has PCA outputs without test projection dimensions for "
+            "Edge-gate spectral context has PCA outputs without test projection dimensions for "
             f"node(s): {missing_dimensions}."
         )
     missing_projection_outputs = sorted(
@@ -60,7 +60,7 @@ def _validate_spectral_context_outputs(
     )
     if missing_projection_outputs:
         raise ValueError(
-            "Gate 2 spectral context has positive test projection dimensions without PCA outputs "
+            "Edge-gate spectral context has positive test projection dimensions without PCA outputs "
             f"for node(s): {missing_projection_outputs}."
         )
 
@@ -69,22 +69,22 @@ def _validate_spectral_context_outputs(
         eigenvalues = np.asarray(principal_component_eigenvalues_by_node[node_id])
         if projection.ndim != 2:
             raise ValueError(
-                f"Gate 2 PCA projection for node {node_id!r} must be a 2-D matrix; "
+                f"Edge-gate PCA projection for node {node_id!r} must be a 2-D matrix; "
                 f"got shape {projection.shape}."
             )
         if eigenvalues.ndim != 1:
             raise ValueError(
-                f"Gate 2 PCA eigenvalues for node {node_id!r} must be a 1-D vector; "
+                f"Edge-gate PCA eigenvalues for node {node_id!r} must be a 1-D vector; "
                 f"got shape {eigenvalues.shape}."
             )
         if projection.shape[0] != eigenvalues.shape[0]:
             raise ValueError(
-                f"Gate 2 PCA projection/eigenvalue row count mismatch for node {node_id!r}: "
+                f"Edge-gate PCA projection/eigenvalue row count mismatch for node {node_id!r}: "
                 f"{projection.shape[0]} projection row(s), {eigenvalues.shape[0]} eigenvalue(s)."
             )
         if projection.shape[0] != int(test_projection_dimensions_by_node[node_id]):
             raise ValueError(
-                f"Gate 2 PCA projection row count for node {node_id!r} must match its "
+                f"Edge-gate PCA projection row count for node {node_id!r} must match its "
                 "test projection dimension."
             )
 
@@ -95,13 +95,13 @@ def compute_child_parent_spectral_context(
     *,
     feature_space: FeatureSpace | None = None,
 ) -> SpectralContext:
-    """Prepare Marchenko-Pastur spectral context for Gate 2."""
+    """Prepare Marchenko-Pastur spectral context for the edge gate."""
     start_sec = perf_counter()
     spectral_decomposition = compute_spectral_decomposition(
         tree,
         leaf_data,
         feature_space=feature_space,
-        minimum_projection_dimension=GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        minimum_projection_dimension=EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     )
 
     _validate_spectral_context_outputs(
@@ -132,7 +132,7 @@ def compute_child_parent_spectral_context(
 
 
 __all__ = [
-    "GATE2_SPECTRAL_MINIMUM_PROJECTION_DIMENSION",
+    "EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION",
     "SpectralContext",
     "compute_child_parent_spectral_context",
 ]

@@ -9,7 +9,7 @@ SIBLING_ALPHA: float = 0.01
 
 # --- Decomposition Parameters ---
 
-# Default significance level for Gate 2 edge (child-vs-parent) tests.
+# Default significance level for edge-divergence (child-vs-parent) tests.
 EDGE_ALPHA: float = 0.001
 
 
@@ -37,18 +37,18 @@ TREE_LINKAGE_METHOD: str = "average"
 # Internal distributions are convex combinations of leaf data — they do NOT
 # increase rank but inflate n_desc, which tightens the MP noise bounds
 # (smaller √(d/n)) and makes signal detection slightly more sensitive.
-# WARNING: Setting to False catastrophically inflates Gate 2 false positives
+# WARNING: Setting to False catastrophically inflates edge-gate false positives
 # on null data (edge_T1 goes from 2% to 89%).
 # Keeping True is recommended for consistency.
 INCLUDE_INTERNAL_IN_SPECTRAL: bool = True
 
 # --- Pass-Through Traversal ---
 
-# When True, the DFS traversal continues past nodes where Gate 3 fails
+# When True, the DFS traversal continues past nodes where the sibling gate fails
 # (siblings declared "same") IF any descendant has a significant sibling
 # split (Sibling_BH_Different == True).  This prevents deep structure from
 # being masked by a non-significant split at a higher level.  The descendant-
 # signal flag is precomputed bottom-up in O(n) so it adds no cost to the
-# hot path.  When False, the original greedy behaviour is used: Gate 3
+# hot path.  When False, the original greedy behaviour is used: sibling-gate
 # failure immediately merges all descendants into one cluster.
 PASSTHROUGH: bool = True

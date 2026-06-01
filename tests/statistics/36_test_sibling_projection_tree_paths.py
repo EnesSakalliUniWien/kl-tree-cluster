@@ -248,7 +248,7 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
 
     test_projection_dimensions_by_node = (
-        bundle.gate_two_result.spectral_context.test_projection_dimensions_by_node
+        bundle.edge_gate_result.spectral_context.test_projection_dimensions_by_node
     )
     assert test_projection_dimensions_by_node["L1"] == 0
     assert test_projection_dimensions_by_node["L2"] == 0
@@ -263,7 +263,7 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
     sibling_projection_dimensions_from_edge_comparisons = (
         derive_sibling_projection_dimensions_from_child_edge_comparisons(
             tree,
-            spectral_context=bundle.gate_two_result.spectral_context,
+            spectral_context=bundle.edge_gate_result.spectral_context,
         )
     )
     assert set(sibling_projection_dimensions_from_edge_comparisons) == {

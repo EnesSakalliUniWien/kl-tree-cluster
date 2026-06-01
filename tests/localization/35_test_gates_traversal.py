@@ -64,7 +64,7 @@ def _make_deep_tree() -> PosetTree:
 def _make_gate(
     tree: nx.DiGraph | None = None,
     *,
-    local_significant: dict[str, bool] | None = None,
+    edge_divergent: dict[str, bool] | None = None,
     sibling_different: dict[str, bool] | None = None,
     sibling_skipped: dict[str, bool] | None = None,
     children_map: dict[str, list[str]] | None = None,
@@ -76,8 +76,8 @@ def _make_gate(
     if children_map is None:
         children_map = {node: list(tree.successors(node)) for node in tree.nodes}
 
-    if local_significant is None:
-        local_significant = {node: True for node in tree.nodes}
+    if edge_divergent is None:
+        edge_divergent = {node: True for node in tree.nodes}
 
     if sibling_different is None:
         sibling_different = {node: True for node in tree.nodes}
@@ -87,7 +87,7 @@ def _make_gate(
 
     return GateEvaluator(
         tree=tree,
-        local_significant=local_significant,
+        edge_divergent=edge_divergent,
         sibling_different=sibling_different,
         sibling_skipped=sibling_skipped,
         children_map=children_map,
@@ -98,7 +98,7 @@ def _make_gate(
 def _make_annotations(
     tree: nx.DiGraph,
     *,
-    local_significant: dict[str, bool],
+    edge_divergent: dict[str, bool],
     sibling_different: dict[str, bool],
     sibling_skipped: dict[str, bool] | None = None,
 ) -> pd.DataFrame:
@@ -107,7 +107,7 @@ def _make_annotations(
 
     return pd.DataFrame(
         {
-            "Child_Parent_Divergence_Significant": pd.Series(local_significant, dtype=bool),
+            "Child_Parent_Divergence_Significant": pd.Series(edge_divergent, dtype=bool),
             "Sibling_BH_Different": pd.Series(sibling_different, dtype=bool),
             "Sibling_Divergence_Skipped": pd.Series(sibling_skipped, dtype=bool),
         }
@@ -172,9 +172,9 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
 
-    def test_gate2_neither_child_diverges(self) -> None:
+    def test_edge_gate_neither_child_diverges(self) -> None:
         gate = _make_gate(
-            local_significant={
+            edge_divergent={
                 "root": True,
                 "L": False,
                 "R": False,
@@ -186,9 +186,9 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
 
-    def test_gate2_one_child_diverges(self) -> None:
+    def test_edge_gate_one_child_diverges(self) -> None:
         gate = _make_gate(
-            local_significant={
+            edge_divergent={
                 "root": True,
                 "L": True,
                 "R": False,
@@ -200,11 +200,11 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.SPLIT
 
-    def test_gate2_missing_annotations_raises(self) -> None:
-        with pytest.raises(ValueError, match="Missing local_significant values"):
-            _make_gate(local_significant={})
+    def test_edge_gate_missing_annotations_raises(self) -> None:
+        with pytest.raises(ValueError, match="Missing edge_divergent values"):
+            _make_gate(edge_divergent={})
 
-    def test_gate3_siblings_same(self) -> None:
+    def test_sibling_gate_siblings_same(self) -> None:
         gate = _make_gate(
             sibling_different={
                 "root": False,
@@ -218,10 +218,10 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
 
-    def test_gate3_siblings_different(self) -> None:
+    def test_sibling_gate_siblings_different(self) -> None:
         assert _make_gate().decision("root") is TraversalDecision.SPLIT
 
-    def test_gate3_skipped_returns_false(self) -> None:
+    def test_sibling_gate_skipped_returns_false(self) -> None:
         gate = _make_gate(
             sibling_skipped={
                 "root": True,
@@ -235,7 +235,7 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
 
-    def test_gate3_missing_annotations_raises(self) -> None:
+    def test_sibling_gate_missing_annotations_raises(self) -> None:
         with pytest.raises(ValueError, match="Missing sibling_different values"):
             _make_gate(sibling_different={})
 
@@ -254,7 +254,7 @@ class TestGateEvaluator:
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
 
-    def test_passthrough_when_gate3_fails_with_descendant_signal(self) -> None:
+    def test_passthrough_when_sibling_gate_fails_with_descendant_signal(self) -> None:
         tree = _make_deep_tree()
         sibling_different = {node: False for node in tree.nodes}
         sibling_different["B"] = True
@@ -285,7 +285,7 @@ class TestGateEvaluator:
 
         assert gate.decision("root") is TraversalDecision.PASS_THROUGH
 
-    def test_no_passthrough_when_gate3_passes(self) -> None:
+    def test_no_passthrough_when_sibling_gate_passes(self) -> None:
         gate = _make_gate(
             passthrough=True,
         )
@@ -294,7 +294,7 @@ class TestGateEvaluator:
     def test_no_passthrough_when_gates_1_2_fail(self) -> None:
         gate = _make_gate(
             passthrough=True,
-            local_significant={
+            edge_divergent={
                 "root": False,
                 "L": False,
                 "R": False,
@@ -327,7 +327,7 @@ class TestTreeDecompositionTraversal:
         tree = _make_binary_tree()
         annotations_df = _make_annotations(
             tree,
-            local_significant={node: True for node in tree.nodes},
+            edge_divergent={node: True for node in tree.nodes},
             sibling_different={node: True for node in tree.nodes},
         )
 
@@ -345,13 +345,13 @@ class TestTreeDecompositionTraversal:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         tree = _make_deep_tree()
-        local_significant = {node: True for node in tree.nodes}
+        edge_divergent = {node: True for node in tree.nodes}
         sibling_different = {node: False for node in tree.nodes}
         sibling_different["B"] = True
 
         annotations_df = _make_annotations(
             tree,
-            local_significant=local_significant,
+            edge_divergent=edge_divergent,
             sibling_different=sibling_different,
         )
 
@@ -369,13 +369,13 @@ class TestTreeDecompositionTraversal:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         tree = _make_deep_tree()
-        local_significant = {node: True for node in tree.nodes}
+        edge_divergent = {node: True for node in tree.nodes}
         sibling_different = {node: False for node in tree.nodes}
         sibling_different["B"] = True
 
         annotations_df = _make_annotations(
             tree,
-            local_significant=local_significant,
+            edge_divergent=edge_divergent,
             sibling_different=sibling_different,
         )
 
@@ -393,15 +393,15 @@ class TestTreeDecompositionTraversal:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         tree = _make_deep_tree()
-        local_significant = {node: True for node in tree.nodes}
-        local_significant["C"] = False
-        local_significant["D"] = False
+        edge_divergent = {node: True for node in tree.nodes}
+        edge_divergent["C"] = False
+        edge_divergent["D"] = False
         sibling_different = {node: False for node in tree.nodes}
         sibling_different["B"] = True
 
         annotations_df = _make_annotations(
             tree,
-            local_significant=local_significant,
+            edge_divergent=edge_divergent,
             sibling_different=sibling_different,
         )
 

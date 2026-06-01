@@ -1,2 +1,1 @@
-"""Gate 2 -> Gate 3 projection inputs for sibling divergence."""
-
+"""Projection inputs passed from the edge gate to sibling-divergence tests."""

@@ -84,7 +84,7 @@ The `benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_00
 python scripts/analysis/run_feature_matrix_with_umap.py \
     --input data/feature_matrices/HC_feature_matrix_GO_CC.tsv \
     --output-dir benchmarks/results/02_hc_cms_go_runs/data_alpha_runs/results_GO_CC_alpha_005 \
-    --alpha-local 0.05 --sibling-alpha 0.05
+    --edge-alpha 0.05 --sibling-alpha 0.05
 
 # Biological analysis
 python scripts/analysis/analyze_hc_clusters.py \

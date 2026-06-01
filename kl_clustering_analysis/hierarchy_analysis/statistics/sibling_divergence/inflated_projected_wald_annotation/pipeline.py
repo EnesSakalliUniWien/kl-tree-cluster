@@ -78,8 +78,8 @@ def annotate_sibling_divergence(
         feature_space=feature_space,
     )
     if stage_timings is not None:
-        stage_timings["gate3_pair_record_collection_sec"] = float(
-            stage_timings.get("gate3_pair_record_collection_sec", 0.0)
+        stage_timings["sibling_gate_pair_record_collection_sec"] = float(
+            stage_timings.get("sibling_gate_pair_record_collection_sec", 0.0)
         ) + float(perf_counter() - collection_start_sec)
 
     mark_non_binary_as_skipped(annotations_df, non_binary)
@@ -104,16 +104,16 @@ def annotate_sibling_divergence(
             skipped_parents=skipped_parents,
         )
         if stage_timings is not None:
-            stage_timings["gate3_sibling_fdr_sec"] = float(
-                stage_timings.get("gate3_sibling_fdr_sec", 0.0)
+            stage_timings["sibling_gate_fdr_sec"] = float(
+                stage_timings.get("sibling_gate_fdr_sec", 0.0)
             ) + float(perf_counter() - sibling_fdr_start_sec)
         return result_df
 
     inflation_fit_start_sec = perf_counter()
     model = fit_empirical_null_inflation_model(records)
     if stage_timings is not None:
-        stage_timings["gate3_inflation_fit_sec"] = float(
-            stage_timings.get("gate3_inflation_fit_sec", 0.0)
+        stage_timings["sibling_gate_inflation_fit_sec"] = float(
+            stage_timings.get("sibling_gate_inflation_fit_sec", 0.0)
         ) + float(perf_counter() - inflation_fit_start_sec)
 
     adjusted_tests_start_sec = perf_counter()
@@ -126,8 +126,8 @@ def annotate_sibling_divergence(
         model=model,
     )
     if stage_timings is not None:
-        stage_timings["gate3_adjusted_tests_sec"] = float(
-            stage_timings.get("gate3_adjusted_tests_sec", 0.0)
+        stage_timings["sibling_gate_adjusted_tests_sec"] = float(
+            stage_timings.get("sibling_gate_adjusted_tests_sec", 0.0)
         ) + float(perf_counter() - adjusted_tests_start_sec)
 
     sibling_fdr_start_sec = perf_counter()
@@ -141,8 +141,8 @@ def annotate_sibling_divergence(
         skipped_parents=skipped_parents,
     )
     if stage_timings is not None:
-        stage_timings["gate3_sibling_fdr_sec"] = float(
-            stage_timings.get("gate3_sibling_fdr_sec", 0.0)
+        stage_timings["sibling_gate_fdr_sec"] = float(
+            stage_timings.get("sibling_gate_fdr_sec", 0.0)
         ) + float(perf_counter() - sibling_fdr_start_sec)
 
     return annotations_df

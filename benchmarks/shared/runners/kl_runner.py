@@ -50,7 +50,7 @@ def _run_kl_on_distance(
     gate_annotation_bundle = run_gate_annotation_pipeline(
         tree,
         tree.annotations_df,
-        alpha_local=config.EDGE_ALPHA,
+        edge_alpha=config.EDGE_ALPHA,
         sibling_alpha=sibling_significance_level,
         leaf_data=data_df,
         feature_space=feature_space,
@@ -62,7 +62,7 @@ def _run_kl_on_distance(
         gate_annotation_bundle=gate_annotation_bundle,
         leaf_data=data_df,
         feature_space=feature_space,
-        alpha_local=config.EDGE_ALPHA,
+        edge_alpha=config.EDGE_ALPHA,
         sibling_alpha=sibling_significance_level,
     )
     traversal_start_sec = perf_counter()

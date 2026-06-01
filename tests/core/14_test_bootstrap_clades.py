@@ -41,4 +41,4 @@ def test_bootstrap_consensus_does_not_rewrite_zero_alpha_to_default() -> None:
     )
 
     with pytest.raises(ValueError, match="alpha"):
-        bootstrap_consensus(data, n_boot=1, alpha_local=0.0, random_seed=0)
+        bootstrap_consensus(data, n_boot=1, edge_alpha=0.0, random_seed=0)

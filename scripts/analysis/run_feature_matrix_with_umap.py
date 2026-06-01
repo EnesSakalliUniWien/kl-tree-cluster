@@ -69,16 +69,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--alpha-local",
+        "--edge-alpha",
         type=float,
         default=float(config.EDGE_ALPHA),
-        help="Gate 2 significance alpha (child-parent).",
+        help="Edge-divergence significance alpha.",
     )
     parser.add_argument(
         "--sibling-alpha",
         type=float,
         default=float(config.SIBLING_ALPHA),
-        help="Gate 3 significance alpha (sibling).",
+        help="Sibling-divergence significance alpha.",
     )
     parser.add_argument(
         "--umap-neighbors",
@@ -222,7 +222,7 @@ def _load_binary_matrix(path: Path) -> pd.DataFrame:
 
 def _run_decomposition(
     data_df: pd.DataFrame,
-    alpha_local: float,
+    edge_alpha: float,
     sibling_alpha: float,
     tree_method: str,
     tree_distance_metric: str,
@@ -257,7 +257,7 @@ def _run_decomposition(
     tree = tree_from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
     decomposition = tree.decompose(
         leaf_data=data_df,
-        alpha_local=alpha_local,
+        edge_alpha=edge_alpha,
         sibling_alpha=sibling_alpha,
     )
 
@@ -822,7 +822,7 @@ def main() -> None:
         print("Running KL decomposition...")
         tree, decomposition, assignments = _run_decomposition(
             data_df=data_df,
-            alpha_local=args.alpha_local,
+            edge_alpha=args.edge_alpha,
             sibling_alpha=args.sibling_alpha,
             tree_method=args.tree_method,
             tree_distance_metric=args.tree_distance_metric,
@@ -876,8 +876,8 @@ def main() -> None:
         "n_samples": int(data_df.shape[0]),
         "n_features": int(data_df.shape[1]),
         "num_clusters": int(decomposition.get("num_clusters", -1)),
-        "alpha_local": (
-            float(args.alpha_local)
+        "edge_alpha": (
+            float(args.edge_alpha)
             if args.tree_method != "paper_cosine_complete" and args.flat_cluster_count is None
             else None
         ),

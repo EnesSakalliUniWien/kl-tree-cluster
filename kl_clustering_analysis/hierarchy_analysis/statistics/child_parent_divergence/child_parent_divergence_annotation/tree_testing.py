@@ -1,4 +1,4 @@
-"""Tree-wide execution helpers for Gate 2 child-parent annotation."""
+"""Tree-wide execution helpers for edge-divergence annotation."""
 
 from __future__ import annotations
 

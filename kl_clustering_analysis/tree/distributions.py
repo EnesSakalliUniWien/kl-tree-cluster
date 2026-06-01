@@ -2,7 +2,8 @@
 Distribution population for tree nodes.
 
 This module handles bottom-up propagation of typed raw feature coordinates
-from leaf nodes to internal nodes.
+from leaf nodes to internal nodes. Internal node distributions are empirical
+subtree barycenters: leaf-count-weighted means of their child distributions.
 """
 
 from typing import Any, Dict
@@ -21,6 +22,44 @@ from kl_clustering_analysis.tree.feature_space import (
 
 CONTINUOUS_COVARIANCE_BY_BLOCK = "continuous_covariance_by_block"
 _CONTINUOUS_SCATTER_BY_BLOCK = "_continuous_scatter_by_block"
+MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION = 4096
+MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES = 512 * 1024 * 1024
+
+
+def _validate_exact_continuous_covariance_feasibility(
+    tree: nx.DiGraph,
+    feature_space: FeatureSpace,
+) -> None:
+    """Fail before allocating dense empirical-Gaussian covariance work state."""
+    if not feature_space.has_continuous_blocks:
+        return
+
+    node_count = int(tree.number_of_nodes())
+    for block in feature_space.continuous_blocks:
+        block_dimension = int(block.raw_dimension)
+        if block_dimension > MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION:
+            raise ValueError(
+                "Dense empirical-Gaussian covariance is only implemented for "
+                "moderate-dimensional continuous blocks. "
+                f"Block {block.name!r} has raw_dimension={block_dimension}; "
+                "the exact dense covariance contract currently supports at most "
+                f"{MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION}. "
+                "Use a lower-dimensional continuous benchmark or add a validated "
+                "low-rank covariance implementation."
+            )
+
+        estimated_work_bytes = node_count * block_dimension * block_dimension * 8
+        if estimated_work_bytes > MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES:
+            raise ValueError(
+                "Dense empirical-Gaussian covariance work state would exceed the "
+                "active implementation memory contract. "
+                f"Block {block.name!r} has raw_dimension={block_dimension} across "
+                f"{node_count} tree nodes, requiring about "
+                f"{estimated_work_bytes / (1024 * 1024):.1f} MiB of scatter state; "
+                f"limit is {MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES / (1024 * 1024):.1f} MiB. "
+                "Use a lower-dimensional continuous benchmark or add a validated "
+                "low-rank covariance implementation."
+            )
 
 
 def _calculate_leaf_distribution(
@@ -75,7 +114,8 @@ def _calculate_hierarchy_node_distribution(
 ) -> None:
     """Compute an internal node's distribution from its immediate children.
 
-    If each child already stores ``distribution`` and ``leaf_count``, then
+    If each child already stores ``distribution`` and ``leaf_count``, then the
+    parent distribution is the empirical subtree barycenter
 
         parent_distribution =
             sum(child_leaf_count_i * child_distribution_i) /
@@ -209,6 +249,7 @@ def populate_distributions(
         DataFrame where index matches leaf labels and columns are features.
     """
     active_feature_space = resolve_feature_space(tuple(leaf_data.columns), feature_space)
+    _validate_exact_continuous_covariance_feasibility(tree, active_feature_space)
 
     # Vectorized extraction of leaf values; avoids per-row Series allocation from iterrows().
     leaf_feature_matrix = validate_feature_matrix(

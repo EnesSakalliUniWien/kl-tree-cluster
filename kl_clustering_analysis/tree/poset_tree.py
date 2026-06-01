@@ -214,7 +214,8 @@ class PosetTree(nx.DiGraph):
         """Populate tree nodes with distributions and build stats DataFrame.
 
         Populates each node with:
-        - distribution: weighted mean of leaf/child distributions
+        - distribution: empirical subtree barycenter, computed as the
+          leaf-count-weighted mean of leaf/child distributions
         - leaf_count: number of descendant leaves
 
         Node distributions are stored as flat raw-coordinate vectors. The
@@ -276,7 +277,7 @@ class PosetTree(nx.DiGraph):
             annotation.
         **decomposer_kwargs
             Extra keyword arguments forwarded to ``TreeDecomposition`` (e.g.,
-            ``alpha_local``, ``sibling_alpha``).
+            ``edge_alpha``, ``sibling_alpha``).
 
         Returns
         -------
@@ -284,7 +285,7 @@ class PosetTree(nx.DiGraph):
             Decomposition output from ``TreeDecomposition.decompose_tree``.
         """
         # Extract alpha values from kwargs (with defaults from config)
-        alpha_local = decomposer_kwargs.pop("alpha_local", config.EDGE_ALPHA)
+        edge_alpha = decomposer_kwargs.pop("edge_alpha", config.EDGE_ALPHA)
         sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
 
         if annotations_df is not None and gate_annotation_bundle is not None:
@@ -307,7 +308,7 @@ class PosetTree(nx.DiGraph):
             tree=self,
             annotations_df=annotations_df,
             gate_annotation_bundle=gate_annotation_bundle,
-            alpha_local=alpha_local,
+            edge_alpha=edge_alpha,
             sibling_alpha=sibling_alpha,
             leaf_data=leaf_data,
             feature_space=feature_space,

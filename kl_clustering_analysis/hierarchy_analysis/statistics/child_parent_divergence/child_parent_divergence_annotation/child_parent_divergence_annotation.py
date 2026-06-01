@@ -1,4 +1,4 @@
-"""Child-parent divergence annotation for Gate 2."""
+"""Child-parent divergence annotation for the edge gate."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def annotate_child_parent_divergence(
     """Test child-parent divergence using the projected Wald pipeline.
 
     Uses Tree-BH (Tree-structured Benjamini-Hochberg) for FDR correction.
-    This is the only supported multiple-testing correction method for Gate 2.
+    This is the only supported multiple-testing correction method for the edge gate.
     """
     annotated_df, _spectral_context = annotate_child_parent_divergence_with_context(
         tree,
@@ -57,7 +57,7 @@ def annotate_child_parent_divergence_with_context(
     feature_space: FeatureSpace | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[pd.DataFrame, SpectralContext]:
-    """Test child-parent divergence and return typed Gate 2 spectral context."""
+    """Test child-parent divergence and return typed edge-gate spectral context."""
     annotations_df = annotations_df.copy()
     edge_alpha = float(significance_level_alpha)
 
@@ -69,7 +69,7 @@ def annotate_child_parent_divergence_with_context(
         raise ValueError("Tree has no edges. Cannot compute child-parent divergence.")
     if leaf_data is None:
         raise ValueError(
-            "Child-parent projected Wald tests require leaf_data so Gate 2 can provide "
+            "Child-parent projected Wald tests require leaf_data so the edge gate can provide "
             "test projection dimensions and PCA bases."
         )
 
@@ -144,8 +144,8 @@ def annotate_child_parent_divergence_with_context(
         edge_alpha=edge_alpha,
     )
     if stage_timings is not None:
-        stage_timings["gate2_tree_bh_sec"] = float(
-            stage_timings.get("gate2_tree_bh_sec", 0.0)
+        stage_timings["edge_gate_tree_bh_sec"] = float(
+            stage_timings.get("edge_gate_tree_bh_sec", 0.0)
         ) + float(perf_counter() - tree_bh_start_sec)
 
     annotated_df = assign_divergence_results(

@@ -25,7 +25,7 @@ def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
     decomposition = tree.decompose(
         annotations_df=tree.annotations_df,
         leaf_data=data_df,
-        alpha_local=config.EDGE_ALPHA,
+        edge_alpha=config.EDGE_ALPHA,
         sibling_alpha=significance_level,
         **kwargs,
     )

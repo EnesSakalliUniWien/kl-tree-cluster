@@ -126,9 +126,9 @@ _OVERVIEW_TEXT = dedent(
     Statistical gates applied at each internal node:
       Gate 1 -- Binary structure:
         The parent node must have exactly 2 children.
-      Gate 2 -- Child-parent divergence:
+      edge gate -- Child-parent divergence:
         Projected Wald chi-squared test on KL(child || parent).
-      Gate 3 -- Sibling divergence:
+      sibling gate -- Sibling divergence:
         Calibrated projected Wald test on KL(left || right)
         with Benjamini-Hochberg false discovery rate correction.
 

@@ -34,21 +34,21 @@ class TreeDecomposition:
     """Annotate a hierarchy with significance tests and carve it into clusters.
 
     The decomposer walks a :class:`~tree.poset_tree.PosetTree` top-down and decides
-    whether to split or merge at each internal node based on three statistical gates:
+    whether to split or stop at each internal node. A split requires one structure
+    prerequisite and two statistical gates:
 
-    #. **Binary structure gate** - parent must have exactly two children to split.
-    #. **Child-parent divergence gate** - at least one child must significantly
-       diverge from the parent (projected Wald chi-square test), confirming
-       there is real signal to split on.
+    #. **Binary structure prerequisite** - parent must have exactly two children.
+    #. **Edge divergence gate** - at least one child must significantly diverge
+       from the parent (projected Wald chi-square test), confirming there is
+       edge-level signal to split on.
     #. **Sibling divergence gate** - siblings must have significantly different
        distributions according to a projected Wald chi-square test with
-       Benjamini-Hochberg FDR correction.  If siblings are significantly
-       different, the split proceeds; otherwise the children are merged
-       into a single cluster.
+       empirical-null inflation and sibling FDR correction.
 
-    Nodes that pass all gates become cluster boundaries. Leaves under the same
-    boundary node are assigned the same cluster identifier. The resulting report
-    captures the cluster root node, member leaves, and cluster size.
+    Nodes that do not split become cluster boundaries. Leaves under the same
+    boundary node are assigned the same cluster identifier. In pass-through mode,
+    a closed sibling-divergence gate may still allow traversal to descendants when a deeper
+    split is already supported.
     """
 
     def __init__(
@@ -57,7 +57,7 @@ class TreeDecomposition:
         annotations_df: pd.DataFrame | None = None,
         *,
         gate_annotation_bundle: GateAnnotationBundle | None = None,
-        alpha_local: float = config.EDGE_ALPHA,
+        edge_alpha: float = config.EDGE_ALPHA,
         sibling_alpha: float = config.SIBLING_ALPHA,
         leaf_data: pd.DataFrame | None = None,
         feature_space: FeatureSpace | None = None,
@@ -76,11 +76,10 @@ class TreeDecomposition:
         gate_annotation_bundle
             Explicit reusable output from ``run_gate_annotation_pipeline``.
             This is the only cache-valid gate annotation contract.
-        alpha_local
-            Significance level used when the local Kullback-Leibler divergence gate
-            falls back to raw chi-square tests.
+        edge_alpha
+            Significance level used by the child-parent edge-divergence gate.
         sibling_alpha
-            Significance level used by sibling-independence annotations and gating.
+            Significance level used by sibling-divergence annotations and gating.
         leaf_data
             Raw feature matrix required for per-node spectral dimension estimation.
             Missing leaf data is a contract error for the gate annotation pipeline.
@@ -96,7 +95,7 @@ class TreeDecomposition:
             self.annotations_df = annotations_df
         else:
             self.annotations_df = pd.DataFrame()
-        self.alpha_local = float(alpha_local)
+        self.edge_alpha = float(edge_alpha)
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
         self._feature_space = feature_space
@@ -112,7 +111,7 @@ class TreeDecomposition:
         # ----- ensure statistical annotations are present -----
         self.annotations_df = self._prepare_annotations(self.annotations_df)
 
-        self._local_significant = self._extract_required_bool_annotation_column(
+        self._edge_divergent = self._extract_required_bool_annotation_column(
             "Child_Parent_Divergence_Significant"
         )
         # Sibling divergence test: Sibling_BH_Different = True means siblings differ -> SPLIT
@@ -132,7 +131,7 @@ class TreeDecomposition:
         # ----- construct the GateEvaluator -----
         self._gate = GateEvaluator(
             tree=self.tree,
-            local_significant=self._local_significant,
+            edge_divergent=self._edge_divergent,
             sibling_different=self._sibling_different,
             sibling_skipped=self._sibling_skipped,
             children_map=self._children,
@@ -156,7 +155,7 @@ class TreeDecomposition:
         annotation_bundle = run_gate_annotation_pipeline(
             self.tree,
             annotations_df,
-            alpha_local=self.alpha_local,
+            edge_alpha=self.edge_alpha,
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
             feature_space=self._feature_space,
@@ -192,7 +191,7 @@ class TreeDecomposition:
 
         return (
             metadata.pipeline == "gate_annotation"
-            and metadata.edge.alpha == self.alpha_local
+            and metadata.edge.alpha == self.edge_alpha
             and metadata.sibling.alpha == self.sibling_alpha
             and metadata.config == build_gate_annotation_config_metadata()
             and metadata.leaf_data
@@ -249,7 +248,7 @@ class TreeDecomposition:
             "cluster_assignments": cluster_assignments,
             "num_clusters": len(cluster_assignments),
             "independence_analysis": {
-                "alpha_local": self.alpha_local,
+                "edge_alpha": self.edge_alpha,
                 "decision_mode": "sibling_divergence",
             },
         }

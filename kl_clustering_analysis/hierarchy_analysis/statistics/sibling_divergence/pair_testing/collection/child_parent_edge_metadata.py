@@ -23,7 +23,7 @@ def validate_child_parent_edge_annotation_requirements(
     if missing_columns:
         raise ValueError(
             "Missing child-parent edge annotation columns. "
-            "Run the canonical child-parent gate first. "
+            "Run the canonical edge-divergence gate first. "
             f"Missing columns: {missing_columns!r}."
         )
 

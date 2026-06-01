@@ -32,7 +32,7 @@ class TestComputeProjectedPvalue:
             compute_projected_pvalue(projected, eigenvalues=None)
 
     def test_rejects_empty_eigenvalues(self):
-        """An empty spectrum is malformed Gate 2 PCA context."""
+        """An empty spectrum is malformed edge-gate PCA context."""
         rng = np.random.default_rng(42)
         projected = rng.standard_normal(5)
 
@@ -60,10 +60,10 @@ class TestComputeProjectedPvalue:
 
 
 class TestSpectralKFloor:
-    """Verify the Gate 2 spectral path uses its fixed small floor."""
+    """Verify the edge-gate spectral path uses its fixed small floor."""
 
-    def test_gate2_spectral_minimum_projection_dimension_is_fixed(self, monkeypatch):
-        """Gate 2 should pass the fixed spectral floor into the spectral estimator."""
+    def test_edge_gate_spectral_minimum_projection_dimension_is_fixed(self, monkeypatch):
+        """The edge gate should pass the fixed spectral floor into the spectral estimator."""
         import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
         import networkx as nx
 
@@ -103,10 +103,10 @@ class TestSpectralKFloor:
 
         assert captured == [2]
 
-    def test_gate2_spectral_context_requires_paired_projection_eigenvalue_keys(
+    def test_edge_gate_spectral_context_requires_paired_projection_eigenvalue_keys(
         self, monkeypatch
     ):
-        """Gate 2 PCA projections and eigenvalues must be keyed identically."""
+        """Edge-gate PCA projections and eigenvalues must be keyed identically."""
         import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
         import networkx as nx
 
@@ -140,10 +140,10 @@ class TestSpectralKFloor:
         with pytest.raises(ValueError, match="matching PCA projection/eigenvalue node keys"):
             spectral_module.compute_child_parent_spectral_context(tree, leaf_data)
 
-    def test_gate2_spectral_context_requires_projection_rows_to_match_eigenvalues(
+    def test_edge_gate_spectral_context_requires_projection_rows_to_match_eigenvalues(
         self, monkeypatch
     ):
-        """Gate 2 PCA projection row count must match the whitening eigenvalues."""
+        """Edge-gate PCA projection row count must match the whitening eigenvalues."""
         import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
         import networkx as nx
 

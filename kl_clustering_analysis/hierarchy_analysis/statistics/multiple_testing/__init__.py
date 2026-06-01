@@ -1,6 +1,7 @@
 """Multiple testing correction utilities for statistical hypothesis testing.
 
-This package provides multiple-testing utilities used by the Tree-BH Gate 2 pipeline.
+This package provides multiple-testing utilities used by the Tree-BH
+edge-divergence pipeline.
 
 Modules
 -------

@@ -71,7 +71,7 @@ def test_pipeline_supports_current_gate_annotation_contract() -> None:
     bundle = run_gate_annotation_pipeline(
         tree,
         annotations_df.copy(),
-        alpha_local=0.01,
+        edge_alpha=0.01,
         sibling_alpha=0.01,
         leaf_data=leaf_data,
     )
@@ -92,7 +92,7 @@ def test_pipeline_requires_leaf_data_for_spectral_gate_context() -> None:
         run_gate_annotation_pipeline(
             tree,
             annotations_df.copy(),
-            alpha_local=0.01,
+            edge_alpha=0.01,
             sibling_alpha=0.01,
             leaf_data=None,
         )

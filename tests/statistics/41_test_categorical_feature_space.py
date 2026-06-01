@@ -17,6 +17,7 @@ from kl_clustering_analysis.tree.distributions import CONTINUOUS_COVARIANCE_BY_B
 from kl_clustering_analysis.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
+    continuous_feature_space_from_columns,
     infer_feature_space_from_columns,
     validate_feature_matrix,
 )
@@ -219,6 +220,25 @@ def test_populate_node_divergences_stores_continuous_means_and_covariances() -> 
         tree.nodes["L0"][CONTINUOUS_COVARIANCE_BY_BLOCK]["X"],
         np.zeros((2, 2), dtype=np.float64),
     )
+
+
+def test_populate_node_divergences_rejects_oversized_dense_continuous_covariance() -> None:
+    tree = PosetTree()
+    tree.add_node("root", is_leaf=False)
+    tree.add_node("L0", is_leaf=True, label="L0")
+    tree.add_node("L1", is_leaf=True, label="L1")
+    tree.add_edge("root", "L0")
+    tree.add_edge("root", "L1")
+    columns = tuple(f"X{i}" for i in range(4097))
+    leaf_data = pd.DataFrame(
+        np.zeros((2, len(columns)), dtype=np.float64),
+        index=["L0", "L1"],
+        columns=columns,
+    )
+    feature_space = continuous_feature_space_from_columns(columns)
+
+    with pytest.raises(ValueError, match="Dense empirical-Gaussian covariance"):
+        tree.populate_node_divergences(leaf_data, feature_space=feature_space)
 
 
 def test_populate_node_divergences_rejects_incomplete_one_hot_category_blocks() -> None:

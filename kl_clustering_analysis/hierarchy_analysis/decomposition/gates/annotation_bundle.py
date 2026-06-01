@@ -51,8 +51,8 @@ class GateAnnotationMetadata:
 
 
 @dataclass
-class Gate2Result:
-    """Gate 2 output passed into the sibling gate."""
+class EdgeGateResult:
+    """Edge-gate output passed into sibling-divergence annotation."""
 
     annotated_df: pd.DataFrame
     spectral_context: SpectralContext
@@ -65,12 +65,12 @@ class GateAnnotationBundle:
 
     annotated_df: pd.DataFrame
     metadata: GateAnnotationMetadata
-    gate_two_result: Gate2Result
+    edge_gate_result: EdgeGateResult
     stage_timings: dict[str, float] = field(default_factory=dict)
 
 
 __all__ = [
-    "Gate2Result",
+    "EdgeGateResult",
     "GateAnnotationBundle",
     "GateAnnotationConfigMetadata",
     "GateAnnotationLeafDataMetadata",

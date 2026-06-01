@@ -267,16 +267,15 @@ def test_diagonal_bernoulli_null_whitening_matches_block_formula() -> None:
 
     assert hasattr(
         contrast_covariance_module,
-        "_build_diagonal_null_whitened_tangent_matrix",
+        "_build_bernoulli_null_whitened_tangent_matrix",
     )
-    vectorized = contrast_covariance_module._build_diagonal_null_whitened_tangent_matrix(
+    vectorized = contrast_covariance_module._build_bernoulli_null_whitened_tangent_matrix(
         observations,
         null_distribution,
         contrast_covariance_module._resolve_distribution_feature_space(
             null_distribution,
             None,
         ),
-        {},
         ridge=1e-12,
     )
 
@@ -298,7 +297,19 @@ def test_diagonal_bernoulli_null_whitening_matches_block_formula() -> None:
     np.testing.assert_allclose(vectorized, expected, rtol=0.0, atol=0.0)
 
 
-def test_diagonal_continuous_null_whitening_matches_block_formula() -> None:
+def test_continuous_feature_space_from_columns_builds_one_full_covariance_block() -> None:
+    feature_space = continuous_feature_space_from_columns(("X0", "X1", "X2"))
+
+    assert feature_space.family_label == "continuous"
+    assert len(feature_space.blocks) == 1
+    block = feature_space.blocks[0]
+    assert block.name == "continuous"
+    assert block.column_indices == (0, 1, 2)
+    assert block.contrast_dimension == 3
+    assert block.covariance == "empirical_gaussian"
+
+
+def test_continuous_null_whitening_uses_full_empirical_gaussian_block() -> None:
     feature_space = continuous_feature_space_from_columns(("X0", "X1", "X2"))
     observations = np.array(
         [
@@ -310,36 +321,43 @@ def test_diagonal_continuous_null_whitening_matches_block_formula() -> None:
     )
     null_distribution = np.array([1.0, -0.5, 6.0], dtype=np.float64)
     covariance_by_block = {
-        "X0": np.array([[4.0]], dtype=np.float64),
-        "X1": np.array([[9.0]], dtype=np.float64),
-        "X2": np.array([[16.0]], dtype=np.float64),
+        "continuous": np.array(
+            [[4.0, 1.0, 0.5], [1.0, 9.0, 0.25], [0.5, 0.25, 16.0]],
+            dtype=np.float64,
+        ),
     }
 
-    assert hasattr(
-        contrast_covariance_module,
-        "_build_diagonal_null_whitened_tangent_matrix",
-    )
-    vectorized = contrast_covariance_module._build_diagonal_null_whitened_tangent_matrix(
+    tangent_rows = build_null_whitened_tangent_matrix(
         observations,
         null_distribution,
-        feature_space,
-        covariance_by_block,
+        feature_space=feature_space,
+        continuous_covariance_by_block=covariance_by_block,
         ridge=1e-12,
     )
 
-    expected = np.column_stack(
-        [
-            contrast_covariance_module._block_null_whitened_tangent_matrix(
-                observations,
-                null_distribution,
-                block,
-                continuous_covariance_by_block=covariance_by_block,
-                ridge=1e-12,
-            )
-            for block in feature_space.blocks
-        ]
+    cholesky = np.linalg.cholesky(covariance_by_block["continuous"] + 1e-12 * np.eye(3))
+    expected = np.linalg.solve(
+        cholesky,
+        (observations - null_distribution).T,
     )
-    np.testing.assert_allclose(vectorized, expected, rtol=1e-14, atol=1e-14)
+    np.testing.assert_allclose(tangent_rows, expected.T, rtol=1e-14, atol=1e-14)
+
+
+def test_continuous_covariance_rejects_non_psd_blocks() -> None:
+    feature_space = continuous_feature_space_from_columns(("X0", "X1"))
+
+    with pytest.raises(ValueError, match="positive semidefinite"):
+        build_contrast_covariance(
+            np.array([0.0, 1.0], dtype=np.float64),
+            np.array([1.0, 0.0], dtype=np.float64),
+            10.0,
+            12.0,
+            comparison="sibling",
+            feature_space=feature_space,
+            continuous_covariance_by_block={
+                "continuous": np.array([[1.0, 3.0], [3.0, 1.0]], dtype=np.float64)
+            },
+        )
 
 
 def test_grouped_categorical_null_whitening_matches_block_formula() -> None:
@@ -540,17 +558,18 @@ def test_vectorized_categorical_wald_whitening_matches_block_formula() -> None:
     np.testing.assert_allclose(vectorized_z, block_z, rtol=1e-13, atol=1e-13)
 
 
-def test_vectorized_diagonal_continuous_wald_whitening_matches_block_formula() -> None:
+def test_continuous_wald_whitening_matches_full_block_formula() -> None:
     feature_space = continuous_feature_space_from_columns(("X0", "X1", "X2"))
     covariance_by_block = {
-        "X0": np.array([[4.0]], dtype=np.float64),
-        "X1": np.array([[9.0]], dtype=np.float64),
-        "X2": np.array([[16.0]], dtype=np.float64),
+        "continuous": np.array(
+            [[4.0, 1.0, 0.5], [1.0, 9.0, 0.25], [0.5, 0.25, 16.0]],
+            dtype=np.float64,
+        ),
     }
     left = np.array([2.0, -1.0, 5.0], dtype=np.float64)
     right = np.array([1.5, 0.0, 4.0], dtype=np.float64)
 
-    vectorized_z = compute_whitened_wald_contrast(
+    public_z = compute_whitened_wald_contrast(
         left,
         right,
         20.0,
@@ -571,7 +590,7 @@ def test_vectorized_diagonal_continuous_wald_whitening_matches_block_formula() -
         ridge=1e-12,
     ).whitened_vector()
 
-    np.testing.assert_allclose(vectorized_z, block_z, rtol=1e-14, atol=1e-14)
+    np.testing.assert_allclose(public_z, block_z, rtol=1e-14, atol=1e-14)
 
 
 def test_sibling_contrast_rejects_child_parent_branch_length_parameter() -> None:
