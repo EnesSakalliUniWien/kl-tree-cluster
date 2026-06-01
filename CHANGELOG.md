@@ -11,7 +11,7 @@ All notable changes to this project are documented in this file.
 
 ### Refactored
 - **Step 3.4 — `gates.py` extraction**: Gate logic (`should_split`, `should_split_v2`, `_check_edge_significance`) extracted from `TreeDecomposition` into `GateEvaluator` class in `gates.py` (343 lines). `tree_decomposition.py` reduced from 992 to 757 lines (−234 lines). `decompose_tree()` and `decompose_tree_v2()` now delegate to free functions `iterate_worklist`, `process_node`, `process_node_v2` in `gates.py`. `GateEvaluator` constructor accepts injected `children_map`, `descendant_leaf_sets`, `root` to decouple from `PosetTree` internals. Five dead inline methods removed.
-- **Power guard in `should_split_v2`** (`gates.py`): When signal localization finds zero significant difference pairs after BH correction, returns `(True, None)` — trusting the aggregate Gate 3 SPLIT but discarding the powerless localization result. Prevents false cross-boundary merges via similarity-only edges.
+- **Power guard in `should_split_v2`** (`gates.py`): When signal localization finds zero significant difference pairs after BH correction, returns `(True, None)` — trusting the aggregate sibling-divergence gate SPLIT but discarding the powerless localization result. Prevents false cross-boundary merges via similarity-only edges.
 
 ### Fixed
 - **Benchmark hang on high-dimensional cases**: `gaussian_extreme_noise_2` (n=300, d=2000, K=30) previously hung due to ~598 × O(2000³) eigendecompositions at every internal node. Dual-form optimization and information cap eliminate the hang.

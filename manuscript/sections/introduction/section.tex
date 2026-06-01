@@ -31,15 +31,11 @@ distribution, whether the two children are actually distinct enough to
 represent separate clusters, or whether scanning the entire tree has produced
 false positives.
 
-The method therefore requires two kinds of evidence. First, a split should not
-survive unless at least one child meaningfully departs from its ancestral
-context. Second, even that is not enough: a parent can contain one drifting
-branch or a mild asymmetry without supporting two stable child clusters, so the
-children themselves must also be distinguishable from one another. This is why
-the method uses both a child-parent edge test and a sibling test. The final
-partition keeps a split only when both questions are answered favorably after
-multiple-testing correction, that is, an adjustment for the fact that many
-candidate splits are tested across the same hierarchy.
+KL-TE treats that split decision as a two-stage statistical question. A split
+must first show evidence that at least one child departs from its parent. It
+must then show that the two children are distinct from one another. The final
+partition is built only after these local decisions have been corrected for the
+many candidate splits examined across the hierarchy.
 
 Four inferential complications shape the design. The child is a subset of its
 parent, so the edge comparison is nested rather than an ordinary two-sample
@@ -79,16 +75,8 @@ is useful both computationally and scientifically: the statistical support for
 each potential split is stored explicitly and can be audited independently of
 the resulting partition.
 
-The presentation follows that decision problem in order. It first constructs the
-tree and node distributions that define the candidate splits. It then asks
-whether a child departs from its parent, explains why that test needs a nested
-variance formula because the child group is contained inside the parent group,
-and uses a parent-local summary of the feature space, meaning a lower-dimensional
-description built from the variation visible below that parent. It then applies
-hierarchical multiple-testing control across the tree. Next it asks whether the
-two children under the same parent are genuinely distinct, and explains why
-that sibling comparison needs a post-selection calibration step, meaning a
-correction for the bias introduced when the same data are used both to choose a
-split and to test it. Only after both evidence tables are in place does the
-final tree traversal, that is, the top-down walk that decides where splitting
-stops, convert them into clusters.
+The presentation follows that decision problem in order. It first defines the
+tree and node distributions. It then gives the child-parent edge test, the
+tree-level multiplicity correction, the sibling test with its post-selection
+inflation layer, and the final top-down traversal that converts test
+annotations into clusters.

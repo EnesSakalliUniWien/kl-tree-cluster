@@ -7,7 +7,6 @@ import re
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 WIKI_DIR = ROOT / "wiki"
 INDEX = WIKI_DIR / "index.md"

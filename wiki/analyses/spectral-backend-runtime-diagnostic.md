@@ -2,7 +2,7 @@
 title: Spectral Backend Runtime Diagnostic
 type: analysis
 status: reviewed
-updated: 2026-05-26
+updated: 2026-06-01
 sources:
   - benchmarks/diagnostics/spectral/profile_spectral_backends.py
   - benchmarks/results/diagnostics/spectral_backend_profile_20260526.csv
@@ -27,17 +27,13 @@ tags:
 The main KL spectral runtime bottleneck was not SciPy eigendecomposition. On
 representative slow cases, eigensolves on already materialized node-local
 matrices took milliseconds. Runtime was dominated by repeated construction of
-null-whitened tangent matrices, especially loops over one-dimensional
-Bernoulli or continuous blocks that called tiny Cholesky solves thousands of
-times per node.
+null-whitened tangent matrices.
 
-An exact vectorized diagnostic for pure diagonal Bernoulli and continuous
-feature spaces produced the same matrices, with maximum absolute differences
-of \(0\) for Bernoulli and \(4.4\times 10^{-16}\) for continuous cases. The
-measured materialization speedups were about \(194\times\) on
-`binary_many_features`, \(343\times\) on
-`dim_consolidated_4c_72f_continuous`, and \(654\times\) on
-`gauss_extreme_noise_highd_continuous`.
+The 2026-05-26 profile first tested a diagonal shortcut for pure Bernoulli and
+one-dimensional continuous blocks. That shortcut is no longer the active
+continuous contract: generated continuous benchmark inputs now use one full
+empirical-Gaussian block spanning the raw continuous columns. The retained
+production shortcut is the exact vectorized Bernoulli whitening map.
 
 A broader 22-case profile confirmed that this is not isolated to the initial
 four cases. Across Gaussian, binary, continuous Gaussian, outlier, SBM,
@@ -47,15 +43,12 @@ materialized matrices. The slowest non-diagonal cases were high-dimensional
 categorical and phylogenetic one-hot datasets, where the next exact speed path
 is grouped multinomial/simplex whitening rather than diagonal whitening.
 
-The first production repair is now implemented in `contrast_covariance.py`.
-Pure one-dimensional Bernoulli and continuous empirical-Gaussian feature spaces
-use exact vectorized diagonal validation and whitening. This does not change
-the mathematical map. The post-change representative profile reduced
-`binary_many_features` from 3.25 s to 0.11 s, reduced
-`dim_consolidated_4c_72f_continuous` from 1.39 s to 0.035 s, and reduced
-`gauss_extreme_noise_highd_continuous` from 91.10 s to 1.05 s in the spectral
-worker. The high-cardinality categorical case remained about 1.23 s because it
-uses non-diagonal multinomial simplex blocks.
+The first production repair implemented exact vectorized Bernoulli validation
+and whitening in `contrast_covariance.py`. This does not change the
+mathematical map for Bernoulli blocks. The historical post-change profile
+reduced `binary_many_features` from 3.25 s to 0.11 s in the spectral worker.
+The continuous diagonal speedup recorded on 2026-05-26 is now historical
+evidence for an abandoned covariance contract, not current production behavior.
 
 The second production repair grouped pure categorical and phylogenetic
 one-hot blocks by category count and applied the same multinomial
@@ -105,19 +98,16 @@ projection path was slightly slower than full `eigh` in these small local
 matrices, because the tree nodes have few rows even when the raw feature
 dimension is large.
 
-The exact diagonal vectorization diagnostic is the highest-value production
-repair already made. For Bernoulli blocks, the null-whitened tangent map is
+The exact Bernoulli vectorization diagnostic is the highest-value production
+repair already made for binary blocks. For Bernoulli blocks, the
+null-whitened tangent map is
 \[
   (x-p)/\sqrt{p(1-p)+\epsilon},
 \]
-which can be applied to all one-dimensional blocks in one NumPy operation. For
-continuous one-dimensional empirical-Gaussian blocks, the map is
-\[
-  (x-\mu)/\sqrt{\widehat\sigma^2+\epsilon},
-\]
-again vectorizable across all blocks. Before the repair, the generic block path
-looped over blocks and invoked Cholesky factorization and triangular solves
-even when each block was \(1\times 1\).
+which can be applied to all one-dimensional Bernoulli blocks in one NumPy
+operation. Before the repair, the generic block path looped over blocks and
+invoked Cholesky factorization and triangular solves even when each block was
+\(1\times 1\).
 
 Categorical high-cardinality data did not enter the diagonal vectorization
 arm, because each categorical feature is a multi-category simplex block. It
@@ -144,12 +134,11 @@ drop-last simplex coordinates. They still have the same runtime shape:
 materialization dominates exact eigendecomposition. Therefore the appropriate
 production design is a family-specific exact whitening backend:
 
-- vectorized diagonal whitening for pure one-dimensional Bernoulli and
-  continuous empirical-Gaussian blocks;
+- vectorized whitening for pure one-dimensional Bernoulli blocks;
 - grouped multinomial Cholesky/solve by category count for categorical and
   phylogenetic one-hot blocks;
-- generic block whitening only for genuinely mixed or irregular feature-space
-  contracts.
+- generic block whitening for continuous empirical-Gaussian blocks and
+  genuinely mixed or irregular feature-space contracts.
 
 After diagonal vectorization, the diagonal-family cases are no longer dominated
 by block-loop materialization:
@@ -198,11 +187,11 @@ feature-space contracts.
   records the post-repair broader family profile.
 - `spectral_backend_profile_after_grouped_categorical_20260526.csv` records
   the post-repair grouped categorical and phylogenetic profile.
-- `contrast_covariance.py` now contains an exact vectorized diagonal whitening
-  path for pure one-dimensional Bernoulli and continuous feature spaces, plus
-  exact grouped multinomial whitening for pure categorical one-hot feature
-  spaces; the generic block path remains for mixed and multidimensional
-  continuous blocks.
+- `contrast_covariance.py` now contains an exact vectorized Bernoulli
+  whitening path for pure one-dimensional Bernoulli feature spaces, plus exact
+  grouped multinomial whitening for pure categorical one-hot feature spaces;
+  continuous empirical-Gaussian blocks use the generic full-block covariance
+  path.
 - `marchenko_pastur.py` calls `build_null_whitened_tangent_matrix()` for each
   node before eigendecomposition.
 - `tree_estimator.py` builds the per-node spectral tasks from the production
@@ -219,7 +208,7 @@ feature-space contracts.
 ## Open Questions
 
 - Should full benchmark result rows include stage timings for tree population,
-  tangent materialization, eigendecomposition, Gate 2, Gate 3, and traversal?
+  tangent materialization, eigendecomposition, edge gate, sibling gate, and traversal?
 - Should partial eigensolvers remain diagnostic-only until a workload appears
   where eigendecomposition, not tangent materialization, dominates?
 - Do genuinely mixed or irregular feature-space contracts need a compiled

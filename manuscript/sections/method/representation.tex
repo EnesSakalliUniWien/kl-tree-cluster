@@ -6,9 +6,10 @@
 method. This subsection introduces the tree objects in plain language before
 writing them formally, because the statistical tests operate on subtree
 summaries rather than directly on individual samples. All supported inputs are
-first mapped into one working discrete sample-feature matrix $X$, and the
-method then builds a rooted agglomerative tree $\mathcal{T} = (V,E)$ using
-Hamming distance and average linkage.
+first mapped into one working sample-feature matrix $X$ with an explicit
+feature-space contract. Binary and one-hot cases use Hamming distance and
+average linkage for the candidate tree; explicit continuous benchmark cases use
+the recorded continuous distance matrix.
 
 For a non-expert reader, the important point is that the tree is a
 bookkeeping device for nested groups of samples. Each leaf corresponds to one
@@ -100,16 +101,20 @@ through one-hot indicators
 \qquad
 k = 0,\dots,K-1,
 \end{equation}
-so that the same Bernoulli or indicator formulas apply on the expanded feature
-space. This expansion creates deterministic within-feature constraints because
-the indicators for one categorical variable sum to one; the current method
-operates on the expanded indicator coordinates and does not separately model a
-multinomial block covariance.
+so that the raw matrix contains the expanded indicator coordinates. The
+statistical contract does not treat those coordinates as independent Bernoulli
+variables. Instead, the feature-space object groups each one-hot variable into
+a drop-last simplex chart and uses the corresponding multinomial block
+covariance in the projected-Wald contrast.
 [TODO: validate the effect of one-hot compositional constraints on the
 projected edge and sibling tests, especially for high-cardinality categorical
 features.]
-Continuous inputs enter through an explicit preprocessing map into a
-discrete representation. One basic option is median binarization,
+Continuous inputs can enter through an explicit continuous feature-space
+contract. In that contract, the raw continuous columns form an
+empirical-Gaussian block, and each tree node stores the empirical descendant
+covariance matrix for that block. Historical binary benchmarks still use
+preprocessing maps into a discrete representation. One basic option is median
+binarization,
 \begin{equation}
 X_{ij}^{\mathrm{bin}}
 =
@@ -128,5 +133,6 @@ t_{jq} = Q_{q/K}(W_{\cdot j}),
 \end{equation}
 with the same indicator map
 $\tilde{X}_{i,j,k} = \mathbf{1}\{C_{ij} = k\}$. After this representation step,
-the same tree construction and testing logic are used for all supported input
-types.
+the testing logic reads the same node-distribution and feature-space contract;
+the tree-distance contract is recorded separately for binary, categorical, and
+continuous benchmark cases.

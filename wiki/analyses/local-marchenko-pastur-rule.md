@@ -66,7 +66,7 @@ The dimension estimator counts eigenvalues above
 \((1+\sqrt{d_u/m_u^{\mathrm{MP}}})^2\), then floors the returned dimension to
 the configured minimum. Here \(m_u^{\mathrm{MP}}\) is the row count used by the
 threshold; it is recorded separately from the effective independent row count
-\(m_u^{\mathrm{eff}}\). In the active Gate 2 context, the minimum dimension is
+\(m_u^{\mathrm{eff}}\). In the active edge-gate context, the minimum dimension is
 two. The raw MP signal count and the returned test dimension are therefore
 different mathematical objects:
 \[
@@ -190,7 +190,7 @@ not adding it as a production fallback.
   upper edge and returns an explicit dimension estimate with raw count, test
   dimension, effective independent row count, and MP threshold row count.
 - `spectral_decomposition_result.py` defines the typed tree-level spectral
-  output contract consumed by Gate 2 and Gate 3.
+  output contract consumed by edge gate and sibling gate.
 - `decomposition.py` and `operators.py` show that both primal and dual
   eigendecomposition paths divide by the same row count, preserving the
   feature-covariance eigenvalue scale.

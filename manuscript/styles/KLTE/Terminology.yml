@@ -6,7 +6,7 @@ swap:
   statistical gates: statistical tests
   gate annotations: test annotations
   passthrough: pass-through
-  Gate 2: edge test
-  Gate 3: sibling test
+  edge gate: edge test
+  sibling gate: sibling test
   TreeBH: hierarchical BH correction
   erank: effective rank

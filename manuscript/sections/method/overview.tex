@@ -16,16 +16,12 @@ split is supported strongly enough to remain as a cluster boundary. The role of
 the statistical method is therefore not to build the hierarchy from scratch,
 but to evaluate the splits proposed by that hierarchy.
 
-KL-TE answers this question in a direct way. After the data are represented in
-a common discrete sample-feature space and arranged into a rooted binary tree,
-each node is summarized by the empirical feature distribution of its descendant
-leaves. These subtree-level summaries are the basic inferential objects used in
-the rest of the method. For each proposed split, the child-parent edge test
-asks whether a child subtree differs from the broader background represented by
-its parent. The sibling test then asks whether the two child subtrees under the
-same parent differ enough from each other to justify treating them as separate
-clusters. A final top-down traversal turns these local decisions into a single
-partition of the leaves.
+KL-TE implements the split decision by separating representation, testing, and
+traversal. The representation step maps the samples into one working
+sample-feature matrix and summarizes every tree node by the empirical feature
+distribution of its descendant leaves. The testing step attaches child-parent
+and sibling evidence to the candidate split. The traversal step reads those
+annotations and returns one terminal partition.
 
 This structure is needed because the tree creates statistical issues that a
 purely geometric cut rule does not address. Parent and child are nested groups,
@@ -40,12 +36,9 @@ statistically convincing than it really is because it was selected from the
 same data on which it is later tested. The rest of this section develops the
 method in that order.
 
-Accordingly, the next subsection defines the representation and subtree objects
-used throughout. The edge-test and sibling-test subsections then formalize the
-two inferential stages, including the relevant variance models, projected test
-statistics, and correction steps. Only after those ingredients are in place do
-we describe the traversal rule that turns nodewise evidence into the returned
-cluster set.
+Accordingly, the next subsection defines the representation and subtree
+objects. The following subsections then introduce the edge test, the edge
+multiplicity correction, the sibling test, and the traversal rule.
 
 \begin{figure}[p]
 \centering
@@ -56,5 +49,4 @@ subtree-level distributions, evaluated with child-parent and sibling tests, and
 finally converted into terminal clusters by a top-down traversal. The schematic
 illustrates the inferential structure of the method rather than a literal
 execution trace.}
-\label{fig:pipeline-overview}
 \end{figure}

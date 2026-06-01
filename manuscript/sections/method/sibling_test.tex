@@ -225,13 +225,16 @@ Type~I error rate until that study is added.]
 \paragraph{Context-weighted empirical-null inflation.}
 The sibling calibration accounts for this extra optimism by estimating the
 runtime empirical inflation of the projected-Wald statistic from the empirical
-null visible inside the fitted hierarchy. For every binary parent $q$, let
-$T_q^{\mathrm{raw}}$ be the raw sibling statistic, let $a_q$ and $\nu_q$ be the
-reference scale and degrees of freedom returned by the projected-Wald kernel
-($a_q=1$ and $\nu_q=k_q$ for the current orthonormal PCA basis), let
-$\pi_q \in [0,1]$ be the sibling null weight implied by the two child-parent
-edge tests, and let $z_q$ denote the calibration context of the sibling
-comparison. In the current implementation,
+null visible inside the fitted hierarchy. The estimator has three ingredients:
+a raw sibling statistic, a weight describing how null-like that sibling context
+looks from the edge stage, and a scalar context used to borrow information
+across similar projection dimensions.
+
+For every binary parent $q$, let $T_q^{\mathrm{raw}}$ be the raw sibling
+statistic. Let $a_q$ and $\nu_q$ be the reference scale and degrees of freedom
+returned by the projected-Wald kernel, with $a_q=1$ and $\nu_q=k_q$ for the
+current orthonormal PCA basis. Let $\pi_q \in [0,1]$ be the sibling null weight
+implied by the two child-parent edge tests. In the current implementation,
 \begin{equation}
 \pi_q =
 \left(
@@ -256,7 +259,10 @@ a_q\,c(z_q)\,\chi^2_{\nu_q}.
 Here $a_q$ is the analytic projected-quadratic reference scale. In the current
 orthonormal projection implementation it is one, so $c(z_q)$ is the empirical
 post-selection inflation.
-For a focal sibling pair $u$, define context weights
+
+The estimator borrows calibration information most strongly from sibling
+records with similar context values. For a focal sibling pair $u$, define
+context weights
 \begin{equation}
 w_q(u)
 =
@@ -334,13 +340,15 @@ $\mathcal C_{\mathrm{stop},u}$ has positive mass, the estimate has only weak
 stopped-or-null support. If both are empty but $\mathcal C_{-u}$ has positive
 mass, the data provide selected non-null context but not empirical-null
 calibration. If $\mathcal C_{-u}$ has no positive mass, the local empirical-null
-calibration contract is unsatisfied. The current implementation raises a
-calibration-data error when the available records are only selected non-null
+calibration contract is unsatisfied.
+
+The production rule is intentionally strict. The current implementation raises
+a calibration-data error when the available records are only selected non-null
 contexts. The current diagnostics do not justify a separately named external
 calibration model for this case; production therefore fails closed. Any future
 external selection-conditioned model would first require validation under the
-full hierarchy-selection event, rather than being used as a fallback. The
-method must not silently substitute a neutral inflation factor.
+full hierarchy-selection event, rather than being used as a fallback. The method
+must not silently substitute a neutral inflation factor.
 The present evidence establishes this as a necessary support contract, not as a
 sufficient finite-sample guarantee. Minimum effective sample size thresholds
 remain a validation gap.

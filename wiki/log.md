@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-05-26
+updated: 2026-06-01
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -199,6 +199,46 @@ verification, and maintenance events here in chronological order.
   cases; post-repair profiles reduced `cat_highd_3cat_500feat` from about
   14.86 s to 0.31 s, `phylo_dna_16taxa_low_mut` from about 21.83 s to 0.46 s,
   and `phylo_large_32taxa` from about 27.32 s to 0.70 s in the spectral worker.
+- Removed stale numeric gate terminology from active code, benchmark timing
+  fields, tests, scripts, and method notes. The canonical split contract is
+  now the binary structure prerequisite, edge-divergence gate, and
+  sibling-divergence gate; node distributions are documented as empirical
+  subtree barycenters where that weighted-center construction is actually
+  used.
+
+### 2026-06-01
+
+- Settled the active feature covariance contract. Generated continuous
+  benchmark inputs now use one empirical-Gaussian block spanning the raw
+  continuous columns, categorical one-hot blocks are explicitly
+  `multinomial_drop_last`, and the old continuous diagonal whitening shortcut
+  was removed from active covariance code. Updated
+  [[open-mathematical-questions]] to mark covariance shape as settled while
+  preserving validation gaps for high-cardinality categorical and continuous
+  finite-sample calibration.
+- Added `benchmarks/validation/feature_covariance_calibration.py` as a strict
+  evidence generator for the two remaining feature-covariance validation
+  targets:
+  `categorical_multinomial_drop_last_covariance` and
+  `continuous_empirical_gaussian_covariance`. The scaffold records local
+  sibling-null full-tangent Wald calibration metrics, confidence intervals,
+  p-value uniformity diagnostics, seed, commit, dirty-worktree status, command,
+  and limitations; it does not claim to validate selected projections, MP
+  selection, sibling FDR, traversal, tree construction, or empirical-null
+  inflation.
+- Audited installation and benchmark-entrypoint hygiene. The canonical setup
+  path is now `uv venv --python 3.11 .venv` followed by
+  `uv sync --extra dev --extra benchmark --extra viz --locked`; the
+  `requirements.txt` fallback, direct benchmark path-bootstrap helper, pytest
+  import path injection, and bare `pytest`/direct benchmark documentation were
+  removed from active project surfaces.
+- Added a preflight implementation contract for dense empirical-Gaussian
+  continuous covariance. The exact dense path now raises a clear unsupported
+  error for oversized \(p \gg n\) continuous blocks instead of allowing the
+  process to be killed by scatter-matrix allocation. The 2026-06-01 full
+  benchmark completed with plots disabled after the 20,000-feature continuous
+  stress case was recorded as an explicit KL skip; a validated low-rank or
+  regularized continuous covariance model remains open.
 
 ## Evidence
 

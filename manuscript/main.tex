@@ -9,17 +9,15 @@
 \usepackage{amsmath, amssymb}
 \usepackage{booktabs}
 \usepackage{longtable}
-\usepackage{tabularx}
+\usepackage{array}
 \usepackage[numbers]{natbib}
-\usepackage{hyperref}
-\usepackage[capitalise,nameinlink,noabbrev]{cleveref}
-\usepackage{caption}
-\usepackage{subcaption}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, backgrounds, calc, fit, matrix, positioning}
+\usepackage{hyperref}
+\usepackage[capitalise,nameinlink,noabbrev]{cleveref}
 
 \hypersetup{
   colorlinks=true,
@@ -37,28 +35,19 @@
 \maketitle
 
 \begin{abstract}
-A hierarchical tree proposes many candidate splits, but geometric tree cuts do
-not say which of those splits are statistically credible. KL-TE is a
-statistically filtered hierarchical clustering method for binary,
-categorical, and discretized continuous sample-feature data. The method
-builds an average-linkage Hamming tree on a working discrete representation,
-assigns each internal node feature-wise distributions, and then answers the
-node-level split question with two statistical tests. The child-parent edge
-test asks whether at least one child truly differs from its parent; it uses a
-variance formula that respects the nested parent-child relationship, a
-parent-specific summary step, and false-discovery correction across
-edges. The sibling test asks whether the two children are genuinely distinct
-from one another; it reuses information from the edge stage, compares the
-siblings along the main directions of variation seen at the parent, and
-applies a context-weighted empirical-null inflation adjustment for the bias
-created by testing on a tree built from the same data before false-discovery
-correction across focal sibling pairs. Categorical inputs
-are handled through indicator expansion, while continuous inputs enter through
-explicit discretization before the same tree-and-test procedure is applied. The
-corrected test annotations are converted into clusters by a top-down
-pass-through traversal. The manuscript records the implemented method in its
-current form and provides the mathematical description needed for empirical
-evaluation.
+Hierarchical clustering exposes many candidate splits, but a geometric tree
+cut does not say which splits are statistically credible. KL-TE is a
+statistical filtering method for hierarchical clustering on binary,
+categorical, and discretized continuous sample-feature data. It builds a
+candidate hierarchy, summarizes each subtree by its empirical feature
+distribution, and annotates candidate splits with two tests. The child-parent
+edge test asks whether a child departs from its parent under a nested variance
+model. The sibling test asks whether the two children under the same parent are
+distinct after accounting for tree-selection scale distortion with a
+context-weighted empirical-null inflation estimate. A top-down traversal then
+turns the corrected annotations into terminal clusters. This manuscript records
+the implemented method and the validation gaps that must be closed before
+submission-level calibration or power claims can be made.
 \end{abstract}
 
 \input{sections/introduction/section}

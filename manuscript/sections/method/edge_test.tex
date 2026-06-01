@@ -74,16 +74,20 @@ the second problem: the edge evidence is high-dimensional and correlated.
 Summing $z_{u \to c,j}^2$ directly would overcount redundant coordinates and let
 noisy directions dominate just because they contribute many small correlated
 terms. The method therefore looks for a smaller set of parent-local directions
-that summarize the main variation seen below the parent, and it measures the
-edge deviation in that reduced space. For each parent node $u$, the
-method forms a local matrix $M_u$ whose rows are:
+that summarize the main variation seen below the parent.
+
+This step has three parts: build a local matrix, compute its principal
+directions, and retain a working number of directions. The edge deviation is
+then measured only in that reduced space. For each parent node $u$, the method
+forms a local matrix $M_u$ whose rows are:
 \begin{enumerate}[leftmargin=1.5em]
   \item all descendant leaf vectors $X_i$ for $i \in L(u)$, and
   \item all descendant internal-node distributions $\theta_v$ for proper
   descendants $v$ of $u$.
 \end{enumerate}
 After removing constant features, let $d_u$ be the number of active
-coordinates and let $m_u$ be the number of rows in $M_u$. The code computes the correlation matrix
+coordinates and let $m_u$ be the number of rows in $M_u$. The code computes the
+correlation matrix
 $C_u \in \mathbb{R}^{d_u \times d_u}$ and its eigen-decomposition
 \begin{equation}
 C_u = V_u \Lambda_u V_u^\top,
@@ -129,7 +133,8 @@ followed by normalization. This construction therefore obtains the same
 parent-local principal directions while replacing a potentially very large
 $d_u \times d_u$ eigendecomposition by a much smaller $m_u \times m_u$ one.
 
-The edge-stage structural dimension is selected by a local
+After the local directions are available, the remaining question is how many of
+them should enter the test. The edge-stage structural dimension is selected by a local
 Marchenko--Pastur signal-count rule
 \citep{marchenko1967distribution,johnstone2018pca}, rather than fixed
 globally. Eigenvalues above the Marchenko--Pastur upper noise edge are treated

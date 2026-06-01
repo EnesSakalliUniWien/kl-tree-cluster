@@ -11,8 +11,8 @@
   widepanel/.style={panel, minimum width=9.75cm, minimum height=4.75cm},
   paneltitle/.style={font=\bfseries\footnotesize, anchor=north west},
   treeline/.style={line width=0.9pt, draw=black!75},
-  gate2line/.style={draw=orange!98!black, line width=1.45pt},
-  gate3line/.style={draw=green!75!black, line width=1.45pt},
+  edgegateline/.style={draw=orange!98!black, line width=1.45pt},
+  siblinggateline/.style={draw=green!75!black, line width=1.45pt},
   cutline/.style={draw=red!75!black, line width=1.25pt, dashed},
   treept/.style={circle, draw=black!75, fill=white, minimum size=3.5mm, inner sep=0pt},
   leafchip/.style={draw=black!18, rounded corners=1pt, fill=white, inner sep=1pt, font=\tiny, align=center, text width=1cm}
@@ -41,14 +41,14 @@
 % Left: edge test
 \begin{scope}[shift={(p3.center)}, xshift=-2.2cm]
   \node[treept] (r3a) at (0,1) {}; \node[treept] (u3a) at (-0.8,0.2) {};
-  \draw[treeline] (r3a) -- (u3a); \draw[gate2line] (r3a) -- (u3a);
+  \draw[treeline] (r3a) -- (u3a); \draw[edgegateline] (r3a) -- (u3a);
   \node[anchor=north, font=\scriptsize, orange!80!black] at (0,-0.5) {Edge test: child signal};
 \end{scope}
 % Right: sibling test
 \begin{scope}[shift={(p3.center)}, xshift=2.2cm]
   \node[treept] (r3b) at (0,1) {}; \node[treept] (u3l) at (-0.8,0.2) {}; \node[treept] (u3r) at (0.8,0.2) {};
   \draw[treeline] (r3b) -- (u3l); \draw[treeline] (r3b) -- (u3r);
-  \draw[gate3line] ($(u3l)+(0.15,0.15)$) -- ($(u3r)+(-0.15,0.15)$);
+  \draw[siblinggateline] ($(u3l)+(0.15,0.15)$) -- ($(u3r)+(-0.15,0.15)$);
   \node[anchor=north, font=\scriptsize, green!60!black] at (0,-0.5) {Sibling test: child separation};
 \end{scope}
 
@@ -62,8 +62,8 @@
 \begin{tikzpicture}[
   x=1cm, y=1cm, font=\small, >=Latex,
   eqbox/.style={draw=black!25, rounded corners=1pt, fill=white, inner sep=3pt, font=\scriptsize, align=center, text width=3.5cm},
-  gate2box/.style={eqbox, draw=orange!98!black, fill=orange!5},
-  gate3box/.style={eqbox, draw=green!75!black, fill=green!5}
+  edgegatebox/.style={eqbox, draw=orange!98!black, fill=orange!5},
+  siblinggatebox/.style={eqbox, draw=green!75!black, fill=green!5}
 ]
 
 % Edge-test conceptual diagram
@@ -72,7 +72,7 @@
   \node[circle, draw, minimum size=8mm, label=above:Parent $P$] (P) at (0,1.5) {$\theta_P$};
   \node[circle, draw, minimum size=8mm, label=below:Child $C$] (C) at (0,-1) {$\theta_C$};
   \draw[->, line width=2pt, orange] (P) -- (C) node[midway, right, black] {Test $H_0: \theta_C = \theta_P$};
-  \node[gate2box] at (0,-2.5) {
+  \node[edgegatebox] at (0,-2.5) {
     \textbf{Projected Wald Test}\\
     $Var \propto \frac{1}{n_C} - \frac{1}{n_P}$\\
     Nested Variance Adjustment
@@ -87,7 +87,7 @@
   \node[circle, draw, minimum size=8mm] (R) at (1.2,0) {$\theta_R$};
   \draw (Parent) -- (L); \draw (Parent) -- (R);
   \draw[<->, line width=2pt, green!70!black] (L) -- (R) node[midway, below=2pt, black] {Test $H_0: \theta_L = \theta_R$};
-  \node[gate3box] at (0,-2.5) {
+  \node[siblinggatebox] at (0,-2.5) {
     \textbf{Calibration Step}\\
     $T_{adj} = T / \hat{c}(z)$\\
     Post-selection Scale Correction
@@ -140,15 +140,15 @@
 
 \node (start) [terminal] {Traverse Node $P$};
 \node (gate12) [decision, below of=start] {Binary split and edge signal?};
-\node (gate3) [decision, below of=gate12, yshift=-0.5cm] {Sibling split supported?};
-\node (split) [process, left of=gate3, xshift=-2.5cm] {KEEP SPLIT\\Recurse to Children};
-\node (merge) [process, right of=gate3, xshift=2.5cm] {MERGE AT $P$\\Stop Traversal};
+\node (siblinggate) [decision, below of=gate12, yshift=-0.5cm] {Sibling split supported?};
+\node (split) [process, left of=siblinggate, xshift=-2.5cm] {KEEP SPLIT\\Recurse to Children};
+\node (merge) [process, right of=siblinggate, xshift=2.5cm] {MERGE AT $P$\\Stop Traversal};
 
 \draw [arrow] (start) -- (gate12);
-\draw [arrow] (gate12) -- node[anchor=east] {Yes} (gate3);
+\draw [arrow] (gate12) -- node[anchor=east] {Yes} (siblinggate);
 \draw [arrow] (gate12) -| node[anchor=south, xshift=-1cm] {No} (merge);
-\draw [arrow] (gate3) -- node[anchor=south] {Yes} (split);
-\draw [arrow] (gate3) -- node[anchor=south] {No} (merge);
+\draw [arrow] (siblinggate) -- node[anchor=south] {Yes} (split);
+\draw [arrow] (siblinggate) -- node[anchor=south] {No} (merge);
 
 \node[anchor=north west, font=\tiny, text width=3cm, gray] at (gate12.east) {Binary parent\\Edge test significant};
 

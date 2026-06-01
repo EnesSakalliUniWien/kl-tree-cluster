@@ -25,12 +25,19 @@ is descriptive rather than justificatory; \Cref{tab:method-constants} records
 which defaults are analytically motivated, which are empirical working choices,
 and which still require validation.
 
-\begin{table}[ht]
-\centering
-\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+\begin{longtable}{@{}p{0.36\linewidth}p{0.58\linewidth}@{}}
+\caption{Default analysis settings used in the software documented here.}
+\label{tab:defaults}\\
 \toprule
 Component & Current choice \\
 \midrule
+\endfirsthead
+\toprule
+Component & Current choice \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
 Tree distance & Hamming \\
 Linkage & Average linkage \\
 Edge significance level & $\alpha_{\mathrm{edge}} = 0.001$ \\
@@ -45,11 +52,7 @@ Include internal spectral rows & On \\
 Edge multiple-testing correction & Hierarchical BH correction on the tree \\
 Sibling multiple-testing correction & Flat BH on focal pairs \\
 Pass-through traversal & On \\
-\bottomrule
-\end{tabularx}
-\caption{Default analysis settings used in the software documented here.}
-\label{tab:defaults}
-\end{table}
+\end{longtable}
 
 Two aspects of these defaults deserve emphasis. First, the two tests do not
 combine information in the same way. The child-parent edge test asks whether a

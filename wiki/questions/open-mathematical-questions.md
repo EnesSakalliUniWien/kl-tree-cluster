@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-05-26
+updated: 2026-06-01
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -10,11 +10,16 @@ sources:
   - manuscript/sections/method/sibling_test.tex
   - manuscript/sections/method/representation.tex
   - manuscript/sections/experiments/section.tex
+  - kl_clustering_analysis/tree/feature_space.py
+  - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
+  - benchmarks/shared/generators/case_data_contracts.py
+  - kl_clustering_analysis/tree/distributions.py
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
   - benchmarks/validation/method_constants_manifest.py
+  - benchmarks/validation/feature_covariance_calibration.py
 tags:
   - method
   - math
@@ -64,13 +69,23 @@ derivation/validation of the data-selected projection effect. This question is
 coupled to the Marchenko--Pastur dimension rule, the minimum spectral dimension
 floor, and the inclusion of internal subtree rows in local spectral matrices.
 
-The feature-space model is only partly settled. Bernoulli coordinates have a
-clear variance model under fixed membership. Categorical variables now have an
-explicit multinomial drop-last covariance chart, but high-cardinality
-categorical calibration still needs validation. Continuous data require an
-explicit covariance contract; whether KL-TE should provide a production
-continuous covariance estimator or keep continuous use as diagnostic remains
-open.
+The feature-space covariance contract is now explicit. Bernoulli coordinates
+use a Bernoulli variance model under fixed membership. Categorical variables
+use a multinomial covariance in a drop-last simplex chart. Continuous
+benchmark inputs use empirical-Gaussian covariance blocks estimated on each
+node's descendant leaves. The active implementation is an exact dense
+covariance implementation; it now fails explicitly for continuous blocks whose
+dense scatter state would exceed the supported implementation envelope. The
+remaining mathematical question is validation and high-dimensional extension,
+not contract shape: high-cardinality categorical calibration, continuous
+finite-sample covariance behavior, and a validated low-rank or regularized
+continuous covariance model still need targeted simulation evidence.
+`benchmarks/validation/feature_covariance_calibration.py` now provides the
+strict evidence generator for the first two targets. Its current scope is the
+local sibling-null Wald statistic in the full tangent space, so it does not
+close questions about selected PCA projections, MP dimension selection, sibling
+FDR, traversal, tree construction, empirical-null inflation, or high-dimensional
+continuous covariance.
 
 The sibling multiplicity and traversal questions are separate from inflation.
 Some binary and categorical under-splits are sibling-FDR blockers rather than
@@ -131,12 +146,15 @@ The current concrete open questions are:
 16. How should one-hot categorical dependence be modeled and validated?
 17. Are high-cardinality categorical failures caused by covariance modeling,
     sibling FDR, or projection dimension policy?
-18. Should continuous data get a production covariance estimator?
-19. How should discretized continuous data be validated under approximate
+18. Is the per-node empirical-Gaussian covariance estimator calibrated well
+    enough for production continuous data?
+19. What validated low-rank or regularized continuous covariance model should
+    replace dense empirical covariance for \(p \gg n\) continuous blocks?
+20. How should discretized continuous data be validated under approximate
     Bernoulli assumptions?
-20. What is the clean general feature-space formulation for mixed Bernoulli,
+21. What is the clean general feature-space formulation for mixed Bernoulli,
     categorical, and continuous blocks?
-21. What sibling-FDR target should replace or justify flat BH across focal
+22. What sibling-FDR target should replace or justify flat BH across focal
     sibling pairs?
 22. Should sibling FDR be traversal-aligned, hierarchical, or conditioned on
     the edge path?
@@ -179,8 +197,9 @@ The current concrete open questions are:
   assumptions and method-constant validation table.
 - `manuscript/sections/method/sibling_test.tex` defines the strict internal
   empirical-null support contract and the fail-closed calibration behavior.
-- `manuscript/sections/method/representation.tex` marks one-hot compositional
-  constraints as requiring validation.
+- `manuscript/sections/method/representation.tex` defines one-hot categorical
+  variables as drop-last multinomial blocks and continuous inputs as
+  empirical-Gaussian covariance blocks; both still require validation.
 - `manuscript/sections/experiments/section.tex` records that results are still
   prospective and require locked outputs.
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the oracle,

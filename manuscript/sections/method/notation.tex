@@ -12,15 +12,20 @@ and traversal quantities convert the resulting significance indicators into the
 final partition. \Cref{tab:notation} summarizes the symbols that carry the
 rest of the method.
 
-\begin{table}[t]
-\centering
-\small
+{\small
+\begin{longtable}{@{}p{0.24\textwidth}p{0.70\textwidth}@{}}
 \caption{Core notation used throughout the KL-TE method description.}
-\label{tab:notation}
-\begin{tabularx}{\textwidth}{@{}lX@{}}
+\label{tab:notation}\\
 \toprule
 Symbol & Meaning \\
 \midrule
+\endfirsthead
+\toprule
+Symbol & Meaning \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
 $n$ & Number of samples. \\
 $p$ & Number of binary or indicator coordinates in the working representation. \\
 $X \in \{0,1\}^{n \times p}$ & Working sample-feature matrix after preprocessing. \\
@@ -59,6 +64,5 @@ $S^{\mathrm{sib}}(u)$ & Sibling significance indicator after correction. \\
 $\mathrm{Split}(u)$ & Indicator that traversal keeps the split at node $u$. \\
 $D^{\mathrm{sib}}(u)$ & Indicator that some proper descendant of $u$ has a significant sibling split among nodes where the sibling test was run. \\
 $\mathcal{C}$ & Final set of terminal cluster nodes returned by traversal. \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{longtable}
+}
