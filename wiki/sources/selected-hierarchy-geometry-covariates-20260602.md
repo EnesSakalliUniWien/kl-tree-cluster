@@ -14,6 +14,11 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/candidate_equations.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_holdout_100/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_holdout_100/candidate_equation_holdout.csv
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/manifest.json
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/case_summary.csv
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/geometry_summary_by_case.csv
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equations.csv
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equation_holdout.csv
 tags:
   - source
   - calibration
@@ -43,6 +48,13 @@ A follow-up 100-replicate run with the same cases and seed writes
 replicate folds and leave-one-case-out folds, then scores held-out selected
 records. This is a transfer diagnostic only; it does not define an external
 calibration law.
+
+A broader 200-replicate run adds diffuse dimensional Gaussian, high-cardinality
+categorical, high-dimensional categorical, heavy-overlap binary, phylogenetic
+DNA, and an SBM boundary case. Eight cases completed; `sbm_moderate` was
+reported as an explicit skip because the current selected-hierarchy null
+generator does not own the precomputed KL tree-distance contract. The broad run
+adds leave-one-source-family-out scoring.
 
 ## Key Points
 
@@ -106,6 +118,23 @@ calibration law.
   `0.877` and holdout \(R^2 \approx 0.184\). Sampling/energy-only candidates
   degrade more strongly, so the compact edge-plus-spectral equation is the
   most stable current candidate family.
+- In the broader 200-replicate panel, selected-ratio scale varies much more
+  strongly by family. Mean \(R\) is about `30.9` for `gauss_clear_medium`,
+  `62.9` for `gauss_null_large`, `89.4` for `cat_highcard_20cat_4c`,
+  `109.3` for `dim_diffuse_6c_136f`, `160.5` for
+  `overlap_heavy_4c_med_feat`, `210.1` for `phylo_dna_8taxa_med_mut`, and
+  `579.8` for `cat_highd_3cat_500feat`.
+- Broad-panel holdout separates tail ranking from mean-scale prediction.
+  Replicate-fold holdout gives the full descriptive equation \(R^2\approx
+  0.429\) and AUC about `0.9996`; the selected-energy candidate has the best
+  replicate-fold tail AUC, about `0.9999`. Leave-one-source-family-out gives
+  the full descriptive equation the best \(R^2\), about `0.458`, but its tail
+  AUC drops to about `0.944`. Simpler edge/spectral equations keep tail AUCs
+  near `0.998`--`0.999` but fit absolute scale worse.
+- The broader run therefore does not validate a production equation. It says
+  edge-selection severity is a very strong tail-ranking coordinate, while
+  absolute selected-ratio calibration depends on family/context scale and
+  needs a proper selected-tail law.
 - The diagnostic can optionally write the full row table. The compact evidence
   keeps only summaries by default; the block model uses one canonical
   edge-strength coordinate,
@@ -135,6 +164,9 @@ calibration law.
 - `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_holdout_100/candidate_equation_holdout.csv`
   records held-out replicate and leave-one-case-out transfer scores for the
   same candidate equations.
+- `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/`
+  records the broad 200-replicate panel with source-family holdout and the SBM
+  precomputed-distance boundary skip.
 
 ## Links
 

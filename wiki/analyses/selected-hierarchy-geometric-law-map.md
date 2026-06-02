@@ -14,6 +14,8 @@ sources:
   - kl_clustering_analysis/tree/distributions.py
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/candidate_equations.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_holdout_100/candidate_equation_holdout.csv
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equation_holdout.csv
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/geometry_summary_by_case.csv
 tags:
   - analysis
   - geometry
@@ -50,6 +52,14 @@ within replicate folds. A held-out transfer diagnostic keeps the
 edge-plus-spectral equation strong under replicate folds and makes it the most
 stable compact candidate under leave-one-case-out transfer. This is still a
 descriptive law-finding result, not a production external-null calibration.
+
+The broader 200-replicate panel makes the target sharper. Tail ranking and
+absolute selected-ratio scale are different problems. Edge-selection severity
+almost perfectly ranks broad-panel top-tail records, but selected-ratio means
+range from about `31` in the clear Gaussian case to about `580` in the
+high-dimensional categorical case. A production law would therefore need to
+model the selected-ratio tail distribution within admissible contexts, not just
+rank the global upper tail.
 
 ## Details
 
@@ -140,6 +150,16 @@ equation has tail AUC about `0.877` and holdout \(R^2 \approx 0.184\). The
 compact equation therefore transfers better as a tail descriptor than the
 larger equation in this small four-case panel.
 
+The broad 200-replicate run changes the interpretation from "best compact
+equation" to "separate tail ranking from calibration scale." Replicate-fold
+holdout gives the full descriptive equation \(R^2\approx0.429\), while the
+selected-energy candidate has the highest top-tail AUC, about `0.9999`.
+Leave-one-source-family-out gives the full descriptive equation the best
+absolute-scale \(R^2\), about `0.458`, but its tail AUC drops to about `0.944`.
+Edge and edge-plus-spectral equations keep near-perfect global tail AUCs but
+fit absolute \(\log R\) scale worse. This means edge action is likely a
+necessary selection coordinate, but not a sufficient calibrated law.
+
 ### Eigenvectors And Trigonometric Projection
 
 The angular variables are ordinary orthogonal-projection geometry:
@@ -228,6 +248,9 @@ calibration law.
 - `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_holdout_100/candidate_equation_holdout.csv`
   records replicate-fold and leave-one-case-out transfer diagnostics for the
   same candidate equations.
+- `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equation_holdout.csv`
+  records broad-panel replicate, leave-one-case, and leave-one-source-family
+  holdout diagnostics.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py`
   defines the fixed-subspace chi-square reference.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py`
@@ -255,6 +278,9 @@ calibration law.
 - Does the edge-plus-spectral equation remain stable under more cases,
   non-root contexts, high-dimensional categorical failures, phylogenetic
   families, and a row-level held-out selected-hierarchy null study?
+- What is the right evaluation target for a production selected law: global
+  top-tail ranking, within-context tail calibration, absolute selected-ratio
+  prediction, or a full selected-ratio tail distribution?
 - Can the selected-hierarchy law be derived as a large-deviation or
   extreme-value problem over selected barycentric contrasts?
 - How should branch-length geometry enter the selected law for phylogenetic

@@ -518,6 +518,9 @@ def _selected_geometry_rows(
     spectral_context: SpectralContext,
     records: Sequence[SiblingPairRecord],
     case_id: str,
+    case_category: str,
+    source_family: str,
+    feature_representation: str,
     replicate_index: int,
     n_samples: int,
     n_features: int,
@@ -584,6 +587,9 @@ def _selected_geometry_rows(
 
         row = {
             "case_id": case_id,
+            "case_category": case_category,
+            "source_family": source_family,
+            "feature_representation": feature_representation,
             "replicate_index": int(replicate_index),
             "parent": record.parent,
             "left_child": record.left,
@@ -679,6 +685,9 @@ def _run_geometry_sample(
         spectral_context=spectral_context,
         records=records,
         case_id=case_id,
+        case_category=str(metadata["category"]),
+        source_family=str(metadata["source_family"]),
+        feature_representation=str(metadata["feature_representation"]),
         replicate_index=replicate_index,
         n_samples=int(data.shape[0]),
         n_features=int(data.shape[1]),
@@ -1137,6 +1146,17 @@ def _case_fold_ids(table: pd.DataFrame) -> pd.Series:
     return case_values.map(case_to_fold).astype(int)
 
 
+def _source_family_fold_ids(table: pd.DataFrame) -> pd.Series:
+    if "source_family" not in table.columns:
+        raise KeyError("Family holdout requires source_family.")
+    family_values = pd.Series(table["source_family"], index=table.index).astype(str)
+    unique_families = tuple(sorted(family_values.unique()))
+    family_to_fold = {
+        family_id: fold_index for fold_index, family_id in enumerate(unique_families)
+    }
+    return family_values.map(family_to_fold).astype(int)
+
+
 def _evaluate_holdout_strategy(
     table: pd.DataFrame,
     *,
@@ -1260,7 +1280,19 @@ def evaluate_candidate_equation_holdout(
         split_strategy="leave_one_case_out",
         fold_ids=_case_fold_ids(table),
     )
-    return pd.concat([replicate_holdout, case_holdout], ignore_index=True)
+    source_family_holdout = _evaluate_holdout_strategy(
+        table,
+        candidate_equations=candidate_equations,
+        response=response,
+        tail_quantile=tail_quantile,
+        min_rows_per_predictor=min_rows_per_predictor,
+        split_strategy="leave_one_source_family_out",
+        fold_ids=_source_family_fold_ids(table),
+    )
+    return pd.concat(
+        [replicate_holdout, case_holdout, source_family_holdout],
+        ignore_index=True,
+    )
 
 
 def evaluate_covariate_block_models(

@@ -25,6 +25,9 @@ def _geometry_records() -> pd.DataFrame:
         rows.append(
             {
                 "case_id": "case",
+                "case_category": "synthetic_family_a",
+                "source_family": "source_family_a",
+                "feature_representation": "bernoulli",
                 "replicate_index": index // 2,
                 "feature_dimension": 40,
                 "parent_sample_size": 20,
@@ -74,6 +77,8 @@ def _multi_case_geometry_records() -> pd.DataFrame:
     first = _geometry_records()
     second = _geometry_records().copy()
     second["case_id"] = "case_b"
+    second["case_category"] = "synthetic_family_b"
+    second["source_family"] = "source_family_b"
     second["replicate_index"] = second["replicate_index"] + 10
     second["selected_hierarchy_ratio"] = second["selected_hierarchy_ratio"] * 1.25
     second["log_selected_hierarchy_ratio"] = np.log(second["selected_hierarchy_ratio"])
@@ -125,6 +130,7 @@ def test_candidate_equations_report_replicate_and_case_holdout() -> None:
     assert set(holdout["split_strategy"]) == {
         "replicate_modulo",
         "leave_one_case_out",
+        "leave_one_source_family_out",
     }
     edge = holdout[
         holdout["equation_id"].eq("edge_action")

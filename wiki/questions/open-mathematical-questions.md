@@ -183,6 +183,16 @@ edge-plus-spectral form keeps tail AUC around `0.922`. The next open question
 is whether this compact law survives a larger panel with non-root contexts,
 high-cardinality categorical failures, phylogenetic cases, and strict
 row-level selected-null support.
+The broad 200-replicate panel shows that this question has two parts. Global
+top-tail ranking is easy in the current broad panel: edge-action and
+edge/spectral equations have near-perfect held-out tail AUCs. Absolute
+selected-ratio scale is harder and varies strongly by family, with mean \(R\)
+rising to about `580` in `cat_highd_3cat_500feat`. The full descriptive
+equation gives the best broad-panel holdout \(R^2\), but its
+leave-one-source-family tail AUC is lower than the simpler edge/spectral
+scores. This means the open production target is not "find a high-AUC
+equation"; it is to define a selected-ratio tail law with admissible contexts
+and calibrated absolute probabilities.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
@@ -276,7 +286,10 @@ The current concrete open questions are:
    \(p\), sibling projection dimension, and parent-size bin. The geometry
    covariate diagnostic adds edge-selection severity as the strongest current
    candidate context variable, with eigenvalue and angular summaries as
-   candidate tail-shape variables rather than validated matching rules.
+   candidate tail-shape variables rather than validated matching rules. The
+   broad geometry panel further separates global top-tail ranking from
+   calibrated selected-ratio scale; a high held-out AUC alone is not enough for
+   production external calibration.
 9. What minimum effective calibration support is required before internal
    empirical-null inflation is trustworthy?
 10. Is the empirical-null weight rule calibrated enough to use beyond

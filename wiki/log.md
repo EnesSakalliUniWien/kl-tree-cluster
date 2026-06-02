@@ -382,6 +382,15 @@ verification, and maintenance events here in chronological order.
   discrimination. Updated [[selected-hierarchy-geometry-covariates-20260602]]
   and [[selected-hierarchy-geometric-law-map]] while keeping the result
   diagnostic-only.
+- Added source-family holdout to the geometry diagnostic and ran a broad
+  200-replicate panel over Gaussian, dimensional Gaussian, binary,
+  high-cardinality/high-dimensional categorical, heavy-overlap binary,
+  phylogenetic, and SBM boundary cases. Eight cases completed; `sbm_moderate`
+  was an explicit precomputed-distance null-generator boundary skip. The
+  broad evidence separates global top-tail ranking from calibrated selected
+  scale: simple edge/spectral scores rank tails well, while absolute
+  selected-ratio scale varies strongly by family and still needs a selected
+  tail-law target rather than a production fallback.
 
 ## Evidence
 
