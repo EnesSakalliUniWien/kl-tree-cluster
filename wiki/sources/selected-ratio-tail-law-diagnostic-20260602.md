@@ -10,6 +10,10 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/case_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/geometry_summary_by_case.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/manifest.json
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/case_summary.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/geometry_summary_by_case.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv
 tags:
   - source
   - calibration
@@ -35,6 +39,11 @@ The result is diagnostic-only. It does not define a production external
 calibration model, scalar inflation fallback, context-borrowing rule, or
 application default. No context in the 200-replicate broad run is
 production-admissible under the predeclared support contract.
+
+A focused 300-replicate follow-up over multi-case source families shows that
+admissibility is reachable but narrow. Two `gaussian_blobs` contexts pass the
+support contract; categorical contexts approach the support threshold; binary
+template contexts remain fragmented.
 
 ## Key Points
 
@@ -72,6 +81,27 @@ production-admissible under the predeclared support contract.
 - The result sharpens the mathematical target. A high global tail-ranking AUC
   is not enough; a production external law would need admissible within-context
   support and calibrated absolute tail probabilities.
+- The focused 300-replicate run used `gauss_null_large`,
+  `gauss_clear_medium`, `binary_low_noise_4c`,
+  `overlap_heavy_4c_med_feat`, `cat_highcard_20cat_4c`, and
+  `cat_highd_3cat_500feat`. It produced `72` tail-law contexts, of which `28`
+  had descriptive held-out folds.
+- In the focused run, exactly two contexts are production-admissible:
+  `gaussian_blobs`, `bernoulli`, `small_0_0.25`, `edge_action_ge8`, with
+  sibling projection dimension `1` and `2`. Their independent matching
+  simulations are `564` and `563`, held-out exceedance rates are about
+  `0.00998` and `0.01000`, and held-out standard errors are about `0.00048`
+  and `0.00083`.
+- The focused categorical source family remains just below the support
+  threshold. Its strongest context has `476` independent simulations,
+  exceedance rate about `0.01009`, and standard error about `0.00045`, but it
+  still fails the `499` independent-simulation rule.
+- The focused binary-template family remains support-fragmented. Its strongest
+  context has `296` independent simulations, below the production threshold.
+- The focused result changes the open question from "can any context become
+  admissible?" to "which exact contexts are admissible, and how should
+  non-admissible categorical, root, medium-parent, and binary contexts be
+  handled without borrowing or fallback?"
 
 ## Evidence
 
@@ -92,6 +122,11 @@ production-admissible under the predeclared support contract.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv`
   records context-level support, held-out exceedance rates, admissibility
   failures, and diagnostic status.
+- `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/manifest.json`
+  records the focused 300-replicate multi-case source-family run.
+- `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv`
+  records the first production-admissible diagnostic contexts and the remaining
+  support-fragmented contexts.
 
 ## Links
 

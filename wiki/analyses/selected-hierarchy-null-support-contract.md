@@ -249,6 +249,18 @@ near `0.01`, but those rows still fail the independent simulation threshold.
 This reinforces the no-fallback rule: descriptive selected-tail behavior is
 evidence about the phenomenon, not an external production calibration estimate.
 
+A focused `300`-replicate follow-up over multi-case source families shows that
+the contract is not unreachable. Two exact `gaussian_blobs` contexts pass:
+small parent-size bin, high edge action, and sibling projection dimensions `1`
+and `2`. They have `564` and `563` independent matching simulations and
+held-out exceedance near `0.01` with standard errors below `0.001`. Other
+nearby contexts remain non-admissible: categorical high-edge small-parent
+contexts reach `476` independent simulations and fail only the simulation-count
+threshold, while binary-template contexts top out at `296` independent
+simulations. Thus admissibility is context-specific; passing Gaussian contexts
+do not license borrowing for categorical, binary, root, or lower-edge-action
+contexts.
+
 ## Evidence
 
 - `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
@@ -268,6 +280,9 @@ evidence about the phenomenon, not an external production calibration estimate.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv`
   records within-context selected-ratio tail support, held-out exceedance
   errors, and production-admissibility failures.
+- `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv`
+  records the focused multi-case source-family support study with two
+  production-admissible Gaussian contexts.
 - `raw/assets/benchmark-results/selected_hierarchy_precision_20260601_summary.csv`
   records the 500-replicate root strict, non-root strict, and non-root
   relaxation-ladder summaries.

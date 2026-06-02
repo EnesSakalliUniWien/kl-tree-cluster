@@ -403,6 +403,12 @@ verification, and maintenance events here in chronological order.
   `replicate_index`. Regenerating the broad 200-replicate result leaves the
   production conclusion unchanged: `0` of `104` contexts are admissible, and
   the largest context has `376` independent matching simulations.
+- Ran a focused 300-replicate selected-tail support study over multi-case
+  `gaussian_blobs`, `binary_template`, and `categorical_multinomial` source
+  families. Two exact small-parent, high-edge-action Gaussian contexts become
+  production-admissible under the diagnostic support contract. Categorical
+  contexts approach but do not reach the `499` simulation threshold, and binary
+  contexts remain support-fragmented.
 
 ## Evidence
 

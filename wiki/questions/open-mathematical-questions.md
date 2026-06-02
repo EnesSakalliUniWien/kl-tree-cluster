@@ -207,6 +207,14 @@ threshold. The independent unit is now explicit as
 and low-edge-action contexts remain unstable. This
 makes the next open question one of admissible support and context design, not
 another scalar heuristic.
+The focused 300-replicate follow-up shows that admissibility is possible but
+narrow: two small-parent, high-edge-action `gaussian_blobs` contexts with
+sibling projection dimension `1` and `2` pass the support and held-out tail
+precision contract. Categorical high-edge small-parent contexts are close but
+remain below the `499` independent-simulation threshold, and binary-template
+contexts remain fragmented. Therefore the open object is no longer simply
+"whether support can ever be reached"; it is a context-specific selected-tail
+law with explicit admissible and non-admissible regions.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
@@ -306,6 +314,9 @@ The current concrete open questions are:
    production external calibration. The selected-ratio tail-law diagnostic
    confirms that explicit edge-action contexts are still support-limited at
    200 replicates.
+   The focused 300-replicate run shows that two Gaussian small-parent,
+   high-edge-action contexts are admissible, but categorical and binary
+   contexts remain non-admissible under the same exact context rule.
 9. What minimum effective calibration support is required before internal
    empirical-null inflation is trustworthy?
 10. Is the empirical-null weight rule calibrated enough to use beyond
