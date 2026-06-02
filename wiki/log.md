@@ -329,6 +329,14 @@ verification, and maintenance events here in chronological order.
   diagnostic support states, no-fallback rule, current exact matching variables,
   descriptive stratifiers, and Monte Carlo precision targets for
   selected-hierarchy null studies.
+- Added `selected_hierarchy_stratification_diagnostic.py` and ran a
+  500-replicate stratification study over the four representative selected-null
+  cases. The diagnostic groups selected edge-path-open sibling records by
+  parent depth and parent-size bins. It shows that small selected parent nodes
+  often have higher selected-null scale than root-like selected nodes, while
+  exact depth is too sparse to promote to a validated exact conditioning
+  variable. Added
+  [[selected-hierarchy-stratification-diagnostic-20260602]].
 
 ## Evidence
 

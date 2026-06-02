@@ -19,6 +19,7 @@ sources:
   - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/analyses/selected-hierarchy-null-support-contract.md
+  - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -126,6 +127,12 @@ near-zero support, but dropping depth and then parent-size restores support
 while keeping selected-hierarchy \(c\) in the tens. This is descriptive
 evidence about support geometry, not a rule for borrowing relaxed contexts in
 production.
+The 2026-06-02 stratification diagnostic shows that parent size is a stronger
+visible heterogeneity coordinate than exact depth in the current representative
+cases. Small selected parent nodes often have \(c\) in the `50`--`70` range,
+while root-like selected nodes are lower but still far above one. Exact depth
+matching remains useful for description, but it is too sparse to promote to a
+validated exact conditioning variable.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an

@@ -26,5 +26,6 @@ Maintained entrypoints:
 - `calibration/run_tree_bh_selection_conditioned_sibling_null.py`
 - `calibration/sample_split_selection_audit.py`
 - `calibration/selected_hierarchy_null_audit.py`
+- `calibration/selected_hierarchy_stratification_diagnostic.py`
 - `analysis/analyze_relationships.py`
 - `spectral/compare_mp_dimension_contracts.py`

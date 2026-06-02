@@ -9,6 +9,7 @@ sources:
   - wiki/sources/edge-selection-null-audit-20260601.md
   - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
+  - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
   - kl_clustering_analysis/tree/distributions.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
@@ -154,6 +155,12 @@ parent-size restores support and still leaves \(c\) in the tens. This means
 that support failure is partly a context-matching geometry problem, not proof
 that the selected-hierarchy phenomenon is absent.
 
+The 2026-06-02 stratification diagnostic further separates depth from parent
+size. Parent-size bins show that small selected parent nodes often have much
+higher selected-null scale than root-like selected nodes. Exact depth is
+therefore a sparse descriptive coordinate, not yet a validated exact
+conditioning variable.
+
 Feature-split cross-fit is useful evidence for the same reason, although it is
 not the chosen production method. When one feature block selects the tree and
 a held-out feature block supplies node distributions and tests, the
@@ -192,6 +199,9 @@ model is provided.
   and the 500-replicate descriptive precision/context-relaxation study, where
   selected-hierarchy correction factors are large enough to block the null
   case but still allow matched signal examples.
+- `wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md`
+  records the depth and parent-size stratification study showing that small
+  selected parent nodes generally have larger selected-null scale.
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the support-status
   contract and the distinction between invalid selected-non-null calibration
   support and valid empirical-null support.

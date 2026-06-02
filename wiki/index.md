@@ -52,6 +52,9 @@ renamed, or promoted.
 - [[selected-hierarchy-null-audit-20260601]] - same-data selected-hierarchy
   null audit showing large selected-hierarchy correction factors without using
   cross-fitting as the method.
+- [[selected-hierarchy-stratification-diagnostic-20260602]] - selected-null
+  scale stratification by parent depth and parent-size bins, recorded as
+  descriptive heterogeneity rather than calibration borrowing.
 
 ### Concepts
 

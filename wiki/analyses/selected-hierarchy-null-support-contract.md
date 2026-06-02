@@ -6,7 +6,10 @@ updated: 2026-06-02
 sources:
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
   - raw/assets/benchmark-results/selected_hierarchy_precision_20260601_summary.csv
+  - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_parent_size.csv
+  - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_depth.csv
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
+  - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/questions/open-mathematical-questions.md
   - manuscript/sections/method/sibling_test.tex
@@ -150,6 +153,13 @@ large-\(c\) selected null behavior across matched contexts. Exact non-root
 depth matching can make support too sparse. Relaxed contexts help identify the
 support bottleneck, but they do not define a calibration rule.
 
+The 2026-06-02 stratification diagnostic supports the same interpretation.
+Parent-size strata explain more of the visible heterogeneity than exact depth:
+small selected parent nodes often have \(c\) in the `50`--`70` range, while
+root-like selected nodes are lower but still far above one in the tested
+contexts. Depth remains useful as a descriptive stratum, but exact depth
+matching is too sparse to treat as a validated conditioning requirement.
+
 ## Evidence
 
 - `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
@@ -160,6 +170,8 @@ support bottleneck, but they do not define a calibration rule.
   relaxation-ladder summaries.
 - `wiki/sources/selected-hierarchy-null-audit-20260601.md` summarizes the
   selected-hierarchy null audit and precision study.
+- `wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md`
+  summarizes the depth and parent-size stratification study.
 - `wiki/analyses/selected-hierarchy-selection-geometry.md` explains the
   geometric selection mechanism that motivates this support contract.
 - `manuscript/sections/method/sibling_test.tex` records the current internal
@@ -170,6 +182,7 @@ support bottleneck, but they do not define a calibration rule.
 
 - [[selected-hierarchy-selection-geometry]]
 - [[selected-hierarchy-null-audit-20260601]]
+- [[selected-hierarchy-stratification-diagnostic-20260602]]
 - [[open-mathematical-questions]]
 - [[oracle-gate-path-diagnostic]]
 - [[projected-wald-statistic]]
