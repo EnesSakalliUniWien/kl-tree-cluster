@@ -298,6 +298,37 @@ verification, and maintenance events here in chronological order.
   stored under
   `raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/` and
   summarized in [[selected-hierarchy-null-audit-20260601]].
+- Added [[selected-hierarchy-selection-geometry]] to consolidate the geometric
+  explanation behind the selected-hierarchy calibration problem. The page
+  separates fixed projected-Wald tangent geometry from same-data hierarchy
+  selection, where internal node barycenters, child-parent edges, and focal
+  sibling contexts are selected high-contrast objects rather than ordinary
+  fixed-tree null contrasts.
+- Tightened `selected_hierarchy_null_audit.py` so selected records require an
+  open child-parent edge path, added explicit non-root target modes, and added
+  projection/parent-size/depth context matching. The 100-replicate richer root
+  rerun still blocks `gauss_null_large` and leaves the three signal examples
+  significant. The non-root strongest rerun has matched Gaussian support but
+  zero matched binary/categorical support under the strict context, marking a
+  diagnostic support limitation rather than a calibration estimate or fallback
+  decision.
+- Added selected-hierarchy diagnostic precision fields: record-level and
+  simulation-level standard errors for \(c\), empirical-tail standard errors,
+  and tail-resolution diagnostics. The 100-replicate richer runs describe the
+  large selected-hierarchy scale effect, but their empirical-tail resolution is
+  too coarse to be a production external-calibration validation at
+  `SIBLING_ALPHA = 0.01`.
+- Ran 500-replicate descriptive selected-hierarchy precision studies for root
+  and non-root strongest targets, plus a non-root context-relaxation ladder for
+  binary and categorical rows. The strict root and Gaussian non-root rows keep
+  \(c\) in the tens with improved precision. Non-root binary/categorical support
+  is sparse under exact depth matching but returns when depth and parent-size
+  are relaxed, showing a support-geometry phenomenon rather than a production
+  borrowing rule.
+- Added [[selected-hierarchy-null-support-contract]] to formalize the
+  diagnostic support states, no-fallback rule, current exact matching variables,
+  descriptive stratifiers, and Monte Carlo precision targets for
+  selected-hierarchy null studies.
 
 ## Evidence
 

@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-05-26
+updated: 2026-06-02
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -76,6 +76,13 @@ renamed, or promoted.
 - [[oracle-gate-path-diagnostic]] - mathematical recoverability and gate-path
   analysis separating tree failures, sibling-calibration under-splits, direct
   sibling false splits, and pass-through fragmentation.
+- [[selected-hierarchy-selection-geometry]] - geometric explanation of why
+  same-data hierarchy selection turns subtree barycenters, edge openings, and
+  focal sibling contexts into selected high-contrast objects rather than
+  ordinary fixed-tree null contrasts.
+- [[selected-hierarchy-null-support-contract]] - diagnostic support contract
+  for selected-hierarchy null studies, including no-fallback unsupported states,
+  context matching, and Monte Carlo precision requirements.
 - [[local-marchenko-pastur-rule]] - audit of the local MP dimension rule,
   eigenvalue scale, finite-sample null behavior, leaf-only spectral rows, and
   calibration-support fallout.

@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-06-01
+updated: 2026-06-02
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -18,6 +18,7 @@ sources:
   - wiki/sources/edge-selection-null-audit-20260601.md
   - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
+  - wiki/analyses/selected-hierarchy-null-support-contract.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -95,6 +96,36 @@ the first evidence that a named selected-hierarchy calibration model may be
 mathematically relevant. It is not yet a production rule because replicate
 counts are small, context matching is preliminary, and continuous/null
 covariance generation is unsupported.
+[[selected-hierarchy-selection-geometry]] records the current geometric
+explanation: fixed projected-Wald tangent geometry is not the blocker; the
+unresolved object is the same-data selected hierarchy, where empirical
+subtree barycenters, edge openings, and focal sibling contexts are conditioned
+on high-contrast selection in the same coordinates that are later tested.
+[[selected-hierarchy-null-support-contract]] records the current diagnostic
+support interpretation: no matched selected-hierarchy records means unsupported,
+and relaxed contexts explain support geometry rather than providing a fallback
+calibration path.
+The 100-replicate richer rerun keeps this conclusion for root targets and for
+matched Gaussian non-root targets. It also exposes a sharper support problem:
+binary and categorical non-root targets can have zero matched selected-null
+records under projection, parent-size, and depth matching, so the external
+selected-hierarchy diagnostic itself needs a minimum-support contract. Those
+rows must be treated as descriptive unsupported states, not as fallback
+calibration estimates.
+The same run shows that support is not only a count problem. Matched rows have
+relative simulation standard errors for \(c\) around `3%` to `10%`, but their
+empirical-tail p-value resolution is only about `0.011` to `0.026`. Therefore
+the present 100-replicate run can describe the selected-hierarchy phenomenon,
+but it is not a locked production external-calibration run for
+`SIBLING_ALPHA = 0.01`.
+The 500-replicate descriptive precision run improves this picture. Strict root
+rows and strict non-root Gaussian rows have hundreds of matched simulations and
+\(c\) estimates in the tens. Non-root binary and categorical rows reveal that
+exact context matching is the bottleneck: exact depth matching gives zero or
+near-zero support, but dropping depth and then parent-size restores support
+while keeping selected-hierarchy \(c\) in the tens. This is descriptive
+evidence about support geometry, not a rule for borrowing relaxed contexts in
+production.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
@@ -172,15 +203,19 @@ The current concrete open questions are:
 6. When should the calibration hierarchy return
    \(\hat c_{\mathrm{internal}}\), \(\hat c_{\mathrm{external}}\), or fail
    undefined?
-7. What minimum effective calibration support is required before internal
+7. What minimum matched selected-hierarchy support and Monte Carlo precision
+   are required before an external calibration estimate is admissible?
+8. Which context variables should be exact matching variables, and which should
+   be descriptive stratifiers, for selected-hierarchy null studies?
+9. What minimum effective calibration support is required before internal
    empirical-null inflation is trustworthy?
-8. Is the empirical-null weight rule calibrated enough to use beyond
+10. Is the empirical-null weight rule calibrated enough to use beyond
    diagnostics?
-9. Is the context bandwidth stable when calibration support is sparse?
-10. Under what exact assumptions is the projected chi-square reference valid?
-11. Is the fixed-projection proof sufficient, or must the data-selected PCA
+11. Is the context bandwidth stable when calibration support is sparse?
+12. Under what exact assumptions is the projected chi-square reference valid?
+13. Is the fixed-projection proof sufficient, or must the data-selected PCA
     effect be derived or simulated?
-12. Does the local Marchenko--Pastur rule preserve calibration and power?
+14. Does the local Marchenko--Pastur rule preserve calibration and power?
     [[local-marchenko-pastur-rule]] partially resolves the algebraic
     correctness question: the \(d_u/m_u\) edge matches the backend eigenvalue
     scale, and the code now separates raw MP signal count, projected-Wald test
@@ -190,53 +225,53 @@ The current concrete open questions are:
     `cat_highcard_20cat_4c`, and under-split dimensional Gaussian cases in the
     historical diagnostic. The open question is whether a genuinely
     selection-aware threshold can be derived or validated.
-13. Is the minimum spectral dimension \(k_{\min}=2\) justified?
+15. Is the minimum spectral dimension \(k_{\min}=2\) justified?
     The 2026-06-01 leaf-only regression-gate diagnostic shows the trade-off:
     \(k_{\min}=2\) keeps higher mean/median ARI among runnable rows but creates
     six unsupported-calibration skips, while \(k_{\min}=1\) reduces skips to
     two but lowers aggregate ARI. This is not solved by a default change.
-14. What calibration-support contract should be used when every local sibling
+16. What calibration-support contract should be used when every local sibling
     record is selected non-null under the leaf-only spectral basis?
-15. Is the sibling projection dimension rule mathematically justified?
-16. How should one-hot categorical dependence be modeled and validated?
-17. Are high-cardinality categorical failures caused by covariance modeling,
+17. Is the sibling projection dimension rule mathematically justified?
+18. How should one-hot categorical dependence be modeled and validated?
+19. Are high-cardinality categorical failures caused by covariance modeling,
     sibling FDR, or projection dimension policy?
-18. Is the per-node empirical-Gaussian covariance estimator calibrated well
+20. Is the per-node empirical-Gaussian covariance estimator calibrated well
     enough for production continuous data?
-19. What validated low-rank or regularized continuous covariance model should
+21. What validated low-rank or regularized continuous covariance model should
     replace dense empirical covariance for \(p \gg n\) continuous blocks?
-20. How should discretized Gaussian benchmark variants be validated under
+22. How should discretized Gaussian benchmark variants be validated under
     approximate Bernoulli or categorical assumptions?
-21. What is the clean general feature-space formulation for mixed Bernoulli,
+23. What is the clean general feature-space formulation for mixed Bernoulli,
     categorical, and continuous blocks?
-22. What sibling-FDR target should replace or justify flat BH across focal
+24. What sibling-FDR target should replace or justify flat BH across focal
     sibling pairs?
-22. Should sibling FDR be traversal-aligned, hierarchical, or conditioned on
+25. Should sibling FDR be traversal-aligned, hierarchical, or conditioned on
     the edge path?
-23. Should pass-through require descendant split evidence to overcome local
+26. Should pass-through require descendant split evidence to overcome local
     sibling-same evidence?
-24. What functional form should
+27. What functional form should
     \(S_{\mathrm{desc}}(v)>\tau(S_{\mathrm{same}}(v),n_v,d_v)\) take?
-25. Does pass-through improve under-splits without unacceptable over-splitting?
-26. How should direct sibling false splitting inside phylogenetic clades be
+28. Does pass-through improve under-splits without unacceptable over-splitting?
+29. How should direct sibling false splitting inside phylogenetic clades be
     modeled?
-27. Which failures are gate failures and which are hierarchy/metric
+30. Which failures are gate failures and which are hierarchy/metric
     recoverability failures?
-28. Which hierarchy diagnostics should be built for `tree_unrecoverable` cases
+31. Which hierarchy diagnostics should be built for `tree_unrecoverable` cases
     before changing metrics or linkage?
-29. For diffuse Gaussian, heavy-overlap, and SBM cases, is the problem
+32. For diffuse Gaussian, heavy-overlap, and SBM cases, is the problem
     representation, distance metric, linkage, or gate logic?
-30. Which validation outputs become the locked manuscript evidence set?
-31. Which method constants become justified defaults rather than implementation
+33. Which validation outputs become the locked manuscript evidence set?
+34. Which method constants become justified defaults rather than implementation
     defaults?
-32. What null calibration study supports edge alpha?
-33. What null calibration and power study supports sibling alpha?
-34. What simulation validates final cluster-count control, not only local
+35. What null calibration study supports edge alpha?
+36. What null calibration and power study supports sibling alpha?
+37. What simulation validates final cluster-count control, not only local
     p-values?
-35. What planted-structure simulations support power claims?
-36. Which real biological application should become the first
+38. What planted-structure simulations support power claims?
+39. Which real biological application should become the first
     manuscript-ready result?
-37. Which generated outputs should be promoted into a locked
+40. Which generated outputs should be promoted into a locked
     manuscript-results manifest?
 38. How should the manuscript state every remaining approximation without
     overstating Type-I error control?

@@ -20,6 +20,7 @@ from time import perf_counter
 import numpy as np
 import pandas as pd
 from kl_clustering_analysis import config
+from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
@@ -71,13 +72,22 @@ class SelectedSiblingContext:
     degrees_of_freedom: float
     projection_dimension: int
     parent_sample_size: int
+    parent_depth: int
+
+
+@dataclass(frozen=True)
+class SelectedSiblingRecord:
+    """Sibling statistic selected by the same-data hierarchy and edge path."""
+
+    record: SiblingPairRecord
+    parent_depth: int
 
 
 @dataclass(frozen=True)
 class SiblingRecordSample:
     """Raw selected sibling statistics collected from one hierarchy run."""
 
-    selected_records: tuple[SiblingPairRecord, ...]
+    selected_records: tuple[SelectedSiblingRecord, ...]
     candidate_records: int
     tested_edges: int
     significant_edges: int
@@ -146,10 +156,18 @@ def _run_edge_and_sibling_records(
         parent_principal_component_eigenvalues=parent_eigenvalues,
         feature_space=feature_space,
     )
+    node_depths = compute_node_depths(tree)
     selected_records = tuple(
-        record
+        SelectedSiblingRecord(
+            record=record,
+            parent_depth=int(node_depths[record.parent]),
+        )
         for record in records
-        if not record.is_null_like and record.degrees_of_freedom > 0.0
+        if (
+            not record.is_null_like
+            and not record.is_edge_blocked
+            and record.degrees_of_freedom > 0.0
+        )
     )
     tested_edges = edge_df["Child_Parent_Divergence_Tested"].astype(bool)
     significant_edges = edge_df["Child_Parent_Divergence_Significant"].astype(bool)
@@ -166,24 +184,22 @@ def _run_edge_and_sibling_records(
 
 def _choose_observed_target(
     case_id: str,
-    records: tuple[SiblingPairRecord, ...],
+    records: tuple[SelectedSiblingRecord, ...],
     *,
     target_mode: str,
 ) -> SelectedSiblingContext:
-    focal_records = [
-        record
-        for record in records
-        if not record.is_null_like and record.degrees_of_freedom > 0.0
-    ]
+    focal_records = list(records)
     if not focal_records:
-        raise ValueError(f"Case {case_id!r} has no selected focal sibling records.")
+        raise ValueError(
+            f"Case {case_id!r} has no sibling records selected by the edge path."
+        )
 
     if target_mode == "root":
-        max_parent_sample_size = max(record.n_parent for record in focal_records)
+        max_parent_sample_size = max(record.record.n_parent for record in focal_records)
         candidates = [
             record
             for record in focal_records
-            if record.n_parent == max_parent_sample_size
+            if record.record.n_parent == max_parent_sample_size
         ]
         if not candidates:
             raise ValueError(
@@ -191,24 +207,53 @@ def _choose_observed_target(
             )
         target = candidates[0]
     elif target_mode == "strongest":
-        target = min(focal_records, key=lambda record: record.p_value)
+        target = min(focal_records, key=lambda item: item.record.p_value)
     elif target_mode == "median_parent_size":
-        ordered = sorted(focal_records, key=lambda record: record.n_parent)
+        ordered = sorted(focal_records, key=lambda item: item.record.n_parent)
+        target = ordered[len(ordered) // 2]
+    elif target_mode == "non_root_strongest":
+        max_parent_sample_size = max(record.record.n_parent for record in focal_records)
+        non_root_records = [
+            record
+            for record in focal_records
+            if record.record.n_parent < max_parent_sample_size
+        ]
+        if not non_root_records:
+            raise ValueError(
+                f"Case {case_id!r} has no non-root sibling record selected by the edge path."
+            )
+        target = min(non_root_records, key=lambda item: item.record.p_value)
+    elif target_mode == "non_root_median_parent_size":
+        max_parent_sample_size = max(record.record.n_parent for record in focal_records)
+        non_root_records = [
+            record
+            for record in focal_records
+            if record.record.n_parent < max_parent_sample_size
+        ]
+        if not non_root_records:
+            raise ValueError(
+                f"Case {case_id!r} has no non-root sibling record selected by the edge path."
+            )
+        ordered = sorted(non_root_records, key=lambda item: item.record.n_parent)
         target = ordered[len(ordered) // 2]
     else:
         raise ValueError(f"Unknown target_mode={target_mode!r}.")
 
+    target_record = target.record
     return SelectedSiblingContext(
         case_id=case_id,
-        parent=target.parent,
-        feature_family=target.feature_family,
+        parent=target_record.parent,
+        feature_family=target_record.feature_family,
         target_mode=target_mode,
-        statistic=float(target.stat),
-        reference_expectation=float(target.reference_scale * target.degrees_of_freedom),
-        raw_p_value=float(target.p_value),
-        degrees_of_freedom=float(target.degrees_of_freedom),
-        projection_dimension=int(target.sibling_projection_dimension),
-        parent_sample_size=int(target.n_parent),
+        statistic=float(target_record.stat),
+        reference_expectation=float(
+            target_record.reference_scale * target_record.degrees_of_freedom
+        ),
+        raw_p_value=float(target_record.p_value),
+        degrees_of_freedom=float(target_record.degrees_of_freedom),
+        projection_dimension=int(target_record.sibling_projection_dimension),
+        parent_sample_size=int(target_record.n_parent),
+        parent_depth=int(target.parent_depth),
     )
 
 
@@ -267,23 +312,39 @@ def _simulate_null_data(
 
 
 def _record_matches_context(
-    record: SiblingPairRecord,
+    record_sample: SelectedSiblingRecord,
     target: SelectedSiblingContext,
     *,
     context_match: str,
 ) -> bool:
+    record = record_sample.record
     if record.feature_family != target.feature_family:
         return False
     if context_match == "any":
         return True
-    if context_match in {"projection", "projection_and_parent_size"}:
+    if context_match in {
+        "projection",
+        "projection_and_parent_size",
+        "projection_parent_size_depth",
+    }:
         if int(record.sibling_projection_dimension) != int(target.projection_dimension):
             return False
-    if context_match == "projection_and_parent_size":
+    if context_match in {
+        "projection_and_parent_size",
+        "projection_parent_size_depth",
+    }:
         lower = max(1, int(np.floor(0.75 * target.parent_sample_size)))
         upper = int(np.ceil(1.25 * target.parent_sample_size))
-        return lower <= int(record.n_parent) <= upper
-    if context_match not in {"any", "projection", "projection_and_parent_size"}:
+        if not lower <= int(record.n_parent) <= upper:
+            return False
+    if context_match == "projection_parent_size_depth":
+        return int(record_sample.parent_depth) == int(target.parent_depth)
+    if context_match not in {
+        "any",
+        "projection",
+        "projection_and_parent_size",
+        "projection_parent_size_depth",
+    }:
         raise ValueError(f"Unknown context_match={context_match!r}.")
     return True
 
@@ -295,7 +356,8 @@ def _selected_hierarchy_summary(
     context_match: str,
     n_replicates: int,
 ) -> dict[str, object]:
-    matched_records: list[SiblingPairRecord] = []
+    matched_records: list[SelectedSiblingRecord] = []
+    matched_records_by_simulation: list[list[SelectedSiblingRecord]] = []
     n_simulations_with_match = 0
     for sample in samples:
         matches = [
@@ -305,6 +367,7 @@ def _selected_hierarchy_summary(
         ]
         if matches:
             n_simulations_with_match += 1
+            matched_records_by_simulation.append(matches)
             matched_records.extend(matches)
 
     candidate_records = sum(sample.candidate_records for sample in samples)
@@ -326,26 +389,72 @@ def _selected_hierarchy_summary(
             "edge_rejection_rate": (
                 float(significant_edges / tested_edges) if tested_edges else 0.0
             ),
+            "selected_hierarchy_support_status": (
+                "unsupported_no_matched_selected_hierarchy_records"
+            ),
             "selected_hierarchy_c_hat": np.nan,
+            "selected_hierarchy_c_hat_record_se": np.nan,
+            "selected_hierarchy_c_hat_simulation_se": np.nan,
+            "selected_hierarchy_c_hat_relative_simulation_se": np.nan,
             "selected_hierarchy_mean_scaled_chi2_p_value": np.nan,
-            "selected_hierarchy_blocks_at_alpha": False,
+            "selected_hierarchy_blocks_at_alpha": np.nan,
             "selected_hierarchy_mean_statistic": np.nan,
             "selected_hierarchy_median_statistic": np.nan,
             "selected_hierarchy_q95_statistic": np.nan,
             "selected_hierarchy_q99_statistic": np.nan,
             "selected_hierarchy_empirical_tail_p_value": np.nan,
+            "selected_hierarchy_empirical_tail_record_se": np.nan,
+            "selected_hierarchy_empirical_tail_simulation_se": np.nan,
+            "selected_hierarchy_record_tail_resolution": np.nan,
+            "selected_hierarchy_matching_simulation_tail_resolution": np.nan,
         }
 
-    statistics = np.asarray([record.stat for record in matched_records], dtype=float)
-    reference_expectations = np.asarray(
+    def _statistics_and_ratios(
+        records: list[SelectedSiblingRecord],
+    ) -> tuple[np.ndarray, np.ndarray]:
+        statistics = np.asarray(
+            [record_sample.record.stat for record_sample in records],
+            dtype=float,
+        )
+        reference_expectations = np.asarray(
+            [
+                float(
+                    record_sample.record.reference_scale
+                    * record_sample.record.degrees_of_freedom
+                )
+                for record_sample in records
+            ],
+            dtype=float,
+        )
+        return statistics, statistics / reference_expectations
+
+    statistics, ratios = _statistics_and_ratios(matched_records)
+    c_hat = float(np.mean(ratios))
+    c_hat_record_se = (
+        float(np.std(ratios, ddof=1) / np.sqrt(len(ratios)))
+        if len(ratios) > 1
+        else np.nan
+    )
+    simulation_ratio_means = np.asarray(
         [
-            float(record.reference_scale * record.degrees_of_freedom)
-            for record in matched_records
+            float(np.mean(_statistics_and_ratios(records)[1]))
+            for records in matched_records_by_simulation
         ],
         dtype=float,
     )
-    ratios = statistics / reference_expectations
-    c_hat = float(np.mean(ratios))
+    c_hat_simulation_se = (
+        float(
+            np.std(simulation_ratio_means, ddof=1)
+            / np.sqrt(len(simulation_ratio_means))
+        )
+        if len(simulation_ratio_means) > 1
+        else np.nan
+    )
+    c_hat_relative_simulation_se = (
+        float(c_hat_simulation_se / c_hat)
+        if np.isfinite(c_hat_simulation_se) and c_hat != 0.0
+        else np.nan
+    )
     target_reference_scale = float(
         target.reference_expectation / target.degrees_of_freedom
     )
@@ -356,6 +465,27 @@ def _selected_hierarchy_summary(
     empirical_tail = float(
         (1 + np.count_nonzero(statistics >= target.statistic))
         / (len(statistics) + 1)
+    )
+    empirical_tail_record_se = float(
+        np.sqrt(empirical_tail * (1.0 - empirical_tail) / (len(statistics) + 1))
+    )
+    simulation_tail_means = np.asarray(
+        [
+            float(
+                np.count_nonzero(_statistics_and_ratios(records)[0] >= target.statistic)
+                / len(records)
+            )
+            for records in matched_records_by_simulation
+        ],
+        dtype=float,
+    )
+    empirical_tail_simulation_se = (
+        float(
+            np.std(simulation_tail_means, ddof=1)
+            / np.sqrt(len(simulation_tail_means))
+        )
+        if len(simulation_tail_means) > 1
+        else np.nan
     )
     return {
         "n_replicates": int(n_replicates),
@@ -370,7 +500,13 @@ def _selected_hierarchy_summary(
         "edge_rejection_rate": (
             float(significant_edges / tested_edges) if tested_edges else 0.0
         ),
+        "selected_hierarchy_support_status": "matched_selected_hierarchy_records",
         "selected_hierarchy_c_hat": c_hat,
+        "selected_hierarchy_c_hat_record_se": c_hat_record_se,
+        "selected_hierarchy_c_hat_simulation_se": c_hat_simulation_se,
+        "selected_hierarchy_c_hat_relative_simulation_se": (
+            c_hat_relative_simulation_se
+        ),
         "selected_hierarchy_mean_scaled_chi2_p_value": mean_scaled_chi2_p_value,
         "selected_hierarchy_blocks_at_alpha": bool(
             mean_scaled_chi2_p_value >= config.SIBLING_ALPHA
@@ -380,6 +516,12 @@ def _selected_hierarchy_summary(
         "selected_hierarchy_q95_statistic": float(np.quantile(statistics, 0.95)),
         "selected_hierarchy_q99_statistic": float(np.quantile(statistics, 0.99)),
         "selected_hierarchy_empirical_tail_p_value": empirical_tail,
+        "selected_hierarchy_empirical_tail_record_se": empirical_tail_record_se,
+        "selected_hierarchy_empirical_tail_simulation_se": empirical_tail_simulation_se,
+        "selected_hierarchy_record_tail_resolution": float(1.0 / (len(statistics) + 1)),
+        "selected_hierarchy_matching_simulation_tail_resolution": float(
+            1.0 / (len(simulation_tail_means) + 1)
+        ),
     }
 
 
@@ -395,6 +537,12 @@ def _diagnose_case(
     feature_space = inputs.metadata.get("feature_space")
     if feature_space is not None and not isinstance(feature_space, FeatureSpace):
         raise ValueError("Prepared feature_space metadata must be a FeatureSpace.")
+    if feature_space is not None and feature_space.family_label == "continuous":
+        raise ValueError(
+            "Continuous selected-hierarchy null simulation requires a validated "
+            "continuous null covariance generator and an audit-owned continuous "
+            "tree-distance contract before use."
+        )
 
     observed_sample, tree_metric = _run_edge_and_sibling_records(
         inputs.data,
@@ -433,6 +581,7 @@ def _diagnose_case(
         "observed_degrees_of_freedom": target.degrees_of_freedom,
         "observed_projection_dimension": target.projection_dimension,
         "observed_parent_sample_size": target.parent_sample_size,
+        "observed_parent_depth": target.parent_depth,
         "observed_selected_records": len(observed_sample.selected_records),
         "observed_candidate_records": observed_sample.candidate_records,
         "observed_edge_rejection_rate": (
@@ -503,7 +652,10 @@ def run_selected_hierarchy_null_audit(
         "summary_csv": str(summary_path),
         "note": (
             "Diagnostic-only selected same-data hierarchy null. Production code "
-            "still fails closed when internal empirical-null support is absent."
+            "still fails closed when internal empirical-null support is absent. "
+            "Selected records require an open child-parent edge path. Missing "
+            "matched selected-hierarchy records are reported as unsupported "
+            "descriptive status, not converted into a calibration fallback."
         ),
     }
     (output_dir / "manifest.json").write_text(json.dumps(metadata, indent=2) + "\n")
@@ -523,12 +675,23 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=20260601)
     parser.add_argument(
         "--target-mode",
-        choices=("root", "strongest", "median_parent_size"),
+        choices=(
+            "root",
+            "strongest",
+            "median_parent_size",
+            "non_root_strongest",
+            "non_root_median_parent_size",
+        ),
         default="root",
     )
     parser.add_argument(
         "--context-match",
-        choices=("any", "projection", "projection_and_parent_size"),
+        choices=(
+            "any",
+            "projection",
+            "projection_and_parent_size",
+            "projection_parent_size_depth",
+        ),
         default="projection",
     )
     parser.add_argument("--output-dir", type=Path, default=None)

@@ -1,0 +1,17 @@
+{
+  "seed": 20260601,
+  "n_replicates": 100,
+  "case_names": [
+    "gauss_null_large",
+    "gauss_clear_medium",
+    "binary_low_noise_4c",
+    "cat_clear_3cat_4c"
+  ],
+  "target_mode": "non_root_strongest",
+  "context_match": "projection_parent_size_depth",
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "elapsed_sec": 33.02297,
+  "summary_csv": "raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601_richer_nonroot/selected_hierarchy_null_audit_summary.csv",
+  "note": "Diagnostic-only selected same-data hierarchy null. Production code still fails closed when internal empirical-null support is absent. Selected records require an open child-parent edge path. Missing matched selected-hierarchy records are reported as unsupported descriptive status, not converted into a calibration fallback."
+}
