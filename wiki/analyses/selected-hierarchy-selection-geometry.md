@@ -161,6 +161,16 @@ higher selected-null scale than root-like selected nodes. Exact depth is
 therefore a sparse descriptive coordinate, not yet a validated exact
 conditioning variable.
 
+The same diagnostic characterizes the selected-ratio distribution
+\(R=W/(a\nu)\). Across reliable parent-size rows, \(R\) has q95 values in the
+tens to low hundreds and the unconditioned projected-Wald reference rejects
+nearly all selected-null records in most rows. Geometrically, the same
+coordinates used to construct and open the hierarchy have already selected
+large projected contrasts before the sibling statistic is interpreted. This is
+why the fixed-subspace projected-Wald reference remains mathematically clean
+but insufficient for the selected hierarchy without an explicit conditional
+law.
+
 Feature-split cross-fit is useful evidence for the same reason, although it is
 not the chosen production method. When one feature block selects the tree and
 a held-out feature block supplies node distributions and tests, the
@@ -201,7 +211,9 @@ model is provided.
   case but still allow matched signal examples.
 - `wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md`
   records the depth and parent-size stratification study showing that small
-  selected parent nodes generally have larger selected-null scale.
+  selected parent nodes generally have larger selected-null scale and that the
+  selected-ratio law has large upper quantiles under same-data hierarchy
+  selection.
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the support-status
   contract and the distinction between invalid selected-non-null calibration
   support and valid empirical-null support.

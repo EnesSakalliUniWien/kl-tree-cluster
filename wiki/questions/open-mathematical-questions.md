@@ -133,6 +133,12 @@ cases. Small selected parent nodes often have \(c\) in the `50`--`70` range,
 while root-like selected nodes are lower but still far above one. Exact depth
 matching remains useful for description, but it is too sparse to promote to a
 validated exact conditioning variable.
+The regenerated stratification table records the selected-ratio law
+\(R=W/(a\nu)\) rather than only the mean scale \(c\). In reliable parent-size
+rows, the q95 of \(R\) ranges from about `38` to `103`, and the unconditioned
+projected-Wald reference rejects almost all selected-null records in most
+strata. This is descriptive evidence that the open object is a selected
+conditional law, not a tuned scalar correction to the unselected reference.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
@@ -214,6 +220,9 @@ The current concrete open questions are:
    are required before an external calibration estimate is admissible?
 8. Which context variables should be exact matching variables, and which should
    be descriptive stratifiers, for selected-hierarchy null studies?
+   Current evidence says parent-size scale is informative, exact depth is
+   sparse, and selected-ratio upper quantiles must be part of the support
+   contract if a production external selected-hierarchy null is ever attempted.
 9. What minimum effective calibration support is required before internal
    empirical-null inflation is trustworthy?
 10. Is the empirical-null weight rule calibrated enough to use beyond

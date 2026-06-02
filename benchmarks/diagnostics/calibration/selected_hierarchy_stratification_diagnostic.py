@@ -46,6 +46,7 @@ def _selected_record_rows(
     case_id: str,
     replicate_index: int,
     n_samples: int,
+    n_features: int,
     sample,
 ) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
@@ -64,6 +65,8 @@ def _selected_record_rows(
                 "replicate_index": int(replicate_index),
                 "parent": record.parent,
                 "feature_family": record.feature_family,
+                "n_samples": int(n_samples),
+                "feature_dimension": int(n_features),
                 "projection_dimension": int(record.sibling_projection_dimension),
                 "parent_depth": int(record_sample.parent_depth),
                 "parent_sample_size": int(record.n_parent),
@@ -96,6 +99,9 @@ def _stratum_summary(
             "selected_hierarchy_ratio"
         ].mean()
         ratios = group["selected_hierarchy_ratio"].to_numpy(dtype=float)
+        statistics = group["statistic"].to_numpy(dtype=float)
+        reference_expectations = group["reference_expectation"].to_numpy(dtype=float)
+        raw_p_values = group["raw_p_value"].to_numpy(dtype=float)
         n_matching_simulations = int(simulation_means.shape[0])
         c_hat = float(np.mean(ratios))
         simulation_se = (
@@ -123,9 +129,25 @@ def _stratum_summary(
                     if np.isfinite(simulation_se) and c_hat != 0.0
                     else np.nan
                 ),
-                "selected_hierarchy_c_hat_median": float(np.quantile(ratios, 0.5)),
-                "selected_hierarchy_c_hat_q10": float(np.quantile(ratios, 0.1)),
-                "selected_hierarchy_c_hat_q90": float(np.quantile(ratios, 0.9)),
+                "selected_hierarchy_ratio_median": float(np.quantile(ratios, 0.5)),
+                "selected_hierarchy_ratio_q10": float(np.quantile(ratios, 0.1)),
+                "selected_hierarchy_ratio_q90": float(np.quantile(ratios, 0.9)),
+                "selected_hierarchy_ratio_q95": float(np.quantile(ratios, 0.95)),
+                "selected_hierarchy_ratio_q99": float(np.quantile(ratios, 0.99)),
+                "statistic_mean": float(np.mean(statistics)),
+                "statistic_median": float(np.quantile(statistics, 0.5)),
+                "statistic_q95": float(np.quantile(statistics, 0.95)),
+                "statistic_q99": float(np.quantile(statistics, 0.99)),
+                "reference_expectation_mean": float(np.mean(reference_expectations)),
+                "reference_expectation_median": float(
+                    np.quantile(reference_expectations, 0.5)
+                ),
+                "raw_p_value_median": float(np.quantile(raw_p_values, 0.5)),
+                "raw_p_value_q10": float(np.quantile(raw_p_values, 0.1)),
+                "raw_p_value_q90": float(np.quantile(raw_p_values, 0.9)),
+                "standard_reference_sibling_alpha_rejection_rate": float(
+                    np.mean(raw_p_values <= config.SIBLING_ALPHA)
+                ),
                 "mean_parent_sample_size": float(group["parent_sample_size"].mean()),
                 "mean_parent_size_fraction": float(group["parent_size_fraction"].mean()),
                 "stratum_role": "descriptive_not_calibration_borrowing",
@@ -176,6 +198,7 @@ def _diagnose_case(
                 case_id=str(inputs.metadata["name"]),
                 replicate_index=replicate_index,
                 n_samples=int(inputs.data.shape[0]),
+                n_features=int(inputs.data.shape[1]),
                 sample=sample,
             )
         )
@@ -185,6 +208,8 @@ def _diagnose_case(
         "case_category": str(inputs.metadata["category"]),
         "feature_family": "bernoulli" if feature_space is None else feature_space.family_label,
         "tree_distance_metric": tree_metric,
+        "n_samples": int(inputs.data.shape[0]),
+        "feature_dimension": int(inputs.data.shape[1]),
         "n_replicates": int(n_replicates),
         "n_candidate_records": int(candidate_records),
         "n_selected_records": int(selected_records),
@@ -246,7 +271,14 @@ def run_selected_hierarchy_stratification_diagnostic(
     case_summary = pd.DataFrame.from_records(case_summaries)
     by_depth = _stratum_summary(
         selected_records,
-        group_columns=["case_id", "feature_family", "projection_dimension", "parent_depth"],
+        group_columns=[
+            "case_id",
+            "feature_family",
+            "n_samples",
+            "feature_dimension",
+            "projection_dimension",
+            "parent_depth",
+        ],
         n_replicates=int(n_replicates),
     )
     by_parent_size = _stratum_summary(
@@ -254,6 +286,8 @@ def run_selected_hierarchy_stratification_diagnostic(
         group_columns=[
             "case_id",
             "feature_family",
+            "n_samples",
+            "feature_dimension",
             "projection_dimension",
             "parent_size_bin",
         ],
@@ -264,6 +298,8 @@ def run_selected_hierarchy_stratification_diagnostic(
         group_columns=[
             "case_id",
             "feature_family",
+            "n_samples",
+            "feature_dimension",
             "projection_dimension",
             "parent_depth",
             "parent_size_bin",

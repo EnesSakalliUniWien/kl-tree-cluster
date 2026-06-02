@@ -160,6 +160,18 @@ root-like selected nodes are lower but still far above one in the tested
 contexts. Depth remains useful as a descriptive stratum, but exact depth
 matching is too sparse to treat as a validated conditioning requirement.
 
+The same stratification run now records the selected-ratio law
+\[
+R_u=\frac{W_u}{a_u\nu_u}
+\]
+inside each descriptive stratum. Reliable parent-size rows have q95 values
+roughly in the `38`--`103` range, and the standard projected-Wald reference
+rejects almost every selected-null record in most rows. This supports the
+mathematical claim that the selected-hierarchy law is a different conditional
+law, not a small perturbation of the fixed-context projected-Wald reference.
+It still does not define a borrowing rule: these are law-shape diagnostics,
+not admissible production calibration estimates.
+
 ## Evidence
 
 - `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
@@ -171,7 +183,8 @@ matching is too sparse to treat as a validated conditioning requirement.
 - `wiki/sources/selected-hierarchy-null-audit-20260601.md` summarizes the
   selected-hierarchy null audit and precision study.
 - `wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md`
-  summarizes the depth and parent-size stratification study.
+  summarizes the depth and parent-size stratification study, including
+  selected-ratio quantiles and raw projected-Wald rejection rates.
 - `wiki/analyses/selected-hierarchy-selection-geometry.md` explains the
   geometric selection mechanism that motivates this support contract.
 - `manuscript/sections/method/sibling_test.tex` records the current internal

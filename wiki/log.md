@@ -337,6 +337,11 @@ verification, and maintenance events here in chronological order.
   exact depth is too sparse to promote to a validated exact conditioning
   variable. Added
   [[selected-hierarchy-stratification-diagnostic-20260602]].
+- Extended the selected-hierarchy stratification evidence to record the
+  selected-ratio law \(R=W/(a\nu)\), raw statistic quantiles, reference
+  expectations, and standard projected-Wald rejection rates inside each
+  descriptive stratum. The compact 500-replicate output still writes no
+  per-record dump and remains diagnostic-only, not a calibration fallback.
 
 ## Evidence
 

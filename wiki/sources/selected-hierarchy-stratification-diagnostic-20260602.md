@@ -26,6 +26,12 @@ replicate and keeps all selected, edge-path-open sibling records. The output is
 descriptive only: depth and parent-size strata describe heterogeneity and must
 not be used as calibration fallback or borrowing rules.
 
+The regenerated 2026-06-02 table also records the selected-ratio law
+\(R=W/(a\nu)\), raw statistic quantiles, reference expectations, and the
+standard projected-Wald rejection rate inside each stratum. These columns
+characterize the conditional selected-null phenomenon; they are not production
+calibration estimates.
+
 ## Key Points
 
 - The run used 500 null replicates for `gauss_null_large`,
@@ -35,6 +41,13 @@ not be used as calibration fallback or borrowing rules.
   the categorical clear case.
 - Parent-size strata are informative. Small selected parent nodes often have
   higher \(c\) than root-like selected nodes.
+- The selected-ratio law is not close to the unselected projected-Wald
+  reference. Among reliable parent-size rows with at least 100 matching
+  simulations, \(R\) has q95 values from about `38` to `103`.
+- The standard projected-Wald reference rejects almost all selected-null
+  records in most reliable strata. The recorded rejection rate at
+  `SIBLING_ALPHA = 0.01` is `1.0` in most rows and never below about `0.70`
+  among the reliable rows.
 - Reliable parent-size rows with at least 100 matching simulations are:
 
 ```text
@@ -74,9 +87,11 @@ gauss_null_large k=2 small_0_0.25             57.9
 - `raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/case_summary.csv`
   records selected-record rates and edge rejection rates by case.
 - `raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_parent_size.csv`
-  records parent-size-bin summaries.
+  records parent-size-bin summaries, including \(n\), feature dimension,
+  projection dimension, \(R\)-law quantiles, statistic quantiles, reference
+  expectations, and raw projected-Wald rejection rates.
 - `raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_depth.csv`
-  records exact-depth summaries.
+  records the same selected-law summaries by exact depth.
 
 ## Links
 

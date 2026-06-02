@@ -9,7 +9,7 @@
   ],
   "edge_alpha": 0.001,
   "sibling_alpha": 0.01,
-  "elapsed_sec": 148.44364,
+  "elapsed_sec": 206.676023,
   "write_selected_records": false,
   "outputs": {
     "case_summary": "raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/case_summary.csv",
