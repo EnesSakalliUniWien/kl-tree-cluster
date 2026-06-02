@@ -31,6 +31,7 @@ def _geometry_records() -> pd.DataFrame:
                 "feature_representation": "bernoulli",
                 "feature_family": "bernoulli",
                 "replicate_index": index // 2,
+                "selected_hierarchy_simulation_id": f"case:{index // 2}",
                 "feature_dimension": 40,
                 "parent_sample_size": 20,
                 "left_child_sample_size": 10,
@@ -83,6 +84,9 @@ def _multi_case_geometry_records() -> pd.DataFrame:
     second["case_category"] = "synthetic_family_b"
     second["source_family"] = "source_family_b"
     second["replicate_index"] = second["replicate_index"] + 10
+    second["selected_hierarchy_simulation_id"] = [
+        f"case_b:{replicate_index}" for replicate_index in second["replicate_index"]
+    ]
     second["selected_hierarchy_ratio"] = second["selected_hierarchy_ratio"] * 1.25
     second["log_selected_hierarchy_ratio"] = np.log(second["selected_hierarchy_ratio"])
     return pd.concat([first, second], ignore_index=True)
@@ -169,6 +173,9 @@ def test_selected_ratio_tail_law_reports_context_support_and_holdout_error() -> 
 def test_selected_ratio_tail_law_can_mark_supported_context_admissible() -> None:
     records = pd.concat([_geometry_records()] * 8, ignore_index=True)
     records["replicate_index"] = np.arange(records.shape[0])
+    records["selected_hierarchy_simulation_id"] = [
+        f"case:{replicate_index}" for replicate_index in records["replicate_index"]
+    ]
 
     tail_law = evaluate_selected_ratio_tail_law(
         records,
@@ -182,6 +189,39 @@ def test_selected_ratio_tail_law_can_mark_supported_context_admissible() -> None
 
     assert bool(tail_law.iloc[0]["production_tail_law_admissible"])
     assert tail_law.iloc[0]["tail_law_admissibility_failure_reasons"] == ""
+
+
+def test_selected_ratio_tail_law_counts_case_replicates_as_independent() -> None:
+    first = _geometry_records()
+    second = _geometry_records().copy()
+    second["case_id"] = "case_b"
+    second["source_family"] = first["source_family"].iloc[0]
+    second["selected_hierarchy_simulation_id"] = [
+        f"case_b:{replicate_index}" for replicate_index in second["replicate_index"]
+    ]
+    records = pd.concat([first, second], ignore_index=True)
+    records["sibling_projection_dimension"] = 2
+    records["negative_log10_min_child_edge_bh_p_value"] = 8.5
+
+    tail_law = evaluate_selected_ratio_tail_law(
+        records,
+        n_folds=2,
+        min_train_simulations=2,
+        min_train_records=2,
+        required_min_matching_simulations=15,
+        required_min_matched_records=20,
+        max_exceedance_standard_error=0.2,
+    )
+
+    assert tail_law.shape[0] == 1
+    assert int(tail_law.iloc[0]["n_matching_simulations"]) == 20
+
+
+def test_selected_ratio_tail_law_requires_independent_simulation_ids() -> None:
+    records = _geometry_records().drop(columns=["selected_hierarchy_simulation_id"])
+
+    with pytest.raises(KeyError, match="explicit independent simulation ids"):
+        evaluate_selected_ratio_tail_law(records)
 
 
 def test_case_summary_uses_selected_ratio_and_geometry_fields() -> None:

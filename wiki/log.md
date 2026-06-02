@@ -398,6 +398,11 @@ verification, and maintenance events here in chronological order.
   rows but no production-admissible context under the strict `499` matching
   simulation, `499` matched record, and `0.002` held-out SE contract. Added
   [[selected-ratio-tail-law-diagnostic-20260602]].
+- Tightened selected-ratio tail-law support counting to use the explicit
+  `selected_hierarchy_simulation_id` case-replicate unit rather than bare
+  `replicate_index`. Regenerating the broad 200-replicate result leaves the
+  production conclusion unchanged: `0` of `104` contexts are admissible, and
+  the largest context has `376` independent matching simulations.
 
 ## Evidence
 

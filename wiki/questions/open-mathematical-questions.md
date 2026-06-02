@@ -201,7 +201,10 @@ In the 200-replicate broad run, `39` contexts have descriptive held-out tail
 folds, `65` have no valid folds, and `0` are production-admissible. Several
 high-support small-parent, high-edge-action contexts have held-out exceedance
 near `0.01`, but all rows still fail the independent matching-simulation
-threshold. Sparse root and low-edge-action contexts remain unstable. This
+threshold. The independent unit is now explicit as
+`selected_hierarchy_simulation_id`; the largest source-family context reaches
+`376` matching simulations, below the `499` production threshold. Sparse root
+and low-edge-action contexts remain unstable. This
 makes the next open question one of admissible support and context design, not
 another scalar heuristic.
 

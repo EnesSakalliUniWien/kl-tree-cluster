@@ -72,6 +72,7 @@ from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "descriptive_selected_hierarchy_geometry_not_calibration"
 RESPONSE_COLUMN = "log_selected_hierarchy_ratio"
+SIMULATION_ID_COLUMN = "selected_hierarchy_simulation_id"
 TAIL_LAW_ROLE = "descriptive_selected_ratio_tail_law_not_calibration"
 TAIL_LAW_CONTEXT_COLUMNS = (
     "source_family",
@@ -607,6 +608,7 @@ def _selected_geometry_rows(
             "source_family": source_family,
             "feature_representation": feature_representation,
             "replicate_index": int(replicate_index),
+            SIMULATION_ID_COLUMN: f"{case_id}:{int(replicate_index)}",
             "parent": record.parent,
             "left_child": record.left,
             "right_child": record.right,
@@ -1392,10 +1394,25 @@ def _edge_action_bin(edge_action: float) -> str:
 
 def _selected_ratio_tail_law_table(records: pd.DataFrame) -> pd.DataFrame:
     table = _candidate_equation_table(records)
+    if SIMULATION_ID_COLUMN not in table.columns:
+        raise KeyError(
+            "Selected-ratio tail-law evaluation requires explicit independent "
+            f"simulation ids in {SIMULATION_ID_COLUMN!r}."
+        )
     table["edge_action_bin"] = [
         _edge_action_bin(float(value)) for value in table["edge_action"]
     ]
     return table
+
+
+def _simulation_fold_ids(group: pd.DataFrame, *, n_folds: int) -> pd.Series:
+    simulation_ids = pd.Series(group[SIMULATION_ID_COLUMN], index=group.index).astype(str)
+    ordered_ids = tuple(sorted(simulation_ids.unique()))
+    fold_by_simulation = {
+        simulation_id: index % int(n_folds)
+        for index, simulation_id in enumerate(ordered_ids)
+    }
+    return simulation_ids.map(fold_by_simulation).astype(int)
 
 
 def _fold_tail_law_evaluation(
@@ -1413,8 +1430,7 @@ def _fold_tail_law_evaluation(
     n_train_rows = 0
     n_test_rows = 0
     used_folds = 0
-    replicate_values = pd.to_numeric(group["replicate_index"], errors="raise").astype(int)
-    fold_ids = pd.Series(replicate_values % int(n_folds), index=group.index, dtype=int)
+    fold_ids = _simulation_fold_ids(group, n_folds=n_folds)
 
     for fold_id in sorted(int(value) for value in fold_ids.unique()):
         train = group.loc[fold_ids != fold_id]
@@ -1424,7 +1440,7 @@ def _fold_tail_law_evaluation(
         if test.empty:
             failures.append(f"fold_{fold_id}:empty_test")
             continue
-        train_simulations = int(train["replicate_index"].nunique())
+        train_simulations = int(train[SIMULATION_ID_COLUMN].nunique())
         if train_simulations < min_train_simulations:
             failures.append(f"fold_{fold_id}:insufficient_train_simulations")
             continue
@@ -1538,7 +1554,7 @@ def evaluate_selected_ratio_tail_law(
         if not isinstance(group_values, tuple):
             group_values = (group_values,)
         ratios = group["selected_hierarchy_ratio"].to_numpy(dtype=float)
-        n_matching_simulations = int(group["replicate_index"].nunique())
+        n_matching_simulations = int(group[SIMULATION_ID_COLUMN].nunique())
         n_records = int(group.shape[0])
         fold_summary = _fold_tail_law_evaluation(
             group,
@@ -1837,6 +1853,7 @@ def run_selected_hierarchy_geometry_covariate_study(
                 )
             ],
             "alpha": float(config.SIBLING_ALPHA),
+            "independent_simulation_id_column": SIMULATION_ID_COLUMN,
             "production_min_matching_simulations": 499,
             "production_min_matched_records": 499,
             "production_max_exceedance_standard_error": 0.002,

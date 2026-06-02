@@ -238,12 +238,16 @@ edge-action bin
 
 At `200` replicates, this table has `104` contexts and no
 production-admissible rows. The most common failure is insufficient independent
-matching simulations; sparse contexts also fail matched-record and held-out
-tail standard-error requirements. Some small-parent, high-edge-action contexts
-have descriptive held-out exceedance near `0.01`, but those rows still fail
-the independent simulation threshold. This reinforces the no-fallback rule:
-descriptive selected-tail behavior is evidence about the phenomenon, not an
-external production calibration estimate.
+matching simulations. The independent unit is
+`selected_hierarchy_simulation_id`, which is the case id plus replicate index,
+so source-family contexts do not collapse different case-replicates that share
+the same numeric replicate index. The largest regenerated context reaches
+`376` matching simulations, still below the `499` threshold. Sparse contexts
+also fail matched-record and held-out tail standard-error requirements. Some
+small-parent, high-edge-action contexts have descriptive held-out exceedance
+near `0.01`, but those rows still fail the independent simulation threshold.
+This reinforces the no-fallback rule: descriptive selected-tail behavior is
+evidence about the phenomenon, not an external production calibration estimate.
 
 ## Evidence
 

@@ -17,7 +17,7 @@
   - Add diagnostic-only tail-law constants, context binning, held-out fold evaluation, production-admissibility checks, output writing, and manifest metadata.
 - Modify `tests/validation/53_test_selected_hierarchy_geometry_covariates.py`
   - Owns focused validation for selected-hierarchy geometry diagnostics.
-  - Add synthetic context fields and tests for tail-law support reporting and admissibility decisions.
+  - Add synthetic context fields, explicit independent simulation ids, and tests for tail-law support reporting and admissibility decisions.
 - Create `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/`
   - Stores the locked broad diagnostic evidence: `manifest.json`, case summaries, geometry summaries, candidate-equation tables, and `selected_ratio_tail_law.csv`.
 - Create `wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md`
@@ -148,6 +148,9 @@ Append this test after the support-reporting test:
 def test_selected_ratio_tail_law_can_mark_supported_context_admissible() -> None:
     records = pd.concat([_geometry_records()] * 8, ignore_index=True)
     records["replicate_index"] = np.arange(records.shape[0])
+    records["selected_hierarchy_simulation_id"] = [
+        f"case:{replicate_index}" for replicate_index in records["replicate_index"]
+    ]
 
     tail_law = evaluate_selected_ratio_tail_law(
         records,
@@ -261,8 +264,7 @@ def _fold_tail_law_evaluation(
     n_train_rows = 0
     n_test_rows = 0
     used_folds = 0
-    replicate_values = pd.to_numeric(group["replicate_index"], errors="raise").astype(int)
-    fold_ids = pd.Series(replicate_values % int(n_folds), index=group.index, dtype=int)
+    fold_ids = _simulation_fold_ids(group, n_folds=n_folds)
 
     for fold_id in sorted(int(value) for value in fold_ids.unique()):
         train = group.loc[fold_ids != fold_id]
@@ -272,7 +274,7 @@ def _fold_tail_law_evaluation(
         if test.empty:
             failures.append(f"fold_{fold_id}:empty_test")
             continue
-        train_simulations = int(train["replicate_index"].nunique())
+        train_simulations = int(train["selected_hierarchy_simulation_id"].nunique())
         if train_simulations < min_train_simulations:
             failures.append(f"fold_{fold_id}:insufficient_train_simulations")
             continue
@@ -396,7 +398,7 @@ def evaluate_selected_ratio_tail_law(
         if not isinstance(group_values, tuple):
             group_values = (group_values,)
         ratios = group["selected_hierarchy_ratio"].to_numpy(dtype=float)
-        n_matching_simulations = int(group["replicate_index"].nunique())
+        n_matching_simulations = int(group["selected_hierarchy_simulation_id"].nunique())
         n_records = int(group.shape[0])
         fold_summary = _fold_tail_law_evaluation(
             group,
@@ -486,6 +488,7 @@ Add this entry to `manifest`:
         )
     ],
     "alpha": float(config.SIBLING_ALPHA),
+    "independent_simulation_id_column": "selected_hierarchy_simulation_id",
     "production_min_matching_simulations": 499,
     "production_min_matched_records": 499,
     "production_max_exceedance_standard_error": 0.002,
@@ -651,12 +654,15 @@ production-admissible under the predeclared support contract.
 - `0` of `104` contexts are production-admissible. Every context fails the
   independent matching-simulation requirement, and most also fail matched
   record count and held-out tail standard-error requirements.
+- The independent simulation unit is `selected_hierarchy_simulation_id`, the
+  pair of case id and replicate index. The largest context reaches `376`
+  matching simulations, still below the `499` production threshold.
 - High-support small-node, high-edge-action contexts often have held-out
   exceedance near the target `0.01`. Ten descriptive contexts have absolute
   exceedance error at most `0.001` and held-out standard error at most
   `0.002`.
 - Sparse root or low-edge-action contexts are unstable. The median absolute
-  held-out exceedance error among descriptive contexts is about `0.0044`, and
+  held-out exceedance error among descriptive contexts is about `0.0052`, and
   the worst sparse context has absolute error about `0.323`.
 - The case-level selected-ratio scale remains large and family-dependent:
   mean \(R\) is about `30.9` for `gauss_clear_medium`, `62.9` for

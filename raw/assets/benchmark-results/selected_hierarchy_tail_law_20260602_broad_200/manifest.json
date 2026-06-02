@@ -16,7 +16,7 @@
   ],
   "edge_alpha": 0.001,
   "sibling_alpha": 0.01,
-  "elapsed_sec": 467.182385,
+  "elapsed_sec": 495.822621,
   "write_selected_records": false,
   "response_column": "log_selected_hierarchy_ratio",
   "covariate_blocks": {
@@ -146,6 +146,7 @@
       }
     ],
     "alpha": 0.01,
+    "independent_simulation_id_column": "selected_hierarchy_simulation_id",
     "production_min_matching_simulations": 499,
     "production_min_matched_records": 499,
     "production_max_exceedance_standard_error": 0.002

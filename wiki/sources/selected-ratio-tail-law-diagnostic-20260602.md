@@ -42,6 +42,10 @@ production-admissible under the predeclared support contract.
   requires at least `499` independent matching simulations, at least `499`
   matched selected records, and held-out exceedance standard error at most
   `0.002`.
+- The independent simulation unit is explicitly recorded as
+  `selected_hierarchy_simulation_id`, the pair of case id and replicate index.
+  This prevents source-family contexts from collapsing independent
+  case-replicates that share the same numeric `replicate_index`.
 - The broad run used `200` replicates over nine requested cases. Eight cases
   completed. `sbm_moderate` was skipped because the selected-hierarchy null
   generator does not own the precomputed KL tree-distance contract.
@@ -50,12 +54,15 @@ production-admissible under the predeclared support contract.
 - `0` of `104` contexts are production-admissible. Every context fails the
   independent matching-simulation requirement, and most also fail matched
   record count and held-out tail standard-error requirements.
+- After counting independent case-replicates explicitly, the largest context
+  support is `376` matching simulations for `gaussian_blobs`, still below the
+  `499` production threshold.
 - High-support small-node, high-edge-action contexts often have held-out
   exceedance near the target `0.01`. Ten descriptive contexts have absolute
   exceedance error at most `0.001` and held-out standard error at most
   `0.002`.
 - Sparse root or low-edge-action contexts are unstable. The median absolute
-  held-out exceedance error among descriptive contexts is about `0.0044`, and
+  held-out exceedance error among descriptive contexts is about `0.0052`, and
   the worst sparse context has absolute error about `0.323`.
 - The case-level selected-ratio scale remains large and family-dependent:
   mean \(R\) is about `30.9` for `gauss_clear_medium`, `62.9` for
@@ -75,8 +82,8 @@ production-admissible under the predeclared support contract.
   validates context support reporting, held-out exceedance estimation,
   admissibility failures, and output creation.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/manifest.json`
-  records the run seed, cases, context columns, edge-action bins, alpha, and
-  production support thresholds.
+  records the run seed, cases, independent simulation id column, context
+  columns, edge-action bins, alpha, and production support thresholds.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/case_summary.csv`
   records case completion status, selected-record counts, and the explicit SBM
   skip reason.
