@@ -22,6 +22,7 @@ sources:
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
+  - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -193,6 +194,16 @@ leave-one-source-family tail AUC is lower than the simpler edge/spectral
 scores. This means the open production target is not "find a high-AUC
 equation"; it is to define a selected-ratio tail law with admissible contexts
 and calibrated absolute probabilities.
+The selected-ratio tail-law diagnostic implements the first within-context
+holdout version of that target. It conditions on source family, feature
+family, parent-size bin, sibling projection dimension, and binned edge action.
+In the 200-replicate broad run, `39` contexts have descriptive held-out tail
+folds, `65` have no valid folds, and `0` are production-admissible. Several
+high-support small-parent, high-edge-action contexts have held-out exceedance
+near `0.01`, but all rows still fail the independent matching-simulation
+threshold. Sparse root and low-edge-action contexts remain unstable. This
+makes the next open question one of admissible support and context design, not
+another scalar heuristic.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
@@ -289,7 +300,9 @@ The current concrete open questions are:
    candidate tail-shape variables rather than validated matching rules. The
    broad geometry panel further separates global top-tail ranking from
    calibrated selected-ratio scale; a high held-out AUC alone is not enough for
-   production external calibration.
+   production external calibration. The selected-ratio tail-law diagnostic
+   confirms that explicit edge-action contexts are still support-limited at
+   200 replicates.
 9. What minimum effective calibration support is required before internal
    empirical-null inflation is trustworthy?
 10. Is the empirical-null weight rule calibrated enough to use beyond

@@ -62,6 +62,10 @@ renamed, or promoted.
   edge-selection, eigenvalue, and angular geometry covariates plus held-out
   candidate-equation transfer checks for selected sibling records under
   regenerated same-data null hierarchies.
+- [[selected-ratio-tail-law-diagnostic-20260602]] - within-context
+  selected-ratio tail-law diagnostic showing descriptive tail behavior but no
+  production-admissible context in the broad 200-replicate selected-hierarchy
+  run.
 
 ### Concepts
 

@@ -16,6 +16,8 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_holdout_100/candidate_equation_holdout.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equation_holdout.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/geometry_summary_by_case.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv
+  - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
 tags:
   - analysis
   - geometry
@@ -60,6 +62,15 @@ range from about `31` in the clear Gaussian case to about `580` in the
 high-dimensional categorical case. A production law would therefore need to
 model the selected-ratio tail distribution within admissible contexts, not just
 rank the global upper tail.
+
+The selected-ratio tail-law diagnostic tests that next object directly. It
+uses contexts defined by source family, feature family, parent-size bin,
+sibling projection dimension, and binned edge action. In the 200-replicate
+broad run, no context is production-admissible under the current support
+contract. Some high-support small-parent, high-edge-action contexts have
+held-out exceedance near \(\alpha_{\mathrm{sib}}=0.01\), but sparse root and
+low-edge-action contexts are unstable. This describes a possible conditional
+tail law; it does not license a production external calibration model.
 
 ## Details
 
@@ -251,6 +262,9 @@ calibration law.
 - `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equation_holdout.csv`
   records broad-panel replicate, leave-one-case, and leave-one-source-family
   holdout diagnostics.
+- `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv`
+  records within-context selected-ratio tail support, held-out exceedance, and
+  production-admissibility failures.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py`
   defines the fixed-subspace chi-square reference.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py`
@@ -265,6 +279,7 @@ calibration law.
 - [[selected-hierarchy-geometry-covariates-20260602]]
 - [[selected-hierarchy-selection-geometry]]
 - [[selected-hierarchy-null-support-contract]]
+- [[selected-ratio-tail-law-diagnostic-20260602]]
 - [[local-marchenko-pastur-rule]]
 - [[projected-wald-statistic]]
 
@@ -281,6 +296,9 @@ calibration law.
 - What is the right evaluation target for a production selected law: global
   top-tail ranking, within-context tail calibration, absolute selected-ratio
   prediction, or a full selected-ratio tail distribution?
+- Which selected-ratio tail-law contexts can reach production-admissible
+  support without borrowing across incompatible source families or selection
+  regimes?
 - Can the selected-hierarchy law be derived as a large-deviation or
   extreme-value problem over selected barycentric contrasts?
 - How should branch-length geometry enter the selected law for phylogenetic

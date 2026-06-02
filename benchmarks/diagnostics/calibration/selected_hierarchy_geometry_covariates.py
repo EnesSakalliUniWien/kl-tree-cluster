@@ -72,6 +72,22 @@ from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "descriptive_selected_hierarchy_geometry_not_calibration"
 RESPONSE_COLUMN = "log_selected_hierarchy_ratio"
+TAIL_LAW_ROLE = "descriptive_selected_ratio_tail_law_not_calibration"
+TAIL_LAW_CONTEXT_COLUMNS = (
+    "source_family",
+    "feature_family",
+    "parent_size_bin",
+    "sibling_projection_dimension",
+    "edge_action_bin",
+)
+EDGE_ACTION_BINS = (0.0, 2.0, 4.0, 6.0, 8.0, np.inf)
+EDGE_ACTION_BIN_LABELS = (
+    "edge_action_0_2",
+    "edge_action_2_4",
+    "edge_action_4_6",
+    "edge_action_6_8",
+    "edge_action_ge8",
+)
 
 CORRELATION_COVARIATES: tuple[tuple[str, str], ...] = (
     ("tree_geometry", "parent_depth"),
@@ -1361,6 +1377,224 @@ def _candidate_equation_table(records: pd.DataFrame) -> pd.DataFrame:
     return table
 
 
+def _edge_action_bin(edge_action: float) -> str:
+    if not np.isfinite(edge_action) or edge_action < 0.0:
+        raise ValueError(f"edge_action must be finite and non-negative; got {edge_action!r}.")
+    for lower, upper, label in zip(
+        EDGE_ACTION_BINS,
+        EDGE_ACTION_BINS[1:],
+        EDGE_ACTION_BIN_LABELS,
+    ):
+        if lower <= edge_action < upper:
+            return label
+    raise ValueError(f"edge_action did not match a bin: {edge_action!r}.")
+
+
+def _selected_ratio_tail_law_table(records: pd.DataFrame) -> pd.DataFrame:
+    table = _candidate_equation_table(records)
+    table["edge_action_bin"] = [
+        _edge_action_bin(float(value)) for value in table["edge_action"]
+    ]
+    return table
+
+
+def _fold_tail_law_evaluation(
+    group: pd.DataFrame,
+    *,
+    alpha: float,
+    n_folds: int,
+    min_train_simulations: int,
+    min_train_records: int,
+) -> dict[str, object]:
+    predictions: list[np.ndarray] = []
+    observed: list[np.ndarray] = []
+    thresholds: list[float] = []
+    failures: list[str] = []
+    n_train_rows = 0
+    n_test_rows = 0
+    used_folds = 0
+    replicate_values = pd.to_numeric(group["replicate_index"], errors="raise").astype(int)
+    fold_ids = pd.Series(replicate_values % int(n_folds), index=group.index, dtype=int)
+
+    for fold_id in sorted(int(value) for value in fold_ids.unique()):
+        train = group.loc[fold_ids != fold_id]
+        test = group.loc[fold_ids == fold_id]
+        n_train_rows += int(train.shape[0])
+        n_test_rows += int(test.shape[0])
+        if test.empty:
+            failures.append(f"fold_{fold_id}:empty_test")
+            continue
+        train_simulations = int(train["replicate_index"].nunique())
+        if train_simulations < min_train_simulations:
+            failures.append(f"fold_{fold_id}:insufficient_train_simulations")
+            continue
+        if train.shape[0] < min_train_records:
+            failures.append(f"fold_{fold_id}:insufficient_train_records")
+            continue
+
+        train_ratios = train["selected_hierarchy_ratio"].to_numpy(dtype=float)
+        threshold = float(np.quantile(train_ratios, 1.0 - alpha))
+        test_ratios = test["selected_hierarchy_ratio"].to_numpy(dtype=float)
+        predictions.append(np.full(test_ratios.shape[0], threshold, dtype=float))
+        observed.append(test_ratios)
+        thresholds.append(threshold)
+        used_folds += 1
+
+    if not predictions:
+        return {
+            "n_train_rows_across_folds": int(n_train_rows),
+            "n_test_rows_across_folds": int(n_test_rows),
+            "n_used_folds": 0,
+            "tail_threshold_mean": np.nan,
+            "tail_threshold_median": np.nan,
+            "heldout_exceedance_rate": np.nan,
+            "heldout_exceedance_absolute_error": np.nan,
+            "heldout_exceedance_standard_error": np.nan,
+            "tail_law_status": "no_valid_tail_law_folds",
+            "tail_law_failure_reasons": ";".join(failures),
+        }
+
+    predicted_thresholds = np.concatenate(predictions)
+    observed_ratios = np.concatenate(observed)
+    exceedances = observed_ratios > predicted_thresholds
+    exceedance_rate = float(np.mean(exceedances))
+    exceedance_se = float(
+        np.sqrt(exceedance_rate * (1.0 - exceedance_rate) / exceedances.shape[0])
+    )
+    return {
+        "n_train_rows_across_folds": int(n_train_rows),
+        "n_test_rows_across_folds": int(n_test_rows),
+        "n_used_folds": int(used_folds),
+        "tail_threshold_mean": float(np.mean(thresholds)),
+        "tail_threshold_median": float(np.median(thresholds)),
+        "heldout_exceedance_rate": exceedance_rate,
+        "heldout_exceedance_absolute_error": float(abs(exceedance_rate - alpha)),
+        "heldout_exceedance_standard_error": exceedance_se,
+        "tail_law_status": "descriptive_holdout_tail_law",
+        "tail_law_failure_reasons": ";".join(failures),
+    }
+
+
+def _tail_law_admissibility_failures(
+    *,
+    n_matching_simulations: int,
+    n_records: int,
+    heldout_exceedance_se: float,
+    required_min_matching_simulations: int,
+    required_min_matched_records: int,
+    max_exceedance_standard_error: float,
+) -> list[str]:
+    failures: list[str] = []
+    if n_matching_simulations < required_min_matching_simulations:
+        failures.append("matching_simulations_below_tail_resolution_contract")
+    if n_records < required_min_matched_records:
+        failures.append("matched_records_below_tail_resolution_contract")
+    if (
+        not np.isfinite(heldout_exceedance_se)
+        or heldout_exceedance_se > max_exceedance_standard_error
+    ):
+        failures.append("heldout_exceedance_se_above_contract")
+    return failures
+
+
+def evaluate_selected_ratio_tail_law(
+    records: pd.DataFrame,
+    *,
+    alpha: float = float(config.SIBLING_ALPHA),
+    n_folds: int = 5,
+    min_train_simulations: int = 20,
+    min_train_records: int = 20,
+    required_min_matching_simulations: int = 499,
+    required_min_matched_records: int = 499,
+    max_exceedance_standard_error: float = 0.002,
+    context_columns: Sequence[str] = TAIL_LAW_CONTEXT_COLUMNS,
+) -> pd.DataFrame:
+    r"""Evaluate selected-ratio tail quantiles inside explicit contexts.
+
+    This diagnostic estimates \(P(R_u > r \mid M_u)\) with held-out replicate
+    folds. It reports support and precision; it does not create an external
+    calibration fallback.
+    """
+    if records.empty:
+        return pd.DataFrame()
+    if not 0.0 < alpha < 1.0:
+        raise ValueError("alpha must lie in (0, 1).")
+    if n_folds < 2:
+        raise ValueError("n_folds must be at least 2.")
+    if min_train_simulations <= 0 or min_train_records <= 0:
+        raise ValueError("minimum training support values must be positive.")
+    if required_min_matching_simulations <= 0 or required_min_matched_records <= 0:
+        raise ValueError("required production support values must be positive.")
+    if max_exceedance_standard_error <= 0.0:
+        raise ValueError("max_exceedance_standard_error must be positive.")
+
+    table = _selected_ratio_tail_law_table(records)
+    missing_columns = [column for column in context_columns if column not in table.columns]
+    if missing_columns:
+        raise KeyError(f"Missing tail-law context column(s): {missing_columns!r}.")
+
+    rows: list[dict[str, object]] = []
+    for group_values, group in table.groupby(list(context_columns), dropna=False):
+        if not isinstance(group_values, tuple):
+            group_values = (group_values,)
+        ratios = group["selected_hierarchy_ratio"].to_numpy(dtype=float)
+        n_matching_simulations = int(group["replicate_index"].nunique())
+        n_records = int(group.shape[0])
+        fold_summary = _fold_tail_law_evaluation(
+            group,
+            alpha=alpha,
+            n_folds=n_folds,
+            min_train_simulations=min_train_simulations,
+            min_train_records=min_train_records,
+        )
+        admissibility_failures = _tail_law_admissibility_failures(
+            n_matching_simulations=n_matching_simulations,
+            n_records=n_records,
+            heldout_exceedance_se=float(
+                fold_summary["heldout_exceedance_standard_error"]
+            ),
+            required_min_matching_simulations=required_min_matching_simulations,
+            required_min_matched_records=required_min_matched_records,
+            max_exceedance_standard_error=max_exceedance_standard_error,
+        )
+        row = {
+            column: value for column, value in zip(context_columns, group_values)
+        }
+        row.update(
+            {
+                "tail_law_role": TAIL_LAW_ROLE,
+                "alpha": float(alpha),
+                "n_records": n_records,
+                "n_matching_simulations": n_matching_simulations,
+                "record_tail_resolution": float(1.0 / (n_records + 1)),
+                "matching_simulation_tail_resolution": float(
+                    1.0 / (n_matching_simulations + 1)
+                ),
+                "required_min_matching_simulations": int(
+                    required_min_matching_simulations
+                ),
+                "required_min_matched_records": int(required_min_matched_records),
+                "selected_ratio_mean": float(np.mean(ratios)),
+                "selected_ratio_median": float(np.quantile(ratios, 0.5)),
+                "selected_ratio_trainless_q90": float(np.quantile(ratios, 0.9)),
+                "selected_ratio_trainless_q95": float(np.quantile(ratios, 0.95)),
+                "selected_ratio_trainless_q99": float(np.quantile(ratios, 0.99)),
+                "production_tail_law_admissible": not admissibility_failures,
+                "tail_law_admissibility_failure_reasons": ";".join(
+                    admissibility_failures
+                ),
+            }
+        )
+        row.update(fold_summary)
+        rows.append(row)
+
+    return (
+        pd.DataFrame.from_records(rows)
+        .sort_values(list(context_columns))
+        .reset_index(drop=True)
+    )
+
+
 def _binary_auc_score(scores: np.ndarray, labels: np.ndarray) -> float:
     finite_mask = np.isfinite(scores) & np.isfinite(labels)
     finite_scores = scores[finite_mask]
@@ -1549,6 +1783,7 @@ def run_selected_hierarchy_geometry_covariate_study(
     covariate_block_models = evaluate_covariate_block_models(selected_records)
     candidate_equations = evaluate_candidate_equations(selected_records)
     candidate_equation_holdout = evaluate_candidate_equation_holdout(selected_records)
+    selected_ratio_tail_law = evaluate_selected_ratio_tail_law(selected_records)
 
     outputs = {
         "case_summary": case_summary,
@@ -1557,6 +1792,7 @@ def run_selected_hierarchy_geometry_covariate_study(
         "covariate_block_models": covariate_block_models,
         "candidate_equations": candidate_equations,
         "candidate_equation_holdout": candidate_equation_holdout,
+        "selected_ratio_tail_law": selected_ratio_tail_law,
     }
     if write_selected_records:
         outputs["selected_geometry_records"] = selected_records
@@ -1585,13 +1821,34 @@ def run_selected_hierarchy_geometry_covariate_study(
             }
             for equation_id, equation, predictors in CANDIDATE_EQUATIONS
         },
+        "selected_ratio_tail_law": {
+            "role": TAIL_LAW_ROLE,
+            "context_columns": list(TAIL_LAW_CONTEXT_COLUMNS),
+            "edge_action_bins": [
+                {
+                    "label": label,
+                    "lower": float(lower),
+                    "upper": None if np.isinf(upper) else float(upper),
+                }
+                for lower, upper, label in zip(
+                    EDGE_ACTION_BINS,
+                    EDGE_ACTION_BINS[1:],
+                    EDGE_ACTION_BIN_LABELS,
+                )
+            ],
+            "alpha": float(config.SIBLING_ALPHA),
+            "production_min_matching_simulations": 499,
+            "production_min_matched_records": 499,
+            "production_max_exceedance_standard_error": 0.002,
+        },
         "outputs": {name: str(output_dir / f"{name}.csv") for name in outputs},
         "note": (
             "Diagnostic-only selected-hierarchy geometry study. Relationship "
             "tables are descriptive and unadjusted; holdout tables are "
-            "descriptive transfer checks, not production calibration. These "
-            "outputs do not define external calibration borrowing, scalar "
-            "inflation, or production fallback."
+            "descriptive transfer checks, not production calibration. The "
+            "selected-ratio tail-law table reports context support and held-out "
+            "tail exceedance only. These outputs do not define external "
+            "calibration borrowing, scalar inflation, or production fallback."
         ),
     }
     (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -1650,6 +1907,7 @@ __all__ = [
     "evaluate_candidate_equations",
     "evaluate_covariate_block_models",
     "evaluate_covariate_relationships",
+    "evaluate_selected_ratio_tail_law",
     "run_selected_hierarchy_geometry_covariate_study",
     "summarize_selected_geometry_by_case",
 ]

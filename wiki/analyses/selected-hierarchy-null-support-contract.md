@@ -12,10 +12,12 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_depth.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_relationships.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_block_models.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
+  - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/questions/open-mathematical-questions.md
   - manuscript/sections/method/sibling_test.tex
@@ -224,6 +226,25 @@ projection dimension alone. The current support contract remains descriptive:
 these variables are candidate conditioning coordinates, not calibration
 borrowing rules.
 
+The selected-ratio tail-law diagnostic then tests a stricter context object:
+
+```text
+source family
+feature family
+parent-size bin
+sibling projection dimension
+edge-action bin
+```
+
+At `200` replicates, this table has `104` contexts and no
+production-admissible rows. The most common failure is insufficient independent
+matching simulations; sparse contexts also fail matched-record and held-out
+tail standard-error requirements. Some small-parent, high-edge-action contexts
+have descriptive held-out exceedance near `0.01`, but those rows still fail
+the independent simulation threshold. This reinforces the no-fallback rule:
+descriptive selected-tail behavior is evidence about the phenomenon, not an
+external production calibration estimate.
+
 ## Evidence
 
 - `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
@@ -240,6 +261,9 @@ borrowing rules.
 - `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_block_models.csv`
   records in-sample descriptive block-model summaries for the same covariate
   families.
+- `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv`
+  records within-context selected-ratio tail support, held-out exceedance
+  errors, and production-admissibility failures.
 - `raw/assets/benchmark-results/selected_hierarchy_precision_20260601_summary.csv`
   records the 500-replicate root strict, non-root strict, and non-root
   relaxation-ladder summaries.
@@ -261,6 +285,7 @@ borrowing rules.
 - [[selected-hierarchy-external-calibration-contract-20260602]]
 - [[selected-hierarchy-stratification-diagnostic-20260602]]
 - [[selected-hierarchy-geometry-covariates-20260602]]
+- [[selected-ratio-tail-law-diagnostic-20260602]]
 - [[open-mathematical-questions]]
 - [[oracle-gate-path-diagnostic]]
 - [[projected-wald-statistic]]

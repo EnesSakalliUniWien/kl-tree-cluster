@@ -391,6 +391,13 @@ verification, and maintenance events here in chronological order.
   scale: simple edge/spectral scores rank tails well, while absolute
   selected-ratio scale varies strongly by family and still needs a selected
   tail-law target rather than a production fallback.
+- Added a within-context selected-ratio tail-law diagnostic to the same
+  selected-hierarchy geometry tool. The context uses source family, feature
+  family, parent-size bin, sibling projection dimension, and binned edge
+  action. A broad 200-replicate run produced descriptive held-out tail-law
+  rows but no production-admissible context under the strict `499` matching
+  simulation, `499` matched record, and `0.002` held-out SE contract. Added
+  [[selected-ratio-tail-law-diagnostic-20260602]].
 
 ## Evidence
 

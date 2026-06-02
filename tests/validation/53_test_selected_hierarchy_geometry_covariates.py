@@ -12,6 +12,7 @@ from benchmarks.diagnostics.calibration.selected_hierarchy_geometry_covariates i
     evaluate_candidate_equations,
     evaluate_covariate_block_models,
     evaluate_covariate_relationships,
+    evaluate_selected_ratio_tail_law,
     run_selected_hierarchy_geometry_covariate_study,
     summarize_selected_geometry_by_case,
 )
@@ -28,6 +29,7 @@ def _geometry_records() -> pd.DataFrame:
                 "case_category": "synthetic_family_a",
                 "source_family": "source_family_a",
                 "feature_representation": "bernoulli",
+                "feature_family": "bernoulli",
                 "replicate_index": index // 2,
                 "feature_dimension": 40,
                 "parent_sample_size": 20,
@@ -37,6 +39,7 @@ def _geometry_records() -> pd.DataFrame:
                 "log_selected_hierarchy_ratio": float(np.log(ratio)),
                 "parent_depth": index % 4,
                 "parent_size_fraction": 1.0 - index / 40.0,
+                "parent_size_bin": "root_0.75_1",
                 "child_balance": 0.5 - index / 100.0,
                 "child_size_ratio": 1.0 + index / 10.0,
                 "branch_length_sum": 1.0 + index / 20.0,
@@ -141,6 +144,46 @@ def test_candidate_equations_report_replicate_and_case_holdout() -> None:
     assert 0.0 <= float(edge["holdout_tail_auc_from_linear_score"]) <= 1.0
 
 
+def test_selected_ratio_tail_law_reports_context_support_and_holdout_error() -> None:
+    records = _multi_case_geometry_records()
+
+    tail_law = evaluate_selected_ratio_tail_law(
+        records,
+        n_folds=2,
+        min_train_simulations=2,
+        min_train_records=2,
+        required_min_matching_simulations=100,
+        required_min_matched_records=100,
+    )
+
+    assert "edge_action_bin" in tail_law.columns
+    first = tail_law.iloc[0]
+    assert first["tail_law_status"] == "descriptive_holdout_tail_law"
+    assert not bool(first["production_tail_law_admissible"])
+    assert "matching_simulations_below_tail_resolution_contract" in str(
+        first["tail_law_admissibility_failure_reasons"]
+    )
+    assert float(first["heldout_exceedance_absolute_error"]) >= 0.0
+
+
+def test_selected_ratio_tail_law_can_mark_supported_context_admissible() -> None:
+    records = pd.concat([_geometry_records()] * 8, ignore_index=True)
+    records["replicate_index"] = np.arange(records.shape[0])
+
+    tail_law = evaluate_selected_ratio_tail_law(
+        records,
+        n_folds=4,
+        min_train_simulations=10,
+        min_train_records=10,
+        required_min_matching_simulations=40,
+        required_min_matched_records=40,
+        max_exceedance_standard_error=0.2,
+    )
+
+    assert bool(tail_law.iloc[0]["production_tail_law_admissible"])
+    assert tail_law.iloc[0]["tail_law_admissibility_failure_reasons"] == ""
+
+
 def test_case_summary_uses_selected_ratio_and_geometry_fields() -> None:
     summary = summarize_selected_geometry_by_case(_geometry_records())
 
@@ -168,6 +211,7 @@ def test_smoke_run_writes_geometry_outputs() -> None:
         assert (output_dir / "covariate_block_models.csv").exists()
         assert (output_dir / "candidate_equations.csv").exists()
         assert (output_dir / "candidate_equation_holdout.csv").exists()
+        assert (output_dir / "selected_ratio_tail_law.csv").exists()
         assert (output_dir / "manifest.json").exists()
 
 

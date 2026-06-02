@@ -12,6 +12,7 @@ sources:
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
+  - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
   - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
   - kl_clustering_analysis/tree/distributions.py
@@ -216,6 +217,15 @@ smaller edge-plus-spectral equation has nearly the same top-10% tail AUC as
 the full equation (about `0.969`). This makes edge action plus spectral excess
 the current best compact equation family for the next larger validation run.
 
+The selected-ratio tail-law diagnostic turns that candidate into an explicit
+context-support question. It estimates held-out tail exceedance within source
+family, feature family, parent-size bin, sibling projection dimension, and
+edge-action bins. In the broad 200-replicate run, no context is
+production-admissible. Geometrically, this means the current selected-tail
+evidence is real but still support-limited: the selected hierarchy creates a
+large conditional tail law, but the repository has not yet defined a
+production-valid external sampling law for that tail.
+
 Feature-split cross-fit is useful evidence for the same reason, although it is
 not the chosen production method. When one feature block selects the tree and
 a held-out feature block supplies node distributions and tests, the
@@ -266,6 +276,9 @@ model is provided.
   row-level selected-hierarchy geometry covariates and descriptive
   relationship/block summaries for tree, edge-selection, spectral, and angular
   variables.
+- `wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md` records the
+  within-context selected-ratio tail-law diagnostic and its production
+  admissibility failures.
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the support-status
   contract and the distinction between invalid selected-non-null calibration
   support and valid empirical-null support.
@@ -286,6 +299,7 @@ model is provided.
 - [[selected-hierarchy-null-audit-20260601]]
 - [[selected-hierarchy-null-support-contract]]
 - [[selected-hierarchy-geometry-covariates-20260602]]
+- [[selected-ratio-tail-law-diagnostic-20260602]]
 - [[projected-wald-statistic]]
 - [[local-marchenko-pastur-rule]]
 - [[selected-pca-projected-wald-validation]]
