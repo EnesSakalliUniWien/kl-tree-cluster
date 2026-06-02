@@ -19,6 +19,7 @@ sources:
   - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/analyses/selected-hierarchy-null-support-contract.md
+  - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
@@ -139,6 +140,15 @@ rows, the q95 of \(R\) ranges from about `38` to `103`, and the unconditioned
 projected-Wald reference rejects almost all selected-null records in most
 strata. This is descriptive evidence that the open object is a selected
 conditional law, not a tuned scalar correction to the unselected reference.
+The external calibration contract diagnostic defines the first explicit
+production admissibility rule for this object. At \(\alpha_{\mathrm{sib}}=0.01\),
+the default tail-resolution target requires at least `499` independent matching
+simulations and `499` matched selected records, plus relative simulation
+SE(\(\hat c\)) at or below `5%`. No current 500-replicate stratum passes this
+production contract. In reliable rows, scalar mean scaling gives zero
+rejections at \(\alpha_{\mathrm{sib}}=0.01\), but the resulting p-values are
+not uniform; this points toward a selected-ratio tail law if an external
+production model is ever attempted.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
@@ -218,11 +228,17 @@ The current concrete open questions are:
    undefined?
 7. What minimum matched selected-hierarchy support and Monte Carlo precision
    are required before an external calibration estimate is admissible?
+   Current diagnostic contract: at \(\alpha_{\mathrm{sib}}=0.01\), require at
+   least `499` independent matching simulations, `499` matched selected
+   records, and relative simulation SE(\(\hat c\)) no larger than `5%`.
+   Current evidence fails this production contract.
 8. Which context variables should be exact matching variables, and which should
    be descriptive stratifiers, for selected-hierarchy null studies?
    Current evidence says parent-size scale is informative, exact depth is
    sparse, and selected-ratio upper quantiles must be part of the support
    contract if a production external selected-hierarchy null is ever attempted.
+   Current external-contract stratum variables are case, feature family, \(n\),
+   \(p\), sibling projection dimension, and parent-size bin.
 9. What minimum effective calibration support is required before internal
    empirical-null inflation is trustworthy?
 10. Is the empirical-null weight rule calibrated enough to use beyond

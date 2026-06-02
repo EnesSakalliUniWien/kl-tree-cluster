@@ -342,6 +342,14 @@ verification, and maintenance events here in chronological order.
   expectations, and standard projected-Wald rejection rates inside each
   descriptive stratum. The compact 500-replicate output still writes no
   per-record dump and remains diagnostic-only, not a calibration fallback.
+- Added `selected_hierarchy_external_calibration_contract.py` and ran a
+  500-replicate external selected-hierarchy calibration contract diagnostic.
+  The production tail-resolution rule requires `499` independent matching
+  simulations at `SIBLING_ALPHA = 0.01`; no current row is production
+  admissible. Scalar mean scaling is conservative in reliable rows but not
+  distribution-calibrated, so future external calibration would need a
+  selected-ratio tail law rather than a scalar fallback. Added
+  [[selected-hierarchy-external-calibration-contract-20260602]].
 
 ## Evidence
 

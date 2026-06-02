@@ -5,10 +5,13 @@ status: reviewed
 updated: 2026-06-02
 sources:
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
+  - benchmarks/diagnostics/calibration/selected_hierarchy_external_calibration_contract.py
   - raw/assets/benchmark-results/selected_hierarchy_precision_20260601_summary.csv
+  - raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/external_calibration_contract.csv
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_parent_size.csv
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_depth.csv
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
+  - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/questions/open-mathematical-questions.md
@@ -172,11 +175,51 @@ law, not a small perturbation of the fixed-context projected-Wald reference.
 It still does not define a borrowing rule: these are law-shape diagnostics,
 not admissible production calibration estimates.
 
+The external calibration admissibility contract makes that boundary explicit.
+For production external tail calibration at
+\(\alpha_{\mathrm{sib}}=0.01\), the current diagnostic requires
+
+```text
+conditioning scope:
+  same_data_selected_hierarchy_edge_path_open
+
+exact stratum variables:
+  case, feature family, n, p, sibling projection dimension, parent-size bin
+
+tail-resolution target:
+  1 / (m + 1) <= 0.2 * alpha_sib
+
+resolved minimum at alpha_sib = 0.01:
+  m >= 499 independent matching simulations
+  matched selected records >= 499
+
+scale-estimate precision:
+  relative simulation SE(c-hat) <= 5%
+```
+
+The 500-replicate run does not make any row production-admissible: the largest
+independent matching-simulation count is `470`, below the required `499`.
+Therefore the production external estimator remains undefined everywhere in
+this evidence set.
+
+The same run checks scalar mean scaling. Among rows with at least 100 matching
+simulations, scalar-\(c\) p-values have rejection rate `0.0` at
+\(\alpha_{\mathrm{sib}}=0.01\), so scalar mean scaling is conservative here.
+However, KS tests against Uniform(0,1) reject the scalar-\(c\) p-values in the
+reliable rows. If an external selected-hierarchy model is pursued, the current
+evidence points toward modeling the selected-ratio tail law rather than using a
+single mean scale as calibrated p-value model.
+
 ## Evidence
 
 - `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
   implements selected records, support states, precision fields, and context
   matching for the diagnostic.
+- `benchmarks/diagnostics/calibration/selected_hierarchy_external_calibration_contract.py`
+  implements the external-calibration admissibility thresholds and scalar-vs-tail
+  diagnostic.
+- `raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/external_calibration_contract.csv`
+  records the 500-replicate admissibility and scalar-vs-tail decisions.
 - `raw/assets/benchmark-results/selected_hierarchy_precision_20260601_summary.csv`
   records the 500-replicate root strict, non-root strict, and non-root
   relaxation-ladder summaries.
@@ -195,6 +238,7 @@ not admissible production calibration estimates.
 
 - [[selected-hierarchy-selection-geometry]]
 - [[selected-hierarchy-null-audit-20260601]]
+- [[selected-hierarchy-external-calibration-contract-20260602]]
 - [[selected-hierarchy-stratification-diagnostic-20260602]]
 - [[open-mathematical-questions]]
 - [[oracle-gate-path-diagnostic]]

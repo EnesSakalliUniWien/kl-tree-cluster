@@ -98,4 +98,5 @@ gauss_null_large k=2 small_0_0.25             57.9
 - [[selected-hierarchy-null-support-contract]]
 - [[selected-hierarchy-selection-geometry]]
 - [[selected-hierarchy-null-audit-20260601]]
+- [[selected-hierarchy-external-calibration-contract-20260602]]
 - [[open-mathematical-questions]]

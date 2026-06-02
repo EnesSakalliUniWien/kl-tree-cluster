@@ -9,6 +9,7 @@ sources:
   - wiki/sources/edge-selection-null-audit-20260601.md
   - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
+  - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
   - kl_clustering_analysis/tree/distributions.py
@@ -171,6 +172,14 @@ why the fixed-subspace projected-Wald reference remains mathematically clean
 but insufficient for the selected hierarchy without an explicit conditional
 law.
 
+The external calibration contract diagnostic sharpens this conclusion. With a
+strict production tail-resolution target, no current 500-replicate stratum is
+admissible as an external production calibration object. Scalar mean scaling is
+also not a calibrated law shape: in reliable rows it gives zero rejection at
+\(\alpha_{\mathrm{sib}}=0.01\), but its p-values are not uniform. The selected
+law is therefore not just "chi-square times a constant"; it is a selected-ratio
+tail distribution that would need its own validated support contract.
+
 Feature-split cross-fit is useful evidence for the same reason, although it is
 not the chosen production method. When one feature block selects the tree and
 a held-out feature block supplies node distributions and tests, the
@@ -214,6 +223,9 @@ model is provided.
   selected parent nodes generally have larger selected-null scale and that the
   selected-ratio law has large upper quantiles under same-data hierarchy
   selection.
+- `wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md`
+  records the explicit production-admissibility thresholds and the
+  scalar-vs-tail diagnostic.
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the support-status
   contract and the distinction between invalid selected-non-null calibration
   support and valid empirical-null support.

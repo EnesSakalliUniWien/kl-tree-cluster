@@ -73,6 +73,8 @@ def _selected_record_rows(
                 "parent_size_fraction": parent_fraction,
                 "parent_size_bin": _parent_size_bin(parent_fraction),
                 "statistic": float(record.stat),
+                "reference_scale": float(record.reference_scale),
+                "degrees_of_freedom": float(record.degrees_of_freedom),
                 "reference_expectation": reference_expectation,
                 "selected_hierarchy_ratio": float(record.stat / reference_expectation),
                 "raw_p_value": float(record.p_value),

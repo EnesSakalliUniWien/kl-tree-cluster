@@ -55,6 +55,9 @@ renamed, or promoted.
 - [[selected-hierarchy-stratification-diagnostic-20260602]] - selected-null
   scale stratification by parent depth and parent-size bins, recorded as
   descriptive heterogeneity rather than calibration borrowing.
+- [[selected-hierarchy-external-calibration-contract-20260602]] - production
+  admissibility and scalar-vs-tail diagnostic for external selected-hierarchy
+  calibration; current evidence remains production-undefined.
 
 ### Concepts
 
