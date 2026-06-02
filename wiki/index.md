@@ -58,6 +58,10 @@ renamed, or promoted.
 - [[selected-hierarchy-external-calibration-contract-20260602]] - production
   admissibility and scalar-vs-tail diagnostic for external selected-hierarchy
   calibration; current evidence remains production-undefined.
+- [[selected-hierarchy-geometry-covariates-20260602]] - row-level tree,
+  edge-selection, eigenvalue, and angular geometry covariates plus held-out
+  candidate-equation transfer checks for selected sibling records under
+  regenerated same-data null hierarchies.
 
 ### Concepts
 
@@ -89,6 +93,8 @@ renamed, or promoted.
 - [[selected-hierarchy-null-support-contract]] - diagnostic support contract
   for selected-hierarchy null studies, including no-fallback unsupported states,
   context matching, and Monte Carlo precision requirements.
+- [[selected-hierarchy-geometric-law-map]] - map from selected-hierarchy
+  geometry variables to their actual statistical laws and physical analogies.
 - [[local-marchenko-pastur-rule]] - audit of the local MP dimension rule,
   eigenvalue scale, finite-sample null behavior, leaf-only spectral rows, and
   calibration-support fallout.

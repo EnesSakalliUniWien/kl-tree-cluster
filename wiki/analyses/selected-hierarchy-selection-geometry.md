@@ -11,7 +11,9 @@ sources:
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
+  - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
+  - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
   - kl_clustering_analysis/tree/distributions.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_kernel.py
@@ -180,6 +182,40 @@ also not a calibrated law shape: in reliable rows it gives zero rejection at
 law is therefore not just "chi-square times a constant"; it is a selected-ratio
 tail distribution that would need its own validated support contract.
 
+The 2026-06-02 geometry covariate diagnostic starts to decompose which
+coordinates may belong in that support contract. It records selected sibling
+records under regenerated same-data null hierarchies and attaches tree
+position, child balance, branch lengths, child-parent edge p-values, parent
+eigenvalue summaries, and angular alignment between the null-whitened sibling
+contrast \(z_u\) and selected PCA basis \(V_k\). The diagnostic object is
+
+\[
+R_u=\frac{W_u}{a_u\nu_u},
+\qquad
+\cos^2\theta_u=
+\frac{\lVert V_k^\top z_u\rVert^2}{\lVert z_u\rVert^2}.
+\]
+
+In the 100-replicate representative run, edge-selection strength is the
+largest recorded univariate correlate of \(\log R_u\): the Spearman
+correlation for `negative_log10_min_child_edge_bh_p_value` is about `0.712`.
+Spectral variables are visible but smaller, with selected eigenvalue mass
+around `-0.436`, selected eigenvalue over the MP upper bound around `0.399`,
+and parent test projection dimension around `0.302`. Angular alignment is
+high in absolute terms, with selected-subspace \(\cos^2\theta\) means about
+`0.83`--`0.92` by case, but its in-sample block model explains less
+log-ratio variance than the spectral block. This suggests that edge-selection
+severity is a necessary candidate context variable, while eigenvalue and
+angular summaries are candidate shape variables for the selected-ratio tail
+law. It does not define a production calibration rule.
+
+The follow-up candidate-equation pass shows that mean behavior and tail
+behavior may require different summaries. The full descriptive equation has
+the largest in-sample mean \(\log R_u\) fit (\(R^2\approx0.188\)), but the
+smaller edge-plus-spectral equation has nearly the same top-10% tail AUC as
+the full equation (about `0.969`). This makes edge action plus spectral excess
+the current best compact equation family for the next larger validation run.
+
 Feature-split cross-fit is useful evidence for the same reason, although it is
 not the chosen production method. When one feature block selects the tree and
 a held-out feature block supplies node distributions and tests, the
@@ -226,6 +262,10 @@ model is provided.
 - `wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md`
   records the explicit production-admissibility thresholds and the
   scalar-vs-tail diagnostic.
+- `wiki/sources/selected-hierarchy-geometry-covariates-20260602.md` records
+  row-level selected-hierarchy geometry covariates and descriptive
+  relationship/block summaries for tree, edge-selection, spectral, and angular
+  variables.
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the support-status
   contract and the distinction between invalid selected-non-null calibration
   support and valid empirical-null support.
@@ -245,6 +285,7 @@ model is provided.
 - [[feature-split-selection-audit-20260601]]
 - [[selected-hierarchy-null-audit-20260601]]
 - [[selected-hierarchy-null-support-contract]]
+- [[selected-hierarchy-geometry-covariates-20260602]]
 - [[projected-wald-statistic]]
 - [[local-marchenko-pastur-rule]]
 - [[selected-pca-projected-wald-validation]]
@@ -254,6 +295,9 @@ model is provided.
 - What exact conditioning event defines the production selected-hierarchy
   sibling null: full hierarchy reconstruction, fixed observed tree, ancestor
   Tree-BH path, focal sibling selection, or all of these?
+- Which candidate context variables from the geometry diagnostic are necessary
+  for a stable selected-ratio tail law: edge-selection strength, eigenvalue
+  concentration, angular alignment, parent size, depth, or child balance?
 - Can the selected-hierarchy correction be derived analytically, or must it be
   simulated as an external conditional null?
 - How should continuous selected-hierarchy null data be generated without

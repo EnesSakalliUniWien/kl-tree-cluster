@@ -21,6 +21,7 @@ sources:
   - wiki/analyses/selected-hierarchy-null-support-contract.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
+  - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -149,6 +150,39 @@ production contract. In reliable rows, scalar mean scaling gives zero
 rejections at \(\alpha_{\mathrm{sib}}=0.01\), but the resulting p-values are
 not uniform; this points toward a selected-ratio tail law if an external
 production model is ever attempted.
+The selected-hierarchy geometry covariate diagnostic adds the first row-level
+decomposition of candidate context variables. In the 100-replicate
+representative run, edge-selection strength is the strongest recorded
+univariate correlate of \(\log R\), with Spearman correlation about `0.712`
+for `negative_log10_min_child_edge_bh_p_value`. Spectral variables are
+secondary but visible, and angular alignment with the selected PCA subspace is
+high in absolute terms. This refines the open problem: parent size, depth, and
+projection dimension alone are unlikely to be enough. A production external
+law, if pursued, must test whether edge-selection severity belongs in the
+conditioning context and whether eigenvalue/angular variables are needed for
+the selected-ratio tail shape.
+The candidate-equation pass makes the next equation more concrete. The best
+compact top-tail candidate is edge action plus spectral modes:
+\[
+\log R_u
+\sim
+A_u+
+\log(\lambda_{k,u}/\lambda_{+,u})+
+m_{k,u}+
+r_{\mathrm{eff},u}.
+\]
+The full descriptive equation fits mean \(\log R\) better, but this compact
+edge-plus-spectral form nearly matches it for top-10% tail discrimination in
+the current representative run. This is still a diagnostic equation family,
+not a production calibration law.
+The held-out 100-replicate rerun strengthens the diagnostic but not the
+production claim. Replicate-fold holdout preserves top-tail AUC around `0.969`
+for the compact edge-plus-spectral form. Leave-one-case-out transfer reduces
+the larger full descriptive equation more strongly, while the compact
+edge-plus-spectral form keeps tail AUC around `0.922`. The next open question
+is whether this compact law survives a larger panel with non-root contexts,
+high-cardinality categorical failures, phylogenetic cases, and strict
+row-level selected-null support.
 
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
@@ -221,7 +255,8 @@ The current concrete open questions are:
    Tree-BH path, focal blocker selection, or full hierarchy reconstruction?
 4. Can external Gaussian sibling-null calibration explain the Gaussian
    blockers?
-5. Does external inflation depend mainly on \(p/n\), projection dimension, tree
+5. Does external inflation depend mainly on edge-selection severity, \(p/n\),
+   projection dimension, eigenvalue concentration, angular alignment, tree
    selection, covariance whitening, or feature family?
 6. When should the calibration hierarchy return
    \(\hat c_{\mathrm{internal}}\), \(\hat c_{\mathrm{external}}\), or fail
@@ -238,7 +273,10 @@ The current concrete open questions are:
    sparse, and selected-ratio upper quantiles must be part of the support
    contract if a production external selected-hierarchy null is ever attempted.
    Current external-contract stratum variables are case, feature family, \(n\),
-   \(p\), sibling projection dimension, and parent-size bin.
+   \(p\), sibling projection dimension, and parent-size bin. The geometry
+   covariate diagnostic adds edge-selection severity as the strongest current
+   candidate context variable, with eigenvalue and angular summaries as
+   candidate tail-shape variables rather than validated matching rules.
 9. What minimum effective calibration support is required before internal
    empirical-null inflation is trustworthy?
 10. Is the empirical-null weight rule calibrated enough to use beyond

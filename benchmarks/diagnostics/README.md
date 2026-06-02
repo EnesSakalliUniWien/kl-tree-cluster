@@ -28,5 +28,6 @@ Maintained entrypoints:
 - `calibration/selected_hierarchy_null_audit.py`
 - `calibration/selected_hierarchy_external_calibration_contract.py`
 - `calibration/selected_hierarchy_stratification_diagnostic.py`
+- `calibration/selected_hierarchy_geometry_covariates.py`
 - `analysis/analyze_relationships.py`
 - `spectral/compare_mp_dimension_contracts.py`

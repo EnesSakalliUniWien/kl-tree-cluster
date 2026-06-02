@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-01
+updated: 2026-06-02
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -350,6 +350,38 @@ verification, and maintenance events here in chronological order.
   distribution-calibrated, so future external calibration would need a
   selected-ratio tail law rather than a scalar fallback. Added
   [[selected-hierarchy-external-calibration-contract-20260602]].
+
+### 2026-06-02
+
+- Added `selected_hierarchy_geometry_covariates.py` and ran a 100-replicate
+  diagnostic over four representative Bernoulli/categorical selected-null
+  cases. The run records row-level tree geometry, edge p-values, eigenvalue
+  summaries, and angular alignment between the selected sibling contrast and
+  the selected PCA subspace. Edge-selection strength is the largest recorded
+  correlate of log selected-ratio; spectral and angular variables add smaller
+  descriptive structure. Added
+  [[selected-hierarchy-geometry-covariates-20260602]] and kept the result
+  explicitly diagnostic-only, not a production external calibration model.
+- Added [[selected-hierarchy-geometric-law-map]] to separate actual method laws
+  from physical analogies for the selected-hierarchy variables. The map links
+  projected-Wald energy to the chi-square law, edge-selection strength to a
+  large-deviation/action coordinate, eigenvalues to Marchenko--Pastur spectral
+  modes, angles to Pythagorean projection, parent size/balance to sampling
+  variance, branch lengths to optional Felsenstein/Brownian variance
+  accumulation, and node distributions to barycentric coarse-graining.
+- Extended the selected-hierarchy geometry diagnostic with candidate-equation
+  scoring. The compact edge-plus-spectral equation nearly matches the full
+  descriptive equation for top-10% selected-ratio tail discrimination, while
+  the full equation fits mean log-ratio better. The result defines the next
+  validation target, not a production law.
+- Added candidate-equation holdout scoring to
+  `selected_hierarchy_geometry_covariates.py` and reran the same 100-replicate
+  four-case panel. Replicate-fold holdout preserves strong tail ranking for
+  the compact edge-plus-spectral equation, and leave-one-case-out transfer
+  makes it more stable than the larger full descriptive candidate for tail
+  discrimination. Updated [[selected-hierarchy-geometry-covariates-20260602]]
+  and [[selected-hierarchy-geometric-law-map]] while keeping the result
+  diagnostic-only.
 
 ## Evidence
 

@@ -10,9 +10,12 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/external_calibration_contract.csv
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_parent_size.csv
   - raw/assets/benchmark-results/selected_hierarchy_stratification_20260602_500/strata_by_depth.csv
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_relationships.csv
+  - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_block_models.csv
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
+  - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/questions/open-mathematical-questions.md
   - manuscript/sections/method/sibling_test.tex
@@ -210,6 +213,17 @@ reliable rows. If an external selected-hierarchy model is pursued, the current
 evidence points toward modeling the selected-ratio tail law rather than using a
 single mean scale as calibrated p-value model.
 
+The geometry covariate diagnostic adds candidate variables for the context
+\(M_u\), but still does not make any variable production-admissible. In its
+100-replicate representative run, edge-selection strength has the largest
+recorded descriptive relationship with \(\log R_u\), while spectral and
+angular summaries provide smaller additional structure. This means a future
+external selected-hierarchy null study should test edge-selection severity as
+an exact or modeled context variable before using parent size, depth, or
+projection dimension alone. The current support contract remains descriptive:
+these variables are candidate conditioning coordinates, not calibration
+borrowing rules.
+
 ## Evidence
 
 - `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
@@ -220,6 +234,12 @@ single mean scale as calibrated p-value model.
   diagnostic.
 - `raw/assets/benchmark-results/selected_hierarchy_external_contract_20260602_500/external_calibration_contract.csv`
   records the 500-replicate admissibility and scalar-vs-tail decisions.
+- `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_relationships.csv`
+  records descriptive univariate relationships between selected-ratio scale
+  and tree, edge-selection, spectral, and angular covariates.
+- `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_block_models.csv`
+  records in-sample descriptive block-model summaries for the same covariate
+  families.
 - `raw/assets/benchmark-results/selected_hierarchy_precision_20260601_summary.csv`
   records the 500-replicate root strict, non-root strict, and non-root
   relaxation-ladder summaries.
@@ -240,6 +260,7 @@ single mean scale as calibrated p-value model.
 - [[selected-hierarchy-null-audit-20260601]]
 - [[selected-hierarchy-external-calibration-contract-20260602]]
 - [[selected-hierarchy-stratification-diagnostic-20260602]]
+- [[selected-hierarchy-geometry-covariates-20260602]]
 - [[open-mathematical-questions]]
 - [[oracle-gate-path-diagnostic]]
 - [[projected-wald-statistic]]
@@ -248,6 +269,9 @@ single mean scale as calibrated p-value model.
 
 - Which context variables should become exact conditioning variables for a
   production selected-hierarchy null, if such a model is ever added?
+- Is edge-selection severity required in \(M_u\), and if so should it enter as
+  a hard stratum, a continuous covariate, or part of a selected-ratio tail-law
+  model?
 - What Monte Carlo precision target would be required for production
   calibration at \(\alpha_{\mathrm{sib}}=0.01\)?
 - Can parent size and depth be modeled continuously or stratified without
