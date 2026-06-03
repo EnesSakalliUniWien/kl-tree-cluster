@@ -78,8 +78,8 @@ renamed, or promoted.
 - [[root-selected-region-margins-20260603]] - average-linkage replay of
   observed root merge-selection inequalities, separating tie-heavy discrete
   hierarchy cells from smooth Euclidean first-order signed-distance cells, and
-  showing edge-opening boundary/action and the edge/sibling barycentric
-  relationship in the supported continuous root panel.
+  showing edge-opening boundary/action, the edge/sibling barycentric
+  relationship, and the fixed-projection edge-conditioned sibling tail.
 
 ### Concepts
 

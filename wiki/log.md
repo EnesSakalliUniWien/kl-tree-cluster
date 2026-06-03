@@ -489,6 +489,15 @@ verification, and maintenance events here in chronological order.
   the sibling projection, so local edge and sibling statistics use the same
   projected barycentric energy before thresholds, Tree-BH, sibling
   FDR/inflation, and selected conditioning are applied.
+- Extended the root selected-region diagnostic to schema `v6` with the
+  fixed-projection sibling tail conditional only on root edge opening, plus
+  the current internal empirical-inflation sibling tail or explicit
+  unsupported status. The diagnostic shows that edge conditioning alone does
+  not explain diffuse-dimensional root blockers: raw and edge-conditioned
+  sibling p-values remain significant, while the empirical-inflation layer can
+  block. The next mathematical target is therefore the empirical-inflation
+  versus fuller selected-hierarchy law, not another root edge-opening
+  truncation formula.
 
 ## Evidence
 

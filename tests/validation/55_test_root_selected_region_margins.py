@@ -7,6 +7,7 @@ import pytest
 from benchmarks.diagnostics.calibration.root_selected_region_margins import (
     annotate_root_child_construction_roles,
     euclidean_average_linkage_inequality_geometry,
+    fixed_projection_edge_conditioned_sibling_tail,
     projected_wald_edge_opening_geometry,
     replay_average_linkage_margins,
     root_edge_sibling_wald_relationship,
@@ -173,6 +174,48 @@ def test_projected_wald_edge_opening_geometry_uses_chi_square_radial_boundary() 
         statistic / threshold
     )
     assert geometry["edge_radial_distance"] == pytest.approx(1.5)
+
+
+def test_fixed_projection_edge_conditioned_tail_matches_truncated_chi_square() -> None:
+    threshold = float(stats.chi2.isf(0.001, df=2))
+    statistic = threshold + 2.0
+
+    tail = fixed_projection_edge_conditioned_sibling_tail(
+        sibling_statistic=statistic,
+        sibling_degrees_of_freedom=2,
+        edge_degrees_of_freedom=2,
+        edge_alpha=0.001,
+    )
+
+    assert tail["edge_conditioned_sibling_law_status"] == (
+        "evaluated_equal_projection_truncated_chi_square"
+    )
+    assert tail["edge_conditioning_threshold"] == pytest.approx(threshold)
+    assert tail["edge_conditioning_probability"] == pytest.approx(0.001)
+    assert tail["edge_conditioned_sibling_p_value"] == pytest.approx(
+        stats.chi2.sf(statistic, df=2) / stats.chi2.sf(threshold, df=2)
+    )
+
+
+def test_fixed_projection_edge_conditioned_tail_integrates_extra_edge_dimensions() -> None:
+    at_zero = fixed_projection_edge_conditioned_sibling_tail(
+        sibling_statistic=0.0,
+        sibling_degrees_of_freedom=2,
+        edge_degrees_of_freedom=4,
+        edge_alpha=0.001,
+    )
+    at_threshold = fixed_projection_edge_conditioned_sibling_tail(
+        sibling_statistic=float(stats.chi2.isf(0.001, df=4)),
+        sibling_degrees_of_freedom=2,
+        edge_degrees_of_freedom=4,
+        edge_alpha=0.001,
+    )
+
+    assert at_zero["edge_conditioned_sibling_law_status"] == (
+        "evaluated_edge_projection_superset_truncated_chi_square"
+    )
+    assert at_zero["edge_conditioned_sibling_p_value"] == pytest.approx(1.0)
+    assert 0.0 < at_threshold["edge_conditioned_sibling_p_value"] < 1.0
 
 
 def test_root_edge_sibling_wald_relationship_verifies_barycentric_z_identity() -> None:

@@ -200,6 +200,57 @@ measure the same null-whitened barycentric direction. They differ through the
 projection dimension, the chi-square opening threshold, Tree-BH edge
 correction, sibling FDR/inflation, and same-data selection conditioning.
 
+### Fixed-Projection Edge-Conditioned Sibling Law
+
+The barycentric identity makes the first edge/sibling conditioning calculation
+explicit in the fixed-subspace root model. Let
+\[
+X\sim\chi^2_{k_s}
+\]
+be the sibling projected energy and let
+\[
+Y\sim\chi^2_{k_e-k_s}
+\]
+be the additional parent-edge projection energy when the edge projection
+contains the sibling projection as a prefix. The raw edge-opening event is
+\[
+X+Y\ge q_{1-\alpha_{\mathrm{edge}},k_e}.
+\]
+For an observed sibling statistic \(w\), the fixed-projection tail conditional
+only on this edge opening is
+\[
+p_{\mathrm{edge-cond}}(w)
+=
+\Pr\left(
+X\ge w
+\mid
+X+Y\ge q_{1-\alpha_{\mathrm{edge}},k_e}
+\right).
+\]
+When \(k_s=k_e=k\), this reduces to the truncated chi-square tail
+\[
+p_{\mathrm{edge-cond}}(w)
+=
+\frac{
+\Pr\!\left(\chi^2_k\ge \max(w,q_{1-\alpha_{\mathrm{edge}},k})\right)
+}{
+\Pr\!\left(\chi^2_k\ge q_{1-\alpha_{\mathrm{edge}},k}\right)
+}.
+\]
+This law is mathematically useful because it isolates the action of the root
+edge-opening boundary. It is not the production selected-hierarchy law: it
+does not condition on hierarchy construction, Tree-BH selection cells,
+selected PCA, sibling FDR, empirical inflation, traversal, or non-root focal
+selection.
+
+The schema `v6` diagnostic shows that this restricted edge conditioning is
+not enough to explain the current root blocker cases. For the diffuse
+dimensional root examples, raw and edge-conditioned sibling p-values remain
+far below `SIBLING_ALPHA = 0.01`; the block appears only after the internal
+empirical-inflation layer. Therefore the next object is not another
+edge-opening truncation formula. It is the relationship between internal
+empirical inflation and the fuller selected-hierarchy law.
+
 ### Root Sibling Selected Region
 
 The root selected region is
@@ -404,6 +455,15 @@ rows, the parent edge projection can retain additional spectral energy beyond
 the sibling projection prefix; this is a projection-policy difference, not a
 different raw barycentric contrast.
 
+Schema `v6` adds the fixed-projection edge-conditioned sibling tail and the
+current internal empirical-inflation sibling tail. The result is a clean
+separation: edge conditioning alone does not turn strong diffuse-dimensional
+root sibling signals into blockers, while empirical inflation does. The
+high-cardinality categorical representative remains explicitly unsupported by
+the internal empirical-null contract. This keeps the next mathematical target
+honest: diagnose the empirical-inflation/selected-hierarchy law, not the
+already isolated root edge-opening law.
+
 ### Minimal Diagnostic Contract
 
 A focused root selected-region diagnostic should record, for each selected
@@ -414,6 +474,9 @@ root merge sequence id
 root child leaf sets
 root sibling W
 root selected ratio R
+root sibling raw p-value
+root sibling edge-conditioned p-value
+root sibling empirical-inflation p-value or unsupported status
 root edge-path radial distance
 root edge-path statistic margin
 root edge-path action

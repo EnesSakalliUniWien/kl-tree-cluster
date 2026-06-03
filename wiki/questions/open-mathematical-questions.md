@@ -285,6 +285,17 @@ Spearman correlation `1.0` with log root sibling ratio, while merge-margin
 distances are weak. The same panel verifies that edge and sibling tests use
 the same projected barycentric energy before thresholds/FDR/inflation; the
 open object is the selected conditioning layer around that shared direction.
+Schema `v6` isolates the fixed-projection law conditional only on root
+edge-opening:
+\[
+\Pr(X\ge w\mid X+Y\ge q_{1-\alpha,k_e}).
+\]
+This law does not explain the current diffuse-dimensional blockers. In the
+observed root rows, edge-conditioned sibling p-values remain far below
+`SIBLING_ALPHA = 0.01`; the block appears only after current internal
+empirical inflation. Therefore the next open object is the relationship
+between empirical inflation and the fuller selected-hierarchy law, not another
+root edge-opening truncation.
 [[selected-pca-projected-wald-validation]] records the first locked run. In the
 tested Gaussian settings, leaf-only selected PCA was calibrated at
 \(\alpha=0.05\), but appending deterministic child-mean internal rows produced
@@ -488,6 +499,13 @@ The current concrete open questions are:
     action be lifted to the full selected law with selected projection,
     Tree-BH selection cells, sibling FDR/inflation, and non-root focal sibling
     contexts?
+44. Why does the internal empirical-inflation layer block some root diffuse
+    dimensional contexts when the raw and edge-conditioned sibling tails are
+    still strongly significant? The current diagnostic says the blocker is not
+    the fixed-projection root edge-opening law alone. The open question is
+    whether internal empirical inflation is estimating a real fuller
+    selected-hierarchy tail, over-penalizing selected non-null contexts, or
+    mixing incompatible support regimes.
 
 ## Evidence
 

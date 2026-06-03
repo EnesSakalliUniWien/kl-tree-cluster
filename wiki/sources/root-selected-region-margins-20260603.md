@@ -38,7 +38,11 @@ edge-opening boundary in fixed-subspace \(z\)-space:
 \(\sqrt Q-\sqrt{q_{1-\alpha,k}}\), plus edge statistic margins and
 edge-path p-value actions. It also records the local algebraic relationship
 between root child-parent edge z-vectors and the root sibling z-vector. These
-are descriptive geometry fields, not a production calibration rule.
+are descriptive geometry fields, not a production calibration rule. Schema
+`v6` adds a fixed-projection sibling tail conditional only on root edge
+opening, plus the current internal empirical-inflation sibling tail when its
+strict support contract is available. This separates the edge-opening
+boundary from the empirical-inflation layer.
 
 ## Key Points
 
@@ -89,6 +93,22 @@ are descriptive geometry fields, not a production calibration rule.
   ratio is constant `1`. In the mixed representative panel, categorical cases
   can have extra parent-projection edge energy when the sibling projection
   dimension is lower than the parent edge dimension.
+- Schema `v6` computes the fixed-projection root sibling tail
+  \(P(X\ge x_{\mathrm{obs}}\mid X+Y\ge q_{1-\alpha,k_e})\), where
+  \(X\sim\chi^2_{k_s}\) is sibling energy and
+  \(Y\sim\chi^2_{k_e-k_s}\) is the extra edge-projection energy. Equal
+  projection cases reduce to a truncated chi-square tail.
+- Edge conditioning alone does not explain the observed blockers. In
+  `dim_diffuse_6c_136f`, the raw root sibling p-value is about
+  `3.83e-165`, the edge-conditioned p-value is about `3.83e-162`, and neither
+  blocks at `SIBLING_ALPHA = 0.01`; the current empirical-inflation p-value is
+  about `0.0118` and blocks. In
+  `dim_diffuse_6c_136f_continuous`, the corresponding p-values are about
+  `6.10e-15`, `6.10e-12`, and `0.123`.
+- `cat_highcard_20cat_4c` remains a calibration-support problem, not an
+  edge-conditioning problem: the raw and edge-conditioned root sibling
+  p-values are about `2.26e-289` and `2.26e-286`, while internal empirical
+  inflation is explicitly `unsupported_internal_empirical_null`.
 - Root selected sibling ratios remain large in all five representatives:
   about `755`, `748`, `379`, `32.7`, and `665`, respectively.
 - Root edge-path BH actions are enormous for Hamming/discretized and
@@ -109,11 +129,11 @@ are descriptive geometry fields, not a production calibration rule.
   linkage replay, rejects a nonminimal linkage matrix, and marks the
   two-leaf root case as having root children that are leaves.
 - `raw/assets/benchmark-results/root_selected_region_margins_20260603/manifest.json`
-  records schema `root_selected_region_margins/v5`, five root rows, `775`
+  records schema `root_selected_region_margins/v6`, five root rows, `775`
   merge-margin rows, nine relationship rows, and the diagnostic role
   `descriptive_root_selected_region_geometry_not_calibration`.
 - `raw/assets/benchmark-results/root_selected_region_margins_20260603_continuous/manifest.json`
-  records schema `root_selected_region_margins/v5`, eight supported continuous
+  records schema `root_selected_region_margins/v6`, eight supported continuous
   root rows, `1124` merge-margin rows, and nine relationship rows.
 - `raw/assets/benchmark-results/root_selected_region_margins_20260603/root_selected_region_summary.csv`
   records one row per representative case with root edge, sibling, spectral,

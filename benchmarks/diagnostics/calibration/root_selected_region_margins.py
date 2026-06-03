@@ -37,6 +37,10 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance im
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     effective_rank,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+    fit_empirical_null_inflation_model,
+    predict_empirical_inflation_factor,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
@@ -49,13 +53,13 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pro
 from kl_clustering_analysis.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
-from scipy import stats
+from scipy import integrate, stats
 from scipy.spatial.distance import squareform
 
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.kl_tree_context import KlTreeContext, build_kl_tree_context
 
-SCHEMA_VERSION = "root_selected_region_margins/v5"
+SCHEMA_VERSION = "root_selected_region_margins/v6"
 GENERATED_BY = "benchmarks.diagnostics.calibration.root_selected_region_margins"
 DIAGNOSTIC_ROLE = "descriptive_root_selected_region_geometry_not_calibration"
 DEFAULT_CASE_NAMES = (
@@ -738,6 +742,169 @@ def projected_wald_edge_opening_geometry(
     }
 
 
+def _validate_probability(value: float, *, value_name: str) -> float:
+    probability = float(value)
+    if not np.isfinite(probability) or probability < -1e-10 or probability > 1.0 + 1e-10:
+        raise ValueError(f"{value_name} must be a probability in [0, 1]; got {value!r}.")
+    return float(min(max(probability, 0.0), 1.0))
+
+
+def fixed_projection_edge_conditioned_sibling_tail(
+    *,
+    sibling_statistic: float,
+    sibling_degrees_of_freedom: int,
+    edge_degrees_of_freedom: int,
+    edge_alpha: float,
+) -> dict[str, float | str | bool]:
+    r"""Tail probability of sibling energy conditional on edge opening.
+
+    Let \(X\sim\chi^2_{k_s}\) be the sibling projected energy and
+    \(Y\sim\chi^2_{k_e-k_s}\) be the extra parent-projection edge energy under
+    a fixed orthonormal subspace. The raw edge opening event is
+    \(X+Y\ge q_{1-\alpha,k_e}\). This returns
+    \[
+    \Pr(X\ge x_{\mathrm{obs}}\mid X+Y\ge q_{1-\alpha,k_e}).
+    \]
+    When \(k_s=k_e\), this is the ordinary truncated chi-square tail.
+    """
+    statistic = float(sibling_statistic)
+    sibling_df = int(sibling_degrees_of_freedom)
+    edge_df = int(edge_degrees_of_freedom)
+    alpha = float(edge_alpha)
+    if not np.isfinite(statistic) or statistic < 0.0:
+        raise ValueError(
+            f"sibling_statistic must be finite and non-negative; got {sibling_statistic!r}."
+        )
+    if sibling_df < 0:
+        raise ValueError(
+            f"sibling_degrees_of_freedom must be non-negative; got {sibling_df!r}."
+        )
+    if edge_df <= 0:
+        raise ValueError(f"edge_degrees_of_freedom must be positive; got {edge_df!r}.")
+    if sibling_df > edge_df:
+        raise ValueError(
+            "Fixed-projection edge-conditioned sibling law requires sibling "
+            "projection dimension <= edge projection dimension. "
+            f"Got sibling={sibling_df}, edge={edge_df}."
+        )
+    if not np.isfinite(alpha) or not (0.0 < alpha <= 1.0):
+        raise ValueError(f"edge_alpha must be finite and in (0, 1]; got {edge_alpha!r}.")
+
+    threshold = float(stats.chi2.isf(alpha, df=edge_df))
+    edge_condition_probability = _validate_probability(
+        stats.chi2.sf(threshold, df=edge_df),
+        value_name="edge_condition_probability",
+    )
+    if edge_condition_probability <= 0.0:
+        raise ValueError(
+            "Fixed-projection edge-conditioned sibling law requires a positive "
+            f"edge condition probability; got {edge_condition_probability!r}."
+        )
+
+    if sibling_df == 0:
+        if statistic != 0.0:
+            raise ValueError(
+                "Zero-dimensional sibling statistic must be exactly zero under the "
+                f"fixed-projection reference; got {statistic!r}."
+            )
+        return {
+            "edge_conditioned_sibling_law_status": (
+                "evaluated_zero_sibling_projection_dimension"
+            ),
+            "edge_conditioning_threshold": threshold,
+            "edge_conditioning_probability": edge_condition_probability,
+            "edge_conditioned_sibling_p_value": 1.0,
+            "edge_conditioned_sibling_blocks_at_sibling_alpha": True,
+        }
+
+    if sibling_df == edge_df:
+        numerator = stats.chi2.sf(max(statistic, threshold), df=sibling_df)
+        conditional_tail = float(numerator / edge_condition_probability)
+        status = "evaluated_equal_projection_truncated_chi_square"
+    else:
+        extra_df = edge_df - sibling_df
+        lower = min(statistic, threshold)
+        integral_part = 0.0
+        if lower < threshold:
+            integral_part, _error = integrate.quad(
+                lambda x: stats.chi2.pdf(x, df=sibling_df)
+                * stats.chi2.sf(threshold - x, df=extra_df),
+                lower,
+                threshold,
+                epsabs=1e-12,
+                epsrel=1e-10,
+                limit=200,
+            )
+        numerator = integral_part + stats.chi2.sf(max(statistic, threshold), df=sibling_df)
+        conditional_tail = float(numerator / edge_condition_probability)
+        status = "evaluated_edge_projection_superset_truncated_chi_square"
+
+    conditional_tail = _validate_probability(
+        conditional_tail,
+        value_name="edge_conditioned_sibling_p_value",
+    )
+    return {
+        "edge_conditioned_sibling_law_status": status,
+        "edge_conditioning_threshold": threshold,
+        "edge_conditioning_probability": edge_condition_probability,
+        "edge_conditioned_sibling_p_value": conditional_tail,
+        "edge_conditioned_sibling_blocks_at_sibling_alpha": bool(
+            conditional_tail > config.SIBLING_ALPHA
+        ),
+    }
+
+
+def inflation_adjusted_sibling_tail_for_record(
+    records,
+    target_record,
+) -> dict[str, float | int | str | bool]:
+    """Return current empirical-inflation sibling p-value for one target record."""
+    try:
+        model = fit_empirical_null_inflation_model(list(records))
+        inflation_factor = predict_empirical_inflation_factor(model, target_record)
+    except ValueError as exc:
+        return {
+            "inflation_adjusted_sibling_status": "unsupported_internal_empirical_null",
+            "inflation_adjusted_sibling_unavailable_reason": str(exc),
+            "inflation_adjusted_sibling_p_value": np.nan,
+            "inflation_adjusted_sibling_statistic": np.nan,
+            "inflation_adjusted_sibling_factor": np.nan,
+            "inflation_adjusted_sibling_blocks_at_sibling_alpha": np.nan,
+            "inflation_model_calibration_count": 0,
+            "inflation_model_effective_sample_size": np.nan,
+        }
+
+    if not np.isfinite(inflation_factor) or inflation_factor < 1.0:
+        raise ValueError(
+            "Predicted sibling inflation factor must be finite and >= 1.0; "
+            f"got {inflation_factor!r}."
+        )
+    if not np.isfinite(target_record.reference_scale) or target_record.reference_scale <= 0.0:
+        raise ValueError(
+            "Target sibling record requires a finite positive reference_scale; "
+            f"parent={target_record.parent!r}."
+        )
+    adjusted_statistic = float(
+        target_record.stat / (target_record.reference_scale * inflation_factor)
+    )
+    adjusted_p_value = _validate_probability(
+        stats.chi2.sf(adjusted_statistic, df=float(target_record.degrees_of_freedom)),
+        value_name="inflation_adjusted_sibling_p_value",
+    )
+    return {
+        "inflation_adjusted_sibling_status": model.method,
+        "inflation_adjusted_sibling_unavailable_reason": "",
+        "inflation_adjusted_sibling_p_value": adjusted_p_value,
+        "inflation_adjusted_sibling_statistic": adjusted_statistic,
+        "inflation_adjusted_sibling_factor": float(inflation_factor),
+        "inflation_adjusted_sibling_blocks_at_sibling_alpha": bool(
+            adjusted_p_value > config.SIBLING_ALPHA
+        ),
+        "inflation_model_calibration_count": int(model.n_calibration),
+        "inflation_model_effective_sample_size": float(model.effective_sample_size),
+    }
+
+
 def _relative_l2_norm(residual: np.ndarray, reference: np.ndarray) -> float:
     reference_norm = float(np.linalg.norm(reference))
     if reference_norm <= 0.0:
@@ -1165,6 +1332,18 @@ def collect_observed_root_selected_region_row(
             "root_sibling_recomputed_statistic_from_parent_projection"
         ]
     )
+    edge_conditioned_sibling_tail = fixed_projection_edge_conditioned_sibling_tail(
+        sibling_statistic=float(root_record.stat),
+        sibling_degrees_of_freedom=int(root_record.degrees_of_freedom),
+        edge_degrees_of_freedom=int(
+            edge_sibling_relationship["root_edge_parent_projection_dimension"]
+        ),
+        edge_alpha=config.EDGE_ALPHA,
+    )
+    inflation_adjusted_sibling_tail = inflation_adjusted_sibling_tail_for_record(
+        records,
+        root_record,
+    )
     left_edge_raw_action = _negative_log10_probability(left_edge_raw)
     right_edge_raw_action = _negative_log10_probability(right_edge_raw)
     left_edge_bh_action = _negative_log10_probability(left_edge_bh)
@@ -1273,6 +1452,27 @@ def collect_observed_root_selected_region_row(
         "root_sibling_reference_expectation": reference_expectation,
         "root_sibling_selected_ratio": float(root_record.stat / reference_expectation),
         "root_sibling_raw_p_value": float(root_record.p_value),
+        "root_sibling_raw_blocks_at_sibling_alpha": bool(
+            float(root_record.p_value) > config.SIBLING_ALPHA
+        ),
+        "root_sibling_edge_conditioned_p_value": edge_conditioned_sibling_tail[
+            "edge_conditioned_sibling_p_value"
+        ],
+        "root_sibling_edge_conditioned_law_status": edge_conditioned_sibling_tail[
+            "edge_conditioned_sibling_law_status"
+        ],
+        "root_sibling_edge_conditioning_threshold": edge_conditioned_sibling_tail[
+            "edge_conditioning_threshold"
+        ],
+        "root_sibling_edge_conditioning_probability": edge_conditioned_sibling_tail[
+            "edge_conditioning_probability"
+        ],
+        "root_sibling_edge_conditioned_blocks_at_sibling_alpha": (
+            edge_conditioned_sibling_tail[
+                "edge_conditioned_sibling_blocks_at_sibling_alpha"
+            ]
+        ),
+        **inflation_adjusted_sibling_tail,
         "root_sibling_projection_dimension": int(root_record.sibling_projection_dimension),
         "root_sibling_null_weight": float(root_record.sibling_null_weight),
         "root_sibling_is_null_like": bool(root_record.is_null_like),
@@ -1502,6 +1702,8 @@ __all__ = [
     "LinkageReplayResult",
     "annotate_root_child_construction_roles",
     "collect_observed_root_selected_region_row",
+    "fixed_projection_edge_conditioned_sibling_tail",
+    "inflation_adjusted_sibling_tail_for_record",
     "projected_wald_edge_opening_geometry",
     "replay_average_linkage_margins",
     "root_edge_sibling_wald_relationship",
