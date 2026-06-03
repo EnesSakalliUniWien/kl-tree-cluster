@@ -520,6 +520,14 @@ verification, and maintenance events here in chronological order.
   study did find two narrow admissible Gaussian small-parent, high-edge-action
   contexts; the external calibration law remains undefined outside such
   predeclared admissible contexts and is not a general fallback.
+- Ran a 500-replicate selected-tail admissibility boundary study over
+  comparable Gaussian and categorical source families and added
+  [[selected-tail-admissibility-domain-20260603]]. The current admissible
+  domain now includes Gaussian and categorical `small_0_0.25`,
+  `edge_action_ge8` contexts with sibling projection dimension `1` and `2`.
+  Root, medium-parent, large-parent, lower-edge-action, binary, continuous, and
+  precomputed-distance contexts remain outside the current admissible
+  production domain.
 
 ## Evidence
 

@@ -2,10 +2,12 @@
 title: Selected Ratio Tail Law Diagnostic 2026-06-02
 type: source
 status: reviewed
-updated: 2026-06-02
+updated: 2026-06-03
 sources:
   - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
+  - benchmarks/diagnostics/calibration/selected_tail_admissibility_domain.py
   - tests/validation/53_test_selected_hierarchy_geometry_covariates.py
+  - tests/validation/57_test_selected_tail_admissibility_domain.py
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/manifest.json
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/case_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/geometry_summary_by_case.csv
@@ -14,6 +16,8 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/case_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/geometry_summary_by_case.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
 tags:
   - source
   - calibration
@@ -44,6 +48,12 @@ A focused 300-replicate follow-up over multi-case source families shows that
 admissibility is reachable but narrow. Two `gaussian_blobs` contexts pass the
 support contract; categorical contexts approach the support threshold; binary
 template contexts remain fragmented.
+
+A 500-replicate boundary expansion over comparable Gaussian and categorical
+source families shows that categorical support is reachable under the same
+exact context rule. The current admissible domain is narrow selected-tail
+contexts with small parent size and high edge action, not a general external
+calibration law.
 
 ## Key Points
 
@@ -102,6 +112,18 @@ template contexts remain fragmented.
   admissible?" to "which exact contexts are admissible, and how should
   non-admissible categorical, root, medium-parent, and binary contexts be
   handled without borrowing or fallback?"
+- The 500-replicate boundary expansion used `gauss_null_large`,
+  `gauss_clear_medium`, `cat_highcard_20cat_4c`, and
+  `cat_highd_3cat_500feat`. Four contexts are production-admissible:
+  `gaussian_blobs` and `categorical_multinomial`, both in `small_0_0.25`,
+  `edge_action_ge8`, with sibling projection dimension `1` and `2`.
+- The admissible categorical contexts have `776` and `689` independent
+  matching simulations, held-out exceedance near `0.01`, and held-out standard
+  errors below `0.001`. This overturns the earlier "categorical remains just
+  below support" statement for the targeted boundary panel.
+- Root, medium-parent, large-parent, lower-edge-action, binary, continuous,
+  and precomputed-distance contexts remain outside the current admissible
+  production domain.
 
 ## Evidence
 
@@ -127,6 +149,12 @@ template contexts remain fragmented.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv`
   records the first production-admissible diagnostic contexts and the remaining
   support-fragmented contexts.
+- `raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv`
+  records the boundary expansion with admissible categorical and Gaussian
+  small-parent, high-edge-action contexts.
+- `raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv`
+  combines broad, focused, and boundary selected-tail contexts into one
+  admissibility-domain table.
 
 ## Links
 
@@ -134,4 +162,5 @@ template contexts remain fragmented.
 - [[selected-hierarchy-selection-geometry]]
 - [[selected-hierarchy-geometric-law-map]]
 - [[selected-hierarchy-geometry-covariates-20260602]]
+- [[selected-tail-admissibility-domain-20260603]]
 - [[open-mathematical-questions]]

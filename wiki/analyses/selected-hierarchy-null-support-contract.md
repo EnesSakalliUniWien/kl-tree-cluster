@@ -2,7 +2,7 @@
 title: Selected Hierarchy Null Support Contract
 type: analysis
 status: reviewed
-updated: 2026-06-02
+updated: 2026-06-03
 sources:
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
   - benchmarks/diagnostics/calibration/selected_hierarchy_external_calibration_contract.py
@@ -13,12 +13,16 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_relationships.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_block_models.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
+  - wiki/sources/selected-tail-admissibility-domain-20260603.md
   - wiki/sources/internal-vs-selected-hierarchy-inflation-20260603.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/questions/open-mathematical-questions.md
@@ -259,9 +263,19 @@ held-out exceedance near `0.01` with standard errors below `0.001`. Other
 nearby contexts remain non-admissible: categorical high-edge small-parent
 contexts reach `476` independent simulations and fail only the simulation-count
 threshold, while binary-template contexts top out at `296` independent
-simulations. Thus admissibility is context-specific; passing Gaussian contexts
-do not license borrowing for categorical, binary, root, or lower-edge-action
-contexts.
+simulations.
+
+A 500-replicate boundary expansion over comparable Gaussian and categorical
+source families shows that categorical small-parent, high-edge-action contexts
+can also satisfy the same support contract. Four contexts pass in the boundary
+run: `gaussian_blobs` and `categorical_multinomial`, each with parent-size bin
+`small_0_0.25`, edge-action bin `edge_action_ge8`, and sibling projection
+dimension `1` or `2`. The categorical contexts have `776` and `689`
+independent matching simulations with held-out exceedance near `0.01` and
+standard errors below `0.001`. Thus admissibility is context-specific and no
+longer Gaussian-only. It is still not general: root, medium-parent,
+large-parent, lower-edge-action, binary, continuous, and precomputed-distance
+contexts remain outside the current admissible production domain.
 
 The internal-vs-selected-hierarchy inflation diagnostic tests whether the
 active internal scale and the selected-hierarchy descriptive scale point to the
@@ -297,6 +311,12 @@ internal support is still not a fallback.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv`
   records the focused multi-case source-family support study with two
   production-admissible Gaussian contexts.
+- `raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv`
+  records the 500-replicate boundary expansion with admissible categorical and
+  Gaussian small-parent, high-edge-action contexts.
+- `raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv`
+  combines broad, focused, and boundary selected-tail runs into one
+  admissibility-domain table.
 - `raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv`
   records the root-target comparison between internal empirical inflation,
   selected-hierarchy descriptive scale, and required blocking scale.

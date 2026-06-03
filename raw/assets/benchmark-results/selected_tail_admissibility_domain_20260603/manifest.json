@@ -1,0 +1,25 @@
+{
+  "diagnostic": "selected_tail_admissibility_domain",
+  "role": "diagnostic_selected_tail_domain_not_calibration",
+  "run_specs": [
+    {
+      "run_id": "broad200",
+      "selected_tail_law_csv": "raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv"
+    },
+    {
+      "run_id": "focused300",
+      "selected_tail_law_csv": "raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv"
+    },
+    {
+      "run_id": "boundary500",
+      "selected_tail_law_csv": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv"
+    }
+  ],
+  "top_n": 30,
+  "outputs": {
+    "context_admissibility_domain": "raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv",
+    "admissibility_summary_by_run_family": "raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/admissibility_summary_by_run_family.csv",
+    "nearest_boundary_contexts": "raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/nearest_boundary_contexts.csv"
+  },
+  "note": "Diagnostic-only admissibility-domain summary. Admissible rows identify contexts where the existing selected-tail support contract is satisfied; non-admissible rows remain undefined for production external calibration."
+}

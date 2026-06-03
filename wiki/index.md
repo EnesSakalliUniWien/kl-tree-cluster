@@ -64,8 +64,11 @@ renamed, or promoted.
   regenerated same-data null hierarchies.
 - [[selected-ratio-tail-law-diagnostic-20260602]] - within-context
   selected-ratio tail-law diagnostic showing no production-admissible context
-  in the broad 200-replicate run, followed by two narrow admissible Gaussian
-  small-parent, high-edge-action contexts in the focused 300-replicate run.
+  in the broad 200-replicate run, followed by narrow admissible Gaussian and
+  categorical small-parent, high-edge-action contexts in focused runs.
+- [[selected-tail-admissibility-domain-20260603]] - combined admissibility
+  domain table showing which selected-tail contexts are production-admissible
+  and which remain undefined under the external calibration support contract.
 - [[selected-geometry-mp-integral-literature-20260602]] - literature capture
   for the no-bootstrap selected-region geometry direction and the
   Stieltjes-transform integral route for deformed Marchenko--Pastur spectra.

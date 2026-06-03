@@ -1,0 +1,11 @@
+run_id,source_family,feature_family,n_contexts,n_admissible_contexts,max_matching_simulations,max_records,min_heldout_exceedance_standard_error,has_admissible_context
+boundary500,categorical_multinomial,categorical,24,2,776,77103,0.0003580919958227,True
+boundary500,gaussian_blobs,bernoulli,25,2,929,71933,0.0003706429140772,True
+broad200,binary_template,bernoulli,24,0,200,23156,0.000658651068008,False
+broad200,categorical_multinomial,categorical,23,0,323,32470,0.0005566170089,False
+broad200,dimensional_gaussian,bernoulli,17,0,176,22472,0.0006641472782082,False
+broad200,gaussian_blobs,bernoulli,23,0,376,29704,0.0005753455154773,False
+broad200,phylogenetic_sequence,categorical,17,0,112,2775,0.0018972032685469,False
+focused300,binary_template,bernoulli,25,0,296,35900,0.0005280220036882,False
+focused300,categorical_multinomial,categorical,23,0,476,48940,0.0004518522917894,False
+focused300,gaussian_blobs,bernoulli,24,2,564,43791,0.0004749829396633,True

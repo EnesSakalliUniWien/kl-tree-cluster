@@ -1,0 +1,159 @@
+{
+  "diagnostic": "selected_hierarchy_geometry_covariates",
+  "study_role": "descriptive_selected_hierarchy_geometry_not_calibration",
+  "seed": 20260603,
+  "n_replicates": 500,
+  "case_names": [
+    "gauss_null_large",
+    "gauss_clear_medium",
+    "cat_highcard_20cat_4c",
+    "cat_highd_3cat_500feat"
+  ],
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "elapsed_sec": 630.301314,
+  "write_selected_records": false,
+  "response_column": "log_selected_hierarchy_ratio",
+  "covariate_blocks": {
+    "tree_geometry": [
+      "parent_depth",
+      "parent_size_fraction",
+      "child_balance",
+      "branch_length_sum",
+      "branch_length_asymmetry"
+    ],
+    "edge_selection": [
+      "negative_log10_min_child_edge_bh_p_value"
+    ],
+    "spectral": [
+      "raw_mp_signal_count",
+      "eigenvalue_effective_rank",
+      "top_eigenvalue_share",
+      "selected_eigenvalue_mass_fraction",
+      "selected_eigenvalue_over_mp_upper_bound"
+    ],
+    "angular": [
+      "selected_subspace_cos2",
+      "top_component_cos2",
+      "component_cos2_entropy"
+    ],
+    "spectrum_plus_angle": [
+      "eigenvalue_effective_rank",
+      "top_eigenvalue_share",
+      "selected_eigenvalue_mass_fraction",
+      "selected_eigenvalue_over_mp_upper_bound",
+      "selected_subspace_cos2",
+      "top_component_cos2",
+      "max_component_cos2",
+      "component_cos2_entropy"
+    ]
+  },
+  "candidate_equations": {
+    "edge_action": {
+      "equation": "log_R ~ A_edge",
+      "predictors": [
+        "edge_action"
+      ]
+    },
+    "edge_sampling_geometry": {
+      "equation": "log_R ~ A_edge + log(p/n_parent) + log(1/n_L+1/n_R) + child_balance",
+      "predictors": [
+        "edge_action",
+        "log_feature_parent_aspect_ratio",
+        "log_sampling_variance_scale",
+        "child_balance"
+      ]
+    },
+    "edge_spectral_modes": {
+      "equation": "log_R ~ A_edge + log(lambda_k/lambda_MP) + spectral_mass + effective_rank",
+      "predictors": [
+        "edge_action",
+        "log_selected_eigenvalue_over_mp_upper_bound",
+        "selected_eigenvalue_mass_fraction",
+        "eigenvalue_effective_rank"
+      ]
+    },
+    "edge_angular_capture": {
+      "equation": "log_R ~ A_edge + rho + top_component_cos2 + component_cos2_entropy",
+      "predictors": [
+        "edge_action",
+        "selected_subspace_cos2",
+        "top_component_cos2",
+        "component_cos2_entropy"
+      ]
+    },
+    "selected_energy_candidate": {
+      "equation": "log_R ~ A_edge + log(lambda_k/lambda_MP) + rho + log(p/n_parent)",
+      "predictors": [
+        "edge_action",
+        "log_selected_eigenvalue_over_mp_upper_bound",
+        "selected_subspace_cos2",
+        "log_feature_parent_aspect_ratio"
+      ]
+    },
+    "full_descriptive_candidate": {
+      "equation": "log_R ~ A_edge + log(p/n_parent) + log(1/n_L+1/n_R) + log(lambda_k/lambda_MP) + spectral_mass + rho + component_entropy",
+      "predictors": [
+        "edge_action",
+        "log_feature_parent_aspect_ratio",
+        "log_sampling_variance_scale",
+        "log_selected_eigenvalue_over_mp_upper_bound",
+        "selected_eigenvalue_mass_fraction",
+        "selected_subspace_cos2",
+        "component_cos2_entropy"
+      ]
+    }
+  },
+  "selected_ratio_tail_law": {
+    "role": "descriptive_selected_ratio_tail_law_not_calibration",
+    "context_columns": [
+      "source_family",
+      "feature_family",
+      "parent_size_bin",
+      "sibling_projection_dimension",
+      "edge_action_bin"
+    ],
+    "edge_action_bins": [
+      {
+        "label": "edge_action_0_2",
+        "lower": 0.0,
+        "upper": 2.0
+      },
+      {
+        "label": "edge_action_2_4",
+        "lower": 2.0,
+        "upper": 4.0
+      },
+      {
+        "label": "edge_action_4_6",
+        "lower": 4.0,
+        "upper": 6.0
+      },
+      {
+        "label": "edge_action_6_8",
+        "lower": 6.0,
+        "upper": 8.0
+      },
+      {
+        "label": "edge_action_ge8",
+        "lower": 8.0,
+        "upper": null
+      }
+    ],
+    "alpha": 0.01,
+    "independent_simulation_id_column": "selected_hierarchy_simulation_id",
+    "production_min_matching_simulations": 499,
+    "production_min_matched_records": 499,
+    "production_max_exceedance_standard_error": 0.002
+  },
+  "outputs": {
+    "case_summary": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/case_summary.csv",
+    "geometry_summary_by_case": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/geometry_summary_by_case.csv",
+    "covariate_relationships": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/covariate_relationships.csv",
+    "covariate_block_models": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/covariate_block_models.csv",
+    "candidate_equations": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/candidate_equations.csv",
+    "candidate_equation_holdout": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/candidate_equation_holdout.csv",
+    "selected_ratio_tail_law": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv"
+  },
+  "note": "Diagnostic-only selected-hierarchy geometry study. Relationship tables are descriptive and unadjusted; holdout tables are descriptive transfer checks, not production calibration. The selected-ratio tail-law table reports context support and held-out tail exceedance only. These outputs do not define external calibration borrowing, scalar inflation, or production fallback."
+}

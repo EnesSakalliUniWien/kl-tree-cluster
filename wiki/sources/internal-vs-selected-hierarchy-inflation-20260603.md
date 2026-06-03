@@ -48,9 +48,10 @@ The run used `25` selected-hierarchy null replicates for
 - The result supports the current mathematical interpretation: selected
   hierarchy can explain large scale in diffuse Gaussian root contexts, but
   this root diagnostic does not itself define external production calibration.
-  The separate selected-tail study has narrow admissible Gaussian contexts;
-  outside such predeclared admissible contexts, selected-hierarchy estimates
-  remain descriptive and undefined for production use.
+  The separate selected-tail studies have narrow admissible Gaussian and
+  categorical small-parent, high-edge-action contexts; outside such
+  predeclared admissible contexts, selected-hierarchy estimates remain
+  descriptive and undefined for production use.
 
 ## Evidence
 
