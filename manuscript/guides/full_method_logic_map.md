@@ -64,8 +64,9 @@ walks the tree top down to decide the final partition.
 - Context bandwidth within feature family over active log-context axes.
 - Effective calibration sample size as a diagnostic.
 - External selected-hierarchy selected-tail law for unsupported internal
-  calibration contexts: partially demonstrated only in narrow Gaussian and
-  categorical small-parent, high-edge-action contexts; undefined elsewhere.
+  calibration contexts: partially demonstrated only in narrow small-parent,
+  high-edge-action contexts for Gaussian, categorical, and binary
+  projection-1 settings; undefined elsewhere.
 - Pass-through traversal.
 
 ## Empirical Claims Not Yet Manuscript-Ready
@@ -79,7 +80,7 @@ walks the tree top down to decide the final partition.
 - Robustness to categorical one-hot covariance, continuous empirical-Gaussian
   covariance, and discretized Gaussian benchmark variants.
 - External selected-tail calibration outside the currently admissible narrow
-  Gaussian and categorical small-parent, high-edge-action contexts.
+  small-parent, high-edge-action contexts.
 - Real-data interpretability.
 
 ## Required Before Submission

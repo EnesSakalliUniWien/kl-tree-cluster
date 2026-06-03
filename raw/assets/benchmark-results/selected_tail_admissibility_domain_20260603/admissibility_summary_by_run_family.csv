@@ -1,4 +1,5 @@
 run_id,source_family,feature_family,n_contexts,n_admissible_contexts,max_matching_simulations,max_records,min_heldout_exceedance_standard_error,has_admissible_context
+binary600,binary_template,bernoulli,29,1,606,67831,0.0,True
 boundary500,categorical_multinomial,categorical,24,2,776,77103,0.0003580919958227,True
 boundary500,gaussian_blobs,bernoulli,25,2,929,71933,0.0003706429140772,True
 broad200,binary_template,bernoulli,24,0,200,23156,0.000658651068008,False

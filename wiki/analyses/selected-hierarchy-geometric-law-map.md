@@ -19,6 +19,7 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/geometry_summary_by_case.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
 tags:
@@ -77,10 +78,12 @@ tail law; it does not license a production external calibration model.
 Focused follow-ups show that this support target is reachable but narrow. The
 300-replicate run admits two Gaussian small-parent, high-edge-action contexts.
 The 500-replicate boundary expansion adds two categorical small-parent,
-high-edge-action contexts under the same exact context rule. Thus the open
-problem is no longer whether an admissible selected-tail context can exist; it
-is defining the domain of admissible contexts and leaving external calibration
-undefined outside that domain.
+high-edge-action contexts under the same exact context rule. The 600-replicate
+binary boundary expansion adds one binary projection-1 small-parent,
+high-edge-action context. Thus the open problem is no longer whether an
+admissible selected-tail context can exist; it is defining the domain of
+admissible contexts and leaving external calibration undefined outside that
+domain.
 
 The no-bootstrap analytic direction is now sharper. The useful object in the
 selective-inference literature is the selected region in the same local

@@ -522,12 +522,17 @@ verification, and maintenance events here in chronological order.
   predeclared admissible contexts and is not a general fallback.
 - Ran a 500-replicate selected-tail admissibility boundary study over
   comparable Gaussian and categorical source families and added
-  [[selected-tail-admissibility-domain-20260603]]. The current admissible
-  domain now includes Gaussian and categorical `small_0_0.25`,
+  [[selected-tail-admissibility-domain-20260603]]. After that run, the
+  admissible domain included Gaussian and categorical `small_0_0.25`,
   `edge_action_ge8` contexts with sibling projection dimension `1` and `2`.
   Root, medium-parent, large-parent, lower-edge-action, binary, continuous, and
   precomputed-distance contexts remain outside the current admissible
   production domain.
+- Ran a 600-replicate binary selected-tail boundary study and regenerated the
+  admissibility-domain table. `binary_template`, `small_0_0.25`,
+  `edge_action_ge8`, sibling projection dimension `1` is now admissible with
+  `606` independent matching simulations; the corresponding binary
+  projection-2 context remains support-limited at `445/499` simulations.
 
 ## Evidence
 

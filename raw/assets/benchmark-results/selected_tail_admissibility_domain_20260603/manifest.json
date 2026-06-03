@@ -13,9 +13,13 @@
     {
       "run_id": "boundary500",
       "selected_tail_law_csv": "raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv"
+    },
+    {
+      "run_id": "binary600",
+      "selected_tail_law_csv": "raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv"
     }
   ],
-  "top_n": 30,
+  "top_n": 40,
   "outputs": {
     "context_admissibility_domain": "raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv",
     "admissibility_summary_by_run_family": "raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/admissibility_summary_by_run_family.csv",

@@ -17,6 +17,7 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/geometry_summary_by_case.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
   - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
 tags:
   - source
@@ -51,9 +52,10 @@ template contexts remain fragmented.
 
 A 500-replicate boundary expansion over comparable Gaussian and categorical
 source families shows that categorical support is reachable under the same
-exact context rule. The current admissible domain is narrow selected-tail
-contexts with small parent size and high edge action, not a general external
-calibration law.
+exact context rule. A 600-replicate binary expansion shows that binary
+projection-1 support is also reachable. The current admissible domain is
+narrow selected-tail contexts with small parent size and high edge action, not
+a general external calibration law.
 
 ## Key Points
 
@@ -121,9 +123,14 @@ calibration law.
   matching simulations, held-out exceedance near `0.01`, and held-out standard
   errors below `0.001`. This overturns the earlier "categorical remains just
   below support" statement for the targeted boundary panel.
-- Root, medium-parent, large-parent, lower-edge-action, binary, continuous,
-  and precomputed-distance contexts remain outside the current admissible
-  production domain.
+- The 600-replicate binary boundary expansion used `binary_low_noise_4c` and
+  `overlap_heavy_4c_med_feat`. One `binary_template` context is
+  production-admissible: `small_0_0.25`, `edge_action_ge8`, with sibling
+  projection dimension `1`. The corresponding projection-2 context remains
+  support-limited at `445/499` simulations.
+- Root, medium-parent, large-parent, lower-edge-action, binary projection-2,
+  continuous, and precomputed-distance contexts remain outside the current
+  admissible production domain.
 
 ## Evidence
 
@@ -152,6 +159,9 @@ calibration law.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv`
   records the boundary expansion with admissible categorical and Gaussian
   small-parent, high-edge-action contexts.
+- `raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv`
+  records the binary boundary expansion with one admissible binary projection-1
+  small-parent, high-edge-action context.
 - `raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv`
   combines broad, focused, and boundary selected-tail contexts into one
   admissibility-domain table.

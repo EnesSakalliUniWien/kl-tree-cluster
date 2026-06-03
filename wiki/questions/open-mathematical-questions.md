@@ -33,6 +33,7 @@ sources:
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
   - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
+  - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -222,11 +223,13 @@ Focused follow-ups show that admissibility is possible but narrow. The
 contexts with sibling projection dimension `1` and `2`. The 500-replicate
 boundary expansion admits the corresponding `categorical_multinomial`
 small-parent, high-edge-action contexts with projection dimension `1` and `2`.
-Root, medium-parent, large-parent, lower-edge-action, binary, continuous, and
-precomputed-distance contexts remain outside the current admissible production
-domain. Therefore the open object is no longer simply "whether support can
-ever be reached"; it is a context-specific selected-tail law with explicit
-admissible and non-admissible regions.
+The 600-replicate binary boundary expansion admits `binary_template` only for
+projection dimension `1`; the projection-2 context remains support-limited at
+`445/499` simulations. Root, medium-parent, large-parent, lower-edge-action,
+continuous, and precomputed-distance contexts remain outside the current
+admissible production domain. Therefore the open object is no longer simply
+"whether support can ever be reached"; it is a context-specific selected-tail
+law with explicit admissible and non-admissible regions.
 
 The internal-vs-selected-hierarchy comparison gives one concrete root-level
 bridge between the current production estimator and the external diagnostic.
@@ -409,9 +412,10 @@ The current concrete open questions are:
    confirms that explicit edge-action contexts are still support-limited at
    200 replicates.
    Focused selected-tail runs show that small-parent, high-edge-action
-   Gaussian and categorical contexts are admissible, but binary, root,
-   medium-parent, large-parent, lower-edge-action, continuous, and
-   precomputed-distance contexts remain outside the current admissible domain.
+   Gaussian, categorical, and binary projection-1 contexts are admissible.
+   Binary projection-2, root, medium-parent, large-parent, lower-edge-action,
+   continuous, and precomputed-distance contexts remain outside the current
+   admissible domain.
    The root selected-region margin diagnostic adds merge-inequality geometry
    as a candidate descriptive variable. It also shows that discrete
    tie-heavy hierarchy cells and continuous positive-margin hierarchy cells
