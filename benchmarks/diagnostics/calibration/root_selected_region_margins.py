@@ -25,9 +25,14 @@ import pandas as pd
 from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
+    compute_sibling_branch_length_sum,
+    extract_branch_length_observation,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence_with_context,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+    compute_whitened_wald_contrast,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     effective_rank,
@@ -50,7 +55,7 @@ from scipy.spatial.distance import squareform
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.kl_tree_context import KlTreeContext, build_kl_tree_context
 
-SCHEMA_VERSION = "root_selected_region_margins/v4"
+SCHEMA_VERSION = "root_selected_region_margins/v5"
 GENERATED_BY = "benchmarks.diagnostics.calibration.root_selected_region_margins"
 DIAGNOSTIC_ROLE = "descriptive_root_selected_region_geometry_not_calibration"
 DEFAULT_CASE_NAMES = (
@@ -61,6 +66,7 @@ DEFAULT_CASE_NAMES = (
     "cat_highcard_20cat_4c",
 )
 NEAR_ACTIVE_ABSOLUTE_TOLERANCE = 1e-12
+BARYCENTRIC_Z_IDENTITY_RELATIVE_TOLERANCE = 1e-7
 SMOOTH_SELECTED_REGION_METRIC = "euclidean"
 RELATIONSHIP_TARGET_COLUMN = "root_sibling_selected_ratio"
 RELATIONSHIP_COVARIATES = (
@@ -70,6 +76,8 @@ RELATIONSHIP_COVARIATES = (
     "root_edge_path_radial_distance",
     "root_edge_path_statistic_margin",
     "root_edge_path_bh_action",
+    "root_edge_extra_parent_projection_energy",
+    "root_edge_to_sibling_projection_energy_ratio",
     "root_selected_eigenvalue_over_mp_upper_bound",
 )
 
@@ -730,6 +738,194 @@ def projected_wald_edge_opening_geometry(
     }
 
 
+def _relative_l2_norm(residual: np.ndarray, reference: np.ndarray) -> float:
+    reference_norm = float(np.linalg.norm(reference))
+    if reference_norm <= 0.0:
+        residual_norm = float(np.linalg.norm(residual))
+        if residual_norm <= 0.0:
+            return 0.0
+        raise ValueError(
+            "Cannot compute relative residual against a zero reference vector "
+            f"with nonzero residual norm {residual_norm!r}."
+        )
+    return float(np.linalg.norm(residual) / reference_norm)
+
+
+def root_edge_sibling_wald_relationship(
+    tree,
+    *,
+    parent: object,
+    left_child: object,
+    right_child: object,
+    sibling_projection_dimension: int,
+    spectral_context,
+    feature_space=None,
+    mean_branch_length: float | None = None,
+) -> dict[str, object]:
+    r"""Compare the root edge z-vectors with the root sibling z-vector.
+
+    For a binary parent whose distribution is the leaf-count barycenter of its
+    children, and with Felsenstein branch scaling disabled, the raw contrasts
+    satisfy
+    \[
+    p_L-p_u=\frac{n_R}{n_u}(p_L-p_R),\qquad
+    p_R-p_u=-\frac{n_L}{n_u}(p_L-p_R).
+    \]
+    The nested child-parent variance scales make the whitened vectors
+    \(z_{L,u}=z_{L,R}\) and \(z_{R,u}=-z_{L,R}\). This helper measures that
+    relationship and then compares the shared parent projection energy used by
+    edge and sibling tests.
+    """
+    if sibling_projection_dimension < 0:
+        raise ValueError("sibling_projection_dimension must be non-negative.")
+    parent_id = str(parent)
+    if parent_id not in spectral_context.test_projection_dimensions_by_node:
+        raise KeyError(f"Missing spectral projection dimension for parent {parent!r}.")
+    if parent_id not in spectral_context.principal_component_projections_by_node:
+        raise KeyError(f"Missing spectral projection basis for parent {parent!r}.")
+
+    parent_distribution = np.asarray(tree.nodes[parent]["distribution"], dtype=np.float64)
+    left_distribution = np.asarray(tree.nodes[left_child]["distribution"], dtype=np.float64)
+    right_distribution = np.asarray(tree.nodes[right_child]["distribution"], dtype=np.float64)
+    parent_sample_size = float(tree.nodes[parent]["leaf_count"])
+    left_sample_size = float(tree.nodes[left_child]["leaf_count"])
+    right_sample_size = float(tree.nodes[right_child]["leaf_count"])
+
+    continuous_covariance_by_block = require_node_continuous_covariance_by_block(
+        tree,
+        parent,
+        feature_space,
+    )
+    left_branch_length = None
+    right_branch_length = None
+    sibling_branch_length_sum = None
+    if config.FELSENSTEIN_SCALING:
+        left_branch_length = extract_branch_length_observation(tree, parent, left_child)
+        right_branch_length = extract_branch_length_observation(tree, parent, right_child)
+        if mean_branch_length is not None:
+            branch_length_sum = compute_sibling_branch_length_sum(
+                left_branch_length,
+                right_branch_length,
+            )
+            if branch_length_sum > 0.0:
+                sibling_branch_length_sum = branch_length_sum
+
+    sibling_z = compute_whitened_wald_contrast(
+        left_distribution,
+        right_distribution,
+        left_sample_size,
+        right_sample_size,
+        comparison="sibling",
+        branch_length_sum=sibling_branch_length_sum,
+        mean_branch_length=mean_branch_length,
+        feature_space=feature_space,
+        continuous_covariance_by_block=continuous_covariance_by_block,
+    )
+    left_edge_z = compute_whitened_wald_contrast(
+        left_distribution,
+        parent_distribution,
+        left_sample_size,
+        parent_sample_size,
+        comparison="child_parent",
+        branch_length=left_branch_length,
+        mean_branch_length=mean_branch_length,
+        feature_space=feature_space,
+        continuous_covariance_by_block=continuous_covariance_by_block,
+    )
+    right_edge_z = compute_whitened_wald_contrast(
+        right_distribution,
+        parent_distribution,
+        right_sample_size,
+        parent_sample_size,
+        comparison="child_parent",
+        branch_length=right_branch_length,
+        mean_branch_length=mean_branch_length,
+        feature_space=feature_space,
+        continuous_covariance_by_block=continuous_covariance_by_block,
+    )
+
+    left_residual = left_edge_z - sibling_z
+    right_residual = right_edge_z + sibling_z
+    left_relative_residual = _relative_l2_norm(left_residual, sibling_z)
+    right_relative_residual = _relative_l2_norm(right_residual, sibling_z)
+    max_relative_residual = max(left_relative_residual, right_relative_residual)
+    relationship_status = (
+        "barycentric_z_identity_verified"
+        if max_relative_residual <= BARYCENTRIC_Z_IDENTITY_RELATIVE_TOLERANCE
+        and not config.FELSENSTEIN_SCALING
+        else "branch_scaled_or_residual_edge_sibling_relation"
+    )
+
+    parent_projection_dimension = int(
+        spectral_context.test_projection_dimensions_by_node[parent_id]
+    )
+    projection = np.asarray(
+        spectral_context.principal_component_projections_by_node[parent_id],
+        dtype=np.float64,
+    )
+    if projection.ndim != 2:
+        raise ValueError(
+            f"Parent projection for {parent!r} must be 2-D; got {projection.shape}."
+        )
+    if projection.shape[1] != sibling_z.shape[0]:
+        raise ValueError(
+            "Parent projection width must match sibling z dimension. "
+            f"projection_width={projection.shape[1]}, z_dimension={sibling_z.shape[0]}."
+        )
+    if projection.shape[0] < parent_projection_dimension:
+        raise ValueError(
+            "Parent projection has fewer rows than parent projection dimension: "
+            f"rows={projection.shape[0]}, dimension={parent_projection_dimension}."
+        )
+    if sibling_projection_dimension > parent_projection_dimension:
+        raise ValueError(
+            "Sibling projection dimension cannot exceed the parent projection dimension: "
+            f"sibling={sibling_projection_dimension}, parent={parent_projection_dimension}."
+        )
+
+    projected_sibling = projection @ sibling_z
+    sibling_projected_statistic = float(
+        np.sum(projected_sibling[:sibling_projection_dimension] ** 2)
+    )
+    edge_equivalent_parent_statistic = float(
+        np.sum(projected_sibling[:parent_projection_dimension] ** 2)
+    )
+    extra_parent_projection_energy = float(
+        edge_equivalent_parent_statistic - sibling_projected_statistic
+    )
+    if sibling_projected_statistic > 0.0:
+        edge_to_sibling_energy_ratio = float(
+            edge_equivalent_parent_statistic / sibling_projected_statistic
+        )
+        projection_energy_status = "defined_positive_sibling_projection_energy"
+    else:
+        edge_to_sibling_energy_ratio = np.nan
+        projection_energy_status = "undefined_zero_sibling_projection_energy"
+
+    return {
+        "root_edge_sibling_relationship_status": relationship_status,
+        "root_left_edge_sibling_z_l2_residual": float(np.linalg.norm(left_residual)),
+        "root_right_edge_sibling_z_l2_residual": float(np.linalg.norm(right_residual)),
+        "root_left_edge_sibling_z_relative_residual": left_relative_residual,
+        "root_right_edge_sibling_z_relative_residual": right_relative_residual,
+        "root_edge_sibling_z_max_relative_residual": max_relative_residual,
+        "root_edge_parent_projection_dimension": parent_projection_dimension,
+        "root_sibling_projection_dimension_for_relationship": int(
+            sibling_projection_dimension
+        ),
+        "root_edge_sibling_projection_prefix_status": "sibling_uses_parent_projection_prefix",
+        "root_sibling_recomputed_statistic_from_parent_projection": (
+            sibling_projected_statistic
+        ),
+        "root_edge_equivalent_parent_projection_statistic": (
+            edge_equivalent_parent_statistic
+        ),
+        "root_edge_extra_parent_projection_energy": extra_parent_projection_energy,
+        "root_edge_to_sibling_projection_energy_ratio": edge_to_sibling_energy_ratio,
+        "root_edge_to_sibling_projection_energy_status": projection_energy_status,
+    }
+
+
 def _standardized_contrast_dimension(context: KlTreeContext) -> int:
     if context.feature_space is None:
         return int(context.data.shape[1])
@@ -951,6 +1147,24 @@ def collect_observed_root_selected_region_row(
         degrees_of_freedom=right_edge_degrees_of_freedom,
         alpha=config.EDGE_ALPHA,
     )
+    edge_sibling_relationship = root_edge_sibling_wald_relationship(
+        context.tree,
+        parent=root,
+        left_child=left_child,
+        right_child=right_child,
+        sibling_projection_dimension=int(root_record.sibling_projection_dimension),
+        spectral_context=spectral_context,
+        feature_space=context.feature_space,
+        mean_branch_length=mean_branch_length,
+    )
+    edge_equivalent_parent_projection_statistic = float(
+        edge_sibling_relationship["root_edge_equivalent_parent_projection_statistic"]
+    )
+    sibling_recomputed_statistic = float(
+        edge_sibling_relationship[
+            "root_sibling_recomputed_statistic_from_parent_projection"
+        ]
+    )
     left_edge_raw_action = _negative_log10_probability(left_edge_raw)
     right_edge_raw_action = _negative_log10_probability(right_edge_raw)
     left_edge_bh_action = _negative_log10_probability(left_edge_bh)
@@ -1043,6 +1257,16 @@ def collect_observed_root_selected_region_row(
         "root_left_edge_bh_action": left_edge_bh_action,
         "root_right_edge_bh_action": right_edge_bh_action,
         "root_edge_path_bh_action": min(left_edge_bh_action, right_edge_bh_action),
+        **edge_sibling_relationship,
+        "root_left_edge_statistic_minus_edge_equivalent_parent_projection_statistic": (
+            float(left_edge_statistic - edge_equivalent_parent_projection_statistic)
+        ),
+        "root_right_edge_statistic_minus_edge_equivalent_parent_projection_statistic": (
+            float(right_edge_statistic - edge_equivalent_parent_projection_statistic)
+        ),
+        "root_sibling_statistic_minus_recomputed_parent_projection_statistic": (
+            float(root_record.stat - sibling_recomputed_statistic)
+        ),
         "root_sibling_statistic": float(root_record.stat),
         "root_sibling_reference_scale": float(root_record.reference_scale),
         "root_sibling_degrees_of_freedom": float(root_record.degrees_of_freedom),
@@ -1280,6 +1504,7 @@ __all__ = [
     "collect_observed_root_selected_region_row",
     "projected_wald_edge_opening_geometry",
     "replay_average_linkage_margins",
+    "root_edge_sibling_wald_relationship",
     "run_root_selected_region_margin_diagnostic",
     "summarize_root_selected_region_relationships",
     "summarize_root_child_margin_geometry",

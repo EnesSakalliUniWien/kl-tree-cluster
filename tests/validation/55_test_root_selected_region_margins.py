@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
@@ -8,8 +9,12 @@ from benchmarks.diagnostics.calibration.root_selected_region_margins import (
     euclidean_average_linkage_inequality_geometry,
     projected_wald_edge_opening_geometry,
     replay_average_linkage_margins,
+    root_edge_sibling_wald_relationship,
     summarize_root_child_margin_geometry,
     summarize_root_selected_region_relationships,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    SpectralContext,
 )
 from scipy import stats
 from scipy.cluster.hierarchy import linkage
@@ -170,6 +175,58 @@ def test_projected_wald_edge_opening_geometry_uses_chi_square_radial_boundary() 
     assert geometry["edge_radial_distance"] == pytest.approx(1.5)
 
 
+def test_root_edge_sibling_wald_relationship_verifies_barycentric_z_identity() -> None:
+    tree = nx.DiGraph()
+    tree.add_edge("root", "L")
+    tree.add_edge("root", "R")
+    left = np.asarray([0.2, 0.7], dtype=float)
+    right = np.asarray([0.8, 0.4], dtype=float)
+    left_n = 3
+    right_n = 5
+    parent = (left_n * left + right_n * right) / float(left_n + right_n)
+    tree.nodes["root"]["distribution"] = parent
+    tree.nodes["root"]["leaf_count"] = left_n + right_n
+    tree.nodes["L"]["distribution"] = left
+    tree.nodes["L"]["leaf_count"] = left_n
+    tree.nodes["R"]["distribution"] = right
+    tree.nodes["R"]["leaf_count"] = right_n
+    spectral_context = SpectralContext(
+        test_projection_dimensions_by_node={"root": 2},
+        raw_mp_signal_counts_by_node={"root": 2},
+        effective_independent_rows_by_node={"root": 8},
+        mp_threshold_rows_by_node={"root": 8},
+        principal_component_projections_by_node={
+            "root": np.eye(2, dtype=float),
+        },
+        principal_component_eigenvalues_by_node={
+            "root": np.ones(2, dtype=float),
+        },
+    )
+
+    relationship = root_edge_sibling_wald_relationship(
+        tree,
+        parent="root",
+        left_child="L",
+        right_child="R",
+        sibling_projection_dimension=1,
+        spectral_context=spectral_context,
+    )
+
+    assert relationship["root_edge_sibling_relationship_status"] == (
+        "barycentric_z_identity_verified"
+    )
+    assert relationship["root_edge_sibling_z_max_relative_residual"] == pytest.approx(
+        0.0,
+        abs=1e-8,
+    )
+    assert relationship["root_edge_parent_projection_dimension"] == 2
+    assert relationship["root_sibling_projection_dimension_for_relationship"] == 1
+    assert relationship["root_edge_equivalent_parent_projection_statistic"] >= (
+        relationship["root_sibling_recomputed_statistic_from_parent_projection"]
+    )
+    assert relationship["root_edge_extra_parent_projection_energy"] >= 0.0
+
+
 def test_root_selected_region_relationships_report_statuses() -> None:
     root_table = pd.DataFrame(
         {
@@ -184,6 +241,8 @@ def test_root_selected_region_relationships_report_statuses() -> None:
             "root_edge_path_radial_distance": [0.0, 1.0, 2.0],
             "root_edge_path_statistic_margin": [0.0, 2.0, 6.0],
             "root_edge_path_bh_action": [0.0, 1.0, 2.0],
+            "root_edge_extra_parent_projection_energy": [0.5, 1.0, 1.5],
+            "root_edge_to_sibling_projection_energy_ratio": [1.2, 1.5, 2.0],
             "root_selected_eigenvalue_over_mp_upper_bound": [2.0, 1.0, 0.5],
         }
     )
@@ -207,3 +266,7 @@ def test_root_selected_region_relationships_report_statuses() -> None:
     assert status_by_covariate["root_edge_path_radial_distance"] == "evaluated"
     assert status_by_covariate["root_edge_path_statistic_margin"] == "evaluated"
     assert status_by_covariate["root_edge_path_bh_action"] == "evaluated"
+    assert status_by_covariate["root_edge_extra_parent_projection_energy"] == "evaluated"
+    assert status_by_covariate["root_edge_to_sibling_projection_energy_ratio"] == (
+        "evaluated"
+    )

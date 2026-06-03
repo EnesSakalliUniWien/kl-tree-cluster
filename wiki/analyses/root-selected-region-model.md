@@ -145,6 +145,61 @@ This is an actual fixed-subspace boundary coordinate. It is still not the
 full selected law because the production hierarchy also selects the tree,
 local spectral basis, and downstream sibling context from the same data.
 
+### Edge-Sibling Algebra At A Binary Parent
+
+For a binary parent \(u\) with children \(L\) and \(R\), the implementation
+stores the parent distribution as the leaf-count barycenter
+\[
+p_u
+=
+\frac{n_Lp_L+n_Rp_R}{n_u},
+\qquad
+n_u=n_L+n_R.
+\]
+Therefore the raw child-parent contrasts are not new directions:
+\[
+p_L-p_u
+=
+\frac{n_R}{n_u}(p_L-p_R),
+\qquad
+p_R-p_u
+=
+-\frac{n_L}{n_u}(p_L-p_R).
+\]
+In the default no-branch-scaling path, the variance scales are
+\[
+s_{\mathrm{sib}}
+=
+\frac1{n_L}+\frac1{n_R}
+=
+\frac{n_u}{n_Ln_R},
+\]
+and
+\[
+s_{L,u}
+=
+\frac1{n_L}-\frac1{n_u}
+=
+\frac{n_R}{n_Ln_u},
+\qquad
+s_{R,u}
+=
+\frac1{n_R}-\frac1{n_u}
+=
+\frac{n_L}{n_Rn_u}.
+\]
+Because both edge and sibling contrasts use the same parent/null covariance
+at a binary parent, these scales cancel the barycentric coefficients:
+\[
+z_{L,u}=z_{L,R},
+\qquad
+z_{R,u}=-z_{L,R}.
+\]
+Thus, locally, the root child-parent edge tests and the root sibling test
+measure the same null-whitened barycentric direction. They differ through the
+projection dimension, the chi-square opening threshold, Tree-BH edge
+correction, sibling FDR/inflation, and same-data selection conditioning.
+
 ### Root Sibling Selected Region
 
 The root selected region is
@@ -260,7 +315,7 @@ calibration law. It is the first local geometric object that can be computed
 from the current tree builder without changing production inference.
 
 For continuous Euclidean cases with independent leaves and root
-empirical-Gaussian feature covariance \(\widehat\Sigma_\rho\), schema `v4`
+empirical-Gaussian feature covariance \(\widehat\Sigma_\rho\), schema `v5`
 also records the first-order null-whitened scale
 \[
 \sigma_{g,t}^2
@@ -332,11 +387,22 @@ marks the high-dimensional Hessian operator as not materialized.
 The supported eight-case continuous rerun makes that limitation sharper. Raw
 merge margin, ambient first-order distance, and null-whitened first-order
 merge distance have weak descriptive relationships with the log root sibling
-selected ratio. The schema `v4` edge-opening fields
+selected ratio. The schema `v5` edge-opening fields
 `root_edge_path_radial_distance`, `root_edge_path_statistic_margin`, and
 `root_edge_path_bh_action` each have Spearman correlation `1.0` in this small
 panel. Therefore the next selected-region object is the edge-opening
 boundary/action, not another adjustment to merge-margin geometry.
+
+Schema `v5` then checks the edge/sibling relationship directly. In all five
+representative rows and all eight supported continuous rows, the default
+no-branch-scaling barycentric z-identity is verified up to numerical
+residuals below `4.17e-8`. In the supported continuous root panel, the sibling
+projection dimension equals the parent edge projection dimension in every
+row, so the edge and sibling statistics are the same projected energy before
+different thresholds/FDR/inflation are applied. In categorical representative
+rows, the parent edge projection can retain additional spectral energy beyond
+the sibling projection prefix; this is a projection-policy difference, not a
+different raw barycentric contrast.
 
 ### Minimal Diagnostic Contract
 
@@ -351,6 +417,8 @@ root selected ratio R
 root edge-path radial distance
 root edge-path statistic margin
 root edge-path action
+edge/sibling z-identity residual
+edge extra parent-projection energy
 active or near-active merge inequalities
 smooth first-order signed distances or discrete tie-cell status
 null-whitened first-order merge distances for continuous Euclidean cells

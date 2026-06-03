@@ -481,6 +481,14 @@ verification, and maintenance events here in chronological order.
   In the supported eight-case continuous panel, all three edge-opening
   coordinates have Spearman correlation `1.0` with log root sibling selected
   ratio, while merge-boundary distances remain weak.
+- Extended the root selected-region diagnostic to schema `v5` with the
+  edge/sibling Wald relationship. The diagnostic now verifies that, under the
+  active no-branch-scaling barycentric parent contract, root child-parent edge
+  z-vectors equal \(z_{L,R}\) and \(-z_{L,R}\) up to numerical residuals. The
+  supported continuous root panel has zero extra edge projection energy beyond
+  the sibling projection, so local edge and sibling statistics use the same
+  projected barycentric energy before thresholds, Tree-BH, sibling
+  FDR/inflation, and selected conditioning are applied.
 
 ## Evidence
 
