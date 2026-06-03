@@ -506,6 +506,15 @@ verification, and maintenance events here in chronological order.
   weights plus feature-family/context-vector localization, not the older
   geometric-mean scalar-context description. The wiki oracle gate-path page now
   records the same active support-set notation.
+- Added
+  `benchmarks/diagnostics/calibration/internal_vs_selected_hierarchy_inflation.py`
+  and [[internal-vs-selected-hierarchy-inflation-20260603]]. The diagnostic
+  compares active internal empirical-null inflation with regenerated
+  selected-hierarchy descriptive scale for the same root sibling target without
+  installing an external fallback. In `dim_diffuse_6c_136f`, the internal and
+  selected-hierarchy scales agree (`85.27` versus `86.23`); in
+  `gauss_null_large` and `cat_highcard_20cat_4c`, selected-hierarchy support
+  exists descriptively while internal production support remains absent.
 
 ## Evidence
 

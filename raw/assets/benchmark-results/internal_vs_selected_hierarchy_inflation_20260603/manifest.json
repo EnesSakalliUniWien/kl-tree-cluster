@@ -1,0 +1,18 @@
+{
+  "study_role": "diagnostic_internal_vs_selected_hierarchy_inflation_not_calibration",
+  "seed": 20260603,
+  "n_replicates": 25,
+  "case_names": [
+    "gauss_null_large",
+    "dim_diffuse_6c_136f",
+    "binary_low_noise_4c",
+    "cat_highcard_20cat_4c"
+  ],
+  "target_mode": "root",
+  "context_match": "projection",
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "elapsed_sec": 16.577502,
+  "summary_csv": "raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv",
+  "note": "Diagnostic-only comparison between active internal empirical-null inflation and a regenerated same-data selected-hierarchy sibling null. Unsupported support remains undefined; selected-hierarchy estimates are not used as production fallback calibration."
+}

@@ -80,6 +80,10 @@ renamed, or promoted.
   hierarchy cells from smooth Euclidean first-order signed-distance cells, and
   showing edge-opening boundary/action, the edge/sibling barycentric
   relationship, and the fixed-projection edge-conditioned sibling tail.
+- [[internal-vs-selected-hierarchy-inflation-20260603]] - diagnostic-only
+  comparison showing that diffuse Gaussian root internal inflation agrees with
+  selected-hierarchy scale, while null and high-cardinality categorical root
+  contexts still lack internal production support.
 
 ### Concepts
 

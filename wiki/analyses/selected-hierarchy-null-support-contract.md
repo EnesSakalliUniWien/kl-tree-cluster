@@ -13,11 +13,13 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_relationships.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/covariate_block_models.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
+  - wiki/sources/internal-vs-selected-hierarchy-inflation-20260603.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/questions/open-mathematical-questions.md
   - manuscript/sections/method/sibling_test.tex
@@ -261,6 +263,18 @@ simulations. Thus admissibility is context-specific; passing Gaussian contexts
 do not license borrowing for categorical, binary, root, or lower-edge-action
 contexts.
 
+The internal-vs-selected-hierarchy inflation diagnostic tests whether the
+active internal scale and the selected-hierarchy descriptive scale point to the
+same object for a shared observed root target. In `dim_diffuse_6c_136f`,
+internal empirical-null support exists and the two scales agree:
+`85.27` internal versus `86.23` selected-hierarchy, with required blocking
+scale `82.21`. In `gauss_null_large` and `cat_highcard_20cat_4c`, selected
+hierarchy has matched descriptive records but the active internal support set
+is empty, so production internal calibration remains undefined. This result
+supports a strict separation: agreement where internal support exists is
+evidence about the phenomenon, while selected-hierarchy support without
+internal support is still not a fallback.
+
 ## Evidence
 
 - `benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py`
@@ -283,6 +297,9 @@ contexts.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_focused_300/selected_ratio_tail_law.csv`
   records the focused multi-case source-family support study with two
   production-admissible Gaussian contexts.
+- `raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv`
+  records the root-target comparison between internal empirical inflation,
+  selected-hierarchy descriptive scale, and required blocking scale.
 - `raw/assets/benchmark-results/selected_hierarchy_precision_20260601_summary.csv`
   records the 500-replicate root strict, non-root strict, and non-root
   relaxation-ladder summaries.

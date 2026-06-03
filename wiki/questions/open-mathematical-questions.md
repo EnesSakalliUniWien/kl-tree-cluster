@@ -29,6 +29,8 @@ sources:
   - wiki/analyses/method-proof-web.md
   - wiki/analyses/root-selected-region-model.md
   - wiki/sources/root-selected-region-margins-20260603.md
+  - wiki/sources/internal-vs-selected-hierarchy-inflation-20260603.md
+  - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -221,6 +223,18 @@ remain below the `499` independent-simulation threshold, and binary-template
 contexts remain fragmented. Therefore the open object is no longer simply
 "whether support can ever be reached"; it is a context-specific selected-tail
 law with explicit admissible and non-admissible regions.
+
+The internal-vs-selected-hierarchy comparison gives one concrete root-level
+bridge between the current production estimator and the external diagnostic.
+For `dim_diffuse_6c_136f`, internal empirical-null support exists and the
+active internal scale agrees with selected-hierarchy scale:
+\(c_{\mathrm{internal}}=85.27\) versus \(c_{\mathrm{sel}}=86.23\), with
+required blocking scale `82.21`. For `gauss_null_large` and
+`cat_highcard_20cat_4c`, the selected-hierarchy diagnostic has matched records,
+but internal production support is absent. This separates two questions:
+whether selected hierarchy explains observed scale in supported diffuse
+Gaussian contexts, and whether unsupported contexts can ever receive a
+production-valid external law without borrowing from an invalid support set.
 
 The bootstrap estimator is not the desired production direction. The selected
 inference literature is still useful because it identifies the mathematical
