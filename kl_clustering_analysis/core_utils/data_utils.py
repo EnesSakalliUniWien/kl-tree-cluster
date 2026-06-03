@@ -108,6 +108,7 @@ def extract_node_sample_size(tree: nx.DiGraph, node_id: object) -> int:
 def assign_divergence_results(
     annotations_df: pd.DataFrame,
     child_ids: list[str],
+    test_statistics: np.ndarray,
     p_values: np.ndarray,
     p_values_corrected: np.ndarray,
     reject_null: np.ndarray,
@@ -127,6 +128,8 @@ def assign_divergence_results(
         DataFrame to update (modified in place)
     child_ids
         List of child node identifiers
+    test_statistics
+        Projected-Wald test statistics for each edge
     p_values
         Raw chi-square p-values for each edge
     p_values_corrected
@@ -151,6 +154,7 @@ def assign_divergence_results(
         The updated annotations dataframe with divergence columns
     """
     # Initialize columns with default values
+    annotations_df["Child_Parent_Divergence_Test_Statistic"] = np.nan
     annotations_df["Child_Parent_Divergence_P_Value"] = np.nan
     annotations_df["Child_Parent_Divergence_P_Value_BH"] = np.nan
     annotations_df["Child_Parent_Divergence_Significant"] = False
@@ -160,6 +164,14 @@ def assign_divergence_results(
     annotations_df["Child_Parent_Divergence_Ancestor_Blocked"] = False
 
     # Assign results to child nodes
+    statistic_array = np.asarray(test_statistics, dtype=float)
+    if statistic_array.ndim != 1 or statistic_array.shape[0] != len(child_ids):
+        raise ValueError(
+            "test_statistics must be aligned to child_ids. "
+            "Got "
+            f"shape={statistic_array.shape}, len(child_ids)={len(child_ids)}."
+        )
+    annotations_df.loc[child_ids, "Child_Parent_Divergence_Test_Statistic"] = statistic_array
     annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value"] = p_values
     annotations_df.loc[child_ids, "Child_Parent_Divergence_P_Value_BH"] = p_values_corrected
     annotations_df.loc[child_ids, "Child_Parent_Divergence_Significant"] = reject_null

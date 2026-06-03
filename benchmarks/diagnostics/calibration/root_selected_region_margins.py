@@ -50,7 +50,7 @@ from scipy.spatial.distance import squareform
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.kl_tree_context import KlTreeContext, build_kl_tree_context
 
-SCHEMA_VERSION = "root_selected_region_margins/v3"
+SCHEMA_VERSION = "root_selected_region_margins/v4"
 GENERATED_BY = "benchmarks.diagnostics.calibration.root_selected_region_margins"
 DIAGNOSTIC_ROLE = "descriptive_root_selected_region_geometry_not_calibration"
 DEFAULT_CASE_NAMES = (
@@ -67,7 +67,9 @@ RELATIONSHIP_COVARIATES = (
     "root_child_min_merge_margin",
     "root_child_min_first_order_signed_distance",
     "root_child_min_null_whitened_first_order_signed_distance",
-    "root_edge_action_proxy",
+    "root_edge_path_radial_distance",
+    "root_edge_path_statistic_margin",
+    "root_edge_path_bh_action",
     "root_selected_eigenvalue_over_mp_upper_bound",
 )
 
@@ -684,6 +686,50 @@ def _negative_log10_probability(value: float) -> float:
     return float(-np.log10(max(p_value, float(np.nextafter(0.0, 1.0)))))
 
 
+def projected_wald_edge_opening_geometry(
+    *,
+    statistic: float,
+    degrees_of_freedom: float,
+    alpha: float,
+) -> dict[str, float | str]:
+    r"""Boundary geometry for one child-parent projected-Wald edge.
+
+    Conditional on the fixed projected subspace, the edge opens when
+    \(Q \ge q_{1-\alpha,k}\) for \(Q=\|Pz\|_2^2\). The local radial signed
+    distance in projected z-space is therefore
+    \(\sqrt Q-\sqrt{q_{1-\alpha,k}}\).
+    """
+    statistic_value = float(statistic)
+    degrees_value = float(degrees_of_freedom)
+    alpha_value = float(alpha)
+    if not np.isfinite(statistic_value) or statistic_value < 0.0:
+        raise ValueError(
+            f"Edge projected-Wald statistic must be finite and non-negative; got {statistic!r}."
+        )
+    if not np.isfinite(degrees_value) or degrees_value <= 0.0:
+        raise ValueError(
+            f"Edge projected-Wald degrees_of_freedom must be finite and positive; "
+            f"got {degrees_of_freedom!r}."
+        )
+    if not np.isfinite(alpha_value) or not (0.0 < alpha_value <= 1.0):
+        raise ValueError(f"Edge alpha must be finite and in (0, 1]; got {alpha!r}.")
+    threshold = float(stats.chi2.isf(alpha_value, df=degrees_value))
+    if not np.isfinite(threshold) or threshold < 0.0:
+        raise ValueError(
+            "Edge projected-Wald chi-square threshold must be finite and non-negative; "
+            f"got {threshold!r}."
+        )
+    return {
+        "edge_opening_boundary_status": "fixed_subspace_chi_square_radial_boundary",
+        "edge_chi_square_threshold": threshold,
+        "edge_statistic_margin": float(statistic_value - threshold),
+        "edge_statistic_over_threshold": (
+            float(statistic_value / threshold) if threshold > 0.0 else np.inf
+        ),
+        "edge_radial_distance": float(np.sqrt(statistic_value) - np.sqrt(threshold)),
+    }
+
+
 def _standardized_contrast_dimension(context: KlTreeContext) -> int:
     if context.feature_space is None:
         return int(context.data.shape[1])
@@ -867,6 +913,8 @@ def collect_observed_root_selected_region_row(
 
     left_child, right_child = root_record.left, root_record.right
     required_edge_columns = (
+        "Child_Parent_Divergence_Test_Statistic",
+        "Child_Parent_Divergence_df",
         "Child_Parent_Divergence_P_Value",
         "Child_Parent_Divergence_P_Value_BH",
         "Child_Parent_Divergence_Significant",
@@ -881,6 +929,32 @@ def collect_observed_root_selected_region_row(
     right_edge_bh = float(edge_df.loc[right_child, "Child_Parent_Divergence_P_Value_BH"])
     left_edge_raw = float(edge_df.loc[left_child, "Child_Parent_Divergence_P_Value"])
     right_edge_raw = float(edge_df.loc[right_child, "Child_Parent_Divergence_P_Value"])
+    left_edge_statistic = float(
+        edge_df.loc[left_child, "Child_Parent_Divergence_Test_Statistic"]
+    )
+    right_edge_statistic = float(
+        edge_df.loc[right_child, "Child_Parent_Divergence_Test_Statistic"]
+    )
+    left_edge_degrees_of_freedom = float(
+        edge_df.loc[left_child, "Child_Parent_Divergence_df"]
+    )
+    right_edge_degrees_of_freedom = float(
+        edge_df.loc[right_child, "Child_Parent_Divergence_df"]
+    )
+    left_edge_geometry = projected_wald_edge_opening_geometry(
+        statistic=left_edge_statistic,
+        degrees_of_freedom=left_edge_degrees_of_freedom,
+        alpha=config.EDGE_ALPHA,
+    )
+    right_edge_geometry = projected_wald_edge_opening_geometry(
+        statistic=right_edge_statistic,
+        degrees_of_freedom=right_edge_degrees_of_freedom,
+        alpha=config.EDGE_ALPHA,
+    )
+    left_edge_raw_action = _negative_log10_probability(left_edge_raw)
+    right_edge_raw_action = _negative_log10_probability(right_edge_raw)
+    left_edge_bh_action = _negative_log10_probability(left_edge_bh)
+    right_edge_bh_action = _negative_log10_probability(right_edge_bh)
     if not bool(edge_df.loc[left_child, "Child_Parent_Divergence_Significant"]):
         edge_status = "left_child_edge_closed"
     elif not bool(edge_df.loc[right_child, "Child_Parent_Divergence_Significant"]):
@@ -918,15 +992,57 @@ def collect_observed_root_selected_region_row(
             / int(context.tree.nodes[root]["leaf_count"])
         ),
         "root_edge_status": edge_status,
+        "root_edge_opening_boundary_status": left_edge_geometry[
+            "edge_opening_boundary_status"
+        ],
+        "root_left_edge_statistic": left_edge_statistic,
+        "root_right_edge_statistic": right_edge_statistic,
+        "root_left_edge_degrees_of_freedom": left_edge_degrees_of_freedom,
+        "root_right_edge_degrees_of_freedom": right_edge_degrees_of_freedom,
+        "root_left_edge_chi_square_threshold": left_edge_geometry[
+            "edge_chi_square_threshold"
+        ],
+        "root_right_edge_chi_square_threshold": right_edge_geometry[
+            "edge_chi_square_threshold"
+        ],
+        "root_left_edge_statistic_margin": left_edge_geometry[
+            "edge_statistic_margin"
+        ],
+        "root_right_edge_statistic_margin": right_edge_geometry[
+            "edge_statistic_margin"
+        ],
+        "root_edge_path_statistic_margin": min(
+            float(left_edge_geometry["edge_statistic_margin"]),
+            float(right_edge_geometry["edge_statistic_margin"]),
+        ),
+        "root_left_edge_statistic_over_threshold": left_edge_geometry[
+            "edge_statistic_over_threshold"
+        ],
+        "root_right_edge_statistic_over_threshold": right_edge_geometry[
+            "edge_statistic_over_threshold"
+        ],
+        "root_edge_path_statistic_over_threshold": min(
+            float(left_edge_geometry["edge_statistic_over_threshold"]),
+            float(right_edge_geometry["edge_statistic_over_threshold"]),
+        ),
+        "root_left_edge_radial_distance": left_edge_geometry["edge_radial_distance"],
+        "root_right_edge_radial_distance": right_edge_geometry["edge_radial_distance"],
+        "root_edge_path_radial_distance": min(
+            float(left_edge_geometry["edge_radial_distance"]),
+            float(right_edge_geometry["edge_radial_distance"]),
+        ),
         "root_left_edge_raw_p_value": left_edge_raw,
         "root_right_edge_raw_p_value": right_edge_raw,
-        "root_min_edge_raw_p_value": min(left_edge_raw, right_edge_raw),
+        "root_edge_path_raw_p_value": max(left_edge_raw, right_edge_raw),
+        "root_left_edge_raw_action": left_edge_raw_action,
+        "root_right_edge_raw_action": right_edge_raw_action,
+        "root_edge_path_raw_action": min(left_edge_raw_action, right_edge_raw_action),
         "root_left_edge_bh_p_value": left_edge_bh,
         "root_right_edge_bh_p_value": right_edge_bh,
-        "root_min_edge_bh_p_value": min(left_edge_bh, right_edge_bh),
-        "root_edge_action_proxy": _negative_log10_probability(
-            min(left_edge_bh, right_edge_bh)
-        ),
+        "root_edge_path_bh_p_value": max(left_edge_bh, right_edge_bh),
+        "root_left_edge_bh_action": left_edge_bh_action,
+        "root_right_edge_bh_action": right_edge_bh_action,
+        "root_edge_path_bh_action": min(left_edge_bh_action, right_edge_bh_action),
         "root_sibling_statistic": float(root_record.stat),
         "root_sibling_reference_scale": float(root_record.reference_scale),
         "root_sibling_degrees_of_freedom": float(root_record.degrees_of_freedom),
@@ -1162,6 +1278,7 @@ __all__ = [
     "LinkageReplayResult",
     "annotate_root_child_construction_roles",
     "collect_observed_root_selected_region_row",
+    "projected_wald_edge_opening_geometry",
     "replay_average_linkage_margins",
     "run_root_selected_region_margin_diagnostic",
     "summarize_root_selected_region_relationships",

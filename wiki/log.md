@@ -473,6 +473,14 @@ verification, and maintenance events here in chronological order.
   ambient signed distance, and null-whitened merge distance have weak
   relationships. The next selected-region object is therefore the edge-opening
   boundary/action, not more merge-margin tuning.
+- Extended the root selected-region diagnostic to schema `v4` with explicit
+  fixed-subspace projected-Wald edge-opening geometry. The active edge
+  annotation contract now preserves `Child_Parent_Divergence_Test_Statistic`;
+  the diagnostic records edge-path radial distance
+  \(\sqrt Q-\sqrt{q_{1-\alpha,k}}\), statistic margin, and Tree-BH action.
+  In the supported eight-case continuous panel, all three edge-opening
+  coordinates have Spearman correlation `1.0` with log root sibling selected
+  ratio, while merge-boundary distances remain weak.
 
 ## Evidence
 

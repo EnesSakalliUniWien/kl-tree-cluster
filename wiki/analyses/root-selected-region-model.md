@@ -122,6 +122,29 @@ the projection is fixed. When the projection is selected from local spectral
 rows, the event also includes the spectral-selection cell that fixes the
 chosen projection dimension and basis.
 
+For a fixed projected edge subspace, write
+\[
+Q_{\rho\to c}(X)=\|P_{\rho\to c}z_{\rho\to c}(X)\|_2^2,
+\qquad
+q_{c,\alpha}=\chi^2_{k_c,1-\alpha_{\mathrm{edge}}}.
+\]
+The local radial signed distance from the observed projected edge vector to
+the opening boundary is
+\[
+d_{\mathrm{edge},c}(X)
+=
+\sqrt{Q_{\rho\to c}(X)}-\sqrt{q_{c,\alpha}}.
+\]
+The root edge path requires both child edges to open, so the path distance is
+\[
+d_{\mathrm{edge},\rho}(X)
+=
+\min_{c\in\{L_\rho,R_\rho\}} d_{\mathrm{edge},c}(X).
+\]
+This is an actual fixed-subspace boundary coordinate. It is still not the
+full selected law because the production hierarchy also selects the tree,
+local spectral basis, and downstream sibling context from the same data.
+
 ### Root Sibling Selected Region
 
 The root selected region is
@@ -194,12 +217,15 @@ constraints after projecting onto the local tangent boundary. These are the
 differential-geometric objects suggested by the selected-inference literature:
 selected region, boundary, signed distance/action, tangent cone, and curvature.
 
-The current diagnostic proxy
+The edge p-value action
 \[
-A_\rho=-\log p_{\min,\mathrm{edge}}
+A_{\mathrm{edge},\rho}
+=
+\min_{c\in\{L_\rho,R_\rho\}} -\log_{10}p_{\rho\to c,\mathrm{BH}}
 \]
-is therefore best interpreted as a large-deviation or signed-distance proxy,
-not as the signed distance itself.
+is therefore best interpreted as a tail-probability action for the root edge
+path. The radial distance \(d_{\mathrm{edge},\rho}\) above is the direct
+fixed-subspace geometric boundary coordinate.
 
 ### First-Order Merge-Boundary Law
 
@@ -234,7 +260,7 @@ calibration law. It is the first local geometric object that can be computed
 from the current tree builder without changing production inference.
 
 For continuous Euclidean cases with independent leaves and root
-empirical-Gaussian feature covariance \(\widehat\Sigma_\rho\), schema `v3`
+empirical-Gaussian feature covariance \(\widehat\Sigma_\rho\), schema `v4`
 also records the first-order null-whitened scale
 \[
 \sigma_{g,t}^2
@@ -306,10 +332,11 @@ marks the high-dimensional Hessian operator as not materialized.
 The supported eight-case continuous rerun makes that limitation sharper. Raw
 merge margin, ambient first-order distance, and null-whitened first-order
 merge distance have weak descriptive relationships with the log root sibling
-selected ratio. The edge-action proxy has Spearman correlation `1.0` in this
-small panel. Therefore the next selected-region object should be the
-edge-opening boundary distance/action, not another adjustment to merge-margin
-geometry.
+selected ratio. The schema `v4` edge-opening fields
+`root_edge_path_radial_distance`, `root_edge_path_statistic_margin`, and
+`root_edge_path_bh_action` each have Spearman correlation `1.0` in this small
+panel. Therefore the next selected-region object is the edge-opening
+boundary/action, not another adjustment to merge-margin geometry.
 
 ### Minimal Diagnostic Contract
 
@@ -321,7 +348,9 @@ root merge sequence id
 root child leaf sets
 root sibling W
 root selected ratio R
-edge action proxy
+root edge-path radial distance
+root edge-path statistic margin
+root edge-path action
 active or near-active merge inequalities
 smooth first-order signed distances or discrete tie-cell status
 null-whitened first-order merge distances for continuous Euclidean cells
@@ -378,8 +407,9 @@ with a declared support and precision contract.
 - How should exact/tie-heavy Hamming cells be represented geometrically:
   tangent cones of polyhedral cells, random tie-breaking cells, or a discrete
   selected-region law?
-- Is edge action asymptotically equivalent to signed distance for selected
-  edge opening?
+- How does edge-path p-value action relate to the radial boundary distance
+  for selected edge opening once the projection and Tree-BH selection cells
+  are included?
 - Does the tangent cone explain the selected-ratio tail better than the
   current edge-plus-spectral proxy equation?
 - Can this root model be extended to non-root focal sibling contexts without

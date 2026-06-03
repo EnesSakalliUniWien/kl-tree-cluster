@@ -29,11 +29,15 @@ the average-linkage hierarchy used by KL-TE and records the merge-selection
 inequality margins that construct the two root child clusters. It joins those
 margins to observed root edge, sibling, and spectral quantities. The diagnostic
 is descriptive selected-region geometry, not an external calibration model.
-Schema `v3` also records smooth first-order signed-distance geometry when the
+Schema `v4` also records smooth first-order signed-distance geometry when the
 tree metric is Euclidean and explicitly marks discrete or nonsmooth tie-cell
 geometry otherwise. For continuous Euclidean cases, it additionally computes
 the first-order null-whitened distance under the root empirical-Gaussian
-feature covariance.
+feature covariance. Schema `v4` also records the child-parent projected-Wald
+edge-opening boundary in fixed-subspace \(z\)-space:
+\(\sqrt Q-\sqrt{q_{1-\alpha,k}}\), plus edge statistic margins and
+edge-path p-value actions. These are descriptive geometry fields, not a
+production calibration rule.
 
 ## Key Points
 
@@ -50,7 +54,7 @@ feature covariance.
 - Hamming/discretized and categorical root selections are dominated by exact
   or numerical-zero merge margins. Near-active construction counts are `18`,
   `89`, `89`, and `133` in the four non-continuous representatives.
-- In schema `v3`, those four non-continuous representatives are classified as
+- In schema `v4`, those four non-continuous representatives are classified as
   `discrete_tie_cell_geometry_required`, with `18`, `89`, `89`, and `133`
   selected discrete tie-cell construction constraints.
 - The continuous Euclidean diffuse representative has smooth first-order
@@ -68,15 +72,17 @@ feature covariance.
   Spearman correlation with log root sibling ratio is about `-0.024` for raw
   merge margin, `0.095` for ambient first-order distance, and `-0.190` for
   null-whitened first-order distance.
-- Root edge-action proxy is the dominant coordinate in the same panel, with
-  Spearman correlation `1.0` against log root sibling ratio. This points the
-  next selected-region development toward the edge-opening boundary, not more
-  merge-margin tuning.
+- The edge-opening fields are the dominant coordinates in the same panel:
+  `root_edge_path_radial_distance`, `root_edge_path_statistic_margin`, and
+  `root_edge_path_bh_action` each have Spearman correlation `1.0` against log
+  root sibling ratio. This supports the current selected-region direction:
+  analyze the edge-opening boundary/action, not more merge-margin tuning.
 - Root selected sibling ratios remain large in all five representatives:
   about `755`, `748`, `379`, `32.7`, and `665`, respectively.
-- Root edge-action proxies are enormous for Hamming/discretized and categorical
-  representatives, but lower for the continuous Euclidean representative
-  (`14.2`).
+- Root edge-path BH actions are enormous for Hamming/discretized and
+  categorical representatives, but lower for the continuous Euclidean
+  representative (`14.2`). The root edge path uses the weaker of the two root
+  child edges because both edges must open.
 - The diagnostic supports a sharper selected-region question: tie-heavy
   discrete hierarchy cells and positive-margin continuous hierarchy cells
   likely need separate geometric descriptions before any external selected
@@ -91,12 +97,12 @@ feature covariance.
   linkage replay, rejects a nonminimal linkage matrix, and marks the
   two-leaf root case as having root children that are leaves.
 - `raw/assets/benchmark-results/root_selected_region_margins_20260603/manifest.json`
-  records schema `root_selected_region_margins/v3`, five root rows, `775`
-  merge-margin rows, five relationship rows, and the diagnostic role
+  records schema `root_selected_region_margins/v4`, five root rows, `775`
+  merge-margin rows, seven relationship rows, and the diagnostic role
   `descriptive_root_selected_region_geometry_not_calibration`.
 - `raw/assets/benchmark-results/root_selected_region_margins_20260603_continuous/manifest.json`
-  records schema `root_selected_region_margins/v3`, eight supported continuous
-  root rows, `1124` merge-margin rows, and five relationship rows.
+  records schema `root_selected_region_margins/v4`, eight supported continuous
+  root rows, `1124` merge-margin rows, and seven relationship rows.
 - `raw/assets/benchmark-results/root_selected_region_margins_20260603/root_selected_region_summary.csv`
   records one row per representative case with root edge, sibling, spectral,
   and margin summaries.

@@ -151,6 +151,7 @@ def annotate_child_parent_divergence_with_context(
     annotated_df = assign_divergence_results(
         annotations_df=annotations_df,
         child_ids=child_ids,
+        test_statistics=edge_test_statistics,
         p_values=edge_p_values,
         p_values_corrected=child_parent_edge_corrected_p_values_by_tree_bh,
         reject_null=child_parent_edge_null_rejected_by_tree_bh,

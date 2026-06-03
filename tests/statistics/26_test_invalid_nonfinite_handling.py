@@ -83,6 +83,14 @@ def _make_sibling_tree() -> tuple[nx.DiGraph, pd.DataFrame]:
                 "CL": 1.0,
                 "CR": 1.0,
             },
+            "Child_Parent_Divergence_Test_Statistic": {
+                "root": np.nan,
+                "L": 5.0,
+                "R": 0.0,
+                "cal": np.nan,
+                "CL": 0.0,
+                "CR": 0.0,
+            },
             "Child_Parent_Divergence_Significant": {
                 "root": False,
                 "L": True,
@@ -276,6 +284,11 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
                 "root": np.nan,
                 "L": 1.0,
                 "R": 1.0,
+            },
+            "Child_Parent_Divergence_Test_Statistic": {
+                "root": np.nan,
+                "L": 0.0,
+                "R": 0.0,
             },
             "Child_Parent_Divergence_Significant": {
                 "root": False,

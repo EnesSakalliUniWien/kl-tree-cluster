@@ -301,6 +301,7 @@ class TestNonBinarySkippedFlag:
         df["Child_Parent_Divergence_Significant"] = True
         df["Child_Parent_Divergence_P_Value_BH"] = 0.01
         df["Child_Parent_Divergence_P_Value"] = 0.01
+        df["Child_Parent_Divergence_Test_Statistic"] = 5.0
         df["Child_Parent_Divergence_df"] = 1.0
         df["Child_Parent_Divergence_Invalid"] = False
         df["Child_Parent_Divergence_Tested"] = True

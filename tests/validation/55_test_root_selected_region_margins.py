@@ -6,10 +6,12 @@ import pytest
 from benchmarks.diagnostics.calibration.root_selected_region_margins import (
     annotate_root_child_construction_roles,
     euclidean_average_linkage_inequality_geometry,
+    projected_wald_edge_opening_geometry,
     replay_average_linkage_margins,
     summarize_root_child_margin_geometry,
     summarize_root_selected_region_relationships,
 )
+from scipy import stats
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
@@ -147,6 +149,27 @@ def test_replay_average_linkage_margins_adds_smooth_geometry_for_euclidean_data(
     ] == "null_whitened_first_order_signed_distance_defined"
 
 
+def test_projected_wald_edge_opening_geometry_uses_chi_square_radial_boundary() -> None:
+    threshold = float(stats.chi2.isf(0.05, df=2.0))
+    statistic = float((np.sqrt(threshold) + 1.5) ** 2)
+
+    geometry = projected_wald_edge_opening_geometry(
+        statistic=statistic,
+        degrees_of_freedom=2.0,
+        alpha=0.05,
+    )
+
+    assert geometry["edge_opening_boundary_status"] == (
+        "fixed_subspace_chi_square_radial_boundary"
+    )
+    assert geometry["edge_chi_square_threshold"] == pytest.approx(threshold)
+    assert geometry["edge_statistic_margin"] == pytest.approx(statistic - threshold)
+    assert geometry["edge_statistic_over_threshold"] == pytest.approx(
+        statistic / threshold
+    )
+    assert geometry["edge_radial_distance"] == pytest.approx(1.5)
+
+
 def test_root_selected_region_relationships_report_statuses() -> None:
     root_table = pd.DataFrame(
         {
@@ -158,7 +181,9 @@ def test_root_selected_region_relationships_report_statuses() -> None:
                 np.nan,
                 np.nan,
             ],
-            "root_edge_action_proxy": [0.0, 1.0, 2.0],
+            "root_edge_path_radial_distance": [0.0, 1.0, 2.0],
+            "root_edge_path_statistic_margin": [0.0, 2.0, 6.0],
+            "root_edge_path_bh_action": [0.0, 1.0, 2.0],
             "root_selected_eigenvalue_over_mp_upper_bound": [2.0, 1.0, 0.5],
         }
     )
@@ -179,3 +204,6 @@ def test_root_selected_region_relationships_report_statuses() -> None:
     assert status_by_covariate[
         "root_child_min_null_whitened_first_order_signed_distance"
     ] == "insufficient_valid_pairs"
+    assert status_by_covariate["root_edge_path_radial_distance"] == "evaluated"
+    assert status_by_covariate["root_edge_path_statistic_margin"] == "evaluated"
+    assert status_by_covariate["root_edge_path_bh_action"] == "evaluated"

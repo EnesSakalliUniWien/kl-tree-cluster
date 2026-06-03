@@ -10,6 +10,7 @@ EDGE_COLUMN_PREFIX = "Child_Parent_"
 SIBLING_COLUMN_PREFIX = "Sibling_"
 
 EDGE_GATE_COLUMNS: tuple[str, ...] = (
+    "Child_Parent_Divergence_Test_Statistic",
     "Child_Parent_Divergence_P_Value",
     "Child_Parent_Divergence_P_Value_BH",
     "Child_Parent_Divergence_Significant",

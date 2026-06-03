@@ -78,8 +78,8 @@ renamed, or promoted.
 - [[root-selected-region-margins-20260603]] - average-linkage replay of
   observed root merge-selection inequalities, separating tie-heavy discrete
   hierarchy cells from smooth Euclidean first-order signed-distance cells, and
-  showing edge action dominates merge-margin distance in the supported
-  continuous root panel.
+  showing edge-opening boundary/action dominates merge-margin distance in the
+  supported continuous root panel.
 
 ### Concepts
 
