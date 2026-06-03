@@ -498,6 +498,14 @@ verification, and maintenance events here in chronological order.
   block. The next mathematical target is therefore the empirical-inflation
   versus fuller selected-hierarchy law, not another root edge-opening
   truncation formula.
+- Checked the selective-inference literature framing against the manuscript
+  assumptions section. `assumptions_validation.tex`, `sibling_test.tex`, the
+  notation table, and the method logic guide now cite the selection-event
+  conditioning literature where the assumption is stated and describe the
+  active empirical-null inflation contract as joint child-edge null-evidence
+  weights plus feature-family/context-vector localization, not the older
+  geometric-mean scalar-context description. The wiki oracle gate-path page now
+  records the same active support-set notation.
 
 ## Evidence
 

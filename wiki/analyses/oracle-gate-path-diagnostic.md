@@ -2,7 +2,7 @@
 title: Oracle Gate-Path Diagnostic
 type: analysis
 status: reviewed
-updated: 2026-05-25
+updated: 2026-06-03
 sources:
   - benchmarks/diagnostics/oracle/oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/gate_path_trace.py
@@ -22,6 +22,8 @@ sources:
   - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_replicate_summary.csv
   - raw/assets/benchmark-results/sample_split_selection_audit_20260601/sample_split_selection_audit_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/selected_hierarchy_null_audit_summary.csv
+  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/child_parent_edge_metadata.py
+  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
   - kl_clustering_analysis/config.py
   - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
   - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
@@ -312,24 +314,29 @@ as a method constant or penalty term.
 
 ### Calibration-Support Contract
 
-For a focal sibling record \(u\), define the local non-focal support set
+For a focal sibling record \(u\), define the active local support set
 
 \[
-\mathcal C_{-u}
+\mathcal C_u
 =
-\{q\neq u:\ f_q=f_u,\ \nu_q>0,\ w_q(u)>0\},
+\{q:\ f_q=f_u,\ \nu_q>0,\ w_q(u)>0\},
 \]
 
 where \(f_q\) is the feature family, \(\nu_q\) is the sibling-test degrees of
-freedom, and \(w_q(u)=\pi_qK(z_q,z_u)\) is the local empirical-null calibration
-weight. The focal record is excluded by definition.
+freedom, and
+\[
+w_q(u)=\pi_q\mathbf 1\{f_q=f_u\}K_{f_u}(x_q,x_u)
+\]
+is the local empirical-null calibration weight. The active implementation does
+not claim a leave-one-context calibration theorem; a leave-one-context variant
+remains validation work.
 
 The strict empirical-null support set is
 
 \[
 \mathcal C_{0,u}
 =
-\{q\in\mathcal C_{-u}:\ S_{l(q)}^{\mathrm{edge}}=0
+\{q\in\mathcal C_u:\ S_{l(q)}^{\mathrm{edge}}=0
 \ \text{and}\ S_{r(q)}^{\mathrm{edge}}=0\},
 \]
 
@@ -339,7 +346,7 @@ child-parent edge rejection indicators. The weak stopped-or-null support set is
 \[
 \mathcal C_{\mathrm{stop},u}
 =
-\{q\in\mathcal C_{-u}:\ q\in\mathcal C_{0,u}
+\{q\in\mathcal C_u:\ q\in\mathcal C_{0,u}
 \ \text{or}\ B_q^{\mathrm{edge}}=1\},
 \]
 
@@ -360,7 +367,7 @@ unsupported_without_empirical_null_support
 ```
 
 Only the first two statuses support an internal empirical-null interpretation.
-If \(\mathcal C_{-u}\) contains only selected non-null context, that context
+If \(\mathcal C_u\) contains only selected non-null context, that context
 can be reported descriptively but is not a calibration state. The local
 empirical-null calibration contract is unsatisfied whenever
 \(\mathcal C_{\mathrm{stop},u}\) has no positive mass. A production method

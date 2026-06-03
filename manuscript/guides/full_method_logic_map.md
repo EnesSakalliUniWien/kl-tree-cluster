@@ -60,9 +60,10 @@ walks the tree top down to decide the final partition.
 - Minimum spectral dimension: `2`.
 - Spectral row set: descendant leaves only in the inferential PCA basis.
 - Sibling projection dimension: geometric mean of child edge dimensions.
-- Empirical-null weight from edge-adjusted p-values.
-- Context bandwidth over log projection dimension.
+- Empirical-null weight from joint child-edge null-evidence weights.
+- Context bandwidth within feature family over active log-context axes.
 - Effective calibration sample size as a diagnostic.
+- External selected-hierarchy law for unsupported internal calibration contexts.
 - Pass-through traversal.
 
 ## Empirical Claims Not Yet Manuscript-Ready

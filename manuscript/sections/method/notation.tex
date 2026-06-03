@@ -53,13 +53,13 @@ $k_u^{\mathrm{edge}}, k_u^{\mathrm{sib}}$ & Edge-stage and sibling-stage project
 $T_u^{\mathrm{raw}}$ & Raw projected sibling statistic. \\
 $a_u$ & Projected quadratic reference scale; $a_u=1$ for the current orthonormal PCA basis. \\
 $\nu_u$ & Sibling reference degrees of freedom; $\nu_u=k_u^{\mathrm{sib}}$ for the current orthonormal PCA basis. \\
-$z_q$ & Sibling calibration context used by the empirical-null inflation estimator. \\
-$s_q$ & Resolved sibling projection dimension whose logarithm defines $z_q$. \\
+$x_q=(\log s_q,\log n_q)$ & Sibling calibration context used by the empirical-null inflation estimator. \\
+$s_q$ & Resolved sibling projection dimension for sibling record $q$. \\
 $\pi_q$ & Empirical sibling null weight used in inflation estimation. \\
 $w_q(u)$ & Context weight assigned to calibration record $q$ when estimating inflation for sibling parent $u$. \\
-$h$ & Null-weighted bandwidth used in the sibling calibration kernel. \\
+$h$ & Null-weighted bandwidth vector used on active sibling calibration context axes. \\
 $n_{\mathrm{cal}}, n_{\mathrm{eff}}$ & Number of contributing sibling calibration records and their effective sample size. \\
-$\hat c(z_u)$ & Context-weighted empirical-null inflation estimate for sibling parent $u$. \\
+$\hat c_{f_u}(x_u)$ & Context-weighted empirical-null inflation estimate for sibling parent $u$ in feature family $f_u$. \\
 $S^{\mathrm{sib}}(u)$ & Sibling significance indicator after correction. \\
 $\mathrm{Split}(u)$ & Indicator that traversal keeps the split at node $u$. \\
 $D^{\mathrm{sib}}(u)$ & Indicator that some proper descendant of $u$ has a significant sibling split among nodes where the sibling test was run. \\

@@ -231,38 +231,37 @@ The sibling calibration accounts for this extra optimism by estimating the
 runtime empirical inflation of the projected-Wald statistic from the empirical
 null visible inside the fitted hierarchy. The estimator has three ingredients:
 a raw sibling statistic, a weight describing how null-like that sibling context
-looks from the edge stage, and a scalar context used to borrow information
-across similar projection dimensions.
+looks from the edge stage, and a feature-family-specific context used to
+borrow information across similar projection dimensions and parent sizes.
 
 For every two-child parent $q$, let $T_q^{\mathrm{raw}}$ be the raw sibling
 statistic. Let $a_q$ and $\nu_q$ be the reference scale and degrees of freedom
 returned by the projected-Wald kernel, with $a_q=1$ and $\nu_q=k_q$ for the
 current orthonormal PCA basis. Let $\pi_q \in [0,1]$ be the sibling null weight
-implied by the two child-parent edge tests. In the current implementation,
+implied by the two child-parent edge tests. For each child edge, define
+\(\omega_{q\to c}=1\) if the edge is not tested or is ancestor-blocked by the
+Tree-BH path, and otherwise set \(\omega_{q\to c}\) to the finite Tree-BH
+adjusted child-parent p-value. In the current implementation,
 \begin{equation}
 \pi_q =
-\left(
-p_{q \to l(q)}^{\mathrm{edge,BH}}\,
-p_{q \to r(q)}^{\mathrm{edge,BH}}
-\right)^{1/2},
+\omega_{q\to l(q)}\,\omega_{q\to r(q)},
 \end{equation}
 so both child-parent edges must look empirically null-like for the sibling pair
 to carry high calibration weight. This is a monotone empirical weight, not a
-posterior null probability. The geometric mean keeps the two-edge evidence on
-the p-value scale instead of squaring already-small p-values. Also,
+posterior null probability. Also,
 \[
-z_q = \log s_q,
+x_q = (\log s_q,\log n_q),
 \]
-where $s_q$ is the resolved sibling projection dimension. The method uses the
-working post-selection null family
+where $s_q$ is the resolved sibling projection dimension and $n_q$ is the
+parent leaf count. The method uses the working post-selection null family
 \begin{equation}\label{eq:sibling-context-scale-model}
 T_q^{\mathrm{raw}} \mid H_0
 \approx
-a_q\,c(z_q)\,\chi^2_{\nu_q}.
+a_q\,c_{f_q}(x_q)\,\chi^2_{\nu_q}.
 \end{equation}
 Here $a_q$ is the analytic projected-quadratic reference scale. In the current
-orthonormal projection implementation it is one, so $c(z_q)$ is the empirical
-post-selection inflation.
+orthonormal projection implementation it is one, so $c_{f_q}(x_q)$ is the
+empirical post-selection inflation for feature family $f_q$.
 
 The estimator borrows calibration information most strongly from sibling
 records with similar context values. For a focal sibling pair $u$, define
@@ -270,25 +269,29 @@ context weights
 \begin{equation}
 w_q(u)
 =
-\pi_q K(z_q,z_u),
+\pi_q\,\mathbf 1\{f_q=f_u\}\,K_{f_u}(x_q,x_u),
 \end{equation}
-where the default kernel is Gaussian in the scalar context,
+where the default kernel is Gaussian over the active context axes,
 \begin{equation}
-K(z_q,z_u)
+K_{f_u}(x_q,x_u)
 =
 \exp\!\left[
 -\frac{1}{2}
+\sum_{j\in A_{f_u}}
 \left(
-\frac{z_q-z_u}{h}
+\frac{x_{qj}-x_{uj}}{h_j}
 \right)^2
 \right],
 \end{equation}
-and $h$ is the null-weighted empirical standard deviation of the observed
-contexts. The local empirical-null inflation estimate is the weighted
+where $A_{f_u}$ is the set of active context axes with nonzero empirical
+bandwidth. The current implementation always uses \(\log s_q\) when it has
+positive bandwidth and additionally uses \(\log n_q\) for non-Bernoulli
+feature families when that axis has positive bandwidth. The local
+empirical-null inflation estimate is the weighted
 chi-square scale maximum-likelihood estimator after accounting for the analytic
 projected-Wald reference scale:
 \begin{equation}\label{eq:sibling-context-scale-estimator}
-\hat{c}(z_u)
+\hat{c}_{f_u}(x_u)
 =
 \max\left\{
 1,\,
@@ -299,22 +302,23 @@ projected-Wald reference scale:
 Let $n_{\mathrm{eff}}$ be the effective sample size of the contributing sibling
 null weights. The implementation reports this effective sample size as
 diagnostic information. It is not an additional multiplier in
-\(\hat c(z_u)\), and it is not currently used as a hard threshold for accepting
-or rejecting calibration support.
+\(\hat c_{f_u}(x_u)\), and it is not currently used as a hard threshold for
+accepting or rejecting calibration support.
 
 \paragraph{Calibration-support contract.}
 For a focal sibling pair $u$, the empirical-null interpretation of
-$\hat c(z_u)$ requires calibration records other than the focal record itself.
+\(\hat c_{f_u}(x_u)\) requires positive calibration mass from records that are
+strict-null-like or stopped by the edge path.
 Let $f_q$ denote the feature family of sibling record $q$, let
 $S_{l(q)}^{\mathrm{edge}}$ and $S_{r(q)}^{\mathrm{edge}}$ be the two
 child-parent edge rejection indicators, and let
 $B_q^{\mathrm{edge}}$ indicate that the sibling record is edge-blocked by the
-ancestor testing path. Define the non-focal local support set
+ancestor testing path. Define the local support set
 \[
-\mathcal C_{-u}
+\mathcal C_u
 =
 \left\{
-q\neq u:
+q:
 f_q=f_u,\ \nu_q>0,\ w_q(u)>0
 \right\}.
 \]
@@ -323,7 +327,7 @@ The strict empirical-null support set is
 \mathcal C_{0,u}
 =
 \left\{
-q\in\mathcal C_{-u}:
+q\in\mathcal C_u:
 S_{l(q)}^{\mathrm{edge}}=0,\
 S_{r(q)}^{\mathrm{edge}}=0
 \right\},
@@ -333,18 +337,19 @@ and the weak stopped-or-null support set is
 \mathcal C_{\mathrm{stop},u}
 =
 \left\{
-q\in\mathcal C_{-u}:
+q\in\mathcal C_u:
 q\in\mathcal C_{0,u}\ \text{or}\ B_q^{\mathrm{edge}}=1
 \right\}.
 \]
-The focal record is never admissible as its own calibration support. If
-$\mathcal C_{0,u}$ has positive calibration mass, the local estimate has strict
-internal empirical-null support. If $\mathcal C_{0,u}$ is empty but
+If $\mathcal C_{0,u}$ has positive calibration mass, the local estimate has
+strict internal empirical-null support. If $\mathcal C_{0,u}$ is empty but
 $\mathcal C_{\mathrm{stop},u}$ has positive mass, the estimate has only weak
-stopped-or-null support. If both are empty but $\mathcal C_{-u}$ has positive
+stopped-or-null support. If both are empty but $\mathcal C_u$ has positive
 mass, the data provide selected non-null context but not empirical-null
-calibration. If $\mathcal C_{-u}$ has no positive mass, the local empirical-null
-calibration contract is unsatisfied.
+calibration. If $\mathcal C_u$ has no positive mass, the local empirical-null
+calibration contract is unsatisfied. A leave-one-context version of this
+support contract may be needed for a stronger finite-sample guarantee, but it
+is not the current implementation and is therefore left as validation work.
 
 The production rule is intentionally strict. The current implementation raises
 a calibration-data error when the available records are only selected non-null

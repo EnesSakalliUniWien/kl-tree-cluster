@@ -20,7 +20,11 @@ and data-dependent subtrees. The projected-Wald reference further treats the
 selected orthonormal projection rows as fixed when evaluating the projected
 quadratic form. This yields a chi-square reference for a fixed subspace under
 an isotropic standardized null, but it is not by itself an exact selective
-inference result for a hierarchy learned from the same data.
+inference result for a hierarchy learned from the same data. Selective
+inference after data-dependent hypothesis selection requires conditioning on
+the selection event \citep{fithian2014optimal,lee2016exact}; for hierarchical
+clustering, this distinction is explicit in selective tests for differences in
+cluster means after agglomerative clustering \citep{gao2024selective}.
 
 \paragraph{High-dimensional spectral assumptions.}
 The Marchenko--Pastur rule is used as a local signal-dimension heuristic for
@@ -37,18 +41,21 @@ optimal detector in this setting.
 \paragraph{Empirical-null inflation assumptions.}
 The sibling inflation model assumes that tree-selected sibling statistics
 share a context-dependent multiplicative scale distortion. The estimator uses
-edge-corrected p-values to assign empirical-null weights and uses the sibling
-projection dimension as the scalar context. These choices define a practical
-calibration model. They do not estimate posterior null probabilities and do not
-provide an exact selective p-value. Their role is to reduce observed
-anti-conservatism from reusing the data to construct and test the hierarchy.
+joint child-edge null-evidence weights, feature-family matching, and a local
+context over log sibling projection dimension and, for non-Bernoulli feature
+families, log parent size. These choices define a practical calibration model.
+They do not estimate posterior null probabilities and do not provide an exact
+selective p-value. Their role is to reduce observed anti-conservatism from
+reusing the data to construct and test the hierarchy. The open mathematical
+object is still the selected-hierarchy law for the selected ratio, not merely a
+mean inflation factor.
 
 \begingroup
 \footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.23\linewidth}>{\raggedright\arraybackslash}p{0.21\linewidth}>{\raggedright\arraybackslash}p{0.19\linewidth}>{\raggedright\arraybackslash}p{0.31\linewidth}@{}}
-\caption{Method choices that are currently part of the implementation but not
-yet fully validated as manuscript-level scientific defaults.}
+\caption{Implemented method choices and unresolved calibration objects that are
+not yet fully validated as manuscript-level scientific defaults.}
 \label{tab:method-constants}\\
 \toprule
 Choice & Mathematical role & Current value & Validation status \\
@@ -64,9 +71,10 @@ Marchenko--Pastur upper edge & Local projection-dimension rule & $(1+\sqrt{d_u/m
 Minimum spectral dimension & Projection-dimension floor & $2$ & Implementation regularizer; needs ablation against floors $0$, $1$, and $2$. \\
 Spectral row set & Rows used to estimate the local PCA basis & descendant leaves only & Internal summary rows are excluded from the inferential PCA basis after selected-PCA validation showed anti-conservative calibration. \\
 Sibling dimension rule & Transfers edge dimensions to sibling test & geometric mean of child edge dimensions & Needs sensitivity against parent dimension and min/max alternatives. \\
-Empirical-null weight $\pi_q$ & Weights calibration records by edge-null evidence & geometric mean of two edge-adjusted p-values & Monotone empirical weight; not a posterior probability; needs calibration check. \\
-Context bandwidth $h$ & Localizes inflation estimates over $\log k$ & null-weighted empirical standard deviation & Needs sensitivity and behavior under few unique dimensions. \\
+Empirical-null weight $\pi_q$ & Weights calibration records by joint child-edge null evidence & product of the two child-edge null-evidence weights & Monotone empirical weight; not a posterior probability; needs calibration check. \\
+Context bandwidth $h$ & Localizes inflation estimates within feature family & null-weighted empirical standard deviation over active log-context axes & Needs sensitivity and behavior under few unique dimensions or parent sizes. \\
 Effective calibration sample size & Reports degeneracy of calibration weights & diagnostic only & Needs threshold study if later used as a hard support rule. \\
+External selected-hierarchy law & Would replace unsupported internal empirical-null contexts & not a production path & Requires an admissible support contract and selected-ratio tail validation before use. \\
 Pass-through traversal & Allows deeper splits after shallow sibling failure & enabled & Algorithmic policy; needs ablation on over-split and under-split behavior. \\
 \bottomrule
 \end{longtable}
