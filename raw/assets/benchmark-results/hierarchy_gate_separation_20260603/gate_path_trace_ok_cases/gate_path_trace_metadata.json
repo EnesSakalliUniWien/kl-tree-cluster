@@ -1,0 +1,20 @@
+{
+  "case_names": [
+    "binary_low_noise_2c",
+    "cat_mod_4cat_6c",
+    "phylo_dna_8taxa_low_mut",
+    "phylo_protein_4taxa",
+    "phylo_protein_8taxa"
+  ],
+  "classification_csv": "raw/assets/benchmark-results/hierarchy_gate_separation_20260603/oracle_ok_cases/oracle_tree_recoverability.csv",
+  "elapsed_sec": 1.998197,
+  "failure_classes": [
+    "gate_over_split",
+    "gate_under_split",
+    "tree_recoverable_statistical_failure"
+  ],
+  "n_cases": 5,
+  "suite": "full",
+  "summary_csv": "raw/assets/benchmark-results/hierarchy_gate_separation_20260603/gate_path_trace_ok_cases/gate_path_trace_summary.csv",
+  "trace_csv": "raw/assets/benchmark-results/hierarchy_gate_separation_20260603/gate_path_trace_ok_cases/gate_path_trace.csv"
+}

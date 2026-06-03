@@ -1,0 +1,18 @@
+{
+  "benchmark_csv": "benchmarks/results/run_20260601_173845Z_full/full_benchmark_comparison.csv",
+  "gate_trace_summary_csv": "raw/assets/benchmark-results/hierarchy_gate_separation_20260603/gate_path_trace_ok_cases/gate_path_trace_summary.csv",
+  "oracle_recoverability_csv": "raw/assets/benchmark-results/hierarchy_gate_separation_20260603/oracle_ok_cases/oracle_tree_recoverability.csv",
+  "outputs": {
+    "case_failure_separation": "case_failure_separation.csv",
+    "separation_by_category": "separation_by_category.csv",
+    "separation_summary": "separation_summary.csv"
+  },
+  "rules": {
+    "calibration_support_undefined": "requires selected calibration support or external null, not gate tuning",
+    "gate_failures": "eligible for gate-path trace before statistical changes",
+    "ok_rows": "classified by oracle true-K recoverability and KL-vs-oracle gap",
+    "skip_rows": "kept separate; no partition is imputed for skipped KL runs",
+    "tree_or_metric_unrecoverable": "do not change statistical gates before metric/hierarchy/representation analysis"
+  },
+  "schema_version": "hierarchy_gate_separation/v1"
+}

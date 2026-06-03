@@ -7,6 +7,7 @@ sources:
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/analyses/selected-hierarchy-null-support-contract.md
+  - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
@@ -72,6 +73,14 @@ held-out exceedance near \(\alpha_{\mathrm{sib}}=0.01\), but sparse root and
 low-edge-action contexts are unstable. This describes a possible conditional
 tail law; it does not license a production external calibration model.
 
+The no-bootstrap analytic direction is now sharper. The useful object in the
+selective-inference literature is the selected region in the same local
+tangent coordinate system used by the statistic. Shimodaira and Terada use
+multiscale bootstrap to estimate signed distance and curvature, but KL-TE does
+not need that estimator as a production path. The retained mathematical
+objects are the selected region, tangent cone or local boundary, signed
+distance/action, curvature, and conditional selected-error law.
+
 ## Details
 
 ### Core Energy Law
@@ -134,6 +143,31 @@ and eigenvalues are mode energies or variances. Current diagnostics show
 spectral variables are secondary but visible: selected eigenvalue mass and
 selected eigenvalue over the MP upper bound correlate with selected-ratio
 scale.
+
+The current MP edge is the identity-population special case. If local
+null-whitened tangent rows were independent and exactly isotropic, the
+population spectral law would be \(H=\delta_1\), and the upper support edge
+would be \((1+\sqrt{d/m})^2\). The analytic generalization is the
+Silverstein--Choi Stieltjes-transform equation for a general population
+spectrum \(H\),
+\[
+m(z)=-
+\left(
+z-c\int \frac{t}{1+t\,m(z)}\,dH(t)
+\right)^{-1},
+\]
+with density recovered from
+\[
+f(x)=\pi^{-1}\operatorname{Im}m(x+i0)
+\]
+and support edges obtained from
+\[
+z(m)=-\frac{1}{m}+c\int\frac{t}{1+t\,m}\,dH(t).
+\]
+This integral-based Marchenko--Pastur route should be studied before changing
+KL-TE's production dimension rule. It asks whether each local tangent spectrum
+is close enough to \(H=\delta_1\), or whether categorical, continuous, or
+selected contexts need a deformed local spectral edge.
 
 The candidate-equation diagnostic suggests spectral variables are especially
 important for the upper tail. The edge-plus-spectral equation
@@ -265,6 +299,9 @@ calibration law.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv`
   records within-context selected-ratio tail support, held-out exceedance, and
   production-admissibility failures.
+- `wiki/sources/selected-geometry-mp-integral-literature-20260602.md` records
+  the no-bootstrap selected-region geometry direction and the
+  Stieltjes-transform integral route for deformed MP spectra.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py`
   defines the fixed-subspace chi-square reference.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py`
@@ -300,6 +337,10 @@ calibration law.
   support without borrowing across incompatible source families or selection
   regimes?
 - Can the selected-hierarchy law be derived as a large-deviation or
-  extreme-value problem over selected barycentric contrasts?
+  extreme-value problem over selected barycentric contrasts, using analytic
+  selected-region geometry rather than bootstrap-estimated geometry?
+- Does the local null-whitened tangent spectrum have \(H\approx\delta_1\), or
+  does KL-TE need a deformed Marchenko--Pastur edge computed from a local
+  population-spectrum integral?
 - How should branch-length geometry enter the selected law for phylogenetic
   cases where Felsenstein scaling is active?

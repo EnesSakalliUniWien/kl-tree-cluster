@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-02
+updated: 2026-06-03
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -409,6 +409,63 @@ verification, and maintenance events here in chronological order.
   production-admissible under the diagnostic support contract. Categorical
   contexts approach but do not reach the `499` simulation threshold, and binary
   contexts remain support-fragmented.
+- Added [[selected-geometry-mp-integral-literature-20260602]] after checking
+  selective-inference and random-matrix references for the no-bootstrap
+  analytic direction. The wiki now records signed distance, curvature,
+  tangent-cone selected-region geometry as the retained selective-inference
+  object, and the Silverstein--Choi/Ledoit--Wolf Stieltjes-transform integral
+  route as the analytic generalization of the current identity
+  Marchenko--Pastur edge.
+- Added `local_mp_identity_law_diagnostic.py` and
+  [[local-mp-identity-law-diagnostic-20260602]]. The representative screen
+  shows frequent near-edge or above-edge identity-MP spikes in selected
+  Bernoulli/discretized spectra, mixed categorical behavior, and continuous
+  empirical-covariance spectra far below the identity-MP positive support. A
+  self-whitening check explains the continuous result: the positive eigenvalues
+  match the finite-rank \((m_u-1)/m_u\) covariance scale. The result supports a
+  deformed/effective local spectral-law question, not a bootstrap threshold
+  fallback.
+- Extended the local MP identity-law diagnostic with a finite identity-null
+  top-edge comparison. The split is now sharper: selected
+  Gaussian-null/high-dimensional Bernoulli/diffuse discretized spectra exceed
+  the finite-null 95% envelope in roughly `55%`--`72%` of evaluated nodes,
+  while high-cardinality/high-dimensional categorical screens are closer to
+  ordinary finite fluctuation at about `7%`--`12%`.
+- Extended the same diagnostic with selected-tree spectral-law covariates and
+  categorical extreme-node output. The rerun keeps the Bernoulli/discretized
+  interpretation as broad selected spectral inflation, while categorical
+  behavior separates into selected extreme nodes: `cat_highcard_20cat_4c` is
+  strongly tied to node size/aspect ratio, and `cat_highd_3cat_500feat` mixes
+  root/half-tree extremes with many tiny selected extreme nodes.
+- Added [[hierarchy-gate-separation-20260603]] after rerunning oracle
+  recoverability on the `85` runnable rows from the latest strict KL-only full
+  benchmark and tracing the five runnable gate failures. The current full
+  separation is `62` solved, `24` calibration-support-undefined skips, `14`
+  tree/metric unrecoverable rows, `4` gate over-splits, `4`
+  oracle-matched-below-solved rows, `1` continuous covariance boundary, and
+  `1` gate under-split.
+- Added [[method-proof-web]] to connect the fixed-object proof spine
+  (feature-space covariance, whitening, fixed projection, projected-Wald
+  chi-square law, MP dimension rule) with the selected-hierarchy proof gap
+  (selected region, selected-ratio tail law, admissible empirical/external
+  calibration support, and oracle recoverability separation).
+- Added [[root-selected-region-model]] as the first simplified selected-region
+  target: root sibling selection with fixed hierarchy-construction procedure,
+  merge inequalities, root edge-opening inequalities, and explicit
+  differential-geometric objects for signed distance, tangent cone, and
+  curvature.
+- Added `benchmarks/diagnostics/calibration/root_selected_region_margins.py`
+  and [[root-selected-region-margins-20260603]]. The diagnostic replays
+  average-linkage merge-selection inequalities for observed root contexts,
+  joins them to root edge/sibling/spectral quantities, and records that
+  representative Hamming/discretized/categorical root cells are tie-heavy while
+  the continuous Euclidean representative has positive construction margins.
+- Extended the root selected-region margin diagnostic to schema `v2`: smooth
+  Euclidean average-linkage constraints now record the first-order signed
+  distance \(m_t/\|\nabla g_t\|\), while Hamming/discrete cases are explicitly
+  classified as discrete tie-cell geometry. The representative continuous case
+  has minimum first-order signed distance about `2.24e-4`; curvature and
+  null-whitened distance remain open.
 
 ## Evidence
 

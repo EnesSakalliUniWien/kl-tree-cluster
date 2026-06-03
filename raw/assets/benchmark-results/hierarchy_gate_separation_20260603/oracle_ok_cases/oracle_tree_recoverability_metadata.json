@@ -1,0 +1,10 @@
+{
+  "benchmark_csv": "raw/assets/benchmark-results/hierarchy_gate_separation_20260603/latest_kl_ok_rows.csv",
+  "elapsed_sec": 4.902252,
+  "n_cases": 85,
+  "oracle_gap_tolerance": 1e-09,
+  "recoverable_ari_threshold": 0.8,
+  "results_csv": "raw/assets/benchmark-results/hierarchy_gate_separation_20260603/oracle_ok_cases/oracle_tree_recoverability.csv",
+  "solved_ari_threshold": 0.95,
+  "suite": "full"
+}

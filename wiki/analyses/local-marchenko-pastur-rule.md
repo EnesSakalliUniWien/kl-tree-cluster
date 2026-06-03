@@ -2,8 +2,10 @@
 title: Local Marchenko-Pastur Rule
 type: analysis
 status: reviewed
-updated: 2026-06-01
+updated: 2026-06-03
 sources:
+  - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
+  - wiki/sources/local-mp-identity-law-diagnostic-20260602.md
   - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/decomposition.py
   - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/operators.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py
@@ -55,6 +57,25 @@ calibration when child-mean/internal rows are appended to the projection
 matrix. The remaining open layers are the minimum projection dimension of two,
 finite-sample upper-edge calibration, null-whitening scale, and calibration
 support in high-cardinality or high-dimensional sibling contexts.
+
+The next analytic extension is not bootstrap thresholding. The current rule is
+the \(H=\delta_1\) identity-population MP law after null whitening. If local
+categorical, continuous, or selected tangent spectra have a non-identity
+population spectral distribution \(H_u\), the natural mathematical replacement
+is the deformed MP law defined by the Stieltjes-transform integral equation and
+its inverse support map. That would make the question "what is the local
+population spectrum in the null-whitened tangent chart?" rather than "which
+resampled threshold is less bad on a benchmark?"
+
+The 2026-06-02 local identity-law screen shows that this question is active,
+not cosmetic. Bernoulli and discretized Gaussian selected node spectra often
+sit near or above the identity MP edge. Continuous empirical-covariance spectra
+sit far below the identity MP positive support under the current active-feature
+aspect-ratio calculation because they follow a different self-whitening law:
+after each node's rows are whitened by the same node's empirical covariance,
+positive covariance eigenvalues concentrate at the backend scale
+\((m_u-1)/m_u\). Therefore \(H=\delta_1\) is not a uniform empirical
+description across production feature families and selected contexts.
 
 The 2026-06-01 regression-gate check shows how the stricter leaf-only contract
 reacts in practice. With \(k_{\min}=2\), the regression gate completed with
@@ -204,6 +225,69 @@ selection, and the selected spectral context. The current evidence only
 supports keeping selection-aware MP calibration as an open research question,
 not adding it as a production fallback.
 
+The literature-backed analytic alternative is to replace the white-noise edge
+only after deriving or estimating a local spectral law \(H_u\). In the
+Silverstein--Choi convention, a sample covariance spectrum with aspect ratio
+\(c\) and population spectral distribution \(H_u\) has limiting Stieltjes
+transform
+\[
+m_u(z)=-
+\left(
+z-c\int \frac{t}{1+t\,m_u(z)}\,dH_u(t)
+\right)^{-1}.
+\]
+The local density is recovered from
+\[
+f_u(x)=\pi^{-1}\operatorname{Im}m_u(x+i0),
+\]
+and support edges are determined through
+\[
+z_u(m)=-\frac{1}{m}+c\int\frac{t}{1+t\,m}\,dH_u(t).
+\]
+For \(H_u=\delta_1\), this collapses to the production edge
+\((1+\sqrt{d_u/m_u})^2\). Therefore the unresolved mathematical task is to
+test whether \(H_u=\delta_1\) is a defensible local null-whitened model, and
+if not, to derive a deformed-MP edge with a locked validation study.
+
+The first local identity-law diagnostic makes the split concrete. In
+`gauss_null_large`, `binary_many_features`, and `dim_diffuse_6c_136f`, raw MP
+spikes occur in about `59%`, `75%`, and `75%` of evaluated nodes, with median
+top eigenvalue over MP edge near one. In the continuous empirical-covariance
+versions, raw spike frequency is `0%` and median top-edge ratios are about
+`0.081` and `0.048`, while median top-eigenvalue and median positive-eigenvalue
+ratios against \((m_u-1)/m_u\) are exactly `1.0`. That is not evidence for
+changing production defaults by itself, but it rules out treating the identity
+MP edge as a family-independent validated law.
+
+The selected-tree spectral-law rerun separates the next diagnostic targets.
+For Bernoulli and discretized Gaussian screens, exceeding the finite
+identity-null top edge remains a selected-hierarchy inflation phenomenon:
+`gauss_null_large`, `binary_many_features`, and `dim_diffuse_6c_136f` exceed
+the 95% finite identity-null edge in about `54.5%`, `72.1%`, and `70.5%` of
+evaluated nodes. Categorical screens should be handled at the selected
+extreme-node level instead. `cat_highcard_20cat_4c` has only about `7.0%`
+finite-null exceedances, and its log top-edge exceedance has strong
+node-size/aspect-ratio relationships. `cat_highd_3cat_500feat` has about
+`12.0%` exceedances but includes root/half-tree extremes with ratios far above
+the finite identity-null edge plus many tiny selected extreme nodes. Therefore
+the categorical open problem is not the same object as broad
+Bernoulli/discretized selected spectral inflation; it is selected extreme-node
+geometry coupled to categorical covariance, projection dimension, and sibling
+testing.
+
+The finite-sample identity-null comparison separates ordinary MP edge
+fluctuation from selected-hierarchy spectral inflation. With 80 simulated
+identity-null replicates per node dimension, the finite-null 95% top-edge
+quantile is close to the asymptotic edge in these high-aspect-ratio settings.
+`gauss_null_large`, `binary_many_features`, and `dim_diffuse_6c_136f` still
+exceed that finite-null envelope in about `54.5%`, `72.1%`, and `70.5%` of
+evaluated nodes. By contrast, `cat_highcard_20cat_4c` and
+`cat_highd_3cat_500feat` exceed it in about `7.0%` and `12.0%` of evaluated
+nodes. The Bernoulli/discretized Gaussian issue is therefore selected spectral
+inflation beyond ordinary finite fluctuation; the categorical issue is more
+localized and should be analyzed through covariance/projection/FDR interactions
+and selected large-node extremes.
+
 ## Evidence
 
 - `projection_dimension_estimators.py` implements the fixed unit-scale MP
@@ -243,6 +327,11 @@ not adding it as a production fallback.
 - `20260601-full-kl-only-leaf-only-spectral.csv` and
   `20260601-full-kl-only-leaf-only-spectral-failure-report.md` record the
   full-suite KL-only benchmark reaction under the same production contract.
+- `wiki/sources/selected-geometry-mp-integral-literature-20260602.md` records
+  the Stieltjes-transform integral route for general MP spectra and the
+  no-bootstrap selected-region geometry boundary.
+- `wiki/sources/local-mp-identity-law-diagnostic-20260602.md` records the
+  representative production-spectrum screen against the identity MP law.
 
 ## Links
 
@@ -255,12 +344,14 @@ not adding it as a production fallback.
 1. What finite-sample upper-edge calibration, if any, should replace the
    asymptotic edge if local Type-I behavior is the target? The targeted smoke
    does not support the tested finite-null edge as a drop-in replacement.
-2. Is a local bulk-scale estimator valid for Bernoulli, categorical, and
+2. Does the local null-whitened tangent spectrum have \(H=\delta_1\), or is a
+   deformed MP law with local population spectrum \(H_u\) required?
+3. Is a local bulk-scale estimator valid for Bernoulli, categorical, and
    continuous null-whitened tangent spectra, or only as a diagnostic?
-3. What explicit semantics would make \(k_{\min}=0\) a valid full-method
+4. What explicit semantics would make \(k_{\min}=0\) a valid full-method
    experiment rather than a projected-Wald contract violation?
-4. How much of the remaining benchmark weakness is caused by MP dimension
+5. How much of the remaining benchmark weakness is caused by MP dimension
    selection versus hierarchy recoverability, sibling FDR, or empirical-null
    inflation support?
-5. Can calibration support be defined from selected leaf-only contexts without
+6. Can calibration support be defined from selected leaf-only contexts without
    reusing selected non-null records as empirical-null evidence?

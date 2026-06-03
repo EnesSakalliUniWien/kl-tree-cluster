@@ -13,6 +13,7 @@ sources:
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
+  - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
   - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
   - kl_clustering_analysis/tree/distributions.py
@@ -38,6 +39,10 @@ hierarchy and then supplies the child-parent and sibling tests. Hierarchy
 selection turns internal node distributions into selected empirical
 barycenters, so child-parent edges and focal sibling pairs are conditioned on
 having large geometric separation in the same coordinates being tested.
+The selected-hierarchy null simulations describe this effect, but they are not
+the desired production mechanism. The analytic target is a selected region in
+the local null-whitened tangent chart, with signed distance, curvature, tangent
+cone, and selected-error law defined without bootstrap fallback.
 
 ## Details
 
@@ -226,6 +231,19 @@ evidence is real but still support-limited: the selected hierarchy creates a
 large conditional tail law, but the repository has not yet defined a
 production-valid external sampling law for that tail.
 
+The literature-backed no-bootstrap formulation is to model the event
+\[
+X\in\mathcal S_u
+\]
+where \(\mathcal S_u\) is the selected-hierarchy region defined by hierarchy
+construction, open child-parent edge path, and focal sibling selection in the
+same null-whitened tangent coordinates used by \(W_u\). The mathematical
+objects are then the local boundary of \(\mathcal S_u\), its tangent cone near
+the observed point, the signed distance/action to that boundary, and curvature
+or second-order corrections. Existing regenerated-null diagnostics are useful
+for discovering these variables; they do not license a bootstrap calibration
+path.
+
 Feature-split cross-fit is useful evidence for the same reason, although it is
 not the chosen production method. When one feature block selects the tree and
 a held-out feature block supplies node distributions and tests, the
@@ -279,6 +297,9 @@ model is provided.
 - `wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md` records the
   within-context selected-ratio tail-law diagnostic and its production
   admissibility failures.
+- `wiki/sources/selected-geometry-mp-integral-literature-20260602.md` records
+  the selective-region geometry literature and the no-bootstrap analytic
+  boundary for this work.
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the support-status
   contract and the distinction between invalid selected-non-null calibration
   support and valid empirical-null support.
@@ -313,7 +334,8 @@ model is provided.
   for a stable selected-ratio tail law: edge-selection strength, eigenvalue
   concentration, angular alignment, parent size, depth, or child balance?
 - Can the selected-hierarchy correction be derived analytically, or must it be
-  simulated as an external conditional null?
+  simulated as an external conditional null? The current direction is analytic
+  selected-region geometry, with simulation only as diagnostic evidence.
 - How should continuous selected-hierarchy null data be generated without
   reintroducing an unvalidated covariance model?
 - What context variables must be matched for a selected-hierarchy calibration

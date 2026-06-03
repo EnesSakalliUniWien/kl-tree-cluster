@@ -1,0 +1,6 @@
+case_id,failure_class,kl_ari,oracle_true_k_ari,oracle_any_k_ari,n_nodes,n_actual_boundaries,n_oracle_true_k_boundaries,n_actual_splits_oracle_boundary,n_actual_stops_above_oracle_boundary,n_actual_fragments_inside_oracle_boundary
+binary_low_noise_2c,gate_over_split,0.7832759989415189,1.0,1.0,79,12,2,2,0,12
+cat_mod_4cat_6c,gate_under_split,0.6780575539568345,0.9865142168323925,0.9865142168323925,359,4,6,0,2,0
+phylo_dna_8taxa_low_mut,gate_over_split,0.6384209059776307,1.0,1.0,319,52,8,8,0,52
+phylo_protein_4taxa,gate_over_split,0.8293548420698108,1.0,1.0,239,19,4,4,0,19
+phylo_protein_8taxa,gate_over_split,0.5786524175680959,1.0,1.0,319,60,8,8,0,60

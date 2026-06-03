@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-06-02
+updated: 2026-06-03
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -23,6 +23,12 @@ sources:
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
+  - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
+  - wiki/sources/local-mp-identity-law-diagnostic-20260602.md
+  - wiki/sources/hierarchy-gate-separation-20260603.md
+  - wiki/analyses/method-proof-web.md
+  - wiki/analyses/root-selected-region-model.md
+  - wiki/sources/root-selected-region-margins-20260603.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -216,6 +222,16 @@ contexts remain fragmented. Therefore the open object is no longer simply
 "whether support can ever be reached"; it is a context-specific selected-tail
 law with explicit admissible and non-admissible regions.
 
+The bootstrap estimator is not the desired production direction. The selected
+inference literature is still useful because it identifies the mathematical
+objects: selected regions, signed distances, mean curvature, tangent cones, and
+conditional selected-error probabilities. For KL-TE, the analytic target is to
+express hierarchy construction, edge opening, and focal sibling selection as a
+selected region in the null-whitened tangent chart, then derive or validate the
+selected-ratio tail from that geometry. Resampling may remain a diagnostic to
+understand the phenomenon, but it should not become a fallback calibration
+rule.
+
 The projected-Wald reference also remains mathematically conditional. For a
 fixed orthonormal projection, \(\lVert Pz\rVert^2\sim\chi^2_k\) under an
 isotropic standardized null. The manuscript still needs either a clean
@@ -231,6 +247,35 @@ PCA rows and MP dimension from the same local null-whitened rows used by the
 contrast. It is intentionally not evidence for hierarchy construction,
 tree-selected sibling pairs, sibling FDR, traversal, or empirical-null
 inflation.
+[[method-proof-web]] makes this proof boundary explicit. The fixed-object
+spine is a theorem under fixed feature chart, fixed node pair, valid
+covariance whitening, and fixed orthonormal projection. The unproved object is
+the selected law
+\[
+\mathcal L(R_u\mid X\in\mathcal S_u),
+\]
+where \(\mathcal S_u\) includes hierarchy construction, edge-path opening, and
+focal sibling selection. Scalar mean inflation and edge-action proxies are
+therefore diagnostics until this selected-region law or an admissible
+selected-tail estimator is validated.
+[[root-selected-region-model]] defines the first tractable version of that
+object: a root sibling context where the selected region is written as the
+intersection of hierarchy merge inequalities and root edge-opening
+inequalities. This narrows the next proof target to active constraints,
+signed-distance/action proxies, tangent cones, curvature terms, and the
+conditional root selected-ratio tail.
+[[root-selected-region-margins-20260603]] implements the first concrete
+observed-root extraction for average linkage. It verifies the selected merge
+sequence against the condensed distance matrix and records nearest-competitor
+margins for the merge inequalities that construct the two root child clusters.
+The representative run shows two selected-region geometries:
+tie-heavy Hamming/discretized/categorical root construction cells and
+positive-margin continuous Euclidean cells. Schema `v2` computes the
+first-order signed distance \(m_t/\|\nabla g_t\|\) for smooth Euclidean
+average-linkage constraints and marks the discrete cases as tie-cell geometry.
+Root selected sibling ratios remain large in both groups, so merge margins
+alone are not the law; they are one piece of the selected-region conditioning
+object.
 [[selected-pca-projected-wald-validation]] records the first locked run. In the
 tested Gaussian settings, leaf-only selected PCA was calibrated at
 \(\alpha=0.05\), but appending deterministic child-mean internal rows produced
@@ -277,6 +322,17 @@ branch-length stopping, sibling covariance changes, or hierarchical FDR rather
 than an inflation change. These cases should not be collapsed into one
 threshold-tuning problem.
 
+The 2026-06-03 hierarchy/gate separation makes this a current full-suite rule,
+not only a historical oracle observation. In the latest strict KL-only
+full-suite output, `62` of `110` cases are solved, `24` are explicit
+calibration-support-undefined skips, `14` are tree/metric unrecoverable,
+`4` are oracle-matched below the solved threshold, `4` are gate over-splits,
+`1` is a gate under-split, and `1` is a continuous covariance boundary. Thus
+only five runnable cases are currently eligible for gate-path statistical
+changes before additional hierarchy/metric work. The tree/metric rows must be
+handled through representation, distance, linkage, or benchmark construction
+analysis first.
+
 The current concrete open questions are:
 
 1. How should the external calibration law condition on hierarchy construction,
@@ -317,6 +373,10 @@ The current concrete open questions are:
    The focused 300-replicate run shows that two Gaussian small-parent,
    high-edge-action contexts are admissible, but categorical and binary
    contexts remain non-admissible under the same exact context rule.
+   The root selected-region margin diagnostic adds merge-inequality geometry
+   as a candidate descriptive variable. It also shows that discrete
+   tie-heavy hierarchy cells and continuous positive-margin hierarchy cells
+   should not be pooled without a mathematical reason.
 9. What minimum effective calibration support is required before internal
    empirical-null inflation is trustworthy?
 10. Is the empirical-null weight rule calibrated enough to use beyond
@@ -334,7 +394,32 @@ The current concrete open questions are:
     finite-null thresholding matched `binary_many_features`, worsened
     `cat_highcard_20cat_4c`, and under-split dimensional Gaussian cases in the
     historical diagnostic. The open question is whether a genuinely
-    selection-aware threshold can be derived or validated.
+    selection-aware threshold can be derived or validated. The no-bootstrap
+    analytic route is to move from the identity-population MP edge
+    \(H=\delta_1\) to a local deformed MP law when the null-whitened tangent
+    spectrum has non-identity population law \(H_u\). The relevant calculation
+    is the Stieltjes-transform integral equation and support-edge inverse map,
+    not an empirical bootstrap threshold.
+    The 2026-06-02 local identity-law screen confirms that this is a real
+    validation question: Bernoulli/discretized selected spectra often sit near
+    or above the identity MP edge, while continuous empirical-covariance
+    spectra sit far below the identity MP positive support because same-node
+    empirical covariance whitening gives positive eigenvalues at the centered
+    self-whitening scale \((m_u-1)/m_u\). The finite identity-null comparison
+    further separates selected spectral inflation from ordinary finite-sample
+    fluctuation: Gaussian-null, high-dimensional Bernoulli, and diffuse
+    discretized Gaussian selected nodes exceed the finite-null 95% top edge in
+    about `54.5%`, `72.1%`, and `70.5%` of evaluated nodes, while the two
+    categorical screens are closer to ordinary finite fluctuation at about
+    `7.0%` and `12.0%`.
+    The 2026-06-03 selected-tree spectral-law rerun refines the categorical
+    branch: `cat_highcard_20cat_4c` behaves like a small set of selected
+    extreme nodes with strong node-size/aspect-ratio relationships, while
+    `cat_highd_3cat_500feat` has a few very large root/half-tree extremes and
+    many tiny selected extreme nodes. Therefore Bernoulli/discretized spectra
+    need a selected-tree spectral inflation law, but categorical spectra need
+    an extreme-node analysis tied to multinomial covariance, projection
+    dimension, and sibling-testing decisions.
 15. Is the minimum spectral dimension \(k_{\min}=2\) justified?
     The 2026-06-01 leaf-only regression-gate diagnostic shows the trade-off:
     \(k_{\min}=2\) keeps higher mean/median ARI among runnable rows but creates
@@ -383,8 +468,12 @@ The current concrete open questions are:
     manuscript-ready result?
 40. Which generated outputs should be promoted into a locked
     manuscript-results manifest?
-38. How should the manuscript state every remaining approximation without
+41. How should the manuscript state every remaining approximation without
     overstating Type-I error control?
+42. How should observed root merge margins be lifted from ambient first-order
+    Euclidean distance to the actual selected-region law: null-whitened signed
+    distance, active-set and tangent-cone structure, curvature, or a discrete
+    tie-cell law?
 
 ## Evidence
 
@@ -409,6 +498,15 @@ The current concrete open questions are:
   audit, including backend eigenvalue scale, finite-sample null probes,
   the leaf-only production row contract, historical internal-row effects, and
   enhancement options.
+- `wiki/sources/selected-geometry-mp-integral-literature-20260602.md` records
+  the selected-region geometry literature and the Stieltjes-transform integral
+  route for general Marchenko--Pastur spectra.
+- `wiki/sources/local-mp-identity-law-diagnostic-20260602.md` records the
+  representative production-spectrum screen against the identity MP law.
+- `wiki/sources/root-selected-region-margins-20260603.md` records observed
+  root merge-selection margins, ambient first-order Euclidean signed-distance
+  geometry for the continuous representative, and tie-cell status for
+  discrete/nonsmooth representatives.
 - `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
   the selected-PCA projected-Wald validation scaffold.
 - `wiki/analyses/selected-pca-projected-wald-validation.md` summarizes the

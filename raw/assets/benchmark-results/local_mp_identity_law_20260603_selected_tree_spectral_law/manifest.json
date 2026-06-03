@@ -1,0 +1,54 @@
+{
+  "case_names": [
+    "gauss_null_large",
+    "binary_many_features",
+    "cat_highcard_20cat_4c",
+    "cat_highd_3cat_500feat",
+    "dim_diffuse_6c_136f",
+    "gauss_null_large_continuous",
+    "dim_diffuse_6c_136f_continuous"
+  ],
+  "code_commit": "14508b282d20b52ce7fed4fa96b1713063b263f4",
+  "created_utc": "2026-06-03T09:07:22+00:00",
+  "diagnostic_role": "descriptive_identity_mp_law_screen_not_production_threshold",
+  "finite_identity_null_quantile": 0.95,
+  "finite_identity_null_reps": 80,
+  "finite_identity_null_seed": 20260603,
+  "generated_by": "benchmarks.diagnostics.spectral.local_mp_identity_law_diagnostic",
+  "git_worktree_status": [
+    " M benchmarks/diagnostics/spectral/README.md",
+    " M wiki/analyses/local-marchenko-pastur-rule.md",
+    " M wiki/analyses/selected-hierarchy-geometric-law-map.md",
+    " M wiki/analyses/selected-hierarchy-selection-geometry.md",
+    " M wiki/index.md",
+    " M wiki/log.md",
+    " M wiki/questions/open-mathematical-questions.md",
+    "?? benchmarks/diagnostics/spectral/local_mp_identity_law_diagnostic.py",
+    "?? raw/assets/benchmark-results/local_mp_identity_law_20260602_representative/",
+    "?? raw/assets/benchmark-results/local_mp_identity_law_20260603_selected_tree_spectral_law/",
+    "?? raw/inbox/selected-geometry-mp-integral-literature-20260602.md",
+    "?? tests/validation/54_test_local_mp_identity_law_diagnostic.py",
+    "?? wiki/sources/local-mp-identity-law-diagnostic-20260602.md",
+    "?? wiki/sources/selected-geometry-mp-integral-literature-20260602.md"
+  ],
+  "grid_size": 8192,
+  "limitations": [
+    "Descriptive screen on production selected node spectra.",
+    "Does not estimate a deformed-MP edge.",
+    "Does not validate selected-hierarchy sibling calibration.",
+    "Does not add bootstrap or resampling threshold behavior.",
+    "The centered self-whitening columns are diagnostic explanations, not thresholds.",
+    "The finite identity-null top-edge columns are diagnostic simulations, not thresholds."
+  ],
+  "max_cases": null,
+  "max_nodes": null,
+  "min_positive_eigenvalues": 4,
+  "outputs": {
+    "case_summary": "case_summary.csv",
+    "categorical_extreme_nodes": "categorical_extreme_nodes.csv",
+    "node_spectrum": "node_spectrum.csv",
+    "spectral_law_relationships": "spectral_law_relationships.csv"
+  },
+  "run_command": "/Users/berksakalli/Projects/kl-te-cluster/benchmarks/diagnostics/spectral/local_mp_identity_law_diagnostic.py --output-dir raw/assets/benchmark-results/local_mp_identity_law_20260603_selected_tree_spectral_law",
+  "schema_version": "local_mp_identity_law_diagnostic/v1"
+}

@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-02
+updated: 2026-06-03
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -66,6 +66,18 @@ renamed, or promoted.
   selected-ratio tail-law diagnostic showing descriptive tail behavior but no
   production-admissible context in the broad 200-replicate selected-hierarchy
   run.
+- [[selected-geometry-mp-integral-literature-20260602]] - literature capture
+  for the no-bootstrap selected-region geometry direction and the
+  Stieltjes-transform integral route for deformed Marchenko--Pastur spectra.
+- [[local-mp-identity-law-diagnostic-20260602]] - production-spectrum screen
+  showing that the identity MP law is not a uniform description across
+  Bernoulli, categorical, discretized Gaussian, and continuous contexts.
+- [[hierarchy-gate-separation-20260603]] - latest strict full-suite separation
+  of solved rows, hierarchy/metric failures, gate failures, calibration-support
+  skips, covariance boundary, and oracle-matched-below-solved rows.
+- [[root-selected-region-margins-20260603]] - average-linkage replay of
+  observed root merge-selection inequalities, separating tie-heavy discrete
+  hierarchy cells from smooth Euclidean first-order signed-distance cells.
 
 ### Concepts
 
@@ -99,6 +111,12 @@ renamed, or promoted.
   context matching, and Monte Carlo precision requirements.
 - [[selected-hierarchy-geometric-law-map]] - map from selected-hierarchy
   geometry variables to their actual statistical laws and physical analogies.
+- [[method-proof-web]] - proof-level map connecting fixed feature-space
+  covariance, projected-Wald, MP, selected hierarchy, empirical-null support,
+  and oracle recoverability while marking selected-inference proof gaps.
+- [[root-selected-region-model]] - first simplified selected-region model for
+  a root sibling context, written as hierarchy merge inequalities plus
+  edge-opening inequalities in the null-whitened tangent geometry.
 - [[local-marchenko-pastur-rule]] - audit of the local MP dimension rule,
   eigenvalue scale, finite-sample null behavior, leaf-only spectral rows, and
   calibration-support fallout.
