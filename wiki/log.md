@@ -515,6 +515,11 @@ verification, and maintenance events here in chronological order.
   selected-hierarchy scales agree (`85.27` versus `86.23`); in
   `gauss_null_large` and `cat_highcard_20cat_4c`, selected-hierarchy support
   exists descriptively while internal production support remains absent.
+- Clarified the manuscript logic map, method validation table, and wiki index
+  wording for selected-tail calibration. The focused selected-ratio tail-law
+  study did find two narrow admissible Gaussian small-parent, high-edge-action
+  contexts; the external calibration law remains undefined outside such
+  predeclared admissible contexts and is not a general fallback.
 
 ## Evidence
 

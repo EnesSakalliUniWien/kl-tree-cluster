@@ -57,15 +57,15 @@ renamed, or promoted.
   descriptive heterogeneity rather than calibration borrowing.
 - [[selected-hierarchy-external-calibration-contract-20260602]] - production
   admissibility and scalar-vs-tail diagnostic for external selected-hierarchy
-  calibration; current evidence remains production-undefined.
+  calibration; the 500-replicate contract run remains production-undefined.
 - [[selected-hierarchy-geometry-covariates-20260602]] - row-level tree,
   edge-selection, eigenvalue, and angular geometry covariates plus held-out
   candidate-equation transfer checks for selected sibling records under
   regenerated same-data null hierarchies.
 - [[selected-ratio-tail-law-diagnostic-20260602]] - within-context
-  selected-ratio tail-law diagnostic showing descriptive tail behavior but no
-  production-admissible context in the broad 200-replicate selected-hierarchy
-  run.
+  selected-ratio tail-law diagnostic showing no production-admissible context
+  in the broad 200-replicate run, followed by two narrow admissible Gaussian
+  small-parent, high-edge-action contexts in the focused 300-replicate run.
 - [[selected-geometry-mp-integral-literature-20260602]] - literature capture
   for the no-bootstrap selected-region geometry direction and the
   Stieltjes-transform integral route for deformed Marchenko--Pastur spectra.

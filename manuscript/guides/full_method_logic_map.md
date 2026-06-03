@@ -63,7 +63,9 @@ walks the tree top down to decide the final partition.
 - Empirical-null weight from joint child-edge null-evidence weights.
 - Context bandwidth within feature family over active log-context axes.
 - Effective calibration sample size as a diagnostic.
-- External selected-hierarchy law for unsupported internal calibration contexts.
+- External selected-hierarchy selected-tail law for unsupported internal
+  calibration contexts: partially demonstrated only in narrow Gaussian
+  small-parent, high-edge-action contexts; undefined elsewhere.
 - Pass-through traversal.
 
 ## Empirical Claims Not Yet Manuscript-Ready
@@ -76,6 +78,8 @@ walks the tree top down to decide the final partition.
 - Robustness to one-hot categorical dependence.
 - Robustness to categorical one-hot covariance, continuous empirical-Gaussian
   covariance, and discretized Gaussian benchmark variants.
+- External selected-tail calibration outside the currently admissible narrow
+  Gaussian contexts.
 - Real-data interpretability.
 
 ## Required Before Submission

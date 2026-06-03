@@ -72,6 +72,13 @@ contract. Some high-support small-parent, high-edge-action contexts have
 held-out exceedance near \(\alpha_{\mathrm{sib}}=0.01\), but sparse root and
 low-edge-action contexts are unstable. This describes a possible conditional
 tail law; it does not license a production external calibration model.
+The focused 300-replicate run then shows that this support target is reachable
+but narrow: two Gaussian small-parent, high-edge-action contexts are
+admissible, while categorical and binary contexts remain non-admissible under
+the same exact context rule. Thus the open problem is no longer whether an
+admissible selected-tail context can exist; it is defining the domain of
+admissible contexts and leaving external calibration undefined outside that
+domain.
 
 The no-bootstrap analytic direction is now sharper. The useful object in the
 selective-inference literature is the selected region in the same local
