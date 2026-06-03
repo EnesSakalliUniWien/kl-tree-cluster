@@ -233,6 +233,26 @@ This is not yet the null-whitened selected-region distance and not a
 calibration law. It is the first local geometric object that can be computed
 from the current tree builder without changing production inference.
 
+For continuous Euclidean cases with independent leaves and root
+empirical-Gaussian feature covariance \(\widehat\Sigma_\rho\), schema `v3`
+also records the first-order null-whitened scale
+\[
+\sigma_{g,t}^2
+=
+\nabla g_t(x)^\top
+\left(I_n\otimes\widehat\Sigma_\rho\right)
+\nabla g_t(x),
+\]
+and the corresponding diagnostic distance
+\[
+d_{\Sigma,t}^{(1)}(x)
+=
+\frac{m_t(x)}{\sigma_{g,t}}.
+\]
+This is still a diagnostic geometry coordinate. It is not a production
+selected-tail law because it conditions only on the local merge inequality and
+does not include edge-opening, spectral selection, sibling FDR, or traversal.
+
 For Hamming/discrete metrics, or when the selected merge is tied with another
 minimum pair, the smooth formula is not the right object. The local selected
 region is a discrete or nonsmooth tie cell. In that regime the next law is not
@@ -283,6 +303,14 @@ with edge-opening strength, spectral excess, feature family, and covariance
 geometry. Curvature remains explicit missing work: the continuous diagnostic
 marks the high-dimensional Hessian operator as not materialized.
 
+The supported eight-case continuous rerun makes that limitation sharper. Raw
+merge margin, ambient first-order distance, and null-whitened first-order
+merge distance have weak descriptive relationships with the log root sibling
+selected ratio. The edge-action proxy has Spearman correlation `1.0` in this
+small panel. Therefore the next selected-region object should be the
+edge-opening boundary distance/action, not another adjustment to merge-margin
+geometry.
+
 ### Minimal Diagnostic Contract
 
 A focused root selected-region diagnostic should record, for each selected
@@ -296,6 +324,7 @@ root selected ratio R
 edge action proxy
 active or near-active merge inequalities
 smooth first-order signed distances or discrete tie-cell status
+null-whitened first-order merge distances for continuous Euclidean cells
 edge-statistic margins to threshold
 lambda_k / lambda_plus
 selected eigenvalue mass

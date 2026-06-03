@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 import pytest
 from benchmarks.diagnostics.calibration.root_selected_region_margins import (
     annotate_root_child_construction_roles,
     euclidean_average_linkage_inequality_geometry,
     replay_average_linkage_margins,
     summarize_root_child_margin_geometry,
+    summarize_root_selected_region_relationships,
 )
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
@@ -65,6 +67,7 @@ def test_euclidean_average_linkage_signed_distance_uses_inequality_gradient() ->
         competitor_left_members=(1,),
         competitor_right_members=(2,),
         margin=2.0,
+        null_feature_covariance=np.asarray([[4.0]], dtype=float),
     )
 
     assert geometry["selected_region_geometry_status"] == (
@@ -73,6 +76,15 @@ def test_euclidean_average_linkage_signed_distance_uses_inequality_gradient() ->
     assert geometry["merge_inequality_gradient_norm"] == pytest.approx(np.sqrt(6.0))
     assert geometry["merge_first_order_signed_distance"] == pytest.approx(
         2.0 / np.sqrt(6.0)
+    )
+    assert geometry["merge_null_quadratic_gradient_scale"] == pytest.approx(
+        np.sqrt(24.0)
+    )
+    assert geometry["merge_null_whitened_first_order_signed_distance"] == pytest.approx(
+        2.0 / np.sqrt(24.0)
+    )
+    assert geometry["null_whitened_geometry_status"] == (
+        "continuous_iid_empirical_gaussian_root_null"
     )
 
 
@@ -117,6 +129,7 @@ def test_replay_average_linkage_margins_adds_smooth_geometry_for_euclidean_data(
         distances,
         leaf_matrix=leaf_matrix,
         geometry_metric="euclidean",
+        null_feature_covariance=np.asarray([[2.0]], dtype=float),
     )
     margins = annotate_root_child_construction_roles(
         replay.merge_margins,
@@ -128,6 +141,41 @@ def test_replay_average_linkage_margins_adds_smooth_geometry_for_euclidean_data(
         "smooth_first_order_geometry_defined"
     }
     assert construction["merge_first_order_signed_distance"].notna().all()
+    assert construction["merge_null_whitened_first_order_signed_distance"].notna().all()
     assert summarize_root_child_margin_geometry(margins)[
         "root_selected_region_law_status"
-    ] == "smooth_first_order_signed_distance_defined"
+    ] == "null_whitened_first_order_signed_distance_defined"
+
+
+def test_root_selected_region_relationships_report_statuses() -> None:
+    root_table = pd.DataFrame(
+        {
+            "root_sibling_selected_ratio": [1.0, 3.0, 9.0],
+            "root_child_min_merge_margin": [0.1, 0.2, 0.3],
+            "root_child_min_first_order_signed_distance": [0.1, 0.1, 0.1],
+            "root_child_min_null_whitened_first_order_signed_distance": [
+                np.nan,
+                np.nan,
+                np.nan,
+            ],
+            "root_edge_action_proxy": [0.0, 1.0, 2.0],
+            "root_selected_eigenvalue_over_mp_upper_bound": [2.0, 1.0, 0.5],
+        }
+    )
+
+    relationships = summarize_root_selected_region_relationships(root_table)
+    status_by_covariate = dict(
+        zip(
+            relationships["covariate"],
+            relationships["relationship_status"],
+            strict=False,
+        )
+    )
+
+    assert status_by_covariate["root_child_min_merge_margin"] == "evaluated"
+    assert status_by_covariate["root_child_min_first_order_signed_distance"] == (
+        "constant_covariate"
+    )
+    assert status_by_covariate[
+        "root_child_min_null_whitened_first_order_signed_distance"
+    ] == "insufficient_valid_pairs"

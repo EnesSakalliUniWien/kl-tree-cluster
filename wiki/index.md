@@ -77,7 +77,9 @@ renamed, or promoted.
   skips, covariance boundary, and oracle-matched-below-solved rows.
 - [[root-selected-region-margins-20260603]] - average-linkage replay of
   observed root merge-selection inequalities, separating tie-heavy discrete
-  hierarchy cells from smooth Euclidean first-order signed-distance cells.
+  hierarchy cells from smooth Euclidean first-order signed-distance cells, and
+  showing edge action dominates merge-margin distance in the supported
+  continuous root panel.
 
 ### Concepts
 

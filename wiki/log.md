@@ -466,6 +466,13 @@ verification, and maintenance events here in chronological order.
   classified as discrete tie-cell geometry. The representative continuous case
   has minimum first-order signed distance about `2.24e-4`; curvature and
   null-whitened distance remain open.
+- Extended the same diagnostic to schema `v3` with root empirical-Gaussian
+  null-whitened first-order merge distance and a relationship table. In the
+  supported eight-case continuous panel, edge action has Spearman correlation
+  `1.0` with log root sibling selected ratio, while raw merge margin,
+  ambient signed distance, and null-whitened merge distance have weak
+  relationships. The next selected-region object is therefore the edge-opening
+  boundary/action, not more merge-margin tuning.
 
 ## Evidence
 

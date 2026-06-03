@@ -41,12 +41,16 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pro
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
+from kl_clustering_analysis.tree.distributions import (
+    require_node_continuous_covariance_by_block,
+)
+from scipy import stats
 from scipy.spatial.distance import squareform
 
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.kl_tree_context import KlTreeContext, build_kl_tree_context
 
-SCHEMA_VERSION = "root_selected_region_margins/v2"
+SCHEMA_VERSION = "root_selected_region_margins/v3"
 GENERATED_BY = "benchmarks.diagnostics.calibration.root_selected_region_margins"
 DIAGNOSTIC_ROLE = "descriptive_root_selected_region_geometry_not_calibration"
 DEFAULT_CASE_NAMES = (
@@ -58,6 +62,14 @@ DEFAULT_CASE_NAMES = (
 )
 NEAR_ACTIVE_ABSOLUTE_TOLERANCE = 1e-12
 SMOOTH_SELECTED_REGION_METRIC = "euclidean"
+RELATIONSHIP_TARGET_COLUMN = "root_sibling_selected_ratio"
+RELATIONSHIP_COVARIATES = (
+    "root_child_min_merge_margin",
+    "root_child_min_first_order_signed_distance",
+    "root_child_min_null_whitened_first_order_signed_distance",
+    "root_edge_action_proxy",
+    "root_selected_eigenvalue_over_mp_upper_bound",
+)
 
 
 @dataclass(frozen=True)
@@ -149,6 +161,7 @@ def euclidean_average_linkage_inequality_geometry(
     competitor_left_members: tuple[int, ...],
     competitor_right_members: tuple[int, ...],
     margin: float,
+    null_feature_covariance: np.ndarray | None = None,
 ) -> dict[str, object]:
     r"""First-order geometry for one smooth average-linkage inequality.
 
@@ -160,13 +173,14 @@ def euclidean_average_linkage_inequality_geometry(
     margin_value = float(margin)
     if not np.isfinite(margin_value):
         raise ValueError(f"margin must be finite; got {margin!r}.")
+    matrix = np.asarray(leaf_matrix, dtype=np.float64)
     selected_gradient = _average_euclidean_linkage_gradient(
-        leaf_matrix,
+        matrix,
         selected_left_members,
         selected_right_members,
     )
     competitor_gradient = _average_euclidean_linkage_gradient(
-        leaf_matrix,
+        matrix,
         competitor_left_members,
         competitor_right_members,
     )
@@ -177,10 +191,42 @@ def euclidean_average_linkage_inequality_geometry(
             "Selected-region merge inequality has zero gradient; first-order "
             "signed distance is undefined."
         )
+    null_scale = np.nan
+    null_whitened_distance = np.nan
+    null_whitened_status = "not_requested"
+    if null_feature_covariance is not None:
+        feature_covariance = np.asarray(null_feature_covariance, dtype=np.float64)
+        if feature_covariance.ndim != 2 or feature_covariance.shape != (
+            matrix.shape[1],
+            matrix.shape[1],
+        ):
+            raise ValueError(
+                "null_feature_covariance must have shape "
+                f"({matrix.shape[1]}, {matrix.shape[1]}); got {feature_covariance.shape}."
+            )
+        if not np.isfinite(feature_covariance).all():
+            raise ValueError("null_feature_covariance contains non-finite values.")
+        quadratic_scale = float(
+            sum(
+                row_gradient @ feature_covariance @ row_gradient
+                for row_gradient in inequality_gradient
+            )
+        )
+        if quadratic_scale <= 0.0 or not np.isfinite(quadratic_scale):
+            raise ValueError(
+                "Null-whitened selected-region distance requires a positive finite "
+                f"gradient covariance scale; got {quadratic_scale!r}."
+            )
+        null_scale = float(np.sqrt(quadratic_scale))
+        null_whitened_distance = float(margin_value / null_scale)
+        null_whitened_status = "continuous_iid_empirical_gaussian_root_null"
     return {
         "selected_region_geometry_status": "smooth_first_order_geometry_defined",
         "merge_inequality_gradient_norm": gradient_norm,
         "merge_first_order_signed_distance": float(margin_value / gradient_norm),
+        "merge_null_quadratic_gradient_scale": null_scale,
+        "merge_null_whitened_first_order_signed_distance": null_whitened_distance,
+        "null_whitened_geometry_status": null_whitened_status,
         "tangent_cone_status": "inactive_local_interior",
         "curvature_status": "not_materialized_high_dimensional_hessian_operator",
         "discrete_tie_cell_status": "not_discrete_tie_cell",
@@ -207,6 +253,9 @@ def _default_selected_region_geometry_row(
         "selected_region_geometry_status": status,
         "merge_inequality_gradient_norm": np.nan,
         "merge_first_order_signed_distance": np.nan,
+        "merge_null_quadratic_gradient_scale": np.nan,
+        "merge_null_whitened_first_order_signed_distance": np.nan,
+        "null_whitened_geometry_status": "undefined_without_smooth_continuous_null",
         "tangent_cone_status": tangent_status,
         "curvature_status": "undefined_without_smooth_euclidean_cell",
         "discrete_tie_cell_status": tie_status,
@@ -219,6 +268,7 @@ def replay_average_linkage_margins(
     *,
     leaf_matrix: np.ndarray | None = None,
     geometry_metric: str | None = None,
+    null_feature_covariance: np.ndarray | None = None,
     absolute_tolerance: float = 1e-8,
 ) -> LinkageReplayResult:
     """Replay SciPy average linkage and expose selected-merge margins.
@@ -245,6 +295,10 @@ def replay_average_linkage_margins(
             )
     else:
         matrix = None
+    if null_feature_covariance is not None and matrix is None:
+        raise ValueError(
+            "null_feature_covariance requires Euclidean leaf_matrix geometry."
+        )
 
     square_distances = squareform(distance_array)
     active_clusters: dict[int, tuple[int, ...]] = {
@@ -345,6 +399,7 @@ def replay_average_linkage_margins(
                     competitor_left_members=competitor_left_members,
                     competitor_right_members=competitor_right_members,
                     margin=margin,
+                    null_feature_covariance=null_feature_covariance,
                 )
                 if margin <= absolute_tolerance:
                     geometry_row["tangent_cone_status"] = "active_smooth_boundary"
@@ -503,6 +558,9 @@ def summarize_root_child_margin_geometry(
         discrete_tie_cell_count = 0
         min_signed_distance = np.nan
         median_signed_distance = np.nan
+        null_whitened_count = 0
+        min_null_whitened_distance = np.nan
+        median_null_whitened_distance = np.nan
         selected_region_law_status = "root_children_are_leaves"
         curvature_status = "undefined_root_children_are_leaves"
     elif defined.empty:
@@ -536,12 +594,40 @@ def summarize_root_child_margin_geometry(
             min_signed_distance = float(np.min(signed_distances))
             median_signed_distance = float(np.quantile(signed_distances, 0.5))
             curvature_status = "not_materialized_high_dimensional_hessian_operator"
+            null_whitened_constraints = smooth_constraints[
+                smooth_constraints["null_whitened_geometry_status"].eq(
+                    "continuous_iid_empirical_gaussian_root_null"
+                )
+            ]
+            null_whitened_count = int(null_whitened_constraints.shape[0])
+            if null_whitened_count:
+                null_whitened_distances = null_whitened_constraints[
+                    "merge_null_whitened_first_order_signed_distance"
+                ].to_numpy(dtype=float)
+                if not np.isfinite(null_whitened_distances).all():
+                    raise ValueError(
+                        "Null-whitened selected-region signed distances must be finite."
+                    )
+                min_null_whitened_distance = float(np.min(null_whitened_distances))
+                median_null_whitened_distance = float(
+                    np.quantile(null_whitened_distances, 0.5)
+                )
+            else:
+                min_null_whitened_distance = np.nan
+                median_null_whitened_distance = np.nan
         else:
             min_signed_distance = np.nan
             median_signed_distance = np.nan
+            null_whitened_count = 0
+            min_null_whitened_distance = np.nan
+            median_null_whitened_distance = np.nan
             curvature_status = "undefined_without_smooth_euclidean_cell"
         if discrete_tie_cell_count:
             selected_region_law_status = "discrete_tie_cell_geometry_required"
+        elif null_whitened_count == int(defined.shape[0]):
+            selected_region_law_status = (
+                "null_whitened_first_order_signed_distance_defined"
+            )
         elif smooth_count == int(defined.shape[0]):
             selected_region_law_status = "smooth_first_order_signed_distance_defined"
         elif smooth_count:
@@ -576,6 +662,13 @@ def summarize_root_child_margin_geometry(
         "root_child_discrete_tie_cell_count": discrete_tie_cell_count,
         "root_child_min_first_order_signed_distance": min_signed_distance,
         "root_child_median_first_order_signed_distance": median_signed_distance,
+        "root_child_null_whitened_constraint_count": null_whitened_count,
+        "root_child_min_null_whitened_first_order_signed_distance": (
+            min_null_whitened_distance
+        ),
+        "root_child_median_null_whitened_first_order_signed_distance": (
+            median_null_whitened_distance
+        ),
         "root_selected_region_law_status": selected_region_law_status,
         "root_selected_region_curvature_status": curvature_status,
         "near_active_absolute_tolerance": float(near_active_absolute_tolerance),
@@ -595,6 +688,41 @@ def _standardized_contrast_dimension(context: KlTreeContext) -> int:
     if context.feature_space is None:
         return int(context.data.shape[1])
     return int(context.feature_space.contrast_dimension)
+
+
+def _root_continuous_null_feature_covariance(
+    context: KlTreeContext,
+    root: object,
+) -> np.ndarray:
+    """Return the root empirical-Gaussian feature covariance for iid leaves."""
+    feature_space = context.feature_space
+    if feature_space is None or feature_space.family_label != "continuous":
+        raise ValueError(
+            "Null-whitened Euclidean selected-region geometry currently requires "
+            "an all-continuous FeatureSpace."
+        )
+    covariance_by_block = require_node_continuous_covariance_by_block(
+        context.tree,
+        root,
+        feature_space,
+    )
+    if covariance_by_block is None:
+        raise ValueError("Continuous FeatureSpace did not provide root covariance blocks.")
+    covariance = np.zeros(
+        (feature_space.raw_dimension, feature_space.raw_dimension),
+        dtype=np.float64,
+    )
+    for block in feature_space.continuous_blocks:
+        block_covariance = np.asarray(covariance_by_block[block.name], dtype=np.float64)
+        expected_shape = (block.raw_dimension, block.raw_dimension)
+        if block_covariance.shape != expected_shape:
+            raise ValueError(
+                f"Continuous block {block.name!r} covariance has shape "
+                f"{block_covariance.shape}; expected {expected_shape}."
+            )
+        block_indices = list(block.column_indices)
+        covariance[np.ix_(block_indices, block_indices)] = block_covariance
+    return covariance
 
 
 def _root_spectral_summary(
@@ -671,8 +799,14 @@ def collect_observed_root_selected_region_row(
             "Root selected-region margin replay currently supports average linkage; "
             f"got {context.tree_linkage_method!r}."
         )
+    root = context.tree.root()
     leaf_matrix = (
         context.data.to_numpy(dtype=np.float64)
+        if context.tree_distance_metric == SMOOTH_SELECTED_REGION_METRIC
+        else None
+    )
+    null_feature_covariance = (
+        _root_continuous_null_feature_covariance(context, root)
         if context.tree_distance_metric == SMOOTH_SELECTED_REGION_METRIC
         else None
     )
@@ -681,6 +815,7 @@ def collect_observed_root_selected_region_row(
         context.distance_condensed,
         leaf_matrix=leaf_matrix,
         geometry_metric=context.tree_distance_metric,
+        null_feature_covariance=null_feature_covariance,
     )
     merge_margins = annotate_root_child_construction_roles(
         replay_result.merge_margins,
@@ -720,7 +855,6 @@ def collect_observed_root_selected_region_row(
         parent_principal_component_eigenvalues=parent_eigenvalues,
         feature_space=context.feature_space,
     )
-    root = context.tree.root()
     root_records = [record for record in records if record.parent == root]
     if len(root_records) != 1:
         raise ValueError(
@@ -835,6 +969,78 @@ def _select_cases(
     return [by_name[name].copy() for name in case_names]
 
 
+def summarize_root_selected_region_relationships(root_table: pd.DataFrame) -> pd.DataFrame:
+    """Summarize descriptive links between geometry variables and root ratio."""
+    if RELATIONSHIP_TARGET_COLUMN not in root_table.columns:
+        raise KeyError(f"Missing relationship target {RELATIONSHIP_TARGET_COLUMN!r}.")
+    missing_covariates = [
+        covariate
+        for covariate in RELATIONSHIP_COVARIATES
+        if covariate not in root_table.columns
+    ]
+    if missing_covariates:
+        raise KeyError(f"Missing relationship covariates: {missing_covariates}.")
+
+    target_values = pd.to_numeric(
+        root_table[RELATIONSHIP_TARGET_COLUMN],
+        errors="raise",
+    ).to_numpy(dtype=float)
+    if np.any(~np.isfinite(target_values)) or np.any(target_values <= 0.0):
+        raise ValueError("root_sibling_selected_ratio must be positive and finite.")
+    log_target = np.log(target_values)
+
+    rows: list[dict[str, object]] = []
+    for covariate in RELATIONSHIP_COVARIATES:
+        covariate_values = pd.to_numeric(root_table[covariate], errors="coerce").to_numpy(
+            dtype=float
+        )
+        valid_mask = np.isfinite(covariate_values) & np.isfinite(log_target)
+        valid_count = int(np.count_nonzero(valid_mask))
+        unique_count = int(np.unique(covariate_values[valid_mask]).shape[0])
+        if valid_count < 3:
+            status = "insufficient_valid_pairs"
+            spearman_r = np.nan
+            spearman_p = np.nan
+            log_pearson_r = np.nan
+        elif unique_count < 2:
+            status = "constant_covariate"
+            spearman_r = np.nan
+            spearman_p = np.nan
+            log_pearson_r = np.nan
+        else:
+            status = "evaluated"
+            spearman = stats.spearmanr(
+                covariate_values[valid_mask],
+                log_target[valid_mask],
+            )
+            spearman_r = float(spearman.statistic)
+            spearman_p = float(spearman.pvalue)
+            if np.all(covariate_values[valid_mask] > 0.0):
+                log_pearson_r = float(
+                    np.corrcoef(
+                        np.log(covariate_values[valid_mask]),
+                        log_target[valid_mask],
+                    )[0, 1]
+                )
+            else:
+                log_pearson_r = np.nan
+        rows.append(
+            {
+                "schema_version": SCHEMA_VERSION,
+                "diagnostic_role": DIAGNOSTIC_ROLE,
+                "target": f"log_{RELATIONSHIP_TARGET_COLUMN}",
+                "covariate": covariate,
+                "relationship_status": status,
+                "valid_pair_count": valid_count,
+                "unique_covariate_count": unique_count,
+                "spearman_r": spearman_r,
+                "spearman_p_value": spearman_p,
+                "log_log_pearson_r": log_pearson_r,
+            }
+        )
+    return pd.DataFrame.from_records(rows)
+
+
 def _make_output_dir(output_dir: Path | None) -> Path:
     if output_dir is not None:
         resolved = output_dir
@@ -876,11 +1082,14 @@ def run_root_selected_region_margin_diagnostic(
 
     root_table = pd.DataFrame.from_records(root_rows)
     merge_margin_table = pd.concat(margin_tables, ignore_index=True)
+    relationship_table = summarize_root_selected_region_relationships(root_table)
     root_path = resolved_output_dir / "root_selected_region_summary.csv"
     merge_path = resolved_output_dir / "root_selected_region_merge_margins.csv"
+    relationship_path = resolved_output_dir / "root_selected_region_relationships.csv"
     manifest_path = resolved_output_dir / "manifest.json"
     root_table.to_csv(root_path, index=False)
     merge_margin_table.to_csv(merge_path, index=False)
+    relationship_table.to_csv(relationship_path, index=False)
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "generated_by": GENERATED_BY,
@@ -890,16 +1099,19 @@ def run_root_selected_region_margin_diagnostic(
         "near_active_absolute_tolerance": float(near_active_absolute_tolerance),
         "root_rows": int(root_table.shape[0]),
         "merge_margin_rows": int(merge_margin_table.shape[0]),
+        "relationship_rows": int(relationship_table.shape[0]),
         "elapsed_seconds": float(perf_counter() - start),
         "outputs": {
             "root_selected_region_summary": str(root_path),
             "root_selected_region_merge_margins": str(merge_path),
+            "root_selected_region_relationships": str(relationship_path),
         },
     }
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return {
         "root_selected_region_summary": root_path,
         "root_selected_region_merge_margins": merge_path,
+        "root_selected_region_relationships": relationship_path,
         "manifest": manifest_path,
     }
 
@@ -952,5 +1164,6 @@ __all__ = [
     "collect_observed_root_selected_region_row",
     "replay_average_linkage_margins",
     "run_root_selected_region_margin_diagnostic",
+    "summarize_root_selected_region_relationships",
     "summarize_root_child_margin_geometry",
 ]

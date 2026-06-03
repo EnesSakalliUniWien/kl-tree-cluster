@@ -1,5 +1,5 @@
 {
-  "schema_version": "root_selected_region_margins/v2",
+  "schema_version": "root_selected_region_margins/v3",
   "generated_by": "benchmarks.diagnostics.calibration.root_selected_region_margins",
   "diagnostic_role": "descriptive_root_selected_region_geometry_not_calibration",
   "suite": "full",
@@ -13,9 +13,11 @@
   "near_active_absolute_tolerance": 1e-12,
   "root_rows": 5,
   "merge_margin_rows": 775,
-  "elapsed_seconds": 3.4050946670176927,
+  "relationship_rows": 5,
+  "elapsed_seconds": 4.018471249990398,
   "outputs": {
     "root_selected_region_summary": "raw/assets/benchmark-results/root_selected_region_margins_20260603/root_selected_region_summary.csv",
-    "root_selected_region_merge_margins": "raw/assets/benchmark-results/root_selected_region_margins_20260603/root_selected_region_merge_margins.csv"
+    "root_selected_region_merge_margins": "raw/assets/benchmark-results/root_selected_region_margins_20260603/root_selected_region_merge_margins.csv",
+    "root_selected_region_relationships": "raw/assets/benchmark-results/root_selected_region_margins_20260603/root_selected_region_relationships.csv"
   }
 }

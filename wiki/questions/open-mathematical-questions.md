@@ -270,12 +270,15 @@ sequence against the condensed distance matrix and records nearest-competitor
 margins for the merge inequalities that construct the two root child clusters.
 The representative run shows two selected-region geometries:
 tie-heavy Hamming/discretized/categorical root construction cells and
-positive-margin continuous Euclidean cells. Schema `v2` computes the
-first-order signed distance \(m_t/\|\nabla g_t\|\) for smooth Euclidean
-average-linkage constraints and marks the discrete cases as tie-cell geometry.
-Root selected sibling ratios remain large in both groups, so merge margins
-alone are not the law; they are one piece of the selected-region conditioning
-object.
+positive-margin continuous Euclidean cells. Schema `v3` computes the
+first-order signed distance \(m_t/\|\nabla g_t\|\) and the root
+empirical-Gaussian null-whitened distance \(m_t/\sigma_{g,t}\) for smooth
+Euclidean average-linkage constraints, while marking the discrete cases as
+tie-cell geometry. Root selected sibling ratios remain large in both groups,
+so merge margins alone are not the law; they are one piece of the
+selected-region conditioning object. In the supported eight-case continuous
+panel, edge action dominates the descriptive relationship with log root
+sibling ratio, while merge-margin distances are weak.
 [[selected-pca-projected-wald-validation]] records the first locked run. In the
 tested Gaussian settings, leaf-only selected PCA was calibrated at
 \(\alpha=0.05\), but appending deterministic child-mean internal rows produced
@@ -474,6 +477,9 @@ The current concrete open questions are:
     Euclidean distance to the actual selected-region law: null-whitened signed
     distance, active-set and tangent-cone structure, curvature, or a discrete
     tie-cell law?
+43. What is the correct edge-opening boundary distance/action, and does it
+    explain selected root sibling ratios once merge-sequence geometry is held
+    fixed?
 
 ## Evidence
 
@@ -504,9 +510,9 @@ The current concrete open questions are:
 - `wiki/sources/local-mp-identity-law-diagnostic-20260602.md` records the
   representative production-spectrum screen against the identity MP law.
 - `wiki/sources/root-selected-region-margins-20260603.md` records observed
-  root merge-selection margins, ambient first-order Euclidean signed-distance
-  geometry for the continuous representative, and tie-cell status for
-  discrete/nonsmooth representatives.
+  root merge-selection margins, ambient and null-whitened first-order
+  Euclidean signed-distance geometry for supported continuous representatives,
+  and tie-cell status for discrete/nonsmooth representatives.
 - `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
   the selected-PCA projected-Wald validation scaffold.
 - `wiki/analyses/selected-pca-projected-wald-validation.md` summarizes the
