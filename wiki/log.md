@@ -367,8 +367,8 @@ verification, and maintenance events here in chronological order.
   projected-Wald energy to the chi-square law, edge-selection strength to a
   large-deviation/action coordinate, eigenvalues to Marchenko--Pastur spectral
   modes, angles to Pythagorean projection, parent size/balance to sampling
-  variance, branch lengths to optional Felsenstein/Brownian variance
-  accumulation, and node distributions to barycentric coarse-graining.
+  variance, branch lengths to phylogenetic covariance context, and node
+  distributions to barycentric coarse-graining.
 - Extended the selected-hierarchy geometry diagnostic with candidate-equation
   scoring. The compact edge-plus-spectral equation nearly matches the full
   descriptive equation for top-10% selected-ratio tail discrimination, while
@@ -642,7 +642,27 @@ verification, and maintenance events here in chronological order.
   `tests/validation/60_test_sibling_null_prior_interpolation_audit.py` and
   wrote compact outputs under
   `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/`.
-
+- Ran the same interpolation audit over the 24 KL calibration-support skips
+  from the complete `run_20260604_115308Z_full` benchmark. All 24 remain
+  `no_strict_internal_support`; 23 receive positive diagnostic interpolated
+  selected-nonnull weights, while `gauss_extreme_noise_highd` receives none.
+  Recorded outputs under
+  `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/`.
+- Removed statistical alpha thresholds from mutable `config.py` and introduced
+  `kl_clustering_analysis/hierarchy_analysis/statistics/alpha_contract.py` as
+  the canonical source for `DEFAULT_EDGE_ALPHA = 0.001` and
+  `DEFAULT_SIBLING_ALPHA = 0.01`. Benchmark KL rows now record both alpha
+  values in their parameter contract, and decomposition output reports both
+  edge and sibling alpha values.
+- Removed the disabled branch-length variance-scaling config path from the
+  active projected-Wald kernel. Branch lengths remain valid tree metadata and
+  diagnostic/topological covariates, but they no longer enter edge or sibling
+  Wald variance through a hidden runtime switch.
+- Added [[alpha-grid-full-20260604]] after running the AWS full-suite alpha
+  grid over `25` edge/sibling alpha pairs. The current default pair
+  `edge_alpha = 0.001` and `sibling_alpha = 0.01` had the best mean ARI in
+  the grid, while lower edge alpha had more exact cluster-count hits. Recorded
+  this as benchmark evidence, not a selected-tree Type-I proof.
 - Added `benchmarks/validation/selected_edge_type1_geometry.py`,
   `benchmarks/cloud/aws_selected_edge_type1_geometry.py`, and
   `benchmarks/diagnostics/analysis/selected_edge_geometry_analysis.py` for a

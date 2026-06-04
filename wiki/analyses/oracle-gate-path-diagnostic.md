@@ -711,8 +711,11 @@ partition.
   records the fixed-tree root Tree-BH selection diagnostic and the unsupported
   production calibration status for the two high-dimensional Gaussian
   blockers.
-- `kl_clustering_analysis/config.py` records `SIBLING_ALPHA = 0.01`,
-  `EDGE_ALPHA = 0.001`, and `PASSTHROUGH = True`.
+- `kl_clustering_analysis/hierarchy_analysis/statistics/alpha_contract.py`
+  records the canonical statistical thresholds: `DEFAULT_EDGE_ALPHA = 0.001`
+  and `DEFAULT_SIBLING_ALPHA = 0.01`.
+- `kl_clustering_analysis/config.py` records the runtime traversal option
+  `PASSTHROUGH = True`.
 - `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py`
   implements the split and pass-through gate logic described here.
 

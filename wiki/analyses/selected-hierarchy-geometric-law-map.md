@@ -38,7 +38,7 @@ The selected-hierarchy geometry variables are not governed by independent
 physical laws in the literal sense. They are statistical-geometric variables.
 Some have direct mathematical laws used by the method: chi-square projected
 energy, Marchenko--Pastur spectral thresholding, Pythagorean projection, sample
-variance scaling, and optional Brownian/Felsenstein branch-length variance.
+variance scaling, and explicit branch-length descriptors for tree geometry.
 Other "physical" connections are useful analogies: energy/action,
 coarse-graining, entropy/effective rank, and modal decomposition.
 
@@ -263,18 +263,18 @@ standard-error scaling, not a separate physical law.
 
 ### Branch Length
 
-Branch length is related to Brownian-motion variance accumulation on a tree.
-Under Felsenstein-style phylogenetic scaling, independent branch variances add:
+Branch length is related to Brownian-motion variance accumulation on a
+phylogenetic tree. Under an explicit Brownian phylogenetic covariance model,
+independent branch variances would add:
 
 \[
 \operatorname{Var}(X_L-X_R)\propto b_L+b_R.
 \]
 
-The code implements this through a branch-length variance multiplier when a
-positive mean branch length is active. In the selected-hierarchy geometry
-diagnostic, branch lengths are recorded as descriptive tree covariates; they
-are not injected into the recomputed Wald contrast unless the same production
-branch-scaling condition is active.
+The current KL-TE Wald kernel does not implement that covariance model.
+Branch lengths are recorded as descriptive tree covariates for topology and
+selection diagnostics; they are not injected into edge or sibling
+projected-Wald variance.
 
 ### Barycenters And Coarse-Graining
 
@@ -334,7 +334,7 @@ calibration law.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py`
   defines the Marchenko--Pastur signal-count rule and effective rank.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/branch_length_utils.py`
-  defines the optional Felsenstein branch-length variance multiplier.
+  validates and aggregates observed branch-length metadata.
 - `kl_clustering_analysis/tree/distributions.py` implements internal node
   distributions as empirical subtree barycenters.
 
@@ -369,5 +369,6 @@ calibration law.
 - Does the local null-whitened tangent spectrum have \(H\approx\delta_1\), or
   does KL-TE need a deformed Marchenko--Pastur edge computed from a local
   population-spectrum integral?
-- How should branch-length geometry enter the selected law for phylogenetic
-  cases where Felsenstein scaling is active?
+- Should branch-length geometry enter the selected law for phylogenetic cases
+  only through descriptive topology covariates, or through a future explicit
+  phylogenetic covariance model?

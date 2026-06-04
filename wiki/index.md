@@ -119,6 +119,10 @@ renamed, or promoted.
   reconstruction of the old tree-neighborhood null-prior score, showing that
   it assigns positive weights to selected non-null records and therefore
   describes but does not solve strict empirical-null support failure.
+- [[alpha-grid-full-20260604]] - AWS full-suite alpha grid showing that the
+  current edge alpha `0.001` and sibling alpha `0.01` pair has the best mean
+  ARI in the tested grid, while lower edge alpha gives more exact
+  cluster-count hits.
 
 ### Concepts
 

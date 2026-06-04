@@ -33,12 +33,14 @@ sources:
   - wiki/sources/root-selected-region-margins-20260603.md
   - wiki/sources/internal-vs-selected-hierarchy-inflation-20260603.md
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
+  - wiki/sources/sibling-null-prior-interpolation-audit-20260604.md
+  - wiki/sources/alpha-grid-full-20260604.md
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_edges.csv
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_final.csv
   - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_edges.csv
   - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_final.csv
-  - wiki/sources/sibling-null-prior-interpolation-audit-20260604.md
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv
+  - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/case_summary.csv
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
   - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
@@ -120,6 +122,21 @@ about `77.8%` at edge alpha `0.0001` and `92.3%` at edge alpha `0.001`.
 Thus high-cardinality categorical calibration is not only a same-data
 selection problem. It also needs a finite-sample categorical one-hot
 projected-Wald/Tree-BH calibration analysis under a fixed hierarchy.
+
+The thresholds are now recorded as canonical method constants in
+`kl_clustering_analysis/hierarchy_analysis/statistics/alpha_contract.py`, not
+as mutable `config.py` values: `DEFAULT_EDGE_ALPHA = 0.001` and
+`DEFAULT_SIBLING_ALPHA = 0.01`. These values are deliberately conservative
+and still need validation as method constants; the cleanup only made their
+assignment explicit and reportable, it did not tune them.
+
+The 2026-06-04 AWS alpha grid gives benchmark evidence for those constants
+without closing the Type-I validation gap. In the tested full-suite grid, the
+current pair `edge_alpha = 0.001` and `sibling_alpha = 0.01` has the best mean
+ARI (`0.893811`). A lower edge alpha (`0.0001` or `0.0003`) gives more exact
+cluster-count hits but lower mean ARI. The grid supports keeping sibling alpha
+`0.01` as the benchmark default for now, while leaving edge alpha as a
+tradeoff between mean ARI and exact cluster-count control.
 
 The first cross-fit diagnostic supports this interpretation. Because the KL
 tree is a sample-leaf hierarchy, literal sample splitting is undefined without
@@ -290,13 +307,17 @@ production-valid external law without borrowing from an invalid support set.
 The 2026-06-04 sibling null-prior interpolation audit rechecks the old
 tree-neighborhood interpolation idea without restoring it as a production
 fallback. It reconstructs old-style interpolated priors from current explicit
-edge columns and compares them with strict internal support. In
-`binary_perfect_4c`, `cat_highcard_20cat_4c`,
-`overlap_heavy_4c_small_feat`, and `phylo_large_32taxa`, strict internal
-support is absent, while the diagnostic score still assigns positive weights
-to many selected non-null records. This explains why the earlier interpolation
-could avoid hard support failure, but it also identifies the mathematical
-problem: those records are selected non-null evidence and are not admissible
+edge columns and compares them with strict internal support. In the initial
+representative run, `binary_perfect_4c`, `cat_highcard_20cat_4c`,
+`overlap_heavy_4c_small_feat`, and `phylo_large_32taxa` all lack strict
+internal support, while the diagnostic score still assigns positive weights to
+many selected non-null records. In the 24-case full calibration-skip audit,
+every case again has `no_strict_internal_support`, and 23 of 24 cases receive
+positive interpolated selected-nonnull weights. The exception is
+`gauss_extreme_noise_highd`, where even the diagnostic score has no positive
+interpolated support. This explains why the earlier interpolation could often
+avoid hard support failure, but it also identifies the mathematical problem:
+those records are selected non-null evidence and are not admissible
 empirical-null calibration support. The diagnostic is therefore useful for
 describing the phenomenon, not for changing production calibration.
 
@@ -600,9 +621,12 @@ The current concrete open questions are:
     representation, distance metric, linkage, or gate logic?
 33. Which validation outputs become the locked manuscript evidence set?
 34. Which method constants become justified defaults rather than implementation
-    defaults?
-35. What null calibration study supports edge alpha?
-36. What null calibration and power study supports sibling alpha?
+    defaults? The full alpha grid supports the current sibling alpha and gives
+    evidence for the current edge alpha, but it is still benchmark-performance
+    evidence rather than a selected-tree null calibration proof.
+35. What null calibration study supports edge alpha beyond benchmark ARI?
+36. What null calibration and power study supports sibling alpha beyond the
+    current full-suite grid?
 37. What simulation validates final cluster-count control, not only local
     p-values?
 38. What planted-structure simulations support power claims?
@@ -676,6 +700,9 @@ The current concrete open questions are:
   biological application choice.
 - `benchmarks/validation/method_constants_manifest.py` enumerates the active
   method constants that still need validation artifacts.
+- `wiki/sources/alpha-grid-full-20260604.md` records the AWS full-suite alpha
+  grid over `25` alpha pairs and separates benchmark evidence from Type-I
+  calibration proof.
 
 ## Links
 
