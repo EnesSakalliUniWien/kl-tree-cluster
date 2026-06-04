@@ -1,0 +1,14 @@
+{
+  "case_names": [
+    "binary_perfect_4c",
+    "cat_highcard_20cat_4c",
+    "overlap_heavy_4c_small_feat",
+    "phylo_large_32taxa"
+  ],
+  "case_summary_csv": "raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv",
+  "created_at_utc": "20260604_121036Z",
+  "elapsed_seconds": 59.89607566597988,
+  "production_method_changed": false,
+  "record_interpolation_audit_csv": "raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/record_interpolation_audit.csv",
+  "study_role": "diagnostic_interpolated_sibling_null_prior_not_calibration"
+}

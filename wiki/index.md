@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-03
+updated: 2026-06-04
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -109,6 +109,10 @@ renamed, or promoted.
   comparison showing that diffuse Gaussian root internal inflation agrees with
   selected-hierarchy scale, while null and high-cardinality categorical root
   contexts still lack internal production support.
+- [[sibling-null-prior-interpolation-audit-20260604]] - diagnostic-only
+  reconstruction of the old tree-neighborhood null-prior score, showing that
+  it assigns positive weights to selected non-null records and therefore
+  describes but does not solve strict empirical-null support failure.
 
 ### Concepts
 

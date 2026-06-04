@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-06-03
+updated: 2026-06-04
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -31,6 +31,8 @@ sources:
   - wiki/sources/root-selected-region-margins-20260603.md
   - wiki/sources/internal-vs-selected-hierarchy-inflation-20260603.md
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
+  - wiki/sources/sibling-null-prior-interpolation-audit-20260604.md
+  - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
   - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
@@ -256,6 +258,19 @@ but internal production support is absent. This separates two questions:
 whether selected hierarchy explains observed scale in supported diffuse
 Gaussian contexts, and whether unsupported contexts can ever receive a
 production-valid external law without borrowing from an invalid support set.
+
+The 2026-06-04 sibling null-prior interpolation audit rechecks the old
+tree-neighborhood interpolation idea without restoring it as a production
+fallback. It reconstructs old-style interpolated priors from current explicit
+edge columns and compares them with strict internal support. In
+`binary_perfect_4c`, `cat_highcard_20cat_4c`,
+`overlap_heavy_4c_small_feat`, and `phylo_large_32taxa`, strict internal
+support is absent, while the diagnostic score still assigns positive weights
+to many selected non-null records. This explains why the earlier interpolation
+could avoid hard support failure, but it also identifies the mathematical
+problem: those records are selected non-null evidence and are not admissible
+empirical-null calibration support. The diagnostic is therefore useful for
+describing the phenomenon, not for changing production calibration.
 
 The bootstrap estimator is not the desired production direction. The selected
 inference literature is still useful because it identifies the mathematical

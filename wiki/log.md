@@ -632,6 +632,16 @@ verification, and maintenance events here in chronological order.
   traversal decision in one stable table. Removed the optional sibling-FDR
   early-return helper and updated active documentation to describe the current
   traversal-aligned sibling BH contract rather than stale flat-BH wording.
+- Added [[sibling-null-prior-interpolation-audit-20260604]] and
+  `benchmarks/diagnostics/calibration/sibling_null_prior_interpolation_audit.py`
+  to reconstruct the old tree-neighborhood sibling-null prior score as a
+  diagnostic-only table. The four-case run shows positive interpolated weights
+  on selected non-null records while strict internal support remains absent,
+  confirming that the old score describes support failure but is not admissible
+  empirical-null calibration. Verified with
+  `tests/validation/60_test_sibling_null_prior_interpolation_audit.py` and
+  wrote compact outputs under
+  `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/`.
 
 ## Evidence
 
