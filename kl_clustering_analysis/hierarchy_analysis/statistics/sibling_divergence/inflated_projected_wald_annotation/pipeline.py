@@ -23,7 +23,6 @@ from ..pair_testing.collection.record_collection import collect_sibling_pair_rec
 from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
 from .fdr_annotation import (
     apply_traversal_aligned_sibling_bh_results,
-    early_return_if_no_records,
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
 )
@@ -84,9 +83,8 @@ def annotate_sibling_divergence(
 
     mark_non_binary_as_skipped(annotations_df, non_binary)
 
-    early_annotations_df = early_return_if_no_records(annotations_df, records)
-    if early_annotations_df is not None:
-        return early_annotations_df
+    if not records:
+        return annotations_df
 
     write_record_projection_dimensions(annotations_df, records)
     _validate_focal_sibling_records(records)

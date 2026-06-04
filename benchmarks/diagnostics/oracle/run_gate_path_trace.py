@@ -25,6 +25,9 @@ from benchmarks.diagnostics.oracle.gate_path_trace import (
     collect_sibling_inflation_trace,
     summarize_gate_path_trace,
 )
+from benchmarks.diagnostics.oracle.statistical_decision_trace import (
+    statistical_decision_trace_from_gate_path_trace,
+)
 from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     FAILURE_CLASS_GATE_OVER_SPLIT,
     FAILURE_CLASS_GATE_UNDER_SPLIT,
@@ -257,6 +260,7 @@ def main() -> None:
     )
     output_dir = _make_output_dir(args.output_dir)
     trace_csv = output_dir / "gate_path_trace.csv"
+    statistical_trace_csv = output_dir / "statistical_decision_trace.csv"
     summary_csv = output_dir / "gate_path_trace_summary.csv"
     metadata_json = output_dir / "gate_path_trace_metadata.json"
 
@@ -271,8 +275,10 @@ def main() -> None:
         traces.append(_trace_case(case, classification_row))
 
     trace_df = pd.concat(traces, ignore_index=True)
+    statistical_trace_df = statistical_decision_trace_from_gate_path_trace(trace_df)
     summary_df = summarize_gate_path_trace(trace_df)
     trace_df.to_csv(trace_csv, index=False)
+    statistical_trace_df.to_csv(statistical_trace_csv, index=False)
     summary_df.to_csv(summary_csv, index=False)
 
     elapsed_sec = time.perf_counter() - started_at
@@ -284,12 +290,14 @@ def main() -> None:
         "n_cases": len(selected),
         "elapsed_sec": round(elapsed_sec, 6),
         "trace_csv": str(trace_csv),
+        "statistical_trace_csv": str(statistical_trace_csv),
         "summary_csv": str(summary_csv),
     }
     metadata_json.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n")
 
     print(f"Gate-path trace complete in {elapsed_sec:.2f}s")
     print(f"Trace: {trace_csv}")
+    print(f"Statistical trace: {statistical_trace_csv}")
     print(f"Summary: {summary_csv}")
     print(f"Metadata: {metadata_json}")
     print(summary_df.to_string(index=False))

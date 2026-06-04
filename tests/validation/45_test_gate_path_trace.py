@@ -3,6 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from benchmarks.diagnostics.oracle.gate_path_trace import build_gate_path_trace_dataframe
+from benchmarks.diagnostics.oracle.statistical_decision_trace import (
+    STATISTICAL_DECISION_TRACE_COLUMNS,
+    statistical_decision_trace_from_gate_path_trace,
+)
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
     EDGE_GATE_COLUMNS,
     SIBLING_GATE_COLUMNS,
@@ -96,3 +100,58 @@ def test_gate_path_trace_marks_oracle_boundary_split_by_actual_traversal() -> No
     assert root_row["actual_decision"] == "split"
     assert root_row["trace_relation"] == "actual_splits_oracle_boundary"
     assert bool(root_row["oracle_true_k_boundary"])
+
+    statistical_trace = statistical_decision_trace_from_gate_path_trace(trace)
+    assert tuple(statistical_trace.columns) == STATISTICAL_DECISION_TRACE_COLUMNS
+
+    statistical_root = statistical_trace.loc[
+        statistical_trace["node_id"] == root
+    ].iloc[0]
+    assert statistical_root["case_id"] == "synthetic"
+    assert statistical_root["node_depth"] == 0
+    assert np.isclose(statistical_root["edge_raw_p"], 0.001)
+    assert np.isclose(statistical_root["edge_bh_p"], 0.002)
+    assert bool(statistical_root["edge_tested"])
+    assert bool(statistical_root["edge_rejected"])
+    assert np.isnan(statistical_root["sibling_raw_p"])
+    assert np.isclose(statistical_root["sibling_adjusted_p"], 0.001)
+    assert np.isclose(statistical_root["sibling_bh_p"], 0.002)
+    assert bool(statistical_root["sibling_rejected"])
+    assert statistical_root["calibration_support_status"] == "not_tested"
+    assert statistical_root["traversal_decision"] == "split"
+
+
+def test_statistical_decision_trace_reports_calibration_support_statuses() -> None:
+    trace = pd.DataFrame(
+        {
+            "case_id": ["case"] * 4,
+            "node_id": ["strict", "stopped", "adjusted", "raw"],
+            "depth": [0, 0, 0, 0],
+            "left_edge_p_value": [np.nan] * 4,
+            "right_edge_p_value": [np.nan] * 4,
+            "left_edge_p_value_bh": [np.nan] * 4,
+            "right_edge_p_value_bh": [np.nan] * 4,
+            "left_edge_tested": [False] * 4,
+            "right_edge_tested": [False] * 4,
+            "left_edge_significant": [False] * 4,
+            "right_edge_significant": [False] * 4,
+            "raw_sibling_p_value": [0.7, 0.8, 0.001, 1.0],
+            "sibling_adjusted_p_value": [np.nan] * 4,
+            "sibling_corrected_p_value": [np.nan] * 4,
+            "sibling_bh_different": [False] * 4,
+            "empirical_inflation_factor": [np.nan, np.nan, 4.0, np.nan],
+            "inflation_applied": [False, False, True, False],
+            "sibling_is_null_like": [True, False, False, False],
+            "sibling_is_edge_blocked": [False, True, False, False],
+            "actual_decision": ["boundary"] * 4,
+        }
+    )
+
+    out = statistical_decision_trace_from_gate_path_trace(trace)
+
+    assert out["calibration_support_status"].tolist() == [
+        "strict_empirical_null_supported",
+        "stopped_or_strict_empirical_null_supported",
+        "focal_test_adjusted",
+        "focal_test_unadjusted",
+    ]

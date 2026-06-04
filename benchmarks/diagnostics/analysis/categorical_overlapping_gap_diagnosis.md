@@ -166,7 +166,7 @@ This means one fix is unlikely to close both gaps.
 ## What to inspect next
 
 1. Categorical:
-   - inspect sibling BH correction and per-tree multiplicity at the upper tree
+   - inspect traversal-aligned sibling BH correction at the upper tree
    - especially cases where root raw p is clearly significant but corrected p blocks the split
 
 2. Moderate overlap:

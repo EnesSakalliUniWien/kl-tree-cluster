@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import warnings
 from typing import Sequence
 
 import networkx as nx
@@ -96,9 +95,9 @@ def apply_traversal_aligned_sibling_bh_results(
     alpha: float,
     *,
     method_labels: list[str] | None = None,
-    skipped_parents: list[str] | None = None,
+    skipped_parents: Sequence[object] | None = None,
 ) -> pd.DataFrame:
-    """Apply sibling BH over the edge-reachable traversal frontier.
+    """Apply traversal-aligned sibling BH over the edge-reachable frontier.
 
     The clustering traversal can only use a sibling decision at nodes whose
     structural prerequisite and edge-divergence gate are open. Therefore the sibling FDR
@@ -169,7 +168,7 @@ def init_sibling_annotation_df(annotations_df: pd.DataFrame) -> pd.DataFrame:
 
 def mark_non_binary_as_skipped(
     annotations_df: pd.DataFrame,
-    non_binary_nodes: Sequence[str],
+    non_binary_nodes: Sequence[object],
 ) -> None:
     """Mark non-binary or leaf nodes as skipped sibling tests."""
     if not non_binary_nodes:
@@ -177,22 +176,8 @@ def mark_non_binary_as_skipped(
     annotations_df.loc[list(non_binary_nodes), "Sibling_Divergence_Skipped"] = True
 
 
-def early_return_if_no_records(
-    annotations_df: pd.DataFrame,
-    records: Sequence[object],
-    *,
-    warning_message: str = "No eligible parent nodes for sibling tests",
-) -> pd.DataFrame | None:
-    """Return the DataFrame early when there are no eligible records."""
-    if records:
-        return None
-    warnings.warn(warning_message, UserWarning)
-    return annotations_df
-
-
 __all__ = [
     "apply_traversal_aligned_sibling_bh_results",
-    "early_return_if_no_records",
     "init_sibling_annotation_df",
     "mark_non_binary_as_skipped",
 ]

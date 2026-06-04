@@ -349,5 +349,6 @@ R_u=\frac{W_u}{a_u\nu_u}.
   calibration without borrowing across incompatible regimes?
 - Can the selected spectral law be derived from a deformed MP population
   spectrum plus a selected-region condition?
-- What theorem, if any, justifies flat sibling BH or the pass-through traversal
-  rule under the selected hierarchy?
+- What theorem, if any, justifies traversal-aligned sibling BH over the
+  edge-reachable frontier or the pass-through traversal rule under the selected
+  hierarchy?
