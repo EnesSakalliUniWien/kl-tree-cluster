@@ -118,6 +118,25 @@ def _compute_diffusion_coordinates(
     return eigenvectors * (eigenvalues[None, :] ** diffusion_time)
 
 
+def _require_hamming_diffusion_input(
+    data_df: pd.DataFrame,
+    feature_space: FeatureSpace | None,
+) -> None:
+    """Require the binary/one-hot matrix contract used by Hamming diffusion."""
+    if feature_space is not None and feature_space.has_continuous_blocks:
+        raise ValueError(
+            "kl_diffusion uses Hamming diffusion and requires binary or one-hot "
+            "feature matrices; continuous FeatureSpace inputs are unsupported."
+        )
+
+    values = data_df.values
+    if not np.isin(values, (0, 1)).all():
+        raise ValueError(
+            "kl_diffusion uses Hamming diffusion and requires binary or one-hot "
+            "feature values."
+        )
+
+
 def _build_diffusion_distance(
     data_df: pd.DataFrame,
     k_neighbors: int,
@@ -228,6 +247,7 @@ def _run_kl_diffusion_method(
     feature_space: FeatureSpace | None = None,
 ) -> MethodRunResult:
     """Run KL decomposition on a diffusion-distance HAC tree."""
+    _require_hamming_diffusion_input(data_df, feature_space)
 
     diff_dist = _build_diffusion_distance(
         data_df,

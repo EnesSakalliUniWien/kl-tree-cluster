@@ -1,6 +1,7 @@
 """Smoke test for benchmark method runners."""
 
 from benchmarks.shared.cases import SMALL_TEST_CASES
+from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
 
@@ -39,3 +40,23 @@ def test_benchmark_louvain_and_adaptive_diffusion_methods_smoke():
     assert set(df_results["method"]) == {"louvain", "kl_diffusion_adaptive"}
     assert set(df_results["status"]) == {"ok"}
     assert (df_results["labels_length"] == df_results["samples"]).all()
+
+
+def test_hamming_diffusion_rejects_continuous_benchmark_input():
+    """The Hamming diffusion method must not silently score continuous cases."""
+    case = next(
+        case.copy()
+        for case in get_default_test_cases()
+        if case["name"] == "gauss_clear_medium_continuous"
+    )
+    df_results, _ = benchmark_cluster_algorithm(
+        test_cases=[case],
+        verbose=False,
+        plot_umap=False,
+        methods=["kl_diffusion"],
+    )
+
+    row = df_results.iloc[0]
+    assert row["method"] == "kl_diffusion"
+    assert row["status"] == "skip"
+    assert "requires binary or one-hot" in row["skip_reason"]

@@ -2,7 +2,7 @@
 title: Benchmark Pipeline Contract
 type: analysis
 status: reviewed
-updated: 2026-05-26
+updated: 2026-06-04
 sources:
   - benchmarks/README.md
   - benchmarks/shared/README.md
@@ -11,6 +11,8 @@ sources:
   - benchmarks/shared/util/case_inputs.py
   - benchmarks/shared/util/method_execution.py
   - benchmarks/shared/util/case_execution.py
+  - benchmarks/shared/runners/kl_diffusion_runner.py
+  - tests/integration/60_test_benchmark_methods_smoke.py
 tags:
   - benchmark
   - pipeline
@@ -62,6 +64,22 @@ The strict distance contract is:
   the method execution stage from the selected run parameters.
 - Case recipe geometry belongs in `benchmarks/shared/cases/geometry.py`, so
   runner large-case decisions and report manifests use the same shape rules.
+- `kl_diffusion` is a Hamming-diffusion method for binary or one-hot matrices.
+  Continuous `FeatureSpace` inputs are not scored by that method; they are
+  reported as explicit skip rows instead of producing misleading Hamming-on-float
+  results. Continuous KL tree construction belongs to the precomputed Euclidean
+  KL path or to a separately declared diffusion method with an explicit
+  continuous metric.
+
+The creation audit on 2026-06-04 found no generator-level geometry or metadata
+corruption across the 110 default cases: case recipe geometry matched generated
+metadata, forwarded continuous variants preserved baseline labels, categorical
+and binary representations had binary values, and all precomputed-distance
+cases declared their distance metric. The important interpretation caveats are
+suite weighting and method support, not corrupted generated data. The full-run
+console summary now labels mean ARI as ok-row-only and prints method status
+counts so unsupported case/method combinations do not disappear from the
+headline.
 
 This means the benchmark folder should be read as domains, not as equivalent
 entry points:
@@ -86,6 +104,10 @@ entry points:
   resolves shared distance objects.
 - `benchmarks/shared/util/method_execution.py` records whether the KL tree
   distance came from a feature metric or a declared precomputed source.
+- `benchmarks/shared/runners/kl_diffusion_runner.py` enforces the binary/one-hot
+  Hamming diffusion input contract.
+- `tests/integration/60_test_benchmark_methods_smoke.py` checks that continuous
+  cases are skipped by `kl_diffusion` with an explicit contract reason.
 - `benchmarks/shared/README.md` documents this execution order and the
   canonical distance contract.
 

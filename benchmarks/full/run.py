@@ -276,8 +276,11 @@ def run_benchmarks():
                 print(f"Relationship plots written: {relationship_pdf}")
 
         summary = df.groupby(["method"])["ari"].mean()
-        print("\nMean ARI by Method:")
+        print("\nMean ARI by Method (ok rows only; skipped rows have NaN ARI):")
         print(summary)
+        status_summary = df.groupby(["method", "status"]).size().unstack(fill_value=0)
+        print("\nRun status counts by Method:")
+        print(status_summary)
 
         if "test_case" in df.columns:
             print(f"\nDetailed results are saved to {output_path}")
