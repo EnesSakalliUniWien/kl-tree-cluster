@@ -643,6 +643,18 @@ verification, and maintenance events here in chronological order.
   wrote compact outputs under
   `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/`.
 
+- Added `benchmarks/validation/selected_edge_type1_geometry.py`,
+  `benchmarks/cloud/aws_selected_edge_type1_geometry.py`, and
+  `benchmarks/diagnostics/analysis/selected_edge_geometry_analysis.py` for a
+  strict selected-edge Type-I geometry diagnostic. Ran local direct,
+  local shard/merge, Docker shard/merge, and AWS Batch pilot checks. The AWS
+  pilot used four shards, two binary global-null cases, two edge alpha values,
+  and `40` replicates, producing `40,960` edge rows. Same-data selected-tree
+  mode rejected about `99.6%` to `99.8%` of Tree-BH-tested frontier edges,
+  while strict sibling-calibration support failures remained explicit. Added
+  [[selected-edge-type1-geometry-pilot-20260604]] and updated
+  [[open-mathematical-questions]].
+
 ## Evidence
 
 - `raw/inbox/wiki-construction-brief.md` records the requested scaffold.

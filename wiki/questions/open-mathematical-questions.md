@@ -16,6 +16,7 @@ sources:
   - kl_clustering_analysis/tree/distributions.py
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/sources/edge-selection-null-audit-20260601.md
+  - wiki/sources/selected-edge-type1-geometry-pilot-20260604.md
   - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/analyses/selected-hierarchy-null-support-contract.md
@@ -31,6 +32,8 @@ sources:
   - wiki/sources/root-selected-region-margins-20260603.md
   - wiki/sources/internal-vs-selected-hierarchy-inflation-20260603.md
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
+  - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_edges.csv
+  - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_final.csv
   - wiki/sources/sibling-null-prior-interpolation-audit-20260604.md
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
@@ -92,6 +95,18 @@ and test child-parent edges rejects about `99%` of tested edges at
 columns gives median rejection rate `0.0`. Thus the production issue is not
 only a sibling inflation estimator question; it is a selected-hierarchy
 conditional inference question.
+
+The 2026-06-04 selected-edge Type-I geometry pilot confirms this direction in
+an AWS-sharded binary global-null run with two cases and `40` replicates. In
+same-data selected-tree mode, about `99.6%` to `99.8%` of Tree-BH-tested
+frontier edges reject, and about `80%` to `91%` of all edge rows reject. In
+the fixed-tree control, all final decompositions return one cluster, but
+frontier edge rejection is not itself a complete proof baseline: among the
+smaller tested frontier, fixed-tree rejection rates range from about `15%` to
+`54%`. The pilot therefore supports the selected-edge boundary/action problem
+without closing Type-I theory. It also shows that strict sibling-inflation
+support failure remains the honest production outcome for selected-tree null
+rows when only selected non-null calibration records are available.
 
 The first cross-fit diagnostic supports this interpretation. Because the KL
 tree is a sample-leaf hierarchy, literal sample splitting is undefined without

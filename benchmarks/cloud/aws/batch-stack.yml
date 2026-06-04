@@ -1,17 +1,17 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Batch Fargate stack for the KL-TE selected-tail equation diagnostic.
+Description: AWS Batch Fargate stack for KL-TE benchmark diagnostics.
 
 Parameters:
   ContainerImage:
     Type: String
-    Description: ECR image URI for the selected-tail diagnostic container.
+    Description: ECR image URI for the benchmark diagnostics container.
   OutputBucket:
     Type: String
     Description: S3 bucket for shard and merged diagnostic outputs.
   OutputPrefix:
     Type: String
     Default: selected-tail-equation-cloud-run
-    Description: S3 prefix used by the default job command.
+    Description: S3 prefix used by the default selected-tail job command.
   SubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Public or NAT-routed subnet ids for AWS Batch Fargate.
@@ -81,7 +81,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: SelectedTailStudyS3Access
+        - PolicyName: BenchmarkDiagnosticsS3Access
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -99,13 +99,13 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/batch/kl-te-selected-tail
+      LogGroupName: /aws/batch/kl-te-benchmark-diagnostics
       RetentionInDays: 14
 
   ComputeEnvironment:
     Type: AWS::Batch::ComputeEnvironment
     Properties:
-      ComputeEnvironmentName: kl-te-selected-tail-fargate
+      ComputeEnvironmentName: kl-te-benchmark-diagnostics-fargate
       Type: MANAGED
       State: ENABLED
       ServiceRole: !GetAtt BatchServiceRole.Arn
@@ -118,7 +118,7 @@ Resources:
   JobQueue:
     Type: AWS::Batch::JobQueue
     Properties:
-      JobQueueName: kl-te-selected-tail
+      JobQueueName: kl-te-benchmark-diagnostics
       Priority: 1
       State: ENABLED
       ComputeEnvironmentOrder:
@@ -128,7 +128,7 @@ Resources:
   JobDefinition:
     Type: AWS::Batch::JobDefinition
     Properties:
-      JobDefinitionName: kl-te-selected-tail
+      JobDefinitionName: kl-te-benchmark-diagnostics
       Type: Container
       PlatformCapabilities:
         - FARGATE
@@ -137,6 +137,7 @@ Resources:
         ExecutionRoleArn: !GetAtt JobExecutionRole.Arn
         JobRoleArn: !GetAtt JobRole.Arn
         Command:
+          - benchmarks.cloud.aws_selected_tail_equation_study
           - run-shard
           - --output-dir
           - /tmp/selected-tail-equation-cloud-run
