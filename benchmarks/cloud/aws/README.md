@@ -206,6 +206,85 @@ The merged selected-edge outputs are:
 - `merged/selected_edge_geometry_final.csv`
 - `merged/aws_selected_edge_geometry_manifest.json`
 
+## Run Traversal Sibling-FDR Diagnostics On AWS Batch
+
+This diagnostic shards by replicate index and runs exactly one FDR layer per
+array job. Submit separate jobs for `synthetic_valid_p`, `fixed_tree_wald`,
+`selected_tree_wald`, and `selected_tree_inflated` so each merged summary
+describes one statistical object.
+
+Local shard smoke:
+
+```bash
+python -m benchmarks.cloud.aws_traversal_sibling_fdr_null run-shard \
+  --layer synthetic_valid_p \
+  --suite binary \
+  --case-names synthetic_balanced_binary_tree \
+  --replicates 20 \
+  --alpha 0.01 \
+  --base-seed 20260604 \
+  --output-dir benchmarks/results/aws_traversal_sibling_fdr_smoke \
+  --shard-count 2 \
+  --shard-index 0
+```
+
+AWS array example:
+
+```bash
+aws batch submit-job \
+  --job-name kl-te-traversal-sibling-fdr-shards \
+  --job-queue kl-te-benchmark-diagnostics \
+  --job-definition kl-te-benchmark-diagnostics \
+  --array-properties size=8 \
+  --container-overrides '{
+    "command": [
+      "benchmarks.cloud.aws_traversal_sibling_fdr_null",
+      "run-shard",
+      "--layer", "selected_tree_wald",
+      "--suite", "binary",
+      "--case-names", "binary_2clusters,binary_low_noise_4c",
+      "--replicates", "400",
+      "--alpha", "0.01",
+      "--edge-alpha", "0.001",
+      "--base-seed", "20260604",
+      "--output-dir", "/tmp/traversal-sibling-fdr",
+      "--shard-count", "8",
+      "--s3-uri", "s3://YOUR_BUCKET/traversal-sibling-fdr-selected-tree-wald"
+    ]
+  }'
+```
+
+Merge after all shards finish:
+
+```bash
+aws batch submit-job \
+  --job-name kl-te-traversal-sibling-fdr-merge \
+  --job-queue kl-te-benchmark-diagnostics \
+  --job-definition kl-te-benchmark-diagnostics \
+  --container-overrides '{
+    "command": [
+      "benchmarks.cloud.aws_traversal_sibling_fdr_null",
+      "merge",
+      "--layer", "selected_tree_wald",
+      "--suite", "binary",
+      "--case-names", "binary_2clusters,binary_low_noise_4c",
+      "--replicates", "400",
+      "--alpha", "0.01",
+      "--edge-alpha", "0.001",
+      "--base-seed", "20260604",
+      "--output-dir", "/tmp/traversal-sibling-fdr",
+      "--shard-count", "8",
+      "--s3-uri", "s3://YOUR_BUCKET/traversal-sibling-fdr-selected-tree-wald"
+    ]
+  }'
+```
+
+Merged outputs:
+
+- `merged/traversal_sibling_fdr_simulations.csv`
+- `merged/traversal_sibling_fdr_summary.csv`
+- `merged/aws_traversal_sibling_fdr_manifest.json`
+
 ## Run A Selected-Tail Shard Locally
 
 ```bash

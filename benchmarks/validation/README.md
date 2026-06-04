@@ -96,6 +96,37 @@ uv run python -m benchmarks.diagnostics.analysis.selected_edge_geometry_analysis
   --output benchmarks/results/selected_edge_type1_geometry_smoke/selected_edge_geometry_models.csv
 ```
 
+Run a traversal-aligned sibling-FDR smoke:
+
+```bash
+uv run python -m benchmarks.validation.traversal_sibling_fdr_null \
+  --layers synthetic_valid_p \
+  --case-names synthetic_balanced_binary_tree \
+  --replicates 200 \
+  --alpha 0.01 \
+  --base-seed 20260604 \
+  --output-dir benchmarks/results/traversal_sibling_fdr_smoke/synthetic
+```
+
+Run the binary fixed-tree, selected-tree, and inflated layers:
+
+```bash
+uv run python -m benchmarks.validation.traversal_sibling_fdr_null \
+  --layers fixed_tree_wald,selected_tree_wald,selected_tree_inflated \
+  --suite binary \
+  --case-names binary_2clusters \
+  --replicates 20 \
+  --alpha 0.01 \
+  --edge-alpha 0.001 \
+  --base-seed 20260604 \
+  --output-dir benchmarks/results/traversal_sibling_fdr_smoke/binary
+```
+
+This diagnostic separates algorithmic FDR behavior from fixed-tree
+projected-Wald calibration, same-data selected-tree effects, and
+empirical-inflation support failures. It does not add a production fallback or
+change alpha defaults.
+
 Create a manifest skeleton:
 
 ```bash
