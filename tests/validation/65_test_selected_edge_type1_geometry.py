@@ -4,6 +4,7 @@ from pathlib import Path
 
 from benchmarks.validation.selected_edge_type1_geometry import (
     SelectedEdgeGeometryConfig,
+    _case_contract,
     build_run_id,
     parse_alpha_grid,
     regenerate_null_case,
@@ -56,6 +57,40 @@ def test_regenerate_null_case_preserves_shape_and_contract() -> None:
     assert set(data.to_numpy().ravel()).issubset({0, 1})
 
 
+def test_regenerate_categorical_null_case_uses_explicit_feature_space() -> None:
+    data, metadata = regenerate_null_case(
+        case_id="cat_clear_3cat_4c",
+        source_family="categorical_multinomial",
+        feature_representation="categorical_one_hot",
+        n_samples=12,
+        n_features=4,
+        n_categories=3,
+        seed=9,
+    )
+
+    assert data.shape == (12, 12)
+    assert metadata["n_features_original"] == 4
+    assert metadata["n_categories"] == 3
+    assert metadata["feature_space"].family_label == "categorical"
+    assert set(data.to_numpy().ravel()).issubset({0, 1})
+
+
+def test_case_contract_rejects_continuous_generator_until_null_covariance_exists() -> None:
+    case = {
+        "name": "gauss_continuous",
+        "generator": "blobs_continuous",
+        "n_samples": 12,
+        "n_features": 3,
+    }
+
+    try:
+        _case_contract(case)
+    except ValueError as exc:
+        assert "continuous null regeneration" in str(exc)
+        return
+    raise AssertionError("continuous selected-edge null regeneration must fail explicitly")
+
+
 def test_run_selected_edge_replicate_emits_edge_rows() -> None:
     edge_rows, sibling_rows, final_rows = run_selected_edge_replicate(
         case_id="binary_2clusters",
@@ -77,6 +112,29 @@ def test_run_selected_edge_replicate_emits_edge_rows() -> None:
     assert all(row["mode"] == "selected_tree" for row in edge_rows)
     assert all("edge_raw_p" in row for row in edge_rows)
     assert all("edge_rejected" in row for row in edge_rows)
+    assert sibling_rows is not None
+
+
+def test_run_selected_edge_replicate_supports_categorical_null() -> None:
+    edge_rows, sibling_rows, final_rows = run_selected_edge_replicate(
+        case_id="cat_clear_3cat_4c",
+        source_family="categorical_multinomial",
+        feature_representation="categorical_one_hot",
+        n_samples=12,
+        n_features=4,
+        n_categories=3,
+        replicate=0,
+        data_seed=23,
+        tree_seed=23,
+        mode="selected_tree",
+        edge_alpha=0.001,
+        sibling_alpha=0.01,
+        run_id="categorical",
+    )
+
+    assert edge_rows
+    assert final_rows[0]["feature_representation"] == "categorical_one_hot"
+    assert final_rows[0]["n_features"] == 12
     assert sibling_rows is not None
 
 

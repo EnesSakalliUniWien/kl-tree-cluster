@@ -20,12 +20,17 @@ import pandas as pd
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
+from kl_clustering_analysis.tree.feature_space import (
+    FeatureSpace,
+    bernoulli_feature_space_from_columns,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import chi2
 
 from benchmarks.shared.cases import get_default_test_cases, get_test_cases_by_suite
+from benchmarks.shared.generators.case_data_contracts import one_hot_encode_categorical
 
 SCHEMA_VERSION = "selected_edge_type1_geometry/v1"
 GENERATED_BY = "benchmarks.validation.selected_edge_type1_geometry"
@@ -124,30 +129,58 @@ def regenerate_null_case(
     feature_representation: str,
     n_samples: int,
     n_features: int,
+    n_categories: int | None = None,
     seed: int,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
-    """Generate a binary global-null matrix for one selected-edge replicate."""
-    if source_family != "binary_template" or feature_representation != "binary":
+    """Generate a global-null matrix for one selected-edge replicate."""
+    rng = np.random.default_rng(int(seed))
+    if source_family == "binary_template" and feature_representation == "binary":
+        matrix = rng.binomial(1, 0.5, size=(int(n_samples), int(n_features))).astype(int)
+        data = pd.DataFrame(
+            matrix,
+            index=[f"S{i}" for i in range(int(n_samples))],
+            columns=[f"F{j}" for j in range(int(n_features))],
+        )
+        feature_space = bernoulli_feature_space_from_columns(tuple(data.columns))
+        n_features_original = int(n_features)
+        categories = None
+    elif source_family == "categorical_multinomial" and feature_representation == "categorical_one_hot":
+        if n_categories is None:
+            raise ValueError(
+                "Categorical selected-edge null regeneration requires n_categories."
+            )
+        if int(n_categories) < 2:
+            raise ValueError(f"n_categories must be at least 2; got {n_categories!r}.")
+        matrix = rng.integers(
+            low=0,
+            high=int(n_categories),
+            size=(int(n_samples), int(n_features)),
+            endpoint=False,
+        )
+        data, _raw_dimension, feature_space = one_hot_encode_categorical(
+            matrix,
+            int(n_categories),
+            [f"S{i}" for i in range(int(n_samples))],
+        )
+        n_features_original = int(n_features)
+        categories = int(n_categories)
+    else:
         raise ValueError(
             "Selected-edge Type-I diagnostic supports only binary_template/binary "
-            f"null regeneration; got {source_family!r}/{feature_representation!r} "
-            f"for {case_id!r}."
+            "and categorical_multinomial/categorical_one_hot null regeneration; "
+            f"got {source_family!r}/{feature_representation!r} for {case_id!r}."
         )
-    rng = np.random.default_rng(int(seed))
-    matrix = rng.binomial(1, 0.5, size=(int(n_samples), int(n_features))).astype(int)
-    data = pd.DataFrame(
-        matrix,
-        index=[f"S{i}" for i in range(int(n_samples))],
-        columns=[f"F{j}" for j in range(int(n_features))],
-    )
     metadata = {
         "case_id": str(case_id),
         "source_family": str(source_family),
         "feature_representation": str(feature_representation),
         "n_samples": int(n_samples),
-        "n_features": int(n_features),
+        "n_features": int(data.shape[1]),
+        "n_features_original": n_features_original,
+        "n_categories": categories,
         "true_null": True,
         "seed": int(seed),
+        "feature_space": feature_space,
     }
     return data, metadata
 
@@ -239,19 +272,21 @@ def _prepare_tree_for_mode(
     feature_representation: str,
     n_samples: int,
     n_features: int,
+    n_categories: int | None,
     tree_seed: int,
     data_seed: int,
-) -> tuple[PosetTree, pd.DataFrame, bool, bool]:
+) -> tuple[PosetTree, pd.DataFrame, FeatureSpace, bool, bool]:
     if mode in {"selected_tree", "selected_tree_traversal"}:
-        data, _metadata = regenerate_null_case(
+        data, metadata = regenerate_null_case(
             case_id=case_id,
             source_family=source_family,
             feature_representation=feature_representation,
             n_samples=n_samples,
             n_features=n_features,
+            n_categories=n_categories,
             seed=data_seed,
         )
-        return _build_tree_from_data(data), data, True, False
+        return _build_tree_from_data(data), data, metadata["feature_space"], True, False
     if mode == "fixed_tree":
         tree_data, _tree_metadata = regenerate_null_case(
             case_id=case_id,
@@ -259,17 +294,19 @@ def _prepare_tree_for_mode(
             feature_representation=feature_representation,
             n_samples=n_samples,
             n_features=n_features,
+            n_categories=n_categories,
             seed=tree_seed,
         )
-        test_data, _test_metadata = regenerate_null_case(
+        test_data, test_metadata = regenerate_null_case(
             case_id=case_id,
             source_family=source_family,
             feature_representation=feature_representation,
             n_samples=n_samples,
             n_features=n_features,
+            n_categories=n_categories,
             seed=data_seed,
         )
-        return _build_tree_from_data(tree_data), test_data, False, True
+        return _build_tree_from_data(tree_data), test_data, test_metadata["feature_space"], False, True
     raise ValueError(f"Unknown selected-edge mode: {mode!r}.")
 
 
@@ -278,8 +315,9 @@ def _annotate_edges(
     data: pd.DataFrame,
     *,
     edge_alpha: float,
+    feature_space: FeatureSpace,
 ) -> tuple[pd.DataFrame, object]:
-    tree.populate_node_divergences(data)
+    tree.populate_node_divergences(data, feature_space=feature_space)
     if tree.annotations_df is None:
         raise ValueError("Tree distribution population did not produce annotations_df.")
     annotations, spectral_context = annotate_child_parent_divergence_with_context(
@@ -287,6 +325,7 @@ def _annotate_edges(
         tree.annotations_df,
         significance_level_alpha=float(edge_alpha),
         leaf_data=data,
+        feature_space=feature_space,
     )
     tree.annotations_df = annotations
     return annotations, spectral_context
@@ -529,11 +568,13 @@ def _decompose_for_final(
     data: pd.DataFrame,
     edge_alpha: float,
     sibling_alpha: float,
+    feature_space: FeatureSpace,
 ) -> tuple[str, int, str]:
     try:
         result = tree.decompose(
             annotations_df=tree.annotations_df,
             leaf_data=data,
+            feature_space=feature_space,
             edge_alpha=float(edge_alpha),
             sibling_alpha=float(sibling_alpha),
         )
@@ -549,6 +590,7 @@ def run_selected_edge_replicate(
     feature_representation: str,
     n_samples: int,
     n_features: int,
+    n_categories: int | None = None,
     replicate: int,
     data_seed: int,
     tree_seed: int,
@@ -558,17 +600,23 @@ def run_selected_edge_replicate(
     run_id: str,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]]:
     """Run one selected-edge Type-I replicate."""
-    tree, data, selected_tree, fixed_tree = _prepare_tree_for_mode(
+    tree, data, feature_space, selected_tree, fixed_tree = _prepare_tree_for_mode(
         mode=mode,
         case_id=case_id,
         source_family=source_family,
         feature_representation=feature_representation,
         n_samples=n_samples,
         n_features=n_features,
+        n_categories=n_categories,
         tree_seed=tree_seed,
         data_seed=data_seed,
     )
-    edge_annotations, spectral_context = _annotate_edges(tree, data, edge_alpha=edge_alpha)
+    edge_annotations, spectral_context = _annotate_edges(
+        tree,
+        data,
+        edge_alpha=edge_alpha,
+        feature_space=feature_space,
+    )
     edge_rows = extract_edge_geometry_rows(
         tree=tree,
         annotations_df=edge_annotations,
@@ -591,6 +639,7 @@ def run_selected_edge_replicate(
         data=data,
         edge_alpha=edge_alpha,
         sibling_alpha=sibling_alpha,
+        feature_space=feature_space,
     )
     annotations_after_decomposition = tree.annotations_df
     sibling_rows = (
@@ -625,7 +674,7 @@ def run_selected_edge_replicate(
             "edge_alpha": float(edge_alpha),
             "sibling_alpha": float(sibling_alpha),
             "n_samples": int(n_samples),
-            "n_features": int(n_features),
+            "n_features": int(data.shape[1]),
             "true_null": True,
             "status": status,
             "failure_reason": failure_reason,
@@ -657,21 +706,49 @@ def _select_cases(*, suite: str, case_names: Sequence[str]) -> list[dict[str, ob
     return [dict(by_name[name]) for name in case_names]
 
 
-def _case_contract(case: dict[str, object]) -> tuple[str, str, str, int, int]:
+def _case_contract(case: dict[str, object]) -> tuple[str, str, str, int, int, int | None]:
     name = str(case["name"])
     generator = str(case.get("generator", ""))
-    if generator != "binary":
+    if generator == "binary":
+        return (
+            name,
+            "binary_template",
+            "binary",
+            int(case["n_samples"]),
+            int(case["n_features"]),
+            None,
+        )
+    if generator == "categorical":
+        return (
+            name,
+            "categorical_multinomial",
+            "categorical_one_hot",
+            int(case["n_samples"]),
+            int(case["n_features"]),
+            int(case["n_categories"]),
+        )
+    if generator in {
+        "blobs_continuous",
+        "dimensional_gaussian_continuous",
+        "gaussian_outliers_continuous",
+    }:
         raise ValueError(
-            "Selected-edge Type-I runner currently supports binary generator cases only; "
+            "Selected-edge Type-I runner does not implement continuous null "
+            f"regeneration yet; case {name!r} has generator={generator!r}."
+        )
+    if generator in {"blobs_quantile", "phylogenetic", "temporal_evolution"}:
+        raise ValueError(
+            "Selected-edge Type-I runner supports direct categorical generator "
+            "cases only. Quantile, phylogenetic, and temporal sequence nulls "
+            f"need their own selected-null generator; case {name!r} has "
+            f"generator={generator!r}."
+        )
+    else:
+        raise ValueError(
+            "Selected-edge Type-I runner supports binary and direct categorical "
+            "generator cases only; "
             f"case {name!r} has generator={generator!r}."
         )
-    return (
-        name,
-        "binary_template",
-        "binary",
-        int(case["n_samples"]),
-        int(case["n_features"]),
-    )
 
 
 def run_selected_edge_geometry(config: SelectedEdgeGeometryConfig) -> dict[str, object]:
@@ -709,9 +786,14 @@ def run_selected_edge_geometry_for_replicates(
     sibling_rows: list[dict[str, object]] = []
     final_rows: list[dict[str, object]] = []
     for case in cases:
-        case_id, source_family, feature_representation, n_samples, n_features = _case_contract(
-            case
-        )
+        (
+            case_id,
+            source_family,
+            feature_representation,
+            n_samples,
+            n_features,
+            n_categories,
+        ) = _case_contract(case)
         for replicate in replicate_tuple:
             for edge_alpha in config.edge_alphas:
                 for mode in config.modes:
@@ -724,6 +806,7 @@ def run_selected_edge_geometry_for_replicates(
                             feature_representation=feature_representation,
                             n_samples=n_samples,
                             n_features=n_features,
+                            n_categories=n_categories,
                             replicate=replicate,
                             data_seed=data_seed,
                             tree_seed=tree_seed,
