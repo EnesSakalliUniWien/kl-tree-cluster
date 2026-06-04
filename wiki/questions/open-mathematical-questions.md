@@ -34,6 +34,8 @@ sources:
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
   - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
+  - wiki/sources/phylogenetic-ml-topological-selected-tail-literature-20260603.md
+  - wiki/sources/selected-tail-topology-refinement-20260603.md
   - wiki/analyses/local-marchenko-pastur-rule.md
   - wiki/analyses/dimensional-gaussian-representation-diagnostic.md
   - wiki/analyses/manuscript-life-science-readiness.md
@@ -230,6 +232,18 @@ continuous, and precomputed-distance contexts remain outside the current
 admissible production domain. Therefore the open object is no longer simply
 "whether support can ever be reached"; it is a context-specific selected-tail
 law with explicit admissible and non-admissible regions.
+The AWS Batch 1000-replicate per-case run sharpens this point. Seven base
+contexts are admissible, but support-rich root and large-parent high-edge
+Gaussian contexts still fail the held-out precision contract. Binary
+small-parent projection-1 now fails mainly by support in this four-case cloud
+panel. The open mathematical question is therefore tail homogeneity: which
+geometric variables define a selected region whose ratio tail is stable enough
+for calibrated probabilities?
+The 2026-06-04 rebuilt-image rerun reproduces the same admissibility set, so
+the next question is not whether the seven contexts were a seed artifact. It is
+why root/large high-edge Gaussian contexts are support-rich but precision-poor,
+and what geometric variable splits those selected regions without turning the
+contract into data-adaptive borrowing.
 
 The internal-vs-selected-hierarchy comparison gives one concrete root-level
 bridge between the current production estimator and the external diagnostic.
@@ -346,11 +360,13 @@ continuous covariance.
 
 The sibling multiplicity and traversal questions are separate from inflation.
 Some binary and categorical under-splits are sibling-FDR blockers rather than
-inflation-estimator failures. The current flat sibling BH correction therefore
-needs either a traversal-aligned justification or a replacement hierarchical
-target. Pass-through traversal also remains empirical: it can recover
-descendant signal, but it can fragment oracle clades because it does not yet
-compare descendant split evidence against local sibling-same evidence.
+inflation-estimator failures. The active code uses traversal-aligned sibling BH
+over the edge-reachable frontier; the remaining question is whether this
+reachable-frontier family is the right mathematical target under selected
+hierarchy traversal.
+Pass-through traversal also remains empirical: it can recover descendant
+signal, but it can fragment oracle clades because it does not yet compare
+descendant split evidence against local sibling-same evidence.
 
 The failure modes must stay separated. Diffuse Gaussian, heavy-overlap, and SBM
 cases often look like hierarchy or recoverability failures rather than gate
@@ -373,6 +389,36 @@ only five runnable cases are currently eligible for gate-path statistical
 changes before additional hierarchy/metric work. The tree/metric rows must be
 handled through representation, distance, linkage, or benchmark construction
 analysis first.
+
+The phylogenetic, machine-learning selective-inference, and topological graph
+literature sharpens the medium/large-parent selected-tail question. When a
+medium or large parent has enough matching simulations but fails held-out tail
+precision, the likely problem is not only replicate count. It is that a single
+parent-size bin mixes different selected regions: different local subtree
+balances, descendant merge topologies, merge-persistence gaps, ancestor
+edge-action paths, covariance condition numbers, and spectral alignments.
+Phylogenetic comparative methods also warn that precomputed tree or distance
+objects require an explicit covariance, branch-length, evolutionary, kernel, or
+permutation model before they define a null law. Therefore medium/large and
+precomputed-distance contexts need topology-aware diagnostic stratification
+before any production external calibration can be considered.
+
+The first topology-refinement diagnostic shows that exact topology-aware
+stratification is not yet a production path. On the 300-replicate
+Gaussian/categorical panel, balance, topology, merge-persistence, edge-path,
+spectral-alignment, and combined exact refinements use data-adaptive bins
+learned from the diagnostic rows. Those refined contexts can diagnose
+heterogeneity, but they cannot be production-admissible calibration contexts.
+The combined exact refinement creates `1,587` contexts, no diagnostic
+support-contract passes, and no production-admissible contexts. This shifts
+the open question from "which exact topology bins should be matched" to
+"which predeclared low-dimensional topology/selection coordinates can model
+the tail without destroying independent support."
+The same 300-replicate input also rechecks the descriptive equation family:
+edge-sampling and edge-spectral equations transfer across source families,
+whereas the selected-energy and full descriptive equations fail that split.
+Thus the next law should not be a high-dimensional fitted equation; it should
+be a low-dimensional predeclared selected-region coordinate model.
 
 The current concrete open questions are:
 
@@ -416,6 +462,16 @@ The current concrete open questions are:
    Binary projection-2, root, medium-parent, large-parent, lower-edge-action,
    continuous, and precomputed-distance contexts remain outside the current
    admissible domain.
+   Literature on selective clustering inference, phylogenetic covariance, and
+   topological graph summaries says medium/large-parent failures should test
+   subtree topology, balance, merge persistence, branch/covariance condition,
+   and ancestor edge-action variables rather than treating parent size as the
+   only scale coordinate.
+   The first exact-refinement test is negative for production use: exact
+   topology-aware bins expose heterogeneity, but they are data-adaptive and
+   fragment medium/large support. The next version should test a modeled
+   selected-tail law or a coarser predeclared topology coordinate, not a
+   many-way exact match.
    The root selected-region margin diagnostic adds merge-inequality geometry
    as a candidate descriptive variable. It also shows that discrete
    tie-heavy hierarchy cells and continuous positive-margin hierarchy cells
@@ -482,10 +538,10 @@ The current concrete open questions are:
     approximate Bernoulli or categorical assumptions?
 23. What is the clean general feature-space formulation for mixed Bernoulli,
     categorical, and continuous blocks?
-24. What sibling-FDR target should replace or justify flat BH across focal
-    sibling pairs?
-25. Should sibling FDR be traversal-aligned, hierarchical, or conditioned on
-    the edge path?
+24. Does traversal-aligned sibling BH over the edge-reachable frontier control
+    the intended sibling false-split target?
+25. Should sibling FDR additionally condition on the edge path or use a more
+    explicit hierarchical target?
 26. Should pass-through require descendant split evidence to overcome local
     sibling-same evidence?
 27. What functional form should

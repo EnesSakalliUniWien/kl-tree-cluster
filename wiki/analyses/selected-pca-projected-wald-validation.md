@@ -82,8 +82,9 @@ fixed no longer approximates the actual selected reference law.
 - `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
   the scaffold and validation contract.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py`
-  documents that internal distribution rows are included in production spectral
-  matrices when configured.
+  documents the current production leaf-only spectral orchestration. The
+  child-mean/internal-row mode is preserved only in the locked validation
+  artifact as the anti-conservative comparison arm.
 
 ## Links
 

@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-03
+updated: 2026-06-04
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -533,6 +533,105 @@ verification, and maintenance events here in chronological order.
   `edge_action_ge8`, sibling projection dimension `1` is now admissible with
   `606` independent matching simulations; the corresponding binary
   projection-2 context remains support-limited at `445/499` simulations.
+- Added [[phylogenetic-ml-topological-selected-tail-literature-20260603]] after
+  checking phylogenetic, machine-learning selective-inference, distance-based
+  inference, and topological graph literature. The durable conclusion is that
+  medium/large parent contexts likely lack tail homogeneity when support
+  exists but held-out precision fails; topology, balance, merge persistence,
+  covariance condition, ancestor edge action, and spectral alignment are
+  diagnostic coordinates, not fallback calibration rules.
+- Added `selected_tail_topology_refinement.py`, topology fields to the
+  row-level selected-hierarchy geometry diagnostic, and
+  [[selected-tail-topology-refinement-20260603]]. A 300-replicate
+  Gaussian/categorical panel shows that exact balance, topology,
+  merge-persistence, edge-path, spectral-alignment, and compact combined
+  refinements do not restore medium/large selected-tail production
+  admissibility. The result points toward a lower-dimensional modeled
+  selected-tail law rather than exact multiway topology matching.
+- Debugged the topology-refinement admissibility wording after noticing that
+  data-adaptive refinement bins were being summarized with production
+  admissibility language. The diagnostic now separates
+  `diagnostic_tail_law_contract_passed` from
+  `production_tail_law_admissible`; only predeclared base contexts can be
+  production-admissible. Regenerated
+  `raw/assets/benchmark-results/selected_tail_topology_refinement_20260603_300/`
+  and updated [[selected-tail-topology-refinement-20260603]],
+  [[selected-hierarchy-null-support-contract]], and
+  [[open-mathematical-questions]].
+- Debugged the selected-tail artifact contract after finding that several
+  `selected_ratio_tail_law.csv` files relied on the manifest-only precision
+  threshold while downstream summaries used a hidden `0.002` constant. The
+  tail-law evaluator now writes `max_exceedance_standard_error` into every
+  row, topology and admissibility-domain summaries read that column, and the
+  affected benchmark CSVs plus
+  `raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/`
+  were regenerated or schema-migrated from their recorded manifests.
+- Rechecked the other mathematical analyses against their verification
+  artifacts. Selected-PCA, local MP, root selected-region, internal-vs-selected
+  inflation, and hierarchy-gate numeric claims match the cited CSV/JSON files.
+  Corrected stale selected-PCA evidence wording to the current leaf-only
+  production spectral contract. Added the 300-replicate topology-input
+  candidate-equation transfer result: edge-sampling and edge-spectral equations
+  transfer across source families, while selected-energy and full descriptive
+  equations fail that split and remain variable-screening diagnostics only.
+- Added `benchmarks/cloud/aws_selected_tail_equation_study.py`,
+  `benchmarks/cloud/aws/Dockerfile`, and
+  [[aws-selected-tail-equation-study]] so the selected-tail equation study can
+  run as AWS Batch shards and merge row-level records into one recomputed
+  diagnostic output. During this cleanup, geometry case summaries were moved
+  to the explicit `selected_hierarchy_simulation_id` contract so cloud shards
+  cannot undercount independent regenerations by reusing local replicate
+  indices.
+- Deployed the AWS Batch selected-tail stack in account `067744548702`, pushed
+  `067744548702.dkr.ecr.us-east-1.amazonaws.com/kl-te-selected-tail:latest`,
+  ran a successful one-shard smoke job, then ran the 20-shard selected-tail
+  cloud diagnostic and merge job. Synced compact merged outputs into
+  `raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260603_1000/`
+  and added [[selected-tail-equation-cloud-run-20260603]]. The row-level
+  merged table remains in S3 because it is `261.5 MiB`. Added
+  `local_deployment_context.json` because the container did not include `.git`
+  and therefore could not record commit/branch inside its generated manifest.
+- Rebuilt and pushed the AWS Batch image after adding explicit
+  `KL_TE_GIT_COMMIT` and `KL_TE_GIT_BRANCH` build arguments plus `.dockerignore`
+  pruning. The post-run rebuilt smoke job
+  `5d72447b-9921-4163-8249-df4b922f912a` succeeded and its shard manifest
+  records `build_commit=a61f1cfe81ded8923b4f11cc16697036f0ed6220` and
+  `build_branch=dev`.
+- Reran the AWS selected-tail equation experiment with the rebuilt image,
+  base seed `20260604`, array job
+  `dfbd5d03-5862-47fa-9966-db1c5301c187`, and merge job
+  `1b869dc6-b4cd-43f3-9467-c95f66d24154`. Synced compact merged outputs into
+  `raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260604_1000/`
+  and added [[selected-tail-equation-cloud-run-20260604]]. The rerun reproduced
+  the same seven admissible contexts as the 2026-06-03 run and no
+  admissibility-status changes.
+- Debugged the 2026-06-04 cloud run contract. The AWS runner evaluated the six
+  predeclared descriptive candidate functions from
+  `selected_hierarchy_geometry_covariates.py` and did not introduce additional
+  fitted law families. The `271,801` selected-record count differs from the
+  `271,798` candidate-equation row count because three selected Gaussian rows
+  have zero selected-hierarchy ratio and therefore undefined log response.
+- Audited selected-tail result weighting for the 2026-06-04 cloud run. The
+  run is arithmetically consistent, but candidate-equation scores are
+  selected-node weighted: `gauss_null_large` contributes `63.6%` of rows versus
+  `30.8%` of independent selected simulations. Equal-simulation weighting
+  keeps `edge_spectral_modes` as the strongest tested coordinate, but with a
+  lower top-tail AUC of about `0.927`, so the result remains a search
+  direction rather than a calibrated production law.
+- Debugged benchmark creation and representation contracts. A generation audit
+  over the 110 default cases found no case-recipe geometry, label-length,
+  value-domain, forwarded-representation, or precomputed-distance metadata
+  mismatch. The actual skew was method compatibility: `kl_diffusion` used
+  Hamming diffusion on continuous float matrices and could return `ok` rows
+  with meaningless ARI. The Hamming diffusion runner now rejects continuous
+  `FeatureSpace` inputs and non-binary values, and the full-run console summary
+  labels mean ARI as ok-row-only while printing method status counts.
+- Added a canonical statistical decision trace derived from the gate-path
+  diagnostic. The trace records edge raw/BH p-values, traversal-aligned sibling
+  BH state, empirical-inflation status, calibration-support status, and final
+  traversal decision in one stable table. Removed the optional sibling-FDR
+  early-return helper and updated active documentation to describe the current
+  traversal-aligned sibling BH contract rather than stale flat-BH wording.
 
 ## Evidence
 
