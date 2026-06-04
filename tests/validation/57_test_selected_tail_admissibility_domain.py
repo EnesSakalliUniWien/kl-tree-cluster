@@ -27,6 +27,7 @@ def _tail_law_table() -> pd.DataFrame:
                 "n_matching_simulations": 600,
                 "required_min_matching_simulations": 499,
                 "required_min_matched_records": 499,
+                "max_exceedance_standard_error": 0.002,
                 "production_tail_law_admissible": True,
                 "tail_law_admissibility_failure_reasons": "",
                 "heldout_exceedance_rate": 0.01,
@@ -42,6 +43,7 @@ def _tail_law_table() -> pd.DataFrame:
                 "n_matching_simulations": 499,
                 "required_min_matching_simulations": 499,
                 "required_min_matched_records": 499,
+                "max_exceedance_standard_error": 0.002,
                 "production_tail_law_admissible": False,
                 "tail_law_admissibility_failure_reasons": (
                     "heldout_exceedance_se_above_contract"
@@ -59,6 +61,7 @@ def _tail_law_table() -> pd.DataFrame:
                 "n_matching_simulations": 300,
                 "required_min_matching_simulations": 499,
                 "required_min_matched_records": 499,
+                "max_exceedance_standard_error": 0.002,
                 "production_tail_law_admissible": False,
                 "tail_law_admissibility_failure_reasons": (
                     "matching_simulations_below_tail_resolution_contract"
@@ -98,6 +101,21 @@ def test_admissibility_domain_classifies_contexts() -> None:
     assert by_source.loc["binary_template", "admissibility_class"] == (
         "support_failed_tail_precision_met_or_unchecked"
     )
+
+
+def test_admissibility_domain_uses_recorded_precision_contract() -> None:
+    table = _tail_law_table()
+    table.loc[0, "max_exceedance_standard_error"] = 0.01
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "selected_ratio_tail_law.csv"
+        table.to_csv(path, index=False)
+
+        domain = build_admissibility_domain_table(
+            (SelectedTailRun(run_id="test_run", path=path),)
+        )
+
+    gaussian = domain[domain["source_family"].eq("gaussian_blobs")].iloc[0]
+    assert abs(float(gaussian["tail_precision_margin"]) - 0.009) < 1e-12
 
 
 def test_summary_and_boundary_outputs_are_written() -> None:

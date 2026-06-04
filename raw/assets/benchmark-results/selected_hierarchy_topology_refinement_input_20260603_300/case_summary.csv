@@ -1,0 +1,5 @@
+case_id,case_category,feature_family,tree_distance_metric,n_samples,feature_dimension,n_replicates,n_candidate_records,n_selected_records,selected_record_rate,tested_edges,significant_edges,edge_rejection_rate,study_role,status,skip_reason
+gauss_null_large,gaussian_null,bernoulli,hamming,200,80,300,59700,52334,0.8766164154103853,104784,104668,0.9988929607573676,descriptive_selected_hierarchy_geometry_not_calibration,ok,
+gauss_clear_medium,improved_gaussian,bernoulli,hamming,60,40,300,17700,15976,0.9025988700564972,32044,31952,0.9971289476969167,descriptive_selected_hierarchy_geometry_not_calibration,ok,
+cat_highcard_20cat_4c,categorical_high_cardinality,categorical,hamming,200,800,300,59700,37031,0.6202847571189279,74362,74062,0.9959656813964122,descriptive_selected_hierarchy_geometry_not_calibration,ok,
+cat_highd_3cat_500feat,categorical_high_dimensional,categorical,hamming,200,1500,300,59700,23187,0.388391959798995,46774,46374,0.9914482404754779,descriptive_selected_hierarchy_geometry_not_calibration,ok,

@@ -1,0 +1,120 @@
+{
+  "diagnostic": "selected_tail_topology_refinement",
+  "study_role": "descriptive_topology_refined_selected_tail_not_calibration",
+  "records_inputs": [
+    {
+      "run_id": "focused_topology",
+      "path": "raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/selected_geometry_records.csv"
+    }
+  ],
+  "base_context_columns": [
+    "source_family",
+    "feature_family",
+    "parent_size_bin",
+    "sibling_projection_dimension",
+    "edge_action_bin"
+  ],
+  "refinement_contexts": {
+    "base": [],
+    "balance": [
+      "child_balance_bin"
+    ],
+    "topology": [
+      "child_balance_bin",
+      "subtree_colless_bin",
+      "subtree_sackin_depth_bin"
+    ],
+    "merge_persistence": [
+      "subtree_branch_condition_bin",
+      "subtree_branch_cv_bin",
+      "sibling_branch_asymmetry_bin"
+    ],
+    "edge_path": [
+      "edge_action_quantile_bin"
+    ],
+    "spectral_alignment": [
+      "effective_rank_bin",
+      "eigenvalue_mp_ratio_bin",
+      "selected_subspace_cos2_bin"
+    ],
+    "compact_topology_edge_spectral": [
+      "child_balance_bin",
+      "subtree_sackin_depth_bin",
+      "edge_action_quantile_bin",
+      "eigenvalue_mp_ratio_bin",
+      "selected_subspace_cos2_bin"
+    ]
+  },
+  "bin_specs": [
+    {
+      "source_column": "child_balance",
+      "target_column": "child_balance_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "subtree_colless_normalized",
+      "target_column": "subtree_colless_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "subtree_sackin_mean_depth",
+      "target_column": "subtree_sackin_depth_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "subtree_branch_length_condition_ratio",
+      "target_column": "subtree_branch_condition_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "subtree_branch_length_cv",
+      "target_column": "subtree_branch_cv_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "branch_length_asymmetry",
+      "target_column": "sibling_branch_asymmetry_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "negative_log10_min_child_edge_bh_p_value",
+      "target_column": "edge_action_quantile_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "eigenvalue_effective_rank",
+      "target_column": "effective_rank_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "selected_eigenvalue_over_mp_upper_bound",
+      "target_column": "eigenvalue_mp_ratio_bin",
+      "n_bins": 3
+    },
+    {
+      "source_column": "selected_subspace_cos2",
+      "target_column": "selected_subspace_cos2_bin",
+      "n_bins": 3
+    }
+  ],
+  "alpha": 0.01,
+  "n_folds": 5,
+  "min_train_simulations": 20,
+  "min_train_records": 20,
+  "required_min_matching_simulations": 499,
+  "required_min_matched_records": 499,
+  "max_exceedance_standard_error": 0.002,
+  "edge_action_bin_labels": [
+    "edge_action_0_2",
+    "edge_action_2_4",
+    "edge_action_4_6",
+    "edge_action_6_8",
+    "edge_action_ge8"
+  ],
+  "outputs": {
+    "refined_tail_law": "raw/assets/benchmark-results/selected_tail_topology_refinement_20260603_300/refined_tail_law.csv",
+    "refinement_summary": "raw/assets/benchmark-results/selected_tail_topology_refinement_20260603_300/refinement_summary.csv",
+    "base_context_refinement_comparison": "raw/assets/benchmark-results/selected_tail_topology_refinement_20260603_300/base_context_refinement_comparison.csv"
+  },
+  "note": "Diagnostic-only comparison of base selected-tail contexts against topology, merge-persistence, edge-path, and spectral-alignment refinements. Refined contexts use data-adaptive bins learned from the diagnostic panel. They can pass diagnostic support checks but are never production-admissible calibration contexts."
+}

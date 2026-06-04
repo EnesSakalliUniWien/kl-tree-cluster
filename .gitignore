@@ -105,6 +105,7 @@ cluster_validation_failures/
 # Benchmark outputs
 benchmarks/**/results/
 benchmarks/**/run_*/
+raw/assets/benchmark-results/**/selected_geometry_records.csv
 
 # Debug output
 debug_output/

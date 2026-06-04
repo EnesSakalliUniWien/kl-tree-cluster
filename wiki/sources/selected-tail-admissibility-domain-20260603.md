@@ -67,6 +67,10 @@ non-admissible contexts remain undefined for production external calibration.
   Continuous, root, medium-parent, large-parent, lower-edge-action, binary
   projection-2, and precomputed-distance contexts remain outside the validated
   production domain.
+- The selected-ratio tail-law CSVs now carry the explicit
+  `max_exceedance_standard_error` contract column. The admissibility-domain
+  table computes `tail_precision_margin` from that recorded value rather than
+  from an implicit default.
 
 ## Evidence
 
@@ -76,7 +80,8 @@ non-admissible contexts remain undefined for production external calibration.
   combines selected-tail runs into context-level admissibility and boundary
   tables.
 - `tests/validation/57_test_selected_tail_admissibility_domain.py` verifies
-  the domain classification and output writer.
+  the domain classification, recorded precision-contract margin, and output
+  writer.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv`
   records the 500-replicate boundary context table.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv`

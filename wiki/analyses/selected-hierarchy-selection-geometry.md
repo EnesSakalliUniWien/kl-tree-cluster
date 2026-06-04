@@ -13,6 +13,7 @@ sources:
   - wiki/sources/selected-hierarchy-stratification-diagnostic-20260602.md
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
+  - wiki/sources/selected-tail-topology-refinement-20260603.md
   - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
   - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
@@ -222,6 +223,13 @@ smaller edge-plus-spectral equation has nearly the same top-10% tail AUC as
 the full equation (about `0.969`). This makes edge action plus spectral excess
 the current best compact equation family for the next larger validation run.
 
+The newer 300-replicate Gaussian/categorical topology-input run keeps the
+same warning sharper. Edge-sampling and edge-spectral equations retain strong
+leave-one-source-family tail transfer, but the selected-energy candidate and
+the full descriptive equation collapse under that split. Thus the equation
+diagnostics should be read as variable-screening evidence, not as a fitted
+production law.
+
 The selected-ratio tail-law diagnostic turns that candidate into an explicit
 context-support question. It estimates held-out tail exceedance within source
 family, feature family, parent-size bin, sibling projection dimension, and
@@ -297,6 +305,8 @@ model is provided.
 - `wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md` records the
   within-context selected-ratio tail-law diagnostic and its production
   admissibility failures.
+- `wiki/sources/selected-tail-topology-refinement-20260603.md` records the
+  topology-input rerun and the data-adaptive refinement caveat.
 - `wiki/sources/selected-geometry-mp-integral-literature-20260602.md` records
   the selective-region geometry literature and the no-bootstrap analytic
   boundary for this work.

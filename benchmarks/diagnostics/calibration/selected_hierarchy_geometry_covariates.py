@@ -329,6 +329,94 @@ def _component_entropy(component_cos2: np.ndarray) -> float:
     return float(-np.sum(positive * np.log(positive)))
 
 
+def _descendant_nodes_including_self(tree, node: object) -> tuple[object, ...]:
+    nodes: list[object] = [node]
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        children = list(tree.successors(current))
+        nodes.extend(children)
+        stack.extend(children)
+    return tuple(nodes)
+
+
+def _subtree_topology_geometry(
+    *,
+    tree,
+    parent: object,
+    node_depths: dict[object, int],
+) -> dict[str, object]:
+    parent_depth = int(node_depths[parent])
+    nodes = _descendant_nodes_including_self(tree, parent)
+    internal_nodes = tuple(
+        node for node in nodes if not bool(tree.nodes[node]["is_leaf"])
+    )
+    leaf_nodes = tuple(node for node in nodes if bool(tree.nodes[node]["is_leaf"]))
+    descendant_internal_node_count = max(len(internal_nodes) - 1, 0)
+    subtree_height = max(int(node_depths[node]) - parent_depth for node in nodes)
+    leaf_depths = np.asarray(
+        [int(node_depths[node]) - parent_depth for node in leaf_nodes],
+        dtype=float,
+    )
+    branch_lengths = np.asarray(
+        [
+            float(tree.edges[node, child]["branch_length"])
+            for node in nodes
+            for child in tree.successors(node)
+        ],
+        dtype=float,
+    )
+    positive_branch_lengths = branch_lengths[branch_lengths > 0.0]
+
+    colless_sum = 0.0
+    for node in internal_nodes:
+        children = list(tree.successors(node))
+        if len(children) != 2:
+            continue
+        left_count = int(tree.nodes[children[0]]["leaf_count"])
+        right_count = int(tree.nodes[children[1]]["leaf_count"])
+        colless_sum += abs(left_count - right_count)
+    parent_leaf_count = int(tree.nodes[parent]["leaf_count"])
+    max_colless = (parent_leaf_count - 1) * (parent_leaf_count - 2) / 2.0
+    normalized_colless = (
+        float(colless_sum / max_colless) if max_colless > 0.0 else 0.0
+    )
+
+    branch_length_mean = (
+        float(np.mean(branch_lengths)) if branch_lengths.size else np.nan
+    )
+    branch_length_std = (
+        float(np.std(branch_lengths, ddof=0)) if branch_lengths.size else np.nan
+    )
+    branch_length_cv = (
+        float(branch_length_std / branch_length_mean)
+        if np.isfinite(branch_length_mean) and branch_length_mean > 0.0
+        else np.nan
+    )
+    branch_length_condition_ratio = (
+        float(np.max(positive_branch_lengths) / np.min(positive_branch_lengths))
+        if positive_branch_lengths.size
+        else np.nan
+    )
+
+    return {
+        "subtree_internal_node_count": int(len(internal_nodes)),
+        "subtree_descendant_internal_node_count": int(descendant_internal_node_count),
+        "subtree_leaf_count": int(len(leaf_nodes)),
+        "subtree_height": int(subtree_height),
+        "subtree_sackin_mean_depth": float(np.mean(leaf_depths)),
+        "subtree_sackin_max_depth": float(np.max(leaf_depths)),
+        "subtree_colless_imbalance": float(colless_sum),
+        "subtree_colless_normalized": normalized_colless,
+        "subtree_branch_length_total": (
+            float(np.sum(branch_lengths)) if branch_lengths.size else np.nan
+        ),
+        "subtree_branch_length_mean": branch_length_mean,
+        "subtree_branch_length_cv": branch_length_cv,
+        "subtree_branch_length_condition_ratio": branch_length_condition_ratio,
+    }
+
+
 def _sibling_whitened_contrast(
     *,
     tree,
@@ -570,6 +658,11 @@ def _selected_geometry_rows(
             z_scores=z_scores,
             spectral_context=spectral_context,
         )
+        subtree_topology = _subtree_topology_geometry(
+            tree=tree,
+            parent=record.parent,
+            node_depths=node_depths,
+        )
         reference_expectation = float(record.reference_scale * record.degrees_of_freedom)
         if reference_expectation <= 0.0:
             raise ValueError(
@@ -654,6 +747,7 @@ def _selected_geometry_rows(
             "study_role": STUDY_ROLE,
         }
         row.update(geometry)
+        row.update(subtree_topology)
         rows.append(row)
     return rows
 
@@ -1590,6 +1684,9 @@ def evaluate_selected_ratio_tail_law(
                     required_min_matching_simulations
                 ),
                 "required_min_matched_records": int(required_min_matched_records),
+                "max_exceedance_standard_error": float(
+                    max_exceedance_standard_error
+                ),
                 "selected_ratio_mean": float(np.mean(ratios)),
                 "selected_ratio_median": float(np.quantile(ratios, 0.5)),
                 "selected_ratio_trainless_q90": float(np.quantile(ratios, 0.9)),
@@ -1724,6 +1821,11 @@ def summarize_selected_geometry_by_case(records: pd.DataFrame) -> pd.DataFrame:
     """Summarize selected-ratio and geometry scale by benchmark case."""
     if records.empty:
         return pd.DataFrame()
+    if SIMULATION_ID_COLUMN not in records.columns:
+        raise KeyError(
+            f"Geometry summaries require explicit independent simulation ids in "
+            f"{SIMULATION_ID_COLUMN!r}."
+        )
     rows: list[dict[str, object]] = []
     for case_id, group in records.groupby("case_id", dropna=False):
         ratios = group["selected_hierarchy_ratio"].to_numpy(dtype=float)
@@ -1733,7 +1835,7 @@ def summarize_selected_geometry_by_case(records: pd.DataFrame) -> pd.DataFrame:
             {
                 "case_id": case_id,
                 "n_records": int(group.shape[0]),
-                "n_matching_simulations": int(group["replicate_index"].nunique()),
+                "n_matching_simulations": int(group[SIMULATION_ID_COLUMN].nunique()),
                 "selected_hierarchy_ratio_mean": float(np.mean(ratios)),
                 "selected_hierarchy_ratio_median": float(np.quantile(ratios, 0.5)),
                 "selected_hierarchy_ratio_q95": float(np.quantile(ratios, 0.95)),

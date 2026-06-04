@@ -189,6 +189,7 @@ def test_selected_ratio_tail_law_can_mark_supported_context_admissible() -> None
 
     assert bool(tail_law.iloc[0]["production_tail_law_admissible"])
     assert tail_law.iloc[0]["tail_law_admissibility_failure_reasons"] == ""
+    assert float(tail_law.iloc[0]["max_exceedance_standard_error"]) == 0.2
 
 
 def test_selected_ratio_tail_law_counts_case_replicates_as_independent() -> None:
@@ -230,6 +231,7 @@ def test_case_summary_uses_selected_ratio_and_geometry_fields() -> None:
     row = summary.iloc[0]
     assert row["case_id"] == "case"
     assert row["n_records"] == 20
+    assert row["n_matching_simulations"] == 10
     assert row["selected_hierarchy_ratio_q95"] > row["selected_hierarchy_ratio_median"]
     assert row["selected_subspace_cos2_mean"] > 0.0
 

@@ -17,6 +17,7 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_holdout_100/candidate_equation_holdout.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equation_holdout.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/geometry_summary_by_case.csv
+  - raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/candidate_equation_holdout.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
@@ -217,6 +218,16 @@ Edge and edge-plus-spectral equations keep near-perfect global tail AUCs but
 fit absolute \(\log R\) scale worse. This means edge action is likely a
 necessary selection coordinate, but not a sufficient calibrated law.
 
+The 300-replicate Gaussian/categorical topology-input rerun adds an important
+verification check. Under leave-one-source-family-out transfer, the
+edge-sampling and edge-spectral equations keep tail AUCs near `0.995`, while
+the selected-energy candidate falls to about `0.152` and the full descriptive
+equation to about `0.050`. Therefore the selected-energy and full equations
+should be treated as panel-specific descriptive fits, not as stable laws. The
+more defensible next object is a predeclared low-dimensional selected-tail
+coordinate system built around edge action, sampling geometry, and spectral
+excess, followed by within-context tail calibration.
+
 ### Eigenvectors And Trigonometric Projection
 
 The angular variables are ordinary orthogonal-projection geometry:
@@ -308,6 +319,10 @@ calibration law.
 - `raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equation_holdout.csv`
   records broad-panel replicate, leave-one-case, and leave-one-source-family
   holdout diagnostics.
+- `raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/candidate_equation_holdout.csv`
+  records the newer Gaussian/categorical topology-input transfer check where
+  selected-energy and full descriptive equations fail leave-one-source-family
+  tail transfer.
 - `raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200/selected_ratio_tail_law.csv`
   records within-context selected-ratio tail support, held-out exceedance, and
   production-admissibility failures.

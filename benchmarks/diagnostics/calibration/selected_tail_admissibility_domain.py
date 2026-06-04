@@ -27,6 +27,7 @@ REQUIRED_COLUMNS = {
     "n_matching_simulations",
     "required_min_matching_simulations",
     "required_min_matched_records",
+    "max_exceedance_standard_error",
     "production_tail_law_admissible",
     "tail_law_admissibility_failure_reasons",
     "heldout_exceedance_rate",
@@ -116,7 +117,8 @@ def build_admissibility_domain_table(
             table["n_records"] - table["required_min_matched_records"]
         )
         table["tail_precision_margin"] = (
-            0.002 - table["heldout_exceedance_standard_error"]
+            table["max_exceedance_standard_error"]
+            - table["heldout_exceedance_standard_error"]
         )
         table["admissibility_class"] = table.apply(_classify_context, axis=1)
         rows.append(table)
@@ -133,6 +135,7 @@ def build_admissibility_domain_table(
         "n_records",
         "required_min_matching_simulations",
         "required_min_matched_records",
+        "max_exceedance_standard_error",
         "simulation_support_margin",
         "record_support_margin",
         "heldout_exceedance_rate",
