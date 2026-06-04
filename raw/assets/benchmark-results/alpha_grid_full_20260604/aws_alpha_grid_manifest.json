@@ -1,0 +1,63 @@
+{
+  "case_names": [],
+  "edge_alphas": [
+    0.0001,
+    0.0003,
+    0.001,
+    0.003,
+    0.01
+  ],
+  "execution_role": "aws_distributed_alpha_grid_diagnostic",
+  "git": {
+    "branch": "unavailable:[Errno 2] No such file or directory: 'git'",
+    "build_branch": "dev",
+    "build_commit": "bb37e8e12d413a9b466f0be1890a5ed16fd562b5",
+    "build_dirty": "true",
+    "commit": "unavailable:[Errno 2] No such file or directory: 'git'",
+    "status_short": "unavailable:[Errno 2] No such file or directory: 'git'"
+  },
+  "n_alpha_pairs": 25,
+  "n_result_rows": 2750,
+  "note": "Merged output is diagnostic benchmark evidence for alpha constants. It does not prove selected-tree Type-I error control.",
+  "outputs": {
+    "results": "/tmp/alpha-grid-full-20260604/merged/alpha_grid_results.csv",
+    "summary": "/tmp/alpha-grid-full-20260604/merged/alpha_grid_summary.csv"
+  },
+  "runner": "benchmarks.cloud.aws_alpha_grid_search",
+  "shard_count": 25,
+  "sibling_alphas": [
+    0.001,
+    0.003,
+    0.01,
+    0.03,
+    0.1
+  ],
+  "source_shard_dirs": [
+    "/tmp/alpha-grid-full-20260604/shards/shard_0000",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0001",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0002",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0003",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0004",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0005",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0006",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0007",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0008",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0009",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0010",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0011",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0012",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0013",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0014",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0015",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0016",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0017",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0018",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0019",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0020",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0021",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0022",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0023",
+    "/tmp/alpha-grid-full-20260604/shards/shard_0024"
+  ],
+  "suite": "full"
+}

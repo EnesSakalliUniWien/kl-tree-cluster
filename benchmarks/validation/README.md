@@ -56,6 +56,46 @@ misspecification.
 
 ## Usage
 
+Run an alpha-grid benchmark diagnostic over the active KL path:
+
+```bash
+uv run python -m benchmarks.validation.alpha_grid_search \
+  --suite full \
+  --edge-alphas 0.0001,0.0003,0.001,0.003,0.01 \
+  --sibling-alphas 0.001,0.003,0.01,0.03,0.1 \
+  --output-dir benchmarks/results/alpha_grid_full
+```
+
+This diagnostic compares benchmark behavior across edge and sibling alpha
+constants. It is not a proof of selected-tree Type-I error control.
+
+Run a selected-edge Type-I geometry smoke over binary null cases:
+
+```bash
+uv run python -m benchmarks.validation.selected_edge_type1_geometry run \
+  --suite binary \
+  --case-names binary_2clusters \
+  --modes fixed_tree,selected_tree \
+  --edge-alphas 0.0001,0.001 \
+  --sibling-alpha 0.01 \
+  --replicates 5 \
+  --base-seed 20260604 \
+  --output-dir benchmarks/results/selected_edge_type1_geometry_smoke
+```
+
+This diagnostic separates fixed-tree edge calibration from same-data
+selected-tree edge behavior. It is evidence for the selected-tree Type-I
+problem and does not change production alpha defaults or add a calibration
+fallback.
+
+Rank descriptive selected-edge geometry variables:
+
+```bash
+uv run python -m benchmarks.diagnostics.analysis.selected_edge_geometry_analysis \
+  --edge-rows benchmarks/results/selected_edge_type1_geometry_smoke/selected_edge_geometry_edges.csv \
+  --output benchmarks/results/selected_edge_type1_geometry_smoke/selected_edge_geometry_models.csv
+```
+
 Create a manifest skeleton:
 
 ```bash
