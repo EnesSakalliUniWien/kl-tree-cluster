@@ -9,6 +9,9 @@ sources:
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/manifest.json
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/record_interpolation_audit.csv
+  - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/manifest.json
+  - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/case_summary.csv
+  - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/record_interpolation_audit.csv
 tags:
   - source
   - calibration
@@ -26,8 +29,12 @@ against the active strict internal calibration support contract. The diagnostic
 does not install interpolated priors as production calibration and records its
 role as `diagnostic_interpolated_sibling_null_prior_not_calibration`.
 
-The four-case run covers `binary_perfect_4c`, `cat_highcard_20cat_4c`,
-`overlap_heavy_4c_small_feat`, and `phylo_large_32taxa`.
+The first run covers four representative cases:
+`binary_perfect_4c`, `cat_highcard_20cat_4c`,
+`overlap_heavy_4c_small_feat`, and `phylo_large_32taxa`. The second run covers
+the 24 KL calibration-support skips from
+`benchmarks/results/run_20260604_115308Z_full/full_benchmark_comparison.csv`;
+it excludes the separate high-dimensional continuous covariance-boundary skip.
 
 ## Key Points
 
@@ -52,6 +59,15 @@ The four-case run covers `binary_perfect_4c`, `cat_highcard_20cat_4c`,
 - Dimensionless stable edges are counted separately instead of receiving an
   invented structural dimension. For `binary_perfect_4c`, eight stable
   dimensionless edges were present.
+- In the 24-case full-skip audit, every row again has
+  `no_strict_internal_support`. The diagnostic interpolation assigns positive
+  selected-nonnull weight in 23 of 24 rows. The only row without any positive
+  diagnostic weight is `gauss_extreme_noise_highd`.
+- Among the 23 rows with positive diagnostic interpolation, the candidate
+  scalar scale ranges from `1.00` to `174.00`, with median `13.05`. The largest
+  descriptive scale appears in `phylo_large_64taxa`; other high rows include
+  `binary_noise_feat_30i_500n`, `gauss_null_large`, and
+  `phylo_large_32taxa`.
 
 ## Evidence
 
@@ -67,6 +83,10 @@ The four-case run covers `binary_perfect_4c`, `cat_highcard_20cat_4c`,
 - `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/record_interpolation_audit.csv`
   records the per-sibling-pair priors, strict support flags, and selected
   non-null flags.
+- `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/case_summary.csv`
+  records the 24-case calibration-support skip audit.
+- `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/record_interpolation_audit.csv`
+  records `5,800` sibling-pair audit rows from the 24 skipped cases.
 
 ## Links
 
