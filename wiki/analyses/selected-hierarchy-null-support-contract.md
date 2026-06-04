@@ -17,6 +17,12 @@ sources:
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_admissibility_boundary_20260603_500/selected_ratio_tail_law.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
   - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
+  - raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260603_1000/aws_selected_tail_equation_study_manifest.json
+  - raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260603_1000/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260603_1000/candidate_equation_holdout.csv
+  - raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260604_1000/aws_selected_tail_equation_study_manifest.json
+  - raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260604_1000/selected_ratio_tail_law.csv
+  - raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260604_1000/candidate_equation_holdout.csv
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/sources/selected-hierarchy-external-calibration-contract-20260602.md
@@ -24,6 +30,10 @@ sources:
   - wiki/sources/selected-hierarchy-geometry-covariates-20260602.md
   - wiki/sources/selected-ratio-tail-law-diagnostic-20260602.md
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
+  - wiki/sources/phylogenetic-ml-topological-selected-tail-literature-20260603.md
+  - wiki/sources/selected-tail-topology-refinement-20260603.md
+  - wiki/sources/selected-tail-equation-cloud-run-20260603.md
+  - wiki/sources/selected-tail-equation-cloud-run-20260604.md
   - wiki/sources/internal-vs-selected-hierarchy-inflation-20260603.md
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/questions/open-mathematical-questions.md
@@ -285,6 +295,67 @@ simulations. The current admissible domain is still not general: root,
 medium-parent, large-parent, lower-edge-action, binary projection-2,
 continuous, and precomputed-distance contexts remain outside the current
 admissible production domain.
+
+The literature scan in
+[[phylogenetic-ml-topological-selected-tail-literature-20260603]] clarifies how
+to interpret medium/large parent failures. If a context has enough matching
+simulations but fails held-out tail precision, parent size alone is too coarse
+as a selected-region coordinate. Candidate variables should include local
+subtree balance, child-size balance, number of internal descendant nodes,
+subtree height, merge persistence or branch-length gap, nearest merge
+competitor margin, cumulative ancestor edge action, tree covariance condition,
+eigenvalue concentration, and contrast/eigenvector angular alignment. These
+are diagnostic coordinates, not calibration-borrowing rules.
+
+The first topology-refinement diagnostic tests that interpretation directly on
+a 300-replicate Gaussian/categorical row-level panel. The diagnostic now
+separates predeclared base contexts from data-adaptive refinement bins. Exact
+refinement by balance, topology, merge-persistence, edge path, spectral
+alignment, or a compact combined context does not produce a
+production-admissible medium/large calibration law. In medium/large high-edge
+contexts, refinements mostly fragment support or keep the same held-out
+precision failure. Some refined subcontexts pass diagnostic support checks,
+but all refined passes are non-production because the bins were learned from
+the diagnostic panel. This means topology is real heterogeneity, but exact
+multiway topology matching is currently only exploratory evidence, not a
+production support contract.
+
+The AWS Batch 1000-replicate per-case run adds a larger focused check without
+changing the production method. It produces seven production-admissible base
+contexts under the current support and precision contract:
+
+```text
+categorical_multinomial, small_0_0.25, edge_action_ge8, k=1
+categorical_multinomial, small_0_0.25, edge_action_ge8, k=2
+gaussian_blobs, medium_0.25_0.5, edge_action_ge8, k=2
+gaussian_blobs, small_0_0.25, edge_action_4_6, k=1
+gaussian_blobs, small_0_0.25, edge_action_6_8, k=1
+gaussian_blobs, small_0_0.25, edge_action_ge8, k=1
+gaussian_blobs, small_0_0.25, edge_action_ge8, k=2
+```
+
+This run also separates support from homogeneity. Gaussian root/high-edge and
+large-parent/high-edge projection-2 contexts have far more than `499`
+independent matching simulations (`1731` and `1454`), but fail the strict
+held-out exceedance standard-error contract. Categorical root/high-edge
+projection-2 has `506` simulations and also fails precision. Binary
+small-parent/high-edge projection-1 is the opposite: held-out precision passes,
+but support remains below threshold at `413/499` simulations in this four-case
+panel. Therefore more computation alone does not solve all contexts; the
+remaining object is a selected-tail law whose admissible context variables
+separate support-rich but tail-heterogeneous regions from truly homogeneous
+selected regions.
+
+The rebuilt-image replication on 2026-06-04 uses a new base seed and records
+the same conclusion. It again produces seven admissible contexts, with no
+admissibility-status changes relative to the 2026-06-03 cloud run. The
+replication has `271,801` selected records and `2,997` independent simulation
+ids. Root and large Gaussian high-edge projection-2 contexts again have enough
+matching simulations but fail the precision contract, while binary
+small-parent high-edge projection-1 again passes tail precision but lacks
+enough independent simulations in the four-case panel. This makes the
+support-versus-homogeneity distinction a replicated result rather than a
+single-run artifact.
 
 The internal-vs-selected-hierarchy inflation diagnostic tests whether the
 active internal scale and the selected-hierarchy descriptive scale point to the

@@ -1,0 +1,27 @@
+{
+  "aws_account": "067744548702",
+  "aws_region": "us-east-1",
+  "branch": "dev",
+  "local_commit": "a61f1cfe81ded8923b4f11cc16697036f0ed6220",
+  "local_worktree_dirty": true,
+  "ecr_image": "067744548702.dkr.ecr.us-east-1.amazonaws.com/kl-te-selected-tail:latest",
+  "ecr_image_digest": "sha256:7758c0cfab8f21c849de579a28725834963e62fa7d1d4046a9ab650f39865f1c",
+  "cloudformation_stack": "kl-te-selected-tail-batch",
+  "s3_output_uri": "s3://phylomovies-iqtree-067744548702-us-east-1/kl-te/selected-tail-equation-cloud-run-20260604",
+  "array_job_id": "dfbd5d03-5862-47fa-9966-db1c5301c187",
+  "merge_job_id": "1b869dc6-b4cd-43f3-9467-c95f66d24154",
+  "array_size": 20,
+  "replicates_per_shard": 50,
+  "requested_total_replicates_per_case": 1000,
+  "base_seed": 20260604,
+  "case_names": [
+    "gauss_null_large",
+    "gauss_clear_medium",
+    "binary_low_noise_4c",
+    "cat_clear_3cat_4c"
+  ],
+  "row_level_merged_table_location": "s3://phylomovies-iqtree-067744548702-us-east-1/kl-te/selected-tail-equation-cloud-run-20260604/merged/selected_geometry_records.csv",
+  "row_level_merged_table_size": "263.9 MiB",
+  "compact_outputs_synced_to_repo": true,
+  "note": "Replication run using the rebuilt image whose shard and merge manifests record build_commit and build_branch. The compact summaries are stored in this directory; the row-level merged table remains in S3."
+}

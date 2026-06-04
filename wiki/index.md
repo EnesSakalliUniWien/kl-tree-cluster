@@ -37,6 +37,12 @@ renamed, or promoted.
 - [[project-overview]] - concise map of the KL-TE repository, source surfaces,
   method purpose, and implementation entry points.
 
+### Tools
+
+- [[aws-selected-tail-equation-study]] - AWS Batch sharding and merge workflow
+  for large selected-tail equation diagnostics, with row-level records and
+  namespaced independent simulation ids.
+
 ### Source Summaries
 
 - [[wiki-construction-brief]] - summary of the captured wiki construction
@@ -70,6 +76,21 @@ renamed, or promoted.
 - [[selected-tail-admissibility-domain-20260603]] - combined admissibility
   domain table showing which selected-tail contexts are production-admissible
   and which remain undefined under the external calibration support contract.
+- [[phylogenetic-ml-topological-selected-tail-literature-20260603]] -
+  literature scan connecting undefined selected-tail contexts to selective
+  inference, phylogenetic covariance, distance-based inference, and
+  topological graph variables.
+- [[selected-tail-topology-refinement-20260603]] - row-level diagnostic showing
+  that data-adaptive topology, merge-persistence, edge-path, and spectral
+  refinements diagnose heterogeneity but do not define production-admissible
+  selected-tail calibration contexts in the current 300-replicate
+  Gaussian/categorical panel.
+- [[selected-tail-equation-cloud-run-20260603]] - AWS Batch 1000-replicate
+  per-case selected-tail equation run showing seven strict admissible base
+  contexts while root/large high-edge contexts still fail tail precision.
+- [[selected-tail-equation-cloud-run-20260604]] - rebuilt-image replication of
+  the AWS selected-tail equation run, reproducing the same seven admissible
+  contexts and no admissibility-status changes versus 2026-06-03.
 - [[selected-geometry-mp-integral-literature-20260602]] - literature capture
   for the no-bootstrap selected-region geometry direction and the
   Stieltjes-transform integral route for deformed Marchenko--Pastur spectra.

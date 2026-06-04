@@ -1,0 +1,30 @@
+{
+  "aws_account": "067744548702",
+  "aws_region": "us-east-1",
+  "branch": "dev",
+  "local_commit": "a61f1cfe81ded8923b4f11cc16697036f0ed6220",
+  "local_worktree_dirty": true,
+  "ecr_image": "067744548702.dkr.ecr.us-east-1.amazonaws.com/kl-te-selected-tail:latest",
+  "ecr_image_digest": "sha256:3897555bb0b7e2712587e3f3bb72be3dceb148af6f62e073d35257fdad6d9a22",
+  "post_run_rebuilt_ecr_image_digest": "sha256:7758c0cfab8f21c849de579a28725834963e62fa7d1d4046a9ab650f39865f1c",
+  "cloudformation_stack": "kl-te-selected-tail-batch",
+  "s3_output_uri": "s3://phylomovies-iqtree-067744548702-us-east-1/kl-te/selected-tail-equation-cloud-run-20260603",
+  "smoke_job_id": "5d6f9666-51bb-4df3-9d2f-6d72bb1c43a7",
+  "post_run_rebuilt_smoke_job_id": "5d72447b-9921-4163-8249-df4b922f912a",
+  "post_run_rebuilt_smoke_s3_uri": "s3://phylomovies-iqtree-067744548702-us-east-1/kl-te/selected-tail-equation-cloud-smoke-rebuilt-20260604",
+  "array_job_id": "34274a53-2cba-48dd-b420-60dff3b343a0",
+  "merge_job_id": "f117f413-e16b-4df0-8e32-539767676cf4",
+  "array_size": 20,
+  "replicates_per_shard": 50,
+  "requested_total_replicates_per_case": 1000,
+  "case_names": [
+    "gauss_null_large",
+    "gauss_clear_medium",
+    "binary_low_noise_4c",
+    "cat_clear_3cat_4c"
+  ],
+  "row_level_merged_table_location": "s3://phylomovies-iqtree-067744548702-us-east-1/kl-te/selected-tail-equation-cloud-run-20260603/merged/selected_geometry_records.csv",
+  "row_level_merged_table_size": "261.5 MiB",
+  "compact_outputs_synced_to_repo": true,
+  "note": "The 1000-replicate run used ecr_image_digest. After the run, the image was rebuilt with build-arg commit/branch metadata and .dockerignore-pruned context; the post_run_rebuilt_smoke_job_id verified that the rebuilt image writes build_commit and build_branch into shard manifests."
+}

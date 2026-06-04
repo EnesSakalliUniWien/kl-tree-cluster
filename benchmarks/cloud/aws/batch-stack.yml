@@ -1,0 +1,172 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS Batch Fargate stack for the KL-TE selected-tail equation diagnostic.
+
+Parameters:
+  ContainerImage:
+    Type: String
+    Description: ECR image URI for the selected-tail diagnostic container.
+  OutputBucket:
+    Type: String
+    Description: S3 bucket for shard and merged diagnostic outputs.
+  OutputPrefix:
+    Type: String
+    Default: selected-tail-equation-cloud-run
+    Description: S3 prefix used by the default job command.
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Public or NAT-routed subnet ids for AWS Batch Fargate.
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: Security groups for AWS Batch Fargate tasks.
+  ShardCount:
+    Type: Number
+    Default: 20
+  ReplicatesPerShard:
+    Type: Number
+    Default: 50
+  BaseSeed:
+    Type: Number
+    Default: 20260603
+  JobVcpus:
+    Type: String
+    Default: "4"
+  JobMemory:
+    Type: String
+    Default: "16384"
+  MaxVcpus:
+    Type: Number
+    Default: 256
+  CpuArchitecture:
+    Type: String
+    Default: X86_64
+    AllowedValues:
+      - X86_64
+      - ARM64
+
+Resources:
+  BatchServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: batch.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+
+  JobExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  JobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SelectedTailStudyS3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource: !Sub arn:aws:s3:::${OutputBucket}
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub arn:aws:s3:::${OutputBucket}/*
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/batch/kl-te-selected-tail
+      RetentionInDays: 14
+
+  ComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ComputeEnvironmentName: kl-te-selected-tail-fargate
+      Type: MANAGED
+      State: ENABLED
+      ServiceRole: !GetAtt BatchServiceRole.Arn
+      ComputeResources:
+        Type: FARGATE
+        MaxvCpus: !Ref MaxVcpus
+        Subnets: !Ref SubnetIds
+        SecurityGroupIds: !Ref SecurityGroupIds
+
+  JobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      JobQueueName: kl-te-selected-tail
+      Priority: 1
+      State: ENABLED
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment: !Ref ComputeEnvironment
+
+  JobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      JobDefinitionName: kl-te-selected-tail
+      Type: Container
+      PlatformCapabilities:
+        - FARGATE
+      ContainerProperties:
+        Image: !Ref ContainerImage
+        ExecutionRoleArn: !GetAtt JobExecutionRole.Arn
+        JobRoleArn: !GetAtt JobRole.Arn
+        Command:
+          - run-shard
+          - --output-dir
+          - /tmp/selected-tail-equation-cloud-run
+          - --shard-count
+          - !Ref ShardCount
+          - --replicates-per-shard
+          - !Ref ReplicatesPerShard
+          - --base-seed
+          - !Ref BaseSeed
+          - --s3-uri
+          - !Sub s3://${OutputBucket}/${OutputPrefix}
+        ResourceRequirements:
+          - Type: VCPU
+            Value: !Ref JobVcpus
+          - Type: MEMORY
+            Value: !Ref JobMemory
+        NetworkConfiguration:
+          AssignPublicIp: ENABLED
+        RuntimePlatform:
+          OperatingSystemFamily: LINUX
+          CpuArchitecture: !Ref CpuArchitecture
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref LogGroup
+
+Outputs:
+  JobQueueArn:
+    Value: !Ref JobQueue
+  JobDefinitionArn:
+    Value: !Ref JobDefinition
+  OutputUri:
+    Value: !Sub s3://${OutputBucket}/${OutputPrefix}
