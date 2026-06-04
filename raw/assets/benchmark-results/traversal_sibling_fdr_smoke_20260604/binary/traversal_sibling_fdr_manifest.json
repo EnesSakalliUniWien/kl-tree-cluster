@@ -1,0 +1,55 @@
+{
+  "alpha": 0.01,
+  "base_seed": 20260604,
+  "case_names": [
+    "binary_2clusters"
+  ],
+  "created_utc": "2026-06-04T17:33:13.873060+00:00",
+  "edge_alpha": 0.001,
+  "generated_by": "benchmarks.validation.traversal_sibling_fdr_null",
+  "git": {
+    "branch": "dev",
+    "build_branch": "unknown",
+    "build_commit": "unknown",
+    "build_dirty": "unknown",
+    "commit": "14b423689fd0a37a2d354226c66f3073de6487b9",
+    "status_short": "?? benchmarks/cloud/aws_traversal_sibling_fdr_null.py\n?? benchmarks/validation/traversal_sibling_fdr_null.py\n?? tests/validation/67_test_traversal_sibling_fdr_null.py\n?? tests/validation/68_test_aws_traversal_sibling_fdr_null.py"
+  },
+  "layers": [
+    "fixed_tree_wald",
+    "selected_tree_wald",
+    "selected_tree_inflated"
+  ],
+  "n_simulation_rows": 60,
+  "n_summary_rows": 3,
+  "note": "Diagnostic traversal-aligned sibling FDR evidence only. Does not change production FDR, alpha defaults, or calibration behavior.",
+  "outputs": {
+    "simulations": "benchmarks/results/traversal_sibling_fdr_smoke/binary/traversal_sibling_fdr_simulations.csv",
+    "summary": "benchmarks/results/traversal_sibling_fdr_smoke/binary/traversal_sibling_fdr_summary.csv"
+  },
+  "replicate_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "replicates": 20,
+  "schema_version": "traversal_sibling_fdr_null/v1",
+  "suite": "binary"
+}

@@ -682,6 +682,16 @@ verification, and maintenance events here in chronological order.
   one across binary and categorical nulls, and exposes high-cardinality
   categorical fixed-tree frontier inflation as a separate open calibration
   problem. Added [[selected-edge-binary-categorical-pilot-20260604]].
+- Added `benchmarks/validation/traversal_sibling_fdr_null.py` and
+  `benchmarks/cloud/aws_traversal_sibling_fdr_null.py` to separate sibling FDR
+  algorithm behavior from fixed-tree projected-Wald calibration, same-data
+  selected-tree calibration, and empirical-inflation support. The local smoke
+  recorded mean FDP `0.03` for synthetic valid p-values at sibling alpha
+  `0.01`, mean FDP `0.25` for fixed-tree raw Wald on `binary_2clusters`, mean
+  FDP `0.95` for selected-tree raw Wald, and `18/20` support failures for the
+  active inflated selected-tree layer. Added
+  [[traversal-sibling-fdr-smoke-20260604]] and kept the result classified as
+  smoke evidence, not final FDR calibration.
 
 ## Evidence
 

@@ -2,7 +2,7 @@
 title: Oracle Gate-Path Diagnostic
 type: analysis
 status: reviewed
-updated: 2026-06-03
+updated: 2026-06-04
 sources:
   - benchmarks/diagnostics/oracle/oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/gate_path_trace.py
@@ -737,8 +737,8 @@ partition.
 - Which deeper full-selection diagnostic is needed for non-root blockers:
   fixed observed tree with ancestor Tree-BH path, focal blocker selection, or
   full hierarchy reconstruction under resampling?
-- What sibling-FDR target should replace or justify the current flat
-  traversal-aligned correction for binary and categorical blockers?
+- What sibling-FDR target should justify the current traversal-reachable
+  frontier correction for binary and categorical blockers?
 - Should pass-through be controlled by an evidence comparison between local
   sibling-same evidence and descendant split evidence?
 - How should direct sibling false splitting inside phylogenetic clades be

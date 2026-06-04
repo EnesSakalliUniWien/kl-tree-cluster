@@ -1,0 +1,2 @@
+mean_fdp,false_rejection_rate,n_simulations,n_ok,n_support_failures,n_runtime_failures,schema_version,layer,suite,case_names,alpha,edge_alpha,base_seed,outcome
+0.03,0.03,200.0,200.0,0.0,0.0,traversal_sibling_fdr_null/v1,synthetic_valid_p,binary,synthetic_balanced_binary_tree,0.01,0.001,20260604,algorithmic_fdr_failure

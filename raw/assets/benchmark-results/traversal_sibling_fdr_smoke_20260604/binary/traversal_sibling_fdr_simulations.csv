@@ -1,0 +1,61 @@
+schema_version,layer,case_id,replicate_index,seed,status,alpha,edge_alpha,n_sibling_candidates,n_sibling_fdr_decisions,n_rejections,n_false_rejections,n_support_failures,failure_reason,selected_tree,fixed_tree
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,0,20260604,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,1,20261613,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,2,20262622,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,3,20263631,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,4,20264640,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,5,20265649,ok,0.01,0.001,49,1,1,1,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,6,20266658,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,7,20267667,ok,0.01,0.001,49,1,1,1,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,8,20268676,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,9,20269685,ok,0.01,0.001,49,1,1,1,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,10,20270694,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,11,20271703,ok,0.01,0.001,49,10,9,9,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,12,20272712,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,13,20273721,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,14,20274730,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,15,20275739,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,16,20276748,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,17,20277757,ok,0.01,0.001,49,1,1,1,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,18,20278766,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,fixed_tree_wald,binary_2clusters,19,20279775,ok,0.01,0.001,49,0,0,0,0,,False,True
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,0,20260604,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,1,20261613,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,2,20262622,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,3,20263631,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,4,20264640,ok,0.01,0.001,49,49,48,48,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,5,20265649,ok,0.01,0.001,49,49,48,48,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,6,20266658,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,7,20267667,ok,0.01,0.001,49,0,0,0,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,8,20268676,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,9,20269685,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,10,20270694,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,11,20271703,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,12,20272712,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,13,20273721,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,14,20274730,ok,0.01,0.001,49,49,48,48,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,15,20275739,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,16,20276748,ok,0.01,0.001,49,49,48,48,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,17,20277757,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,18,20278766,ok,0.01,0.001,49,49,49,49,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_wald,binary_2clusters,19,20279775,ok,0.01,0.001,49,4,4,4,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,0,20260604,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,1,20261613,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,2,20262622,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,3,20263631,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,4,20264640,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,5,20265649,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,6,20266658,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,7,20267667,ok,0.01,0.001,49,0,0,0,0,,True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,8,20268676,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,9,20269685,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,10,20270694,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,11,20271703,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,12,20272712,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,13,20273721,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,14,20274730,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,15,20275739,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,16,20276748,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,17,20277757,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,18,20278766,support_failure,0.01,0.001,0,0,0,0,1,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 49 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",True,False
+traversal_sibling_fdr_null/v1,selected_tree_inflated,binary_2clusters,19,20279775,ok,0.01,0.001,49,4,0,0,0,,True,False

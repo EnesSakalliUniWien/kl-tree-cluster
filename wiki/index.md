@@ -123,6 +123,10 @@ renamed, or promoted.
   current edge alpha `0.001` and sibling alpha `0.01` pair has the best mean
   ARI in the tested grid, while lower edge alpha gives more exact
   cluster-count hits.
+- [[traversal-sibling-fdr-smoke-20260604]] - layered smoke diagnostic showing
+  that traversal-aligned sibling BH is not automatically a global FDR guarantee
+  across depths, and separating fixed-tree Wald, selected-tree Wald, and
+  empirical-inflation support failures.
 
 ### Concepts
 

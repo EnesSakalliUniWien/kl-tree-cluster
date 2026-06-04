@@ -35,12 +35,15 @@ sources:
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - wiki/sources/sibling-null-prior-interpolation-audit-20260604.md
   - wiki/sources/alpha-grid-full-20260604.md
+  - wiki/sources/traversal-sibling-fdr-smoke-20260604.md
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_edges.csv
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_final.csv
   - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_edges.csv
   - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_final.csv
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/case_summary.csv
+  - raw/assets/benchmark-results/traversal_sibling_fdr_smoke_20260604/synthetic/traversal_sibling_fdr_summary.csv
+  - raw/assets/benchmark-results/traversal_sibling_fdr_smoke_20260604/binary/traversal_sibling_fdr_summary.csv
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
   - raw/assets/benchmark-results/selected_tail_admissibility_domain_20260603/context_admissibility_domain.csv
   - raw/assets/benchmark-results/selected_hierarchy_tail_law_binary_boundary_20260603_600/selected_ratio_tail_law.csv
@@ -137,6 +140,16 @@ ARI (`0.893811`). A lower edge alpha (`0.0001` or `0.0003`) gives more exact
 cluster-count hits but lower mean ARI. The grid supports keeping sibling alpha
 `0.01` as the benchmark default for now, while leaving edge alpha as a
 tradeoff between mean ARI and exact cluster-count control.
+
+The traversal sibling-FDR smoke splits the FDR question into four layers. With
+valid synthetic null p-values on an always-open three-level traversal tree,
+mean FDP is `0.03` at sibling alpha `0.01`, so repeated BH over traversal
+depths is not automatically a global FDR guarantee. On `binary_2clusters`,
+fixed-tree raw sibling projected-Wald has mean FDP `0.25`; selected-tree raw
+Wald has mean FDP `0.95`; and the active inflated selected-tree layer has
+`18/20` empirical-inflation support failures. This does not close the final
+FDR question, but it shows that we must validate algorithmic FDR, fixed-tree
+Wald calibration, selected-tree effects, and inflation support separately.
 
 The first cross-fit diagnostic supports this interpretation. Because the KL
 tree is a sample-leaf hierarchy, literal sample splitting is undefined without
@@ -603,9 +616,12 @@ The current concrete open questions are:
 23. What is the clean general feature-space formulation for mixed Bernoulli,
     categorical, and continuous blocks?
 24. Does traversal-aligned sibling BH over the edge-reachable frontier control
-    the intended sibling false-split target?
-25. Should sibling FDR additionally condition on the edge path or use a more
-    explicit hierarchical target?
+    the intended sibling false-split target? The 2026-06-04 smoke says this
+    must be decomposed into algorithmic repeated-BH behavior, fixed-tree
+    projected-Wald calibration, selected-tree p-value distortion, and
+    empirical-inflation support failure.
+25. Should sibling FDR additionally condition on the edge path, traversal
+    depth, or selected hierarchy, or use a more explicit hierarchical target?
 26. Should pass-through require descendant split evidence to overcome local
     sibling-same evidence?
 27. What functional form should
