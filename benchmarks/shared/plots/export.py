@@ -20,7 +20,6 @@ from .embedding import (
     create_clustering_comparison_plot_3d,
     create_clustering_comparison_plots,
 )
-from .manifold import create_manifold_alignment_plot
 
 logger = logging.getLogger(__name__)
 
@@ -513,6 +512,8 @@ def create_manifold_plots_from_results(
     *,
     pdf: PdfPages | None = None,
 ) -> list:
+    from .manifold import create_manifold_alignment_plot
+
     figs: list = collected if collected is not None else []
     if save:
         output_dir.mkdir(exist_ok=True)
