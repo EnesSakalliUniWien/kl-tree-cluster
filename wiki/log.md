@@ -654,6 +654,14 @@ verification, and maintenance events here in chronological order.
   while strict sibling-calibration support failures remained explicit. Added
   [[selected-edge-type1-geometry-pilot-20260604]] and updated
   [[open-mathematical-questions]].
+- Extended the selected-edge diagnostic to direct categorical multinomial
+  nulls with an explicit categorical `FeatureSpace`, while leaving continuous
+  null regeneration as a hard unsupported state. Ran the AWS binary/categorical
+  pilot with four cases, four shards, and `40` replicates, producing
+  `136,320` edge rows. The run confirms selected-tree frontier rejection near
+  one across binary and categorical nulls, and exposes high-cardinality
+  categorical fixed-tree frontier inflation as a separate open calibration
+  problem. Added [[selected-edge-binary-categorical-pilot-20260604]].
 
 ## Evidence
 

@@ -55,6 +55,9 @@ renamed, or promoted.
 - [[selected-edge-type1-geometry-pilot-20260604]] - AWS pilot comparing
   fixed-tree and same-data selected-tree binary global-null edge behavior,
   with geometry covariates and strict sibling-calibration failure reporting.
+- [[selected-edge-binary-categorical-pilot-20260604]] - AWS pilot extending
+  selected-edge diagnostics to direct categorical multinomial nulls and
+  exposing high-cardinality categorical fixed-tree frontier inflation.
 - [[feature-split-selection-audit-20260601]] - cross-fit audit showing that
   feature-split hierarchy selection/testing restores null support in the null
   case and keeps signal examples interpretable.

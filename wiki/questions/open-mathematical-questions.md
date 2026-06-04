@@ -17,6 +17,7 @@ sources:
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/sources/edge-selection-null-audit-20260601.md
   - wiki/sources/selected-edge-type1-geometry-pilot-20260604.md
+  - wiki/sources/selected-edge-binary-categorical-pilot-20260604.md
   - wiki/sources/feature-split-selection-audit-20260601.md
   - wiki/sources/selected-hierarchy-null-audit-20260601.md
   - wiki/analyses/selected-hierarchy-null-support-contract.md
@@ -34,6 +35,8 @@ sources:
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_edges.csv
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_final.csv
+  - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_edges.csv
+  - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_final.csv
   - wiki/sources/sibling-null-prior-interpolation-audit-20260604.md
   - raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/case_summary.csv
   - wiki/sources/selected-tail-admissibility-domain-20260603.md
@@ -107,6 +110,16 @@ smaller tested frontier, fixed-tree rejection rates range from about `15%` to
 without closing Type-I theory. It also shows that strict sibling-inflation
 support failure remains the honest production outcome for selected-tree null
 rows when only selected non-null calibration records are available.
+
+The direct categorical extension keeps the same selected-tree conclusion and
+adds a second open problem. In the 2026-06-04 binary/categorical pilot,
+same-data selected-tree mode rejects about `99.6%` to `99.9%` of
+Tree-BH-tested frontier edges across binary and categorical nulls. However,
+`cat_highcard_20cat_4c` also shows high fixed-tree frontier rejection rates:
+about `77.8%` at edge alpha `0.0001` and `92.3%` at edge alpha `0.001`.
+Thus high-cardinality categorical calibration is not only a same-data
+selection problem. It also needs a finite-sample categorical one-hot
+projected-Wald/Tree-BH calibration analysis under a fixed hierarchy.
 
 The first cross-fit diagnostic supports this interpretation. Because the KL
 tree is a sample-leaf hierarchy, literal sample splitting is undefined without

@@ -1,0 +1,33 @@
+{
+  "base_seed": 20260604,
+  "case_names": [
+    "binary_2clusters",
+    "binary_low_noise_4c",
+    "cat_clear_3cat_4c",
+    "cat_highcard_20cat_4c"
+  ],
+  "edge_alphas": [
+    0.0001,
+    0.001
+  ],
+  "execution_role": "aws_distributed_selected_edge_type1_geometry_diagnostic",
+  "modes": [
+    "fixed_tree",
+    "selected_tree"
+  ],
+  "n_edge_rows": 136320,
+  "n_final_rows": 640,
+  "n_sibling_rows": 41435,
+  "note": "Merged selected-edge Type-I geometry diagnostic evidence only.",
+  "replicates": 40,
+  "runner": "benchmarks.cloud.aws_selected_edge_type1_geometry",
+  "shard_count": 4,
+  "sibling_alpha": 0.01,
+  "source_shard_dirs": [
+    "/tmp/selected-edge-type1-binary-categorical-pilot/shards/shard_0000",
+    "/tmp/selected-edge-type1-binary-categorical-pilot/shards/shard_0001",
+    "/tmp/selected-edge-type1-binary-categorical-pilot/shards/shard_0002",
+    "/tmp/selected-edge-type1-binary-categorical-pilot/shards/shard_0003"
+  ],
+  "suite": "full"
+}
