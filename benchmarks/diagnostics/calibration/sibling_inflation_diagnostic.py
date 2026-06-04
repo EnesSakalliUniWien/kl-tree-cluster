@@ -7,12 +7,8 @@ from dataclasses import dataclass
 import networkx as nx
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
     GateAnnotationBundle,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    compute_mean_branch_length,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     fit_empirical_null_inflation_model,
@@ -75,11 +71,9 @@ def collect_sibling_inflation_inputs(
             spectral_context=edge_gate_result.spectral_context,
         )
     )
-    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
     records, non_binary_nodes = collect_sibling_pair_records(
         tree,
         edge_gate_result.annotated_df,
-        mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
         parent_principal_component_projections=parent_projections,
         parent_principal_component_eigenvalues=parent_eigenvalues,

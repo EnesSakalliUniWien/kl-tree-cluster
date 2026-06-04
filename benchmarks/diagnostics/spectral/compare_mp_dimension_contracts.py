@@ -36,6 +36,10 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.deco
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     MarchenkoPasturDimensionEstimate,
     estimate_marchenko_pastur_dimension,
@@ -286,8 +290,8 @@ def _run_kl_with_gate_bundle(
     gate_bundle = run_gate_annotation_pipeline(
         tree,
         tree.annotations_df.copy(),
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=data_df,
         feature_space=feature_space,
     )
@@ -295,8 +299,8 @@ def _run_kl_with_gate_bundle(
         gate_annotation_bundle=gate_bundle,
         leaf_data=data_df,
         feature_space=feature_space,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
     )
     labels, report_df = _labels_and_report_from_decomposition(
         decomposition,

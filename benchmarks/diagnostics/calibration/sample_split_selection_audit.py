@@ -25,8 +25,9 @@ from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    compute_mean_branch_length,
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
@@ -263,7 +264,7 @@ def _collect_support_metrics(
     edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
         tree.annotations_df,
-        significance_level_alpha=config.EDGE_ALPHA,
+        significance_level_alpha=DEFAULT_EDGE_ALPHA,
         leaf_data=test_data,
         feature_space=feature_space,
     )
@@ -277,11 +278,9 @@ def _collect_support_metrics(
             spectral_context=spectral_context,
         )
     )
-    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
     records, non_binary_nodes = collect_sibling_pair_records(
         tree,
         edge_df,
-        mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
         parent_principal_component_projections=parent_projections,
         parent_principal_component_eigenvalues=parent_eigenvalues,
@@ -346,16 +345,16 @@ def _run_full_decomposition(
     gate_bundle = run_gate_annotation_pipeline(
         tree,
         tree.annotations_df,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=test_data,
         feature_space=feature_space,
     )
     decomposer = TreeDecomposition(
         tree=tree,
         gate_annotation_bundle=gate_bundle,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=test_data,
         feature_space=feature_space,
         passthrough=config.PASSTHROUGH,
@@ -498,8 +497,8 @@ def run_feature_split_selection_audit(
         "split_axis": "feature",
         "case_names": list(case_names),
         "selection_fraction": float(selection_fraction),
-        "edge_alpha": float(config.EDGE_ALPHA),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "edge_alpha": float(DEFAULT_EDGE_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "output": str(summary_path),
         "note": (
             "Literal sample splitting is not implemented because KL-TE uses a "

@@ -22,11 +22,9 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    compute_mean_branch_length,
-    compute_sibling_branch_length_sum,
-    extract_branch_length_observation,
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence_with_context,
@@ -849,7 +847,7 @@ def fixed_projection_edge_conditioned_sibling_tail(
         "edge_conditioning_probability": edge_condition_probability,
         "edge_conditioned_sibling_p_value": conditional_tail,
         "edge_conditioned_sibling_blocks_at_sibling_alpha": bool(
-            conditional_tail > config.SIBLING_ALPHA
+            conditional_tail > DEFAULT_SIBLING_ALPHA
         ),
     }
 
@@ -898,7 +896,7 @@ def inflation_adjusted_sibling_tail_for_record(
         "inflation_adjusted_sibling_statistic": adjusted_statistic,
         "inflation_adjusted_sibling_factor": float(inflation_factor),
         "inflation_adjusted_sibling_blocks_at_sibling_alpha": bool(
-            adjusted_p_value > config.SIBLING_ALPHA
+            adjusted_p_value > DEFAULT_SIBLING_ALPHA
         ),
         "inflation_model_calibration_count": int(model.n_calibration),
         "inflation_model_effective_sample_size": float(model.effective_sample_size),
@@ -927,13 +925,11 @@ def root_edge_sibling_wald_relationship(
     sibling_projection_dimension: int,
     spectral_context,
     feature_space=None,
-    mean_branch_length: float | None = None,
 ) -> dict[str, object]:
     r"""Compare the root edge z-vectors with the root sibling z-vector.
 
     For a binary parent whose distribution is the leaf-count barycenter of its
-    children, and with Felsenstein branch scaling disabled, the raw contrasts
-    satisfy
+    children, the raw unscaled Wald contrasts satisfy
     \[
     p_L-p_u=\frac{n_R}{n_u}(p_L-p_R),\qquad
     p_R-p_u=-\frac{n_L}{n_u}(p_L-p_R).
@@ -963,28 +959,12 @@ def root_edge_sibling_wald_relationship(
         parent,
         feature_space,
     )
-    left_branch_length = None
-    right_branch_length = None
-    sibling_branch_length_sum = None
-    if config.FELSENSTEIN_SCALING:
-        left_branch_length = extract_branch_length_observation(tree, parent, left_child)
-        right_branch_length = extract_branch_length_observation(tree, parent, right_child)
-        if mean_branch_length is not None:
-            branch_length_sum = compute_sibling_branch_length_sum(
-                left_branch_length,
-                right_branch_length,
-            )
-            if branch_length_sum > 0.0:
-                sibling_branch_length_sum = branch_length_sum
-
     sibling_z = compute_whitened_wald_contrast(
         left_distribution,
         right_distribution,
         left_sample_size,
         right_sample_size,
         comparison="sibling",
-        branch_length_sum=sibling_branch_length_sum,
-        mean_branch_length=mean_branch_length,
         feature_space=feature_space,
         continuous_covariance_by_block=continuous_covariance_by_block,
     )
@@ -994,8 +974,6 @@ def root_edge_sibling_wald_relationship(
         left_sample_size,
         parent_sample_size,
         comparison="child_parent",
-        branch_length=left_branch_length,
-        mean_branch_length=mean_branch_length,
         feature_space=feature_space,
         continuous_covariance_by_block=continuous_covariance_by_block,
     )
@@ -1005,8 +983,6 @@ def root_edge_sibling_wald_relationship(
         right_sample_size,
         parent_sample_size,
         comparison="child_parent",
-        branch_length=right_branch_length,
-        mean_branch_length=mean_branch_length,
         feature_space=feature_space,
         continuous_covariance_by_block=continuous_covariance_by_block,
     )
@@ -1019,8 +995,7 @@ def root_edge_sibling_wald_relationship(
     relationship_status = (
         "barycentric_z_identity_verified"
         if max_relative_residual <= BARYCENTRIC_Z_IDENTITY_RELATIVE_TOLERANCE
-        and not config.FELSENSTEIN_SCALING
-        else "branch_scaled_or_residual_edge_sibling_relation"
+        else "residual_edge_sibling_relation"
     )
 
     parent_projection_dimension = int(
@@ -1238,7 +1213,7 @@ def collect_observed_root_selected_region_row(
     edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         context.tree,
         context.tree.annotations_df,
-        significance_level_alpha=config.EDGE_ALPHA,
+        significance_level_alpha=DEFAULT_EDGE_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
@@ -1252,13 +1227,9 @@ def collect_observed_root_selected_region_row(
             spectral_context=spectral_context,
         )
     )
-    mean_branch_length = (
-        compute_mean_branch_length(context.tree) if config.FELSENSTEIN_SCALING else None
-    )
     records, non_binary_nodes = collect_sibling_pair_records(
         context.tree,
         edge_df,
-        mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
         parent_principal_component_projections=parent_projections,
         parent_principal_component_eigenvalues=parent_eigenvalues,
@@ -1307,12 +1278,12 @@ def collect_observed_root_selected_region_row(
     left_edge_geometry = projected_wald_edge_opening_geometry(
         statistic=left_edge_statistic,
         degrees_of_freedom=left_edge_degrees_of_freedom,
-        alpha=config.EDGE_ALPHA,
+        alpha=DEFAULT_EDGE_ALPHA,
     )
     right_edge_geometry = projected_wald_edge_opening_geometry(
         statistic=right_edge_statistic,
         degrees_of_freedom=right_edge_degrees_of_freedom,
-        alpha=config.EDGE_ALPHA,
+        alpha=DEFAULT_EDGE_ALPHA,
     )
     edge_sibling_relationship = root_edge_sibling_wald_relationship(
         context.tree,
@@ -1322,7 +1293,6 @@ def collect_observed_root_selected_region_row(
         sibling_projection_dimension=int(root_record.sibling_projection_dimension),
         spectral_context=spectral_context,
         feature_space=context.feature_space,
-        mean_branch_length=mean_branch_length,
     )
     edge_equivalent_parent_projection_statistic = float(
         edge_sibling_relationship["root_edge_equivalent_parent_projection_statistic"]
@@ -1338,7 +1308,7 @@ def collect_observed_root_selected_region_row(
         edge_degrees_of_freedom=int(
             edge_sibling_relationship["root_edge_parent_projection_dimension"]
         ),
-        edge_alpha=config.EDGE_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
     )
     inflation_adjusted_sibling_tail = inflation_adjusted_sibling_tail_for_record(
         records,
@@ -1453,7 +1423,7 @@ def collect_observed_root_selected_region_row(
         "root_sibling_selected_ratio": float(root_record.stat / reference_expectation),
         "root_sibling_raw_p_value": float(root_record.p_value),
         "root_sibling_raw_blocks_at_sibling_alpha": bool(
-            float(root_record.p_value) > config.SIBLING_ALPHA
+            float(root_record.p_value) > DEFAULT_SIBLING_ALPHA
         ),
         "root_sibling_edge_conditioned_p_value": edge_conditioned_sibling_tail[
             "edge_conditioned_sibling_p_value"

@@ -19,7 +19,10 @@ from pathlib import Path
 from time import perf_counter
 
 import pandas as pd
-from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 
 from benchmarks.diagnostics.calibration.selected_hierarchy_geometry_covariates import (
     CANDIDATE_EQUATIONS,
@@ -318,8 +321,8 @@ def write_combined_outputs(
         "independent_simulation_id_column": SIMULATION_ID_COLUMN,
         "n_independent_simulations": int(records[SIMULATION_ID_COLUMN].nunique()),
         "response_column": RESPONSE_COLUMN,
-        "edge_alpha": float(config.EDGE_ALPHA),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "edge_alpha": float(DEFAULT_EDGE_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "source_shard_dirs": [str(path) for path in shard_dirs],
         "outputs": {name: str(output_dir / f"{name}.csv") for name in outputs},
         "covariate_blocks": {
@@ -347,7 +350,7 @@ def write_combined_outputs(
                     EDGE_ACTION_BIN_LABELS,
                 )
             ],
-            "alpha": float(config.SIBLING_ALPHA),
+            "alpha": float(DEFAULT_SIBLING_ALPHA),
             "production_min_matching_simulations": 499,
             "production_min_matched_records": 499,
             "production_max_exceedance_standard_error": 0.002,

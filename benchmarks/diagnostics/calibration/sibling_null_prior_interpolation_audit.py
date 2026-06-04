@@ -20,12 +20,11 @@ from typing import Callable, Iterable, Sequence
 import networkx as nx
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
     EDGE_GATE_COLUMNS,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    compute_mean_branch_length,
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
@@ -502,7 +501,7 @@ def _collect_records_for_case(
     edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         context.tree,
         context.tree.annotations_df,
-        significance_level_alpha=config.EDGE_ALPHA,
+        significance_level_alpha=DEFAULT_EDGE_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
@@ -516,11 +515,9 @@ def _collect_records_for_case(
             spectral_context=spectral_context,
         )
     )
-    mean_branch_length = compute_mean_branch_length(context.tree) if config.FELSENSTEIN_SCALING else None
     records, _non_binary_nodes = collect_sibling_pair_records(
         context.tree,
         edge_df,
-        mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
         parent_principal_component_projections=parent_projections,
         parent_principal_component_eigenvalues=parent_eigenvalues,

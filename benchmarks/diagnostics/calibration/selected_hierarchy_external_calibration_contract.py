@@ -19,7 +19,10 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from scipy.stats import chi2, kstest
 
 from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import (
@@ -48,7 +51,7 @@ GROUP_COLUMNS = (
 class ExternalCalibrationContract:
     """Thresholds for production-admissible external selected-hierarchy evidence."""
 
-    sibling_alpha: float = float(config.SIBLING_ALPHA)
+    sibling_alpha: float = float(DEFAULT_SIBLING_ALPHA)
     tail_resolution_fraction_of_alpha: float = 0.2
     min_matching_simulations: int | None = None
     min_matched_records: int | None = None
@@ -351,7 +354,7 @@ def run_external_calibration_contract_diagnostic(
         "n_replicates": int(n_replicates),
         "case_names": case_names,
         "conditioning_scope": CONDITIONING_SCOPE,
-        "edge_alpha": float(config.EDGE_ALPHA),
+        "edge_alpha": float(DEFAULT_EDGE_ALPHA),
         "sibling_alpha": float(contract.sibling_alpha),
         "contract": asdict(contract),
         "resolved_min_matching_simulations": contract.resolved_min_matching_simulations(),

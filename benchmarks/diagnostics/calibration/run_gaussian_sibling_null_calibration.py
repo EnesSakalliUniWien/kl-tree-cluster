@@ -18,6 +18,10 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 from benchmarks.diagnostics.calibration.gaussian_sibling_null_calibration import (
@@ -271,16 +275,16 @@ def _diagnose_case(
     gate_annotation_bundle = run_gate_annotation_pipeline(
         context.tree,
         context.tree.annotations_df,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
     decomposer = TreeDecomposition(
         tree=context.tree,
         gate_annotation_bundle=gate_annotation_bundle,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
         passthrough=config.PASSTHROUGH,
@@ -327,7 +331,7 @@ def _diagnose_case(
         records=inputs.records,
         model=inputs.model,
         trace_df=trace_df,
-        sibling_alpha=config.SIBLING_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         max_contributors=0,
         contributors_for_all_crossings=False,
     )
@@ -338,7 +342,7 @@ def _diagnose_case(
             _target_context(
                 context=context,
                 row=row,
-                sibling_alpha=config.SIBLING_ALPHA,
+                sibling_alpha=DEFAULT_SIBLING_ALPHA,
             ),
             n_replicates=n_replicates,
             seed=seed + row_index,
@@ -444,7 +448,7 @@ def main() -> None:
         "n_cases": len(selected),
         "n_replicates": int(args.n_replicates),
         "seed": int(args.seed),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "elapsed_sec": round(elapsed_sec, 6),
         "targets_csv": str(targets_csv),
         "case_summary_csv": str(case_summary_csv),

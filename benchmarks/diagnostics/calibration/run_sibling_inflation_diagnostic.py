@@ -18,6 +18,10 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
@@ -205,16 +209,16 @@ def _diagnose_case(
     gate_annotation_bundle = run_gate_annotation_pipeline(
         context.tree,
         context.tree.annotations_df,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
     decomposer = TreeDecomposition(
         tree=context.tree,
         gate_annotation_bundle=gate_annotation_bundle,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
         passthrough=config.PASSTHROUGH,
@@ -261,7 +265,7 @@ def _diagnose_case(
         records=inputs.records,
         model=inputs.model,
         trace_df=trace_df,
-        sibling_alpha=config.SIBLING_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         max_contributors=max_contributors,
         contributors_for_all_crossings=contributors_for_all_crossings,
     )
@@ -325,7 +329,7 @@ def main() -> None:
         "failure_classes": _parse_csv_list(args.failure_classes),
         "case_names": [str(case["name"]) for case, _row in selected],
         "n_cases": len(selected),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "max_contributors": int(args.max_contributors),
         "contributors_for_all_crossings": bool(args.contributors_for_all_crossings),
         "elapsed_sec": round(elapsed_sec, 6),

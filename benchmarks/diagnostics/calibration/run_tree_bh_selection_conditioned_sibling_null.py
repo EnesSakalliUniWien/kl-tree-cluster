@@ -14,9 +14,9 @@ import pandas as pd
 
 repo_root = Path(__file__).resolve().parents[3]
 
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    compute_mean_branch_length,
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence_with_context,
@@ -190,7 +190,7 @@ def _diagnose_case(
     edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         context.tree,
         context.tree.annotations_df,
-        significance_level_alpha=config.EDGE_ALPHA,
+        significance_level_alpha=DEFAULT_EDGE_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
@@ -204,13 +204,9 @@ def _diagnose_case(
             spectral_context=spectral_context,
         )
     )
-    mean_branch_length = (
-        compute_mean_branch_length(context.tree) if config.FELSENSTEIN_SCALING else None
-    )
     records, _non_binary = collect_sibling_pair_records(
         context.tree,
         edge_df,
-        mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
         parent_principal_component_projections=parent_projections,
         parent_principal_component_eigenvalues=parent_eigenvalues,
@@ -244,8 +240,8 @@ def _diagnose_case(
         reference_scale=float(target.reference_scale),
         observed_statistic=float(target.stat),
         observed_p_value=float(target.p_value),
-        edge_alpha=float(config.EDGE_ALPHA),
-        sibling_alpha=float(config.SIBLING_ALPHA),
+        edge_alpha=float(DEFAULT_EDGE_ALPHA),
+        sibling_alpha=float(DEFAULT_SIBLING_ALPHA),
         parent_sample_size=int(target.n_parent),
         left_sample_size=int(context.tree.nodes[target.left]["leaf_count"]),
         right_sample_size=int(context.tree.nodes[target.right]["leaf_count"]),
@@ -314,8 +310,8 @@ def main() -> None:
         "n_candidates": int(args.n_candidates),
         "chunk_size": int(args.chunk_size),
         "seed": int(args.seed),
-        "edge_alpha": float(config.EDGE_ALPHA),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "edge_alpha": float(DEFAULT_EDGE_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "conditioning_scope": (
             "fixed_tree_root_tree_bh_edge_path_and_fixed_blocker_parent"
         ),

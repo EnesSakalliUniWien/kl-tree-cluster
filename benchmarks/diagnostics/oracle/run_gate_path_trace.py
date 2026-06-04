@@ -18,6 +18,10 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 from benchmarks.diagnostics.oracle.gate_path_trace import (
@@ -25,14 +29,14 @@ from benchmarks.diagnostics.oracle.gate_path_trace import (
     collect_sibling_inflation_trace,
     summarize_gate_path_trace,
 )
-from benchmarks.diagnostics.oracle.statistical_decision_trace import (
-    statistical_decision_trace_from_gate_path_trace,
-)
 from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     FAILURE_CLASS_GATE_OVER_SPLIT,
     FAILURE_CLASS_GATE_UNDER_SPLIT,
     FAILURE_CLASS_TREE_RECOVERABLE_STATISTICAL_FAILURE,
     oracle_subtree_cut,
+)
+from benchmarks.diagnostics.oracle.statistical_decision_trace import (
+    statistical_decision_trace_from_gate_path_trace,
 )
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
@@ -193,16 +197,16 @@ def _trace_case(case: dict[str, object], classification_row) -> pd.DataFrame:
     gate_annotation_bundle = run_gate_annotation_pipeline(
         context.tree,
         context.tree.annotations_df,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
     decomposer = TreeDecomposition(
         tree=context.tree,
         gate_annotation_bundle=gate_annotation_bundle,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
         passthrough=config.PASSTHROUGH,

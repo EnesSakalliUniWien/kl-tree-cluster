@@ -18,10 +18,10 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    compute_mean_branch_length,
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
@@ -421,7 +421,6 @@ def _sibling_whitened_contrast(
     *,
     tree,
     record: SiblingPairRecord,
-    mean_branch_length: float | None,
     feature_space: FeatureSpace | None,
 ) -> tuple[np.ndarray, int, int, float | None, float | None, float | None]:
     (
@@ -441,11 +440,6 @@ def _sibling_whitened_contrast(
         branch_length_left,
         branch_length_right,
     )
-    wald_branch_length_sum = (
-        raw_branch_length_sum
-        if mean_branch_length is not None and raw_branch_length_sum > 0.0
-        else None
-    )
     z_scores = compute_whitened_wald_contrast(
         left_distribution,
         right_distribution,
@@ -453,8 +447,6 @@ def _sibling_whitened_contrast(
         float(right_sample_size),
         comparison="sibling",
         feature_space=feature_space,
-        branch_length_sum=wald_branch_length_sum,
-        mean_branch_length=mean_branch_length,
         continuous_covariance_by_block=require_node_continuous_covariance_by_block(
             tree,
             record.parent,
@@ -629,7 +621,6 @@ def _selected_geometry_rows(
     replicate_index: int,
     n_samples: int,
     n_features: int,
-    mean_branch_length: float | None,
     feature_space: FeatureSpace | None,
 ) -> list[dict[str, object]]:
     node_depths = compute_node_depths(tree)
@@ -648,7 +639,6 @@ def _selected_geometry_rows(
         ) = _sibling_whitened_contrast(
             tree=tree,
             record=record,
-            mean_branch_length=mean_branch_length,
             feature_space=feature_space,
         )
         projection_dimension = int(record.sibling_projection_dimension)
@@ -765,7 +755,7 @@ def _run_geometry_sample(
     edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         tree,
         tree.annotations_df,
-        significance_level_alpha=config.EDGE_ALPHA,
+        significance_level_alpha=DEFAULT_EDGE_ALPHA,
         leaf_data=data,
         feature_space=feature_space,
     )
@@ -779,11 +769,9 @@ def _run_geometry_sample(
             spectral_context=spectral_context,
         )
     )
-    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
     records, _non_binary_nodes = collect_sibling_pair_records(
         tree,
         edge_df,
-        mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
         parent_principal_component_projections=parent_projections,
         parent_principal_component_eigenvalues=parent_eigenvalues,
@@ -803,7 +791,6 @@ def _run_geometry_sample(
         replicate_index=replicate_index,
         n_samples=int(data.shape[0]),
         n_features=int(data.shape[1]),
-        mean_branch_length=mean_branch_length,
         feature_space=feature_space,
     )
     return GeometryStudySample(
@@ -1610,7 +1597,7 @@ def _tail_law_admissibility_failures(
 def evaluate_selected_ratio_tail_law(
     records: pd.DataFrame,
     *,
-    alpha: float = float(config.SIBLING_ALPHA),
+    alpha: float = float(DEFAULT_SIBLING_ALPHA),
     n_folds: int = 5,
     min_train_simulations: int = 20,
     min_train_records: int = 20,
@@ -1924,8 +1911,8 @@ def run_selected_hierarchy_geometry_covariate_study(
         "seed": int(seed),
         "n_replicates": int(n_replicates),
         "case_names": case_names,
-        "edge_alpha": float(config.EDGE_ALPHA),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "edge_alpha": float(DEFAULT_EDGE_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "elapsed_sec": round(float(perf_counter() - started_at), 6),
         "write_selected_records": bool(write_selected_records),
         "response_column": RESPONSE_COLUMN,
@@ -1954,7 +1941,7 @@ def run_selected_hierarchy_geometry_covariate_study(
                     EDGE_ACTION_BIN_LABELS,
                 )
             ],
-            "alpha": float(config.SIBLING_ALPHA),
+            "alpha": float(DEFAULT_SIBLING_ALPHA),
             "independent_simulation_id_column": SIMULATION_ID_COLUMN,
             "production_min_matching_simulations": 499,
             "production_min_matched_records": 499,

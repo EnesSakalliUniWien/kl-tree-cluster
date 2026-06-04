@@ -18,6 +18,10 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null import (
@@ -257,8 +261,8 @@ def _target_context(
         reference_scale=float(row["reference_scale"]),
         observed_statistic=float(row["raw_sibling_statistic"]),
         observed_p_value=float(row["raw_sibling_p_value"]),
-        edge_alpha=float(config.EDGE_ALPHA),
-        sibling_alpha=float(config.SIBLING_ALPHA),
+        edge_alpha=float(DEFAULT_EDGE_ALPHA),
+        sibling_alpha=float(DEFAULT_SIBLING_ALPHA),
         parent_sample_size=int(row["parent_sample_size"]),
         left_sample_size=int(context.tree.nodes[left_child]["leaf_count"]),
         right_sample_size=int(context.tree.nodes[right_child]["leaf_count"]),
@@ -300,8 +304,8 @@ def _diagnose_case(
     gate_annotation_bundle = run_gate_annotation_pipeline(
         context.tree,
         context.tree.annotations_df,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
@@ -310,8 +314,8 @@ def _diagnose_case(
     decomposer = TreeDecomposition(
         tree=context.tree,
         gate_annotation_bundle=gate_annotation_bundle,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
         passthrough=config.PASSTHROUGH,
@@ -358,7 +362,7 @@ def _diagnose_case(
         records=inputs.records,
         model=inputs.model,
         trace_df=trace_df,
-        sibling_alpha=config.SIBLING_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
         max_contributors=0,
         contributors_for_all_crossings=False,
     )
@@ -489,8 +493,8 @@ def main() -> None:
         "n_candidates": int(args.n_candidates),
         "chunk_size": int(args.chunk_size),
         "seed": int(args.seed),
-        "edge_alpha": float(config.EDGE_ALPHA),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "edge_alpha": float(DEFAULT_EDGE_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "conditioning_scope": (
             "fixed_tree_fixed_projection_local_child_parent_edge_selection"
         ),

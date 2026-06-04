@@ -8,6 +8,10 @@
 
 **Tech Stack:** Python 3.11, pandas, NumPy, pytest, ruff, docs-as-code wiki lint via `make wiki-lint`, CSV/JSON evidence under `raw/assets/benchmark-results/`.
 
+Use `DEFAULT_SIBLING_ALPHA` from
+`kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract` in code
+snippets; statistical thresholds are not read from `config.py`.
+
 ---
 
 ## File Structure
@@ -360,7 +364,7 @@ Place this function after `_tail_law_admissibility_failures()`:
 def evaluate_selected_ratio_tail_law(
     records: pd.DataFrame,
     *,
-    alpha: float = float(config.SIBLING_ALPHA),
+    alpha: float = float(DEFAULT_SIBLING_ALPHA),
     n_folds: int = 5,
     min_train_simulations: int = 20,
     min_train_records: int = 20,
@@ -487,7 +491,7 @@ Add this entry to `manifest`:
             EDGE_ACTION_BIN_LABELS,
         )
     ],
-    "alpha": float(config.SIBLING_ALPHA),
+    "alpha": float(DEFAULT_SIBLING_ALPHA),
     "independent_simulation_id_column": "selected_hierarchy_simulation_id",
     "production_min_matching_simulations": 499,
     "production_min_matched_records": 499,

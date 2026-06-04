@@ -15,7 +15,10 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import (
@@ -148,7 +151,7 @@ def _stratum_summary(
                 "raw_p_value_q10": float(np.quantile(raw_p_values, 0.1)),
                 "raw_p_value_q90": float(np.quantile(raw_p_values, 0.9)),
                 "standard_reference_sibling_alpha_rejection_rate": float(
-                    np.mean(raw_p_values <= config.SIBLING_ALPHA)
+                    np.mean(raw_p_values <= DEFAULT_SIBLING_ALPHA)
                 ),
                 "mean_parent_sample_size": float(group["parent_sample_size"].mean()),
                 "mean_parent_size_fraction": float(group["parent_size_fraction"].mean()),
@@ -324,8 +327,8 @@ def run_selected_hierarchy_stratification_diagnostic(
         "seed": int(seed),
         "n_replicates": int(n_replicates),
         "case_names": case_names,
-        "edge_alpha": float(config.EDGE_ALPHA),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "edge_alpha": float(DEFAULT_EDGE_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "elapsed_sec": round(float(perf_counter() - started_at), 6),
         "write_selected_records": bool(write_selected_records),
         "outputs": {name: str(output_dir / f"{name}.csv") for name in outputs},

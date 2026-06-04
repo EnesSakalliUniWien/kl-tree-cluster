@@ -16,10 +16,10 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    compute_mean_branch_length,
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
@@ -147,7 +147,7 @@ def _observed_target(
     edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         context.tree,
         context.tree.annotations_df,
-        significance_level_alpha=config.EDGE_ALPHA,
+        significance_level_alpha=DEFAULT_EDGE_ALPHA,
         leaf_data=context.data,
         feature_space=context.feature_space,
     )
@@ -161,13 +161,9 @@ def _observed_target(
             spectral_context=spectral_context,
         )
     )
-    mean_branch_length = (
-        compute_mean_branch_length(context.tree) if config.FELSENSTEIN_SCALING else None
-    )
     records, _non_binary_nodes = collect_sibling_pair_records(
         context.tree,
         edge_df,
-        mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
         parent_principal_component_projections=parent_projections,
         parent_principal_component_eigenvalues=parent_eigenvalues,
@@ -371,7 +367,7 @@ def _diagnose_case(
     internal = _internal_empirical_inflation_summary(
         target_record=target.record,
         records=target.all_records,
-        alpha=float(config.SIBLING_ALPHA),
+        alpha=float(DEFAULT_SIBLING_ALPHA),
     )
     selected_hierarchy = _selected_hierarchy_summary(
         target=target.context,
@@ -467,8 +463,8 @@ def run_internal_vs_selected_hierarchy_inflation_study(
         "case_names": case_names,
         "target_mode": target_mode,
         "context_match": context_match,
-        "edge_alpha": float(config.EDGE_ALPHA),
-        "sibling_alpha": float(config.SIBLING_ALPHA),
+        "edge_alpha": float(DEFAULT_EDGE_ALPHA),
+        "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "elapsed_sec": round(float(perf_counter() - started_at), 6),
         "summary_csv": str(summary_path),
         "note": (
