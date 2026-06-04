@@ -1,7 +1,6 @@
 """Smoke test for benchmark method runners."""
 
-from benchmarks.shared.cases import SMALL_TEST_CASES
-from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.cases import SMALL_TEST_CASES, get_default_test_cases
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
 
