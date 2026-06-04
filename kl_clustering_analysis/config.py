@@ -1,26 +1,5 @@
 """Central configuration for the KL-TE clustering analysis library."""
 
-# --- Statistical Parameters ---
-
-# Default significance level (alpha) for sibling-divergence gating in clustering.
-# This is intentionally conservative to reduce over-merging at high levels
-# of the tree.
-SIBLING_ALPHA: float = 0.01
-
-# --- Decomposition Parameters ---
-
-# Default significance level for edge-divergence (child-vs-parent) tests.
-EDGE_ALPHA: float = 0.001
-
-
-# --- Legacy Branch-Length Variance Scaling ---
-
-# Scale Wald test variance by normalized branch length.
-# Disabled: empirical comparison shows branch-length scaling systematically
-# under-splits on data-dependent trees (mean ARI 0.694 → 1.000 without it).
-FELSENSTEIN_SCALING: bool = False
-
-
 # --- Tree Inference Parameters ---
 
 # Distance metric for hierarchical clustering

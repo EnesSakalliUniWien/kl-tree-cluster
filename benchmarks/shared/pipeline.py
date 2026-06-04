@@ -12,7 +12,10 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
-from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.config import DEFAULT_METHODS
@@ -44,7 +47,8 @@ if not logger.handlers:
 # PDF layout/merge helpers live under `benchmarks.shared.util.pdf.*`.
 def benchmark_cluster_algorithm(
     test_cases=None,
-    significance_level=config.SIBLING_ALPHA,
+    significance_level=DEFAULT_SIBLING_ALPHA,
+    edge_alpha=DEFAULT_EDGE_ALPHA,
     verbose=True,
     plot_umap=False,
     plot_manifold=False,
@@ -69,8 +73,10 @@ def benchmark_cluster_algorithm(
         - cluster_std: noise level (standard deviation)
         - seed: random seed
         If None, uses default test cases.
-    significance_level : float, default=config.SIBLING_ALPHA
+    significance_level : float, default=DEFAULT_SIBLING_ALPHA
         Significance level used for sibling-independence gating in decomposition
+    edge_alpha : float, default=DEFAULT_EDGE_ALPHA
+        Significance level used for child-parent edge Tree-BH gating.
     verbose : bool, default=True
         If True, prints progress and displays validation results
     plot_umap : bool, default=False
@@ -167,6 +173,7 @@ def benchmark_cluster_algorithm(
                 selected_methods=selected_methods,
                 param_sets=param_sets,
                 significance_level=significance_level,
+                edge_alpha=edge_alpha,
                 output_pdf=output_pdf,
                 plots_root=plots_root,
                 matrix_audit=matrix_audit,

@@ -353,7 +353,6 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
     records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
-        mean_branch_length=None,
         sibling_projection_dimensions_from_edge_comparisons={"root": 2},
         parent_principal_component_projections={"root": np.eye(2, dtype=float)},
         parent_principal_component_eigenvalues={"root": np.ones(2, dtype=float)},

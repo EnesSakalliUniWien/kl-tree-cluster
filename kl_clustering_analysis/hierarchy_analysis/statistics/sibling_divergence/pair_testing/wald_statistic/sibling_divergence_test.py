@@ -13,7 +13,6 @@ from ....projection.projected_wald.projected_wald_kernel import run_projected_wa
 from ...projection.pair_testing.projection_dimension import (
     resolve_sibling_projection_dimension,
 )
-from .branch_length import _resolve_sibling_branch_length_sum
 from .sibling_z_scores import _compute_sibling_z_scores
 
 
@@ -22,9 +21,6 @@ def sibling_divergence_test(
     right_distribution: np.ndarray,
     left_sample_size: float,
     right_sample_size: float,
-    branch_length_left: float | None = None,
-    branch_length_right: float | None = None,
-    mean_branch_length: float | None = None,
     *,
     projection_dimension_from_edge_comparisons: int | None = None,
     parent_principal_component_projection: np.ndarray | None = None,
@@ -33,19 +29,11 @@ def sibling_divergence_test(
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
 ) -> tuple[float, float, float, float]:
     """Two-sample Wald test for sibling divergence."""
-    branch_length_sum = _resolve_sibling_branch_length_sum(
-        branch_length_left,
-        branch_length_right,
-        mean_branch_length,
-    )
-
     z_scores = _compute_sibling_z_scores(
         left_distribution,
         right_distribution,
         left_sample_size,
         right_sample_size,
-        branch_length_sum=branch_length_sum,
-        mean_branch_length=mean_branch_length,
         feature_space=feature_space,
         continuous_covariance_by_block=continuous_covariance_by_block,
     )

@@ -62,6 +62,7 @@ def test_run_single_case_restores_matrix_audit_env(monkeypatch, initial_value):
         selected_methods=selected_methods,
         param_sets=param_sets,
         significance_level=0.05,
+        edge_alpha=0.001,
         output_pdf=None,
         plots_root=Path("benchmarks/results/plots"),
         matrix_audit=True,

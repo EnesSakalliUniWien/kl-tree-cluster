@@ -10,7 +10,9 @@ import numpy as np
 import pandas as pd
 from benchmarks.shared.generators import generate_random_feature_matrix
 from benchmarks.shared.util.decomposition import _labels_from_decomposition
-from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+)
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
@@ -25,7 +27,7 @@ def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
     decomposition = tree.decompose(
         annotations_df=tree.annotations_df,
         leaf_data=data_df,
-        edge_alpha=config.EDGE_ALPHA,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
         sibling_alpha=significance_level,
         **kwargs,
     )

@@ -6,8 +6,11 @@ from typing import TYPE_CHECKING
 import networkx as nx
 import numpy as np
 
-from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.tree.distributions import populate_distributions
 from kl_clustering_analysis.tree.topology import (
     compute_descendant_leaf_sets,
@@ -284,9 +287,9 @@ class PosetTree(nx.DiGraph):
         dict
             Decomposition output from ``TreeDecomposition.decompose_tree``.
         """
-        # Extract alpha values from kwargs (with defaults from config)
-        edge_alpha = decomposer_kwargs.pop("edge_alpha", config.EDGE_ALPHA)
-        sibling_alpha = decomposer_kwargs.pop("sibling_alpha", config.SIBLING_ALPHA)
+        # Extract alpha values from kwargs using the canonical statistical defaults.
+        edge_alpha = decomposer_kwargs.pop("edge_alpha", DEFAULT_EDGE_ALPHA)
+        sibling_alpha = decomposer_kwargs.pop("sibling_alpha", DEFAULT_SIBLING_ALPHA)
 
         if annotations_df is not None and gate_annotation_bundle is not None:
             raise ValueError("Pass either annotations_df or gate_annotation_bundle, not both.")

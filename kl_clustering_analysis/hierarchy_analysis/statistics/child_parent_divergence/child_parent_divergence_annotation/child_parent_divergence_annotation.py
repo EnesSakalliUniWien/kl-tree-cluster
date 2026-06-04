@@ -9,10 +9,12 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from kl_clustering_analysis import config
 from kl_clustering_analysis.core_utils.data_utils import (
     assign_divergence_results,
     extract_leaf_counts,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
 )
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
@@ -27,7 +29,7 @@ def annotate_child_parent_divergence(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     *,
-    significance_level_alpha: float = config.EDGE_ALPHA,
+    significance_level_alpha: float = DEFAULT_EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
@@ -52,7 +54,7 @@ def annotate_child_parent_divergence_with_context(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
     *,
-    significance_level_alpha: float = config.EDGE_ALPHA,
+    significance_level_alpha: float = DEFAULT_EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
     stage_timings: MutableMapping[str, float] | None = None,

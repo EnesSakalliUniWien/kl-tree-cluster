@@ -517,13 +517,23 @@ inspecting current behavior.
 
 The benchmark system uses the core library:
 ```python
-from kl_clustering_analysis.tree.poset_tree import PosetTree
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_SIBLING_ALPHA,
+)
+from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
-# Adjust config for benchmark runs
-config.EDGE_ALPHA = 0.05
-config.SIBLING_ALPHA = 0.05
+# Tree-construction options remain runtime config values.
 config.TREE_DISTANCE_METRIC = "hamming"  # or "rogerstanimoto"
+
+# Benchmark runs use the canonical edge threshold and an explicit sibling
+# threshold argument. Do not mutate global config to change statistical alphas.
+df_results, _ = benchmark_cluster_algorithm(
+    significance_level=DEFAULT_SIBLING_ALPHA,
+)
+
+# Lower-level method experiments can pass an explicit `edge_alpha` to the gate
+# pipeline. Production benchmark rows record the alpha values used.
 ```
 
 ## Calibration Diagnostics

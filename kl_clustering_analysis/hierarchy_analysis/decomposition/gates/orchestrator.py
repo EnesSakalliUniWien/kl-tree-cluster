@@ -9,7 +9,10 @@ from time import perf_counter
 import numpy as np
 import pandas as pd
 
-from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ...statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
@@ -70,7 +73,6 @@ def _build_sibling_metadata(
 def build_gate_annotation_config_metadata() -> GateAnnotationConfigMetadata:
     """Capture config values that affect gate annotation outputs."""
     return GateAnnotationConfigMetadata(
-        felsenstein_scaling=bool(config.FELSENSTEIN_SCALING),
         spectral_minimum_dimension=EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     )
 
@@ -157,8 +159,8 @@ def run_gate_annotation_pipeline(
     tree,
     annotations_df: pd.DataFrame,
     *,
-    edge_alpha: float = config.EDGE_ALPHA,
-    sibling_alpha: float = config.SIBLING_ALPHA,
+    edge_alpha: float = DEFAULT_EDGE_ALPHA,
+    sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
 ) -> GateAnnotationBundle:

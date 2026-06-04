@@ -10,10 +10,6 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy import linalg
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
-    felsenstein_sibling_multiplier,
-    validate_branch_length_observation,
-)
 from kl_clustering_analysis.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
@@ -87,9 +83,6 @@ def build_contrast_covariance(
     *,
     comparison: ComparisonKind,
     feature_space: FeatureSpace | None = None,
-    branch_length_sum: float | None = None,
-    branch_length: float | None = None,
-    mean_branch_length: float | None = None,
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
     ridge: float = 1e-12,
 ) -> ContrastCovariance:
@@ -105,9 +98,6 @@ def build_contrast_covariance(
         second_sample_size,
         comparison=comparison,
         feature_space=feature_space,
-        branch_length_sum=branch_length_sum,
-        branch_length=branch_length,
-        mean_branch_length=mean_branch_length,
         continuous_covariance_by_block=continuous_covariance_by_block,
         ridge=ridge,
     )
@@ -132,9 +122,6 @@ def _resolve_contrast_inputs(
     *,
     comparison: ComparisonKind,
     feature_space: FeatureSpace | None,
-    branch_length_sum: float | None,
-    branch_length: float | None,
-    mean_branch_length: float | None,
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None,
     ridge: float,
 ) -> _ResolvedContrastInputs:
@@ -172,31 +159,13 @@ def _resolve_contrast_inputs(
     )
 
     if comparison == "sibling":
-        if branch_length is not None:
-            raise ValueError(
-                "branch_length is only valid for child_parent contrasts; "
-                "sibling contrasts use branch_length_sum."
-            )
         variance_scale = _sibling_variance_scale(first_sample_size, second_sample_size)
         covariance_distribution = (
             first_sample_size * first + second_sample_size * second
         ) / (first_sample_size + second_sample_size)
-        variance_scale *= _sibling_branch_multiplier(
-            branch_length_sum=branch_length_sum,
-            mean_branch_length=mean_branch_length,
-        )
     elif comparison == "child_parent":
-        if branch_length_sum is not None:
-            raise ValueError(
-                "branch_length_sum is only valid for sibling contrasts; "
-                "child_parent contrasts use branch_length."
-            )
         variance_scale = _child_parent_variance_scale(first_sample_size, second_sample_size)
         covariance_distribution = second
-        variance_scale *= _child_parent_branch_multiplier(
-            branch_length=branch_length,
-            mean_branch_length=mean_branch_length,
-        )
     else:
         raise ValueError(f"Unknown comparison kind: {comparison!r}.")
 
@@ -219,9 +188,6 @@ def compute_whitened_wald_contrast(
     *,
     comparison: ComparisonKind,
     feature_space: FeatureSpace | None = None,
-    branch_length_sum: float | None = None,
-    branch_length: float | None = None,
-    mean_branch_length: float | None = None,
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
     ridge: float = 1e-12,
 ) -> NDArray[np.float64]:
@@ -233,9 +199,6 @@ def compute_whitened_wald_contrast(
         second_sample_size,
         comparison=comparison,
         feature_space=feature_space,
-        branch_length_sum=branch_length_sum,
-        branch_length=branch_length,
-        mean_branch_length=mean_branch_length,
         continuous_covariance_by_block=continuous_covariance_by_block,
         ridge=ridge,
     )
@@ -785,50 +748,6 @@ def _child_parent_variance_scale(child_sample_size: float, parent_sample_size: f
             f"nested_factor={nested_factor:.6f}."
         )
     return nested_factor
-
-
-def _sibling_branch_multiplier(
-    *,
-    branch_length_sum: float | None,
-    mean_branch_length: float | None,
-) -> float:
-    if branch_length_sum is None:
-        return 1.0
-    branch_length_sum_value = validate_branch_length_observation(
-        branch_length_sum,
-        value_name="branch_length_sum",
-    )
-    if branch_length_sum_value == 0.0:
-        return 1.0
-    return felsenstein_sibling_multiplier(branch_length_sum_value, mean_branch_length)
-
-
-def _child_parent_branch_multiplier(
-    *,
-    branch_length: float | None,
-    mean_branch_length: float | None,
-) -> float:
-    if branch_length is None:
-        return 1.0
-    branch_length_value = validate_branch_length_observation(
-        branch_length,
-        value_name="branch_length",
-    )
-    if branch_length_value == 0.0:
-        return 1.0
-    if mean_branch_length is None:
-        raise ValueError(
-            "mean_branch_length is required when child-parent branch_length is positive."
-        )
-    mean_branch_length_value = validate_branch_length_observation(
-        mean_branch_length,
-        value_name="mean_branch_length",
-    )
-    if mean_branch_length_value <= 0.0:
-        raise ValueError(
-            "mean_branch_length must be positive when child-parent branch_length is positive."
-        )
-    return 1.0 + branch_length_value / mean_branch_length_value
 
 
 def _feature_space_contrast_covariance(

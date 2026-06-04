@@ -18,8 +18,6 @@ def _compute_sibling_z_scores(
     left_sample_size: float,
     right_sample_size: float,
     *,
-    branch_length_sum: float | None,
-    mean_branch_length: float | None,
     feature_space: FeatureSpace | None = None,
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
 ) -> np.ndarray:
@@ -31,8 +29,6 @@ def _compute_sibling_z_scores(
         float(right_sample_size),
         comparison="sibling",
         feature_space=feature_space,
-        branch_length_sum=branch_length_sum,
-        mean_branch_length=mean_branch_length,
         continuous_covariance_by_block=continuous_covariance_by_block,
     )
 

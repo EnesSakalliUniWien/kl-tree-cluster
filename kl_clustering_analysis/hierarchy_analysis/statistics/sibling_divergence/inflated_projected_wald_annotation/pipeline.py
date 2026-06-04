@@ -9,10 +9,11 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
-from ...branch_length_utils import compute_mean_branch_length
 from ..inflation_correction.empirical_null_inflation_estimation import (
     fit_empirical_null_inflation_model,
 )
@@ -55,20 +56,17 @@ def annotate_sibling_divergence(
     sibling_projection_dimensions_from_edge_comparisons: dict[str, int],
     parent_principal_component_projections: dict[str, np.ndarray],
     parent_principal_component_eigenvalues: dict[str, np.ndarray],
-    significance_level_alpha: float = config.SIBLING_ALPHA,
+    significance_level_alpha: float = DEFAULT_SIBLING_ALPHA,
     feature_space: FeatureSpace | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using context-weighted empirical-null inflation."""
     annotations_df = init_sibling_annotation_df(annotations_df)
 
-    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-
     collection_start_sec = perf_counter()
     records, non_binary = collect_sibling_pair_records(
         tree,
         annotations_df,
-        mean_branch_length,
         sibling_projection_dimensions_from_edge_comparisons=(
             sibling_projection_dimensions_from_edge_comparisons
         ),

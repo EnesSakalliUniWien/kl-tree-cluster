@@ -13,6 +13,10 @@ from textwrap import dedent
 
 import matplotlib.pyplot as plt
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 
 from benchmarks.shared.cases.geometry import case_recipe_cluster_count, case_recipe_geometry
 from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
@@ -138,7 +142,6 @@ _OVERVIEW_TEXT = dedent(
       Linkage method:               {linkage_method}
       Edge alpha:                   {edge_alpha}
       Sibling alpha:                {sibling_alpha}
-      Branch-length variance scaling: {branch_length_scaling}
 """
 )
 
@@ -469,9 +472,8 @@ def generate_overview_page(
         n_cases=n_cases,
         distance_metric=config.TREE_DISTANCE_METRIC,
         linkage_method=config.TREE_LINKAGE_METHOD,
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
-        branch_length_scaling="enabled" if config.FELSENSTEIN_SCALING else "disabled",
+        edge_alpha=DEFAULT_EDGE_ALPHA,
+        sibling_alpha=DEFAULT_SIBLING_ALPHA,
     ) + f"\n    Report generated: {timestamp}\n"
     return _text_page(overview, fontsize=10.5, title_fontsize=16.0)
 

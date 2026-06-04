@@ -341,6 +341,30 @@ class TestTreeDecompositionTraversal:
         cluster_leaf_sets = sorted(_cluster_leaf_sets(result), key=lambda leaves: min(leaves))
         assert cluster_leaf_sets == [{"L1"}, {"L2"}, {"R1"}, {"R2"}]
 
+    def test_decompose_tree_reports_edge_and_sibling_alpha(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_binary_tree()
+        annotations_df = _make_annotations(
+            tree,
+            edge_divergent={node: True for node in tree.nodes},
+            sibling_different={node: False for node in tree.nodes},
+        )
+
+        monkeypatch.setattr(TreeDecomposition, "_prepare_annotations", lambda self, df: df)
+        decomposer = TreeDecomposition(
+            tree=tree,
+            annotations_df=annotations_df,
+            edge_alpha=0.007,
+            sibling_alpha=0.123,
+            passthrough=False,
+        )
+
+        result = decomposer.decompose_tree()
+
+        assert result["independence_analysis"]["edge_alpha"] == 0.007
+        assert result["independence_analysis"]["sibling_alpha"] == 0.123
+
     def test_decompose_tree_passthrough_reaches_descendant_split(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

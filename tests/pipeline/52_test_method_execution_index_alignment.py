@@ -7,6 +7,9 @@ import pandas as pd
 import pytest
 from benchmarks.shared.types import MethodRunResult, MethodSpec
 from benchmarks.shared.util import method_execution
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+)
 
 
 def _stage_timings(**overrides):
@@ -68,7 +71,10 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     )
     misordered_report.index.name = "sample_id"
 
-    def _fake_run_clustering_result(**_kwargs):
+    captured_kwargs = {}
+
+    def _fake_run_clustering_result(**kwargs):
+        captured_kwargs.update(kwargs)
         return MethodRunResult(
             labels=np.array([0, 0, 1, 1, 2, 2], dtype=int),
             found_clusters=3,
@@ -89,6 +95,7 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
         case_name="index_alignment_case",
         tc_seed=42,
         significance_level=0.05,
+        edge_alpha=0.007,
         data_t=data_t,
         y_t=y_t,
         x_original=data_t.values.astype(float),
@@ -107,6 +114,11 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert np.isclose(result_row.purity, 1.0)
     assert result_row.params_raw["tree_distance_metric"] == "hamming"
     assert result_row.params_raw["tree_distance_source"] == "feature_metric"
+    assert captured_kwargs["edge_alpha"] == 0.007
+    assert result_row.params_raw["edge_alpha"] == 0.007
+    assert result_row.params_raw["sibling_alpha"] == 0.05
+    assert "edge_alpha=0.007" in result_row.params_display
+    assert "sibling_alpha=0.05" in result_row.params_display
     assert result_row.tree_build_sec == 0.01
     assert result_row.edge_gate_sec == 0.03
     assert result_row.edge_gate_contrast_covariance_sec == 0.04
@@ -119,6 +131,8 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert np.isclose(computed_result.ari, 1.0)
     assert computed_result.params["tree_distance_metric"] == "hamming"
     assert computed_result.params["tree_distance_source"] == "feature_metric"
+    assert computed_result.params["edge_alpha"] == 0.007
+    assert computed_result.params["sibling_alpha"] == 0.05
     assert computed_result.meta["stage_timings"]["edge_gate_sec"] == 0.03
     assert method_audit is None
 
@@ -155,6 +169,7 @@ def test_run_single_method_once_records_precomputed_kl_distance_contract(monkeyp
         case_name="continuous_case",
         tc_seed=42,
         significance_level=0.05,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
         data_t=data_t,
         y_t=y_t,
         x_original=data_t.values.astype(float),
@@ -173,11 +188,17 @@ def test_run_single_method_once_records_precomputed_kl_distance_contract(monkeyp
     np.testing.assert_allclose(captured_kwargs["distance_condensed"], precomputed_distance)
     assert result_row.params_raw["tree_distance_metric"] == "euclidean"
     assert result_row.params_raw["tree_distance_source"] == "precomputed"
+    assert result_row.params_raw["edge_alpha"] == DEFAULT_EDGE_ALPHA
+    assert result_row.params_raw["sibling_alpha"] == 0.05
     assert "tree_distance_metric=euclidean" in result_row.params_display
     assert "tree_distance_source=precomputed" in result_row.params_display
+    assert "edge_alpha=0.001" in result_row.params_display
+    assert "sibling_alpha=0.05" in result_row.params_display
     assert computed_result is not None
     assert computed_result.params["tree_distance_metric"] == "euclidean"
     assert computed_result.params["tree_distance_source"] == "precomputed"
+    assert computed_result.params["edge_alpha"] == DEFAULT_EDGE_ALPHA
+    assert computed_result.params["sibling_alpha"] == 0.05
 
 
 def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance(monkeypatch):
@@ -203,6 +224,7 @@ def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance
             case_name="broken_precomputed_case",
             tc_seed=42,
             significance_level=0.05,
+            edge_alpha=DEFAULT_EDGE_ALPHA,
             data_t=data_t,
             y_t=y_t,
             x_original=data_t.values.astype(float),
@@ -248,6 +270,7 @@ def test_run_single_method_once_requires_kl_stage_timings(monkeypatch):
             case_name="missing_timing_case",
             tc_seed=42,
             significance_level=0.05,
+            edge_alpha=DEFAULT_EDGE_ALPHA,
             data_t=data_t,
             y_t=y_t,
             x_original=data_t.values.astype(float),
@@ -284,6 +307,7 @@ def test_run_single_method_once_records_runner_exception_as_skip(monkeypatch):
         case_name="unsupported_calibration_case",
         tc_seed=42,
         significance_level=0.05,
+        edge_alpha=DEFAULT_EDGE_ALPHA,
         data_t=data_t,
         y_t=y_t,
         x_original=data_t.values.astype(float),
@@ -340,6 +364,7 @@ def test_run_single_method_once_rejects_report_index_not_sample_ids(monkeypatch)
             case_name="positional_index_case",
             tc_seed=42,
             significance_level=0.05,
+            edge_alpha=DEFAULT_EDGE_ALPHA,
             data_t=data_t,
             y_t=y_t,
             x_original=data_t.values.astype(float),

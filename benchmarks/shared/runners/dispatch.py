@@ -7,6 +7,10 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from scipy.spatial.distance import pdist, squareform
 
@@ -71,6 +75,7 @@ def run_clustering_result(
     seed: Optional[int] = None,
     *,
     significance_level: float | None = None,
+    edge_alpha: float | None = None,
     distance_matrix: Optional[np.ndarray] = None,
     distance_condensed: Optional[np.ndarray] = None,
     feature_space: FeatureSpace | None = None,
@@ -80,7 +85,8 @@ def run_clustering_result(
     This is the canonical method dispatcher used by pipeline and benchmark helpers.
     """
     spec = METHOD_SPECS[method_id]
-    alpha = config.SIBLING_ALPHA if significance_level is None else float(significance_level)
+    alpha = DEFAULT_SIBLING_ALPHA if significance_level is None else float(significance_level)
+    resolved_edge_alpha = DEFAULT_EDGE_ALPHA if edge_alpha is None else float(edge_alpha)
     if method_id == "kl_diffusion":
         try:
             result = spec.runner(
@@ -123,6 +129,7 @@ def run_clustering_result(
                 kl_distance_condensed,
                 alpha,
                 tree_linkage_method=str(params["tree_linkage_method"]),
+                edge_alpha=resolved_edge_alpha,
                 feature_space=feature_space,
             )
         except Exception as exc:

@@ -21,8 +21,6 @@ def run_child_parent_projected_wald_test(
     parent_dist: np.ndarray,
     n_child: int,
     n_parent: int,
-    branch_length: float | None = None,
-    mean_branch_length: float | None = None,
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
@@ -37,8 +35,6 @@ def run_child_parent_projected_wald_test(
         parent_dist,
         n_child,
         n_parent,
-        branch_length,
-        mean_branch_length,
         feature_space=feature_space,
         continuous_covariance_by_block=continuous_covariance_by_block,
     )

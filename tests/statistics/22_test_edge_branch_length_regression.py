@@ -3,7 +3,6 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 import pytest
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
@@ -36,27 +35,22 @@ def _make_two_edge_tree(
 
 def _run_edge_projection_with_capture(
     tree: nx.DiGraph,
-    monkeypatch,
-) -> list[tuple[float | None, float | None]]:
-    captured: list[tuple[float | None, float | None]] = []
-
-    # Enable Felsenstein scaling so mean_branch_length is computed
-    monkeypatch.setattr(config, "FELSENSTEIN_SCALING", True)
+    monkeypatch: pytest.MonkeyPatch,
+) -> list[tuple[int, int]]:
+    captured: list[tuple[int, int]] = []
 
     def _fake_projected_test(
         child_dist: np.ndarray,
         parent_dist: np.ndarray,
         n_child: int,
         n_parent: int,
-        branch_length: float | None = None,
-        mean_branch_length: float | None = None,
         spectral_k: int | None = None,
         pca_projection: np.ndarray | None = None,
         pca_eigenvalues: np.ndarray | None = None,
         feature_space: object | None = None,
         continuous_covariance_by_block: object | None = None,
     ) -> tuple[float, float, float, bool]:
-        captured.append((branch_length, mean_branch_length))
+        captured.append((n_child, n_parent))
         return 0.0, 1.0, 1.0, False
 
     monkeypatch.setattr(
@@ -77,82 +71,40 @@ def _run_edge_projection_with_capture(
     return captured
 
 
-def test_no_branch_lengths_have_no_arbitrary_mean_normalization(monkeypatch) -> None:
-    tree = _make_two_edge_tree(left_branch_length=None, right_branch_length=None)
-
-    # Regression contract: no branch lengths => no normalization constant fallback.
-    assert compute_mean_branch_length(tree) is None
-
-    captured = _run_edge_projection_with_capture(tree, monkeypatch)
-    assert captured == [(None, None), (None, None)]
-
-
-def test_mixed_missing_and_present_branch_lengths_use_only_valid_edges(monkeypatch) -> None:
-    tree = _make_two_edge_tree(left_branch_length=2.0, right_branch_length=None)
-
-    assert compute_mean_branch_length(tree) == 2.0
-
-    captured = _run_edge_projection_with_capture(tree, monkeypatch)
-    assert captured == [(2.0, 2.0), (None, 2.0)]
-
-
-def test_positive_branch_lengths_apply_tree_mean_normalization(monkeypatch) -> None:
+def test_branch_length_utility_uses_only_positive_observations() -> None:
     tree = _make_two_edge_tree(left_branch_length=1.0, right_branch_length=3.0)
 
     assert compute_mean_branch_length(tree) == 2.0
 
-    captured = _run_edge_projection_with_capture(tree, monkeypatch)
-    assert captured == [(1.0, 2.0), (3.0, 2.0)]
 
-
-def test_zero_branch_length_is_observed_but_does_not_define_normalization(
-    monkeypatch,
-) -> None:
-    """Zero-length edges are valid observations but do not set the positive mean."""
+def test_branch_length_utility_returns_none_without_positive_observations() -> None:
     tree = _make_two_edge_tree(left_branch_length=0.0, right_branch_length=None)
 
     assert compute_mean_branch_length(tree) is None
 
-    captured = _run_edge_projection_with_capture(tree, monkeypatch)
-    assert captured == [(0.0, None), (None, None)]
 
-
-def test_negative_branch_lengths_raise_instead_of_disabling_adjustment(
-    monkeypatch,
-) -> None:
-    """Negative branch lengths are malformed tree metadata.
-
-    Complex real-world failure mode:
-    - tree has edge attributes, but values are 0 or negative
-    - fallback mean=1.0 makes these values "look valid" and can shrink variance
-      (for negatives), inflating z-scores.
-    """
-    tree = _make_two_edge_tree(left_branch_length=0.0, right_branch_length=-2.0)
-
-    with pytest.raises(ValueError, match="finite non-negative branch length"):
-        compute_mean_branch_length(tree)
-
-    with pytest.raises(ValueError, match="finite non-negative branch length"):
-        _run_edge_projection_with_capture(tree, monkeypatch)
-
-
-def test_mixed_positive_and_invalid_branch_lengths_raise(monkeypatch) -> None:
-    """Invalid present branch lengths must not be silently dropped."""
-    tree = _make_two_edge_tree(left_branch_length=-1.0, right_branch_length=3.0)
-
-    with pytest.raises(ValueError, match="finite non-negative branch length"):
-        compute_mean_branch_length(tree)
-
-    with pytest.raises(ValueError, match="finite non-negative branch length"):
-        _run_edge_projection_with_capture(tree, monkeypatch)
-
-
-def test_non_finite_branch_length_values_raise(monkeypatch) -> None:
-    """NaN branch length metadata is malformed tree metadata."""
+def test_branch_length_utility_rejects_malformed_observations() -> None:
     tree = _make_two_edge_tree(left_branch_length=float("nan"), right_branch_length=4.0)
 
     with pytest.raises(ValueError, match="finite non-negative branch length"):
         compute_mean_branch_length(tree)
 
-    with pytest.raises(ValueError, match="finite non-negative branch length"):
-        _run_edge_projection_with_capture(tree, monkeypatch)
+
+def test_edge_projection_does_not_use_branch_length_variance_scaling(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tree = _make_two_edge_tree(left_branch_length=1.0, right_branch_length=3.0)
+
+    captured = _run_edge_projection_with_capture(tree, monkeypatch)
+
+    assert captured == [(5, 10), (5, 10)]
+
+
+def test_edge_projection_does_not_validate_unused_branch_lengths(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tree = _make_two_edge_tree(left_branch_length=float("nan"), right_branch_length=-1.0)
+
+    captured = _run_edge_projection_with_capture(tree, monkeypatch)
+
+    assert captured == [(5, 10), (5, 10)]

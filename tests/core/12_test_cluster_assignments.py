@@ -3,9 +3,12 @@
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
@@ -50,32 +53,33 @@ def _build_hierarchical_tree(
     return tree, linkage_matrix
 
 
-def _run_statistical_analysis(tree: PosetTree, x: pd.DataFrame) -> pd.DataFrame:
+def _run_statistical_analysis(
+    tree: PosetTree,
+    x: pd.DataFrame,
+    *,
+    edge_alpha: float = DEFAULT_EDGE_ALPHA,
+    sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
+) -> pd.DataFrame:
     """Run the production gate-annotation pipeline on a populated tree."""
     tree.populate_node_divergences(x)
     return run_gate_annotation_pipeline(
         tree,
         tree.annotations_df.copy(),
-        edge_alpha=config.EDGE_ALPHA,
-        sibling_alpha=config.SIBLING_ALPHA,
+        edge_alpha=edge_alpha,
+        sibling_alpha=sibling_alpha,
         leaf_data=x,
     ).annotated_df
 
 
 def test_selected_nonnull_only_fixture_requires_explicit_calibration_support() -> None:
     """The full sibling gate must reject fixtures with no empirical-null support."""
-    old_edge_alpha = config.EDGE_ALPHA
-    config.EDGE_ALPHA = 0.01
-    try:
-        x, _y_true = _create_test_case_data(
-            n_samples=90,
-            n_features=60,
-            n_clusters=3,
-            noise_level=1.0,
-            seed=42,
-        )
-        tree, _ = _build_hierarchical_tree(x)
-        with pytest.raises(ValueError, match="selected non-null"):
-            _run_statistical_analysis(tree, x)
-    finally:
-        config.EDGE_ALPHA = old_edge_alpha
+    x, _y_true = _create_test_case_data(
+        n_samples=90,
+        n_features=60,
+        n_clusters=3,
+        noise_level=1.0,
+        seed=42,
+    )
+    tree, _ = _build_hierarchical_tree(x)
+    with pytest.raises(ValueError, match="selected non-null"):
+        _run_statistical_analysis(tree, x, edge_alpha=0.01)

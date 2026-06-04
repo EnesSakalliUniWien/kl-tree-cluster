@@ -34,6 +34,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 
 
 def bootstrap_consensus(
@@ -57,7 +61,7 @@ def bootstrap_consensus(
         Number of bootstrap replicates.
     edge_alpha, sibling_alpha
         Significance levels forwarded to ``PosetTree.decompose()``.
-        Defaults to ``config.EDGE_ALPHA`` / ``config.SIBLING_ALPHA``.
+        Defaults to ``DEFAULT_EDGE_ALPHA`` / ``DEFAULT_SIBLING_ALPHA``.
     metric
         Distance metric for ``pdist``.  Defaults to ``config.TREE_DISTANCE_METRIC``.
     linkage_method
@@ -86,9 +90,9 @@ def bootstrap_consensus(
     from kl_clustering_analysis.tree.poset_tree import PosetTree  # local import to avoid cycles
 
     if edge_alpha is None:
-        edge_alpha = config.EDGE_ALPHA
+        edge_alpha = DEFAULT_EDGE_ALPHA
     if sibling_alpha is None:
-        sibling_alpha = config.SIBLING_ALPHA
+        sibling_alpha = DEFAULT_SIBLING_ALPHA
     if metric is None:
         metric = config.TREE_DISTANCE_METRIC
     if linkage_method is None:

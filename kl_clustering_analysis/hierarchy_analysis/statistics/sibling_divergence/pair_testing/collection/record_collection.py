@@ -37,7 +37,6 @@ from .sibling_pair_record_building import build_sibling_pair_record
 def collect_sibling_pair_records(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
-    mean_branch_length: float | None,
     *,
     sibling_projection_dimensions_from_edge_comparisons: dict[object, int],
     parent_principal_component_projections: dict[object, np.ndarray],
@@ -99,9 +98,6 @@ def collect_sibling_pair_records(
             right_distribution,
             float(left_sample_size),
             float(right_sample_size),
-            branch_length_left=branch_length_left,
-            branch_length_right=branch_length_right,
-            mean_branch_length=mean_branch_length,
             projection_dimension_from_edge_comparisons=projection_dimension_from_edge_comparisons,
             parent_principal_component_projection=parent_principal_component_projection,
             parent_principal_component_eigenvalues=(

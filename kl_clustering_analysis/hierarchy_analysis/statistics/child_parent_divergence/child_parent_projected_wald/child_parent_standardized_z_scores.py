@@ -17,8 +17,6 @@ def compute_child_parent_standardized_z_scores(
     parent_dist: np.ndarray,
     n_child: int,
     n_parent: int,
-    branch_length: float | None = None,
-    mean_branch_length: float | None = None,
     feature_space: FeatureSpace | None = None,
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
 ) -> np.ndarray:
@@ -30,8 +28,6 @@ def compute_child_parent_standardized_z_scores(
         float(n_parent),
         comparison="child_parent",
         feature_space=feature_space,
-        branch_length=branch_length,
-        mean_branch_length=mean_branch_length,
         continuous_covariance_by_block=continuous_covariance_by_block,
     )
 

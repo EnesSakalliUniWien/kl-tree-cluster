@@ -13,6 +13,9 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+)
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -31,6 +34,7 @@ def _run_kl_on_distance(
     sibling_significance_level: float,
     *,
     tree_linkage_method: str,
+    edge_alpha: float = DEFAULT_EDGE_ALPHA,
     feature_space: FeatureSpace | None = None,
     extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
@@ -51,7 +55,7 @@ def _run_kl_on_distance(
     gate_annotation_bundle = run_gate_annotation_pipeline(
         tree,
         tree.annotations_df,
-        edge_alpha=config.EDGE_ALPHA,
+        edge_alpha=edge_alpha,
         sibling_alpha=sibling_significance_level,
         leaf_data=data_df,
         feature_space=feature_space,
@@ -63,7 +67,7 @@ def _run_kl_on_distance(
         gate_annotation_bundle=gate_annotation_bundle,
         leaf_data=data_df,
         feature_space=feature_space,
-        edge_alpha=config.EDGE_ALPHA,
+        edge_alpha=edge_alpha,
         sibling_alpha=sibling_significance_level,
     )
     traversal_start_sec = perf_counter()
@@ -108,6 +112,7 @@ def _run_kl_method(
     sibling_significance_level: float,
     tree_linkage_method: str = config.TREE_LINKAGE_METHOD,
     *,
+    edge_alpha: float = DEFAULT_EDGE_ALPHA,
     feature_space: FeatureSpace | None = None,
 ) -> MethodRunResult:
     return _run_kl_on_distance(
@@ -115,5 +120,6 @@ def _run_kl_method(
         distance_condensed,
         sibling_significance_level,
         tree_linkage_method=tree_linkage_method,
+        edge_alpha=edge_alpha,
         feature_space=feature_space,
     )

@@ -594,7 +594,7 @@ def test_continuous_wald_whitening_matches_full_block_formula() -> None:
 
 
 def test_sibling_contrast_rejects_child_parent_branch_length_parameter() -> None:
-    with pytest.raises(ValueError, match="branch_length is only valid"):
+    with pytest.raises(TypeError, match="unexpected keyword argument 'branch_length'"):
         build_contrast_covariance(
             np.array([0.2], dtype=np.float64),
             np.array([0.4], dtype=np.float64),
@@ -606,7 +606,7 @@ def test_sibling_contrast_rejects_child_parent_branch_length_parameter() -> None
 
 
 def test_child_parent_contrast_rejects_sibling_branch_length_sum_parameter() -> None:
-    with pytest.raises(ValueError, match="branch_length_sum is only valid"):
+    with pytest.raises(TypeError, match="unexpected keyword argument 'branch_length_sum'"):
         build_contrast_covariance(
             np.array([0.2], dtype=np.float64),
             np.array([0.4], dtype=np.float64),

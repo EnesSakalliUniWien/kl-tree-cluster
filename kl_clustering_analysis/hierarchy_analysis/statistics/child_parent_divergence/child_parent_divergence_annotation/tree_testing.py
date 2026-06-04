@@ -7,16 +7,11 @@ from collections.abc import MutableMapping
 import networkx as nx
 import numpy as np
 
-from kl_clustering_analysis import config
 from kl_clustering_analysis.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
-from ...branch_length_utils import (
-    compute_mean_branch_length,
-    extract_branch_length_observation,
-)
 from ..child_parent_projected_wald.child_parent_projected_wald_test import (
     run_child_parent_projected_wald_test,
 )
@@ -41,21 +36,9 @@ def run_child_parent_tests_across_tree(
     p_values = np.full(n_edge_tests, np.nan)
     invalid_test_flags = np.zeros(n_edge_tests, dtype=bool)
 
-    mean_branch_length = compute_mean_branch_length(tree) if config.FELSENSTEIN_SCALING else None
-
     for edge_index in range(n_edge_tests):
         child_dist = tree.nodes[child_ids[edge_index]]["distribution"]
         parent_dist = tree.nodes[parent_ids[edge_index]]["distribution"]
-
-        branch_length: float | None = None
-        if config.FELSENSTEIN_SCALING and tree.has_edge(
-            parent_ids[edge_index], child_ids[edge_index]
-        ):
-            branch_length = extract_branch_length_observation(
-                tree,
-                parent_ids[edge_index],
-                child_ids[edge_index],
-            )
 
         node_spectral_dimension = spectral_dims[parent_ids[edge_index]]
         node_pca_projection = pca_projections[parent_ids[edge_index]]
@@ -86,8 +69,6 @@ def run_child_parent_tests_across_tree(
             np.asarray(parent_dist, dtype=np.float64),
             int(child_leaf_counts[edge_index]),
             int(parent_leaf_counts[edge_index]),
-            branch_length,
-            mean_branch_length,
             **test_kwargs,
         )
 

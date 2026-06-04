@@ -28,6 +28,7 @@ from .decomposition.gates.orchestrator import (
     build_gate_annotation_leaf_data_metadata,
     run_gate_annotation_pipeline,
 )
+from .statistics.alpha_contract import DEFAULT_EDGE_ALPHA, DEFAULT_SIBLING_ALPHA
 
 
 class TreeDecomposition:
@@ -57,8 +58,8 @@ class TreeDecomposition:
         annotations_df: pd.DataFrame | None = None,
         *,
         gate_annotation_bundle: GateAnnotationBundle | None = None,
-        edge_alpha: float = config.EDGE_ALPHA,
-        sibling_alpha: float = config.SIBLING_ALPHA,
+        edge_alpha: float = DEFAULT_EDGE_ALPHA,
+        sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
         leaf_data: pd.DataFrame | None = None,
         feature_space: FeatureSpace | None = None,
         passthrough: bool = config.PASSTHROUGH,
@@ -249,6 +250,7 @@ class TreeDecomposition:
             "num_clusters": len(cluster_assignments),
             "independence_analysis": {
                 "edge_alpha": self.edge_alpha,
+                "sibling_alpha": self.sibling_alpha,
                 "decision_mode": "sibling_divergence",
             },
         }

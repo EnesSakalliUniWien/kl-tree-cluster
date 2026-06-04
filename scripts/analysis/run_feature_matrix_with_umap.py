@@ -37,6 +37,10 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 from kl_clustering_analysis.plot.cluster_color_mapping import (
     build_cluster_color_spec,
     present_cluster_ids,
@@ -71,13 +75,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--edge-alpha",
         type=float,
-        default=float(config.EDGE_ALPHA),
+        default=float(DEFAULT_EDGE_ALPHA),
         help="Edge-divergence significance alpha.",
     )
     parser.add_argument(
         "--sibling-alpha",
         type=float,
-        default=float(config.SIBLING_ALPHA),
+        default=float(DEFAULT_SIBLING_ALPHA),
         help="Sibling-divergence significance alpha.",
     )
     parser.add_argument(

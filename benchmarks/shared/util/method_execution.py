@@ -156,6 +156,7 @@ def run_single_method_once(
     case_name: str,
     tc_seed: object,
     significance_level: float,
+    edge_alpha: float,
     data_t: object,
     y_t: object,
     x_original: object,
@@ -175,6 +176,9 @@ def run_single_method_once(
     feature_space = meta.get("feature_space")
     distance_condensed_for_run = None
     recorded_run_params = dict(run_params)
+    if method_id.startswith("kl"):
+        recorded_run_params["edge_alpha"] = float(edge_alpha)
+        recorded_run_params["sibling_alpha"] = float(significance_level)
     if method_id in {"kl", "kl_complete", "kl_single"}:
         metric = str(run_params["tree_distance_metric"])
         requires_precomputed_kl_distance = bool(meta["requires_precomputed_kl_distance"])
@@ -206,6 +210,7 @@ def run_single_method_once(
             params=run_params,
             seed=tc_seed,
             significance_level=significance_level,
+            edge_alpha=edge_alpha,
             distance_matrix=distance_matrix,
             distance_condensed=distance_condensed_for_run,
             feature_space=feature_space,

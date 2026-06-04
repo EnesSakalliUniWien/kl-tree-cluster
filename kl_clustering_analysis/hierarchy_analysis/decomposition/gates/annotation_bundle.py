@@ -24,7 +24,6 @@ class GateMetadata:
 class GateAnnotationConfigMetadata:
     """Config values that affect gate annotation outputs."""
 
-    felsenstein_scaling: bool
     spectral_minimum_dimension: int
 
 
