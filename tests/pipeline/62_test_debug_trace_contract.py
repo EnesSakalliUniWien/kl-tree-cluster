@@ -53,7 +53,7 @@ def test_analyze_single_case_uses_sibling_decision_column(tmp_path: Path) -> Non
                 "node_id": "root",
                 "leaf_count": 4,
                 "parent_node": None,
-                "Sibling_Divergence_P_Value": None,
+                "Sibling_Divergence_P_Value": 0.35,
                 "Sibling_BH_Different": False,
             },
             {
@@ -61,14 +61,14 @@ def test_analyze_single_case_uses_sibling_decision_column(tmp_path: Path) -> Non
                 "leaf_count": 2,
                 "parent_node": "root",
                 "Sibling_Divergence_P_Value": 0.001,
-                "Sibling_BH_Different": False,
+                "Sibling_BH_Different": True,
             },
             {
                 "node_id": "right",
                 "leaf_count": 2,
                 "parent_node": "root",
                 "Sibling_Divergence_P_Value": 0.001,
-                "Sibling_BH_Different": False,
+                "Sibling_BH_Different": True,
             },
         ],
     )
@@ -77,5 +77,5 @@ def test_analyze_single_case_uses_sibling_decision_column(tmp_path: Path) -> Non
 
     assert diagnosis == {
         "mode": "**UNDER-SPLIT**",
-        "reason": "Root split rejected (P=1.00e-03)",
+        "reason": "Root split rejected (P=3.50e-01)",
     }

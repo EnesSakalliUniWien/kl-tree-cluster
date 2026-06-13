@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import textwrap
 from collections.abc import Callable
 from pathlib import Path
 
@@ -14,7 +15,12 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 from benchmarks.shared.result_records import ComputedResultRecord
 from benchmarks.shared.util.params import format_params_for_display
-from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES, prepare_pdf_figure
+from benchmarks.shared.util.pdf.layout import (
+    PDF_PAGE_SIZE_INCHES,
+    PDF_WIDE_PAGE_SIZE_INCHES,
+    prepare_pdf_figure,
+    set_pdf_page_size,
+)
 
 from .embedding import (
     create_clustering_comparison_plot_3d,
@@ -61,6 +67,36 @@ def _format_params_for_filename(params: dict) -> str:
     # Format as key-value pairs, sanitize, and join
     # e.g., {'metric': 'euclidean', 'res': 1.0} -> "metric-euclidean_res-1p0"
     return "_".join(f"{k}-{str(v).replace('.', 'p')}" for k, v in items)
+
+
+def _shorten_title_line(text: str, width: int) -> str:
+    text = " ".join(str(text).split())
+    if len(text) <= width:
+        return text
+    return textwrap.shorten(text, width=width, placeholder="...")
+
+
+def _wrap_title_line(text: str, width: int) -> list[str]:
+    return textwrap.wrap(
+        _shorten_title_line(text, width * 2),
+        width=width,
+        break_long_words=True,
+        break_on_hyphens=False,
+    )
+
+
+def _tree_plot_style(tree, decomposition: dict) -> dict[str, object]:
+    """Return size and legend defaults scaled for tree density."""
+    node_count = len(list(tree.nodes()))
+    num_clusters = int(decomposition.get("num_clusters", 0))
+    dense = node_count > 80 or num_clusters > 20
+    return {
+        "figsize": PDF_WIDE_PAGE_SIZE_INCHES if dense else PDF_PAGE_SIZE_INCHES,
+        "node_size": 5 if dense else 12,
+        "font_size": 7 if dense else 9,
+        "max_cluster_legend_entries": 0 if num_clusters > 20 else 20,
+        "subplots_right": 0.82 if num_clusters <= 20 else 0.88,
+    }
 
 
 def create_umap_plots_from_results(
@@ -196,7 +232,9 @@ def _create_tree_figures_for_case(
     n_items = len(tree_results)
 
     for idx, result in enumerate(tree_results, start=1):
-        fig, ax = plt.subplots(1, 1, figsize=PDF_PAGE_SIZE_INCHES)
+        plot_style = _tree_plot_style(result.tree, result.decomposition)
+        fig, ax = plt.subplots(1, 1, figsize=plot_style["figsize"])
+        set_pdf_page_size(fig, plot_style["figsize"])
         fig.suptitle(
             f"Tree Comparisons – Test Case {case_num}\n{meta_text}",
             fontsize=16,
@@ -213,11 +251,11 @@ def _create_tree_figures_for_case(
         metrics_text = _format_ari_nmi(result)
 
         page_tag = f" ({idx}/{n_items})" if n_items > 1 else ""
-        title_lines = [f"{method_name}{page_tag}"]
+        title_lines = _wrap_title_line(f"{method_name}{page_tag}", 72)
         if param_str_display:
-            title_lines.append(f"({param_str_display})")
+            title_lines.extend(_wrap_title_line(f"({param_str_display})", 72))
         if metrics_text:
-            title_lines.append(metrics_text)
+            title_lines.extend(_wrap_title_line(metrics_text, 72))
         title = "\n".join(title_lines)
 
         plot_tree_with_clusters(
@@ -225,12 +263,19 @@ def _create_tree_figures_for_case(
             decomposition_results=decomp_t,
             annotations_df=annotations_df,
             use_labels=True,
-            node_size=12,
-            font_size=9,
+            node_size=int(plot_style["node_size"]),
+            font_size=int(plot_style["font_size"]),
             title=title,
             ax=ax,
+            max_cluster_legend_entries=int(plot_style["max_cluster_legend_entries"]),
+            legend_outside=True,
         )
-        fig.subplots_adjust(top=0.84, bottom=0.06, left=0.03, right=0.97)
+        fig.subplots_adjust(
+            top=0.82,
+            bottom=0.06,
+            left=0.03,
+            right=float(plot_style["subplots_right"]),
+        )
         figs.append(fig)
 
     return figs
@@ -265,6 +310,7 @@ def _create_tree_panel_renderers_for_case(
                 font_size=6,
                 title="",
                 ax=ax,
+                show_legend=False,
             )
 
         panels.append((panel_title, _render_tree))
@@ -375,7 +421,7 @@ def create_tree_then_umap_plots_from_results(
     *,
     pdf: PdfPages | None = None,
 ) -> list:
-    """For each test case: render compact tree panels inside the UMAP comparison pages."""
+    """For each test case: render tree pages first, then UMAP comparison pages."""
     if save:
         output_dir.mkdir(exist_ok=True)
     figs: list = collected if collected is not None else []
@@ -391,7 +437,22 @@ def create_tree_then_umap_plots_from_results(
         if verbose:
             print(f"  Creating Tree→UMAP plots for test case {case_num}...")
 
-        tree_panels = _create_tree_panel_renderers_for_case(case_results=case_results)
+        tree_figs = _create_tree_figures_for_case(case_num=case_num, case_results=case_results)
+        for tree_idx, tree_fig in enumerate(tree_figs, start=1):
+            tree_filename = (
+                f"tree_case_{case_num}_{tree_idx}_{timestamp}.png"
+                if timestamp
+                else f"tree_case_{case_num}_{tree_idx}.png"
+            )
+            _save_or_collect_figure(
+                tree_fig,
+                pdf=pdf,
+                save=save,
+                collect=collect,
+                figs=figs,
+                output_path=(output_dir / tree_filename) if save else None,
+                test_case_num=case_num,
+            )
 
         labels_to_plot = {"Ground Truth": first_result.y_true}
         for res in case_results:
@@ -413,7 +474,6 @@ def create_tree_then_umap_plots_from_results(
             test_case_num=case_num,
             meta=meta,
             cache_key=_cache_key,
-            extra_panels=tree_panels,
         )
         n_pages = len(umap_figs)
         for page_idx, umap_fig in enumerate(umap_figs, start=1):

@@ -108,24 +108,13 @@ def analyze_single_case(csv_path: Path) -> dict:
     if pd.isna(root_id):
         return {"mode": "ERROR", "reason": "Invalid audit contract; root node_id is missing"}
 
-    # Children
-    children = df[df["parent_node"] == root_id]
-
-    root_split_rejected = True
-    root_p = float("nan")
-
-    if len(children) > 0:
-        sibling_p_values = pd.to_numeric(
-            children["Sibling_Divergence_P_Value"], errors="coerce"
-        ).dropna()
-        if not sibling_p_values.empty:
-            root_p = float(sibling_p_values.min())
-        if _coerce_bool_series(children["Sibling_BH_Different"]).any():
-            root_split_rejected = False
+    root_row = df.loc[root_idx]
+    root_p = _root_sibling_pvalue(root_row)
+    root_split_rejected = _root_split_rejected(root_row)
 
     # Significant splits analysis
     sibling_different = _coerce_bool_series(df["Sibling_BH_Different"])
-    sig_splits = df[sibling_different & (df["parent_node"] != root_id)]
+    sig_splits = df[sibling_different & (df.index != root_idx)]
 
     # Classification
     if root_split_rejected:
@@ -152,3 +141,22 @@ def _coerce_bool_series(series: pd.Series) -> pd.Series:
         return series.fillna(False)
     lowered = series.astype(str).str.strip().str.lower()
     return lowered.isin({"1", "true", "t", "yes"})
+
+
+def _root_sibling_pvalue(root_row: pd.Series) -> float:
+    for column in (
+        "Sibling_Divergence_P_Value_Corrected",
+        "Sibling_Divergence_P_Value",
+    ):
+        if column not in root_row.index:
+            continue
+        value = pd.to_numeric(pd.Series([root_row[column]]), errors="coerce").iloc[0]
+        if pd.notna(value):
+            return float(value)
+    return float("nan")
+
+
+def _root_split_rejected(root_row: pd.Series) -> bool:
+    if "Sibling_BH_Different" not in root_row.index or pd.isna(root_row["Sibling_BH_Different"]):
+        return True
+    return not bool(_coerce_bool_series(pd.Series([root_row["Sibling_BH_Different"]])).iloc[0])

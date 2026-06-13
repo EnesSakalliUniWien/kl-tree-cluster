@@ -103,6 +103,7 @@ _register(
     "overlapping_gaussian",
     "overlapping_gaussian_quantile",
 )
+_register("method_proof", "method_proof")
 _register("real_data", "real_data")
 
 
@@ -349,6 +350,25 @@ _REALDATA_TEXT = dedent(
 """
 )
 
+_METHOD_PROOF_TEXT = dedent(
+    """\
+    Method-Proof Cases
+
+    Data generation:
+      Traceable mathematical benchmark probes for selected-tail calibration,
+      barycentric imbalance, selected MP/projection behavior, categorical
+      simplex-boundary covariance, continuous p>>n covariance, phylogenetic
+      null dependence, and traversal/pass-through behavior.
+
+    Purpose:
+      These cases are not tuned for ARI alone. Each case declares a
+      benchmark_role, mathematical_target, expected_failure_modes, required
+      trace columns, admissibility rule, and success criterion so failures can
+      be attributed to a mathematical contract rather than only scored as a
+      clustering miss.
+"""
+)
+
 _EVALUATION_TEXT = dedent(
     """\
     Evaluation Metrics
@@ -388,6 +408,7 @@ _SECTION_TEXTS: dict[str, str] = {
     "categorical": _CATEGORICAL_TEXT,
     "phylogenetic": _PHYLOGENETIC_TEXT,
     "overlapping": _OVERLAPPING_TEXT,
+    "method_proof": _METHOD_PROOF_TEXT,
     "real_data": _REALDATA_TEXT,
 }
 
@@ -399,6 +420,7 @@ GROUP_ORDER: list[str] = [
     "categorical",
     "phylogenetic",
     "overlapping",
+    "method_proof",
     "real_data",
 ]
 

@@ -252,7 +252,42 @@ def _create_figure_and_axes(
     return plt.subplots(figsize=resolved_figsize)
 
 
-def _draw_styled_edges(G: nx.DiGraph, pos: Dict, annotations_df, ax: "plt.Axes") -> None:
+def _draw_rectangular_elbow_edges(
+    edgelist: list[tuple[object, object]],
+    pos: Dict,
+    edge_style: dict,
+    ax: "plt.Axes",
+) -> None:
+    """Draw routed tree edges for rectangular layouts.
+
+    Straight parent-child segments on deep, unbalanced trees can visually cut
+    through unrelated subtrees. Elbow routing keeps the tree plot readable
+    without changing the underlying tree.
+    """
+    for parent, child in edgelist:
+        parent_x, parent_y = pos[parent]
+        child_x, child_y = pos[child]
+        mid_y = (parent_y + child_y) / 2.0
+        ax.plot(
+            [parent_x, parent_x, child_x, child_x],
+            [parent_y, mid_y, mid_y, child_y],
+            color=edge_style["edge_color"],
+            linewidth=edge_style["width"],
+            linestyle=edge_style["style"],
+            alpha=edge_style["alpha"],
+            solid_capstyle="round",
+            zorder=1,
+        )
+
+
+def _draw_styled_edges(
+    G: nx.DiGraph,
+    pos: Dict,
+    annotations_df,
+    ax: "plt.Axes",
+    *,
+    layout: str,
+) -> None:
     """Draw edges grouped by sibling-test styling."""
     edge_groups = _group_edges_for_sibling_style(G, annotations_df)
     for edge_group in EDGE_DRAW_ORDER:
@@ -260,6 +295,9 @@ def _draw_styled_edges(G: nx.DiGraph, pos: Dict, annotations_df, ax: "plt.Axes")
         if not edgelist:
             continue
         edge_style = EDGE_STYLES[edge_group]
+        if layout == "rectangular":
+            _draw_rectangular_elbow_edges(edgelist, pos, edge_style, ax)
+            continue
         nx.draw_networkx_edges(
             G,
             pos,
@@ -422,8 +460,14 @@ def _add_plot_legend(
     node_to_cluster: Dict,
     cluster_id_to_color: Dict[int, str],
     font_size: int,
+    show_legend: bool,
+    max_cluster_legend_entries: int,
+    legend_outside: bool,
 ) -> None:
     """Attach cluster and style legends when there is something to show."""
+    if not show_legend:
+        return
+
     leaf_cluster_ids = [
         int(node_to_cluster[n])
         for n in leaves
@@ -431,24 +475,38 @@ def _add_plot_legend(
     ]
     present_ids = present_cluster_ids(leaf_cluster_ids)
 
-    handles = [
-        Patch(facecolor=cluster_id_to_color[cid], edgecolor="none", label=f"{cid}")
-        for cid in present_ids
-        if cid in cluster_id_to_color
-    ]
+    handles: list[object] = []
+    if len(present_ids) <= max_cluster_legend_entries:
+        handles.extend(
+            Patch(facecolor=cluster_id_to_color[cid], edgecolor="none", label=f"{cid}")
+            for cid in present_ids
+            if cid in cluster_id_to_color
+        )
+    elif present_ids:
+        handles.append(
+            Patch(
+                facecolor="none",
+                edgecolor="none",
+                label=f"{len(present_ids)} clusters",
+            )
+        )
     handles.extend(_build_style_legend_handles())
 
     if not handles:
         return
 
-    ax.legend(
-        handles=handles,
-        title="Legend",
-        loc="best",
-        frameon=False,
-        fontsize=max(font_size - 1, 6),
-        title_fontsize=max(font_size - 1, 6),
-    )
+    legend_kwargs = {
+        "handles": handles,
+        "title": "Legend",
+        "frameon": False,
+        "fontsize": max(font_size - 1, 6),
+        "title_fontsize": max(font_size - 1, 6),
+    }
+    if legend_outside:
+        legend_kwargs.update({"loc": "center left", "bbox_to_anchor": (1.01, 0.5)})
+    else:
+        legend_kwargs.update({"loc": "best"})
+    ax.legend(**legend_kwargs)
 
 
 def _finalize_axes(ax: "plt.Axes", title: str, font_size: int) -> None:
@@ -473,6 +531,9 @@ def plot_tree_with_clusters(
     layout: str = "rectangular",
     figsize: Optional[Tuple[float, float]] = None,
     ax: Optional["plt.Axes"] = None,
+    show_legend: bool = True,
+    max_cluster_legend_entries: int = 20,
+    legend_outside: bool = True,
 ):
     """
     Plot hierarchical tree with cluster assignments.
@@ -526,7 +587,7 @@ def plot_tree_with_clusters(
         figsize=figsize,
         ax=ax,
     )
-    _draw_styled_edges(G, pos, annotations_df, ax)
+    _draw_styled_edges(G, pos, annotations_df, ax, layout=layout)
     _draw_tree_nodes(
         G,
         pos,
@@ -551,5 +612,8 @@ def plot_tree_with_clusters(
         node_to_cluster=node_to_cluster,
         cluster_id_to_color=cluster_id_to_color,
         font_size=font_size,
+        show_legend=show_legend,
+        max_cluster_legend_entries=max_cluster_legend_entries,
+        legend_outside=legend_outside,
     )
     return fig, ax

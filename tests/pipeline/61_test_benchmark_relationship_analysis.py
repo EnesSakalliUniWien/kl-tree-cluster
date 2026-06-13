@@ -122,11 +122,11 @@ def _write_synthetic_audit(output_dir: Path, *, case_num: int, method_slug: str,
                 "is_leaf": False,
                 "Child_Parent_Divergence_Significant": False,
                 "Child_Parent_Divergence_Invalid": False,
-                "Sibling_Divergence_Skipped": True,
+                "Sibling_Divergence_Skipped": False,
                 "Sibling_Divergence_Invalid": False,
-                "Sibling_Divergence_P_Value": None,
-                "Sibling_Divergence_P_Value_Corrected": None,
-                "Sibling_BH_Different": False,
+                "Sibling_Divergence_P_Value": sibling_p,
+                "Sibling_Divergence_P_Value_Corrected": sibling_p,
+                "Sibling_BH_Different": sibling_flag,
                 "parent_node": None,
                 "parent_label": "",
                 "branch_length": None,
@@ -198,6 +198,52 @@ def _write_synthetic_audit(output_dir: Path, *, case_num: int, method_slug: str,
         ]
     )
     df.to_csv(audit_dir / f"case_{case_num}_{method_slug}_stats.csv", index=False)
+
+
+def test_relationship_audit_summary_uses_root_row_for_root_split(tmp_path: Path) -> None:
+    audit_dir = tmp_path / "audit"
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        [
+            {
+                "node_id": "root",
+                "leaf_count": 4,
+                "is_leaf": False,
+                "parent_node": None,
+                "Sibling_Divergence_P_Value": 0.001,
+                "Sibling_Divergence_P_Value_Corrected": 0.001,
+                "Sibling_BH_Different": True,
+            },
+            {
+                "node_id": "left",
+                "leaf_count": 2,
+                "is_leaf": False,
+                "parent_node": "root",
+                "Sibling_Divergence_P_Value": 0.9,
+                "Sibling_Divergence_P_Value_Corrected": 0.9,
+                "Sibling_BH_Different": False,
+            },
+            {
+                "node_id": "right",
+                "leaf_count": 2,
+                "is_leaf": False,
+                "parent_node": "root",
+                "Sibling_Divergence_P_Value": 0.8,
+                "Sibling_Divergence_P_Value_Corrected": 0.8,
+                "Sibling_BH_Different": False,
+            },
+        ]
+    ).to_csv(audit_dir / "case_1_kl_stats.csv", index=False)
+
+    artifacts = analyze_benchmark_relationships(
+        _make_synthetic_results().query("test_case == 1 and method == 'kl'"),
+        tmp_path,
+        include_plots=False,
+    )
+
+    row = pd.read_csv(artifacts.augmented_rows_csv).iloc[0]
+    assert row["audit_root_split_rejected"] == 0.0
+    assert row["audit_root_sibling_p"] == pytest.approx(0.001)
 
 
 def test_normalize_results_dataframe_uses_current_schema_only() -> None:

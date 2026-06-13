@@ -9,7 +9,9 @@ Key improvements over a plain ``cmap="tab10"`` approach:
 
 from __future__ import annotations
 
+import colorsys
 from dataclasses import dataclass
+from math import gcd
 from typing import Dict, Iterable, List
 
 import matplotlib.colors as mcolors
@@ -37,6 +39,29 @@ def _discrete_colors_from_matplotlib_cmap(name: str, n: int) -> List[str]:
         if len(base) >= n:
             return [mcolors.to_hex(base[i]) for i in range(n)]
     return [mcolors.to_hex(cmap(i / max(n - 1, 1))) for i in range(n)]
+
+
+def _max_contrast_order(colors: List[str]) -> List[str]:
+    """Reorder large palettes so adjacent integer IDs are less visually similar."""
+    n = len(colors)
+    if n <= 2:
+        return colors
+
+    step = max(1, n // 2 - 1)
+    while gcd(step, n) != 1:
+        step -= 1
+    return [colors[(i * step) % n] for i in range(n)]
+
+
+def _large_cluster_palette(n: int) -> List[str]:
+    """Build a dependency-free large-N palette for diagnostic cluster plots."""
+    colors: List[str] = []
+    for i in range(n):
+        hue = i / max(n, 1)
+        saturation = 0.62 + 0.23 * ((i % 3) / 2)
+        value = 0.74 + 0.16 * ((i % 2))
+        colors.append(mcolors.to_hex(colorsys.hsv_to_rgb(hue, saturation, value)))
+    return _max_contrast_order(colors)
 
 
 def build_cluster_color_spec(
@@ -79,9 +104,7 @@ def build_cluster_color_spec(
         elif n_clusters <= 20:
             colors = _discrete_colors_from_matplotlib_cmap("tab20", n_clusters)
         else:
-            import seaborn as sns
-
-            colors = [mcolors.to_hex(c) for c in sns.husl_palette(n_clusters)]
+            colors = _large_cluster_palette(n_clusters)
 
     cmap = ListedColormap(colors)
     # Older Matplotlib versions don't accept bad/under kwargs in __init__.

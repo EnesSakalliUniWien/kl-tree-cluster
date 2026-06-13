@@ -684,9 +684,9 @@ def _extract_audit_summary(audit_path: Path) -> dict[str, float] | None:
     except Exception:
         return None
 
-    children = df[df["parent_node"] == root_id].copy()
-    root_p = _select_root_split_pvalue(children)
-    root_split_rejected = _root_split_rejected_from_sibling_decision(children)
+    root_row = df.loc[root_idx]
+    root_p = _select_root_split_pvalue(root_row)
+    root_split_rejected = _root_split_rejected_from_sibling_decision(root_row)
 
     sibling_valid = pd.Series(True, index=df.index, dtype=bool)
     if "Sibling_Divergence_Skipped" in df.columns:
@@ -740,26 +740,22 @@ def _extract_audit_summary(audit_path: Path) -> dict[str, float] | None:
     }
 
 
-def _select_root_split_pvalue(children: pd.DataFrame) -> float:
-    if children.empty:
-        return np.nan
+def _select_root_split_pvalue(root_row: pd.Series) -> float:
     for col in (
         "Sibling_Divergence_P_Value_Corrected",
         "Sibling_Divergence_P_Value",
     ):
-        if col in children.columns:
-            values = pd.to_numeric(children[col], errors="coerce").dropna()
-            if not values.empty:
-                return float(values.min())
+        if col in root_row.index:
+            value = pd.to_numeric(pd.Series([root_row[col]]), errors="coerce").iloc[0]
+            if pd.notna(value):
+                return float(value)
     return np.nan
 
 
-def _root_split_rejected_from_sibling_decision(children: pd.DataFrame) -> bool:
-    if children.empty:
+def _root_split_rejected_from_sibling_decision(root_row: pd.Series) -> bool:
+    if "Sibling_BH_Different" not in root_row.index or pd.isna(root_row["Sibling_BH_Different"]):
         return True
-    if not children["Sibling_BH_Different"].notna().any():
-        return True
-    return not bool(_coerce_bool_series(children["Sibling_BH_Different"]).any())
+    return not bool(_coerce_bool_series(pd.Series([root_row["Sibling_BH_Different"]])).iloc[0])
 
 
 def _coerce_bool_series(series: pd.Series) -> pd.Series:

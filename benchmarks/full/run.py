@@ -147,8 +147,15 @@ def run_benchmarks():
     # Single benchmark results root
     timestamp = format_timestamp_utc()
     base_output_dir = repo_root / "benchmarks" / "results"
-    run_dir = base_output_dir / f"run_{timestamp}_{case_suite}"
+    configured_run_dir = os.environ.get("KL_TE_RUN_DIR")
+    run_dir = (
+        Path(configured_run_dir).expanduser().resolve()
+        if configured_run_dir
+        else base_output_dir / f"run_{timestamp}_{case_suite}"
+    )
     run_dir.mkdir(parents=True, exist_ok=True)
+    if configured_run_dir:
+        print(f"Using configured run directory: {run_dir}")
 
     output_path = run_dir / f"{case_suite}_benchmark_comparison.csv"
     pdf_dir = run_dir / "plots"

@@ -23,7 +23,11 @@ from kl_clustering_analysis.plot.cluster_color_mapping import (
     present_cluster_ids,
 )
 
-from benchmarks.shared.util.pdf.layout import PDF_PAGE_SIZE_INCHES
+from benchmarks.shared.util.pdf.layout import (
+    PDF_PAGE_SIZE_INCHES,
+    PDF_WIDE_PAGE_SIZE_INCHES,
+    set_pdf_page_size,
+)
 
 # Reduce noisy but expected warnings emitted during visualization
 warnings.filterwarnings(
@@ -223,7 +227,80 @@ def _fit_embedding_2d(
     raise ValueError(f"Unknown KL_TE_EMBEDDING_BACKEND={backend!r}.")
 
 
-def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> str:
+_PARAM_KEY_ALIASES = {
+    "tree_distance_metric": "metric",
+    "tree_linkage_method": "link",
+    "edge_alpha": "e_alpha",
+    "sibling_alpha": "s_alpha",
+    "alpha": "alpha",
+    "n_clusters": "K",
+    "n_components": "dim",
+    "random_state": "seed",
+}
+
+_PARAM_VALUE_ALIASES = {
+    "tree_distribution_kl": "tree_kl",
+    "tree_distribution_js": "tree_js",
+    "average": "avg",
+    "complete": "complete",
+    "single": "single",
+}
+
+_PARAM_KEY_PRIORITY = {
+    "metric": 0,
+    "link": 1,
+    "e_alpha": 2,
+    "s_alpha": 3,
+}
+
+
+def _shorten_text(text: str, max_chars: int) -> str:
+    """Shorten text at word boundaries with a compact ASCII ellipsis."""
+    text = " ".join(str(text).split())
+    if len(text) <= max_chars:
+        return text
+    return textwrap.shorten(text, width=max_chars, placeholder="...")
+
+
+def _compact_param_token(token: str) -> str:
+    """Compact a single ``key=value`` parameter token for subplot titles."""
+    if "=" not in token:
+        return _shorten_text(token, 18)
+    key, value = token.split("=", 1)
+    key = _PARAM_KEY_ALIASES.get(key.strip(), key.strip())
+    value = _PARAM_VALUE_ALIASES.get(value.strip(), value.strip())
+    return f"{key}={_shorten_text(value, 16)}"
+
+
+def _compact_param_string(param_part: str, max_chars: int) -> str:
+    """Compact params with tree identity first, then stop before titles spill."""
+    tokens = [
+        _compact_param_token(token.strip())
+        for token in param_part.split(",")
+        if token.strip()
+    ]
+    tokens = sorted(
+        tokens,
+        key=lambda token: (_PARAM_KEY_PRIORITY.get(token.split("=", 1)[0], 50), token),
+    )
+
+    selected: list[str] = []
+    omitted = 0
+    for token in tokens:
+        candidate_tokens = [*selected, token]
+        candidate = ", ".join(candidate_tokens)
+        if len(candidate) <= max_chars:
+            selected.append(token)
+        else:
+            omitted += 1
+    compact = ", ".join(selected)
+    if omitted and compact:
+        suffix = ",..."
+        compact = compact[: max(0, max_chars - len(suffix))].rstrip(", ") + suffix
+    return compact
+
+
+def _format_method_subplot_title(method_name: str, max_line_chars: int = 24) -> str:
     """Compact long method/param labels for subplot titles."""
     name = str(method_name).strip()
     metrics_suffix = ""
@@ -242,30 +319,43 @@ def _format_method_subplot_title(method_name: str, max_line_chars: int = 26) -> 
     if " (" in name and name.endswith(")"):
         method_part, param_part = name.split(" (", 1)
         param_part = param_part[:-1]
-        compact_params: list[str] = []
-        for token in param_part.split(","):
-            token = token.strip()
-            if token.startswith("tree_distance_metric="):
-                compact_params.append(token.replace("tree_distance_metric=", "metric="))
-            elif token.startswith("tree_linkage_method="):
-                compact_params.append(token.replace("tree_linkage_method=", "linkage="))
-            elif token:
-                compact_params.append(token)
-        compact_param_str = ", ".join(compact_params)
-        if len(compact_param_str) > 40:
-            compact_param_str = compact_param_str[:37] + "..."
-        name = f"{method_part} ({compact_param_str})"
+        compact_param_str = _compact_param_string(param_part, max_line_chars - 2)
+        name = _shorten_text(method_part, max_line_chars)
+        if compact_param_str:
+            name = f"{name}\n({compact_param_str})"
+    else:
+        name = _shorten_text(name, max_line_chars)
 
-    title_len_limit = max_line_chars * 2
+    title_lines = []
+    for line in name.splitlines():
+        title_lines.extend(
+            textwrap.wrap(
+                line,
+                width=max_line_chars,
+                break_long_words=True,
+                break_on_hyphens=False,
+            )
+            or [line]
+        )
     if metrics_suffix:
-        title_len_limit = max(12, title_len_limit - len(metrics_suffix))
-    if len(name) > title_len_limit:
-        name = name[: title_len_limit - 3] + "..."
+        title_lines.append(_shorten_text(metrics_suffix.strip(" []"), max_line_chars))
+    return "\n".join(title_lines[:3])
 
-    if metrics_suffix:
-        name = f"{name}{metrics_suffix}"
-    wrapped = "\n".join(textwrap.wrap(name, width=max_line_chars, break_long_words=False))
-    return f"{wrapped}\nClustering"
+
+def _use_relaxed_embedding_grid(
+    entries: list[tuple[str, tuple[str, np.ndarray] | tuple[str, Callable[[Axes], None]]]],
+    color_clusters: int,
+) -> bool:
+    """Return whether pages need fewer panels to avoid title and color crowding."""
+    if color_clusters > 20:
+        return True
+    for entry_type, payload in entries:
+        if entry_type != "labels":
+            continue
+        method_name, _labels = payload
+        if len(str(method_name)) > 70:
+            return True
+    return False
 
 
 def create_clustering_comparison_plots(
@@ -324,6 +414,13 @@ def create_clustering_comparison_plots(
     entries = [("extra", item) for item in tree_entries] + [
         ("labels", item) for item in label_entries
     ]
+    if _use_relaxed_embedding_grid(entries, color_clusters):
+        n_cols = min(max(1, int(n_cols)), 2)
+        max_panels_per_page = min(max_panels_per_page, 4)
+        page_size = PDF_WIDE_PAGE_SIZE_INCHES
+    else:
+        n_cols = max(1, int(n_cols))
+        page_size = PDF_PAGE_SIZE_INCHES
     max_panels_per_page = max(1, int(max_panels_per_page))
     n_pages = (len(entries) + max_panels_per_page - 1) // max_panels_per_page
     figures: list[plt.Figure] = []
@@ -345,9 +442,10 @@ def create_clustering_comparison_plots(
         fig, axes = plt.subplots(
             n_rows,
             n_cols,
-            figsize=PDF_PAGE_SIZE_INCHES,
+            figsize=page_size,
             squeeze=False,
         )
+        set_pdf_page_size(fig, page_size)
         flat_axes = axes.flatten()
 
         page_suffix = f" (page {page_idx + 1}/{n_pages})" if n_pages > 1 else ""
