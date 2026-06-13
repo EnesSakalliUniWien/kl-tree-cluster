@@ -93,6 +93,7 @@ def compute_child_parent_spectral_context(
     tree: nx.DiGraph,
     leaf_data: pd.DataFrame,
     *,
+    minimum_projection_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     feature_space: FeatureSpace | None = None,
 ) -> SpectralContext:
     """Prepare Marchenko-Pastur spectral context for the edge gate."""
@@ -101,7 +102,7 @@ def compute_child_parent_spectral_context(
         tree,
         leaf_data,
         feature_space=feature_space,
-        minimum_projection_dimension=EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        minimum_projection_dimension=int(minimum_projection_dimension),
     )
 
     _validate_spectral_context_outputs(

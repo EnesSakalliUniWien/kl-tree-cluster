@@ -11,6 +11,9 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import 
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from scipy.spatial.distance import pdist, squareform
 
@@ -131,6 +134,13 @@ def run_clustering_result(
                 tree_linkage_method=str(params["tree_linkage_method"]),
                 edge_alpha=resolved_edge_alpha,
                 feature_space=feature_space,
+                spectral_minimum_dimension=int(
+                    params.get(
+                        "spectral_minimum_dimension",
+                        EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+                    )
+                ),
+                passthrough=bool(params.get("passthrough", config.PASSTHROUGH)),
             )
         except Exception as exc:
             return _method_failure_result(exc)

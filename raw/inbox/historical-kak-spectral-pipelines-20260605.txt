@@ -1,0 +1,70 @@
+Historical KAK/cosine spectral pipeline capture, 2026-06-05
+
+Local evidence was collected from git history in
+/Users/berksakalli/Projects/kl-te-cluster. The current working tree does not
+contain the root-level KAK scripts; only scripts/analysis/run_feature_matrix_with_umap.py
+is present. Git history shows that commit 66c3def, "Simplify repository
+structure", deleted:
+
+- scripts/adaptive_cosine_spectral_blocks.py
+- scripts/cosine_subspace_tree_sweep.py
+- scripts/kak_mp_tree_method_test.py
+- scripts/kak_signal_adaptive_umap_tree_page.py
+- scripts/run_feature_matrix_with_umap.py
+
+The last available versions are readable from parent/history commit a1a2763.
+
+adaptive_cosine_spectral_blocks.py:
+- Builds a row-normalized gene-gene cosine operator as S = X_norm X_norm.T.
+- Uses numpy.linalg.eigh, sorts eigenvalues descending, and keeps positive
+  eigenvectors up to max_rank.
+- Segments log eigenvalue decay with BIC-selected piecewise-linear blocks, with
+  optional common-mode isolation.
+- For each block, forms coordinates U_block sqrt(lambda_block), computes
+  Euclidean pdist in those coordinates, builds average linkage, converts to
+  PosetTree, and calls tree.decompose(leaf_data=data, alpha_local=...,
+  sibling_alpha=...).
+- Writes adaptive_spectral_block_tree_summary.csv, adaptive_spectral_blocks.csv,
+  cosine_kak_eigenspectrum.csv, cluster assignment files, top terms, plots, a
+  manifest, and README.
+
+kak_mp_tree_method_test.py:
+- Standardizes active features and computes the dual gene-side Gram operator
+  Z Z.T / (n - 1).
+- Uses Marchenko-Pastur bounds to separate above-MP signal, inside-MP bulk,
+  full nonzero rank, or adaptive blocks within the above-MP signal regime.
+- For each regime, forms U_regime sqrt(lambda_regime), computes Euclidean
+  distances, builds average linkage, converts to PosetTree, and calls
+  tree.decompose(leaf_data=data, alpha_local=..., sibling_alpha=...).
+- Writes kak_feature_correlation_spectrum.csv, kak_mp_tree_method_summary.csv,
+  assignment files, cluster sizes, top terms, and README.
+
+cosine_subspace_tree_sweep.py:
+- Earlier fixed-band version of the cosine operator method.
+- Uses hard-coded bands: 1, 2-5, 6-15, 16-35, 36-80, 2-35, 2-80, 1-80.
+- For each band, builds coordinates from cosine eigenvectors/eigenvalues,
+  computes Euclidean distances, builds average linkage, and calls
+  tree.decompose(leaf_data=data, alpha_local=..., sibling_alpha=...).
+
+kak_signal_adaptive_umap_tree_page.py:
+- Visualization-only page builder. It loads KAK result assignments and summary,
+  recomputes KAK block coordinates, fits sub-UMAPs, and writes whole-UMAP to
+  sub-UMAP to tree visual pages.
+
+run_feature_matrix_with_umap.py:
+- Historical root-level full pipeline script later replaced in the current tree
+  by scripts/analysis/run_feature_matrix_with_umap.py.
+- Supports normal KL, fixed diffusion, adaptive diffusion, paper cosine complete
+  baseline, UMAP/SVD visualization, dendrogram/tree plots, and assignments.
+
+Current compatibility note:
+- The historical KAK scripts pass alpha_local into tree.decompose. The current
+  PosetTree.decompose / TreeDecomposition interface uses edge_alpha and
+  sibling_alpha. Restoring these scripts would require replacing alpha_local
+  with edge_alpha and checking any compatibility imports.
+
+Result directory status:
+- The named result path
+  benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_spectral_blocks/
+  is not present in the current working tree and has no tracked git-history
+  entries in this checkout.

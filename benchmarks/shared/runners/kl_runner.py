@@ -16,6 +16,9 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator 
 from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -36,6 +39,8 @@ def _run_kl_on_distance(
     tree_linkage_method: str,
     edge_alpha: float = DEFAULT_EDGE_ALPHA,
     feature_space: FeatureSpace | None = None,
+    spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    passthrough: bool = config.PASSTHROUGH,
     extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
     stage_timings: dict[str, float] = {}
@@ -59,6 +64,7 @@ def _run_kl_on_distance(
         sibling_alpha=sibling_significance_level,
         leaf_data=data_df,
         feature_space=feature_space,
+        spectral_minimum_dimension=spectral_minimum_dimension,
     )
     stage_timings.update(gate_annotation_bundle.stage_timings)
 
@@ -67,8 +73,10 @@ def _run_kl_on_distance(
         gate_annotation_bundle=gate_annotation_bundle,
         leaf_data=data_df,
         feature_space=feature_space,
+        spectral_minimum_dimension=spectral_minimum_dimension,
         edge_alpha=edge_alpha,
         sibling_alpha=sibling_significance_level,
+        passthrough=passthrough,
     )
     traversal_start_sec = perf_counter()
     decomposition = decomposer.decompose_tree()
@@ -86,6 +94,8 @@ def _run_kl_on_distance(
         "gate_bundle": gate_annotation_bundle,
         "linkage_matrix": linkage_matrix,
         "stage_timings": stage_timings,
+        "spectral_minimum_dimension": int(spectral_minimum_dimension),
+        "passthrough": bool(passthrough),
     }
     if extra:
         duplicate_extra_keys = sorted(set(result_extra).intersection(extra))
@@ -114,6 +124,8 @@ def _run_kl_method(
     *,
     edge_alpha: float = DEFAULT_EDGE_ALPHA,
     feature_space: FeatureSpace | None = None,
+    spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    passthrough: bool = config.PASSTHROUGH,
 ) -> MethodRunResult:
     return _run_kl_on_distance(
         data_df,
@@ -122,4 +134,6 @@ def _run_kl_method(
         tree_linkage_method=tree_linkage_method,
         edge_alpha=edge_alpha,
         feature_space=feature_space,
+        spectral_minimum_dimension=spectral_minimum_dimension,
+        passthrough=passthrough,
     )

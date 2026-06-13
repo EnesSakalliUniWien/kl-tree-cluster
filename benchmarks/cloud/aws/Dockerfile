@@ -19,9 +19,11 @@ RUN pip install --no-cache-dir --upgrade pip \
         "networkx>=3.1" \
         "numpy>=1.24.0,<2.4" \
         "pandas>=2.0.0" \
+        "pydiffmap>=0.2.0.1" \
         "scikit-learn>=1.3.0" \
         "scipy>=1.10.0" \
-        "statsmodels>=0.14.0"
+        "statsmodels>=0.14.0" \
+        "tabulate>=0.9.0"
 
 COPY benchmarks ./benchmarks
 COPY kl_clustering_analysis ./kl_clustering_analysis

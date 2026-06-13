@@ -125,6 +125,139 @@ The merged alpha-grid outputs are:
 - `merged/alpha_grid_results.csv`: per-case KL benchmark rows for every alpha pair.
 - `merged/aws_alpha_grid_manifest.json`: grid, shard count, git state, and output paths.
 
+## Run KAK/Cosine Lens Linkage Alpha Sweeps On AWS
+
+This diagnostic compares average, complete, and Ward-Euclidean trees for the
+KAK/cosine subspace lenses. Ward is run on Euclidean lens coordinates; it is not
+run on Hamming distances. Average and complete use Euclidean condensed
+distances. Each AWS shard owns one or more `lens x linkage` groups and sweeps
+all requested edge/sibling alpha pairs for those groups.
+
+Local two-shard smoke:
+
+```bash
+python -m benchmarks.cloud.aws_kak_lens_linkage_alpha_sweep run-shard \
+  --output-dir benchmarks/results/aws_kak_lens_linkage_alpha_smoke \
+  --shard-count 2 \
+  --shard-index 0 \
+  --edge-alphas 0.001 \
+  --sibling-alphas 0.01 \
+  --lenses raw_kak:binary:adaptive_modes_10_15 \
+  --tree-linkage-methods average,complete,ward
+
+python -m benchmarks.cloud.aws_kak_lens_linkage_alpha_sweep run-shard \
+  --output-dir benchmarks/results/aws_kak_lens_linkage_alpha_smoke \
+  --shard-count 2 \
+  --shard-index 1 \
+  --edge-alphas 0.001 \
+  --sibling-alphas 0.01 \
+  --lenses raw_kak:binary:adaptive_modes_10_15 \
+  --tree-linkage-methods average,complete,ward
+
+python -m benchmarks.cloud.aws_kak_lens_linkage_alpha_sweep merge \
+  --output-dir benchmarks/results/aws_kak_lens_linkage_alpha_smoke \
+  --shard-count 2 \
+  --edge-alphas 0.001 \
+  --sibling-alphas 0.01 \
+  --lenses raw_kak:binary:adaptive_modes_10_15 \
+  --tree-linkage-methods average,complete,ward
+```
+
+Submit the default big sweep as an 18-shard array job. The default grid contains
+six lenses, three linkage methods, and a `5 x 5` alpha grid, so it produces `450`
+summary rows before fail-closed gate rows are filtered by interpretation.
+
+```bash
+aws batch submit-job \
+  --job-name kl-te-kak-lens-linkage-alpha-shards \
+  --job-queue kl-te-benchmark-diagnostics \
+  --job-definition kl-te-benchmark-diagnostics \
+  --array-properties size=18 \
+  --container-overrides '{
+    "command": [
+      "benchmarks.cloud.aws_kak_lens_linkage_alpha_sweep",
+      "run-shard",
+      "--output-dir", "/tmp/kak-lens-linkage-alpha",
+      "--shard-count", "18",
+      "--s3-uri", "s3://YOUR_BUCKET/kak-lens-linkage-alpha"
+    ]
+  }'
+```
+
+After the shard jobs finish, merge the outputs:
+
+```bash
+aws batch submit-job \
+  --job-name kl-te-kak-lens-linkage-alpha-merge \
+  --job-queue kl-te-benchmark-diagnostics \
+  --job-definition kl-te-benchmark-diagnostics \
+  --container-overrides '{
+    "command": [
+      "benchmarks.cloud.aws_kak_lens_linkage_alpha_sweep",
+      "merge",
+      "--output-dir", "/tmp/kak-lens-linkage-alpha",
+      "--shard-count", "18",
+      "--s3-uri", "s3://YOUR_BUCKET/kak-lens-linkage-alpha"
+    ]
+  }'
+```
+
+The merged outputs are:
+
+- `merged/kak_lens_linkage_alpha_sweep_summary.csv`: one row per lens,
+  linkage, and alpha pair.
+- `merged/aws_kak_lens_linkage_alpha_sweep_manifest.json`: grid, lens list,
+  linkage methods, shard count, git state, and output paths.
+
+## Run The Tree-Strategy Semantic Panel On AWS
+
+This diagnostic joins precomputed Julia result CSVs into one semantic panel with
+tree strategy, lens family, linkage, alpha, cluster counts, context quality,
+main-context refinement, feature-axis bridge, p-value continuity, and
+radius/angle/action diagnostics. It does not rerun clustering.
+
+Because the AWS image excludes `benchmarks/results`, first upload a
+repository-shaped result bundle that contains the needed `benchmarks/results/...`
+paths:
+
+```bash
+aws s3 sync benchmarks/results s3://YOUR_BUCKET/tree-strategy-input/benchmarks/results
+```
+
+Then run the panel builder:
+
+```bash
+aws batch submit-job \
+  --job-name kl-te-tree-strategy-semantic-panel \
+  --job-queue kl-te-benchmark-diagnostics \
+  --job-definition kl-te-benchmark-diagnostics \
+  --container-overrides '{
+    "command": [
+      "benchmarks.cloud.aws_tree_strategy_semantic_panel",
+      "run",
+      "--input-s3-uri", "s3://YOUR_BUCKET/tree-strategy-input",
+      "--output-dir", "/tmp/tree-strategy-semantic-panel",
+      "--output-s3-uri", "s3://YOUR_BUCKET/tree-strategy-semantic-panel"
+    ]
+  }'
+```
+
+If the large KAK/cosine linkage alpha sweep has already been merged on S3, add
+its repository-relative merged CSV path with `--alpha-summary-paths`, for
+example:
+
+```bash
+      "--alpha-summary-paths",
+      "benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/17_aws_kak_lens_linkage_alpha_sweep_smoke_20260611/merged/kak_lens_linkage_alpha_sweep_summary.csv"
+```
+
+The panel outputs are:
+
+- `tree_strategy_semantic_panel.csv`: the requested joined semantic table.
+- `tree_strategy_semantic_panel_report.md`: counts and top refinement rows.
+- `aws_tree_strategy_semantic_panel_manifest.json`: input/output paths, schema,
+  row counts, semantic-role counts, and git state.
+
 ## Run Selected-Edge Type-I Geometry On AWS Batch
 
 This diagnostic shards by replicate index. It estimates fixed-tree versus

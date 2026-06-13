@@ -34,6 +34,9 @@ from benchmarks.shared.runners.kl_diffusion_runner import (
     _build_diffusion_distance,
 )
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
 from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -259,7 +262,16 @@ def _run_decomposition(
     )
 
     tree = tree_from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
+    tree.populate_node_divergences(data_df)
+    gate_bundle = run_gate_annotation_pipeline(
+        tree,
+        tree.annotations_df.copy(),
+        edge_alpha=edge_alpha,
+        sibling_alpha=sibling_alpha,
+        leaf_data=data_df,
+    )
     decomposition = tree.decompose(
+        gate_annotation_bundle=gate_bundle,
         leaf_data=data_df,
         edge_alpha=edge_alpha,
         sibling_alpha=sibling_alpha,

@@ -1,0 +1,15 @@
+Source URL: https://arxiv.org/abs/1305.5870
+Accessed: 2026-06-05
+Title: The Optimal Hard Threshold for Singular Values is 4/sqrt(3)
+Authors: Matan Gavish and David L. Donoho
+Version checked: arXiv v3, last revised 2014-06-04
+
+Relevance note:
+The paper derives asymptotic MSE-optimal hard thresholds for singular values
+in low-rank matrix denoising. For square matrices with known noise level, the
+threshold is (4/sqrt(3)) sqrt(n) sigma; with unknown noise, a median singular
+value rule is used. This is relevant to KL-TE Q14/Q15 as a candidate
+rank-selection threshold that is more conservative than the ordinary MP upper
+edge, but the objective is denoising risk rather than selected-tree null
+false-split control. Treat it as diagnostic input, not as production
+justification for an MP/projection-dimension rule.

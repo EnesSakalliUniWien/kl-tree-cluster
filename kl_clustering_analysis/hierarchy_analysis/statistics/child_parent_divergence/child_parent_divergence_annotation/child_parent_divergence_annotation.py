@@ -21,7 +21,11 @@ from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from .child_parent_divergence_tree_bh import (
     apply_child_parent_divergence_tree_bh_correction,
 )
-from .spectral_context import SpectralContext, compute_child_parent_spectral_context
+from .spectral_context import (
+    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    SpectralContext,
+    compute_child_parent_spectral_context,
+)
 from .tree_testing import run_child_parent_tests_across_tree
 
 
@@ -32,6 +36,7 @@ def annotate_child_parent_divergence(
     significance_level_alpha: float = DEFAULT_EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
+    spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using the projected Wald pipeline.
@@ -45,6 +50,7 @@ def annotate_child_parent_divergence(
         significance_level_alpha=significance_level_alpha,
         leaf_data=leaf_data,
         feature_space=feature_space,
+        spectral_minimum_dimension=spectral_minimum_dimension,
         stage_timings=stage_timings,
     )
     return annotated_df
@@ -57,6 +63,7 @@ def annotate_child_parent_divergence_with_context(
     significance_level_alpha: float = DEFAULT_EDGE_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
+    spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[pd.DataFrame, SpectralContext]:
     """Test child-parent divergence and return typed edge-gate spectral context."""
@@ -82,6 +89,7 @@ def annotate_child_parent_divergence_with_context(
         tree,
         leaf_data,
         feature_space=feature_space,
+        minimum_projection_dimension=spectral_minimum_dimension,
     )
 
     test_kwargs = {
