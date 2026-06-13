@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from benchmarks.shared.generators.barycentric import (
+    generate_binary_barycentric_template,
+    generate_binary_selected_nonnull_only,
+    generate_planted_hierarchy_deep_signal,
+)
 from benchmarks.shared.generators.binary_cases import generate_binary_case
 from benchmarks.shared.generators.case_data_contracts import (
     CaseDataResult,
@@ -13,6 +18,12 @@ from benchmarks.shared.generators.categorical_cases import (
     generate_phylogenetic_case,
     generate_temporal_evolution_case,
 )
+from benchmarks.shared.generators.continuous_low_rank import (
+    generate_continuous_low_rank_factor,
+)
+from benchmarks.shared.generators.dirichlet_multinomial import (
+    generate_categorical_dirichlet_multinomial,
+)
 from benchmarks.shared.generators.gaussian_cases import (
     generate_blobs_case,
     generate_blobs_continuous_case,
@@ -23,10 +34,18 @@ from benchmarks.shared.generators.gaussian_cases import (
     generate_gaussian_outlier_continuous_case,
 )
 from benchmarks.shared.generators.graph_cases import generate_sbm_case
+from benchmarks.shared.generators.phylogenetic_nulls import (
+    generate_phylogenetic_brownian_continuous,
+)
 from benchmarks.shared.generators.preloaded_cases import generate_preloaded_case
+from benchmarks.shared.generators.spiked_covariance import (
+    generate_continuous_spiked_covariance,
+)
 
 GENERATOR_DISPATCH: dict[str, CaseGenerator] = {
     "binary": generate_binary_case,
+    "binary_barycentric_template": generate_binary_barycentric_template,
+    "binary_selected_nonnull_only": generate_binary_selected_nonnull_only,
     "blobs": generate_blobs_case,
     "blobs_continuous": generate_blobs_continuous_case,
     "blobs_quantile": generate_blobs_quantile_case,
@@ -36,7 +55,12 @@ GENERATOR_DISPATCH: dict[str, CaseGenerator] = {
     "gaussian_outliers_continuous": generate_gaussian_outlier_continuous_case,
     "sbm": generate_sbm_case,
     "categorical": generate_categorical_case,
+    "categorical_dirichlet_multinomial": generate_categorical_dirichlet_multinomial,
+    "continuous_low_rank_factor": generate_continuous_low_rank_factor,
+    "continuous_spiked_covariance": generate_continuous_spiked_covariance,
     "phylogenetic": generate_phylogenetic_case,
+    "phylogenetic_brownian_continuous": generate_phylogenetic_brownian_continuous,
+    "planted_hierarchy_deep_signal": generate_planted_hierarchy_deep_signal,
     "temporal_evolution": generate_temporal_evolution_case,
     "preloaded": generate_preloaded_case,
 }

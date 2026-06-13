@@ -21,11 +21,25 @@ def case_recipe_geometry(case: Mapping[str, object]) -> tuple[int, int]:
         ) * int(case["n_categories"])
     if generator in {"categorical", "blobs_quantile"}:
         return int(case["n_samples"]), int(case["n_features"]) * int(case["n_categories"])
+    if generator == "categorical_dirichlet_multinomial":
+        return int(case["n_samples"]), int(case["n_features"]) * int(case["n_categories"])
     if generator == "binary":
         return int(case["n_samples"]), int(case["n_features"]) + int(case["noise_features"])
     if generator in {
+        "binary_barycentric_template",
+        "binary_selected_nonnull_only",
+        "planted_hierarchy_deep_signal",
+    }:
+        return int(case["n_samples"]), int(case["n_features"])
+    if generator == "phylogenetic_brownian_continuous":
+        return int(case["n_taxa"]) * int(case["samples_per_taxon"]), int(
+            case["n_features"]
+        )
+    if generator in {
         "blobs",
         "blobs_continuous",
+        "continuous_low_rank_factor",
+        "continuous_spiked_covariance",
         "dimensional_gaussian",
         "dimensional_gaussian_continuous",
         "gaussian_outliers",

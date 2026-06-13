@@ -1,0 +1,615 @@
+Yes. I would build the next benchmark program as a traceable mathematical benchmark suite, not just more ARI tables. The repo already has a good starting point: cases are organized by source families such as Gaussian, dimensionality, outliers, binary, SBM, categorical, phylogenetic, and overlapping cases, and suites can be filtered by binary, categorical, continuous, discretized Gaussian, graph, or full.  ￼init￼.py￼ The generator contract already records source_family, feature_representation, and whether a case requires precomputed KL tree distances, which is exactly the metadata foundation needed for traceable benchmarks.  ￼
+
+The missing step is to make every benchmark case answer a specific mathematical question: selected-tail calibration, internal support, MP/projection, categorical covariance, continuous covariance, traversal FDR, pass-through, phylogenetic null, or real-data evidence.
+
+1. Benchmark design principles from the literature
+
+The benchmark suite should not be a random collection of hard cases. A cluster benchmarking white paper argues that clustering benchmarking needs simulated and empirical data, clear target questions, neutral comparisons, and careful design because unsupervised methods lack a single universally accepted objective.  ￼ HAWKS makes the same point from another angle: synthetic clustering benchmarks should cover diverse properties that affect algorithm performance, and can even be generated to expose differences between specific algorithms.  ￼
+
+Recent large-scale work also reinforces that clustering remains nontrivial even with many modern algorithms and data types. CLUBench reports a broad benchmark over 24 algorithms and 131 datasets across tabular, text, and image data, and emphasizes effects of data type, hyperparameter tuning, embeddings, and performance-matrix structure.  ￼ For graph clustering, PCBS emphasizes standardized, fine-grained evaluation of graph clustering quality and runtime across real-world graph datasets.  ￼
+
+For KL-TE specifically, the most important benchmark principle is selection-aware traceability. Selective-inference papers on hierarchical clustering show that classical tests can be anti-conservative when clusters are selected by clustering before testing, and that the correct target is conditional on the clustering selection event.  ￼ This matches your selected-hierarchy problem exactly.
+
+2. What new benchmark cases to add
+
+I would add cases in three tiers: method-proof cases, failure-attribution cases, and manuscript-realism cases.
+
+Tier A — Method-proof benchmark cases
+
+These are not mainly for ARI. They are for proving or falsifying mathematical pieces.
+
+Case family	Purpose	New case examples
+Selected-tail calibration ladder	Fit/validate selected-tail law by edge severity, parent size, projection dimension, feature family, spectral geometry	sel_tail_gauss_small_high_edge_k1, sel_tail_cat_small_high_edge_k2, sel_tail_binary_medium_edge_k1, sel_tail_root_high_edge_k2
+Barycentric imbalance ladder	Test whether child-size imbalance drives selected inflation and pass-through mistakes	bar_balanced_50_50, bar_unbalanced_80_20, bar_tiny_child_95_5
+Controlled edge-action null	Simulate null trees where edge-opening severity is binned by design	edge_action_0_2_null, edge_action_4_6_null, edge_action_ge8_null
+Angle-controlled projection null	Test \cos^2\theta, \sin^2\theta, selected PCA alignment	angle_low_capture, angle_medium_capture, angle_high_capture
+BBP/spiked MP ladder	Validate selected MP and k_{\min} around weak/strong spectral spikes	mp_below_bbp, mp_at_bbp, mp_above_bbp
+Finite-null MP ladder	Compare identity MP, finite-null MP, deformed MP, and selected MP	mp_identity_null, mp_deformed_ar1, mp_selected_tree_null
+Sibling projection dimension grid	Compare parent k, min/max child k, geometric mean, harmonic mean	sibdim_parent, sibdim_geom_mean, sibdim_max_child
+Internal support stress	Test hard thresholds for n_{\mathrm{eff}}, strict/stopped counts, per-family support	internal_support_rich, internal_support_sparse, internal_support_selected_only
+Null-weight grid cases	Validate sibling null-weight rule under known null/signal edges	weight_product_valid, weight_min_p_valid, weight_hard_indicator_valid
+Bandwidth sparsity cases	Force sparse calibration context and test bandwidth guard behavior	bandwidth_one_context, bandwidth_two_contexts, bandwidth_fragmented_family
+
+The key new mathematical covariates are:
+
+A_{\mathrm{edge}}=-\log p_{\min}^{\mathrm{edge}},
+\qquad
+\rho_u=\cos^2\theta_u=\frac{\|P_k z_u\|^2}{\|z_u\|^2},
+
+b_u=\min(n_L,n_R)/n_u,
+\qquad
+\ell_u^{\mathrm{bar}}=\log\frac{\max(n_L,n_R)}{\min(n_L,n_R)},
+
+\lambda_{k,u}/\lambda_{+,u},
+\qquad
+M_{k,u}=\frac{\sum_{j\le k}\lambda_{j,u}}{\sum_j\lambda_{j,u}}.
+
+Those should be written into every selected sibling trace row.
+
+Tier B — Failure-attribution benchmark cases
+
+These are for separating covariance, MP/projection, FDR, selection, and hierarchy recoverability.
+
+Case family	Purpose	Why needed
+Categorical simplex-face cases	High-cardinality categorical covariance near zero-probability categories	Current categorical suite has high-cardinality and high-dimensional cases, but not a systematic simplex-boundary ladder.  ￼
+Dirichlet-multinomial overdispersion	Distinguish multinomial covariance failure from selection failure	One-hot categorical blocks assume multinomial covariance; overdispersion tests misspecification.
+Rare-category signal cases	Test power when signal lies in rare categories	High-cardinality categorical failures may be covariance-boundary or projection failures.
+Continuous p\gg n shrinkage cases	Validate dense empirical covariance versus shrinkage/low-rank covariance	Existing Gaussian continuous examples include continuous null/stress variants but dense covariance is not enough for p\gg n.  ￼
+Low-rank continuous factor cases	Test POET/shrinkage model replacement	Needed for Q20/Q21.
+Heavy-tailed continuous cases	Test robust covariance need	Empirical-Gaussian covariance can be too optimistic under heavy tails.
+Degree-corrected SBM / LFR graph cases	Separate graph metric recoverability from gate logic	Existing suite has SBM cases; add degree heterogeneity and overlapping communities.  ￼init￼.py￼
+Phylogenetic Brownian/OU nulls	Build real phylogenetic covariance/null generator before selected tails	Existing phylogenetic cases simulate DNA/protein-like categorical evolution, conserved/divergent/large settings.  ￼
+Topology-fragmented selected-tail cases	Test root/medium/large support-rich but tail-heterogeneous contexts	Needed because exact topology refinements can fragment support.
+Unrecoverable tree controls	Declare tree/metric failure before gate tuning	Prevents using thresholds to “fix” impossible trees.
+
+For high-cardinality categorical attribution, run four nested versions of each case:
+
+1. Fixed full-tangent covariance: no selected tree, no MP.
+2. Fixed membership + selected PCA/MP: isolate projection.
+3. Full selected hierarchy + raw sibling p-values: isolate selection.
+4. Full pipeline: add inflation, sibling BH, traversal.
+
+The failure label should be one of:
+
+categorical_covariance_failure
+selected_MP_projection_failure
+selected_tail_calibration_failure
+sibling_FDR_failure
+traversal_failure
+tree_metric_unrecoverable
+
+Tier C — Manuscript-realism cases
+
+These should support the paper, not tune constants.
+
+Case family	Purpose
+Global null cluster-count controls	Validate P(\hat K>1) under null for binary, categorical, continuous, graph, phylogenetic
+Planted hierarchy power cases	Validate exact K, ARI, false split/merge counts under known hierarchy
+Diffuse weak-signal cases	Show honest unrecoverable cases rather than overfitting thresholds
+Single-cell annotated real-data cases	First real biological application with external labels and trace manifest
+Cross-feature validation cases	Feature-split selection/testing diagnostics for selected-hierarchy inflation
+Real categorical biological panels	Mutation/gene-family/DNA/protein-like feature matrices with known clades
+
+For real biological evidence, expert-annotated scRNA-seq datasets are useful because SCCAF explicitly benchmarks automated cell-type discovery against expert-annotated scRNA-seq datasets.  ￼ But a real-data result should not be treated as proof of calibration. It should be a locked application manifest with all split decisions traceable.
+
+3. Concrete new case specs to add first
+
+I would add these first because they map directly to unresolved questions.
+
+NEW_METHOD_PROOF_CASES = [
+    {
+        "name": "bar_binary_balanced_4c",
+        "generator": "binary_barycentric_template",
+        "n_samples": 160,
+        "n_features": 200,
+        "n_clusters": 4,
+        "child_balance_grid": [0.50, 0.50],
+        "signal_strength": "moderate",
+        "seed": 21000,
+        "benchmark_role": "barycentric_balance_validation",
+    },
+    {
+        "name": "bar_binary_unbalanced_95_5",
+        "generator": "binary_barycentric_template",
+        "n_samples": 200,
+        "n_features": 200,
+        "n_clusters": 4,
+        "child_balance_grid": [0.95, 0.05],
+        "signal_strength": "moderate",
+        "seed": 21001,
+        "benchmark_role": "barycentric_leverage_stress",
+    },
+    {
+        "name": "mp_spike_below_bbp_continuous",
+        "generator": "continuous_spiked_covariance",
+        "n_samples": 120,
+        "n_features": 300,
+        "n_clusters": 1,
+        "spike_strength": "below_bbp",
+        "covariance_profile": "identity_plus_rank1",
+        "seed": 21100,
+        "benchmark_role": "selected_mp_null_validation",
+    },
+    {
+        "name": "mp_spike_above_bbp_continuous",
+        "generator": "continuous_spiked_covariance",
+        "n_samples": 120,
+        "n_features": 300,
+        "n_clusters": 2,
+        "spike_strength": "above_bbp",
+        "covariance_profile": "identity_plus_rank1",
+        "seed": 21101,
+        "benchmark_role": "selected_mp_power_validation",
+    },
+    {
+        "name": "cat_simplex_face_rare_20cat",
+        "generator": "categorical_dirichlet_multinomial",
+        "n_samples": 240,
+        "n_features": 60,
+        "n_clusters": 4,
+        "n_categories": 20,
+        "concentration_profile": "rare_tail",
+        "overdispersion": 0.0,
+        "seed": 21200,
+        "benchmark_role": "categorical_covariance_boundary",
+    },
+    {
+        "name": "cat_dirichlet_overdispersed_20cat",
+        "generator": "categorical_dirichlet_multinomial",
+        "n_samples": 240,
+        "n_features": 60,
+        "n_clusters": 4,
+        "n_categories": 20,
+        "concentration_profile": "rare_tail",
+        "overdispersion": 0.25,
+        "seed": 21201,
+        "benchmark_role": "categorical_model_misspecification",
+    },
+    {
+        "name": "cont_lowrank_pggn_shrinkage",
+        "generator": "continuous_low_rank_factor",
+        "n_samples": 80,
+        "n_features": 2000,
+        "n_clusters": 4,
+        "rank": 5,
+        "noise_variance": 1.0,
+        "mean_signal": "cluster_low_rank",
+        "seed": 21300,
+        "benchmark_role": "continuous_shrinkage_covariance",
+    },
+    {
+        "name": "support_selected_only_fail_closed",
+        "generator": "binary_selected_nonnull_only",
+        "n_samples": 160,
+        "n_features": 500,
+        "n_clusters": 4,
+        "edge_open_rate_target": 0.95,
+        "seed": 21400,
+        "benchmark_role": "internal_calibration_support_contract",
+    },
+    {
+        "name": "phylo_brownian_null_16taxa",
+        "generator": "phylogenetic_brownian_continuous",
+        "n_taxa": 16,
+        "samples_per_taxon": 10,
+        "n_features": 100,
+        "branch_length_profile": "balanced",
+        "sigma2": 1.0,
+        "seed": 21500,
+        "benchmark_role": "phylogenetic_covariance_null",
+    },
+    {
+        "name": "traversal_deep_signal_under_same_parent",
+        "generator": "planted_hierarchy_deep_signal",
+        "n_samples": 240,
+        "n_features": 300,
+        "n_clusters": 6,
+        "root_sibling_effect": "weak_same",
+        "descendant_effect": "strong",
+        "seed": 21600,
+        "benchmark_role": "pass_through_replacement_validation",
+    },
+]
+
+These are intentionally not all “hard.” Some are calibration nulls, some are power cases, and some are expected fail-closed cases.
+
+4. Method enhancements tied to these cases
+
+Selected-tail law
+
+Add a production-disabled diagnostic module first:
+
+benchmarks/diagnostics/calibration/selected_tail_law_model.py
+
+It should fit held-out tail models for:
+
+R_u=\frac{T_u}{a_u\nu_u}
+
+using:
+
+source_family
+feature_family
+parent_size_bin
+edge_action_bin
+sibling_projection_dimension
+child_balance
+barycentric_leverage
+lambda_k_over_mp
+selected_eigenvalue_mass
+effective_rank
+selected_subspace_cos2
+
+The output should be tail calibration, not mean fit:
+
+heldout_exceedance_rate_at_alpha
+heldout_exceedance_se
+n_matching_simulations
+n_records
+production_admissible
+failure_reasons
+
+A context only becomes production-admissible when it is predeclared and passes support and held-out precision.
+
+Internal support thresholds
+
+Add hard thresholds to the internal empirical-null model:
+
+min_supported_records
+min_strict_null_records
+min_stopped_edge_records
+min_family_supported_records
+min_n_eff_global
+min_n_eff_family
+min_n_eff_local_kernel
+max_weight_share
+max_leave_one_sim_delta_log_c
+
+The current model already computes effective sample size but does not enforce it as a hard threshold.  ￼ Add CalibrationSupportReport and make every unsupported case explain which threshold failed.
+
+Sibling null-weight grid
+
+Validate these alternatives:
+
+product_bh_p              # current
+sqrt_product_bh_p
+min_bh_p
+hard_indicator_p_gt_tau
+ancestor_action_weighted
+isotonic_selected_null_weight
+
+Every weight rule should be evaluated on:
+
+bias of c_hat
+variance of c_hat
+false split rate
+power
+skip/undefined rate
+leave-one-simulation stability
+
+Context bandwidth guard
+
+The current bandwidth is estimated from weighted standard deviations of \log k and \log n_{\text{parent}}.  ￼ Add:
+
+if n_eff_local < threshold: undefined_sparse_context
+if unique_context_values < threshold: drop axis or fail
+if max_weight_share > threshold: fail unstable_bandwidth
+
+Selected MP and k_{\min}
+
+Compare:
+
+identity_MP_kmin2      # current
+identity_MP_kmin1
+finite_null_MP
+Tracy_Widom_corrected_MP
+deformed_MP
+selected_tree_MP
+
+The current code counts raw MP spikes and separately stores the projected-Wald test dimension, effective independent rows, and MP threshold rows.  ￼ That is good; now benchmark each rule with calibration and power, not ARI alone.
+
+Continuous p\gg n
+
+Add covariance modes:
+
+empirical_dense
+linear_shrinkage_identity
+low_rank_plus_diagonal
+POET_like_factor_sparse
+nonlinear_shrinkage_reference
+
+For the low-rank model:
+
+\hat\Sigma
+=
+U_r\Lambda_rU_r^\top
++
+\sigma^2(I-U_rU_r^\top)
++
+\lambda I.
+
+Wasserstein/Gaussian barycenter literature is also useful if you later represent continuous nodes as Gaussian distributions rather than just mean vectors; for Gaussian location-scatter families, the Wasserstein barycenter mean is the weighted mean, while covariance satisfies a nonlinear equation.  ￼
+
+Pass-through replacement
+
+Replace binary pass-through with a margin rule:
+
+M_{\mathrm{desc}}(v)
+>
+\tau_0+\tau_1 M_{\mathrm{same}}(v)+\tau_2\log n_v+\tau_3 k_v .
+
+Benchmark this against:
+
+global null
+weak root same / strong descendant split
+strong root split / weak descendants
+phylogenetic clade false splitting
+high-cardinality categorical
+
+5. Traceable benchmark protocol
+
+Every benchmark run should generate five locked files:
+
+manifest.json
+case_summary.csv
+node_decision_trace.csv
+selected_sibling_records.csv
+failure_attribution.csv
+
+manifest.json
+
+{
+  "schema_version": "kl_te_benchmark_manifest/v1",
+  "created_utc": "...",
+  "git_commit": "...",
+  "git_dirty": false,
+  "run_command": "...",
+  "random_seed": 20260604,
+  "case_id": "cat_simplex_face_rare_20cat",
+  "generator": "categorical_dirichlet_multinomial",
+  "source_family": "categorical_multinomial",
+  "feature_representation": "one_hot_categorical",
+  "feature_space_signature": "...",
+  "n_samples": 240,
+  "n_features": 1200,
+  "n_clusters_true": 4,
+  "tree_distance_metric": "hamming",
+  "tree_linkage_method": "average",
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "benchmark_role": "categorical_covariance_boundary",
+  "mathematical_target": "categorical_covariance_vs_selection_failure_attribution",
+  "expected_failure_modes": [
+    "categorical_covariance_failure",
+    "selected_MP_projection_failure",
+    "selected_tail_calibration_failure"
+  ],
+  "outputs": {
+    "case_summary": "case_summary.csv",
+    "node_decision_trace": "node_decision_trace.csv",
+    "selected_sibling_records": "selected_sibling_records.csv",
+    "failure_attribution": "failure_attribution.csv"
+  }
+}
+
+node_decision_trace.csv
+
+Each row should be one node or one edge-reachable sibling context:
+
+case_id
+replicate_id
+node_id
+parent_id
+left_child
+right_child
+parent_depth
+parent_sample_size
+left_sample_size
+right_sample_size
+child_balance
+barycentric_leverage
+edge_left_raw_p
+edge_right_raw_p
+edge_left_bh_p
+edge_right_bh_p
+edge_path_open
+edge_action
+sibling_raw_stat
+sibling_raw_p
+sibling_projection_dimension
+reference_scale
+degrees_of_freedom
+selected_ratio
+selected_subspace_cos2
+selected_subspace_tan2
+lambda_k_over_mp
+selected_eigenvalue_mass
+internal_support_status
+n_supported_records
+n_strict_null_records
+n_stopped_records
+n_eff_family
+inflation_c_hat
+sibling_adjusted_p
+sibling_bh_p
+traversal_decision
+failure_label
+
+This gives you the ability to infer the math from each run.
+
+6. The “math inference tool” I would add
+
+Add a tool named:
+
+benchmarks/diagnostics/math_trace/infer_benchmark_math.py
+
+The goal is not symbolic proof. The goal is to infer which mathematical layer explains each success/failure.
+
+Inputs
+
+manifest.json
+node_decision_trace.csv
+selected_sibling_records.csv
+cluster_assignments.csv
+truth_labels.csv
+
+Outputs
+
+math_inference_report.md
+math_inference_summary.json
+law_fit_selected_tail.csv
+support_threshold_audit.csv
+projection_law_audit.csv
+failure_attribution.csv
+
+Core modules
+
+class MathTraceEngine:
+    def infer_selected_tail_law(self):
+        # Fit and validate R = T/(a*df) by edge, parent size, k, family, spectrum, angle.
+    def infer_internal_support_validity(self):
+        # Check n_eff, strict/stopped support, family support, leave-one stability.
+    def infer_projection_failure(self):
+        # Compare MP rule, k_min, angle capture, eigenvalue over MP.
+    def infer_categorical_failure(self):
+        # Separate simplex covariance boundary from selected-tail/fdr failure.
+    def infer_continuous_covariance_failure(self):
+        # Dense vs shrinkage/low-rank covariance diagnostics.
+    def infer_fdr_traversal_failure(self):
+        # Compare local p-values, frontier BH, TreeBH-style alternative, final traversal.
+    def infer_barycentric_geometry(self):
+        # Compute child balance, barycentric leverage, edge-sibling identity residual.
+    def classify_failure(self):
+        # One primary and optional secondary failure labels.
+
+Failure classifier
+
+Use a deterministic hierarchy:
+
+if tree_oracle_unrecoverable:
+    tree_metric_unrecoverable
+elif covariance_null_invalid:
+    covariance_failure
+elif fixed_projection_pvalues_not_uniform:
+    projected_wald_failure
+elif selected_MP_calibration_failed:
+    selected_MP_projection_failure
+elif internal_support_threshold_failed:
+    calibration_support_undefined
+elif selected_tail_context_not_admissible:
+    external_selected_tail_undefined
+elif sibling_BH_false_split_rate_high:
+    sibling_FDR_failure
+elif traversal_overrides_local_evidence_badly:
+    traversal_failure
+else:
+    solved_or_unattributed
+
+Mathematical equations inferred per node
+
+The report should print:
+
+R_u=\frac{T_u}{a_u\nu_u},
+
+A_{\mathrm{edge}}=-\log p_{\min}^{\mathrm{edge}},
+
+\rho_u=\frac{\|P_kz_u\|^2}{\|z_u\|^2},
+\qquad
+\tan^2\theta_u=\frac{1-\rho_u}{\rho_u},
+
+\ell_u^{\mathrm{bar}}=\log\frac{\max(n_L,n_R)}{\min(n_L,n_R)},
+
+\lambda_{k,u}/\lambda_{+,u}.
+
+This becomes the “tool to infer the math”: each failure is tied to one of these variables and to a reproducible trace row.
+
+7. Metamorphic tests for traceability
+
+Because clustering often lacks a unique oracle, add metamorphic tests. Metamorphic testing is designed for systems where exact expected outputs are hard to define; it checks necessary relations under input transformations.  ￼
+
+Add these invariants:
+
+Transformation	Expected behavior
+Permute sample order	Same clusters up to labels
+Permute feature order	Same decisions
+Relabel categorical levels within each feature	Same decisions after feature-space relabel
+Duplicate pure-noise features	Calibration should not become anti-conservative
+Add null samples to all clusters proportionally	More stable support, not more false splits
+Split a planted cluster into identical subclones	Should not over-split unless signal is added
+Rotate continuous data under identity covariance	Same continuous decisions
+Scale continuous covariance with whitening update	Same p-value calibration
+Swap left/right children	Same sibling decision
+Collapse signal to zero	\hat K\to 1, false split controlled
+
+These tests are ideal for CI because they detect implementation and math-contract drift.
+
+8. How to enhance the repo structure
+
+I would add:
+
+benchmarks/shared/cases/method_proof.py
+benchmarks/shared/generators/barycentric.py
+benchmarks/shared/generators/spiked_covariance.py
+benchmarks/shared/generators/dirichlet_multinomial.py
+benchmarks/shared/generators/continuous_low_rank.py
+benchmarks/shared/generators/phylogenetic_nulls.py
+benchmarks/diagnostics/math_trace/
+  infer_benchmark_math.py
+  trace_schema.py
+  failure_classifier.py
+  selected_tail_law.py
+  support_thresholds.py
+  projection_law.py
+  metamorphic_checks.py
+benchmarks/validation/
+  selected_tail_law_validation.py
+  internal_support_threshold_validation.py
+  sibling_weight_rule_validation.py
+  context_bandwidth_validation.py
+  selected_mp_kmin_validation.py
+  sibling_projection_dimension_validation.py
+  cluster_count_control_validation.py
+  planted_power_validation.py
+
+Then add one manifest per validation family:
+
+raw/assets/benchmark-results/<run_id>/manifest.json
+raw/assets/benchmark-results/<run_id>/case_summary.csv
+raw/assets/benchmark-results/<run_id>/math_inference_summary.json
+
+9. Priority order
+
+Start with these five, because they will most improve method credibility:
+
+1. Internal support threshold validation
+    Protects production immediately.
+2. Selected-tail law benchmark
+    Directly addresses selected-hierarchy calibration.
+3. Selected MP / k_{\min} / sibling dimension validation
+    Stabilizes the projected-Wald layer.
+4. Categorical simplex-boundary attribution
+    Explains high-cardinality categorical failures.
+5. Continuous low-rank/shrinkage covariance benchmark
+    Opens the p\gg n continuous path honestly.
+
+After that, do traversal/pass-through, phylogenetic nulls, and the locked manuscript evidence set.
+
+10. The most important benchmark philosophy
+
+Do not ask each benchmark only:
+
+“Did ARI improve?”
+
+Ask:
+
+“Which mathematical contract did this benchmark validate or falsify?”
+
+Every case should have:
+
+benchmark_role
+mathematical_target
+expected_failure_modes
+required_trace_columns
+admissibility_rule
+success_criterion
+
+That will turn KL-TE from “a method with many diagnostics” into a traceable statistical system.

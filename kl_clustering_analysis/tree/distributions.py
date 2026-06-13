@@ -6,6 +6,7 @@ from leaf nodes to internal nodes. Internal node distributions are empirical
 subtree barycenters: leaf-count-weighted means of their child distributions.
 """
 
+import os
 from typing import Any, Dict
 
 import networkx as nx
@@ -24,6 +25,38 @@ CONTINUOUS_COVARIANCE_BY_BLOCK = "continuous_covariance_by_block"
 _CONTINUOUS_SCATTER_BY_BLOCK = "_continuous_scatter_by_block"
 MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION = 4096
 MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES = 512 * 1024 * 1024
+MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION_ENV = (
+    "KL_TE_MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION"
+)
+MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV = (
+    "KL_TE_MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB"
+)
+
+
+def _positive_int_from_env(name: str, default: int) -> int:
+    raw_value = os.environ.get(name)
+    if raw_value is None or raw_value.strip() == "":
+        return int(default)
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a positive integer; got {raw_value!r}.") from exc
+    if value <= 0:
+        raise ValueError(f"{name} must be a positive integer; got {raw_value!r}.")
+    return value
+
+
+def _continuous_covariance_limits() -> tuple[int, int]:
+    """Return active exact dense continuous covariance limits."""
+    max_block_dimension = _positive_int_from_env(
+        MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION_ENV,
+        MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION,
+    )
+    max_work_mib = _positive_int_from_env(
+        MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV,
+        MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES // (1024 * 1024),
+    )
+    return max_block_dimension, max_work_mib * 1024 * 1024
 
 
 def _validate_exact_continuous_covariance_feasibility(
@@ -35,30 +68,33 @@ def _validate_exact_continuous_covariance_feasibility(
         return
 
     node_count = int(tree.number_of_nodes())
+    max_block_dimension, max_work_bytes = _continuous_covariance_limits()
     for block in feature_space.continuous_blocks:
         block_dimension = int(block.raw_dimension)
-        if block_dimension > MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION:
+        if block_dimension > max_block_dimension:
             raise ValueError(
                 "Dense empirical-Gaussian covariance is only implemented for "
                 "moderate-dimensional continuous blocks. "
                 f"Block {block.name!r} has raw_dimension={block_dimension}; "
                 "the exact dense covariance contract currently supports at most "
-                f"{MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION}. "
-                "Use a lower-dimensional continuous benchmark or add a validated "
-                "low-rank covariance implementation."
+                f"{max_block_dimension}. Override "
+                f"{MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION_ENV} only when "
+                "the dense covariance memory cost is acceptable, use a lower-dimensional "
+                "continuous benchmark, or add a validated low-rank covariance implementation."
             )
 
         estimated_work_bytes = node_count * block_dimension * block_dimension * 8
-        if estimated_work_bytes > MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES:
+        if estimated_work_bytes > max_work_bytes:
             raise ValueError(
                 "Dense empirical-Gaussian covariance work state would exceed the "
                 "active implementation memory contract. "
                 f"Block {block.name!r} has raw_dimension={block_dimension} across "
                 f"{node_count} tree nodes, requiring about "
                 f"{estimated_work_bytes / (1024 * 1024):.1f} MiB of scatter state; "
-                f"limit is {MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES / (1024 * 1024):.1f} MiB. "
-                "Use a lower-dimensional continuous benchmark or add a validated "
-                "low-rank covariance implementation."
+                f"limit is {max_work_bytes / (1024 * 1024):.1f} MiB. Override "
+                f"{MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV} only when the "
+                "dense covariance memory cost is acceptable, use a lower-dimensional "
+                "continuous benchmark, or add a validated low-rank covariance implementation."
             )
 
 
@@ -298,6 +334,8 @@ def require_node_continuous_covariance_by_block(
 
 __all__ = [
     "CONTINUOUS_COVARIANCE_BY_BLOCK",
+    "MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION_ENV",
+    "MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV",
     "populate_distributions",
     "require_node_continuous_covariance_by_block",
 ]

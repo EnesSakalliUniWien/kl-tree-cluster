@@ -10,12 +10,24 @@ from .binary import BINARY_CASES
 from .categorical import CATEGORICAL_CASES
 from .dimensionality import DIMENSIONALITY_CASES
 from .gaussian import GAUSSIAN_CASES
+from .method_proof import METHOD_PROOF_CASES
 from .outliers import OUTLIER_CASES
 from .overlapping import OVERLAPPING_CASES
 from .phylogenetic import PHYLOGENETIC_CASES
 from .sbm import SBM_CASES
 
 BINARY_BENCHMARK_GENERATORS = frozenset({"binary"})
+METHOD_PROOF_BENCHMARK_GENERATORS = frozenset(
+    {
+        "binary_barycentric_template",
+        "binary_selected_nonnull_only",
+        "categorical_dirichlet_multinomial",
+        "continuous_low_rank_factor",
+        "continuous_spiked_covariance",
+        "phylogenetic_brownian_continuous",
+        "planted_hierarchy_deep_signal",
+    }
+)
 DISCRETIZED_GAUSSIAN_BENCHMARK_GENERATORS = frozenset(
     {
         "blobs",
@@ -27,13 +39,17 @@ DISCRETIZED_GAUSSIAN_BENCHMARK_GENERATORS = frozenset(
 CONTINUOUS_BENCHMARK_GENERATORS = frozenset(
     {
         "blobs_continuous",
+        "continuous_low_rank_factor",
+        "continuous_spiked_covariance",
         "dimensional_gaussian_continuous",
         "gaussian_outliers_continuous",
+        "phylogenetic_brownian_continuous",
     }
 )
 CATEGORICAL_BENCHMARK_GENERATORS = frozenset(
     {
         "categorical",
+        "categorical_dirichlet_multinomial",
         "blobs_quantile",
         "phylogenetic",
         "temporal_evolution",
@@ -49,6 +65,7 @@ BENCHMARK_CASE_SUITES = frozenset(
         "continuous",
         "discretized_gaussian",
         "graph",
+        "method_proof",
     }
 )
 
@@ -96,6 +113,7 @@ ALL_CASE_CATEGORIES = {
     **CATEGORICAL_CASES,
     **PHYLOGENETIC_CASES,
     **OVERLAPPING_CASES,
+    **METHOD_PROOF_CASES,
 }
 
 
@@ -177,6 +195,8 @@ def get_test_cases_by_suite(suite: str) -> list[dict]:
         allowed_generators = DISCRETIZED_GAUSSIAN_BENCHMARK_GENERATORS
     elif normalized_suite == "graph":
         allowed_generators = GRAPH_BENCHMARK_GENERATORS
+    elif normalized_suite == "method_proof":
+        allowed_generators = METHOD_PROOF_BENCHMARK_GENERATORS
     else:
         raise AssertionError(f"Unhandled benchmark suite: {normalized_suite!r}")
 

@@ -13,7 +13,10 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergenc
 from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
     compute_spectral_decomposition,
 )
-from kl_clustering_analysis.tree.distributions import CONTINUOUS_COVARIANCE_BY_BLOCK
+from kl_clustering_analysis.tree.distributions import (
+    CONTINUOUS_COVARIANCE_BY_BLOCK,
+    MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV,
+)
 from kl_clustering_analysis.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
@@ -424,3 +427,26 @@ def test_feature_space_supports_mixed_bernoulli_and_unequal_categorical_blocks()
     assert feature_space.raw_dimension == 7
     assert feature_space.contrast_dimension == 5
     assert feature_space.family_label == "mixed"
+
+
+def test_continuous_covariance_memory_contract_is_adjustable(monkeypatch) -> None:
+    """Dense continuous covariance memory cap can be raised explicitly."""
+    columns = [f"X{j}" for j in range(400)]
+    leaf_data = pd.DataFrame(
+        np.arange(4 * 400, dtype=np.float64).reshape(4, 400),
+        index=["L0", "L1", "L2", "L3"],
+        columns=columns,
+    )
+    feature_space = continuous_feature_space_from_columns(tuple(columns))
+
+    monkeypatch.setenv(MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV, "1")
+    with pytest.raises(ValueError, match="memory contract"):
+        _simple_binary_tree().populate_node_divergences(
+            leaf_data,
+            feature_space=feature_space,
+        )
+
+    monkeypatch.setenv(MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV, "8")
+    tree = _simple_binary_tree()
+    tree.populate_node_divergences(leaf_data, feature_space=feature_space)
+    assert CONTINUOUS_COVARIANCE_BY_BLOCK in tree.nodes["root"]
