@@ -1,0 +1,15 @@
+{
+  "created_at_utc": "20260604_192054Z",
+  "study_role": "diagnostic_q5_selected_tail_law_not_calibration",
+  "records_path": "raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/selected_geometry_records.csv",
+  "alpha": 0.01,
+  "tail_quantile": 0.9,
+  "n_replicate_folds": 5,
+  "min_train_rows_per_predictor": 20,
+  "min_test_rows": 10,
+  "outputs": {
+    "validation": "raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_validation.csv",
+    "summary": "raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_summary.csv"
+  },
+  "interpretation": "Diagnostic validation of a predeclared Q5 selected-tail law. Rows do not create a production external calibration path."
+}

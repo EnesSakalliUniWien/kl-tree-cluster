@@ -1,0 +1,13 @@
+case_name,case_category,variant,threshold_policy,minimum_projection_dimension,status,error,true_clusters,found_clusters,ari,median_test_projection_dimension,median_raw_mp_signal_count,raw_zero_fraction,median_effective_independent_rows,median_mp_threshold_rows
+gauss_null_large,gaussian_null,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,1,,,,,,,
+gauss_null_large,gaussian_null,leaf_only_floor1,leaf,1,ok,,1,1.0,1.0,1.0,1.0,0.18592964824120603,3.0,3.0
+gauss_null_large,gaussian_null,leaf_only_floor2,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 199 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",1,,,,,,,
+gauss_null_large,gaussian_null,leaf_only_finite_null_floor2,finite_null,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 199 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",1,,,,,,,
+binary_2clusters,improved_binary_edge_cases,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,2,,,,,,,
+binary_2clusters,improved_binary_edge_cases,leaf_only_floor1,leaf,1,ok,,2,2.0,1.0,1.0,0.0,0.9387755102040817,6.0,6.0
+binary_2clusters,improved_binary_edge_cases,leaf_only_floor2,leaf,2,ok,,2,3.0,0.9607686148919136,2.0,0.0,0.9387755102040817,6.0,6.0
+binary_2clusters,improved_binary_edge_cases,leaf_only_finite_null_floor2,finite_null,2,ok,,2,3.0,0.9607686148919136,2.0,0.0,0.8163265306122449,6.0,6.0
+cat_highcard_20cat_4c,categorical_high_cardinality,leaf_only_floor0,leaf,0,error,Zero-dimensional spectral context can only be used with a zero projected-Wald contrast.,4,,,,,,,
+cat_highcard_20cat_4c,categorical_high_cardinality,leaf_only_floor1,leaf,1,ok,,4,1.0,0.0,1.0,0.0,0.9698492462311558,3.0,3.0
+cat_highcard_20cat_4c,categorical_high_cardinality,leaf_only_floor2,leaf,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 199 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,
+cat_highcard_20cat_4c,categorical_high_cardinality,leaf_only_finite_null_floor2,finite_null,2,error,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 199 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,,,,,,,

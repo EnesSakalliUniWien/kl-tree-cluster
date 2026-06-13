@@ -1,0 +1,9 @@
+{
+  "created_at_utc": "20260604_192608Z",
+  "study_role": "diagnostic_sibling_null_weight_rule_not_calibration",
+  "records_path": "raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/selected_geometry_records.csv",
+  "outputs": {
+    "summary": "raw/assets/benchmark-results/sibling_null_weight_rule_validation_20260604/sibling_null_weight_rule_summary.csv"
+  },
+  "interpretation": "Diagnostic comparison of sibling null-weight rules. The output does not validate or install a production replacement rule."
+}

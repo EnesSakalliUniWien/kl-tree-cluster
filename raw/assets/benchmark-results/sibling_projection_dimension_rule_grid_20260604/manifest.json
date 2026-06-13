@@ -1,0 +1,9 @@
+{
+  "created_at_utc": "20260604_192608Z",
+  "study_role": "diagnostic_sibling_projection_dimension_rule_grid_not_calibration",
+  "records_path": "raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/selected_geometry_records.csv",
+  "outputs": {
+    "summary": "raw/assets/benchmark-results/sibling_projection_dimension_rule_grid_20260604/sibling_projection_dimension_rule_grid.csv"
+  },
+  "interpretation": "Diagnostic dimension-distribution grid for sibling projection rules. This is not a calibration or power validation."
+}

@@ -1,0 +1,22 @@
+{
+  "created_at_utc": "20260604_202324Z",
+  "study_role": "diagnostic_selected_tail_external_promotion_gate_not_calibration",
+  "run_specs": [
+    {
+      "run_id": "cloud1000_20260604",
+      "selected_tail_law_csv": "raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260604_1000/selected_ratio_tail_law.csv"
+    }
+  ],
+  "q5_validation_path": "raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_validation.csv",
+  "q5_model_id": "q5_barycentric_edge_spectral",
+  "max_q5_split_residual_tail_abs_error": 0.005,
+  "max_context_heldout_tail_abs_error": 0.005,
+  "require_c_hat_precision": true,
+  "max_relative_c_simulation_se": 0.05,
+  "outputs": {
+    "contexts": "raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_promotion_contexts.csv",
+    "q5_gate": "raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_q5_promotion_gate.csv",
+    "summary": "raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_promotion_summary.csv"
+  },
+  "interpretation": "Diagnostic promotion gate only. Rows with external_admissible would identify contexts eligible for a future external CalibrationDecision branch; this script does not change production calibration."
+}

@@ -13,6 +13,8 @@ here only when they are diagnostic entrypoints or diagnostic-only helpers.
 - `oracle/`: subtree-cut recoverability and gate-path traces.
 - `calibration/`: sibling inflation and selection-conditioned null diagnostics.
 - `spectral/`: Marchenko-Pastur and projection-dimension diagnostics.
+- `math_trace/`: trace-schema validation and deterministic mathematical
+  failure attribution for benchmark run artifacts.
 - `failure/`: benchmark failure-report tracing used by the full benchmark.
 - `analysis/`: post-run result analysis and durable diagnostic notes.
 
@@ -30,5 +32,13 @@ Maintained entrypoints:
 - `calibration/selected_hierarchy_stratification_diagnostic.py`
 - `calibration/selected_hierarchy_geometry_covariates.py`
 - `calibration/root_selected_region_margins.py`
+- `calibration/selected_tail_parent_size_balance_stability.py`
+- `calibration/selected_tail_promotion_gate.py`
+- `calibration/internal_support_threshold_validation.py`
+- `calibration/sibling_null_weight_rule_validation.py`
 - `analysis/analyze_relationships.py`
 - `spectral/compare_mp_dimension_contracts.py`
+- `spectral/mp_projection_dimension_behavior_sweep.py`
+- `spectral/sibling_projection_dimension_rule_grid.py`
+- `open_questions/full_diagnostic_contract.py`
+- `math_trace/infer_benchmark_math.py`

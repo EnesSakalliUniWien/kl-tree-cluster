@@ -1,0 +1,30 @@
+{
+  "created_at_utc": "20260604_205310Z",
+  "study_role": "diagnostic_parent_size_balance_tail_law_not_calibration",
+  "records_path": "raw/assets/benchmark-results/selected_hierarchy_topology_refinement_input_20260603_300/selected_geometry_records.csv",
+  "alpha": 0.01,
+  "required_min_matching_simulations": 499,
+  "required_min_matched_records": 499,
+  "max_relative_c_simulation_se": 0.05,
+  "max_exceedance_standard_error": 0.002,
+  "max_parent_size_abs_error": 0.005,
+  "context_columns": [
+    "source_family",
+    "feature_family",
+    "sibling_projection_dimension",
+    "edge_action_bin",
+    "barycentric_balance_bin"
+  ],
+  "balance_bins": [
+    "balance_0_0.1",
+    "balance_0.1_0.25",
+    "balance_0.25_0.4",
+    "balance_0.4_0.5"
+  ],
+  "outputs": {
+    "contexts": "raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_contexts.csv",
+    "parent_folds": "raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_parent_folds.csv",
+    "summary": "raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_summary.csv"
+  },
+  "interpretation": "Diagnostic-only parent-size transfer gate scoped by edge action, projection dimension, feature family, source family, and barycentric balance. Candidate rows are not production calibration rules without a separate promotion gate."
+}
