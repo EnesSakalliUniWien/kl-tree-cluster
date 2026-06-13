@@ -91,11 +91,118 @@ n_u = n_{l(u)} + n_{r(u)},
 \qquad
 \theta_u = \frac{n_{l(u)} \theta_{l(u)} + n_{r(u)} \theta_{r(u)}}{n_u}.
 \end{equation}
+Equivalently, with
+\[
+\beta_u = \frac{n_{l(u)}}{n_u},
+\]
+the parent is the linear empirical barycenter
+\begin{equation}
+\theta_u
+=
+\beta_u \theta_{l(u)}
++
+(1-\beta_u)\theta_{r(u)}.
+\label{eq:barycentric-parent}
+\end{equation}
+This is a centroid representation in the declared feature chart. Euclidean
+means are squared-error centroids, and Bregman clustering theory gives the
+analogous mean-as-representative interpretation for broad classes of
+information-geometric distortions \citep{banerjee2005clustering}. Functional
+and symmetrized Bregman centroid results give useful extensions for
+distributional summaries \citep{frigyik2008functional,nielsen2009sided}, and
+agglomerative Bregman clustering connects this centroid view to hierarchical
+merge procedures \citep{telgarsky2012agglomerative}. Ward's minimum-variance
+method is the classical Euclidean special case in which merge costs are written
+through centroids and cluster sizes \citep{ward1963hierarchical}.
+
+\Cref{eq:barycentric-parent} also gives an exact local algebraic identity for
+the edge and sibling tests. For a binary parent with left child $L$ and right
+child $R$,
+\begin{equation}
+\theta_L-\theta_u
+=
+(1-\beta_u)(\theta_L-\theta_R),
+\qquad
+\theta_R-\theta_u
+=
+-\beta_u(\theta_L-\theta_R).
+\label{eq:barycentric-raw-contrasts}
+\end{equation}
+The sibling variance scale is
+\[
+s_u^{\mathrm{samp}}
+=
+\frac{1}{n_L}+\frac{1}{n_R},
+\]
+while the nested left and right child-parent variance scales are
+\[
+\frac{1}{n_L}-\frac{1}{n_u}
+\quad\text{and}\quad
+\frac{1}{n_R}-\frac{1}{n_u}.
+\]
+Therefore, under a shared local covariance baseline, no branch-length scaling,
+and the same whitening chart, the barycentric coefficients in
+\Cref{eq:barycentric-raw-contrasts} cancel the nested variance scales:
+\begin{equation}
+z_{L\to u}^{\mathrm{edge}} = z_u^{\mathrm{sib}},
+\qquad
+z_{R\to u}^{\mathrm{edge}} = -z_u^{\mathrm{sib}}.
+\label{eq:barycentric-edge-sibling-identity}
+\end{equation}
+Thus the same null-whitened barycentric direction can both open the
+child-parent edge path and create the focal sibling statistic. This is why the
+selected-hierarchy calibration problem is better viewed as a selected
+barycentric-contrast problem than as a marginal chi-square calculation.
+
+The barycentric algebra also supplies predeclared leverage variables for
+selected-tail diagnostics:
+\begin{equation}
+b_u=\min(\beta_u,1-\beta_u),
+\qquad
+\ell_u^{\mathrm{bar}}
+=
+\log\frac{\max(\beta_u,1-\beta_u)}{\min(\beta_u,1-\beta_u)},
+\qquad
+s_u^{\mathrm{samp}}=\frac{1}{n_L}+\frac{1}{n_R}.
+\end{equation}
+In the current diagnostics these variables enter only as descriptive selected
+tail coordinates, for example through models of the form
+\begin{equation}
+\log R_u
+=
+m\!\left(
+A_u^{\mathrm{edge}},
+\log n_u,
+\log(p/n_u),
+k_u^{\mathrm{sib}},
+f_u,
+b_u,
+\ell_u^{\mathrm{bar}},
+\lambda_{k,u}/\lambda_{+,u},
+M_{k,u},
+\rho_u
+\right)
++
+\varepsilon_u.
+\end{equation}
+They do not define a production external calibration rule unless held-out tail
+validation succeeds in the target selected context.
 The decomposition goal is to identify a set of terminal tree nodes whose leaf
 sets partition the samples and whose defining splits are supported by the two
 statistical tests below. This barycentric subtree update is shared by
 Bernoulli, categorical one-hot, and continuous coordinates; the feature-space
 contract determines the contrast chart and covariance model used by the tests.
+
+This current representation is still a coordinatewise empirical barycenter, not
+a Wasserstein or Fr{\'e}chet barycenter of full probability measures. Future
+extensions that represent nodes as full distributions or tree-valued objects
+would need their own barycenter geometry: Wasserstein barycenters for
+probability measures and Gaussian location-scatter families
+\citep{agueh2011barycenters,cuturi2014fast,alvarez2016fixed,carlier2024quantitative},
+Fr{\'e}chet or Karcher means for metric and Riemannian spaces
+\citep{frechet1948elements,karcher1977riemannian}, and BHV tree-space means
+for phylogenetic or topological summaries
+\citep{miller2015polyhedral,brown2020mean,lammers2024statistics}.
 
 Categorical features with values $C_{ij} \in \{0,\dots,K-1\}$ are represented
 through one-hot indicators

@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-06-04
+updated: 2026-06-05
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -34,8 +34,48 @@ sources:
   - wiki/sources/internal-vs-selected-hierarchy-inflation-20260603.md
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - wiki/sources/sibling-null-prior-interpolation-audit-20260604.md
+  - wiki/sources/calibration-contract-enhancement-request-20260604.md
+  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/types/inflation_model.py
+  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
+  - wiki/sources/selected-tail-law-q5-validation-20260604.md
+  - benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py
+  - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_validation.csv
+  - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_summary.csv
+  - wiki/sources/recursive-method-followups-20260604.md
+  - benchmarks/diagnostics/calibration/sibling_null_weight_rule_validation.py
+  - raw/assets/benchmark-results/sibling_null_weight_rule_validation_20260604/sibling_null_weight_rule_summary.csv
+  - benchmarks/diagnostics/spectral/sibling_projection_dimension_rule_grid.py
+  - raw/assets/benchmark-results/sibling_projection_dimension_rule_grid_20260604/sibling_projection_dimension_rule_grid.csv
+  - raw/assets/benchmark-results/mp_kmin_q14_q15_smoke_20260604/mp_kmin_contract_smoke.csv
+  - wiki/sources/barycentric-method-literature-request-20260604.md
+  - raw/inbox/barycentric-method-literature-request-20260604.txt
+  - manuscript/sections/method/representation.tex
+  - manuscript/sections/method/notation.tex
+  - manuscript/references.bib
+  - wiki/sources/open-question-diagnostic-audit-20260604.md
+  - raw/assets/benchmark-results/open_question_diagnostic_audit_20260604/open_question_diagnostic_audit.csv
+  - wiki/sources/open-question-full-diagnostic-contract-20260604.md
+  - benchmarks/diagnostics/open_questions/full_diagnostic_contract.py
+  - raw/assets/benchmark-results/open_question_full_diagnostic_contract_20260604/open_question_full_diagnostic_contract.csv
+  - raw/assets/benchmark-results/open_question_full_diagnostic_contract_20260604/open_question_full_diagnostic_summary.csv
+  - wiki/sources/selected-tail-promotion-gate-20260604.md
+  - benchmarks/diagnostics/calibration/selected_tail_promotion_gate.py
+  - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_promotion_contexts.csv
+  - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_q5_promotion_gate.csv
+  - raw/assets/benchmark-results/selected_tail_promotion_gate_20260604/selected_tail_promotion_summary.csv
+  - wiki/sources/selected-tail-parent-size-balance-stability-20260604.md
+  - benchmarks/diagnostics/calibration/selected_tail_parent_size_balance_stability.py
+  - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_contexts.csv
+  - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_parent_folds.csv
+  - raw/assets/benchmark-results/selected_tail_parent_size_balance_stability_20260604/parent_size_balance_summary.csv
   - wiki/sources/alpha-grid-full-20260604.md
   - wiki/sources/traversal-sibling-fdr-smoke-20260604.md
+  - wiki/sources/full-benchmark-run-20260605.md
+  - wiki/sources/mnist-continuous-alpha-sweep-20260605.md
+  - wiki/sources/selected-tail-promotion-gate-debug-20260605.md
+  - wiki/sources/internal-calibration-q9-q10-q11-debug-20260605.md
+  - benchmarks/diagnostics/calibration/internal_support_threshold_validation.py
+  - wiki/sources/mixed-internal-calibration-sweeps-20260605.md
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_edges.csv
   - raw/assets/benchmark-results/selected-edge-type1-pilot-20260604/merged/selected_edge_geometry_final.csv
   - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_edges.csv
@@ -140,6 +180,13 @@ ARI (`0.893811`). A lower edge alpha (`0.0001` or `0.0003`) gives more exact
 cluster-count hits but lower mean ARI. The grid supports keeping sibling alpha
 `0.01` as the benchmark default for now, while leaving edge alpha as a
 tradeoff between mean ARI and exact cluster-count control.
+The 2026-06-05 continuous MNIST PCA50 alpha sweep shows that this full-suite
+default evidence is not a universal per-dataset optimum. On MNIST with Ward
+linkage, the strictest tested pair (`edge_alpha=0.0001`,
+`sibling_alpha=0.0001`) improves to ARI `0.514854` with `11` clusters, while
+higher alphas over-split the Ward tree. This reinforces that alpha defaults
+need separate method-constant validation and that benchmark ARI tuning is not
+the same as selected-tree null calibration.
 
 The traversal sibling-FDR smoke splits the FDR question into four layers. With
 valid synthetic null p-values on an always-open three-level traversal tree,
@@ -334,6 +381,32 @@ those records are selected non-null evidence and are not admissible
 empirical-null calibration support. The diagnostic is therefore useful for
 describing the phenomenon, not for changing production calibration.
 
+The 2026-06-04 calibration-contract implementation makes this separation
+explicit in code. Focal sibling calibration now returns a `CalibrationDecision`
+with an admissibility status, scalar \(c\) when available, adjusted p-value,
+support counts, exact context, and descriptive strata. The scalar prediction
+helper remains only as a compatibility path and raises if the decision is not
+`internal_admissible`. This improves the software contract and prevents
+unsupported contexts from being hidden behind a scalar estimate, but it does
+not solve the mathematical support thresholds: minimum effective support,
+leave-one-target stability, and external selected-tail admissibility remain
+open validation questions.
+
+The recursive follow-up pass adds an executable Q9/Q11 support-threshold
+contract around this decision object. Decisions now report positive-weight
+record counts, selected-nonnull counts, strict and stopped support, family and
+local effective sample size, maximum weight share, leave-one-record
+sensitivity, configured threshold values, and failure reasons. Threshold
+enforcement is opt-in and returns `undefined_sparse_context` when enabled and
+failed; it is not a validated default production threshold. The same pass adds
+a Q10 sibling empirical-null weight-rule grid. On the current selected-geometry
+records, the grid is descriptive only because internal-support labels are not
+available, but it shows that the current product-BH rule has effective sample
+size `72.63`, maximum weight share `0.0250`, and weighted selected-ratio mean
+`7.37`, while a hard null-indicator rule at `0.05` has no positive records.
+The next Q10 validation must run on a mixed null/signal table with known
+support labels before any replacement weight rule can be promoted.
+
 The bootstrap estimator is not the desired production direction. The selected
 inference literature is still useful because it identifies the mathematical
 objects: selected regions, signed distances, mean curvature, tangent cones, and
@@ -466,6 +539,15 @@ only five runnable cases are currently eligible for gate-path statistical
 changes before additional hierarchy/metric work. The tree/metric rows must be
 handled through representation, distance, linkage, or benchmark construction
 analysis first.
+The completed 2026-06-05 full benchmark extends this separation to `120` cases
+and `9` methods. KL remains strong on binary, overlapping, categorical, and
+phylogenetic ok rows, but produces `28` skips under the strict empirical-null
+support contract; the new method-proof cases intentionally expose covariance,
+calibration-support, and under-split stress modes rather than serving as an
+ARI leaderboard. This keeps Q30--Q32 active: low ARI can come from
+representation/tree unrecoverability, root-split rejection, covariance limits,
+or calibration support, and these modes should not be merged into one
+threshold-tuning question.
 
 The phylogenetic, machine-learning selective-inference, and topological graph
 literature sharpens the medium/large-parent selected-tail question. When a
@@ -497,7 +579,116 @@ whereas the selected-energy and full descriptive equations fail that split.
 Thus the next law should not be a high-dimensional fitted equation; it should
 be a low-dimensional predeclared selected-region coordinate model.
 
+The Q5 selected-tail law validation turns this into a direct fitted-tail
+diagnostic. It fits predeclared residual-tail models using edge severity,
+parent size, sibling projection dimension, feature family, parent-size bin, and
+spectral geometry. Replicate holdout is strong for the full Q5 model
+(\(R^2=0.338\), top-tail AUC `0.978`, residual-tail exceedance `0.010052` at
+\(\alpha=0.01\)), but leave-one-case and leave-one-parent-size-bin validation
+show poor absolute tail calibration. The edge-plus-spectral-only model is more
+stable across splits, with median holdout \(R^2=0.197\), median top-tail AUC
+`0.987`, and median residual-tail absolute error `0.007755`. This partially
+answers which variables matter for Q5: edge severity and spectral geometry are
+useful, but the current full global Q5 law is not a production selected-tail
+calibrator.
+
+The barycentric follow-up tightens the method-level explanation and gives a
+new Q5 result. Since internal node distributions are leaf-count weighted
+barycenters, a binary parent has
+\(\theta_L-\theta_u=(1-\beta_u)(\theta_L-\theta_R)\) and
+\(\theta_R-\theta_u=-\beta_u(\theta_L-\theta_R)\). Under the implemented
+nested child-parent and sibling variance scales, a shared covariance baseline,
+and no branch-length scaling, the whitened child-parent edge vectors equal the
+sibling vector up to sign. This explains why edge severity is a strong selected
+tail coordinate: the same barycentric direction is used by edge opening and
+sibling evidence. The expanded Q5 run adds barycentric balance,
+log-barycentric leverage, and log sampling scale. The best current
+low-dimensional candidate is `q5_barycentric_edge_spectral`, whose median
+residual-tail absolute error is `0.002386` versus `0.007755` for the previous
+edge-plus-spectral model. The full barycentric all-variable law still fails
+transfer, so this is a better diagnostic path, not a calibrated external law.
+
 The current concrete open questions are:
+
+Diagnostic status checkpoint: [[open-question-diagnostic-audit-20260604]]
+records one row for each question below. The audit outcome is that `Q3`,
+`Q5`, `Q7`, and `Q8` are partially answered by current diagnostics; `Q6` is
+implemented for internal fail-closed calibration decisions but remains open
+for external selected-tail promotion; `Q10` and `Q17` have diagnostic-only
+reruns; `Q16`, `Q22`, `Q25`, `Q27`, `Q28`, `Q33`, `Q37`, `Q39`, and `Q40`
+still lack a sufficient diagnostic to close them; and the rest are partially
+diagnosed but need larger, better-conditioned, or more specific validation
+panels before they can become method claims.
+
+Full diagnostic-contract checkpoint:
+[[open-question-full-diagnostic-contract-20260604]] converts every item below
+into a fully specified diagnostic work unit. The generated contract has `44`
+rows and every row has `diagnostic_contract_status=fully_specified`, with
+required inputs, required outputs, acceptance criteria, diagnostic scale, and
+the blocker before method-claim promotion. This closes the vague "needs more
+diagnostics" state; it does not close the mathematical questions themselves.
+
+Promotion checkpoint: [[selected-tail-promotion-gate-20260604]] runs the
+strict Q1/Q5/Q7/Q8 gate on the 2026-06-04 1000-replicate selected-tail table.
+It evaluates `79` contexts: `69` are `undefined_support_failure`, `10` are
+`external_diagnostic_only`, and `0` are `external_admissible`. Seven contexts
+meet the existing context-level selected-tail law, but none can be promoted
+because the barycentric Q5 model fails leave-one-parent-size-bin transfer
+(`0.250107` residual-tail absolute error) and the strict relative
+\(\hat c\) simulation-SE field is absent from the selected-tail context table.
+Therefore the production calibration branch remains fail-closed; the next
+necessary diagnostic is a scoped parent-size-stable selected-tail law or a
+context-specific Q5 replacement with c-hat precision metadata.
+
+Balance-aware parent-size stability checkpoint:
+[[selected-tail-parent-size-balance-stability-20260604]] runs that scoped
+diagnostic on the available 300-replicate row-level selected-geometry table.
+It conditions on source family, feature family, sibling projection dimension,
+edge-action bin, and predeclared barycentric-balance bin, then evaluates
+leave-one-parent-size-bin transfer and simulation-level \( \hat c \) precision.
+The run finds `3` `parent_size_balance_external_candidate` contexts, all
+`gaussian_blobs`/Bernoulli, projection dimension `2`, `edge_action_ge8`, with
+balance bins `balance_0.1_0.25`, `balance_0.25_0.4`, and `balance_0.4_0.5`.
+It also finds `51` support failures and `2` support-rich contexts with only
+one parent-size bin, so no parent-size holdout is possible. This creates a
+narrow context-specific diagnostic path, but it is still not a production
+external calibration branch until rerun on a production-scale row-level panel
+and supplied as a promoted external selected-tail rule. On 2026-06-13 the
+runtime wiring gap was narrowed: `ExternalSelectedTailCalibrationModel` can now
+return `external_admissible_scalar` only for exact predeclared context matches,
+and otherwise returns `undefined_external_not_admissible`. This is production
+plumbing for future promoted rows, not validation that the three diagnostic
+candidates are production-admissible.
+The 2026-06-05 promotion-gate debug explains the remaining evidence gap. The
+selected-tail promotion table has six context-level candidates that satisfy
+support, context-law admissibility, tail precision, and absolute-tail-error
+predicates, but all six are blocked by the global Q5 parent-size transfer
+failure and missing c-hat precision metadata. The later balance-conditioned
+diagnostic has three narrower candidates with c-hat precision and parent-size
+holdout passing, but those rows use a different context schema and still need a
+production-scale row-level panel before they should be supplied to the external
+promotion branch.
+The Q9/Q10/Q11 internal-calibration debug separates implementation from
+validation. Q9/Q11 support metadata and opt-in `undefined_sparse_context`
+enforcement exist, and the 2026-06-05 follow-up threads the enforcement flag
+and custom thresholds through sibling adjustment, sibling annotation, gate
+annotation, and `TreeDecomposition` while keeping defaults off. The threshold
+values are still not validated as method constants. A diagnostic entrypoint now
+scores permissive, current, and strict threshold profiles on mixed null/signal
+context panels, reporting null false-split and signal-retention rates only when
+outcome labels are present. Q10 has a predeclared weight-rule grid and now
+reports selected-nonnull weight leakage when true support labels are supplied,
+but the current selected-geometry diagnostic still has
+`support_labels_unavailable`, so it cannot validate a replacement rule.
+The subsequent mixed internal-calibration sweeps provide labeled
+method-proof, binary, and categorical panels. They make Q10 leakage measurable:
+current product-BH selected-nonnull weight share is about `4.73e-10`,
+`1.82e-9`, and `4.21e-9` in the three sweeps. This supports keeping the
+current Q10 weight rule for now, but it does not close Q9/Q11 threshold
+validation. Current-default thresholds have low binary null false splits
+(`0.00008`) but categorical admissible null false splits remain high
+(`0.029816`) and method-proof signal retention among admissible signal contexts
+is only `0.16343`.
 
 1. How should the external calibration law condition on hierarchy construction,
    child-parent edge openings, and focal sibling selection?
@@ -509,10 +700,17 @@ The current concrete open questions are:
    blockers?
 5. Does external inflation depend mainly on edge-selection severity, \(p/n\),
    projection dimension, eigenvalue concentration, angular alignment, tree
-   selection, covariance whitening, or feature family?
+   selection, covariance whitening, or feature family? Current Q5 validation
+   partially answers this: edge severity plus spectral geometry transfer better
+   than the full edge/parent/projection/feature/spectral linear law, but no
+   production tail law is validated. The barycentric rerun adds child balance
+   and leverage; it improves the edge/spectral tail-error diagnostic but does
+   not rescue the full all-variable law.
 6. When should the calibration hierarchy return
    \(\hat c_{\mathrm{internal}}\), \(\hat c_{\mathrm{external}}\), or fail
-   undefined?
+   undefined? The code now exposes these outcomes through explicit focal
+   `CalibrationDecision` statuses for the internal estimator, but the
+   production rule for promoting any external selected-tail law is still open.
 7. What minimum matched selected-hierarchy support and Monte Carlo precision
    are required before an external calibration estimate is admissible?
    Current diagnostic contract: at \(\alpha_{\mathrm{sib}}=0.01\), require at
@@ -554,13 +752,49 @@ The current concrete open questions are:
    tie-heavy hierarchy cells and continuous positive-margin hierarchy cells
    should not be pooled without a mathematical reason.
 9. What minimum effective calibration support is required before internal
-   empirical-null inflation is trustworthy?
+   empirical-null inflation is trustworthy? The implementation now reports
+   supported-record, positive-weight, selected-nonnull, strict-null,
+   edge-blocked, feature-family, and local effective-support metadata. It also
+   reports maximum weight share and leave-one-record scale stability, and can
+   opt into a sparse-context failure status through the full sibling/gate
+   annotation path. No hard mathematical threshold has been validated as a
+   default production rule. The next support contract should also test whether
+   calibration records cover comparable barycentric weights, because balanced
+   and highly unbalanced splits share different leverage geometry.
 10. Is the empirical-null weight rule calibrated enough to use beyond
-   diagnostics?
+   diagnostics? The Q10 diagnostic now compares product-BH, minimum-BH,
+   geometric-mean-BH, Fisher-combined, and hard null-indicator rules. On the
+   current selected-geometry input it is not a replacement validation because
+   true support labels are unavailable. The 2026-06-05 mixed sweeps add labeled
+   panels and show near-zero selected-nonnull leakage for the current
+   product-BH rule, so there is no current diagnostic reason to replace it.
+   Promotion still needs a predeclared acceptance rule across support regimes.
 11. Is the context bandwidth stable when calibration support is sparse?
+   Q9/Q11 support-threshold enforcement can now drop sparse contexts
+   explicitly, but bandwidth stability itself still needs a grid over exact
+   versus relaxed parent-size, feature-family, projection-dimension, and
+   spectral-geometry axes, now including barycentric balance/leverage as
+   candidate exact or stratifying coordinates.
 12. Under what exact assumptions is the projected chi-square reference valid?
+    The fixed-projection statement is a conditional theorem: after whitening,
+    if the contrast is standard normal and the projection is fixed, valid, and
+    not selected using the tested contrast, then the projected statistic has
+    the expected chi-square reference. This supports local proof language only
+    under fixed or conditionally independent projections; it does not justify
+    selected hierarchy construction, focal sibling selection, or subspaces that
+    contain deterministic summaries of the tested sibling means.
 13. Is the fixed-projection proof sufficient, or must the data-selected PCA
-    effect be derived or simulated?
+    effect be derived or simulated? The selected-PCA validation is nuanced.
+    Leaf-only fixed-membership Gaussian selected PCA is calibrated in the
+    locked 2026-06-01 run and the 2026-06-05 rerun: nominal `0.05` rejection
+    rates are near nominal (`0.046`--`0.059` in the rerun). The child-mean-row
+    variant is catastrophically anti-conservative (`0.671`, `0.992`, and
+    `1.000`), even though mean raw MP signal count remains `0` and the mean
+    projection dimension is the `k_min=2` floor. Therefore the proof is
+    sufficient only for fixed/leaf-only local Gaussian settings. Any selected
+    PCA basis that leaks sibling means, and any full selected-tree setting
+    where the focal sibling is chosen using the same evidence, still requires a
+    selected-reference correction or a validated diagnostic law.
 14. Does the local Marchenko--Pastur rule preserve calibration and power?
     [[local-marchenko-pastur-rule]] partially resolves the algebraic
     correctness question: the \(d_u/m_u\) edge matches the backend eigenvalue
@@ -596,21 +830,80 @@ The current concrete open questions are:
     need a selected-tree spectral inflation law, but categorical spectra need
     an extreme-node analysis tied to multinomial covariance, projection
     dimension, and sibling-testing decisions.
+    The Q14/Q15 recursive smoke over `gauss_null_large`, `binary_2clusters`,
+    and `cat_highcard_20cat_4c` adds a small implementation check:
+    `leaf_only_floor0` errors in all three targeted cases because the current
+    test stack lacks explicit zero-dimensional semantics, `leaf_only_floor1`
+    runs all three cases, and `leaf_only_floor2` plus finite-null floor-2 both
+    still trigger two strict calibration-support failures. This supports
+    testing \(k_{\min}=1\) as a candidate branch, but it does not validate a
+    default change. The barycentric identity suggests the selected PCA/MP
+    study should stratify by child balance because unbalanced selected
+    barycenters can align the shared edge/sibling direction with leading local
+    spectral modes.
+    The 2026-06-05 MP/projection behavior sweep adds raw sibling-test behavior
+    endpoints. In `mp_spike_below_bbp_continuous`, raw parent MP count selects
+    `k=0` on all rows and reduces false splits from `0.07597` under the
+    current edge-derived rule to `0.0`; in `mp_spike_above_bbp_continuous`, the
+    same raw MP rule again selects `k=0` on all rows and drops signal retention
+    from `0.09152` to `0.0`. Thus raw MP count is directionally useful for
+    below-BBP null control but not an admissible selected sibling rule by
+    itself.
+    Gavish-Donoho hard singular-value thresholding is a relevant external
+    rank-selection candidate because it is more conservative than the ordinary
+    MP edge, but its objective is asymptotic denoising risk, not selected-tree
+    null false-split control. It should enter as a diagnostic threshold rule,
+    not as a production proof.
 15. Is the minimum spectral dimension \(k_{\min}=2\) justified?
     The 2026-06-01 leaf-only regression-gate diagnostic shows the trade-off:
     \(k_{\min}=2\) keeps higher mean/median ARI among runnable rows but creates
     six unsupported-calibration skips, while \(k_{\min}=1\) reduces skips to
     two but lowers aggregate ARI. This is not solved by a default change.
+    The targeted Q14/Q15 smoke reinforces this: \(k_{\min}=0\) currently needs
+    a new null/no-test semantic, \(k_{\min}=1\) removes the strict skips in the
+    three-case smoke, and \(k_{\min}=2\) remains entangled with calibration
+    support rather than only spectral power.
+    The 2026-06-05 behavior sweep uses explicit diagnostic zero-dimensional
+    semantics (`stat=0`, `df=0`, `p=1`) and confirms why this must remain
+    separate from production: floor-0/raw-MP semantics can suppress null
+    splits, but also suppress selected signal when MP count stays at zero.
+    Floor-1 restores some above-BBP MP spike power (`0.08258`) but keeps
+    below-BBP false splits at `0.06277`; floor-2 matches the parent-dimension
+    rule and is slightly more powerful but no more calibrated.
 16. What calibration-support contract should be used when every local sibling
     record is selected non-null under the leaf-only spectral basis?
-17. Is the sibling projection dimension rule mathematically justified?
+17. Is the sibling projection dimension rule mathematically justified? The Q17
+    rule-grid diagnostic now compares the current edge-derived dimension,
+    parent test dimension, raw MP parent signal count, and raw-MP floor rules.
+    On selected-geometry rows, the current rule uses \(k=1\) for about `75%`
+    of records and \(k=2\) for about `25%`; raw MP count would set \(k=0\) for
+    about `47%` and differs from the current rule on about `58.7%`. This shows
+    the rule choice has large behavioral surface, but p-value and power
+    validation remain open. The next rule grid should cross dimension choices
+    with barycentric balance and leverage because the edge-derived rule is
+    reusing the same whitened barycentric direction.
+    The 2026-06-05 behavioral sweep adds those null/power endpoints at the raw
+    selected-tree p-value level. Raw MP count differs from current on `73.7%`
+    of method-proof rows, `48.3%` of binary rows, and `88.9%` of categorical
+    rows; it chooses `k=0` on `55.4%`, `28.5%`, and `84.6%` of those panels.
+    It reduces suite-wide null false splits relative to current but loses
+    signal, while floor-1/floor-2 recover signal and reintroduce high
+    selected-tree false splits. Q17 therefore remains active: the rule choice
+    has large behavioral effects, but none of the tested rules is a calibrated
+    production rule without a selected-tree correction law.
 18. How should one-hot categorical dependence be modeled and validated?
 19. Are high-cardinality categorical failures caused by covariance modeling,
-    sibling FDR, or projection dimension policy?
+    sibling FDR, or projection dimension policy? Barycentric boundary geometry
+    is now an explicit candidate: selected categorical subtree barycenters near
+    simplex faces may make drop-last covariance ill-conditioned or unstable.
 20. Is the per-node empirical-Gaussian covariance estimator calibrated well
-    enough for production continuous data?
+    enough for production continuous data? The current node object is a
+    Euclidean mean barycenter, not a Gaussian-distribution barycenter.
 21. What validated low-rank or regularized continuous covariance model should
     replace dense empirical covariance for \(p \gg n\) continuous blocks?
+    Wasserstein Gaussian barycenters are now a literature-backed future option
+    if nodes should represent full location-scatter distributions rather than
+    only mean vectors.
 22. How should discretized Gaussian benchmark variants be validated under
     approximate Bernoulli or categorical assumptions?
 23. What is the clean general feature-space formulation for mixed Bernoulli,
@@ -619,16 +912,21 @@ The current concrete open questions are:
     the intended sibling false-split target? The 2026-06-04 smoke says this
     must be decomposed into algorithmic repeated-BH behavior, fixed-tree
     projected-Wald calibration, selected-tree p-value distortion, and
-    empirical-inflation support failure.
+    empirical-inflation support failure. Barycentric same-evidence should be a
+    candidate local strength variable when defining the frontier target.
 25. Should sibling FDR additionally condition on the edge path, traversal
     depth, or selected hierarchy, or use a more explicit hierarchical target?
 26. Should pass-through require descendant split evidence to overcome local
-    sibling-same evidence?
+    sibling-same evidence? The local sibling-same evidence should include
+    barycentric symmetry: pass-through should be harder when a balanced parent
+    places both children symmetrically around the parent barycenter.
 27. What functional form should
     \(S_{\mathrm{desc}}(v)>\tau(S_{\mathrm{same}}(v),n_v,d_v)\) take?
 28. Does pass-through improve under-splits without unacceptable over-splitting?
 29. How should direct sibling false splitting inside phylogenetic clades be
-    modeled?
+    modeled? Future phylogenetic nulls should use Frechet/BHV tree-space
+    barycenter and variance theory rather than ordinary Euclidean means when
+    the object being averaged is a tree.
 30. Which failures are gate failures and which are hierarchy/metric
     recoverability failures?
 31. Which hierarchy diagnostics should be built for `tree_unrecoverable` cases
@@ -654,13 +952,16 @@ The current concrete open questions are:
     overstating Type-I error control?
 42. How should observed root merge margins be lifted from ambient first-order
     Euclidean distance to the actual selected-region law: null-whitened signed
-    distance, active-set and tangent-cone structure, curvature, or a discrete
-    tie-cell law?
+    distance, active-set and tangent-cone structure, curvature, a discrete
+    tie-cell law, or the derivative of the selected barycenter map
+    \(X\mapsto\theta_u(X)\)?
 43. Given the verified local edge/sibling barycentric z-identity, how should
     the fixed-subspace edge-opening radial distance and edge-path Tree-BH
     action be lifted to the full selected law with selected projection,
     Tree-BH selection cells, sibling FDR/inflation, and non-root focal sibling
-    contexts?
+    contexts? The next selected-region law should explicitly track how
+    hierarchy selection changes which leaves enter each barycenter and how
+    that selected barycentric map changes the tangent and normal geometry.
 44. Why does the internal empirical-inflation layer block some root diffuse
     dimensional contexts when the raw and edge-conditioned sibling tails are
     still strongly significant? The current diagnostic says the blocker is not
@@ -719,6 +1020,14 @@ The current concrete open questions are:
 - `wiki/sources/alpha-grid-full-20260604.md` records the AWS full-suite alpha
   grid over `25` alpha pairs and separates benchmark evidence from Type-I
   calibration proof.
+- `wiki/sources/full-benchmark-run-20260605.md` records the completed
+  120-case benchmark and the latest method-proof stress modes.
+- `wiki/sources/mnist-continuous-alpha-sweep-20260605.md` records the focused
+  continuous MNIST alpha sweep and its Ward-linkage sensitivity.
+- `wiki/sources/selected-tail-promotion-gate-debug-20260605.md` records the
+  predicate-level debug of the zero-admissible selected-tail promotion result.
+- `wiki/sources/internal-calibration-q9-q10-q11-debug-20260605.md` records the
+  implementation-vs-validation debug for Q9/Q10/Q11.
 
 ## Links
 

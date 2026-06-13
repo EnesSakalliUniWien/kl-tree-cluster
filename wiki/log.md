@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-04
+updated: 2026-06-12
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -692,6 +692,502 @@ verification, and maintenance events here in chronological order.
   active inflated selected-tree layer. Added
   [[traversal-sibling-fdr-smoke-20260604]] and kept the result classified as
   smoke evidence, not final FDR calibration.
+- Ingested
+  `raw/inbox/calibration-contract-enhancement-request-20260604.txt` and added
+  [[calibration-contract-enhancement-request-20260604]]. Implemented explicit
+  internal `CalibrationDecision` statuses for sibling empirical-null
+  calibration, preserved scalar prediction as an admissibility-checked
+  compatibility helper, and corrected `manuscript/sections/method/edge_test.tex`
+  from historical internal-row spectral matrices to the production leaf-only
+  inferential PCA contract.
+- Updated [[open-mathematical-questions]] to separate the new code-level
+  `CalibrationDecision` status contract from still-open mathematical validation
+  questions about effective internal support thresholds, leave-one-target
+  stability, and external selected-tail admissibility.
+- Added `benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py`
+  and [[selected-tail-law-q5-validation-20260604]] for Q5. The diagnostic fits
+  residual-tail models using edge severity, parent size, sibling projection
+  dimension, feature family, parent-size bin, and spectral geometry on the
+  300-replicate row-level selected-geometry table. The full Q5 model validates
+  on replicate holdout but fails case/parent-size extrapolation, while the
+  edge-plus-spectral model transfers best; the result remains diagnostic and
+  not a production external calibration law.
+- Ingested `raw/inbox/recursive-method-program-20260604.txt` and added
+  [[recursive-method-followups-20260604]]. Implemented Q9/Q11
+  support-threshold reporting and opt-in sparse-context enforcement, added the
+  Q10 sibling empirical-null weight-rule diagnostic grid, ran the Q14/Q15
+  MP/minimum-dimension smoke, and added the Q17 sibling projection-dimension
+  rule-grid diagnostic. Updated [[open-mathematical-questions]] so these items
+  are marked as partially answered by code or diagnostics while Q19--Q44 remain
+  larger idea and validation tracks.
+- Ingested `raw/inbox/barycentric-method-literature-request-20260604.txt` and
+  added [[barycentric-method-literature-request-20260604]]. Expanded the
+  manuscript method with the barycentric parent formula, the edge/sibling
+  whitened z-identity, barycentric leverage variables, Bregman/Wasserstein/
+  Frechet/BHV literature, and a validation-status row. Extended the Q5
+  selected-tail diagnostic with barycentric balance, log leverage, sampling
+  scale, and `log(p/n_u)` predictors; the expanded rerun finds that the
+  barycentric edge-plus-spectral model reduces median residual-tail absolute
+  error to `0.002386` while remaining diagnostic-only.
+- Added `raw/assets/benchmark-results/open_question_diagnostic_audit_20260604/open_question_diagnostic_audit.csv`
+  and [[open-question-diagnostic-audit-20260604]]. Reran the focused diagnostic
+  validation gate, Q10 sibling null-weight rule diagnostic, and Q17 sibling
+  projection-dimension rule grid. Updated [[open-mathematical-questions]] with
+  a compact all-44-question diagnostic status ledger.
+- Added `benchmarks/diagnostics/open_questions/full_diagnostic_contract.py`,
+  `tests/validation/71_test_open_question_full_diagnostic_contract.py`, and
+  [[open-question-full-diagnostic-contract-20260604]]. Generated
+  `raw/assets/benchmark-results/open_question_full_diagnostic_contract_20260604/`
+  so all `Q1`--`Q44` now have fully specified diagnostic contracts while
+  remaining explicitly non-promoted method claims.
+- Added `benchmarks/diagnostics/calibration/selected_tail_promotion_gate.py`
+  and [[selected-tail-promotion-gate-20260604]]. The strict Q1/Q5/Q7/Q8 gate
+  over the 2026-06-04 1000-replicate selected-tail run evaluates `79`
+  contexts: `69` are `undefined_support_failure`, `10` are
+  `external_diagnostic_only`, and `0` are `external_admissible`. The seven
+  context-level selected-tail admissible rows remain diagnostic-only because
+  Q5 fails leave-one-parent-size-bin transfer and relative c-hat precision is
+  not available in the selected-tail context table.
+- Added
+  `benchmarks/diagnostics/calibration/selected_tail_parent_size_balance_stability.py`
+  and [[selected-tail-parent-size-balance-stability-20260604]]. On the
+  300-replicate row-level selected-geometry table, the diagnostic finds `3`
+  balance-scoped, parent-size-stable external-candidate contexts, all
+  Gaussian Bernoulli projection-2 high-edge-action rows with balance bins
+  `balance_0.1_0.25`, `balance_0.25_0.4`, and `balance_0.4_0.5`; `51`
+  contexts remain support failures and `2` lack parent-size holdout coverage.
+- Ingested `raw/inbox/traceable-benchmark-suite-request-20260604.txt` and
+  added [[traceable-benchmark-suite-request-20260604]] and
+  [[traceable-mathematical-benchmark-suite]]. Implemented the first
+  `method_proof` benchmark suite with ten traceable cases, lightweight
+  generators for the new binary/categorical/continuous/phylogenetic case
+  families, and `benchmarks/diagnostics/math_trace/infer_benchmark_math.py`
+  for deterministic row-level mathematical failure attribution.
+- Ran the canonical full benchmark on 2026-06-05 and added
+  [[full-benchmark-run-20260605]]. The run completed `120` cases and `9`
+  methods with `1080` result rows in
+  `benchmarks/results/run_20260605_084136Z_full/`. Added generator geometry
+  coverage for the method-proof cases, a `KL_TE_RUN_DIR` resume/report
+  override for the full runner, and a `method_proof` report section so the
+  completed CSV could be post-processed into relationship, failure, and PDF
+  reports.
+- Ran the canonical MNIST example and added
+  [[mnist-benchmark-run-20260605]]. The run sampled `2000` MNIST images and
+  tested `20` distance/linkage configurations; four single-linkage
+  configurations completed with heavy over-splitting and low ARI, while the
+  remaining configurations failed closed under the strict sibling empirical-null
+  support contract.
+- Ran a continuous MNIST PCA50 probe and added
+  [[mnist-continuous-pca50-run-20260605]]. The probe retained `83.13%` PCA
+  variance, used Euclidean tree distances, and found the best ARI under
+  complete linkage (`0.258244`) while single and average linkage collapsed to
+  one cluster.
+- Ran a focused continuous MNIST PCA50 alpha sweep and added
+  [[mnist-continuous-alpha-sweep-20260605]]. The `75`-row grid completed
+  without calibration-support or dense-covariance failures; strict Ward
+  (`edge_alpha=0.0001`, `sibling_alpha=0.0001`) improved to ARI `0.514854`
+  with `11` clusters, while higher alphas over-split the Ward tree.
+- Debugged the strict selected-tail promotion gate and added
+  [[selected-tail-promotion-gate-debug-20260605]]. The zero-admissible result
+  decomposes into `69` support failures plus global Q5 parent-size transfer
+  failure and missing c-hat precision metadata; six context-law candidates
+  would pass only if both global blockers were relaxed, while the later
+  balance-conditioned diagnostic exposes three narrower diagnostic candidates.
+- Debugged the Q9/Q10/Q11 internal calibration status and added
+  [[internal-calibration-q9-q10-q11-debug-20260605]]. Q9/Q11 support metadata
+  and opt-in sparse-context enforcement are implemented. A follow-up threaded
+  the enforcement flag and custom thresholds through sibling adjustment,
+  sibling annotation, gate annotation, and `TreeDecomposition` while keeping
+  defaults off. Q10 remains diagnostic-only because the current
+  selected-geometry input lacks internal-support labels.
+- Added `benchmarks/diagnostics/calibration/internal_support_threshold_validation.py`
+  and extended `sibling_null_weight_rule_validation.py` so mixed null/signal
+  panels can score permissive/current/strict internal support thresholds and
+  Q10 can report selected-nonnull weight leakage when true support labels are
+  supplied. No production-scale mixed panel is promoted; the result is
+  diagnostic infrastructure for Q9/Q10/Q11 validation.
+- Ran mixed internal-calibration sweeps and added
+  [[mixed-internal-calibration-sweeps-20260605]]. The method-proof, binary,
+  and categorical panels produce `163100`, `225639`, and `58861` Q10 sibling
+  records, respectively. Q10 current product-BH selected-nonnull leakage is
+  near zero in all three panels, but Q9/Q11 thresholds remain unpromoted
+  because categorical admissible null false splits remain above nominal alpha
+  and signal retention is low.
+- Added `benchmarks/diagnostics/spectral/mp_projection_dimension_behavior_sweep.py`,
+  ran method-proof, binary, and categorical Q14/Q15/Q17 behavior sweeps, and
+  added [[mp-projection-dimension-behavior-sweeps-20260605]]. Raw parent MP
+  count often chooses `k=0` and reduces false splits, but in the above-BBP MP
+  spike case it also suppresses all signal; floor rules recover signal while
+  leaving selected-tree raw sibling p-values anti-conservative. Recorded
+  Gavish-Donoho hard singular-value thresholding as diagnostic rank-selection
+  input rather than production calibration evidence.
+- Debugged the Q14/Q15/Q17 behavior sweep failure mode with post-hoc
+  attribution tables. The raw-MP improvement comes primarily from the
+  zero-dimensional no-test branch; conditional on `k>0`, null-labeled selected
+  sibling tests reject around `99%` of contexts. Required-alpha summaries show
+  that nominal `1%` control would require raw p-value cutoffs on the order of
+  `1e-113` or smaller, so simple alpha tuning is not a credible production
+  calibration.
+- Checked Q12/Q13 selected-PCA evidence by rerunning
+  `benchmarks.validation.selected_pca_projected_wald_calibration` at 1000
+  replicates per setting. The rerun reproduces the locked conclusion:
+  leaf-only fixed-membership Gaussian selected PCA is calibrated near nominal
+  (`0.046`, `0.048`, `0.059` rejection at alpha `0.05`), while child-mean-row
+  spectral bases reject at `0.671`, `0.992`, and `1.000`. Updated
+  [[selected-pca-projected-wald-validation]] and Q12/Q13 wording accordingly.
+
+### 2026-06-05
+
+- Recovered historical root-level KAK/cosine spectral scripts from git history
+  after confirming they are absent from the current working tree. Added
+  [[historical-kak-spectral-pipelines-20260605]] to record that
+  `adaptive_cosine_spectral_blocks.py`, `kak_mp_tree_method_test.py`, and
+  `cosine_subspace_tree_sweep.py` selected tree topology from spectral
+  coordinates before running `TreeDecomposition` gates on the original feature
+  matrix, while `kak_signal_adaptive_umap_tree_page.py` was visualization-only.
+- Added and ran a current-compatible adaptive cosine/KAK benchmark probe using
+  the production gate-bundle path. The method-proof run produced `37` ok and
+  `5` fail-closed spectral-block rows; the full run produced `369` ok, `46`
+  failed-gate, and `3` failed-spectrum rows. Added
+  [[adaptive-cosine-kak-benchmark-probe-20260605]] to record that early
+  non-common spectral intervals, especially `2-5` and `2-6`, carry most
+  recoverable signal, while common-mode or high-energy block selection is only
+  diagnostic without selected-tree calibration.
+- Extended the adaptive cosine/KAK probe with explicit internal support
+  threshold enforcement and a full-data matrix runner. Support enforcement
+  reduced the full benchmark KAK probe from `369` to `248` ok rows and reduced
+  cases with an ok block from `110` to `96`. On the combined Julia GO matrix,
+  default blocks over-split into `101` to `650` clusters, while all `15`
+  binary/TF-IDF blocks failed closed under support-threshold enforcement.
+
+### 2026-06-06
+
+- Restored `scripts/kak_signal_adaptive_umap_tree_page.py` as a
+  current-compatible diagnostic page generator for the adaptive cosine/KAK
+  matrix probe. The script now writes global/block embeddings, per-gene
+  radius/angle/invariant-axis geometry, per-block pages, an interactive 3D
+  embedding, and a per-internal-merge tree geometry table.
+- Ran the restored diagnostic on the default combined Julia GO matrix KAK
+  output. The full render wrote `11` ok block pages and `7722` internal merge
+  rows under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_20260606/`.
+  The restored internal geometry reinforces the diagnostic-only conclusion:
+  non-common KAK blocks mostly live at high angle to the leading block axis,
+  have high independent-radius fractions, and still over-split into many local
+  pure fragments without support-enforced selected-tree calibration.
+- Tested a candidate path-conditioned barycentric action equation and added
+  [[barycentric-action-equation-diagnostic-20260606]]. The selected-tail side
+  keeps `q5_barycentric_edge_spectral` as the best current compact equation;
+  angle-augmented variants are unstable under feature-family transfer. The KAK
+  traversal side shows that radius/angle/internal-axis variables improve
+  leave-one-block-out explanation of current local pure fragments, so they are
+  traversal diagnostics or future stratifiers rather than direct calibration
+  replacements.
+- Reran the canonical full benchmark and added [[full-benchmark-run-20260606]].
+  The run completed `120` cases and `1080` method rows in
+  `benchmarks/results/run_20260605_224254Z_full_big/`, with plots,
+  relationship analysis, failure diagnosis, and a merged PDF report. The mean
+  ARI leaderboard and KL skip profile match the previous full run: `kmeans`
+  leads ok-row mean ARI, `kl` has `92` ok rows and `28` strict-support or dense
+  covariance skips, and low-ARI ok `kl` rows are dominated by root-rejection
+  under-splits.
+- Added [[path-conditioned-barycentric-action-diagnostics-20260606]] after
+  implementing cached-output diagnostics for the path-conditioned barycentric
+  action trace. The diagnostic reproduces the KAK `radius_angle_action` median
+  AUC `0.892810`, reruns the full benchmark in
+  `benchmarks/results/run_20260606_path_action_full/`, and ranks angular-shell,
+  action-budget, and traversal-survival paths as validation-panel candidates
+  while keeping external selected-tail calibration fail-closed.
+- Extended the path-conditioned barycentric action diagnostic with row-level
+  radius/angle/action annotations and a high-action angular-shell guard panel.
+  The panel shows that pure-fragment KAK contexts have higher median capped
+  action-budget proxy than mixed contexts, and the best tested guard
+  `action_ge_0.9__angle_ge_75__ind_ge_0.85` has pure-fragment precision
+  `0.713537` with mixed-context flag rate `0.086202`. This remains a
+  post-hoc diagnostic validation-panel candidate, not a production traversal
+  rule.
+- Added [[null-edge-sibling-calibration-enhancement-plan]] to integrate the
+  path-conditioned diagnostics into a null edge and null sibling calibration
+  roadmap. The plan keeps edge selected-null calibration, sibling
+  selected-tail/internal support calibration, and traversal geometry as
+  separate objects with fail-closed production defaults.
+- Added a cost-sensitive utility curve to the path-conditioned barycentric
+  action diagnostic and wrote
+  `benchmarks/results/diagnostics/path_conditioned_barycentric_action_20260606_guard_utility/`.
+  The equal-cost best guard is
+  `action_ge_0.75__angle_ge_60__ind_ge_0.85` with net utility `744`, while the
+  two-times mixed-context-cost best guard is
+  `action_ge_0.9__angle_ge_60__ind_ge_0.85` with net utility `197`. No tested
+  guard remains net-positive once delaying a mixed context costs `3x` or more
+  than preventing a pure fragment.
+- Added [[phase1-path-b-foundation-20260606]] after implementing
+  `benchmarks/diagnostics/path_b/phase1_path_b_foundation.py`. The full KL-only
+  Phase 1 Path B sweep wrote `960` rows over `k_min in {0,1,2,3}` crossed with
+  pass-through on/off. The penalized full-suite optimum is `k_min=1` with
+  pass-through enabled: penalized mean ARI `0.728301`, ok-row mean ARI
+  `0.794510`, skip rate `0.083333`, and exact-k rate `0.736364`. The Q5
+  selected-tail geometry gain panel again selects
+  `q5_barycentric_edge_spectral`, reducing median residual-tail error by
+  `0.260780` versus the no-spectral baseline.
+- Added [[recursive-pvalue-geometry-20260606]] after implementing
+  `benchmarks/diagnostics/path_b/recursive_pvalue_geometry.py`. The full
+  recursive p-value geometry diagnostic completed `110` ok KL cases and `10`
+  expected skips. It found connected but asymmetric p-value fields: raw
+  edge-vs-parent-sibling coupling `0.392907`, raw recursive sibling continuity
+  `0.443386`, raw subspace-rotation-vs-gap coupling `0.254220`, and
+  eigen-gap-vs-tail-sensitivity `0.027132`. Raw edge alpha margins pass on
+  `0.8372` of edges, while raw sibling margins pass on only `0.0822` of
+  sibling contexts, reinforcing that edge traversal and sibling calibration
+  must remain separate equations.
+- Added [[mixed-null-signal-geometry-validation-20260606]] after implementing
+  `benchmarks/diagnostics/path_b/mixed_null_signal_geometry_validation.py`.
+  The full labeled panel completed `110` ok KL cases with `26369` sibling
+  contexts: `22599` `null_context`, `2366` `mixed_context`, and `1404`
+  `signal_context`. Corrected sibling splitting is conservative on clean
+  truth-null contexts (`0.002611`) but weak on truth-signal contexts
+  (`0.141026`). After adding row-aligned KAK-style radius/angle/action
+  covariates in the root selected PCA frame, `kak_radius_angle_action` leads
+  the full held-out signal-vs-null panel with median AUC `0.957892`, a gain of
+  `0.051982` over `chi_square_only`; the method-proof suite also selects KAK
+  with median AUC `0.897334` and gain `0.330447`. These terms remain
+  diagnostic-only and are not a production selected-tail calibration rule.
+- Extended [[mixed-null-signal-geometry-validation-20260606]] with
+  scikit-learn continuous edge/sibling/KAK surfaces and replaced the
+  process-randomized `case_hash_modulo_5` split with a stable CRC32 fold id.
+  Re-evaluating the cached full labeled panel gives
+  `sklearn_hist_gradient_edge_sibling_kak_surface` median AUC `0.985084`,
+  `sklearn_logistic_edge_sibling_kak_surface` median AUC `0.966521`, and the
+  original row-aligned `kak_radius_angle_action` median AUC `0.948342`, versus
+  stable-fold `chi_square_only` median AUC `0.895775`. This supports modeling
+  the edge/sibling/KAK relationship as a continuous diagnostic surface before
+  any threshold guard or production calibration rule.
+- Added [[diagnostic-framework-github-scan-20260606]] after scanning GitHub for
+  analytical and machine learning frameworks that could strengthen KL-TE
+  calibration diagnostics. No open GitHub issues or PRs were found in the
+  project remote for calibration, selected-tail, KAK, FDR, or sibling search
+  terms. The useful framework stack is selective-inference formalization,
+  simulation-based inference for amortized selected-tail diagnostics, conformal
+  risk control for held-out guards, and calibration/observability tooling for
+  monitoring and interpretation.
+- Debugged KL clustering failure attribution and added
+  [[clustering-root-audit-debug-20260606]]. The root sibling decision is stored
+  on the root audit row, so the failure and relationship analyzers now read the
+  root row instead of root children. Corrected artifacts show `79` accepted-root
+  ok KL rows with mean ARI `0.901264`, `13` rejected-root rows with mean ARI
+  `0.307692`, and four low-ARI accepted-root post-root sibling traversal
+  stalls where deeper sibling split rate is `0.0` despite persistent edge
+  action.
+
+### 2026-06-07
+
+- Regenerated the canonical derived reports in
+  `benchmarks/results/run_20260605_224254Z_full_big/` after the root-audit
+  analyzer fix. The refreshed `benchmark_relationship_*` artifacts,
+  `failure_report.md`, `benchmark_relationship_plots.pdf`, and
+  `full_benchmark_report.pdf` now use the root-row sibling decision. The
+  canonical low-ARI KL diagnosis now separates nine true root rejections from
+  four accepted-root post-root sibling traversal stalls.
+
+### 2026-06-10
+
+- Updated [[adaptive-cosine-kak-benchmark-probe-20260605]] with a diagnostic
+  visualization rule: when reference labels are available, KAK/cosine tree
+  visualizations should order displayed trees or block pages by cluster-level
+  NMI so the most informative decompositions are inspected first. This is
+  presentation-only and does not change tree construction, gates, traversal, or
+  calibration.
+- Implemented the NMI-ordering diagnostic in
+  `scripts/kak_signal_adaptive_umap_tree_page.py` and reran the restored
+  KAK/cosine visualization on the Julia GO matrix with Julia endotype labels.
+  The run wrote the sorted page, per-block pages, reference-label table,
+  reference NMI/ARI table, and NMI ranking plot under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_nmi_ordered_20260610/`.
+  The top-NMI block was `binary__adaptive_modes_16_19` with NMI `0.632591`,
+  ARI `0.002297`, and `650` clusters, confirming that the view is useful for
+  inspecting geometry but still reflects severe fragmentation rather than a
+  production-selected decomposition.
+- Recreated the historical full-matrix comparators with
+  `scripts/analysis/run_feature_matrix_with_umap.py` after updating it to the
+  current gate-annotation bundle path. Against the same `262` saved Julia
+  reference-label matches, fixed diffusion with gates led the recreated
+  comparators by ARI (`0.062392`, `54` clusters), followed by paper cosine
+  complete `K=20` (`0.058671`, `20` clusters). The high-NMI KAK/KL gate rows
+  were near-zero ARI because they split the `703` genes into roughly `650` to
+  `670` clusters. The comparison artifacts are under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/09_full_data_method_reference_comparison_20260610/`.
+- Added and ran
+  `benchmarks/diagnostics/spectral/adaptive_cosine_kak_diffusion_matrix_probe.py`
+  to test fixed diffusion inside the separated KAK/cosine spectral spaces on
+  the Julia GO matrix. The run wrote
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/10_full_data_kak_separated_diffusion_20260610/`.
+  It produced `12` ok rows and `3` calibration-support fail-closed rows. The
+  best row, `binary__adaptive_modes_02_05`, improved Julia-reference ARI to
+  `0.085175` with NMI `0.498510`, but still produced `153` clusters and
+  singleton fraction `0.568627`, so separated-space diffusion is a useful
+  diagnostic direction rather than a production clustering rule.
+- Extended the separated-space diffusion diagnostic with
+  `--diffusion-mode adaptive` and reran the Julia GO matrix under the pydiffmap
+  variable-bandwidth backend. The adaptive run wrote
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/11_full_data_kak_separated_adaptive_diffusion_20260610/`.
+  Its best row was again `binary__adaptive_modes_02_05`, with `130` clusters,
+  singleton fraction `0.261538`, NMI `0.516169`, and ARI `0.062483`. Adaptive
+  diffusion reduced singleton fragmentation in that block but did not beat the
+  fixed separated-space ARI `0.085175`.
+- Reran the Julia GO tree comparison under an internal context-quality framing
+  that intentionally ignores external Julia ARI. The context report under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/12_context_quality_tree_comparison_20260610/`
+  compares non-singleton coverage, medium-size context counts, within-context
+  GO Jaccard, and Fisher/BH enrichment fractions. Full adaptive diffusion is
+  the strongest broad context tree among tested candidates (`63` clusters,
+  `54` non-singleton contexts, `40` medium-size contexts, gene-weighted
+  Jaccard `0.143262`, enrichment fraction `0.925926`), while separated
+  adaptive TF-IDF `14-30` gives finer but more fragmented high-coherence
+  subcontexts.
+- Added a conditional subspace-lens analysis that treats full adaptive diffusion
+  as the main context tree and compares KAK/cosine block assignments as
+  overlays. The report under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/13_subspace_lens_vs_main_adaptive_contexts_20260610/`
+  shows that raw KAK `tfidf__adaptive_modes_14_30`, separated fixed diffusion
+  `tfidf__adaptive_modes_14_30`, and raw KAK `binary__adaptive_modes_10_15`
+  are the strongest refinement lenses, especially for main adaptive context
+  `60`.
+- Generated the plot-list page under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/14_main_context_subspace_lens_plot_list_20260610/`
+  with the main adaptive diffusion embedding/tree, context-quality plots,
+  lens-refinement scatter, raw KAK geometry overview, and top subspace-lens
+  panels. Updated [[adaptive-cosine-kak-benchmark-probe-20260605]] to record
+  that the current decomposition is cosine spectral/KAK-inspired diagnostic
+  geometry, not a formal Cartan decomposition unless the symmetry group,
+  invariant axis, and selected-subspace calibration law are specified.
+- Added `benchmarks/diagnostics/spectral/kak_lens_alpha_sweep.py` and ran a
+  focused edge/sibling alpha sweep over six useful KAK/cosine diagnostic
+  lenses while holding full adaptive diffusion fixed as the main context tree.
+  The output under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/15_kak_lens_alpha_sweep_20260610/`
+  contains `54` rows: `48` ok and `6` fail-closed gate rows. The sweep shows
+  sibling alpha is the main lens-resolution knob, while edge alpha is mostly
+  secondary except that `edge_alpha=0.003` breaks empirical-null support for
+  two separated-space lenses.
+
+### 2026-06-11
+
+- Extended `benchmarks/diagnostics/spectral/kak_lens_alpha_sweep.py` with
+  average-versus-Ward linkage comparisons for KAK/cosine diagnostic lenses.
+  Ward is constrained to Euclidean lens coordinates, not Hamming distances.
+  The raw KAK binary `10-15` smoke at `edge_alpha=0.001` and
+  `sibling_alpha=0.01` showed average linkage as the useful overlay
+  (`101` clusters, singleton-gene fraction `0.022760`, lens score `0.877331`)
+  and Ward-Euclidean as an over-fragmenting tree (`638` clusters,
+  singleton-gene fraction `0.846373`, lens score `0.190178`).
+- Added `benchmarks/cloud/aws_kak_lens_linkage_alpha_sweep.py`, updated the AWS
+  benchmark Docker image dependencies, documented the Batch commands in
+  `benchmarks/cloud/aws/README.md`, and added
+  `tests/validation/82_test_aws_kak_lens_linkage_alpha_sweep.py`. The default
+  cloud contract initially covered six lenses, average plus Ward-Euclidean, and
+  a `5 x 5` edge/sibling alpha grid. Local two-shard run/merge smoke passed; AWS
+  submission remained pending because the local AWS session had expired and
+  `aws login` was waiting for browser authentication.
+- Added complete linkage to the KAK/cosine lens linkage comparison and reran
+  the raw KAK binary `10-15` local smoke with average, complete, and Ward at
+  `edge_alpha=0.001`, `sibling_alpha=0.01`. Complete behaved like Ward on this
+  lens: `638` clusters, singleton-gene fraction `0.846373`, and lens score
+  `0.199089`, compared with average linkage at `101` clusters and score
+  `0.877331`. The AWS default contract now covers six lenses, three linkage
+  methods, and a `5 x 5` alpha grid for `450` candidate rows.
+- Added `benchmarks/diagnostics/spectral/covariance_axis_stability.py` and
+  `tests/validation/83_test_covariance_axis_stability.py` to test the
+  covariance/PCA analogue of the candidate invariant axis. The diagnostic keeps
+  genes aligned, resamples feature columns, recomputes centered dual covariance
+  sample axes, and aligns replicates by sign and Procrustes. On the Julia
+  matrix with `30` replicates and `80%` feature subsampling, median axis-1
+  absolute cosine was `0.999692` for binary and `0.999702` for TF-IDF; median
+  top-6 subspace canonical correlation was `0.998592` for binary and
+  `0.998271` for TF-IDF. Recorded this as stable covariance-axis diagnostic
+  evidence, not as a formal Cartan invariant-axis proof.
+
+### 2026-06-12
+
+- Added `benchmarks/diagnostics/spectral/kak_lens_feature_axis_clustering.py`
+  and `tests/validation/84_test_kak_lens_feature_axis_clustering.py` to map
+  raw KAK/cosine lens axes back to GO feature loadings using
+  \(q_j = Z^T u_j / \sqrt{\lambda_j}\), then cluster genes through the normal
+  KL-TE gate path. The diagnostic intentionally accepts only `raw_kak` lenses;
+  separated diffusion lenses need separate nonlinear attribution. The Julia
+  run under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/20_kak_lens_feature_axis_clustering_20260612/`
+  reproduced the raw binary `10-15` `101`-cluster lens with singleton fraction
+  `0.022760` and produced a more fragmented raw TF-IDF `14-30` lens with
+  `311` clusters and singleton fraction `0.220484`. In both lenses, positive
+  regulation of DNA-templated transcription (`GO:0045893`) was the top
+  common-to-variant feature bridge.
+- Debugged the raw KAK lens feature-axis mapping by adding reconstruction and
+  orthogonality audit metrics, then reran the Julia binary `10-15` and TF-IDF
+  `14-30` lens mappings under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/21_kak_lens_feature_axis_clustering_debug_20260612/`.
+  The largest full feature-axis reconstruction error was `6.55e-15`, so the
+  feature-axis map is numerically consistent and the remaining fragmentation is
+  traversal/geometric behavior rather than a normalization mismatch.
+- Added `benchmarks/diagnostics/spectral/tree_strategy_semantic_panel.py`,
+  `benchmarks/cloud/aws_tree_strategy_semantic_panel.py`, and
+  `tests/validation/85_test_tree_strategy_semantic_panel.py` to join Julia
+  tree/lens diagnostics into the requested semantic panel. The local smoke
+  under `benchmarks/results/diagnostics/tree_strategy_semantic_panel_smoke_20260612/`
+  wrote `59` rows: `2` main-context trees, `37` diagnostic-lens rows, `19`
+  fragmentation-lens rows, and `1` coarse baseline row. AWS submission was not
+  completed because the local AWS CLI could not reach the AWS sign-in endpoint.
+- Corrected the main rectangular tree renderer in
+  `kl_clustering_analysis/plot/cluster_tree_visualization.py` to draw routed
+  elbow edges instead of straight parent-child diagonals. The crossing-edge
+  artifact was a visualization routing problem in deep unbalanced trees, not a
+  graph or clustering change. The Plotly subembedding white lines were
+  identified as scene grid/axis lines rather than tree edges.
+- Completed the full AWS KAK/cosine lens linkage alpha sweep after retrying
+  missing shard `0005`; the original array failure was an ECR pull timeout.
+  The merged `450`-row output is under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/22_aws_kak_lens_linkage_alpha_sweep_full_20260612/merged/`.
+  The regenerated semantic panel is under
+  `benchmarks/results/diagnostics/tree_strategy_semantic_panel_aws_full_kak_20260612/`
+  and classifies the full joined evidence as `2` main context trees, `149`
+  diagnostic lenses, `185` fragmentation lenses, `2` fine lenses, and `1`
+  coarse baseline row.
+- Added `benchmarks/diagnostics/spectral/kak_feature_subspace_clustering.py`
+  and `tests/validation/86_test_kak_feature_subspace_clustering.py` to test
+  the feature-side interpretation of the KAK route. The diagnostic embeds
+  binary GO features, not genes, in each selected raw KAK block as
+  `Q_B sqrt(Lambda_B)`. The first Julia binary run under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/23_kak_binary_feature_subspace_clustering_20260612/`
+  wrote feature coordinates for all eight adaptive blocks but all blocks failed
+  closed in the current gate layer, exposing the missing feature-side
+  edge/sibling calibration equations.
+- Generated a classical UMAP-only clustering panel for the Julia full-data
+  coordinates under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/25_julia_classical_umap_clustering_20260612/`.
+  On the stored two-dimensional UMAP plane, complete linkage `K=20` had the
+  highest reference ARI (`0.145744`, NMI `0.403709`), with Ward, average,
+  GMM, and k-means close behind. This was recorded as a visual manifold
+  baseline, not as calibrated tree-context evidence.
+- Added `benchmarks/diagnostics/calibration/selected_sibling_lrt_diagnostic.py`
+  and `tests/validation/87_test_selected_sibling_lrt_diagnostic.py` to compare
+  Bernoulli sibling deviance against the existing projected-Wald sibling
+  statistic on whole-space fixed-diffusion Julia trees. The diagnostic run
+  under
+  `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/29_selected_sibling_lrt_diagnostic_20260612/`
+  shows that the fragmented `k=30,t=3` regime raises median projected-Wald
+  selected ratio to `18.603097` while median deviance per changed feature stays
+  near `2.010217`, separating topology/projection amplification from raw
+  child-distribution contrast.
+- Wired the first production-side external selected-tail calibration branch.
+  `ExternalSelectedTailCalibrationModel` stores exact pre-promoted contexts and
+  returns `external_admissible_scalar` only on exact context matches; otherwise
+  it returns `undefined_external_not_admissible`. The sibling adjustment path
+  can now use this external model when internal support thresholds fail or when
+  no internal empirical-null model can be fit, and gate metadata records whether
+  an external selected-tail rule set was active. Focused verification passed:
+  `pytest tests/statistics/35_test_empirical_null_inflation_estimation.py -q`,
+  `pytest tests/core/test_gate_annotation_reuse.py -q`, and
+  `pytest tests/validation/72_test_selected_tail_promotion_gate.py tests/validation/73_test_selected_tail_parent_size_balance_stability.py -q`.
+  This is runtime plumbing only; production-scale row-level evidence is still
+  required before diagnostic balance-scoped contexts should be promoted.
 
 ## Evidence
 

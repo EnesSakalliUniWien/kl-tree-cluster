@@ -86,12 +86,10 @@ that summarize the main variation seen below the parent.
 This step has three parts: build a local matrix, compute its principal
 directions, and retain a working number of directions. The edge deviation is
 then measured only in that reduced space. For each parent node $u$, the method
-forms a local matrix $M_u$ whose rows are:
-\begin{enumerate}[leftmargin=1.5em]
-  \item all descendant leaf vectors $X_i$ for $i \in L(u)$, and
-  \item all descendant internal-node distributions $\theta_v$ for proper
-  descendants $v$ of $u$.
-\end{enumerate}
+forms a local matrix $M_u$ whose rows are the descendant leaf vectors $X_i$ for
+$i \in L(u)$. Internal-node distributions are used in the tested edge
+contrasts, but the implemented inferential PCA basis is estimated from
+descendant leaf rows only.
 After removing constant features, let $d_u$ be the number of active
 coordinates and let $m_u$ be the number of rows in $M_u$. The code computes the
 correlation matrix
@@ -225,31 +223,25 @@ distributions are
 \theta_{U_2}=(0,0,1,0),\qquad
 \theta_R=(0.5,0.5,0.5,0.5).
 \end{equation}
-Because the local spectral matrix includes proper descendant internal distributions in
-the spectral matrix, the root-local matrix is
+Because the implemented local spectral matrix uses descendant leaf rows only,
+the root-local matrix is
 \begin{equation}
 M_R =
 \begin{bmatrix}
 1&1&0&1\\
 1&1&0&1\\
 0&0&1&0\\
-0&0&1&0\\
-1&1&0&1\\
 0&0&1&0
 \end{bmatrix},
 \end{equation}
-where the first four rows are the leaves $A,B,C,D$ and the last two rows are
-the internal-node distributions $\theta_{U_1}$ and $\theta_{U_2}$. Each active
-column has mean $0.5$ and standard deviation $0.5$, so the standardized matrix
-is
+where the rows are the leaves $A,B,C,D$. Each active column has mean $0.5$ and
+standard deviation $0.5$, so the standardized matrix is
 \begin{equation}
 \widetilde{M}_R =
 \begin{bmatrix}
 1&1&-1&1\\
 1&1&-1&1\\
 -1&-1&1&-1\\
--1&-1&1&-1\\
-1&1&-1&1\\
 -1&-1&1&-1
 \end{bmatrix}.
 \end{equation}

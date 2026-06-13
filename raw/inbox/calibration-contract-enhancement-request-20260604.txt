@@ -1,0 +1,196 @@
+I checked the dev code path closely. The main conclusion is: the repo already enforces a strict “fail closed” internal calibration contract, and external selected-hierarchy calibration is currently diagnostic-only. The biggest method enhancement should not be “use external Gaussian calibration as a fallback”; it should be a predeclared selected-tail law with admissibility checks, plus clearer code-level calibration statuses.
+
+1. What the current code actually does
+
+The live pipeline is:
+
+TreeDecomposition → run_gate_annotation_pipeline → edge gate → sibling record collection → internal empirical-null inflation → traversal-aligned sibling BH → top-down traversal. The README describes the intended workflow as hierarchy construction, feature-space node distributions, projected-Wald edge/sibling tests, empirical-null inflation, and strict unsupported statuses rather than silent fallback.  ￼
+
+The top-down split rule is exactly: binary node, at least one significant child-parent edge, and significant sibling divergence. If any of these fail, traversal stops at the parent unless pass-through is enabled and a descendant split is already supported.  ￼ The GateEvaluator implements that directly: _passes_split_prerequisites requires two children and one significant child edge, _sibling_gate_is_open requires Sibling_BH_Different and not skipped, and pass-through only continues if descendants can split.  ￼
+
+The edge gate uses projected-Wald tests, then Tree-BH over child-parent edges. The orchestrator then derives sibling projection dimensions from the edge spectral context and runs sibling divergence.  ￼ Tree-BH itself is implemented as a top-down procedure over eligible sibling groups, scaling each group’s level by ancestor rejection proportions.  ￼
+
+Sibling calibration is internal only in production. fit_empirical_null_inflation_model() admits only positive-weight sibling records that are either record.is_null_like or record.is_edge_blocked. If all positive-weight records are selected non-null records, it raises a ValueError; it does not return c=1, does not borrow relaxed context, and does not install external calibration.  ￼
+
+The sibling null weight is not a posterior probability. The code uses Tree-BH adjusted child-edge p-values as monotone null-like weights, returns weight 1.0 for untested/ancestor-blocked child edges, and multiplies the two child weights. This is useful, but it is a heuristic empirical weighting rule unless separately validated.  ￼
+
+The projected-Wald reference is fixed-subspace chi-square. The reference helper explicitly states that conditional on a fixed orthonormal projection matrix not selected from the tested contrast, an isotropic standardized null gives χ²(k), and it explicitly does not account for selecting PCA rows and projection dimension from the same data.  ￼
+
+One important code/text mismatch: the live spectral code uses descendant leaf rows only for the inferential PCA/MP basis, while manuscript/sections/method/edge_test.tex still says the local spectral matrix includes descendant internal-node distributions. The code builds spectral tasks from descendant_leaf_indices_by_node and slices the full leaf matrix; it does not add internal distributions.  ￼ The manuscript section still describes internal rows in M_u.  ￼ This should be corrected before locking manuscript evidence.
+
+2. Literature anchor
+
+The statistical issue is classic selective inference: testing clusters after clustering inflates Type-I error unless the selection event is accounted for. Gao, Bien, and Witten’s hierarchical clustering selective-inference paper states exactly that classical mean tests are valid for groups defined a priori but can have extremely inflated Type-I error when groups are produced by clustering; their solution is to condition on the clustering selection event.  ￼ Fithian, Sun, and Taylor frame the general target as selective Type-I error, meaning the error rate conditional on the test having been selected.  ￼ Lee, Sun, Sun, and Taylor provide the polyhedral selective-inference template for post-selection laws.  ￼
+
+For the edge Tree-BH layer, the relevant structured-FDR literature is TreeBH: Bogomolov et al. introduce TreeBH for hypotheses organized in a tree and prove error-rate control under assumptions on dependence.  ￼ Ordinary BH is appropriate only under its own dependence assumptions; the BH/FDR literature explicitly distinguishes independent/positive dependence settings from arbitrary dependence.  ￼
+
+For MP/PCA, the implemented rule is an identity-noise Marchenko–Pastur upper edge. The MP law describes the asymptotic eigenvalue distribution of large random covariance matrices, with support edge (1+\sqrt{p/n})^2 under unit scale.  ￼ But selected local spectra, categorical dependence, and empirical self-whitening are not automatically identity-MP. For high-dimensional continuous covariance, shrinkage and factor/sparse-residual approaches are more defensible than dense sample covariance when p\gg n: Ledoit–Wolf nonlinear shrinkage targets large covariance matrices where sample covariance is ill-conditioned, and POET targets high-dimensional covariance with factor plus sparse residual structure.  ￼
+
+3. Answers and method decisions
+
+Selected-hierarchy calibration, questions 1–11
+
+External calibration should condition at least on same-data hierarchy construction, open child-parent edge path, and focal sibling selection. The current diagnostic approximation does exactly that by regenerating null matrices, rebuilding the hierarchy, rerunning edge tests, and collecting selected sibling records.  ￼ A fixed-tree or edge-only diagnostic is useful for attribution, but it is not enough for production selected-hierarchy calibration.
+
+For non-root blockers, conditioning on the ancestor Tree-BH path does not obviously keep c small. The repo’s wiki evidence says non-root Gaussian strict contexts still have large c, while non-root binary/categorical exact-depth contexts often have sparse support.  ￼ So the right conclusion is: non-root conditioning can increase support sparsity and can still yield large inflation; it is not a simplification.
+
+The diagnostic hierarchy should be:
+
+1. Fixed tree / fixed projection to validate the projected-Wald kernel.
+2. Selected PCA with fixed membership to validate data-selected PCA/MP.
+3. Tree-BH edge path conditioning to isolate edge-opening inflation.
+4. Focal sibling selection to isolate blocker-specific selection.
+5. Full hierarchy reconstruction for any production external law.
+
+The current evidence says full reconstruction is the closest diagnostic to the actual law. The selected-hierarchy null audit uses regenerated null data, rebuilds the tree, reruns edge gates, and keeps selected sibling records.  ￼
+
+External Gaussian sibling-null calibration can explain some Gaussian blockers only where the selected-tail context is admissible. It should not be a general fallback. The selected-tail domain evidence says admissible contexts are narrow: small-parent, high-edge-action contexts for Gaussian/categorical and one binary projection-1 setting; root, medium/large parent, lower-edge-action, continuous, and precomputed-distance contexts remain outside the current admissible production domain.  ￼
+
+External inflation should be modeled as a function of at least edge severity, parent size, projection dimension, feature family/source family, and probably spectral quantities. The geometry diagnostic already records edge p-values, parent size/depth, p,n, projection dimension, eigenvalue effective rank, selected eigenvalue mass, MP ratio, and angular alignment.  ￼ It also defines candidate equations involving edge action, \log(p/n_{\text{parent}}), sampling variance, eigenvalue-over-MP, spectral mass, and angle.  ￼
+
+The production decision hierarchy should be:
+
+\text{if admissible internal support: return } \hat c_{\mathrm{internal}}.
+
+\text{else if predeclared external context is production-admissible: return external selected-tail law, not just scalar } \hat c.
+
+\text{else: fail undefined.}
+
+This is aligned with the existing code: unsupported internal support raises an error rather than using selected non-null records.  ￼ The external diagnostic similarly marks rows as undefined_not_production_admissible if support or precision fails.  ￼
+
+For external admissibility, the repo already has a clear rule: at SIBLING_ALPHA = 0.01, require at least 499 independent matching simulations, 499 matched selected records, and relative simulation SE for \hat c no larger than 5%. This follows the tail-resolution rule 1/(m+1)\le 0.2\alpha.  ￼ For tail-law contexts, the later domain table also requires held-out exceedance precision via max_exceedance_standard_error.  ￼
+
+Exact matching variables should currently be predeclared source/case family, feature family, parent-size bin, sibling projection dimension, and edge-action bin for selected-tail studies. Case, n, and p are exact in the older external-contract diagnostic. Parent depth, subtree topology, balance, eigenvalue concentration, angular alignment, branch-length condition, and merge persistence should remain descriptive stratifiers unless a predeclared low-dimensional model validates them.  ￼
+
+For internal empirical-null inflation, the code currently has no effective-support threshold beyond “at least one supported positive-weight record.” It computes effective sample size but does not use it as a hard threshold.  ￼ That is too permissive for production claims. Add an explicit internal support contract: n_supported_records, n_strict_null_records, n_edge_blocked_records, n_eff, per-family support, and leave-one-target stability. Until validated, a reasonable fail-closed engineering threshold would be n_eff >= 20 and at least several strict/stopped records, but the manuscript should state this as a validation target, not a theorem.
+
+The empirical-null weight rule is not calibrated beyond diagnostics. The code’s weight is a monotone edge-null evidence weight, and the manuscript correctly says it is not a posterior null probability.  ￼ It needs a weight-rule grid validation before being described as calibrated.
+
+The context bandwidth is not stable under sparse support. The code estimates bandwidth as weighted standard deviation of \log k and \log n_{\text{parent}}, drops zero-bandwidth axes, and for Bernoulli uses only projection dimension when bandwidth is active.  ￼ This should be guarded by support thresholds and leave-one-simulation sensitivity.
+
+Projected-Wald, spectral, and feature-space math, questions 12–23
+
+The projected chi-square reference is valid under fixed node memberships, correct feature-space covariance, valid whitening, a fixed orthonormal projection P, and an approximately isotropic standardized null. The code states this assumption explicitly and disclaims selected projection/dimension randomness.  ￼
+
+A fixed-projection proof is not sufficient for the full method. It supports the kernel, not the selected hierarchy. The selected-PCA validation does address one intermediate question: leaf-only selected PCA was calibrated in tested Gaussian fixed-membership settings, while adding child-mean/internal rows was strongly anti-conservative.  ￼ But this still does not validate tree-selected sibling pairs, sibling FDR, traversal, or inflation.
+
+The local MP rule is scale-consistent with the backend, but it is not a complete calibration-and-power proof. The code whitens descendant leaf rows in the null tangent chart, eigendecomposes a covariance or dual Gram matrix divided by row count, counts eigenvalues above (1+\sqrt{d/m})^2, and then floors to the configured minimum dimension.  ￼ The MP estimator separates raw MP signal count from returned test dimension.  ￼ The method should eventually test deformed/local spectral laws, not just identity MP.
+
+k_{\min}=2 is an implementation default, not mathematically justified. The code sets EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = 2.  ￼ The wiki says a floor-1 diagnostic reduced skips but worsened aggregate ARI, so changing the floor is not a validated fix.  ￼
+
+When all local sibling records are selected non-null, production should fail undefined. The current code already does this: selected non-null positive-weight records are explicitly rejected as empirical-null support.  ￼
+
+The sibling projection dimension rule is heuristic. The code uses the geometric mean of the two child edge dimensions when both are positive, reuses one child dimension when only one is positive, and falls back to the parent dimension otherwise, capped by the parent projection rank.  ￼ This should be validated by a dimension-rule grid, not claimed as derived.
+
+One-hot categorical dependence is handled correctly at the local covariance-chart level: categorical blocks use a drop-last simplex chart and multinomial drop-last covariance. The feature-space code requires categorical blocks to have contiguous category columns and contrast dimension K-1.  ￼ The contrast covariance code uses the reduced multinomial covariance \operatorname{diag}(p)-pp^\top with ridge.  ￼
+
+High-cardinality categorical failures should be attributed in three layers: covariance validity, projection-dimension/MP validity, and selected-hierarchy calibration/FDR. The covariance scaffold validates only fixed full-tangent local sibling-null calibration; it explicitly does not validate selected PCA, MP selection, FDR, traversal, tree construction, or inflation.  ￼ So high-cardinality failure is not automatically a covariance failure.
+
+Per-node empirical-Gaussian covariance is implemented but not production-validated for p\gg n. Dense covariance has hard feasibility limits: blocks over dimension 4096 or excessive scatter state raise an unsupported error and recommend a low-rank covariance implementation.  ￼ For p\gg n, replace dense covariance with a validated low-rank/shrinkage model: Ledoit–Wolf linear/nonlinear shrinkage for general covariance, POET when a factor-plus-sparse-residual model is plausible, and robust Tyler/elliptical variants if heavy tails are present.  ￼
+
+Discretized Gaussian variants should remain benchmark variants under Bernoulli/categorical approximations. They should not be used as evidence for continuous empirical-Gaussian production unless the null generator and covariance model are explicitly continuous.
+
+The clean general feature-space formulation is already close to the code: a feature space is a set of independent blocks, each with raw coordinates, chart, contrast dimension, and covariance model. Bernoulli uses identity/variance p(1-p); categorical uses drop-last simplex/multinomial covariance; continuous uses identity chart and empirical-Gaussian covariance. The contrast layer concatenates blockwise whitened contrasts.  ￼
+
+FDR, traversal, and failure attribution, questions 24–32
+
+Traversal-aligned sibling BH over the edge-reachable frontier is a reasonable operational target, but it does not yet have a proof for the intended false-split target under selected hierarchy. The code builds the sibling BH family top-down only among parents whose structural and edge prerequisites are open.  ￼ That matches traversal, but the p-values are selected/adjusted p-values, so ordinary BH theory alone is not enough.
+
+Sibling FDR should be stated as a conditional traversal target: among sibling tests reachable under the edge path and hierarchy, control false split decisions if adjusted p-values satisfy the necessary null assumptions. Do not claim global FDR over all internal nodes unless a separate target is defined.
+
+Pass-through should require descendant split evidence to overcome local sibling-same evidence. The current code passes through when the local edge prerequisite holds, the local sibling gate fails, and any descendant can split.  ￼ It does not compare descendant evidence strength against local same evidence. That is the enhancement point.
+
+A workable form is:
+
+S_{\mathrm{desc}}(v)
+=
+\max_{w\in \mathrm{desc}(v)}
+-\log p^{\mathrm{adj}}_{\mathrm{sib}}(w)
+-
+\lambda_1\log |\mathrm{desc}(v)|
+-
+\lambda_2 d(w,v),
+
+and pass through only if
+
+S_{\mathrm{desc}}(v)
+>
+\tau_0+\tau_1[-\log p_{\mathrm{same}}(v)]+\tau_2\log n_v+\tau_3 k_v .
+
+This should be tuned only in null-plus-planted traversal simulations. Until then, pass-through remains an implementation default, not a proven statistical gate.
+
+Direct sibling false splitting inside phylogenetic clades should be modeled with a phylogenetic covariance/null generator, not generic IID Bernoulli/categorical nulls. The code currently rejects precomputed-distance selected-hierarchy audits because the null generator must own the tree-distance contract first.  ￼ That is the correct failure boundary.
+
+Gate failures versus hierarchy/metric failures should remain separated. The wiki’s latest separation reports many calibration-support skips and tree/metric unrecoverable rows, with only a few runnable gate failures eligible for threshold changes.  ￼ So diffuse Gaussian, heavy-overlap, and SBM cases should first be diagnosed for representation/distance/linkage recoverability before changing gates.
+
+Validation and manuscript evidence, questions 33–41
+
+Locked manuscript evidence should include:
+
+1. Fixed full-tangent feature covariance calibration.
+2. Selected-PCA projected-Wald validation.
+3. Edge null calibration under fixed tree, selected tree, and feature-split diagnostics.
+4. Internal empirical-null support and inflation stability.
+5. External selected-tail admissibility domain.
+6. Sibling FDR null and planted-power study.
+7. Final cluster-count control simulation.
+8. Gate-path failure attribution table.
+9. A real biological application manifest with frozen inputs, parameters, outputs, and interpretation.
+
+The method constants manifest already lists the constants needing evidence: edge_alpha, sibling_alpha, MP upper edge, minimum spectral dimension, sibling projection dimension rule, empirical-null weight rule, context bandwidth, and pass-through traversal.  ￼ Use that as the lock checklist.
+
+Edge alpha needs a null calibration study, not just ARI. Sibling alpha needs local and traversal-level null/power studies after inflation, not just the current grid. Final cluster-count control should be validated by simulating full trees under global null, planted hierarchy, diffuse overlap, and misspecified metric cases; report P(\hat K>K_0), P(\hat K<K_0), ARI, and false split/merge attribution.
+
+Planted-structure simulations should cover Bernoulli block templates, multinomial categorical blocks, continuous Gaussian low-rank/factor structures, phylogenetic clades, heavy overlap, and SBM/precomputed-distance boundaries.
+
+The first manuscript-ready biological application should be the first real-data track that has a locked manifest: frozen feature matrix, feature-space contract, tree metric/linkage, calibration status for every split, final clusters, reference alignment/confusion table, and failure/unsupported statuses. Do not choose by best ARI; choose by completeness of evidence.
+
+The manuscript should state approximations plainly: fixed projected-Wald is a theorem under fixed-subspace assumptions; selected PCA is locally validated in tested Gaussian settings; selected hierarchy remains a conditional-inference gap except in predeclared admissible selected-tail contexts; internal empirical-null inflation is a practical calibration layer with support contracts, not a finite-sample exact guarantee.
+
+Selected-region geometry, questions 42–44
+
+Root merge margins should be lifted to the selected-region law by separating discrete and smooth cases. For Hamming/categorical/discretized data, many root regions are discrete tie cells. For continuous Euclidean average linkage, use null-whitened signed distance to active merge inequalities, then tangent cone and curvature corrections. The repo’s root selected-region work already distinguishes tie-heavy discrete cells from positive-margin continuous cells and found edge-opening coordinates more informative than raw merge margins.  ￼
+
+Fixed-subspace edge-opening radial distance is only one constraint in the full selected law. The full law must include selected projection, Tree-BH cells, sibling FDR/inflation, and non-root focal context. The root diagnostic’s schema v6 found that conditioning only on root edge opening does not explain diffuse-dimensional blockers: raw and edge-conditioned sibling p-values remain significant; blocking appears after empirical inflation.  ￼
+
+Internal empirical inflation blocks some root diffuse-dimensional contexts because it is estimating the broader selected-hierarchy scale, not just the edge-truncated fixed-projection law. The internal-vs-selected diagnostic found one diffuse case where internal and selected-hierarchy scales agree closely: 85.27 vs 86.23, with required blocking scale 82.21.  ￼ That supports the idea that the inflation layer is absorbing full selected-hierarchy effects in contexts where internal support exists.
+
+4. Concrete code enhancements I would make
+
+First, add an explicit calibration decision object:
+
+@dataclass(frozen=True)
+class CalibrationDecision:
+    status: Literal[
+        "internal_admissible",
+        "external_admissible_scalar",
+        "external_admissible_tail_law",
+        "undefined_no_internal_support",
+        "undefined_external_not_admissible",
+        "undefined_no_family_support",
+        "undefined_sparse_context",
+    ]
+    c_hat: float | None
+    p_value: float | None
+    estimator: str
+    support: dict[str, float | int | str]
+    exact_context: dict[str, object]
+    descriptive_strata: dict[str, object]
+
+Then make compute_inflation_adjusted_sibling_tests() consume CalibrationDecision, not just a scalar model. That will prevent external diagnostic quantities from accidentally becoming production fallback.
+
+Second, split internal support from prediction support. The current fit step rejects globally if no supported records exist, but prediction can still be unstable for a focal feature family/context. Add focal checks:
+
+same feature_family support > 0
+effective local kernel sample size >= threshold
+strict/stopped support count >= threshold
+leave-one-simulation c_hat stability within tolerance
+bandwidth axes predeclared and nondegenerate
+
+Third, promote selected-tail law evaluation out of diagnostics only when a context is predeclared. The current admissibility-domain script correctly says it “does not create a calibration path.”  ￼ Keep that boundary until the production calibrator can verify the exact context tuple and the held-out tail precision.
+
+Fourth, update stale manuscript text. Replace the internal-row spectral matrix description in edge_test.tex with the current leaf-only spectral contract. The code and selected-PCA validation both support leaf-only; the manuscript still says internal rows are included.
+
+Fifth, add a validation manifest row for every default. The constants manifest already names the missing evidence fields; use it as a blocking checklist before calling any constant “justified default.”  ￼
+
+The method should be enhanced by formalizing admissibility, not by weakening the strict support rule. The current strictness is scientifically right; the missing piece is a production-grade selected-tail law for the narrow contexts where external calibration has enough support.

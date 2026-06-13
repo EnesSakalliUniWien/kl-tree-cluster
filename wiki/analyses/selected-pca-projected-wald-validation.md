@@ -2,12 +2,14 @@
 title: Selected PCA Projected-Wald Validation
 type: analysis
 status: reviewed
-updated: 2026-06-01
+updated: 2026-06-05
 sources:
   - benchmarks/validation/selected_pca_projected_wald_calibration.py
   - benchmarks/validation/manifests/selected_pca_projected_wald_validation_manifest.json
   - raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.json
   - raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.csv
+  - benchmarks/results/validation/selected_pca_projected_wald_calibration_check_20260605.json
+  - benchmarks/results/validation/selected_pca_projected_wald_calibration_check_20260605.csv
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
 tags:
@@ -33,6 +35,11 @@ MP dimension are selected from the same fixed-membership Gaussian null context.
 It does not validate hierarchy construction, tree-selected sibling pairs,
 sibling FDR, traversal, empirical-null inflation, categorical blocks, or
 real-data misspecification.
+
+A fresh 2026-06-05 rerun on the current worktree reproduces the locked
+pattern: leaf-only rejection rates at nominal `0.05` are `0.046`, `0.048`, and
+`0.059`, while the corresponding child-mean-row settings reject at `0.671`,
+`0.992`, and `1.000`.
 
 ## Details
 
@@ -62,6 +69,15 @@ dimension is only the configured spectral floor. The leaf-only rows are
 compatible with the fixed-subspace approximation in this diagnostic; the
 child-mean rows are not.
 
+This means Q12 and Q13 should be kept separate. Q12's fixed-projection
+chi-square statement is valid only under fixed or conditionally independent
+valid projections. Q13's selected-PCA question is not globally negative:
+leaf-only fixed-membership Gaussian selected PCA is calibrated in this
+diagnostic. The failure is the leakage mode where deterministic summaries of
+the tested sibling means enter the spectral row set, plus the broader
+selected-tree setting where the hierarchy and focal sibling are selected using
+the same evidence.
+
 The mathematical interpretation is direct. In the leaf-only Gaussian null, the
 selected PCA rows are random but selected from independent null variation
 around the parent mean. The fixed-subspace chi-square reference remains
@@ -79,6 +95,9 @@ fixed no longer approximates the actual selected reference law.
   limitations.
 - `raw/assets/selected-pca-projected-wald-validation/20260601-selected-pca-projected-wald-calibration.csv`
   records the row-level summary table.
+- `benchmarks/results/validation/selected_pca_projected_wald_calibration_check_20260605.csv`
+  records the current-worktree rerun used to check that the locked conclusion
+  still reproduces.
 - `benchmarks/validation/selected_pca_projected_wald_calibration.py` defines
   the scaffold and validation contract.
 - `kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py`

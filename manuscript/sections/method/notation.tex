@@ -40,6 +40,10 @@ $L(u)$ & Descendant leaf set of node $u$. \\
 $n_u = |L(u)|$ & Number of descendant leaves under node $u$. \\
 $e = (u,c)$ & Directed tree edge from parent $u$ to child $c$, representing immediate subtree containment. \\
 $\theta_u$ & Empirical node distribution at node $u$ in the active feature-space coordinates. \\
+$\beta_u=n_{l(u)}/n_u$ & Left-child barycentric weight at binary parent $u$. \\
+$b_u=\min(\beta_u,1-\beta_u)$ & Barycentric balance of the two children at parent $u$. \\
+$s_u^{\mathrm{samp}}=1/n_{l(u)}+1/n_{r(u)}$ & Two-sample sampling variance scale for the sibling contrast at parent $u$. \\
+$\ell_u^{\mathrm{bar}}$ & Barycentric leverage, defined as $\log\{\max(\beta_u,1-\beta_u)/\min(\beta_u,1-\beta_u)\}$. \\
 $H_{0,j}^{\mathrm{edge}}(u,c)$ & Coordinatewise child-parent edge null for feature $j$. \\
 $z_{u \to c}^{\mathrm{edge}}$ & Standardized child-parent edge vector. \\
 $T_{u \to c}^{\mathrm{edge}}$ & Projected edge statistic for edge $(u,c)$. \\
