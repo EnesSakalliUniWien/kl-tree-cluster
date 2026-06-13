@@ -1,0 +1,674 @@
+You should treat these as one program with four layers:
+
+1. Calibration law: selected-tail external law plus stricter internal support.
+2. Projection/feature-space law: selected MP, k_{\min}, sibling projection dimension, categorical/continuous covariance.
+3. Traversal/FDR law: selected reachable-frontier BH and pass-through replacement.
+4. Manuscript/evidence law: locked simulations, constants, real-data manifest, and selected-region geometry.
+
+No paper I found solves the whole KL-TE problem end-to-end, because your pipeline combines same-data hierarchy construction, Tree-BH edge opening, selected PCA/MP dimension, sibling empirical inflation, sibling BH, and traversal. But several papers solve subproblems that can be used directly.
+
+A. Papers to anchor the work
+
+Selective inference after clustering: closest to your selected-hierarchy problem
+
+The most relevant paper is Gao, Bien, and Witten, “Selective Inference for Hierarchical Clustering.” It directly addresses the fact that classical tests are anti-conservative when clusters are formed by hierarchical clustering, and proposes selective p-values that condition on the clustering selection event. This should be your primary conceptual model for Q5 and Q42–Q44.  ￼
+
+For broader clustering selection, use Chen and Witten, “Selective inference for k-means clustering,” Chen and Gao, “Testing for a difference in means of a single feature after clustering,” and Yun and He, “Selective inference for multiple pairs of clusters after K-means clustering.” These papers are useful because they separate pairwise cluster testing from multiple pair testing, which maps well to your local sibling tests versus traversal/frontier multiplicity.  ￼
+
+For a different clustering objective, Bachoc, Maugis-Rabusseau, and Neuvial, “Selective inference after convex clustering with \ell_1 penalization,” gives a polyhedral selective-inference route for convex clustering. It will not plug into average linkage directly, but it is useful for thinking about selection regions and path constraints.  ￼
+
+For general selected-inference theory, use Fithian, Sun, and Taylor, “Optimal Inference After Model Selection,” and Lee, Sun, Sun, and Taylor, “Exact post-selection inference, with application to the lasso.” Fithian et al. frame the correct target as selective Type-I error, while Lee et al. provide the polyhedral conditioning template.  ￼
+
+For the non-polyhedral/curvature direction, Tian et al., “Selective sampling after solving a convex problem,” is especially useful: it uses change-of-measure ideas and connects selective-inference Jacobians to curvature and Weyl–Steiner tube formulae. That is directly relevant to your root selected-region lift, where merge cells, edge-open cells, and PCA/MP cells are not all simple polyhedra.  ￼
+
+Hierarchical FDR and traversal
+
+For Tree-BH and hierarchical hypotheses, use Bogomolov et al., “Testing hypotheses on a tree: new error rates and controlling strategies.” This is the direct TreeBH reference and gives you the right language for tree-structured error targets.  ￼
+
+For general hierarchical FDR alternatives, use Lynch and Guo, “On Procedures Controlling the FDR for Testing Hierarchically Ordered Hypotheses.” This is useful when comparing traversal-aligned sibling BH to other hierarchical FDR procedures.  ￼
+
+For pass-through and gatekeeping logic, use Goeman and Solari, “The sequential rejection principle of familywise error control.” It provides a way to reason about graph/tree-gate procedures through monotonicity and sequential rejection, which is the right proof style if you replace pass-through with a descendant-vs-local rule.  ￼
+
+MP, PCA, angles, and selected spectral geometry
+
+For MP/PCA validation, the relevant base is the Marchenko–Pastur law and spiked covariance literature. Baik, Ben Arous, and Péché characterize the phase transition of the largest eigenvalue in spiked covariance models; this is useful for distinguishing weak spikes that should be missed from strong spikes that should enter the projection.  ￼
+
+For largest eigenvalue finite-sample corrections, Tracy–Widom/Johnstone-type work is the right family. The search result here surfaced Soshnikov’s universality note, which describes Tracy–Widom limits for largest Wishart eigenvalues and extends the universality picture.  ￼
+
+For deformed/non-identity MP, use Silverstein-style Stieltjes-transform support equations. A recent Bai–Hu–Silverstein–Zhou paper summarizes the “information-plus-noise” Stieltjes-transform/support route, which is close to what you need if local categorical/continuous spectra are not identity-whitened.  ￼
+
+For PCA stability and angular rules, use Davis–Kahan/Wedin \sin\Theta perturbation theory. Modern high-dimensional versions include Cai and Zhang, “Rate-Optimal Perturbation Bounds for Singular Subspaces,” and O’Rourke, Vu, and Wang, “Matrices with Gaussian noise: optimal estimates for singular subspace perturbation.” These give a principled role to eigengap, spectral norm noise, and subspace angle.  ￼
+
+For cone/tube geometry, Amelunxen, Lotz, McCoy, and Tropp, “Living on the edge,” gives statistical dimension and conic intrinsic-volume tools. This is relevant to selected-region tangent cones and angular cap probabilities.  ￼
+
+Continuous covariance and p\gg n
+
+For continuous p\gg n, dense empirical covariance should be replaced or augmented by shrinkage/low-rank methods. Ledoit and Wolf, “Nonlinear shrinkage estimation of large-dimensional covariance matrices,” is directly relevant because it targets large covariance matrices where the sample covariance performs poorly or is ill-conditioned.  ￼
+
+For factor-plus-sparse residual structure, use POET/S-POET style methods. The Fan–Wang result surfaced here discusses ultra-high-dimensional spiked covariance, eigenvalue/eigenvector bias, and S-POET as a shrinkage principal orthogonal complement thresholding estimator.  ￼
+
+Phylogenetic covariance/nulls
+
+For phylogenetic selected tails, start from Felsenstein’s phylogenetically independent contrasts: the key idea is that related taxa are not independent, and Brownian-motion phylogenetic covariance can transform contrasts into independent standardized quantities.  ￼
+
+For distance-based objects, distance-based MANOVA/DBF/PERMANOVA-like work is relevant because it separates vector observations from general dissimilarity objects. Minas and Montana’s DBF paper is a useful reference for approximate inference with distance-based statistics.  ￼
+
+⸻
+
+B. Strategy by question cluster
+
+Q5. Fit and validate a selected-tail law
+
+The law should not be “\chi^2 times scalar c” unless it passes a tail-shape test. The right response variable is already natural in your diagnostics:
+
+R_u=\frac{T_u}{a_u\nu_u},
+
+where T_u is the raw selected sibling statistic, a_u is the projected-Wald reference scale, and \nu_u is degrees of freedom. Your external diagnostic already checks scalar c versus a full selected-ratio tail law and marks non-admissible rows undefined.  ￼
+
+Use a two-stage law:
+
+\log R_u
+=
+m(x_u)+\varepsilon_u,
+
+where
+
+x_u=
+\left[
+A_{\mathrm{edge}},
+\log(n_u/n),
+\log(p/n_u),
+k_u,
+f_u,
+\log(\lambda_{k,u}/\lambda_{+,u}),
+M_{k,u},
+\rho_u
+\right].
+
+Here A_{\mathrm{edge}} is edge severity, k_u is sibling projection dimension, f_u is feature family, \lambda_{k,u}/\lambda_{+,u} is selected eigenvalue over MP edge, M_{k,u} is selected eigenvalue mass, and \rho_u=\cos^2\theta_u is angular capture. This matches the repo’s geometry diagnostic, which already records edge p-values, parent size/depth, projection dimension, eigenvalue summaries, and angular alignment.  ￼
+
+Validation target:
+
+\Pr_{\mathrm{heldout}}\{R_u > q_{0.99}(x_u)\mid x_u\}\approx 0.01.
+
+Do not validate by R^2 alone. Use held-out exceedance at \alpha_{\mathrm{sib}}=0.01, leave-one-case, leave-one-source-family, and leave-one-simulation. The selected-tail domain script already computes admissibility using matching simulations, matched records, held-out exceedance rate, and held-out exceedance SE.  ￼
+
+Production admissibility should require:
+
+m_{\mathrm{sim}}\ge 499,\qquad
+m_{\mathrm{records}}\ge 499,\qquad
+\mathrm{SE}_{\mathrm{tail}}\le 0.2\alpha_{\mathrm{sib}},
+
+plus a predeclared context. The 499 rule comes from 1/(m+1)\le 0.2\alpha at \alpha=0.01.  ￼
+
+Practical model sequence:
+
+1. Exact bins first: feature family/source family, parent-size bin, edge-action bin, k.
+2. Monotone quantile model next: q_{0.99}(x) using edge severity and parent size as monotone effects.
+3. Spectral correction layer: add \lambda_k/\lambda_+, selected eigenvalue mass, effective rank.
+4. Angular layer: add \rho=\cos^2\theta, but only if it improves leave-one-family tail calibration.
+5. Never promote data-adaptive bins unless they are frozen before the validation run.
+
+Q9. Hard internal support thresholds
+
+The current code requires strict-null or stopped-edge support but does not enforce a hard n_{\mathrm{eff}} threshold; it computes effective sample size and stores it in the model.  ￼ Add a CalibrationSupportReport before fitting/predicting:
+
+n_positive_weight_records
+n_supported_records
+n_strict_null_records
+n_stopped_edge_records
+n_selected_nonnull_records
+n_family_supported_records
+n_eff_global
+n_eff_family
+n_eff_local_kernel
+max_weight_share
+leave_one_simulation_max_delta_log_c
+leave_one_target_max_delta_log_c
+
+Recommended initial fail-closed thresholds for validation, not as final theorem:
+
+n_supported_records >= 30
+n_family_supported_records >= 15
+n_strict_null_records + n_stopped_edge_records >= 10
+n_eff_family >= 10
+n_eff_local_kernel >= 8
+max_weight_share <= 0.25
+leave_one_simulation_max_delta_log_c <= log(1.25)
+
+Then run a grid over these thresholds and report false-split, under-split, and skip rates. The production default should be the most conservative threshold whose skip rate is acceptable in planted-power simulations.
+
+Q10. Validate the sibling null-weight rule
+
+The current rule is:
+
+\pi_q=\omega_{q\to l(q)}\omega_{q\to r(q)},
+
+where \omega=1 for untested/ancestor-blocked edges and otherwise \omega is the Tree-BH adjusted child-edge p-value. The code comments correctly describe it as monotone null-like evidence, not a posterior probability.  ￼
+
+Validate alternatives:
+
+current_product_bh_p:       p_L p_R
+min_edge_bh_p:              min(p_L, p_R)
+geometric_mean:             sqrt(p_L p_R)
+fisher_null_score:          transform -2(log p_L + log p_R)
+hard_null_indicator:        1{p_L>t and p_R>t}
+local_fdr_like_isotonic:    isotonic calibration from selected-null simulations
+ancestor_weighted_product:  downweight by cumulative ancestor edge action
+
+Study design:
+
+1. Global null fixed tree.
+2. Global null selected tree.
+3. Mixed tree with known null sibling nodes and known signal sibling nodes.
+4. High-cardinality categorical stress.
+5. Diffuse Gaussian stress.
+6. Continuous p\gg n stress after covariance model is fixed.
+
+Endpoints:
+
+\mathrm{bias}(\hat c),\quad
+\mathrm{Var}(\hat c),\quad
+P(\text{false split}),\quad
+P(\text{skip undefined}),\quad
+\text{power at planted splits}.
+
+Only keep a weight rule if it is stable under leave-one-simulation and does not treat selected non-null records as null calibration support.
+
+Q11. Guard context bandwidth under sparse support
+
+The current bandwidth is a weighted standard deviation over \log k and \log n_{\mathrm{parent}}, with zero-bandwidth axes dropped.  ￼ That is fragile under sparse support.
+
+Add guards:
+
+if n_eff_local_kernel < threshold:
+    undefined_sparse_context
+if bandwidth axis computed from < min_unique_values:
+    drop axis and report dropped_axis
+if all axes dropped:
+    use family-level estimate only if family support threshold passes
+else:
+    fail undefined
+
+Validation grid:
+
+bandwidth = weighted_std
+bandwidth = max(weighted_std, floor)
+bandwidth = nearest-neighbor kNN bandwidth
+bandwidth = median absolute deviation
+bandwidth = fixed predeclared bins
+
+Optimize for held-out tail calibration, not mean \hat c. Use leave-one-simulation and leave-one-case diagnostics to detect bandwidth collapse.
+
+Q14–Q15. Selected MP law and k_{\min}=2
+
+The current MP estimator counts eigenvalues above
+
+(1+\sqrt{d_u/m_u})^2
+
+and then floors to the minimum projection dimension. The code separates raw MP signal count from returned test projection dimension.  ￼ The current edge minimum is 2.  ￼
+
+Validate five projection rules:
+
+identity_MP_kmin2       current
+identity_MP_kmin1
+finite_TW_MP            MP edge plus Tracy-Widom finite-sample correction
+parallel_analysis       empirical finite-null eigenvalue threshold
+deformed_MP             local H_u Stieltjes-transform support edge
+selected_MP             regenerated selected-tree local spectra
+
+For k_{\min}, test:
+
+k_min = 0 with explicit zero-dimensional semantics
+k_min = 1
+k_min = 2
+k_min = adaptive: 1 if no raw MP spike, 2 if edge action high
+k_min = raw MP only, fail when k=0 and contrast nonzero
+
+Endpoints:
+
+raw MP false spike rate under null
+projected-Wald p-value uniformity
+sibling false split rate
+internal calibration support rate
+ARI and final K under planted cases
+skip/undefined rate
+
+Do not justify k_{\min}=2 by ARI alone. It needs null calibration, support, and planted-power evidence.
+
+Q17. Sibling projection dimension rule
+
+The current sibling rule is geometric mean of child edge dimensions, one-child fallback, or parent fallback, capped by parent projection dimension.  ￼ Treat this as a heuristic until validated.
+
+Grid:
+
+parent_k
+min(child_k)
+max(child_k)
+round(sqrt(k_L k_R))  current
+harmonic_mean(k_L,k_R)
+edge_action_weighted_mean
+raw_MP_parent_signal_count
+oracle planted contrast dimension
+
+For each rule, report:
+
+dimension distribution
+zero/one/two dimension frequency
+sibling p-value calibration under fixed membership
+selected-tail support under selected hierarchy
+under-split and over-split rate
+runtime
+
+The rule should be chosen by tail calibration plus planted sibling power, not by average ARI alone.
+
+Q19. Attribute high-cardinality categorical failures
+
+Use a four-stage ablation ladder:
+
+1. Covariance only: fixed full-tangent sibling-null test using drop-last multinomial covariance. The feature-covariance validation scaffold already targets this exact question and explicitly excludes selection, MP, FDR, traversal, and inflation.  ￼
+2. Projection/MP only: fixed sibling membership, selected PCA/MP, no tree reconstruction.
+3. Selection only: full selected hierarchy but fixed/admissible projection.
+4. FDR/traversal only: oracle local p-values, then sibling BH and traversal.
+
+Failure labels:
+
+categorical_covariance_failure
+selected_MP_projection_failure
+selected_tail_calibration_failure
+sibling_FDR_failure
+traversal_failure
+tree_metric_unrecoverable
+
+High-cardinality categorical cases often create sparse simplex probabilities and near-boundary covariance blocks. So include probability profiles:
+
+uniform
+rare_tail
+imbalanced_rare_categories
+block-correlated categories
+Dirichlet-multinomial overdispersed
+
+Q20–Q21. Continuous covariance and p\gg n
+
+The current continuous path uses dense empirical-Gaussian covariance and explicitly fails for oversized dense covariance work states.  ￼ Keep that fail-fast behavior.
+
+Add three covariance modes:
+
+empirical_dense
+linear_shrinkage_identity
+low_rank_plus_diagonal
+
+Concrete model:
+
+\hat\Sigma_{\lambda,r}
+=
+U_r\hat\Lambda_r U_r^\top
++
+\hat\sigma^2(I-U_rU_r^\top)
++
+\lambda \tau I.
+
+Use Woodbury or eigenbasis whitening:
+
+\hat\Sigma_{\lambda,r}^{-1/2}z
+=
+U_r(\hat\Lambda_r+\lambda\tau I)^{-1/2}U_r^\top z
++
+(I-U_rU_r^\top)(\hat\sigma^2+\lambda\tau)^{-1/2}z.
+
+Validation:
+
+1. Fixed full-tangent continuous sibling null.
+2. Fixed membership selected PCA.
+3. Full selected hierarchy.
+4. p/n grid: p<n, p\approx n, p\gg n.
+5. Covariance profiles: identity, AR(1), low-rank factor, ill-conditioned, heavy-tailed.
+
+Use Ledoit–Wolf nonlinear shrinkage as the default baseline because it is designed for large-dimensional covariance matrices where sample covariance is poor or ill-conditioned.  ￼ Use POET/S-POET when low-rank factor structure is expected.  ￼
+
+Q24–Q25. Traversal-aligned sibling BH under selected hierarchy
+
+The current sibling BH is traversal-aligned: it applies BH only over edge-reachable candidate parents at each frontier.  ￼ The proof target should be stated as:
+
+\mathrm{FDR}_{\mathrm{reach}}
+=
+\mathbb E
+\left[
+\frac{\#\{\text{false sibling splits among edge-reachable tested nodes}\}}
+{\max(1,\#\{\text{sibling splits among edge-reachable tested nodes}\})}
+\right].
+
+Simulation plan:
+
+global null: no true sibling split anywhere
+single planted split
+multiple planted splits on one branch
+multiple planted splits on separate branches
+deep weak descendants under strong same-parent evidence
+unrecoverable tree cases
+
+Compare:
+
+flat BH over all internal nodes
+current traversal frontier BH
+TreeBH-style sibling correction
+BY correction over reachable frontier
+closed-testing / gatekeeping variant
+no sibling FDR, local alpha only
+
+Proof route:
+
+1. If adjusted sibling p-values are conditionally super-uniform given selected hierarchy and edge path, then adapt BH/TreeBH arguments.
+2. If dependence is unknown, prove only under PRDS/positive dependence or use BY-style conservative fallback.
+3. Otherwise state simulation-only control.
+
+TreeBH and hierarchical FDR papers give the right target language and dependence caveats.  ￼
+
+Q26–Q28. Replace pass-through heuristic
+
+Current pass-through continues if local sibling gate fails but a descendant can split.  ￼ Replace it with a margin comparison.
+
+Define local same margin:
+
+M_{\mathrm{same}}(v)
+=
+\frac{q_{1-\alpha,k_v}-T^{\mathrm{adj}}_v}{\sqrt{2k_v}},
+
+where positive means the local sibling statistic is below the rejection threshold.
+
+Define descendant split margin:
+
+M_{\mathrm{desc}}(v)
+=
+\max_{w\subset v}
+\left[
+\frac{T^{\mathrm{adj}}_w-q_{1-\alpha,k_w}}{\sqrt{2k_w}}
+-
+\lambda_d\,\mathrm{dist}(v,w)
+-
+\lambda_m\log N_{\mathrm{desc}}(v)
+\right].
+
+Pass through only if
+
+M_{\mathrm{desc}}(v)
+>
+\tau_0+\tau_1 M_{\mathrm{same}}(v)+\tau_2\log n_v.
+
+Validation endpoints:
+
+under-split correction rate
+false descendant fragmentation rate
+final cluster count overestimation
+ARI
+oracle clade preservation
+
+Run this under global null, weak deep signal, strong shallow signal, and phylogenetic clade simulations.
+
+Q29. Phylogenetic covariance/null generator
+
+Do not handle precomputed-distance selected tails until the null generator owns the distance/tree contract. The repo’s selected-hierarchy null audit already refuses precomputed KL tree-distance cases for exactly this reason.  ￼
+
+Add three phylogenetic null generators:
+
+Brownian continuous traits on a fixed phylogeny
+OU continuous traits on a fixed phylogeny
+discrete Markov substitution model for DNA/categorical states
+
+For Brownian traits:
+
+\mathrm{Cov}(X_i,X_j)=\sigma^2 t_{\mathrm{MRCA}(i,j)}.
+
+For DNA/categorical traits, simulate along branches with a Markov transition matrix, then rebuild the same feature representation. Use Felsenstein independent contrasts/PGLS as the statistical baseline because they explicitly address non-independence due to shared ancestry.  ￼
+
+Q33–Q41. Locked manuscript evidence
+
+Create a manuscript_results_manifest.json with:
+
+schema_version
+git_commit
+dirty_status
+run_command
+random_seed
+input_data_hash
+feature_space_signature
+tree_metric
+linkage
+edge_alpha
+sibling_alpha
+calibration_contract_version
+outputs
+primary_endpoints
+known_limitations
+
+Lock these studies:
+
+1. Fixed projected-Wald covariance calibration.
+2. Selected PCA projected-Wald validation.
+3. Selected MP/k_{\min} validation.
+4. Sibling projection-dimension rule validation.
+5. Internal calibration support threshold validation.
+6. Sibling null-weight rule validation.
+7. Context bandwidth validation.
+8. External selected-tail admissibility domain.
+9. Sibling FDR traversal simulation.
+10. Pass-through replacement simulation.
+11. Final cluster-count control simulation.
+12. Planted power study.
+13. Real-data biological manifest.
+
+The method constants manifest already lists edge_alpha, sibling_alpha, MP upper edge, minimum spectral dimension, sibling projection dimension, empirical-null weight rule, context bandwidth, and pass-through traversal as constants requiring evidence.  ￼ Use that as the manuscript checklist.
+
+For cluster-count control, report:
+
+P(K_hat = K_true)
+P(K_hat > K_true)
+P(K_hat < K_true)
+mean false split count
+mean false merge count
+ARI
+skip/undefined rate
+
+For real data, do not present only clusters. Present the full decision trace: edge raw/BH p-values, sibling raw/adjusted p-values, calibration status, support counts, traversal decision, final cluster assignment, and reference alignment.
+
+Q42–Q44. Full selected-region law
+
+Define the selected event for a focal sibling u:
+
+\mathcal S_u
+=
+\mathcal H_{\mathrm{tree}}
+\cap
+\mathcal E_{\mathrm{TreeBH\ path}}
+\cap
+\mathcal P_{\mathrm{PCA/MP}}
+\cap
+\mathcal F_{\mathrm{sibling\ frontier}}
+\cap
+\mathcal I_{\mathrm{inflation/FDR}}
+\cap
+\mathcal U_{\mathrm{focal\ selection}}.
+
+Then the target law is:
+
+\mathcal L
+\left(
+R_u
+\mid
+X\in\mathcal S_u
+\right).
+
+Build it in layers:
+
+Layer 1: root fixed-membership identity
+
+Use the barycentric identity. For a binary parent with children L,R, n=n_L+n_R, parent mean
+
+\bar x_u=\frac{n_L\bar x_L+n_R\bar x_R}{n},
+
+and no branch scaling, the child-parent and sibling standardized contrasts satisfy
+
+z_{L\to u}^{\mathrm{edge}}
+=
+z_{L,R}^{\mathrm{sib}},
+\qquad
+z_{R\to u}^{\mathrm{edge}}
+=
+-z_{L,R}^{\mathrm{sib}},
+
+provided the covariance baseline is the same parent/pooled baseline. This explains why root edge opening and sibling statistic are geometrically coupled.
+
+Layer 2: projection/angle law
+
+For a projection P_k,
+
+T_u=\|P_k z_u\|^2
+=
+\|z_u\|^2\cos^2\theta_u,
+
+where
+
+\cos^2\theta_u
+=
+\frac{\|P_k z_u\|^2}{\|z_u\|^2}.
+
+This is the main trigonometric rule to add to the selected-tail law.
+
+Under a fixed independent random subspace null,
+
+\cos^2\theta \sim \mathrm{Beta}\left(\frac{k}{2},\frac{d-k}{2}\right),
+
+and
+
+\frac{(\cos^2\theta/k)}
+{((1-\cos^2\theta)/(d-k))}
+\sim F_{k,d-k}.
+
+This gives a baseline angular diagnostic: if observed selected \rho=\cos^2\theta is far above the Beta/F reference, selected PCA alignment is part of the inflation law.
+
+Layer 3: edge opening as radial truncation
+
+For edge statistic Q,
+
+r_{\mathrm{edge}}
+=
+\sqrt Q-\sqrt{q_{1-\alpha,k}},
+
+and
+
+A_{\mathrm{edge}}
+=
+-\log p_{\mathrm{edge,min}}.
+
+Use r_{\mathrm{edge}} for local smooth geometry and A_{\mathrm{edge}} for robust binned selected-tail contexts.
+
+Layer 4: selected PCA stability
+
+Use Davis–Kahan/Wedin:
+
+\|\sin\Theta(\hat V,V)\|
+\lesssim
+\frac{\|E\|}{\mathrm{eigengap}}.
+
+So eigengap, selected eigenvalue over MP edge, and effective rank should enter the selected law as stability variables. This is exactly where trigonometry helps: \sin\Theta, \cos^2\theta, and \tan^2\theta=(1-\rho)/\rho are interpretable geometry variables. Davis–Kahan/Wedin-style perturbation papers justify this angle/eigengap link.  ￼
+
+Layer 5: merge-region geometry
+
+For average linkage, each selected merge has inequalities of the form
+
+d(A,B)\le d(C,D)
+
+against competing merges. In smooth Euclidean cases, approximate each active inequality by signed distance:
+
+\delta_t
+=
+\frac{g_t(X)}{\|\nabla g_t(X)\|_{\Sigma_0^{-1}}},
+
+then collect the minimum signed distance, active constraint count, and tangent cone. For discrete Hamming/categorical cases, treat the region as a tie-cell rather than a smooth manifold.
+
+For non-root contexts, add ancestor path constraints:
+
+\mathcal E_{\mathrm{anc}}(u)
+=
+\bigcap_{a\in\mathrm{path}(u)}
+\{p_{a\to c}^{\mathrm{TreeBH}}\le \alpha_a\}.
+
+Then fit the selected-tail law conditional on:
+
+root/non-root
+ancestor edge action
+minimum ancestor radial margin
+local edge action
+parent size
+projection dimension
+spectral geometry
+angular capture
+
+C. Trigonometric rules worth adding now
+
+These are the most useful “rules” to implement as diagnostics and candidate law variables.
+
+1. Projection capture
+
+\rho_u=\cos^2\theta_u
+=
+\frac{\|P_k z_u\|^2}{\|z_u\|^2}.
+
+Use rho_u as angular capture. If \rho_u is high, the selected PCA basis is aligned with the sibling contrast.
+
+2. Orthogonal leakage
+
+1-\rho_u=\sin^2\theta_u.
+
+This measures how much sibling energy lies outside the selected projection.
+
+3. Tangent inflation score
+
+\tan^2\theta_u=\frac{1-\rho_u}{\rho_u}.
+
+Very small \tan^2\theta means the selected projection almost captures the entire contrast. That should predict larger selected-tail inflation.
+
+4. Edge/sibling barycentric identity
+
+z_{L\to u}=z_{L,R},\qquad z_{R\to u}=-z_{L,R}.
+
+This is crucial because it says edge opening and sibling evidence are not independent at a binary parent. It explains why edge action is such a strong selected-tail covariate.
+
+5. Two-edge law of cosines
+
+When edge vectors are not exactly opposite because of different covariance/projection/context choices, use
+
+\|z_L-z_R\|^2
+=
+\|z_L\|^2+\|z_R\|^2
+-
+2\|z_L\|\|z_R\|\cos\phi.
+
+This separates sibling energy into edge magnitudes and edge angle. It can help distinguish “two children both far from parent in same direction” from “children separated from each other.”
+
+6. Spherical cap baseline
+
+For fixed independent subspace,
+
+\Pr(\rho\ge r)
+
+is a spherical-cap tail. Use it as an angular p-diagnostic, not a production p-value. If selected hierarchy produces many tiny cap p-values under null, angular selection is part of the law.
+
+7. Cone angle / statistical dimension
+
+Approximate a selected region near the observed point by a cone C_u. Its statistical dimension \delta(C_u) acts like an effective number of selected directions. This connects your selected-region geometry to conic integral geometry.  ￼
+
+D. Execution order
+
+Do this in the following order:
+
+1. Internal thresholds: Q9–Q11 first, because they protect production now.
+2. Selected-tail law: Q5 next, but keep it diagnostic until admissibility passes.
+3. Projection validation: Q14, Q15, Q17, because they affect all p-values.
+4. Categorical/continuous attribution: Q19–Q21, because feature-family failures should not be misattributed to FDR or calibration.
+5. Traversal/FDR/pass-through: Q24–Q28, after local p-values are trustworthy.
+6. Phylogenetic generator: Q29 before any precomputed-distance selected-tail claim.
+7. Manuscript evidence lock: Q33–Q41 only after the above studies have stable manifests.
+8. Full selected-region law: Q42–Q44 as the long-term proof/modeling track.
+
+The single most important methodological choice is: external selected-tail calibration may enter production only as a predeclared, context-admissible tail law, not as a scalar fallback.

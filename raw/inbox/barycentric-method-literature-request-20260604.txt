@@ -1,0 +1,173 @@
+Yes — barycentric-methods literature fits naturally into KL-TE because the method already represents each internal node as a leaf-count-weighted empirical subtree barycenter. In the code, internal node distributions are computed as weighted means of child distributions, with child weights equal to descendant leaf counts.  ￼
+
+Add this barycentric layer to the method
+
+1. Node distributions as empirical barycenters
+
+For an internal node u with descendant leaves D(u), the current method stores
+
+\bar x_u
+=
+\frac{1}{|D(u)|}
+\sum_{i\in D(u)}x_i .
+
+For a binary split u\to (L,R),
+
+\bar x_u
+=
+\beta_u \bar x_L + (1-\beta_u)\bar x_R,
+\qquad
+\beta_u=\frac{n_L}{n_L+n_R}.
+
+This should be described as a linear empirical barycenter in the active feature chart. For Bernoulli, categorical drop-last, and continuous Gaussian blocks, this is not just an implementation convenience: it is the centroid/minimizer under squared-error and Bregman-type distortion families. Banerjee et al.’s Bregman clustering framework is especially useful here because it shows how means/centroids arise as optimal representatives for Bregman divergences; Frigyik et al. extend the “mean minimizes expected Bregman divergence” idea to functions/distributions; Nielsen and Nock discuss sided/symmetrized Bregman centroids for information-theoretic divergences.  ￼
+
+2. Barycentric edge–sibling identity
+
+The barycentric formula gives an important exact identity that should become part of the methods section. For n=n_L+n_R,
+
+\bar x_L-\bar x_u
+=
+(1-\beta_u)(\bar x_L-\bar x_R),
+
+\bar x_R-\bar x_u
+=
+-\beta_u(\bar x_L-\bar x_R).
+
+Under the same covariance baseline and no branch-length scaling, the standardized left child-parent edge contrast equals the sibling contrast, and the right child-parent edge contrast is its negative:
+
+z_{L\to u}^{\mathrm{edge}}
+=
+z_{L,R}^{\mathrm{sib}},
+\qquad
+z_{R\to u}^{\mathrm{edge}}
+=
+-z_{L,R}^{\mathrm{sib}}.
+
+This is a powerful explanation for why edge severity predicts selected sibling-tail inflation: the same barycentric contrast that opens the child-parent edge is reused downstream as sibling evidence. Your selected-region diagnostics already observed that edge-opening coordinates are much more predictive of selected sibling ratio than merge margins alone.  ￼
+
+3. Barycentric leverage variables for Q5
+
+Add these to the selected-tail law:
+
+\beta_u=\frac{n_L}{n_u},
+\qquad
+b_u=\min(\beta_u,1-\beta_u),
+
+s_u^{\mathrm{samp}}
+=
+\frac{1}{n_L}+\frac{1}{n_R},
+
+\ell_u^{\mathrm{bar}}
+=
+\log\left(
+\frac{\max(\beta_u,1-\beta_u)}
+{\min(\beta_u,1-\beta_u)}
+\right).
+
+Then the selected-tail law becomes
+
+\log R_u
+=
+m\!\left(
+A_{\mathrm{edge}},
+\log n_u,
+\log(p/n_u),
+k_u,
+f_u,
+b_u,
+\ell_u^{\mathrm{bar}},
+\lambda_{k,u}/\lambda_{+,u},
+M_{k,u},
+\rho_u
+\right)
++
+\varepsilon_u.
+
+Here b_u and \ell_u^{\mathrm{bar}} are the barycentric additions: they tell whether the selected split is balanced or dominated by one child. This matters because highly unbalanced barycentric splits can create high-leverage child-parent contrasts even when the sibling interpretation is fragile.
+
+Literature to add
+
+Bregman and information-geometric barycenters
+
+Use these to justify the current empirical mean/barycenter representation for Bernoulli, categorical, and continuous blocks.
+
+Banerjee, Merugu, Dhillon, and Ghosh — “Clustering with Bregman Divergences.” This is the main reference for centroids/means as representatives under Bregman distortions, including KL-like and squared-error cases.  ￼
+
+Frigyik, Srivastava, and Gupta — “Functional Bregman Divergence and Bayesian Estimation of Distributions.” This extends Bregman mean-minimizer logic from finite vectors to functions/distributions, which is useful for framing node distributions as empirical distributional summaries.  ￼
+
+Nielsen and Nock — “On the Centroids of Symmetrized Bregman Divergences.” Useful if you later want symmetric divergence centroids or Jensen/Burbea–Rao alternatives for categorical/continuous blocks.  ￼
+
+Telgarsky and Dasgupta — “Agglomerative Bregman Clustering.” This is useful because KL-TE is hierarchical/agglomerative, and this paper develops agglomerative clustering theory under Bregman divergences.  ￼
+
+Wasserstein and distributional barycenters
+
+These are not immediate replacements for the current feature-space barycenter, but they are valuable for future extensions where node distributions are treated as full probability measures rather than coordinatewise feature means.
+
+Agueh and Carlier — “Barycenters in the Wasserstein Space.” This is the foundational Wasserstein barycenter paper; Bigot and Klein explicitly connect their work to Agueh–Carlier barycenters and characterize barycenters via averaged optimal transport maps.  ￼
+
+Cuturi and Doucet — “Fast Computation of Wasserstein Barycenters.” Useful if you later want computational barycenters for histogram/categorical feature blocks using entropic OT.  ￼
+
+Álvarez-Esteban et al. — “A fixed-point approach to barycenters in Wasserstein space.” Especially relevant for Gaussian continuous blocks because the paper discusses Wasserstein barycenters for location-scatter families, where the barycenter mean is a weighted mean and covariance solves a nonlinear matrix equation.  ￼
+
+Carlier, Delalande, and Mérigot — “Quantitative Stability of Barycenters in the Wasserstein Space.” Useful for Q42–Q44 because selected-region inference needs sensitivity/stability of the barycenter map under perturbations.  ￼
+
+Fréchet/Karcher barycenters and tree-space barycenters
+
+Use these to make the method more general and to support phylogenetic/topological extensions.
+
+Fréchet mean literature. The Fréchet mean generalizes centroids to metric spaces by minimizing squared distance to observations, so it is the clean umbrella concept for “node as representative of descendant leaves.”  ￼
+
+Karcher/Riemannian center of mass. Karcher’s center-of-mass work is useful if continuous feature blocks later live on nonlinear manifolds or covariance manifolds rather than Euclidean space.  ￼
+
+Miller, Owen, and Provan — “Polyhedral computational geometry for averaging metric phylogenetic trees.” This is very relevant to Q29/Q42–Q44 because it studies Fréchet means in BHV phylogenetic tree space, a nonpositively curved polyhedral space.  ￼
+
+Brown and Owen — “Mean and Variance of Phylogenetic Trees.” This gives a practical bridge between phylogenetic trees, Fréchet means, variance, and hypothesis testing. It can support your future phylogenetic covariance/null generator.  ￼
+
+Lammers, Nye, and Huckemann — “Statistics for Phylogenetic Trees in the Presence of Stickiness.” Useful because selected hierarchical trees may have “sticky” behavior near unresolved or star-like topologies; that resembles your support-fragmentation and topology-boundary problems.  ￼
+
+Classical centroid/variance clustering
+
+Use these to connect KL-TE’s barycentric summaries to standard clustering language.
+
+Ward’s minimum variance method. Ward’s method merges clusters by minimizing increase in within-cluster variance, and the merge cost is expressible through cluster centroids. This is relevant as background for barycentric/centroid-based hierarchical clustering, even though KL-TE’s active tree construction can use average linkage rather than Ward linkage.  ￼
+
+Centroid and Ward HAC variants. The nearest-neighbor chain summary gives the Ward distance formula in terms of cluster centroids and cluster sizes, which is useful for explaining barycentric leverage and size effects.  ￼
+
+Manuscript-ready insertion
+
+You can add this after the node-distribution subsection:
+
+Barycentric node representation. Each internal node is represented by the empirical barycenter of its descendant leaves in the declared feature-space chart. If D(u) is the descendant leaf set below node u, the stored node parameter is
+> \bar x_u = |D(u)|^{-1}\sum_{i\in D(u)}x_i.
+>
+For a binary parent with children L and R, this can be written as
+> \bar x_u=\beta_u\bar x_L+(1-\beta_u)\bar x_R,
+> \qquad
+> \beta_u=n_L/(n_L+n_R).
+>
+This barycentric representation is natural for the current typed feature space: Euclidean means minimize squared error, and Bregman-centroid theory gives the analogous mean-as-representative interpretation for a broad class of information-geometric distortions, including KL-like objectives. It also exposes an important selection geometry. The child-parent edge contrasts are scalar multiples of the sibling contrast:
+> \bar x_L-\bar x_u=(1-\beta_u)(\bar x_L-\bar x_R),
+> \qquad
+> \bar x_R-\bar x_u=-\beta_u(\bar x_L-\bar x_R).
+>
+After the nested child-parent and two-sample sibling variance normalizations, these identities imply that, under a shared local covariance baseline, the left and right edge z-vectors are z_{L,R}^{\mathrm{sib}} and -z_{L,R}^{\mathrm{sib}}. Thus the same barycentric direction can both open the child-parent edge path and create the focal sibling statistic. The selected-hierarchy calibration problem is therefore not merely a marginal chi-square problem; it is a selected barycentric-contrast problem.
+
+How barycentric literature helps the open questions
+
+For Q5, barycentric variables should enter the selected-tail law: child balance, parent-size fraction, barycentric leverage, and edge/sibling shared-direction identity.
+
+For Q9–Q11, internal support thresholds should include whether calibration records cover similar barycentric weights \beta_u. A focal split with \beta_u\approx 0.5 should not borrow heavily from highly unbalanced calibration records unless validated.
+
+For Q14–Q17, selected PCA/MP and sibling dimension rules should stratify by barycentric balance. Unbalanced barycenters can align strongly with leading PCs and inflate \cos^2\theta.
+
+For Q19, high-cardinality categorical failures may be barycentric boundary failures: if many categorical simplex coordinates are near zero, the empirical barycenter is near a simplex face and the drop-last covariance becomes ill-conditioned.
+
+For Q20–Q21, continuous covariance should distinguish Euclidean barycenters of means from Wasserstein/Gaussian barycenters of distributions. If the node should represent a Gaussian distribution rather than only a mean vector, the barycenter covariance is not generally the leaf-count weighted covariance average; Wasserstein Gaussian barycenters provide a principled alternative.  ￼
+
+For Q24–Q28, traversal and pass-through should compare descendant evidence against local barycentric same-evidence. The local same-evidence is stronger when the parent barycenter is balanced and both children lie symmetrically around it; pass-through should be harder in that case.
+
+For Q29, phylogenetic selected tails should use Fréchet/BHV barycenter literature because the “mean tree” and its variance live in non-Euclidean tree space, not ordinary Euclidean feature space.  ￼
+
+For Q42–Q44, the full selected law should include the derivative or sensitivity of the barycenter map:
+X\mapsto \bar x_u(X),
+because hierarchy selection changes which leaves enter each barycenter. This is the selected barycentric map, and its local tangent/normal geometry is what turns fixed-subspace chi-square behavior into selected-tail inflation.
