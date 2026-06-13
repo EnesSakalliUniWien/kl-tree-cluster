@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from time import perf_counter
 
@@ -23,6 +24,15 @@ from ...statistics.child_parent_divergence.child_parent_divergence_annotation.sp
 )
 from ...statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
+)
+from ...statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+    DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
+)
+from ...statistics.sibling_divergence.inflation_correction.external_selected_tail_calibration import (
+    ExternalSelectedTailCalibrationModel,
+)
+from ...statistics.sibling_divergence.inflation_correction.types.inflation_model import (
+    CalibrationSupportThresholds,
 )
 from ...statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
     collect_parent_principal_component_inputs_for_sibling_tests,
@@ -70,10 +80,39 @@ def _build_sibling_metadata(
     return GateMetadata(gate="sibling", alpha=float(sibling_alpha))
 
 
-def build_gate_annotation_config_metadata() -> GateAnnotationConfigMetadata:
+def _support_thresholds_signature(
+    thresholds: CalibrationSupportThresholds,
+) -> tuple[tuple[str, float | int], ...]:
+    return tuple(
+        (field, getattr(thresholds, field))
+        for field in thresholds.__dataclass_fields__
+    )
+
+
+def build_gate_annotation_config_metadata(
+    *,
+    spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    enforce_internal_support_thresholds: bool = False,
+    internal_support_thresholds: CalibrationSupportThresholds = (
+        DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
+    ),
+    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
+) -> GateAnnotationConfigMetadata:
     """Capture config values that affect gate annotation outputs."""
     return GateAnnotationConfigMetadata(
-        spectral_minimum_dimension=EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        spectral_minimum_dimension=int(spectral_minimum_dimension),
+        enforce_internal_support_thresholds=bool(enforce_internal_support_thresholds),
+        internal_support_thresholds_signature=_support_thresholds_signature(
+            internal_support_thresholds
+        ),
+        external_selected_tail_calibration_enabled=(
+            external_selected_tail_model is not None
+        ),
+        external_selected_tail_rule_count=(
+            0
+            if external_selected_tail_model is None
+            else int(len(external_selected_tail_model.rules))
+        ),
     )
 
 
@@ -163,6 +202,15 @@ def run_gate_annotation_pipeline(
     sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
+    spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    enforce_internal_support_thresholds: bool = False,
+    internal_support_thresholds: CalibrationSupportThresholds = (
+        DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
+    ),
+    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
+    external_selected_tail_context_by_parent: Mapping[
+        object, Mapping[str, object]
+    ] | None = None,
 ) -> GateAnnotationBundle:
     """Run the edge-gate and sibling-gate annotation pipeline.
 
@@ -188,6 +236,7 @@ def run_gate_annotation_pipeline(
         significance_level_alpha=edge_alpha,
         leaf_data=leaf_data,
         feature_space=feature_space,
+        spectral_minimum_dimension=spectral_minimum_dimension,
         stage_timings=stage_timings,
     )
     edge_gate_sec = float(perf_counter() - edge_gate_start_sec)
@@ -223,6 +272,10 @@ def run_gate_annotation_pipeline(
             sibling_inputs.parent_principal_component_eigenvalues
         ),
         feature_space=feature_space,
+        enforce_support_thresholds=enforce_internal_support_thresholds,
+        support_thresholds=internal_support_thresholds,
+        external_selected_tail_model=external_selected_tail_model,
+        external_selected_tail_context_by_parent=external_selected_tail_context_by_parent,
         stage_timings=stage_timings,
     )
     sibling_gate_sec = float(perf_counter() - sibling_gate_start_sec)
@@ -239,7 +292,12 @@ def run_gate_annotation_pipeline(
         pipeline="gate_annotation",
         edge=edge_metadata,
         sibling=sibling_metadata,
-        config=build_gate_annotation_config_metadata(),
+        config=build_gate_annotation_config_metadata(
+            spectral_minimum_dimension=spectral_minimum_dimension,
+            enforce_internal_support_thresholds=enforce_internal_support_thresholds,
+            internal_support_thresholds=internal_support_thresholds,
+            external_selected_tail_model=external_selected_tail_model,
+        ),
         leaf_data=build_gate_annotation_leaf_data_metadata(
             leaf_data,
             feature_space=feature_space,

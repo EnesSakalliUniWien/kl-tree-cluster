@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 import numpy as np
-from scipy.stats import chi2
 
 from ..pair_testing.types.sibling_pair_record import SiblingPairRecord
-from .empirical_null_inflation_estimation import predict_empirical_inflation_factor
-from .types.inflation_model import EmpiricalNullInflationModel
+from .empirical_null_inflation_estimation import (
+    DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
+    decide_empirical_null_calibration,
+)
+from .external_selected_tail_calibration import ExternalSelectedTailCalibrationModel
+from .types.inflation_model import (
+    CalibrationSupportThresholds,
+    EmpiricalNullInflationModel,
+)
 
 InflationAdjustedSiblingTestSummary = tuple[float, float, float]
 
@@ -17,7 +23,11 @@ InflationAdjustedSiblingTestSummary = tuple[float, float, float]
 def _compute_inflation_adjusted_sibling_test(
     sibling_test_record: SiblingPairRecord,
     *,
-    model: EmpiricalNullInflationModel,
+    model: EmpiricalNullInflationModel | None,
+    enforce_support_thresholds: bool = False,
+    support_thresholds: CalibrationSupportThresholds = DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
+    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
+    external_selected_tail_context: Mapping[str, object] | None = None,
 ) -> tuple[InflationAdjustedSiblingTestSummary, str]:
     """Return one inflation-adjusted sibling-test summary."""
     if not np.isfinite(sibling_test_record.stat):
@@ -31,17 +41,50 @@ def _compute_inflation_adjusted_sibling_test(
                 "Zero-dimensional sibling records must carry statistic=0 and p_value=1; "
                 f"parent={sibling_test_record.parent!r}."
             )
-        return (0.0, 0.0, 1.0), model.method
+        method = "zero_dimensional_sibling_record" if model is None else model.method
+        return (0.0, 0.0, 1.0), method
     if sibling_test_record.degrees_of_freedom < 0:
         raise ValueError(
             "Sibling record must have non-negative degrees of freedom before "
             f"adjustment; parent={sibling_test_record.parent!r}."
         )
 
-    empirical_inflation_factor = predict_empirical_inflation_factor(
-        model,
-        sibling_test_record,
-    )
+    if model is None:
+        if external_selected_tail_model is None:
+            raise ValueError(
+                "Sibling empirical calibration has no internal model and no "
+                "external selected-tail model; "
+                f"parent={sibling_test_record.parent!r}."
+            )
+        decision = external_selected_tail_model.decision_for(
+            sibling_test_record,
+            external_context=external_selected_tail_context,
+            internal_decision=None,
+        )
+    else:
+        decision = decide_empirical_null_calibration(
+            model,
+            sibling_test_record,
+            enforce_support_thresholds=enforce_support_thresholds,
+            support_thresholds=support_thresholds,
+            external_selected_tail_model=external_selected_tail_model,
+            external_selected_tail_context=(
+                None
+                if external_selected_tail_context is None
+                else dict(external_selected_tail_context)
+            ),
+        )
+    admissible_statuses = {
+        "internal_admissible",
+        "external_admissible_scalar",
+        "external_admissible_tail_law",
+    }
+    if decision.status not in admissible_statuses or decision.c_hat is None:
+        raise ValueError(
+            "Sibling empirical calibration is not internally admissible; "
+            f"status={decision.status!r}, parent={sibling_test_record.parent!r}."
+        )
+    empirical_inflation_factor = decision.c_hat
     if not np.isfinite(empirical_inflation_factor) or empirical_inflation_factor < 1.0:
         raise ValueError(
             "Sibling empirical inflation factor must be finite and >= 1.0; "
@@ -61,23 +104,27 @@ def _compute_inflation_adjusted_sibling_test(
         sibling_test_record.reference_scale * empirical_inflation_factor
     )
     inflation_adjusted_degrees_of_freedom = float(sibling_test_record.degrees_of_freedom)
-    inflation_adjusted_p_value = float(
-        chi2.sf(
-            inflation_adjusted_statistic,
-            df=inflation_adjusted_degrees_of_freedom,
+    if decision.p_value is None:
+        raise ValueError(
+            "Sibling empirical calibration decision did not include an adjusted "
+            f"p-value; parent={sibling_test_record.parent!r}."
         )
-    )
+    inflation_adjusted_p_value = decision.p_value
     return (
         inflation_adjusted_statistic,
         inflation_adjusted_degrees_of_freedom,
         inflation_adjusted_p_value,
-    ), model.method
+    ), decision.estimator
 
 
 def compute_inflation_adjusted_sibling_tests(
     sibling_test_records: Iterable[SiblingPairRecord],
     *,
-    model: EmpiricalNullInflationModel,
+    model: EmpiricalNullInflationModel | None,
+    enforce_support_thresholds: bool = False,
+    support_thresholds: CalibrationSupportThresholds = DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
+    external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
+    external_selected_tail_context_by_parent: Mapping[object, Mapping[str, object]] | None = None,
 ) -> tuple[list[str], list[InflationAdjustedSiblingTestSummary], list[str]]:
     """Return inflation-adjusted sibling-test summaries for tested parents."""
     tested_parent_ids: list[str] = []
@@ -91,6 +138,16 @@ def compute_inflation_adjusted_sibling_tests(
         test_summary, method_label = _compute_inflation_adjusted_sibling_test(
             sibling_test_record,
             model=model,
+            enforce_support_thresholds=enforce_support_thresholds,
+            support_thresholds=support_thresholds,
+            external_selected_tail_model=external_selected_tail_model,
+            external_selected_tail_context=(
+                None
+                if external_selected_tail_context_by_parent is None
+                else external_selected_tail_context_by_parent.get(
+                    sibling_test_record.parent
+                )
+            ),
         )
         tested_parent_ids.append(sibling_test_record.parent)
         inflation_adjusted_test_summaries.append(test_summary)

@@ -25,6 +25,10 @@ class GateAnnotationConfigMetadata:
     """Config values that affect gate annotation outputs."""
 
     spectral_minimum_dimension: int
+    enforce_internal_support_thresholds: bool = False
+    internal_support_thresholds_signature: tuple[tuple[str, float | int], ...] = ()
+    external_selected_tail_calibration_enabled: bool = False
+    external_selected_tail_rule_count: int = 0
 
 
 @dataclass(frozen=True)

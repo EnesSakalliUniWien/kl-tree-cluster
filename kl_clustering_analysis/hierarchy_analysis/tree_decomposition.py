@@ -29,6 +29,15 @@ from .decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
 from .statistics.alpha_contract import DEFAULT_EDGE_ALPHA, DEFAULT_SIBLING_ALPHA
+from .statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+    DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
+)
+from .statistics.sibling_divergence.inflation_correction.types.inflation_model import (
+    CalibrationSupportThresholds,
+)
+from .statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 
 
 class TreeDecomposition:
@@ -62,6 +71,11 @@ class TreeDecomposition:
         sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
         leaf_data: pd.DataFrame | None = None,
         feature_space: FeatureSpace | None = None,
+        spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        enforce_internal_support_thresholds: bool = False,
+        internal_support_thresholds: CalibrationSupportThresholds = (
+            DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
+        ),
         passthrough: bool = config.PASSTHROUGH,
     ):
         """Configure decomposition thresholds and pre-compute reusable metadata.
@@ -100,6 +114,11 @@ class TreeDecomposition:
         self.sibling_alpha = float(sibling_alpha)
         self._leaf_data = leaf_data
         self._feature_space = feature_space
+        self._spectral_minimum_dimension = int(spectral_minimum_dimension)
+        self._enforce_internal_support_thresholds = bool(
+            enforce_internal_support_thresholds
+        )
+        self._internal_support_thresholds = internal_support_thresholds
 
         # ----- root -----
         self._root = self.tree.root()
@@ -160,6 +179,11 @@ class TreeDecomposition:
             sibling_alpha=self.sibling_alpha,
             leaf_data=self._leaf_data,
             feature_space=self._feature_space,
+            spectral_minimum_dimension=self._spectral_minimum_dimension,
+            enforce_internal_support_thresholds=(
+                self._enforce_internal_support_thresholds
+            ),
+            internal_support_thresholds=self._internal_support_thresholds,
         )
         self._gate_annotation_bundle = annotation_bundle
         return annotation_bundle.annotated_df
@@ -194,7 +218,14 @@ class TreeDecomposition:
             metadata.pipeline == "gate_annotation"
             and metadata.edge.alpha == self.edge_alpha
             and metadata.sibling.alpha == self.sibling_alpha
-            and metadata.config == build_gate_annotation_config_metadata()
+            and metadata.config
+            == build_gate_annotation_config_metadata(
+                spectral_minimum_dimension=self._spectral_minimum_dimension,
+                enforce_internal_support_thresholds=(
+                    self._enforce_internal_support_thresholds
+                ),
+                internal_support_thresholds=self._internal_support_thresholds,
+            )
             and metadata.leaf_data
             == build_gate_annotation_leaf_data_metadata(
                 self._leaf_data,

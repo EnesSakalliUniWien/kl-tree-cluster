@@ -4,8 +4,17 @@ import math
 
 import pytest
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+    CalibrationSupportThresholds,
+    decide_empirical_null_calibration,
     fit_empirical_null_inflation_model,
     predict_empirical_inflation_factor,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.external_selected_tail_calibration import (
+    ExternalSelectedTailCalibrationModel,
+    ExternalSelectedTailCalibrationRule,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_adjusted_sibling_tests import (
+    compute_inflation_adjusted_sibling_tests,
 )
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
@@ -105,6 +114,7 @@ def test_fit_empirical_null_inflation_model_excludes_selected_nonnull_records() 
 
     assert model.n_calibration == 1
     assert model.n_stopped_or_null_calibration == 1
+    assert model.n_edge_blocked_calibration == 1
     assert math.isclose(
         model.baseline_empirical_inflation_factor,
         4.0 / 1.0,
@@ -167,6 +177,365 @@ def test_fit_empirical_null_inflation_model_uses_context_weighted_inflation() ->
         )
         >= 1.0
     )
+
+
+def test_decide_empirical_null_calibration_reports_internal_support() -> None:
+    records = [
+        _make_record("strict", stat=4.0, degrees_of_freedom=2.0),
+        _make_record(
+            "edge_blocked",
+            stat=8.0,
+            degrees_of_freedom=2.0,
+            is_null_like=False,
+            is_edge_blocked=True,
+        ),
+    ]
+    target = _make_record(
+        "target",
+        stat=16.0,
+        degrees_of_freedom=2.0,
+        is_null_like=False,
+    )
+
+    model = fit_empirical_null_inflation_model(records)
+    decision = decide_empirical_null_calibration(model, target)
+
+    assert decision.status == "internal_admissible"
+    assert decision.c_hat is not None
+    assert decision.p_value is not None
+    assert decision.support["n_supported_records"] == 2
+    assert decision.support["n_positive_weight_records"] == 2
+    assert decision.support["n_selected_nonnull_positive_weight_records"] == 0
+    assert decision.support["n_strict_null_records"] == 1
+    assert decision.support["n_edge_blocked_records"] == 1
+    assert decision.support["n_family_supported_records"] == 2
+    assert decision.support["support_contract_status"] == "below_internal_support_thresholds"
+    assert "supported_records_below_threshold" in str(
+        decision.support["support_contract_failure_reasons"]
+    )
+    assert decision.exact_context["feature_family"] == "bernoulli"
+    assert decision.estimator.endswith("family_baseline")
+
+
+def test_decide_empirical_null_calibration_can_enforce_support_thresholds() -> None:
+    records = [
+        _make_record("strict", stat=4.0, degrees_of_freedom=2.0),
+        _make_record("blocked", stat=8.0, degrees_of_freedom=2.0, is_edge_blocked=True),
+    ]
+    target = _make_record(
+        "target",
+        stat=16.0,
+        degrees_of_freedom=2.0,
+        is_null_like=False,
+    )
+
+    model = fit_empirical_null_inflation_model(records)
+    decision = decide_empirical_null_calibration(
+        model,
+        target,
+        enforce_support_thresholds=True,
+    )
+
+    assert decision.status == "undefined_sparse_context"
+    assert decision.c_hat is None
+    assert decision.support["support_contract_status"] == "below_internal_support_thresholds"
+    assert decision.descriptive_strata["reason"] == "internal_support_thresholds_failed"
+    with pytest.raises(ValueError, match="undefined_sparse_context"):
+        predict_empirical_inflation_factor(
+            model,
+            target,
+            enforce_support_thresholds=True,
+        )
+
+
+def test_decide_empirical_null_calibration_accepts_custom_support_thresholds() -> None:
+    records = [
+        _make_record("strict", stat=4.0, degrees_of_freedom=2.0),
+        _make_record("blocked", stat=8.0, degrees_of_freedom=2.0, is_edge_blocked=True),
+    ]
+    target = _make_record(
+        "target",
+        stat=16.0,
+        degrees_of_freedom=2.0,
+        is_null_like=False,
+    )
+    permissive = CalibrationSupportThresholds(
+        min_supported_records=2,
+        min_family_supported_records=2,
+        min_stopped_or_null_records=2,
+        min_family_effective_sample_size=1.0,
+        min_local_effective_sample_size=1.0,
+        max_weight_share=1.0,
+        max_leave_one_record_delta_log_c=10.0,
+    )
+
+    model = fit_empirical_null_inflation_model(records)
+    decision = decide_empirical_null_calibration(
+        model,
+        target,
+        enforce_support_thresholds=True,
+        support_thresholds=permissive,
+    )
+
+    assert decision.status == "internal_admissible"
+    assert decision.support["support_contract_status"] == (
+        "passes_internal_support_thresholds"
+    )
+    assert decision.support["support_contract_failure_reasons"] == ""
+
+
+def test_decide_empirical_null_calibration_uses_promoted_external_selected_tail_context() -> None:
+    records = [
+        _make_record("strict", stat=4.0, degrees_of_freedom=2.0),
+        _make_record("blocked", stat=8.0, degrees_of_freedom=2.0, is_edge_blocked=True),
+    ]
+    target = _make_record(
+        "target",
+        stat=160.0,
+        degrees_of_freedom=2.0,
+        is_null_like=False,
+    )
+    external = ExternalSelectedTailCalibrationModel(
+        rules=(
+            ExternalSelectedTailCalibrationRule(
+                exact_context={
+                    "source_family": "gaussian_blobs",
+                    "feature_family": "bernoulli",
+                    "sibling_projection_dimension": 2,
+                    "edge_action_bin": "edge_action_ge8",
+                    "balance_bin": "balance_0.25_0.4",
+                },
+                c_hat=50.0,
+                support={
+                    "n_matching_simulations": 800,
+                    "n_records": 900,
+                    "relative_c_hat_simulation_se": 0.02,
+                },
+                descriptive_strata={
+                    "promotion_decision": "external_admissible",
+                    "tail_law_status": "parent_size_balance_external_candidate",
+                },
+            ),
+        )
+    )
+
+    model = fit_empirical_null_inflation_model(records)
+    decision = decide_empirical_null_calibration(
+        model,
+        target,
+        enforce_support_thresholds=True,
+        external_selected_tail_model=external,
+        external_selected_tail_context={
+            "source_family": "gaussian_blobs",
+            "feature_family": "bernoulli",
+            "sibling_projection_dimension": 2,
+            "edge_action_bin": "edge_action_ge8",
+            "balance_bin": "balance_0.25_0.4",
+        },
+    )
+
+    assert decision.status == "external_admissible_scalar"
+    assert decision.c_hat == 50.0
+    assert decision.p_value is not None
+    assert decision.estimator == "external_selected_tail_scalar"
+    assert decision.support["external_selected_tail_status"] == "matched"
+    assert decision.support["n_matching_simulations"] == 800
+    assert decision.descriptive_strata["internal_status"] == "undefined_sparse_context"
+
+
+def test_decide_empirical_null_calibration_fails_closed_without_matching_external_context() -> None:
+    records = [
+        _make_record("strict", stat=4.0, degrees_of_freedom=2.0),
+        _make_record("blocked", stat=8.0, degrees_of_freedom=2.0, is_edge_blocked=True),
+    ]
+    target = _make_record(
+        "target",
+        stat=160.0,
+        degrees_of_freedom=2.0,
+        is_null_like=False,
+    )
+    external = ExternalSelectedTailCalibrationModel(
+        rules=(
+            ExternalSelectedTailCalibrationRule(
+                exact_context={
+                    "source_family": "gaussian_blobs",
+                    "feature_family": "bernoulli",
+                    "sibling_projection_dimension": 2,
+                    "edge_action_bin": "edge_action_ge8",
+                    "balance_bin": "balance_0.25_0.4",
+                },
+                c_hat=50.0,
+            ),
+        )
+    )
+
+    model = fit_empirical_null_inflation_model(records)
+    decision = decide_empirical_null_calibration(
+        model,
+        target,
+        enforce_support_thresholds=True,
+        external_selected_tail_model=external,
+        external_selected_tail_context={
+            "source_family": "gaussian_blobs",
+            "feature_family": "bernoulli",
+            "sibling_projection_dimension": 2,
+            "edge_action_bin": "edge_action_6_8",
+            "balance_bin": "balance_0.25_0.4",
+        },
+    )
+
+    assert decision.status == "undefined_external_not_admissible"
+    assert decision.c_hat is None
+    assert decision.p_value is None
+    assert decision.support["external_selected_tail_status"] == "not_matched"
+    assert decision.descriptive_strata["internal_status"] == "undefined_sparse_context"
+
+
+def test_compute_inflation_adjusted_sibling_tests_can_enforce_support_thresholds() -> None:
+    records = [
+        _make_record("strict", stat=4.0, degrees_of_freedom=2.0),
+        _make_record("blocked", stat=8.0, degrees_of_freedom=2.0, is_edge_blocked=True),
+        _make_record(
+            "target",
+            stat=16.0,
+            degrees_of_freedom=2.0,
+            is_null_like=False,
+        ),
+    ]
+    model = fit_empirical_null_inflation_model(records)
+
+    parent_ids, summaries, methods = compute_inflation_adjusted_sibling_tests(
+        records,
+        model=model,
+    )
+
+    assert parent_ids == ["target"]
+    assert len(summaries) == 1
+    assert methods[0].endswith("family_baseline")
+
+    with pytest.raises(ValueError, match="undefined_sparse_context"):
+        compute_inflation_adjusted_sibling_tests(
+            records,
+            model=model,
+            enforce_support_thresholds=True,
+        )
+
+
+def test_compute_inflation_adjusted_sibling_tests_uses_external_selected_tail_context() -> None:
+    records = [
+        _make_record("strict", stat=4.0, degrees_of_freedom=2.0),
+        _make_record("blocked", stat=8.0, degrees_of_freedom=2.0, is_edge_blocked=True),
+        _make_record(
+            "target",
+            stat=160.0,
+            degrees_of_freedom=2.0,
+            is_null_like=False,
+        ),
+    ]
+    external = ExternalSelectedTailCalibrationModel(
+        rules=(
+            ExternalSelectedTailCalibrationRule(
+                exact_context={
+                    "source_family": "gaussian_blobs",
+                    "feature_family": "bernoulli",
+                    "sibling_projection_dimension": 2,
+                    "edge_action_bin": "edge_action_ge8",
+                    "balance_bin": "balance_0.25_0.4",
+                },
+                c_hat=50.0,
+            ),
+        )
+    )
+    model = fit_empirical_null_inflation_model(records)
+
+    parent_ids, summaries, methods = compute_inflation_adjusted_sibling_tests(
+        records,
+        model=model,
+        enforce_support_thresholds=True,
+        external_selected_tail_model=external,
+        external_selected_tail_context_by_parent={
+            "target": {
+                "source_family": "gaussian_blobs",
+                "feature_family": "bernoulli",
+                "sibling_projection_dimension": 2,
+                "edge_action_bin": "edge_action_ge8",
+                "balance_bin": "balance_0.25_0.4",
+            }
+        },
+    )
+
+    assert parent_ids == ["target"]
+    assert summaries == [(3.2, 2.0, summaries[0][2])]
+    assert 0.0 < summaries[0][2] < 1.0
+    assert methods == ["external_selected_tail_scalar"]
+
+
+def test_compute_inflation_adjusted_sibling_tests_uses_external_when_internal_model_absent() -> None:
+    records = [
+        _make_record(
+            "target",
+            stat=160.0,
+            degrees_of_freedom=2.0,
+            is_null_like=False,
+        ),
+    ]
+    external = ExternalSelectedTailCalibrationModel(
+        rules=(
+            ExternalSelectedTailCalibrationRule(
+                exact_context={
+                    "source_family": "gaussian_blobs",
+                    "feature_family": "bernoulli",
+                    "sibling_projection_dimension": 2,
+                    "edge_action_bin": "edge_action_ge8",
+                    "balance_bin": "balance_0.25_0.4",
+                },
+                c_hat=50.0,
+            ),
+        )
+    )
+
+    parent_ids, summaries, methods = compute_inflation_adjusted_sibling_tests(
+        records,
+        model=None,
+        external_selected_tail_model=external,
+        external_selected_tail_context_by_parent={
+            "target": {
+                "source_family": "gaussian_blobs",
+                "feature_family": "bernoulli",
+                "sibling_projection_dimension": 2,
+                "edge_action_bin": "edge_action_ge8",
+                "balance_bin": "balance_0.25_0.4",
+            }
+        },
+    )
+
+    assert parent_ids == ["target"]
+    assert summaries[0][0] == 3.2
+    assert methods == ["external_selected_tail_scalar"]
+
+
+def test_decide_empirical_null_calibration_reports_missing_family_support() -> None:
+    records = [
+        _make_record("bernoulli", stat=4.0, degrees_of_freedom=2.0),
+    ]
+    target = _make_record(
+        "target",
+        stat=16.0,
+        degrees_of_freedom=2.0,
+        is_null_like=False,
+        feature_family="categorical",
+    )
+
+    model = fit_empirical_null_inflation_model(records)
+    decision = decide_empirical_null_calibration(model, target)
+
+    assert decision.status == "undefined_no_family_support"
+    assert decision.c_hat is None
+    assert decision.p_value is None
+    assert decision.support["n_supported_records"] == 1
+    assert decision.support["n_family_supported_records"] == 0
+    with pytest.raises(ValueError, match="undefined_no_family_support"):
+        predict_empirical_inflation_factor(model, target)
 
 
 def test_predict_empirical_inflation_conditions_on_parent_sample_size() -> None:

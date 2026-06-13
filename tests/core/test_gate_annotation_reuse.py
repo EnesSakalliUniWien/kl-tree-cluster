@@ -5,8 +5,12 @@ from dataclasses import replace
 import kl_clustering_analysis.hierarchy_analysis.tree_decomposition as tree_decomposition_module
 import numpy as np
 import pandas as pd
+import pytest
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+    CalibrationSupportThresholds,
 )
 from kl_clustering_analysis.tree.poset_tree import PosetTree
 
@@ -170,3 +174,43 @@ def test_decompose_recomputes_annotations_when_leaf_data_changes(monkeypatch) ->
 
     assert calls == 1
     assert result["num_clusters"] >= 1
+
+
+def test_decompose_recomputes_annotations_when_internal_support_enforcement_changes(
+    monkeypatch,
+) -> None:
+    tree, annotations_df, leaf_data = _build_cherry_tree()
+    bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
+
+    calls = 0
+
+    def counted_pipeline(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        assert kwargs["enforce_internal_support_thresholds"] is True
+        assert isinstance(kwargs["internal_support_thresholds"], CalibrationSupportThresholds)
+        return run_gate_annotation_pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(
+        tree_decomposition_module,
+        "run_gate_annotation_pipeline",
+        counted_pipeline,
+    )
+
+    with pytest.raises(ValueError, match="undefined_sparse_context"):
+        tree.decompose(
+            gate_annotation_bundle=bundle,
+            leaf_data=leaf_data,
+            enforce_internal_support_thresholds=True,
+            internal_support_thresholds=CalibrationSupportThresholds(
+                min_supported_records=1,
+                min_family_supported_records=1,
+                min_stopped_or_null_records=1,
+                min_family_effective_sample_size=1.0,
+                min_local_effective_sample_size=1.0,
+                max_weight_share=1.0,
+                max_leave_one_record_delta_log_c=10.0,
+            ),
+        )
+
+    assert calls == 1
