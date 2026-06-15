@@ -37,6 +37,7 @@ GENERATED_BY = (
 DEFAULT_PRIOR_TRUTH_PROBABILITY = 0.05
 DEFAULT_CONTEXT_PENALTY_WEIGHT = 50.0
 DEFAULT_SELECTED_FAMILY_WEIGHT = 0.25
+DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT = 1.0
 DEFAULT_ROOT_LOG_ODDS_PENALTY = 1.0
 DEFAULT_PASSTHROUGH_LOG_ODDS_PENALTY = 1.5
 DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM = 2
@@ -67,6 +68,7 @@ OPTIONAL_COLUMNS = {
     "n_children",
     "parent_id",
     "analytical_case",
+    "neighborhood_scale",
 }
 
 ROW_COLUMNS = (
@@ -104,6 +106,14 @@ ROW_COLUMNS = (
     "anti_fragment_log_lr",
     "selected_family_log_component",
     "context_log_component",
+    "neighborhood_scale",
+    "neighborhood_scale_log_value",
+    "neighborhood_scale_log_center",
+    "neighborhood_scale_log_bandwidth",
+    "neighborhood_scale_log_component",
+    "neighborhood_scale_support_truth_count",
+    "neighborhood_scale_support_negative_count",
+    "neighborhood_scale_support_status",
     "root_log_component",
     "passthrough_log_component",
     "topology_core_log_odds",
@@ -146,6 +156,7 @@ SUMMARY_COLUMNS = (
     "prior_truth_probability",
     "selected_family_weight",
     "context_penalty_weight",
+    "neighborhood_scale_weight",
     "min_truth_support_per_stratum",
     "truth_conditional_log_odds_min",
     "truth_conditional_log_odds_median",
@@ -158,6 +169,8 @@ SUMMARY_COLUMNS = (
     "posterior_log_odds_margin",
     "support_insufficient_row_count",
     "feature_missing_row_count",
+    "neighborhood_scale_support_insufficient_row_count",
+    "neighborhood_scale_unavailable_row_count",
     "candidate_row_count",
     "diagnostic_status",
     "production_status",
@@ -201,6 +214,7 @@ class OverlapConditionalTopologyLawPanelConfig:
     prior_truth_probability: float = DEFAULT_PRIOR_TRUTH_PROBABILITY
     selected_family_weight: float = DEFAULT_SELECTED_FAMILY_WEIGHT
     context_penalty_weight: float = DEFAULT_CONTEXT_PENALTY_WEIGHT
+    neighborhood_scale_weight: float = DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT
     root_log_odds_penalty: float = DEFAULT_ROOT_LOG_ODDS_PENALTY
     passthrough_log_odds_penalty: float = DEFAULT_PASSTHROUGH_LOG_ODDS_PENALTY
     min_truth_support_per_stratum: int = DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM
@@ -290,6 +304,88 @@ def _sigmoid(values: pd.Series) -> pd.Series:
     return 1.0 / (1.0 + np.exp(-clipped))
 
 
+def _neighborhood_scale_components(
+    rows: pd.DataFrame,
+    *,
+    roles: pd.Series,
+    support_group_by_index: dict[object, str],
+    min_truth_support: int,
+    weight: float,
+) -> dict[object, dict[str, object]]:
+    """Return explicit old-style log-scale proximity components by row.
+
+    This is diagnostic-only. It preserves the old local-in-log-scale idea as a
+    visible component with support counts; insufficient scale support is
+    reported fail-closed rather than used as calibration.
+    """
+    scale = _numeric(rows, "neighborhood_scale")
+    positive = scale.where(scale > 0.0)
+    log_scale = np.log(positive)
+    has_any_scale = bool(log_scale.notna().any())
+    support_groups = pd.Series(support_group_by_index)
+    records: dict[object, dict[str, object]] = {}
+
+    for group in sorted(set(support_group_by_index.values())):
+        member_index = support_groups[support_groups.eq(group)].index
+        group_logs = log_scale.loc[member_index]
+        finite_logs = group_logs.dropna()
+        truth_mask = roles.loc[member_index].eq("truth_recovery") & group_logs.notna()
+        truth_logs = group_logs.loc[truth_mask[truth_mask].index]
+        truth_count = int(truth_logs.shape[0])
+        negative_count = int(
+            (roles.loc[member_index].ne("truth_recovery") & group_logs.notna()).sum()
+        )
+        center = float(truth_logs.median()) if truth_count else math.nan
+        bandwidth = (
+            float(finite_logs.std(ddof=0))
+            if finite_logs.shape[0] > 1
+            else math.nan
+        )
+        if not math.isfinite(bandwidth) or bandwidth <= 1e-9:
+            bandwidth = 1.0
+
+        for idx in member_index:
+            value = float(scale.loc[idx]) if math.isfinite(_finite_float(scale.loc[idx])) else math.nan
+            log_value = (
+                float(log_scale.loc[idx])
+                if math.isfinite(_finite_float(log_scale.loc[idx]))
+                else math.nan
+            )
+            if not has_any_scale:
+                status = "neighborhood_scale_unavailable_neutral"
+                component = 0.0
+                row_center = math.nan
+                row_bandwidth = math.nan
+            elif not math.isfinite(log_value):
+                status = "neighborhood_scale_missing_fail_closed"
+                component = 0.0
+                row_center = center
+                row_bandwidth = bandwidth
+            elif truth_count < int(min_truth_support):
+                status = "neighborhood_scale_support_insufficient_fail_closed"
+                component = 0.0
+                row_center = center
+                row_bandwidth = bandwidth
+            else:
+                status = "neighborhood_scale_support_observed_diagnostic_only"
+                z_score = (log_value - center) / bandwidth
+                component = -0.5 * float(weight) * float(z_score * z_score)
+                row_center = center
+                row_bandwidth = bandwidth
+
+            records[idx] = {
+                "neighborhood_scale": value,
+                "neighborhood_scale_log_value": log_value,
+                "neighborhood_scale_log_center": row_center,
+                "neighborhood_scale_log_bandwidth": row_bandwidth,
+                "neighborhood_scale_log_component": float(component),
+                "neighborhood_scale_support_truth_count": truth_count,
+                "neighborhood_scale_support_negative_count": negative_count,
+                "neighborhood_scale_support_status": status,
+            }
+    return records
+
+
 def infer_directed_incidence(
     *,
     depth: object = math.nan,
@@ -377,11 +473,14 @@ def _support_status(
 def _conditional_status(
     *,
     support_status: str,
+    neighborhood_scale_support_status: str,
     topology_core_supported: bool,
     conditional_log_odds: float,
 ) -> str:
     if support_status != "support_observed_diagnostic_only":
         return support_status
+    if neighborhood_scale_support_status.endswith("_fail_closed"):
+        return neighborhood_scale_support_status
     if not topology_core_supported:
         return "selected_context_only_not_promoted"
     if conditional_log_odds > 0.0:
@@ -395,6 +494,7 @@ def build_conditional_topology_law_rows(
     prior_truth_probability: float = DEFAULT_PRIOR_TRUTH_PROBABILITY,
     selected_family_weight: float = DEFAULT_SELECTED_FAMILY_WEIGHT,
     context_penalty_weight: float = DEFAULT_CONTEXT_PENALTY_WEIGHT,
+    neighborhood_scale_weight: float = DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT,
     root_log_odds_penalty: float = DEFAULT_ROOT_LOG_ODDS_PENALTY,
     passthrough_log_odds_penalty: float = DEFAULT_PASSTHROUGH_LOG_ODDS_PENALTY,
     min_truth_support_per_stratum: int = DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM,
@@ -445,6 +545,13 @@ def build_conditional_topology_law_rows(
         group_roles = roles.loc[members[members].index]
         truth_count = int(group_roles.eq("truth_recovery").sum())
         support_counts[group] = (truth_count, int(group_roles.ne("truth_recovery").sum()))
+    neighborhood_components = _neighborhood_scale_components(
+        rows,
+        roles=roles,
+        support_group_by_index=support_group_by_index,
+        min_truth_support=int(min_truth_support_per_stratum),
+        weight=float(neighborhood_scale_weight),
+    )
 
     conditional_log_odds_by_index: dict[object, float] = {}
     raw_records: list[dict[str, object]] = []
@@ -482,11 +589,15 @@ def build_conditional_topology_law_rows(
         topology_core = (
             incoming_component + outgoing_component + edge_component + anti_component
         )
+        neighborhood_component = float(
+            neighborhood_components[idx]["neighborhood_scale_log_component"]
+        )
         selected_context = selected_component[position] + context_component[position]
         conditional_log_odds = (
             intercept
             + topology_core
             + selected_context
+            + neighborhood_component
             + root_component
             + passthrough_component
         )
@@ -543,6 +654,7 @@ def build_conditional_topology_law_rows(
                 "anti_fragment_log_lr": float(anti_component),
                 "selected_family_log_component": float(selected_component[position]),
                 "context_log_component": float(context_component[position]),
+                **neighborhood_components[idx],
                 "root_log_component": float(root_component),
                 "passthrough_log_component": float(passthrough_component),
                 "topology_core_log_odds": float(topology_core),
@@ -558,6 +670,11 @@ def build_conditional_topology_law_rows(
                 "support_status": support_status,
                 "conditional_topology_status": _conditional_status(
                     support_status=support_status,
+                    neighborhood_scale_support_status=str(
+                        neighborhood_components[idx][
+                            "neighborhood_scale_support_status"
+                        ]
+                    ),
                     topology_core_supported=topology_core_supported,
                     conditional_log_odds=float(conditional_log_odds),
                 ),
@@ -596,6 +713,7 @@ def summarize_conditional_topology_components(rows: pd.DataFrame) -> pd.DataFram
         "anti_fragment_log_lr",
         "selected_family_log_component",
         "context_log_component",
+        "neighborhood_scale_log_component",
         "root_log_component",
         "passthrough_log_component",
         "topology_core_log_odds",
@@ -643,6 +761,7 @@ def summarize_conditional_topology_law_rows(
     prior_truth_probability: float = DEFAULT_PRIOR_TRUTH_PROBABILITY,
     selected_family_weight: float = DEFAULT_SELECTED_FAMILY_WEIGHT,
     context_penalty_weight: float = DEFAULT_CONTEXT_PENALTY_WEIGHT,
+    neighborhood_scale_weight: float = DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT,
     min_truth_support_per_stratum: int = DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM,
 ) -> pd.DataFrame:
     """Summarize conditional topology-law row scores and support status."""
@@ -658,6 +777,7 @@ def summarize_conditional_topology_law_rows(
                     "prior_truth_probability": float(prior_truth_probability),
                     "selected_family_weight": float(selected_family_weight),
                     "context_penalty_weight": float(context_penalty_weight),
+                    "neighborhood_scale_weight": float(neighborhood_scale_weight),
                     "min_truth_support_per_stratum": int(min_truth_support_per_stratum),
                     "truth_conditional_log_odds_min": math.nan,
                     "truth_conditional_log_odds_median": math.nan,
@@ -670,6 +790,8 @@ def summarize_conditional_topology_law_rows(
                     "posterior_log_odds_margin": math.nan,
                     "support_insufficient_row_count": 0,
                     "feature_missing_row_count": 0,
+                    "neighborhood_scale_support_insufficient_row_count": 0,
+                    "neighborhood_scale_unavailable_row_count": 0,
                     "candidate_row_count": 0,
                     "diagnostic_status": "conditional_topology_unavailable",
                     "production_status": "fail_closed_no_rows",
@@ -694,6 +816,11 @@ def summarize_conditional_topology_law_rows(
     feature_missing = rows["support_status"].astype(str).eq(
         "topology_features_missing_fail_closed"
     )
+    neighborhood_scale_status = rows["neighborhood_scale_support_status"].astype(str)
+    scale_fail_closed = neighborhood_scale_status.str.endswith("_fail_closed")
+    scale_unavailable = neighborhood_scale_status.eq(
+        "neighborhood_scale_unavailable_neutral"
+    )
     candidate_count = int(
         rows["conditional_topology_status"]
         .astype(str)
@@ -714,7 +841,9 @@ def summarize_conditional_topology_law_rows(
         diagnostic_status = "conditional_topology_not_separating"
     production_status = (
         "diagnostic_only_support_insufficient_fail_closed"
-        if bool(support_insufficient.any()) or bool(feature_missing.any())
+        if bool(support_insufficient.any())
+        or bool(feature_missing.any())
+        or bool(scale_fail_closed.any())
         else "diagnostic_only_not_production_calibrated"
     )
     return pd.DataFrame.from_records(
@@ -728,6 +857,7 @@ def summarize_conditional_topology_law_rows(
                 "prior_truth_probability": float(prior_truth_probability),
                 "selected_family_weight": float(selected_family_weight),
                 "context_penalty_weight": float(context_penalty_weight),
+                "neighborhood_scale_weight": float(neighborhood_scale_weight),
                 "min_truth_support_per_stratum": int(min_truth_support_per_stratum),
                 "truth_conditional_log_odds_min": truth_min,
                 "truth_conditional_log_odds_median": float(truth_scores.median())
@@ -744,6 +874,12 @@ def summarize_conditional_topology_law_rows(
                 "posterior_log_odds_margin": margin,
                 "support_insufficient_row_count": int(support_insufficient.sum()),
                 "feature_missing_row_count": int(feature_missing.sum()),
+                "neighborhood_scale_support_insufficient_row_count": int(
+                    scale_fail_closed.sum()
+                ),
+                "neighborhood_scale_unavailable_row_count": int(
+                    scale_unavailable.sum()
+                ),
                 "candidate_row_count": candidate_count,
                 "diagnostic_status": diagnostic_status,
                 "production_status": production_status,
@@ -962,6 +1098,7 @@ def run_overlap_conditional_topology_law_panel(
         prior_truth_probability=float(config.prior_truth_probability),
         selected_family_weight=float(config.selected_family_weight),
         context_penalty_weight=float(config.context_penalty_weight),
+        neighborhood_scale_weight=float(config.neighborhood_scale_weight),
         root_log_odds_penalty=float(config.root_log_odds_penalty),
         passthrough_log_odds_penalty=float(config.passthrough_log_odds_penalty),
         min_truth_support_per_stratum=int(config.min_truth_support_per_stratum),
@@ -972,6 +1109,7 @@ def run_overlap_conditional_topology_law_panel(
         prior_truth_probability=float(config.prior_truth_probability),
         selected_family_weight=float(config.selected_family_weight),
         context_penalty_weight=float(config.context_penalty_weight),
+        neighborhood_scale_weight=float(config.neighborhood_scale_weight),
         min_truth_support_per_stratum=int(config.min_truth_support_per_stratum),
     )
     benchmark_summary = summarize_conditional_topology_benchmark(rows)
@@ -980,6 +1118,7 @@ def run_overlap_conditional_topology_law_panel(
         prior_truth_probability=float(config.prior_truth_probability),
         selected_family_weight=float(config.selected_family_weight),
         context_penalty_weight=float(config.context_penalty_weight),
+        neighborhood_scale_weight=float(config.neighborhood_scale_weight),
         root_log_odds_penalty=float(config.root_log_odds_penalty),
         passthrough_log_odds_penalty=float(config.passthrough_log_odds_penalty),
         min_truth_support_per_stratum=int(config.min_truth_support_per_stratum),
@@ -1000,12 +1139,14 @@ def run_overlap_conditional_topology_law_panel(
         "prior_truth_probability": float(config.prior_truth_probability),
         "selected_family_weight": float(config.selected_family_weight),
         "context_penalty_weight": float(config.context_penalty_weight),
+        "neighborhood_scale_weight": float(config.neighborhood_scale_weight),
         "root_log_odds_penalty": float(config.root_log_odds_penalty),
         "passthrough_log_odds_penalty": float(config.passthrough_log_odds_penalty),
         "min_truth_support_per_stratum": int(config.min_truth_support_per_stratum),
         "law": (
             "eta = logit(prior) + topology_core + selected_family_weight * "
             "log1p(selected_family) + min(context, 0) * context_penalty "
+            "+ neighborhood_scale_component "
             "- root_penalty * I_root - passthrough_penalty * I_passthrough"
         ),
         "outputs": {
@@ -1048,6 +1189,11 @@ def _parse_args() -> argparse.Namespace:
         default=DEFAULT_CONTEXT_PENALTY_WEIGHT,
     )
     parser.add_argument(
+        "--neighborhood-scale-weight",
+        type=float,
+        default=DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT,
+    )
+    parser.add_argument(
         "--root-log-odds-penalty",
         type=float,
         default=DEFAULT_ROOT_LOG_ODDS_PENALTY,
@@ -1074,6 +1220,7 @@ def main() -> None:
             prior_truth_probability=float(args.prior_truth_probability),
             selected_family_weight=float(args.selected_family_weight),
             context_penalty_weight=float(args.context_penalty_weight),
+            neighborhood_scale_weight=float(args.neighborhood_scale_weight),
             root_log_odds_penalty=float(args.root_log_odds_penalty),
             passthrough_log_odds_penalty=float(args.passthrough_log_odds_penalty),
             min_truth_support_per_stratum=int(args.min_truth_support_per_stratum),

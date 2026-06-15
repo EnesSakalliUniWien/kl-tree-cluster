@@ -25,12 +25,13 @@ def _row(
     fragment: float = 0.60,
     selected: float = 8.0,
     context: float = -0.01,
+    neighborhood_scale: float | None = None,
     n_left: float = 50.0,
     n_right: float = 50.0,
     node_id: str = "N1",
     replicate: int = 0,
 ) -> dict[str, object]:
-    return {
+    record = {
         "case_id": "case",
         "data_role": "signal",
         "replicate": replicate,
@@ -51,6 +52,9 @@ def _row(
         "selected_family_log_bayes_factor_lower": selected,
         "continuous_context_min_margin": context,
     }
+    if neighborhood_scale is not None:
+        record["neighborhood_scale"] = neighborhood_scale
+    return record
 
 
 def test_directed_incidence_distinguishes_root_internal_and_leaf() -> None:
@@ -197,6 +201,60 @@ def test_selected_family_context_alone_does_not_promote_weak_topology() -> None:
     assert not bool(selected_only["topology_core_supported"])
     assert selected_only["conditional_topology_status"] == (
         "selected_context_only_not_promoted"
+    )
+
+
+def test_neighborhood_scale_component_is_explicit_and_support_gated() -> None:
+    rows = build_conditional_topology_law_rows(
+        pd.DataFrame.from_records(
+            [
+                _row(node_id="truth_a", neighborhood_scale=10.0),
+                _row(
+                    role="truth_recovery",
+                    node_id="truth_b",
+                    replicate=1,
+                    neighborhood_scale=12.0,
+                ),
+                _row(
+                    role="null_like",
+                    node_id="far_negative",
+                    neighborhood_scale=80.0,
+                ),
+            ]
+        ),
+        min_truth_support_per_stratum=2,
+    )
+
+    truth = rows.loc[rows["node_id"].eq("truth_a")].iloc[0]
+    negative = rows.loc[rows["node_id"].eq("far_negative")].iloc[0]
+    assert truth["neighborhood_scale_support_status"] == (
+        "neighborhood_scale_support_observed_diagnostic_only"
+    )
+    assert float(truth["neighborhood_scale_log_component"]) > float(
+        negative["neighborhood_scale_log_component"]
+    )
+    assert int(truth["neighborhood_scale_support_truth_count"]) == 2
+
+
+def test_neighborhood_scale_support_is_reported_without_silent_promotion() -> None:
+    rows = build_conditional_topology_law_rows(
+        pd.DataFrame.from_records(
+            [
+                _row(node_id="truth", neighborhood_scale=10.0),
+                _row(role="null_like", node_id="negative", neighborhood_scale=11.0),
+            ]
+        ),
+        min_truth_support_per_stratum=2,
+    )
+    summary = summarize_conditional_topology_law_rows(rows)
+
+    truth = rows.loc[rows["node_id"].eq("truth")].iloc[0]
+    assert truth["neighborhood_scale_support_status"] == (
+        "neighborhood_scale_support_insufficient_fail_closed"
+    )
+    assert summary["neighborhood_scale_support_insufficient_row_count"].iloc[0] == 2
+    assert summary["production_status"].iloc[0] == (
+        "diagnostic_only_support_insufficient_fail_closed"
     )
 
 

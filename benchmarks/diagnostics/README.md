@@ -51,6 +51,7 @@ Maintained entrypoints:
 - `calibration/data_independent_sibling_gate_traversal_panel.py`
 - `calibration/fixed_sibling_gate_profile_validation.py`
 - `calibration/selected_family_traversal_panel.py`
+- `spectral/cosine_band_coherence_comparator.py`
 - `analysis/analyze_relationships.py`
 - `spectral/compare_mp_dimension_contracts.py`
 - `spectral/mp_projection_dimension_behavior_sweep.py`
@@ -77,3 +78,9 @@ production default.
 `scripts/analysis/multiscale_umap_overlay.py` joins
 `multiscale_gene_assignments.csv` to existing UMAP coordinates and renders a
 stable-region-first overlay with pass-through or guard zones marked separately.
+
+`spectral/cosine_band_coherence_comparator.py` ports the old c2ef fixed
+cosine-band and biological-coherence checks into the current diagnostic stack.
+It keeps the historical predeclared bands and runs current gate/decomposition
+code on each band tree; the outputs are comparator evidence, not production
+calibration.

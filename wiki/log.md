@@ -2293,6 +2293,20 @@ verification, and maintenance events here in chronological order.
   `0.480000`, and exact-K count `4/17`. A Julia binary matrix run writes a
   UMAP overlay and returns `410` final clusters from `703` samples, confirming
   that the profile is runnable but still fragmentation-heavy.
+- Added [[cosine-band-coherence-comparator-20260615]] after porting the useful
+  c2ef fixed cosine-band and coherence checks into
+  `benchmarks/diagnostics/spectral/cosine_band_coherence_comparator.py` and
+  `tests/validation/135_test_cosine_band_coherence_comparator.py`. The
+  comparator keeps the historical fixed band labels, runs current
+  gate/decomposition code on each band tree, reports feature-enrichment and
+  within-cluster TF-IDF cosine coherence, and marks rows
+  `diagnostic_only_not_production_calibration`.
+- Updated [[overlap-conditional-topology-law-panel-20260615]] so the old
+  neighborhood/log-scale idea is represented as the explicit
+  `neighborhood_scale_log_component` with `neighborhood_scale_support_*`
+  counts. Missing scale is neutral when absent from the input table, but sparse
+  or row-missing scale evidence is fail-closed and reflected in the production
+  summary.
 
 ## Evidence
 

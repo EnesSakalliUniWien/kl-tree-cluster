@@ -6,6 +6,7 @@ updated: 2026-06-15
 sources:
   - benchmarks/diagnostics/calibration/overlap_conditional_topology_law_panel.py
   - tests/validation/134_test_overlap_conditional_topology_law_panel.py
+  - raw/inbox/c2ef-cosine-subspace-method-notes-20260615.md
   - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
   - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
   - benchmarks/shared/runners/method_registry.py
@@ -50,8 +51,14 @@ threshold.
   incoming component; missing topology features fail closed.
 - The row score is
   `logit(prior) + topology_core + selected_family_weight * log1p(selected_family)
-  + min(context, 0) * context_penalty - root_penalty - passthrough_penalty`
-  where the penalties apply only to the matching incidence indicators.
+  + min(context, 0) * context_penalty + neighborhood_scale_component
+  - root_penalty - passthrough_penalty` where the penalties apply only to the
+  matching incidence indicators.
+- The old neighborhood/local-scale idea is now explicit as
+  `neighborhood_scale_log_component`, with row-level
+  `neighborhood_scale_support_*` counts and fail-closed status when scale
+  support is too thin. Missing scale is neutral only when the input table has no
+  scale evidence at all.
 - The runner reconstructs analytical cases for context-positive recovery,
   context-negative emergence, fragment false positives, closed-root
   pass-through false positives, closed-root pass-through many-cluster signal,
@@ -87,7 +94,8 @@ threshold.
 - `tests/validation/134_test_overlap_conditional_topology_law_panel.py`
   verifies directed incidence, root/leaf handling, topology evidence
   monotonicity, selected-family/context-only non-promotion, missing-feature
-  fail-closed behavior, analytical cases, and output writing.
+  fail-closed behavior, explicit neighborhood-scale support accounting,
+  analytical cases, and output writing.
 - Focused verification passed:
   `pytest tests/validation/134_test_overlap_conditional_topology_law_panel.py -q`.
 - Regression, binary smoke, and Julia matrix runs wrote outputs under

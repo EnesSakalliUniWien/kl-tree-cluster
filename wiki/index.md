@@ -210,6 +210,10 @@ renamed, or promoted.
   loadings before clustering; a binary feature-side `Q_B sqrt(Lambda_B)`
   subspace diagnostic now exposes that feature leaves are not yet supported by
   the current gate equations.
+- [[cosine-band-coherence-comparator-20260615]] - current-framework diagnostic
+  comparator for the c2ef fixed cosine-band sweep and biological coherence
+  checks; keeps the historical band labels but marks outputs diagnostic-only,
+  not production calibration.
 - [[barycentric-action-equation-diagnostic-20260606]] - diagnostic test of the
   candidate path-conditioned barycentric action equation, finding that compact
   barycentric edge/spectral variables remain best for selected-tail

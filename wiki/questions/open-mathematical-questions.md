@@ -1816,7 +1816,16 @@ is only `0.16343`.
     The open object is therefore not raw edge strength, global homogeneity, or
     a max-negative topology threshold. It is a support-aware selected
     neighborhood conditional law over root/internal/pass-through incidence and
-    income/outcome topology.
+    income/outcome topology. The old local neighborhood/log-scale idea is now
+    represented explicitly as `neighborhood_scale_log_component` with
+    `neighborhood_scale_support_*` counts, so it can contribute diagnostic
+    evidence only when the incidence stratum has enough support; sparse scale
+    support is fail-closed, not a hidden calibration fallback.
+    A separate fixed-band cosine comparator now preserves the useful c2ef
+    evidence path: fixed cosine bands plus feature-enrichment and
+    within-cluster TF-IDF coherence are available as diagnostic-only
+    comparator outputs. This should be used to study spectral subspace
+    recoverability, not to bypass the selected-neighborhood traversal law.
     The regression-gate benchmark separates this diagnostic conclusion from
     production clustering behavior. Passing the refined profile through the
     standard benchmark path eliminates default KL skips on the 17-case
