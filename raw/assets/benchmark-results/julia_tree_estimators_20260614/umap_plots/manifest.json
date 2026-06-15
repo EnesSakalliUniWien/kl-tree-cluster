@@ -1,0 +1,34 @@
+{
+  "clear_cluster_size_classes_png": "julia_tree_estimators_umap_cluster_size_classes_clear.png",
+  "clear_method_top15_pngs": [
+    "julia_tree_estimators_umap_kl_top15_clear.png",
+    "julia_tree_estimators_umap_kl_neighbor_joining_top15_clear.png",
+    "julia_tree_estimators_umap_kl_iqtree3_fast_top15_clear.png"
+  ],
+  "clear_top_clusters_png": "julia_tree_estimators_umap_top_clusters_clear.png",
+  "colormap_note": "Clear variants highlight only the largest non-singleton clusters with a fixed high-contrast palette and black outlines; hundreds of cluster IDs are not encoded as a single categorical colormap.",
+  "coordinates": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/julia_tree_estimators_20260614/umap_plots/julia_tree_estimator_umap_coordinates.csv",
+  "data": "/Users/berksakalli/Projects/kl-te-cluster/data/feature_matrices/feature_matrix_julia_GOCC_GOBP_GOMF_combined.tsv",
+  "full_umap_debug_note": "The standalone HTML embeds Plotly locally; the original interactive HTML references the Plotly CDN and may fail under offline or external-script-restricted browser conditions.",
+  "full_umap_interactive_outputs": [
+    "julia_full_umap_interactive_long.csv",
+    "julia_full_umap_interactive_methods.html",
+    "julia_full_umap_interactive_methods_standalone.html"
+  ],
+  "full_umap_interactive_standalone_html": "julia_full_umap_interactive_methods_standalone.html",
+  "full_umap_method_cluster_sizes_png": "julia_full_umap_method_cluster_sizes.png",
+  "full_umap_note": "Full UMAP views include every gene. Static method view encodes cluster-size classes; interactive HTML exposes gene, cluster_id, cluster_size, and reference label on hover.",
+  "full_umap_reference_endotypes_png": "julia_full_umap_reference_endotypes.png",
+  "plots": [
+    "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/julia_tree_estimators_20260614/umap_plots/julia_tree_estimators_umap_top_clusters.png",
+    "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/julia_tree_estimators_20260614/umap_plots/julia_tree_estimators_umap_cluster_size_classes.png"
+  ],
+  "reference_labels": "/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_nmi_ordered_20260610/kak_signal_adaptive_reference_labels.csv",
+  "summary": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/julia_tree_estimators_20260614/summary.csv",
+  "umap": {
+    "metric": "hamming",
+    "min_dist": 0.1,
+    "n_neighbors": 15,
+    "random_state": 42
+  }
+}

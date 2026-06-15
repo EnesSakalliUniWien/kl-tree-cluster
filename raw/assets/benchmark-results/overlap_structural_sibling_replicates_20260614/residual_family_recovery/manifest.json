@@ -1,0 +1,31 @@
+{
+  "action": "weak_unstable_multiscale_zone",
+  "decision_zone_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_rows.csv",
+  "fragment_guard_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/fragment_risk_guard/overlap_fragment_risk_guard_rows.csv",
+  "generated_at_utc": "20260614_184858Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_residual_family_recovery",
+  "metrics": [
+    "residual_family_size",
+    "residual_min_sibling_p_value",
+    "residual_neg_log10_min_sibling_p_value",
+    "residual_max_homogeneity_gain_min",
+    "residual_max_continuous_context_margin",
+    "residual_max_subspace_consensus_jaccard_topk",
+    "residual_max_depth",
+    "residual_median_parent_size",
+    "residual_max_barycentric_balance",
+    "residual_min_fragment_risk_proxy_score",
+    "residual_max_fragment_risk_proxy_score",
+    "residual_max_balanced_recovery_proxy_score",
+    "residual_min_size_balance",
+    "residual_min_edge_norm_balance"
+  ],
+  "outputs": {
+    "family_rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_rows.csv",
+    "metric_summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_metric_separability.csv",
+    "threshold_scan": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_threshold_scan.csv"
+  },
+  "policy_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/diagnostic_traversal_policy/overlap_diagnostic_traversal_policy_rows.csv",
+  "schema_version": "overlap_residual_family_recovery/v1",
+  "study_role": "diagnostic_overlap_residual_family_recovery_not_calibration"
+}

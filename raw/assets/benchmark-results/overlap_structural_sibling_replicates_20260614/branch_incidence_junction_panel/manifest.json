@@ -1,0 +1,31 @@
+{
+  "base_seed": 20260613,
+  "case_names": [
+    "overlap_extreme_4c",
+    "overlap_mod_4c_small",
+    "overlap_mod_8c_large",
+    "overlap_unbal_4c_small"
+  ],
+  "data_roles": [
+    "null",
+    "signal"
+  ],
+  "edge_alpha": 0.001,
+  "generated_at_utc": "20260615_110113Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_branch_incidence_junction_panel",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/branch_incidence_junction_panel/overlap_branch_incidence_junction_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/branch_incidence_junction_panel/overlap_branch_incidence_junction_summary.csv"
+  },
+  "production_status": "diagnostic_only_branch_incidence_law",
+  "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+  "replicates": 3,
+  "rows": 148,
+  "schema_version": "overlap_branch_incidence_junction_panel/v1",
+  "sibling_alpha": 0.01,
+  "skipped_cases": [],
+  "study_role": "diagnostic_overlap_branch_incidence_junction_panel",
+  "suite": "binary",
+  "top_k": 12,
+  "transfer_gap_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_transfer_gap_audit/overlap_internal_node_transfer_gap_rows.csv"
+}

@@ -1,0 +1,467 @@
+{
+  "schema_version": "fixed_sibling_gate_profile_validation/v1",
+  "study_role": "diagnostic_fixed_sibling_gate_profile_validation_not_calibration",
+  "generated_by": "benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+  "created_at_utc": "20260614_112159Z",
+  "constants": {
+    "sibling_gate_profile": {
+      "validation_design": "Shared KL runner smoke over selected null/signal benchmark cases; diagnostic-only fixed sibling-gate profile validation.",
+      "source_artifact_paths": {
+        "rows": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_rows.csv",
+        "checkpoint_rows_dir": "/tmp/klte_clean_failure_fixture_candidate_20260614/checkpoint_rows",
+        "summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_summary.csv",
+        "transfer_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+        "production_components": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_components.csv",
+        "production_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_summary.csv"
+      },
+      "code_commit": "working_tree",
+      "run_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+      "random_seed_policy": "base_seed=20310054; replicate seed = base + 1009*r; root_selective_permutation_guard_seed=0",
+      "n_replicates": 1,
+      "baseline_setting": "projected_wald_inflation default, not rerun here",
+      "candidate_setting": "fixed_coordinate_global_passthrough_refined_v1",
+      "primary_endpoint": "adaptive_projection_avoided, null false split rate, signal mean ARI",
+      "effect_estimate": {
+        "summary_rows": 1,
+        "transfer_rows": 1
+      },
+      "confidence_interval": {
+        "null": "Wilson upper bound for false split rate",
+        "signal": "one-sided t lower bound for mean ARI"
+      },
+      "decision_rule": "Diagnostic candidate only: all rows must avoid adaptive projection; null upper confidence <= 0.05; signal lower confidence >= 0.75.",
+      "limitations": "This artifact validates routing and smoke-level traversal evidence. It is not a broad production calibration and does not compare TooManyCells as a direct benchmark method.",
+      "profile_grid": [
+        "fixed_coordinate_global_passthrough_refined_v1"
+      ],
+      "profile_metadata": {
+        "fixed_coordinate_global_passthrough_refined_v1": {
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "sibling_gate_method": "fixed_coordinate_bh",
+          "sibling_gate_alpha_penalty": 50.0,
+          "root_stability_guard_threshold": 0.24,
+          "root_stability_subsample_replicates": 12,
+          "root_stability_feature_fraction": 0.8,
+          "root_stability_seed": 0,
+          "status": "diagnostic_candidate",
+          "description": "Non-cross-fit fixed coordinate-BH sibling gate with selected-topology alpha penalty, selected-root feature-subsample stability guard, and a global selected-family sibling-min permutation guard that reruns Monte Carlo floor pass-through families at higher resolution.",
+          "root_selective_permutation_guard_replicates": 99,
+          "root_selective_permutation_guard_seed": 0,
+          "root_selective_permutation_guard_alpha": 0.01,
+          "root_selective_permutation_guard_scope": "global_sibling_min_passthrough_descendant_refined",
+          "resolved_runtime_config": {
+            "sibling_gate_profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+            "sibling_gate_method": "fixed_coordinate_bh",
+            "sibling_gate_alpha_penalty": 50.0,
+            "root_stability_guard_threshold": 0.24,
+            "root_stability_subsample_replicates": 12,
+            "root_stability_feature_fraction": 0.8,
+            "root_stability_seed": 0,
+            "root_selective_permutation_guard_replicates": 99,
+            "root_selective_permutation_guard_seed": 0,
+            "root_selective_permutation_guard_alpha": 0.01,
+            "root_selective_permutation_guard_scope": "global_sibling_min_passthrough_descendant_refined"
+          }
+        }
+      },
+      "adaptive_projection_avoidance_check": {
+        "all_summary_rows_avoided_adaptive_projection": true
+      },
+      "root_selective_permutation_guard": {
+        "status": "enabled",
+        "by_profile": {
+          "fixed_coordinate_global_passthrough_refined_v1": {
+            "replicates": 99,
+            "seed": 0,
+            "alpha": 0.01,
+            "scope": "global_sibling_min_passthrough_descendant_refined",
+            "status": "enabled"
+          }
+        }
+      },
+      "null_false_split_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "max_null_false_split_rate": 1.0,
+          "max_null_false_split_rate_upper_confidence": 1.0,
+          "required_zero_false_split_null_replicates_per_case": 73,
+          "additional_zero_false_split_null_replicates_per_case": 72,
+          "max_observed_null_false_split_count": 1,
+          "max_required_null_replicates_given_observed_false_splits": 110,
+          "max_additional_zero_false_null_replicates_given_observed_false_splits": 109
+        }
+      ],
+      "signal_ari_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "min_signal_mean_ari": NaN,
+          "min_signal_mean_ari_lower_confidence": NaN
+        }
+      ]
+    },
+    "fixed_sibling_gate_alpha_penalty": {
+      "validation_design": "Shared KL runner smoke over selected null/signal benchmark cases; diagnostic-only fixed sibling-gate profile validation.",
+      "source_artifact_paths": {
+        "rows": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_rows.csv",
+        "checkpoint_rows_dir": "/tmp/klte_clean_failure_fixture_candidate_20260614/checkpoint_rows",
+        "summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_summary.csv",
+        "transfer_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+        "production_components": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_components.csv",
+        "production_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_summary.csv"
+      },
+      "code_commit": "working_tree",
+      "run_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+      "random_seed_policy": "base_seed=20310054; replicate seed = base + 1009*r; root_selective_permutation_guard_seed=0",
+      "n_replicates": 1,
+      "baseline_setting": "projected_wald_inflation default, not rerun here",
+      "candidate_setting": "fixed_coordinate_global_passthrough_refined_v1",
+      "primary_endpoint": "adaptive_projection_avoided, null false split rate, signal mean ARI",
+      "effect_estimate": {
+        "summary_rows": 1,
+        "transfer_rows": 1
+      },
+      "confidence_interval": {
+        "null": "Wilson upper bound for false split rate",
+        "signal": "one-sided t lower bound for mean ARI"
+      },
+      "decision_rule": "Diagnostic candidate only: all rows must avoid adaptive projection; null upper confidence <= 0.05; signal lower confidence >= 0.75.",
+      "limitations": "This artifact validates routing and smoke-level traversal evidence. It is not a broad production calibration and does not compare TooManyCells as a direct benchmark method.",
+      "penalty_grid": [
+        50.0
+      ],
+      "effective_sibling_alpha": {
+        "fixed_coordinate_global_passthrough_refined_v1": 0.0002
+      },
+      "null_false_split_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "max_null_false_split_rate": 1.0,
+          "max_null_false_split_rate_upper_confidence": 1.0,
+          "required_zero_false_split_null_replicates_per_case": 73,
+          "additional_zero_false_split_null_replicates_per_case": 72,
+          "max_observed_null_false_split_count": 1,
+          "max_required_null_replicates_given_observed_false_splits": 110,
+          "max_additional_zero_false_null_replicates_given_observed_false_splits": 109
+        }
+      ],
+      "signal_ari_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "min_signal_mean_ari": NaN,
+          "min_signal_mean_ari_lower_confidence": NaN
+        }
+      ]
+    },
+    "root_stability_guard_threshold": {
+      "validation_design": "Shared KL runner smoke over selected null/signal benchmark cases; diagnostic-only fixed sibling-gate profile validation.",
+      "source_artifact_paths": {
+        "rows": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_rows.csv",
+        "checkpoint_rows_dir": "/tmp/klte_clean_failure_fixture_candidate_20260614/checkpoint_rows",
+        "summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_summary.csv",
+        "transfer_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+        "production_components": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_components.csv",
+        "production_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_summary.csv"
+      },
+      "code_commit": "working_tree",
+      "run_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+      "random_seed_policy": "base_seed=20310054; replicate seed = base + 1009*r; root_selective_permutation_guard_seed=0",
+      "n_replicates": 1,
+      "baseline_setting": "projected_wald_inflation default, not rerun here",
+      "candidate_setting": "fixed_coordinate_global_passthrough_refined_v1",
+      "primary_endpoint": "adaptive_projection_avoided, null false split rate, signal mean ARI",
+      "effect_estimate": {
+        "summary_rows": 1,
+        "transfer_rows": 1
+      },
+      "confidence_interval": {
+        "null": "Wilson upper bound for false split rate",
+        "signal": "one-sided t lower bound for mean ARI"
+      },
+      "decision_rule": "Diagnostic candidate only: all rows must avoid adaptive projection; null upper confidence <= 0.05; signal lower confidence >= 0.75.",
+      "limitations": "This artifact validates routing and smoke-level traversal evidence. It is not a broad production calibration and does not compare TooManyCells as a direct benchmark method.",
+      "threshold_grid": [
+        0.24
+      ],
+      "root_stability_distribution": "see rows and summary outputs",
+      "null_root_block_rate": "see summary root_stability_guard_block_rate",
+      "signal_root_block_rate": "see summary root_stability_guard_block_rate",
+      "null_false_split_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "max_null_false_split_rate": 1.0,
+          "max_null_false_split_rate_upper_confidence": 1.0,
+          "required_zero_false_split_null_replicates_per_case": 73,
+          "additional_zero_false_split_null_replicates_per_case": 72,
+          "max_observed_null_false_split_count": 1,
+          "max_required_null_replicates_given_observed_false_splits": 110,
+          "max_additional_zero_false_null_replicates_given_observed_false_splits": 109
+        }
+      ],
+      "signal_ari_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "min_signal_mean_ari": NaN,
+          "min_signal_mean_ari_lower_confidence": NaN
+        }
+      ]
+    },
+    "root_stability_subsample_replicates": {
+      "validation_design": "Shared KL runner smoke over selected null/signal benchmark cases; diagnostic-only fixed sibling-gate profile validation.",
+      "source_artifact_paths": {
+        "rows": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_rows.csv",
+        "checkpoint_rows_dir": "/tmp/klte_clean_failure_fixture_candidate_20260614/checkpoint_rows",
+        "summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_summary.csv",
+        "transfer_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+        "production_components": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_components.csv",
+        "production_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_summary.csv"
+      },
+      "code_commit": "working_tree",
+      "run_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+      "random_seed_policy": "base_seed=20310054; replicate seed = base + 1009*r; root_selective_permutation_guard_seed=0",
+      "n_replicates": 1,
+      "baseline_setting": "projected_wald_inflation default, not rerun here",
+      "candidate_setting": "fixed_coordinate_global_passthrough_refined_v1",
+      "primary_endpoint": "adaptive_projection_avoided, null false split rate, signal mean ARI",
+      "effect_estimate": {
+        "summary_rows": 1,
+        "transfer_rows": 1
+      },
+      "confidence_interval": {
+        "null": "Wilson upper bound for false split rate",
+        "signal": "one-sided t lower bound for mean ARI"
+      },
+      "decision_rule": "Diagnostic candidate only: all rows must avoid adaptive projection; null upper confidence <= 0.05; signal lower confidence >= 0.75.",
+      "limitations": "This artifact validates routing and smoke-level traversal evidence. It is not a broad production calibration and does not compare TooManyCells as a direct benchmark method.",
+      "subsample_replicate_grid": [
+        12
+      ],
+      "guard_decision_stability": "see rows and summary outputs",
+      "runtime_cost_summary": "see manifest and runner timings in MethodRunResult extras",
+      "null_false_split_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "max_null_false_split_rate": 1.0,
+          "max_null_false_split_rate_upper_confidence": 1.0,
+          "required_zero_false_split_null_replicates_per_case": 73,
+          "additional_zero_false_split_null_replicates_per_case": 72,
+          "max_observed_null_false_split_count": 1,
+          "max_required_null_replicates_given_observed_false_splits": 110,
+          "max_additional_zero_false_null_replicates_given_observed_false_splits": 109
+        }
+      ],
+      "signal_ari_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "min_signal_mean_ari": NaN,
+          "min_signal_mean_ari_lower_confidence": NaN
+        }
+      ]
+    },
+    "root_stability_feature_fraction": {
+      "validation_design": "Shared KL runner smoke over selected null/signal benchmark cases; diagnostic-only fixed sibling-gate profile validation.",
+      "source_artifact_paths": {
+        "rows": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_rows.csv",
+        "checkpoint_rows_dir": "/tmp/klte_clean_failure_fixture_candidate_20260614/checkpoint_rows",
+        "summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_summary.csv",
+        "transfer_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+        "production_components": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_components.csv",
+        "production_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_summary.csv"
+      },
+      "code_commit": "working_tree",
+      "run_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+      "random_seed_policy": "base_seed=20310054; replicate seed = base + 1009*r; root_selective_permutation_guard_seed=0",
+      "n_replicates": 1,
+      "baseline_setting": "projected_wald_inflation default, not rerun here",
+      "candidate_setting": "fixed_coordinate_global_passthrough_refined_v1",
+      "primary_endpoint": "adaptive_projection_avoided, null false split rate, signal mean ARI",
+      "effect_estimate": {
+        "summary_rows": 1,
+        "transfer_rows": 1
+      },
+      "confidence_interval": {
+        "null": "Wilson upper bound for false split rate",
+        "signal": "one-sided t lower bound for mean ARI"
+      },
+      "decision_rule": "Diagnostic candidate only: all rows must avoid adaptive projection; null upper confidence <= 0.05; signal lower confidence >= 0.75.",
+      "limitations": "This artifact validates routing and smoke-level traversal evidence. It is not a broad production calibration and does not compare TooManyCells as a direct benchmark method.",
+      "feature_fraction_grid": [
+        0.8
+      ],
+      "root_stability_distribution": "see rows and summary outputs",
+      "null_root_block_rate": "see summary root_stability_guard_block_rate",
+      "signal_root_block_rate": "see summary root_stability_guard_block_rate"
+    },
+    "root_selective_permutation_guard_replicates": {
+      "validation_design": "Shared KL runner smoke over selected null/signal benchmark cases; diagnostic-only fixed sibling-gate profile validation.",
+      "source_artifact_paths": {
+        "rows": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_rows.csv",
+        "checkpoint_rows_dir": "/tmp/klte_clean_failure_fixture_candidate_20260614/checkpoint_rows",
+        "summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_summary.csv",
+        "transfer_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+        "production_components": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_components.csv",
+        "production_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_summary.csv"
+      },
+      "code_commit": "working_tree",
+      "run_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+      "random_seed_policy": "base_seed=20310054; replicate seed = base + 1009*r; root_selective_permutation_guard_seed=0",
+      "n_replicates": 1,
+      "baseline_setting": "projected_wald_inflation default, not rerun here",
+      "candidate_setting": "fixed_coordinate_global_passthrough_refined_v1",
+      "primary_endpoint": "adaptive_projection_avoided, null false split rate, signal mean ARI",
+      "effect_estimate": {
+        "summary_rows": 1,
+        "transfer_rows": 1
+      },
+      "confidence_interval": {
+        "null": "Wilson upper bound for false split rate",
+        "signal": "one-sided t lower bound for mean ARI"
+      },
+      "decision_rule": "Diagnostic candidate only: all rows must avoid adaptive projection; null upper confidence <= 0.05; signal lower confidence >= 0.75.",
+      "limitations": "This artifact validates routing and smoke-level traversal evidence. It is not a broad production calibration and does not compare TooManyCells as a direct benchmark method.",
+      "permutation_replicate_grid": [
+        99
+      ],
+      "root_selective_p_value_distribution": "see rows root_selective_permutation_p_value and summary mean_root_selective_permutation_p_value",
+      "null_root_block_rate": "see summary root_stability_guard_block_rate",
+      "signal_root_block_rate": "see summary root_stability_guard_block_rate",
+      "runtime_cost_summary": "see manifest and runner timings in MethodRunResult extras",
+      "null_false_split_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "max_null_false_split_rate": 1.0,
+          "max_null_false_split_rate_upper_confidence": 1.0,
+          "required_zero_false_split_null_replicates_per_case": 73,
+          "additional_zero_false_split_null_replicates_per_case": 72,
+          "max_observed_null_false_split_count": 1,
+          "max_required_null_replicates_given_observed_false_splits": 110,
+          "max_additional_zero_false_null_replicates_given_observed_false_splits": 109
+        }
+      ],
+      "signal_ari_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "min_signal_mean_ari": NaN,
+          "min_signal_mean_ari_lower_confidence": NaN
+        }
+      ]
+    },
+    "root_selective_permutation_guard_alpha": {
+      "validation_design": "Shared KL runner smoke over selected null/signal benchmark cases; diagnostic-only fixed sibling-gate profile validation.",
+      "source_artifact_paths": {
+        "rows": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_rows.csv",
+        "checkpoint_rows_dir": "/tmp/klte_clean_failure_fixture_candidate_20260614/checkpoint_rows",
+        "summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_summary.csv",
+        "transfer_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+        "production_components": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_components.csv",
+        "production_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_summary.csv"
+      },
+      "code_commit": "working_tree",
+      "run_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+      "random_seed_policy": "base_seed=20310054; replicate seed = base + 1009*r; root_selective_permutation_guard_seed=0",
+      "n_replicates": 1,
+      "baseline_setting": "projected_wald_inflation default, not rerun here",
+      "candidate_setting": "fixed_coordinate_global_passthrough_refined_v1",
+      "primary_endpoint": "adaptive_projection_avoided, null false split rate, signal mean ARI",
+      "effect_estimate": {
+        "summary_rows": 1,
+        "transfer_rows": 1
+      },
+      "confidence_interval": {
+        "null": "Wilson upper bound for false split rate",
+        "signal": "one-sided t lower bound for mean ARI"
+      },
+      "decision_rule": "Diagnostic candidate only: all rows must avoid adaptive projection; null upper confidence <= 0.05; signal lower confidence >= 0.75.",
+      "limitations": "This artifact validates routing and smoke-level traversal evidence. It is not a broad production calibration and does not compare TooManyCells as a direct benchmark method.",
+      "alpha_grid": [
+        0.01
+      ],
+      "root_selective_p_value_distribution": "see rows root_selective_permutation_p_value and summary mean_root_selective_permutation_p_value",
+      "null_root_block_rate": "see summary root_stability_guard_block_rate",
+      "signal_root_block_rate": "see summary root_stability_guard_block_rate",
+      "null_false_split_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "max_null_false_split_rate": 1.0,
+          "max_null_false_split_rate_upper_confidence": 1.0,
+          "required_zero_false_split_null_replicates_per_case": 73,
+          "additional_zero_false_split_null_replicates_per_case": 72,
+          "max_observed_null_false_split_count": 1,
+          "max_required_null_replicates_given_observed_false_splits": 110,
+          "max_additional_zero_false_null_replicates_given_observed_false_splits": 109
+        }
+      ],
+      "signal_ari_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "min_signal_mean_ari": NaN,
+          "min_signal_mean_ari_lower_confidence": NaN
+        }
+      ]
+    },
+    "root_selective_permutation_guard_scope": {
+      "validation_design": "Shared KL runner smoke over selected null/signal benchmark cases; diagnostic-only fixed sibling-gate profile validation.",
+      "source_artifact_paths": {
+        "rows": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_rows.csv",
+        "checkpoint_rows_dir": "/tmp/klte_clean_failure_fixture_candidate_20260614/checkpoint_rows",
+        "summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_summary.csv",
+        "transfer_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+        "production_components": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_components.csv",
+        "production_summary": "/tmp/klte_clean_failure_fixture_candidate_20260614/production_admissibility_summary.csv"
+      },
+      "code_commit": "working_tree",
+      "run_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+      "random_seed_policy": "base_seed=20310054; replicate seed = base + 1009*r; root_selective_permutation_guard_seed=0",
+      "n_replicates": 1,
+      "baseline_setting": "projected_wald_inflation default, not rerun here",
+      "candidate_setting": "fixed_coordinate_global_passthrough_refined_v1",
+      "primary_endpoint": "adaptive_projection_avoided, null false split rate, signal mean ARI",
+      "effect_estimate": {
+        "summary_rows": 1,
+        "transfer_rows": 1
+      },
+      "confidence_interval": {
+        "null": "Wilson upper bound for false split rate",
+        "signal": "one-sided t lower bound for mean ARI"
+      },
+      "decision_rule": "Diagnostic candidate only: all rows must avoid adaptive projection; null upper confidence <= 0.05; signal lower confidence >= 0.75.",
+      "limitations": "This artifact validates routing and smoke-level traversal evidence. It is not a broad production calibration and does not compare TooManyCells as a direct benchmark method.",
+      "scope_grid": [
+        "global_sibling_min_passthrough_descendant_refined"
+      ],
+      "root_selective_p_value_distribution": "see rows root_selective_permutation_p_value and summary mean_root_selective_permutation_p_value",
+      "null_false_split_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "max_null_false_split_rate": 1.0,
+          "max_null_false_split_rate_upper_confidence": 1.0,
+          "required_zero_false_split_null_replicates_per_case": 73,
+          "additional_zero_false_split_null_replicates_per_case": 72,
+          "max_observed_null_false_split_count": 1,
+          "max_required_null_replicates_given_observed_false_splits": 110,
+          "max_additional_zero_false_null_replicates_given_observed_false_splits": 109
+        }
+      ],
+      "signal_ari_confidence": [
+        {
+          "source_family": "binary_template",
+          "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+          "min_signal_mean_ari": NaN,
+          "min_signal_mean_ari_lower_confidence": NaN
+        }
+      ]
+    }
+  }
+}

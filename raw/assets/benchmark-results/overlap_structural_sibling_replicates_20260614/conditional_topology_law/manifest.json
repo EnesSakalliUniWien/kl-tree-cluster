@@ -1,0 +1,22 @@
+{
+  "context_penalty_weight": 50.0,
+  "generated_at_utc": "20260615_121042Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_conditional_topology_law_panel",
+  "law": "eta = logit(prior) + topology_core + selected_family_weight * log1p(selected_family) + min(context, 0) * context_penalty - root_penalty * I_root - passthrough_penalty * I_passthrough",
+  "min_truth_support_per_stratum": 2,
+  "outputs": {
+    "analytical_cases": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_topology_law/overlap_conditional_topology_law_analytical_cases.csv",
+    "benchmark_summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_topology_law/overlap_conditional_topology_law_benchmark_summary.csv",
+    "component_summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_topology_law/overlap_conditional_topology_law_component_summary.csv",
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_topology_law/overlap_conditional_topology_law_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_topology_law/overlap_conditional_topology_law_summary.csv"
+  },
+  "passthrough_log_odds_penalty": 1.5,
+  "prior_truth_probability": 0.05,
+  "production_status": "diagnostic_only_non_permutation_conditional_law",
+  "root_log_odds_penalty": 1.0,
+  "schema_version": "overlap_conditional_topology_law/v1",
+  "selected_family_weight": 0.25,
+  "study_role": "diagnostic_overlap_conditional_topology_law_not_calibration",
+  "topology_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_rows.csv"
+}

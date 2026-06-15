@@ -1,0 +1,24 @@
+{
+  "assignments": {
+    "kl": "raw/assets/benchmark-results/julia_tree_estimators_20260614/kl_assignments.csv",
+    "kl_neighbor_joining": "raw/assets/benchmark-results/julia_tree_estimators_20260614/kl_neighbor_joining_assignments.csv",
+    "kl_iqtree3_fast": "raw/assets/benchmark-results/julia_tree_estimators_20260614/kl_iqtree3_fast_assignments.csv"
+  },
+  "feature_matrix": "data/feature_matrices/feature_matrix_julia_GOCC_GOBP_GOMF_combined.tsv",
+  "reference_labels": "benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_nmi_ordered_20260610/kak_signal_adaptive_reference_labels.csv",
+  "umap_coordinates": "raw/assets/benchmark-results/julia_tree_estimators_20260614/umap_plots/julia_tree_estimator_umap_coordinates.csv",
+  "outputs": [
+    "cluster_size_bins.csv",
+    "cluster_size_summary.csv",
+    "clustering_diagnostic_review_panel.png",
+    "feature_coherence_by_cluster.csv",
+    "feature_coherence_summary.csv",
+    "manifest.json",
+    "method_cluster_reference_purity.csv",
+    "reference_fragmentation_by_label.csv",
+    "reference_recovery_summary.csv",
+    "top_non_singleton_clusters.csv",
+    "umap_cluster_compactness.csv",
+    "umap_compactness_summary.csv"
+  ]
+}

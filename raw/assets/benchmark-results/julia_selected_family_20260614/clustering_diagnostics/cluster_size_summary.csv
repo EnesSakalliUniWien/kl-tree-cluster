@@ -1,0 +1,2 @@
+method,n_genes,n_clusters,singletons,singleton_gene_fraction,non_singleton_clusters,genes_in_non_singletons,median_cluster_size,mean_cluster_size,p90_cluster_size,max_cluster_size,clusters_ge5,genes_in_clusters_ge5,clusters_ge10,genes_in_clusters_ge10,effective_cluster_count,cluster_size_gini
+kl_selected_family,703,401,306,0.4352773826458037,95,397,1.0,1.7531172069825436,2.0,40,16,207,6,143,238.9895814904774,0.38643788820977426

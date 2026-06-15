@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-12
+updated: 2026-06-14
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -1188,6 +1188,1111 @@ verification, and maintenance events here in chronological order.
   `pytest tests/validation/72_test_selected_tail_promotion_gate.py tests/validation/73_test_selected_tail_parent_size_balance_stability.py -q`.
   This is runtime plumbing only; production-scale row-level evidence is still
   required before diagnostic balance-scoped contexts should be promoted.
+- Added executable diagnostics for all four null edge/sibling calibration
+  roadmap phases: `edge_null_calibration_panel.py`,
+  `sibling_null_calibration_panel.py`, `traversal_guard_validation_panel.py`,
+  and `production_admissibility_contract.py`, with validation tests
+  `88`--`91` and source pages [[edge-null-calibration-panel-20260613]],
+  [[sibling-null-calibration-panel-20260613]],
+  [[traversal-guard-validation-panel-20260613]], and
+  [[production-admissibility-contract-20260613]]. The package separates
+  fixed-tree edge nulls, selected-tree edge nulls, sibling strict/stopped/null
+  roles, selected-nonnull sibling rows, external selected-tail contexts,
+  traversal guard candidates, and final production-admissibility decisions.
+  All outputs are diagnostic-only unless a downstream predeclared evidence
+  panel supplies production-ready component statuses.
+- Added `benchmarks/diagnostics/calibration/selected_edge_sibling_null_equation.py`,
+  `tests/validation/92_test_selected_edge_sibling_null_equation.py`, and
+  [[selected-edge-sibling-null-equation-20260613]]. The diagnostic implements
+  the practical conditional equation
+  \(P(T_u^{\mathrm{sib}}\ge t\mid f_u,k_u,A_u^{\mathrm{edge}},b_u,\mathrm{edge\ path\ open})\)
+  by exact matched empirical-null contexts and add-one tail probabilities.
+  Unsupported or sparse matched contexts fail closed rather than producing a
+  calibrated p-value.
+- Checked the selected edge+sibling equation against current benchmark
+  evidence. The stored 2026-06-04 selected-edge pilot sibling artifact cannot
+  run the equation because `sibling_raw_stat` and `sibling_raw_p` are entirely
+  absent, while live method-proof examples produce conditional empirical
+  p-values only in contexts with exact matched strict-null support. The
+  production-admissibility contract now treats those finite equation p-values
+  as diagnostic-only and sparse/unmatched equation contexts as fail-closed.
+- Added `benchmarks/diagnostics/calibration/statistic_distribution_shape_panel.py`,
+  `tests/validation/93_test_statistic_distribution_shape_panel.py`, and
+  [[statistic-distribution-shape-panel-20260613]]. The panel compares empirical
+  statistic skew/tails against the chi-square skew implied by current df and an
+  optional covariance-inferred Satterthwaite df/scale reference. Live
+  method-proof sibling rows showed covariance-inferred effective df almost
+  unchanged from current projection df, but large covariance scales that reduce
+  tail rates without restoring nominal calibration. This makes df count alone
+  unlikely to explain the observed distribution mismatch.
+- Added `benchmarks/diagnostics/calibration/covariance_laplacian_panel.py`,
+  `tests/validation/94_test_covariance_laplacian_panel.py`, and
+  [[covariance-laplacian-panel-20260613]]. The panel turns covariance matrices
+  into absolute-correlation Laplacian graphs. Live method-proof checks showed
+  all sampled Bernoulli sibling contrast covariance matrices are diagonal
+  Laplacian graphs, while reconstructed parent spectral covariance matrices are
+  dense and mostly connected. This records a wiki coverage gap: prior pages
+  covered MP eigenvalues, selected-tail spectral covariates, and covariance
+  validation, but not covariance graph connectivity or the separation between
+  sibling whitening covariance and parent spectral covariance.
+- Updated `benchmarks/validation/selected_edge_type1_geometry.py` so future
+  selected-edge sibling artifacts export raw sibling statistic, raw p-value,
+  adjusted statistic/p-value when available, covariance-inferred df/scale, and
+  bounded Laplacian summaries for sibling contrast and parent spectral
+  covariance. Raw sibling rows are collected before decomposition adjustment,
+  so calibration-support failures can still be inspected by the distribution
+  and selected edge+sibling equation panels.
+- Added `benchmarks/diagnostics/calibration/selected_edge_sibling_postrun_analysis.py`,
+  `tests/validation/95_test_selected_edge_sibling_postrun_analysis.py`, and
+  [[selected-edge-sibling-postrun-analysis-20260613]]. A local two-replicate
+  `binary_2clusters` selected-tree smoke run produced `196` edge rows, `98`
+  sibling rows, and `2` final rows. Current chi-square sibling tails remained
+  inflated at tail rate `1.0` in both df bins; covariance-inferred alternate
+  tail rates dropped to about `0.158` and `0.864`; the selected edge+sibling
+  equation produced `95` supported conditional empirical p-values and withheld
+  `3` rows for insufficient null support.
+- Extended the selected-edge sibling post-run analyzer so it writes
+  `production_admissibility_components.csv` and
+  `production_admissibility_summary.csv` through the same conservative
+  production-admissibility contract. On the local two-replicate
+  `binary_2clusters` smoke artifact, the summary has `7` required components,
+  `3` fail-closed blockers, and `4` diagnostic-only components, with final
+  decision `fail_closed_undefined`. The blockers are the two
+  `skew_exceeds_df_reference` distribution-shape bins and
+  `selected_edge_sibling_equation:insufficient_null_support`.
+- Added `benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py`,
+  `tests/validation/96_test_differential_statistic_validity_panel.py`, and
+  [[differential-statistic-validity-panel-20260613]]. The panel reconstructs
+  the implemented whitened sibling contrast and parent PCA projection, then
+  reports Fisher/Wald boundary geometry, fixed-projection finite differences,
+  recomputed-projection sensitivity, eigengap instability, and nonsmooth
+  Hamming selection stability. A one-replicate `binary_2clusters` fixed-tree
+  plus selected-tree smoke produced `98` rows: `81`
+  `wald_metric_boundary_unstable`, `11` `fixed_subspace_candidate`, and `6`
+  `nonsmooth_selection_geometry`. The production summary had `4` required
+  components, all fail-closed, with final decision `fail_closed_undefined`.
+- Added `benchmarks/diagnostics/calibration/regularized_wald_statistic_panel.py`,
+  `tests/validation/97_test_regularized_wald_statistic_panel.py`, and
+  [[regularized-wald-statistic-panel-20260613]]. The panel compares plug-in,
+  Jeffreys-smoothed, Dirichlet-smoothed, and root-shrunk sibling
+  projected-Wald statistics before any production promotion. In a five-
+  replicate `binary_2clusters` fixed-tree smoke, smoothing reduced boundary
+  instability to zero for Jeffreys, Dirichlet, and root-shrink variants, but
+  fixed-tree chi-square tail rates still ranged from `0.500` to `0.933`.
+  The selected-tree smoke had smoothed tail rates `0.969`--`1.000`. Both
+  production summaries remained `fail_closed_undefined`.
+- Added `benchmarks/diagnostics/calibration/null_law_decomposition_panel.py`,
+  `tests/validation/98_test_null_law_decomposition_panel.py`, and
+  [[null-law-decomposition-panel-20260613]]. The panel separates fixed-topology
+  sibling null behavior into same-sample adaptive projection, independent
+  tree-sample projection, and random fixed orthonormal projection. In a
+  20-replicate `binary_2clusters` smoke, same-sample adaptive projection had
+  tail rates `0.916` and `0.745` across the two df bins, while independent
+  tree-sample projection had `0.053` and `0.076`, and random fixed projection
+  had `0.063` and `0.036`. Projection row orthonormality and operator weights
+  stayed at the fixed-subspace chi-square values, so the null-law failure is
+  same-sample adaptive projection/dimension selection rather than the
+  quadratic form itself. The production summary remains
+  `fail_closed_undefined`.
+- Recorded the user constraint that cross-fit/sample-split methods are not the
+  intended next production path. Added `raw/inbox/toomanycells-method-notes-20260613.md`
+  and [[toomanycells-method-20260613]] after checking the TooManyCells public
+  documentation and publication references. The note is relational, not a
+  direct comparator: TooManyCells is recorded as a tree-first divisive
+  hierarchical spectral clustering method with Newman-Girvan modularity
+  stopping. It is not a repair for the current KL-TE projected-Wald null law and
+  not a proposed replacement for the KL-TE gate.
+- Added `benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py`,
+  `tests/validation/99_test_data_independent_sibling_gate_panel.py`,
+  `raw/inbox/data-independent-sibling-gate-smoke-20260613.md`, and
+  [[data-independent-sibling-gate-panel-20260613]]. The panel implements a
+  same-data, non-cross-fit candidate that removes adaptive parent PCA/dimension
+  selection from the sibling statistic and uses fixed coordinate-wise
+  Bonferroni/BH p-values with a selected-topology penalty. In the
+  `binary_2clusters` 50-replicate selected-topology smoke, null effective-alpha
+  rejection was `0.007755` against target `0.01`, signal rejection was
+  `0.175510` to `0.194694`, and large-parent signal rejection was `0.738019`.
+  Production admissibility remains `diagnostic_only`.
+- Extended the data-independent sibling gate panel to evaluate a
+  selected-topology penalty grid, support direct categorical cases with
+  `FeatureSpace` metadata, emit
+  `data_independent_sibling_gate_penalty_transfer_summary.csv`, and scope
+  production-admissibility contracts by method, penalty, topology mode, and
+  feature family. Added `raw/inbox/data-independent-sibling-gate-transfer-20260613.md`.
+  In a three-case binary transfer smoke, `coordinate_bh` with penalty `10` was
+  the only grid candidate controlling all selected-null cases while retaining
+  all signal cases under the all-parent threshold. A direct categorical smoke
+  remained null-conservative but signal-weak, leaving categorical aggregation
+  and traversal-target power as open work.
+- Added `block_bonferroni` and `block_bh` candidate methods to the
+  data-independent sibling gate panel. These aggregate fixed feature-block
+  chi-square p-values instead of individual coordinates, using the categorical
+  simplex chart dimension as degrees of freedom. A categorical block-gate smoke
+  over `cat_clear_3cat_4c`, `cat_mod_3cat_4c`, and
+  `cat_highcard_10cat_4c` stayed null-conservative but signal-weak; the best
+  minimum all-parent signal rejection was `0.033166` for block BH and
+  `0.049580` for coordinate BH. This rules out simple categorical block
+  aggregation as the missing fix.
+- Added `benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py`,
+  `tests/validation/100_test_data_independent_sibling_gate_traversal_panel.py`,
+  `raw/inbox/data-independent-sibling-gate-traversal-20260613.md`, and
+  [[data-independent-sibling-gate-traversal-panel-20260613]]. The panel runs
+  fixed data-independent sibling gates through the actual top-down traversal.
+  In an eight-replicate six-case smoke, fixed `coordinate_bh` gates recovered
+  strong signal ARI for binary and direct categorical cases, but selected-null
+  traversal still false-split above the diagnostic threshold. The remaining
+  blocker is selected topology plus edge-reachable traversal null control, not
+  same-sample adaptive sibling projection.
+- Extended the data-independent sibling gate traversal panel with split-geometry
+  diagnostics and
+  `data_independent_sibling_gate_traversal_transfer_summary.csv`. A mixed
+  16-replicate smoke with edge alpha `0.0001` and penalties `500` and `1000`
+  showed binary transfer candidates with max null false-split rate `0.0000`
+  and minimum signal mean ARI at least `0.987067`; direct categorical transfer
+  still failed because high-cardinality null false splits persisted and
+  moderate categorical signal weakened at stronger penalties. A 128-replicate
+  `cat_highcard_10cat_4c` geometry follow-up estimated false splitting at
+  `7/128 = 0.0546875`, all at the selected root with first child size `9`--`44`
+  out of `200`. The matching signal run had mean ARI `0.755123` and first root
+  min-child size at least `48`, but other valid signal cases have smaller first
+  splits, so the evidence supports selective/adaptive traversal-null
+  conditioning rather than a universal hard balance guard.
+- Added an optional selected-root permutation diagnostic to the same traversal
+  panel. It preserves Bernoulli/categorical feature-block margins, reruns
+  selected tree construction on permuted null samples, and reports a
+  Monte-Carlo selected-root p-value for the fixed sibling gate. In a
+  four-replicate `cat_highcard_10cat_4c` smoke with `9` permutation draws, the
+  known false root changed from raw p-value `1.707e-6` to selected-root
+  p-value `0.1`, but true signal roots also had selected-root p-values
+  `0.1`--`0.2`. This makes permutation conditioning a useful selected-null
+  diagnostic but not yet a power-preserving production stopping statistic.
+- Extended the traversal panel to emit
+  `production_admissibility_components.csv` and
+  `production_admissibility_summary.csv` from traversal transfer evidence. A
+  small contract smoke over `binary_2clusters` and `cat_highcard_10cat_4c` at
+  penalty `1000` produced the intended conservative boundary: binary
+  fixed-coordinate transfer is represented as `diagnostic_only`, while
+  categorical high-cardinality transfer remains `fail_closed_undefined`. This
+  turns the non-cross-fit repair into an explicit domain-scoped candidate
+  without promoting it beyond the available evidence.
+- Added optional selected-root feature-subsample stability diagnostics and a
+  root-stability guard to the data-independent traversal panel. The diagnostic
+  rebuilds selected trees on feature-block subsamples and compares root
+  bipartitions by ARI. In a 16-replicate `cat_highcard_10cat_4c` smoke, a
+  threshold of `0.08` blocked the one null false root, reduced false-split rate
+  from `0.0625` to `0.0`, and blocked no signal roots; signal mean ARI stayed
+  `0.824357`. In a six-case mixed smoke the guard controlled all tested nulls
+  and preserved binary transfer, but categorical transfer remained signal-weak
+  because `cat_mod_3cat_4c` stayed below the `0.75` signal threshold. The best
+  categorical penalty/edge follow-up reached minimum signal mean ARI `0.747419`
+  while keeping null false-split rate `0.0`.
+- Ran a follow-up threshold sweep for the root-stability guard. With fixed
+  coordinate BH, edge alpha `0.001`, selected-topology penalty `50`,
+  feature-subsample fraction `0.8`, `12` stability subsamples, and
+  root-stability threshold `0.15`, the 16-replicate six-case mixed smoke
+  transferred across binary and direct categorical cases. Binary max null
+  false-split rate was `0.0` with minimum signal mean ARI `0.865005`;
+  categorical max null false-split rate was `0.0` with minimum signal mean ARI
+  `0.771764`. Production summaries remain `diagnostic_only`, but the current
+  method candidate is now explicit: fixed coordinate BH plus selected-topology
+  penalty plus selected-root feature-subsample stability.
+- Added confidence-bound transfer diagnostics to the data-independent traversal
+  panel. Case summaries now include Wilson upper confidence bounds for null
+  false-split rates and one-sided t lower confidence bounds for signal mean
+  ARI; production-admissibility rows include separate point-transfer and
+  confidence-bound components. In the 16-replicate candidate smoke, point
+  estimates still transferred, but both binary and categorical confidence
+  components failed closed because zero observed false splits still produced a
+  null false-split upper confidence bound of `0.193608`, above the `0.05`
+  target. This keeps the candidate diagnostic-only until a larger validation
+  run or analytic selected-null bound tightens the uncertainty.
+- Added validation-support sizing to traversal transfer summaries. For the
+  current 95% Wilson bound and a `0.05` false-split target, zero observed false
+  splits require `73` null replicates per case. The 16-replicate candidate
+  smoke therefore needs `57` additional zero-false-split null replicates per
+  case before the null confidence component can pass, with separate signal
+  lower-bound validation still required.
+- Ran the 73-replicate mixed candidate validation at root-stability threshold
+  `0.15`. Point-transfer still passed, but confidence failed because null false
+  splits appeared in `binary_2clusters`, `cat_clear_3cat_4c`, and
+  `cat_mod_3cat_4c`; both binary and categorical family summaries had max null
+  false-split rate `0.027397` and null upper confidence `0.094501`. Added
+  `root_stability_threshold_sensitivity.csv` to the traversal panel. Post-run
+  sensitivity on the same evidence identified threshold `0.24` as the first
+  tested value passing both binary and categorical point/confidence checks:
+  max null false split `0.0`, null upper confidence `0.049992`, binary signal
+  lower confidence `0.762835`, and categorical signal lower confidence
+  `0.758985`. This is a prospective-validation candidate, not a production
+  constant, because the threshold was selected after inspecting the run.
+- Ran the pre-alignment prospective 73-replicate validation with root-stability
+  threshold `0.24` predeclared. The fixed coordinate BH +
+  selected-topology penalty `50` + root-stability guard candidate passed point
+  and confidence checks on the six-case binary/direct-categorical smoke suite.
+  Binary max null false-split rate was `0.0`, null upper confidence
+  `0.049992`, minimum signal mean ARI `0.835616`, and minimum signal lower
+  confidence `0.762835`. Direct categorical max null false-split rate was
+  `0.0`, null upper confidence `0.049992`, minimum signal mean ARI `0.782621`,
+  and minimum signal lower confidence `0.758985`. The production contract still reports
+  `diagnostic_only`, because candidate statuses are intentionally not
+  production-ready without broader generalization or threshold derivation.
+- Added a relational TooManyCells check and broader fixed-gate stress probes.
+  TooManyCells is recorded only as a tree-first divisive spectral reference
+  with Newman-Girvan modularity stopping, not as a direct KL-TE comparator. The
+  full supported traversal surface contains 42 binary-template and 11 direct
+  categorical-multinomial cases, but all-surface inline runs need checkpointed
+  output before they are practical. Three-replicate targeted probes with the
+  same fixed-gate constants found zero observed null false splits in targeted
+  binary and direct categorical cases. Binary signal retained across seven
+  targeted cases with minimum mean ARI `0.805955`; direct categorical signal
+  failed because `cat_highcard_20cat_4c` had mean ARI `0.080649` and
+  `cat_overlap_3cat_4c` had mean ARI `0.703263`. The next method problem is
+  categorical power without reopening selected-root null inflation.
+- Added checkpoint row output and selected-tree oracle ARI to the traversal
+  panel. Checkpoints are written after every completed case-role-replicate
+  unit, preserving partial evidence from broad validation runs. The oracle
+  diagnostic shows that `cat_highcard_20cat_4c` is limited by the selected
+  average-linkage tree itself: low-penalty `block_bh` reaches mean ARI
+  `0.659781`, equal to the selected-tree oracle cut at the true cluster count,
+  while edge alpha `0.01` does not improve the case. This moves the remaining
+  categorical issue from sibling projection calibration to categorical tree
+  construction or oracle-normalized validation.
+- Added production-facing fixed-subspace sibling gate options:
+  `sibling_gate_method="fixed_coordinate_bh"` and
+  `sibling_gate_method="fixed_block_bh"`. These options are wired through
+  `run_gate_annotation_pipeline`, `TreeDecomposition`, and `PosetTree.decompose`
+  via forwarded kwargs. The default remains `projected_wald_inflation`. The new
+  fixed gates compute covariance-whitened sibling contrasts and apply
+  predeclared coordinate-wise or feature-block BH aggregation without using
+  same-sample parent PCA projections or edge-derived sibling projection
+  dimensions. Regression tests cover opt-in annotation, method metadata,
+  categorical block aggregation, and cache invalidation across sibling-gate
+  methods.
+- Refactored the diagnostic BH fixed-gate p-value paths to delegate to the
+  production `fixed_subspace_sibling_p_value` implementation. Added regression
+  coverage proving that `fixed_coordinate_bh` does not call the parent-PCA
+  sibling input resolver. This aligns the validation evidence with the
+  production-facing method option and locks the main repair invariant into
+  tests.
+- Added `sibling_gate_alpha_penalty` to the gate annotation and decomposition
+  path. The penalty is positive, defaults to `1.0`, is stored in gate config
+  metadata, and divides `sibling_alpha` before sibling FDR. Tests cover
+  effective alpha calculation, invalid penalties, and cache invalidation across
+  penalty changes. An end-to-end `binary_2clusters` smoke with
+  `fixed_coordinate_bh`, penalty `50`, edge alpha `0.001`, and sibling alpha
+  `0.01` wrote `49` fixed-method sibling rows and `5` open sibling rows.
+- Added the selected-root feature-subsample stability guard to the
+  production-facing annotation and decomposition path. The guard is default
+  off, records its threshold/subsampling settings in gate config metadata, and
+  closes only an unstable open root by rewriting the root sibling decision to
+  fail closed with `Root_Stability_*` diagnostics. Tests cover direct blocking,
+  metadata capture, invalid inert guard configuration, and cache invalidation
+  across guard changes. The runnable opt-in method now matches the diagnostic
+  candidate: fixed-subspace sibling gate plus selected-topology alpha penalty
+  plus selected-root stability guard, while production promotion remains gated
+  by the admissibility contract.
+- Added `fixed_global_chi_square` as the direct full fixed-subspace sibling
+  gate. The statistic is `chi2.sf(z.T @ z, df=len(z))` on the existing
+  covariance-whitened contrast, so it avoids parent PCA projection rows and
+  edge-derived sibling dimensions while preserving the classical fixed-df Wald
+  reference. Diagnostic panels expose the same option as
+  `candidate_method="global_chi_square"`. A two-replicate `binary_2clusters`
+  traversal smoke with penalty `50` and root-stability threshold `0.24` wrote
+  all expected artifacts and produced point-transfer evidence, but production
+  admissibility remained fail-closed because confidence was still
+  null-uncertain at that sample size.
+- Added named sibling-gate profiles `fixed_coordinate_guarded_v1` and
+  `fixed_global_guarded_v1`. These profiles package the non-cross-fit fixed
+  sibling gate, selected-topology penalty `50`, root-stability threshold
+  `0.24`, `12` stability subsamples, feature fraction `0.8`, and deterministic
+  seed `0` as auditable diagnostic candidates. The profile id is stored in
+  gate annotation config metadata and included in cache reuse checks. Tests
+  verify profile resolution, conflict detection, avoidance of parent-PCA
+  sibling inputs, and recomputation when a cached adaptive bundle is reused
+  under a fixed profile request.
+- Wired fixed sibling-gate profiles through the shared KL benchmark runner.
+  `_run_kl_method` and `_run_kl_on_distance` now forward profile/fixed-gate
+  settings into gate annotation and decomposition and record them in
+  `MethodRunResult.extra`. Added a runner regression for
+  `fixed_global_guarded_v1`. The method-constants manifest now includes the
+  fixed-profile constants `sibling_gate_profile`,
+  `fixed_sibling_gate_alpha_penalty`, `root_stability_guard_threshold`,
+  `root_stability_subsample_replicates`, and
+  `root_stability_feature_fraction` as explicit validation targets; their
+  skeleton evidence status remains `missing` until profile validation artifacts
+  are attached.
+- Added
+  `benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py`,
+  `tests/validation/101_test_fixed_sibling_gate_profile_validation.py`,
+  `raw/inbox/fixed-sibling-gate-profile-validation-20260613.md`, and
+  [[fixed-sibling-gate-profile-validation-20260613]]. The panel validates named
+  fixed sibling-gate profiles through the shared KL runner, records whether
+  adaptive projected-Wald sibling rows were avoided, writes method-constant
+  evidence fields, and emits conservative production-admissibility components.
+  TooManyCells remains relational context only, not a direct comparator.
+- Fixed the production-facing root-stability guard replay contract. The guard
+  now records root replay distance metric and linkage method in gate config
+  metadata and recomputes feature-subsample roots with the same Hamming/average
+  contract used by the shared KL fixed-profile runner, instead of falling back
+  to default Euclidean linkage replay. Focused tests cover metadata propagation,
+  cache invalidation, runner extras, and profile-validation output columns.
+- Aligned the data-independent sibling-gate traversal diagnostic with the same
+  Hamming/average selected-tree replay contract. Selected trees, oracle cuts,
+  root-selective p-values, and root feature-subsample stability now use
+  explicit Hamming distance; row outputs and the manifest record the metric and
+  linkage. Previous traversal numbers from before this correction should be
+  treated as pre-alignment diagnostics unless rerun with these fields.
+- Ran corrected Hamming/average traversal evidence for the fixed coordinate
+  candidate. The 16-replicate six-case mixed smoke was a point-transfer
+  candidate but confidence-uncertain. The 73-replicate support run remained a
+  point-transfer candidate and signal confidence passed, but binary and direct
+  categorical families each had one null false root (`1/73`, Wilson upper
+  `0.073597`), so production admissibility stayed fail-closed. The traversal
+  summary now reports observed-count-aware support sizing: with one false
+  split, `110` total null replicates, or `37` additional zero-false null
+  replicates, are needed to bring the Wilson upper bound below `0.05`. A
+  corrected penalty-grid probe showed penalty `500` weakens categorical signal,
+  so the evidence does not justify replacing the current penalty `50` profile
+  constant.
+- Added `root_selective_guard_sensitivity.csv` to the traversal panel. The
+  diagnostic estimates a selected-root permutation guard that blocks opened
+  roots whose selected-root p-value exceeds `sibling_alpha`. Targeted 99-draw
+  checks on the corrected-Hamming false roots blocked the two null roots while
+  retaining matched strong signal roots at the Monte Carlo floor; a nine-draw
+  smoke was too coarse and blocked signal. This identifies selected-root
+  permutation as the next method layer to validate, not a production default.
+- Made selected-root permutation lazy in the traversal panel: all rows keep the
+  observed root p-value, but expensive permutation draws are run only for
+  opened or root-stability-blocked roots. Regression coverage verifies the lazy
+  call pattern, and a 99-draw binary false-root smoke still writes the expected
+  selected-root guard sensitivity artifact.
+- Exposed the fixed coordinate-BH p-value as a direct helper so diagnostic
+  selected-root permutation loops no longer rebuild a throwaway Bernoulli
+  `FeatureSpace` for each coordinate-BH p-value. Focused validation confirms
+  equality with the production fixed-subspace gate and statsmodels BH
+  adjustment.
+- Aligned the traversal diagnostic with production-facing fixed profiles by
+  adding explicit `root_stability_seed` support, defaulting to `0`. The
+  fixed-profile validation rows now record root-level sibling p-values,
+  root-open status, root-stability mean/median/q10, and root-stability block
+  status. An aligned replay at data seed `20309045` shows that
+  `fixed_coordinate_guarded_v1` blocks the known binary null root but still
+  opens the known direct-categorical null root; the 99-draw selected-root
+  permutation diagnostic blocks that categorical false root while retaining the
+  matched signal. Production summaries remain fail-closed because this is
+  targeted evidence, not broad confidence evidence.
+
+### 2026-06-14
+
+- Exposed selected-root permutation as a production-facing, default-off runtime
+  guard for fixed-subspace sibling gates. The guard preserves
+  Bernoulli/categorical feature-block margins, reruns Hamming/average selected
+  tree construction under permutation, records `Root_Selective_Permutation_*`
+  audit columns, and closes only an open root whose selected-root p-value is
+  above the guard alpha. It is intentionally rejected for
+  `projected_wald_inflation`, because the same-sample adaptive PCA statistic is
+  the invalid layer being avoided.
+- Threaded the guard through `run_gate_annotation_pipeline`,
+  `TreeDecomposition`, shared KL runner extras, gate annotation cache metadata,
+  fixed-profile validation rows, summaries, method-constant evidence fields,
+  and validation tests. Added method-constant targets for
+  `root_selective_permutation_guard_replicates` and
+  `root_selective_permutation_guard_alpha`.
+- Ran a targeted runtime replay with `fixed_coordinate_guarded_v1`, data seed
+  `20309045`, guard seed `20318458`, and `99` permutation draws. The known
+  `cat_clear_3cat_4c` null root is now closed in the runtime profile path
+  (`selected-root p = 0.17`, one final cluster), while the matched categorical
+  signal is retained (`selected-root p = 0.01`, ARI `0.881909`). The known
+  `binary_2clusters` null remains closed by root stability, with selected-root
+  permutation also indicating a block (`p = 0.02`).
+- Updated the raw notes and wiki synthesis to reflect the new boundary: the
+  specific rooting/null-sibling artifact now has an executable non-cross-fit
+  guard, but production promotion remains fail-closed until broad null
+  confidence, signal confidence, guard replicate/alpha validation, and
+  supported feature-family/tree-construction domains are established.
+- Packaged the selected-root method layer as
+  `fixed_coordinate_selective_root_v1`. The profile expands to fixed
+  coordinate BH, selected-topology penalty `50`, root-stability threshold
+  `0.24`, `12` stability subsamples, feature fraction `0.8`, selected-root
+  permutation replicates `99`, seed `0`, and guard alpha `0.01`. Existing
+  guarded profiles keep selected-root permutation disabled by default but still
+  accept explicit guard settings for targeted replay. The shared KL runner now
+  records resolved profile settings in `MethodRunResult.extra`, so validation
+  artifacts report the actual method constants that ran.
+- Updated fixed-profile method-constant evidence to use resolved profile
+  settings. A profile-owned selected-root guard is now reported as enabled in
+  evidence JSON even when the CLI guard override arguments are left at their
+  defaults; the selective-root profile smoke records replicate grid `[99]` and
+  alpha grid `[0.01]`.
+- Rechecked the rooting/null-sibling boundary after the selected-root fix.
+  Root-only guarding still leaves a `cat_clear_3cat_4c` pass-through
+  descendant false split in the six-case two-replicate smoke. A broad
+  `open_internal` selected-subtree guard closes nulls but weakens signal
+  (`0.651330` binary mean signal ARI, `0.521072` categorical). Added the
+  narrower `fixed_coordinate_selective_passthrough_v1` profile, which tests
+  only descendant splits reached through an ordinary closed sibling ancestor
+  and avoids compounding below explicit root guards. The v2 mixed smoke has
+  zero observed null false splits, binary mean signal ARI `0.941101`, and
+  categorical mean signal ARI `0.848463`; production remains fail-closed on
+  smoke-scale confidence (`0.65762` null Wilson upper bound).
+- Added `root_selective_permutation_guard_scope` as an explicit
+  method-constant validation target and regenerated the method-constant
+  manifest skeleton. Fixed-profile evidence now reports a `scope_grid`, so
+  `root`, `open_internal`, and `passthrough_descendant` guard choices are
+  auditable.
+- Added Wilson support sizing to fixed-profile transfer summaries and
+  manifest-style evidence. The two-replicate
+  `fixed_coordinate_selective_passthrough_v1` mixed smoke now reports `73`
+  required zero-false-split null replicates per case and `71` additional
+  zero-false null replicates from the current support level. Fixed checkpoint
+  resume to read CSVs with `keep_default_na=False`, preserving the literal
+  `null` role in resumed rows so null confidence calculations are not dropped.
+- Rechecked `fixed_coordinate_selective_passthrough_v1` on a six-case
+  ten-replicate mixed run. Categorical nulls stayed closed, but
+  `binary_many_clusters` null replicate `7` produced a pass-through descendant
+  false split below an already closed unstable root. A hard closed-root
+  pass-through barrier was rejected because it collapses two strong
+  many-cluster signal rows from ARI `1.0` to `0.0`, and increasing the local
+  selected-subtree permutation count to `999` still leaves the false row
+  selected at p-value `0.002`. Diagnostic global selected-family replays move
+  that false row to p-values around `0.05` to `0.06`, identifying the next
+  non-cross-fit fix as an optimized global pass-through selected-family null,
+  not a production constant change in this pass.
+- Implemented the global selected-family pass-through null as
+  `fixed_coordinate_global_passthrough_v1`. The new
+  `global_sibling_min_passthrough_descendant` scope keeps selected-root
+  permutation for roots and evaluates pass-through descendants against the
+  minimum fixed-subspace sibling p-value over every binary parent in each
+  fully reselected feature-block permutation null tree. A targeted
+  `binary_many_clusters` replay closes null replicate `7` with selected p
+  `0.05` and retains signal replicate `0` at ARI `1.0` with selected p
+  `0.01`; the profile remains diagnostic because broad transfer and runtime
+  optimization are still open.
+- Added an exact Bernoulli fast path for the global selected-family
+  fixed-coordinate BH statistic. The known false-row CLI replay now runs in
+  about `16` seconds while preserving selected p `0.05`. Small transfer
+  smokes are favorable but still confidence-limited:
+  `/tmp/klte_global_passthrough_binary_10rep_20260614` has zero false splits
+  across `30` binary null rows and signal mean ARI `0.945084`, while
+  `/tmp/klte_global_passthrough_categorical_10rep_20260614` has zero false
+  splits across `30` categorical null rows and signal mean ARI `0.832022`.
+  Production remains fail-closed because Wilson confidence still needs
+  additional zero-false null support; at this point categorical runtime still
+  used the canonical covariance fallback, which was rechecked and optimized in
+  the next pass.
+- Rechecked the remaining fixed-profile elements and replaced the categorical
+  fallback in the selected-family path with exact vectorized grouped
+  multinomial whitening through `compute_whitened_wald_contrast`. The hard
+  `binary_many_clusters` null seed replay remains closed with one cluster,
+  selected-family p `0.05`, and scope
+  `global_sibling_min_passthrough_descendant`. The rerun
+  `/tmp/klte_global_passthrough_categorical_10rep_fast_20260614` preserves the
+  prior direct-categorical smoke result, with zero false splits across `30`
+  null rows and signal mean ARI `0.832022`, while wall time improves from about
+  `309` seconds to about `147` seconds. Production remains fail-closed because
+  support confidence still needs `63` additional zero-false null replicates per
+  case; the remaining runtime issue is the repeated selected-family
+  permutation loop, not categorical covariance object construction.
+- Ran binary support-level validation for
+  `fixed_coordinate_global_passthrough_v1` on `binary_2clusters`,
+  `binary_many_clusters`, and `binary_unbalanced_low`. The first two cases
+  have zero false splits through `142` null replicates each, but
+  `binary_unbalanced_low` has three false splits, point false-split rate
+  `0.021127`, and Wilson upper bound `0.060270`, so the confidence component
+  remains fail-closed. All three false rows are pass-through descendants below
+  closed roots and land on the `99`-draw selected-family p-value floor `0.01`.
+  A `999`-draw replay gives p-values `0.017`, `0.005`, and `0.029`.
+  Implemented the diagnostic successor
+  `fixed_coordinate_global_passthrough_refined_v1`, which reruns global
+  pass-through floor cases at `999` draws. Normal-runner replay closes two of
+  the three observed false rows and keeps the genuinely stronger row with
+  p-value `0.005`. The refined ten-replicate binary smoke has zero false
+  splits across `30` null rows and signal mean ARI `0.945084`, but remains
+  diagnostic until full support validation is run.
+- Completed binary support-level validation for
+  `fixed_coordinate_global_passthrough_refined_v1` on the same three binary
+  transfer cases at `142` null/signal replicates per case. The refined profile
+  has one false split across `426` null rows, the known
+  `binary_unbalanced_low` replicate `96` with selected-family p-value `0.005`;
+  the `binary_unbalanced_low` Wilson upper bound is `0.038809`, and the
+  minimum signal mean ARI lower confidence across cases is `0.832434`. The
+  production summary moves from `fail_closed_undefined` to `diagnostic_only`:
+  confidence is now a candidate for the binary transfer set, while profile
+  routing, transfer, and confidence components remain diagnostic-only pending
+  broader method acceptance and direct-categorical support evidence.
+- Ran the all-supported selected-null smoke and full 120-case single-seed
+  performance pass for `fixed_coordinate_global_passthrough_refined_v1`; added
+  `raw/inbox/refined-profile-all-benchmark-tests-20260614.md` and
+  [[refined-profile-all-benchmark-tests-20260614]]. The selected-null smoke
+  covered all 53 regenerable full-suite binary/direct-categorical cases with
+  three null/signal replicates each. Direct categorical nulls stayed closed,
+  but binary-template overlap nulls produced 11 false splits across 126 null
+  rows, so all-supported production remains fail-closed. The full 120-case
+  performance pass returned 107 ok rows and 13 continuous covariance-contract
+  errors; ok rows had mean ARI `0.782567`, median ARI `0.955719`, and exact-K
+  rate `0.439252`. The result keeps the refined profile diagnostic-only and
+  identifies overlap-template null inflation, weak heavy-overlap/SBM/
+  Dirichlet/deep-traversal signal, and continuous covariance support as the
+  next blockers.
+- Added `raw/inbox/root-selection-literature-20260614.md` and
+  [[root-selection-literature-20260614]] after a literature check on root
+  selection, hierarchical-clustering significance, TooManyCells, divisive
+  high-dimensional split objectives, phylogenetic rooting, and trajectory-root
+  orientation. The synthesis separates KL-TE's selected all-sample root split
+  from biological or phylogenetic root orientation and records that the current
+  method issue is selected-root/traversal null validity, not optimizing a free
+  high-dimensional root point.
+- Added `raw/inbox/selected-root-selected-family-traversal-literature-20260614.md`
+  and [[selected-root-selected-family-traversal-literature-20260614]] after a
+  focused literature check for the selected-root/selected-family traversal null
+  law. The synthesis records that no exact KL-TE law was found, but the closest
+  technical relatives are selective inference after hierarchical clustering,
+  selective inference on multiple selected families, hierarchical FDR/FWER,
+  TreeScan and scan-statistic max tests, and cluster-based permutation
+  max-statistic methods. The current refined global pass-through diagnostic is
+  best interpreted as a TreeScan/maxT-style selected-family permutation object
+  for a data-selected hierarchy.
+- Materialized a clean selected-root/pass-through null failure fixture under
+  `raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/` and
+  added [[selected-root-pass-through-null-fixture-20260614]]. The fixture uses
+  iid Bernoulli null data with `400` samples, `80` features, and seed
+  `20310054`; replaying `fixed_coordinate_global_passthrough_refined_v1`
+  returns three clusters even though the root is closed by stability. The
+  compact decision path records root `N798` closed with raw root sibling
+  p-value `6.72e-6`, and descendant `N797` open with sibling p-value
+  `5.21e-7`.
+- Added
+  `benchmarks/diagnostics/calibration/selected_family_traversal_panel.py`,
+  `tests/validation/102_test_selected_family_traversal_panel.py`, and
+  [[selected-family-traversal-panel-20260614]]. The panel compares baseline KL
+  traversal with fixed-coordinate selected-root, local pass-through, and
+  refined global selected-family profiles, writes selected-family guard rows,
+  and emits multi-scale node, region, and sample outputs so stable boundaries,
+  blocked selected families, pass-through zones, and leaf fragments are
+  inspectable separately from the flat cluster labels.
+- Added `scripts/analysis/multiscale_umap_overlay.py` for Julia-style
+  multi-scale UMAP review. The helper joins `multiscale_gene_assignments.csv`
+  to existing UMAP coordinates, colors stable regions first, and overlays
+  pass-through or guard zones. The selected-family panel now writes the null
+  role as `selected_null` and sample-level gene assignments with decomposition
+  sample labels, so default CSV readers and UMAP joins do not lose the role or
+  sample identifier.
+- Added checkpoint/resume and per-row timeout support to
+  `selected_family_traversal_panel.py`, then ran a one-replicate full-suite
+  supported smoke for `fixed_coordinate_global_passthrough_refined_v1`. The run
+  completed `101` of `106` supported binary/direct-categorical rows; five
+  expensive high-dimensional categorical or overlap rows timed out at the
+  `60` second per-row budget and were recorded in the manifest. Completed
+  direct-categorical null rows stayed closed, but binary overlap-template nulls
+  had four false splits and several binary/categorical signal rows were weak,
+  so both production-admissibility summaries remain fail-closed.
+- Added `scripts/analysis/run_selected_family_matrix.py` and ran the full
+  Julia GO binary matrix through
+  `fixed_coordinate_global_passthrough_refined_v1`, writing
+  `raw/assets/benchmark-results/julia_selected_family_20260614/` and
+  [[julia-selected-family-run-20260614]]. The selected-family profile returned
+  `401` clusters, `306` singletons, `8` blocked selected-family/root guard
+  rows, reference ARI `0.064157`, and reference NMI `0.618847`. The UMAP
+  overlay shows stable regions more clearly after annotating the dominant
+  selected-root guard zone `zone_N1404` covering `665` genes instead of
+  outlining nearly every point.
+- Added opt-in phylogenetic tree construction for KL runs:
+  `kl_neighbor_joining` builds a neighbor-joining tree from the KL tree
+  distance vector, `kl_iqtree3` calls an external IQ-TREE 3 binary and parses
+  the resulting Newick tree, and both are rooted with minimum ancestor
+  deviation before conversion to `PosetTree`. Added
+  [[phylogenetic-tree-builders-20260614]] to keep this root-orientation
+  implementation separate from the still-open selected-root/selected-family
+  null-law problem.
+- Ran the combined Julia GO matrix through baseline KL, MAD-rooted neighbor
+  joining, and IQ-TREE 3 fast/MAD, then copied compact artifacts to
+  `raw/assets/benchmark-results/julia_tree_estimators_20260614/` and added
+  [[julia-tree-estimator-run-20260614]]. Baseline KL produced `670` clusters
+  with reference NMI `0.633958`; neighbor joining produced `494` clusters with
+  reference NMI `0.616780`; IQ-TREE fast/MAD produced `566` clusters with
+  reference NMI `0.629320`. The result shows tree estimator changes alter
+  fragmentation but do not solve selected traversal calibration.
+- Regenerated the Julia tree-estimator UMAP plots with high-contrast cluster
+  color maps under
+  `raw/assets/benchmark-results/julia_tree_estimators_20260614/umap_plots/`.
+  The clearer variants highlight only the largest non-singleton clusters with
+  black outlines and encode cluster-size classes separately, because hundreds
+  of tiny cluster IDs cannot be read reliably as one categorical colormap.
+- Added `scripts/analysis/cluster_diagnostics_panel.py` and ran it over the
+  Julia tree-estimator artifacts. The resulting
+  `raw/assets/benchmark-results/julia_tree_estimators_20260614/clustering_diagnostics/`
+  bundle separates cluster-size fragmentation, reference recovery,
+  reference-label fragmentation, method-cluster reference purity, UMAP
+  compactness, and active-feature Jaccard coherence.
+- Added full Julia UMAP exports under
+  `raw/assets/benchmark-results/julia_tree_estimators_20260614/umap_plots/`:
+  a static all-gene reference-endotype view, a static all-gene method
+  cluster-size view, and an interactive HTML view with per-gene cluster and
+  reference metadata on hover.
+- Ran a post-hoc alpha sensitivity audit for the Julia linkage and
+  neighbor-joining tree-estimator runs, saving node-level default gate
+  annotations and retresholded alpha-grid summaries under
+  `raw/assets/benchmark-results/julia_tree_estimators_20260614/alpha_audit/`.
+  The audit shows edge decisions are nearly saturated, while sibling alpha
+  controls a fragmentation versus UMAP-scatter tradeoff rather than producing
+  clean UMAP-local clusters.
+- Debugged the Julia UMAP/alpha analysis. The row-level interactive data has
+  the expected `703 x 3` method rows with no duplicate gene-method entries, and
+  stored assignment cluster sizes match recomputed sizes. Generated a
+  standalone Plotly HTML because the first interactive export referenced the
+  Plotly CDN, and added
+  `raw/assets/benchmark-results/julia_tree_estimators_20260614/analysis_debug_report.md`
+  to document the CDN issue and the post-hoc nature of the alpha audit.
+- Added [[overlap-structural-sibling-panel-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_structural_sibling_panel.py` and
+  `tests/validation/103_test_overlap_structural_sibling_panel.py`. The focused
+  null/signal run over four binary overlap cases wrote `68` analytical rows
+  under `raw/assets/benchmark-results/overlap_structural_sibling_20260614/`.
+  All `38` selected-null rows were `weak_homogeneity_gain`, while accepted
+  null splits retained the expected edge/sibling barycentric support alignment;
+  the overlap failure is selected contrast without structural homogeneity gain.
+- Tightened the overlap structural sibling panel so structure-versus-homogeneity
+  support agreement is explicit. The regenerated outputs add
+  `max_edge_homogeneity_jaccard_topk` and
+  `subspace_consensus_jaccard_topk`; the same four-case run still classifies
+  all selected-null analytical rows as `weak_homogeneity_gain`, not as
+  structural-homogeneity subspace mismatches.
+- Extended the same panel with heterogeneity-focused subspace support,
+  heterogeneity pairwise gains, and `structural_change_mode`. The regenerated
+  four-case output has no rows with strong same-subspace heterogeneity
+  (`heterogeneity_gain_max >= 0.02`); selected-null rows remain weak/mixed
+  structural change, while five signal rows are homogeneous same-subspace.
+- Added [[overlap-structural-threshold-sensitivity-20260614]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_structural_threshold_sensitivity.py`
+  and `tests/validation/104_test_overlap_structural_threshold_sensitivity.py`.
+  The post-run sweep over `2304` case-level rows shows homogeneity gain around
+  `0.02` as the focused overlap separator: zero null false accepts, all five
+  truth-aligned signal accepts retained, and zero truth-misaligned accepts.
+  Sibling p-value thresholds from `0.001` to `0.05` do not change the best
+  rows, so alpha tightening alone is not the main traversal fix here.
+- Extended the overlap threshold analyzer with case-replicate stability fields
+  and ran a three-replicate four-case overlap follow-up under
+  `raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/`.
+  The replicate run weakens the one-seed threshold hypothesis: homogeneity
+  threshold `0.02` still blocks null false accepts and truth-misaligned
+  accepts, but retains only `12/17` truth-aligned accepts and `6/8`
+  truth-aligned signal case-replicates. Threshold `0.01` retains `15/17`
+  truth-aligned accepts but keeps two truth-misaligned accepts, while `0.005`
+  leaves null false accepts. No tested threshold is stable enough for a method
+  rule.
+- Added [[overlap-structural-context-thresholds-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_structural_context_thresholds.py`
+  and `tests/validation/105_test_overlap_structural_context_thresholds.py`.
+  The context-binned run over the three-replicate overlap rows produced `864`
+  sensitivity rows and `12` summary rows. Deep/internal contexts retained
+  `7/7` truth-aligned signal accepts with zero null structural accepts at a
+  permissive homogeneity threshold, while shallow and medium-parent contexts
+  showed signal loss and large-parent contexts kept truth-misaligned signal.
+  This points to context-conditioned traversal structure checks rather than a
+  global cutoff.
+- Added [[overlap-structural-continuous-rule-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_structural_continuous_rule.py`
+  and `tests/validation/106_test_overlap_structural_continuous_rule.py`.
+  The first continuous traversal-context grid evaluated `432` smooth threshold
+  surfaces over depth, parent size, and barycentric balance; a finer follow-up
+  evaluated `1200`. Neither produced a clean candidate. The best coarse rule
+  blocked null and truth-misaligned accepts but retained only `7/8`
+  truth-aligned signal case-replicates. Direct row inspection showed all null
+  and truth-misaligned accepts in the weak-homogeneity region, while only
+  `12/17` truth-aligned signal accepts were structurally same-subspace
+  supported. The current method direction is therefore a continuous structural
+  traversal rule with an explicit ambiguous multi-scale zone, not a forced
+  global or additive accept cutoff.
+- Added [[overlap-structural-decision-zones-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_structural_decision_zones.py`
+  and `tests/validation/107_test_overlap_structural_decision_zones.py`.
+  The three-way diagnostic zone run over the same three-replicate overlap rows
+  writes stable, unstable weak-homogeneity, and nonaccepted rows. Accepted-row
+  composition is cleanly separated: `stable_structural_accept` has `12`
+  truth-aligned signal rows and zero null or truth-misaligned rows, while
+  `unstable_weak_homogeneity_zone` has all `23` selected-null accepted rows,
+  all `20` truth-misaligned signal accepted rows, and the remaining `5`
+  truth-aligned accepted rows. This makes the next traversal method target an
+  explicit unstable multi-scale zone plus selected-family null law, not alpha
+  tuning.
+- Added [[overlap-weak-zone-separability-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_weak_zone_separability.py` and
+  `tests/validation/108_test_overlap_weak_zone_separability.py`. The panel
+  scans scalar metrics inside `unstable_weak_homogeneity_zone`. Homogeneity
+  gain nearly separates weak truth-aligned signal from selected null alone
+  (`AUC = 0.991304`, zero-null retention `4/5`), but against selected null plus
+  truth-misaligned signal the best zero-negative scalar threshold retains only
+  `2/5` weak truth-aligned rows. The highest-AUC combined metric,
+  context-homogeneity margin, retains `0/5` at zero leakage. This confirms
+  that the weak-zone blocker is a selected-family mixture law, not a scalar
+  threshold or alpha tuning issue.
+- Added [[overlap-weak-family-thresholds-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_weak_family_thresholds.py` and
+  `tests/validation/109_test_overlap_weak_family_thresholds.py`. The panel
+  aggregates unstable weak-zone rows by `(case_id, data_role, replicate)`.
+  Family-level selected p-values perfectly separate weak truth-aligned signal
+  families from selected-null families in the focused run (`AUC = 1.0`,
+  zero-null retention `5/5`), but fail against truth-misaligned signal
+  families. Against selected-null plus truth-misaligned families, p-value
+  metrics retain `0/5` positives at zero leakage, and the best combined
+  family-level zero-negative rule retains only `2/5`. This confirms the open
+  traversal object is a selected-family mixture law, not row or family alpha
+  tightening.
+- Added [[overlap-weak-truth-geometry-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_weak_truth_geometry.py` and
+  `tests/validation/110_test_overlap_weak_truth_geometry.py`. The oracle-only
+  panel classifies weak accepted signal rows by truth geometry. In the
+  three-replicate overlap run, weak rows include `3` balanced truth recoveries,
+  `2` partial truth recoveries, `8` one-sided pure fragments, `1` one-sided
+  mixed remainder, `3` balanced wrong-granularity rows, and `8` diffuse truth
+  mismatches. This explains why selected-family p-values are insufficient:
+  pure-fragment splits can be statistically extreme while leaving a mixed
+  sibling remainder, so the selected-family law needs a structural recovery
+  target, not only an extremeness target.
+- Added [[overlap-recovery-proxy-separability-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_recovery_proxy_separability.py`
+  and `tests/validation/111_test_overlap_recovery_proxy_separability.py`.
+  The panel evaluates non-oracle structural proxies against the oracle
+  truth-geometry labels. Fragment-risk, size balance, edge-norm balance, and
+  homogeneity symmetry distinguish truth recovery from one-sided fragment-like
+  rows; `fragment_risk_proxy_score` reaches `AUC = 0.955556` and keeps `3/5`
+  recovery rows at zero fragment leakage. The same proxies do not separate
+  recovery from all non-recovery rows: the best full non-recovery metric keeps
+  only `1/5` recovery rows at zero leakage. This supports a future fragment
+  guard but not a complete selected-family law.
+- Added [[overlap-fragment-risk-guard-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_fragment_risk_guard.py` and
+  `tests/validation/112_test_overlap_fragment_risk_guard.py`. The guard scan
+  evaluates non-oracle fragment-risk thresholds over all unstable weak-zone
+  rows, including selected-null rows. The best focused candidate,
+  `fragment_risk_proxy_score >= 1.252729`, retains `5/5` truth-recovery rows
+  while blocking `8/9` fragment-like rows, `6/23` selected-null rows, and
+  `1/11` diffuse/wrong rows. Size, barycentric, and edge-balance thresholds
+  around `0.33`/`0.50` block `7/9` fragment-like rows with no recovery loss.
+  This supports a diagnostic fragment-risk guard experiment, not production
+  promotion.
+- Updated [[overlap-structural-decision-zones-20260614]] after exposing the
+  context-conditioned traversal rule as signed continuous margins in
+  `benchmarks/diagnostics/calibration/overlap_structural_decision_zones.py`.
+  The rule uses a smooth threshold over depth, parent size, and barycentric
+  balance, then requires nonnegative homogeneity, subspace-consensus, and
+  log-p margins for stable acceptance. Regenerated decision-zone outputs keep
+  the same zone composition: `stable_structural_accept` has `12` truth-aligned
+  signal rows and no null or truth-misaligned rows, while
+  `unstable_weak_homogeneity_zone` contains all `23` selected-null accepted
+  rows and all `20` truth-misaligned signal accepted rows. The median minimum
+  continuous margin is `0.017777` in the stable zone and `-0.009088` in the
+  weak zone.
+- Added [[overlap-diagnostic-traversal-policy-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_diagnostic_traversal_policy.py`
+  and `tests/validation/113_test_overlap_diagnostic_traversal_policy.py`.
+  The composer applies the exact focused fragment-risk threshold
+  `1.252728536810977` to the continuous decision-zone output without changing
+  production behavior. In the focused overlap run it yields `12`
+  `stable_region_accept` rows, `15` `weak_fragment_guard_blocked` rows, `33`
+  `weak_unstable_multiscale_zone` rows, and `112` nonaccepted/leaf rows. The
+  blocked weak rows include `8/9` fragment-like rows and no truth-recovery
+  rows, but the remaining unstable zone still contains `17` selected-null rows,
+  all `5` truth-recovery rows, `10` diffuse/wrong rows, and `11`
+  truth-misaligned signal rows. This narrows the traversal fix to
+  fragment-risk blocking plus an unresolved selected-family recovery law.
+- Added [[overlap-residual-family-recovery-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_residual_family_recovery.py` and
+  `tests/validation/114_test_overlap_residual_family_recovery.py`. The panel
+  analyzes only rows left in `weak_unstable_multiscale_zone` after the
+  continuous structural rule and fragment-risk guard. The residual family set
+  contains `8` selected-null families, `5` truth-recovery families, and `3`
+  non-recovery signal families. Residual family p-value extremeness separates
+  recovery from selected null (`AUC = 1.0`, zero-null retention `5/5`) but not
+  from non-recovery selected signal (`AUC = 0.666667`, zero-negative retention
+  `0/5`), and still has zero-negative retention `0/5` against null plus
+  non-recovery despite `AUC = 0.909091`. The best residual non-recovery
+  structural metric, `residual_min_fragment_risk_proxy_score`, reaches
+  `AUC = 0.866667` but retains only `3/5` recovery families at zero
+  non-recovery leakage. This confirms the remaining traversal blocker is a
+  selected-family structural recovery law, not p-value alpha tuning.
+- Added [[overlap-residual-recovery-eligibility-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_residual_recovery_eligibility.py`
+  and `tests/validation/115_test_overlap_residual_recovery_eligibility.py`.
+  The eligibility layer separates residual selected-family null evidence from
+  structural recovery evidence. In the focused overlap residual families,
+  `residual_neg_log10_min_sibling_p_value > 8.454637` retains `5/5`
+  truth-recovery families while selecting `0/8` selected-null families.
+  `residual_min_fragment_risk_proxy_score > 0.747520` retains `3/5`
+  truth-recovery families while selecting `0/3` non-recovery signal families,
+  and the stricter all-negative threshold `> 1.076065` retains only `2/5`
+  recovery families while selecting `0/11` negatives. This makes the current
+  threshold hierarchy explicit: p-value evidence is a null filter; structural
+  evidence is a recovery filter; neither alone is sufficient for production.
+- Added [[overlap-threshold-hierarchy-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_threshold_hierarchy.py` and
+  `tests/validation/116_test_overlap_threshold_hierarchy.py`. The hierarchy
+  composes the focused overlap outputs into six ordered stages. Continuous
+  structural stable acceptance retains `12/17` truth-aligned accepted rows and
+  selects `0/43` selected-null or truth-misaligned accepted rows. The
+  fragment-risk stage blocks `8/9` fragment-like weak rows and `0/5`
+  truth-recovery rows. Residual selected-family null evidence retains `5/5`
+  truth-recovery families with `0/8` selected-null families, while residual
+  structural recovery evidence keeps only `3/5` or `2/5` truth-recovery
+  families under non-recovery or all-negative control. The remaining blocker is
+  the selected-family mixture where p-value evidence exists without sufficient
+  structural recovery evidence.
+- Added [[overlap-residual-threshold-transfer-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_residual_threshold_transfer.py`
+  and `tests/validation/117_test_overlap_residual_threshold_transfer.py`. The
+  transfer panel recomputes residual max-negative thresholds on leave-one-case
+  and leave-one-replicate training splits. All residual threshold classes leak
+  or lose recovery on held-out families. The residual p-value null-evidence
+  threshold retains `5/5` held-out recovery families but selects `1/8`
+  selected-null and `1/3` non-recovery families in both split kinds. The
+  residual non-recovery structural threshold retains `3/5` recovery families
+  but leaks `7/8` selected-null families in leave-one-case and `5/8` in
+  leave-one-replicate, plus `1/3` non-recovery families. The strict
+  all-negative structural threshold retains only `2/5` recovery families and
+  still leaks selected-null families. This demotes focused cutpoints to
+  explanatory diagnostics, not transferable calibration constants.
+- Added [[overlap-threshold-stability-contract-20260614]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_threshold_stability_contract.py`
+  and `tests/validation/118_test_overlap_threshold_stability_contract.py`.
+  The contract classifies the six-stage threshold hierarchy after transfer
+  testing: `1` stable-reporting stage, `1` diagnostic-only guard stage, `3`
+  non-transferable focused cutpoints, and `4` stages requiring a selected-family
+  law. The final status is `fail_closed_selected_family_law_required`, blocked
+  by residual selected-family null evidence, residual structural evidence, the
+  strict all-negative structural cutpoint, and the remaining p-value-only
+  selected-family mixture. This records the current method state: report stable
+  regions, keep fragment guard diagnostic, and do not promote residual
+  thresholds without selected-family structural recovery theory.
+- Added [[overlap-selected-family-law-requirements-20260614]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_selected_family_law_requirements.py`
+  and `tests/validation/119_test_overlap_selected_family_law_requirements.py`.
+  The diagnostic writes a conditioning envelope over residual family size,
+  selected-family p-value evidence, homogeneity/context/subspace metrics,
+  depth, parent size, barycentric balance, fragment risk, balanced recovery
+  proxy, and size/edge balance. The four resulting requirements keep residual
+  weak traversal fail-closed: selected-family null evidence is not
+  transferable, the structural recovery target is missing, transfer validation
+  is unsatisfied, and residual weak families must remain unstable multi-scale
+  output until a selected-family structural recovery law is validated.
+- Added [[overlap-conditional-bayesian-traversal-law-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_conditional_bayesian_traversal_law.py`
+  and `tests/validation/120_test_overlap_conditional_bayesian_traversal_law.py`.
+  The non-permutation diagnostic maps residual selected-family p-values to
+  lower-bound Bayes-factor evidence, subtracts a selection-context penalty, and
+  adds a structural neighborhood likelihood from homogeneity, continuous
+  context, subspace, balance, recovery proxy, and fragment-risk terms. In the
+  focused residual run, `0/8` selected-null families and `0/3` non-recovery
+  families pass the strong-neighborhood coherent-candidate rule, while `1/5`
+  truth-recovery families passes and `4/5` remain unstable. This confirms the
+  next Bayesian law must model structural neighborhood likelihood, not only
+  selected-family p-value evidence.
+- Added [[overlap-bayesian-neighborhood-component-audit-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_bayesian_neighborhood_component_audit.py`
+  and
+  `tests/validation/121_test_overlap_bayesian_neighborhood_component_audit.py`.
+  The audit shows selected-null residual families are blocked by context
+  margin in `8/8` rows, non-recovery rows are blocked by context margin or
+  subspace, and the blocked truth-recovery rows are limited by
+  balanced-recovery, context-margin, or subspace terms. The next conditional
+  Bayesian traversal law should preserve the context-margin selected-null
+  blocker while replacing the coarse balanced-recovery and subspace proxies
+  with an overlap-aware internal-node neighborhood likelihood.
+- Added [[overlap-internal-node-bayesian-likelihood-probe-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_internal_node_bayesian_likelihood_probe.py`
+  and
+  `tests/validation/122_test_overlap_internal_node_bayesian_likelihood_probe.py`.
+  The row-level overlap-aware likelihood probe selects `4/5` truth-recovery
+  internal nodes and `0/28` selected-null, diffuse/wrong, or fragment-like
+  rows in the focused residual panel. The result explains why family-level
+  Bayesian aggregation was too coarse: selected families can contain one
+  coherent internal node and one blocked neighboring node. The next traversal
+  law should score internal nodes first and report mixed selected families as
+  multi-scale structures, rather than forcing a whole-family promotion.
+- Added [[overlap-internal-node-likelihood-sensitivity-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_internal_node_likelihood_sensitivity.py`
+  and
+  `tests/validation/123_test_overlap_internal_node_likelihood_sensitivity.py`.
+  The `324`-point sensitivity grid reports `216` zero-negative rules and `24`
+  zero-negative rules retaining at least `4/5` truth-recovery internal nodes.
+  The default row-level likelihood rule is in that retaining band. Relaxing the
+  context-margin floor to `-0.002` leaks negative rows for all `108/108` grid
+  points, while floors `0.0` and `0.002` keep zero leakage. This records
+  nonnegative context margin as the stable conditional gate; softer overlap
+  tolerance should live in subspace, balance, and fragment-risk terms.
+- Added [[overlap-internal-node-likelihood-transfer-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_internal_node_likelihood_transfer.py`
+  and `tests/validation/124_test_overlap_internal_node_likelihood_transfer.py`.
+  Leave-one-case transfer has `72` selected rule evaluations with zero leakage,
+  while leave-one-replicate transfer has `24` leaking evaluations, all from
+  `context_margin_floor = -0.002` rules. Restricting to nonnegative
+  context-margin rules gives zero leakage for both split kinds, but replicate
+  recovery retention remains incomplete. This keeps the row-level Bayesian
+  likelihood diagnostic-only and sharpens the next target: improve
+  overlap-internal subspace, balance, and fragment likelihood terms without
+  relaxing nonnegative context margin.
+- Added [[overlap-internal-node-transfer-gap-audit-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_internal_node_transfer_gap_audit.py`
+  and
+  `tests/validation/125_test_overlap_internal_node_transfer_gap_audit.py`.
+  The audit shows the focused row-level panel recovers `4/5` truth-recovery
+  internal nodes and selects `0/28` negative rows. The single missed truth row
+  is `overlap_unbal_4c_small`, replicate `1`, node `N797`: it passes
+  subspace, size-balance, edge-norm, and fragment-risk checks, but has
+  negative local context margin. Since relaxed-context transfer rules produce
+  `24` leakage evaluations and nonnegative-context rules produce `0`, the
+  next repair must be a higher-order conditional/Bayesian law rather than a
+  relaxed local context threshold.
+- Added [[overlap-income-outcome-junction-law-20260615]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_income_outcome_junction_law.py`
+  and `tests/validation/126_test_overlap_income_outcome_junction_law.py`.
+  The diagnostic reframes the next law as directional incidence, not only
+  node degree: incoming selected-parent context and outgoing child-sibling
+  evidence are kept separate. In the focused residual panel, `32/33` rows have
+  an observed incoming parent relation and `0/33` have nonnegative incoming
+  context. Four truth-recovery rows are supported by outgoing local evidence,
+  while the missed `overlap_unbal_4c_small` replicate `1` node `N797` is
+  classified as `truth_recovery_income_outcome_context_transition_required`.
+  This identifies the next mathematical object as a Bayesian transition law
+  over \(I_u\), \(O_u\), and \(I_u \to O_u\) under the selected traversal
+  event.
+- Added [[overlap-branch-incidence-junction-panel-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_branch_incidence_junction_panel.py`
+  and
+  `tests/validation/127_test_overlap_branch_incidence_junction_panel.py`.
+  This panel computes the actual incoming edge, incoming selected-family
+  contrast, and outgoing child-sibling contrast from tree descendant means. In
+  the focused overlap rerun it emits `148` branch-incidence rows and annotates
+  `32` transfer-gap rows. All `5/5` annotated truth-recovery rows are
+  coordinate branch-incidence mismatches, including the missed
+  `overlap_unbal_4c_small` replicate `1` node `N797`; its
+  incoming-family/outgoing top-k Jaccard is `0.0` and absolute cosine is
+  `0.112750`. A follow-up metric-family extension added centered cosine,
+  diagonal Fisher-weighted cosine, and Fisher-weighted top-coordinate overlap;
+  the missed row's best metric-family score remains `0.112750`, classified as
+  `metric_family_branch_mismatch`. The median truth-recovery metric-family
+  score is `0.029662`, below the negative median `0.043478`. Therefore the
+  next Bayesian traversal law should not enforce incoming/outgoing branch
+  alignment as a hard recovery condition; it needs a separate emergent
+  local-outcome mode.
+- Added [[overlap-bayesian-incidence-mode-law-20260615]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_bayesian_incidence_mode_law.py`
+  and `tests/validation/128_test_overlap_bayesian_incidence_mode_law.py`.
+  The law has two diagnostic modes: continuation and emergent local outcome.
+  Continuation has `0` candidates in the focused overlap panel because
+  metric-family branch alignment is absent. Positive-context local outcome
+  selects `4` rows, all truth-recovery with `0` negatives. Context-negative
+  emergent mode is not identified: it contains `26` rows, with `1`
+  truth-recovery and `25` negatives. The current admissible diagnostic
+  boundary is therefore local outcome plus nonnegative context; the remaining
+  task is to find an additional conditioning variable for the context-negative
+  emergent row.
+- Added [[overlap-context-negative-edge-conditioning-20260615]] after extending
+  `benchmarks/diagnostics/calibration/overlap_branch_incidence_junction_panel.py`
+  to export child-parent edge p-values and implementing
+  `benchmarks/diagnostics/calibration/overlap_context_negative_edge_conditioning.py`
+  plus `tests/validation/129_test_overlap_context_negative_edge_conditioning.py`.
+  The focused overlap rerun shows edge tests exist but do not solve the
+  context-negative emergent ambiguity: among `26` rows there is `1`
+  truth-recovery row and `25` negatives, the best outgoing edge-strength metric
+  has AUC `0.916667` but zero-negative retention `0`, and edge rejection flags
+  are saturated for truth and negatives. The next conditioning variable must
+  encode selected neighborhood/topology or a higher-order ancestor/incoming/
+  outgoing/family relation, not raw edge significance alone.
+- Added [[overlap-context-negative-topology-conditioning-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_context_negative_topology_conditioning.py`
+  and
+  `tests/validation/130_test_overlap_context_negative_topology_conditioning.py`.
+  The focused scan joins incidence-mode rows, true branch-incidence topology,
+  internal-node transfer-gap structural evidence, and income/outcome context
+  inside the same `26` context-negative emergent rows. It finds `7` numeric
+  zero-negative separators and no categorical separator. The strongest
+  interpretable candidate is the higher-order topology relation
+  `balance_product = incoming_branch_balance * outgoing_balance`: the single
+  truth row has value `0.232891`, the largest negative is `0.222500`, and the
+  max-negative margin is `0.010391`. Pure outgoing balance also separates but
+  narrowly (`0.492891` truth versus `0.491304` max negative). The result moves
+  the method target toward a smooth incoming/outgoing selected-neighborhood
+  topology likelihood, but remains diagnostic-only because it is a
+  single-positive focused cutpoint requiring transfer validation.
+- Added [[overlap-context-negative-topology-transfer-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_context_negative_topology_transfer.py`
+  and
+  `tests/validation/131_test_overlap_context_negative_topology_transfer.py`.
+  The transfer audit learns zero-negative rules on held-out case and replicate
+  folds. `balance_product` keeps zero held-out negative leakage in folds with a
+  training rule, but no fold simultaneously has a training separator and
+  held-out truth because the focused context-negative emergent slice has only
+  one truth-recovery row. Its status is
+  `transfer_unvalidated_no_truth_holdout_support`; nearby topology metrics
+  leak one held-out negative under replicate splits. The candidate therefore
+  remains a Bayesian/conditional likelihood direction, not a promotable
+  threshold.
+- Added [[overlap-context-negative-bayesian-topology-law-20260615]] after
+  implementing
+  `benchmarks/diagnostics/calibration/overlap_context_negative_bayesian_topology_law.py`
+  and
+  `tests/validation/132_test_overlap_context_negative_bayesian_topology_law.py`.
+  The diagnostic replaces the failed hard-threshold transfer direction with a
+  continuous selected-neighborhood component law over incoming balance,
+  outgoing balance, outgoing edge-norm balance, anti-fragment evidence,
+  selected-family evidence, and soft context penalty. In the focused
+  `context_negative_emergent` slice, the single truth row is top-ranked with
+  posterior-style log odds `34.101999`; the strongest negative is `29.147130`,
+  giving margin `4.954869`. Component summaries show outgoing balance and
+  outgoing edge-norm balance carry the top rank, while raw edge significance is
+  not used. The result remains diagnostic-only pending pooled support and
+  weight uncertainty.
+- Added [[overlap-context-negative-bayesian-topology-sensitivity-20260615]]
+  after implementing
+  `benchmarks/diagnostics/calibration/overlap_context_negative_bayesian_topology_sensitivity.py`
+  and
+  `tests/validation/133_test_overlap_context_negative_bayesian_topology_sensitivity.py`.
+  The ablation audit evaluates `13` component profiles across context penalty
+  weights `0`, `25`, `50`, `75`, and `100`. It finds `60/65` separating
+  profile-weight combinations. Topology-only and outgoing-topology-only
+  separate at all tested weights, while selected-family plus context separates
+  in `0/5`. This supports the interpretation that the missing conditioning
+  variable is structural selected-neighborhood topology, not selected-family
+  evidence or context alone.
+- Added [[topology-vector-benchmark-20260615]] after forwarding KL
+  gate-profile parameters through `benchmarks/shared/runners/dispatch.py`,
+  adding dispatch coverage in `tests/pipeline/51_test_dispatch_contract.py`,
+  and running the regression-gate KL benchmark with default projected-Wald and
+  `fixed_coordinate_global_passthrough_refined_v1` variants. The refined
+  profile eliminates default KL skips (`17/17` ok versus `11/17`), improves
+  skip-as-zero mean ARI from `0.388484` to `0.445742`, and improves exact-K
+  count from `3/17` to `5/17`, but ok-only mean ARI is lower
+  (`0.445742` versus `0.600384`) and several easy non-overlap rows under-split.
+  The benchmark supports the topology vector as a diagnostic conditioning
+  object, not as a broad production traversal default.
+- Added [[overlap-conditional-topology-law-panel-20260615]] after implementing
+  `benchmarks/diagnostics/calibration/overlap_conditional_topology_law_panel.py`,
+  `tests/validation/134_test_overlap_conditional_topology_law_panel.py`, the
+  diagnostic profile `fixed_coordinate_conditional_topology_diagnostic_v1`,
+  and directed-incidence fields in selected-family multi-scale node decisions.
+  The panel is non-cross-fit and non-permutation. On the focused `26`-row
+  context-negative overlap slice, the single truth row remains rank `1`, with
+  conditional log-odds `31.869341` versus strongest negative `27.174856`, but
+  the status remains `support_insufficient_fail_closed` because the internal
+  incidence support stratum has only one truth-recovery row. The result
+  clarifies that the next mathematical object is a support-aware selected
+  neighborhood conditional law, not raw edge strength, global homogeneity, or
+  a tuned topology threshold. The benchmark-facing
+  `kl_conditional_topology_diagnostic` method id also runs the 17-case
+  regression gate with `17/17` ok rows, mean ARI `0.460293`, median ARI
+  `0.480000`, and exact-K count `4/17`. A Julia binary matrix run writes a
+  UMAP overlay and returns `410` final clusters from `703` samples, confirming
+  that the profile is runnable but still fragmentation-heavy.
 
 ## Evidence
 

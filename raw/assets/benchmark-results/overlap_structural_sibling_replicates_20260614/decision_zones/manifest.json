@@ -1,0 +1,23 @@
+{
+  "generated_at_utc": "20260614_183743Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_structural_decision_zones",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_summary.csv"
+  },
+  "parameters": {
+    "balance_reference": 0.5,
+    "base_threshold": 0.005,
+    "depth_scale": 1.5,
+    "imbalance_penalty": 0.005,
+    "parent_reference_size": 800.0,
+    "parent_size_penalty": 0.0,
+    "shallow_penalty": 0.015,
+    "sibling_p_threshold": 0.001,
+    "subspace_threshold": 0.15,
+    "truth_alignment_threshold": 0.5
+  },
+  "rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/overlap_structural_sibling_rows.csv",
+  "schema_version": "overlap_structural_decision_zones/v1",
+  "study_role": "diagnostic_overlap_structural_decision_zones_not_calibration"
+}

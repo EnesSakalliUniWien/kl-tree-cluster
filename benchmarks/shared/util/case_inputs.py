@@ -15,8 +15,12 @@ from kl_clustering_analysis.tree.feature_space import (
 from scipy.spatial.distance import pdist, squareform
 
 from benchmarks.shared.generators import generate_case_data
-
-DISTANCE_MATRIX_METHODS = {"leiden", "louvain", "dbscan", "optics", "hdbscan"}
+from benchmarks.shared.util.method_sets import (
+    DISTANCE_MATRIX_METHODS as _DISTANCE_MATRIX_METHODS,
+)
+from benchmarks.shared.util.method_sets import (
+    KL_DISTANCE_TREE_METHODS as _KL_DISTANCE_TREE_METHODS,
+)
 
 
 @dataclass(frozen=True)
@@ -48,10 +52,10 @@ def prepare_case_inputs(
         )
 
     needs_distance_matrix = any(
-        method_id in DISTANCE_MATRIX_METHODS for method_id in selected_methods
+        method_id in _DISTANCE_MATRIX_METHODS for method_id in selected_methods
     )
     needs_kl_tree_distance = any(
-        method_id in {"kl", "kl_complete", "kl_single"} for method_id in selected_methods
+        method_id in _KL_DISTANCE_TREE_METHODS for method_id in selected_methods
     )
     requires_precomputed_kl_distance = bool(meta["requires_precomputed_kl_distance"])
     needs_distance_condensed = (
@@ -95,4 +99,4 @@ def prepare_case_inputs(
     )
 
 
-__all__ = ["DISTANCE_MATRIX_METHODS", "PreparedCaseInputs", "prepare_case_inputs"]
+__all__ = ["PreparedCaseInputs", "prepare_case_inputs"]

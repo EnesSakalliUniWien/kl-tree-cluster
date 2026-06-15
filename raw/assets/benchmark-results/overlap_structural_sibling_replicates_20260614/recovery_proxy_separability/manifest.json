@@ -1,0 +1,27 @@
+{
+  "generated_at_utc": "20260614_182948Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_recovery_proxy_separability",
+  "metrics": [
+    "barycentric_balance",
+    "min_child_pairwise_jaccard",
+    "max_child_pairwise_jaccard",
+    "child_pairwise_jaccard_gap",
+    "homogeneity_gain_min",
+    "max_homogeneity_gain",
+    "homogeneity_gain_gap",
+    "edge_norm_balance",
+    "subspace_consensus_jaccard_topk",
+    "size_balance",
+    "balanced_recovery_proxy_score",
+    "fragment_risk_proxy_score"
+  ],
+  "outputs": {
+    "metric_summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/recovery_proxy_separability/overlap_recovery_proxy_metric_separability.csv",
+    "proxy_rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/recovery_proxy_separability/overlap_recovery_proxy_rows.csv",
+    "threshold_scan": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/recovery_proxy_separability/overlap_recovery_proxy_threshold_scan.csv"
+  },
+  "schema_version": "overlap_recovery_proxy_separability/v1",
+  "structural_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/overlap_structural_sibling_rows.csv",
+  "study_role": "diagnostic_overlap_recovery_proxy_separability_not_calibration",
+  "truth_geometry_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_truth_geometry/overlap_weak_truth_geometry_rows.csv"
+}

@@ -1,0 +1,33 @@
+{
+  "generated_at_utc": "20260614_175759Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_structural_context_thresholds",
+  "homogeneity_thresholds": [
+    0.005,
+    0.01,
+    0.015,
+    0.02,
+    0.025,
+    0.03
+  ],
+  "outputs": {
+    "sensitivity": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_thresholds/overlap_structural_context_threshold_sensitivity.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_thresholds/overlap_structural_context_threshold_summary.csv"
+  },
+  "rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/overlap_structural_sibling_rows.csv",
+  "schema_version": "overlap_structural_context_thresholds/v1",
+  "sensitivity_rows": 864,
+  "sibling_p_thresholds": [
+    0.001,
+    0.01,
+    0.05
+  ],
+  "study_role": "diagnostic_overlap_structural_context_thresholds_not_calibration",
+  "subspace_thresholds": [
+    0.15,
+    0.25,
+    0.35,
+    0.5
+  ],
+  "summary_rows": 12,
+  "truth_alignment_threshold": 0.5
+}

@@ -1,0 +1,14 @@
+{
+  "decision_zone_summary_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_summary.csv",
+  "fragment_guard_scan_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/fragment_risk_guard/overlap_fragment_risk_guard_scan.csv",
+  "generated_at_utc": "20260614_190040Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_threshold_hierarchy",
+  "outputs": {
+    "hierarchy": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_hierarchy/overlap_threshold_hierarchy.csv"
+  },
+  "policy_summary_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/diagnostic_traversal_policy/overlap_diagnostic_traversal_policy_summary.csv",
+  "residual_eligibility_summary_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_recovery_eligibility/overlap_residual_recovery_eligibility_summary.csv",
+  "residual_thresholds_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_recovery_eligibility/overlap_residual_recovery_thresholds.csv",
+  "schema_version": "overlap_threshold_hierarchy/v1",
+  "study_role": "diagnostic_overlap_threshold_hierarchy_not_calibration"
+}

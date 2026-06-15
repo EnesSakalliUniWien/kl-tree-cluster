@@ -1,0 +1,12 @@
+{
+  "gene_assignments": "raw/assets/benchmark-results/julia_selected_family_20260614/multiscale_gene_assignments.csv",
+  "umap_coordinates": "raw/assets/benchmark-results/julia_tree_estimators_20260614/umap_plots/julia_tree_estimator_umap_coordinates.csv",
+  "method_id": "fixed_coordinate_global_passthrough_refined_v1",
+  "data_role": "observed",
+  "replicate": 0,
+  "top_regions": 25,
+  "outputs": {
+    "overlay_data": "raw/assets/benchmark-results/julia_selected_family_20260614/umap_overlay/multiscale_umap_overlay_data.csv",
+    "plot": "raw/assets/benchmark-results/julia_selected_family_20260614/umap_overlay/multiscale_umap_overlay.png"
+  }
+}

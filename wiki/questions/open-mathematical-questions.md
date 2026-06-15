@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-06-05
+updated: 2026-06-15
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -94,6 +94,28 @@ sources:
   - wiki/analyses/manuscript-life-science-readiness.md
   - benchmarks/validation/method_constants_manifest.py
   - benchmarks/validation/feature_covariance_calibration.py
+  - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
+  - benchmarks/diagnostics/calibration/regularized_wald_statistic_panel.py
+  - benchmarks/diagnostics/calibration/null_law_decomposition_panel.py
+  - benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py
+  - benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py
+  - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
+  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+  - raw/inbox/data-independent-sibling-gate-smoke-20260613.md
+  - raw/inbox/data-independent-sibling-gate-transfer-20260613.md
+  - raw/inbox/data-independent-sibling-gate-traversal-20260613.md
+  - raw/inbox/fixed-sibling-gate-profile-validation-20260613.md
+  - raw/inbox/refined-profile-all-benchmark-tests-20260614.md
+  - wiki/sources/refined-profile-all-benchmark-tests-20260614.md
+  - raw/inbox/toomanycells-method-notes-20260613.md
+  - wiki/sources/overlap-context-negative-edge-conditioning-20260615.md
+  - wiki/sources/overlap-context-negative-topology-conditioning-20260615.md
+  - wiki/sources/overlap-context-negative-topology-transfer-20260615.md
+  - wiki/sources/overlap-context-negative-bayesian-topology-law-20260615.md
+  - wiki/sources/overlap-context-negative-bayesian-topology-sensitivity-20260615.md
+  - wiki/sources/overlap-conditional-topology-law-panel-20260615.md
+  - wiki/sources/topology-vector-benchmark-20260615.md
 tags:
   - method
   - math
@@ -134,6 +156,419 @@ context \(n_L,n_R,p,k_u,a_u,\nu_u\), feature family, and selection regime. The
 existing fixed-subspace and root/local edge-selection diagnostics do not
 produce inflation factors in the thousands, so they do not justify a production
 external calibration model.
+
+The 2026-06-13 differential statistic-validity panel adds a separate blocker:
+before selected-hierarchy conditioning can be promoted, the implemented
+projected-Wald statistic must pass local validity checks for Fisher boundary
+geometry, whitening sensitivity, projection stability, and selection geometry.
+In the first `binary_2clusters` smoke, Fisher/Wald boundary instability
+dominates both fixed-tree and selected-tree summaries, so the current tail
+problem is not only a degrees-of-freedom or selected-tail equation issue.
+
+The regularized Wald follow-up shows that Jeffreys, Dirichlet, and root-shrink
+smoothing repair the boundary-instability diagnostic in the tested fixed-tree
+rows, but the fixed-tree chi-square tail law remains severely misaligned. The
+immediate open point therefore shifts from boundary regularization to the
+reference law or statistic shape itself: a smoothed covariance model is not
+sufficient unless a fixed-tree null law also passes.
+
+The null-law decomposition panel resolves that narrower reference-law question
+for the binary fixed-topology smoke. The implemented quadratic operator is
+orthonormal in the tested coordinates: operator weights are `1`, Satterthwaite
+scale is `1.0`, and inferred df equals the projection dimension. The tail
+failure appears only when the parent projection is learned from the same null
+sample as the sibling contrast. With an independent tree-sample projection or
+an independent random orthonormal projection, tail rates are near nominal. The
+remaining mathematical problem is therefore selective/adaptive projection and
+hierarchy conditioning, not a wrong fixed-subspace chi-square formula.
+
+The project direction explicitly excludes cross-fit/sample-split methods as the
+next production path. The immediate KL-TE work is therefore selective/adaptive
+projection null theory for the current same-data gate, plus careful study of
+same-data topology objectives. The TooManyCells note is relational only: it
+positions KL-TE against a tree-first divisive spectral method with
+Newman-Girvan modularity stopping. It is not a direct comparator or a proposed
+replacement for the KL-TE gate.
+
+The same-date data-independent sibling-gate panel gives the first non-cross-fit
+candidate direction that directly removes the broken adaptive projection layer.
+It replaces parent-learned PCA/dimension selection with fixed coordinate-wise
+Wald p-value aggregation and a predeclared selected-topology penalty. In the
+`binary_2clusters` selected-topology smoke with `50` replicates and penalty
+`10`, both Bonferroni and BH coordinate gates have null effective-alpha
+rejection rate `0.007755` against target `0.01`; signal rejection remains
+`0.175510` to `0.194694`, and large-parent signal rejection is `0.738019`.
+This is a method candidate, not a production calibration rule: all components
+remain diagnostic-only under the production-admissibility contract. The open
+work is to test whether the selected-topology penalty and fixed-coordinate gate
+generalize across binary/categorical cases and to formalize the selected
+topology penalty rather than tuning it per case.
+
+The penalty-grid transfer update narrows that statement. In a three-case binary
+smoke, `coordinate_bh` with selected-topology penalty `10` is the only tested
+candidate that controls all selected-null cases and retains all signal cases:
+the maximum null effective-alpha rejection is `0.008163` and the minimum signal
+rejection is `0.151171`. In a direct categorical smoke, the same family is
+null-conservative but signal-weak under the all-parent threshold; for
+`cat_clear_3cat_4c`, the `coordinate_bh`, penalty-`10` null rejection is
+`0.003535`, signal rejection is `0.057071`, and large-parent signal rejection
+is `0.465686`. Thus the current fix candidate is binary-only and diagnostic:
+categorical needs either a different aggregation target, large-parent/traversal
+targeting, or a feature-block-aware power criterion before it can be considered
+the same method.
+
+The feature-block categorical follow-up rules out the simplest aggregation
+repair. `block_bh` and `block_bonferroni` aggregate one chi-square statistic
+per original categorical feature with `df = K - 1`, preserving the fixed
+subspace principle and avoiding adaptive PCA. Across `cat_clear_3cat_4c`,
+`cat_mod_3cat_4c`, and `cat_highcard_10cat_4c`, block BH is null-conservative
+but remains signal-weak: the best minimum all-parent signal rejection over the
+tested penalty grid is `0.033166`. Coordinate BH is more powerful for the
+tested categorical transfer set, with best minimum signal rejection `0.049580`,
+but still far below the `0.15` signal-retention threshold. The categorical
+open problem is therefore not only one-hot coordinate aggregation; it is how
+selected topology distributes categorical signal across many weak sibling
+contexts and whether traversal-level or large-parent target criteria are the
+right inferential object.
+
+The traversal-level follow-up is more favorable but still not production
+calibration. With fixed `coordinate_bh` gates, edge alpha `0.0001`, and
+selected-topology penalties `500` and `1000`, binary cases transfer in a
+16-replicate smoke: max null false-split rate is `0.0000`, and minimum signal
+mean ARI is at least `0.987067`. Direct categorical cases do not transfer under
+the same criterion. `cat_highcard_10cat_4c` still has root false splitting, and
+`cat_mod_3cat_4c` falls just below the signal ARI threshold at stronger
+penalties. A 128-replicate `cat_highcard_10cat_4c` null follow-up estimates
+false splitting at `7/128 = 0.0546875`; all false events are selected root
+splits with first child size `9`--`44` out of `200`. The matching signal run
+has mean ARI `0.755123` and first root min-child size at least `48`, but other
+valid signal cases have smaller true first splits. The open mathematical
+problem is therefore not a universal child-size guard. It is a
+selective/adaptive traversal null law that conditions on selected topology
+geometry, including root balance, feature family, and edge-reachable context.
+
+The guarded fixed-gate follow-up improves the candidate but does not close the
+method problem. A pre-alignment predeclared six-case, 73-replicate validation
+of fixed `coordinate_bh`, selected-topology penalty `50`, and root-stability
+threshold `0.24` passed point and confidence checks for the smoke suite, but
+the corrected Hamming/average replay rerun remains null-confidence uncertain.
+Broader three-replicate stress probes then separated the remaining failure mode:
+targeted binary cases retained signal with zero observed null false splits,
+while direct categorical high-cardinality and overlap cases lost power
+(`cat_highcard_20cat_4c` mean ARI `0.080649`, `cat_overlap_3cat_4c` mean ARI
+`0.703263`). The open method problem is therefore no longer the fixed-subspace
+chi-square law; it is how to design a non-cross-fit categorical gate or
+stopping objective that preserves power while keeping the selected-root null
+closed.
+
+The selected-tree oracle follow-up changes the interpretation of the hardest
+direct categorical failures. For `cat_highcard_20cat_4c`, low-penalty
+`block_bh` reaches mean ARI `0.659781`, which equals the selected
+average-linkage tree's oracle cut at the true cluster count. For
+`cat_overlap_3cat_4c`, the best traversal mean ARI is near the tree oracle as
+well. Increasing edge alpha does not improve these cases because edge-open
+counts are already saturated. Thus the remaining categorical weakness is not
+only a stopping statistic problem. Some cases require a better categorical tree
+construction or an oracle-normalized acceptance criterion before they can be
+used as evidence against the fixed-subspace sibling gate.
+
+The fixed-subspace sibling gate is now exposed through the normal
+`TreeDecomposition` path as an explicit method option rather than only as a
+benchmark diagnostic. `fixed_global_chi_square`, `fixed_coordinate_bh`, and
+`fixed_block_bh` remove parent PCA rows and edge-derived sibling projection
+dimensions from the sibling statistic. The global method is the direct fixed
+Wald reference with predeclared `df = len(z)`; the BH methods add sparse or
+feature-block aggregation. This addresses the identified adaptive-projection
+mechanism at the software interface level. What remains mathematically open is
+promotion: choosing domain-specific constants, selected-topology penalties or
+guards, and tree-construction criteria that pass the production-admissibility
+contract. The validation implementation now shares the production
+fixed-subspace p-value function for the global and BH gates, and tests enforce
+that fixed gates do not resolve same-sample parent PCA sibling inputs. Thus the
+unresolved part is no longer whether the software can avoid the broken
+projection mechanism; it is whether the resulting fixed-gate method can be
+promoted for a specified domain.
+The selected-topology penalty is also now exposed in the production-facing path
+as `sibling_gate_alpha_penalty`, so the current candidate can be represented as
+fixed sibling gate plus explicit alpha penalty rather than hidden benchmark
+logic.
+
+The root-stability guard is now exposed in the same production-facing path as
+an explicit, default-off fail-closed option. The method candidate can therefore
+be represented end to end as fixed-subspace sibling gate plus
+`sibling_gate_alpha_penalty` plus predeclared
+`root_stability_guard_threshold`/subsampling settings. This closes the
+software-interface gap between the diagnostic candidate and decomposition
+runtime, but it does not close the mathematical promotion gap: the threshold
+and target domain still need a derivation, external validation, or a
+production-admissibility decision.
+
+The benchmark runner and method-constants manifest now make that promotion gap
+auditable. `sibling_gate_profile`, `fixed_sibling_gate_alpha_penalty`,
+`root_stability_guard_threshold`, `root_stability_subsample_replicates`, and
+`root_stability_feature_fraction` are manifest-tracked validation targets, but
+their evidence status remains missing until broad profile-validation artifacts
+attach null false-split confidence, signal ARI confidence, profile metadata,
+and adaptive-projection avoidance checks. The method is therefore runnable as a
+standard benchmark candidate without being silently promoted.
+
+The selected-root permutation guard is now also represented in this auditable
+runtime path. `root_selective_permutation_guard_replicates` and
+`root_selective_permutation_guard_alpha` are method-constant validation targets,
+and the guard writes root-level selected-permutation audit columns when
+explicitly enabled. The guard is default-off and restricted to fixed-subspace
+sibling methods; it is not allowed to wrap `projected_wald_inflation`, because
+the learned same-sample parent projection is the invalid statistic layer being
+removed.
+
+The packaged method candidate is now
+`fixed_coordinate_selective_root_v1`. It combines fixed coordinate BH sibling
+p-values, selected-topology penalty `50`, root-stability threshold `0.24`,
+`12` stability subsamples, feature fraction `0.8`, and a `99`-draw
+selected-root permutation guard at alpha `0.01`. The older guarded profiles
+remain compatibility candidates with selected-root permutation disabled unless
+explicitly requested. The KL runner records resolved profile constants in its
+result metadata, so downstream validation artifacts can audit the actual method
+that ran.
+
+The first executable selective-null object is now available but not sufficient:
+the traversal panel's selected-root permutation diagnostic preserves
+feature-block margins and reruns selected tree construction under the null. In
+a four-replicate `cat_highcard_10cat_4c` smoke, it moved the known false root
+from raw p-value `1.707e-6` to selected-root p-value `0.1`, showing that the
+raw p-value is not surprising after topology selection. The same diagnostic
+also assigns true high-cardinality signal roots selected p-values `0.1`--`0.2`.
+Thus permutation conditioning is a correct-looking diagnostic direction but is
+too conservative as the production statistic. The next open method problem is
+to find a selective statistic or conditioning set that controls selected roots
+under preserved margins without discarding the joint signal that drives useful
+clustering.
+
+The production-admissibility boundary has been made explicit for the current
+fixed-gate repair. Traversal transfer rows now feed the shared conservative
+contract: binary fixed-coordinate transfer can be carried forward only as
+`diagnostic_only`, while high-cardinality categorical transfer remains
+`fail_closed_undefined`. This means the original adaptive projection failure has
+a concrete non-cross-fit repair candidate for binary contexts, but no broad
+production method is proved until the selected traversal law is solved for
+categorical and other feature families.
+
+The newest categorical candidate is a selected-root feature-subsample stability
+guard. It measures whether the selected root bipartition persists when selected
+trees are rebuilt on random feature-block subsets. In the hard
+`cat_highcard_10cat_4c` smoke, a threshold of `0.08` blocked the observed null
+false root and blocked no signal roots. In mixed binary/categorical smoke, the
+guard controlled all tested nulls. However, categorical transfer remains just
+short of the current signal criterion: the best tested minimum categorical
+signal mean ARI was `0.747419` against the `0.75` threshold, driven by
+`cat_mod_3cat_4c`. The open question has therefore shifted from "can selected
+categorical roots be guarded without cross-fitting?" to "how should
+root-stability thresholds and categorical signal criteria be calibrated so that
+moderate but real categorical structure is not rejected as too weak?"
+
+A follow-up threshold sweep gives a concrete diagnostic method candidate. With
+fixed coordinate BH, edge alpha `0.001`, selected-topology penalty `50`,
+feature-subsample fraction `0.8`, `12` stability subsamples, and stability
+threshold `0.15`, the six-case mixed smoke transferred across both binary and
+direct categorical cases. Binary max null false-split rate was `0.0` and
+minimum signal mean ARI was `0.865005`; categorical max null false-split rate
+was `0.0` and minimum signal mean ARI was `0.771764`. The open production
+question is now threshold validation: prove or externally validate the
+selected-topology penalty and root-stability threshold, quantify uncertainty of
+the transfer criteria, and test outside the current synthetic suite.
+
+The uncertainty layer now makes that production gap explicit. Transfer summaries
+include Wilson upper confidence bounds for null false-split rates and one-sided
+t lower confidence bounds for signal mean ARI. In the 16-replicate candidate
+smoke, the point estimates transfer, but the confidence component fails closed:
+zero observed null false splits still gives a null upper confidence bound
+`0.193608`, well above the `0.05` target. The next open validation problem is
+therefore not another local statistic change; it is scaling or analytically
+bounding the selected-null false-split rate so the confidence upper bound is
+compatible with production control.
+
+The validation-support target is now explicit. With the current 95% Wilson
+bound, zero false splits require `73` null replicates per case to certify a
+`0.05` false-split target, so the 16-replicate candidate smoke needs `57`
+additional zero-false-split null replicates per case. Signal validation remains
+separate because the categorical signal lower confidence bound is still below
+the `0.75` ARI target.
+
+The 73-replicate support-target validation at stability threshold `0.15` did
+not pass confidence: binary and categorical families both had max null
+false-split rate `0.027397` and null upper confidence `0.094501`. Post-run
+threshold sensitivity on the same evidence shows that threshold `0.24` would
+block the remaining false roots while retaining signal lower confidence:
+binary min signal lower confidence is `0.762835`, and categorical min signal
+lower confidence is `0.758985`. This identifies a sharper method candidate but
+also creates a new validation requirement: threshold `0.24` was selected
+post-run and must be tested prospectively or derived from an independent
+stability criterion.
+
+The prospective validation had to be rerun after aligning the diagnostic tree
+replay with the KL runner's Hamming/average selected-tree contract. Under the
+corrected replay, fixed coordinate BH, edge alpha `0.001`, selected-topology
+penalty `50`, feature-subsample fraction `0.8`, `12` stability subsamples, and
+stability threshold `0.24` remain point-transfer candidates on the six-case
+binary/direct-categorical smoke suite. However, the corrected 73-replicate run
+does not production-clear confidence: binary and direct categorical families
+each have one null false root (`1/73 = 0.013699`), with Wilson upper confidence
+`0.073597`. Signal lower confidence passes (`0.762835` binary and `0.766477`
+categorical). The remaining root/null-sibling blocker is therefore null
+confidence, not the fixed-subspace statistic itself and not an untracked
+Euclidean-vs-Hamming guard mismatch. With one observed false split, the panel
+now reports that `110` total null replicates, or `37` additional zero-false
+null replicates, are required for the Wilson upper bound to fall below `0.05`.
+The root-stability seed alignment recheck changes the interpretation of those
+two false roots. The traversal diagnostic now records `root_stability_seed`
+and defaults it to `0`, matching the named profile. Under that aligned contract,
+the `fixed_coordinate_guarded_v1` profile blocks the `binary_2clusters` null
+root (`mean root-stability ARI = 0.184170 < 0.24`) and retains the matched
+binary signal. It does not block the `cat_clear_3cat_4c` null root
+(`mean root-stability ARI = 0.283508 > 0.24`). A 99-draw selected-root
+permutation diagnostic then gives selected-root p-value `0.17` for that
+categorical null root and `0.01` for the matched categorical signal root,
+suggesting a non-cross-fit selective-root guard rather than a larger global
+topology penalty. This is still not production evidence because it is targeted
+to one observed false-root seed and because broad confidence evidence remains
+fail-closed.
+
+That selective-root guard has now been implemented in the production-facing
+annotation and decomposition path. In a targeted profile-validation replay at
+data seed `20309045`, guard seed `20318458`, and `99` permutation draws, the
+known `cat_clear_3cat_4c` null root is closed and the method returns one
+cluster; the matched categorical signal is retained with ARI `0.881909`. The
+known `binary_2clusters` null remains closed by root stability, while
+selected-root permutation would also block it. The open mathematical problem is
+therefore no longer "can the specific categorical false root be closed without
+cross-fitting?" It is whether the selected-root permutation conditioning,
+replicate count, guard alpha, and feature-family/tree-construction domain can
+be validated broadly enough to satisfy the production-admissibility contract.
+The packaged `fixed_coordinate_selective_root_v1` profile reproduces that
+targeted behavior with its profile-level selected-root guard seed `0`.
+
+The next recheck shows that root-only guarding is not enough under pass-through
+traversal. A `cat_clear_3cat_4c` null replicate can have a closed root sibling
+gate and still return three clusters because a descendant sibling split is
+reachable through pass-through. A broad selected-subtree permutation guard
+(`open_internal`) closes this null leak but collapses signal in a two-replicate
+mixed smoke. The current strongest diagnostic refinement is
+`fixed_coordinate_selective_passthrough_v1`: it tests only open descendant
+splits reached through an ordinary closed sibling ancestor and avoids
+compounding below roots already closed by explicit guards. In the same
+six-case two-replicate smoke it has zero observed null false splits, binary
+signal mean ARI `0.941101`, and categorical signal mean ARI `0.848463`, but
+production remains fail-closed because two null replicates per case leave the
+Wilson upper confidence bound at `0.65762`. The refreshed validation summary
+turns this into a concrete support target: `73` zero-false-split null
+replicates per case are needed for the `0.05` Wilson target, so the current
+smoke requires `71` additional zero-false null replicates per case. The open
+mathematical problem is therefore now the selective pass-through null law and
+confidence validation, not the original adaptive sibling projection statistic.
+
+The ten-replicate pass-through recheck reopens that last point in a more
+specific way. `fixed_coordinate_selective_passthrough_v1` keeps categorical
+nulls closed but has one binary null false split: `binary_many_clusters`, null
+replicate `7`, seed `20316108`, opens descendant node `N585` below a closed
+unstable root. A hard rule that stops all pass-through below closed unstable
+roots is rejected because it also destroys two true `binary_many_clusters`
+signal rows with ARI `1.0`; root binary-split instability is not equivalent to
+absence of many-cluster signal. Increasing the local selected-subtree
+permutation count is also insufficient, since the false row remains selected
+at p-value `0.002` with `999` draws. The open mathematical object is now a
+global selected-family pass-through null: condition on the whole-tree search
+over descendants below closed roots, not only on the already selected subtree.
+Small diagnostic replays move the false row to global p-values about `0.05` to
+`0.06`, but this needs an optimized implementation and signal validation
+before it can become a guard.
+
+The first implementation of that object is now available as
+`fixed_coordinate_global_passthrough_v1`. It uses a conservative
+selected-family null: for each feature-block permutation, rebuild the whole
+tree and take the minimum fixed-subspace sibling p-value over every binary
+parent. In the targeted `binary_many_clusters` replay, this closes the null
+replicate `7` while retaining signal replicate `0` at ARI `1.0`. Exact
+vectorized discrete whitening makes the binary and direct-categorical
+diagnostics practical enough for smoke validation: the three-case,
+ten-replicate binary smoke has zero false splits across `30` null rows and
+signal mean ARI `0.945084`; the matching direct-categorical smoke also has zero
+false splits across `30` null rows and signal mean ARI `0.832022`. The
+direct-categorical rerun preserves those statistics while improving wall time
+from about `309` seconds to about `147` seconds.
+
+The support-level binary run sharpens the remaining open problem. The
+unrefined global profile reaches acceptable point behavior but not the Wilson
+confidence target: at `142` null replicates per case,
+`binary_unbalanced_low` has three false splits, point false-split rate
+`0.021127`, and Wilson upper bound `0.060270`. All three false rows are
+pass-through descendants below a closed root and all land on the `99`-draw
+Monte Carlo floor p-value `0.01`. A `999`-draw replay gives p-values `0.017`,
+`0.005`, and `0.029`, motivating
+`fixed_coordinate_global_passthrough_refined_v1`. This refined profile leaves
+the fixed-subspace statistic and selected-family null unchanged but reruns
+floor pass-through families at `999` draws before accepting the split. It
+closes two of the three observed false rows and keeps the row with p-value
+`0.005`. Its own `142`-replicate binary support run has one false split across
+`426` null rows, `binary_unbalanced_low` Wilson upper bound `0.038809`, and
+minimum signal mean ARI lower confidence `0.832434`, so the binary production
+summary moves from fail-closed to diagnostic-only.
+
+What remains open is no longer the existence of an executable non-cross-fit
+pass-through correction, or a categorical fixed-coordinate whitening path. It
+is direct-categorical support-target validation of the refined profile, the
+cost of repeated selected-family permutations, and proof or prospective
+evidence that the conservative/refined global family is not overblocking signal
+across broader domains.
+
+The selected-family traversal output surface is now explicit. The
+`selected_family_traversal_panel.py` diagnostic compares baseline traversal
+against the fixed-coordinate selected-root/pass-through profile family and
+writes multi-scale node, region, and sample outputs. This closes the previous
+reporting gap where pass-through zones and blocked selected families were
+collapsed into a single flat clustering. The companion UMAP overlay helper can
+now color stable regions first and mark pass-through or guard zones as a
+secondary layer. This does not close the method problem: the refined global
+selected-family profile remains diagnostic-only, and the open mathematical
+work is still broad null confidence, overlap-aware selected-family control,
+categorical validation, and continuous covariance support.
+
+The all-benchmark recheck makes the broader-domain blocker concrete. In the
+all-supported selected-null smoke, direct categorical nulls stay closed, but
+six overlap-template binary null cases inflate and seven signal summaries are
+weak. In the full 120-case single-seed performance pass, the refined profile
+routes as intended and returns 107 ok rows with median ARI `0.955719`, but the
+mean ARI is `0.782567`, exact-K rate is `0.439252`, 13 continuous cases fail
+the current covariance contract, SBM and categorical Dirichlet-multinomial
+collapse, and heavy-overlap/deep-traversal signals remain weak. The next
+method work is therefore not only more selected-null replicates; it also needs
+an overlap-aware selected-family law, continuous covariance support, and
+signal-retention criteria for broader benchmark families.
+
+The selected-family traversal panel reproduces that blocker in the new
+multi-scale output path. A one-replicate full-suite supported smoke completed
+`101` of `106` supported binary/direct-categorical rows before the per-row
+timeout skipped five expensive high-dimensional categorical or overlap rows.
+Completed binary rows had four overlap-template null false splits
+(`overlap_extreme_4c`, `overlap_mod_4c_small`, `overlap_mod_8c_large`, and
+`overlap_unbal_4c_small`), while completed direct-categorical null rows stayed
+closed. Several signal rows remained weak, including high-cardinality
+categorical and heavy-overlap binary cases. Thus the next method problem is
+not output plumbing; it is an overlap-aware selected-family law, runtime
+control for expensive selected-family permutations, and domain-specific signal
+criteria.
+
+The traversal-level follow-up shows that traversal is the right next criterion
+for method choice. Fixed `coordinate_bh` gates recover useful signal after the
+adaptive sibling projection is removed: in an eight-replicate six-case smoke,
+mean signal ARI is around `0.879`--`0.921` for the binary transfer set and
+`0.810`--`0.831` for the direct categorical transfer set across penalties
+`10`--`50`. However, selected-null traversal still false-splits too often:
+at penalty `50`, the maximum false-split rate is `0.125` across the binary
+cases and `0.250` across the categorical cases. The remaining open object is
+therefore not the sibling projected-Wald subspace itself. It is the selected
+topology plus edge-reachable traversal null law, or a formally justified
+traversal penalty that controls false splits while preserving the fixed-gate
+signal behavior.
 
 The problem decomposition is now sharper: missing sibling calibration support
 is caused upstream by tree and edge selection. Under pure Bernoulli null data,
@@ -969,6 +1404,428 @@ is only `0.16343`.
     whether internal empirical inflation is estimating a real fuller
     selected-hierarchy tail, over-penalizing selected non-null contexts, or
     mixing incompatible support regimes.
+45. What structural-homogeneity condition should a selected sibling split
+    satisfy in overlap regimes? The overlap structural sibling diagnostic shows
+    that the current refined-profile binary overlap null failures are not
+    explained by edge/sibling support living in unrelated coordinate subspaces:
+    accepted null splits have the expected barycentric edge/sibling alignment.
+    Their weak point is near-zero or negative within-child pairwise Jaccard
+    homogeneity gain. The diagnostic now also checks explicit
+    structure-versus-homogeneity support overlap, so future cases can be
+    separated into weak-gain failures and true structural-homogeneity subspace
+    mismatches. It also separates same-subspace heterogeneity from unrelated
+    subspace signal: a child becoming more heterogeneous in the selected
+    structural coordinates is a different object from a significant contrast
+    carried by unrelated coordinates. The open method question is therefore a
+    traversal-aware structural sibling check with at least three outcomes:
+    homogeneous same-subspace split, heterogeneous same-subspace warning, and
+    unrelated/weak structural evidence.
+    The first threshold sweeps say the important overlap threshold is
+    homogeneity gain, not sibling alpha: sibling p-value thresholds from
+    `0.001` to `0.05` do not distinguish the best rows. However, the
+    three-replicate check shows no stable production threshold in the tested
+    grid. Around `0.02` blocks null false accepts and truth-misaligned accepts
+    but retains only `12/17` truth-aligned signal accepts; around `0.01`
+    retains more signal but keeps truth-misaligned accepts.
+    The context-binned threshold diagnostic narrows this further: deep/internal
+    accepted splits are separable with permissive structural thresholds, while
+    shallow/root and large-parent contexts either lose truth-aligned signal or
+    keep truth-misaligned signal. The open object is therefore a
+    context-conditioned traversal structural law, not a single scalar cutoff.
+    The continuous-rule follow-up makes this sharper. A smooth surface over
+    depth, parent size, and barycentric balance is the right rule shape, but
+    additive continuous thresholds alone do not close the overlap problem. The
+    first `432`-rule grid and a finer `1200`-rule grid both find no clean
+    candidate. All null accepts and all truth-misaligned signal accepts sit in
+    the weak-homogeneity region, while only `12/17` truth-aligned signal
+    accepts are structurally same-subspace supported. The remaining `5/17`
+    truth-aligned rows overlap the weak region. The next method object is
+    therefore not a forced accept threshold; it is a continuous structural
+    decision with an explicit ambiguous or unstable multi-scale zone, plus a
+    selected-family null law if those weak rows must ever be promoted.
+    The current diagnostic rule can be written as a signed-margin traversal
+    surface, not as a global cutoff:
+    \[
+    \tau(u)=\tau_0+\lambda_d e^{-d(u)/s_d}
+    +\lambda_n\frac{\log(1+n_u)}{\log(1+n_{\mathrm{ref}})}
+    +\lambda_b(0.5-b_u)_+.
+    \]
+    A row is a stable structural accept only when the original traversal split
+    is accepted, the structural status is same-subspace supported, and the
+    three margins \(h_u-\tau(u)\), \(c_u-c_0\), and
+    \(\log(\alpha/p_u)\) are all nonnegative. This rule is continuous in
+    depth, size, and balance; shallow, root, large-parent, and imbalanced
+    contexts are penalized smoothly rather than by discrete bins.
+    The decision-zone panel makes the multi-scale interpretation explicit. In
+    the three-replicate overlap run, `stable_structural_accept` contains `12`
+    accepted rows, all truth-aligned signal. The
+    `unstable_weak_homogeneity_zone` contains all `23` selected-null accepted
+    rows, all `20` truth-misaligned signal accepted rows, and the remaining
+    `5` truth-aligned signal accepted rows. This means the stable region is a
+    clean diagnostic accept set in the focused run, but the weak zone is a
+    mixture distribution. Production traversal should expose that weak zone as
+    unstable/multi-scale unless a selected-family null law can separate its
+    real-signal rows from selected null or truth-misaligned rows.
+    The weak-zone separability panel tests that last clause directly. Within
+    `unstable_weak_homogeneity_zone`, homogeneity-like metrics rank weak
+    truth-aligned rows above selected nulls, but they do not separate the full
+    selected-family mixture. Against selected null alone,
+    `homogeneity_gain_min` has `AUC = 0.991304` and a zero-null threshold
+    retains `4/5` weak truth-aligned rows. Against selected null plus
+    truth-misaligned signal, the best zero-negative scalar rule retains only
+    `2/5` weak truth-aligned rows, and the highest-AUC combined metric retains
+    `0/5` at zero leakage. Thus the remaining weak-zone problem is not alpha
+    or scalar-threshold tuning; it is a selected-family mixture law or a
+    deliberate unstable-zone reporting rule.
+    Family-wise aggregation confirms the same conclusion. When unstable rows
+    are grouped by `(case_id, data_role, replicate)`, selected-family
+    p-value metrics perfectly separate weak truth-aligned families from
+    selected-null families in the focused run (`AUC = 1.0`, zero-null
+    retention `5/5`). But truth-misaligned signal families can have still more
+    extreme selected-family p-values, so against selected-null plus
+    truth-misaligned families the p-value metrics retain `0/5` positives at
+    zero leakage. The best combined family-level zero-negative rule retains
+    only `2/5` weak truth-aligned families. Thus the selected-family object
+    must condition on more than family extremeness; it must distinguish true
+    structural recovery from selected but truth-misaligned signal.
+    The oracle truth-geometry panel identifies what this means structurally.
+    Weak truth-aligned rows are balanced or partial truth recovery, while many
+    truth-misaligned rows are one-sided pure fragments, diffuse mismatches, or
+    wrong-granularity splits. One-sided pure fragments can have very strong
+    selected-family evidence because one child is nearly pure, but the sibling
+    side is a mixed remainder. The selected-family traversal law therefore
+    needs a structural recovery target, not only an extremeness target.
+    The non-oracle recovery-proxy panel shows which part of that target is
+    currently reachable without truth labels. Size balance, edge-norm balance,
+    homogeneity symmetry, and a fragment-risk proxy strongly distinguish
+    truth recovery from one-sided fragment-like rows; the fragment-risk proxy
+    has `AUC = 0.955556` against fragments and retains `3/5` recovery rows at
+    zero fragment leakage. But these proxies do not separate recovery from all
+    non-recovery modes: the best full non-recovery metric retains only `1/5`
+    recovery rows at zero leakage. Thus a production fragment-risk guard is a
+    plausible next runtime diagnostic, but diffuse mismatch and wrong
+    granularity still need selected-family recovery theory or explicit
+    unstable-zone reporting.
+    The fragment-risk guard scan turns that into a concrete candidate threshold
+    family. In the focused run, `fragment_risk_proxy_score >= 1.252729` blocks
+    `8/9` fragment-like weak rows while retaining `5/5` truth-recovery rows.
+    Size/barycentric/edge-balance guards also block `7/9` fragment-like rows
+    with no truth-recovery loss. These thresholds are not production
+    calibrated, but they identify the next narrow runtime experiment:
+    guard one-sided weak fragment risk while leaving diffuse/wrong-granularity
+    weak rows in the unstable multi-scale zone.
+    The diagnostic traversal-policy composer performs that experiment without
+    changing production behavior. Using the exact focused threshold
+    `fragment_risk_proxy_score >= 1.252728536810977`, it keeps the `12` stable
+    structural accepts clean, moves `15` weak-zone rows into
+    `weak_fragment_guard_blocked`, and leaves `33` weak rows in
+    `weak_unstable_multiscale_zone`. The blocked weak rows include `8/9`
+    fragment-like rows, `6/23` selected-null rows, and no truth-recovery rows.
+    The remaining unstable zone still contains `17` selected-null rows, all
+    `5` truth-recovery rows, `1` fragment-like row, `10` diffuse/wrong rows,
+    and `11` truth-misaligned signal rows. Thus the fragment guard reduces
+    one-sided over-fragmentation but does not solve the selected-family
+    recovery law.
+    The residual family-recovery panel isolates that remaining law after
+    fragment blocking. In the residual weak multi-scale zone, there are `8`
+    selected-null families, `5` truth-recovery families, and `3` non-recovery
+    signal families. Family p-value extremeness separates recovery from
+    selected null (`AUC = 1.0`, zero-null retention `5/5`), but not from
+    non-recovery selected signal (`AUC = 0.666667`, zero-negative retention
+    `0/5`). Against selected-null plus non-recovery families, p-value
+    extremeness still ranks well (`AUC = 0.909091`) but has zero-negative
+    retention `0/5`. The best structural residual non-recovery separator is
+    `residual_min_fragment_risk_proxy_score` with `AUC = 0.866667`, retaining
+    only `3/5` recovery families at zero non-recovery leakage. Thus the
+    remaining selected-family law must condition on structural recovery, not
+    only on family p-value extremeness.
+    The residual eligibility diagnostic turns this into three explicit gates.
+    The selected-family null-evidence gate,
+    `residual_neg_log10_min_sibling_p_value > 8.454637`, retains `5/5`
+    truth-recovery families and selects `0/8` selected-null families. The
+    non-recovery structural gate,
+    `residual_min_fragment_risk_proxy_score > 0.747520`, retains `3/5`
+    truth-recovery families and selects `0/3` non-recovery families. The
+    strict all-negative structural gate,
+    `residual_min_fragment_risk_proxy_score > 1.076065`, retains only `2/5`
+    recovery families while selecting `0/11` selected-null or non-recovery
+    negatives. Thus the current threshold hierarchy is: p-value thresholds are
+    useful for null evidence; fragment-risk/structural thresholds are useful
+    for non-recovery control; neither alone is a production selected-family
+    recovery law.
+    The threshold hierarchy synthesis makes the staged interpretation explicit.
+    Continuous structural margins retain `12/17` truth-aligned accepted rows
+    with `0/43` selected-null or truth-misaligned accepted rows. The
+    fragment-risk guard blocks `8/9` fragment-like weak rows while blocking
+    `0/5` truth-recovery rows. Residual p-value evidence retains `5/5`
+    recovery families with `0/8` selected-null families, but residual
+    structural non-recovery control retains only `3/5` recovery families, and
+    strict all-negative structural control retains only `2/5`. The unresolved
+    final mixture is exactly the hard part: `2/5` recovery families and `1/3`
+    non-recovery families have selected-family null evidence without enough
+    structural recovery evidence.
+    The residual transfer diagnostic checks whether those focused cutpoints
+    are stable under leave-one-case and leave-one-replicate recomputation. They
+    are not. The residual null-evidence threshold keeps `5/5` held-out recovery
+    families but leaks `1/8` selected-null and `1/3` non-recovery families in
+    both split kinds. The residual non-recovery structural threshold keeps
+    `3/5` recovery families but leaks selected-null families heavily (`7/8`
+    leave-one-case, `5/8` leave-one-replicate) and still leaks `1/3`
+    non-recovery families. The strict all-negative structural threshold keeps
+    only `2/5` recovery families and still leaks selected-null families under
+    transfer. These thresholds therefore explain failure modes but cannot be
+    treated as transferable calibration constants.
+    The threshold stability contract closes the current diagnostic loop:
+    continuous stable accepts are `stable_reporting_candidate`, the fragment
+    guard is `diagnostic_only_guard_candidate`, the three residual cutpoints
+    are `nontransferable_focused_cutpoint`, and the residual null-evidence-only
+    mixture is `selected_family_law_required`. The resulting promotion status
+    is `fail_closed_selected_family_law_required`. Thus the immediate method
+    answer is not a new scalar threshold; it is multi-scale reporting plus a
+    selected-family structural recovery law.
+    The selected-family law-requirement envelope makes that next object
+    explicit. The missing law must condition on residual family size,
+    selected-family p-value evidence, homogeneity gain, continuous context
+    margin, subspace consensus, depth, parent size, barycentric balance,
+    fragment risk, balanced recovery proxy, size balance, and edge-norm
+    balance. In the focused residual set there are `5` truth-recovery
+    families, `3` non-recovery signal families, and `8` selected-null-like
+    families. The requirement statuses are
+    `law_required_not_transferable_cutpoint`,
+    `law_required_structural_target_missing`,
+    `fail_closed_transfer_not_satisfied`, and
+    `stable_reporting_only_no_production_promotion`. Thus the desired
+    traversal rule is continuous and context-conditioned: shallow/root,
+    large-parent, imbalanced, weak-homogeneity, and subspace-incoherent
+    families need stronger structural evidence than deep/internal,
+    same-subspace, balanced families, and residual weak families remain
+    unstable multi-scale output until this law transfers.
+    The conditional Bayesian diagnostic tests the same direction without
+    permutations. It maps selected-family p-values to lower-bound Bayes-factor
+    evidence, adds a selection-context penalty, and adds a structural
+    neighborhood likelihood from homogeneity, continuous context margin,
+    subspace consensus, balance, recovery proxy, and fragment risk. This
+    confirms why p-value evidence cannot dominate the traversal law: in the
+    focused residual run, `0/8` selected-null and `0/3` non-recovery families
+    pass the strong-neighborhood candidate rule, but only `1/5`
+    truth-recovery families passes. The other residual recovery families have
+    extreme selected-family evidence but insufficient or incoherent
+    neighborhood likelihood. Thus the Bayesian law is the right form, but the
+    open work is estimating or deriving a structural neighborhood likelihood
+    that retains more real recovery without reopening selected-null or
+    wrong-granularity selected families.
+    The component audit localizes this likelihood gap. Selected-null residual
+    families have `0/8` coherent candidates and are limited by
+    `context_margin_log_bayes_factor` in all rows, which means the context
+    margin is a useful selected-null blocker. Non-recovery families have `0/3`
+    coherent candidates and are limited by context margin in `2/3` rows and
+    subspace in `1/3`. Truth-recovery families have only `1/5` coherent
+    candidates; the blocked recovery rows are limited by balanced-recovery
+    proxy in `2/4`, context margin in `1/4`, and subspace in `1/4`. Therefore
+    the next Bayesian law should not weaken the context-margin blocker
+    globally. It should instead replace the current coarse balanced-recovery
+    and subspace proxies with a conditional overlap-recovery likelihood that
+    recognizes coherent recovery in overlapping internal-node neighborhoods.
+    The internal-node likelihood probe sharpens that target. A row-level
+    overlap-aware screen with nonnegative context margin, soft subspace support
+    (`0.15`), size balance (`0.33`), edge-norm balance (`0.49`), and fragment
+    risk at most `1.25` selects `4/5` truth-recovery internal nodes while
+    selecting `0/17` selected-null, `0/10` diffuse/wrong, and `0/1`
+    fragment-like rows in the focused residual panel. The recovered rows
+    include partial-truth `overlap_mod_8c_large` nodes that the family-level
+    Bayesian aggregate rejected because their selected families also contained
+    diffuse/wrong neighboring rows. Thus the selected-family law should not
+    force a single family-level open/closed decision. It should score coherent
+    internal nodes inside selected families and report mixed families as
+    multi-scale structures.
+    The internal-node sensitivity scan then separates a stable conditional
+    gate from softer tuning degrees of freedom. In a `324`-point grid around
+    the row-level probe, `216` rules have zero negative selected nodes and `24`
+    rules retain at least `4/5` truth-recovery nodes with zero negatives. The
+    default rule is in that zero-negative recovery-retaining band. The decisive
+    term is context margin: relaxing the floor to `-0.002` leaks negative rows
+    in all `108/108` grid points, while floors `0.0` and `0.002` have zero
+    leakage. The cost of raising the floor to `0.002` is lower maximum recovery
+    retention (`3/5` instead of `4/5`). Thus the conditional Bayesian law
+    should keep nonnegative context margin as a hard local neighborhood
+    condition and treat subspace, balance, and fragment-risk tolerances as the
+    softer overlap-aware likelihood terms.
+    The transfer scan confirms this distinction. Rules selected on
+    leave-one-case training splits transfer with zero leakage (`72/72` selected
+    rule evaluations) and median held-out recovery retention `0.75`. In
+    leave-one-replicate transfer, all `24` leakage evaluations come from rules
+    with `context_margin_floor = -0.002`; restricting to nonnegative
+    context-margin rules gives `72/72` zero-leakage replicate evaluations.
+    However, nonnegative-context replicate transfer still has maximum recovery
+    retention `0.666667` and median `0.5`, so the law is not ready for
+    production promotion. The stable claim is narrower: context margin should
+    be a nonnegative conditional gate; the remaining recovery problem is
+    modeling overlap-internal subspace/balance/fragment structure strongly
+    enough to recover more real nodes without relaxing context.
+    The transfer-gap audit resolves which side of that statement the remaining
+    miss belongs to. In the row-level likelihood output, `4/5` truth-recovery
+    internal nodes are recovered and `0/28` negative rows are selected. The
+    single missed truth-recovery row,
+    `overlap_unbal_4c_small` replicate `1` node `N797`, passes the soft
+    structural checks for subspace, size balance, edge-norm balance, and
+    fragment risk; its only blocking component is negative local context
+    margin (`-0.005752`). Since relaxed-context transfer rules produce `24`
+    leakage evaluations while nonnegative-context rules produce `0`, this
+    miss should not be repaired by lowering the local context gate. It is the
+    first compact target for a higher-order conditional or Bayesian law:
+    condition on ancestor, selected-family, or neighborhood evidence and
+    allow a context-negative local node only when the larger selected
+    structure supplies coherent recovery evidence.
+    The income/outcome junction diagnostic refines the target further. The law
+    cannot be only degree-aware; it must know which incident relation is
+    incoming and which relations are outgoing. In the focused residual panel,
+    `32/33` rows have an observed incoming parent relation, but
+    `0/33` have nonnegative incoming parent context. Four truth-recovery rows
+    are recovered anyway because their own outgoing child-sibling evidence is
+    locally supported. The remaining missed row is the income/outcome
+    transition case: `overlap_unbal_4c_small` replicate `1` node `N797` has
+    incoming parent zone `nonaccepted_or_leaf`, incoming context margin
+    `-0.014967`, outgoing context margin `-0.005752`, and passes outgoing soft
+    structural checks. This points to a conditional object of the form
+    \[
+    P(H_u \mid I_u, O_u, I_u \to O_u, \mathcal S_u),
+    \]
+    where \(I_u\) is incoming selected-parent evidence, \(O_u\) is outgoing
+    child-sibling evidence, \(I_u \to O_u\) is the transition relation, and
+    \(\mathcal S_u\) is the selected traversal event. Leaves and roots are
+    still special degree cases, but the internal traversal law must be a
+    directional incidence law over incoming and outgoing roles.
+    The branch-incidence panel then removes the parent-context proxy by
+    computing the actual incoming edge vector, incoming selected-family
+    contrast, and outgoing child-sibling contrast from descendant means. This
+    changes the interpretation: `0/5` annotated truth-recovery rows are
+    branch-transition candidates, and `5/5` are coordinate branch-incidence
+    mismatches.
+    The missed `overlap_unbal_4c_small` replicate `1` node `N797` has
+    incoming-family/outgoing top-k Jaccard `0.0` and absolute cosine
+    `0.112750`, so it is not a clean weak-income to coherent-outcome
+    transition. The richer metric-family check gives the same result:
+    top-coordinate overlap, raw cosine, centered cosine, diagonal
+    Fisher-weighted cosine, and Fisher-weighted top-coordinate overlap all
+    leave the missed row below the weak compatibility floor; its best score is
+    `0.112750`. Across annotated rows, the median truth-recovery
+    metric-family score is only `0.029662`, while the negative median is
+    `0.043478`. The four rows recovered by local internal-node likelihood are
+    also metric-family branch mismatches. Thus the next Bayesian law should
+    not require incoming/outgoing branch alignment as a hard recovery
+    condition. It needs at least two latent modes: a continuation mode, where
+    outgoing structure follows the incoming branch, and an emergent
+    local-outcome mode, where outgoing structure is coherent but appears in a
+    different subspace from the selected incoming branch.
+    The Bayesian incidence-mode law formalizes that two-mode interpretation
+    and records the current fail-closed boundary. Continuation mode has `0`
+    candidates in the focused overlap panel because metric-family
+    branch-incidence alignment is absent. The positive-context local-outcome
+    mode selects `4` rows, all truth-recovery and no negatives. The
+    context-negative emergent mode is not identified: it contains `26`
+    ambiguous rows, with `1`
+    truth-recovery row and `25` negative rows. Therefore the currently
+    defensible diagnostic law is a local-outcome law with a hard nonnegative
+    context condition. The missing mathematical object is now narrower:
+    identify an additional conditioning variable that separates the one true
+    context-negative emergent row from the selected-null, diffuse/wrong, and
+    fragment-like context-negative emergent rows.
+    The edge-conditioning follow-up checks the most direct candidate variable:
+    child-parent edge tests. The tests are present in the gate annotation
+    contract, and the branch-incidence panel now exports incoming-node,
+    incoming-sibling, and outgoing-child edge p-values and BH rejection flags.
+    Inside the `26` context-negative emergent rows, however, edge evidence does
+    not identify the true row. The best outgoing edge-strength variables have
+    rank AUC `0.916667`, but no zero-negative separator: the truth row has
+    outgoing negative-log BH evidence `177.772205`, while negative rows reach
+    the p-value floor at `300.0`. The binary edge-rejection variables are
+    saturated as well: incoming and outgoing edge rejection counts are `2` for
+    the truth row and for the negatives. Therefore the additional conditioning
+    variable cannot be raw edge-test significance or edge-strength alone; it
+    must encode selected neighborhood/topology structure, bounded evidence
+    behavior, or a higher-order conditional relation among ancestor, incoming,
+    outgoing, and selected-family events.
+    The topology-conditioning scan tests that next family directly. It finds a
+    focused single-positive candidate: the higher-order relation
+    `balance_product = incoming_branch_balance * outgoing_balance` separates
+    the one context-negative emergent truth row from all `25` negatives in the
+    current slice. The truth value is `0.232891`, the largest negative is
+    `0.222500`, and the max-negative margin is `0.010391`. Pure outgoing
+    balance also separates (`0.492891` truth versus `0.491304` max negative),
+    but by a narrow margin. This is the first concrete candidate in the right
+    mathematical direction: a directional selected-neighborhood topology
+    relation between the incoming branch and outgoing decomposition, not raw
+    edge significance. It is still not a law: the positive count is `1`, no
+    categorical topology status separates, and the threshold is a focused
+    max-negative cutpoint. The next open step is transfer validation of this
+    incoming/outgoing balance product, ideally as a smooth conditional
+    likelihood term rather than a hard tuned threshold.
+    The transfer audit makes that last warning concrete. In leave-one-case
+    validation, `balance_product` has zero held-out negative leakage in folds
+    where a training separator exists, but those folds contain no held-out
+    truth; the fold holding out the only truth row has no training truth
+    support. The summary status is
+    `transfer_unvalidated_no_truth_holdout_support`. Leave-one-replicate
+    validation gives the same status for `balance_product`, while neighboring
+    topology metrics leak held-out negatives. Thus the extra conditioning
+    variable is not the existing edge tests and not a deployable balance
+    threshold. The next object must be a regularized conditional/Bayesian
+    selected-neighborhood term that can borrow structure across cases while
+    still preserving income/outcome direction and selected-family context.
+    The first version of that object is now explicit as a diagnostic
+    component law. It scores the vector
+    \[
+    Z_u =
+    (B^{\mathrm{in}}_u,\ B^{\mathrm{out}}_u,\
+    E^{\mathrm{out}}_u,\ F^{\mathrm{out}}_u,\
+    S_u,\ C_u),
+    \]
+    where the entries represent incoming branch balance, outgoing child
+    balance, outgoing edge-norm balance, outgoing anti-fragment evidence,
+    selected-family evidence, and context margin. With fixed beta likelihood
+    ratios favoring coherent topology, the focused truth row is ranked first:
+    posterior-style log odds `34.101999` versus maximum negative `29.147130`.
+    The component audit shows why this is different from the failed edge-test
+    route: outgoing balance and outgoing edge-norm balance rank the truth row
+    first, while selected-family evidence and context penalty are supporting
+    terms rather than stand-alone gates. This is still not production
+    calibration, because the priors are fixed diagnostics and the support set
+    contains only one context-negative truth row. The next mathematical task is
+    to turn this vector law into a pooled conditional model over selected
+    families and overlap cases, with uncertainty on component weights and an
+    explicit fail-closed rule when posterior support is weak.
+    The sensitivity audit strengthens the interpretation of \(Z_u\). Across
+    `13` component profiles and `5` context penalty weights, `60/65` profiles
+    top-rank and separate the focused truth row. All topology-only profiles
+    separate, all outgoing-topology-only profiles separate, and
+    selected-family plus context separates in `0/5` weights. Therefore the
+    current missing variable should be modeled as structural selected
+    neighborhood topology, especially coherent outgoing topology conditioned by
+    the incoming/family event, rather than as selected-family evidence or
+    context margin alone.
+    The conditional topology-law panel makes that object directed and
+    incidence-aware. It distinguishes the root's two outgoing edges from
+    internal nodes' one incoming plus two outgoing edges, and it treats leaves
+    as one-incoming/no-outgoing terminal rows rather than sibling-test
+    candidates. This non-permutation law keeps the focused context-negative
+    truth row ranked first with conditional log-odds margin `4.694486`, while
+    selected-family/context-only rows cannot promote without coherent outgoing
+    topology. The important result is the fail-closed boundary: the internal
+    stratum still has only one truth-recovery row, so the law reports
+    `support_insufficient_fail_closed` instead of becoming a traversal rule.
+    The open object is therefore not raw edge strength, global homogeneity, or
+    a max-negative topology threshold. It is a support-aware selected
+    neighborhood conditional law over root/internal/pass-through incidence and
+    income/outcome topology.
+    The regression-gate benchmark separates this diagnostic conclusion from
+    production clustering behavior. Passing the refined profile through the
+    standard benchmark path eliminates default KL skips on the 17-case
+    regression gate and improves skip-as-zero mean ARI from `0.388484` to
+    `0.445742`, but ok-only mean ARI drops from `0.600384` to `0.445742` and
+    some easy non-overlap cases under-split. Thus the vector law is a
+    benchmark-supported diagnostic conditioning object; turning it into a
+    production traversal decision still requires a calibrated posterior rule
+    and broader benchmark validation.
 
 ## Evidence
 
@@ -1028,6 +1885,115 @@ is only `0.16343`.
   predicate-level debug of the zero-admissible selected-tail promotion result.
 - `wiki/sources/internal-calibration-q9-q10-q11-debug-20260605.md` records the
   implementation-vs-validation debug for Q9/Q10/Q11.
+- `wiki/sources/refined-profile-all-benchmark-tests-20260614.md` records the
+  all-supported selected-null smoke and full 120-case performance pass for the
+  refined global pass-through profile.
+- `wiki/sources/overlap-structural-sibling-panel-20260614.md` records the
+  focused overlap structural sibling diagnostic and the weak-homogeneity-gain
+  finding for selected-null overlap false splits.
+- `wiki/sources/overlap-structural-threshold-sensitivity-20260614.md` records
+  the post-run threshold sweep over homogeneity, heterogeneity, subspace
+  consensus, and sibling p-value thresholds.
+- `wiki/sources/overlap-structural-context-thresholds-20260614.md` records the
+  context-binned threshold diagnostic over depth, parent size, balance, and
+  subspace consensus.
+- `wiki/sources/overlap-structural-continuous-rule-20260614.md` records the
+  continuous traversal-context threshold surface, the coarse and fine grid
+  failures, and the resulting ambiguous-zone interpretation.
+- `wiki/sources/overlap-structural-decision-zones-20260614.md` records the
+  three-way stable/unstable/nonaccepted zone diagnostic and the accepted-row
+  crosstab showing that null and truth-misaligned accepts all fall into the
+  unstable weak-homogeneity zone.
+- `wiki/sources/overlap-weak-zone-separability-20260614.md` records the
+  unstable-zone metric AUC and zero-negative threshold scan showing that scalar
+  thresholds rank but cannot safely recover all weak truth-aligned rows.
+- `wiki/sources/overlap-weak-family-thresholds-20260614.md` records the
+  family-wise weak-zone aggregation and shows that selected-family p-values
+  solve weak signal versus selected null but not weak signal versus
+  truth-misaligned selected-family signal.
+- `wiki/sources/overlap-weak-truth-geometry-20260614.md` records the oracle
+  truth-geometry classification showing balanced/partial recovery versus
+  one-sided pure fragments, diffuse mismatches, and wrong-granularity weak
+  selected families.
+- `wiki/sources/overlap-recovery-proxy-separability-20260614.md` records the
+  non-oracle proxy scan showing that structural symmetry proxies detect
+  one-sided fragment risk but do not solve all weak non-recovery modes.
+- `wiki/sources/overlap-fragment-risk-guard-20260614.md` records the
+  diagnostic guard-threshold scan showing fragment-risk and balance thresholds
+  can block most one-sided fragment-like rows in the focused overlap run while
+  retaining truth-recovery rows.
+- `wiki/sources/overlap-diagnostic-traversal-policy-20260614.md` records the
+  diagnostic composition of stable structural accepts, fragment-risk blocking,
+  and unresolved weak multi-scale rows.
+- `wiki/sources/overlap-residual-family-recovery-20260614.md` records the
+  post-fragment residual selected-family threshold scan showing where p-value
+  and structural metrics still fail.
+- `wiki/sources/overlap-residual-recovery-eligibility-20260614.md` records the
+  explicit residual null-evidence, non-recovery structural, and strict
+  all-negative structural gates.
+- `wiki/sources/overlap-threshold-hierarchy-20260614.md` records the ordered
+  threshold synthesis across stable-row, fragment-guard, residual-null, and
+  residual-structural stages.
+- `wiki/sources/overlap-residual-threshold-transfer-20260614.md` records the
+  leave-one-case and leave-one-replicate transfer check showing focused
+  residual thresholds are not stable calibration constants.
+- `wiki/sources/overlap-threshold-stability-contract-20260614.md` records the
+  diagnostic fail-closed stability contract over the threshold hierarchy.
+- `wiki/sources/overlap-selected-family-law-requirements-20260614.md` records
+  the conditioning envelope and validation obligations for the missing
+  selected-family structural recovery law.
+- `wiki/sources/overlap-conditional-bayesian-traversal-law-20260615.md`
+  records the first non-permutation posterior-style selected-family diagnostic
+  and shows that p-value Bayes evidence still needs strong neighborhood
+  structural likelihood.
+- `wiki/sources/overlap-bayesian-neighborhood-component-audit-20260615.md`
+  records which neighborhood likelihood components block selected-null,
+  non-recovery, and truth-recovery residual families.
+- `wiki/sources/overlap-internal-node-bayesian-likelihood-probe-20260615.md`
+  records the row-level overlap-aware likelihood probe and the resulting
+  internal-node versus selected-family distinction.
+- `wiki/sources/overlap-internal-node-likelihood-sensitivity-20260615.md`
+  records the row-level likelihood threshold sensitivity scan and identifies
+  nonnegative context margin as the stable conditional gate.
+- `wiki/sources/overlap-internal-node-likelihood-transfer-20260615.md`
+  records held-out case and replicate transfer for the row-level likelihood
+  threshold family.
+- `wiki/sources/overlap-internal-node-transfer-gap-audit-20260615.md` records
+  that the single remaining truth-recovery miss is context-negative but
+  soft-structure supported, while relaxed local context leaks.
+- `wiki/sources/overlap-income-outcome-junction-law-20260615.md` records the
+  directional incidence diagnostic separating incoming selected-parent context
+  from outgoing child-sibling evidence and identifying the transition law
+  target.
+- `wiki/sources/overlap-branch-incidence-junction-panel-20260615.md` records
+  the true branch-vector diagnostic showing the focused truth-recovery rows
+  are not explained by incoming/outgoing branch alignment.
+- `wiki/sources/overlap-bayesian-incidence-mode-law-20260615.md` records the
+  two-mode diagnostic Bayesian law and its fail-closed boundary for
+  context-negative emergent rows.
+- `wiki/sources/overlap-context-negative-edge-conditioning-20260615.md`
+  records the edge-test conditioning scan showing that child-parent edge
+  evidence exists but does not separate the context-negative emergent truth row
+  from negative ambiguous rows.
+- `wiki/sources/overlap-context-negative-topology-conditioning-20260615.md`
+  records the selected-neighborhood topology scan and the single-positive
+  incoming/outgoing balance-product candidate.
+- `wiki/sources/overlap-context-negative-topology-transfer-20260615.md`
+  records the held-out transfer audit showing the balance-product candidate is
+  not yet validated as a threshold rule.
+- `wiki/sources/overlap-context-negative-bayesian-topology-law-20260615.md`
+  records the continuous selected-neighborhood topology component law and its
+  focused-slice ranking behavior.
+- `wiki/sources/overlap-context-negative-bayesian-topology-sensitivity-20260615.md`
+  records the component-ablation and context-penalty robustness audit.
+- `wiki/sources/overlap-conditional-topology-law-panel-20260615.md` records
+  the non-permutation directed-incidence topology law. The focused
+  context-negative truth row remains top-ranked, but the law reports
+  `support_insufficient_fail_closed` because the internal support stratum still
+  has only one truth-recovery row.
+- `wiki/sources/topology-vector-benchmark-20260615.md` records the regression
+  gate benchmark and the dispatch plumbing required to run the refined profile
+  as a standard KL benchmark parameter variant.
 
 ## Links
 
@@ -1038,3 +2004,36 @@ is only `0.16343`.
 - [[oracle-gate-path-diagnostic]]
 - [[top-down-traversal]]
 - [[manuscript-life-science-readiness]]
+- [[overlap-structural-sibling-panel-20260614]]
+- [[overlap-structural-threshold-sensitivity-20260614]]
+- [[overlap-structural-context-thresholds-20260614]]
+- [[overlap-structural-continuous-rule-20260614]]
+- [[overlap-structural-decision-zones-20260614]]
+- [[overlap-weak-zone-separability-20260614]]
+- [[overlap-weak-family-thresholds-20260614]]
+- [[overlap-weak-truth-geometry-20260614]]
+- [[overlap-recovery-proxy-separability-20260614]]
+- [[overlap-fragment-risk-guard-20260614]]
+- [[overlap-diagnostic-traversal-policy-20260614]]
+- [[overlap-residual-family-recovery-20260614]]
+- [[overlap-residual-recovery-eligibility-20260614]]
+- [[overlap-threshold-hierarchy-20260614]]
+- [[overlap-residual-threshold-transfer-20260614]]
+- [[overlap-threshold-stability-contract-20260614]]
+- [[overlap-selected-family-law-requirements-20260614]]
+- [[overlap-conditional-bayesian-traversal-law-20260615]]
+- [[overlap-bayesian-neighborhood-component-audit-20260615]]
+- [[overlap-internal-node-bayesian-likelihood-probe-20260615]]
+- [[overlap-internal-node-likelihood-sensitivity-20260615]]
+- [[overlap-internal-node-likelihood-transfer-20260615]]
+- [[overlap-internal-node-transfer-gap-audit-20260615]]
+- [[overlap-income-outcome-junction-law-20260615]]
+- [[overlap-branch-incidence-junction-panel-20260615]]
+- [[overlap-bayesian-incidence-mode-law-20260615]]
+- [[overlap-context-negative-edge-conditioning-20260615]]
+- [[overlap-context-negative-topology-conditioning-20260615]]
+- [[overlap-context-negative-topology-transfer-20260615]]
+- [[overlap-context-negative-bayesian-topology-law-20260615]]
+- [[overlap-context-negative-bayesian-topology-sensitivity-20260615]]
+- [[overlap-conditional-topology-law-panel-20260615]]
+- [[topology-vector-benchmark-20260615]]

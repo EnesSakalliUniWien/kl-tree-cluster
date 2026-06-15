@@ -1,0 +1,27 @@
+{
+  "source_default_annotations": [
+    "kl_default_annotations.csv",
+    "kl_neighbor_joining_default_annotations.csv"
+  ],
+  "edge_alphas": [
+    1e-08,
+    1e-06,
+    0.0001,
+    0.001,
+    0.01
+  ],
+  "sibling_alphas": [
+    1e-06,
+    0.0001,
+    0.001,
+    0.01,
+    0.05,
+    0.1
+  ],
+  "note": "Post-hoc retreshold of saved default projected-Wald p/q values. This approximates alpha sensitivity without recomputing selected statistics or TreeBH ancestor testing at each alpha.",
+  "outputs": [
+    "posthoc_alpha_sensitivity_summary.csv",
+    "kl_posthoc_alpha_sensitivity_heatmaps.png",
+    "kl_neighbor_joining_posthoc_alpha_sensitivity_heatmaps.png"
+  ]
+}

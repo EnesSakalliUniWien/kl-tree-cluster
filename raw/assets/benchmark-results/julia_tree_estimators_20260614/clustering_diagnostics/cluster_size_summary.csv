@@ -1,0 +1,4 @@
+method,n_genes,n_clusters,singletons,singleton_gene_fraction,non_singleton_clusters,genes_in_non_singletons,median_cluster_size,mean_cluster_size,p90_cluster_size,max_cluster_size,clusters_ge5,genes_in_clusters_ge5,clusters_ge10,genes_in_clusters_ge10,effective_cluster_count,cluster_size_gini
+kl,703,670,648,0.9217638691322901,22,55,1.0,1.0492537313432835,1.0,8,1,8,0,0,649.8233288555749,0.04582705250419312
+kl_neighbor_joining,703,494,406,0.577524893314367,88,297,1.0,1.4230769230769231,2.0,17,21,145,3,38,387.2323425660045,0.2676815959364436
+kl_iqtree3_fast,703,566,478,0.6799431009957326,88,225,1.0,1.2420494699646643,2.0,5,4,20,0,0,513.1259887720761,0.17204660490879572

@@ -20,6 +20,7 @@ from scipy.spatial.distance import pdist, squareform
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
+from benchmarks.shared.util.method_sets import KL_RUNNER_METHODS
 
 
 def _normalize_method_result(
@@ -119,9 +120,11 @@ def run_clustering_result(
             return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
 
-    if method_id in {"kl", "kl_complete", "kl_single"}:
+    if method_id in KL_RUNNER_METHODS:
         metric = str(params["tree_distance_metric"])
-        if distance_condensed is not None:
+        if method_id == "kl_iqtree3":
+            kl_distance_condensed = None
+        elif distance_condensed is not None:
             # Use precomputed distance (e.g. SBM modularity distance).
             kl_distance_condensed = np.asarray(distance_condensed, dtype=float)
         else:
@@ -132,6 +135,12 @@ def run_clustering_result(
                 kl_distance_condensed,
                 alpha,
                 tree_linkage_method=str(params["tree_linkage_method"]),
+                tree_builder=str(params.get("tree_builder", "linkage")),
+                tree_rooting=str(params.get("tree_rooting", "linkage_root")),
+                iqtree_executable=str(params.get("iqtree_executable", "iqtree3")),
+                iqtree_model=str(params.get("iqtree_model", "JC2")),
+                iqtree_threads=int(params.get("iqtree_threads", 1)),
+                iqtree_work_dir=params.get("iqtree_work_dir"),
                 edge_alpha=resolved_edge_alpha,
                 feature_space=feature_space,
                 spectral_minimum_dimension=int(
@@ -139,6 +148,35 @@ def run_clustering_result(
                         "spectral_minimum_dimension",
                         EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
                     )
+                ),
+                sibling_gate_profile=params.get("sibling_gate_profile"),
+                sibling_gate_method=str(
+                    params.get("sibling_gate_method", "projected_wald_inflation")
+                ),
+                sibling_gate_alpha_penalty=float(
+                    params.get("sibling_gate_alpha_penalty", 1.0)
+                ),
+                root_stability_guard_threshold=params.get(
+                    "root_stability_guard_threshold"
+                ),
+                root_stability_subsample_replicates=int(
+                    params.get("root_stability_subsample_replicates", 0)
+                ),
+                root_stability_feature_fraction=float(
+                    params.get("root_stability_feature_fraction", 0.8)
+                ),
+                root_stability_seed=int(params.get("root_stability_seed", 0)),
+                root_selective_permutation_guard_replicates=int(
+                    params.get("root_selective_permutation_guard_replicates", 0)
+                ),
+                root_selective_permutation_guard_seed=int(
+                    params.get("root_selective_permutation_guard_seed", 0)
+                ),
+                root_selective_permutation_guard_alpha=params.get(
+                    "root_selective_permutation_guard_alpha"
+                ),
+                root_selective_permutation_guard_scope=str(
+                    params.get("root_selective_permutation_guard_scope", "root")
                 ),
                 passthrough=bool(params.get("passthrough", config.PASSTHROUGH)),
             )

@@ -1,0 +1,7 @@
+method,size_bin,clusters,genes,gene_fraction
+kl_selected_family,singleton,306,306,0.4352773826458037
+kl_selected_family,n=2,56,112,0.1593172119487909
+kl_selected_family,3-5,26,93,0.13229018492176386
+kl_selected_family,6-10,8,59,0.08392603129445235
+kl_selected_family,11-20,1,16,0.02275960170697013
+kl_selected_family,>20,4,117,0.16642958748221906

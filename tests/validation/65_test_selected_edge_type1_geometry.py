@@ -113,6 +113,17 @@ def test_run_selected_edge_replicate_emits_edge_rows() -> None:
     assert all("edge_raw_p" in row for row in edge_rows)
     assert all("edge_rejected" in row for row in edge_rows)
     assert sibling_rows is not None
+    assert sibling_rows
+    sibling_required = {
+        "sibling_raw_stat",
+        "sibling_adjusted_stat",
+        "sibling_raw_p",
+        "covariance_inferred_df",
+        "covariance_inferred_reference_scale",
+        "sibling_contrast_laplacian_status",
+        "parent_spectral_laplacian_status",
+    }
+    assert sibling_required.issubset(sibling_rows[0])
 
 
 def test_run_selected_edge_replicate_supports_categorical_null() -> None:

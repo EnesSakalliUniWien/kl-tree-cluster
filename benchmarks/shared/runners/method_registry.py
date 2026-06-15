@@ -49,6 +49,46 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
+    "kl_conditional_topology_diagnostic": MethodSpec(
+        name="KL (Conditional Topology Diagnostic)",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_profile": (
+                    "fixed_coordinate_conditional_topology_diagnostic_v1"
+                ),
+            },
+        ],
+    ),
+    "kl_neighbor_joining": MethodSpec(
+        name="KL (Neighbor Joining, MAD Root)",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "tree_builder": "neighbor_joining",
+                "tree_rooting": "mad",
+            },
+        ],
+    ),
+    "kl_iqtree3": MethodSpec(
+        name="KL (IQ-TREE 3, MAD Root)",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "tree_builder": "iqtree3",
+                "tree_rooting": "mad",
+                "iqtree_executable": "iqtree3",
+                "iqtree_model": "JC2",
+                "iqtree_threads": 1,
+            },
+        ],
+    ),
     "kl_diffusion": MethodSpec(
         name="KL (Diffusion)",
         runner=_import_runner(

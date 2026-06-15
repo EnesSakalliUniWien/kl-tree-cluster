@@ -1,0 +1,38 @@
+{
+  "generated_at_utc": "20260615_093821Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_conditional_bayesian_traversal_law",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_bayesian_traversal_law/overlap_conditional_bayesian_traversal_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_bayesian_traversal_law/overlap_conditional_bayesian_traversal_summary.csv"
+  },
+  "parameters": {
+    "ambiguous_posterior_threshold": 0.5,
+    "balanced_recovery_reference": 2.0,
+    "balanced_recovery_weight": 0.75,
+    "base_log_prior_odds": -2.0,
+    "coherent_posterior_threshold": 0.9,
+    "context_margin_weight": 80.0,
+    "depth_credit_weight": 0.45,
+    "depth_scale": 2.0,
+    "edge_norm_balance_reference": 0.5,
+    "edge_norm_balance_weight": 1.0,
+    "family_size_log_penalty_weight": 1.0,
+    "fragment_risk_reference": 1.0,
+    "fragment_risk_weight": 1.5,
+    "homogeneity_gain_weight": 80.0,
+    "imbalance_penalty_weight": 2.0,
+    "incoherent_neighborhood_threshold": 0.0,
+    "p_extreme_log_bayes_factor_threshold": 3.0,
+    "parent_reference_size": 800.0,
+    "parent_size_penalty_weight": 0.55,
+    "size_balance_reference": 0.3333333333333333,
+    "size_balance_weight": 2.0,
+    "strong_neighborhood_log_bayes_factor_threshold": 2.0,
+    "subspace_reference": 0.5,
+    "subspace_weight": 1.5
+  },
+  "production_status": "diagnostic_only_no_permutation_no_production_promotion",
+  "residual_family_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_rows.csv",
+  "schema_version": "overlap_conditional_bayesian_traversal_law/v1",
+  "study_role": "diagnostic_overlap_conditional_bayesian_traversal_law_not_calibration"
+}

@@ -1,0 +1,22 @@
+{
+  "generated_at_utc": "20260614_181533Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_weak_zone_separability",
+  "metrics": [
+    "depth",
+    "n_parent",
+    "barycentric_balance",
+    "neg_log10_sibling_p_value",
+    "homogeneity_gain_min",
+    "subspace_consensus_jaccard_topk",
+    "continuous_homogeneity_threshold",
+    "context_homogeneity_margin"
+  ],
+  "outputs": {
+    "metric_summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_zone_separability/overlap_weak_zone_metric_separability.csv",
+    "threshold_scan": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_zone_separability/overlap_weak_zone_threshold_scan.csv"
+  },
+  "rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_rows.csv",
+  "schema_version": "overlap_weak_zone_separability/v1",
+  "study_role": "diagnostic_overlap_weak_zone_separability_not_calibration",
+  "zone": "unstable_weak_homogeneity_zone"
+}

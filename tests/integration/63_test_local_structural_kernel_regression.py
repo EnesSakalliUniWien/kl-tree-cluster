@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import numpy as np
+import pandas as pd
 import pytest
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.kl_tree_context import build_kl_tree_context
@@ -7,6 +9,7 @@ from benchmarks.shared.runners.kl_runner import _run_kl_method
 from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
+from scipy.spatial.distance import pdist
 
 
 @pytest.mark.slow
@@ -61,3 +64,121 @@ def test_strict_sibling_calibration_preserves_gauss_clear_small() -> None:
         "traversal_sec",
     ):
         assert stage_timings[key] >= 0.0
+
+
+def test_kl_runner_accepts_fixed_sibling_gate_profile() -> None:
+    rng = np.random.default_rng(123)
+    data = pd.DataFrame(
+        rng.integers(0, 2, size=(16, 8)),
+        index=[f"S{index}" for index in range(16)],
+        columns=[f"F{index}" for index in range(8)],
+    )
+    result = _run_kl_method(
+        data,
+        pdist(data.to_numpy(), metric="hamming"),
+        DEFAULT_SIBLING_ALPHA,
+        tree_linkage_method="average",
+        sibling_gate_profile="fixed_global_guarded_v1",
+        root_selective_permutation_guard_replicates=1,
+        root_selective_permutation_guard_seed=19,
+        root_selective_permutation_guard_alpha=0.01,
+    )
+
+    metadata = result.extra["gate_bundle"].metadata.config
+    assert result.status == "ok"
+    assert metadata.sibling_gate_profile_id == "fixed_global_guarded_v1"
+    assert metadata.sibling_gate_method == "fixed_global_chi_square"
+    assert metadata.sibling_gate_alpha_penalty == 50.0
+    assert metadata.root_stability_guard_threshold == 0.24
+    assert metadata.root_stability_tree_distance_metric == "hamming"
+    assert metadata.root_stability_tree_linkage_method == "average"
+    assert metadata.root_selective_permutation_guard_replicates == 1
+    assert metadata.root_selective_permutation_guard_seed == 19
+    assert metadata.root_selective_permutation_guard_alpha == 0.01
+    assert result.extra["sibling_gate_profile"] == "fixed_global_guarded_v1"
+    assert result.extra["sibling_gate_method"] == "fixed_global_chi_square"
+    assert result.extra["sibling_gate_alpha_penalty"] == 50.0
+    assert result.extra["root_stability_subsample_replicates"] == 12
+    assert result.extra["root_stability_tree_distance_metric"] == "hamming"
+    assert result.extra["root_stability_tree_linkage_method"] == "average"
+    assert result.extra["root_selective_permutation_guard_tree_distance_metric"] == (
+        "hamming"
+    )
+    assert result.extra["root_selective_permutation_guard_tree_linkage_method"] == (
+        "average"
+    )
+
+
+def test_kl_runner_selected_root_guard_blocks_known_categorical_false_root() -> None:
+    from benchmarks.diagnostics.calibration.data_independent_sibling_gate_traversal_panel import (
+        _generate_data_with_truth,
+    )
+    from benchmarks.validation.selected_edge_type1_geometry import (
+        _case_contract,
+        _select_cases,
+    )
+    from sklearn.metrics import adjusted_rand_score
+
+    case = next(
+        case
+        for case in _select_cases(suite="full", case_names=("cat_clear_3cat_4c",))
+    )
+    (
+        case_id,
+        source_family,
+        feature_representation,
+        n_samples,
+        n_features,
+        n_categories,
+    ) = _case_contract(case)
+    seed = 20309045
+    results = {}
+    for role in ("null", "signal"):
+        data, feature_space, truth, _true_clusters = _generate_data_with_truth(
+            case=case,
+            case_id=case_id,
+            source_family=source_family,
+            feature_representation=feature_representation,
+            n_samples=n_samples,
+            n_features=n_features,
+            n_categories=n_categories,
+            data_role=role,
+            seed=seed,
+        )
+        run = _run_kl_method(
+            data,
+            pdist(data.to_numpy(dtype=float), metric="hamming"),
+            0.01,
+            tree_linkage_method="average",
+            edge_alpha=0.001,
+            feature_space=feature_space,
+            sibling_gate_profile="fixed_coordinate_selective_root_v1",
+        )
+        annotations = run.extra["annotations"]
+        root = run.extra["tree"].root()
+        metadata = run.extra["gate_bundle"].metadata.config
+        assert metadata.sibling_gate_profile_id == "fixed_coordinate_selective_root_v1"
+        assert metadata.root_selective_permutation_guard_replicates == 99
+        assert metadata.root_selective_permutation_guard_seed == 0
+        assert metadata.root_selective_permutation_guard_alpha == 0.01
+        assert run.extra["root_selective_permutation_guard_replicates"] == 99
+        results[role] = {
+            "found_clusters": int(run.found_clusters),
+            "ari": float(
+                adjusted_rand_score(np.asarray(truth, dtype=int), np.asarray(run.labels))
+            ),
+            "root_selective_p": float(
+                annotations.at[root, "Root_Selective_Permutation_P_Value"]
+            ),
+            "blocked": bool(
+                annotations.at[root, "Root_Selective_Permutation_Guard_Blocked"]
+            ),
+        }
+
+    assert results["null"]["found_clusters"] == 1
+    assert results["null"]["blocked"] is True
+    assert results["null"]["root_selective_p"] == pytest.approx(0.17)
+    assert results["signal"]["found_clusters"] == 6
+    assert results["signal"]["blocked"] is False
+    assert results["signal"]["root_selective_p"] == pytest.approx(0.01)
+    assert results["signal"]["ari"] > 0.75

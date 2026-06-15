@@ -1,0 +1,21 @@
+{
+  "analysis_debug_report": "analysis_debug_report.md",
+  "debug_notes": {
+    "alpha_audit": "alpha_audit/posthoc_alpha_sensitivity_summary.csv retresholds saved q-values and is not a fresh full gate recomputation at each alpha.",
+    "interactive_html": "Use umap_plots/julia_full_umap_interactive_methods_standalone.html for offline or external-script-restricted local review."
+  },
+  "iqtree_mode": "--fast",
+  "iqtree_model": "JC2",
+  "matrix": "/Users/berksakalli/Projects/kl-te-cluster/data/feature_matrices/feature_matrix_julia_GOCC_GOBP_GOMF_combined.tsv",
+  "methods": [
+    "kl",
+    "kl_neighbor_joining",
+    "kl_iqtree3_fast"
+  ],
+  "output_dir": "/tmp/klte_julia_tree_estimators_20260614",
+  "reference_labels": "/Users/berksakalli/Projects/kl-te-cluster/benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_nmi_ordered_20260610/kak_signal_adaptive_reference_labels.csv",
+  "shape": [
+    703,
+    14766
+  ]
+}

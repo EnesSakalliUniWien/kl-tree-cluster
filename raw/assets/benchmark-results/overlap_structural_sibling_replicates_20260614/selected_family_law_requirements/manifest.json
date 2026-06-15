@@ -1,0 +1,12 @@
+{
+  "generated_at_utc": "20260614_191413Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_selected_family_law_requirements",
+  "outputs": {
+    "conditioning_envelope": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/selected_family_law_requirements/overlap_selected_family_conditioning_envelope.csv",
+    "requirements": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/selected_family_law_requirements/overlap_selected_family_law_requirements.csv"
+  },
+  "residual_family_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_rows.csv",
+  "schema_version": "overlap_selected_family_law_requirements/v1",
+  "stability_contract_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_stability_contract/overlap_threshold_stability_contract_rows.csv",
+  "study_role": "diagnostic_overlap_selected_family_law_requirements_not_calibration"
+}

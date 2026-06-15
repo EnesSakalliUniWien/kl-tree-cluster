@@ -1,0 +1,14 @@
+{
+  "bayesian_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_bayesian_traversal_law/overlap_conditional_bayesian_traversal_rows.csv",
+  "generated_at_utc": "20260615_094244Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_bayesian_neighborhood_component_audit",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_neighborhood_component_audit/overlap_bayesian_neighborhood_component_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_neighborhood_component_audit/overlap_bayesian_neighborhood_component_summary.csv"
+  },
+  "p_extreme_log_bayes_factor_threshold": 3.0,
+  "production_status": "diagnostic_only_no_threshold_promotion",
+  "schema_version": "overlap_bayesian_neighborhood_component_audit/v1",
+  "strong_neighborhood_threshold": 2.0,
+  "study_role": "diagnostic_overlap_bayesian_neighborhood_component_audit"
+}

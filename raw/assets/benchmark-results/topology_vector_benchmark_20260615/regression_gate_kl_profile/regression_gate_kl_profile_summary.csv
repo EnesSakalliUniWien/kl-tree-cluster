@@ -1,0 +1,3 @@
+benchmark_variant,rows,ok_rows,skip_rows,mean_ari_ok,median_ari_ok,mean_nmi_ok,median_nmi_ok,mean_found_clusters_ok,exact_k_count,exact_k_total
+default_projected_wald,17,11,6,0.600384290177162,0.6802931292570171,0.6116556614162296,0.8132426959457543,6.363636363636363,3,17
+fixed_coordinate_global_passthrough_refined_v1,17,17,0,0.44574167277085325,0.4670632180855772,0.48128688539097314,0.5624625684445556,5.647058823529412,5,17

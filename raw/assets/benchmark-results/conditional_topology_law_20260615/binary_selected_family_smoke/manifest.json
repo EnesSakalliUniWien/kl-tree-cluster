@@ -1,0 +1,40 @@
+{
+  "created_at_utc": "20260615_121458Z",
+  "schema_version": "selected_family_traversal_panel/v1",
+  "study_role": "diagnostic_selected_family_traversal_not_calibration",
+  "generated_by": "benchmarks.diagnostics.calibration.selected_family_traversal_panel",
+  "config": {
+    "suite": "binary",
+    "case_names": [
+      "binary_2clusters"
+    ],
+    "methods": [
+      "fixed_coordinate_conditional_topology_diagnostic_v1"
+    ],
+    "data_roles": [
+      "null",
+      "signal"
+    ],
+    "sibling_alpha": 0.01,
+    "edge_alpha": 0.001,
+    "replicates": 1,
+    "base_seed": 20260615,
+    "max_null_split_rate": 0.05,
+    "min_signal_mean_ari": 0.75,
+    "skip_unsupported_cases": true,
+    "resume_from_checkpoints": false,
+    "per_row_timeout_seconds": null
+  },
+  "skipped_cases": [],
+  "outputs": {
+    "selected_family_traversal_rows": "raw/assets/benchmark-results/conditional_topology_law_20260615/binary_selected_family_smoke/selected_family_traversal_rows.csv",
+    "checkpoint_rows_dir": "raw/assets/benchmark-results/conditional_topology_law_20260615/binary_selected_family_smoke/checkpoint_rows",
+    "selected_family_guard_rows": "raw/assets/benchmark-results/conditional_topology_law_20260615/binary_selected_family_smoke/selected_family_guard_rows.csv",
+    "multiscale_node_decisions": "raw/assets/benchmark-results/conditional_topology_law_20260615/binary_selected_family_smoke/multiscale_node_decisions.csv",
+    "multiscale_regions": "raw/assets/benchmark-results/conditional_topology_law_20260615/binary_selected_family_smoke/multiscale_regions.csv",
+    "multiscale_gene_assignments": "raw/assets/benchmark-results/conditional_topology_law_20260615/binary_selected_family_smoke/multiscale_gene_assignments.csv",
+    "production_admissibility_components": "raw/assets/benchmark-results/conditional_topology_law_20260615/binary_selected_family_smoke/production_admissibility_components.csv",
+    "production_admissibility_summary": "raw/assets/benchmark-results/conditional_topology_law_20260615/binary_selected_family_smoke/production_admissibility_summary.csv"
+  },
+  "interpretation": "Diagnostic-only selected traversal panel. Fixed-coordinate profiles avoid adaptive parent PCA, and the refined global pass-through profile surfaces the selected-family sibling-min null with Monte Carlo floor refinement. Production behavior remains fail-closed or diagnostic-only."
+}

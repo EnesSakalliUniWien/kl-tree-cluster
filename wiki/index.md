@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-12
+updated: 2026-06-15
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -247,6 +247,35 @@ renamed, or promoted.
   machine learning frameworks for KL-TE diagnostics, selecting selective
   inference, simulation-based inference, conformal risk control, and
   calibration/observability tooling as the most relevant framework stack.
+- [[data-independent-sibling-gate-panel-20260613]] - diagnostic same-data,
+  non-cross-fit sibling-gate candidate using fixed coordinate-wise Wald
+  p-values plus a selected-topology penalty; the `binary_2clusters` smoke
+  controls the selected null near `0.01` while remaining diagnostic-only.
+- [[data-independent-sibling-gate-traversal-panel-20260613]] - traversal-level
+  diagnostic showing that fixed data-independent sibling gates recover strong
+  binary signal and useful categorical signal; the selected-root permutation
+  layer now has both traversal diagnostics and a default-off runtime guard, but
+  production remains fail-closed pending broad confidence evidence.
+- [[fixed-sibling-gate-profile-validation-20260613]] - shared-runner
+  validation artifact proving that named fixed sibling-gate profiles avoid
+  adaptive projected-Wald sibling rows, exposing the selected-root permutation
+  guard in the runtime profile path, packaging
+  `fixed_coordinate_selective_root_v1` and the narrower
+  `fixed_coordinate_selective_passthrough_v1`, and recording the ten-replicate
+  recheck that rejects a hard closed-root barrier, the support run showing
+  `fixed_coordinate_global_passthrough_v1` still has boundary false splits,
+  and `fixed_coordinate_global_passthrough_refined_v1` as the current
+  selected-family pass-through diagnostic candidate after binary support
+  validation moved its production summary from fail-closed to diagnostic-only.
+- [[selected-family-traversal-panel-20260614]] - diagnostic runner comparing
+  baseline traversal with fixed-coordinate selected-root and selected-family
+  profiles, surfacing selected-family guard rows and multi-scale node, region,
+  and sample outputs instead of only a flat clustering.
+- [[refined-profile-all-benchmark-tests-20260614]] - all-supported
+  selected-null smoke and full 120-case performance pass for
+  `fixed_coordinate_global_passthrough_refined_v1`, showing overlap-template
+  null inflation, several weak signal families, continuous covariance-contract
+  errors, and strong but expensive high-dimensional categorical performance.
 
 ### Concepts
 
@@ -269,6 +298,194 @@ renamed, or promoted.
 - [[null-edge-sibling-calibration-enhancement-plan]] - calibration roadmap
   separating selected edge-null law, sibling null support/external selected-tail
   law, and KAK/action traversal geometry before any production rule promotion.
+- [[edge-null-calibration-panel-20260613]] - executable first-phase edge-null
+  diagnostic contract separating fixed-tree null, selected-tree null, and
+  selected-tree signal rows without changing production calibration.
+- [[sibling-null-calibration-panel-20260613]] - sibling-null diagnostic
+  contract separating strict-null, stopped-edge null, selected-nonnull, and
+  external selected-tail contexts.
+- [[traversal-guard-validation-panel-20260613]] - diagnostic guard-validation
+  panel for action/angle traversal geometry, pure-fragment precision, and
+  signal-context blocking.
+- [[production-admissibility-contract-20260613]] - conservative component
+  contract that turns separated diagnostic statuses into explicit
+  production-admissible, diagnostic-only, or fail-closed decisions.
+- [[selected-edge-sibling-null-equation-20260613]] - executable conditional
+  empirical-null equation using barycentric balance, edge action, projection
+  dimension, feature family, and edge-path-open status to estimate matched
+  sibling tail probabilities only when support exists.
+- [[statistic-distribution-shape-panel-20260613]] - diagnostic distribution
+  panel comparing empirical statistic skew/tails against current chi-square df
+  and covariance-inferred Satterthwaite df/scale references.
+- [[covariance-laplacian-panel-20260613]] - graph-Laplacian covariance panel
+  separating diagonal sibling contrast covariance from dense parent spectral
+  covariance connectivity.
+- [[selected-edge-sibling-postrun-analysis-20260613]] - post-run analyzer for
+  enriched selected-edge sibling artifacts, producing distribution-shape and
+  selected edge+sibling equation outputs without promoting a production rule.
+- [[differential-statistic-validity-panel-20260613]] - diagnostic validity
+  layer for projected-Wald sibling statistics, separating Fisher boundary,
+  whitening, projection, and nonsmooth selection geometry before production
+  promotion.
+- [[regularized-wald-statistic-panel-20260613]] - diagnostic comparison of
+  plug-in, Jeffreys-smoothed, Dirichlet-smoothed, and root-shrunk sibling
+  projected-Wald statistics under fixed-tree-first null validation.
+- [[null-law-decomposition-panel-20260613]] - fixed-topology null-law
+  decomposition showing that same-sample adaptive projection breaks the
+  sibling projected-Wald chi-square reference while independent fixed
+  projections are near nominal.
+- [[toomanycells-method-20260613]] - relational method note positioning
+  TooManyCells as a tree-first divisive hierarchical spectral clustering
+  approach with Newman-Girvan modularity stopping, not as a direct KL-TE
+  comparator.
+- [[overlap-structural-sibling-panel-20260614]] - overlap-focused structural
+  sibling diagnostic showing that refined-profile binary overlap null failures
+  have strong selected sibling contrasts but near-zero within-child homogeneity
+  gain, consistent with selected barycentric contrast rather than structural
+  cluster support.
+- [[overlap-structural-threshold-sensitivity-20260614]] - post-run threshold
+  sweeps over overlap structural rows showing that homogeneity gain, not
+  sibling p-value tightening, is the main separator for focused binary overlap
+  traversal failures, but the first three-replicate run finds no fully stable
+  threshold in the tested grid.
+- [[overlap-structural-context-thresholds-20260614]] - context-binned threshold
+  diagnostic showing that deep/internal overlap traversal contexts can retain
+  truth-aligned signal with permissive structural thresholds, while shallow,
+  root, and large-parent contexts need stricter guards or multi-scale warnings.
+- [[overlap-structural-continuous-rule-20260614]] - smooth traversal-context
+  threshold diagnostic showing that depth, parent size, and barycentric balance
+  can formalize the direction, but no tested continuous accept surface controls
+  null and truth-misaligned rows while retaining all weak truth-aligned signal.
+- [[overlap-structural-decision-zones-20260614]] - three-way structural
+  traversal zone diagnostic exposing the context-conditioned rule as signed
+  continuous margins; stable same-subspace accepts are clean truth-aligned
+  evidence in the focused overlap run, while every null and truth-misaligned
+  accepted split falls into the unstable weak-homogeneity zone.
+- [[overlap-weak-zone-separability-20260614]] - unstable-zone separability
+  diagnostic showing that scalar structural thresholds can rank weak signal but
+  cannot recover all weak truth-aligned rows without selected-null or
+  truth-misaligned leakage.
+- [[overlap-weak-family-thresholds-20260614]] - family-wise weak-zone
+  diagnostic showing that selected-family p-values separate weak signal from
+  selected null, but fail against truth-misaligned signal families; family
+  aggregation does not remove the selected-family mixture blocker.
+- [[overlap-weak-truth-geometry-20260614]] - oracle truth-geometry diagnostic
+  showing that many statistically extreme weak overlap families are one-sided
+  pure fragments, diffuse mismatches, or wrong-granularity splits rather than
+  balanced structural recovery.
+- [[overlap-recovery-proxy-separability-20260614]] - non-oracle structural
+  proxy diagnostic showing that size/edge/homogeneity symmetry can detect
+  one-sided fragment risk, but does not separate truth recovery from all weak
+  non-recovery modes.
+- [[overlap-fragment-risk-guard-20260614]] - diagnostic guard-threshold scan
+  showing that fragment-risk and symmetry thresholds can block most one-sided
+  weak fragment rows while retaining truth-recovery rows in the focused overlap
+  panel.
+- [[overlap-diagnostic-traversal-policy-20260614]] - diagnostic composition of
+  continuous structural zones and the fragment-risk guard, yielding stable
+  region accepts, fragment-guarded weak rows, and an unresolved weak
+  multi-scale zone.
+- [[overlap-residual-family-recovery-20260614]] - post-fragment residual
+  selected-family diagnostic showing that p-value extremeness separates
+  recovery from selected null but not from non-recovery selected signal.
+- [[overlap-residual-recovery-eligibility-20260614]] - residual eligibility
+  diagnostic splitting selected-family null evidence from structural recovery
+  evidence and showing why p-value-only promotion remains unsafe.
+- [[overlap-threshold-hierarchy-20260614]] - ordered threshold synthesis
+  showing which traversal thresholds act at stable-row, fragment-guard,
+  residual-null, and residual-structural stages.
+- [[overlap-residual-threshold-transfer-20260614]] - leave-one-case and
+  leave-one-replicate transfer diagnostic showing that focused residual
+  max-negative thresholds leak or lose recovery when learned off-split.
+- [[overlap-threshold-stability-contract-20260614]] - diagnostic contract
+  classifying the overlap thresholds as stable reporting, diagnostic-only,
+  non-transferable, or selected-family-law required.
+- [[overlap-selected-family-law-requirements-20260614]] - diagnostic envelope
+  converting residual selected-family failures into explicit conditioning
+  variables and validation obligations for the missing structural recovery law.
+- [[overlap-conditional-bayesian-traversal-law-20260615]] - non-permutation
+  posterior-style diagnostic showing that selected-family p-value Bayes
+  evidence must be gated by strong structural neighborhood likelihood.
+- [[overlap-bayesian-neighborhood-component-audit-20260615]] - component audit
+  showing that selected-null families are blocked mainly by context margin,
+  while blocked truth-recovery families expose balanced-recovery, context, and
+  subspace likelihood gaps.
+- [[overlap-internal-node-bayesian-likelihood-probe-20260615]] - row-level
+  overlap-aware likelihood probe showing that internal-node candidates recover
+  partial overlap signal inside otherwise mixed selected families.
+- [[overlap-internal-node-likelihood-sensitivity-20260615]] - threshold
+  sensitivity scan showing context margin must stay nonnegative, while
+  subspace, balance, and fragment-risk tolerances form the softer overlap
+  likelihood degrees of freedom.
+- [[overlap-internal-node-likelihood-transfer-20260615]] - leave-one-case and
+  leave-one-replicate transfer scan showing nonnegative context-margin rules
+  keep zero leakage, while recovery retention remains incomplete.
+- [[overlap-internal-node-transfer-gap-audit-20260615]] - conditional/Bayesian
+  gap audit showing the single remaining row-level truth miss is
+  context-negative but soft-structure supported, while relaxed context leaks.
+- [[overlap-income-outcome-junction-law-20260615]] - income/outcome-aware
+  junction diagnostic showing the next traversal law must model the transition
+  from incoming selected-parent context to outgoing child-sibling evidence.
+- [[overlap-branch-incidence-junction-panel-20260615]] - true branch-vector
+  diagnostic showing overlap truth recovery is not explained by coordinate or
+  metric-family incoming/outgoing branch alignment and needs an emergent
+  local-outcome mode.
+- [[overlap-bayesian-incidence-mode-law-20260615]] - two-mode diagnostic
+  Bayesian law showing positive-context local outcome recovers `4/5` truth
+  rows with zero negatives, while context-negative emergent rows remain
+  unidentified and fail-closed.
+- [[overlap-context-negative-edge-conditioning-20260615]] - edge-test
+  conditioning scan showing child-parent edge evidence exists but does not
+  separate the context-negative emergent truth row from negatives because edge
+  strength overlaps and rejection flags saturate.
+- [[overlap-context-negative-topology-conditioning-20260615]] - selected
+  neighborhood/topology scan showing the higher-order
+  incoming-balance/outgoing-balance product separates the single
+  context-negative emergent truth row in the focused overlap slice, but only as
+  a single-positive diagnostic candidate needing transfer validation.
+- [[overlap-context-negative-topology-transfer-20260615]] - held-out
+  case/replicate transfer audit showing the balance-product candidate is not
+  yet validated because the focused slice has only one positive
+  context-negative emergent row; neighboring topology metrics can leak held-out
+  negatives under replicate splits.
+- [[overlap-context-negative-bayesian-topology-law-20260615]] - continuous
+  selected-neighborhood topology diagnostic showing the focused truth row is
+  top-ranked by fixed Bayesian component scores over incoming/outgoing balance,
+  outgoing edge-norm balance, anti-fragment evidence, selected-family evidence,
+  and soft context penalty.
+- [[overlap-context-negative-bayesian-topology-sensitivity-20260615]] -
+  component-ablation audit showing topology-only and outgoing-topology-only
+  profiles robustly separate the focused context-negative truth row, while
+  selected-family plus context never separates.
+- [[overlap-conditional-topology-law-panel-20260615]] - non-permutation,
+  directed-incidence topology-law panel showing the focused truth row remains
+  top-ranked, but the internal support stratum is still too thin for
+  production promotion.
+- [[topology-vector-benchmark-20260615]] - regression-gate KL benchmark and
+  topology-vector summary showing the refined pass-through profile reduces
+  skips and improves skip-as-zero ARI, but is not a broad production clustering
+  default; the topology vector remains a diagnostic conditioning object.
+- [[root-selection-literature-20260614]] - literature synthesis separating
+  clustering root split inference from phylogenetic or trajectory root
+  orientation, and arguing that KL-TE should validate selected-root stopping
+  rather than optimize a free root parameter.
+- [[selected-root-selected-family-traversal-literature-20260614]] - literature
+  synthesis mapping KL-TE's selected-root and pass-through selected-family null
+  problem to selective clustering inference, selective families, hierarchical
+  FDR/FWER, TreeScan/scan statistics, and cluster-permutation max tests.
+- [[selected-root-pass-through-null-fixture-20260614]] - compact iid Bernoulli
+  null fixture showing a closed selected root with one pass-through descendant
+  split under `fixed_coordinate_global_passthrough_refined_v1`.
+- [[phylogenetic-tree-builders-20260614]] - implementation note for opt-in
+  neighbor-joining and IQ-TREE 3 KL tree builders, both rooted by minimum
+  ancestor deviation before conversion to `PosetTree`.
+- [[julia-tree-estimator-run-20260614]] - full Julia GO matrix tree-estimator
+  comparison showing baseline KL, MAD-rooted neighbor joining, and IQ-TREE 3
+  fast/MAD remain highly fragmented and do not solve traversal calibration.
+- [[julia-selected-family-run-20260614]] - full Julia GO matrix run of
+  `fixed_coordinate_global_passthrough_refined_v1`, with multi-scale traversal
+  outputs and a stable-region-first UMAP overlay; fragmentation drops to `401`
+  clusters but a dominant selected-root guard zone covers most genes.
 
 - [[wiki-construction]] - reusable argument for the three-layer wiki scaffold,
   local lint, and maintenance workflow.

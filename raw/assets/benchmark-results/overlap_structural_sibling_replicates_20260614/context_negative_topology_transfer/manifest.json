@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "20260615_112301Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_context_negative_topology_transfer",
+  "metrics": [
+    "balance_product",
+    "outgoing_balance",
+    "size_balance",
+    "edge_norm_balance",
+    "outgoing_edge_norm_balance",
+    "outgoing_balance_edge_product",
+    "outgoing_balance_edge_subspace_product"
+  ],
+  "min_train_truth_count": 1,
+  "outputs": {
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_transfer/overlap_context_negative_topology_transfer_summary.csv",
+    "transfer_rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_transfer/overlap_context_negative_topology_transfer_rows.csv"
+  },
+  "production_status": "diagnostic_only_transfer_support_audit",
+  "schema_version": "overlap_context_negative_topology_transfer/v1",
+  "split_columns": [
+    "case_id",
+    "replicate"
+  ],
+  "study_role": "diagnostic_overlap_context_negative_topology_transfer",
+  "topology_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_rows.csv"
+}

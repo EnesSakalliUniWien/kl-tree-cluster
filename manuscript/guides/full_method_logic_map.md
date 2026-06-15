@@ -26,6 +26,11 @@ walks the tree top down to decide the final partition.
   projected subspace under an isotropic standardized null.
 - The empirical sibling inflation model is a calibration model, not an exact
   selective-inference theorem.
+- The sibling contrast covariance used to standardize a left-right test and
+  the parent spectral covariance used to choose projection directions are
+  different covariance objects. Diagnostics may compare both, but production
+  currently uses the orthonormal projected-Wald reference after standardization
+  rather than a covariance-weighted quadratic reference.
 
 ## Estimator and Statistic Chain
 
@@ -41,6 +46,24 @@ walks the tree top down to decide the final partition.
 8. For sibling tests, estimate context-weighted empirical-null inflation from
    sibling records and divide the raw statistic by that inflation.
 9. Correct p-values and traverse the tree.
+
+## Covariance Object Separation
+
+The sibling contrast covariance is the feature-space covariance of the
+left-right contrast being tested. For Bernoulli blocks this is coordinatewise
+under the current feature-space contract, and its graph-Laplacian diagnostic is
+therefore diagonal unless a non-diagonal block model is declared.
+
+The parent spectral covariance is the covariance of descendant null-whitened
+tangent rows used to build the parent-local spectral basis and choose the
+projection dimension. It can be dense even when the sibling contrast covariance
+is diagonal, because it summarizes the selected local geometry of descendants
+rather than the direct two-sample contrast covariance.
+
+Covariance-inferred Satterthwaite degrees of freedom and scales are diagnostic
+comparators for distribution-shape analysis. They do not replace the
+implemented chi-square reference unless a separate production-admissibility
+contract promotes such a rule.
 
 ## Canonical Terminology
 

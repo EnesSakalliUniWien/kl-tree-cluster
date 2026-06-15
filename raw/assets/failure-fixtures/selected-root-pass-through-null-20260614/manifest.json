@@ -1,0 +1,43 @@
+{
+  "schema_version": "klte_failure_fixture/v1",
+  "created_at_utc": "2026-06-14T11:22:00Z",
+  "fixture_id": "selected-root-pass-through-null-20260614",
+  "purpose": "Minimal selected-null fixture showing root closed but pass-through descendant split under the refined fixed-coordinate profile.",
+  "case_id": "overlap_mod_4c_small",
+  "source_family": "binary_template",
+  "feature_representation": "binary",
+  "data_role": "null",
+  "seed": 20310054,
+  "n_samples": 400,
+  "n_features": 80,
+  "true_clusters": 1,
+  "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "tree_distance_metric": "hamming",
+  "tree_linkage_method": "average",
+  "found_clusters": 3,
+  "ari": 0.0,
+  "false_split": true,
+  "root_node": "N798",
+  "root_sibling_p_value": 6.721334448174447e-06,
+  "root_sibling_open_after_guards": false,
+  "root_stability_guard_blocked": true,
+  "root_stability_subsample_mean_ari": 0.015626276502294405,
+  "root_selective_permutation_p_value": 0.46,
+  "root_selective_permutation_guard_blocked": false,
+  "open_sibling_node_count_after_guards": 1,
+  "open_sibling_nodes_after_guards": [
+    "N797"
+  ],
+  "outputs": {
+    "feature_matrix": "raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/feature_matrix.csv",
+    "labels": "raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/labels.csv",
+    "node_annotations": "raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/node_annotations.csv",
+    "decision_path": "raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/decision_path.csv",
+    "tree_edges": "raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/tree_edges.csv",
+    "runner_rows": "raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/fixed_sibling_gate_profile_validation_rows.csv"
+  },
+  "replay_command": "python -m benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation --output-dir /tmp/klte_clean_failure_fixture_replay --suite full --case-names overlap_mod_4c_small --profiles fixed_coordinate_global_passthrough_refined_v1 --data-roles null --sibling-alpha 0.01 --edge-alpha 0.001 --replicates 1 --base-seed 20310054",
+  "interpretation": "The data are global Bernoulli null. The raw root sibling p-value is tiny, but root stability closes the root. The final false split happens because traversal still reaches one open descendant below the closed root."
+}

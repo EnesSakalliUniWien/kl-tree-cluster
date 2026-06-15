@@ -1,0 +1,17 @@
+{
+  "balanced_child_purity": 0.65,
+  "generated_at_utc": "20260614_182446Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_weak_truth_geometry",
+  "high_child_purity": 0.85,
+  "low_child_purity": 0.55,
+  "outputs": {
+    "family_geometry": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_truth_geometry/overlap_weak_truth_geometry_families.csv",
+    "row_geometry": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_truth_geometry/overlap_weak_truth_geometry_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_truth_geometry/overlap_weak_truth_geometry_summary.csv"
+  },
+  "purity_gap": 0.25,
+  "rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/overlap_structural_sibling_rows.csv",
+  "schema_version": "overlap_weak_truth_geometry/v1",
+  "study_role": "diagnostic_overlap_weak_truth_geometry_not_calibration",
+  "truth_alignment_threshold": 0.5
+}

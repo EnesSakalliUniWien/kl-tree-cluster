@@ -36,9 +36,44 @@ Maintained entrypoints:
 - `calibration/selected_tail_promotion_gate.py`
 - `calibration/internal_support_threshold_validation.py`
 - `calibration/sibling_null_weight_rule_validation.py`
+- `calibration/edge_null_calibration_panel.py`
+- `calibration/sibling_null_calibration_panel.py`
+- `calibration/traversal_guard_validation_panel.py`
+- `calibration/production_admissibility_contract.py`
+- `calibration/selected_edge_sibling_null_equation.py`
+- `calibration/selected_edge_sibling_postrun_analysis.py`
+- `calibration/differential_statistic_validity_panel.py`
+- `calibration/regularized_wald_statistic_panel.py`
+- `calibration/null_law_decomposition_panel.py`
+- `calibration/statistic_distribution_shape_panel.py`
+- `calibration/covariance_laplacian_panel.py`
+- `calibration/data_independent_sibling_gate_panel.py`
+- `calibration/data_independent_sibling_gate_traversal_panel.py`
+- `calibration/fixed_sibling_gate_profile_validation.py`
+- `calibration/selected_family_traversal_panel.py`
 - `analysis/analyze_relationships.py`
 - `spectral/compare_mp_dimension_contracts.py`
 - `spectral/mp_projection_dimension_behavior_sweep.py`
 - `spectral/sibling_projection_dimension_rule_grid.py`
 - `open_questions/full_diagnostic_contract.py`
 - `math_trace/infer_benchmark_math.py`
+
+`calibration/fixed_sibling_gate_profile_validation.py` is the current shared
+runner smoke for fixed sibling-gate profiles, root-stability metadata, and the
+default-off selected-root permutation guard. Its successful rows remain
+diagnostic evidence unless the production-admissibility outputs pass the
+confidence contract. Use `fixed_coordinate_selective_root_v1` to exercise the
+packaged selected-root permutation candidate directly, and
+`fixed_coordinate_selective_passthrough_v1` to exercise the narrower
+pass-through descendant selected-subtree guard.
+
+`calibration/selected_family_traversal_panel.py` compares baseline traversal
+with the fixed-coordinate selected-root/pass-through profile family and writes
+multi-scale node, region, and sample outputs. Use
+`fixed_coordinate_global_passthrough_refined_v1` as the primary binary V1
+selected-family diagnostic candidate; it remains validation-only, not a
+production default.
+
+`scripts/analysis/multiscale_umap_overlay.py` joins
+`multiscale_gene_assignments.csv` to existing UMAP coordinates and renders a
+stable-region-first overlay with pass-through or guard zones marked separately.

@@ -1,0 +1,3 @@
+node_id,is_root,Sibling_BH_Different,Sibling_Divergence_P_Value,Root_Stability_Guard_Blocked,Root_Stability_Subsample_Mean_ARI,Root_Selective_Permutation_P_Value,Root_Selective_Permutation_Guard_Blocked,Selective_Permutation_P_Value,Selective_Permutation_Guard_Blocked,Child_Parent_Divergence_Tested,Child_Parent_Divergence_P_Value_BH
+N797,False,True,5.212803085628001e-07,False,,,False,,False,True,1.2042941153893569e-18
+N798,True,False,6.721334448174447e-06,True,0.015626276502294405,0.46,False,0.46,False,False,

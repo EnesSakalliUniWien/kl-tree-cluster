@@ -1,0 +1,14 @@
+{
+  "decision_zone_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_rows.csv",
+  "generated_at_utc": "20260615_101606Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_income_outcome_junction_law",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/income_outcome_junction_law/overlap_income_outcome_junction_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/income_outcome_junction_law/overlap_income_outcome_junction_summary.csv"
+  },
+  "production_status": "diagnostic_only_income_outcome_transition_law",
+  "schema_version": "overlap_income_outcome_junction_law/v1",
+  "structural_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/overlap_structural_sibling_rows.csv",
+  "study_role": "diagnostic_overlap_income_outcome_junction_law",
+  "transfer_gap_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_transfer_gap_audit/overlap_internal_node_transfer_gap_rows.csv"
+}

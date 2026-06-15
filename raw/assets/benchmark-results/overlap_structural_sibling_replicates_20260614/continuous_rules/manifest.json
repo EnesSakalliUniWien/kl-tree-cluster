@@ -1,0 +1,45 @@
+{
+  "balance_reference": 0.5,
+  "base_thresholds": [
+    0.0025,
+    0.005,
+    0.0075
+  ],
+  "depth_scale": 1.5,
+  "generated_at_utc": "20260614_180448Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_structural_continuous_rule",
+  "imbalance_penalties": [
+    0.0,
+    0.005,
+    0.01
+  ],
+  "outputs": {
+    "decision_rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/continuous_rules/overlap_structural_continuous_rule_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/continuous_rules/overlap_structural_continuous_rule_summary.csv"
+  },
+  "parent_reference_size": 800.0,
+  "parent_size_penalties": [
+    0.0,
+    0.005,
+    0.01
+  ],
+  "rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/overlap_structural_sibling_rows.csv",
+  "rule_count": 432,
+  "schema_version": "overlap_structural_continuous_rule/v1",
+  "shallow_penalties": [
+    0.0,
+    0.005,
+    0.01,
+    0.015
+  ],
+  "sibling_p_thresholds": [
+    0.001,
+    0.01
+  ],
+  "study_role": "diagnostic_overlap_structural_continuous_rule_not_calibration",
+  "subspace_thresholds": [
+    0.15,
+    0.25
+  ],
+  "truth_alignment_threshold": 0.5
+}

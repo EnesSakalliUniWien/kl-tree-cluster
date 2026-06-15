@@ -24,19 +24,21 @@ from .decomposition.gates.column_contracts import (
 )
 from .decomposition.gates.gate_evaluator import GateEvaluator, TraversalDecision
 from .decomposition.gates.orchestrator import (
+    SiblingGateProfile,
     build_gate_annotation_config_metadata,
     build_gate_annotation_leaf_data_metadata,
+    resolve_sibling_gate_profile_config,
     run_gate_annotation_pipeline,
 )
 from .statistics.alpha_contract import DEFAULT_EDGE_ALPHA, DEFAULT_SIBLING_ALPHA
+from .statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+)
 from .statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
 )
 from .statistics.sibling_divergence.inflation_correction.types.inflation_model import (
     CalibrationSupportThresholds,
-)
-from .statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
-    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
 
 
@@ -72,6 +74,21 @@ class TreeDecomposition:
         leaf_data: pd.DataFrame | None = None,
         feature_space: FeatureSpace | None = None,
         spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        sibling_gate_profile: str | SiblingGateProfile | None = None,
+        sibling_gate_method: str = "projected_wald_inflation",
+        sibling_gate_alpha_penalty: float = 1.0,
+        root_stability_guard_threshold: float | None = None,
+        root_stability_subsample_replicates: int = 0,
+        root_stability_feature_fraction: float = 0.8,
+        root_stability_seed: int = 0,
+        root_stability_tree_distance_metric: str = "hamming",
+        root_stability_tree_linkage_method: str = "average",
+        root_selective_permutation_guard_replicates: int = 0,
+        root_selective_permutation_guard_seed: int = 0,
+        root_selective_permutation_guard_alpha: float | None = None,
+        root_selective_permutation_guard_scope: str = "root",
+        root_selective_permutation_guard_tree_distance_metric: str = "hamming",
+        root_selective_permutation_guard_tree_linkage_method: str = "average",
         enforce_internal_support_thresholds: bool = False,
         internal_support_thresholds: CalibrationSupportThresholds = (
             DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
@@ -95,6 +112,22 @@ class TreeDecomposition:
             Significance level used by the child-parent edge-divergence gate.
         sibling_alpha
             Significance level used by sibling-divergence annotations and gating.
+        sibling_gate_method
+            Sibling gate strategy. The default keeps the current projected-Wald
+            inflation path. Fixed-subspace methods avoid parent PCA/dimension
+            selection in the sibling statistic.
+        sibling_gate_profile
+            Optional named profile that expands to an auditable fixed-gate
+            method, selected-topology penalty, root-stability guard, and
+            optional selected-root permutation guard.
+        sibling_gate_alpha_penalty
+            Positive divisor applied to ``sibling_alpha`` before sibling FDR.
+            This exposes the selected-topology penalty used by fixed-gate
+            diagnostics without changing the default effective alpha.
+        root_stability_guard_threshold
+            Optional fail-closed root guard. When configured, the root sibling
+            gate is closed if its feature-subsample root stability ARI falls
+            below this threshold.
         leaf_data
             Raw feature matrix required for per-node spectral dimension estimation.
             Missing leaf data is a contract error for the gate annotation pipeline.
@@ -115,8 +148,67 @@ class TreeDecomposition:
         self._leaf_data = leaf_data
         self._feature_space = feature_space
         self._spectral_minimum_dimension = int(spectral_minimum_dimension)
+        (
+            self._sibling_gate_profile_id,
+            self._sibling_gate_method,
+            self._sibling_gate_alpha_penalty,
+            self._root_stability_guard_threshold,
+            self._root_stability_subsample_replicates,
+            self._root_stability_feature_fraction,
+            self._root_stability_seed,
+            resolved_root_selective_permutation_guard_replicates,
+            resolved_root_selective_permutation_guard_seed,
+            resolved_root_selective_permutation_guard_alpha,
+            resolved_root_selective_permutation_guard_scope,
+        ) = resolve_sibling_gate_profile_config(
+            sibling_gate_profile=sibling_gate_profile,
+            sibling_gate_method=sibling_gate_method,
+            sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
+            root_stability_guard_threshold=root_stability_guard_threshold,
+            root_stability_subsample_replicates=root_stability_subsample_replicates,
+            root_stability_feature_fraction=root_stability_feature_fraction,
+            root_stability_seed=root_stability_seed,
+            root_selective_permutation_guard_replicates=(
+                root_selective_permutation_guard_replicates
+            ),
+            root_selective_permutation_guard_seed=(
+                root_selective_permutation_guard_seed
+            ),
+            root_selective_permutation_guard_alpha=(
+                root_selective_permutation_guard_alpha
+            ),
+            root_selective_permutation_guard_scope=(
+                root_selective_permutation_guard_scope
+            ),
+        )
         self._enforce_internal_support_thresholds = bool(
             enforce_internal_support_thresholds
+        )
+        self._root_stability_tree_distance_metric = str(
+            root_stability_tree_distance_metric
+        )
+        self._root_stability_tree_linkage_method = str(
+            root_stability_tree_linkage_method
+        )
+        self._root_selective_permutation_guard_replicates = int(
+            resolved_root_selective_permutation_guard_replicates
+        )
+        self._root_selective_permutation_guard_seed = int(
+            resolved_root_selective_permutation_guard_seed
+        )
+        self._root_selective_permutation_guard_alpha = (
+            None
+            if resolved_root_selective_permutation_guard_alpha is None
+            else float(resolved_root_selective_permutation_guard_alpha)
+        )
+        self._root_selective_permutation_guard_scope = str(
+            resolved_root_selective_permutation_guard_scope
+        )
+        self._root_selective_permutation_guard_tree_distance_metric = str(
+            root_selective_permutation_guard_tree_distance_metric
+        )
+        self._root_selective_permutation_guard_tree_linkage_method = str(
+            root_selective_permutation_guard_tree_linkage_method
         )
         self._internal_support_thresholds = internal_support_thresholds
 
@@ -180,6 +272,39 @@ class TreeDecomposition:
             leaf_data=self._leaf_data,
             feature_space=self._feature_space,
             spectral_minimum_dimension=self._spectral_minimum_dimension,
+            sibling_gate_profile=self._sibling_gate_profile_id,
+            sibling_gate_method=self._sibling_gate_method,
+            sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
+            root_stability_guard_threshold=self._root_stability_guard_threshold,
+            root_stability_subsample_replicates=(
+                self._root_stability_subsample_replicates
+            ),
+            root_stability_feature_fraction=self._root_stability_feature_fraction,
+            root_stability_seed=self._root_stability_seed,
+            root_stability_tree_distance_metric=(
+                self._root_stability_tree_distance_metric
+            ),
+            root_stability_tree_linkage_method=(
+                self._root_stability_tree_linkage_method
+            ),
+            root_selective_permutation_guard_replicates=(
+                self._root_selective_permutation_guard_replicates
+            ),
+            root_selective_permutation_guard_seed=(
+                self._root_selective_permutation_guard_seed
+            ),
+            root_selective_permutation_guard_alpha=(
+                self._root_selective_permutation_guard_alpha
+            ),
+            root_selective_permutation_guard_scope=(
+                self._root_selective_permutation_guard_scope
+            ),
+            root_selective_permutation_guard_tree_distance_metric=(
+                self._root_selective_permutation_guard_tree_distance_metric
+            ),
+            root_selective_permutation_guard_tree_linkage_method=(
+                self._root_selective_permutation_guard_tree_linkage_method
+            ),
             enforce_internal_support_thresholds=(
                 self._enforce_internal_support_thresholds
             ),
@@ -221,6 +346,39 @@ class TreeDecomposition:
             and metadata.config
             == build_gate_annotation_config_metadata(
                 spectral_minimum_dimension=self._spectral_minimum_dimension,
+                sibling_gate_profile_id=self._sibling_gate_profile_id,
+                sibling_gate_method=self._sibling_gate_method,
+                sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
+                root_stability_guard_threshold=self._root_stability_guard_threshold,
+                root_stability_subsample_replicates=(
+                    self._root_stability_subsample_replicates
+                ),
+                root_stability_feature_fraction=self._root_stability_feature_fraction,
+                root_stability_seed=self._root_stability_seed,
+                root_stability_tree_distance_metric=(
+                    self._root_stability_tree_distance_metric
+                ),
+                root_stability_tree_linkage_method=(
+                    self._root_stability_tree_linkage_method
+                ),
+                root_selective_permutation_guard_replicates=(
+                    self._root_selective_permutation_guard_replicates
+                ),
+                root_selective_permutation_guard_seed=(
+                    self._root_selective_permutation_guard_seed
+                ),
+                root_selective_permutation_guard_alpha=(
+                    self._root_selective_permutation_guard_alpha
+                ),
+                root_selective_permutation_guard_scope=(
+                    self._root_selective_permutation_guard_scope
+                ),
+                root_selective_permutation_guard_tree_distance_metric=(
+                    self._root_selective_permutation_guard_tree_distance_metric
+                ),
+                root_selective_permutation_guard_tree_linkage_method=(
+                    self._root_selective_permutation_guard_tree_linkage_method
+                ),
                 enforce_internal_support_thresholds=(
                     self._enforce_internal_support_thresholds
                 ),
@@ -255,6 +413,7 @@ class TreeDecomposition:
         """
         nodes_to_visit: list[object] = [self._root]
         final_boundaries: list[ClusterBoundary] = []
+        traversal_trace: list[dict[str, object]] = []
         processed: set[object] = set()
 
         while nodes_to_visit:
@@ -264,8 +423,19 @@ class TreeDecomposition:
             processed.add(node)
 
             decision = self._gate.decision(node)
+            children = self._children[node]
+            traversal_trace.append(
+                {
+                    "node_id": node,
+                    "decision": decision.value,
+                    "is_leaf": len(children) == 0,
+                    "n_children": len(children),
+                    "n_descendant_leaves": len(self._descendant_leaf_sets[node]),
+                    "final_boundary": decision is TraversalDecision.BOUNDARY,
+                }
+            )
             if decision in (TraversalDecision.SPLIT, TraversalDecision.PASS_THROUGH):
-                left_child, right_child = self._children[node]
+                left_child, right_child = children
                 nodes_to_visit.append(right_child)
                 nodes_to_visit.append(left_child)
                 continue
@@ -279,6 +449,7 @@ class TreeDecomposition:
         return {
             "cluster_assignments": cluster_assignments,
             "num_clusters": len(cluster_assignments),
+            "traversal_trace": traversal_trace,
             "independence_analysis": {
                 "edge_alpha": self.edge_alpha,
                 "sibling_alpha": self.sibling_alpha,

@@ -1,0 +1,2 @@
+method,matched_reference_genes,reference_labels,method_clusters_on_ref_genes,adjusted_rand_index,normalized_mutual_info,homogeneity,completeness,v_measure
+kl_selected_family,262,20,180,0.06415735370611395,0.6188473509689947,0.8986182081299425,0.47192180750289137,0.6188473509689947

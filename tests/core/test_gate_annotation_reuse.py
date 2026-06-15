@@ -151,6 +151,225 @@ def test_decompose_recomputes_stale_gate_annotations(monkeypatch) -> None:
     assert result["num_clusters"] >= 1
 
 
+def test_decompose_recomputes_when_sibling_gate_method_changes(monkeypatch) -> None:
+    tree, annotations_df, leaf_data = _build_cherry_tree()
+    bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
+
+    calls = 0
+
+    def counted_pipeline(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        assert kwargs["sibling_gate_method"] == "fixed_coordinate_bh"
+        return run_gate_annotation_pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(
+        tree_decomposition_module,
+        "run_gate_annotation_pipeline",
+        counted_pipeline,
+    )
+
+    result = tree.decompose(
+        gate_annotation_bundle=bundle,
+        leaf_data=leaf_data,
+        sibling_gate_method="fixed_coordinate_bh",
+    )
+
+    assert calls == 1
+    assert result["num_clusters"] >= 1
+    fixed_p_values = tree.annotations_df.loc[
+        tree.annotations_df["Sibling_Test_Method"].eq("fixed_coordinate_bh"),
+        "Sibling_Divergence_P_Value",
+    ]
+    assert not fixed_p_values.empty
+    assert fixed_p_values.between(0.0, 1.0).all()
+
+
+def test_decompose_recomputes_when_sibling_gate_penalty_changes(monkeypatch) -> None:
+    tree, annotations_df, leaf_data = _build_cherry_tree()
+    bundle = run_gate_annotation_pipeline(
+        tree,
+        annotations_df.copy(),
+        leaf_data=leaf_data,
+        sibling_gate_method="fixed_coordinate_bh",
+        sibling_gate_alpha_penalty=1.0,
+    )
+
+    calls = 0
+
+    def counted_pipeline(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        assert kwargs["sibling_gate_method"] == "fixed_coordinate_bh"
+        assert kwargs["sibling_gate_alpha_penalty"] == 50.0
+        return run_gate_annotation_pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(
+        tree_decomposition_module,
+        "run_gate_annotation_pipeline",
+        counted_pipeline,
+    )
+
+    result = tree.decompose(
+        gate_annotation_bundle=bundle,
+        leaf_data=leaf_data,
+        sibling_gate_method="fixed_coordinate_bh",
+        sibling_gate_alpha_penalty=50.0,
+    )
+
+    assert calls == 1
+    assert result["num_clusters"] >= 1
+
+
+def test_decompose_recomputes_when_root_stability_guard_changes(monkeypatch) -> None:
+    tree, annotations_df, leaf_data = _build_cherry_tree()
+    bundle = run_gate_annotation_pipeline(
+        tree,
+        annotations_df.copy(),
+        leaf_data=leaf_data,
+        sibling_gate_method="fixed_coordinate_bh",
+    )
+
+    calls = 0
+
+    def counted_pipeline(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        assert kwargs["sibling_gate_method"] == "fixed_coordinate_bh"
+        assert kwargs["root_stability_guard_threshold"] == 0.50
+        assert kwargs["root_stability_subsample_replicates"] == 4
+        assert kwargs["root_stability_feature_fraction"] == 0.75
+        assert kwargs["root_stability_seed"] == 11
+        assert kwargs["root_stability_tree_distance_metric"] == "hamming"
+        assert kwargs["root_stability_tree_linkage_method"] == "average"
+        return run_gate_annotation_pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(
+        tree_decomposition_module,
+        "run_gate_annotation_pipeline",
+        counted_pipeline,
+    )
+
+    result = tree.decompose(
+        gate_annotation_bundle=bundle,
+        leaf_data=leaf_data,
+        sibling_gate_method="fixed_coordinate_bh",
+        root_stability_guard_threshold=0.50,
+        root_stability_subsample_replicates=4,
+        root_stability_feature_fraction=0.75,
+        root_stability_seed=11,
+    )
+
+    assert calls == 1
+    assert result["num_clusters"] >= 1
+
+
+def test_decompose_recomputes_when_root_selective_guard_changes(monkeypatch) -> None:
+    tree, annotations_df, leaf_data = _build_cherry_tree()
+    bundle = run_gate_annotation_pipeline(
+        tree,
+        annotations_df.copy(),
+        leaf_data=leaf_data,
+        sibling_gate_method="fixed_coordinate_bh",
+    )
+
+    calls = 0
+
+    def counted_pipeline(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        assert kwargs["sibling_gate_method"] == "fixed_coordinate_bh"
+        assert kwargs["root_selective_permutation_guard_replicates"] == 2
+        assert kwargs["root_selective_permutation_guard_seed"] == 13
+        assert kwargs["root_selective_permutation_guard_alpha"] == 0.01
+        assert kwargs["root_selective_permutation_guard_tree_distance_metric"] == (
+            "hamming"
+        )
+        assert kwargs["root_selective_permutation_guard_tree_linkage_method"] == (
+            "average"
+        )
+        return run_gate_annotation_pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(
+        tree_decomposition_module,
+        "run_gate_annotation_pipeline",
+        counted_pipeline,
+    )
+
+    result = tree.decompose(
+        gate_annotation_bundle=bundle,
+        leaf_data=leaf_data,
+        sibling_gate_method="fixed_coordinate_bh",
+        root_selective_permutation_guard_replicates=2,
+        root_selective_permutation_guard_seed=13,
+        root_selective_permutation_guard_alpha=0.01,
+    )
+
+    assert calls == 1
+    assert result["num_clusters"] >= 1
+
+
+def test_decompose_recomputes_when_sibling_gate_profile_changes(monkeypatch) -> None:
+    tree, annotations_df, leaf_data = _build_cherry_tree()
+    bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
+
+    calls = 0
+
+    def counted_pipeline(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        assert kwargs["sibling_gate_profile"] == "fixed_coordinate_guarded_v1"
+        return run_gate_annotation_pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(
+        tree_decomposition_module,
+        "run_gate_annotation_pipeline",
+        counted_pipeline,
+    )
+
+    result = tree.decompose(
+        gate_annotation_bundle=bundle,
+        leaf_data=leaf_data,
+        sibling_gate_profile="fixed_coordinate_guarded_v1",
+    )
+
+    assert calls == 1
+    assert result["num_clusters"] >= 1
+
+
+def test_decompose_recomputes_when_selective_root_profile_changes(monkeypatch) -> None:
+    tree, annotations_df, leaf_data = _build_cherry_tree()
+    bundle = run_gate_annotation_pipeline(
+        tree,
+        annotations_df.copy(),
+        leaf_data=leaf_data,
+        sibling_gate_profile="fixed_coordinate_guarded_v1",
+    )
+
+    calls = 0
+
+    def counted_pipeline(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        assert kwargs["sibling_gate_profile"] == "fixed_coordinate_selective_root_v1"
+        return run_gate_annotation_pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(
+        tree_decomposition_module,
+        "run_gate_annotation_pipeline",
+        counted_pipeline,
+    )
+
+    result = tree.decompose(
+        gate_annotation_bundle=bundle,
+        leaf_data=leaf_data,
+        sibling_gate_profile="fixed_coordinate_selective_root_v1",
+    )
+
+    assert calls == 1
+    assert result["num_clusters"] >= 1
+
+
 def test_decompose_recomputes_annotations_when_leaf_data_changes(monkeypatch) -> None:
     tree, annotations_df, leaf_data = _build_cherry_tree()
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)

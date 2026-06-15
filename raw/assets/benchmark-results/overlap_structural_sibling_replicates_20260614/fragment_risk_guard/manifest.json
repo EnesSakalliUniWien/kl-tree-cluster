@@ -1,0 +1,23 @@
+{
+  "decision_zone_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_rows.csv",
+  "generated_at_utc": "20260614_183406Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_fragment_risk_guard",
+  "guard_specs": [
+    "fragment_risk_proxy_score:greater_equal",
+    "child_pairwise_jaccard_gap:greater_equal",
+    "homogeneity_gain_gap:greater_equal",
+    "barycentric_balance:less_equal",
+    "edge_norm_balance:less_equal",
+    "size_balance:less_equal",
+    "balanced_recovery_proxy_score:less_equal"
+  ],
+  "outputs": {
+    "guard_rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/fragment_risk_guard/overlap_fragment_risk_guard_rows.csv",
+    "guard_scan": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/fragment_risk_guard/overlap_fragment_risk_guard_scan.csv"
+  },
+  "schema_version": "overlap_fragment_risk_guard/v1",
+  "structural_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/overlap_structural_sibling_rows.csv",
+  "study_role": "diagnostic_overlap_fragment_risk_guard_not_calibration",
+  "truth_geometry_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_truth_geometry/overlap_weak_truth_geometry_rows.csv",
+  "zone": "unstable_weak_homogeneity_zone"
+}

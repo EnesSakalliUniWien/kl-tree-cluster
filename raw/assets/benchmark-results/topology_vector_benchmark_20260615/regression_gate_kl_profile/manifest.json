@@ -1,0 +1,20 @@
+{
+  "generated_at_utc": "20260615_114729Z",
+  "input_results": "raw/assets/benchmark-results/topology_vector_benchmark_20260615/regression_gate_kl_profile/regression_gate_kl_profile_comparison.csv",
+  "notes": [
+    "Benchmark uses standard regression gate cases with KL average/Hamming tree.",
+    "Refined variant is passed through sibling_gate_profile after dispatcher forwarding fix.",
+    "This is clustering performance benchmark, not topology-vector production calibration."
+  ],
+  "outputs": {
+    "by_case": "raw/assets/benchmark-results/topology_vector_benchmark_20260615/regression_gate_kl_profile/regression_gate_kl_profile_by_case.csv",
+    "case_deltas": "raw/assets/benchmark-results/topology_vector_benchmark_20260615/regression_gate_kl_profile/regression_gate_kl_profile_case_deltas.csv",
+    "results": "raw/assets/benchmark-results/topology_vector_benchmark_20260615/regression_gate_kl_profile/regression_gate_kl_profile_comparison.csv",
+    "summary": "raw/assets/benchmark-results/topology_vector_benchmark_20260615/regression_gate_kl_profile/regression_gate_kl_profile_summary.csv"
+  },
+  "schema_version": "topology_vector_regression_gate_profile_benchmark/v1",
+  "variants": [
+    "default_projected_wald",
+    "fixed_coordinate_global_passthrough_refined_v1"
+  ]
+}

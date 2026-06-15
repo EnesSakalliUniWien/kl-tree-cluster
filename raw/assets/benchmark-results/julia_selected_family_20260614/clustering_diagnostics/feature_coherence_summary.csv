@@ -1,0 +1,2 @@
+method,non_singleton_clusters,mean_pairwise_hamming_similarity,median_pairwise_hamming_similarity,mean_pairwise_jaccard_similarity,median_pairwise_jaccard_similarity,median_features_shared_by_all,median_features_shared_by_half,median_active_feature_union
+kl_selected_family,95,0.9779485148833295,0.982933766761479,0.36363762616744894,0.3200992555831266,90.0,291.0,489.0

@@ -1,0 +1,30 @@
+{
+  "base_seed": 20260613,
+  "case_names": [
+    "overlap_extreme_4c",
+    "overlap_mod_4c_small",
+    "overlap_mod_8c_large",
+    "overlap_unbal_4c_small"
+  ],
+  "data_roles": [
+    "null",
+    "signal"
+  ],
+  "edge_alpha": 0.001,
+  "generated_at_utc": "20260614_174344Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_structural_sibling_panel",
+  "max_pairwise_samples": 200,
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_20260614/overlap_structural_sibling_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_20260614/overlap_structural_sibling_summary.csv"
+  },
+  "profile_id": "fixed_coordinate_global_passthrough_refined_v1",
+  "replicates": 1,
+  "rows": 68,
+  "schema_version": "overlap_structural_sibling_panel/v1",
+  "sibling_alpha": 0.01,
+  "skipped_cases": [],
+  "study_role": "diagnostic_overlap_structural_sibling_not_calibration",
+  "suite": "full",
+  "top_k": 12
+}

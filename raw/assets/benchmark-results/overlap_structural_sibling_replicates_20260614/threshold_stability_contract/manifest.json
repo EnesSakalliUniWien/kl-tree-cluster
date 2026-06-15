@@ -1,0 +1,12 @@
+{
+  "generated_at_utc": "20260614_190930Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_threshold_stability_contract",
+  "outputs": {
+    "stage_status": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_stability_contract/overlap_threshold_stability_contract_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_stability_contract/overlap_threshold_stability_contract_summary.csv"
+  },
+  "schema_version": "overlap_threshold_stability_contract/v1",
+  "study_role": "diagnostic_overlap_threshold_stability_contract_not_calibration",
+  "threshold_hierarchy_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/threshold_hierarchy/overlap_threshold_hierarchy.csv",
+  "transfer_summary_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_threshold_transfer/overlap_residual_threshold_transfer_summary.csv"
+}

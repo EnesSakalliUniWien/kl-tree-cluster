@@ -1,0 +1,14 @@
+{
+  "generated_at_utc": "20260614_185442Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_residual_recovery_eligibility",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_recovery_eligibility/overlap_residual_recovery_eligibility_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_recovery_eligibility/overlap_residual_recovery_eligibility_summary.csv",
+    "thresholds": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_recovery_eligibility/overlap_residual_recovery_thresholds.csv"
+  },
+  "p_value_evidence_metric": "residual_neg_log10_min_sibling_p_value",
+  "residual_family_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_rows.csv",
+  "schema_version": "overlap_residual_recovery_eligibility/v1",
+  "structural_evidence_metric": "residual_min_fragment_risk_proxy_score",
+  "study_role": "diagnostic_overlap_residual_recovery_eligibility_not_calibration"
+}

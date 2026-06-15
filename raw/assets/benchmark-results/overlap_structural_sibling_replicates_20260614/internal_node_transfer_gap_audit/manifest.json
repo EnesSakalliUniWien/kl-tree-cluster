@@ -1,0 +1,21 @@
+{
+  "generated_at_utc": "20260615_100321Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_internal_node_transfer_gap_audit",
+  "likelihood_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_bayesian_likelihood_probe/overlap_internal_node_likelihood_rows.csv",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_transfer_gap_audit/overlap_internal_node_transfer_gap_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_transfer_gap_audit/overlap_internal_node_transfer_gap_summary.csv"
+  },
+  "parameters": {
+    "bayes_factor_floor": 3.0,
+    "context_margin_floor": 0.0,
+    "edge_norm_balance_floor": 0.49,
+    "fragment_risk_ceiling": 1.25,
+    "size_balance_floor": 0.33,
+    "subspace_floor": 0.15
+  },
+  "production_status": "diagnostic_only_conditional_bayesian_gap_audit",
+  "schema_version": "overlap_internal_node_transfer_gap_audit/v1",
+  "study_role": "diagnostic_overlap_internal_node_transfer_gap_audit",
+  "transfer_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_likelihood_transfer/overlap_internal_node_likelihood_transfer_rows.csv"
+}

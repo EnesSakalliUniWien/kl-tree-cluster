@@ -1,0 +1,16 @@
+{
+  "decision_zone_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_rows.csv",
+  "fragment_guard_direction": "greater_equal",
+  "fragment_guard_metric": "fragment_risk_proxy_score",
+  "fragment_guard_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/fragment_risk_guard/overlap_fragment_risk_guard_rows.csv",
+  "fragment_guard_threshold": 1.252728536810977,
+  "generated_at_utc": "20260614_184405Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_diagnostic_traversal_policy",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/diagnostic_traversal_policy/overlap_diagnostic_traversal_policy_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/diagnostic_traversal_policy/overlap_diagnostic_traversal_policy_summary.csv"
+  },
+  "schema_version": "overlap_diagnostic_traversal_policy/v1",
+  "study_role": "diagnostic_overlap_traversal_policy_not_calibration",
+  "weak_zone": "unstable_weak_homogeneity_zone"
+}

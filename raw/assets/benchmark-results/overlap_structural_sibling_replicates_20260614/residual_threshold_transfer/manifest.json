@@ -1,0 +1,15 @@
+{
+  "generated_at_utc": "20260614_190526Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_residual_threshold_transfer",
+  "outputs": {
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_threshold_transfer/overlap_residual_threshold_transfer_summary.csv",
+    "transfer_rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_threshold_transfer/overlap_residual_threshold_transfer_rows.csv"
+  },
+  "residual_family_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/residual_family_recovery/overlap_residual_family_rows.csv",
+  "schema_version": "overlap_residual_threshold_transfer/v1",
+  "split_columns": [
+    "case_id",
+    "replicate"
+  ],
+  "study_role": "diagnostic_overlap_residual_threshold_transfer_not_calibration"
+}

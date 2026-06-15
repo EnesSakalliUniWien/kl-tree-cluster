@@ -1,0 +1,96 @@
+{
+  "component_profiles": {
+    "balance_only": [
+      "incoming",
+      "outgoing"
+    ],
+    "full_v1": [
+      "incoming",
+      "outgoing",
+      "edge_norm",
+      "anti_fragment",
+      "selected",
+      "context"
+    ],
+    "no_anti_fragment": [
+      "incoming",
+      "outgoing",
+      "edge_norm",
+      "selected",
+      "context"
+    ],
+    "no_context_penalty": [
+      "incoming",
+      "outgoing",
+      "edge_norm",
+      "anti_fragment",
+      "selected"
+    ],
+    "no_incoming_balance": [
+      "outgoing",
+      "edge_norm",
+      "anti_fragment",
+      "selected",
+      "context"
+    ],
+    "no_outgoing_balance": [
+      "incoming",
+      "edge_norm",
+      "anti_fragment",
+      "selected",
+      "context"
+    ],
+    "no_outgoing_edge_norm": [
+      "incoming",
+      "outgoing",
+      "anti_fragment",
+      "selected",
+      "context"
+    ],
+    "no_selected_family": [
+      "incoming",
+      "outgoing",
+      "edge_norm",
+      "anti_fragment",
+      "context"
+    ],
+    "outgoing_balance_only": [
+      "outgoing"
+    ],
+    "outgoing_edge_norm_only": [
+      "edge_norm"
+    ],
+    "outgoing_topology_only": [
+      "outgoing",
+      "edge_norm",
+      "anti_fragment"
+    ],
+    "selected_context_only": [
+      "selected",
+      "context"
+    ],
+    "topology_only": [
+      "incoming",
+      "outgoing",
+      "edge_norm",
+      "anti_fragment"
+    ]
+  },
+  "context_penalty_weights": [
+    0.0,
+    25.0,
+    50.0,
+    75.0,
+    100.0
+  ],
+  "generated_at_utc": "20260615_113709Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_context_negative_bayesian_topology_sensitivity",
+  "outputs": {
+    "sensitivity_rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_sensitivity/overlap_context_negative_bayesian_topology_sensitivity_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_sensitivity/overlap_context_negative_bayesian_topology_sensitivity_summary.csv"
+  },
+  "production_status": "diagnostic_only_bayesian_topology_sensitivity",
+  "schema_version": "overlap_context_negative_bayesian_topology_sensitivity/v1",
+  "study_role": "diagnostic_overlap_context_negative_bayesian_topology_sensitivity",
+  "topology_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_rows.csv"
+}

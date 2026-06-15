@@ -1,0 +1,15 @@
+{
+  "generated_at_utc": "20260615_114819Z",
+  "input_outputs": {
+    "edge_conditioning": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_edge_conditioning",
+    "regression_gate": "raw/assets/benchmark-results/topology_vector_benchmark_20260615/regression_gate_kl_profile",
+    "topology_law": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_law",
+    "topology_sensitivity": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_sensitivity",
+    "topology_transfer": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_transfer"
+  },
+  "outputs": {
+    "report": "raw/assets/benchmark-results/topology_vector_benchmark_20260615/topology_vector_benchmark_report.md",
+    "summary": "raw/assets/benchmark-results/topology_vector_benchmark_20260615/topology_vector_benchmark_summary.csv"
+  },
+  "schema_version": "topology_vector_benchmark_summary/v1"
+}

@@ -16,6 +16,7 @@ from benchmarks.shared.result_records import (
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.types import MethodSpec
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
+from benchmarks.shared.util.method_sets import KL_DISTANCE_TREE_METHODS
 from benchmarks.shared.util.time import BENCHMARK_STAGE_TIMING_KEYS
 
 KL_TREE_DISTANCE_SOURCE_KEY = "tree_distance_source"
@@ -179,7 +180,7 @@ def run_single_method_once(
     if method_id.startswith("kl"):
         recorded_run_params["edge_alpha"] = float(edge_alpha)
         recorded_run_params["sibling_alpha"] = float(significance_level)
-    if method_id in {"kl", "kl_complete", "kl_single"}:
+    if method_id in KL_DISTANCE_TREE_METHODS:
         metric = str(run_params["tree_distance_metric"])
         requires_precomputed_kl_distance = bool(meta["requires_precomputed_kl_distance"])
         if requires_precomputed_kl_distance:

@@ -1,0 +1,25 @@
+{
+  "generated_at_utc": "20260614_182014Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_weak_family_thresholds",
+  "metrics": [
+    "family_size",
+    "min_sibling_p_value",
+    "neg_log10_min_sibling_p_value",
+    "max_homogeneity_gain_min",
+    "max_context_homogeneity_margin",
+    "max_subspace_consensus_jaccard_topk",
+    "min_continuous_homogeneity_threshold",
+    "max_depth",
+    "median_parent_size",
+    "max_barycentric_balance"
+  ],
+  "outputs": {
+    "family_rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_family_thresholds/overlap_weak_family_rows.csv",
+    "metric_summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_family_thresholds/overlap_weak_family_metric_separability.csv",
+    "threshold_scan": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/weak_family_thresholds/overlap_weak_family_threshold_scan.csv"
+  },
+  "rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/decision_zones/overlap_structural_decision_zone_rows.csv",
+  "schema_version": "overlap_weak_family_thresholds/v1",
+  "study_role": "diagnostic_overlap_weak_family_thresholds_not_calibration",
+  "zone": "unstable_weak_homogeneity_zone"
+}

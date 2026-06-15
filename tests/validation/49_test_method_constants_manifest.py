@@ -36,6 +36,14 @@ class MethodConstantsManifestTests(unittest.TestCase):
             [entry["constant_id"] for entry in manifest["constants"]],
             list(CONSTANT_IDS),
         )
+        self.assertIn("sibling_gate_profile", CONSTANT_IDS)
+        self.assertIn("fixed_sibling_gate_alpha_penalty", CONSTANT_IDS)
+        self.assertIn("root_stability_guard_threshold", CONSTANT_IDS)
+        self.assertIn("root_stability_subsample_replicates", CONSTANT_IDS)
+        self.assertIn("root_stability_feature_fraction", CONSTANT_IDS)
+        self.assertIn("root_selective_permutation_guard_replicates", CONSTANT_IDS)
+        self.assertIn("root_selective_permutation_guard_alpha", CONSTANT_IDS)
+        self.assertIn("root_selective_permutation_guard_scope", CONSTANT_IDS)
         self.assertTrue(manifest["source_paths"][0]["exists"])
         self.assertEqual(manifest["source_paths"][0]["kind"], "directory")
         self.assertIn(
@@ -53,9 +61,12 @@ class MethodConstantsManifestTests(unittest.TestCase):
                 REQUIRED_OUTPUT_FIELDS[constant_id],
             )
 
-        serialized = json.dumps(manifest, sort_keys=True)
-        self.assertNotIn("mean_ari", serialized)
-        self.assertNotIn("p_value", serialized)
+        serialized_metrics = json.dumps(
+            [entry["evidence"]["metrics"] for entry in manifest["constants"]],
+            sort_keys=True,
+        )
+        self.assertNotIn("mean_ari", serialized_metrics)
+        self.assertNotIn("p_value", serialized_metrics)
 
     def test_validate_manifest_rejects_missing_constant(self) -> None:
         manifest = create_manifest([], created_utc="2026-05-24T00:00:00Z")

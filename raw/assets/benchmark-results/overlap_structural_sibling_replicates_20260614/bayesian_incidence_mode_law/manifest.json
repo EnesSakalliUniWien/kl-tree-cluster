@@ -1,0 +1,15 @@
+{
+  "branch_alignment_floor": 0.25,
+  "branch_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/branch_incidence_junction_panel/overlap_branch_incidence_junction_rows.csv",
+  "generated_at_utc": "20260615_105219Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_bayesian_incidence_mode_law",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_incidence_mode_law/overlap_bayesian_incidence_mode_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/bayesian_incidence_mode_law/overlap_bayesian_incidence_mode_summary.csv"
+  },
+  "production_status": "diagnostic_only_fail_closed_mode_law",
+  "schema_version": "overlap_bayesian_incidence_mode_law/v1",
+  "selected_bayes_factor_floor": 3.0,
+  "study_role": "diagnostic_overlap_bayesian_incidence_mode_law",
+  "transfer_gap_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/internal_node_transfer_gap_audit/overlap_internal_node_transfer_gap_rows.csv"
+}

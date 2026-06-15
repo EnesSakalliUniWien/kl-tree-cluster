@@ -1,0 +1,28 @@
+{
+  "component_priors": {
+    "anti_fragment_unit": "1 / (1 + outgoing_fragment_risk_proxy_score)",
+    "background_topology_beta": [
+      2.0,
+      5.0
+    ],
+    "balanced_topology_signal_beta": [
+      6.0,
+      2.0
+    ],
+    "context_penalty": "min(continuous_context_min_margin, 0) * weight",
+    "selected_family_evidence": "log1p(selected_family_log_bayes_factor_lower)"
+  },
+  "context_penalty_weight": 50.0,
+  "generated_at_utc": "20260615_113158Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_context_negative_bayesian_topology_law",
+  "outputs": {
+    "component_summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_law/overlap_context_negative_bayesian_topology_component_summary.csv",
+    "rows": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_law/overlap_context_negative_bayesian_topology_rows.csv",
+    "summary": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_bayesian_topology_law/overlap_context_negative_bayesian_topology_summary.csv"
+  },
+  "prior_truth_probability": 0.05,
+  "production_status": "diagnostic_only_bayesian_topology_law",
+  "schema_version": "overlap_context_negative_bayesian_topology_law/v1",
+  "study_role": "diagnostic_overlap_context_negative_bayesian_topology_law",
+  "topology_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_rows.csv"
+}

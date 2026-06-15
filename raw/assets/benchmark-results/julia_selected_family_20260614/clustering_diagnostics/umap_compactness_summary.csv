@@ -1,0 +1,2 @@
+method,non_singleton_clusters_on_umap,weighted_mean_umap_radius,median_cluster_mean_umap_radius,p90_cluster_mean_umap_radius,max_cluster_mean_umap_radius,umap_silhouette_all_labels
+kl_selected_family,95,0.35516263797252623,0.1579557244937323,0.6642275337384327,1.5410216781412547,-0.20274962787878953

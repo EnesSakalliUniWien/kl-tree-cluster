@@ -1,0 +1,4 @@
+method,non_singleton_clusters,mean_pairwise_hamming_similarity,median_pairwise_hamming_similarity,mean_pairwise_jaccard_similarity,median_pairwise_jaccard_similarity,median_features_shared_by_all,median_features_shared_by_half,median_active_feature_union
+kl,22,0.9981768620787311,0.9980698902885006,0.5952121711909217,0.6666666666666667,49.5,73.5,73.5
+kl_iqtree3_fast,88,0.9914073177939493,0.9922118380062306,0.32595760617504826,0.24911581121109333,34.5,126.0,237.0
+kl_neighbor_joining,88,0.9891356274471644,0.9900446972775294,0.3186043516404806,0.22863636363636364,40.5,159.0,307.5

@@ -1,0 +1,18 @@
+{
+  "assignments": {
+    "kl_selected_family": "raw/assets/benchmark-results/julia_selected_family_20260614/cluster_assignments.csv"
+  },
+  "feature_matrix": "data/feature_matrices/feature_matrix_julia_GOCC_GOBP_GOMF_combined.tsv",
+  "reference_labels": null,
+  "umap_coordinates": "raw/assets/benchmark-results/julia_tree_estimators_20260614/umap_plots/julia_tree_estimator_umap_coordinates.csv",
+  "outputs": [
+    "cluster_size_bins.csv",
+    "cluster_size_summary.csv",
+    "clustering_diagnostic_review_panel.png",
+    "feature_coherence_by_cluster.csv",
+    "feature_coherence_summary.csv",
+    "top_non_singleton_clusters.csv",
+    "umap_cluster_compactness.csv",
+    "umap_compactness_summary.csv"
+  ]
+}

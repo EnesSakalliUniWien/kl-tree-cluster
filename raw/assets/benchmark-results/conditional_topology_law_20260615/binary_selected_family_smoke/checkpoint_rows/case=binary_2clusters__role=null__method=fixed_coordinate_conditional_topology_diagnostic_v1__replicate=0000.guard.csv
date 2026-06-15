@@ -1,0 +1,1 @@
+schema_version,case_id,data_role,method_id,replicate,data_seed,node_id,decision_class,guard_scope,observed_p_value,selected_p_value,base_selected_p_value,null_min_p_value,null_q05_p_value,guard_alpha,guard_replicates,guard_seed,guard_refined,guard_would_block,guard_blocked,study_role

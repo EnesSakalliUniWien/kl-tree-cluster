@@ -1,0 +1,39 @@
+{
+  "generated_at_utc": "20260614_175406Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_structural_threshold_sensitivity",
+  "heterogeneity_thresholds": [
+    0.0,
+    0.005,
+    0.01,
+    0.02
+  ],
+  "homogeneity_thresholds": [
+    0.0,
+    0.0025,
+    0.005,
+    0.01,
+    0.02,
+    0.03
+  ],
+  "outputs": {
+    "recommendations": "raw/assets/benchmark-results/overlap_structural_sibling_20260614/threshold_sensitivity/overlap_structural_threshold_recommendations.csv",
+    "sensitivity": "raw/assets/benchmark-results/overlap_structural_sibling_20260614/threshold_sensitivity/overlap_structural_threshold_sensitivity.csv"
+  },
+  "recommendation_rows": 288,
+  "rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_20260614/overlap_structural_sibling_rows.csv",
+  "schema_version": "overlap_structural_threshold_sensitivity/v1",
+  "sensitivity_rows": 2304,
+  "sibling_p_thresholds": [
+    0.001,
+    0.01,
+    0.05
+  ],
+  "study_role": "diagnostic_overlap_structural_threshold_sensitivity_not_calibration",
+  "subspace_thresholds": [
+    0.15,
+    0.25,
+    0.35,
+    0.5
+  ],
+  "truth_alignment_threshold": 0.5
+}

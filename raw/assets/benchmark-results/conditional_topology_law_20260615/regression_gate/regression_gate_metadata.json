@@ -1,0 +1,39 @@
+{
+  "case_names": [
+    "gauss_extreme_noise_3c",
+    "gauss_extreme_noise_highd",
+    "dim_consolidated_4c_24f",
+    "dim_consolidated_4c_272f",
+    "dim_diffuse_6c_36f",
+    "sbm_moderate",
+    "sbm_hard",
+    "cat_highcard_20cat_4c",
+    "cat_overlap_3cat_4c",
+    "phylo_dna_8taxa_med_mut",
+    "phylo_protein_4taxa",
+    "phylo_protein_12taxa",
+    "phylo_conserved_4taxa",
+    "phylo_conserved_8taxa",
+    "overlap_heavy_4c_med_feat",
+    "overlap_extreme_4c",
+    "overlap_unbal_4c_small"
+  ],
+  "elapsed_sec": 17.29712,
+  "generated_at_utc": "20260615_121424Z",
+  "kl_te_n_jobs": "1",
+  "methods": [
+    "kl",
+    "kl_conditional_topology_diagnostic"
+  ],
+  "n_cases": 17,
+  "n_rows": 34,
+  "results_csv": "raw/assets/benchmark-results/conditional_topology_law_20260615/regression_gate/regression_gate_comparison.csv",
+  "suite": "regression_gate",
+  "thread_env": {
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1"
+  }
+}

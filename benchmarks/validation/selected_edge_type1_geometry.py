@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,6 +20,21 @@ import pandas as pd
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+    build_contrast_covariance,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+    collect_sibling_pair_records,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
+    SiblingPairRecord,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+    collect_parent_principal_component_inputs_for_sibling_tests,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
+)
 from kl_clustering_analysis.tree.feature_space import (
     FeatureSpace,
     bernoulli_feature_space_from_columns,
@@ -29,6 +44,12 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import chi2
 
+from benchmarks.diagnostics.calibration.covariance_laplacian_panel import (
+    analyze_covariance_laplacian,
+)
+from benchmarks.diagnostics.calibration.statistic_distribution_shape_panel import (
+    infer_satterthwaite_reference_from_eigenvalues,
+)
 from benchmarks.shared.cases import get_default_test_cases, get_test_cases_by_suite
 from benchmarks.shared.generators.case_data_contracts import one_hot_encode_categorical
 
@@ -53,6 +74,7 @@ SIBLING_COLUMNS = (
     "Sibling_BH_Different",
     "Sibling_Projection_Dimension",
 )
+COVARIANCE_LAPLACIAN_MAX_FEATURES = 512
 
 
 @dataclass(frozen=True)
@@ -459,10 +481,224 @@ def _calibration_support_status(row: pd.Series) -> str:
     return "not_tested"
 
 
+def _projection_inputs(tree: PosetTree, spectral_context: object) -> tuple[
+    dict[object, int],
+    dict[object, np.ndarray],
+    dict[object, np.ndarray],
+]:
+    projection_dimensions = derive_sibling_projection_dimensions_from_child_edge_comparisons(
+        tree,
+        spectral_context=spectral_context,
+    )
+    parent_projections, parent_eigenvalues = (
+        collect_parent_principal_component_inputs_for_sibling_tests(
+            projection_dimensions,
+            spectral_context=spectral_context,
+        )
+    )
+    return projection_dimensions, parent_projections, parent_eigenvalues
+
+
+def _collect_raw_sibling_records(
+    *,
+    tree: PosetTree,
+    annotations_df: pd.DataFrame,
+    spectral_context: object,
+    feature_space: FeatureSpace,
+) -> dict[str, SiblingPairRecord]:
+    projection_dimensions, parent_projections, parent_eigenvalues = _projection_inputs(
+        tree,
+        spectral_context,
+    )
+    records, _non_binary = collect_sibling_pair_records(
+        tree,
+        annotations_df,
+        sibling_projection_dimensions_from_edge_comparisons=projection_dimensions,
+        parent_principal_component_projections=parent_projections,
+        parent_principal_component_eigenvalues=parent_eigenvalues,
+        feature_space=feature_space,
+    )
+    return {str(record.parent): record for record in records}
+
+
+def _covariance_laplacian_empty_fields(prefix: str, status: str) -> dict[str, object]:
+    return {
+        f"{prefix}_laplacian_status": status,
+        f"{prefix}_covariance_effective_rank": float("nan"),
+        f"{prefix}_off_diagonal_abs_mass_fraction": float("nan"),
+        f"{prefix}_n_connected_components": float("nan"),
+        f"{prefix}_largest_component_fraction": float("nan"),
+        f"{prefix}_normalized_laplacian_lambda2": float("nan"),
+    }
+
+
+def _select_laplacian_fields(prefix: str, row: Mapping[str, object]) -> dict[str, object]:
+    return {
+        f"{prefix}_laplacian_status": row["laplacian_status"],
+        f"{prefix}_covariance_effective_rank": row["covariance_effective_rank"],
+        f"{prefix}_off_diagonal_abs_mass_fraction": row[
+            "off_diagonal_abs_mass_fraction"
+        ],
+        f"{prefix}_n_connected_components": row["n_connected_components"],
+        f"{prefix}_largest_component_fraction": row["largest_component_fraction"],
+        f"{prefix}_normalized_laplacian_lambda2": row[
+            "normalized_laplacian_lambda2"
+        ],
+    }
+
+
+def _block_diagonal_covariance(
+    covariance_blocks: Sequence[np.ndarray],
+    *,
+    max_features: int = COVARIANCE_LAPLACIAN_MAX_FEATURES,
+) -> np.ndarray | None:
+    width = int(sum(np.asarray(block).shape[0] for block in covariance_blocks))
+    if width <= 0 or width > int(max_features):
+        return None
+    matrix = np.zeros((width, width), dtype=float)
+    offset = 0
+    for block in covariance_blocks:
+        covariance_block = np.asarray(block, dtype=float)
+        next_offset = offset + int(covariance_block.shape[0])
+        matrix[offset:next_offset, offset:next_offset] = covariance_block
+        offset = next_offset
+    return matrix
+
+
+def _sibling_contrast_laplacian_fields(
+    *,
+    tree: PosetTree,
+    parent: object,
+    left: object,
+    right: object,
+    feature_space: FeatureSpace,
+) -> dict[str, object]:
+    try:
+        contrast_covariance = build_contrast_covariance(
+            np.asarray(tree.nodes[left]["distribution"], dtype=float),
+            np.asarray(tree.nodes[right]["distribution"], dtype=float),
+            float(tree.nodes[left]["leaf_count"]),
+            float(tree.nodes[right]["leaf_count"]),
+            comparison="sibling",
+            feature_space=feature_space,
+        )
+        matrix = _block_diagonal_covariance(contrast_covariance.covariance_blocks)
+        if matrix is None:
+            return _covariance_laplacian_empty_fields(
+                "sibling_contrast",
+                "laplacian_skipped_high_dimension",
+            )
+        row = analyze_covariance_laplacian(
+            matrix,
+            matrix_id=f"sibling_contrast:{parent}",
+            matrix_context_role="sibling_contrast_covariance",
+            feature_family=feature_space.family_label,
+            correlation_threshold=0.05,
+        )
+        return _select_laplacian_fields("sibling_contrast", row)
+    except (ValueError, np.linalg.LinAlgError):
+        return _covariance_laplacian_empty_fields(
+            "sibling_contrast",
+            "laplacian_unavailable",
+        )
+
+
+def _parent_spectral_laplacian_fields(
+    *,
+    spectral_context: object,
+    parent: object,
+) -> dict[str, object]:
+    key = str(parent)
+    projections = getattr(spectral_context, "principal_component_projections_by_node", {})
+    eigenvalues_by_node = getattr(
+        spectral_context,
+        "principal_component_eigenvalues_by_node",
+        {},
+    )
+    if key not in projections or key not in eigenvalues_by_node:
+        return _covariance_laplacian_empty_fields(
+            "parent_spectral",
+            "laplacian_missing_spectral_context",
+        )
+    projection = np.asarray(projections[key], dtype=float)
+    eigenvalues = np.asarray(eigenvalues_by_node[key], dtype=float)
+    if projection.ndim != 2 or eigenvalues.ndim != 1 or projection.shape[0] != eigenvalues.shape[0]:
+        return _covariance_laplacian_empty_fields(
+            "parent_spectral",
+            "laplacian_invalid_spectral_context",
+        )
+    if projection.shape[1] > COVARIANCE_LAPLACIAN_MAX_FEATURES:
+        return _covariance_laplacian_empty_fields(
+            "parent_spectral",
+            "laplacian_skipped_high_dimension",
+        )
+    try:
+        covariance = (projection.T * eigenvalues) @ projection
+        row = analyze_covariance_laplacian(
+            covariance,
+            matrix_id=f"parent_spectral:{parent}",
+            matrix_context_role="parent_spectral_covariance",
+            correlation_threshold=0.05,
+        )
+        return _select_laplacian_fields("parent_spectral", row)
+    except (ValueError, np.linalg.LinAlgError):
+        return _covariance_laplacian_empty_fields(
+            "parent_spectral",
+            "laplacian_unavailable",
+        )
+
+
+def _covariance_inferred_reference_fields(
+    *,
+    spectral_context: object,
+    parent: object,
+    projection_dimension: float,
+) -> dict[str, float]:
+    key = str(parent)
+    eigenvalues_by_node = getattr(
+        spectral_context,
+        "principal_component_eigenvalues_by_node",
+        {},
+    )
+    if key not in eigenvalues_by_node:
+        return {
+            "covariance_inferred_df": float("nan"),
+            "covariance_inferred_reference_scale": float("nan"),
+            "covariance_inferred_df_ratio_to_current": float("nan"),
+        }
+    eigenvalues = np.asarray(eigenvalues_by_node[key], dtype=float)
+    k = int(projection_dimension) if np.isfinite(projection_dimension) else 0
+    if k <= 0 or eigenvalues.size < k:
+        return {
+            "covariance_inferred_df": float("nan"),
+            "covariance_inferred_reference_scale": float("nan"),
+            "covariance_inferred_df_ratio_to_current": float("nan"),
+        }
+    try:
+        scale, inferred_df = infer_satterthwaite_reference_from_eigenvalues(
+            eigenvalues[:k],
+        )
+    except ValueError:
+        scale = float("nan")
+        inferred_df = float("nan")
+    return {
+        "covariance_inferred_df": inferred_df,
+        "covariance_inferred_reference_scale": scale,
+        "covariance_inferred_df_ratio_to_current": (
+            float(inferred_df / projection_dimension)
+            if np.isfinite(inferred_df) and projection_dimension > 0.0
+            else float("nan")
+        ),
+    }
+
+
 def extract_sibling_geometry_rows(
     *,
     tree: PosetTree,
     annotations_df: pd.DataFrame,
+    spectral_context: object,
+    feature_space: FeatureSpace,
+    raw_sibling_records_by_parent: Mapping[str, SiblingPairRecord],
     run_id: str,
     mode: str,
     source_family: str,
@@ -475,7 +711,8 @@ def extract_sibling_geometry_rows(
     sibling_alpha: float,
 ) -> list[dict[str, object]]:
     """Extract sibling-level rows from available annotation columns."""
-    if not set(SIBLING_COLUMNS).issubset(annotations_df.columns):
+    has_sibling_annotations = set(SIBLING_COLUMNS).issubset(annotations_df.columns)
+    if not has_sibling_annotations and not raw_sibling_records_by_parent:
         return []
     depths = _node_depth_map(tree)
     rows: list[dict[str, object]] = []
@@ -499,15 +736,88 @@ def extract_sibling_geometry_rows(
         right_edge_bh = _positive_p_or_nan(
             annotations_df.at[right, "Child_Parent_Divergence_P_Value_BH"]
         )
-        sibling_stat = _finite_or_nan(annotations_df.at[parent, "Sibling_Test_Statistic"])
-        sibling_df = _finite_or_nan(annotations_df.at[parent, "Sibling_Degrees_of_Freedom"])
-        adjusted_p = _positive_p_or_nan(annotations_df.at[parent, "Sibling_Divergence_P_Value"])
-        sibling_bh_p = _positive_p_or_nan(
-            annotations_df.at[parent, "Sibling_Divergence_P_Value_Corrected"]
+        raw_record = raw_sibling_records_by_parent.get(str(parent))
+        raw_sibling_stat = (
+            float(raw_record.stat)
+            if raw_record is not None and np.isfinite(raw_record.stat)
+            else float("nan")
+        )
+        sibling_df = (
+            float(raw_record.degrees_of_freedom)
+            if raw_record is not None and np.isfinite(raw_record.degrees_of_freedom)
+            else (
+                _finite_or_nan(annotations_df.at[parent, "Sibling_Degrees_of_Freedom"])
+                if has_sibling_annotations
+                else float("nan")
+            )
+        )
+        raw_sibling_p = (
+            float(raw_record.p_value)
+            if raw_record is not None and np.isfinite(raw_record.p_value)
+            else (
+                float(chi2.sf(raw_sibling_stat, df=sibling_df))
+                if np.isfinite(raw_sibling_stat) and sibling_df > 0.0
+                else float("nan")
+            )
+        )
+        adjusted_stat = (
+            _finite_or_nan(annotations_df.at[parent, "Sibling_Test_Statistic"])
+            if has_sibling_annotations
+            else float("nan")
+        )
+        adjusted_p = (
+            _positive_p_or_nan(annotations_df.at[parent, "Sibling_Divergence_P_Value"])
+            if has_sibling_annotations
+            else float("nan")
+        )
+        sibling_bh_p = (
+            _positive_p_or_nan(
+                annotations_df.at[parent, "Sibling_Divergence_P_Value_Corrected"]
+            )
+            if has_sibling_annotations
+            else float("nan")
+        )
+        sibling_projection_dimension = (
+            float(raw_record.sibling_projection_dimension)
+            if raw_record is not None
+            and np.isfinite(raw_record.sibling_projection_dimension)
+            else (
+                _finite_or_nan(annotations_df.at[parent, "Sibling_Projection_Dimension"])
+                if has_sibling_annotations
+                else float("nan")
+            )
         )
         selected_ratio = (
-            float(sibling_stat / sibling_df)
-            if np.isfinite(sibling_stat) and np.isfinite(sibling_df) and sibling_df > 0.0
+            float(raw_sibling_stat / sibling_df)
+            if np.isfinite(raw_sibling_stat) and np.isfinite(sibling_df) and sibling_df > 0.0
+            else float("nan")
+        )
+        adjusted_selected_ratio = (
+            float(adjusted_stat / sibling_df)
+            if np.isfinite(adjusted_stat) and np.isfinite(sibling_df) and sibling_df > 0.0
+            else float("nan")
+        )
+        covariance_fields = _covariance_inferred_reference_fields(
+            spectral_context=spectral_context,
+            parent=parent,
+            projection_dimension=sibling_projection_dimension,
+        )
+        sibling_laplacian_fields = _sibling_contrast_laplacian_fields(
+            tree=tree,
+            parent=parent,
+            left=left,
+            right=right,
+            feature_space=feature_space,
+        )
+        parent_laplacian_fields = _parent_spectral_laplacian_fields(
+            spectral_context=spectral_context,
+            parent=parent,
+        )
+        inflation_factor = (
+            float(raw_sibling_stat / adjusted_stat)
+            if np.isfinite(raw_sibling_stat)
+            and np.isfinite(adjusted_stat)
+            and adjusted_stat > 0.0
             else float("nan")
         )
         rows.append(
@@ -537,26 +847,37 @@ def extract_sibling_geometry_rows(
                     annotations_df.at[left, "Child_Parent_Divergence_Significant"]
                     or annotations_df.at[right, "Child_Parent_Divergence_Significant"]
                 ),
-                "sibling_raw_stat": float("nan"),
+                "sibling_raw_stat": raw_sibling_stat,
+                "sibling_adjusted_stat": adjusted_stat,
                 "sibling_df": sibling_df,
-                "sibling_raw_p": float("nan"),
-                "inflation_factor": float("nan"),
+                "sibling_raw_p": raw_sibling_p,
+                "inflation_factor": inflation_factor,
                 "sibling_adjusted_p": adjusted_p,
                 "sibling_bh_p": sibling_bh_p,
-                "sibling_rejected": bool(annotations_df.at[parent, "Sibling_BH_Different"]),
-                "calibration_support_status": _calibration_support_status(annotations_df.loc[parent]),
-                "sibling_projection_dimension": _finite_or_nan(
-                    annotations_df.at[parent, "Sibling_Projection_Dimension"]
-                ),
+                "sibling_rejected": bool(
+                    annotations_df.at[parent, "Sibling_BH_Different"]
+                )
+                if has_sibling_annotations
+                else False,
+                "calibration_support_status": _calibration_support_status(
+                    annotations_df.loc[parent]
+                )
+                if has_sibling_annotations
+                else "raw_only_pre_calibration",
+                "sibling_projection_dimension": sibling_projection_dimension,
                 "edge_to_sibling_cosine": float("nan"),
                 "edge_to_sibling_cosine_squared": float("nan"),
                 "sibling_subspace_capture": float("nan"),
                 "principal_angle_min": float("nan"),
                 "principal_angle_max": float("nan"),
                 "selected_ratio": selected_ratio,
+                "adjusted_selected_ratio": adjusted_selected_ratio,
                 "selected_ratio_log": (
                     float(np.log(selected_ratio)) if selected_ratio > 0.0 else float("nan")
                 ),
+                **covariance_fields,
+                **sibling_laplacian_fields,
+                **parent_laplacian_fields,
             }
         )
     return rows
@@ -633,6 +954,12 @@ def run_selected_edge_replicate(
         selected_tree=selected_tree,
         fixed_tree=fixed_tree,
     )
+    raw_sibling_records_by_parent = _collect_raw_sibling_records(
+        tree=tree,
+        annotations_df=edge_annotations,
+        spectral_context=spectral_context,
+        feature_space=feature_space,
+    )
 
     status, found_clusters, failure_reason = _decompose_for_final(
         tree=tree,
@@ -646,6 +973,9 @@ def run_selected_edge_replicate(
         extract_sibling_geometry_rows(
             tree=tree,
             annotations_df=annotations_after_decomposition,
+            spectral_context=spectral_context,
+            feature_space=feature_space,
+            raw_sibling_records_by_parent=raw_sibling_records_by_parent,
             run_id=run_id,
             mode=mode,
             source_family=source_family,

@@ -156,6 +156,136 @@ CONSTANT_SPECS: tuple[dict[str, Any], ...] = (
             "descendant_signal_recovery",
         ),
     },
+    {
+        "constant_id": "sibling_gate_profile",
+        "display_name": "Sibling gate profile",
+        "default_value": "projected_wald_inflation",
+        "validation_question": (
+            "Does a named fixed-subspace sibling-gate profile repair same-sample "
+            "adaptive projection failure without reopening traversal false splits?"
+        ),
+        "additional_required_output_fields": (
+            "profile_grid",
+            "profile_metadata",
+            "adaptive_projection_avoidance_check",
+            "null_false_split_confidence",
+            "signal_ari_confidence",
+        ),
+    },
+    {
+        "constant_id": "fixed_sibling_gate_alpha_penalty",
+        "display_name": "Fixed sibling-gate alpha penalty",
+        "default_value": 50.0,
+        "validation_question": (
+            "Does the selected-topology alpha penalty control false sibling-driven "
+            "splits for fixed-subspace profiles while retaining signal?"
+        ),
+        "additional_required_output_fields": (
+            "penalty_grid",
+            "effective_sibling_alpha",
+            "null_false_split_confidence",
+            "signal_ari_confidence",
+        ),
+    },
+    {
+        "constant_id": "root_stability_guard_threshold",
+        "display_name": "Root stability guard threshold",
+        "default_value": 0.24,
+        "validation_question": (
+            "Does the selected-root feature-subsample stability threshold block "
+            "unstable selected-null roots without suppressing true signal roots?"
+        ),
+        "additional_required_output_fields": (
+            "threshold_grid",
+            "root_stability_distribution",
+            "null_root_block_rate",
+            "signal_root_block_rate",
+            "null_false_split_confidence",
+            "signal_ari_confidence",
+        ),
+    },
+    {
+        "constant_id": "root_stability_subsample_replicates",
+        "display_name": "Root stability subsample replicates",
+        "default_value": 12,
+        "validation_question": (
+            "Are the root-stability subsample counts sufficient for stable guard "
+            "decisions under the fixed-subspace profiles?"
+        ),
+        "additional_required_output_fields": (
+            "subsample_replicate_grid",
+            "guard_decision_stability",
+            "runtime_cost_summary",
+            "null_false_split_confidence",
+            "signal_ari_confidence",
+        ),
+    },
+    {
+        "constant_id": "root_stability_feature_fraction",
+        "display_name": "Root stability feature fraction",
+        "default_value": 0.8,
+        "validation_question": (
+            "Does the root-stability feature-subsample fraction preserve signal "
+            "while detecting selected-root instability?"
+        ),
+        "additional_required_output_fields": (
+            "feature_fraction_grid",
+            "root_stability_distribution",
+            "null_root_block_rate",
+            "signal_root_block_rate",
+        ),
+    },
+    {
+        "constant_id": "root_selective_permutation_guard_replicates",
+        "display_name": "Root selective permutation guard replicates",
+        "default_value": 0,
+        "validation_question": (
+            "How many selected-root permutation draws are required to block "
+            "selected-null roots while retaining true signal roots?"
+        ),
+        "additional_required_output_fields": (
+            "permutation_replicate_grid",
+            "root_selective_p_value_distribution",
+            "null_root_block_rate",
+            "signal_root_block_rate",
+            "runtime_cost_summary",
+            "null_false_split_confidence",
+            "signal_ari_confidence",
+        ),
+    },
+    {
+        "constant_id": "root_selective_permutation_guard_alpha",
+        "display_name": "Root selective permutation guard alpha",
+        "default_value": None,
+        "validation_question": (
+            "Does the selected-root permutation alpha threshold control "
+            "selected-root false splits without suppressing true signal roots?"
+        ),
+        "additional_required_output_fields": (
+            "alpha_grid",
+            "root_selective_p_value_distribution",
+            "null_root_block_rate",
+            "signal_root_block_rate",
+            "null_false_split_confidence",
+            "signal_ari_confidence",
+        ),
+    },
+    {
+        "constant_id": "root_selective_permutation_guard_scope",
+        "display_name": "Root selective permutation guard scope",
+        "default_value": "root",
+        "validation_question": (
+            "Does the selected-permutation guard scope target root and "
+            "pass-through false splits without compounding conservatism below "
+            "explicitly blocked roots?"
+        ),
+        "additional_required_output_fields": (
+            "scope_grid",
+            "root_selective_p_value_distribution",
+            "null_false_split_confidence",
+            "signal_ari_confidence",
+        ),
+    },
 )
 
 CONSTANT_IDS = tuple(spec["constant_id"] for spec in CONSTANT_SPECS)

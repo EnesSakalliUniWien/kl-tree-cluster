@@ -25,6 +25,21 @@ class GateAnnotationConfigMetadata:
     """Config values that affect gate annotation outputs."""
 
     spectral_minimum_dimension: int
+    sibling_gate_profile_id: str | None = None
+    sibling_gate_method: str = "projected_wald_inflation"
+    sibling_gate_alpha_penalty: float = 1.0
+    root_stability_guard_threshold: float | None = None
+    root_stability_subsample_replicates: int = 0
+    root_stability_feature_fraction: float = 0.8
+    root_stability_seed: int = 0
+    root_stability_tree_distance_metric: str = "hamming"
+    root_stability_tree_linkage_method: str = "average"
+    root_selective_permutation_guard_replicates: int = 0
+    root_selective_permutation_guard_seed: int = 0
+    root_selective_permutation_guard_alpha: float | None = None
+    root_selective_permutation_guard_scope: str = "root"
+    root_selective_permutation_guard_tree_distance_metric: str = "hamming"
+    root_selective_permutation_guard_tree_linkage_method: str = "average"
     enforce_internal_support_thresholds: bool = False
     internal_support_thresholds_signature: tuple[tuple[str, float | int], ...] = ()
     external_selected_tail_calibration_enabled: bool = False
