@@ -34,10 +34,23 @@ def test_cluster_algorithm_validation():
         # worse than random.  On very small / noisy data this is expected.
         assert -1 <= best["ari"] <= 1
         assert 0 <= best["nmi"] <= 1
+        assert -1 <= best["ami"] <= 1
         assert 0 <= best["purity"] <= 1
+        assert 0 <= best["homogeneity"] <= 1
+        assert 0 <= best["completeness"] <= 1
+        assert 0 <= best["v_measure"] <= 1
+        assert 0 <= best["fowlkes_mallows"] <= 1
         assert 0 <= best["macro_recall"] <= 1
         assert 0 <= best["macro_f1"] <= 1
         assert 0 <= best["worst_cluster_recall"] <= 1
+        assert best["n_singleton_clusters"] >= 0
+        assert 0 <= best["singleton_fraction"] <= 1
+        assert best["median_cluster_size"] >= 1
+        assert 0 <= best["largest_cluster_fraction"] <= 1
+        assert best["effective_cluster_count"] >= 1
+        assert best["cluster_size_entropy"] >= 0
+        assert 0 <= best["cluster_size_gini"] <= 1
+        assert 0 <= best["noise_label_fraction"] <= 1
         assert best["cluster_count_abs_error"] >= 0
 
 
@@ -63,10 +76,26 @@ def test_benchmark_cluster_algorithm_expected_columns():
         "noise",
         "ari",
         "nmi",
+        "ami",
         "purity",
+        "homogeneity",
+        "completeness",
+        "v_measure",
+        "fowlkes_mallows",
         "macro_recall",
         "macro_f1",
         "worst_cluster_recall",
+        "n_singleton_clusters",
+        "singleton_fraction",
+        "median_cluster_size",
+        "largest_cluster_fraction",
+        "effective_cluster_count",
+        "cluster_size_entropy",
+        "cluster_size_gini",
+        "noise_label_fraction",
+        "silhouette_score",
+        "davies_bouldin_index",
+        "calinski_harabasz_index",
         "outlier_precision",
         "outlier_recall",
         "outlier_f1",

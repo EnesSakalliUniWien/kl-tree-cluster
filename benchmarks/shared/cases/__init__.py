@@ -39,11 +39,8 @@ DISCRETIZED_GAUSSIAN_BENCHMARK_GENERATORS = frozenset(
 CONTINUOUS_BENCHMARK_GENERATORS = frozenset(
     {
         "blobs_continuous",
-        "continuous_low_rank_factor",
-        "continuous_spiked_covariance",
         "dimensional_gaussian_continuous",
         "gaussian_outliers_continuous",
-        "phylogenetic_brownian_continuous",
     }
 )
 CATEGORICAL_BENCHMARK_GENERATORS = frozenset(

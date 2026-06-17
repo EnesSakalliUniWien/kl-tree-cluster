@@ -111,7 +111,21 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
 
     assert np.isclose(result_row.ari, 1.0)
     assert np.isclose(result_row.nmi, 1.0)
+    assert np.isclose(result_row.ami, 1.0)
     assert np.isclose(result_row.purity, 1.0)
+    assert np.isclose(result_row.homogeneity, 1.0)
+    assert np.isclose(result_row.completeness, 1.0)
+    assert np.isclose(result_row.v_measure, 1.0)
+    assert np.isclose(result_row.fowlkes_mallows, 1.0)
+    assert np.isclose(result_row.n_singleton_clusters, 0.0)
+    assert np.isclose(result_row.singleton_fraction, 0.0)
+    assert np.isclose(result_row.median_cluster_size, 2.0)
+    assert np.isclose(result_row.largest_cluster_fraction, 2.0 / 6.0)
+    assert np.isclose(result_row.effective_cluster_count, 3.0)
+    assert np.isclose(result_row.noise_label_fraction, 0.0)
+    assert np.isfinite(result_row.silhouette_score)
+    assert np.isfinite(result_row.davies_bouldin_index)
+    assert np.isfinite(result_row.calinski_harabasz_index)
     assert result_row.params_raw["tree_distance_metric"] == "hamming"
     assert result_row.params_raw["tree_distance_source"] == "feature_metric"
     assert captured_kwargs["edge_alpha"] == 0.007

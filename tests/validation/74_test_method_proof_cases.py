@@ -5,11 +5,12 @@ from benchmarks.shared.generators.generate_case_data import generate_case_data
 def test_method_proof_suite_lists_traceable_cases():
     cases = get_test_cases_by_suite("method_proof")
 
-    assert len(cases) == 10
+    assert len(cases) == 11
     assert {case["name"] for case in cases} >= {
         "bar_binary_balanced_4c",
         "cat_simplex_face_rare_20cat",
         "cont_lowrank_pggn_shrinkage",
+        "traversal_deep_branch_recovery_stress",
     }
     for case in cases:
         assert case["benchmark_role"]
@@ -25,6 +26,7 @@ def test_method_proof_generators_satisfy_case_data_contract():
     cases = {case["name"]: case for case in get_test_cases_by_suite("method_proof")}
     selected_names = [
         "bar_binary_balanced_4c",
+        "traversal_deep_branch_recovery_stress",
         "mp_spike_below_bbp_continuous",
         "cat_simplex_face_rare_20cat",
         "phylo_brownian_null_16taxa",

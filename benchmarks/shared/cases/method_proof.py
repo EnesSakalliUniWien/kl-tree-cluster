@@ -245,5 +245,26 @@ METHOD_PROOF_CASES = {
             ],
             success_criterion="deep descendant signal is not erased by a weak same-parent root context",
         ),
+        _method_case(
+            name="traversal_deep_branch_recovery_stress",
+            generator="planted_hierarchy_deep_signal",
+            n_samples=240,
+            n_features=480,
+            n_clusters=6,
+            root_sibling_effect="very_weak_same",
+            descendant_effect="very_strong_sparse",
+            seed=21601,
+            benchmark_role="pass_through_branch_recovery_validation",
+            mathematical_target="selected_pass_through_branch_recovery_support",
+            expected_failure_modes=[
+                "traversal_failure",
+                "sibling_FDR_failure",
+                "selected_pass_through_false_fragment",
+            ],
+            success_criterion=(
+                "real selected traversal produces branch-recovery support before "
+                "any pass-through retention law is fitted"
+            ),
+        ),
     ]
 }

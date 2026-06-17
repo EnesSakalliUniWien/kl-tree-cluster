@@ -26,10 +26,26 @@ _NUMERIC_COLUMNS = (
     "noise",
     "ari",
     "nmi",
+    "ami",
     "purity",
+    "homogeneity",
+    "completeness",
+    "v_measure",
+    "fowlkes_mallows",
     "macro_recall",
     "macro_f1",
     "worst_cluster_recall",
+    "n_singleton_clusters",
+    "singleton_fraction",
+    "median_cluster_size",
+    "largest_cluster_fraction",
+    "effective_cluster_count",
+    "cluster_size_entropy",
+    "cluster_size_gini",
+    "noise_label_fraction",
+    "silhouette_score",
+    "davies_bouldin_index",
+    "calinski_harabasz_index",
     "outlier_precision",
     "outlier_recall",
     "outlier_f1",
@@ -680,7 +696,6 @@ def _extract_audit_summary(audit_path: Path) -> dict[str, float] | None:
 
     try:
         root_idx = df["leaf_count"].astype(float).idxmax()
-        root_id = df.loc[root_idx, "node_id"]
     except Exception:
         return None
 

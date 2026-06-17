@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from benchmarks.shared.result_records.models import BenchmarkResultRow, BenchmarkRunStatus
 from benchmarks.shared.util.params import format_params_for_display
 from benchmarks.shared.util.time import normalize_stage_timings
@@ -53,6 +55,22 @@ def build_benchmark_result_row(
     skip_reason: str | None,
     labels_length: int,
     stage_timings: dict[str, object] | None = None,
+    ami: float = math.nan,
+    homogeneity: float = math.nan,
+    completeness: float = math.nan,
+    v_measure: float = math.nan,
+    fowlkes_mallows: float = math.nan,
+    n_singleton_clusters: float = math.nan,
+    singleton_fraction: float = math.nan,
+    median_cluster_size: float = math.nan,
+    largest_cluster_fraction: float = math.nan,
+    effective_cluster_count: float = math.nan,
+    cluster_size_entropy: float = math.nan,
+    cluster_size_gini: float = math.nan,
+    noise_label_fraction: float = math.nan,
+    silhouette_score: float = math.nan,
+    davies_bouldin_index: float = math.nan,
+    calinski_harabasz_index: float = math.nan,
 ) -> BenchmarkResultRow:
     """Build a typed benchmark row with normalized output fields."""
     if true_clusters is None:
@@ -76,10 +94,26 @@ def build_benchmark_result_row(
         noise=float(noise),
         ari=float(ari),
         nmi=float(nmi),
+        ami=float(ami),
         purity=float(purity),
+        homogeneity=float(homogeneity),
+        completeness=float(completeness),
+        v_measure=float(v_measure),
+        fowlkes_mallows=float(fowlkes_mallows),
         macro_recall=float(macro_recall),
         macro_f1=float(macro_f1),
         worst_cluster_recall=float(worst_cluster_recall),
+        n_singleton_clusters=float(n_singleton_clusters),
+        singleton_fraction=float(singleton_fraction),
+        median_cluster_size=float(median_cluster_size),
+        largest_cluster_fraction=float(largest_cluster_fraction),
+        effective_cluster_count=float(effective_cluster_count),
+        cluster_size_entropy=float(cluster_size_entropy),
+        cluster_size_gini=float(cluster_size_gini),
+        noise_label_fraction=float(noise_label_fraction),
+        silhouette_score=float(silhouette_score),
+        davies_bouldin_index=float(davies_bouldin_index),
+        calinski_harabasz_index=float(calinski_harabasz_index),
         outlier_precision=float(outlier_precision),
         outlier_recall=float(outlier_recall),
         outlier_f1=float(outlier_f1),

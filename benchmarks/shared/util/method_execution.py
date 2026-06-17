@@ -243,13 +243,35 @@ def run_single_method_once(
         report_df = _report_for_metric_evaluation(result.report_df, labels, data_t.index)
         found_clusters = result.found_clusters
         labels_len = len(labels)
-        metrics = _calculate_ari_nmi_purity_metrics(report_df, data_t.index, y_t, meta)
+        metrics = _calculate_ari_nmi_purity_metrics(
+            report_df,
+            data_t.index,
+            y_t,
+            meta,
+            feature_matrix=data_t,
+        )
         ari = metrics.ari
         nmi = metrics.nmi
+        ami = metrics.ami
         purity = metrics.purity
+        homogeneity = metrics.homogeneity
+        completeness = metrics.completeness
+        v_measure = metrics.v_measure
+        fowlkes_mallows = metrics.fowlkes_mallows
         macro_recall = metrics.macro_recall
         macro_f1 = metrics.macro_f1
         worst_cluster_recall = metrics.worst_cluster_recall
+        n_singleton_clusters = metrics.n_singleton_clusters
+        singleton_fraction = metrics.singleton_fraction
+        median_cluster_size = metrics.median_cluster_size
+        largest_cluster_fraction = metrics.largest_cluster_fraction
+        effective_cluster_count = metrics.effective_cluster_count
+        cluster_size_entropy = metrics.cluster_size_entropy
+        cluster_size_gini = metrics.cluster_size_gini
+        noise_label_fraction = metrics.noise_label_fraction
+        internal_silhouette = metrics.silhouette_score
+        davies_bouldin = metrics.davies_bouldin_index
+        calinski_harabasz = metrics.calinski_harabasz_index
         outlier_precision = metrics.outlier_precision
         outlier_recall = metrics.outlier_recall
         outlier_f1 = metrics.outlier_f1
@@ -258,8 +280,25 @@ def run_single_method_once(
     else:
         labels_len = 0
         found_clusters = 0
-        ari, nmi, purity = np.nan, np.nan, np.nan
+        ari, nmi, ami, purity = np.nan, np.nan, np.nan, np.nan
+        homogeneity, completeness, v_measure, fowlkes_mallows = (
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+        )
         macro_recall, macro_f1, worst_cluster_recall = np.nan, np.nan, np.nan
+        n_singleton_clusters = np.nan
+        singleton_fraction = np.nan
+        median_cluster_size = np.nan
+        largest_cluster_fraction = np.nan
+        effective_cluster_count = np.nan
+        cluster_size_entropy = np.nan
+        cluster_size_gini = np.nan
+        noise_label_fraction = np.nan
+        internal_silhouette = np.nan
+        davies_bouldin = np.nan
+        calinski_harabasz = np.nan
         outlier_precision, outlier_recall, outlier_f1 = np.nan, np.nan, np.nan
         singleton_outlier_isolated = np.nan
         grouped_outlier_cluster_recovered = np.nan
@@ -288,10 +327,26 @@ def run_single_method_once(
         noise=meta["noise"],
         ari=ari,
         nmi=nmi,
+        ami=ami,
         purity=purity,
+        homogeneity=homogeneity,
+        completeness=completeness,
+        v_measure=v_measure,
+        fowlkes_mallows=fowlkes_mallows,
         macro_recall=macro_recall,
         macro_f1=macro_f1,
         worst_cluster_recall=worst_cluster_recall,
+        n_singleton_clusters=n_singleton_clusters,
+        singleton_fraction=singleton_fraction,
+        median_cluster_size=median_cluster_size,
+        largest_cluster_fraction=largest_cluster_fraction,
+        effective_cluster_count=effective_cluster_count,
+        cluster_size_entropy=cluster_size_entropy,
+        cluster_size_gini=cluster_size_gini,
+        noise_label_fraction=noise_label_fraction,
+        silhouette_score=internal_silhouette,
+        davies_bouldin_index=davies_bouldin,
+        calinski_harabasz_index=calinski_harabasz,
         outlier_precision=outlier_precision,
         outlier_recall=outlier_recall,
         outlier_f1=outlier_f1,

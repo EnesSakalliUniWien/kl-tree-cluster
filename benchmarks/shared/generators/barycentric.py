@@ -144,15 +144,38 @@ def generate_planted_hierarchy_deep_signal(test_case: dict, seed: int | None) ->
     labels = _labels_from_sizes(sizes)
     rng.shuffle(labels)
 
-    probabilities = np.full((n_clusters, n_features), 0.5, dtype=float)
+    root_effect = str(test_case.get("root_sibling_effect", "weak_same"))
+    descendant_effect = str(test_case.get("descendant_effect", "strong"))
+    root_delta = {
+        "none": 0.0,
+        "very_weak_same": 0.02,
+        "weak_same": 0.05,
+        "moderate_same": 0.08,
+    }.get(root_effect, 0.05)
+    descendant_delta = {
+        "moderate": 0.24,
+        "strong": 0.32,
+        "very_strong": 0.42,
+        "very_strong_sparse": 0.0,
+    }.get(descendant_effect, 0.32)
+    sparse_descendants = descendant_effect == "very_strong_sparse"
+
+    probabilities = np.full(
+        (n_clusters, n_features),
+        0.16 if sparse_descendants else 0.5,
+        dtype=float,
+    )
     root_width = max(1, n_features // 6)
     descendant_width = max(1, (n_features - root_width) // max(n_clusters, 1))
     for cluster in range(n_clusters):
         root_sign = 1.0 if cluster < n_clusters / 2 else -1.0
-        probabilities[cluster, :root_width] += 0.05 * root_sign
+        probabilities[cluster, :root_width] = 0.5 + root_delta * root_sign
         start = root_width + cluster * descendant_width
         stop = n_features if cluster == n_clusters - 1 else min(n_features, start + descendant_width)
-        probabilities[cluster, start:stop] += 0.32
+        if sparse_descendants:
+            probabilities[cluster, start:stop] = 0.88
+        else:
+            probabilities[cluster, start:stop] += descendant_delta
     probabilities = np.clip(probabilities, 0.02, 0.98)
 
     matrix = _binary_matrix_from_cluster_probabilities(
@@ -176,8 +199,11 @@ def generate_planted_hierarchy_deep_signal(test_case: dict, seed: int | None) ->
         feature_representation="binary",
         requires_precomputed_kl_distance=False,
         extra={
-            "root_sibling_effect": str(test_case.get("root_sibling_effect", "weak_same")),
-            "descendant_effect": str(test_case.get("descendant_effect", "strong")),
+            "root_sibling_effect": root_effect,
+            "descendant_effect": descendant_effect,
+            "root_delta": float(root_delta),
+            "descendant_delta": float(descendant_delta),
+            "sparse_descendants": bool(sparse_descendants),
         },
     )
     return data_df, labels, matrix.astype(float), metadata

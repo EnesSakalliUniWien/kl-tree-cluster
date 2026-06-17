@@ -38,7 +38,7 @@ post-run diagnostics.
 | `util/` | Case execution, method execution, parameter parsing, PDF helpers, and timing. |
 | `plots/` | Benchmark PDF pages, embeddings, runtime plots, and report export. |
 | `relationship_analysis.py` | Post-run benchmark factor analysis. |
-| `metrics.py` | ARI, NMI, purity, exact-K, and outlier metrics. |
+| `metrics.py` | External, fragmentation, internal-geometry, and outlier clustering metrics. |
 
 ## Contracts
 

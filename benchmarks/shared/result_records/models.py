@@ -32,10 +32,26 @@ class BenchmarkResultRow:
     noise: float
     ari: float
     nmi: float
+    ami: float
     purity: float
+    homogeneity: float
+    completeness: float
+    v_measure: float
+    fowlkes_mallows: float
     macro_recall: float
     macro_f1: float
     worst_cluster_recall: float
+    n_singleton_clusters: float
+    singleton_fraction: float
+    median_cluster_size: float
+    largest_cluster_fraction: float
+    effective_cluster_count: float
+    cluster_size_entropy: float
+    cluster_size_gini: float
+    noise_label_fraction: float
+    silhouette_score: float
+    davies_bouldin_index: float
+    calinski_harabasz_index: float
     outlier_precision: float
     outlier_recall: float
     outlier_f1: float

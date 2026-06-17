@@ -5,6 +5,20 @@ import pandas as pd
 from benchmarks.shared.metrics import _calculate_ari_nmi_purity_metrics
 
 
+def test_purity_is_majority_cluster_purity_not_homogeneity_alias() -> None:
+    sample_names = pd.Index(["S0", "S1", "S2", "S3", "S4", "S5"])
+    report_df = pd.DataFrame(
+        {"cluster_id": [0, 0, 1, 1, 1, 1]},
+        index=sample_names,
+    )
+    y_true = np.array([0, 0, 0, 1, 1, 1])
+
+    metrics = _calculate_ari_nmi_purity_metrics(report_df, sample_names, y_true, {})
+
+    assert metrics.purity == 5 / 6
+    assert metrics.purity != metrics.homogeneity
+
+
 def test_outlier_metrics_report_perfect_singleton_isolation() -> None:
     sample_names = pd.Index(["S0", "S1", "S2", "S3", "S4"])
     report_df = pd.DataFrame(
