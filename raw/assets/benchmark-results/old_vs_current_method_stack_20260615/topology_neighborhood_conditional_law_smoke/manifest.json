@@ -1,0 +1,25 @@
+{
+  "context_penalty_weight": 50.0,
+  "diagnostic_status": "conditional_topology_signal_detected_support_insufficient",
+  "generated_at_utc": "20260615_151532Z",
+  "generated_by": "benchmarks.diagnostics.calibration.overlap_conditional_topology_law_panel",
+  "law": "eta = logit(prior) + topology_core + selected_family_weight * log1p(selected_family) + min(context, 0) * context_penalty + neighborhood_scale_component + topology_neighborhood_component - root_penalty * I_root - passthrough_penalty * I_passthrough",
+  "min_truth_support_per_stratum": 2,
+  "neighborhood_scale_weight": 1.0,
+  "outputs": {
+    "analytical_cases": "raw/assets/benchmark-results/old_vs_current_method_stack_20260615/topology_neighborhood_conditional_law_smoke/overlap_conditional_topology_law_analytical_cases.csv",
+    "benchmark_summary": "raw/assets/benchmark-results/old_vs_current_method_stack_20260615/topology_neighborhood_conditional_law_smoke/overlap_conditional_topology_law_benchmark_summary.csv",
+    "component_summary": "raw/assets/benchmark-results/old_vs_current_method_stack_20260615/topology_neighborhood_conditional_law_smoke/overlap_conditional_topology_law_component_summary.csv",
+    "rows": "raw/assets/benchmark-results/old_vs_current_method_stack_20260615/topology_neighborhood_conditional_law_smoke/overlap_conditional_topology_law_rows.csv",
+    "summary": "raw/assets/benchmark-results/old_vs_current_method_stack_20260615/topology_neighborhood_conditional_law_smoke/overlap_conditional_topology_law_summary.csv"
+  },
+  "passthrough_log_odds_penalty": 1.5,
+  "prior_truth_probability": 0.05,
+  "production_status": "diagnostic_only_support_insufficient_fail_closed",
+  "root_log_odds_penalty": 1.0,
+  "schema_version": "overlap_conditional_topology_law/v1",
+  "selected_family_weight": 0.25,
+  "study_role": "diagnostic_overlap_conditional_topology_law_not_calibration",
+  "topology_neighborhood_weight": 1.0,
+  "topology_rows_path": "raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_rows.csv"
+}

@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-15
+updated: 2026-06-17
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -111,6 +111,165 @@ renamed, or promoted.
   hierarchy cells from smooth Euclidean first-order signed-distance cells, and
   showing edge-opening boundary/action, the edge/sibling barycentric
   relationship, and the fixed-projection edge-conditioned sibling tail.
+- [[root-selected-region-overlap-case-family-20260616]] - seven-case overlap
+  root selected-region replay showing all overlap roots require discrete
+  tie-cell geometry, so root outgoing balance is not a smooth rescue law.
+- [[root-selected-tie-cell-burden-20260616]] - discrete root tie-cell burden
+  diagnostic over the overlap case family, quantifying tied merge-choice
+  multiplicities and selected tie-rank position, showing raw tie burden itself
+  is not a monotone rescue rule.
+- [[root-selected-mixed-region-law-20260616]] - mixed root selected-region
+  diagnostic joining margin, tie-cell, tie-rank, and bandwidth frontier
+  evidence; all seven overlap roots remain blocked until a discrete tie-rank
+  null law is calibrated.
+- [[root-tie-rank-calibration-feasibility-20260616]] - conditioning-stratum
+  feasibility table for the discrete root tie-rank law, showing zero
+  admissible null support in the seven-case artifact and quantifying the
+  required selected-null simulation counts.
+- [[root-tie-rank-selected-null-simulation-pilot-20260616]] - first executable
+  selected-null root simulation pilot for the tie-rank law; seven generated
+  null roots succeed but populate null-only strata rather than the observed
+  target strata.
+- [[root-tie-rank-null-proposal-frontier-20260616]] - proposal-family frontier
+  for the root tie-rank law; a two-case smoke shows iid and column-beta rows
+  stay far below target action, while a two-block tilt creates huge selected
+  ratios with low spectral ratios and a sparse block spike creates one
+  high-spectral-ratio row with low root action; the coupled edge-spectral
+  proposal still behaves like the dense action rows, so all proposal rows miss
+  observed target strata and unjoined bandwidth is now marked missing.
+- [[root-tie-rank-proposal-gap-panel-20260616]] - coordinate-gap panel over the
+  root proposal frontier, showing dense/coupled proposals are action-edge
+  without spectral while iid/column-beta/sparse proposals are spectral without
+  edge/action; the missing root law is a selected spectral-action coupling.
+- [[root-tie-rank-spectral-action-dominance-panel-20260616]] - continuous
+  dominance panel showing no proposal family dominates any observed root in
+  spectral-action coordinates; dense/coupled rows dominate action and edge for
+  all targets but never spectral.
+- [[root-tie-rank-coupling-equation-panel-20260616]] - coupled
+  spectral-action equation panel showing pure \(T\min(A,E)S\) coupling reaches
+  only some easier observed roots, while measured-neighborhood coupling reaches
+  none because all generated proposal roots still have missing bandwidth
+  evidence.
+- [[root-tie-rank-neighborhood-join-audit-20260616]] - join audit showing the
+  measured-neighborhood gap is operationally localized: all generated proposal
+  matrices exist, but none has a generated selected-neighborhood
+  topology-frontier replay, so every generated proposal family needs that
+  replay before bandwidth can enter calibration.
+- [[root-tie-rank-generated-neighborhood-replay-20260616]] - generated proposal
+  matrix replay through selected-neighborhood distribution, p-value
+  interpolation, measurability, and topology-frontier builders; the rerun
+  closes the unmeasured-bandwidth gap and shows measured-neighborhood coupling
+  now reaches only easier targets while hard roots still need the discrete
+  root spectral-action/tie-rank law.
+- [[root-tie-rank-measured-coupling-residual-panel-20260616]] - target-level
+  residual diagnosis after generated replay, showing the coupled proposal is
+  best for every observed root, action-edge is already satisfied on unresolved
+  targets, and the remaining hard-root blocker is selected spectral excess
+  under high action-edge/tie-rank conditioning.
+- [[root-tie-rank-selected-spectral-excess-panel-20260616]] - narrowed
+  selected-spectral diagnostic under measured high action-edge/tie
+  conditioning, showing no selected-null support and no target spectral-excess
+  reach; the best coupled proposal still needs additional spectral lift,
+  especially on the hard roots.
+- [[root-tie-rank-selected-spectral-generator-targets-20260616]] - generator
+  target panel for the remaining selected spectral-excess law, showing only
+  dense/action diagnostic families cover the measured high action-edge/tie
+  stratum and both still require spectral lift for every observed target.
+- [[root-tie-rank-spectral-lift-parameter-sweep-20260616]] - compact
+  parameter sweep showing stronger coupled dense-plus-spike amplitudes keep
+  action-edge/tie coverage but still reach `0/7` target spectral excesses,
+  while a coherent rank-one MP-spike proposal improves the root screen to
+  `2/7` target reach; matched target conditioning by selected
+  tie-rank/action-edge geometry prevents cross-target borrowing but still
+  leaves the hard selected spectral tail unresolved.
+- [[root-tie-rank-conditioned-coherent-topology-join-20260617]] - generated
+  neighborhood/topology replay and spectral-target join for the conditioned
+  coherent spike rows; all seven rows get measured no-reopen root bandwidth,
+  the matched family still reaches only `2/7` spectral targets, and the hard
+  selected-root spectral tail remains open.
+- [[root-selected-spectral-tail-law-with-legacy-overlay-20260617]] -
+  support-aware selected-root spectral-tail diagnostic using
+  \(S_{\mathrm{root}}\), \(T,A,E,B,H_u\), plus full legacy and internal
+  spectral overlays; all seven roots fail closed for missing selected-null
+  support, while the old full method shows one selected-null false split.
+- [[root-selected-importance-tail-support-20260617]] - importance-weighted
+  external-null support channel for selected-root spectral tails, adding
+  likelihood-ratio metadata, generated-neighborhood topology replay, and
+  ESS-conservative p-values; the accumulated smoke gives same-stratum weighted
+  support for `2/7` observed roots while five remain fail-closed, and scalar
+  tilts miss the remaining mid action-edge strata.
+- [[root-tie-rank-target-conditioned-importance-frontier-20260617]] -
+  target-conditioned importance frontier for the remaining root-tail strata;
+  narrow pure two-block, coupled, unbalanced, accepted-stratum rejection, and
+  correlated two-factor smokes preserve likelihood-ratio semantics but still
+  produce zero pre-topology hits for the tested mixed action-edge target
+  strata.
+- [[root-selected-spectral-tail-nearest-support-20260617]] -
+  nearest-support localization for selected-root spectral tails; exact support
+  remains `2/7`, all five unsupported roots stay fail-closed, and the dominant
+  nearest-support blocker is usually selected-ratio action rather than
+  bandwidth/topology replay.
+- [[root-selected-action-conditioning-ladder-20260617]] - conditioning ladder
+  over exact \(T,A,E,B,H_u\) and action-relaxed root-tail support; exact support
+  remains `2/7`, relaxing only selected-ratio action restores support for
+  three additional roots, and two roots require relaxing edge action as well.
+- [[root-selected-action-dominance-tail-20260617]] - one-sided action-dominance
+  diagnostic for selected-root spectral tails; same \(T,E,B,H_u\) support with
+  \(A_{\mathrm{support}}\ge A_{\mathrm{target}}\) exists for the three
+  action-only roots, but none of those rows exceed the observed spectral
+  excess, so the result remains fail-closed pending a monotonicity theorem.
+- [[root-selected-deformed-tail-support-gap-20260617]] - deformed
+  \(S_{H_u}\) support-gap diagnostic showing exact support remains `2/7`, five
+  roots fail closed for missing same \(T,A,E,B,H_u\) support, and the dominant
+  missing coordinate is selected-ratio action for four of those roots.
+- [[root-selected-deformed-external-law-target-20260617]] - external-law target
+  panel for the missing deformed selected-root tail support; `5/7` roots need
+  new conditional selected-root support, with four requiring an `A,S_Hu` tilt
+  and one requiring an `E,S_Hu` tilt.
+- [[root-selected-conditional-tilt-feasibility-20260617]] - finite-support
+  convex-hull check for the selected-root conditional exponential tilt; full
+  \((T,A,E,S_{H_u})\) feasibility is `0/7`, required-axis feasibility is
+  `1/5`, and the four hard `A,S_Hu` roots need actual nonzero spectral-excess
+  support rather than reweighting of current external-null rows.
+- [[root-selected-external-law-equation-20260617]] - explicit selected-root
+  external-law equations after the failed hull check; `2/7` roots defer to
+  existing tail support, `1/7` is moment-feasible but underpowered, and `4/7`
+  require new same-stratum nonzero \(S_{H_u}\) support.
+- [[root-selected-same-geometry-external-support-attempt-20260617]] -
+  executable generated external-null support attempt for the selected-root
+  tail law; the five-target tiny smoke replays all five generated candidates,
+  gets zero pre-topology hits, adds only one same-tail support row with
+  `S_Hu = 0`, and leaves the nonzero same-geometry spectral-tail law open.
+- [[legacy-c2ef9a69-root-tail-overlap-comparison-20260617]] - seven-case
+  overlap rerun of the full legacy package on selected-root-tail cases; the
+  old method improves one signal row but creates two selected-null false
+  splits, so its kernel smoother is useful locality evidence rather than a
+  production root rescue.
+- [[old-current-method-difference-ledger-20260617]] - normalized component
+  ledger for old-versus-current method changes; tracks removed/replaced
+  components, added current guards, diagnostic-retained evidence, selected-null
+  safety regressions, signal-power gains, and fragmentation symptoms in one
+  table.
+- [[root-selected-kernel-spectral-tail-law-20260617]] - first executable
+  support-gated kernel-spectral root-tail candidate; scalar kernel support
+  exists for `2/7` overlap roots, but the topology-conditioned channel has
+  `0/7` available roots and remains fail-closed.
+- [[root-selected-binary-resolution-20260617]] - method-facing binary-root
+  resolution diagnostic using \(\rho_r=T\min(A,E)\); the tree remains binary,
+  but `5/7` root rows fail closed because binary-root resolution is not a
+  substitute for selected spectral-tail support.
+- [[root-selected-population-law-requirement-20260617]] - diagnostic
+  \(H_u\)-requirement panel for selected-root spectral tails; after active
+  feature count capture, the three action-dominance fail-closed roots need
+  modest MP-edge multipliers about `1.33`, `1.43`, and `1.46`.
+- [[root-selected-h-u-observability-20260617]] - \(H_u\) observability audit
+  for selected-root spectral tails; root eigenvalue spectra and active feature
+  counts are now captured for observed targets, giving `3/7` roots the inputs
+  needed for the next deformed MP edge calculation.
+- [[root-selected-deformed-mp-edge-20260617]] - plug-in deformed MP edge
+  diagnostic for observed selected roots; deformed edges are computed for
+  `3/7` targets, reducing their spectral excess but remaining non-calibrating
+  because generated/support rows still lack full root spectra.
 - [[internal-vs-selected-hierarchy-inflation-20260603]] - diagnostic-only
   comparison showing that diffuse Gaussian root internal inflation agrees with
   selected-hierarchy scale, while null and high-cardinality categorical root
@@ -214,6 +373,12 @@ renamed, or promoted.
   comparator for the c2ef fixed cosine-band sweep and biological coherence
   checks; keeps the historical band labels but marks outputs diagnostic-only,
   not production calibration.
+- [[old-vs-current-method-stack-comparison-20260615]] - corrected old/current
+  comparison over bandwidths, calibration strategies, heuristic guards, and
+  traversal laws, identifying the old topology-aware sibling-null bandwidth
+  layer as useful but computationally pathological on full Julia without
+  cached tree distances; the reusable piece is now carried forward as an
+  explicit, support-gated topology-neighborhood diagnostic component.
 - [[barycentric-action-equation-diagnostic-20260606]] - diagnostic test of the
   candidate path-conditioned barycentric action equation, finding that compact
   barycentric edge/spectral variables remain best for selected-tail
@@ -302,6 +467,100 @@ renamed, or promoted.
 - [[null-edge-sibling-calibration-enhancement-plan]] - calibration roadmap
   separating selected edge-null law, sibling null support/external selected-tail
   law, and KAK/action traversal geometry before any production rule promotion.
+- [[traversal-neighborhood-method-comparison]] - comparison of the previous
+  neighborhood-calibrated traversal inputs with the current strict
+  fixed-coordinate/support-gated path; records that the traversal skeleton is
+  shared and that the next law must model directed selected-neighborhood
+  distributions at split, boundary, and pass-through states.
+- [[selected-neighborhood-bottleneck-law]] - merged method contract that keeps
+  selected-family guards for null pass-through control, uses directed
+  incoming/outgoing topology for internal recovery, and treats old bandwidth
+  variables as bottleneck localizers rather than standalone split thresholds.
+- [[selected-neighborhood-measurability-law]] - formal selected-neighborhood
+  traversal law that separates direct sibling-test measurability, supported
+  bandwidth interpolation for non-measurable evidence, topology coherence, and
+  fail-closed bottleneck labels without any fragmentation penalty.
+- [[selected-neighborhood-measurability-law-diagnostic-20260616]] - executable
+  diagnostic evaluator for the measurability law; expanded overlap rows produce
+  direct splits and fail-closed bottlenecks only, while the refined candidate
+  audit joins interpolation support, bandwidth scales, topology fields, and
+  spectral bottleneck labels into one table; the non-direct rows now localize
+  to a required root-selected topology law or low selected-tree structural balance
+  rather than missing interpolated p-like values.
+- [[selected-neighborhood-pvalue-interpolation-comparison-20260616]] -
+  hold-out diagnostic comparing direct sibling p-values with reconstructed
+  interpolated p-like values on expanded overlap candidates; default bandwidth
+  suppresses selected-null false positives but also misses direct signal
+  positives, reports effective interpolation support, and shows that widening
+  `tau_s` alone reopens null mistakes before reliably rescuing signal.
+- [[selected-neighborhood-topology-frontier-diagnostic-20260616]] -
+  root/non-root topology-frontier comparator over the same expanded overlap
+  candidate rows; root outgoing balance and lowered non-root balance-product
+  thresholds pass selected-null rows more readily than signal rows, and joined
+  root margin evidence labels all overlap root rows as discrete tie-cell
+  geometry, so these variables remain bottleneck localizers rather than
+  split-rescue rules.
+- [[root-selected-mixed-region-law-20260616]] - root selected-region law table
+  over the overlap cases, explicitly representing
+  `E_root = E_margin intersect E_tie_cell intersect E_tie_rank` and showing
+  that bandwidth reopenings do not close the missing calibrated root law.
+- [[root-conditional-kernel-spectral-law]] - refined law statement that keeps
+  the old kernel smoother as support-gated neighborhood weighting and makes
+  the selected-root deformed spectral excess the calibrated tail variable
+  after conditioning on root bifurcation topology.
+- [[selected-neighborhood-spectral-flow-diagnostic-20260616]] -
+  MP eigenvalue/eigenvector flow diagnostic for selected-neighborhood
+  parent-child edges; the three-case overlap run finds weak but useful
+  signal-vs-selected-null separation and identical spectral summaries across
+  the refined and conditional profiles; the multiplicity-aware extension adds
+  MP block projectors and polynomial mode transport, but current overlap MP
+  blocks are almost all singleton, supporting spectral flow as a bottleneck
+  localizer rather than a standalone rescue rule.
+- [[spectral-transport-passthrough-guard-20260616]] -
+  opt-in traversal profile that introduces MP mode transport as a fail-closed
+  pass-through support guard; strict `require_mp_blocks=True` semantics now
+  treat unmeasured no-MP paths as bottlenecks rather than support, and the
+  profile is exposed as standard benchmark method id
+  `kl_spectral_transport_passthrough` with the old diagnostic id kept as an
+  alias.
+- [[spectral-transport-overlap-dispatch-panel-20260616]] - standard-dispatch
+  comparison between `kl_global_passthrough_refined_diagnostic` and
+  `kl_spectral_transport_passthrough`; the current strict measured
+  MP support rule preserves the three overlap signal rows and the selected-
+  family rerun fixes the `overlap_mod_4c_small` selected-null oversplit by
+  blocking one pass-through node.
+- [[spectral-transport-threshold-calibration-panel-20260616]] - threshold panel
+  over the three overlap selected-family cases; all default thresholds
+  `0.75`, `1.0`, `1.2`, and `1.5` are `threshold_candidate`, reducing
+  selected-null false splits from `1` to `0` without signal ARI regression.
+- [[spectral-transport-promotion-gate-20260616]] - explicit promotion gate over
+  standard-dispatch and selected-family overlap evidence; all three targeted
+  one-replicate components pass, but the 50-replicate selected-family gate
+  fails signal retention, so the current spectral transport pass-through rule
+  remains opt-in rather than default traversal.
+- [[spectral-transport-promoted-replicate-panel-20260616]] - 50-replicate
+  validation of `fixed_coordinate_spectral_transport_passthrough_v1`, showing
+  selected-null false splits drop from `117/150` to `3/150` but `4/150` signal
+  rows regress, blocking default promotion.
+- [[spectral-vs-bandwidth-tradeoff-panel-20260616]] - direct evidence-surface
+  comparison between strict MP spectral transport and the older bandwidth
+  interpolation diagnostic; spectral support controls selected-null
+  oversplitting but regresses signal rows, while default bandwidth smoothing
+  misses all direct signal positives and widened `tau_s` reopens selected-null
+  rows faster than it recovers signal.
+- [[legacy-internal-spectral-comparison-panel-20260616]] - standard-dispatch
+  comparison between current leaf-only MP spectra and the copied commit-era
+  internal-barycenter spectral diagnostic; internal rows substantially increase
+  MP row and raw signal counts but leave completed small-overlap partitions
+  unchanged in the one-replicate panel.
+- [[legacy-c2ef9a69-method-package-20260616]] - full old
+  `kl_clustering_analysis` method package from commit `c2ef9a69`, isolated
+  under `kl_clustering_analysis.legacy_methods.commit_c2ef9a69` and exposed to
+  standard benchmark dispatch as `kl_legacy_c2ef9a69`.
+- [[legacy-c2ef9a69-method-comparison-panel-20260616]] - small binary and
+  overlap comparison between current `kl` and the full legacy commit package;
+  legacy fixes one current over-split and avoids some skips, but introduces one
+  selected-null false split and under-splits the hardest overlap signal case.
 - [[edge-null-calibration-panel-20260613]] - executable first-phase edge-null
   diagnostic contract separating fixed-tree null, selected-tree null, and
   selected-tree signal rows without changing production calibration.
@@ -446,7 +705,9 @@ renamed, or promoted.
   neighborhood/topology scan showing the higher-order
   incoming-balance/outgoing-balance product separates the single
   context-negative emergent truth row in the focused overlap slice, but only as
-  a single-positive diagnostic candidate needing transfer validation.
+  a single-positive diagnostic candidate needing transfer validation; the row
+  producer now emits explicit topology support/signal roles for downstream
+  bandwidth diagnostics.
 - [[overlap-context-negative-topology-transfer-20260615]] - held-out
   case/replicate transfer audit showing the balance-product candidate is not
   yet validated because the focused slice has only one positive
@@ -464,7 +725,83 @@ renamed, or promoted.
 - [[overlap-conditional-topology-law-panel-20260615]] - non-permutation,
   directed-incidence topology-law panel showing the focused truth row remains
   top-ranked, but the internal support stratum is still too thin for
-  production promotion.
+  production promotion; it now includes cached topology-neighborhood bandwidth
+  diagnostics with explicit support/signal-role gating, selected-nonnull
+  exclusion, and evidence that bandwidth alone does not separate the focused
+  overlap truth row.
+- [[specific-small-method-benchmark-20260615]] - focused three-variant
+  benchmark showing that the old topology-neighborhood bandwidth component is
+  active but non-separating, `balance_product` generalizes on a multi-positive
+  row fixture, and the conditional-topology profile is not yet a safe global
+  traversal replacement on small overlap clustering cases.
+- [[selected-neighborhood-distribution-panel-20260615]] - executable
+  distribution panel joining traversal node decisions with current directed
+  topology and old topology-neighborhood fields; shows that compact overlap
+  evidence is mostly traversal-only and that old/current neighborhood evidence
+  currently covers only `38/22376` node rows.
+- [[overlap-method-clustering-comparison-20260616]] - paired checkpoint
+  assignment comparison showing that the conditional-topology profile mainly
+  adds selected-null overlap fragmentation, while signal partitions remain
+  mostly identical or nearly identical to the refined guarded profile.
+- [[overlap-signal-suppression-localizer-20260616]] - joined signal run and
+  candidate-node localizer showing useful guarded-traversal suppression is
+  concentrated in heavy-overlap signal cases, while unbalanced/partial overlap
+  extra movement mostly overfragments.
+- [[retained-pass-through-topology-likelihood-panel-20260615]] - diagnostic
+  likelihood-identifiability panel for retained pass-through walks; the compact
+  run has matched traversal-neighborhood controls but no finite topology
+  evidence on signal retained pass-through rows and no cross-case tree-network
+  distance, so production remains fail-closed.
+- [[overlap-selected-pass-through-fixture-miner-20260615]] - diagnostic miner
+  for the selected retained pass-through event; finds `12` compact overlap
+  event rows with finite traversal context, sparse direct topology support, and
+  completed structural topology support for `7/7` signal rows and `3/5`
+  selected-null controls, but an expanded seven-case run finds `50` event rows
+  and shows the structural fallback overlaps selected-null controls.
+- [[selected-pass-through-branch-recovery-conditioning-20260615]] -
+  diagnostic branch-recovery conditioning panel for selected pass-through
+  walks; focused fixtures show non-oracle feature geometry can separate branch
+  recovery from barycentric mixtures/fragments and selected-null controls, the
+  generated support fixture confirms this with benchmark matrices and synthetic
+  selected paths, but real traversal-selected searches, including the full
+  binary suite, still have no clean branch-recovery positives in pass-through
+  rows; a stronger method-proof stress fixture finds branch-positive selected
+  candidates only among accepted splits, while retained pass-through rows stay
+  false fragments.
+- [[selected-candidate-truth-law-panel-20260615]] - reusable oracle diagnostic
+  for all selected traversal candidates; on the method-proof stress run it
+  keeps `2` selected-null controls and finds `13` full branch recoveries, all
+  in accepted split/split rows, with retained pass-through rows capped at
+  own-split ARI `0.140288`; immediate-split feature homogeneity and branch
+  geometry separate those full branch recoveries from false fragments plus
+  selected-null controls on this stress run and on the generated-support
+  candidate conversion, but real overlap/binary transfer finds weak-feature
+  pass-through branch positives and no zero-leakage feature cutoff; local
+  traversal context metrics, including descendant counts and sibling p-values,
+  also fail to transfer as standalone pass-through retention rules; the new
+  family-likelihood summary shows that real pass-through branch positives are
+  selected-family collision cases with matched selected-null risk or fragment
+  mixture, while accepted split/split branch families form a separate cleaner
+  regime; the collision-law component summary keeps accepted-split
+  preservation diagnostic-only pending a fragment filter and keeps
+  pass-through retention fail-closed because all real pass-through branch
+  families collide; accepted-split filter summaries show generated-support
+  separation does not transfer, because real accepted split clean families
+  overlap fragment-mixed families on feature and context metrics; pairwise
+  two-metric rules only retain partial clean-family subsets in real transfer,
+  so accepted-split preservation still lacks a full fragment filter; monotone
+  frontier diagnostics show that richer context frontiers can remove
+  negative-dominance; the new non-permutation frontier-law diagnostic gives
+  `full_family_context_frontier` `65/65` clean families non-dominated against
+  `40` fragment controls, but its status is margin-thin diagnostic, transfer
+  support is thin, and ablation shows dependence on sibling p-value and
+  child-contrast coordinates; witness rows show the `10` margin-thin clean
+  families are all saved only by sibling p-value, and the sibling-rescue audit
+  shows no positive structural support for all `11` sibling-p active rescues,
+  while the conservative guard retains only `54/65` binary-suite clean
+  families; a log-p sibling frontier removes binary-suite margin thinness but
+  still leaves expanded-overlap support and unsupported sibling-rescue
+  failures, so the law remains fail-closed for production.
 - [[topology-vector-benchmark-20260615]] - regression-gate KL benchmark and
   topology-vector summary showing the refined pass-through profile reduces
   skips and improves skip-as-zero ARI, but is not a broad production clustering

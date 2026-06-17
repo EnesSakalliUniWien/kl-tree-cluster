@@ -1,0 +1,17 @@
+{
+  "schema_version": "old_vs_current_method_stack_contract_comparison/v1",
+  "old_reference_commit": "c2ef9a69e0888168950bdee4a41ae8ab9996e32f",
+  "comparison_scope": "bandwidths, calibration strategies, heuristic guards, and traversal laws; not classical cosine/complete clustering",
+  "fresh_old_julia_rerun_status": "interrupted_after_timeout_in_adaptive_kernel_bandwidths_tree_distance_loop",
+  "outputs": {
+    "contract_comparison": "raw/assets/benchmark-results/old_vs_current_method_stack_20260615/stack_contract_comparison/method_stack_contract_comparison.csv",
+    "behavior_summary": "raw/assets/benchmark-results/old_vs_current_method_stack_20260615/stack_contract_comparison/method_stack_behavior_summary.csv",
+    "pairwise_overlap": "raw/assets/benchmark-results/old_vs_current_method_stack_20260615/stack_contract_comparison/method_stack_pairwise_overlap.csv"
+  },
+  "sources": [
+    "raw/inbox/c2ef-cosine-subspace-method-notes-20260615.md",
+    "kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py",
+    "kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py",
+    "kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/fixed_subspace_annotation.py"
+  ]
+}

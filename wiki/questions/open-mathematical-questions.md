@@ -2,7 +2,7 @@
 title: Open Mathematical Questions
 type: question
 status: reviewed
-updated: 2026-06-15
+updated: 2026-06-16
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/guides/edge_sibling_derivation_guide.md
@@ -55,6 +55,7 @@ sources:
   - wiki/sources/open-question-diagnostic-audit-20260604.md
   - raw/assets/benchmark-results/open_question_diagnostic_audit_20260604/open_question_diagnostic_audit.csv
   - wiki/sources/open-question-full-diagnostic-contract-20260604.md
+  - wiki/sources/cosine-band-coherence-comparator-20260615.md
   - benchmarks/diagnostics/open_questions/full_diagnostic_contract.py
   - raw/assets/benchmark-results/open_question_full_diagnostic_contract_20260604/open_question_full_diagnostic_contract.csv
   - raw/assets/benchmark-results/open_question_full_diagnostic_contract_20260604/open_question_full_diagnostic_summary.csv
@@ -116,6 +117,11 @@ sources:
   - wiki/sources/overlap-context-negative-bayesian-topology-sensitivity-20260615.md
   - wiki/sources/overlap-conditional-topology-law-panel-20260615.md
   - wiki/sources/topology-vector-benchmark-20260615.md
+  - wiki/analyses/traversal-neighborhood-method-comparison.md
+  - wiki/sources/selected-neighborhood-distribution-panel-20260615.md
+  - wiki/sources/overlap-selected-pass-through-fixture-miner-20260615.md
+  - wiki/sources/selected-pass-through-branch-recovery-conditioning-20260615.md
+  - wiki/sources/selected-candidate-truth-law-panel-20260615.md
 tags:
   - method
   - math
@@ -1820,12 +1826,47 @@ is only `0.16343`.
     represented explicitly as `neighborhood_scale_log_component` with
     `neighborhood_scale_support_*` counts, so it can contribute diagnostic
     evidence only when the incidence stratum has enough support; sparse scale
-    support is fail-closed, not a hidden calibration fallback.
+    support is fail-closed, not a hidden calibration fallback. The older
+    topology-aware sibling-null bandwidth idea is also reintroduced as a
+    diagnostic `topology_neighborhood_log_component` using cached all-pairs tree
+    distances and explicit `tau_b`, `tau_t`, `tau_s`, and `h_k` fields. Its
+    support contract is stricter than the c2ef prototype: selected-nonnull rows
+    are excluded from empirical support, signal neighborhoods require explicit
+    `topology_signal_role` evidence, and tables without explicit topology
+    support/signal roles get a neutral unavailable status rather than implicit
+    truth-label calibration. After regenerating the topology-conditioning rows
+    with explicit `parent_id`, `topology_support_role`, and
+    `topology_signal_role`, the component activates on `25/26` focused overlap
+    rows, excludes `8` selected-nonnull rows from support, and leaves the one
+    sparse group fail-closed. It does not by itself separate the focused truth
+    row: the truth component is `-0.606531`, the negative median is
+    `-0.471195`, and `13` negatives are above the truth component. The Bayesian
+    topology core still ranks the truth row first, so the open object is a
+    conditional topology law that can use neighborhood bandwidth evidence as
+    one component, not an old-style bandwidth threshold.
+    The guarded-recovery refinement turns this into an explicit diagnostic
+    contract:
+    `recover_internal_split = root/null guards pass AND support sufficient AND
+    balance_product/outgoing_edge evidence high`. In the focused multi-positive
+    row fixture the rule recovers `3/3` truth rows and blocks `4/4` hard
+    negatives. On the real `26`-row context-negative overlap slice it recovers
+    `0` rows because the only truth row is still support-insufficient, despite
+    coherent `balance_product` and outgoing edge-norm evidence. This sharpens
+    the open mathematical problem: the topology formula is plausible as an
+    internal ambiguous-node recovery term, but production traversal requires a
+    conditional support law with more focused overlap positives, not a lower
+    threshold.
     A separate fixed-band cosine comparator now preserves the useful c2ef
     evidence path: fixed cosine bands plus feature-enrichment and
     within-cluster TF-IDF coherence are available as diagnostic-only
     comparator outputs. This should be used to study spectral subspace
     recoverability, not to bypass the selected-neighborhood traversal law.
+    On the Julia binary matrix, the on-demand AWS fixed-band sweep is still
+    fragmentation-heavy: the best coherent-cluster fraction is `0.349315` in
+    `variation_36_80`, while the early/mid variation bands have singleton
+    fractions above `0.84`. This reinforces that a spectral lens can expose
+    coherent biological subspaces, but it is not by itself a selected
+    traversal law or a stable flat clustering rule.
     The regression-gate benchmark separates this diagnostic conclusion from
     production clustering behavior. Passing the refined profile through the
     standard benchmark path eliminates default KL skips on the 17-case
@@ -1999,7 +2040,339 @@ is only `0.16343`.
   the non-permutation directed-incidence topology law. The focused
   context-negative truth row remains top-ranked, but the law reports
   `support_insufficient_fail_closed` because the internal support stratum still
-  has only one truth-recovery row.
+  has only one truth-recovery row. It also records the cached
+  topology-neighborhood bandwidth component inherited from the old method stack:
+  the useful geometry is retained, selected-nonnull rows are excluded from
+  support, and the activated component is not a standalone separator on the
+  focused overlap slice.
+- `wiki/analyses/traversal-neighborhood-method-comparison.md` records the
+  corrected old/current method comparison: both stacks use the same binary plus
+  edge plus sibling traversal skeleton with pass-through, while neighborhood
+  evidence changes the sibling gate/calibration rather than the traversal
+  evaluator directly. This narrows the next diagnostic to selected-neighborhood
+  distributions at split, boundary, and pass-through states.
+- `wiki/sources/selected-neighborhood-distribution-panel-20260615.md` records
+  that diagnostic. In the compact small-overlap run, `43` split rows,
+  `22308` boundary rows, and `25` pass-through rows are summarized, but only
+  `38/22376` node rows have joined old-and-current topology-neighborhood
+  evidence. State-level coverage shows the old/current evidence is concentrated
+  around accepted splits and a few selected-null stopped rows; signal
+  pass-through rows have no joined old/current neighborhood evidence. The
+  case-level coverage table makes this concrete: `overlap_extreme_4c` signal
+  rows have `0/2398` old-and-current coverage, `overlap_mod_4c_small` signal
+  rows have `1/1598`, and `overlap_unbal_4c_small` signal rows have `4/1598`.
+  The previous bandwidth layer is therefore a sparse evidence component, not
+  the missing traversal law. The immediate open problem is not only
+  distributional separation; it is deriving a directed selected-neighborhood
+  law that covers the boundary and pass-through states where the current method
+  actually stops or leaks.
+  The paired profile contrast also shows why aggregate agreement is misleading:
+  the conditional-topology and refined global pass-through profiles agree on
+  `11151/11188` selected nodes, but leaves and non-candidate boundaries
+  dominate that denominator. Candidate movement differs materially: the
+  conditional profile has `24` splits and `18` pass-throughs, while the refined
+  profile has `19` splits and `7` pass-throughs. The law must therefore be
+  derived on selected candidate neighborhoods, not on all tree nodes pooled
+  together.
+  Conditioning the same paired contrast to traversal-relevant candidate nodes
+  reduces the denominator to `50` paired nodes and drops agreement to `32/50`.
+  Therefore the two methods are close only on the background tree-node pool;
+  at selected candidate neighborhoods, the refined profile is substantially
+  more conservative and the conditional-topology profile preserves more
+  pass-through/split movement. The unresolved law must explain this candidate
+  stratum directly.
+  The node-level candidate contrast identifies the concrete ambiguous pattern:
+  `18/50` candidate rows diverge, with `10` rows driven by conditional-profile
+  pass-throughs that the refined profile turns into `not_visited` or
+  `boundary`. Selected-null divergences often look like useful guard
+  suppression, while `overlap_unbal_4c_small` signal divergences look like
+  possible over-suppression. Many of those signal pass-through divergences are
+  `traversal_only`, so existing old/current neighborhood evidence is still too
+  sparse to adjudicate them. The selected-neighborhood law must therefore
+  condition on the pass-through candidate itself, not merely on available
+  bandwidth evidence.
+  The ambiguity-bucket summary makes the tradeoff exact: `8` divergent
+  candidates are conservative selected-null suppressions and `8` are possible
+  signal over-suppressions. The latter bucket has `0/8` old-and-current
+  neighborhood coverage and `8/8` traversal-only pairs. Thus the missing law
+  cannot be recovered from the currently joined old/current neighborhood
+  fields alone; it must define additional pass-through-local evidence or a
+  conditional law for traversal-only candidate neighborhoods.
+  Local feature summaries show why the law cannot be a raw edge/sibling
+  p-value rule. The possible signal over-suppression rows in
+  `overlap_unbal_4c_small` have `8/8` edge-open rows, `7/8` pass-through
+  candidates, median sibling p-value `0.003135`, median depth `5.5`, and median
+  descendant leaf count `86.5`, but no finite `balance_product` coverage. The
+  selected-null conservative suppressions also have low median sibling p-values
+  (`2.728782e-05` and `0.004946513` in the two selected-null cases). Therefore
+  the selected-neighborhood law needs context beyond local edge/sibling
+  significance: depth, descendant mass, pass-through ancestry, and structural
+  topology evidence must enter the conditioning object.
+  Descendant-outcome counts sharpen but do not solve this. The
+  `overlap_unbal_4c_small` possible signal over-suppression bucket has `7`
+  conditional-profile descendant accepted splits and `0` refined-profile
+  descendant accepted splits, but selected-null conservative suppressions also
+  have downstream conditional splits (`3` in `overlap_extreme_4c` and `2` in
+  `overlap_mod_4c_small`). Thus downstream accepted splits mark where the old
+  edge-plus-neighborhood pass-through traversal kept walking; they are not a
+  valid retention law by themselves.
+  The stop-rule comparison summary names that shared mechanism
+  `left_pass_through_downstream_split_right_stops`. Its presence on both
+  selected-null suppressions and possible signal over-suppressions proves that
+  the two profiles share the same basic traversal algebra but differ at the
+  selected pass-through-neighborhood retention step.
+  Pattern-conditioned retention evidence narrows the missing variable further:
+  selected-null rows with that pattern have `5` conditional pass-throughs and
+  `5` downstream conditional accepted splits, with `1` finite
+  `balance_product`; the signal rows have `7` conditional pass-throughs and
+  `7` downstream conditional accepted splits, but `7/7` are traversal-only and
+  `0` have finite `balance_product`. The signal side therefore lacks topology
+  coverage exactly where the refined profile suppresses the walk.
+  The explicit retention-gap table separates the two required laws:
+  selected-null rows need a null-side selected-pass-through false-positive law
+  before any guard can be relaxed, while the signal rows need a signal-side
+  topology likelihood for retained pass-through walks. Until both exist, the
+  production action remains fail-closed.
+  This is now also encoded as a method contract: the base traversal skeleton is
+  shared, selected-null pass-through control belongs to the refined
+  fail-closed guard, and signal pass-through retention belongs to the
+  unvalidated conditional-recovery side until the topology likelihood is
+  derived.
+  The profile-config contract independently verifies that this is not a
+  sibling-gate or root-stability difference: both profiles use the same
+  fixed-coordinate sibling gate, alpha penalty, and root-stability settings.
+  The concrete profile difference is the refined selected-family global
+  sibling-min pass-through guard, which is absent from the conditional topology
+  diagnostic profile.
+  The readiness contract is therefore: both profiles are diagnostic-ready for
+  the shared skeleton; the refined profile is ready only as a fail-closed
+  selected-null pass-through guard candidate; and the conditional topology
+  profile is not ready for production signal retention until the signal-side
+  topology likelihood is derived.
+  The retained pass-through topology likelihood panel makes that likelihood
+  failure explicit. For the selected event
+  `left_pass_through_downstream_split_right_stops`, the compact run has `7`
+  signal rows and `5` selected-null control rows; `5/7` signal rows can be
+  matched by depth and descendant mass, but the signal side has `0` finite
+  topology features and the matched controls also have `0` finite topology
+  features. The likelihood status is therefore
+  `signal_topology_likelihood_not_identifiable`, and production remains
+  `fail_closed_until_likelihood_identifiable`.
+  The traversal-network extension shows that this is not simply missing
+  traversal context: `7/7` signal rows and `5/5` selected-null controls have
+  finite pass-through-context distance and finite downstream accepted-split
+  distance, and all `5` matched rows are traversal-neighborhood matched. The
+  remaining mathematical gap is the topology likelihood itself plus same-tree
+  selected-null network controls, because all current matches are cross-case
+  and exact tree-network distance is unavailable across independently selected
+  trees.
+  The selected pass-through fixture miner makes this gap executable. It mines
+  `12` rows in the selected event stratum: `7` signal candidates from
+  `overlap_unbal_4c_small` replicate `0` and `5` selected-null controls from
+  `overlap_extreme_4c` and `overlap_mod_4c_small`. Traversal context is finite
+  on all rows, but the direct topology rows are sparse: the signal side has
+  `0` finite direct topology rows and the selected-null side has only `1`. The
+  miner now computes a structural fallback from the selected tree itself,
+  \(\tilde P_u=\tilde B^{in}_u\tilde B^{out}_u\), where incoming balance uses
+  node-versus-incoming-sibling descendant mass and outgoing balance uses the two
+  child descendant masses. This gives completed topology support for `7/7`
+  signal rows and `3/5` selected-null controls. In the compact selected-event
+  rows, completed balance product separates in the low direction: threshold
+  `0.02594` retains `7/7` signal candidates and `0` finite selected-null
+  controls. The expanded seven-case, five-replicate overlap run mines `50`
+  selected-event rows (`19` signal candidates and `31` selected-null controls)
+  and shows that this separation does not transfer: completed topology support
+  is observed for `17/19` signal candidates and `20/31` selected-null controls,
+  but the low-direction separator overlaps `10` finite selected-null controls.
+  The truth-labeled expanded rerun sharpens this further: among the `19` signal
+  selected-event rows there are `0` full branch recoveries, `0` partial branch
+  recoveries, `1` barycentric mixture candidate, `14` false fragments, and
+  `4` unresolved signal candidates. The barycentric row is
+  `overlap_unbal_4c_small` replicate `4` node `N790`: the downstream accepted
+  split has truth ARI `0.364506` and mean child purity `0.734586`, but both
+  children have the same majority truth label. The immediate open step is
+  therefore a branch-recovery-versus-barycentric-mixture conditional law for
+  selected pass-through neighborhoods, plus focused fixtures that actually
+  contain clean full branch recovery positives. It is not more traversal
+  discovery and not production promotion.
+  The focused branch-recovery conditioning panel supplies those analytical
+  positives and sharpens the next blocker. Oracle branch indicators separate
+  branch recovery from barycentric mixture, fragments, and selected-null
+  controls. Balance-only observable topology still leaks selected-null
+  controls, but the new feature-geometry extension supplies a non-oracle
+  candidate: downstream homogeneity gain, same-subspace consensus, and
+  contrast-normalized `feature_branch_geometry_score` separate the focused
+  analytical branch rows. On the real expanded overlap rows, feature geometry
+  is observed for all `50` rows, but there are still `0` full or partial
+  branch-recovery positives. The generated support fixture now adds `3` clean
+  full branch positives, `1` partial branch positive, barycentric/fragment
+  negatives, and `3` selected-null controls through actual benchmark feature
+  matrices and synthetic selected paths. Feature homogeneity gain and
+  `feature_branch_geometry_score` separate this support, while balance product
+  still leaks. The open mathematical object is therefore a selected-neighborhood
+  branch law validated on real traversal-selected branch-positive support and
+  matched selected-null controls, not a new global homogeneity cutoff and not a
+  restoration of the old bandwidth threshold.
+  A targeted real traversal-selected branch-positive search over clean binary
+  four-cluster cases plus `overlap_part_4c_small` confirms that this is still
+  open: it mines `12` selected pass-through event rows, but `7/7` signal rows
+  are false fragments and the remaining `5` rows are selected-null controls.
+  Low completed-balance evidence separates those event rows from selected-null
+  controls, but it separates false fragments, not branch recoveries. The
+  remaining law must therefore condition on feature-subspace homogeneity and
+  coherent child contrast, while continuing to require real selected-positive
+  support.
+  A full binary-suite search over all `42` binary cases with `3` replicates
+  makes the same point at broader scope: it mines `92` selected pass-through
+  event rows, with `61` signal-side candidates and `31` selected-null controls,
+  but still finds `0` full or partial branch recoveries. The signal-side rows
+  are `56` false fragments and `5` unresolved signals. Therefore the next
+  required fixture is not more of the same binary sweep; it is a targeted real
+  traversal-selected stress case or a revised selected-event definition that
+  actually produces branch-positive support.
+  The strengthened method-proof stress case clarifies that branch-positive
+  support does exist in selected candidates, but not in retained pass-through
+  rows. The reusable selected-candidate truth-law panel keeps `2` selected-null
+  controls and reports `116` candidate rows: `13` full branch recoveries, `3`
+  partial branch recoveries, `84` false fragments, and `14` unresolved signal
+  rows. All `13` full branch recoveries are accepted split/split candidates;
+  pass-through candidates have maximum own-split ARI `0.140288`, and the
+  selected pass-through miner classifies `28/28` signal event rows as false
+  fragments. The open object therefore shifts from "promote retained
+  pass-through branch recovery" to "derive a candidate-level selected truth law
+  that preserves accepted branch splits and suppresses homogeneous
+  pass-through fragments."
+  The same reusable panel now attaches non-oracle feature geometry to the
+  candidate's immediate child split. On the stress run,
+  `feature_homogeneity_gain_min` and `feature_branch_geometry_score` separate
+  full branch recoveries from false fragments plus selected-null controls with
+  zero negative leakage. This is the first concrete support for a
+  candidate-level structural rule. The generated-support candidate conversion
+  repeats the same check on benchmark matrices with synthetic selected paths:
+  `feature_homogeneity_gain_min`, `feature_child_contrast_norm`, and
+  `feature_branch_geometry_score` separate `3` full branch recoveries from
+  `2` false fragments and `3` selected-null controls. It is still not a
+  production rule, because the generated selected paths are synthetic and the
+  overlap partial row remains unresolved under the current child-purity floor.
+  The transfer check has now been run on real traversal-selected candidates.
+  Expanded overlap has `302` candidate rows with `45` full branch recoveries,
+  including `2` pass-through branch recoveries. The full binary-suite audit
+  has `1000` candidate rows with `268` full branch recoveries and `1`
+  pass-through branch recovery. In both runs, feature homogeneity and branch
+  geometry have high AUC for branch recovery but fail zero-negative separation.
+  The pass-through positives are weak-feature rows, so the selected-neighborhood
+  law cannot be a single immediate-split homogeneity cutoff. It must condition
+  separately on traversal state, pass-through ancestry, and selected-null
+  suppression evidence.
+  The context-metric extension reaches the same conclusion for local traversal
+  variables. In expanded overlap pass-through candidates, the two branch
+  recoveries have minimum descendant sibling p-values `0.094013` and
+  `0.001126`, while selected-null/fragment controls overlap those ranges; no
+  context metric has zero-negative separation. The full binary-suite
+  `pass_through_any` slice has a single branch row whose minimum sibling
+  p-value separates in that slice, but this does not transfer to expanded
+  overlap. Therefore neither local feature homogeneity nor local context
+  p-values are sufficient standalone laws; the remaining object is a
+  higher-order selected-neighborhood/family law that jointly models pass-through
+  ancestry, descendant coherence, and selected-null suppression.
+  The family-likelihood extension turns that statement into a sharper
+  condition. Generated support has `3` clean branch families and no colliding
+  branch families, but real pass-through positives are not clean families.
+  Expanded overlap has `2` pass-through branch-positive families under
+  `left_pass_through_downstream_split_right_stops`; both collide with matched
+  selected-null controls and one also carries `5` false fragments. The targeted
+  real-search run repeats the same two collisions, and the full binary-suite
+  run has one pass-through branch-positive family that also collides with a
+  matched selected-null control. Accepted split/split branch families remain a
+  different regime (`22` clean families in expanded overlap, `14` in targeted
+  real search, and `65` in the binary suite). Therefore the open law is not a
+  single pass-through rescue threshold; it must be a collision-aware
+  selected-family law with separate accepted-split preservation and
+  pass-through retention components.
+  The collision-law component summary states the required components directly.
+  Accepted split preservation has clean support but also fragment-mixed
+  accepted families, so it is `diagnostic_only_no_promotion` until an
+  accepted-split fragment filter is derived. Pass-through retention is stricter:
+  every observed real pass-through branch-positive family collides, so its
+  production action is `fail_closed_until_collision_law_validated`. Selected
+  null suppression and guard-stop fragment suppression remain fail-closed
+  guard components. The next mathematical step is therefore to write a
+  collision-aware law over selected-family stop-rule patterns, not to tune
+  local p-value, depth, or feature-homogeneity thresholds.
+  The accepted-split filter diagnostic adds the same warning on the cleaner
+  accepted split component. Generated support separates clean branch families
+  from fragments, but real accepted split families do not. Expanded overlap has
+  `22` clean accepted families and `1` fragment-mixed branch family with metric
+  overlap; targeted real-search has `14` clean and `2` fragment-mixed families
+  with no separating metric; the binary suite has `65` clean and `40`
+  fragment-mixed families, again with no zero-negative filter. Thus accepted
+  split preservation needs its own family-level fragment law, not simply the
+  immediate-split feature geometry that worked on generated support.
+  Pairwise accepted-split filters do not close the gap. They find
+  zero-negative subsets, but not full rules: expanded overlap retains at most
+  `20/22` clean accepted families, targeted real-search at most `10/14`, and
+  the binary suite at most `44/65`. These are useful diagnostic regions, not a
+  production fragment law, because preserving accepted splits would still
+  suppress a substantial part of clean signal.
+  The accepted-split frontier diagnostic narrows the shape of the remaining
+  law. Simple frontiers are impossible for many clean binary-suite families:
+  `feature_strength_high` leaves only `9/65` clean families undominated, and
+  `feature_strength_with_fragment_penalty` leaves `16/65`. A richer
+  `full_family_context_frontier` removes negative dominance in the real
+  transfer runs, meaning a monotone family law is not ruled out.
+  The frontier-law extension now tests this object directly. For oriented
+  family features \(x\), it uses
+  \(m(x)=\min_{y\in\mathcal N}\max_j(x_j-y_j)\) against fragment controls
+  \(\mathcal N\), then puts a \(\operatorname{Beta}(1,1)\) diagnostic
+  posterior on the clean-family non-domination events \(1\{m(x)>0\}\).
+  On the full binary suite, `full_family_context_frontier` has `65/65`
+  non-dominated clean families against `40` fragment controls, posterior mean
+  `0.985075`, and lower `90%` approximation `0.960888`, but its status is
+  `selected_family_frontier_law_margin_thin_diagnostic`, not a production
+  candidate. Generated support and real-transfer slices have too few finite
+  fragment controls, and the law has not yet been validated prospectively as a
+  production selection region. The leave-one-coordinate ablation also shows
+  the frontier is fragile: on the binary suite, all full-context coordinates
+  give zero leakage but minimum clean margin `1.245512e-11`; removing
+  `median_min_sibling_p_value` makes `11/65` clean families dominated, removing
+  `max_feature_child_contrast_norm` makes `10/65` dominated, and removing
+  `median_feature_branch_geometry_score` makes `1/65` dominated. Thus the open
+  production object is a robust selected-family frontier law with margin
+  stability, not merely a non-dominated full-context frontier. The witness
+  rows sharpen this: the `10` margin-thin clean families are all saved only by
+  `median_min_sibling_p_value`, while the broader active-coordinate count is
+  `43` child-contrast, `11` sibling p-value, `8` homogeneity gain, and `3`
+  branch geometry. A production law must therefore explain when sibling
+  p-value may legitimately rescue a clean family, instead of letting a
+  near-tie p-value coordinate stand in for structural homogeneity. The
+  sibling-rescue audit makes the current answer fail-closed: in the full
+  binary suite, all `11` full-context sibling-p active rescues have no positive
+  structural gap against their nearest fragment witness, including all `10`
+  margin-thin rows. The status is
+  `sibling_only_thin_rescue_requires_law`, so sibling-p rescue needs its own
+  structural law before it can be part of production. A conservative guard that
+  blocks unsupported sibling-p rescues retains `54/65` binary-suite
+  full-context clean families, `18/22` expanded-overlap clean families, and
+  `14/14` real-search clean families. This guard is useful as a fail-closed
+  diagnostic, but it is not the final law because it knowingly drops clean
+  families. Replacing raw p-values by
+  `median_negative_log10_min_sibling_p_value` removes the binary-suite
+  near-zero-margin artifact: `full_family_log_sibling_context_frontier` has
+  `65/65` non-dominated clean families, minimum margin `0.011136`, and no
+  binary-suite guard blocks. This does not close the problem. Expanded overlap
+  is still support-limited and has `4/22` unsupported log-sibling rescues, so
+  the remaining object is a transfer-valid structural sibling-rescue law, not
+  merely a p-value rescaling.
+  The law-target summary makes the production consequence explicit. The
+  `8` possible signal over-suppression rows require
+  `derive_traversal_only_pass_through_retention_law`, with evidence gap
+  `missing_topology_evidence_for_downstream_splits`, and remain
+  `fail_closed_until_law_validated`; one additional traversal-only divergence
+  also remains fail-closed. The `8` selected-null suppressions are a separate
+  target, `validate_false_positive_suppression_law`, with
+  `retain_fail_closed_refined_guard`. The method question is now a two-sided
+  selected-candidate law: retain true deep pass-throughs without reopening the
+  selected-null false positives.
 - `wiki/sources/topology-vector-benchmark-20260615.md` records the regression
   gate benchmark and the dispatch plumbing required to run the refined profile
   as a standard KL benchmark parameter variant.
@@ -2045,4 +2418,9 @@ is only `0.16343`.
 - [[overlap-context-negative-bayesian-topology-law-20260615]]
 - [[overlap-context-negative-bayesian-topology-sensitivity-20260615]]
 - [[overlap-conditional-topology-law-panel-20260615]]
+- [[traversal-neighborhood-method-comparison]]
+- [[selected-neighborhood-distribution-panel-20260615]]
+- [[overlap-selected-pass-through-fixture-miner-20260615]]
+- [[selected-pass-through-branch-recovery-conditioning-20260615]]
+- [[selected-candidate-truth-law-panel-20260615]]
 - [[topology-vector-benchmark-20260615]]

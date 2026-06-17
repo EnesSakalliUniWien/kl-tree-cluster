@@ -1,0 +1,2 @@
+left_method,right_method,n_common,adjusted_rand_index,normalized_mutual_information
+prior_full_julia_kl_stack_20260614,current_conditional_topology_diagnostic_v1,703,0.06280286301304237,0.9230447895271763

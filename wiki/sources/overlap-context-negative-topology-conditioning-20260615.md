@@ -34,6 +34,17 @@ structural evidence, and income/outcome junction context.
 
 - The runner writes topology-conditioning rows, per-metric summaries,
   per-category summaries, threshold scans, a one-row summary, and `manifest.json`.
+- The row contract now carries `parent_id`, `topology_support_role`, and
+  `topology_signal_role` so downstream conditional topology-law diagnostics can
+  use selected-neighborhood bandwidth evidence without inferring support from
+  truth labels.
+- In the regenerated focused rows, `17` rows are marked `strict_null` support,
+  `8` signal-side negatives are marked `selected_nonnull`, and the single
+  `truth_recovery` row is marked with `topology_signal_role = signal`.
+- `sibling_projection_dimension` is optional on the branch-incidence input. If
+  the upstream artifact predates that column, `neighborhood_scale_source` is
+  `missing_sibling_projection_dimension` rather than aborting the topology-role
+  producer.
 - In the focused overlap run, the ambiguous subset again contains `26` rows:
   `1` truth-recovery row and `25` negative rows.
 - Seven numeric topology/neighborhood metrics separate the single truth row
@@ -62,8 +73,9 @@ structural evidence, and income/outcome junction context.
 ## Evidence
 
 - `tests/validation/130_test_overlap_context_negative_topology_conditioning.py`
-  verifies single-truth separator detection, overlapping metric failure, and
-  output writing.
+  verifies single-truth separator detection, explicit support/signal-role
+  production, selected-nonnull exclusion marking, missing projection-dimension
+  tolerance, overlapping metric failure, and output writing.
 - Verification passed:
   `pytest tests/validation/130_test_overlap_context_negative_topology_conditioning.py -q`
   and

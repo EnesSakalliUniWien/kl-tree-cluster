@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-14
+updated: 2026-06-17
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -2301,12 +2301,1168 @@ verification, and maintenance events here in chronological order.
   gate/decomposition code on each band tree, reports feature-enrichment and
   within-cluster TF-IDF cosine coherence, and marks rows
   `diagnostic_only_not_production_calibration`.
+- Ran the cosine-band comparator on the compact selected-root/pass-through null
+  fixture and the Julia binary matrix. The null fixture returns one cluster in
+  every binary and TF-IDF fixed band. The Julia run was sharded across eight
+  AWS on-demand `c7i.xlarge` instances with all shard exit codes zero; merged
+  evidence lives under
+  `raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/`.
+  Julia remains fragmentation-heavy: `variation_36_80` has the strongest
+  coherence fraction (`102/292 = 0.349315`), while `variation_06_15` and
+  `variation_16_35` have singleton fractions above `0.84`.
+- Added [[old-vs-current-method-stack-comparison-20260615]] after correcting
+  the old/current comparison scope from classical clustering to the actual
+  method stack: bandwidths, calibration strategies, heuristic guards, and
+  traversal laws. The old c2ef stack's topology-aware sibling-null bandwidths
+  (`tau_b`, `tau_t`, `tau_s`, `h_k`) encode structural neighborhood evidence
+  more directly than the current strict support model, but a fresh full-Julia
+  rerun stopped inside the adaptive bandwidth tree-distance loop after more
+  than five minutes. Existing Julia outputs show the prior full KL stack at
+  `670` clusters and the current conditional-topology diagnostic at `410`
+  clusters, with ARI `0.062803` and NMI `0.923045`.
 - Updated [[overlap-conditional-topology-law-panel-20260615]] so the old
   neighborhood/log-scale idea is represented as the explicit
   `neighborhood_scale_log_component` with `neighborhood_scale_support_*`
   counts. Missing scale is neutral when absent from the input table, but sparse
   or row-missing scale evidence is fail-closed and reflected in the production
   summary.
+- Extended [[overlap-conditional-topology-law-panel-20260615]] with the old
+  topology-aware sibling-null bandwidth geometry as a cached,
+  support-gated `topology_neighborhood_log_component`. The implementation
+  materializes all-pairs tree distances from `node_id`/`parent_id`, reports
+  `tau_b`, `tau_t`, `tau_s`, and `h_k`, excludes selected-nonnull rows from
+  support, and requires explicit topology signal roles before activation. The
+  old/current smoke run on the `26`-row overlap slice has cached tree distances
+  but no explicit topology signal roles, so the component remains neutral for
+  all rows rather than leaking truth labels into calibration.
+- Regenerated the context-negative topology-conditioning rows with explicit
+  `parent_id`, `topology_support_role`, and `topology_signal_role`, then reran
+  the conditional topology-law smoke. The source now has `17` strict-null
+  support rows, `8` selected-nonnull exclusions, and one explicit signal row.
+  The topology-neighborhood component activates on `25/26` rows and leaves one
+  sparse group fail-closed. It is not a standalone separator: the focused truth
+  component is `-0.606531`, the negative median is `-0.471195`, and `13`
+  negatives exceed the truth component. The full Bayesian topology law still
+  ranks the truth row first with log-odds margin `4.694486`.
+- Added [[specific-small-method-benchmark-20260615]] after rerunning the
+  focused small benchmark into
+  `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/`.
+  Three conditional-law variants show that topology-neighborhood bandwidth off
+  and on both rank the truth row first with the same `4.694486` log-odds
+  margin. The bandwidth component is active but non-separating; outgoing
+  balance and outgoing edge-norm balance are the zero-negative topology
+  separators. The method fix should therefore use bandwidth as support/context
+  regularization, not as the traversal decision rule.
+- Extended [[specific-small-method-benchmark-20260615]] with
+  `focused_overlap_balance_product_benchmark.py` and a small selected-family
+  traversal run over `overlap_mod_4c_small`, `overlap_unbal_4c_small`, and
+  `overlap_extreme_4c`. In the multi-positive row fixture, `balance_product`
+  separates `3` truth rows from `4` hard negatives with margin `0.015620`,
+  while outgoing balance alone does not separate. In the clustering run, the
+  conditional-topology diagnostic profile still false-splits selected-null rows
+  and fragments one unbalanced signal replicate into `12` clusters, so the
+  balance-product posterior should be an internal ambiguous-node recovery rule,
+  not a global replacement for refined selected-family/root guards.
+- Implemented the guarded internal recovery diagnostic in
+  `overlap_conditional_topology_law_panel.py`:
+  `recover_internal_split = root/null guards pass AND support sufficient AND
+  balance_product/outgoing_edge evidence high`. Focused validation recovers
+  all `3` synthetic overlap positives and blocks all `4` hard negatives. The
+  regenerated real context-negative overlap law recovers `0` rows because the
+  only truth row remains `support_insufficient_fail_closed`; this keeps the
+  method fail-closed and identifies focused overlap-positive support as the
+  next mathematical blocker.
+- Added [[traversal-neighborhood-method-comparison]] after rechecking the old
+  and current traversal implementations. The comparison records that both
+  stacks use the same binary plus edge plus sibling traversal skeleton with
+  pass-through. The old neighborhood terms changed sibling calibration through
+  tree-neighborhood bandwidths, while the current strict path uses
+  strict-null/stopped support and a narrower log-projection/log-parent-size
+  kernel. The next distribution diagnostic should therefore measure selected
+  neighborhoods at split, boundary, and pass-through states rather than treat
+  neighborhood as a direct traversal cutoff.
+- Added [[selected-neighborhood-distribution-panel-20260615]] and the
+  executable `selected_neighborhood_distribution_panel.py`. The compact
+  overlap run joins selected-family node decisions with context-negative
+  topology rows and conditional-law rows, then summarizes split, boundary, and
+  pass-through states. The first run has `43` split rows, `22308` boundary
+  rows, `25` pass-through rows, only `38/22376` old-and-current neighborhood
+  evidence rows, and `recover_internal_split_count = 0`. This turns the next
+  blocker into a measurable distribution-coverage problem.
+- Extended the selected-neighborhood distribution panel with
+  `selected_neighborhood_coverage_summary.csv`, grouped by method, data role,
+  traversal state, and stop reason. The rerun shows that old/current
+  neighborhood evidence is concentrated around accepted split rows and a few
+  selected-null stopped rows, while signal pass-through rows have zero
+  old/current coverage. The previous neighborhood-calibrated stack therefore
+  did not fully decide traversal stopping; it supplied sparse internal-node
+  context around the same binary plus edge plus sibling traversal skeleton.
+- Added `selected_neighborhood_case_coverage_summary.csv` to the same panel
+  and reran the compact overlap slice. Case-level coverage is nearly absent in
+  the signal rows where traversal behavior matters most:
+  `overlap_extreme_4c` has `0/2398` old-and-current signal coverage,
+  `overlap_mod_4c_small` has `1/1598`, and `overlap_unbal_4c_small` has
+  `4/1598`. This confirms that restoring old bandwidth evidence alone cannot
+  fix sibling-closed/pass-through traversal; it must become one component of a
+  directed selected-neighborhood law.
+- Added `selected_neighborhood_method_contrast_summary.csv`, pairing traversal
+  profiles on identical `case_id,data_role,replicate,node_id` keys. The compact
+  overlap rerun shows `11151/11188` paired traversal decisions agree, but the
+  agreement is dominated by leaves and non-candidate boundaries. The
+  conditional-topology profile has `24` splits and `18` pass-throughs; the
+  refined global pass-through profile has `19` splits and `7` pass-throughs
+  plus more explicit guard blocks. The real method difference is therefore
+  localized to selected candidate neighborhoods, not the full tree node pool.
+- Added `selected_neighborhood_candidate_method_contrast_summary.csv`, which
+  conditions the paired comparison on nodes where either method split, passed
+  through, explicit-guard-blocked, or had old-and-current neighborhood evidence.
+  The denominator drops from `11188` paired tree nodes to `50` candidate nodes,
+  and traversal agreement drops from `0.996693` to `32/50`. This is the clean
+  current understanding of the two methods: they share the same broad
+  traversal skeleton, but behave differently on the selected candidate stratum
+  that needs the directed selected-neighborhood law.
+- Added `selected_neighborhood_candidate_method_contrast_rows.csv` to expose
+  those `50` candidate nodes directly. The detail rows show `18` divergent
+  candidates, including `10` conditional-profile pass-throughs that the refined
+  profile turns into `not_visited` or `boundary`. Selected-null divergences
+  often look like successful conservative guard suppression, while
+  `overlap_unbal_4c_small` signal divergences look like possible
+  over-suppression. Many signal pass-through divergences are still
+  `traversal_only`, so the missing object remains a selected-neighborhood
+  pass-through law rather than a simple old-bandwidth restoration.
+- Added `selected_neighborhood_candidate_ambiguity_summary.csv`, grouping the
+  node-level candidate rows into interpretation buckets. The compact run has
+  `8` conservative selected-null suppressions and `8` possible signal
+  over-suppressions. The possible signal over-suppression bucket has `0/8`
+  old-and-current neighborhood coverage and `8/8` traversal-only pairs, which
+  shows that the next law needs additional pass-through-local evidence or an
+  explicit conditional law for traversal-only candidate neighborhoods.
+- Added `selected_neighborhood_candidate_local_feature_summary.csv`, which
+  summarizes depth, descendant size, edge/sibling flags, sibling p-values, and
+  topology evidence by ambiguity bucket. The possible
+  `overlap_unbal_4c_small` signal over-suppression bucket has `8/8` edge-open
+  rows, `7/8` pass-through candidates, median sibling p-value `0.003135`,
+  median depth `5.5`, median descendant leaves `86.5`, and no finite
+  `balance_product` coverage. Selected-null conservative suppressions also
+  have low median sibling p-values, so local edge/sibling significance cannot
+  distinguish false selected-null candidates from possible true unbalanced
+  signal pass-throughs.
+- Added `selected_neighborhood_candidate_law_target_summary.csv`, translating
+  ambiguity buckets into explicit diagnostic obligations. The compact run has
+  `8` rows requiring
+  `derive_traversal_only_pass_through_retention_law`, one additional
+  traversal-only divergence requiring inspection, and all of those remain
+  `fail_closed_until_law_validated`. The `8` selected-null suppressions target
+  `validate_false_positive_suppression_law` while retaining the refined
+  fail-closed guard.
+- Extended the selected-neighborhood candidate contrast with descendant
+  outcome counts below each candidate node. The rerun shows that the
+  `overlap_unbal_4c_small` possible signal over-suppression bucket has `7`
+  conditional-profile descendant accepted splits versus `0` on the refined
+  side, but selected-null conservative suppressions also have downstream
+  conditional splits (`3` in `overlap_extreme_4c` and `2` in
+  `overlap_mod_4c_small`). This confirms that the previous traversal stop rule
+  was edge/neighborhood/pass-through sensitive, but descendant activity alone
+  cannot become a retention rule. The law target for these signal rows is now
+  recorded as `missing_topology_evidence_for_downstream_splits`.
+- Added `selected_neighborhood_stop_rule_comparison_summary.csv` to name and
+  summarize the traversal stop/pass-through mechanism at candidate nodes. The
+  shared pattern `left_pass_through_downstream_split_right_stops` appears in
+  both selected-null conservative suppressions and
+  `overlap_unbal_4c_small` possible signal over-suppressions. This pins the
+  method distinction to selected pass-through-neighborhood retention, not to a
+  different base traversal equation.
+- Added `selected_neighborhood_retention_evidence_summary.csv`, conditioning
+  evidence on the stop-rule pattern itself. For
+  `left_pass_through_downstream_split_right_stops`, selected-null rows have
+  `5` conditional pass-throughs and `5` downstream conditional accepted splits
+  with `1` finite `balance_product`, while signal rows have `7` conditional
+  pass-throughs and `7` downstream conditional accepted splits but `7/7`
+  traversal-only pairs and `0` finite `balance_product`. This moves the method
+  comparison from "which method walks?" to "where is structural topology
+  evidence absent for retained pass-through walks?"
+- Added `selected_neighborhood_retention_gap_summary.csv`, translating the
+  pattern-conditioned evidence into explicit law requirements. The selected-null
+  side requires a null-side selected-pass-through false-positive law and keeps
+  `retain_fail_closed_refined_guard`; the signal side requires a signal-side
+  topology likelihood for retained pass-through walks and stays
+  `fail_closed_until_topology_law_validated`.
+- Added `selected_neighborhood_method_contract_summary.csv`, which records the
+  corrected method comparison as a contract: the base binary/edge/sibling
+  pass-through traversal skeleton is shared; `selected_null_pass_through_control`
+  is a non-shared component where the refined guard remains required; and
+  `signal_pass_through_retention` is a non-shared component where conditional
+  recovery remains unvalidated until the topology likelihood is derived.
+- Added `selected_neighborhood_profile_config_contract_summary.csv`, derived
+  from the actual `SIBLING_GATE_PROFILES`. It verifies that the two compared
+  profiles share `fixed_coordinate_bh`, alpha penalty `50`, and the same
+  selected-root stability guard settings. The concrete profile difference is
+  the refined selected-family global sibling-min pass-through guard:
+  `99` draws, alpha `0.01`, and scope
+  `global_sibling_min_passthrough_descendant_refined` versus no selected-family
+  permutation guard in the conditional topology diagnostic profile.
+- Added `selected_neighborhood_method_readiness_summary.csv`, translating the
+  method and profile contracts into per-method readiness verdicts. Both
+  profiles are diagnostic-ready only for the shared traversal skeleton; the
+  refined profile is ready as a fail-closed selected-null pass-through guard
+  candidate; and the conditional topology profile is not ready for production
+  signal pass-through retention until the signal-side topology likelihood is
+  derived.
+- Added `retained_pass_through_topology_likelihood_panel.py` and validation
+  tests. The compact run on selected-neighborhood candidate rows finds `7`
+  signal retained-pass-through rows, `5` selected-null controls, `5` matched
+  signal rows, `2` unmatched signal rows, and `0` matched controls with finite
+  topology features. The summary status is
+  `signal_topology_likelihood_not_identifiable`, with production action
+  `fail_closed_until_likelihood_identifiable`.
+- Extended the retained pass-through topology likelihood panel with directed
+  traversal-network context from `selected_neighborhood_distribution_rows.csv`.
+  The compact rerun has finite pass-through-context and downstream
+  accepted-split distances for `7/7` signal rows and `5/5` selected-null
+  controls, with all `5` matched rows traversal-neighborhood matched. Exact
+  tree-network distance remains unavailable because those matches are
+  cross-case selected-null controls. The topology likelihood remains
+  unidentifiable and production remains fail-closed.
+- Added [[overlap-selected-pass-through-fixture-miner-20260615]] and the
+  executable `overlap_selected_pass_through_fixture_miner.py`. The compact run
+  mines `12` selected pass-through event rows:
+  `7` signal candidates from `overlap_unbal_4c_small` replicate `0` and `5`
+  selected-null controls from `overlap_extreme_4c` and
+  `overlap_mod_4c_small`. Traversal context is finite for all rows. Direct
+  topology support remains absent on the signal side (`0` rows) and sparse on
+  the selected-null side (`1` row), so the direct support status is
+  `signal_topology_support_missing`.
+- Extended the selected pass-through fixture miner with a structural topology
+  fallback computed from selected-tree descendant masses:
+  incoming node-versus-sibling balance, outgoing child balance, and their
+  product. The compact rerun has structural topology for `7/7` signal rows and
+  `5/5` selected-null controls; completed topology support is observed for
+  `7/7` signal rows and `3/5` selected-null controls. The completed support
+  status is
+  `selected_pass_through_completed_topology_support_observed_diagnostic_only`,
+  and completed balance product separates the finite compact selected-event rows
+  in the low direction at threshold `0.02594`, retaining `7/7` signal candidates
+  with `0` finite selected-null controls. The next required step is
+  `expand_selected_pass_through_fixture_support_and_truth_labels`.
+- Ran an expanded selected pass-through overlap sweep over seven binary overlap
+  cases, five replicates, null/signal data roles, and the conditional-topology
+  and refined global pass-through profiles. The selected-neighborhood
+  distribution plus fixture miner now mines `50` selected-event rows:
+  `19` signal candidates and `31` selected-null controls. Completed topology
+  support is observed for `17/19` signal candidates and `20/31` selected-null
+  controls, but the low-direction completed-balance-product separator overlaps
+  `10` finite selected-null controls. The structural fallback is therefore a
+  useful conditioning variable, not a standalone selected pass-through
+  retention law.
+- Extended the selected pass-through fixture miner with synthetic benchmark
+  truth context from traversal `data_seed` values and
+  `multiscale_gene_assignments.csv` path membership. The truth-labeled
+  expanded run keeps production fail-closed and classifies the `19` signal
+  selected-event rows as `0` full branch recoveries, `0` partial branch
+  recoveries, `1` barycentric mixture candidate, `14` false fragments, and
+  `4` unresolved signal candidates. The next method object is therefore a
+  selected-neighborhood law that separates branch recovery from barycentric
+  mixture and false fragments.
+- Added [[selected-pass-through-branch-recovery-conditioning-20260615]] and the
+  executable `selected_pass_through_branch_recovery_conditioning.py`. The
+  focused fixture has `3` full branch recoveries, `1` partial branch recovery,
+  `1` barycentric mixture, `2` false fragments, and `2` selected-null controls.
+  Oracle branch indicators separate all branch rows, but observable topology
+  metrics still leak a selected-null control. The real expanded overlap rows
+  remain `full_branch_recovery_support_missing`, so production stays
+  `fail_closed_until_branch_law_validated`.
+- Rechecked the previous c2ef bandwidth method and updated
+  [[traversal-neighborhood-method-comparison]] and
+  [[old-vs-current-method-stack-comparison-20260615]] with the explicit old
+  sibling-null-prior bandwidth equations. The checked conclusion is that the
+  old bandwidth system is useful as topology/context support, but the current
+  cached replay is non-separating on the focused overlap slice, so the next
+  method object remains a directed selected-neighborhood branch-recovery law,
+  not a restoration of the old bandwidth threshold.
+- Extended `selected_pass_through_branch_recovery_conditioning.py` with an
+  optional non-oracle feature-geometry layer computed from
+  `multiscale_gene_assignments.csv` path membership and regenerated benchmark
+  feature matrices. The focused feature-geometry fixture now has observable
+  `feature_branch_geometry_score` and homogeneity/subspace-consensus metrics
+  separating branch recovery from barycentric, fragment, and selected-null
+  controls, while balance-product metrics still leak. The real expanded overlap
+  rerun observes feature geometry for all `50` selected pass-through rows but
+  still has `0` full or partial branch-recovery positives, so the next required
+  step is to generate or mine real selected pass-through branch-positive cases
+  with matched selected-null controls. Production remains
+  `fail_closed_until_branch_law_validated`.
+- Added a generated selected-pass-through branch-positive support fixture to
+  the same panel. It uses existing binary benchmark feature matrices and
+  synthetic selected path membership to create `3` full branch recoveries,
+  `1` partial branch recovery, `1` barycentric mixture, `1` false fragment, and
+  `3` selected-null controls. The generated support run writes the source node
+  rows and gene assignments, and `feature_homogeneity_gain_min` plus
+  `feature_branch_geometry_score` separate branch rows from controls while
+  balance product still leaks. This validates the non-oracle feature geometry
+  on generated support, but production remains fail-closed until the law is
+  validated on real traversal-selected branch positives.
+- Ran a targeted real traversal-selected branch-positive search over
+  `binary_perfect_4c`, `binary_low_noise_4c`, `binary_moderate_4c`, and
+  `overlap_part_4c_small` with the conditional-topology and refined global
+  pass-through profiles. The fixture miner finds `12` selected-event rows:
+  `7` signal rows and `5` selected-null controls. Branch conditioning
+  classifies all `7` signal rows as false fragments, with `0` full or partial
+  branch recoveries. Completed balance product separates selected-event signal
+  rows from selected-null controls in this run, but it separates false
+  fragments, not recoveries. This reinforces the rechecked c2ef bandwidth
+  conclusion: tree-neighborhood/balance evidence is context, while production
+  needs a feature-subspace selected-neighborhood branch law with real
+  traversal-selected positives.
+- Ran the same selected pass-through branch-positive search across the full
+  binary benchmark suite: all `42` binary cases, `3` replicates, null/signal
+  roles, and the conditional-topology plus refined global pass-through
+  profiles. The traversal, distribution, fixture-miner, and branch-conditioning
+  outputs live under
+  `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_pass_through_branch_positive_binary_suite_*`.
+  The miner finds `92` selected-event rows (`61` signal-side candidates and
+  `31` selected-null controls), but branch conditioning finds `0` full or
+  partial branch recoveries: `56` signal rows are false fragments and `5` are
+  unresolved. Feature geometry is observed on all `92` rows, so the blocker is
+  not missing measurement; it is missing real selected-positive support. The
+  next fixture must be a targeted real traversal-selected branch-recovery
+  stress case or a revised selected-event definition.
+- Enabled the existing `planted_hierarchy_deep_signal` method-proof generator
+  for selected-family diagnostics by treating it as a binary-template source
+  for null regeneration, then added
+  `traversal_deep_branch_recovery_stress` with very weak root contrast and
+  very strong sparse descendant blocks. The existing planted case produces
+  selected pass-through rows but only unresolved downstream truth. The stronger
+  stress case produces many selected pass-through rows, but the selected-event
+  miner classifies `28/28` signal rows as false fragments. A separate
+  candidate own-split truth audit on the same run finds `13` full branch
+  recoveries and `3` partial branch recoveries, all among accepted split
+  candidates; pass-through candidates have maximum own-split ARI `0.140288`.
+  The method implication is that retained pass-through should not be promoted
+  as branch recovery. The next law should preserve accepted branch splits while
+  suppressing homogeneous pass-through fragments.
+- Added [[selected-candidate-truth-law-panel-20260615]] and
+  `selected_candidate_truth_law_panel.py` to make the inline own-split audit
+  reusable. The stress rerun writes
+  `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_candidate_truth_law_stress/`
+  and reports `116` selected candidate rows: `114` signal rows, `2`
+  selected-null controls, `13` full branch recoveries, `3` partial branch
+  recoveries, `84` false fragments, and `14` unresolved signal rows. All full
+  branch recoveries are split/split accepted candidates; pass-through rows
+  remain capped at own-split ARI `0.140288`. Production remains
+  `diagnostic_only_no_promotion`.
+- Extended the selected-candidate truth-law panel with immediate-split
+  non-oracle feature geometry and
+  `selected_candidate_feature_metric_summary.csv`. The stress rerun observes
+  feature geometry for all `116` candidates. `feature_homogeneity_gain_min`
+  and `feature_branch_geometry_score` separate the `13` full branch recoveries
+  from `84` false fragments plus `2` selected-null controls with zero negative
+  leakage. This supports a candidate-level structural rule on the stress
+  fixture, but remains diagnostic-only until transfer is validated.
+- Added a generated-support mode to the selected-candidate truth-law panel.
+  It converts generated pass-through support rows into immediate split
+  candidates at `truth_downstream_split_node_id`, writes
+  `generated_support_candidate_rows.csv`, and reruns the candidate law under
+  `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_candidate_truth_law_generated_support/`.
+  The run has `3` full branch recoveries, `2` false fragments, `3`
+  selected-null controls, and `1` unresolved overlap partial row.
+  `feature_homogeneity_gain_min`, `feature_child_contrast_norm`, and
+  `feature_branch_geometry_score` separate full branch recoveries from the
+  false-fragment plus selected-null negatives with zero leakage. This validates
+  the immediate-split feature geometry on generated benchmark matrices, but not
+  yet on real traversal-selected overlap positives.
+- Extended the selected-candidate truth-law panel with
+  `selected_candidate_feature_metric_state_summary.csv`, which stratifies
+  feature metrics by traversal state scope. Reran the panel on stress,
+  generated support, expanded overlap, targeted real-search, and the full
+  binary-suite candidate rows. Expanded overlap has `302` candidates with
+  `45` full branch recoveries, `19` partial branch recoveries, `16` false
+  fragments, `133` selected-null controls, and `89` unresolved rows; it also
+  finds `2` real pass-through branch recoveries. The full binary-suite audit
+  has `1000` candidates with `268` full branch recoveries, `50` partial branch
+  recoveries, `364` false fragments, `98` selected-null controls, and `220`
+  unresolved rows, with `1` pass-through branch recovery. Feature homogeneity
+  and branch geometry retain high AUC on real candidates, but no longer have
+  zero-negative separation. Pass-through branch positives are weak-feature
+  rows, so the next law must be traversal-state/pass-through conditioned rather
+  than a single homogeneity cutoff.
+- Extended the selected-candidate truth-law panel again with
+  `selected_candidate_context_metric_state_summary.csv`, summarizing local
+  traversal context by candidate state. Reran the expanded overlap,
+  targeted real-search, and full binary-suite outputs. Expanded overlap
+  `pass_through_any` has two branch recoveries with minimum descendant sibling
+  p-values `0.094013` and `0.001126`, but no context metric achieves
+  zero-negative separation from false fragments or selected-null controls. The
+  binary suite has a single pass-through branch row whose minimum sibling
+  p-value separates only in that slice, so it is not a transferable rule. This
+  closes the local-context shortcut and keeps the open method object as a
+  higher-order selected-neighborhood/family law.
+- Extended the selected-candidate truth-law panel with
+  `selected_candidate_family_likelihood_rows.csv` and
+  `selected_candidate_family_likelihood_summary.csv`. The diagnostic groups
+  selected candidates by run, ambiguity bucket, and stop-rule pattern, then
+  marks matched selected-null collisions only for selected stop-rule families.
+  Reran stress, generated support, expanded overlap, targeted real-search, and
+  full binary-suite outputs. Generated support has `3` clean branch families
+  and no colliding branch families. Real pass-through positives are collision
+  cases: expanded overlap has `2` pass-through branch-positive families, both
+  colliding with matched selected-null controls and one with `5` false
+  fragments; targeted real search repeats those `2`; the binary suite has `1`
+  pass-through branch-positive family and it also collides with matched
+  selected-null control. Accepted split/split branch families remain cleaner
+  (`22`, `14`, and `65` clean families in expanded overlap, targeted
+  real-search, and binary suite respectively), so accepted split preservation
+  and pass-through retention must be separate law components.
+- Added `selected_candidate_collision_law_components.csv` to the same panel
+  and reran stress, generated support, expanded overlap, targeted real-search,
+  and binary-suite outputs. The component layer makes the selected-family law
+  contract explicit. Generated support has a clean accepted-split preservation
+  component with `3` clean branch families. Expanded overlap accepted-split
+  preservation has `22` clean branch families but `1` colliding branch family,
+  targeted real-search has `14` clean and `2` colliding, and the binary suite
+  has `65` clean and `40` colliding, so accepted-split preservation remains
+  diagnostic-only until a fragment filter exists. Pass-through retention is
+  stricter: expanded overlap has `2/2`, targeted real-search has `2/2`, and
+  the binary suite has `1/1` pass-through branch families colliding, giving
+  `pass_through_branch_families_all_collide` and
+  `fail_closed_until_collision_law_validated`. Selected-null suppression and
+  guard-stop fragment suppression remain retained fail-closed guard
+  components.
+- Added `selected_candidate_accepted_split_filter_rows.csv` and
+  `selected_candidate_accepted_split_filter_summary.csv` to test whether
+  accepted split preservation has a simple non-oracle fragment filter. The
+  generated-support run separates clean branch families from fragment families
+  on homogeneity gain, branch geometry, and child contrast. Real transfer
+  fails: expanded overlap has `22` clean accepted families versus `1`
+  fragment-mixed branch family with no zero-negative metric separation;
+  targeted real-search has `14` clean versus `2` fragment-mixed families with
+  no separation; the binary suite has `65` clean versus `40` fragment-mixed
+  families, also with no separating feature or context metric. Accepted split
+  preservation therefore remains diagnostic-only and needs a family-level
+  fragment law.
+- Added `selected_candidate_accepted_split_pair_filter_summary.csv` to test
+  axis-aligned two-metric accepted split filters. Generated support has full
+  zero-negative pairwise filters. Real transfer only supports partial clean
+  subsets: expanded overlap retains at most `20/22` clean accepted families at
+  zero negatives, targeted real-search at most `10/14`, and the binary suite at
+  most `44/65`. The best binary-suite pair still has production action
+  `fail_closed_until_fragment_filter_validated`, so accepted split
+  preservation remains an unresolved family-level fragment-law problem.
+- Added `selected_candidate_accepted_split_frontier_summary.csv` to test
+  monotone multi-metric dominance frontiers for accepted split preservation.
+  Simple frontiers fail on real transfer: in the binary suite,
+  `feature_strength_high` leaves only `9/65` clean families undominated and
+  `feature_strength_with_fragment_penalty` leaves `16/65`; the
+  `binary_transfer_best_pair_context` frontier leaves `57/65`. The richer
+  `full_family_context_frontier` removes clean-family negative dominance in
+  the real transfer runs, but it is diagnostic-only because it does not define
+  a zero-negative calibrated selection region. The next object is a
+  selected-family frontier law.
+- Added `selected_candidate_frontier_law_rows.csv` and
+  `selected_candidate_frontier_law_summary.csv` to make the selected-family
+  frontier law diagnostic explicit without permutations or sample splitting.
+  The law computes continuous margins
+  \(m(x)=\min_{y\in\mathcal N}\max_j(x_j-y_j)\) against fragment controls and
+  a \(\operatorname{Beta}(1,1)\) diagnostic posterior over clean-family
+  non-domination. Regenerated the stress, generated-support, expanded-overlap,
+  real-search, and binary-suite selected-candidate runs. The full binary suite
+  gives `full_family_context_frontier`
+  `65/65` clean non-dominated families against `40` finite fragment controls,
+  posterior mean `0.985075`, lower `90%` approximation `0.960888`, and
+  `selected_family_frontier_law_margin_thin_diagnostic`; the other
+  binary-suite frontiers remain leaky, and the smaller transfer runs remain
+  fail-closed for thin fragment-control support.
+- Added `selected_candidate_frontier_ablation_summary.csv` to test whether the
+  candidate frontier law is robust to removing one coordinate. On the full
+  binary suite, `full_family_context_frontier` with all coordinates has
+  `65/65` non-dominated clean families but minimum clean margin
+  `1.245512e-11`, so it is `frontier_ablation_zero_leakage_but_margin_thin`.
+  Removing `median_min_sibling_p_value` makes `11/65` clean families
+  dominated, removing `max_feature_child_contrast_norm` makes `10/65`
+  dominated, and removing `median_feature_branch_geometry_score` makes `1/65`
+  dominated. The candidate is therefore a useful diagnostic frontier, but not
+  yet a robust production law.
+- Added `selected_candidate_frontier_witness_rows.csv` to record the nearest
+  fragment-family witness and active coordinate for each clean accepted-split
+  family. On the binary-suite `full_family_context_frontier`, `10/65` clean
+  families are `frontier_margin_thin`, and all ten are saved only by
+  `median_min_sibling_p_value`. Across all clean families, the active
+  coordinate counts are `43` child-contrast, `11` sibling p-value, `8`
+  homogeneity gain, and `3` branch geometry. This identifies the next
+  mathematical issue: sibling p-value cannot be allowed to rescue margin-thin
+  clean families without a structural explanation.
+- Added `selected_candidate_sibling_rescue_audit_rows.csv` and
+  `selected_candidate_sibling_rescue_audit_summary.csv` to test that issue
+  directly. On the binary-suite `full_family_context_frontier`, all `11`
+  sibling-p active rescues have no positive structural gap against their
+  nearest fragment witness, including all `10` margin-thin rows. The summary
+  status is `sibling_only_thin_rescue_requires_law` with production action
+  `fail_closed_until_sibling_rescue_law_validated`. Expanded overlap has
+  `4/22` full-context sibling-only thin rescues. This keeps the frontier law
+  fail-closed until a structural sibling-rescue law is derived.
+- Added `selected_candidate_sibling_rescue_guard_summary.csv` to quantify the
+  conservative guard that blocks unsupported sibling-p rescues. The guard
+  retains `54/65` binary-suite full-context clean families, `18/22`
+  expanded-overlap clean families, and `14/14` real-search clean families. It
+  is a useful fail-closed diagnostic, but it is not production promotion
+  because it drops clean families and leaves the sibling-rescue law open.
+- Added `median_negative_log10_min_sibling_p_value` and
+  `full_family_log_sibling_context_frontier` to test whether raw-p margin
+  thinness was a p-scale artifact. On the binary suite, the log-sibling
+  frontier has `65/65` clean families non-dominated, minimum clean margin
+  `0.011136`, and guard blocks `0/65`; its status is
+  `selected_family_frontier_law_candidate_diagnostic`. This improves the
+  binary-suite diagnostic but does not promote production: expanded overlap is
+  still support-limited and has `4/22` unsupported log-sibling rescues, while
+  real-search remains support-limited despite guard retention `14/14`.
+
+### 2026-06-16
+
+- Added [[selected-neighborhood-bottleneck-law]] as the merged old/current
+  method contract: selected-family guards remain responsible for null
+  pass-through over-splitting control, directed incoming/outgoing topology is
+  the recovery evidence for ambiguous internal candidates, and old
+  topology-neighborhood bandwidths become explicit bottleneck localizers and
+  support regularizers rather than standalone split thresholds.
+- Integrated richer benchmark cluster-quality metrics into the shared result
+  schema: adjusted mutual information, homogeneity/completeness/V-measure,
+  Fowlkes-Mallows, singleton and cluster-size fragmentation diagnostics,
+  noise-label fraction, and scikit-learn internal geometry metrics
+  (silhouette, Davies-Bouldin, and Calinski-Harabasz) with NaN-safe handling
+  for degenerate clusterings.
+- Added [[overlap-method-clustering-comparison-20260616]] and
+  `overlap_method_clustering_comparison.py` to compare the conditional-topology
+  and refined global pass-through profiles on paired overlap checkpoint
+  assignments. The expanded overlap run covers `70` paired runs and the
+  binary-suite overlap slice covers `84` paired runs; both show that the
+  conditional profile's extra fragmentation is concentrated in selected-null
+  overlap rows while signal partitions are usually unchanged or very close.
+- Added [[overlap-signal-suppression-localizer-20260616]] and
+  `overlap_signal_suppression_localizer.py` to localize the signal cases where
+  guarded traversal suppresses useful conditional-profile movement. The
+  expanded overlap localization finds `3` useful suppressed-movement runs and
+  `5` harmful/overfragmented runs; the broader binary-suite overlap slice finds
+  `4` useful runs concentrated in heavy-overlap cases and `2` harmful rows in
+  unbalanced/partial overlap cases.
+- Clarified [[selected-neighborhood-bottleneck-law]] so fragmentation is treated
+  as an audit outcome and failure-mode label, not as a production penalty term.
+  The old `tau_b`, `tau_t`, `tau_s`, and `h_k` interpolation path is recorded
+  as a support/neighborhood prior update for non-measurable sibling evidence,
+  not as a cluster-count or fragmentation penalty.
+- Added [[selected-neighborhood-measurability-law]] to formalize the new logic:
+  direct selected-family sibling p-values take precedence; non-measurable
+  sibling evidence may use supported ancestor/stable-neighborhood bandwidth
+  interpolation with signal-neighborhood attenuation; unsupported,
+  selected-nonnull-only, or topology-incoherent candidates fail closed with a
+  bottleneck label and no fragmentation penalty term.
+- Added [[selected-neighborhood-measurability-law-diagnostic-20260616]] and
+  `selected_neighborhood_measurability_law.py`. The diagnostic implements
+  unclipped child-prior interpolation, direct-test precedence, supported
+  interpolation rescue, topology-coherence checks, and fail-closed bottleneck
+  labels. On expanded overlap selected-neighborhood rows it emits `3,050`
+  direct splits and no rescues; the candidate-only audit shows `104`
+  interpolation-prior-unavailable rows, so the rescue path is installed but
+  remains inactive until supported priors are generated.
+- Added [[selected-neighborhood-pvalue-interpolation-comparison-20260616]] and
+  `selected_neighborhood_pvalue_interpolation_comparison.py`. The diagnostic
+  compares direct sibling p-values with hold-out reconstructed interpolated
+  p-like values on `69,860` expanded overlap candidates, adds best-case
+  `tau_s` bandwidth requirements, and writes a tau-sensitivity tradeoff table.
+  Default `tau_s = 1` suppresses selected-null direct false positives but also
+  misses direct signal positives; widening `tau_s` alone is not adequate
+  because selected-null rows reopen before signal is reliably recovered.
+- Added [[selected-neighborhood-spectral-flow-diagnostic-20260616]] and
+  `selected_neighborhood_spectral_flow.py`. The diagnostic compares
+  MP-certified parent-child row eigenspaces with sign-invariant principal-angle
+  geometry, measures log eigenvalue drift, and writes node, edge, summary, and
+  separation panels. The three-case overlap run emits `5,194` node rows and
+  `5,188` edge rows; `spectral_flow_affinity` gives diagnostic AUC `0.584`
+  for signal versus selected-null, supporting spectral flow as a bottleneck
+  localizer and stratum variable rather than a standalone rescue rule.
+- Ran the same spectral-flow diagnostic for
+  `fixed_coordinate_conditional_topology_diagnostic_v1`. Its three-case
+  spectral-flow counts and summaries match
+  `fixed_coordinate_global_passthrough_refined_v1`, confirming that this panel
+  measures the shared selected-tree/data spectral geometry underneath the gate
+  profiles rather than their downstream traversal differences.
+- Extended `selected_neighborhood_spectral_flow.py` with multiplicity-aware MP
+  mode transport: leading MP eigenvalues are grouped into block signatures with
+  projectors, multiplicities, normalized characteristic polynomials, and mean
+  log eigenvalues; parent-child blocks are optimally matched to produce
+  mode-transport cost, affinity, and connection-Laplacian residual panels. The
+  rerun writes `1,599` block rows and `5,188` mode-edge rows per profile.
+  Current overlap blocks are almost all singleton (`875/877` selected-null
+  blocks and `720/722` signal blocks), so polynomial and multiplicity terms are
+  implemented but not yet empirical separators; mode transport remains a weak
+  diagnostic localizer with affinity AUC `0.536`.
+- Added [[spectral-transport-passthrough-guard-20260616]] and the diagnostic
+  profile `fixed_coordinate_spectral_transport_passthrough_diagnostic_v1`.
+  Spectral mode transport is now integrated into traversal as a fail-closed
+  pass-through support guard: it can only block pass-through and cannot open
+  sibling splits. This initial smoke result was later superseded by the
+  matched-mode-only rule and fresh current-code overlap reruns recorded below.
+- Exposed the spectral transport pass-through profile through the standard
+  benchmark registry as `kl_spectral_transport_passthrough_diagnostic`. Dispatch
+  now forwards spectral transport parameters to the KL runner, result metadata
+  records the resolved guard configuration, targeted dispatch/registry tests
+  pass, and a direct smoke run returns `status='ok'` with the spectral
+  pass-through guard enabled.
+- Added [[spectral-transport-overlap-dispatch-panel-20260616]] and
+  `spectral_transport_overlap_dispatch_panel.py` to compare the registered
+  spectral method against the refined pass-through baseline through standard
+  dispatch. The spectral traversal guard was narrowed to matched MP-mode
+  transport evidence and its default max-cost threshold was raised to `1.2`.
+  Current standard-dispatch overlap rows are neutral versus the refined
+  baseline, and the fresh selected-family rerun shows the spectral profile no
+  longer fixes the `overlap_mod_4c_small` selected-null oversplit. The result is
+  safer for signal rows but not strong enough for production traversal
+  promotion.
+- Added [[spectral-transport-promotion-gate-20260616]] and
+  `spectral_transport_promotion_gate.py`. The gate requires standard-dispatch
+  signal retention, selected-family signal retention, and selected-null
+  false-split reduction. Current outputs pass both signal-retention components
+  but fail selected-null false-split reduction (`1` baseline false split versus
+  `1` candidate false split), so the explicit promotion decision is
+  `diagnostic_only_not_promoted`.
+- Corrected spectral transport strict-support semantics: when
+  `require_mp_blocks=True`, unmeasured no-MP paths no longer count as
+  pass-through support. Added
+  [[spectral-transport-threshold-calibration-panel-20260616]] and regenerated
+  threshold, standard-dispatch, selected-family, and promotion-gate outputs.
+  The selected-family spectral profile now fixes the
+  `overlap_mod_4c_small` selected-null oversplit (`7` clusters to `1`) without
+  signal ARI regression, and the targeted promotion gate decision is
+  `promotion_admissible`. Broader production calibration remains separate from
+  this targeted traversal-promotion evidence.
+- Added promoted traversal profile
+  `fixed_coordinate_spectral_transport_passthrough_v1` and benchmark method id
+  `kl_spectral_transport_passthrough`, while keeping the diagnostic alias for
+  backward-compatible comparisons. Regenerated promoted standard-dispatch,
+  selected-family, and default promotion-gate outputs; the promoted gate again
+  records `promotion_admissible` with `3/3` required components passing.
+- Ran the 50-replicate promoted selected-family validation and added
+  [[spectral-transport-promoted-replicate-panel-20260616]]. The opt-in
+  spectral transport profile reduces selected-null false splits from `117/150`
+  to `3/150`, but four paired signal rows regress, including one
+  `overlap_mod_4c_small` row with delta ARI `-0.822005`. The replicate-aware
+  promotion gate now defaults to the 50-replicate selected-family evidence and
+  returns `diagnostic_only_not_promoted`, blocked by
+  `selected_family_signal_retention`; the profile status is
+  `opt_in_candidate_not_default`.
+- Added [[spectral-vs-bandwidth-tradeoff-panel-20260616]] and
+  `spectral_vs_bandwidth_tradeoff_panel.py` to compare strict MP spectral
+  transport with the older bandwidth interpolation diagnostic on overlapping
+  evidence surfaces. The output records `hybrid_needed_diagnostic_only`:
+  spectral transport reduces selected-null false splits from `117/150` to
+  `3/150` but regresses `4/150` signal rows, while default bandwidth
+  interpolation catches no direct signal positives and widened `tau_s = 20`
+  reopens selected-null rows faster than it recovers signal.
+- Added [[legacy-internal-spectral-comparison-panel-20260616]] and the
+  opt-in `kl_legacy_internal_spectral_diagnostic` path copied from the old
+  internal-node spectral behavior. The current code can now append descendant
+  internal barycenters to node-local spectral matrices while preserving the
+  leaf count as effective independent rows. A one-replicate overlap benchmark
+  writes `12` rows and `6` paired comparisons; internal rows strongly increase
+  MP threshold and raw signal counts, but completed partitions are unchanged
+  versus current leaf-only spectra.
+- Added [[legacy-c2ef9a69-method-package-20260616]] and extracted the full old
+  `kl_clustering_analysis` method package from commit `c2ef9a69` into
+  `kl_clustering_analysis.legacy_methods.commit_c2ef9a69`. The snapshot's
+  absolute imports were rewritten into the nested namespace, the benchmark
+  registry now exposes `kl_legacy_c2ef9a69`, and targeted tests verify package
+  import, dispatcher routing, and a small real-run smoke.
+- Added [[legacy-c2ef9a69-method-comparison-panel-20260616]] and ran the full
+  legacy package against current `kl` on six compact binary/overlap cases with
+  selected-null and signal roles. The output writes `24` method rows and `12`
+  paired comparisons under
+  `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel/`.
+  The legacy method fixes the `binary_low_noise_2c` signal over-split and
+  avoids some current strict-support skips, but it false-splits
+  `overlap_mod_4c_small` selected-null and under-splits
+  `overlap_heavy_4c_small_feat` signal.
+- Refined the selected-neighborhood measurability diagnostics to implement the
+  candidate-audit table requested by the merged bandwidth/topology plan.
+  `selected_neighborhood_pvalue_interpolation_comparison.py` now reports
+  effective interpolation support
+  \((\sum_v w_v)^2/\sum_v w_v^2\), and
+  `selected_neighborhood_measurability_law.py` can join hold-out
+  interpolation rows plus spectral-flow edge rows while emitting traversal
+  state, bandwidth scales, topology variables, interpolation behavior labels,
+  and spectral bottleneck status. A real-row smoke on
+  `overlap_unbal_4c_small` signal replicate `0` writes `399` candidate rows
+  and `71` audit columns under
+  `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_refined_candidate_audit_smoke/`.
+- Optimized the p-value interpolation comparison by replacing repeated
+  per-target pandas row iteration with a vectorized selected-tree-group
+  interpolation context. The full expanded candidate interpolation output now
+  regenerates successfully with `69,860` rows and effective-support fields.
+  The joined measurability audit also regenerates `69,860` rows and localizes
+  the `104` non-direct rows to topology coherence despite observed
+  interpolation support, while spectral diagnostics are explicitly labeled as
+  joined, floor-only, rotation bottleneck, or not joined.
+- Added selected-tree structural topology fallback to the measurability audit.
+  The audit now computes incoming branch balance, outgoing child balance, and
+  their product from `parent_id` plus `n_descendant_leaves` before candidate
+  filtering. The full candidate table grows to `83` columns. Among the `104`
+  non-direct rows, `41` non-root rows have structural balance products below
+  the coherence floor and `63` root rows have outgoing balance but require a
+  separate root-selected topology law; no diagnostic rescue is promoted.
+- Added `selected_neighborhood_topology_frontier.py` and its validation tests.
+  The full expanded overlap comparator writes `69,860` row annotations plus a
+  root/non-root threshold sweep. At `tau_s = 20`, bandwidth direct-positive
+  reopen counts are `579` selected-null versus `388` signal rows per method
+  profile. Root outgoing-balance and lowered non-root balance-product
+  thresholds also pass selected-null rows more readily than signal rows, so the
+  hybrid support count remains `0` and the topology variables stay diagnostic.
+- Ran the root selected-region margin replay on the seven overlap cases and
+  joined the case-level root law status into the topology-frontier comparator.
+  All seven overlap roots report `discrete_tie_cell_geometry_required`; the
+  refreshed topology-frontier rows grow to `41` columns and label all root
+  non-direct candidates with this concrete discrete selected-region blocker.
+- Added `root_selected_tie_cell_burden.py`, which summarizes the discrete
+  root tie-cell burden as summed log tied-merge multiplicity. The seven-case
+  overlap output has large tie burden in every case, but the largest root
+  selected ratios do not occur at the largest tie burdens, so tie burden is a
+  conditioning coordinate rather than a monotone rescue or penalty rule.
+- Extended the root selected-region replay with selected tie-rank coordinates
+  inside tied minimum sets and regenerated the overlap root/tie-cell outputs.
+  Median selected tie-rank fraction aligns with root selected ratio more than
+  raw tie burden does, making deterministic tie-breaking a concrete coordinate
+  for the future discrete root selected-region law.
+- Added [[root-selected-mixed-region-law-20260616]] and
+  `root_selected_mixed_region_law.py`, joining root margin, tie-cell burden,
+  selected tie-rank, and topology-frontier bandwidth evidence. The seven-case
+  overlap artifact classifies every root as `discrete_tie_rank_region`, blocks
+  all rows until a discrete tie-rank null law is calibrated, and shows six
+  cases where bandwidth reopens without root-law support.
+- Added [[root-tie-rank-calibration-feasibility-20260616]] and
+  `root_tie_rank_calibration_feasibility.py`, converting the mixed root law
+  into conditioning strata over selected tie-rank, edge margin, spectral ratio,
+  and bandwidth-reopen status. The seven-case overlap artifact has seven
+  strata and zero admissible selected-null calibration support, implying `693`
+  additional selected-null root simulations for alpha-resolution only or
+  `11088` for the stated tail-precision target.
+- Added [[root-tie-rank-selected-null-simulation-pilot-20260616]] and
+  `root_tie_rank_selected_null_simulation_pilot.py`. A one-replicate iid
+  Bernoulli selected-null run over the seven overlap case scales produced
+  `7/7` successful root rows and no failures, but generated null roots occupied
+  three null-only strata and none of the seven observed target strata. The next
+  simulation step must therefore target or enrich high edge-margin,
+  high-spectral-ratio, bandwidth-reopen root strata rather than only increasing
+  iid null replicate count blindly.
+- Added [[root-tie-rank-null-proposal-frontier-20260616]] and
+  `root_tie_rank_null_proposal_frontier.py`. The diagnostic separates iid
+  calibration-candidate rows from column-beta, two-block, sparse-spike, and
+  coupled edge-spectral diagnostic proposals, then reports observed
+  target-stratum hits without counting
+  proposal rows as null support. A two-case smoke over `overlap_mod_4c_small`
+  and `overlap_mod_6c_med` generated `10` roots with no failures. Iid and
+  column-beta rows stayed far below observed root action, the two-block
+  proposal produced selected ratios above `7000` and `28000` with low spectral
+  ratios, and the sparse-spike proposal reached `spectral_ratio_gt_4` once but
+  with low edge margin and low selected ratio. The coupled edge-spectral
+  proposal produced selected ratios about `6988` and `30498` with high edge
+  margins, but still had only `spectral_ratio_1_2` rows. Every proposal family
+  still missed the observed target strata. The feasibility annotation now treats
+  unjoined topology-frontier bandwidth as `bandwidth_reopen_missing` rather
+  than measured no-reopen.
+- Added [[root-tie-rank-proposal-gap-panel-20260616]] and
+  `root_tie_rank_proposal_gap_panel.py`, a post-run coordinate-gap diagnostic
+  over the root proposal frontier. The two-case smoke writes `35`
+  target-by-family best-gap rows and `5` family summaries. Two-block and
+  coupled proposals exceed all target selected ratios and match edge-margin
+  bands for `4/7` targets but fail the spectral bands; iid, column-beta, and
+  sparse-spike proposals match spectral bands for `4/7`, `4/7`, and `5/7`
+  targets but lack high edge/action. Every best generated row has unmeasured
+  bandwidth. The next root-law object is therefore a selected spectral-action
+  coupling, not another independent action, edge, or spectral threshold.
+- Added [[root-tie-rank-spectral-action-dominance-panel-20260616]] and
+  `root_tie_rank_spectral_action_dominance_panel.py`, which tests continuous
+  dominance rather than coarse band matches. The two-case smoke writes `35`
+  target-by-family dominance rows and `5` summaries. No proposal family has
+  full continuous dominance or spectral-action dominance over any observed
+  target. Two-block and coupled proposals dominate selected-ratio action and
+  edge margin for `7/7` targets but never spectral ratio; iid, column-beta,
+  and sparse-spike proposals dominate spectral ratio for `2/7` targets but
+  never action or edge. This rules out the coordinate-gap result being only a
+  binning artifact.
+- Added [[root-tie-rank-coupling-equation-panel-20260616]] and
+  `root_tie_rank_coupling_equation_panel.py`, making the missing selected
+  spectral-action equation explicit as \(T\min(A,E)S\) plus a measured
+  neighborhood coupling factor. The two-case smoke writes `35`
+  target-by-family coupling rows and `5` summaries. Pure bottleneck coupling
+  reaches some easier observed roots, but measured-neighborhood coupling
+  reaches `0/7` targets for every proposal family because all generated
+  proposal rows still have missing bandwidth evidence.
+- Added [[root-tie-rank-neighborhood-join-audit-20260616]] and
+  `root_tie_rank_neighborhood_join_audit.py`, auditing whether missing
+  generated bandwidth evidence comes from absent matrices, absent
+  topology-frontier rows, or an unjoined frontier. The two-case smoke writes
+  `17` rows and `6` summaries. All `10` generated proposal matrices exist, but
+  every generated proposal root lacks selected-neighborhood topology-frontier
+  replay; all generated families are therefore labeled
+  `generated_topology_frontier_replay_needed`.
+- Added [[root-tie-rank-generated-neighborhood-replay-20260616]] and
+  `root_tie_rank_generated_neighborhood_replay.py`, then reran the proposal
+  frontier and coupling equation with generated topology-frontier rows joined.
+  The generated replay writes `10` run rows and `9,990` node/neighborhood rows
+  for each replay table, with all generated matrices completing KL replay. The
+  rebuilt proposal frontier changes generated bandwidth from missing to
+  measured: `3/10` generated roots reopen at reference bandwidth and `7/10`
+  are measured no-reopen. The updated coupling panel has
+  `generated_neighborhood_measured_count = 7/7` for every proposal family, but
+  measured-neighborhood coupling dominance remains limited to easier targets:
+  column-beta `1/7`, coupled edge-spectral `2/7`, iid `0/7`, sparse block
+  spike `2/7`, and two-block tilt `2/7`. The remaining blocker is therefore
+  selected spectral-action/tie-rank calibration, not missing generated
+  bandwidth replay.
+- Added [[root-tie-rank-measured-coupling-residual-panel-20260616]] and
+  `root_tie_rank_measured_coupling_residual_panel.py`, a target-level residual
+  diagnostic over the measured-neighborhood coupling rows. The panel selects
+  the best measured proposal per observed root. The coupled edge-spectral
+  proposal is best for all seven targets; it reaches the two easier targets
+  diagnostically, while the five unresolved hard or partial targets all have
+  spectral-excess as the dominant residual axis and zero action-edge
+  bottleneck relative deficit. The next mathematical step is therefore
+  selected spectral excess conditional on high action-edge and tie-rank
+  geometry.
+- Added [[root-tie-rank-selected-spectral-excess-panel-20260616]] and
+  `root_tie_rank_selected_spectral_excess_panel.py`, directly testing the
+  selected spectral-excess condition under measured high action-edge/tie
+  proposal roots. Every observed target has four eligible diagnostic generated
+  rows and zero eligible selected-null calibration rows. The best spectral row
+  is the same coupled proposal for all targets, and no target's spectral excess
+  is reached. Two easier roots are partial spectral residuals, while five hard
+  roots have median spectral log-ratio `0.305111` and median required
+  spectral-excess multiplier `2.631889`. The next step is an external
+  selected spectral-excess law or a selected-null generator for this
+  high-action-edge/tie measured stratum.
+- Added [[root-tie-rank-selected-spectral-generator-targets-20260616]] and
+  `root_tie_rank_selected_spectral_generator_target_panel.py`, converting the
+  selected spectral-excess residual into proposal-family generator targets.
+  The generated-replay run writes `35` target-by-family rows and `5`
+  summaries. Only the coupled edge-spectral and two-block tilt families cover
+  all seven observed targets in the measured high action-edge/tie stratum, but
+  both are diagnostic-only and require spectral lift for every target. The
+  coupled family needs median spectral lift `2.493244` and maximum `4.296772`;
+  the two-block family needs median `2.595615` and maximum `4.473194`.
+  Iid selected-null support covers `0/7` targets, leaving the next method
+  object as a selected-null or external law that jointly occupies this stratum
+  and has the required selected spectral-excess tail.
+- Added [[root-tie-rank-spectral-lift-parameter-sweep-20260616]] and
+  `root_tie_rank_spectral_lift_parameter_sweep.py`, a pre-replay root-metric
+  sweep for the selected spectral-excess generator. A 30-setting run was
+  stopped because root-margin replay was too slow and its partial matrix
+  directory was removed. Two completed `overlap_mod_6c_med` smoke settings
+  show the key behavior: both cover `7/7` observed targets in action-edge/tie
+  metrics and reach `0/7` target spectral excesses. The moderate coupled
+  setting has selected spectral-excess log `0.338471`, median required
+  spectral-lift multiplier `2.718312`, and maximum `4.684647`; the stronger
+  high-amplitude setting has lower spectral-excess log `0.244586`, median lift
+  `2.985886`, and maximum `5.145775`. This argues that the next generator
+  needs MP-mode construction, not just larger dense/sparse perturbation
+  amplitude.
+- Extended [[root-tie-rank-spectral-lift-parameter-sweep-20260616]] with a
+  diagnostic `coherent_rank_one_spike_proposal`, a binary rank-one population
+  spike aligned across active features. The six-setting compact
+  `overlap_mod_6c_med` grid writes `6` generated rows, `42` target rows,
+  `6` summary rows, and `0` failures. All coherent settings cover `7/7`
+  action-edge/tie targets. The best setting
+  `coherent_rank_one_spike_proposal__sf0_200__sd0_650` reaches `2/7` target
+  spectral excesses, selected eigenvalue over MP upper bound `2.191630`, best
+  generated spectral-excess log `0.784646`, median required spectral-lift
+  multiplier `1.739915`, and maximum `2.998511`. This improves over the best
+  coupled smoke (`0/7`, median lift `2.718312`) but still leaves the hard
+  selected spectral tail unresolved.
+- Added matched-target conditioning to
+  [[root-tie-rank-spectral-lift-parameter-sweep-20260616]] via
+  `conditioned_coherent_rank_one_spike_proposal`. Each setting derives its
+  coherent spike concentration from the target's selected tie-rank/action-edge
+  geometry, carries the conditioning target id, and can support only that
+  matched target. The capped conditioning smoke over `overlap_mod_6c_med`
+  writes `7` generated rows, `7` target rows, `7` summary rows, and `0`
+  failures. It reaches the same `2/7` easy targets as the best unconditional
+  coherent grid, with median residual spectral lift `1.805514` and maximum
+  `2.952730`. This records conditioning as a no-borrowing localization audit,
+  not a closed spectral rescue law.
+- Ran generated-neighborhood/topology replay for the capped conditioned
+  coherent spike matrices and added
+  [[root-tie-rank-conditioned-coherent-topology-join-20260617]]. The replay
+  writes `7` run rows and `8,393` rows each for node decisions, distribution,
+  p-value interpolation, measurability, and topology frontier. The join appends
+  seven conditioned coherent rows to the existing generated-replay feasibility
+  table and reruns the selected spectral generator target panel with
+  `conditioning_target_case_id` enforced. All conditioned coherent rows have
+  `root_frontier_row_count = 1`, `root_bandwidth_reopen_count = 0`, and
+  `root_bandwidth_reopen_band = bandwidth_no_root_reopen`. The matched
+  conditioned coherent family covers `7/7` high action-edge/tie measured
+  targets and reaches `2/7` spectral targets, with median residual lift
+  `1.805514` and maximum `2.952730`; the hard selected-root spectral tail and
+  external selected-null support remain open.
+- Added [[root-selected-spectral-tail-law-with-legacy-overlay-20260617]] and
+  `root_selected_spectral_tail_law_panel.py`. The panel expresses the root
+  inference target as a support-aware tail law over
+  \(S_{\mathrm{root}}=\log(\lambda/\lambda_{\mathrm{MP}})\) conditional on the
+  root selected event, \(T,A,E,B,H_u\), and deliberately excludes
+  \(S_{\mathrm{root}}\) from the conditioning key. The run writes `7` root
+  rows and one summary row. All seven roots have
+  `selected_null_support_count = 0`, no conservative p-value, and
+  `fail_closed_selected_root_spectral_tail_support_missing`. The full legacy
+  method overlay shows one selected-null false split on
+  `overlap_mod_4c_small`, while the legacy internal-barycenter overlay changes
+  MP counts but does not provide calibrated root-tail support.
+- Added [[root-selected-importance-tail-support-20260617]] and extended the
+  selected-root spectral-tail path with likelihood-ratio external-null support.
+  `root_tie_rank_null_proposal_frontier.py` now accepts tilted importance
+  proposal families that carry \(\log(dP_0/dQ)\) metadata and are labeled as
+  `external_selected_null`/`external_null_support`. The root-tail panel uses an
+  effective-sample-size weighted conservative p-value when same-stratum
+  weighted support exists. The current seven-root panel was regenerated and
+  still reports `calibrated_tail_count = 0` and
+  `fail_closed_missing_support_count = 7`, so this is an executable external
+  law channel rather than a promoted rescue rule.
+- Ran the first end-to-end importance external-null smoke for selected-root
+  spectral tails. The frontier generated `14` weighted external rows from
+  `importance_two_block_external_null` and `importance_coupled_external_null`,
+  replayed those matrices through generated selected-neighborhood topology,
+  joined measured bandwidth evidence back into the root-tail input, and wrote
+  `root_selected_spectral_tail_law_importance_external_smoke`. The result has
+  `calibrated_tail_count = 1` and `fail_closed_missing_support_count = 6`.
+  The single supported target is `overlap_unbal_6c_med`, with one
+  non-exceeding weighted support row, ESS `1.0`, and conservative p-value
+  `0.5`; the other six observed roots remain fail-closed.
+- Ran a milder accumulated importance external-null smoke and two scalar
+  two-block probes. The mild replay/join/tail path writes
+  `root_selected_spectral_tail_law_importance_external_mild_accumulated` and
+  improves support to `2/7`: `overlap_extreme_4c` gains one non-exceeding
+  weighted support row, while `overlap_unbal_6c_med` has six support rows but
+  ESS remains `1.0`. The `0.13` and `0.12` scalar two-block probes were
+  completed but not replayed because their pre-replay \(T,A,E\) bands jump
+  between low/low and high/high rather than matching the remaining low/mid,
+  mid/high, and mid/mid target strata.
+- Added [[root-tie-rank-target-conditioned-importance-frontier-20260617]] and
+  `root_tie_rank_target_conditioned_importance_frontier.py`. The diagnostic
+  generates likelihood-ratio-weighted external-null rows per unsupported target
+  and records `conditioning_target_case_id` before checking pre-topology
+  \(T,A,E\) stratum hits. A broader first run was interrupted because the root
+  selected-region replay was too slow; the subsequent narrow pure two-block
+  and coupled smokes each wrote `4` generated rows over
+  `overlap_heavy_4c_small_feat` and `overlap_mod_4c_small` and both reported
+  `pre_topology_supported_target_count = 0`. This makes the next proposal
+  blocker sharper: target scoping is present, but the current Bernoulli tilt
+  families still cannot land in the required mixed action-edge bands.
+- Added an unbalanced two-block external-null proposal arm to the
+  target-conditioned importance frontier. It preserves likelihood-ratio weights
+  through a deterministic unequal block fraction. Narrow and boundary probes
+  for `overlap_mod_4c_small` write `8`, `12`, and `6` generated rows
+  respectively, but all report `pre_topology_supported_target_count = 0`.
+  The near misses show the same discontinuity: rows either fall to low/low
+  action-edge bands or jump to high/high, so block imbalance alone does not
+  create the required mid/high stratum.
+- Added accepted-stratum rejection support to
+  `root_tie_rank_target_conditioned_importance_frontier.py`. The new mode keeps
+  likelihood-ratio proposal semantics but retains only candidates whose
+  pre-topology \(T,A,E\) key matches the target before topology replay. A
+  micro smoke on `overlap_mod_4c_small` using unbalanced two-block deltas
+  `0.126` and `0.129`, block fraction `0.55`, and `10` attempts per setting
+  retains `0/20` candidates. This confirms that post-hoc rejection over the
+  current proposal is too sparse; the next inference path needs a proposal or
+  analytic law with separate selected-ratio action and edge-action controls.
+- Added `importance_correlated_two_factor_external_null` to the
+  target-conditioned importance frontier. The proposal uses a primary root
+  factor plus a partially correlated residual factor and keeps
+  \(\log(dP_0/dQ)\) metadata. A compact `overlap_mod_4c_small` smoke writes
+  `8` generated rows and still reports `pre_topology_supported_target_count =
+  0`. Together with the fine unbalanced boundary probe, this rules out the
+  simple residual-parent-energy shortcut: generated roots still jump between
+  low/low and high/high action-edge bands, often with high tie-rank.
+- Added [[root-selected-spectral-tail-nearest-support-20260617]] and
+  `root_selected_spectral_tail_nearest_support_panel.py`. The panel reads the
+  accumulated importance/topology feasibility rows plus the root-tail panel,
+  finds the nearest calibration-support row in \(T,A,E,B,H_u\) coordinates,
+  and keeps nearest support diagnostic-only. The mild accumulated run writes
+  `7` rows and one summary: exact support remains `2/7`, nearest support is
+  available for all seven targets, and five targets remain
+  `fail_closed_nearest_support_only`. For `overlap_mod_4c_small`,
+  `overlap_mod_6c_med`, `overlap_part_4c_small`, and
+  `overlap_unbal_4c_small`, the dominant nearest gap is selected-ratio action,
+  while bandwidth topology matches.
+- Added [[root-selected-action-conditioning-ladder-20260617]] and
+  `root_selected_action_conditioning_ladder_panel.py`. The diagnostic compares
+  exact \(T,A,E,B,H_u\) support against relaxed levels that remove \(A\), then
+  \(B\), or \(E\), while keeping relaxed rows non-calibrating. The mild
+  accumulated run writes `28` ladder rows. Exact support remains `2/7`.
+  Relaxing only \(A\) restores support for `overlap_mod_4c_small`,
+  `overlap_mod_6c_med`, and `overlap_part_4c_small`, so selected-ratio action
+  is the minimal missing coordinate for those roots.
+  `overlap_heavy_4c_small_feat` and `overlap_unbal_4c_small` require relaxing
+  \(E\) as well.
+- Added [[root-selected-action-dominance-tail-20260617]] and
+  `root_selected_action_dominance_tail_panel.py`. The panel tests one-sided
+  diagnostic support with the same \(T,E,B,H_u\) and
+  \(A_{\mathrm{support}}\ge A_{\mathrm{target}}\). The mild accumulated run
+  finds action-dominating support for the three action-only gap roots, but
+  every such row has `action_dominating_spectral_exceedance_count = 0`. These
+  rows therefore remain non-production and the next mathematical obligation is
+  to prove or reject one-sided selected-action spectral-tail monotonicity.
+- Added [[root-selected-population-law-requirement-20260617]] and
+  `root_selected_population_law_requirement_panel.py`. The panel converts the
+  action-dominance spectral gap into the required MP-edge multiplier
+  \(\kappa_H=\exp(S_{\mathrm{target}}-S_{\mathrm{support,max}})\). The mild
+  accumulated run finds substantial-to-large requirements for the three
+  action-dominance fail-closed roots: `2.353980` for
+  `overlap_mod_4c_small`, `3.257578` for `overlap_mod_6c_med`, and `2.378802`
+  for `overlap_part_4c_small`. This keeps the roots fail-closed and moves the
+  next math object to estimating \(H_u\) or deriving the selected spectral-tail
+  law directly.
+- Added [[root-selected-h-u-observability-20260617]] and
+  `root_selected_h_u_observability_panel.py`. The panel audits whether the
+  selected-root artifacts contain the root eigenvalue spectrum, active feature
+  count, MP threshold rows, and deformed edge needed to estimate \(H_u\). The
+  mild accumulated run writes `7` rows and reports
+  `h_u_estimable_target_count = 0`, `missing_spectrum_target_count = 7`,
+  `missing_feature_count_target_count = 7`, `support_missing_target_count = 2`,
+  and `exact_tail_support_target_count = 2`. Thus exact tail support already
+  handles two roots, two roots need support generation first, and the three
+  action-dominance fail-closed roots need root spectrum capture before a
+  deformed MP edge can be inferred.
+- Extended the spectral context with full component eigenvalues and active
+  feature counts, separate from the projected-Wald PCA eigenvalues, and updated
+  `root_selected_region_margins.py` plus
+  `root_tie_rank_conditioned_coherent_topology_join.py` to carry those fields
+  into selected-root tail artifacts. After regenerating the overlap root
+  summary, topology joins, root-tail panels, population requirement panel, and
+  \(H_u\) observability panel, the observed root MP edge uses active feature
+  count rather than truncated projection width. The three action-dominance
+  fail-closed roots now need modest MP-edge multipliers: `1.327024` for
+  `overlap_mod_4c_small`, `1.432777` for `overlap_mod_6c_med`, and `1.459352`
+  for `overlap_part_4c_small`. The \(H_u\) observability summary now reports
+  `h_u_estimable_target_count = 3`, `missing_spectrum_target_count = 0`, and
+  `missing_feature_count_target_count = 0`; the remaining missing field is the
+  deformed MP edge itself.
+- Added [[root-selected-deformed-mp-edge-20260617]] and
+  `root_selected_deformed_mp_edge_panel.py`. The panel computes a plug-in
+  Silverstein--Choi deformed MP edge from the captured observed root bulk
+  spectrum after excluding the top identity-MP raw signal count. The mild
+  accumulated run computes deformed edges for `3/7` observed roots, with
+  median edge multiplier `1.159819` and maximum multiplier `1.309283` among
+  computed rows. The corresponding deformed root spectral excesses are
+  `0.617050` for `overlap_mod_4c_small`, `0.616136` for
+  `overlap_mod_6c_med`, and `0.864845` for `overlap_part_4c_small`.
+  Production remains fail-closed because `diagnostic_proposal`,
+  `external_selected_null`, and `selected_null` support rows still have zero
+  full-spectrum captures in the joined feasibility table.
+- Extended `root_selected_mixed_region_law.py` so mixed-law rows preserve the
+  full root spectral-bulk fields needed for support-side \(H_u\): active
+  feature count, full eigenvalue count, full eigenvalue JSON, projected
+  eigenvalue JSON, and the identity MP edge. Added regression coverage in
+  `155_test_root_selected_mixed_region_law.py` and
+  `168_test_root_tie_rank_conditioned_coherent_topology_join.py`. Existing
+  accumulated support artifacts still need regeneration; the code path no
+  longer strips the fields.
+- Extended the selected-root \(H_u\) replay to generated and external-null
+  support rows. `root_selected_deformed_mp_edge_panel.py` now writes
+  `root_selected_deformed_mp_edge_support_rows.csv`, and
+  `root_tie_rank_null_proposal_frontier.py` preserves the spectral-bulk fields
+  through combined feasibility rows without `_x`/`_y` suffixing. A refreshed
+  mild importance external-null replay gives `14/14` external-null rows with
+  full spectra, active feature counts, and measured topology status. The
+  support-side deformed MP edge computes for all `14` external rows, but every
+  external row has `s_root_deformed_excess_log = 0`. The refreshed identity-MP
+  selected-tail panel remains `2/7` calibrated and `5/7` fail-closed, so the
+  hard roots still require a selected-null/external law that occupies the same
+  \(T,A,E,B,H_u\) stratum with nonzero calibrated spectral excess.
+- Extended `root_selected_spectral_tail_law_panel.py` so the active tail
+  variable can come from deformed \(S_{H_u}\) rows when target and support
+  deformed-MP edge CSVs are supplied. The refreshed mild \(H_u\)-replay tail
+  run sets `spectral_tail_variable = deformed_mp_s_h_u` for all seven roots
+  and still reports `calibrated_tail_count = 2` with `5/7` fail-closed. The
+  edge correction reduces several observed excesses, for example
+  `overlap_mod_6c_med` from identity `0.885616` to deformed `0.616136`, but it
+  does not create support for the five unsupported \(T,A,E,B,H_u\) strata.
+- Added [[root-selected-deformed-tail-support-gap-20260617]] and
+  `root_selected_deformed_tail_support_gap_panel.py`. The panel localizes the
+  fail-closed deformed \(S_{H_u}\) tail rows against the nearest external-null
+  support rows. The mild replay writes seven rows and one summary:
+  exact support remains `2/7`, `5/7` roots are missing same-stratum
+  \(T,A,E,B,H_u\) support, and every nearest support row has
+  `S_Hu = 0`. The maximum required deformed-excess lift is `2.374638` on
+  `overlap_part_4c_small`; four fail-closed roots are dominated by
+  selected-ratio action and one by edge action.
+- Added [[root-selected-deformed-external-law-target-20260617]] and
+  `root_selected_deformed_external_law_target_panel.py`. The panel converts the
+  deformed selected-root support gaps into conditional external-law targets
+  rather than p-value rescues. The mild replay reports `target_count = 7`,
+  `external_law_required_count = 5`, and `existing_support_count = 2`; four
+  unsupported roots require an `A,S_Hu` tilt and one requires an `E,S_Hu` tilt.
+  The row contract records exact target moments while preserving \(T,A,E\) as
+  absolute nearest-support gaps, avoiding a false signed-coordinate
+  reconstruction from the support-gap panel.
+- Added [[root-selected-conditional-tilt-feasibility-20260617]] and
+  `root_selected_conditional_tilt_feasibility_panel.py`. The panel tests the
+  finite-support version of the selected-root conditional exponential tilt by
+  projecting target moments onto the convex hull of current external-null
+  support moments. The mild replay writes `19` rows. Same-\(B,H_u\) full
+  \((T,A,E,S_{H_u})\) feasibility is `0/7`, required-axis feasibility is
+  `1/5`, and the four nonzero `A,S_Hu` roots remain outside the hull with
+  residual \(S_{H_u}\) equal to their target deformed spectral excess. This
+  rules out simple reweighting of the current support rows for the hard roots.
+- Added [[root-selected-external-law-equation-20260617]] and
+  `root_selected_external_law_equation_panel.py`. The panel converts the
+  failed hull check into explicit selected-root external-law equations:
+  moment matching under \(R_{\mathrm{root}},T,A,E,B,H_u\) plus positive mass
+  on \(S_{H_u}\ge S_{H_u,\mathrm{target}}\). The mild replay reports
+  `existing_tail_support_count = 2`,
+  `moment_only_reweighting_possible_count = 1`, and
+  `new_spectral_support_required_count = 4`, with minimum support count `99`
+  for alpha `0.01` resolution.
+- Added [[root-selected-binary-resolution-20260617]] and
+  `root_selected_binary_resolution_panel.py`. This method-facing diagnostic
+  keeps the tree binary but records first-split resolution strength
+  \(\rho_r=T\min(A,E)\). The mild replay gives `2` weak, `3` transition, and
+  `2` strong binary-resolution roots. Only `2/7` roots have selected-root tail
+  support; `5/7` remain fail-closed, including strong binary roots whose
+  selected spectral-tail law is still unsupported.
+- Added [[root-selected-same-geometry-external-support-attempt-20260617]] and
+  `root_selected_same_geometry_external_support_attempt.py`. The new
+  diagnostic runs the selected-root support loop end to end: target-conditioned
+  likelihood-ratio external-null generation, generated-neighborhood replay,
+  topology/\(B\) join, deformed-MP \(H_u\) support computation, and the
+  support-aware tail panel. The five-target tiny smoke generates and replays
+  `5` candidates, gets zero pre-topology hits, adds only one same-tail support
+  row with `S_Hu = 0`, and leaves the same-geometry nonzero spectral-tail law
+  fail-closed for the hard roots.
+- Added [[legacy-c2ef9a69-root-tail-overlap-comparison-20260617]] and
+  [[root-conditional-kernel-spectral-law]]. The seven-case legacy overlap run
+  shows the old method completes more selected-root-tail rows and improves one
+  signal row, but creates two selected-null false splits. The refined law keeps
+  the old adaptive kernel smoother as support-gated neighborhood weighting and
+  makes \(S_{H_u}\) the selected-root spectral tail, with effective-support and
+  nonzero same-stratum support checks before any p-value is reported.
+- Added [[old-current-method-difference-ledger-20260617]] and
+  `old_current_method_difference_ledger.py`. The ledger reads existing
+  old/current comparison artifacts rather than rerunning clustering and writes
+  `17` component rows. It records `5` replaced-or-removed components, `4`
+  added current guards, `3` diagnostic-retained components, `2` old-power
+  positive rows, and `2` old selected-null safety regression rows. This is now
+  the canonical tracking surface for real old-versus-current method
+  differences.
+- Added [[root-selected-kernel-spectral-tail-law-20260617]] and
+  `root_selected_kernel_spectral_tail_law_panel.py`. The candidate panel uses
+  old-style kernel locality only as admissible support weights for selected-root
+  \(S_{H_u}\), excluding diagnostic proposal rows. The seven-root run reports
+  `kernel_available_count = 2`, `strict_fail_closed_kernel_available_count = 1`,
+  and `kernel_nonzero_support_target_count = 0`; positive-tail roots therefore
+  remain fail-closed. The old/current ledger was regenerated with `18`
+  component rows and now includes the candidate row with decision
+  `not_promotable_positive_tail_support_missing`.
+- Extended [[root-selected-kernel-spectral-tail-law-20260617]] with a
+  topology-conditioned root kernel channel. Observed targets are enriched from
+  the root selected-region replay, each root receives exact and coarsened
+  bifurcation signatures, and topology support is required before scalar
+  kernel smoothing. The rerun still has scalar support for `2/7` roots, but
+  `topology_kernel_available_count = 0`, `topology_support_missing_count = 6`,
+  `topology_degenerate_support_count = 1`, and
+  `summary_status = scalar_kernel_support_but_topology_fail_closed`.
 
 ## Evidence
 

@@ -6,6 +6,7 @@ updated: 2026-06-03
 sources:
   - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
   - wiki/sources/local-mp-identity-law-diagnostic-20260602.md
+  - wiki/sources/legacy-internal-spectral-comparison-panel-20260616.md
   - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/decomposition.py
   - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/operators.py
   - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py
@@ -95,6 +96,14 @@ median ARI \(1.0\), and exact \(K\) in 63 of 110 rows. All but one skip were
 strict sibling-calibration-support failures; the remaining skip was the
 intentional dense continuous covariance limit for the 20,000-feature continuous
 stress case.
+
+The 2026-06-16 copied-commit comparison adds a current-code reconstruction of
+the old internal-barycenter row path. On a one-replicate overlap panel, the
+legacy diagnostic increases raw MP signal counts by about `191` nodes on
+average and adds thousands of MP threshold rows, but the completed partitions
+match the current leaf-only path exactly. This confirms that internal rows
+alter the local spectral algebra but are not, by themselves, a validated
+anti-fragmentation rule.
 
 ## Details
 
@@ -218,6 +227,15 @@ The correct next mathematical object is therefore not an internal-row fallback
 or an unvalidated floor change, but a calibrated rule for empirical-null
 support or an external conditional-null calibration model.
 
+The 2026-06-16 standard-dispatch reconstruction makes the same conclusion
+observable in the current code. Internal barycenters can be appended and counted
+for the MP edge as the old commit did, while the leaf count remains recorded as
+the independent-row count. In the compact overlap benchmark, this produces much
+larger raw MP signal and threshold-row sums, but no partition change among the
+four completed paired rows. Thus internal rows are best treated as a spectral
+sensitivity diagnostic and possible local covariate, not as a rescue condition
+for split/pass-through decisions.
+
 Selection-aware thresholding remains a different mathematical object from the
 finite-null smoke. A finite-null edge samples fixed local null matrices. A
 selection-aware edge would condition on hierarchy construction, edge-gate
@@ -332,12 +350,16 @@ and selected large-node extremes.
   no-bootstrap selected-region geometry boundary.
 - `wiki/sources/local-mp-identity-law-diagnostic-20260602.md` records the
   representative production-spectrum screen against the identity MP law.
+- `wiki/sources/legacy-internal-spectral-comparison-panel-20260616.md`
+  records the copied-commit internal-barycenter spectral diagnostic and its
+  small overlap benchmark comparison against the current leaf-only path.
 
 ## Links
 
 - [[open-mathematical-questions]]
 - [[projected-wald-statistic]]
 - [[oracle-gate-path-diagnostic]]
+- [[legacy-internal-spectral-comparison-panel-20260616]]
 
 ## Open Questions
 

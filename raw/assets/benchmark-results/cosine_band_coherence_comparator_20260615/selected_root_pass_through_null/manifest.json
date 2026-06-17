@@ -1,0 +1,13 @@
+{
+  "adaptive_schema_reused": "adaptive_cosine_kak_benchmark_probe/v1",
+  "generated_at_utc": "20260615_130344Z",
+  "generated_by": "__main__",
+  "input_path": "raw/assets/failure-fixtures/selected-root-pass-through-null-20260614/feature_matrix.csv",
+  "outputs": {
+    "cluster_coherence": "raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/selected_root_pass_through_null/cosine_band_comparator_cluster_coherence.csv",
+    "rows": "raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/selected_root_pass_through_null/cosine_band_comparator_rows.csv",
+    "spectrum": "raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/selected_root_pass_through_null/cosine_band_comparator_spectrum.csv"
+  },
+  "schema_version": "cosine_band_coherence_comparator/v1",
+  "study_role": "diagnostic_legacy_cosine_band_coherence_comparator_not_calibration"
+}

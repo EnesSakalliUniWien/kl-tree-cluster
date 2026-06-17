@@ -8,6 +8,13 @@ sources:
   - benchmarks/diagnostics/spectral/cosine_band_coherence_comparator.py
   - tests/validation/135_test_cosine_band_coherence_comparator.py
   - benchmarks/diagnostics/spectral/adaptive_cosine_kak_benchmark_probe.py
+  - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/selected_root_pass_through_null/manifest.json
+  - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/selected_root_pass_through_null/cosine_band_comparator_rows.csv
+  - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/manifest.json
+  - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/shard_exit_codes.csv
+  - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/cosine_band_comparator_rows.csv
+  - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/cosine_band_comparator_cluster_coherence.csv
+  - raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/cosine_band_comparator_spectrum.csv
 tags:
   - source
   - diagnostics
@@ -44,6 +51,21 @@ coherence evidence.
   for subspace behavior, not a traversal null law or production promotion rule.
 - The companion test verifies the fixed band contract, enriched feature-block
   detection, and diagnostic-only row output.
+- On the compact selected-root/pass-through null fixture, all binary and TF-IDF
+  fixed bands return one cluster. This means the fixed cosine-band comparator
+  does not reproduce the selected-root/pass-through false split on that null
+  fixture.
+- The Julia binary matrix was run as an AWS on-demand sharded sweep, one
+  `c7i.xlarge` shard per fixed band. The merged manifest records
+  `all_exit_codes_zero: true`, `row_count: 8`, `coherence_row_count: 2927`,
+  `spectrum_row_count: 640`, and S3 provenance under
+  `s3://phylomovies-iqtree-067744548702-us-east-1/topology-search/kl-te-cosine-julia-binary-sharded-20260615-140208Z`.
+- The Julia run is fragmentation-heavy. The best coherent-cluster fraction is
+  `variation_36_80` with `102/292 = 0.349315`; the least singleton-heavy broad
+  band is `broad_variation_02_35` with `224` clusters, singleton fraction
+  `0.486607`, and coherence fraction `0.258929`; `variation_06_15` and
+  `variation_16_35` are especially fragmentary with singleton fractions
+  `0.875899` and `0.846743`.
 
 ## Evidence
 
@@ -51,6 +73,11 @@ coherence evidence.
   fixed c2ef band contract and coherence summaries.
 - The implementation cites the old scripts as source evidence but runs through
   the current diagnostic framework.
+- `raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/selected_root_pass_through_null/cosine_band_comparator_rows.csv`
+  records the compact null-fixture check.
+- `raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/manifest.json`
+  and `shard_exit_codes.csv` record the on-demand AWS sharded Julia run and
+  completion status.
 
 ## Links
 

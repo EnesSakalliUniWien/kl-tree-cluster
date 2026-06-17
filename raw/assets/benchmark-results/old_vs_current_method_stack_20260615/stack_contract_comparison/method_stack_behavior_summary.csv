@@ -1,0 +1,3 @@
+method,source,fresh_or_existing,n_samples,n_clusters,n_singleton_clusters,largest_cluster_fraction
+prior_full_julia_kl_stack_20260614,raw/assets/benchmark-results/julia_tree_estimators_20260614/kl_assignments.csv,existing_prior_run,703,670,648,0.011379800853485065
+current_conditional_topology_diagnostic_v1,raw/assets/benchmark-results/conditional_topology_law_20260615/julia_selected_family/cluster_assignments.csv,existing_current_run,703,410,312,0.03840682788051209

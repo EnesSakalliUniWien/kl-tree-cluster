@@ -1,0 +1,1 @@
+schema_version,study_role,run_id,weighting,block_name,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_cluster_prevalence,top_term_rest_prevalence,top_term_prevalence_delta,mean_within_tfidf_cosine,coherent_by_rule

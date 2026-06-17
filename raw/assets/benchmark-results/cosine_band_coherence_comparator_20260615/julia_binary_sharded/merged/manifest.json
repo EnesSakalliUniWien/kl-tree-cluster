@@ -1,0 +1,27 @@
+{
+  "all_exit_codes_zero": true,
+  "bands": [
+    "all_modes_01_80",
+    "broad_variation_02_35",
+    "broad_variation_02_80",
+    "common_mode_01",
+    "variation_02_05",
+    "variation_06_15",
+    "variation_16_35",
+    "variation_36_80"
+  ],
+  "coherence_row_count": 2927,
+  "instance_lifecycle": "on_demand",
+  "instance_type": "c7i.xlarge",
+  "outputs": {
+    "cluster_coherence": "raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/cosine_band_comparator_cluster_coherence.csv",
+    "rows": "raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/cosine_band_comparator_rows.csv",
+    "shard_exit_codes": "raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/shard_exit_codes.csv",
+    "spectrum": "raw/assets/benchmark-results/cosine_band_coherence_comparator_20260615/julia_binary_sharded/merged/cosine_band_comparator_spectrum.csv"
+  },
+  "row_count": 8,
+  "schema_version": "cosine_band_coherence_comparator/aws_sharded_v1",
+  "source_s3_uri": "s3://phylomovies-iqtree-067744548702-us-east-1/topology-search/kl-te-cosine-julia-binary-sharded-20260615-140208Z",
+  "spectrum_row_count": 640,
+  "weighting": "binary"
+}
