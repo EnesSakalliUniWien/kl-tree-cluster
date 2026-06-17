@@ -1,0 +1,53 @@
+{
+  "created_at_utc": "20260617_103738Z",
+  "schema_version": "fixed_sibling_gate_profile_validation/v1",
+  "study_role": "diagnostic_fixed_sibling_gate_profile_validation_not_calibration",
+  "generated_by": "benchmarks.diagnostics.calibration.fixed_sibling_gate_profile_validation",
+  "config": {
+    "suite": "full",
+    "case_names": [
+      "overlap_extreme_4c",
+      "overlap_heavy_4c_small_feat",
+      "overlap_mod_4c_small",
+      "overlap_mod_6c_med",
+      "overlap_part_4c_small",
+      "overlap_unbal_4c_small",
+      "overlap_unbal_6c_med"
+    ],
+    "profiles": [
+      "fixed_coordinate_selective_root_v1"
+    ],
+    "data_roles": [
+      "signal"
+    ],
+    "sibling_alpha": 0.01,
+    "edge_alpha": 0.001,
+    "replicates": 1,
+    "base_seed": 20260617,
+    "resume_from_checkpoints": false,
+    "root_selective_permutation_guard_replicates": 99,
+    "root_selective_permutation_guard_seed": 0,
+    "root_selective_permutation_guard_alpha": 0.01,
+    "max_null_split_rate": 0.05,
+    "min_signal_mean_ari": 0.75
+  },
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/fixed_sibling_gate_profile_validation_rows.csv",
+    "checkpoint_rows_dir": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/checkpoint_rows",
+    "summary": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/fixed_sibling_gate_profile_validation_summary.csv",
+    "transfer_summary": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/fixed_sibling_gate_profile_validation_transfer_summary.csv",
+    "production_components": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/production_admissibility_components.csv",
+    "production_summary": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/production_admissibility_summary.csv",
+    "checkpoint_rows": [
+      "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/checkpoint_rows/case=overlap_extreme_4c__role=signal__profile=fixed_coordinate_selective_root_v1__replicate=0000.csv",
+      "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/checkpoint_rows/case=overlap_heavy_4c_small_feat__role=signal__profile=fixed_coordinate_selective_root_v1__replicate=0000.csv",
+      "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/checkpoint_rows/case=overlap_mod_4c_small__role=signal__profile=fixed_coordinate_selective_root_v1__replicate=0000.csv",
+      "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/checkpoint_rows/case=overlap_mod_6c_med__role=signal__profile=fixed_coordinate_selective_root_v1__replicate=0000.csv",
+      "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/checkpoint_rows/case=overlap_part_4c_small__role=signal__profile=fixed_coordinate_selective_root_v1__replicate=0000.csv",
+      "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/checkpoint_rows/case=overlap_unbal_4c_small__role=signal__profile=fixed_coordinate_selective_root_v1__replicate=0000.csv",
+      "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/checkpoint_rows/case=overlap_unbal_6c_med__role=signal__profile=fixed_coordinate_selective_root_v1__replicate=0000.csv"
+    ],
+    "method_constant_evidence_fields": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/method_constant_evidence_fields.json"
+  },
+  "interpretation": "Diagnostic-only validation that named fixed sibling-gate profiles avoid adaptive sibling projection in the shared KL runner and record traversal point/confidence evidence."
+}

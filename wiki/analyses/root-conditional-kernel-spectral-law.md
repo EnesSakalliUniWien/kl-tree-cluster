@@ -192,9 +192,10 @@ conditioning on the selected topology and the local population spectrum.
   the tail law: a p-value calibrated inside the observed \(G_{\hat r}\) is not
   evidence that \(\hat r\) is the correct first bifurcation. A selected root is
   usable only when root validity replay and selected-root tail support both
-  pass. The first profile-fixture join reports `0/7` usable roots because
-  root validity is unmeasured for six targets and failed for the one joined
-  fixture target.
+  pass. The all-seven signal replay reports `2/7` root-validity-supported
+  targets, but only `overlap_unbal_6c_med` is also tail-calibrated.
+  `overlap_extreme_4c` is the opposite case: tail-calibrated inside the
+  observed root event, but root-validity replay fails.
 
 ## Links
 

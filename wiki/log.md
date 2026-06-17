@@ -3474,6 +3474,15 @@ verification, and maintenance events here in chronological order.
   join over the seven overlap root-tail targets reports `1/7` root-validity
   failures, `6/7` unmeasured roots, `2/7` tail-calibrated roots, and `0/7`
   usable selected roots.
+- Ran the all-seven signal-role root-validity replay for the overlap root-tail
+  targets using `fixed_coordinate_selective_root_v1`. The replay covers all
+  seven targets: `2/7` pass root validity
+  (`overlap_part_4c_small`, `overlap_unbal_6c_med`), `5/7` fail
+  feature-subsample stability, and `0/7` are unmeasured. Joining this evidence
+  back to the selected-root tail panel gives `1/7` usable root
+  (`overlap_unbal_6c_med`), `1/7` valid-but-tail-missing root
+  (`overlap_part_4c_small`), and one tail-calibrated but root-invalid root
+  (`overlap_extreme_4c`).
 
 ## Evidence
 

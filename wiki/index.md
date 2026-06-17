@@ -262,8 +262,9 @@ renamed, or promoted.
   separates selected-root validity from selected-root tail calibration by
   joining root-tail rows to feature-subsample stability, selected-root
   permutation, or explicit topology-family replay evidence; a tail calibrated
-  inside an invalid or unmeasured root still fails closed, and the first
-  fixture join reports `0/7` usable selected roots.
+  inside an invalid or unmeasured root still fails closed; the all-seven
+  signal replay reports `2/7` root-validity-supported roots and `1/7` usable
+  selected-root tail.
 - [[root-selected-population-law-requirement-20260617]] - diagnostic
   \(H_u\)-requirement panel for selected-root spectral tails; after active
   feature count capture, the three action-dominance fail-closed roots need

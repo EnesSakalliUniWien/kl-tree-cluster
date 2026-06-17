@@ -10,6 +10,12 @@ sources:
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_profile_fixture_join/manifest.json
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_profile_fixture_join/root_selected_validity_replay_rows.csv
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_profile_fixture_join/root_selected_validity_replay_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/manifest.json
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/fixed_sibling_gate_profile_validation_rows.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/fixed_sibling_gate_profile_validation_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_overlap_seven_signal_v1/manifest.json
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_overlap_seven_signal_v1/root_selected_validity_replay_rows.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_overlap_seven_signal_v1/root_selected_validity_replay_summary.csv
 tags:
   - source
   - diagnostics
@@ -48,6 +54,14 @@ tail has selected-null support.
   and `0/7` are usable selected roots.
 - The same join has `2/7` tail-calibrated roots, but both still fail closed
   because root validity is unmeasured for those targets.
+- The all-seven signal-role replay under
+  `fixed_coordinate_selective_root_v1` gives complete target coverage:
+  `2/7` roots are validity-supported, `5/7` fail root stability, and no root
+  is unmeasured.
+- Only `overlap_unbal_6c_med` is both root-validity supported and
+  selected-tail calibrated. `overlap_part_4c_small` is root-validity supported
+  but still tail-support missing. `overlap_extreme_4c` is tail-calibrated
+  but fails root-validity replay.
 
 This implements the sharper root-selection uncertainty distinction:
 calibration inside \(G_{\hat r}\) is not evidence that \(\hat r\) is the right
@@ -70,6 +84,18 @@ first bifurcation.
 - `root_selected_validity_replay_rows.csv` marks `overlap_mod_4c_small` as
   `root_validity_failed_feature_subsample_replay` with method action
   `fail_closed_root_unstable_under_topology_replay`.
+- `root_validity_replay_overlap_seven_signal_v1` records signal-role root
+  stability and selected-root permutation evidence for all seven overlap
+  root-tail targets. Mean root-stability ARI is below the `0.24` guard
+  threshold for `overlap_extreme_4c`, `overlap_heavy_4c_small_feat`,
+  `overlap_mod_4c_small`, `overlap_mod_6c_med`, and
+  `overlap_unbal_4c_small`.
+- `root_selected_validity_replay_overlap_seven_signal_v1` records
+  `root_validity_supported_count = 2`, `root_validity_failed_count = 5`,
+  `root_validity_unmeasured_count = 0`, `tail_calibrated_count = 2`, and
+  `usable_selected_root_count = 1`.
+- The usable selected-root row is `overlap_unbal_6c_med` with method action
+  `use_selected_root_tail_with_validity_annotation`.
 
 ## Links
 

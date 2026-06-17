@@ -1,0 +1,21 @@
+{
+  "schema_version": "root_selected_validity_replay_panel/v1",
+  "study_role": "diagnostic_root_selected_validity_replay_not_calibration",
+  "generated_by": "benchmarks.diagnostics.calibration.root_selected_validity_replay_panel",
+  "generated_at": "2026-06-17T10:37:47.626776+00:00",
+  "config": {
+    "output_dir": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_overlap_seven_signal_v1",
+    "tail_rows_path": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_spectral_tail_law_deformed_hu_mild_replay_v3_smoke/root_selected_spectral_tail_law_rows.csv",
+    "root_replay_rows_path": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_validity_replay_overlap_seven_signal_v1/fixed_sibling_gate_profile_validation_rows.csv",
+    "root_stability_threshold": 0.24,
+    "root_selective_permutation_alpha": 0.01
+  },
+  "row_counts": {
+    "rows": 7,
+    "summary": 1
+  },
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_overlap_seven_signal_v1/root_selected_validity_replay_rows.csv",
+    "summary": "raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_validity_replay_overlap_seven_signal_v1/root_selected_validity_replay_summary.csv"
+  }
+}
