@@ -74,11 +74,13 @@ def _process_node(
     Parameters
     ----------
     spectral_task
-        Per-node task payload with descendant leaf rows.
+        Per-node task payload with descendant leaf rows and, in the legacy
+        diagnostic path, descendant internal barycenter rows.
     full_feature_matrix
         Full data matrix shared across threads (read-only view).
     """
     descendant_leaf_row_indices = spectral_task.row_indices
+    internal_distribution_vectors = spectral_task.internal_distributions
     stage_timings = _empty_stage_timings()
 
     if len(descendant_leaf_row_indices) < 2:
@@ -90,6 +92,8 @@ def _process_node(
             mp_threshold_rows=len(descendant_leaf_row_indices),
             projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
             eigenvalues=np.zeros(0, dtype=np.float64),
+            full_eigenvalues=np.zeros(0, dtype=np.float64),
+            active_feature_count=0,
             stage_timings=stage_timings,
         )
 
@@ -106,6 +110,24 @@ def _process_node(
     stage_timings["tangent_whitening_sec"] += float(perf_counter() - whitening_start_sec)
 
     descendant_feature_matrix = descendant_leaf_feature_rows
+    if internal_distribution_vectors:
+        internal_feature_rows = np.asarray(internal_distribution_vectors, dtype=np.float64)
+        if internal_feature_rows.ndim == 3 and internal_feature_rows.shape[1] == 1:
+            internal_feature_rows = internal_feature_rows[:, 0, :]
+        whitening_start_sec = perf_counter()
+        internal_feature_rows = _build_trusted_null_whitened_tangent_matrix(
+            internal_feature_rows,
+            spectral_task.null_distribution,
+            spectral_task.feature_space,
+            spectral_task.continuous_covariance_by_block or {},
+            ridge=1e-12,
+        )
+        stage_timings["tangent_whitening_sec"] += float(
+            perf_counter() - whitening_start_sec
+        )
+        descendant_feature_matrix = np.vstack(
+            [descendant_leaf_feature_rows, internal_feature_rows]
+        )
 
     eigensolve_start_sec = perf_counter()
     eigendecomposition_result = eigendecompose_covariance(
@@ -123,6 +145,8 @@ def _process_node(
             mp_threshold_rows=descendant_feature_matrix.shape[0],
             projection_matrix=np.zeros((0, feature_count), dtype=np.float64),
             eigenvalues=np.zeros(0, dtype=np.float64),
+            full_eigenvalues=np.zeros(0, dtype=np.float64),
+            active_feature_count=0,
             stage_timings=stage_timings,
         )
 
@@ -163,6 +187,11 @@ def _process_node(
         mp_threshold_rows=dimension_estimate.mp_threshold_rows,
         projection_matrix=projection_matrix,
         eigenvalues=pca_eigenvalues,
+        full_eigenvalues=np.asarray(
+            eigendecomposition_result.eigenvalues,
+            dtype=np.float64,
+        ),
+        active_feature_count=int(eigendecomposition_result.active_feature_count),
         stage_timings=stage_timings,
     )
 

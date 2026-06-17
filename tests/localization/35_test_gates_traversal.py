@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -13,6 +15,9 @@ from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.gate_evaluator import (
     GateEvaluator,
     TraversalDecision,
+)
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.spectral_transport import (
+    annotate_spectral_transport_passthrough_support,
 )
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.poset_tree import PosetTree
@@ -69,6 +74,7 @@ def _make_gate(
     sibling_skipped: dict[str, bool] | None = None,
     children_map: dict[str, list[str]] | None = None,
     passthrough: bool = False,
+    passthrough_supported: dict[str, bool] | None = None,
 ) -> GateEvaluator:
     if tree is None:
         tree = _make_binary_tree()
@@ -92,6 +98,7 @@ def _make_gate(
         sibling_skipped=sibling_skipped,
         children_map=children_map,
         passthrough=passthrough,
+        passthrough_supported=passthrough_supported,
     )
 
 
@@ -120,12 +127,14 @@ def _decompose_with_annotations(
     monkeypatch: pytest.MonkeyPatch,
     *,
     passthrough: bool,
+    spectral_transport_passthrough_guard: bool = False,
 ) -> dict[str, object]:
     monkeypatch.setattr(TreeDecomposition, "_prepare_annotations", lambda self, df: df)
     decomposer = TreeDecomposition(
         tree=tree,
         annotations_df=annotations_df,
         passthrough=passthrough,
+        spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
     )
     return decomposer.decompose_tree()
 
@@ -264,6 +273,26 @@ class TestGateEvaluator:
             sibling_different=sibling_different,
         )
         assert gate.decision("root") is TraversalDecision.PASS_THROUGH
+
+    def test_spectral_support_guard_blocks_passthrough(self) -> None:
+        tree = _make_deep_tree()
+        sibling_different = {node: False for node in tree.nodes}
+        sibling_different["B"] = True
+        passthrough_supported = {node: True for node in tree.nodes}
+        passthrough_supported["root"] = False
+
+        gate = _make_gate(
+            tree=tree,
+            passthrough=True,
+            sibling_different=sibling_different,
+            passthrough_supported=passthrough_supported,
+        )
+
+        assert gate.decision("root") is TraversalDecision.BOUNDARY
+        assert gate.passthrough_support_status("root") == {
+            "passthrough_supported": False,
+            "passthrough_bottleneck": "",
+        }
 
     def test_passthrough_decision_uses_cached_gate_results(
         self, monkeypatch: pytest.MonkeyPatch
@@ -438,3 +467,168 @@ class TestTreeDecompositionTraversal:
 
         cluster_leaf_sets = _cluster_leaf_sets(result)
         assert cluster_leaf_sets == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
+
+    def test_decompose_tree_spectral_support_guard_blocks_passthrough(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_deep_tree()
+        edge_divergent = {node: True for node in tree.nodes}
+        sibling_different = {node: False for node in tree.nodes}
+        sibling_different["B"] = True
+        annotations_df = _make_annotations(
+            tree,
+            edge_divergent=edge_divergent,
+            sibling_different=sibling_different,
+        )
+        annotations_df["Spectral_Transport_Pass_Through_Supported"] = True
+        annotations_df["Spectral_Transport_Bottleneck"] = "supported_mp_mode_path"
+        annotations_df.loc["root", "Spectral_Transport_Pass_Through_Supported"] = False
+        annotations_df.loc["root", "Spectral_Transport_Bottleneck"] = (
+            "spectral_transport_bottleneck"
+        )
+
+        result = _decompose_with_annotations(
+            tree,
+            annotations_df,
+            monkeypatch,
+            passthrough=True,
+            spectral_transport_passthrough_guard=True,
+        )
+
+        assert _cluster_leaf_sets(result) == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
+        root_trace = result["traversal_trace"][0]
+        assert root_trace["decision"] == "boundary"
+        assert root_trace["passthrough_supported"] is False
+        assert root_trace["passthrough_bottleneck"] == "spectral_transport_bottleneck"
+
+
+def test_spectral_transport_annotation_supports_coherent_passthrough_path() -> None:
+    tree = _make_deep_tree()
+    edge_divergent = {node: True for node in tree.nodes}
+    sibling_different = {node: False for node in tree.nodes}
+    sibling_different["B"] = True
+    annotations = _make_annotations(
+        tree,
+        edge_divergent=edge_divergent,
+        sibling_different=sibling_different,
+    )
+    spectral_context = SimpleNamespace(
+        principal_component_projections_by_node={
+            node: np.asarray([[1.0, 0.0]]) for node in tree.nodes
+        },
+        principal_component_eigenvalues_by_node={
+            node: np.asarray([4.0]) for node in tree.nodes
+        },
+        raw_mp_signal_counts_by_node={node: 1 for node in tree.nodes},
+    )
+
+    out = annotate_spectral_transport_passthrough_support(
+        tree,
+        annotations,
+        spectral_context,
+        max_cost=0.1,
+    )
+
+    assert bool(out.loc["root", "Spectral_Transport_Pass_Through_Supported"])
+    assert out.loc["root", "Spectral_Transport_Bottleneck"] == "supported_mp_mode_path"
+
+
+def test_spectral_transport_annotation_blocks_rotated_passthrough_path() -> None:
+    tree = _make_deep_tree()
+    edge_divergent = {node: True for node in tree.nodes}
+    sibling_different = {node: False for node in tree.nodes}
+    sibling_different["B"] = True
+    annotations = _make_annotations(
+        tree,
+        edge_divergent=edge_divergent,
+        sibling_different=sibling_different,
+    )
+    spectral_context = SimpleNamespace(
+        principal_component_projections_by_node={
+            **{node: np.asarray([[1.0, 0.0]]) for node in tree.nodes},
+            "B": np.asarray([[0.0, 1.0]]),
+        },
+        principal_component_eigenvalues_by_node={
+            node: np.asarray([4.0]) for node in tree.nodes
+        },
+        raw_mp_signal_counts_by_node={node: 1 for node in tree.nodes},
+    )
+
+    out = annotate_spectral_transport_passthrough_support(
+        tree,
+        annotations,
+        spectral_context,
+        max_cost=0.1,
+    )
+
+    assert not bool(out.loc["root", "Spectral_Transport_Pass_Through_Supported"])
+    assert bool(out.loc["root", "Spectral_Transport_Pass_Through_Blocked"])
+
+
+def test_spectral_transport_annotation_blocks_floor_only_when_mp_blocks_required() -> None:
+    tree = _make_deep_tree()
+    edge_divergent = {node: True for node in tree.nodes}
+    sibling_different = {node: False for node in tree.nodes}
+    sibling_different["B"] = True
+    annotations = _make_annotations(
+        tree,
+        edge_divergent=edge_divergent,
+        sibling_different=sibling_different,
+    )
+    spectral_context = SimpleNamespace(
+        principal_component_projections_by_node={
+            node: np.asarray([[1.0, 0.0]]) for node in tree.nodes
+        },
+        principal_component_eigenvalues_by_node={
+            node: np.asarray([4.0]) for node in tree.nodes
+        },
+        raw_mp_signal_counts_by_node={node: 0 for node in tree.nodes},
+    )
+
+    out = annotate_spectral_transport_passthrough_support(
+        tree,
+        annotations,
+        spectral_context,
+        max_cost=0.1,
+    )
+
+    assert not bool(out.loc["root", "Spectral_Transport_Pass_Through_Supported"])
+    assert bool(out.loc["root", "Spectral_Transport_Pass_Through_Blocked"])
+    assert out.loc["root", "Spectral_Transport_Bottleneck"] == (
+        "spectral_transport_bottleneck"
+    )
+
+
+def test_spectral_transport_annotation_does_not_veto_floor_only_when_mp_blocks_not_required() -> None:
+    tree = _make_deep_tree()
+    edge_divergent = {node: True for node in tree.nodes}
+    sibling_different = {node: False for node in tree.nodes}
+    sibling_different["B"] = True
+    annotations = _make_annotations(
+        tree,
+        edge_divergent=edge_divergent,
+        sibling_different=sibling_different,
+    )
+    spectral_context = SimpleNamespace(
+        principal_component_projections_by_node={
+            node: np.asarray([[1.0, 0.0]]) for node in tree.nodes
+        },
+        principal_component_eigenvalues_by_node={
+            node: np.asarray([4.0]) for node in tree.nodes
+        },
+        raw_mp_signal_counts_by_node={node: 0 for node in tree.nodes},
+    )
+
+    out = annotate_spectral_transport_passthrough_support(
+        tree,
+        annotations,
+        spectral_context,
+        max_cost=0.1,
+        require_mp_blocks=False,
+    )
+
+    assert bool(out.loc["root", "Spectral_Transport_Pass_Through_Supported"])
+    assert not bool(out.loc["root", "Spectral_Transport_Pass_Through_Blocked"])
+    assert out.loc["root", "Spectral_Transport_Bottleneck"] == (
+        "unmeasured_no_matched_mp_path"
+    )

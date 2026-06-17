@@ -7,6 +7,11 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 from kl_clustering_analysis import config
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.spectral_transport import (
+    DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
+    DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+    DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
@@ -149,6 +154,9 @@ def run_clustering_result(
                         EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
                     )
                 ),
+                spectral_include_internal_barycenters=bool(
+                    params.get("spectral_include_internal_barycenters", False)
+                ),
                 sibling_gate_profile=params.get("sibling_gate_profile"),
                 sibling_gate_method=str(
                     params.get("sibling_gate_method", "projected_wald_inflation")
@@ -177,6 +185,30 @@ def run_clustering_result(
                 ),
                 root_selective_permutation_guard_scope=str(
                     params.get("root_selective_permutation_guard_scope", "root")
+                ),
+                spectral_transport_passthrough_guard=bool(
+                    params.get("spectral_transport_passthrough_guard", False)
+                ),
+                spectral_transport_max_cost=float(
+                    params.get(
+                        "spectral_transport_max_cost",
+                        DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+                    )
+                ),
+                spectral_transport_require_mp_blocks=bool(
+                    params.get("spectral_transport_require_mp_blocks", True)
+                ),
+                spectral_transport_block_log_tolerance=float(
+                    params.get(
+                        "spectral_transport_block_log_tolerance",
+                        DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
+                    )
+                ),
+                spectral_transport_unmatched_mode_penalty=float(
+                    params.get(
+                        "spectral_transport_unmatched_mode_penalty",
+                        DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
+                    )
                 ),
                 passthrough=bool(params.get("passthrough", config.PASSTHROUGH)),
             )

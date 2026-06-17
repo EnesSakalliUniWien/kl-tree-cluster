@@ -26,6 +26,8 @@ class SpectralContext:
     mp_threshold_rows_by_node: dict[str, int]
     principal_component_projections_by_node: dict[str, np.ndarray]
     principal_component_eigenvalues_by_node: dict[str, np.ndarray]
+    full_component_eigenvalues_by_node: dict[str, np.ndarray] = field(default_factory=dict)
+    active_feature_counts_by_node: dict[str, int] = field(default_factory=dict)
     stage_timings: dict[str, float] = field(default_factory=dict)
 
 
@@ -95,6 +97,7 @@ def compute_child_parent_spectral_context(
     *,
     minimum_projection_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     feature_space: FeatureSpace | None = None,
+    include_internal_barycenters: bool = False,
 ) -> SpectralContext:
     """Prepare Marchenko-Pastur spectral context for the edge gate."""
     start_sec = perf_counter()
@@ -103,6 +106,7 @@ def compute_child_parent_spectral_context(
         leaf_data,
         feature_space=feature_space,
         minimum_projection_dimension=int(minimum_projection_dimension),
+        include_internal_barycenters=bool(include_internal_barycenters),
     )
 
     _validate_spectral_context_outputs(
@@ -128,6 +132,10 @@ def compute_child_parent_spectral_context(
         principal_component_eigenvalues_by_node=(
             spectral_decomposition.principal_component_eigenvalues_by_node
         ),
+        full_component_eigenvalues_by_node=(
+            spectral_decomposition.full_component_eigenvalues_by_node
+        ),
+        active_feature_counts_by_node=spectral_decomposition.active_feature_counts_by_node,
         stage_timings=stage_timings,
     )
 

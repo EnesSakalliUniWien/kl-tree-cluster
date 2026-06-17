@@ -1,0 +1,17 @@
+"""
+KL-divergence based hierarchical clustering analysis.
+
+This package provides tools for hierarchical clustering analysis using
+KL-divergence measures with NetworkX and advanced visualization capabilities.
+"""
+
+__version__ = "0.1.0"
+
+# Core modules
+from . import hierarchy_analysis, plot, tree
+
+__all__ = [
+    "hierarchy_analysis",
+    "plot",
+    "tree",
+]

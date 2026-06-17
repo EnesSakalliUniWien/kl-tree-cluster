@@ -53,7 +53,30 @@ def precompute_descendants(
     return desc_indices
 
 
+def precompute_descendant_internal_nodes(tree: nx.DiGraph) -> Dict[str, list[object]]:
+    """Bottom-up precomputation of descendant internal node IDs.
+
+    Internal barycenter rows are a diagnostic reconstruction of the older
+    spectral path. They are deterministic descendants, so this helper records
+    their node IDs without treating them as extra independent leaves.
+    """
+    desc_internal: Dict[str, list[object]] = {}
+
+    for node_id in bottom_up_nodes(tree):
+        if is_leaf(tree, node_id):
+            desc_internal[node_id] = []
+            continue
+        internal_nodes: list[object] = []
+        for child in tree.successors(node_id):
+            if not is_leaf(tree, child):
+                internal_nodes.append(child)
+            internal_nodes.extend(desc_internal[child])
+        desc_internal[node_id] = internal_nodes
+    return desc_internal
+
+
 __all__ = [
     "is_leaf",
     "precompute_descendants",
+    "precompute_descendant_internal_nodes",
 ]

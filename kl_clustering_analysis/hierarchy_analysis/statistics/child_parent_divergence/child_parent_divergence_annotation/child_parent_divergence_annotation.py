@@ -37,6 +37,7 @@ def annotate_child_parent_divergence(
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    spectral_include_internal_barycenters: bool = False,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using the projected Wald pipeline.
@@ -51,6 +52,7 @@ def annotate_child_parent_divergence(
         leaf_data=leaf_data,
         feature_space=feature_space,
         spectral_minimum_dimension=spectral_minimum_dimension,
+        spectral_include_internal_barycenters=spectral_include_internal_barycenters,
         stage_timings=stage_timings,
     )
     return annotated_df
@@ -64,6 +66,7 @@ def annotate_child_parent_divergence_with_context(
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    spectral_include_internal_barycenters: bool = False,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[pd.DataFrame, SpectralContext]:
     """Test child-parent divergence and return typed edge-gate spectral context."""
@@ -90,6 +93,7 @@ def annotate_child_parent_divergence_with_context(
         leaf_data,
         feature_space=feature_space,
         minimum_projection_dimension=spectral_minimum_dimension,
+        include_internal_barycenters=bool(spectral_include_internal_barycenters),
     )
 
     test_kwargs = {

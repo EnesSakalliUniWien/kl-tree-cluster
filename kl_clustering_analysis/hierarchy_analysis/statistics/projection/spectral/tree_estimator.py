@@ -43,7 +43,11 @@ from .marchenko_pastur import _get_n_jobs, _process_node
 from .node_spectral_result import NodeSpectralResult
 from .node_spectral_task import NodeSpectralTask
 from .spectral_decomposition_result import SpectralDecompositionResult
-from .tree_helpers import is_leaf, precompute_descendants
+from .tree_helpers import (
+    is_leaf,
+    precompute_descendant_internal_nodes,
+    precompute_descendants,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +58,34 @@ def _build_spectral_tasks(
     descendant_leaf_indices_by_node: dict[str, list[int]],
     *,
     feature_space: FeatureSpace,
+    include_internal_barycenters: bool = False,
 ) -> list[NodeSpectralTask]:
     """Build per-node spectral tasks from precomputed descendant metadata."""
+    feature_count = int(feature_space.raw_dimension)
+    descendant_internal_nodes_by_node = (
+        precompute_descendant_internal_nodes(tree)
+        if include_internal_barycenters
+        else {}
+    )
+
+    def _internal_distributions(node_id: str) -> tuple[np.ndarray, ...]:
+        if not include_internal_barycenters:
+            return ()
+        rows: list[np.ndarray] = []
+        for internal_node_id in descendant_internal_nodes_by_node.get(node_id, []):
+            distribution = tree.nodes[internal_node_id].get("distribution")
+            if distribution is None:
+                continue
+            distribution_array = np.asarray(distribution, dtype=np.float64)
+            if distribution_array.shape == (feature_count,):
+                rows.append(distribution_array)
+        return tuple(rows)
 
     return [
         NodeSpectralTask(
             node_id=node_id,
             row_indices=tuple(descendant_leaf_indices_by_node[node_id]),
+            internal_distributions=_internal_distributions(node_id),
             null_distribution=np.asarray(tree.nodes[node_id]["distribution"], dtype=np.float64),
             feature_space=feature_space,
             continuous_covariance_by_block=require_node_continuous_covariance_by_block(
@@ -105,6 +130,8 @@ def _aggregate_spectral_results(
     mp_threshold_rows: dict[str, int],
     pca_projections: dict[str, np.ndarray],
     pca_eigenvalues: dict[str, np.ndarray],
+    full_eigenvalues: dict[str, np.ndarray],
+    active_feature_counts: dict[str, int],
 ) -> None:
     """Write per-node worker outputs into decomposition result dicts."""
     for node_result in spectral_results:
@@ -123,6 +150,14 @@ def _aggregate_spectral_results(
             )
         pca_projections[node_result.node_id] = node_result.projection_matrix
         pca_eigenvalues[node_result.node_id] = node_result.eigenvalues
+        full_eigenvalues[node_result.node_id] = (
+            node_result.full_eigenvalues
+            if node_result.full_eigenvalues is not None
+            else node_result.eigenvalues
+        )
+        active_feature_counts[node_result.node_id] = int(
+            node_result.active_feature_count
+        )
 
 
 def compute_spectral_decomposition(
@@ -131,6 +166,7 @@ def compute_spectral_decomposition(
     *,
     minimum_projection_dimension: int = 1,
     feature_space: FeatureSpace | None = None,
+    include_internal_barycenters: bool = False,
 ) -> SpectralDecompositionResult:
     """Compute MP dimension metadata, PCA projections, and eigenvalues.
 
@@ -149,6 +185,12 @@ def compute_spectral_decomposition(
         DataFrame with leaf labels as index and features as columns.
     minimum_projection_dimension
         Floor on the returned dimension.
+    include_internal_barycenters
+        Diagnostic reconstruction of the commit-era spectral path. When True,
+        descendant internal node distributions are appended to the node-local
+        spectral matrix before eigendecomposition. These rows are deterministic
+        barycenters of the leaves and are therefore opt-in, not the production
+        default.
 
     Returns
     -------
@@ -176,6 +218,8 @@ def compute_spectral_decomposition(
     mp_threshold_rows: Dict[str, int] = {}
     pca_projections: Dict[str, np.ndarray] = {}
     pca_eigenvalues: Dict[str, np.ndarray] = {}
+    full_eigenvalues: Dict[str, np.ndarray] = {}
+    active_feature_counts: Dict[str, int] = {}
 
     # Separate leaves (trivial) from internal nodes (expensive).
     internal_node_ids: list[str] = []
@@ -185,6 +229,8 @@ def compute_spectral_decomposition(
             raw_mp_signal_counts[node_id] = 0
             effective_independent_rows[node_id] = 1
             mp_threshold_rows[node_id] = 1
+            full_eigenvalues[node_id] = np.zeros(0, dtype=np.float64)
+            active_feature_counts[node_id] = 0
         else:
             internal_node_ids.append(node_id)
 
@@ -193,6 +239,7 @@ def compute_spectral_decomposition(
         internal_node_ids,
         descendant_leaf_indices_by_node,
         feature_space=active_feature_space,
+        include_internal_barycenters=bool(include_internal_barycenters),
     )
 
     # Data is sliced lazily inside each worker (not pre-materialised here).
@@ -214,6 +261,8 @@ def compute_spectral_decomposition(
         mp_threshold_rows=mp_threshold_rows,
         pca_projections=pca_projections,
         pca_eigenvalues=pca_eigenvalues,
+        full_eigenvalues=full_eigenvalues,
+        active_feature_counts=active_feature_counts,
     )
     spectral_wall_sec = float(perf_counter() - spectral_start_sec)
     stage_timings = {
@@ -267,6 +316,8 @@ def compute_spectral_decomposition(
         mp_threshold_rows_by_node=mp_threshold_rows,
         principal_component_projections_by_node=pca_projections,
         principal_component_eigenvalues_by_node=pca_eigenvalues,
+        full_component_eigenvalues_by_node=full_eigenvalues,
+        active_feature_counts_by_node=active_feature_counts,
         stage_timings=stage_timings,
     )
 

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
+
 import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
 from benchmarks.diagnostics.calibration.root_selected_region_margins import (
+    _root_spectral_summary,
     annotate_root_child_construction_roles,
     euclidean_average_linkage_inequality_geometry,
     fixed_projection_edge_conditioned_sibling_tail,
@@ -56,6 +59,9 @@ def test_replay_average_linkage_margins_exposes_root_child_inequalities() -> Non
         "final_root_merge_no_competitor",
     ]
     assert margins.loc[0, "merge_margin_to_nearest_competitor"] == pytest.approx(0.2)
+    assert margins.loc[0, "selected_tie_rank_lexicographic"] == 1
+    assert margins.loc[0, "selected_tie_rank_fraction"] == pytest.approx(1.0)
+    assert margins.loc[0, "selected_tie_break_status"] == "unique_minimum"
 
     summary = summarize_root_child_margin_geometry(margins)
     assert summary["root_child_margin_status"] == "defined"
@@ -153,6 +159,35 @@ def test_replay_average_linkage_margins_adds_smooth_geometry_for_euclidean_data(
     assert summarize_root_child_margin_geometry(margins)[
         "root_selected_region_law_status"
     ] == "null_whitened_first_order_signed_distance_defined"
+
+
+def test_replay_average_linkage_records_selected_rank_inside_tie_cell() -> None:
+    square = np.asarray(
+        [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+        ],
+        dtype=float,
+    )
+    distances = squareform(square)
+    linkage_matrix = np.asarray(
+        [
+            [1.0, 2.0, 1.0, 2.0],
+            [0.0, 3.0, 1.0, 3.0],
+        ],
+        dtype=float,
+    )
+
+    replay = replay_average_linkage_margins(linkage_matrix, distances)
+    first = replay.merge_margins.iloc[0]
+
+    assert first["tied_minimum_pair_count"] == 3
+    assert first["selected_pair_tied_for_minimum"]
+    assert first["selected_tie_rank_lexicographic"] == 3
+    assert first["selected_tie_rank_fraction"] == pytest.approx(1.0)
+    assert first["selected_tie_log_rank"] == pytest.approx(np.log(3.0))
+    assert first["selected_tie_break_status"] == "tied_minimum_lexicographic_rank"
 
 
 def test_projected_wald_edge_opening_geometry_uses_chi_square_radial_boundary() -> None:
@@ -268,6 +303,65 @@ def test_root_edge_sibling_wald_relationship_verifies_barycentric_z_identity() -
         relationship["root_sibling_recomputed_statistic_from_parent_projection"]
     )
     assert relationship["root_edge_extra_parent_projection_energy"] >= 0.0
+
+
+def test_root_spectral_summary_captures_full_h_u_spectrum() -> None:
+    spectral_context = SpectralContext(
+        test_projection_dimensions_by_node={"root": 2},
+        raw_mp_signal_counts_by_node={"root": 1},
+        effective_independent_rows_by_node={"root": 8},
+        mp_threshold_rows_by_node={"root": 8},
+        principal_component_projections_by_node={"root": np.eye(2, dtype=float)},
+        principal_component_eigenvalues_by_node={
+            "root": np.asarray([5.0, 2.0], dtype=float),
+        },
+        full_component_eigenvalues_by_node={
+            "root": np.asarray([5.0, 2.0, 1.0, 0.5], dtype=float),
+        },
+        active_feature_counts_by_node={"root": 4},
+    )
+
+    summary = _root_spectral_summary(
+        root="root",
+        sibling_projection_dimension=2,
+        spectral_context=spectral_context,
+    )
+
+    assert summary["root_active_feature_count"] == 4
+    assert summary["root_full_eigenvalue_count"] == 4
+    assert json.loads(summary["root_full_component_eigenvalues_json"]) == [
+        5.0,
+        2.0,
+        1.0,
+        0.5,
+    ]
+    assert json.loads(summary["root_projected_eigenvalues_json"]) == [5.0, 2.0]
+    assert summary["root_mp_upper_bound"] == pytest.approx(
+        (1.0 + np.sqrt(4.0 / 8.0)) ** 2
+    )
+    assert summary["root_selected_eigenvalue_over_mp_upper_bound"] == pytest.approx(
+        2.0 / ((1.0 + np.sqrt(4.0 / 8.0)) ** 2)
+    )
+
+
+def test_root_spectral_summary_requires_full_h_u_spectrum() -> None:
+    spectral_context = SpectralContext(
+        test_projection_dimensions_by_node={"root": 2},
+        raw_mp_signal_counts_by_node={"root": 1},
+        effective_independent_rows_by_node={"root": 8},
+        mp_threshold_rows_by_node={"root": 8},
+        principal_component_projections_by_node={"root": np.eye(2, dtype=float)},
+        principal_component_eigenvalues_by_node={
+            "root": np.asarray([5.0, 2.0], dtype=float),
+        },
+    )
+
+    with pytest.raises(KeyError, match="Missing root spectral context"):
+        _root_spectral_summary(
+            root="root",
+            sibling_projection_dimension=2,
+            spectral_context=spectral_context,
+        )
 
 
 def test_root_selected_region_relationships_report_statuses() -> None:

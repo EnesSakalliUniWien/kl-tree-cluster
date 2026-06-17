@@ -62,6 +62,71 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
+    "kl_global_passthrough_refined_diagnostic": MethodSpec(
+        name="KL (Global Passthrough Refined Diagnostic)",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_profile": (
+                    "fixed_coordinate_global_passthrough_refined_v1"
+                ),
+            },
+        ],
+    ),
+    "kl_spectral_transport_passthrough_diagnostic": MethodSpec(
+        name="KL (Spectral Transport Passthrough Diagnostic)",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_profile": (
+                    "fixed_coordinate_spectral_transport_passthrough_diagnostic_v1"
+                ),
+            },
+        ],
+    ),
+    "kl_spectral_transport_passthrough": MethodSpec(
+        name="KL (Spectral Transport Passthrough)",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_profile": (
+                    "fixed_coordinate_spectral_transport_passthrough_v1"
+                ),
+            },
+        ],
+    ),
+    "kl_legacy_internal_spectral_diagnostic": MethodSpec(
+        name="KL (Legacy Internal-Node Spectral Diagnostic)",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "spectral_include_internal_barycenters": True,
+            },
+        ],
+    ),
+    "kl_legacy_c2ef9a69": MethodSpec(
+        name="KL Legacy Full Method (commit c2ef9a69)",
+        runner=_import_runner(
+            "benchmarks.shared.runners.legacy_commit_runner",
+            "_run_legacy_c2ef9a69_kl_method",
+        ),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "tree_builder": "linkage",
+                "tree_rooting": "linkage_root",
+            },
+        ],
+    ),
     "kl_neighbor_joining": MethodSpec(
         name="KL (Neighbor Joining, MAD Root)",
         runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),

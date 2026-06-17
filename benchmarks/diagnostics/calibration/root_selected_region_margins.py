@@ -363,6 +363,22 @@ def replay_average_linkage_margins(
             for pair, score in candidate_items
             if abs(float(score) - selected_score) <= absolute_tolerance
         ]
+        tied_at_selected_sorted = sorted(tied_at_selected)
+        try:
+            selected_tie_rank = tied_at_selected_sorted.index(selected_key) + 1
+        except ValueError as exc:
+            raise ValueError(
+                "Selected linkage pair is not present in the tied minimum set at "
+                f"step {step_index}: selected={selected_key}, ties={tied_at_selected_sorted[:5]}."
+            ) from exc
+        selected_tie_count = int(len(tied_at_selected_sorted))
+        selected_tie_rank_fraction = float(selected_tie_rank / selected_tie_count)
+        selected_tie_log_rank = float(np.log(float(selected_tie_rank)))
+        selected_tie_break_status = (
+            "unique_minimum"
+            if selected_tie_count == 1
+            else "tied_minimum_lexicographic_rank"
+        )
         competitors = [
             (pair, score) for pair, score in candidate_items if pair != selected_key
         ]
@@ -457,6 +473,10 @@ def replay_average_linkage_margins(
                 "candidate_pair_count": int(len(candidate_items)),
                 "tied_minimum_pair_count": int(len(tied_at_selected)),
                 "selected_pair_tied_for_minimum": selected_pair_tied,
+                "selected_tie_rank_lexicographic": int(selected_tie_rank),
+                "selected_tie_rank_fraction": selected_tie_rank_fraction,
+                "selected_tie_log_rank": selected_tie_log_rank,
+                "selected_tie_break_status": selected_tie_break_status,
                 **geometry_row,
             }
         )
@@ -1116,38 +1136,54 @@ def _root_spectral_summary(
     spectral_context,
 ) -> dict[str, object]:
     node_id = str(root)
+    full_eigenvalues_by_node = spectral_context.full_component_eigenvalues_by_node
+    active_feature_counts_by_node = spectral_context.active_feature_counts_by_node
     required_maps = (
         spectral_context.test_projection_dimensions_by_node,
         spectral_context.raw_mp_signal_counts_by_node,
         spectral_context.effective_independent_rows_by_node,
         spectral_context.mp_threshold_rows_by_node,
         spectral_context.principal_component_eigenvalues_by_node,
+        full_eigenvalues_by_node,
+        active_feature_counts_by_node,
     )
     if any(node_id not in mapping for mapping in required_maps):
         raise KeyError(f"Missing root spectral context for node {node_id!r}.")
-    eigenvalues = np.asarray(
+    projected_eigenvalues = np.asarray(
         spectral_context.principal_component_eigenvalues_by_node[node_id],
         dtype=np.float64,
     )
-    if eigenvalues.ndim != 1:
-        raise ValueError(f"Root eigenvalues must be 1-D; got {eigenvalues.shape}.")
+    if projected_eigenvalues.ndim != 1:
+        raise ValueError(
+            "Root projected eigenvalues must be 1-D; "
+            f"got {projected_eigenvalues.shape}."
+        )
+    full_eigenvalues = np.asarray(
+        full_eigenvalues_by_node[node_id],
+        dtype=np.float64,
+    )
+    if full_eigenvalues.ndim != 1:
+        raise ValueError(
+            "Root full eigenvalues must be 1-D; "
+            f"got {full_eigenvalues.shape}."
+        )
+    active_feature_count = int(active_feature_counts_by_node[node_id])
     if sibling_projection_dimension <= 0:
         raise ValueError("Root sibling projection dimension must be positive.")
-    if sibling_projection_dimension > eigenvalues.shape[0]:
+    if sibling_projection_dimension > full_eigenvalues.shape[0]:
         raise ValueError(
             "Root sibling projection dimension exceeds root eigenvalue count: "
-            f"{sibling_projection_dimension} > {eigenvalues.shape[0]}."
+            f"{sibling_projection_dimension} > {full_eigenvalues.shape[0]}."
         )
-    eigenvalue_sum = float(np.sum(eigenvalues))
+    eigenvalue_sum = float(np.sum(full_eigenvalues))
     if eigenvalue_sum <= 0.0 or not np.isfinite(eigenvalue_sum):
         raise ValueError("Root eigenvalue sum must be positive and finite.")
     selected_eigenvalue_mass = float(
-        np.sum(eigenvalues[:sibling_projection_dimension]) / eigenvalue_sum
+        np.sum(full_eigenvalues[:sibling_projection_dimension]) / eigenvalue_sum
     )
     mp_threshold_rows = int(spectral_context.mp_threshold_rows_by_node[node_id])
-    active_spectrum_width = int(eigenvalues.shape[0])
     mp_upper_bound = float(
-        (1.0 + np.sqrt(float(active_spectrum_width) / float(mp_threshold_rows))) ** 2
+        (1.0 + np.sqrt(float(active_feature_count) / float(mp_threshold_rows))) ** 2
     )
     return {
         "root_edge_projection_dimension": int(
@@ -1160,13 +1196,20 @@ def _root_spectral_summary(
             spectral_context.effective_independent_rows_by_node[node_id]
         ),
         "root_mp_threshold_rows": mp_threshold_rows,
-        "root_active_spectrum_width": active_spectrum_width,
-        "root_eigenvalue_effective_rank": effective_rank(eigenvalues),
-        "root_top_eigenvalue_share": float(eigenvalues[0] / eigenvalue_sum),
+        "root_active_feature_count": active_feature_count,
+        "root_full_eigenvalue_count": int(full_eigenvalues.shape[0]),
+        "root_full_component_eigenvalues_json": json.dumps(
+            [float(value) for value in full_eigenvalues]
+        ),
+        "root_projected_eigenvalues_json": json.dumps(
+            [float(value) for value in projected_eigenvalues]
+        ),
+        "root_eigenvalue_effective_rank": effective_rank(full_eigenvalues),
+        "root_top_eigenvalue_share": float(full_eigenvalues[0] / eigenvalue_sum),
         "root_selected_eigenvalue_mass_fraction": selected_eigenvalue_mass,
         "root_mp_upper_bound": mp_upper_bound,
         "root_selected_eigenvalue_over_mp_upper_bound": float(
-            eigenvalues[sibling_projection_dimension - 1] / mp_upper_bound
+            full_eigenvalues[sibling_projection_dimension - 1] / mp_upper_bound
         ),
     }
 

@@ -199,6 +199,7 @@ def test_fixed_profile_resolves_guarded_candidate_constants() -> None:
         root_selective_seed,
         root_selective_alpha,
         root_selective_scope,
+        *_spectral_transport_config,
     ) = resolve_sibling_gate_profile_config(
         sibling_gate_profile="fixed_coordinate_guarded_v1",
     )
@@ -230,6 +231,7 @@ def test_fixed_profile_resolves_selective_root_candidate_constants() -> None:
         root_selective_seed,
         root_selective_alpha,
         root_selective_scope,
+        *_spectral_transport_config,
     ) = resolve_sibling_gate_profile_config(
         sibling_gate_profile="fixed_coordinate_selective_root_v1",
     )
@@ -261,6 +263,7 @@ def test_fixed_profile_resolves_selective_traversal_candidate_constants() -> Non
         root_selective_seed,
         root_selective_alpha,
         root_selective_scope,
+        *_spectral_transport_config,
     ) = resolve_sibling_gate_profile_config(
         sibling_gate_profile="fixed_coordinate_selective_traversal_v1",
     )
@@ -292,6 +295,7 @@ def test_fixed_profile_resolves_selective_passthrough_candidate_constants() -> N
         root_selective_seed,
         root_selective_alpha,
         root_selective_scope,
+        *_spectral_transport_config,
     ) = resolve_sibling_gate_profile_config(
         sibling_gate_profile="fixed_coordinate_selective_passthrough_v1",
     )
@@ -323,6 +327,7 @@ def test_fixed_profile_resolves_global_passthrough_candidate_constants() -> None
         root_selective_seed,
         root_selective_alpha,
         root_selective_scope,
+        *_spectral_transport_config,
     ) = resolve_sibling_gate_profile_config(
         sibling_gate_profile="fixed_coordinate_global_passthrough_v1",
     )
@@ -354,6 +359,7 @@ def test_fixed_profile_resolves_refined_global_passthrough_candidate_constants()
         root_selective_seed,
         root_selective_alpha,
         root_selective_scope,
+        *_spectral_transport_config,
     ) = resolve_sibling_gate_profile_config(
         sibling_gate_profile="fixed_coordinate_global_passthrough_refined_v1",
     )
@@ -374,6 +380,74 @@ def test_fixed_profile_resolves_refined_global_passthrough_candidate_constants()
     assert SIBLING_GATE_PROFILES[profile_id].status == "diagnostic_candidate"
 
 
+def test_fixed_profile_resolves_spectral_transport_passthrough_constants() -> None:
+    (
+        profile_id,
+        method,
+        penalty,
+        threshold,
+        stability_replicates,
+        fraction,
+        stability_seed,
+        root_selective_replicates,
+        root_selective_seed,
+        root_selective_alpha,
+        root_selective_scope,
+        spectral_guard,
+        spectral_max_cost,
+        spectral_require_mp_blocks,
+        spectral_block_log_tolerance,
+        spectral_unmatched_mode_penalty,
+    ) = resolve_sibling_gate_profile_config(
+        sibling_gate_profile=(
+            "fixed_coordinate_spectral_transport_passthrough_diagnostic_v1"
+        ),
+    )
+
+    assert profile_id == "fixed_coordinate_spectral_transport_passthrough_diagnostic_v1"
+    assert method == "fixed_coordinate_bh"
+    assert penalty == 50.0
+    assert threshold == 0.24
+    assert stability_replicates == 12
+    assert fraction == 0.8
+    assert stability_seed == 0
+    assert root_selective_replicates == 99
+    assert root_selective_seed == 0
+    assert root_selective_alpha == 0.01
+    assert root_selective_scope == (
+        "global_sibling_min_passthrough_descendant_refined"
+    )
+    assert spectral_guard is True
+    assert spectral_max_cost == 1.2
+    assert spectral_require_mp_blocks is True
+    assert spectral_block_log_tolerance == 0.05
+    assert spectral_unmatched_mode_penalty == 1.0
+    assert SIBLING_GATE_PROFILES[profile_id].status == "diagnostic_only_not_production"
+
+    promoted = resolve_sibling_gate_profile_config(
+        sibling_gate_profile="fixed_coordinate_spectral_transport_passthrough_v1",
+    )
+    assert promoted[0] == "fixed_coordinate_spectral_transport_passthrough_v1"
+    assert promoted[1:16] == (
+        method,
+        penalty,
+        threshold,
+        stability_replicates,
+        fraction,
+        stability_seed,
+        root_selective_replicates,
+        root_selective_seed,
+        root_selective_alpha,
+        root_selective_scope,
+        spectral_guard,
+        spectral_max_cost,
+        spectral_require_mp_blocks,
+        spectral_block_log_tolerance,
+        spectral_unmatched_mode_penalty,
+    )
+    assert SIBLING_GATE_PROFILES[promoted[0]].status == "opt_in_candidate_not_default"
+
+
 def test_fixed_profile_allows_explicit_root_selective_guard_when_disabled() -> None:
     (
         _profile_id,
@@ -387,6 +461,7 @@ def test_fixed_profile_allows_explicit_root_selective_guard_when_disabled() -> N
         root_selective_seed,
         root_selective_alpha,
         root_selective_scope,
+        *_spectral_transport_config,
     ) = resolve_sibling_gate_profile_config(
         sibling_gate_profile="fixed_coordinate_guarded_v1",
         root_selective_permutation_guard_replicates=5,

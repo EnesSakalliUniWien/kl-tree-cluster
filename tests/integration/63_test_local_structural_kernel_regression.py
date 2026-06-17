@@ -107,6 +107,9 @@ def test_kl_runner_accepts_fixed_sibling_gate_profile() -> None:
     assert result.extra["root_selective_permutation_guard_tree_linkage_method"] == (
         "average"
     )
+    assert result.extra["spectral_transport_passthrough_guard"] is False
+    assert result.extra["spectral_transport_max_cost"] == 1.2
+    assert result.extra["spectral_transport_require_mp_blocks"] is True
 
 
 def test_kl_runner_selected_root_guard_blocks_known_categorical_false_root() -> None:

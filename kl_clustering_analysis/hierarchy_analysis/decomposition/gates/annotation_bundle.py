@@ -7,6 +7,11 @@ from typing import Any
 
 import pandas as pd
 
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.spectral_transport import (
+    DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
+    DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+    DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     SpectralContext,
 )
@@ -25,6 +30,7 @@ class GateAnnotationConfigMetadata:
     """Config values that affect gate annotation outputs."""
 
     spectral_minimum_dimension: int
+    spectral_include_internal_barycenters: bool = False
     sibling_gate_profile_id: str | None = None
     sibling_gate_method: str = "projected_wald_inflation"
     sibling_gate_alpha_penalty: float = 1.0
@@ -44,6 +50,15 @@ class GateAnnotationConfigMetadata:
     internal_support_thresholds_signature: tuple[tuple[str, float | int], ...] = ()
     external_selected_tail_calibration_enabled: bool = False
     external_selected_tail_rule_count: int = 0
+    spectral_transport_passthrough_guard: bool = False
+    spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST
+    spectral_transport_require_mp_blocks: bool = True
+    spectral_transport_block_log_tolerance: float = (
+        DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
+    )
+    spectral_transport_unmatched_mode_penalty: float = (
+        DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
+    )
 
 
 @dataclass(frozen=True)

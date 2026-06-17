@@ -218,6 +218,54 @@ class TestSpectralKFloor:
             atol=1e-10,
         )
 
+    def test_legacy_internal_barycenter_spectral_path_adds_threshold_rows(self):
+        """Legacy diagnostic mode appends descendant internal distributions."""
+        import networkx as nx
+        from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+            compute_spectral_decomposition,
+        )
+
+        tree = nx.DiGraph()
+        tree.add_edges_from(
+            [
+                ("root", "I0"),
+                ("root", "L2"),
+                ("I0", "L0"),
+                ("I0", "L1"),
+            ]
+        )
+        for leaf in ("L0", "L1", "L2"):
+            tree.nodes[leaf]["label"] = leaf
+            tree.nodes[leaf]["is_leaf"] = True
+        tree.nodes["I0"]["is_leaf"] = False
+        tree.nodes["root"]["is_leaf"] = False
+        tree.nodes["I0"]["distribution"] = np.array([0.5, 0.0])
+        tree.nodes["root"]["distribution"] = np.array([1.0 / 3.0, 1.0 / 3.0])
+
+        leaf_data = pd.DataFrame(
+            [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]],
+            index=["L0", "L1", "L2"],
+            columns=["F0", "F1"],
+        )
+
+        current = compute_spectral_decomposition(
+            tree,
+            leaf_data,
+            minimum_projection_dimension=1,
+        )
+        legacy = compute_spectral_decomposition(
+            tree,
+            leaf_data,
+            minimum_projection_dimension=1,
+            include_internal_barycenters=True,
+        )
+
+        assert current.effective_independent_rows_by_node["root"] == 3
+        assert current.mp_threshold_rows_by_node["root"] == 3
+        assert legacy.effective_independent_rows_by_node["root"] == 3
+        assert legacy.mp_threshold_rows_by_node["root"] == 4
+        assert legacy.mp_threshold_rows_by_node["I0"] == 2
+
     def test_spectral_decomposition_requires_leaf_data_for_every_leaf_label(self):
         """Missing leaf rows must fail instead of silently shrinking a subtree."""
         import networkx as nx

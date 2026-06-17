@@ -61,6 +61,8 @@ class GateEvaluator:
         children_map: dict[object, list[object]],
         *,
         passthrough: bool = False,
+        passthrough_supported: dict[object, bool] | None = None,
+        passthrough_bottleneck: dict[object, str] | None = None,
     ) -> None:
         self.tree = tree
         self._edge_divergent = edge_divergent
@@ -68,6 +70,8 @@ class GateEvaluator:
         self._sibling_skipped = sibling_skipped
         self._children_map = children_map
         self._passthrough = passthrough
+        self._passthrough_supported = passthrough_supported
+        self._passthrough_bottleneck = passthrough_bottleneck or {}
         self._node_ids = tuple(self.tree.nodes)
         self._validate_contract()
         if self._passthrough:
@@ -100,6 +104,16 @@ class GateEvaluator:
             if missing:
                 preview = ", ".join(map(repr, missing[:5]))
                 raise ValueError(f"Missing {name} values for nodes: {preview}.")
+        if self._passthrough_supported is not None:
+            missing = [
+                node for node in node_ids if node not in self._passthrough_supported
+            ]
+            if missing:
+                preview = ", ".join(map(repr, missing[:5]))
+                raise ValueError(
+                    "Missing passthrough_supported values for nodes: "
+                    f"{preview}."
+                )
 
     def _passes_split_prerequisites(self, parent: object) -> bool:
         """Run the binary-structure prerequisite and edge-divergence gate.
@@ -164,6 +178,19 @@ class GateEvaluator:
             )
         return has_split
 
+    def _passthrough_support_is_open(self, parent: object) -> bool:
+        if self._passthrough_supported is None:
+            return True
+        return bool(self._passthrough_supported[parent])
+
+    def passthrough_support_status(self, parent: object) -> dict[str, object]:
+        """Return diagnostic support metadata for a possible pass-through node."""
+        supported = self._passthrough_support_is_open(parent)
+        return {
+            "passthrough_supported": supported,
+            "passthrough_bottleneck": self._passthrough_bottleneck.get(parent, ""),
+        }
+
     def decision(self, parent: object) -> TraversalDecision:
         """Evaluate the top-down clustering action for *parent*.
 
@@ -177,6 +204,8 @@ class GateEvaluator:
             if self._can_split_by_node[parent]:
                 return TraversalDecision.SPLIT
             if self._has_descendant_split[parent]:
+                if not self._passthrough_support_is_open(parent):
+                    return TraversalDecision.BOUNDARY
                 return TraversalDecision.PASS_THROUGH
             return TraversalDecision.BOUNDARY
 

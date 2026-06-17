@@ -30,6 +30,11 @@ from .decomposition.gates.orchestrator import (
     resolve_sibling_gate_profile_config,
     run_gate_annotation_pipeline,
 )
+from .decomposition.gates.spectral_transport import (
+    DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
+    DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+    DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
+)
 from .statistics.alpha_contract import DEFAULT_EDGE_ALPHA, DEFAULT_SIBLING_ALPHA
 from .statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
@@ -74,6 +79,7 @@ class TreeDecomposition:
         leaf_data: pd.DataFrame | None = None,
         feature_space: FeatureSpace | None = None,
         spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        spectral_include_internal_barycenters: bool = False,
         sibling_gate_profile: str | SiblingGateProfile | None = None,
         sibling_gate_method: str = "projected_wald_inflation",
         sibling_gate_alpha_penalty: float = 1.0,
@@ -92,6 +98,15 @@ class TreeDecomposition:
         enforce_internal_support_thresholds: bool = False,
         internal_support_thresholds: CalibrationSupportThresholds = (
             DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
+        ),
+        spectral_transport_passthrough_guard: bool = False,
+        spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+        spectral_transport_require_mp_blocks: bool = True,
+        spectral_transport_block_log_tolerance: float = (
+            DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
+        ),
+        spectral_transport_unmatched_mode_penalty: float = (
+            DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
         ),
         passthrough: bool = config.PASSTHROUGH,
     ):
@@ -148,6 +163,9 @@ class TreeDecomposition:
         self._leaf_data = leaf_data
         self._feature_space = feature_space
         self._spectral_minimum_dimension = int(spectral_minimum_dimension)
+        self._spectral_include_internal_barycenters = bool(
+            spectral_include_internal_barycenters
+        )
         (
             self._sibling_gate_profile_id,
             self._sibling_gate_method,
@@ -160,6 +178,11 @@ class TreeDecomposition:
             resolved_root_selective_permutation_guard_seed,
             resolved_root_selective_permutation_guard_alpha,
             resolved_root_selective_permutation_guard_scope,
+            resolved_spectral_transport_passthrough_guard,
+            resolved_spectral_transport_max_cost,
+            resolved_spectral_transport_require_mp_blocks,
+            resolved_spectral_transport_block_log_tolerance,
+            resolved_spectral_transport_unmatched_mode_penalty,
         ) = resolve_sibling_gate_profile_config(
             sibling_gate_profile=sibling_gate_profile,
             sibling_gate_method=sibling_gate_method,
@@ -179,6 +202,17 @@ class TreeDecomposition:
             ),
             root_selective_permutation_guard_scope=(
                 root_selective_permutation_guard_scope
+            ),
+            spectral_transport_passthrough_guard=(
+                spectral_transport_passthrough_guard
+            ),
+            spectral_transport_max_cost=spectral_transport_max_cost,
+            spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
+            spectral_transport_block_log_tolerance=(
+                spectral_transport_block_log_tolerance
+            ),
+            spectral_transport_unmatched_mode_penalty=(
+                spectral_transport_unmatched_mode_penalty
             ),
         )
         self._enforce_internal_support_thresholds = bool(
@@ -211,6 +245,21 @@ class TreeDecomposition:
             root_selective_permutation_guard_tree_linkage_method
         )
         self._internal_support_thresholds = internal_support_thresholds
+        self._spectral_transport_passthrough_guard = bool(
+            resolved_spectral_transport_passthrough_guard
+        )
+        self._spectral_transport_max_cost = float(
+            resolved_spectral_transport_max_cost
+        )
+        self._spectral_transport_require_mp_blocks = bool(
+            resolved_spectral_transport_require_mp_blocks
+        )
+        self._spectral_transport_block_log_tolerance = float(
+            resolved_spectral_transport_block_log_tolerance
+        )
+        self._spectral_transport_unmatched_mode_penalty = float(
+            resolved_spectral_transport_unmatched_mode_penalty
+        )
 
         # ----- root -----
         self._root = self.tree.root()
@@ -234,6 +283,22 @@ class TreeDecomposition:
         self._sibling_skipped = self._extract_required_bool_annotation_column(
             "Sibling_Divergence_Skipped"
         )
+        self._passthrough_supported = (
+            self._extract_required_bool_annotation_column(
+                "Spectral_Transport_Pass_Through_Supported"
+            )
+            if self._spectral_transport_passthrough_guard
+            else None
+        )
+        self._passthrough_bottleneck = (
+            {
+                node: str(self.annotations_df.loc[node, "Spectral_Transport_Bottleneck"])
+                for node in self._node_ids
+            }
+            if self._spectral_transport_passthrough_guard
+            and "Spectral_Transport_Bottleneck" in self.annotations_df.columns
+            else None
+        )
 
         # Precompute children list (avoids rebuilding generator repeatedly)
         self._children: dict[object, list[object]] = {
@@ -248,6 +313,8 @@ class TreeDecomposition:
             sibling_skipped=self._sibling_skipped,
             children_map=self._children,
             passthrough=bool(passthrough),
+            passthrough_supported=self._passthrough_supported,
+            passthrough_bottleneck=self._passthrough_bottleneck,
         )
 
     # ---------- initialization helpers ----------
@@ -272,6 +339,9 @@ class TreeDecomposition:
             leaf_data=self._leaf_data,
             feature_space=self._feature_space,
             spectral_minimum_dimension=self._spectral_minimum_dimension,
+            spectral_include_internal_barycenters=(
+                self._spectral_include_internal_barycenters
+            ),
             sibling_gate_profile=self._sibling_gate_profile_id,
             sibling_gate_method=self._sibling_gate_method,
             sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
@@ -309,6 +379,19 @@ class TreeDecomposition:
                 self._enforce_internal_support_thresholds
             ),
             internal_support_thresholds=self._internal_support_thresholds,
+            spectral_transport_passthrough_guard=(
+                self._spectral_transport_passthrough_guard
+            ),
+            spectral_transport_max_cost=self._spectral_transport_max_cost,
+            spectral_transport_require_mp_blocks=(
+                self._spectral_transport_require_mp_blocks
+            ),
+            spectral_transport_block_log_tolerance=(
+                self._spectral_transport_block_log_tolerance
+            ),
+            spectral_transport_unmatched_mode_penalty=(
+                self._spectral_transport_unmatched_mode_penalty
+            ),
         )
         self._gate_annotation_bundle = annotation_bundle
         return annotation_bundle.annotated_df
@@ -346,6 +429,9 @@ class TreeDecomposition:
             and metadata.config
             == build_gate_annotation_config_metadata(
                 spectral_minimum_dimension=self._spectral_minimum_dimension,
+                spectral_include_internal_barycenters=(
+                    self._spectral_include_internal_barycenters
+                ),
                 sibling_gate_profile_id=self._sibling_gate_profile_id,
                 sibling_gate_method=self._sibling_gate_method,
                 sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
@@ -383,6 +469,19 @@ class TreeDecomposition:
                     self._enforce_internal_support_thresholds
                 ),
                 internal_support_thresholds=self._internal_support_thresholds,
+                spectral_transport_passthrough_guard=(
+                    self._spectral_transport_passthrough_guard
+                ),
+                spectral_transport_max_cost=self._spectral_transport_max_cost,
+                spectral_transport_require_mp_blocks=(
+                    self._spectral_transport_require_mp_blocks
+                ),
+                spectral_transport_block_log_tolerance=(
+                    self._spectral_transport_block_log_tolerance
+                ),
+                spectral_transport_unmatched_mode_penalty=(
+                    self._spectral_transport_unmatched_mode_penalty
+                ),
             )
             and metadata.leaf_data
             == build_gate_annotation_leaf_data_metadata(
@@ -424,6 +523,7 @@ class TreeDecomposition:
 
             decision = self._gate.decision(node)
             children = self._children[node]
+            passthrough_support = self._gate.passthrough_support_status(node)
             traversal_trace.append(
                 {
                     "node_id": node,
@@ -432,6 +532,7 @@ class TreeDecomposition:
                     "n_children": len(children),
                     "n_descendant_leaves": len(self._descendant_leaf_sets[node]),
                     "final_boundary": decision is TraversalDecision.BOUNDARY,
+                    **passthrough_support,
                 }
             )
             if decision in (TraversalDecision.SPLIT, TraversalDecision.PASS_THROUGH):

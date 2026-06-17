@@ -51,11 +51,15 @@ def test_validate_methods_accepts_refined_profile_and_rejects_unknown() -> None:
             BASELINE_METHOD_ID,
             "fixed_coordinate_conditional_topology_diagnostic_v1",
             "fixed_coordinate_global_passthrough_refined_v1",
+            "fixed_coordinate_spectral_transport_passthrough_diagnostic_v1",
+            "fixed_coordinate_spectral_transport_passthrough_v1",
         )
     ) == (
         BASELINE_METHOD_ID,
         "fixed_coordinate_conditional_topology_diagnostic_v1",
         "fixed_coordinate_global_passthrough_refined_v1",
+        "fixed_coordinate_spectral_transport_passthrough_diagnostic_v1",
+        "fixed_coordinate_spectral_transport_passthrough_v1",
     )
 
     with pytest.raises(ValueError, match="Unknown traversal method"):
@@ -68,6 +72,7 @@ def test_multiscale_node_decisions_distinguish_guard_and_traversal_classes() -> 
     annotations["Child_Parent_Divergence_Significant"] = True
     annotations["Sibling_BH_Different"] = False
     annotations["Sibling_Divergence_P_Value"] = 0.5
+    annotations["Sibling_Projection_Dimension"] = 3.0
     annotations["Root_Stability_Guard_Blocked"] = False
     annotations["Root_Selective_Permutation_Guard_Blocked"] = False
     annotations["Selective_Permutation_Guard_Blocked"] = False
@@ -154,6 +159,10 @@ def test_multiscale_node_decisions_distinguish_guard_and_traversal_classes() -> 
         rows["node_id"].eq("B1"),
         "conditional_topology_status",
     ].iloc[0] == "leaf_no_outgoing_test_fail_closed"
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_projection_dimension",
+    ].iloc[0] == 3.0
 
 
 def test_production_components_remain_diagnostic_or_fail_closed() -> None:
@@ -221,6 +230,7 @@ def test_run_selected_family_traversal_panel_writes_outputs(tmp_path) -> None:
             "stable_boundary",
             "selected_root_blocked",
             "selected_family_blocked",
+            "spectral_transport_blocked",
             "unstable_passthrough_zone",
             "accepted_internal_split",
             "leaf_fragment",

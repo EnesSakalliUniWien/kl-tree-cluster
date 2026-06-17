@@ -89,6 +89,7 @@ TRAVERSAL_ROW_COLUMNS = (
     "leaf_fragment_count",
     "selected_family_guard_tested_count",
     "selected_family_guard_block_count",
+    "spectral_transport_blocked_count",
     "min_selected_family_p_value",
 )
 
@@ -110,6 +111,7 @@ NODE_DECISION_COLUMNS = (
     "child_parent_edge_open",
     "sibling_open",
     "sibling_p_value",
+    "sibling_projection_dimension",
     "root_stability_guard_blocked",
     "root_selective_guard_blocked",
     "selected_family_guard_blocked",
@@ -125,6 +127,16 @@ NODE_DECISION_COLUMNS = (
     "conditional_topology_status",
     "conditional_topology_log_odds",
     "conditional_topology_probability",
+    "spectral_transport_node_mp_block_count",
+    "spectral_transport_node_mp_total_multiplicity",
+    "spectral_transport_child_best_mode_cost",
+    "spectral_transport_child_best_mode_affinity",
+    "spectral_transport_child_best_mode_status",
+    "spectral_transport_best_descendant_split_path_cost",
+    "spectral_transport_best_descendant_split_path_has_mp_evidence",
+    "spectral_transport_passthrough_supported",
+    "spectral_transport_passthrough_blocked",
+    "spectral_transport_bottleneck",
     "study_role",
 )
 
@@ -442,6 +454,15 @@ def _decision_class(
         return "selected_root_blocked"
     if selected_family_blocked:
         return "selected_family_blocked"
+    if (
+        traversal_decision == "boundary"
+        and _annotation_bool(
+            annotations,
+            node,
+            "Spectral_Transport_Pass_Through_Blocked",
+        )
+    ):
+        return "spectral_transport_blocked"
     if traversal_decision == "split":
         return "accepted_internal_split"
     if traversal_decision == "pass_through":
@@ -560,6 +581,11 @@ def _build_node_decisions(
                     node,
                     "Sibling_Divergence_P_Value",
                 ),
+                "sibling_projection_dimension": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Projection_Dimension",
+                ),
                 "root_stability_guard_blocked": _annotation_bool(
                     annotations,
                     node,
@@ -596,6 +622,60 @@ def _build_node_decisions(
                     "Selective_Permutation_Guard_Scope",
                 ),
                 **topology_fields,
+                "spectral_transport_node_mp_block_count": _annotation_float(
+                    annotations,
+                    node,
+                    "Spectral_Transport_Node_MP_Block_Count",
+                ),
+                "spectral_transport_node_mp_total_multiplicity": _annotation_float(
+                    annotations,
+                    node,
+                    "Spectral_Transport_Node_MP_Total_Multiplicity",
+                ),
+                "spectral_transport_child_best_mode_cost": _annotation_float(
+                    annotations,
+                    node,
+                    "Spectral_Transport_Child_Best_Mode_Cost",
+                ),
+                "spectral_transport_child_best_mode_affinity": _annotation_float(
+                    annotations,
+                    node,
+                    "Spectral_Transport_Child_Best_Mode_Affinity",
+                ),
+                "spectral_transport_child_best_mode_status": _annotation_str(
+                    annotations,
+                    node,
+                    "Spectral_Transport_Child_Best_Mode_Status",
+                ),
+                "spectral_transport_best_descendant_split_path_cost": (
+                    _annotation_float(
+                        annotations,
+                        node,
+                        "Spectral_Transport_Best_Descendant_Split_Path_Cost",
+                    )
+                ),
+                "spectral_transport_best_descendant_split_path_has_mp_evidence": (
+                    _annotation_bool(
+                        annotations,
+                        node,
+                        "Spectral_Transport_Best_Descendant_Split_Path_Has_MP_Evidence",
+                    )
+                ),
+                "spectral_transport_passthrough_supported": _annotation_bool(
+                    annotations,
+                    node,
+                    "Spectral_Transport_Pass_Through_Supported",
+                ),
+                "spectral_transport_passthrough_blocked": _annotation_bool(
+                    annotations,
+                    node,
+                    "Spectral_Transport_Pass_Through_Blocked",
+                ),
+                "spectral_transport_bottleneck": _annotation_str(
+                    annotations,
+                    node,
+                    "Spectral_Transport_Bottleneck",
+                ),
                 "study_role": STUDY_ROLE,
             }
         )
@@ -715,6 +795,8 @@ def _build_guard_rows(node_decisions: pd.DataFrame, result) -> pd.DataFrame:
 def _region_status(decision_class: str) -> str:
     if decision_class in {"selected_root_blocked", "selected_family_blocked"}:
         return "guard_blocked_zone"
+    if decision_class == "spectral_transport_blocked":
+        return "spectral_transport_blocked_zone"
     if decision_class == "unstable_passthrough_zone":
         return "unstable_passthrough_zone"
     if decision_class == "leaf_fragment":
@@ -958,6 +1040,9 @@ def _run_one(
         )
         if not guard_rows.empty
         else 0,
+        "spectral_transport_blocked_count": int(
+            node_decisions["spectral_transport_passthrough_blocked"].astype(bool).sum()
+        ),
         "min_selected_family_p_value": float(
             pd.to_numeric(guard_rows["selected_p_value"], errors="coerce").min()
         )

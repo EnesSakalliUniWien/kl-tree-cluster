@@ -13,6 +13,11 @@ from kl_clustering_analysis import config
 from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
+from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.spectral_transport import (
+    DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
+    DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+    DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
 )
@@ -50,6 +55,7 @@ def _run_kl_on_distance(
     edge_alpha: float = DEFAULT_EDGE_ALPHA,
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    spectral_include_internal_barycenters: bool = False,
     sibling_gate_profile: str | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -61,6 +67,15 @@ def _run_kl_on_distance(
     root_selective_permutation_guard_seed: int = 0,
     root_selective_permutation_guard_alpha: float | None = None,
     root_selective_permutation_guard_scope: str = "root",
+    spectral_transport_passthrough_guard: bool = False,
+    spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+    spectral_transport_require_mp_blocks: bool = True,
+    spectral_transport_block_log_tolerance: float = (
+        DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
+    ),
+    spectral_transport_unmatched_mode_penalty: float = (
+        DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
+    ),
     passthrough: bool = config.PASSTHROUGH,
     extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
@@ -113,6 +128,9 @@ def _run_kl_on_distance(
         leaf_data=data_df,
         feature_space=feature_space,
         spectral_minimum_dimension=spectral_minimum_dimension,
+        spectral_include_internal_barycenters=(
+            spectral_include_internal_barycenters
+        ),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -130,6 +148,13 @@ def _run_kl_on_distance(
         root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
         root_selective_permutation_guard_tree_distance_metric="hamming",
         root_selective_permutation_guard_tree_linkage_method=tree_linkage_method,
+        spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
+        spectral_transport_max_cost=spectral_transport_max_cost,
+        spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
+        spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
+        spectral_transport_unmatched_mode_penalty=(
+            spectral_transport_unmatched_mode_penalty
+        ),
     )
     stage_timings.update(gate_annotation_bundle.stage_timings)
     resolved_gate_config = gate_annotation_bundle.metadata.config
@@ -140,6 +165,9 @@ def _run_kl_on_distance(
         leaf_data=data_df,
         feature_space=feature_space,
         spectral_minimum_dimension=spectral_minimum_dimension,
+        spectral_include_internal_barycenters=(
+            spectral_include_internal_barycenters
+        ),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -157,6 +185,13 @@ def _run_kl_on_distance(
         root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
         root_selective_permutation_guard_tree_distance_metric="hamming",
         root_selective_permutation_guard_tree_linkage_method=tree_linkage_method,
+        spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
+        spectral_transport_max_cost=spectral_transport_max_cost,
+        spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
+        spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
+        spectral_transport_unmatched_mode_penalty=(
+            spectral_transport_unmatched_mode_penalty
+        ),
         edge_alpha=edge_alpha,
         sibling_alpha=sibling_significance_level,
         passthrough=passthrough,
@@ -182,6 +217,9 @@ def _run_kl_on_distance(
         "iqtree_metadata": iqtree_metadata,
         "stage_timings": stage_timings,
         "spectral_minimum_dimension": int(spectral_minimum_dimension),
+        "spectral_include_internal_barycenters": bool(
+            spectral_include_internal_barycenters
+        ),
         "passthrough": bool(passthrough),
         "sibling_gate_profile": resolved_gate_config.sibling_gate_profile_id,
         "sibling_gate_method": str(resolved_gate_config.sibling_gate_method),
@@ -224,6 +262,21 @@ def _run_kl_on_distance(
         "root_selective_permutation_guard_tree_linkage_method": str(
             resolved_gate_config.root_selective_permutation_guard_tree_linkage_method
         ),
+        "spectral_transport_passthrough_guard": bool(
+            resolved_gate_config.spectral_transport_passthrough_guard
+        ),
+        "spectral_transport_max_cost": float(
+            resolved_gate_config.spectral_transport_max_cost
+        ),
+        "spectral_transport_require_mp_blocks": bool(
+            resolved_gate_config.spectral_transport_require_mp_blocks
+        ),
+        "spectral_transport_block_log_tolerance": float(
+            resolved_gate_config.spectral_transport_block_log_tolerance
+        ),
+        "spectral_transport_unmatched_mode_penalty": float(
+            resolved_gate_config.spectral_transport_unmatched_mode_penalty
+        ),
     }
     if extra:
         duplicate_extra_keys = sorted(set(result_extra).intersection(extra))
@@ -259,6 +312,7 @@ def _run_kl_method(
     edge_alpha: float = DEFAULT_EDGE_ALPHA,
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    spectral_include_internal_barycenters: bool = False,
     sibling_gate_profile: str | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -270,6 +324,15 @@ def _run_kl_method(
     root_selective_permutation_guard_seed: int = 0,
     root_selective_permutation_guard_alpha: float | None = None,
     root_selective_permutation_guard_scope: str = "root",
+    spectral_transport_passthrough_guard: bool = False,
+    spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
+    spectral_transport_require_mp_blocks: bool = True,
+    spectral_transport_block_log_tolerance: float = (
+        DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
+    ),
+    spectral_transport_unmatched_mode_penalty: float = (
+        DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
+    ),
     passthrough: bool = config.PASSTHROUGH,
 ) -> MethodRunResult:
     return _run_kl_on_distance(
@@ -286,6 +349,9 @@ def _run_kl_method(
         edge_alpha=edge_alpha,
         feature_space=feature_space,
         spectral_minimum_dimension=spectral_minimum_dimension,
+        spectral_include_internal_barycenters=(
+            spectral_include_internal_barycenters
+        ),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -299,5 +365,12 @@ def _run_kl_method(
         root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
         root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
         root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
+        spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
+        spectral_transport_max_cost=spectral_transport_max_cost,
+        spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
+        spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
+        spectral_transport_unmatched_mode_penalty=(
+            spectral_transport_unmatched_mode_penalty
+        ),
         passthrough=passthrough,
     )

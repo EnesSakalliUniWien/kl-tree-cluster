@@ -1,0 +1,138 @@
+"""
+Distribution population for tree nodes.
+
+This module handles bottom-up propagation of probability distributions
+from leaf nodes to internal nodes, optionally using branch lengths
+for harmonic weighting.
+"""
+
+from typing import Any, Dict
+
+import networkx as nx
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+
+from kl_clustering_analysis.legacy_methods.commit_c2ef9a69.kl_clustering_analysis.core_utils.tree_utils import (
+    bottom_up_nodes,
+)
+
+
+def _calculate_leaf_distribution(
+    tree: nx.DiGraph,
+    node_id: str,
+    leaf_matrix: npt.NDArray[np.float64],
+    label_to_row_idx: Dict[Any, int],
+) -> None:
+    """Set a leaf's distribution to its row in ``leaf_matrix``.
+
+    The stored vector is
+
+        distribution = leaf_matrix[row_idx, :]
+
+    This function does not encode or normalize the row. It copies it into
+    ``tree.nodes[node_id]["distribution"]`` and sets ``leaf_count = 1``.
+
+    Args:
+        tree: Directed tree containing the leaf node.
+        node_id: Leaf node whose distribution should be populated.
+        leaf_matrix: Matrix whose rows correspond to leaf labels.
+        label_to_row_idx: Mapping from leaf label to row index.
+
+    Raises:
+        KeyError: If the leaf label is not present in ``label_to_row_idx``.
+    """
+    label = tree.nodes[node_id].get("label", node_id)
+    try:
+        row_idx = label_to_row_idx[label]
+    except KeyError as exc:
+        raise KeyError(f"Leaf label {label!r} was not found in leaf_data index.") from exc
+
+    feature_probabilities = np.asarray(leaf_matrix[row_idx], dtype=np.float64).reshape(-1)
+    tree.nodes[node_id]["distribution"] = feature_probabilities
+    tree.nodes[node_id]["leaf_count"] = 1
+
+
+def _calculate_hierarchy_node_distribution(
+    tree: nx.DiGraph,
+    node_id: str,
+) -> None:
+    """Compute an internal node's distribution from its immediate children.
+
+    If each child already stores ``distribution`` and ``leaf_count``, then
+
+        parent_distribution =
+            sum(child_leaf_count_i * child_distribution_i) /
+            sum(child_leaf_count_i)
+
+    and
+
+        parent_leaf_count = sum(child_leaf_count_i)
+
+    If child entries lie in ``[0, 1]``, parent entries do too. The vector is
+    not required to sum to 1; here it represents feature-wise probabilities,
+    not a categorical simplex vector.
+
+    Args:
+        tree: Directed tree whose child nodes already have ``distribution`` and
+            ``leaf_count`` attributes.
+        node_id: Internal node whose distribution should be computed.
+
+    Raises:
+        ValueError: If the node has no children or if the combined child weight
+            is not positive.
+    """
+    children = list(tree.successors(node_id))
+    if not children:
+        raise ValueError(f"Internal node {node_id!r} has no children.")
+
+    weighted_distribution_sum = 0.0
+    total_weight = 0.0
+    total_descendant_leaves = 0
+
+    for child_id in children:
+        child_leaf_count = int(tree.nodes[child_id]["leaf_count"])
+        child_distribution = np.asarray(tree.nodes[child_id]["distribution"], dtype=np.float64)
+        total_descendant_leaves += child_leaf_count
+
+        weighted_distribution_sum += child_distribution * child_leaf_count
+        total_weight += child_leaf_count
+
+    if total_weight <= 0:
+        raise ValueError(
+            f"Internal node {node_id!r} has no descendant leaves; malformed tree. "
+            f"Children: {children!r}."
+        )
+
+    tree.nodes[node_id]["leaf_count"] = total_descendant_leaves
+    tree.nodes[node_id]["distribution"] = weighted_distribution_sum / total_weight
+
+
+def populate_distributions(
+    tree: nx.DiGraph,
+    leaf_data: pd.DataFrame,
+) -> None:
+    """
+    Populate 'distribution' and 'leaf_count' for all nodes bottom-up.
+
+    Traverses in postorder so children are processed before parents.
+
+    Parameters
+    ----------
+    tree
+        A directed tree (e.g., PosetTree) with 'is_leaf' node attributes.
+    leaf_data
+        DataFrame where index matches leaf labels and columns are features.
+    """
+    # Vectorized extraction of leaf values; avoids per-row Series allocation from iterrows().
+    leaf_feature_matrix = leaf_data.to_numpy(dtype=np.float64, copy=False)
+    label_to_row_idx = {label: i for i, label in enumerate(leaf_data.index)}
+
+    # Process nodes bottom-up (leaves first, then parents)
+    for node_id in bottom_up_nodes(tree):
+        is_leaf = tree.nodes[node_id].get("is_leaf", False)
+
+        if is_leaf:
+            _calculate_leaf_distribution(tree, node_id, leaf_feature_matrix, label_to_row_idx)
+        else:
+            _calculate_hierarchy_node_distribution(tree, node_id)
