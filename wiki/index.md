@@ -258,6 +258,12 @@ renamed, or promoted.
   resolution diagnostic using \(\rho_r=T\min(A,E)\); the tree remains binary,
   but `5/7` root rows fail closed because binary-root resolution is not a
   substitute for selected spectral-tail support.
+- [[root-selected-validity-replay-panel-20260617]] - diagnostic panel that
+  separates selected-root validity from selected-root tail calibration by
+  joining root-tail rows to feature-subsample stability, selected-root
+  permutation, or explicit topology-family replay evidence; a tail calibrated
+  inside an invalid or unmeasured root still fails closed, and the first
+  fixture join reports `0/7` usable selected roots.
 - [[root-selected-population-law-requirement-20260617]] - diagnostic
   \(H_u\)-requirement panel for selected-root spectral tails; after active
   feature count capture, the three action-dominance fail-closed roots need

@@ -3463,6 +3463,17 @@ verification, and maintenance events here in chronological order.
   `topology_kernel_available_count = 0`, `topology_support_missing_count = 6`,
   `topology_degenerate_support_count = 1`, and
   `summary_status = scalar_kernel_support_but_topology_fail_closed`.
+- Added [[root-selected-validity-replay-panel-20260617]] and
+  `root_selected_validity_replay_panel.py`. The panel implements the sharper
+  root-selection uncertainty distinction: selected-root tail calibration is
+  conditional on the observed \(G_{\hat r}\), while root validity asks whether
+  \(\hat r\) is stable/coherent against feature-subsample topology replay,
+  selected-root permutation, or explicit alternative root-family rows. The
+  combined usability status is fail-closed unless both root validity and
+  selected-root spectral-tail support are present. The first profile-fixture
+  join over the seven overlap root-tail targets reports `1/7` root-validity
+  failures, `6/7` unmeasured roots, `2/7` tail-calibrated roots, and `0/7`
+  usable selected roots.
 
 ## Evidence
 

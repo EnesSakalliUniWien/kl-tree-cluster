@@ -9,6 +9,7 @@ sources:
   - wiki/sources/root-selected-same-geometry-external-support-attempt-20260617.md
   - wiki/sources/root-selected-spectral-tail-law-with-legacy-overlay-20260617.md
   - wiki/sources/root-selected-kernel-spectral-tail-law-20260617.md
+  - wiki/sources/root-selected-validity-replay-panel-20260617.md
   - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/adaptive_kernel_bandwidths.py
   - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/kernel_interpolation.py
   - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/child_prior_estimation.py
@@ -187,6 +188,13 @@ conditioning on the selected topology and the local population spectrum.
   `topology_support_missing_count = 6`, and
   `topology_degenerate_support_count = 1`. This confirms that scalar smoothing
   was borrowing from the wrong root topology class.
+- The root-validity replay panel separates the deeper selection problem from
+  the tail law: a p-value calibrated inside the observed \(G_{\hat r}\) is not
+  evidence that \(\hat r\) is the correct first bifurcation. A selected root is
+  usable only when root validity replay and selected-root tail support both
+  pass. The first profile-fixture join reports `0/7` usable roots because
+  root validity is unmeasured for six targets and failed for the one joined
+  fixture target.
 
 ## Links
 
@@ -195,6 +203,7 @@ conditioning on the selected topology and the local population spectrum.
 - [[root-selected-same-geometry-external-support-attempt-20260617]]
 - [[root-selected-spectral-tail-law-with-legacy-overlay-20260617]]
 - [[root-selected-kernel-spectral-tail-law-20260617]]
+- [[root-selected-validity-replay-panel-20260617]]
 - [[selected-neighborhood-measurability-law]]
 
 ## Open Questions
