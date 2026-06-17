@@ -101,6 +101,7 @@ def test_run_branch_incidence_panel_writes_outputs(tmp_path) -> None:
         "outgoing_right_child_id",
         "incoming_family_outgoing_jaccard_topk",
         "incoming_family_outgoing_fisher_abs_cosine",
+        "sibling_projection_dimension",
         "metric_family_alignment_score",
         "metric_family_compatibility_status",
         "branch_incidence_geometry_status",

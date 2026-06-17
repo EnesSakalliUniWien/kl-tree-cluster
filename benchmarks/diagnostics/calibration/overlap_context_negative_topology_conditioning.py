@@ -176,9 +176,14 @@ ROW_COLUMNS = (
     "data_role",
     "replicate",
     "node_id",
+    "parent_id",
     "guard_truth_role",
+    "topology_support_role",
+    "topology_signal_role",
     "bayesian_incidence_mode_status",
     *CATEGORICAL_COLUMNS,
+    "neighborhood_scale",
+    "neighborhood_scale_source",
     *DEFAULT_TOPOLOGY_METRICS,
 )
 
@@ -346,6 +351,24 @@ def _neglog10_p(values: pd.Series) -> pd.Series:
     return -np.log10(numeric)
 
 
+def _topology_support_role(*, data_role: object, guard_truth_role: object) -> str:
+    """Classify rows for topology-neighborhood empirical support."""
+    role = str(guard_truth_role)
+    data = str(data_role)
+    if role == "truth_recovery":
+        return ""
+    if data in {"null", "selected_null"} or role == "null_like":
+        return "strict_null"
+    if data == "signal" or role in {"diffuse_or_wrong", "fragment_like"}:
+        return "selected_nonnull"
+    return ""
+
+
+def _topology_signal_role(*, guard_truth_role: object) -> str:
+    """Classify explicit topology signal rows for neighborhood diagnostics."""
+    return "signal" if str(guard_truth_role) == "truth_recovery" else ""
+
+
 def add_topology_conditioning_metrics(rows: pd.DataFrame) -> pd.DataFrame:
     """Return rows with derived selected-neighborhood topology metrics."""
     enriched = rows.copy()
@@ -454,11 +477,21 @@ def build_context_negative_topology_conditioning_rows(
     ].copy()
     branch_columns = [
         *keys,
+        *(
+            ["incoming_parent_id"]
+            if "incoming_parent_id" in branch_rows.columns
+            else []
+        ),
         "depth",
         "decision_class",
         "traversal_decision",
         "sibling_open",
         "sibling_p_value",
+        *(
+            ["sibling_projection_dimension"]
+            if "sibling_projection_dimension" in branch_rows.columns
+            else []
+        ),
         "selected_family_guard_blocked",
         "selected_family_p_value",
         "n_parent_context",
@@ -514,6 +547,18 @@ def build_context_negative_topology_conditioning_rows(
         how="left",
         validate="one_to_one",
     )
+    if "sibling_projection_dimension" not in rows.columns:
+        rows["sibling_projection_dimension"] = np.nan
+    sibling_projection_dimension = _numeric(rows, "sibling_projection_dimension")
+    rows["neighborhood_scale"] = sibling_projection_dimension.where(
+        sibling_projection_dimension.gt(0.0),
+        np.nan,
+    )
+    rows["neighborhood_scale_source"] = np.where(
+        rows["neighborhood_scale"].notna(),
+        "sibling_projection_dimension",
+        "missing_sibling_projection_dimension",
+    )
     rows = add_topology_conditioning_metrics(rows)
 
     records: list[dict[str, object]] = []
@@ -525,13 +570,34 @@ def build_context_negative_topology_conditioning_rows(
             "data_role": str(row["data_role"]),
             "replicate": int(row["replicate"]),
             "node_id": str(row["node_id"]),
+            "parent_id": (
+                str(row["incoming_parent_id"])
+                if "incoming_parent_id" in row and pd.notna(row["incoming_parent_id"])
+                else ""
+            ),
             "guard_truth_role": str(row["guard_truth_role"]),
+            "topology_support_role": _topology_support_role(
+                data_role=row["data_role"],
+                guard_truth_role=row["guard_truth_role"],
+            ),
+            "topology_signal_role": _topology_signal_role(
+                guard_truth_role=row["guard_truth_role"]
+            ),
             "bayesian_incidence_mode_status": str(
                 row["bayesian_incidence_mode_status"]
             ),
         }
         for column in CATEGORICAL_COLUMNS:
             record[column] = str(row[column]) if pd.notna(row[column]) else "missing"
+        try:
+            record["neighborhood_scale"] = float(row["neighborhood_scale"])
+        except (TypeError, ValueError):
+            record["neighborhood_scale"] = math.nan
+        record["neighborhood_scale_source"] = (
+            str(row["neighborhood_scale_source"])
+            if pd.notna(row["neighborhood_scale_source"])
+            else "missing_sibling_projection_dimension"
+        )
         for metric in DEFAULT_TOPOLOGY_METRICS:
             try:
                 record[metric] = float(row[metric])

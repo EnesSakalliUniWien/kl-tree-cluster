@@ -91,6 +91,25 @@ def test_case_contract_rejects_continuous_generator_until_null_covariance_exists
     raise AssertionError("continuous selected-edge null regeneration must fail explicitly")
 
 
+def test_case_contract_supports_planted_hierarchy_as_binary_template() -> None:
+    case = {
+        "name": "traversal_deep_signal_under_same_parent",
+        "generator": "planted_hierarchy_deep_signal",
+        "n_samples": 24,
+        "n_features": 30,
+        "n_clusters": 6,
+    }
+
+    assert _case_contract(case) == (
+        "traversal_deep_signal_under_same_parent",
+        "binary_template",
+        "binary",
+        24,
+        30,
+        None,
+    )
+
+
 def test_run_selected_edge_replicate_emits_edge_rows() -> None:
     edge_rows, sibling_rows, final_rows = run_selected_edge_replicate(
         case_id="binary_2clusters",

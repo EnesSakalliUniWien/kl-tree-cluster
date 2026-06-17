@@ -1039,7 +1039,7 @@ def _select_cases(*, suite: str, case_names: Sequence[str]) -> list[dict[str, ob
 def _case_contract(case: dict[str, object]) -> tuple[str, str, str, int, int, int | None]:
     name = str(case["name"])
     generator = str(case.get("generator", ""))
-    if generator == "binary":
+    if generator in {"binary", "planted_hierarchy_deep_signal"}:
         return (
             name,
             "binary_template",

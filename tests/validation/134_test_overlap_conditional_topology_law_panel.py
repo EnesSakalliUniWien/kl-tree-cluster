@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import math
 
 import pandas as pd
 from benchmarks.diagnostics.calibration.overlap_conditional_topology_law_panel import (
     OverlapConditionalTopologyLawPanelConfig,
+    build_cached_tree_distances,
     build_conditional_topology_analytical_cases,
     build_conditional_topology_law_rows,
     infer_directed_incidence,
@@ -29,13 +31,18 @@ def _row(
     n_left: float = 50.0,
     n_right: float = 50.0,
     node_id: str = "N1",
+    parent_id: str = "root",
     replicate: int = 0,
+    topology_support_role: str | None = None,
+    topology_signal_role: str | None = None,
+    balance_product: float | None = None,
 ) -> dict[str, object]:
     record = {
         "case_id": "case",
         "data_role": "signal",
         "replicate": replicate,
         "node_id": node_id,
+        "parent_id": parent_id,
         "guard_truth_role": role,
         "depth": depth,
         "decision_class": decision_class,
@@ -54,7 +61,64 @@ def _row(
     }
     if neighborhood_scale is not None:
         record["neighborhood_scale"] = neighborhood_scale
+    if topology_support_role is not None:
+        record["topology_support_role"] = topology_support_role
+    if topology_signal_role is not None:
+        record["topology_signal_role"] = topology_signal_role
+    if balance_product is not None:
+        record["balance_product"] = balance_product
     return record
+
+
+def test_cached_tree_distances_materializes_all_pairs_once() -> None:
+    rows = pd.DataFrame.from_records(
+        [
+            _row(node_id="root", parent_id="", depth=0),
+            _row(node_id="left", parent_id="root", depth=1),
+            _row(node_id="right", parent_id="root", depth=1),
+            _row(node_id="leaf", parent_id="left", depth=2),
+        ]
+    )
+
+    cache = build_cached_tree_distances(rows)
+
+    assert cache.status == "cached_all_pairs_tree_distances"
+    assert cache.computed_pair_count == 6
+    assert cache.distance("left", "right") == 2.0
+    assert cache.distance("leaf", "right") == 3.0
+    assert cache.distance("leaf", "right") == 3.0
+    assert cache.computed_pair_count == 6
+
+
+def test_cached_tree_distances_reports_missing_parent_edges() -> None:
+    rows = pd.DataFrame.from_records(
+        [
+            _row(node_id="left", parent_id="", depth=1),
+            _row(node_id="right", parent_id="", depth=1),
+        ]
+    )
+
+    cache = build_cached_tree_distances(rows)
+
+    assert cache.status == "tree_distance_parent_edges_unavailable"
+    assert cache.computed_pair_count == 1
+    assert math.isinf(cache.distance("left", "right"))
+
+
+def test_cached_tree_distances_uses_auxiliary_parent_nodes() -> None:
+    rows = pd.DataFrame.from_records(
+        [
+            _row(node_id="left", parent_id="root", depth=1),
+            _row(node_id="right", parent_id="root", depth=1),
+        ]
+    )
+
+    cache = build_cached_tree_distances(rows)
+
+    assert cache.status == "cached_all_pairs_tree_distances"
+    assert set(cache.nodes) == {"left", "right", "root"}
+    assert cache.distance("left", "right") == 2.0
+    assert cache.computed_pair_count == 3
 
 
 def test_directed_incidence_distinguishes_root_internal_and_leaf() -> None:
@@ -258,6 +322,214 @@ def test_neighborhood_scale_support_is_reported_without_silent_promotion() -> No
     )
 
 
+def test_topology_neighborhood_bandwidth_excludes_selected_nonnull_support() -> None:
+    rows = build_conditional_topology_law_rows(
+        pd.DataFrame.from_records(
+            [
+                _row(
+                    role="null_like",
+                    node_id="stable_null",
+                    parent_id="root",
+                    topology_support_role="strict_null",
+                    neighborhood_scale=10.0,
+                ),
+                _row(
+                    role="diffuse_or_wrong",
+                    node_id="selected_nonnull",
+                    parent_id="root",
+                    topology_support_role="selected_nonnull",
+                    neighborhood_scale=11.0,
+                ),
+                _row(
+                    node_id="candidate",
+                    parent_id="selected_nonnull",
+                    topology_signal_role="signal",
+                    neighborhood_scale=12.0,
+                ),
+            ]
+        ),
+        min_truth_support_per_stratum=2,
+    )
+
+    candidate = rows.loc[rows["node_id"].eq("candidate")].iloc[0]
+    assert int(candidate["topology_neighborhood_support_count"]) == 1
+    assert int(candidate["topology_neighborhood_selected_nonnull_excluded_count"]) == 1
+    assert candidate["topology_neighborhood_support_status"] == (
+        "topology_neighborhood_support_insufficient_fail_closed"
+    )
+    assert float(candidate["topology_neighborhood_log_component"]) == 0.0
+
+
+def test_topology_neighborhood_bandwidth_component_uses_cached_tree_context() -> None:
+    rows = build_conditional_topology_law_rows(
+        pd.DataFrame.from_records(
+            [
+                _row(
+                    role="null_like",
+                    node_id="stable_a",
+                    parent_id="root",
+                    topology_support_role="strict_null",
+                    neighborhood_scale=10.0,
+                ),
+                _row(
+                    role="null_like",
+                    node_id="stable_b",
+                    parent_id="root",
+                    topology_support_role="edge_blocked",
+                    neighborhood_scale=12.0,
+                    replicate=1,
+                ),
+                _row(
+                    role="truth_recovery",
+                    node_id="signal",
+                    parent_id="stable_a",
+                    topology_signal_role="signal",
+                    neighborhood_scale=11.0,
+                ),
+                _row(
+                    role="truth_recovery",
+                    node_id="near_signal",
+                    parent_id="signal",
+                    neighborhood_scale=11.5,
+                    replicate=2,
+                ),
+                _row(
+                    role="truth_recovery",
+                    node_id="near_stable",
+                    parent_id="stable_b",
+                    neighborhood_scale=11.5,
+                    replicate=3,
+                ),
+            ]
+        ),
+        min_truth_support_per_stratum=1,
+    )
+
+    near_signal = rows.loc[rows["node_id"].eq("near_signal")].iloc[0]
+    near_stable = rows.loc[rows["node_id"].eq("near_stable")].iloc[0]
+    assert near_signal["topology_neighborhood_support_status"] == (
+        "topology_neighborhood_support_observed_diagnostic_only"
+    )
+    assert float(near_signal["topology_neighborhood_log_component"]) > float(
+        near_stable["topology_neighborhood_log_component"]
+    )
+    assert float(near_signal["conditional_log_odds"]) > float(
+        near_stable["conditional_log_odds"]
+    )
+
+
+def test_guarded_recovery_requires_support_guards_and_topology_evidence() -> None:
+    rows = build_conditional_topology_law_rows(
+        pd.DataFrame.from_records(
+            [
+                _row(
+                    node_id="candidate",
+                    parent_id="parent",
+                    topology_signal_role="signal",
+                    outgoing=0.47,
+                    edge_norm=0.96,
+                    balance_product=0.23,
+                ),
+                _row(
+                    node_id="truth_support",
+                    parent_id="parent",
+                    topology_signal_role="signal",
+                    outgoing=0.46,
+                    edge_norm=0.955,
+                    balance_product=0.225,
+                    replicate=1,
+                ),
+                _row(
+                    role="null_like",
+                    node_id="strict_null",
+                    parent_id="parent",
+                    topology_support_role="strict_null",
+                    outgoing=0.49,
+                    edge_norm=0.98,
+                    balance_product=0.24,
+                    replicate=2,
+                ),
+                _row(
+                    role="diffuse_or_wrong",
+                    node_id="low_product",
+                    parent_id="parent",
+                    topology_support_role="selected_nonnull",
+                    outgoing=0.49,
+                    edge_norm=0.98,
+                    balance_product=0.20,
+                    replicate=3,
+                ),
+                _row(
+                    role="diffuse_or_wrong",
+                    node_id="low_edge",
+                    parent_id="parent",
+                    topology_support_role="selected_nonnull",
+                    outgoing=0.49,
+                    edge_norm=0.94,
+                    balance_product=0.23,
+                    replicate=4,
+                ),
+            ]
+        ),
+        min_truth_support_per_stratum=2,
+    )
+    by_node = {row["node_id"]: row for _, row in rows.iterrows()}
+    summary = summarize_conditional_topology_law_rows(
+        rows,
+        min_truth_support_per_stratum=2,
+    ).iloc[0]
+
+    assert bool(by_node["candidate"]["recover_internal_split"])
+    assert by_node["candidate"]["guarded_recovery_status"] == (
+        "guarded_internal_recovery_candidate_diagnostic_only"
+    )
+    assert not bool(by_node["strict_null"]["recover_internal_split"])
+    assert by_node["strict_null"]["guarded_recovery_status"] == (
+        "root_or_null_guard_blocked"
+    )
+    assert by_node["low_product"]["guarded_recovery_status"] == (
+        "balance_product_below_floor"
+    )
+    assert by_node["low_edge"]["guarded_recovery_status"] == (
+        "outgoing_edge_below_floor"
+    )
+    assert int(summary["guarded_recovery_candidate_count"]) == 2
+    assert int(summary["guarded_recovery_guard_blocked_row_count"]) == 1
+    assert int(summary["guarded_recovery_evidence_blocked_row_count"]) == 2
+
+
+def test_guarded_recovery_fails_closed_when_support_is_thin() -> None:
+    rows = build_conditional_topology_law_rows(
+        pd.DataFrame.from_records(
+            [
+                _row(
+                    node_id="single_truth",
+                    parent_id="parent",
+                    topology_signal_role="signal",
+                    outgoing=0.47,
+                    edge_norm=0.96,
+                    balance_product=0.23,
+                ),
+                _row(
+                    role="null_like",
+                    node_id="strict_null",
+                    parent_id="parent",
+                    topology_support_role="strict_null",
+                    outgoing=0.40,
+                    edge_norm=0.90,
+                    balance_product=0.18,
+                    replicate=1,
+                ),
+            ]
+        ),
+        min_truth_support_per_stratum=2,
+    )
+    truth = rows.loc[rows["node_id"].eq("single_truth")].iloc[0]
+
+    assert not bool(truth["recover_internal_split"])
+    assert truth["guarded_recovery_status"] == "support_insufficient_fail_closed"
+
+
 def test_missing_topology_features_fail_closed_not_positive() -> None:
     rows = build_conditional_topology_law_rows(
         pd.DataFrame.from_records(
@@ -364,10 +636,13 @@ def test_run_conditional_topology_law_panel_writes_outputs(tmp_path) -> None:
     summary = pd.read_csv(outputs["summary"])
     benchmark = pd.read_csv(outputs["benchmark_summary"])
     analytical = pd.read_csv(outputs["analytical_cases"])
+    manifest = json.loads(outputs["manifest"].read_text())
     assert summary["diagnostic_status"].iloc[0] in {
         "conditional_topology_candidate_diagnostic_only",
         "conditional_topology_partial_truth_separation",
     }
+    assert manifest["diagnostic_status"] == summary["diagnostic_status"].iloc[0]
+    assert manifest["production_status"] == summary["production_status"].iloc[0]
     assert not benchmark.empty
     assert set(analytical["analytical_case"]) >= {
         "context_negative_emergent_true_split",

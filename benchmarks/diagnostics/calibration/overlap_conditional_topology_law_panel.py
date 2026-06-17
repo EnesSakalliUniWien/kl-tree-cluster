@@ -38,9 +38,12 @@ DEFAULT_PRIOR_TRUTH_PROBABILITY = 0.05
 DEFAULT_CONTEXT_PENALTY_WEIGHT = 50.0
 DEFAULT_SELECTED_FAMILY_WEIGHT = 0.25
 DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT = 1.0
+DEFAULT_TOPOLOGY_NEIGHBORHOOD_WEIGHT = 1.0
 DEFAULT_ROOT_LOG_ODDS_PENALTY = 1.0
 DEFAULT_PASSTHROUGH_LOG_ODDS_PENALTY = 1.5
 DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM = 2
+DEFAULT_GUARDED_RECOVERY_BALANCE_PRODUCT_FLOOR = 0.22
+DEFAULT_GUARDED_RECOVERY_OUTGOING_EDGE_NORM_FLOOR = 0.95
 
 REQUIRED_COLUMNS = {
     "case_id",
@@ -69,6 +72,13 @@ OPTIONAL_COLUMNS = {
     "parent_id",
     "analytical_case",
     "neighborhood_scale",
+    "topology_support_role",
+    "topology_signal_role",
+    "distance_to_stopping_edge",
+    "balance_product",
+    "root_stability_guard_blocked",
+    "root_selective_guard_blocked",
+    "selected_family_guard_blocked",
 }
 
 ROW_COLUMNS = (
@@ -114,6 +124,18 @@ ROW_COLUMNS = (
     "neighborhood_scale_support_truth_count",
     "neighborhood_scale_support_negative_count",
     "neighborhood_scale_support_status",
+    "topology_neighborhood_log_component",
+    "topology_neighborhood_tau_b",
+    "topology_neighborhood_tau_t",
+    "topology_neighborhood_tau_s",
+    "topology_neighborhood_h_k",
+    "topology_neighborhood_nearest_stable_distance",
+    "topology_neighborhood_nearest_signal_distance",
+    "topology_neighborhood_support_count",
+    "topology_neighborhood_signal_count",
+    "topology_neighborhood_selected_nonnull_excluded_count",
+    "topology_neighborhood_distance_cache_status",
+    "topology_neighborhood_support_status",
     "root_log_component",
     "passthrough_log_component",
     "topology_core_log_odds",
@@ -128,6 +150,15 @@ ROW_COLUMNS = (
     "support_negative_count",
     "support_status",
     "conditional_topology_status",
+    "guarded_recovery_balance_product",
+    "guarded_recovery_outgoing_edge_norm_balance",
+    "guarded_recovery_balance_product_floor",
+    "guarded_recovery_outgoing_edge_norm_floor",
+    "guarded_recovery_guard_status",
+    "guarded_recovery_support_status",
+    "guarded_recovery_evidence_status",
+    "guarded_recovery_status",
+    "recover_internal_split",
 )
 
 COMPONENT_COLUMNS = (
@@ -157,6 +188,7 @@ SUMMARY_COLUMNS = (
     "selected_family_weight",
     "context_penalty_weight",
     "neighborhood_scale_weight",
+    "topology_neighborhood_weight",
     "min_truth_support_per_stratum",
     "truth_conditional_log_odds_min",
     "truth_conditional_log_odds_median",
@@ -171,6 +203,12 @@ SUMMARY_COLUMNS = (
     "feature_missing_row_count",
     "neighborhood_scale_support_insufficient_row_count",
     "neighborhood_scale_unavailable_row_count",
+    "topology_neighborhood_support_insufficient_row_count",
+    "topology_neighborhood_unavailable_row_count",
+    "guarded_recovery_candidate_count",
+    "guarded_recovery_guard_blocked_row_count",
+    "guarded_recovery_support_blocked_row_count",
+    "guarded_recovery_evidence_blocked_row_count",
     "candidate_row_count",
     "diagnostic_status",
     "production_status",
@@ -206,6 +244,28 @@ class DirectedIncidence:
 
 
 @dataclass(frozen=True)
+class CachedTreeDistances:
+    """Cached all-pairs undirected tree distances for topology diagnostics."""
+
+    distances: dict[tuple[str, str], float]
+    nodes: tuple[str, ...]
+    status: str
+
+    @property
+    def computed_pair_count(self) -> int:
+        return int(len(self.distances))
+
+    def distance(self, left: object, right: object) -> float:
+        """Return the cached tree distance between two node identifiers."""
+        left_id = str(left)
+        right_id = str(right)
+        if left_id == right_id:
+            return 0.0
+        key = tuple(sorted((left_id, right_id)))
+        return float(self.distances.get(key, math.inf))
+
+
+@dataclass(frozen=True)
 class OverlapConditionalTopologyLawPanelConfig:
     """Runtime contract for conditional topology-law diagnostics."""
 
@@ -218,6 +278,7 @@ class OverlapConditionalTopologyLawPanelConfig:
     root_log_odds_penalty: float = DEFAULT_ROOT_LOG_ODDS_PENALTY
     passthrough_log_odds_penalty: float = DEFAULT_PASSTHROUGH_LOG_ODDS_PENALTY
     min_truth_support_per_stratum: int = DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM
+    topology_neighborhood_weight: float = DEFAULT_TOPOLOGY_NEIGHBORHOOD_WEIGHT
 
     @property
     def rows_path(self) -> Path:
@@ -304,6 +365,89 @@ def _sigmoid(values: pd.Series) -> pd.Series:
     return 1.0 / (1.0 + np.exp(-clipped))
 
 
+def build_cached_tree_distances(rows: pd.DataFrame) -> CachedTreeDistances:
+    """Build an all-pairs distance cache from `node_id` and `parent_id` columns."""
+    if "node_id" not in rows or "parent_id" not in rows:
+        return CachedTreeDistances({}, (), "tree_distance_parent_links_unavailable")
+
+    row_node_ids = tuple(str(node) for node in rows["node_id"].dropna().astype(str))
+    if not row_node_ids:
+        return CachedTreeDistances({}, (), "tree_distance_no_nodes")
+
+    auxiliary_parent_ids: list[str] = []
+    if "parent_id" in rows:
+        for value in rows["parent_id"]:
+            if pd.isna(value):
+                continue
+            parent = str(value)
+            if parent:
+                auxiliary_parent_ids.append(parent)
+    node_ids = tuple(dict.fromkeys([*row_node_ids, *auxiliary_parent_ids]))
+    adjacency: dict[str, set[str]] = {node: set() for node in node_ids}
+    node_set = set(node_ids)
+    edge_count = 0
+    for _, row in rows.iterrows():
+        node = str(row["node_id"])
+        parent_value = row.get("parent_id", "")
+        if pd.isna(parent_value):
+            continue
+        parent = str(parent_value)
+        if not parent or parent not in node_set or parent == node:
+            continue
+        adjacency.setdefault(node, set()).add(parent)
+        adjacency.setdefault(parent, set()).add(node)
+        edge_count += 1
+
+    distances: dict[tuple[str, str], float] = {}
+    for source in node_ids:
+        seen = {source: 0}
+        queue = [source]
+        for current in queue:
+            for neighbor in sorted(adjacency.get(current, ())):
+                if neighbor in seen:
+                    continue
+                seen[neighbor] = seen[current] + 1
+                queue.append(neighbor)
+        for target in node_ids:
+            if source == target:
+                continue
+            key = tuple(sorted((source, target)))
+            if key in distances:
+                continue
+            distances[key] = float(seen[target]) if target in seen else math.inf
+    status = (
+        "cached_all_pairs_tree_distances"
+        if edge_count
+        else "tree_distance_parent_edges_unavailable"
+    )
+    return CachedTreeDistances(distances, node_ids, status)
+
+
+def _nearest_distance(
+    cache: CachedTreeDistances,
+    node: object,
+    targets: Iterable[object],
+) -> float:
+    distances = [
+        cache.distance(node, target)
+        for target in targets
+        if str(target) != str(node)
+    ]
+    finite = [distance for distance in distances if math.isfinite(distance)]
+    return float(min(finite)) if finite else math.inf
+
+
+def _safe_positive_median(values: Iterable[float], default: float = 1.0) -> float:
+    finite = [
+        float(value)
+        for value in values
+        if math.isfinite(float(value)) and float(value) > 0.0
+    ]
+    if not finite:
+        return float(default)
+    return max(float(np.median(finite)), 1e-12)
+
+
 def _neighborhood_scale_components(
     rows: pd.DataFrame,
     *,
@@ -382,6 +526,134 @@ def _neighborhood_scale_components(
                 "neighborhood_scale_support_truth_count": truth_count,
                 "neighborhood_scale_support_negative_count": negative_count,
                 "neighborhood_scale_support_status": status,
+            }
+    return records
+
+
+def _topology_neighborhood_components(
+    rows: pd.DataFrame,
+    *,
+    roles: pd.Series,
+    support_group_by_index: dict[object, str],
+    min_support: int,
+    weight: float,
+) -> dict[object, dict[str, object]]:
+    """Return old-style topology-neighborhood bandwidth components by row.
+
+    The component is diagnostic-only. It borrows the old structural idea of
+    tree-distance neighborhoods and log-scale bandwidths, but it never counts
+    selected non-null rows as empirical-null support.
+    """
+    cache = build_cached_tree_distances(rows)
+    scale = _numeric(rows, "neighborhood_scale")
+    log_scale = np.log(scale.where(scale > 0.0))
+    support_role = (
+        rows["topology_support_role"].astype(str)
+        if "topology_support_role" in rows
+        else pd.Series("", index=rows.index, dtype=str)
+    ).str.strip()
+    signal_role = (
+        rows["topology_signal_role"].astype(str)
+        if "topology_signal_role" in rows
+        else pd.Series("", index=rows.index, dtype=str)
+    ).str.strip()
+    distance_to_stopping = _numeric(rows, "distance_to_stopping_edge")
+    support_groups = pd.Series(support_group_by_index)
+    records: dict[object, dict[str, object]] = {}
+    eligible_support_roles = {
+        "strict_null",
+        "edge_blocked",
+        "stopped_or_null",
+        "null_like",
+        "stable",
+    }
+    selected_nonnull_roles = {"selected_nonnull", "selected_non_null", "nonnull"}
+    has_explicit_neighborhood_evidence = bool(
+        support_role.replace({"nan": "", "None": ""}).str.len().gt(0).any()
+        or signal_role.replace({"nan": "", "None": ""}).str.len().gt(0).any()
+    )
+
+    for group in sorted(set(support_group_by_index.values())):
+        member_index = support_groups[support_groups.eq(group)].index
+        group_support_roles = support_role.loc[member_index]
+        group_roles = roles.loc[member_index]
+        eligible_mask = group_support_roles.isin(eligible_support_roles) | (
+            group_roles.eq("null_like") & ~group_support_roles.isin(selected_nonnull_roles)
+        )
+        selected_nonnull_excluded = int(
+            group_support_roles.isin(selected_nonnull_roles).sum()
+        )
+        support_index = eligible_mask[eligible_mask].index
+        support_nodes = rows.loc[support_index, "node_id"].astype(str).tolist()
+        signal_index = signal_role.loc[member_index].eq("signal")
+        signal_nodes = (
+            rows.loc[signal_index[signal_index].index, "node_id"].astype(str).tolist()
+        )
+        support_logs = log_scale.loc[support_index].dropna()
+        scale_center = (
+            float(support_logs.median()) if not support_logs.empty else math.nan
+        )
+        h_k = float(support_logs.std(ddof=0)) if support_logs.shape[0] > 1 else 0.0
+        if not math.isfinite(h_k) or h_k <= 1e-12:
+            h_k = 0.0
+        tau_b = _safe_positive_median(distance_to_stopping.loc[member_index], default=1.0)
+        tau_t = _safe_positive_median(
+            (
+                _nearest_distance(cache, rows.loc[idx, "node_id"], support_nodes)
+                for idx in member_index
+            ),
+            default=1.0,
+        )
+        tau_s = _safe_positive_median(
+            (
+                _nearest_distance(cache, rows.loc[idx, "node_id"], signal_nodes)
+                for idx in member_index
+            ),
+            default=1.0,
+        )
+
+        for idx in member_index:
+            node_id = rows.loc[idx, "node_id"]
+            nearest_stable = _nearest_distance(cache, node_id, support_nodes)
+            nearest_signal = _nearest_distance(cache, node_id, signal_nodes)
+            log_value = _finite_float(log_scale.loc[idx])
+            if not has_explicit_neighborhood_evidence:
+                status = "topology_neighborhood_unavailable_neutral"
+                component = 0.0
+            elif cache.status != "cached_all_pairs_tree_distances":
+                status = "topology_neighborhood_unavailable_neutral"
+                component = 0.0
+            elif len(support_nodes) < int(min_support) or not signal_nodes:
+                status = "topology_neighborhood_support_insufficient_fail_closed"
+                component = 0.0
+            else:
+                stable_kernel = math.exp(
+                    -0.5 * (nearest_stable / tau_t) ** 2
+                ) if math.isfinite(nearest_stable) else 0.0
+                signal_kernel = math.exp(
+                    -0.5 * (nearest_signal / tau_s) ** 2
+                ) if math.isfinite(nearest_signal) else 0.0
+                scale_penalty = 0.0
+                if math.isfinite(log_value) and math.isfinite(scale_center) and h_k > 0.0:
+                    scale_penalty = 0.5 * ((log_value - scale_center) / h_k) ** 2
+                status = "topology_neighborhood_support_observed_diagnostic_only"
+                component = float(weight) * (signal_kernel - stable_kernel) - scale_penalty
+
+            records[idx] = {
+                "topology_neighborhood_log_component": float(component),
+                "topology_neighborhood_tau_b": float(tau_b),
+                "topology_neighborhood_tau_t": float(tau_t),
+                "topology_neighborhood_tau_s": float(tau_s),
+                "topology_neighborhood_h_k": float(h_k),
+                "topology_neighborhood_nearest_stable_distance": float(nearest_stable),
+                "topology_neighborhood_nearest_signal_distance": float(nearest_signal),
+                "topology_neighborhood_support_count": int(len(support_nodes)),
+                "topology_neighborhood_signal_count": int(len(signal_nodes)),
+                "topology_neighborhood_selected_nonnull_excluded_count": int(
+                    selected_nonnull_excluded
+                ),
+                "topology_neighborhood_distance_cache_status": cache.status,
+                "topology_neighborhood_support_status": status,
             }
     return records
 
@@ -474,6 +746,7 @@ def _conditional_status(
     *,
     support_status: str,
     neighborhood_scale_support_status: str,
+    topology_neighborhood_support_status: str,
     topology_core_supported: bool,
     conditional_log_odds: float,
 ) -> str:
@@ -481,11 +754,101 @@ def _conditional_status(
         return support_status
     if neighborhood_scale_support_status.endswith("_fail_closed"):
         return neighborhood_scale_support_status
+    if topology_neighborhood_support_status.endswith("_fail_closed"):
+        return topology_neighborhood_support_status
     if not topology_core_supported:
         return "selected_context_only_not_promoted"
     if conditional_log_odds > 0.0:
         return "conditional_topology_candidate_diagnostic_only"
     return "conditional_topology_below_support"
+
+
+def _bool_column_value(row: pd.Series, column: str) -> bool:
+    value = row[column] if column in row else False
+    if pd.isna(value):
+        return False
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes"}
+    return bool(value)
+
+
+def _guarded_recovery_fields(
+    *,
+    row: pd.Series,
+    incidence: DirectedIncidence,
+    support_status: str,
+    balance_product: float,
+    outgoing_edge_norm_balance: float,
+    balance_product_floor: float,
+    outgoing_edge_norm_floor: float,
+) -> dict[str, object]:
+    """Return guarded internal-recovery diagnostics for one row."""
+    support_role = _string_value(row, "topology_support_role").strip()
+    data_role = _string_value(row, "data_role").strip()
+    root_or_family_blocked = any(
+        _bool_column_value(row, column)
+        for column in (
+            "root_stability_guard_blocked",
+            "root_selective_guard_blocked",
+            "selected_family_guard_blocked",
+        )
+    )
+    null_like_blocked = support_role in {
+        "strict_null",
+        "edge_blocked",
+        "stopped_or_null",
+        "null_like",
+        "stable",
+    } or data_role in {"null", "selected_null"}
+
+    if incidence.incidence_role != "internal" or incidence.pass_through_candidate:
+        guard_status = "not_internal_recovery_candidate"
+    elif root_or_family_blocked or null_like_blocked:
+        guard_status = "root_or_null_guard_blocked"
+    else:
+        guard_status = "root_null_guards_pass"
+
+    support_ok = support_status == "support_observed_diagnostic_only"
+    support_gate_status = (
+        "support_sufficient"
+        if support_ok
+        else "support_insufficient_fail_closed"
+    )
+    if not math.isfinite(balance_product):
+        evidence_status = "balance_product_missing"
+    elif balance_product < float(balance_product_floor):
+        evidence_status = "balance_product_below_floor"
+    elif not math.isfinite(outgoing_edge_norm_balance):
+        evidence_status = "outgoing_edge_missing"
+    elif outgoing_edge_norm_balance < float(outgoing_edge_norm_floor):
+        evidence_status = "outgoing_edge_below_floor"
+    else:
+        evidence_status = "balance_product_outgoing_edge_supported"
+
+    if guard_status != "root_null_guards_pass":
+        status = guard_status
+    elif not support_ok:
+        status = support_gate_status
+    elif evidence_status != "balance_product_outgoing_edge_supported":
+        status = evidence_status
+    else:
+        status = "guarded_internal_recovery_candidate_diagnostic_only"
+
+    return {
+        "guarded_recovery_balance_product": float(balance_product),
+        "guarded_recovery_outgoing_edge_norm_balance": float(
+            outgoing_edge_norm_balance
+        ),
+        "guarded_recovery_balance_product_floor": float(balance_product_floor),
+        "guarded_recovery_outgoing_edge_norm_floor": float(outgoing_edge_norm_floor),
+        "guarded_recovery_guard_status": guard_status,
+        "guarded_recovery_support_status": support_gate_status,
+        "guarded_recovery_evidence_status": evidence_status,
+        "guarded_recovery_status": status,
+        "recover_internal_split": bool(
+            status == "guarded_internal_recovery_candidate_diagnostic_only"
+        ),
+    }
 
 
 def build_conditional_topology_law_rows(
@@ -495,9 +858,16 @@ def build_conditional_topology_law_rows(
     selected_family_weight: float = DEFAULT_SELECTED_FAMILY_WEIGHT,
     context_penalty_weight: float = DEFAULT_CONTEXT_PENALTY_WEIGHT,
     neighborhood_scale_weight: float = DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT,
+    topology_neighborhood_weight: float = DEFAULT_TOPOLOGY_NEIGHBORHOOD_WEIGHT,
     root_log_odds_penalty: float = DEFAULT_ROOT_LOG_ODDS_PENALTY,
     passthrough_log_odds_penalty: float = DEFAULT_PASSTHROUGH_LOG_ODDS_PENALTY,
     min_truth_support_per_stratum: int = DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM,
+    guarded_recovery_balance_product_floor: float = (
+        DEFAULT_GUARDED_RECOVERY_BALANCE_PRODUCT_FLOOR
+    ),
+    guarded_recovery_outgoing_edge_norm_floor: float = (
+        DEFAULT_GUARDED_RECOVERY_OUTGOING_EDGE_NORM_FLOOR
+    ),
 ) -> pd.DataFrame:
     """Build incidence-aware conditional topology-law rows."""
     _validate(topology_rows)
@@ -511,6 +881,7 @@ def build_conditional_topology_law_rows(
     fragment = _numeric(rows, "outgoing_fragment_risk_proxy_score")
     selected_family = _numeric(rows, "selected_family_log_bayes_factor_lower")
     context = _numeric(rows, "continuous_context_min_margin")
+    balance_product = _numeric(rows, "balance_product")
 
     incoming_lr = _neutralize_missing(
         beta_log_likelihood_ratio(_balance_unit(incoming))
@@ -552,6 +923,13 @@ def build_conditional_topology_law_rows(
         min_truth_support=int(min_truth_support_per_stratum),
         weight=float(neighborhood_scale_weight),
     )
+    topology_neighborhood_components = _topology_neighborhood_components(
+        rows,
+        roles=roles,
+        support_group_by_index=support_group_by_index,
+        min_support=int(min_truth_support_per_stratum),
+        weight=float(topology_neighborhood_weight),
+    )
 
     conditional_log_odds_by_index: dict[object, float] = {}
     raw_records: list[dict[str, object]] = []
@@ -592,12 +970,18 @@ def build_conditional_topology_law_rows(
         neighborhood_component = float(
             neighborhood_components[idx]["neighborhood_scale_log_component"]
         )
+        topology_neighborhood_component = float(
+            topology_neighborhood_components[idx][
+                "topology_neighborhood_log_component"
+            ]
+        )
         selected_context = selected_component[position] + context_component[position]
         conditional_log_odds = (
             intercept
             + topology_core
             + selected_context
             + neighborhood_component
+            + topology_neighborhood_component
             + root_component
             + passthrough_component
         )
@@ -613,6 +997,15 @@ def build_conditional_topology_law_rows(
             missing_topology=missing_topology,
             support_truth_count=support_truth_count,
             min_truth_support=int(min_truth_support_per_stratum),
+        )
+        guarded_recovery = _guarded_recovery_fields(
+            row=row,
+            incidence=incidence,
+            support_status=support_status,
+            balance_product=float(balance_product.loc[idx]),
+            outgoing_edge_norm_balance=float(edge_norm.loc[idx]),
+            balance_product_floor=float(guarded_recovery_balance_product_floor),
+            outgoing_edge_norm_floor=float(guarded_recovery_outgoing_edge_norm_floor),
         )
         raw_records.append(
             {
@@ -655,6 +1048,7 @@ def build_conditional_topology_law_rows(
                 "selected_family_log_component": float(selected_component[position]),
                 "context_log_component": float(context_component[position]),
                 **neighborhood_components[idx],
+                **topology_neighborhood_components[idx],
                 "root_log_component": float(root_component),
                 "passthrough_log_component": float(passthrough_component),
                 "topology_core_log_odds": float(topology_core),
@@ -675,9 +1069,15 @@ def build_conditional_topology_law_rows(
                             "neighborhood_scale_support_status"
                         ]
                     ),
+                    topology_neighborhood_support_status=str(
+                        topology_neighborhood_components[idx][
+                            "topology_neighborhood_support_status"
+                        ]
+                    ),
                     topology_core_supported=topology_core_supported,
                     conditional_log_odds=float(conditional_log_odds),
                 ),
+                **guarded_recovery,
             }
         )
 
@@ -714,6 +1114,7 @@ def summarize_conditional_topology_components(rows: pd.DataFrame) -> pd.DataFram
         "selected_family_log_component",
         "context_log_component",
         "neighborhood_scale_log_component",
+        "topology_neighborhood_log_component",
         "root_log_component",
         "passthrough_log_component",
         "topology_core_log_odds",
@@ -762,6 +1163,7 @@ def summarize_conditional_topology_law_rows(
     selected_family_weight: float = DEFAULT_SELECTED_FAMILY_WEIGHT,
     context_penalty_weight: float = DEFAULT_CONTEXT_PENALTY_WEIGHT,
     neighborhood_scale_weight: float = DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT,
+    topology_neighborhood_weight: float = DEFAULT_TOPOLOGY_NEIGHBORHOOD_WEIGHT,
     min_truth_support_per_stratum: int = DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM,
 ) -> pd.DataFrame:
     """Summarize conditional topology-law row scores and support status."""
@@ -778,6 +1180,7 @@ def summarize_conditional_topology_law_rows(
                     "selected_family_weight": float(selected_family_weight),
                     "context_penalty_weight": float(context_penalty_weight),
                     "neighborhood_scale_weight": float(neighborhood_scale_weight),
+                    "topology_neighborhood_weight": float(topology_neighborhood_weight),
                     "min_truth_support_per_stratum": int(min_truth_support_per_stratum),
                     "truth_conditional_log_odds_min": math.nan,
                     "truth_conditional_log_odds_median": math.nan,
@@ -792,6 +1195,12 @@ def summarize_conditional_topology_law_rows(
                     "feature_missing_row_count": 0,
                     "neighborhood_scale_support_insufficient_row_count": 0,
                     "neighborhood_scale_unavailable_row_count": 0,
+                    "topology_neighborhood_support_insufficient_row_count": 0,
+                    "topology_neighborhood_unavailable_row_count": 0,
+                    "guarded_recovery_candidate_count": 0,
+                    "guarded_recovery_guard_blocked_row_count": 0,
+                    "guarded_recovery_support_blocked_row_count": 0,
+                    "guarded_recovery_evidence_blocked_row_count": 0,
                     "candidate_row_count": 0,
                     "diagnostic_status": "conditional_topology_unavailable",
                     "production_status": "fail_closed_no_rows",
@@ -821,11 +1230,39 @@ def summarize_conditional_topology_law_rows(
     scale_unavailable = neighborhood_scale_status.eq(
         "neighborhood_scale_unavailable_neutral"
     )
+    topology_neighborhood_status = rows["topology_neighborhood_support_status"].astype(str)
+    topology_neighborhood_fail_closed = topology_neighborhood_status.str.endswith(
+        "_fail_closed"
+    )
+    topology_neighborhood_unavailable = topology_neighborhood_status.eq(
+        "topology_neighborhood_unavailable_neutral"
+    )
     candidate_count = int(
         rows["conditional_topology_status"]
         .astype(str)
         .eq("conditional_topology_candidate_diagnostic_only")
         .sum()
+    )
+    guarded_recovery_status = rows["guarded_recovery_status"].astype(str)
+    guarded_recovery_candidate = guarded_recovery_status.eq(
+        "guarded_internal_recovery_candidate_diagnostic_only"
+    )
+    guarded_recovery_guard_blocked = guarded_recovery_status.isin(
+        {
+            "root_or_null_guard_blocked",
+            "not_internal_recovery_candidate",
+        }
+    )
+    guarded_recovery_support_blocked = guarded_recovery_status.eq(
+        "support_insufficient_fail_closed"
+    )
+    guarded_recovery_evidence_blocked = guarded_recovery_status.isin(
+        {
+            "balance_product_missing",
+            "balance_product_below_floor",
+            "outgoing_edge_missing",
+            "outgoing_edge_below_floor",
+        }
     )
     if not bool(truth.any()):
         diagnostic_status = "conditional_topology_no_truth_support"
@@ -844,6 +1281,7 @@ def summarize_conditional_topology_law_rows(
         if bool(support_insufficient.any())
         or bool(feature_missing.any())
         or bool(scale_fail_closed.any())
+        or bool(topology_neighborhood_fail_closed.any())
         else "diagnostic_only_not_production_calibrated"
     )
     return pd.DataFrame.from_records(
@@ -858,6 +1296,7 @@ def summarize_conditional_topology_law_rows(
                 "selected_family_weight": float(selected_family_weight),
                 "context_penalty_weight": float(context_penalty_weight),
                 "neighborhood_scale_weight": float(neighborhood_scale_weight),
+                "topology_neighborhood_weight": float(topology_neighborhood_weight),
                 "min_truth_support_per_stratum": int(min_truth_support_per_stratum),
                 "truth_conditional_log_odds_min": truth_min,
                 "truth_conditional_log_odds_median": float(truth_scores.median())
@@ -879,6 +1318,24 @@ def summarize_conditional_topology_law_rows(
                 ),
                 "neighborhood_scale_unavailable_row_count": int(
                     scale_unavailable.sum()
+                ),
+                "topology_neighborhood_support_insufficient_row_count": int(
+                    topology_neighborhood_fail_closed.sum()
+                ),
+                "topology_neighborhood_unavailable_row_count": int(
+                    topology_neighborhood_unavailable.sum()
+                ),
+                "guarded_recovery_candidate_count": int(
+                    guarded_recovery_candidate.sum()
+                ),
+                "guarded_recovery_guard_blocked_row_count": int(
+                    guarded_recovery_guard_blocked.sum()
+                ),
+                "guarded_recovery_support_blocked_row_count": int(
+                    guarded_recovery_support_blocked.sum()
+                ),
+                "guarded_recovery_evidence_blocked_row_count": int(
+                    guarded_recovery_evidence_blocked.sum()
                 ),
                 "candidate_row_count": candidate_count,
                 "diagnostic_status": diagnostic_status,
@@ -1099,6 +1556,7 @@ def run_overlap_conditional_topology_law_panel(
         selected_family_weight=float(config.selected_family_weight),
         context_penalty_weight=float(config.context_penalty_weight),
         neighborhood_scale_weight=float(config.neighborhood_scale_weight),
+        topology_neighborhood_weight=float(config.topology_neighborhood_weight),
         root_log_odds_penalty=float(config.root_log_odds_penalty),
         passthrough_log_odds_penalty=float(config.passthrough_log_odds_penalty),
         min_truth_support_per_stratum=int(config.min_truth_support_per_stratum),
@@ -1110,6 +1568,7 @@ def run_overlap_conditional_topology_law_panel(
         selected_family_weight=float(config.selected_family_weight),
         context_penalty_weight=float(config.context_penalty_weight),
         neighborhood_scale_weight=float(config.neighborhood_scale_weight),
+        topology_neighborhood_weight=float(config.topology_neighborhood_weight),
         min_truth_support_per_stratum=int(config.min_truth_support_per_stratum),
     )
     benchmark_summary = summarize_conditional_topology_benchmark(rows)
@@ -1119,6 +1578,7 @@ def run_overlap_conditional_topology_law_panel(
         selected_family_weight=float(config.selected_family_weight),
         context_penalty_weight=float(config.context_penalty_weight),
         neighborhood_scale_weight=float(config.neighborhood_scale_weight),
+        topology_neighborhood_weight=float(config.topology_neighborhood_weight),
         root_log_odds_penalty=float(config.root_log_odds_penalty),
         passthrough_log_odds_penalty=float(config.passthrough_log_odds_penalty),
         min_truth_support_per_stratum=int(config.min_truth_support_per_stratum),
@@ -1130,6 +1590,7 @@ def run_overlap_conditional_topology_law_panel(
     summary.to_csv(config.summary_path, index=False)
     benchmark_summary.to_csv(config.benchmark_summary_path, index=False)
     analytical_cases.to_csv(config.analytical_cases_path, index=False)
+    summary_record = summary.iloc[0].to_dict() if not summary.empty else {}
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "study_role": STUDY_ROLE,
@@ -1140,13 +1601,14 @@ def run_overlap_conditional_topology_law_panel(
         "selected_family_weight": float(config.selected_family_weight),
         "context_penalty_weight": float(config.context_penalty_weight),
         "neighborhood_scale_weight": float(config.neighborhood_scale_weight),
+        "topology_neighborhood_weight": float(config.topology_neighborhood_weight),
         "root_log_odds_penalty": float(config.root_log_odds_penalty),
         "passthrough_log_odds_penalty": float(config.passthrough_log_odds_penalty),
         "min_truth_support_per_stratum": int(config.min_truth_support_per_stratum),
         "law": (
             "eta = logit(prior) + topology_core + selected_family_weight * "
             "log1p(selected_family) + min(context, 0) * context_penalty "
-            "+ neighborhood_scale_component "
+            "+ neighborhood_scale_component + topology_neighborhood_component "
             "- root_penalty * I_root - passthrough_penalty * I_passthrough"
         ),
         "outputs": {
@@ -1156,7 +1618,15 @@ def run_overlap_conditional_topology_law_panel(
             "benchmark_summary": str(config.benchmark_summary_path),
             "analytical_cases": str(config.analytical_cases_path),
         },
-        "production_status": "diagnostic_only_non_permutation_conditional_law",
+        "diagnostic_status": str(
+            summary_record.get("diagnostic_status", "diagnostic_summary_unavailable")
+        ),
+        "production_status": str(
+            summary_record.get(
+                "production_status",
+                "diagnostic_only_non_permutation_conditional_law",
+            )
+        ),
     }
     config.manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True))
     return {
@@ -1194,6 +1664,11 @@ def _parse_args() -> argparse.Namespace:
         default=DEFAULT_NEIGHBORHOOD_SCALE_WEIGHT,
     )
     parser.add_argument(
+        "--topology-neighborhood-weight",
+        type=float,
+        default=DEFAULT_TOPOLOGY_NEIGHBORHOOD_WEIGHT,
+    )
+    parser.add_argument(
         "--root-log-odds-penalty",
         type=float,
         default=DEFAULT_ROOT_LOG_ODDS_PENALTY,
@@ -1221,6 +1696,7 @@ def main() -> None:
             selected_family_weight=float(args.selected_family_weight),
             context_penalty_weight=float(args.context_penalty_weight),
             neighborhood_scale_weight=float(args.neighborhood_scale_weight),
+            topology_neighborhood_weight=float(args.topology_neighborhood_weight),
             root_log_odds_penalty=float(args.root_log_odds_penalty),
             passthrough_log_odds_penalty=float(args.passthrough_log_odds_penalty),
             min_truth_support_per_stratum=int(args.min_truth_support_per_stratum),

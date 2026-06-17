@@ -81,6 +81,7 @@ ROW_COLUMNS = (
     "traversal_decision",
     "sibling_open",
     "sibling_p_value",
+    "sibling_projection_dimension",
     "selected_family_guard_blocked",
     "selected_family_p_value",
     "n_parent_context",
@@ -650,6 +651,9 @@ def _branch_row_for_node(
         "traversal_decision": str(node_row["traversal_decision"]),
         "sibling_open": bool(node_row["sibling_open"]),
         "sibling_p_value": float(node_row["sibling_p_value"]),
+        "sibling_projection_dimension": _finite_float(
+            node_row.get("sibling_projection_dimension", np.nan)
+        ),
         "selected_family_guard_blocked": bool(node_row["selected_family_guard_blocked"]),
         "selected_family_p_value": float(node_row["selected_family_p_value"]),
         "n_parent_context": int(len(parent_labels)),

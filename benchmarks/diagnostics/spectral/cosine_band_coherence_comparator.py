@@ -26,7 +26,7 @@ from kl_clustering_analysis.tree.feature_space import (
     bernoulli_feature_space_from_columns,
     continuous_feature_space_from_columns,
 )
-from scipy.stats import fisher_exact
+from scipy.stats import hypergeom
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from statsmodels.stats.multitest import multipletests
@@ -42,7 +42,6 @@ from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import 
     sibling_method_counts,
     weighted_matrix,
 )
-from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import load_matrix
 from benchmarks.shared.util.time import format_timestamp_utc
 
 SCHEMA_VERSION = "cosine_band_coherence_comparator/v1"
@@ -113,11 +112,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--weightings", nargs="+", default=["binary", "tfidf"])
+    parser.add_argument("--band-names", nargs="+", default=None)
     parser.add_argument("--max-rank", type=int, default=80)
     parser.add_argument("--edge-alpha", type=float, default=DEFAULT_EDGE_ALPHA)
     parser.add_argument("--sibling-alpha", type=float, default=DEFAULT_SIBLING_ALPHA)
     parser.add_argument("--min-significant-terms", type=int, default=3)
     parser.add_argument("--min-prevalence-delta", type=float, default=0.25)
+    parser.add_argument("--checkpoint-dir", type=Path, default=None)
     return parser.parse_args()
 
 
@@ -159,10 +160,50 @@ def infer_comparator_feature_space(data: pd.DataFrame) -> FeatureSpace:
     return continuous_feature_space_from_columns(data.columns)
 
 
+def load_comparator_matrix(path: Path) -> pd.DataFrame:
+    """Load a CSV or TSV feature matrix with samples in rows."""
+    first_line = Path(path).read_text(encoding="utf-8").splitlines()[0]
+    sep = "\t" if "\t" in first_line else ","
+    data = pd.read_csv(path, sep=sep, index_col=0)
+    zero_columns = data.columns[(data.sum(axis=0) == 0).to_numpy()]
+    if len(zero_columns):
+        data = data.drop(columns=zero_columns)
+    zero_rows = data.index[(data.sum(axis=1) == 0).to_numpy()]
+    if len(zero_rows):
+        raise ValueError(
+            "Rows with zero feature mass cannot enter cosine/KAK analysis: "
+            f"{list(zero_rows[:10])!r}"
+        )
+    return data.astype(float)
+
+
 def _bh_q_values(p_values: Sequence[float]) -> np.ndarray:
-    if not p_values:
+    if len(p_values) == 0:
         return np.asarray([], dtype=float)
     return np.asarray(multipletests(p_values, method="fdr_bh")[1], dtype=float)
+
+
+def _one_sided_enrichment_p_values(
+    *,
+    cluster_counts: pd.Series,
+    rest_counts: pd.Series,
+    cluster_size: int,
+    rest_size: int,
+) -> np.ndarray:
+    """Return vectorized Fisher-exact greater-tail enrichment p-values."""
+    present_cluster = cluster_counts.to_numpy(dtype=int)
+    present_rest = rest_counts.to_numpy(dtype=int)
+    population_size = int(cluster_size) + int(rest_size)
+    present_total = present_cluster + present_rest
+    return np.asarray(
+        hypergeom.sf(
+            present_cluster - 1,
+            population_size,
+            present_total,
+            int(cluster_size),
+        ),
+        dtype=float,
+    )
 
 
 def _mean_within_tfidf_cosine_by_cluster(
@@ -208,16 +249,12 @@ def cluster_biological_coherence(
         rest = feature_presence.loc[~mask]
         cluster_count = cluster.sum(axis=0).astype(int)
         rest_count = rest.sum(axis=0).astype(int)
-        p_values: list[float] = []
-        for term in data.columns:
-            present_cluster = int(cluster_count[term])
-            present_rest = int(rest_count[term])
-            odds_table = [
-                [present_cluster, cluster_size - present_cluster],
-                [present_rest, rest_size - present_rest],
-            ]
-            _, p_value = fisher_exact(odds_table, alternative="greater")
-            p_values.append(float(p_value))
+        p_values = _one_sided_enrichment_p_values(
+            cluster_counts=cluster_count,
+            rest_counts=rest_count,
+            cluster_size=cluster_size,
+            rest_size=rest_size,
+        )
         q_values = _bh_q_values(p_values)
         cluster_prev = cluster_count / cluster_size
         rest_prev = rest_count / max(rest_size, 1)
@@ -281,12 +318,35 @@ def build_cosine_band_coherence_rows(
     feature_space: FeatureSpace | None = None,
     min_significant_terms: int = 3,
     min_prevalence_delta: float = 0.25,
+    checkpoint_dir: Path | None = None,
+    band_names: Sequence[str] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Run fixed cosine-band trees and return row/coherence/spectrum tables."""
     resolved_feature_space = feature_space or infer_comparator_feature_space(data)
     rows: list[dict[str, object]] = []
     coherence_rows: list[pd.DataFrame] = []
     spectrum_rows: list[dict[str, object]] = []
+
+    def write_checkpoint() -> None:
+        if checkpoint_dir is None:
+            return
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame.from_records(rows, columns=ROW_COLUMNS).to_csv(
+            checkpoint_dir / "cosine_band_comparator_rows.partial.csv",
+            index=False,
+        )
+        (
+            pd.concat(coherence_rows, ignore_index=True)
+            if coherence_rows
+            else pd.DataFrame(columns=COHERENCE_COLUMNS)
+        ).to_csv(
+            checkpoint_dir / "cosine_band_comparator_cluster_coherence.partial.csv",
+            index=False,
+        )
+        pd.DataFrame.from_records(spectrum_rows, columns=SPECTRUM_COLUMNS).to_csv(
+            checkpoint_dir / "cosine_band_comparator_spectrum.partial.csv",
+            index=False,
+        )
 
     for weighting in weightings:
         try:
@@ -295,6 +355,14 @@ def build_cosine_band_coherence_rows(
             spectrum_rows.extend(_spectrum_rows(str(weighting), eigvals))
             total_energy = float(np.sum(eigvals))
             bands = legacy_cosine_bands(len(eigvals))
+            if band_names is not None:
+                requested_bands = {str(name) for name in band_names}
+                bands = [
+                    band for band in bands if str(band.block_name) in requested_bands
+                ]
+                missing_bands = requested_bands - {str(band.block_name) for band in bands}
+                if missing_bands:
+                    raise ValueError(f"Unknown or unavailable band_names: {sorted(missing_bands)!r}")
         except Exception as exc:  # noqa: BLE001 - diagnostic table records failures.
             rows.append(
                 {
@@ -327,6 +395,7 @@ def build_cosine_band_coherence_rows(
                     "error": repr(exc),
                 }
             )
+            write_checkpoint()
             continue
 
         for block in bands:
@@ -418,6 +487,7 @@ def build_cosine_band_coherence_rows(
                     true_labels = np.asarray(data.attrs["true_label"])
                     rows[-1]["ari"] = float(adjusted_rand_score(true_labels, labels))
                     rows[-1]["nmi"] = float(normalized_mutual_info_score(true_labels, labels))
+                write_checkpoint()
             except Exception as exc:  # noqa: BLE001 - diagnostic table records failures.
                 rows.append(
                     {
@@ -450,6 +520,7 @@ def build_cosine_band_coherence_rows(
                         "error": repr(exc),
                     }
                 )
+                write_checkpoint()
 
     rows_df = pd.DataFrame.from_records(rows, columns=ROW_COLUMNS)
     coherence_df = (
@@ -471,10 +542,12 @@ def run_cosine_band_coherence_comparator(
     sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
     min_significant_terms: int = 3,
     min_prevalence_delta: float = 0.25,
+    checkpoint_dir: Path | None = None,
+    band_names: Sequence[str] | None = None,
 ) -> dict[str, Path]:
     """Run the comparator and write rows, coherence, spectrum, and manifest."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    data = load_matrix(input_path)
+    data = load_comparator_matrix(input_path)
     rows, coherence, spectrum = build_cosine_band_coherence_rows(
         data=data,
         weightings=weightings,
@@ -483,6 +556,8 @@ def run_cosine_band_coherence_comparator(
         sibling_alpha=sibling_alpha,
         min_significant_terms=min_significant_terms,
         min_prevalence_delta=min_prevalence_delta,
+        checkpoint_dir=checkpoint_dir,
+        band_names=band_names,
     )
     rows_path = output_dir / "cosine_band_comparator_rows.csv"
     coherence_path = output_dir / "cosine_band_comparator_cluster_coherence.csv"
@@ -499,6 +574,7 @@ def run_cosine_band_coherence_comparator(
                 "generated_by": __name__,
                 "generated_at_utc": format_timestamp_utc(),
                 "input_path": str(input_path),
+                "band_names": list(band_names) if band_names is not None else None,
                 "adaptive_schema_reused": ADAPTIVE_SCHEMA_VERSION,
                 "outputs": {
                     "rows": str(rows_path),
@@ -531,6 +607,8 @@ def main() -> None:
         sibling_alpha=float(args.sibling_alpha),
         min_significant_terms=int(args.min_significant_terms),
         min_prevalence_delta=float(args.min_prevalence_delta),
+        checkpoint_dir=args.checkpoint_dir,
+        band_names=args.band_names,
     )
 
 
