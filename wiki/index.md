@@ -100,6 +100,15 @@ renamed, or promoted.
 - [[selected-geometry-mp-integral-literature-20260602]] - literature capture
   for the no-bootstrap selected-region geometry direction and the
   Stieltjes-transform integral route for deformed Marchenko--Pastur spectra.
+- [[selected-neighborhood-signal-flow-literature-20260617]] - literature
+  bridge showing that selective inference supports fail-closed selected roots,
+  while diffusion maps, tree wavelets, and treelets support neighborhood
+  smoothing only as multiscale support evidence.
+- [[graph-neural-geometry-spectral-artifact-literature-20260617]] - graph
+  signal processing, graph neural network, and graph geometry literature bridge
+  for the internal-barycenter artifact problem; it frames internal rows as
+  graph low-pass/tree-filter evidence and points to angle/radius transport plus
+  topology/curvature conditioning.
 - [[local-mp-identity-law-diagnostic-20260602]] - production-spectrum screen
   showing that the identity MP law is not a uniform description across
   Bernoulli, categorical, discretized Gaussian, and continuous contexts.
@@ -245,6 +254,16 @@ renamed, or promoted.
   old method improves one signal row but creates two selected-null false
   splits, so its kernel smoother is useful locality evidence rather than a
   production root rescue.
+- [[legacy-c2ef9a69-edge-alpha-comparison-20260617]] - edge-alpha grid
+  comparison between current `kl` and full legacy `kl_legacy_c2ef9a69` on the
+  same seven overlap/root-tail cases; every tested alpha has one legacy signal
+  gain and at least one legacy extra selected-null false split, so edge alpha
+  alone does not produce an admissible legacy rule.
+- [[ad-hoc-sibling-gate-selected-null-diffusion-comparison-20260617]] -
+  selected-null/signal smoke comparing legacy, adaptive parent PCA, fixed
+  sibling gates, guarded coordinate profiles, and diffusion tree construction;
+  legacy is cleanest on the tiny selected-null smoke, while diffusion improves
+  signal behavior but still leaks selected-null rows.
 - [[old-current-method-difference-ledger-20260617]] - normalized component
   ledger for old-versus-current method changes; tracks removed/replaced
   components, added current guards, diagnostic-retained evidence, selected-null
@@ -265,6 +284,11 @@ renamed, or promoted.
   inside an invalid or unmeasured root still fails closed; the all-seven
   signal replay reports `2/7` root-validity-supported roots and `1/7` usable
   selected-root tail.
+- [[root-tree-geometry-hard-negative-replay-20260617]] - replay of
+  `overlap_extreme_4c` across alternative tree builders, distances, and
+  linkage/rooting choices; current `0/6` geometries become root-validity
+  supported, while the old commit either under-splits or fragments without a
+  valid-root guard, so the case is a hard negative for root-tail rescue.
 - [[root-selected-population-law-requirement-20260617]] - diagnostic
   \(H_u\)-requirement panel for selected-root spectral tails; after active
   feature count capture, the three action-dominance fail-closed roots need
@@ -482,7 +506,8 @@ renamed, or promoted.
 - [[selected-neighborhood-bottleneck-law]] - merged method contract that keeps
   selected-family guards for null pass-through control, uses directed
   incoming/outgoing topology for internal recovery, and treats old bandwidth
-  variables as bottleneck localizers rather than standalone split thresholds.
+  variables as conditional support localizers rather than standalone split
+  thresholds.
 - [[selected-neighborhood-measurability-law]] - formal selected-neighborhood
   traversal law that separates direct sibling-test measurability, supported
   bandwidth interpolation for non-measurable evidence, topology coherence, and
@@ -494,12 +519,21 @@ renamed, or promoted.
   spectral bottleneck labels into one table; the non-direct rows now localize
   to a required root-selected topology law or low selected-tree structural balance
   rather than missing interpolated p-like values.
+- [[selected-neighborhood-conditional-support-panel-20260617]] - root-
+  conditioned support join over expanded overlap candidates; strict root
+  validity, local support, topology, and spectral-flow checks yield `0`
+  conditional neighborhood support passes, `0` selected-null neighborhood
+  leaks, and `0` hard-negative leaks.
 - [[selected-neighborhood-pvalue-interpolation-comparison-20260616]] -
   hold-out diagnostic comparing direct sibling p-values with reconstructed
   interpolated p-like values on expanded overlap candidates; default bandwidth
   suppresses selected-null false positives but also misses direct signal
   positives, reports effective interpolation support, and shows that widening
-  `tau_s` alone reopens null mistakes before reliably rescuing signal.
+  `tau_s` alone reopens null mistakes before reliably rescuing signal; it now
+  writes method-level and topology-region `tau_s` interval checks plus
+  role-region bandwidth vectors; the branch-length rerun localizes support in
+  branch units but still has an empty admissible interval because selected-null
+  neighborhoods open before signal.
 - [[selected-neighborhood-topology-frontier-diagnostic-20260616]] -
   root/non-root topology-frontier comparator over the same expanded overlap
   candidate rows; root outgoing balance and lowered non-root balance-product
@@ -523,6 +557,20 @@ renamed, or promoted.
   MP block projectors and polynomial mode transport, but current overlap MP
   blocks are almost all singleton, supporting spectral flow as a bottleneck
   localizer rather than a standalone rescue rule.
+- [[selected-neighborhood-internal-spectral-flow-panel-20260617]] -
+  diagnostic-only leaf-versus-internal-barycenter spectral-flow comparison;
+  internal barycenters create many MP-supported edges in both signal and
+  selected-null roles, supporting them as tree-filter evidence while warning
+  against restoring them as independent MP samples or split rescue. The
+  neighborhood-energy extension records graph Dirichlet-style angle/radius
+  transport: strict shared smoothing is mixed and internal-only support remains
+  a fail-closed warning channel.
+- [[selected-neighborhood-internal-spectral-flow-conditional-energy-20260617]] -
+  root-conditioned postprocess for internal-barycenter neighborhood energy; the
+  seven-case overlap run finds `0/7` signal rescue candidates after root
+  validity, root-tail, strict shared energy, hard-negative, and paired
+  selected-null checks, while preserving the empirical lesson that old
+  bandwidth/internal mechanisms remain useful diagnostics.
 - [[spectral-transport-passthrough-guard-20260616]] -
   opt-in traversal profile that introduces MP mode transport as a fail-closed
   pass-through support guard; strict `require_mp_blocks=True` semantics now

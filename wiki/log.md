@@ -3483,6 +3483,150 @@ verification, and maintenance events here in chronological order.
   (`overlap_unbal_6c_med`), `1/7` valid-but-tail-missing root
   (`overlap_part_4c_small`), and one tail-calibrated but root-invalid root
   (`overlap_extreme_4c`).
+- Added [[root-tree-geometry-hard-negative-replay-20260617]] and
+  `root_tree_geometry_hard_negative_replay_panel.py`. The KL runner and shared
+  dispatcher now expose root replay distance/linkage knobs so selected-root
+  validity can be replayed under alternative tree geometry. The
+  `overlap_extreme_4c` signal seed was replayed across six geometries
+  including linkage and neighbor joining with Hamming, Jaccard, and
+  Rogers-Tanimoto distances. The hard-negative control holds:
+  `0/6` geometries are root-validity supported, `0/6` leak, and all rows are
+  `hard_negative_control_blocked_root_unstable`.
+- Reran the tree-geometry hard-negative benchmark with the copied old commit
+  method `kl_legacy_c2ef9a69`. The old runner supports only linkage trees, so
+  the neighbor-joining geometries are explicit skips. Among the four supported
+  linkage geometries, three under-split to one cluster and Rogers-Tanimoto
+  average linkage fragments to `5` clusters with ARI `-0.002225`, while the
+  root partition truth ARI remains `0.000663`. This records the legacy behavior
+  as invalid-root fragmentation without a root-validity guard.
+- Added [[selected-neighborhood-signal-flow-literature-20260617]] and the raw
+  capture `raw/inbox/selected-neighborhood-signal-flow-literature-20260617.md`.
+  The literature bridge separates selective-inference support for fail-closed
+  selected roots from diffusion/tree multiscale support for neighborhood
+  smoothing. Updated [[root-conditional-kernel-spectral-law]] and
+  [[selected-neighborhood-bottleneck-law]] to state that bandwidth/kernel
+  smoothing is admissible conditional support evidence, not an unconditional
+  p-value rescue.
+- Added [[selected-neighborhood-conditional-support-panel-20260617]] and
+  `selected_neighborhood_conditional_support_panel.py`. The panel joins the
+  expanded selected-neighborhood measurability rows to selected-root validity
+  and root-tail evidence, separates direct sibling splits from neighborhood
+  support, and treats `overlap_extreme_4c` as a hard negative. The expanded
+  candidate run writes `69,860` rows and `28` case/method/role summaries. The
+  strict joined rule reports `0` conditional neighborhood support passes, `0`
+  selected-null neighborhood leaks, `0` hard-negative leaks, and keeps both
+  `overlap_extreme_4c` signal method profiles
+  `hard_negative_control_supported`.
+- Added [[selected-neighborhood-internal-spectral-flow-panel-20260617]] and
+  `selected_neighborhood_internal_spectral_flow_panel.py`. The diagnostic
+  compares leaf-only spectral flow with the opt-in internal-barycenter
+  spectral context on identical selected trees and data, without changing
+  production traversal. The three-case overlap run writes `10,388` node rows,
+  `10,376` edge rows, `5,194` node-pairwise rows, and `5,188` pairwise edge
+  rows. Internal barycenters increase MP-supported edges from `430` to `1,140`
+  on selected null and from `267` to `969` on signal, creating `710`
+  selected-null support edges and `702` signal support edges. The angular/
+  radial node layer records `315` selected-null and `385` signal internal-only
+  spike creations, no whole-object rotations, and rare single-mode rotations
+  (`4` selected null, `3` signal). This confirms internal distributions as
+  useful tree-filter diagnostics and rejects them as an unconditional rescue
+  rule.
+- Added [[graph-neural-geometry-spectral-artifact-literature-20260617]] and
+  `raw/inbox/graph-neural-geometry-spectral-artifact-literature-20260617.md`.
+  The literature bridge maps the internal-barycenter artifact problem to graph
+  signal processing, graph neural network low-pass/oversmoothing theory,
+  oversquashing/curvature, neural diffusion, and connection-Laplacian vector
+  transport. The resulting method implication is that internal distributions
+  should be modeled as graph low-pass/tree-filter evidence, then conditioned by
+  angle/radius persistence and selected topology/root geometry rather than
+  counted as independent MP rows.
+- Extended [[selected-neighborhood-internal-spectral-flow-panel-20260617]] with
+  a graph Dirichlet-style neighborhood energy table over selected parent-child
+  edges. The new output separates own-variant MP support, strict shared MP
+  support, and internal-only MP support, using angle energy, radius energy, and
+  joint transport energy. The three-case overlap rerun writes `6` energy rows:
+  strict shared transport smooths in one case and degrades in two, while
+  internal-only support remains large and mirrored (`710` selected-null edges
+  versus `702` signal edges). This keeps internal barycenters diagnostic-only
+  and fail-closed for split rescue.
+- Added
+  [[selected-neighborhood-internal-spectral-flow-conditional-energy-20260617]]
+  and `selected_neighborhood_internal_spectral_flow_conditional_energy.py`.
+  The larger seven-case overlap run writes `27,972` node rows, `27,944` edge
+  rows, `13,972` edge-pairwise rows, and `14` neighborhood-energy rows. The
+  conditional postprocess joins those energy rows to selected-root validity and
+  root-tail context, requiring root validity, root-tail support, strict shared
+  MP energy improvement, hard-negative blocking, and paired selected-null
+  cleanliness before labeling any row a rescue candidate. The result is
+  `0/7` signal rescue candidates, `7/7` selected-null internal-energy
+  warnings, and `summary_status =
+  conditional_internal_energy_rescue_fail_closed`. This records a stronger
+  admissibility result, not a denial that old bandwidth/internal mechanisms had
+  empirical diagnostic value.
+- Extended [[selected-neighborhood-pvalue-interpolation-comparison-20260616]]
+  with method-level `tau_s` interval checks, topology-region bandwidth
+  summaries, and region-level `tau_s` admissibility tables. The regenerated
+  expanded candidate run confirms that widening `tau_s` remains blocked at the
+  method level because selected-null rows reopen first. A joined
+  topology-bandwidth rerun shows the old bandwidth evidence is sparse:
+  `48/139,860` distribution rows have old-and-current neighborhood evidence,
+  `116/140` comparison role-regions lack finite `tau_b`, and `24/140` have
+  only sparse finite `tau_b`. The analysis now records the region bandwidth
+  set \(\Theta_R\), the diagnostic interval
+  \(I_s(R;r,\ell)\), and the remaining branch-length distance gap.
+- Closed the branch-length distance gap operationally. The p-value interpolation
+  rerun
+  `selected_neighborhood_pvalue_interpolation_comparison_overlap_expanded_joined_topology_bandwidths_branch_length_metric`
+  records `cached_all_pairs_branch_length_tree_distances` for all `69,860`
+  rows, compresses the median nearest-support distance from `1.0` hop to `0.03`
+  branch-length units, and compresses the median best-case required `tau_s` from
+  `150.826030` to `2.838978`. The promotion conclusion remains fail-closed:
+  the `25%` signal, `5%` selected-null interval is empty (`0.048578` signal
+  lower bound versus `0.003706` selected-null upper bound), and
+  `overlap_extreme_4c` still shows branch-length selected-null false-open risk
+  (`939` selected-null interpolated positives versus `426` signal positives).
+- Added branch-length-aware internal spectral state diagnostics to
+  [[selected-neighborhood-internal-spectral-flow-panel-20260617]]. The spectral
+  estimator now supports `spectral_internal_distribution_mode =
+  branch_length_state`, which uses child precision proportional to descendant
+  support divided by edge length for diagnostic internal rows while preserving
+  leaf independent-row counts. The four-case overlap rerun writes `22,776` node
+  rows and `22,752` edge rows. Branch-length internal state slightly increases
+  internal support over empirical barycenters, but on both selected-null and
+  signal roles (`756` versus `746` selected-null created support edges and
+  `785` versus `750` signal created support edges), so it remains localization
+  evidence rather than standalone rescue evidence.
+- Extended [[root-tree-geometry-hard-negative-replay-20260617]] with a rootless
+  unrooted edge-cut scan. Each directed tree edge is treated as an undirected
+  bipartition, and the best truth ARI is recorded separately from selected-root
+  validity. The regenerated `overlap_extreme_4c` current replay has `0/6`
+  root-validity-supported geometries, `0/6` rootless truth-aligned geometries,
+  and maximum best unrooted edge-cut ARI `0.004682`. The regenerated legacy
+  replay has `0/4` truth-aligned linkage geometries and one Rogers-Tanimoto
+  invalid-root fragmentation warning. This closes the "remove the root" check
+  for this warning case: root removal alone does not expose a valid coarse
+  split under the tested geometric methods.
+- Added [[legacy-c2ef9a69-edge-alpha-comparison-20260617]] and
+  `legacy_c2ef9a69_edge_alpha_comparison_panel.py`. The panel reruns current
+  `kl` and full legacy `kl_legacy_c2ef9a69` on the seven overlap/root-tail
+  cases over edge alpha `0.0001, 0.0003, 0.001, 0.003, 0.01`, writing `140`
+  method rows and `70` pairwise rows. Every alpha has one legacy signal gain
+  and at least one legacy extra selected-null false split; the strictest alpha
+  still leaks `overlap_mod_6c_med`. The comparison therefore rejects edge alpha
+  as the clean explanation for the legacy advantage and keeps legacy as a
+  power-source witness plus selected-null safety warning.
+- Added
+  [[ad-hoc-sibling-gate-selected-null-diffusion-comparison-20260617]]. The
+  user-run selected-null/signal smoke over `binary_2clusters` and
+  `cat_clear_3cat_4c` shows legacy `c2ef9a69` at `0/4` selected-null false
+  splits and signal mean ARI `1.0`, while unguarded coordinate/block gates
+  fragment selected null and signal rows. The follow-up diffusion run on the
+  same null/signal shape shows plain `kl_diffusion` has selected-null false
+  split rate `0.25` and signal mean ARI `0.897059`; adaptive diffusion has
+  signal mean ARI `0.986815` but selected-null false split rate `0.50` and only
+  `2/4` null rows complete. This supports diffusion/bandwidth geometry as a
+  signal-improving component, not a standalone production replacement for the
+  legacy stack.
 
 ## Evidence
 

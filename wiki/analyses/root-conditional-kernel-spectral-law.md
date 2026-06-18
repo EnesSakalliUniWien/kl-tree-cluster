@@ -5,11 +5,14 @@ status: draft
 updated: 2026-06-17
 sources:
   - wiki/sources/legacy-c2ef9a69-root-tail-overlap-comparison-20260617.md
+  - wiki/sources/legacy-c2ef9a69-edge-alpha-comparison-20260617.md
   - wiki/sources/spectral-vs-bandwidth-tradeoff-panel-20260616.md
   - wiki/sources/root-selected-same-geometry-external-support-attempt-20260617.md
   - wiki/sources/root-selected-spectral-tail-law-with-legacy-overlay-20260617.md
   - wiki/sources/root-selected-kernel-spectral-tail-law-20260617.md
   - wiki/sources/root-selected-validity-replay-panel-20260617.md
+  - wiki/sources/root-tree-geometry-hard-negative-replay-20260617.md
+  - wiki/sources/selected-neighborhood-signal-flow-literature-20260617.md
   - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/adaptive_kernel_bandwidths.py
   - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/kernel_interpolation.py
   - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/child_prior_estimation.py
@@ -32,6 +35,13 @@ how far the target is from its stopping-edge ancestry and structural scale.
 
 The root law to learn is therefore a selected conditional spectral-tail law
 with kernel-smoothed admissible support, not a lower p-value threshold.
+
+The literature split is the same as the method split. Selective-inference and
+multiscale-bootstrap work supports the fail-closed rule for selected roots:
+the tested object was chosen by the algorithm. Diffusion maps, tree wavelets,
+and treelets support the neighborhood as a multiscale signal-flow/locality
+operator. They do not justify using the smoothed value as an unconditional
+rescue p-value.
 
 ## Details
 
@@ -166,10 +176,24 @@ are relevant. It should not itself declare a split significant. The split
 decision still needs a selected-root tail law over the eigenvalue excess after
 conditioning on the selected topology and the local population spectrum.
 
+The signal-flow analogy makes the scale interpretation explicit. In diffusion
+maps, \(\tau\) controls local diffusion over a kernel graph and the slow modes
+describe coherent geometry. In tree wavelets and treelets, coarse tree scales
+retain low-frequency structure while fine-scale details carry localized
+artifacts. For KL-TE, \(\tau_b,\tau_t,\tau_s,h_k\) should therefore be read as
+support-locality coordinates for a selected conditional law, not as knobs that
+make an unsupported root significant.
+
 ## Evidence
 
 - The seven-case root-tail legacy comparison shows the old method improves one
   signal row but creates two selected-null false splits.
+- The edge-alpha grid comparison closes the simpler explanation that the
+  legacy gain is just an alpha-setting issue. Across edge alpha
+  `0.0001, 0.0003, 0.001, 0.003, 0.01`, every alpha keeps one legacy signal
+  gain but also has at least one legacy extra selected-null false split. The
+  strictest alpha still leaks selected null on `overlap_mod_6c_med`, so edge
+  alpha alone does not make the old rule admissible.
 - The bandwidth tradeoff panel shows default interpolation is conservative but
   misses direct signal positives, while widening `tau_s` reopens selected-null
   positives faster than it recovers signal.
@@ -196,15 +220,41 @@ conditioning on the selected topology and the local population spectrum.
   targets, but only `overlap_unbal_6c_med` is also tail-calibrated.
   `overlap_extreme_4c` is the opposite case: tail-calibrated inside the
   observed root event, but root-validity replay fails.
+- The tree-geometry hard-negative replay strengthens that interpretation for
+  `overlap_extreme_4c`: across linkage/Hamming, linkage/Jaccard,
+  linkage/Rogers-Tanimoto, and neighbor-joining variants, `0/6` geometries
+  become root-validity supported and `0/6` leak. The maximum root-stability
+  mean ARI is only `0.012785`, far below the `0.24` guard threshold. The same
+  replay now removes the privileged root direction and scans all undirected edge
+  bipartitions in the selected tree. That rootless geometry check finds `0/6`
+  current geometries and `0/4` legacy linkage geometries with a truth-aligned
+  edge cut; the maximum edge-cut ARI is only `0.004682`. Thus alternative tree
+  construction and root removal do not turn this case into a valid root-tail
+  rescue; it remains a tree-geometry hard negative.
+- The old commit replay on the same hard-negative benchmark supports the same
+  conclusion from the opposite direction. The copied legacy method only
+  supports linkage trees; on the four supported linkage geometries it either
+  under-splits to one cluster or fragments on Rogers-Tanimoto average linkage
+  with `5` found clusters while the root partition truth ARI remains
+  `0.000663`. This is old-method fragmentation without a selected-root
+  validity guard, not evidence that bandwidth interpolation should rescue the
+  root.
+- [[selected-neighborhood-signal-flow-literature-20260617]] records the
+  literature bridge: selected clustering needs conditional inference, while
+  diffusion/tree multiscale methods justify neighborhood smoothing only as
+  locality and support evidence.
 
 ## Links
 
 - [[legacy-c2ef9a69-root-tail-overlap-comparison-20260617]]
+- [[legacy-c2ef9a69-edge-alpha-comparison-20260617]]
 - [[spectral-vs-bandwidth-tradeoff-panel-20260616]]
 - [[root-selected-same-geometry-external-support-attempt-20260617]]
 - [[root-selected-spectral-tail-law-with-legacy-overlay-20260617]]
 - [[root-selected-kernel-spectral-tail-law-20260617]]
 - [[root-selected-validity-replay-panel-20260617]]
+- [[root-tree-geometry-hard-negative-replay-20260617]]
+- [[selected-neighborhood-signal-flow-literature-20260617]]
 - [[selected-neighborhood-measurability-law]]
 
 ## Open Questions
