@@ -73,6 +73,7 @@ ROW_COLUMNS = (
     "replicate",
     "node_id",
     "parent_id",
+    "branch_length_to_parent",
     "decision_class",
     "traversal_decision",
     "direct_sibling_p_value",
@@ -94,6 +95,8 @@ ROW_COLUMNS = (
     "signal_attenuation",
     "nearest_support_distance",
     "nearest_signal_distance",
+    "distance_to_stopping_edge",
+    "tau_b",
     "tau_t",
     "tau_s",
     "h_k",
@@ -160,6 +163,97 @@ TAU_S_SENSITIVITY_COLUMNS = (
     "best_case_significant_count",
     "best_case_significant_fraction",
     "sensitivity_label",
+)
+
+TAU_S_RANGE_COLUMNS = (
+    "schema_version",
+    "study_role",
+    "method_id",
+    "target_signal_fraction",
+    "max_selected_null_fraction",
+    "signal_direct_significant_count",
+    "selected_null_direct_significant_count",
+    "finite_signal_tau_s_count",
+    "finite_selected_null_tau_s_count",
+    "signal_tau_s_lower_bound",
+    "selected_null_tau_s_upper_bound",
+    "admissible_tau_s_width",
+    "admissible_tau_s_midpoint",
+    "tau_s_range_status",
+)
+
+DEFAULT_TAU_S_RANGE_SIGNAL_FRACTIONS = (0.25, 0.50, 0.75)
+DEFAULT_TAU_S_RANGE_SELECTED_NULL_FRACTIONS = (0.01, 0.05, 0.10, 0.20)
+
+TOPOLOGY_REGION_COLUMNS = ("case_id", "method_id", "replicate")
+ROLE_TOPOLOGY_REGION_COLUMNS = ("case_id", "data_role", "method_id", "replicate")
+
+REGION_BANDWIDTH_COLUMNS = (
+    "schema_version",
+    "study_role",
+    "case_id",
+    "data_role",
+    "method_id",
+    "replicate",
+    "row_count",
+    "direct_significant_count",
+    "interpolated_computed_count",
+    "interpolated_significant_count",
+    "tau_b_finite_count",
+    "tau_b_q10",
+    "tau_b_median",
+    "tau_b_q90",
+    "tau_t_finite_count",
+    "tau_t_q10",
+    "tau_t_median",
+    "tau_t_q90",
+    "tau_s_finite_count",
+    "tau_s_q10",
+    "tau_s_median",
+    "tau_s_q90",
+    "h_k_finite_count",
+    "h_k_q10",
+    "h_k_median",
+    "h_k_q90",
+    "distance_to_stopping_edge_finite_count",
+    "distance_to_stopping_edge_q10",
+    "distance_to_stopping_edge_median",
+    "distance_to_stopping_edge_q90",
+    "best_case_required_tau_s_finite_count",
+    "best_case_required_tau_s_q10",
+    "best_case_required_tau_s_median",
+    "best_case_required_tau_s_q90",
+    "effective_support_median",
+    "nearest_support_distance_median",
+    "nearest_signal_distance_median",
+    "region_bandwidth_status",
+)
+
+REGION_TAU_S_RANGE_COLUMNS = (
+    "schema_version",
+    "study_role",
+    "case_id",
+    "method_id",
+    "replicate",
+    "target_signal_fraction",
+    "max_selected_null_fraction",
+    "signal_direct_significant_count",
+    "selected_null_direct_significant_count",
+    "finite_signal_tau_s_count",
+    "finite_selected_null_tau_s_count",
+    "signal_tau_s_lower_bound",
+    "selected_null_tau_s_upper_bound",
+    "admissible_tau_s_width",
+    "admissible_tau_s_midpoint",
+    "signal_observed_tau_b_median",
+    "selected_null_observed_tau_b_median",
+    "signal_observed_tau_t_median",
+    "selected_null_observed_tau_t_median",
+    "signal_observed_tau_s_median",
+    "selected_null_observed_tau_s_median",
+    "signal_observed_h_k_median",
+    "selected_null_observed_h_k_median",
+    "tau_s_range_status",
 )
 
 
@@ -346,6 +440,10 @@ def _is_computed_status(status: str) -> bool:
         "interpolated_p_like_observed_diagnostic_only",
         "interpolated_p_like_no_signal_attenuation_diagnostic_only",
     }
+
+
+def _tree_distances_available(status: str) -> bool:
+    return str(status).startswith("cached_all_pairs_")
 
 
 def _safe_neg_log10(value: float) -> float:
@@ -635,7 +733,7 @@ def compute_holdout_interpolated_p_like(
     else:
         h_k = _group_h_k(group, support_index, fallback=float(fallback_h_k))
 
-    if cache.status != "cached_all_pairs_tree_distances":
+    if not cache.distances_available:
         return HoldoutInterpolatedPValue(
             p_like=math.nan,
             support_weight=0.0,
@@ -825,7 +923,7 @@ def compute_holdout_interpolated_p_like_fast(
     support_positions = np.flatnonzero(support_mask)
     signal_positions = np.flatnonzero(signal_mask)
 
-    if context.cache_status != "cached_all_pairs_tree_distances":
+    if not _tree_distances_available(context.cache_status):
         return HoldoutInterpolatedPValue(
             p_like=math.nan,
             support_weight=0.0,
@@ -1126,6 +1224,9 @@ def _build_group_rows(
                 "replicate": row.get("replicate", math.nan),
                 "node_id": _string_value(row, "node_id"),
                 "parent_id": _string_value(row, "parent_id"),
+                "branch_length_to_parent": _finite_float(
+                    row.get("branch_length_to_parent", math.nan)
+                ),
                 "decision_class": _string_value(row, "decision_class"),
                 "traversal_decision": _string_value(row, "traversal_decision"),
                 "direct_sibling_p_value": direct_p,
@@ -1165,6 +1266,12 @@ def _build_group_rows(
                 "signal_attenuation": interpolation.signal_attenuation,
                 "nearest_support_distance": interpolation.nearest_support_distance,
                 "nearest_signal_distance": interpolation.nearest_signal_distance,
+                "distance_to_stopping_edge": _finite_float(
+                    row.get("distance_to_stopping_edge", math.nan)
+                ),
+                "tau_b": _finite_float(
+                    row.get("topology_neighborhood_tau_b", math.nan)
+                ),
                 "tau_t": interpolation.tau_t,
                 "tau_s": interpolation.tau_s,
                 "h_k": interpolation.h_k,
@@ -1393,6 +1500,375 @@ def summarize_tau_s_sensitivity(
     return pd.DataFrame.from_records(records, columns=TAU_S_SENSITIVITY_COLUMNS)
 
 
+def _finite_required_tau_s(group: pd.DataFrame) -> pd.Series:
+    required = pd.to_numeric(
+        group["best_case_required_tau_s_for_alpha"],
+        errors="coerce",
+    )
+    return required[np.isfinite(required)]
+
+
+def _tau_s_range_status(
+    *,
+    signal_count: int,
+    finite_signal_count: int,
+    selected_null_count: int,
+    finite_selected_null_count: int,
+    lower_bound: float,
+    upper_bound: float,
+) -> str:
+    if signal_count <= 0:
+        return "no_direct_signal_rows"
+    if finite_signal_count <= 0 or not math.isfinite(lower_bound):
+        return "no_finite_signal_tau_s_lower_bound"
+    if selected_null_count <= 0:
+        return "tau_s_range_open_ended_no_selected_null_direct_rows"
+    if finite_selected_null_count <= 0 or not math.isfinite(upper_bound):
+        return "no_finite_selected_null_tau_s_upper_bound"
+    if lower_bound <= upper_bound:
+        return "tau_s_range_admissible_diagnostic"
+    return "tau_s_range_empty_selected_null_reopens_first"
+
+
+def summarize_tau_s_range(
+    rows: pd.DataFrame,
+    *,
+    target_signal_fractions: tuple[float, ...] = (
+        DEFAULT_TAU_S_RANGE_SIGNAL_FRACTIONS
+    ),
+    max_selected_null_fractions: tuple[float, ...] = (
+        DEFAULT_TAU_S_RANGE_SELECTED_NULL_FRACTIONS
+    ),
+) -> pd.DataFrame:
+    """Estimate admissible tau_s intervals from optimistic row thresholds.
+
+    For a target signal recovery fraction r, the lower endpoint is the
+    r-quantile of required signal tau_s values. For a selected-null leak budget
+    ell, the upper endpoint is the ell-quantile of required selected-null
+    tau_s values. An interval exists only when lower <= upper.
+    """
+    if rows.empty:
+        return pd.DataFrame(columns=TAU_S_RANGE_COLUMNS)
+    direct = rows.loc[rows["direct_significant"].astype(bool)].copy()
+    if direct.empty:
+        return pd.DataFrame(columns=TAU_S_RANGE_COLUMNS)
+
+    records: list[dict[str, object]] = []
+    for method_id, method_group in direct.groupby("method_id", dropna=False):
+        signal = method_group.loc[method_group["data_role"].astype(str).eq("signal")]
+        selected_null = method_group.loc[
+            method_group["data_role"].astype(str).eq("selected_null")
+        ]
+        signal_required = _finite_required_tau_s(signal)
+        selected_null_required = _finite_required_tau_s(selected_null)
+        signal_count = int(len(signal))
+        selected_null_count = int(len(selected_null))
+        finite_signal_count = int(len(signal_required))
+        finite_selected_null_count = int(len(selected_null_required))
+
+        for signal_fraction in target_signal_fractions:
+            target_fraction = float(signal_fraction)
+            lower_bound = (
+                float(signal_required.quantile(target_fraction))
+                if finite_signal_count > 0
+                else math.nan
+            )
+            for selected_null_fraction in max_selected_null_fractions:
+                leak_fraction = float(selected_null_fraction)
+                upper_bound = (
+                    float(selected_null_required.quantile(leak_fraction))
+                    if finite_selected_null_count > 0
+                    else math.inf
+                )
+                status = _tau_s_range_status(
+                    signal_count=signal_count,
+                    finite_signal_count=finite_signal_count,
+                    selected_null_count=selected_null_count,
+                    finite_selected_null_count=finite_selected_null_count,
+                    lower_bound=lower_bound,
+                    upper_bound=upper_bound,
+                )
+                width = (
+                    float(upper_bound - lower_bound)
+                    if math.isfinite(lower_bound) and math.isfinite(upper_bound)
+                    else math.inf
+                    if math.isfinite(lower_bound) and math.isinf(upper_bound)
+                    else math.nan
+                )
+                midpoint = (
+                    float((lower_bound + upper_bound) / 2.0)
+                    if math.isfinite(lower_bound) and math.isfinite(upper_bound)
+                    else math.nan
+                )
+                records.append(
+                    {
+                        "schema_version": SCHEMA_VERSION,
+                        "study_role": STUDY_ROLE,
+                        "method_id": method_id,
+                        "target_signal_fraction": target_fraction,
+                        "max_selected_null_fraction": leak_fraction,
+                        "signal_direct_significant_count": signal_count,
+                        "selected_null_direct_significant_count": selected_null_count,
+                        "finite_signal_tau_s_count": finite_signal_count,
+                        "finite_selected_null_tau_s_count": (
+                            finite_selected_null_count
+                        ),
+                        "signal_tau_s_lower_bound": lower_bound,
+                        "selected_null_tau_s_upper_bound": upper_bound,
+                        "admissible_tau_s_width": width,
+                        "admissible_tau_s_midpoint": midpoint,
+                        "tau_s_range_status": status,
+                    }
+                )
+    return pd.DataFrame.from_records(records, columns=TAU_S_RANGE_COLUMNS)
+
+
+def _finite_numeric_series(values: pd.Series) -> pd.Series:
+    numeric = pd.to_numeric(values, errors="coerce")
+    return numeric[np.isfinite(numeric)]
+
+
+def _finite_count(values: pd.Series) -> int:
+    return int(len(_finite_numeric_series(values)))
+
+
+def _safe_quantile_or_nan(values: pd.Series, quantile: float) -> float:
+    finite = _finite_numeric_series(values)
+    if finite.empty:
+        return math.nan
+    return float(finite.quantile(float(quantile)))
+
+
+def _observed_role_median(region: pd.DataFrame, role: str, column: str) -> float:
+    role_rows = region.loc[region["data_role"].astype(str).eq(role)]
+    if role_rows.empty or column not in role_rows:
+        return math.nan
+    return _safe_median(role_rows[column])
+
+
+def _bandwidth_quantile_fields(group: pd.DataFrame, column: str, prefix: str) -> dict[str, object]:
+    if column not in group:
+        empty = pd.Series(dtype=float)
+        return {
+            f"{prefix}_finite_count": 0,
+            f"{prefix}_q10": _safe_quantile_or_nan(empty, 0.10),
+            f"{prefix}_median": _safe_quantile_or_nan(empty, 0.50),
+            f"{prefix}_q90": _safe_quantile_or_nan(empty, 0.90),
+        }
+    values = group[column]
+    return {
+        f"{prefix}_finite_count": _finite_count(values),
+        f"{prefix}_q10": _safe_quantile_or_nan(values, 0.10),
+        f"{prefix}_median": _safe_quantile_or_nan(values, 0.50),
+        f"{prefix}_q90": _safe_quantile_or_nan(values, 0.90),
+    }
+
+
+def _region_bandwidth_status(group: pd.DataFrame) -> str:
+    row_count = int(len(group))
+    tau_b_count = _finite_count(group["tau_b"]) if "tau_b" in group else 0
+    tau_t_count = _finite_count(group["tau_t"]) if "tau_t" in group else 0
+    tau_s_count = _finite_count(group["tau_s"]) if "tau_s" in group else 0
+    h_k_count = _finite_count(group["h_k"]) if "h_k" in group else 0
+    if (
+        row_count > 0
+        and tau_b_count == row_count
+        and tau_t_count == row_count
+        and tau_s_count == row_count
+        and h_k_count == row_count
+    ):
+        return "observed_full_bandwidth_vector_diagnostic"
+    if tau_b_count and tau_t_count and tau_s_count and h_k_count:
+        return "observed_sparse_tau_b_bandwidth_vector_diagnostic"
+    if tau_t_count and tau_s_count and h_k_count:
+        return "observed_partial_bandwidth_vector_without_tau_b"
+    return "bandwidth_vector_incomplete"
+
+
+def summarize_region_bandwidths(rows: pd.DataFrame) -> pd.DataFrame:
+    """Summarize observed bandwidth coordinates by selected topology region.
+
+    A region here is a single selected tree for one benchmark case, data role,
+    method, and replicate. This is role-specific because the signal and
+    selected-null trees are generated separately.
+    """
+    if rows.empty:
+        return pd.DataFrame(columns=REGION_BANDWIDTH_COLUMNS)
+
+    records: list[dict[str, object]] = []
+    for keys, group in rows.groupby(
+        list(ROLE_TOPOLOGY_REGION_COLUMNS),
+        dropna=False,
+        sort=True,
+    ):
+        computed = group["interpolation_status"].map(_is_computed_status)
+        record: dict[str, object] = {
+            "schema_version": SCHEMA_VERSION,
+            "study_role": STUDY_ROLE,
+            "case_id": keys[0],
+            "data_role": keys[1],
+            "method_id": keys[2],
+            "replicate": keys[3],
+            "row_count": int(len(group)),
+            "direct_significant_count": int(group["direct_significant"].sum()),
+            "interpolated_computed_count": int(computed.sum()),
+            "interpolated_significant_count": int(group["interpolated_significant"].sum()),
+        }
+        for column, prefix in (
+            ("tau_b", "tau_b"),
+            ("tau_t", "tau_t"),
+            ("tau_s", "tau_s"),
+            ("h_k", "h_k"),
+            ("distance_to_stopping_edge", "distance_to_stopping_edge"),
+            ("best_case_required_tau_s_for_alpha", "best_case_required_tau_s"),
+        ):
+            record.update(_bandwidth_quantile_fields(group, column, prefix))
+        record.update(
+            {
+                "effective_support_median": _safe_median(group["effective_support"]),
+                "nearest_support_distance_median": _safe_median(
+                    group["nearest_support_distance"]
+                ),
+                "nearest_signal_distance_median": _safe_median(
+                    group["nearest_signal_distance"]
+                ),
+                "region_bandwidth_status": _region_bandwidth_status(group),
+            }
+        )
+        records.append(record)
+    return pd.DataFrame.from_records(records, columns=REGION_BANDWIDTH_COLUMNS)
+
+
+def summarize_region_tau_s_ranges(
+    rows: pd.DataFrame,
+    *,
+    target_signal_fractions: tuple[float, ...] = (
+        DEFAULT_TAU_S_RANGE_SIGNAL_FRACTIONS
+    ),
+    max_selected_null_fractions: tuple[float, ...] = (
+        DEFAULT_TAU_S_RANGE_SELECTED_NULL_FRACTIONS
+    ),
+) -> pd.DataFrame:
+    """Estimate tau_s intervals separately for each benchmark topology region."""
+    if rows.empty:
+        return pd.DataFrame(columns=REGION_TAU_S_RANGE_COLUMNS)
+    direct = rows.loc[rows["direct_significant"].astype(bool)].copy()
+    if direct.empty:
+        return pd.DataFrame(columns=REGION_TAU_S_RANGE_COLUMNS)
+
+    all_region_groups = {
+        tuple(keys): group
+        for keys, group in rows.groupby(
+            list(TOPOLOGY_REGION_COLUMNS),
+            dropna=False,
+            sort=True,
+        )
+    }
+
+    records: list[dict[str, object]] = []
+    for keys, region_direct in direct.groupby(
+        list(TOPOLOGY_REGION_COLUMNS),
+        dropna=False,
+        sort=True,
+    ):
+        region_key = tuple(keys)
+        region = all_region_groups.get(region_key, region_direct)
+        signal = region_direct.loc[region_direct["data_role"].astype(str).eq("signal")]
+        selected_null = region_direct.loc[
+            region_direct["data_role"].astype(str).eq("selected_null")
+        ]
+        signal_required = _finite_required_tau_s(signal)
+        selected_null_required = _finite_required_tau_s(selected_null)
+        signal_count = int(len(signal))
+        selected_null_count = int(len(selected_null))
+        finite_signal_count = int(len(signal_required))
+        finite_selected_null_count = int(len(selected_null_required))
+
+        observed_medians = {
+            "signal_observed_tau_b_median": _observed_role_median(
+                region, "signal", "tau_b"
+            ),
+            "selected_null_observed_tau_b_median": _observed_role_median(
+                region, "selected_null", "tau_b"
+            ),
+            "signal_observed_tau_t_median": _observed_role_median(
+                region, "signal", "tau_t"
+            ),
+            "selected_null_observed_tau_t_median": _observed_role_median(
+                region, "selected_null", "tau_t"
+            ),
+            "signal_observed_tau_s_median": _observed_role_median(
+                region, "signal", "tau_s"
+            ),
+            "selected_null_observed_tau_s_median": _observed_role_median(
+                region, "selected_null", "tau_s"
+            ),
+            "signal_observed_h_k_median": _observed_role_median(
+                region, "signal", "h_k"
+            ),
+            "selected_null_observed_h_k_median": _observed_role_median(
+                region, "selected_null", "h_k"
+            ),
+        }
+
+        for signal_fraction in target_signal_fractions:
+            target_fraction = float(signal_fraction)
+            lower_bound = (
+                float(signal_required.quantile(target_fraction))
+                if finite_signal_count > 0
+                else math.nan
+            )
+            for selected_null_fraction in max_selected_null_fractions:
+                leak_fraction = float(selected_null_fraction)
+                upper_bound = (
+                    float(selected_null_required.quantile(leak_fraction))
+                    if finite_selected_null_count > 0
+                    else math.inf
+                )
+                status = _tau_s_range_status(
+                    signal_count=signal_count,
+                    finite_signal_count=finite_signal_count,
+                    selected_null_count=selected_null_count,
+                    finite_selected_null_count=finite_selected_null_count,
+                    lower_bound=lower_bound,
+                    upper_bound=upper_bound,
+                )
+                width = (
+                    float(upper_bound - lower_bound)
+                    if math.isfinite(lower_bound) and math.isfinite(upper_bound)
+                    else math.inf
+                    if math.isfinite(lower_bound) and math.isinf(upper_bound)
+                    else math.nan
+                )
+                midpoint = (
+                    float((lower_bound + upper_bound) / 2.0)
+                    if math.isfinite(lower_bound) and math.isfinite(upper_bound)
+                    else math.nan
+                )
+                records.append(
+                    {
+                        "schema_version": SCHEMA_VERSION,
+                        "study_role": STUDY_ROLE,
+                        "case_id": region_key[0],
+                        "method_id": region_key[1],
+                        "replicate": region_key[2],
+                        "target_signal_fraction": target_fraction,
+                        "max_selected_null_fraction": leak_fraction,
+                        "signal_direct_significant_count": signal_count,
+                        "selected_null_direct_significant_count": selected_null_count,
+                        "finite_signal_tau_s_count": finite_signal_count,
+                        "finite_selected_null_tau_s_count": finite_selected_null_count,
+                        "signal_tau_s_lower_bound": lower_bound,
+                        "selected_null_tau_s_upper_bound": upper_bound,
+                        "admissible_tau_s_width": width,
+                        "admissible_tau_s_midpoint": midpoint,
+                        **observed_medians,
+                        "tau_s_range_status": status,
+                    }
+                )
+    return pd.DataFrame.from_records(records, columns=REGION_TAU_S_RANGE_COLUMNS)
+
+
 def run_pvalue_interpolation_comparison(
     *,
     rows_path: Path,
@@ -1419,6 +1895,9 @@ def run_pvalue_interpolation_comparison(
     summary = summarize_pvalue_interpolation_comparison(comparison_rows)
     case_summary = summarize_pvalue_interpolation_cases(comparison_rows)
     tau_s_sensitivity = summarize_tau_s_sensitivity(comparison_rows)
+    tau_s_range = summarize_tau_s_range(comparison_rows)
+    region_bandwidths = summarize_region_bandwidths(comparison_rows)
+    region_tau_s_ranges = summarize_region_tau_s_ranges(comparison_rows)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     rows_out = output_dir / "selected_neighborhood_pvalue_interpolation_rows.csv"
@@ -1429,11 +1908,25 @@ def run_pvalue_interpolation_comparison(
     tau_s_sensitivity_out = (
         output_dir / "selected_neighborhood_pvalue_interpolation_tau_s_sensitivity.csv"
     )
+    tau_s_range_out = (
+        output_dir / "selected_neighborhood_pvalue_interpolation_tau_s_range.csv"
+    )
+    region_bandwidths_out = (
+        output_dir
+        / "selected_neighborhood_pvalue_interpolation_region_bandwidths.csv"
+    )
+    region_tau_s_ranges_out = (
+        output_dir
+        / "selected_neighborhood_pvalue_interpolation_region_tau_s_range.csv"
+    )
     manifest_out = output_dir / "manifest.json"
     comparison_rows.to_csv(rows_out, index=False)
     summary.to_csv(summary_out, index=False)
     case_summary.to_csv(case_summary_out, index=False)
     tau_s_sensitivity.to_csv(tau_s_sensitivity_out, index=False)
+    tau_s_range.to_csv(tau_s_range_out, index=False)
+    region_bandwidths.to_csv(region_bandwidths_out, index=False)
+    region_tau_s_ranges.to_csv(region_tau_s_ranges_out, index=False)
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "study_role": STUDY_ROLE,
@@ -1454,6 +1947,9 @@ def run_pvalue_interpolation_comparison(
             "summary": summary_out,
             "case_summary": case_summary_out,
             "tau_s_sensitivity": tau_s_sensitivity_out,
+            "tau_s_range": tau_s_range_out,
+            "region_bandwidths": region_bandwidths_out,
+            "region_tau_s_range": region_tau_s_ranges_out,
         },
     }
     manifest_out.write_text(json.dumps(manifest, indent=2, default=_json_default) + "\n")
@@ -1462,6 +1958,9 @@ def run_pvalue_interpolation_comparison(
         "summary": summary_out,
         "case_summary": case_summary_out,
         "tau_s_sensitivity": tau_s_sensitivity_out,
+        "tau_s_range": tau_s_range_out,
+        "region_bandwidths": region_bandwidths_out,
+        "region_tau_s_range": region_tau_s_ranges_out,
         "manifest": manifest_out,
     }
 
