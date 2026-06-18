@@ -157,6 +157,15 @@ def run_clustering_result(
                 spectral_include_internal_barycenters=bool(
                     params.get("spectral_include_internal_barycenters", False)
                 ),
+                spectral_internal_distribution_mode=str(
+                    params.get(
+                        "spectral_internal_distribution_mode",
+                        "empirical_barycenter",
+                    )
+                ),
+                spectral_mp_row_count_mode=str(
+                    params.get("spectral_mp_row_count_mode", "leaf_effective_rows")
+                ),
                 sibling_gate_profile=params.get("sibling_gate_profile"),
                 sibling_gate_method=str(
                     params.get("sibling_gate_method", "projected_wald_inflation")
@@ -174,6 +183,12 @@ def run_clustering_result(
                     params.get("root_stability_feature_fraction", 0.8)
                 ),
                 root_stability_seed=int(params.get("root_stability_seed", 0)),
+                root_stability_tree_distance_metric=str(
+                    params.get("root_stability_tree_distance_metric", "hamming")
+                ),
+                root_stability_tree_linkage_method=params.get(
+                    "root_stability_tree_linkage_method"
+                ),
                 root_selective_permutation_guard_replicates=int(
                     params.get("root_selective_permutation_guard_replicates", 0)
                 ),
@@ -185,6 +200,15 @@ def run_clustering_result(
                 ),
                 root_selective_permutation_guard_scope=str(
                     params.get("root_selective_permutation_guard_scope", "root")
+                ),
+                root_selective_permutation_guard_tree_distance_metric=str(
+                    params.get(
+                        "root_selective_permutation_guard_tree_distance_metric",
+                        "hamming",
+                    )
+                ),
+                root_selective_permutation_guard_tree_linkage_method=params.get(
+                    "root_selective_permutation_guard_tree_linkage_method"
                 ),
                 spectral_transport_passthrough_guard=bool(
                     params.get("spectral_transport_passthrough_guard", False)
@@ -209,6 +233,9 @@ def run_clustering_result(
                         "spectral_transport_unmatched_mode_penalty",
                         DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
                     )
+                ),
+                neighborhood_bandwidth_profile=params.get(
+                    "neighborhood_bandwidth_profile"
                 ),
                 passthrough=bool(params.get("passthrough", config.PASSTHROUGH)),
             )

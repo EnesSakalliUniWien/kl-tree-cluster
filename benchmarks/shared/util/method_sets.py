@@ -12,6 +12,10 @@ KL_DISTANCE_TREE_METHODS = {
     "kl_spectral_transport_passthrough",
     "kl_legacy_internal_spectral_diagnostic",
     "kl_legacy_c2ef9a69",
+    "kl_internal_filter_v1",
+    "kl_internal_filter_branch_length_v1",
+    "kl_bandwidth_context_v1",
+    "kl_rescued_legacy_v1",
     "kl_neighbor_joining",
 }
 

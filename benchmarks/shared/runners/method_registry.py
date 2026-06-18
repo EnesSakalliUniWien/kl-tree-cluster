@@ -109,6 +109,65 @@ METHOD_SPECS: dict[str, MethodSpec] = {
                 "tree_distance_metric": "hamming",
                 "tree_linkage_method": "average",
                 "spectral_include_internal_barycenters": True,
+                "spectral_mp_row_count_mode": "legacy_stacked_rows",
+            },
+        ],
+    ),
+    "kl_internal_filter_v1": MethodSpec(
+        name="KL Internal Spectral Filter",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "spectral_include_internal_barycenters": True,
+                "spectral_internal_distribution_mode": "empirical_barycenter",
+                "spectral_mp_row_count_mode": "leaf_effective_rows",
+            },
+        ],
+    ),
+    "kl_internal_filter_branch_length_v1": MethodSpec(
+        name="KL Branch-Length Internal Spectral Filter",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "spectral_include_internal_barycenters": True,
+                "spectral_internal_distribution_mode": "branch_length_state",
+                "spectral_mp_row_count_mode": "leaf_effective_rows",
+            },
+        ],
+    ),
+    "kl_bandwidth_context_v1": MethodSpec(
+        name="KL Regional Bandwidth Context",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "neighborhood_bandwidth_profile": (
+                    "regional_tau_branch_length_support_only_v1"
+                ),
+            },
+        ],
+    ),
+    "kl_rescued_legacy_v1": MethodSpec(
+        name="KL Guarded Legacy-Stabilized Candidate",
+        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "spectral_include_internal_barycenters": True,
+                "spectral_internal_distribution_mode": "branch_length_state",
+                "spectral_mp_row_count_mode": "leaf_effective_rows",
+                "sibling_gate_profile": (
+                    "fixed_coordinate_spectral_transport_passthrough_v1"
+                ),
+                "neighborhood_bandwidth_profile": (
+                    "regional_tau_branch_length_support_only_v1"
+                ),
             },
         ],
     ),

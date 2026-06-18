@@ -24,6 +24,13 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import 
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+    INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+)
+from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.neighborhood_bandwidth import (
+    build_branch_length_distance_cache,
+)
 from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 from kl_clustering_analysis.tree.phylogenetic import (
@@ -56,6 +63,8 @@ def _run_kl_on_distance(
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     spectral_include_internal_barycenters: bool = False,
+    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     sibling_gate_profile: str | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -63,10 +72,14 @@ def _run_kl_on_distance(
     root_stability_subsample_replicates: int = 0,
     root_stability_feature_fraction: float = 0.8,
     root_stability_seed: int = 0,
+    root_stability_tree_distance_metric: str = "hamming",
+    root_stability_tree_linkage_method: str | None = None,
     root_selective_permutation_guard_replicates: int = 0,
     root_selective_permutation_guard_seed: int = 0,
     root_selective_permutation_guard_alpha: float | None = None,
     root_selective_permutation_guard_scope: str = "root",
+    root_selective_permutation_guard_tree_distance_metric: str = "hamming",
+    root_selective_permutation_guard_tree_linkage_method: str | None = None,
     spectral_transport_passthrough_guard: bool = False,
     spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
     spectral_transport_require_mp_blocks: bool = True,
@@ -76,6 +89,7 @@ def _run_kl_on_distance(
     spectral_transport_unmatched_mode_penalty: float = (
         DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
     ),
+    neighborhood_bandwidth_profile: str | None = None,
     passthrough: bool = config.PASSTHROUGH,
     extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
@@ -112,6 +126,28 @@ def _run_kl_on_distance(
     else:
         raise ValueError(f"Unsupported KL tree_builder: {tree_builder!r}.")
     stage_timings["tree_build_sec"] = elapsed_since(tree_build_start_sec)
+    neighborhood_bandwidth_metadata: dict[str, object] = {}
+    if neighborhood_bandwidth_profile is not None:
+        distance_cache = build_branch_length_distance_cache(tree)
+        neighborhood_bandwidth_metadata = {
+            "neighborhood_bandwidth_profile": str(neighborhood_bandwidth_profile),
+            "neighborhood_distance_status": distance_cache.status,
+            "neighborhood_distance_fallback_edge_length": (
+                distance_cache.fallback_edge_length
+            ),
+            "neighborhood_distance_pair_count": len(distance_cache.distances),
+            "neighborhood_bandwidth_action": "support_regularizer_only_no_pvalue_rescue",
+        }
+    root_stability_replay_linkage = (
+        tree_linkage_method
+        if root_stability_tree_linkage_method is None
+        else str(root_stability_tree_linkage_method)
+    )
+    root_selective_replay_linkage = (
+        tree_linkage_method
+        if root_selective_permutation_guard_tree_linkage_method is None
+        else str(root_selective_permutation_guard_tree_linkage_method)
+    )
 
     populate_start_sec = perf_counter()
     tree.populate_node_divergences(
@@ -131,6 +167,8 @@ def _run_kl_on_distance(
         spectral_include_internal_barycenters=(
             spectral_include_internal_barycenters
         ),
+        spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
+        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -138,16 +176,20 @@ def _run_kl_on_distance(
         root_stability_subsample_replicates=root_stability_subsample_replicates,
         root_stability_feature_fraction=root_stability_feature_fraction,
         root_stability_seed=root_stability_seed,
-        root_stability_tree_distance_metric="hamming",
-        root_stability_tree_linkage_method=tree_linkage_method,
+        root_stability_tree_distance_metric=str(root_stability_tree_distance_metric),
+        root_stability_tree_linkage_method=root_stability_replay_linkage,
         root_selective_permutation_guard_replicates=(
             root_selective_permutation_guard_replicates
         ),
         root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
         root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
         root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
-        root_selective_permutation_guard_tree_distance_metric="hamming",
-        root_selective_permutation_guard_tree_linkage_method=tree_linkage_method,
+        root_selective_permutation_guard_tree_distance_metric=str(
+            root_selective_permutation_guard_tree_distance_metric
+        ),
+        root_selective_permutation_guard_tree_linkage_method=(
+            root_selective_replay_linkage
+        ),
         spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
         spectral_transport_max_cost=spectral_transport_max_cost,
         spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
@@ -168,6 +210,8 @@ def _run_kl_on_distance(
         spectral_include_internal_barycenters=(
             spectral_include_internal_barycenters
         ),
+        spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
+        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -175,16 +219,20 @@ def _run_kl_on_distance(
         root_stability_subsample_replicates=root_stability_subsample_replicates,
         root_stability_feature_fraction=root_stability_feature_fraction,
         root_stability_seed=root_stability_seed,
-        root_stability_tree_distance_metric="hamming",
-        root_stability_tree_linkage_method=tree_linkage_method,
+        root_stability_tree_distance_metric=str(root_stability_tree_distance_metric),
+        root_stability_tree_linkage_method=root_stability_replay_linkage,
         root_selective_permutation_guard_replicates=(
             root_selective_permutation_guard_replicates
         ),
         root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
         root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
         root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
-        root_selective_permutation_guard_tree_distance_metric="hamming",
-        root_selective_permutation_guard_tree_linkage_method=tree_linkage_method,
+        root_selective_permutation_guard_tree_distance_metric=str(
+            root_selective_permutation_guard_tree_distance_metric
+        ),
+        root_selective_permutation_guard_tree_linkage_method=(
+            root_selective_replay_linkage
+        ),
         spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
         spectral_transport_max_cost=spectral_transport_max_cost,
         spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
@@ -219,6 +267,12 @@ def _run_kl_on_distance(
         "spectral_minimum_dimension": int(spectral_minimum_dimension),
         "spectral_include_internal_barycenters": bool(
             spectral_include_internal_barycenters
+        ),
+        "spectral_internal_distribution_mode": str(
+            resolved_gate_config.spectral_internal_distribution_mode
+        ),
+        "spectral_mp_row_count_mode": str(
+            resolved_gate_config.spectral_mp_row_count_mode
         ),
         "passthrough": bool(passthrough),
         "sibling_gate_profile": resolved_gate_config.sibling_gate_profile_id,
@@ -277,6 +331,7 @@ def _run_kl_on_distance(
         "spectral_transport_unmatched_mode_penalty": float(
             resolved_gate_config.spectral_transport_unmatched_mode_penalty
         ),
+        **neighborhood_bandwidth_metadata,
     }
     if extra:
         duplicate_extra_keys = sorted(set(result_extra).intersection(extra))
@@ -313,6 +368,8 @@ def _run_kl_method(
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     spectral_include_internal_barycenters: bool = False,
+    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     sibling_gate_profile: str | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -320,10 +377,14 @@ def _run_kl_method(
     root_stability_subsample_replicates: int = 0,
     root_stability_feature_fraction: float = 0.8,
     root_stability_seed: int = 0,
+    root_stability_tree_distance_metric: str = "hamming",
+    root_stability_tree_linkage_method: str | None = None,
     root_selective_permutation_guard_replicates: int = 0,
     root_selective_permutation_guard_seed: int = 0,
     root_selective_permutation_guard_alpha: float | None = None,
     root_selective_permutation_guard_scope: str = "root",
+    root_selective_permutation_guard_tree_distance_metric: str = "hamming",
+    root_selective_permutation_guard_tree_linkage_method: str | None = None,
     spectral_transport_passthrough_guard: bool = False,
     spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
     spectral_transport_require_mp_blocks: bool = True,
@@ -333,6 +394,7 @@ def _run_kl_method(
     spectral_transport_unmatched_mode_penalty: float = (
         DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
     ),
+    neighborhood_bandwidth_profile: str | None = None,
     passthrough: bool = config.PASSTHROUGH,
 ) -> MethodRunResult:
     return _run_kl_on_distance(
@@ -352,6 +414,8 @@ def _run_kl_method(
         spectral_include_internal_barycenters=(
             spectral_include_internal_barycenters
         ),
+        spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
+        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -359,12 +423,20 @@ def _run_kl_method(
         root_stability_subsample_replicates=root_stability_subsample_replicates,
         root_stability_feature_fraction=root_stability_feature_fraction,
         root_stability_seed=root_stability_seed,
+        root_stability_tree_distance_metric=root_stability_tree_distance_metric,
+        root_stability_tree_linkage_method=root_stability_tree_linkage_method,
         root_selective_permutation_guard_replicates=(
             root_selective_permutation_guard_replicates
         ),
         root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
         root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
         root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
+        root_selective_permutation_guard_tree_distance_metric=(
+            root_selective_permutation_guard_tree_distance_metric
+        ),
+        root_selective_permutation_guard_tree_linkage_method=(
+            root_selective_permutation_guard_tree_linkage_method
+        ),
         spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
         spectral_transport_max_cost=spectral_transport_max_cost,
         spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
@@ -372,5 +444,6 @@ def _run_kl_method(
         spectral_transport_unmatched_mode_penalty=(
             spectral_transport_unmatched_mode_penalty
         ),
+        neighborhood_bandwidth_profile=neighborhood_bandwidth_profile,
         passthrough=passthrough,
     )
