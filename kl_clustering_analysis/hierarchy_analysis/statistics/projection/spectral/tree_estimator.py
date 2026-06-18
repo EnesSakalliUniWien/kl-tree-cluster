@@ -22,6 +22,7 @@ zero-dimensional PCA contexts.
 from __future__ import annotations
 
 import logging
+import math
 from time import perf_counter
 from typing import Dict, cast
 
@@ -30,6 +31,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
+from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes
 from kl_clustering_analysis.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
@@ -39,7 +41,12 @@ from kl_clustering_analysis.tree.feature_space import (
     validate_feature_matrix,
 )
 
-from .marchenko_pastur import _get_n_jobs, _process_node
+from .marchenko_pastur import (
+    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    MP_ROW_COUNT_LEGACY_STACKED_ROWS,
+    _get_n_jobs,
+    _process_node,
+)
 from .node_spectral_result import NodeSpectralResult
 from .node_spectral_task import NodeSpectralTask
 from .spectral_decomposition_result import SpectralDecompositionResult
@@ -51,6 +58,146 @@ from .tree_helpers import (
 
 logger = logging.getLogger(__name__)
 
+INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER = "empirical_barycenter"
+INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE = "branch_length_state"
+INTERNAL_DISTRIBUTION_MODES = (
+    INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE,
+)
+MP_ROW_COUNT_MODES = (
+    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    MP_ROW_COUNT_LEGACY_STACKED_ROWS,
+)
+
+_EDGE_LENGTH_KEYS = ("branch_length", "length", "weight")
+_BRANCH_LENGTH_STATE_RELATIVE_FLOOR = 1e-6
+
+
+def _validate_internal_distribution_mode(internal_distribution_mode: str) -> str:
+    mode = str(internal_distribution_mode)
+    if mode not in INTERNAL_DISTRIBUTION_MODES:
+        raise ValueError(
+            "Unknown internal spectral distribution mode "
+            f"{internal_distribution_mode!r}; allowed={INTERNAL_DISTRIBUTION_MODES!r}."
+        )
+    return mode
+
+
+def _validate_mp_row_count_mode(mp_row_count_mode: str) -> str:
+    mode = str(mp_row_count_mode)
+    if mode not in MP_ROW_COUNT_MODES:
+        raise ValueError(
+            f"Unknown MP row-count mode {mp_row_count_mode!r}; "
+            f"allowed={MP_ROW_COUNT_MODES!r}."
+        )
+    return mode
+
+
+def _edge_length(tree: nx.DiGraph, parent_id: object, child_id: object) -> float:
+    attrs = tree.edges[parent_id, child_id]
+    for key in _EDGE_LENGTH_KEYS:
+        if key not in attrs:
+            continue
+        value = float(attrs[key])
+        if not math.isfinite(value) or value < 0.0:
+            raise ValueError(
+                "Branch-length internal spectral state requires finite "
+                f"non-negative edge lengths; edge {(parent_id, child_id)!r} "
+                f"has {key}={attrs[key]!r}."
+            )
+        return value
+    return 1.0
+
+
+def _branch_length_floor(tree: nx.DiGraph) -> float:
+    positive_lengths: list[float] = []
+    for _parent_id, _child_id, attrs in tree.edges(data=True):
+        for key in _EDGE_LENGTH_KEYS:
+            if key not in attrs:
+                continue
+            value = float(attrs[key])
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(
+                    "Branch-length internal spectral state requires finite "
+                    f"non-negative edge lengths; got {key}={attrs[key]!r}."
+                )
+            if value > 0.0:
+                positive_lengths.append(value)
+            break
+    if not positive_lengths:
+        return 1.0
+    median_positive_length = float(np.median(np.asarray(positive_lengths, dtype=float)))
+    return max(
+        median_positive_length * _BRANCH_LENGTH_STATE_RELATIVE_FLOOR,
+        float(np.finfo(np.float64).eps),
+    )
+
+
+def _precompute_branch_length_internal_states(
+    tree: nx.DiGraph,
+    *,
+    feature_count: int,
+) -> dict[object, np.ndarray]:
+    r"""Estimate branch-length-aware latent states for internal nodes.
+
+    The stored ``distribution`` remains the empirical leaf-count subtree
+    barycenter. This diagnostic state instead treats each child subtree as a
+    noisy observation of the parent state with precision proportional to
+
+        descendant_leaf_count / max(branch_length(parent, child), floor).
+
+    Short edges therefore transmit child state more strongly; long edges are
+    allowed to drift. The floor is data-derived and only prevents zero-length
+    edges from becoming infinite weights.
+    """
+    branch_floor = _branch_length_floor(tree)
+    state_by_node: dict[object, np.ndarray] = {}
+    leaf_count_by_node: dict[object, int] = {}
+
+    for node_id in bottom_up_nodes(tree):
+        children = list(tree.successors(node_id))
+        if not children:
+            distribution = tree.nodes[node_id].get("distribution")
+            if distribution is None:
+                continue
+            distribution_array = np.asarray(distribution, dtype=np.float64)
+            if distribution_array.shape != (feature_count,):
+                continue
+            state_by_node[node_id] = distribution_array
+            leaf_count_by_node[node_id] = 1
+            continue
+
+        weighted_state_sum = np.zeros(feature_count, dtype=np.float64)
+        total_weight = 0.0
+        total_leaf_count = 0
+        for child_id in children:
+            child_leaf_count = int(leaf_count_by_node.get(child_id, 0))
+            total_leaf_count += child_leaf_count
+            child_state = state_by_node.get(child_id)
+            if child_state is None or child_leaf_count <= 0:
+                continue
+            edge_length = max(_edge_length(tree, node_id, child_id), branch_floor)
+            child_precision = float(child_leaf_count) / edge_length
+            weighted_state_sum += child_state * child_precision
+            total_weight += child_precision
+
+        leaf_count_by_node[node_id] = total_leaf_count
+        if total_weight > 0.0:
+            state_by_node[node_id] = weighted_state_sum / total_weight
+            continue
+
+        distribution = tree.nodes[node_id].get("distribution")
+        if distribution is not None:
+            distribution_array = np.asarray(distribution, dtype=np.float64)
+            if distribution_array.shape == (feature_count,):
+                state_by_node[node_id] = distribution_array
+
+    return {
+        node_id: state
+        for node_id, state in state_by_node.items()
+        if not is_leaf(tree, node_id)
+    }
+
 
 def _build_spectral_tasks(
     tree: nx.DiGraph,
@@ -59,12 +206,27 @@ def _build_spectral_tasks(
     *,
     feature_space: FeatureSpace,
     include_internal_barycenters: bool = False,
+    internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 ) -> list[NodeSpectralTask]:
     """Build per-node spectral tasks from precomputed descendant metadata."""
     feature_count = int(feature_space.raw_dimension)
+    internal_distribution_mode = _validate_internal_distribution_mode(
+        internal_distribution_mode
+    )
+    mp_row_count_mode = _validate_mp_row_count_mode(mp_row_count_mode)
     descendant_internal_nodes_by_node = (
         precompute_descendant_internal_nodes(tree)
         if include_internal_barycenters
+        else {}
+    )
+    branch_length_internal_states = (
+        _precompute_branch_length_internal_states(
+            tree,
+            feature_count=feature_count,
+        )
+        if include_internal_barycenters
+        and internal_distribution_mode == INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE
         else {}
     )
 
@@ -73,7 +235,10 @@ def _build_spectral_tasks(
             return ()
         rows: list[np.ndarray] = []
         for internal_node_id in descendant_internal_nodes_by_node.get(node_id, []):
-            distribution = tree.nodes[internal_node_id].get("distribution")
+            if internal_distribution_mode == INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE:
+                distribution = branch_length_internal_states.get(internal_node_id)
+            else:
+                distribution = tree.nodes[internal_node_id].get("distribution")
             if distribution is None:
                 continue
             distribution_array = np.asarray(distribution, dtype=np.float64)
@@ -93,6 +258,7 @@ def _build_spectral_tasks(
                 node_id,
                 feature_space,
             ),
+            mp_row_count_mode=mp_row_count_mode,
         )
         for node_id in internal_node_ids
     ]
@@ -167,6 +333,8 @@ def compute_spectral_decomposition(
     minimum_projection_dimension: int = 1,
     feature_space: FeatureSpace | None = None,
     include_internal_barycenters: bool = False,
+    internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 ) -> SpectralDecompositionResult:
     """Compute MP dimension metadata, PCA projections, and eigenvalues.
 
@@ -186,11 +354,23 @@ def compute_spectral_decomposition(
     minimum_projection_dimension
         Floor on the returned dimension.
     include_internal_barycenters
-        Diagnostic reconstruction of the commit-era spectral path. When True,
-        descendant internal node distributions are appended to the node-local
-        spectral matrix before eigendecomposition. These rows are deterministic
-        barycenters of the leaves and are therefore opt-in, not the production
-        default.
+        Opt-in tree-filtered spectral path. When True, descendant internal node
+        distributions are appended to the node-local spectral matrix before
+        eigendecomposition. These rows are deterministic barycenters of the
+        leaves, so the default MP row-count mode keeps the descendant leaf count
+        as the threshold row count.
+    internal_distribution_mode
+        Which opt-in internal rows to append. ``"empirical_barycenter"`` uses
+        the stored leaf-count subtree barycenters. ``"branch_length_state"``
+        estimates separate branch-length-aware latent internal states with
+        child precision proportional to descendant support divided by edge
+        length. The mode has no effect unless ``include_internal_barycenters``
+        is true.
+    mp_row_count_mode
+        ``"leaf_effective_rows"`` keeps MP thresholding calibrated to descendant
+        leaves even when internal rows are appended. ``"legacy_stacked_rows"``
+        reproduces the commit-era stacked-row threshold as an explicit
+        diagnostic comparator.
 
     Returns
     -------
@@ -201,6 +381,10 @@ def compute_spectral_decomposition(
         are exposed separately.
     """
     spectral_start_sec = perf_counter()
+    internal_distribution_mode = _validate_internal_distribution_mode(
+        internal_distribution_mode
+    )
+    mp_row_count_mode = _validate_mp_row_count_mode(mp_row_count_mode)
     active_feature_space = resolve_feature_space(tuple(leaf_data.columns), feature_space)
     feature_count = active_feature_space.contrast_dimension
     leaf_feature_matrix = validate_feature_matrix(
@@ -240,6 +424,8 @@ def compute_spectral_decomposition(
         descendant_leaf_indices_by_node,
         feature_space=active_feature_space,
         include_internal_barycenters=bool(include_internal_barycenters),
+        internal_distribution_mode=internal_distribution_mode,
+        mp_row_count_mode=mp_row_count_mode,
     )
 
     # Data is sliced lazily inside each worker (not pre-materialised here).
@@ -323,5 +509,11 @@ def compute_spectral_decomposition(
 
 
 __all__ = [
+    "INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE",
+    "INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER",
+    "INTERNAL_DISTRIBUTION_MODES",
+    "MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS",
+    "MP_ROW_COUNT_LEGACY_STACKED_ROWS",
+    "MP_ROW_COUNT_MODES",
     "compute_spectral_decomposition",
 ]

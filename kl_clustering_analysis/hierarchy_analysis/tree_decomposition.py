@@ -39,6 +39,10 @@ from .statistics.alpha_contract import DEFAULT_EDGE_ALPHA, DEFAULT_SIBLING_ALPHA
 from .statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
+from .statistics.projection.spectral.tree_estimator import (
+    INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+)
 from .statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
 )
@@ -80,6 +84,8 @@ class TreeDecomposition:
         feature_space: FeatureSpace | None = None,
         spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
         spectral_include_internal_barycenters: bool = False,
+        spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+        spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
         sibling_gate_profile: str | SiblingGateProfile | None = None,
         sibling_gate_method: str = "projected_wald_inflation",
         sibling_gate_alpha_penalty: float = 1.0,
@@ -166,6 +172,10 @@ class TreeDecomposition:
         self._spectral_include_internal_barycenters = bool(
             spectral_include_internal_barycenters
         )
+        self._spectral_internal_distribution_mode = str(
+            spectral_internal_distribution_mode
+        )
+        self._spectral_mp_row_count_mode = str(spectral_mp_row_count_mode)
         (
             self._sibling_gate_profile_id,
             self._sibling_gate_method,
@@ -342,6 +352,10 @@ class TreeDecomposition:
             spectral_include_internal_barycenters=(
                 self._spectral_include_internal_barycenters
             ),
+            spectral_internal_distribution_mode=(
+                self._spectral_internal_distribution_mode
+            ),
+            spectral_mp_row_count_mode=self._spectral_mp_row_count_mode,
             sibling_gate_profile=self._sibling_gate_profile_id,
             sibling_gate_method=self._sibling_gate_method,
             sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
@@ -432,6 +446,10 @@ class TreeDecomposition:
                 spectral_include_internal_barycenters=(
                     self._spectral_include_internal_barycenters
                 ),
+                spectral_internal_distribution_mode=(
+                    self._spectral_internal_distribution_mode
+                ),
+                spectral_mp_row_count_mode=self._spectral_mp_row_count_mode,
                 sibling_gate_profile_id=self._sibling_gate_profile_id,
                 sibling_gate_method=self._sibling_gate_method,
                 sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,

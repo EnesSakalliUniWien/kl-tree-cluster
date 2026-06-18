@@ -12,6 +12,10 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.spectral_tran
     DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
     DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
 )
+from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+    INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+)
 from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     SpectralContext,
 )
@@ -31,6 +35,8 @@ class GateAnnotationConfigMetadata:
 
     spectral_minimum_dimension: int
     spectral_include_internal_barycenters: bool = False
+    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER
+    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS
     sibling_gate_profile_id: str | None = None
     sibling_gate_method: str = "projected_wald_inflation"
     sibling_gate_alpha_penalty: float = 1.0

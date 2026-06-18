@@ -30,6 +30,10 @@ from ...statistics.child_parent_divergence.child_parent_divergence_annotation.ch
 from ...statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
+from ...statistics.projection.spectral.tree_estimator import (
+    INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+)
 from ...statistics.contrast_covariance import (
     build_contrast_covariance,
     compute_whitened_wald_contrast,
@@ -620,6 +624,8 @@ def build_gate_annotation_config_metadata(
     *,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     spectral_include_internal_barycenters: bool = False,
+    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     sibling_gate_profile_id: str | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -656,6 +662,8 @@ def build_gate_annotation_config_metadata(
         spectral_include_internal_barycenters=bool(
             spectral_include_internal_barycenters
         ),
+        spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
+        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         sibling_gate_profile_id=(
             None if sibling_gate_profile_id is None else str(sibling_gate_profile_id)
         ),
@@ -1857,6 +1865,8 @@ def run_gate_annotation_pipeline(
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     spectral_include_internal_barycenters: bool = False,
+    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     sibling_gate_profile: str | SiblingGateProfile | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -1999,6 +2009,8 @@ def run_gate_annotation_pipeline(
         spectral_include_internal_barycenters=(
             spectral_include_internal_barycenters
         ),
+        spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
+        spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
         stage_timings=stage_timings,
     )
     edge_gate_sec = float(perf_counter() - edge_gate_start_sec)
@@ -2142,6 +2154,8 @@ def run_gate_annotation_pipeline(
             spectral_include_internal_barycenters=(
                 spectral_include_internal_barycenters
             ),
+            spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
+            spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
             sibling_gate_profile_id=sibling_gate_profile_id,
             sibling_gate_method=sibling_gate_method,
             sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,

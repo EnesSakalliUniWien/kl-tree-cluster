@@ -12,6 +12,10 @@ import pandas as pd
 from kl_clustering_analysis.tree.feature_space import FeatureSpace
 
 from ...projection.spectral.tree_estimator import compute_spectral_decomposition
+from ...projection.spectral.tree_estimator import (
+    INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+)
 
 EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION = 2
 
@@ -98,6 +102,8 @@ def compute_child_parent_spectral_context(
     minimum_projection_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     feature_space: FeatureSpace | None = None,
     include_internal_barycenters: bool = False,
+    internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
 ) -> SpectralContext:
     """Prepare Marchenko-Pastur spectral context for the edge gate."""
     start_sec = perf_counter()
@@ -107,6 +113,8 @@ def compute_child_parent_spectral_context(
         feature_space=feature_space,
         minimum_projection_dimension=int(minimum_projection_dimension),
         include_internal_barycenters=bool(include_internal_barycenters),
+        internal_distribution_mode=str(internal_distribution_mode),
+        mp_row_count_mode=str(mp_row_count_mode),
     )
 
     _validate_spectral_context_outputs(
@@ -142,6 +150,7 @@ def compute_child_parent_spectral_context(
 
 __all__ = [
     "EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION",
+    "MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS",
     "SpectralContext",
     "compute_child_parent_spectral_context",
 ]

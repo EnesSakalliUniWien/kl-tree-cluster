@@ -23,6 +23,8 @@ from .child_parent_divergence_tree_bh import (
 )
 from .spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     SpectralContext,
     compute_child_parent_spectral_context,
 )
@@ -38,6 +40,8 @@ def annotate_child_parent_divergence(
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     spectral_include_internal_barycenters: bool = False,
+    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using the projected Wald pipeline.
@@ -53,6 +57,8 @@ def annotate_child_parent_divergence(
         feature_space=feature_space,
         spectral_minimum_dimension=spectral_minimum_dimension,
         spectral_include_internal_barycenters=spectral_include_internal_barycenters,
+        spectral_internal_distribution_mode=spectral_internal_distribution_mode,
+        spectral_mp_row_count_mode=spectral_mp_row_count_mode,
         stage_timings=stage_timings,
     )
     return annotated_df
@@ -67,6 +73,8 @@ def annotate_child_parent_divergence_with_context(
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
     spectral_include_internal_barycenters: bool = False,
+    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
+    spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[pd.DataFrame, SpectralContext]:
     """Test child-parent divergence and return typed edge-gate spectral context."""
@@ -94,6 +102,8 @@ def annotate_child_parent_divergence_with_context(
         feature_space=feature_space,
         minimum_projection_dimension=spectral_minimum_dimension,
         include_internal_barycenters=bool(spectral_include_internal_barycenters),
+        internal_distribution_mode=str(spectral_internal_distribution_mode),
+        mp_row_count_mode=str(spectral_mp_row_count_mode),
     )
 
     test_kwargs = {
