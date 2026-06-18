@@ -63,8 +63,9 @@ def _branch_row(
     node_id: str,
     outgoing_balance: float,
     sibling_projection_dimension: float,
+    branch_length_to_parent: float | None = None,
 ) -> dict[str, object]:
-    return {
+    record = {
         "case_id": case_id,
         "data_role": data_role,
         "replicate": replicate,
@@ -87,6 +88,9 @@ def _branch_row(
         "outgoing_balance": outgoing_balance,
         "metric_family_alignment_score": 0.10,
     }
+    if branch_length_to_parent is not None:
+        record["branch_length_to_parent"] = branch_length_to_parent
+    return record
 
 
 def _gap_row(
@@ -157,6 +161,7 @@ def _joined_inputs(truth_outgoing_balance: float = 0.49) -> tuple[pd.DataFrame, 
                 node_id=node_id,
                 outgoing_balance=outgoing_balance,
                 sibling_projection_dimension=sibling_projection_dimension,
+                branch_length_to_parent=0.25 + replicate,
             )
             for (
                 case_id,
@@ -217,6 +222,7 @@ def test_topology_conditioning_finds_single_truth_separator_candidate() -> None:
     assert truth["neighborhood_scale"] == 7.0
     assert truth["neighborhood_scale_source"] == "sibling_projection_dimension"
     assert truth["parent_id"] == "P_0"
+    assert truth["branch_length_to_parent"] == 0.25
     assert truth["topology_signal_role"] == "signal"
     assert truth["topology_support_role"] == ""
     assert null_like["topology_signal_role"] == ""

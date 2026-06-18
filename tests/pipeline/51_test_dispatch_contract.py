@@ -139,18 +139,29 @@ def test_run_clustering_result_forwards_kl_gate_profile_params(monkeypatch):
             "root_stability_subsample_replicates": 12,
             "root_stability_feature_fraction": 0.8,
             "root_stability_seed": 7,
+            "root_stability_tree_distance_metric": "jaccard",
+            "root_stability_tree_linkage_method": "complete",
             "root_selective_permutation_guard_replicates": 99,
             "root_selective_permutation_guard_seed": 11,
             "root_selective_permutation_guard_alpha": 0.01,
             "root_selective_permutation_guard_scope": (
                 "global_sibling_min_passthrough_descendant_refined"
             ),
+            "root_selective_permutation_guard_tree_distance_metric": (
+                "rogerstanimoto"
+            ),
+            "root_selective_permutation_guard_tree_linkage_method": "weighted",
             "spectral_transport_passthrough_guard": True,
             "spectral_transport_max_cost": 0.75,
             "spectral_transport_require_mp_blocks": False,
             "spectral_transport_block_log_tolerance": 0.02,
             "spectral_transport_unmatched_mode_penalty": 1.5,
             "spectral_include_internal_barycenters": True,
+            "spectral_internal_distribution_mode": "branch_length_state",
+            "spectral_mp_row_count_mode": "leaf_effective_rows",
+            "neighborhood_bandwidth_profile": (
+                "regional_tau_branch_length_support_only_v1"
+            ),
             "passthrough": True,
         },
         seed=42,
@@ -166,18 +177,33 @@ def test_run_clustering_result_forwards_kl_gate_profile_params(monkeypatch):
     assert captured["kwargs"]["root_stability_subsample_replicates"] == 12
     assert captured["kwargs"]["root_stability_feature_fraction"] == 0.8
     assert captured["kwargs"]["root_stability_seed"] == 7
+    assert captured["kwargs"]["root_stability_tree_distance_metric"] == "jaccard"
+    assert captured["kwargs"]["root_stability_tree_linkage_method"] == "complete"
     assert captured["kwargs"]["root_selective_permutation_guard_replicates"] == 99
     assert captured["kwargs"]["root_selective_permutation_guard_seed"] == 11
     assert captured["kwargs"]["root_selective_permutation_guard_alpha"] == 0.01
     assert captured["kwargs"]["root_selective_permutation_guard_scope"] == (
         "global_sibling_min_passthrough_descendant_refined"
     )
+    assert captured["kwargs"][
+        "root_selective_permutation_guard_tree_distance_metric"
+    ] == "rogerstanimoto"
+    assert captured["kwargs"][
+        "root_selective_permutation_guard_tree_linkage_method"
+    ] == "weighted"
     assert captured["kwargs"]["spectral_transport_passthrough_guard"] is True
     assert captured["kwargs"]["spectral_transport_max_cost"] == 0.75
     assert captured["kwargs"]["spectral_transport_require_mp_blocks"] is False
     assert captured["kwargs"]["spectral_transport_block_log_tolerance"] == 0.02
     assert captured["kwargs"]["spectral_transport_unmatched_mode_penalty"] == 1.5
     assert captured["kwargs"]["spectral_include_internal_barycenters"] is True
+    assert captured["kwargs"]["spectral_internal_distribution_mode"] == (
+        "branch_length_state"
+    )
+    assert captured["kwargs"]["spectral_mp_row_count_mode"] == "leaf_effective_rows"
+    assert captured["kwargs"]["neighborhood_bandwidth_profile"] == (
+        "regional_tau_branch_length_support_only_v1"
+    )
     assert captured["kwargs"]["passthrough"] is True
 
 
@@ -232,6 +258,27 @@ def test_method_registry_exposes_full_legacy_commit_method():
     assert params["tree_linkage_method"] == "average"
     assert params["tree_builder"] == "linkage"
     assert params["tree_rooting"] == "linkage_root"
+
+
+def test_method_registry_exposes_guarded_rescue_profiles():
+    internal = METHOD_SPECS["kl_internal_filter_v1"].param_grid[0]
+    branch_length = METHOD_SPECS["kl_internal_filter_branch_length_v1"].param_grid[0]
+    bandwidth = METHOD_SPECS["kl_bandwidth_context_v1"].param_grid[0]
+    rescued = METHOD_SPECS["kl_rescued_legacy_v1"].param_grid[0]
+
+    assert internal["spectral_include_internal_barycenters"] is True
+    assert internal["spectral_internal_distribution_mode"] == "empirical_barycenter"
+    assert internal["spectral_mp_row_count_mode"] == "leaf_effective_rows"
+    assert branch_length["spectral_internal_distribution_mode"] == (
+        "branch_length_state"
+    )
+    assert bandwidth["neighborhood_bandwidth_profile"] == (
+        "regional_tau_branch_length_support_only_v1"
+    )
+    assert rescued["sibling_gate_profile"] == (
+        "fixed_coordinate_spectral_transport_passthrough_v1"
+    )
+    assert rescued["spectral_mp_row_count_mode"] == "leaf_effective_rows"
 
 
 def test_legacy_commit_package_imports_tree_decomposition():

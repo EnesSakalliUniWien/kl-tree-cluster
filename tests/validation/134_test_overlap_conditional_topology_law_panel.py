@@ -36,6 +36,7 @@ def _row(
     topology_support_role: str | None = None,
     topology_signal_role: str | None = None,
     balance_product: float | None = None,
+    branch_length_to_parent: float | None = None,
 ) -> dict[str, object]:
     record = {
         "case_id": "case",
@@ -67,6 +68,8 @@ def _row(
         record["topology_signal_role"] = topology_signal_role
     if balance_product is not None:
         record["balance_product"] = balance_product
+    if branch_length_to_parent is not None:
+        record["branch_length_to_parent"] = branch_length_to_parent
     return record
 
 
@@ -88,6 +91,59 @@ def test_cached_tree_distances_materializes_all_pairs_once() -> None:
     assert cache.distance("leaf", "right") == 3.0
     assert cache.distance("leaf", "right") == 3.0
     assert cache.computed_pair_count == 6
+
+
+def test_cached_tree_distances_use_parent_branch_lengths_when_available() -> None:
+    rows = pd.DataFrame.from_records(
+        [
+            _row(node_id="root", parent_id="", depth=0),
+            _row(
+                node_id="left",
+                parent_id="root",
+                depth=1,
+                branch_length_to_parent=0.25,
+            ),
+            _row(
+                node_id="right",
+                parent_id="root",
+                depth=1,
+                branch_length_to_parent=1.75,
+            ),
+            _row(
+                node_id="leaf",
+                parent_id="left",
+                depth=2,
+                branch_length_to_parent=0.50,
+            ),
+        ]
+    )
+
+    cache = build_cached_tree_distances(rows)
+
+    assert cache.status == "cached_all_pairs_branch_length_tree_distances"
+    assert cache.distance_metric == "branch_length"
+    assert cache.edge_count == 3
+    assert cache.branch_length_edge_count == 3
+    assert cache.distances_available
+    assert cache.distance("left", "right") == 2.0
+    assert cache.distance("leaf", "right") == 2.5
+
+
+def test_cached_tree_distances_report_mixed_branch_length_coverage() -> None:
+    rows = pd.DataFrame.from_records(
+        [
+            _row(node_id="left", parent_id="root", depth=1, branch_length_to_parent=0.25),
+            _row(node_id="right", parent_id="root", depth=1),
+        ]
+    )
+
+    cache = build_cached_tree_distances(rows)
+
+    assert cache.status == "cached_all_pairs_mixed_branch_length_tree_distances"
+    assert cache.distance_metric == "mixed_branch_length_and_hop_count"
+    assert cache.edge_count == 2
+    assert cache.branch_length_edge_count == 1
+    assert cache.distance("left", "right") == 1.25
 
 
 def test_cached_tree_distances_reports_missing_parent_edges() -> None:

@@ -234,6 +234,18 @@ def test_selected_neighborhood_rows_classify_traversal_stop_reasons() -> None:
     assert by_node["guarded"]["traversal_stop_reason"] == "explicit_guard_blocked"
 
 
+def test_selected_neighborhood_rows_preserve_parent_branch_lengths() -> None:
+    node_decisions = _node_rows()
+    node_decisions.loc[node_decisions["node_id"].eq("split"), "branch_length_to_parent"] = 0.25
+
+    rows = build_selected_neighborhood_distribution_rows(
+        node_decisions=node_decisions,
+    )
+    split = rows.loc[rows["node_id"].eq("split")].iloc[0]
+
+    assert split["branch_length_to_parent"] == 0.25
+
+
 def test_selected_neighborhood_distribution_summaries_are_robust() -> None:
     rows = build_selected_neighborhood_distribution_rows(
         node_decisions=_node_rows(),

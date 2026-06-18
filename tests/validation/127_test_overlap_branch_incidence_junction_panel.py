@@ -96,6 +96,7 @@ def test_run_branch_incidence_panel_writes_outputs(tmp_path) -> None:
     rows = pd.read_csv(outputs["rows"])
     assert set(rows.columns) >= {
         "incoming_parent_id",
+        "branch_length_to_parent",
         "incoming_sibling_id",
         "outgoing_left_child_id",
         "outgoing_right_child_id",
@@ -106,3 +107,5 @@ def test_run_branch_incidence_panel_writes_outputs(tmp_path) -> None:
         "metric_family_compatibility_status",
         "branch_incidence_geometry_status",
     }
+    assert rows["branch_length_to_parent"].notna().all()
+    assert rows["branch_length_to_parent"].ge(0.0).all()

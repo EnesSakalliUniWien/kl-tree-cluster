@@ -31,16 +31,15 @@ def _annotate_tree_structure(tree: nx.DiGraph, leaves: set[str]) -> None:
 
 def _make_tree() -> PosetTree:
     tree = PosetTree()
-    tree.add_edges_from(
-        [
-            ("root", "A"),
-            ("root", "B"),
-            ("A", "A1"),
-            ("A", "A2"),
-            ("B", "B1"),
-            ("B", "B2"),
-        ]
-    )
+    for parent, child, branch_length in (
+        ("root", "A", 0.2),
+        ("root", "B", 0.3),
+        ("A", "A1", 0.4),
+        ("A", "A2", 0.5),
+        ("B", "B1", 0.6),
+        ("B", "B2", 0.7),
+    ):
+        tree.add_edge(parent, child, branch_length=branch_length)
     _annotate_tree_structure(tree, {"A1", "A2", "B1", "B2"})
     return tree
 
@@ -163,6 +162,10 @@ def test_multiscale_node_decisions_distinguish_guard_and_traversal_classes() -> 
         rows["node_id"].eq("B"),
         "sibling_projection_dimension",
     ].iloc[0] == 3.0
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "branch_length_to_parent",
+    ].iloc[0] == 0.3
 
 
 def test_production_components_remain_diagnostic_or_fail_closed() -> None:
