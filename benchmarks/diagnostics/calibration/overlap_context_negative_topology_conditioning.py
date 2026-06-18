@@ -177,6 +177,7 @@ ROW_COLUMNS = (
     "replicate",
     "node_id",
     "parent_id",
+    "branch_length_to_parent",
     "guard_truth_role",
     "topology_support_role",
     "topology_signal_role",
@@ -332,6 +333,14 @@ def _numeric(rows: pd.DataFrame, column: str) -> pd.Series:
     return pd.to_numeric(rows[column], errors="coerce")
 
 
+def _finite_float(value: object) -> float:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return math.nan
+    return numeric if math.isfinite(numeric) else math.nan
+
+
 def _finite(values: Sequence[float]) -> np.ndarray:
     array = np.asarray(values, dtype=float)
     return array[np.isfinite(array)]
@@ -482,6 +491,11 @@ def build_context_negative_topology_conditioning_rows(
             if "incoming_parent_id" in branch_rows.columns
             else []
         ),
+        *(
+            ["branch_length_to_parent"]
+            if "branch_length_to_parent" in branch_rows.columns
+            else []
+        ),
         "depth",
         "decision_class",
         "traversal_decision",
@@ -574,6 +588,9 @@ def build_context_negative_topology_conditioning_rows(
                 str(row["incoming_parent_id"])
                 if "incoming_parent_id" in row and pd.notna(row["incoming_parent_id"])
                 else ""
+            ),
+            "branch_length_to_parent": _finite_float(
+                row.get("branch_length_to_parent", math.nan)
             ),
             "guard_truth_role": str(row["guard_truth_role"]),
             "topology_support_role": _topology_support_role(

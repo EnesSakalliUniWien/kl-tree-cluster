@@ -13,6 +13,7 @@ production calibration rule is promoted.
 from __future__ import annotations
 
 import argparse
+import heapq
 import json
 import math
 from collections.abc import Iterable
@@ -44,6 +45,15 @@ DEFAULT_PASSTHROUGH_LOG_ODDS_PENALTY = 1.5
 DEFAULT_MIN_TRUTH_SUPPORT_PER_STRATUM = 2
 DEFAULT_GUARDED_RECOVERY_BALANCE_PRODUCT_FLOOR = 0.22
 DEFAULT_GUARDED_RECOVERY_OUTGOING_EDGE_NORM_FLOOR = 0.95
+
+BRANCH_LENGTH_TO_PARENT_COLUMNS = (
+    "branch_length_to_parent",
+    "parent_branch_length",
+    "edge_branch_length",
+    "edge_length_to_parent",
+    "branch_length",
+    "edge_length",
+)
 
 REQUIRED_COLUMNS = {
     "case_id",
@@ -250,10 +260,17 @@ class CachedTreeDistances:
     distances: dict[tuple[str, str], float]
     nodes: tuple[str, ...]
     status: str
+    distance_metric: str = "topology_hop_count"
+    edge_count: int = 0
+    branch_length_edge_count: int = 0
 
     @property
     def computed_pair_count(self) -> int:
         return int(len(self.distances))
+
+    @property
+    def distances_available(self) -> bool:
+        return str(self.status).startswith("cached_all_pairs_")
 
     def distance(self, left: object, right: object) -> float:
         """Return the cached tree distance between two node identifiers."""
@@ -338,6 +355,34 @@ def _finite_float(value: object) -> float:
     return numeric if math.isfinite(numeric) else math.nan
 
 
+def _branch_length_to_parent(row: pd.Series) -> tuple[float, bool]:
+    for column in BRANCH_LENGTH_TO_PARENT_COLUMNS:
+        if column not in row:
+            continue
+        value = _finite_float(row.get(column, math.nan))
+        if math.isfinite(value) and value >= 0.0:
+            return float(value), True
+    return 1.0, False
+
+
+def _weighted_shortest_paths(
+    adjacency: dict[str, dict[str, float]],
+    source: str,
+) -> dict[str, float]:
+    distances: dict[str, float] = {source: 0.0}
+    heap: list[tuple[float, str]] = [(0.0, source)]
+    while heap:
+        current_distance, current = heapq.heappop(heap)
+        if current_distance > distances[current]:
+            continue
+        for neighbor, weight in sorted(adjacency.get(current, {}).items()):
+            next_distance = current_distance + float(weight)
+            if next_distance < distances.get(neighbor, math.inf):
+                distances[neighbor] = next_distance
+                heapq.heappush(heap, (next_distance, neighbor))
+    return distances
+
+
 def _clip_unit(values: pd.Series | np.ndarray | float) -> np.ndarray:
     return np.clip(np.asarray(values, dtype=float), 1e-6, 1.0 - 1e-6)
 
@@ -366,7 +411,7 @@ def _sigmoid(values: pd.Series) -> pd.Series:
 
 
 def build_cached_tree_distances(rows: pd.DataFrame) -> CachedTreeDistances:
-    """Build an all-pairs distance cache from `node_id` and `parent_id` columns."""
+    """Build all-pairs distances from parent links, using branch lengths if present."""
     if "node_id" not in rows or "parent_id" not in rows:
         return CachedTreeDistances({}, (), "tree_distance_parent_links_unavailable")
 
@@ -383,9 +428,9 @@ def build_cached_tree_distances(rows: pd.DataFrame) -> CachedTreeDistances:
             if parent:
                 auxiliary_parent_ids.append(parent)
     node_ids = tuple(dict.fromkeys([*row_node_ids, *auxiliary_parent_ids]))
-    adjacency: dict[str, set[str]] = {node: set() for node in node_ids}
+    adjacency: dict[str, dict[str, float]] = {node: {} for node in node_ids}
     node_set = set(node_ids)
-    edge_count = 0
+    edge_weights: dict[tuple[str, str], tuple[float, bool]] = {}
     for _, row in rows.iterrows():
         node = str(row["node_id"])
         parent_value = row.get("parent_id", "")
@@ -394,20 +439,28 @@ def build_cached_tree_distances(rows: pd.DataFrame) -> CachedTreeDistances:
         parent = str(parent_value)
         if not parent or parent not in node_set or parent == node:
             continue
-        adjacency.setdefault(node, set()).add(parent)
-        adjacency.setdefault(parent, set()).add(node)
-        edge_count += 1
+        weight, has_branch_length = _branch_length_to_parent(row)
+        edge_key = tuple(sorted((node, parent)))
+        previous = edge_weights.get(edge_key)
+        if (
+            previous is None
+            or (has_branch_length and not previous[1])
+            or (has_branch_length == previous[1] and weight < previous[0])
+        ):
+            edge_weights[edge_key] = (float(weight), bool(has_branch_length))
+
+    for (left, right), (weight, _has_branch_length) in edge_weights.items():
+        adjacency.setdefault(left, {})[right] = float(weight)
+        adjacency.setdefault(right, {})[left] = float(weight)
+
+    edge_count = int(len(edge_weights))
+    branch_length_edge_count = int(
+        sum(1 for _edge, (_weight, has_branch_length) in edge_weights.items() if has_branch_length)
+    )
 
     distances: dict[tuple[str, str], float] = {}
     for source in node_ids:
-        seen = {source: 0}
-        queue = [source]
-        for current in queue:
-            for neighbor in sorted(adjacency.get(current, ())):
-                if neighbor in seen:
-                    continue
-                seen[neighbor] = seen[current] + 1
-                queue.append(neighbor)
+        seen = _weighted_shortest_paths(adjacency, source)
         for target in node_ids:
             if source == target:
                 continue
@@ -415,12 +468,26 @@ def build_cached_tree_distances(rows: pd.DataFrame) -> CachedTreeDistances:
             if key in distances:
                 continue
             distances[key] = float(seen[target]) if target in seen else math.inf
-    status = (
-        "cached_all_pairs_tree_distances"
-        if edge_count
-        else "tree_distance_parent_edges_unavailable"
+    if not edge_count:
+        status = "tree_distance_parent_edges_unavailable"
+        metric = "topology_hop_count"
+    elif branch_length_edge_count == edge_count:
+        status = "cached_all_pairs_branch_length_tree_distances"
+        metric = "branch_length"
+    elif branch_length_edge_count:
+        status = "cached_all_pairs_mixed_branch_length_tree_distances"
+        metric = "mixed_branch_length_and_hop_count"
+    else:
+        status = "cached_all_pairs_tree_distances"
+        metric = "topology_hop_count"
+    return CachedTreeDistances(
+        distances,
+        node_ids,
+        status,
+        metric,
+        edge_count,
+        branch_length_edge_count,
     )
-    return CachedTreeDistances(distances, node_ids, status)
 
 
 def _nearest_distance(
@@ -620,7 +687,7 @@ def _topology_neighborhood_components(
             if not has_explicit_neighborhood_evidence:
                 status = "topology_neighborhood_unavailable_neutral"
                 component = 0.0
-            elif cache.status != "cached_all_pairs_tree_distances":
+            elif not cache.distances_available:
                 status = "topology_neighborhood_unavailable_neutral"
                 component = 0.0
             elif len(support_nodes) < int(min_support) or not signal_nodes:

@@ -73,6 +73,7 @@ ROW_COLUMNS = (
     "profile_id",
     "node_id",
     "incoming_parent_id",
+    "branch_length_to_parent",
     "incoming_sibling_id",
     "outgoing_left_child_id",
     "outgoing_right_child_id",
@@ -417,6 +418,19 @@ def _single_parent(tree, node: object) -> object | None:
     return parents[0]
 
 
+def _branch_length_to_parent(tree, *, parent: object | None, node: object) -> float:
+    if parent is None or not tree.has_edge(parent, node):
+        return math.nan
+    value = tree.edges[parent, node].get("branch_length", math.nan)
+    try:
+        branch_length = float(value)
+    except (TypeError, ValueError):
+        return math.nan
+    if not math.isfinite(branch_length) or branch_length < 0.0:
+        return math.nan
+    return float(branch_length)
+
+
 def _incoming_sibling(tree, *, parent: object, node: object) -> object | None:
     siblings = [child for child in tree.successors(parent) if child != node]
     if len(siblings) != 1:
@@ -643,6 +657,11 @@ def _branch_row_for_node(
         "profile_id": str(profile_id),
         "node_id": str(node_row["node_id"]),
         "incoming_parent_id": str(parent),
+        "branch_length_to_parent": _branch_length_to_parent(
+            tree,
+            parent=parent,
+            node=raw_node,
+        ),
         "incoming_sibling_id": str(incoming_sibling),
         "outgoing_left_child_id": str(left_child),
         "outgoing_right_child_id": str(right_child),

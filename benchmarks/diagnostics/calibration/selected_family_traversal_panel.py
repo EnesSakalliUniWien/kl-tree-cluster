@@ -102,6 +102,7 @@ NODE_DECISION_COLUMNS = (
     "data_seed",
     "node_id",
     "parent_id",
+    "branch_length_to_parent",
     "depth",
     "visited",
     "traversal_decision",
@@ -386,6 +387,19 @@ def _parent_map(tree) -> dict[object, object | None]:
     return parents
 
 
+def _branch_length_to_parent(tree, *, parent: object | None, node: object) -> float:
+    if parent is None or not tree.has_edge(parent, node):
+        return math.nan
+    value = tree.edges[parent, node].get("branch_length", math.nan)
+    try:
+        branch_length = float(value)
+    except (TypeError, ValueError):
+        return math.nan
+    if not math.isfinite(branch_length) or branch_length < 0.0:
+        return math.nan
+    return float(branch_length)
+
+
 def _depth_map(tree, root: object) -> dict[object, int]:
     depths = {root: 0}
     stack = [root]
@@ -531,6 +545,7 @@ def _build_node_decisions(
     records: list[dict[str, object]] = []
     output_role = _output_data_role(data_role)
     for node in tree.nodes:
+        parent = parents[node]
         children = list(tree.successors(node))
         trace_row = trace.get(node, {})
         traversal_decision = str(trace_row.get("decision", "not_visited"))
@@ -559,7 +574,12 @@ def _build_node_decisions(
                 "replicate": int(replicate),
                 "data_seed": int(data_seed),
                 "node_id": str(node),
-                "parent_id": "" if parents[node] is None else str(parents[node]),
+                "parent_id": "" if parent is None else str(parent),
+                "branch_length_to_parent": _branch_length_to_parent(
+                    tree,
+                    parent=parent,
+                    node=node,
+                ),
                 "depth": int(depths.get(node, -1)),
                 "visited": bool(node in trace),
                 "traversal_decision": traversal_decision,
@@ -1187,7 +1207,8 @@ def _concat_frames(frames: Iterable[pd.DataFrame], columns: Sequence[str] | None
     frames = [frame for frame in frames if frame is not None and not frame.empty]
     if not frames:
         return pd.DataFrame(columns=columns)
-    return pd.concat(frames, ignore_index=True)
+    combined = pd.concat(frames, ignore_index=True)
+    return combined.reindex(columns=columns) if columns is not None else combined
 
 
 def run_selected_family_traversal_panel(

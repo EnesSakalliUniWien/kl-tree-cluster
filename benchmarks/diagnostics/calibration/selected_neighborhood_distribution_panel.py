@@ -100,6 +100,7 @@ LAW_VALUE_COLUMNS = (
 
 NUMERIC_METRICS = (
     "depth",
+    "branch_length_to_parent",
     "n_children",
     "n_descendant_leaves",
     "sibling_p_value",
@@ -151,6 +152,7 @@ ROW_COLUMNS = (
     "replicate",
     "node_id",
     "parent_id",
+    "branch_length_to_parent",
     "depth",
     "traversal_decision",
     "decision_class",
