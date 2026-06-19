@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-17
+updated: 2026-06-19
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -3627,6 +3627,193 @@ verification, and maintenance events here in chronological order.
   `2/4` null rows complete. This supports diffusion/bandwidth geometry as a
   signal-improving component, not a standalone production replacement for the
   legacy stack.
+- Added [[manual-guarded-benchmark-run-direct-20260617]]. The direct-dispatch
+  six-method, six-case smoke records branch-length internal filtering as the
+  strongest completed-row profile (`3` exact-K rows, mean ARI `0.926991`),
+  current and bandwidth-context as identical on this panel, and hard-overlap
+  strict-support skips as safety behavior distinct from legacy or rescued
+  low-ARI completions. The note also corrects the hard-negative nuance:
+  `kl_internal_filter_v1` skips `overlap_extreme_4c` but returns one cluster
+  with ARI `0.0` on `overlap_extreme_4c__r1`.
+- Added [[benchmark-runner-guarded-contract-fix-20260618]]. The standard
+  benchmark runner requires complete OK KL `stage_timings`, forwards
+  `enforce_internal_support_thresholds`, enables that flag on the internal
+  filter, branch-length internal filter, and rescued legacy candidate
+  profiles, and converts guarded internal-barycenter one-cluster OK rows on
+  `overlap_extreme_4c*` into explicit skips. Targeted tests pass, and a local
+  standard regression-gate run over `overlap_extreme_4c` and the six registered
+  methods completes without the direct-dispatch workaround.
+- Added [[julia-allgo-new-c2ef-cosine-subspace-validation-20260618]]. The
+  c2ef `validate_cosine_subspace_split.py` workflow was run through the copied
+  full legacy package on `feature_matrix_julia_allGO_new.tsv`. The historical
+  TF-IDF cosine components `2-5` split produces `19` clusters over `602` genes
+  and `6368` nonempty GO terms. The useful evidence is coherence and
+  perturbation structure rather than ARI: `11/19` clusters pass the GO
+  coherence rule, feature subsampling succeeds for `6/8` runs at fraction
+  `0.8` and `4/8` at fraction `0.6`, gene subsampling succeeds for `8/8`, and
+  all feature-subset failures are zero-active-term input failures rather than
+  legacy decomposition exceptions.
+- Added [[branch-length-candidate-run-gate-20260618]]. The standard
+  regression gate now compares `kl`, `kl_legacy_c2ef9a69`, and
+  `kl_internal_filter_branch_length_v1` across eight gate-supported SBM,
+  categorical, overlap, and extreme-noise cases without direct dispatch.
+  Branch-length remains fail-closed on severe unsupported overlap, while legacy
+  completes `overlap_extreme_4c` with six clusters and ARI `0.002729`; the
+  broader supplemental shared-catalog panel keeps branch-length as the next
+  candidate to test but does not promote it as production-ready.
+- Added [[branch-length-candidate-full-big-20260618]]. The non-plotted full
+  benchmark compared `kl`, `kl_legacy_c2ef9a69`, and
+  `kl_internal_filter_branch_length_v1` across `121` cases. Current KL has the
+  best completed-row mean ARI (`0.819354`) with `66` exact-K rows, branch-length
+  is close (`0.801364`) with `62` exact-K rows and preserved fail-closed
+  behavior on `overlap_extreme_4c`, and legacy completes all rows but has the
+  weakest mean ARI (`0.726685`) despite `78` exact-K rows.
+- Added [[julia-allgo-new-go-ic-tree-summary-plots-20260618]]. The allGO-new
+  plot/ranking run scored `31` tree assignments from raw cosine subspace,
+  adaptive-diffusion cosine subspace, legacy c2ef components `2-5`, and full
+  adaptive diffusion. The output deck contains one UMAP/subspace/tree page per
+  tree, plus GO-IC and quality summary plots. Method-separated PDFs/CSVs keep
+  the four method families apart, and the previous internal diagnostic name
+  `kak` is not used as a reader-facing method label. The display rank is
+  quality-tiered before GO-BIC because raw GO-IC alone over-ranks
+  near-singleton trees; under that ordering the top rows are full adaptive
+  diffusion, legacy c2ef components `2-5`, and adaptive diffusion cosine
+  subspace over TF-IDF modes `2-5`.
+- Added [[julia-allgo-new-method-version-tree-matrix-20260618]]. The selected
+  allGO-new crossed matrix separates gate version from tree geometry, running
+  legacy/current gates on raw cosine-subspace and adaptive-diffusion
+  cosine-subspace TF-IDF blocks `02-05`, `16-19`, and `53-80`, plus the current
+  full adaptive-diffusion tree. The attempted legacy full adaptive-diffusion
+  tree was interrupted in the c2ef shortest-path interpolation bottleneck, so
+  the completed legacy adaptive examples are the adaptive-diffusion
+  cosine-subspace rows.
+- Added [[benchmark-plot-backend-fix-20260618]]. The UMAP-triggered plotted
+  benchmark abort was traced to Matplotlib loading the macOS GUI backend in a
+  command-line/spawned-worker path before UMAP rendering. Benchmark plotting now
+  defaults to `MPLBACKEND=Agg` before `pyplot` imports in the full runner,
+  shared plot package, and isolated case worker; a plotted isolated
+  `method_proof` run completed all `11` cases and merged the PDF report.
+- Added [[branch-length-candidate-promotion-audit-20260618]]. The full-suite
+  branch-length comparison was converted into an explicit promotion decision:
+  do not promote `kl_internal_filter_branch_length_v1` over current `kl` as the
+  global default. Branch-length improves `6` matched current rows, loses `7`,
+  ties `66`, is branch-only OK on `12`, and current-only OK on `14`; it remains
+  the next guarded candidate, but the next test should be a fixed-candidate
+  traversal/support audit rather than a global replacement or adaptive policy.
+- Added [[branch-length-traversal-audit-20260618]]. The diagnostic records
+  current KL and branch-length internal filtering on `16` selected cases,
+  producing `32` method rows, `3032` edge-reachable traversal tuple rows,
+  `3352` traversal edge-map rows, run logs, and verification logs. The audit
+  keeps live clustering traversal separate from the edge-reachable walk that
+  continues until child-parent edge tests close.
+- Added [[path-conditioned-traversal-audit-20260618]]. The diagnostic extends
+  the traversal tuple audit with incoming-parent state, ancestor-chain counts,
+  descendant support counts, branch-length path summaries, and truth-label
+  tuple diagnostics. The run keeps all traversal decisions fixed, writes
+  `3032` path-conditioned tuple rows, records `34` live pass-through rows and
+  `14` stacked pass-through rows, and leaves branch-length evaluation as a
+  fixed-candidate audit rather than an adaptive routing policy.
+- Added [[path-conditioned-hypothesis-audit-20260618]]. The diagnostic joins
+  path-conditioned traversal burden to branch/current outcome deltas and recent
+  method summaries. It explicitly marks `6/16` selected cases as
+  outcome/path status mismatches, keeps `phylo_protein_4taxa` as the clearest
+  stacked-pass-through branch loss, separates isolated pass-through losses from
+  stacked-chain failures, and records bandwidth-context, internal-filter,
+  rescued-legacy, and legacy connections without introducing adaptive routing.
+- Added [[path-conditioned-alpha-contract-recheck-20260618]]. The mismatch
+  check showed that the earlier `6/16` outcome/path status mismatches came
+  from diagnostic alpha defaults (`0.05/0.05`) rather than benchmark-equivalent
+  execution. The traversal audit now defaults to the canonical
+  `edge_alpha=0.001` and `sibling_alpha=0.01`; the alpha-contract recheck has
+  `0/16` status mismatches and `12` exact branch-minus-current delta matches
+  against the promotion audit.
+- Added [[julia-allgo-new-feature-matrix-quality-20260618]]. The allGO-new
+  feature matrix quality run validates `602` genes by `6368` binary GO terms
+  with no missing values or zero rows/columns, but records rare-term-heavy GO
+  support, `459` duplicate GO-term pattern groups, one duplicate gene-pattern
+  group, low marginal GO-term entropy, uneven gene annotation burden, weak
+  median pairwise gene similarity, and a distributed SVD spectrum.
+- Added [[julia-allgo-new-current-adaptive-diffusion-subspace-tree-20260618]].
+  The current-method adaptive diffusion cosine-subspace experiment writes one
+  directory per subspace, adds axis-level GO-term loading explanations, and
+  ranks `14` completed current KL trees plus one explicit failed-gate subspace.
+  The top quality-aware row is `tfidf / adaptive_modes_02_05` with `40`
+  clusters, `21/40` coherent clusters, and GO-BIC active per gene
+  `1687.966840`; the raw GO-IC winner remains degenerate because of
+  singleton-heavy overfragmentation.
+- Updated [[julia-allgo-new-current-adaptive-diffusion-subspace-tree-20260618]]
+  after moving the experiment under `results/analyses/`: generated large
+  combined GO-term loading heatmaps for all `15` subspaces, rebuilt the
+  detailed axis-term PDF with a method/value sentence on each page, added a
+  combined one-page-per-subspace PDF, and connected CSVs, PDFs, trees, and
+  embedding plots through `ARTIFACT_INDEX.md` and
+  `connected_results_manifest.json`.
+- Added [[current-adaptive-diffusion-subspace-tree-pipeline]] and
+  [[allgo-new-interactome-current-adaptive-diffusion-subspace-tree-20260618]].
+  The current adaptive-diffusion cosine-subspace runner now derives its
+  experiment root and reader-facing prefixes from the input matrix name and
+  writes the full connected result structure in one run: rankings,
+  specificity-aware rank, method-separated PDFs, all-tree PDFs, manifests, and
+  one artifact-complete directory per subspace. The interactome run on
+  `feature_matrix_allGO_new_interactome.tsv` completed `7/12` current KL
+  subspaces and failed closed for `5/12`; the top specificity-aware row is
+  `tfidf / adaptive_modes_06_11`.
+- Added [[go-annotation-feature-matrix-pipeline]]. The new wrapper records a
+  consistent GO annotation feature-matrix pipeline with matrix-quality,
+  canonical current adaptive-diffusion cosine-subspace, optional
+  method-matrix audit, and analysis-level audit stages. The 2026-06-19
+  inventory over `11` existing allGO result roots separates one matrix-quality
+  folder, four candidate-generation folders, one mixed-method GO-IC reader
+  report, three canonical current pipeline folders, and two unclassified
+  legacy/incomplete folders.
+- Updated [[go-annotation-feature-matrix-pipeline]] with the active dataset set:
+  `feature_matrix_julia_allGO_new.tsv` and
+  `feature_matrix_allGO_new_interactome.tsv`. The interactome Downloads matrix
+  was promoted to `data/feature_matrices/`; the Julia Downloads matrix is
+  byte-identical to the existing canonical copy. The dataset inventory records
+  both active matrices as binary, complete, and free of zero rows/columns, and
+  flags the root `feature_matrix_julia_allGO_new (1).tsv` as a non-canonical
+  duplicate.
+- Added systematic subspace gene-annotation PDFs for both active datasets using
+  [[go-annotation-feature-matrix-pipeline]]. The Julia report has `15` pages
+  and `112` cluster summaries; the interactome report has `8` pages and `56`
+  cluster summaries. The interpretation layer uses local GO feature-matrix
+  evidence plus QuickGO term definitions and UniProt reviewed human
+  gene/protein labels through `scripts/rest_request.py`; each report cached
+  `100` QuickGO records and `80` UniProt lookups with no external lookup
+  warnings.
+- Rebuilt the systematic subspace gene-annotation outputs with organized
+  per-subspace directories and visible plot pages. Each completed subspace now
+  has a `subspaces/rank##_weighting_block_name/` directory with cluster roster,
+  cluster annotations, gene memberships, source artifacts, a radial tree
+  colored by final cluster id, and a full feature-space PCA embedding colored
+  by the same cluster assignments. The regenerated PDFs now use one plot page
+  followed by one annotation page per completed subspace: the Julia report is
+  `29` pages with `2761` complete cluster rows and `8428` gene memberships,
+  and the interactome report is `15` pages with `595` complete cluster rows
+  and `2373` gene memberships.
+- Rebuilt the systematic subspace gene-annotation outputs to include
+  failed-gate eigenband directories and explicit diagnostic cluster rosters.
+  Accepted subspaces keep `assignment_source=accepted_kl`, while failed-gate
+  rows use `assignment_source=diagnostic_linkage_cut` from saved linkage trees
+  and are not labeled as final accepted KL output. The Julia report is now
+  `30` pages with `15` subspaces, `2828` cluster rows, `9030` gene memberships,
+  and invariant `602`-leaf trees. The interactome report is now `24` pages
+  with `12` subspaces, `920` cluster rows, `4068` gene memberships, and
+  invariant `339`-leaf trees. Each subspace directory now has darker radial
+  cluster trees plus full-space, subspace, and tree-distance cluster
+  embeddings.
+- Added a GO cluster meaningfulness and eigenband-coherence audit. The audit
+  uses one-sided hypergeometric GO-feature enrichment with BH correction per
+  cluster and `30` size-preserving random partitions per eigenband. Julia has
+  many meaningful clusters (`506` strong and `138` moderate), but strict
+  eigenband coherence is mixed: only `2/14` accepted KL eigenbands are coherent,
+  with `7/14` above-null-mean, `4/14` null-like or weak, and `1/14`
+  under-tested. Interactome is stronger at the eigenband level: `3/7` accepted
+  KL eigenbands are coherent, `2/7` above-null-mean, and `2/7` null-like or
+  weak. Diagnostic linkage-cut eigenbands show internal enrichment but remain
+  diagnostic, not accepted final KL output. QuickGO rechecks found `4/27`
+  Julia top terms obsolete and `0/21` interactome top terms obsolete.
 
 ## Evidence
 

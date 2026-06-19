@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-17
+updated: 2026-06-19
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -42,6 +42,13 @@ renamed, or promoted.
 - [[aws-selected-tail-equation-study]] - AWS Batch sharding and merge workflow
   for large selected-tail equation diagnostics, with row-level records and
   namespaced independent simulation ids.
+- [[current-adaptive-diffusion-subspace-tree-pipeline]] - full current
+  adaptive-diffusion cosine-subspace tree pipeline contract, including stable
+  result-directory layout, rankings, PDFs, manifests, and per-subspace files.
+- [[go-annotation-feature-matrix-pipeline]] - consistent GO annotation
+  feature-matrix entry point plus an audit that separates matrix quality,
+  candidate generation, mixed-method GO-IC reports, canonical current outputs,
+  and unclassified legacy folders.
 
 ### Source Summaries
 
@@ -259,6 +266,85 @@ renamed, or promoted.
   same seven overlap/root-tail cases; every tested alpha has one legacy signal
   gain and at least one legacy extra selected-null false split, so edge alpha
   alone does not produce an admissible legacy rule.
+- [[manual-guarded-benchmark-run-direct-20260617]] - six-method, six-case
+  direct-dispatch smoke over binary, categorical, and `overlap_extreme_4c`
+  replicates; branch-length internal filtering has the best completed-row
+  profile, current and bandwidth-context match exactly, and guarded hard
+  overlap skips remain distinct from legacy-style low-ARI completions.
+- [[benchmark-runner-guarded-contract-fix-20260618]] - standard benchmark
+  runner fix for guarded KL variants: partial OK timing metadata is completed,
+  internal-barycenter candidate profiles enforce internal support thresholds,
+  and `overlap_extreme_4c*` one-cluster guarded OK rows become explicit skips.
+- [[branch-length-candidate-run-gate-20260618]] - first standard `run_gate`
+  comparison after the guarded runner fix for `kl`, `kl_legacy_c2ef9a69`, and
+  `kl_internal_filter_branch_length_v1`; branch-length remains fail-closed on
+  severe overlap but over-skips several sparse-context gate rows, so it stays
+  the next candidate to test rather than a production promotion.
+- [[branch-length-candidate-full-big-20260618]] - full `121`-case comparison
+  of current KL, legacy c2ef, and branch-length internal filtering; current KL
+  has the best completed-row mean ARI, branch-length remains close and
+  fail-closed on unsupported severe overlap, and legacy completes all rows but
+  has the weakest mean ARI.
+- [[branch-length-candidate-promotion-audit-20260618]] - decision record for
+  branch-length promotion: do not replace current KL globally; keep
+  branch-length as the next guarded candidate and evaluate fixed-candidate
+  traversal/support evidence because it improves some
+  phylogenetic/categorical/binary rows but regresses solved continuous and
+  phylogenetic cases.
+- [[branch-length-traversal-audit-20260618]] - fixed-candidate traversal audit
+  for current KL and branch-length internal filtering; records live traversal
+  counters, edge-reachable traversal tuples, edge maps, branch lengths, run
+  logs, and verification logs without introducing adaptive method routing.
+- [[path-conditioned-traversal-audit-20260618]] - path-conditioned extension
+  of the traversal tuple audit; records incoming-parent state, ancestor-chain
+  pass-through counts, descendant support counts, truth-label tuple
+  diagnostics, and pass-through/boundary summaries without changing traversal
+  decisions.
+- [[path-conditioned-hypothesis-audit-20260618]] - falsification table joining
+  path-conditioned traversal burden to branch/current outcome deltas and recent
+  method variants; status-mismatched rows are isolated instead of interpreted
+  as path-burden evidence.
+- [[path-conditioned-alpha-contract-recheck-20260618]] - benchmark-aligned
+  recheck of the path-conditioned traversal/hypothesis audits under
+  `edge_alpha=0.001` and `sibling_alpha=0.01`; resolves the earlier `6/16`
+  status mismatch as an audit-alpha mismatch and leaves `0/16` mismatches.
+- [[benchmark-plot-backend-fix-20260618]] - fixes the plotted full benchmark
+  crash by selecting Matplotlib's file-safe `Agg` backend before benchmark
+  plotting imports `pyplot`; the UMAP-triggered failure was a macOS GUI backend
+  abort, and a plotted isolated `method_proof` run now completes.
+- [[julia-allgo-new-c2ef-cosine-subspace-validation-20260618]] - completed
+  legacy c2ef `validate_cosine_subspace_split.py` run on
+  `feature_matrix_julia_allGO_new.tsv`; the TF-IDF cosine components `2-5`
+  split yields `19` clusters, `11/19` coherence-rule passes, and perturbation
+  evidence that gene subsampling is stable while feature subsampling is partly
+  blocked by zero-active-term rows.
+- [[julia-allgo-new-feature-matrix-quality-20260618]] - input-quality audit for
+  `feature_matrix_julia_allGO_new.tsv`; the matrix is binary, complete, and has
+  no zero rows or columns, but GO support is rare-term-heavy, exact duplicate
+  GO-term patterns are common, marginal GO-term entropy is low, gene annotation
+  burden is uneven, and the SVD spectrum is distributed across many components.
+- [[julia-allgo-new-current-adaptive-diffusion-subspace-tree-20260618]] -
+  current-method adaptive diffusion run over allGO-new cosine subspaces, with
+  one output directory per subspace, cluster assignments and trees for
+  completed rows, explicit failed-gate status for `binary` modes `02-06`, and
+  connected per-axis plus combined GO-term loading plots explaining each
+  subspace axis.
+- [[allgo-new-interactome-current-adaptive-diffusion-subspace-tree-20260618]] -
+  current-method adaptive diffusion run on
+  `feature_matrix_allGO_new_interactome.tsv`, using the full connected
+  pipeline directory structure with method-separated PDFs, manifests, and
+  specificity-aware ranking.
+- [[julia-allgo-new-go-ic-tree-summary-plots-20260618]] - all-tree allGO-new
+  GO annotation information-criterion plot deck over `31` raw cosine subspace,
+  adaptive-diffusion cosine subspace, legacy c2ef, and full adaptive-diffusion
+  trees; method-separated PDFs/CSVs keep those families apart, and display
+  ranking is quality-tiered before GO-BIC to demote singleton-dominated
+  GO-overfit splits while preserving raw GO-IC rank.
+- [[julia-allgo-new-method-version-tree-matrix-20260618]] - selected allGO-new
+  crossed matrix separating gate version from tree geometry: legacy/current
+  gates over raw cosine-subspace and adaptive-diffusion cosine-subspace trees,
+  plus the current full adaptive-diffusion tree; the attempted legacy full
+  adaptive tree hit the c2ef shortest-path interpolation bottleneck.
 - [[ad-hoc-sibling-gate-selected-null-diffusion-comparison-20260617]] -
   selected-null/signal smoke comparing legacy, adaptive parent PCA, fixed
   sibling gates, guarded coordinate profiles, and diffusion tree construction;
