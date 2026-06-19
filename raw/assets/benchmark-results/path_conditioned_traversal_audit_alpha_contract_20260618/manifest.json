@@ -1,0 +1,60 @@
+{
+  "argv": [
+    "/Users/berksakalli/Projects/kl-te-cluster/benchmarks/diagnostics/calibration/path_conditioned_traversal_audit.py",
+    "--output-dir",
+    "raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618"
+  ],
+  "case_names": [
+    "phylo_dna_8taxa_low_mut",
+    "phylo_protein_8taxa",
+    "cat_mod_4cat_6c",
+    "binary_2clusters",
+    "gauss_outlier_cluster_4c",
+    "gauss_noisy_many",
+    "gauss_clear_medium",
+    "dim_consolidated_4c_24f",
+    "phylo_dna_4taxa_low_mut",
+    "phylo_protein_4taxa",
+    "phylo_dna_8taxa_med_mut",
+    "gauss_single_outlier_4c",
+    "binary_unbalanced_med",
+    "overlap_extreme_4c",
+    "traversal_deep_signal_under_same_parent",
+    "traversal_deep_branch_recovery_stress"
+  ],
+  "counts": {
+    "boundary_summary_rows": 27,
+    "method_rows": 32,
+    "pass_through_summary_rows": 8,
+    "path_conditioned_tuple_rows": 3819,
+    "summary_rows": 32
+  },
+  "edge_alpha": 0.001,
+  "environment": {
+    "KL_TE_N_JOBS": "",
+    "cwd": "/Users/berksakalli/Projects/kl-te-cluster",
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.2 | packaged by Anaconda, Inc. | (main, Feb  6 2025, 12:55:35) [Clang 14.0.6 ]"
+  },
+  "generated_at_utc": "20260618_142527Z",
+  "generated_by": "benchmarks.diagnostics.calibration.path_conditioned_traversal_audit",
+  "methods": [
+    "kl",
+    "kl_internal_filter_branch_length_v1"
+  ],
+  "output_dir": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618",
+  "outputs": {
+    "manifest": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618/manifest.json",
+    "method_rows": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618/method_rows.csv",
+    "path_conditioned_boundary_summary": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618/path_conditioned_boundary_summary.csv",
+    "path_conditioned_pass_through_summary": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618/path_conditioned_pass_through_summary.csv",
+    "path_conditioned_traversal_case_summary": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618/path_conditioned_traversal_case_summary.csv",
+    "path_conditioned_traversal_tuples": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618/path_conditioned_traversal_tuples.csv",
+    "run_log": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618/run.log",
+    "verification_log": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_alpha_contract_20260618/verification.log"
+  },
+  "schema_version": "path_conditioned_traversal_audit/v1",
+  "significance_level": 0.01,
+  "study_role": "diagnostic_path_conditioned_traversal_audit_not_policy",
+  "suite": "full"
+}

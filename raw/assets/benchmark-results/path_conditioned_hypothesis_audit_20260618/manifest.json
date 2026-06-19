@@ -1,0 +1,41 @@
+{
+  "argv": [
+    "/Users/berksakalli/Projects/kl-te-cluster/benchmarks/diagnostics/calibration/path_conditioned_hypothesis_audit.py",
+    "--output-dir",
+    "raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618"
+  ],
+  "counts": {
+    "branch_current_cases": 16,
+    "burden_summary_rows": 9,
+    "method_case_rows": 32,
+    "recent_method_connection_rows": 9,
+    "solution_rows": 5
+  },
+  "environment": {
+    "cwd": "/Users/berksakalli/Projects/kl-te-cluster",
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.2 | packaged by Anaconda, Inc. | (main, Feb  6 2025, 12:55:35) [Clang 14.0.6 ]"
+  },
+  "generated_at_utc": "20260618_123846Z",
+  "generated_by": "benchmarks.diagnostics.calibration.path_conditioned_hypothesis_audit",
+  "inputs": {
+    "full_big_dir": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/branch_length_candidate_full_big_20260618",
+    "manual_guarded_dir": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/manual_guarded_benchmark_run_direct_20260617",
+    "path_audit_dir": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_traversal_audit_20260618",
+    "promotion_audit_dir": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618"
+  },
+  "output_dir": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618",
+  "outputs": {
+    "branch_current_path_hypothesis_table": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/branch_current_path_hypothesis_table.csv",
+    "hypothesis_solution_matrix": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/hypothesis_solution_matrix.csv",
+    "manifest": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/manifest.json",
+    "method_case_path_hypothesis_table": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/method_case_path_hypothesis_table.csv",
+    "path_burden_outcome_summary": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/path_burden_outcome_summary.csv",
+    "path_conditioned_hypothesis_report": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/path_conditioned_hypothesis_report.md",
+    "recent_method_connection_summary": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/recent_method_connection_summary.csv",
+    "run_log": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/run.log",
+    "verification_log": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/path_conditioned_hypothesis_audit_20260618/verification.log"
+  },
+  "schema_version": "path_conditioned_hypothesis_audit/v1",
+  "study_role": "diagnostic_hypothesis_audit_not_policy"
+}

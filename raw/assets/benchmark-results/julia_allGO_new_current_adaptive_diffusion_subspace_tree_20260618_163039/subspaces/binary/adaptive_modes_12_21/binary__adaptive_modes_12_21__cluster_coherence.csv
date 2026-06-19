@@ -1,0 +1,39 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,0,15,242,4.1344312897421255e-15,RNA Splicing (GO:0008380),0.7914821124361159,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,1,21,150,1.6773641808377448e-21,MHC Protein Complex (GO:0042611),0.7584624211130235,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,2,12,28,8.17158827711554e-11,Establishment Of Protein Localization To Organelle (GO:0072594),0.8793785310734463,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,3,17,132,2.2180122170022788e-13,Transport Across Blood-Brain Barrier (GO:0150104),0.6939165409753646,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,4,16,163,7.502443853595419e-17,Glycosaminoglycan Metabolic Process (GO:0030203),0.859641638225256,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,5,25,55,8.918581832641801e-11,Ubiquitin-Like Protein Transferase Activity (GO:0019787),0.7328249566724437,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,6,22,189,2.4524845218879846e-13,DNA Replication (GO:0006260),0.6927899686520377,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,7,32,49,2.0513130316582407e-17,Endoplasmic Reticulum Membrane (GO:0005789),0.7883771929824561,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,8,13,152,3.2147264118913173e-13,Release Of Cytochrome C From Mitochondria (GO:0001836),0.7641373906229594,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,9,18,238,2.439805874298675e-12,Nucleosomal DNA Binding (GO:0031492),0.6999619482496194,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,10,7,341,1.9783322244761126e-07,Acetyltransferase Activity (GO:0016407),0.9747899159663865,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,11,7,22,4.014850690848581e-07,Proteasome Assembly (GO:0043248),0.9714285714285714,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,12,4,42,0.011738872918057848,NAD Binding (GO:0051287),0.7399665551839465,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,13,4,17,0.004956036899536484,Regulation Of ER-associated Ubiquitin-Dependent Protein Catabolic Process (GO:1903069),0.9648829431438127,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,14,28,399,1.0416752274581344e-17,Peptidyl-Serine Modification (GO:0018209),0.804006968641115,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,15,23,93,9.655725567216402e-11,Type III Interferon-Mediated Signaling Pathway (GO:0038196),0.391304347826087,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,16,15,261,8.388841542869627e-10,Protein Phosphorylated Amino Acid Binding (GO:0045309),0.8447473026689382,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,17,35,118,4.2153549698772185e-13,Vesicle-Mediated Transport (GO:0016192),0.5721340388007055,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,18,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,19,17,126,3.703495525875958e-14,NADPH Oxidase Complex (GO:0043020),0.7493212669683258,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,20,28,45,2.2202755537335798e-05,Ficolin-1-Rich Granule Lumen (GO:1904813),0.49651567944250874,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,21,17,88,3.843478618691773e-12,Transcription Preinitiation Complex Assembly (GO:0070897),0.6870789341377577,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,22,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,23,25,334,3.880384221513007e-09,B Cell Receptor Signaling Pathway (GO:0050853),0.6281455805892547,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,24,17,1,0.024672803130437335,RNA Binding (GO:0003723),0.5068878833584716,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,25,5,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.1715242881072027,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,26,13,9,0.010378355130870905,Kinase Binding (GO:0019900),0.6310565495624919,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,27,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,28,3,100,0.0007040314868353408,Negative Regulation Of DNA Replication (GO:0008156),0.998330550918197,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,29,3,39,0.0389637425995434,Positive Regulation Of Chemokine (C-X-C Motif) Ligand 2 Production (GO:2000343),0.9682804674457429,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,30,9,0,0.7972551377049881,Cytoskeleton-Dependent Intracellular Transport (GO:0030705),0.3249016301292861,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,31,12,0,0.138526587090005,Basolateral Plasma Membrane (GO:0016323),0.4423728813559322,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,32,14,4,0.0005170077354989821,Regulation Of Signal Transduction By P53 Class Mediator (GO:1901796),0.5289115646258503,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,33,10,11,0.00010982959771023182,Endoplasmic Reticulum Lumen (GO:0005788),0.7783783783783784,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,34,3,0,0.05033825130872687,Negative Regulation Of B Cell Proliferation (GO:0030889),0.9833055091819699,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,35,7,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030252100840336135,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,36,25,74,0.01453102037748463,Cellular Response To Steroid Hormone Stimulus (GO:0071383),0.2488041594454073,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_12_21,37,76,23,0.005338849365130868,Reverse Cholesterol Transport (GO:0043691),0.13142885731438864,False

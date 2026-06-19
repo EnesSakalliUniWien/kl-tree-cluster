@@ -1,0 +1,20 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+legacy_c2ef__tfidf__components_02_05,0,27,49,1.2365684452455055e-32,Proteasome Assembly (GO:0043248),0.8501127214170693,True
+legacy_c2ef__tfidf__components_02_05,1,25,273,4.9077647290539605e-32,Fibrinolysis (GO:0042730),0.9478682842287696,True
+legacy_c2ef__tfidf__components_02_05,2,36,897,1.9146361697271456e-41,Ephrin Receptor Binding (GO:0046875),0.969964664310954,True
+legacy_c2ef__tfidf__components_02_05,3,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__tfidf__components_02_05,4,52,307,1.0428690909703497e-23,Glycosaminoglycan Metabolic Process (GO:0030203),0.4423076923076923,True
+legacy_c2ef__tfidf__components_02_05,5,32,73,3.5666719023444023e-06,Regulation Of I-kappaB kinase/NF-kappaB Signaling (GO:0043122),0.5190789473684211,True
+legacy_c2ef__tfidf__components_02_05,6,9,4,0.0117703191590451,Ubiquitin-Dependent Protein Catabolic Process (GO:0006511),0.7571669477234402,True
+legacy_c2ef__tfidf__components_02_05,7,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+legacy_c2ef__tfidf__components_02_05,8,3,77,0.0143622423314409,Positive Regulation Of Protein Export From Nucleus (GO:0046827),0.989983305509182,True
+legacy_c2ef__tfidf__components_02_05,9,14,0,0.2869237820050889,Chaperone Cofactor-Dependent Protein Refolding (GO:0051085),0.3809523809523809,False
+legacy_c2ef__tfidf__components_02_05,10,6,0,0.2423504833294799,Establishment Of Apical/Basal Cell Polarity (GO:0035089),0.4848993288590604,False
+legacy_c2ef__tfidf__components_02_05,11,109,0,0.5740530576080825,Nucleotide-Sugar Biosynthetic Process (GO:0009226),0.0458715596330275,False
+legacy_c2ef__tfidf__components_02_05,12,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+legacy_c2ef__tfidf__components_02_05,13,66,123,5.062727447862669e-16,Endoplasmic Reticulum Membrane (GO:0005789),0.5342039800995024,True
+legacy_c2ef__tfidf__components_02_05,14,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030050083472454,False
+legacy_c2ef__tfidf__components_02_05,15,2,0,0.2002089540688,Negative Regulation Of Response To Wounding (GO:1903035),0.9816666666666668,False
+legacy_c2ef__tfidf__components_02_05,16,39,140,4.745531409897651e-07,Transmembrane Receptor Protein Tyrosine Kinase Signaling Pathway (GO:0007169),0.4425467960103839,True
+legacy_c2ef__tfidf__components_02_05,17,130,898,6.705243726291046e-54,DNA Binding (GO:0003677),0.6764667535853977,True
+legacy_c2ef__tfidf__components_02_05,18,44,602,5.739481746223208e-44,Regulation Of Tumor Necrosis Factor-Mediated Signaling Pathway (GO:0010803),0.9222873900293256,True

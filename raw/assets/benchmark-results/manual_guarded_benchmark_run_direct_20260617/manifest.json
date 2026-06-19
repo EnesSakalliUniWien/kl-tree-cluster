@@ -1,0 +1,20 @@
+{
+  "methods": [
+    "kl_current",
+    "kl_legacy_c2ef9a69",
+    "kl_internal_filter_v1",
+    "kl_internal_filter_branch_length_v1",
+    "kl_bandwidth_context_v1",
+    "kl_rescued_legacy_v1"
+  ],
+  "case_names": [
+    "binary_2clusters",
+    "binary_2clusters__r1",
+    "cat_clear_3cat_4c",
+    "cat_clear_3cat_4c__r1",
+    "overlap_extreme_4c",
+    "overlap_extreme_4c__r1"
+  ],
+  "generated_at_utc": "20260617T153205Z",
+  "n_rows": 36
+}

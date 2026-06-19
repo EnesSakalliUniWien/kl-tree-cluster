@@ -1,0 +1,57 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,0,12,198,5.447272741635082e-15,High-Density Lipoprotein Particle Remodeling (GO:0034375),0.906497175141243,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,1,14,115,1.1376100936687514e-15,Cornified Envelope (GO:0001533),0.9098639455782314,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,2,12,107,1.661019068482088e-10,Positive Regulation Of Stem Cell Population Maintenance (GO:1902459),0.8793785310734463,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,3,19,48,6.42465978531175e-11,Interleukin-4-Mediated Signaling Pathway (GO:0035771),0.5686557732237971,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,4,13,64,2.6306906681933606e-09,"Fatty Acid Elongation, Unsaturated Fatty Acid (GO:0019368)",0.5367637455922685,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,5,9,48,2.3057285174642493e-11,DNA-templated Transcription Elongation (GO:0006354),0.8838298669664605,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,6,21,237,6.135406824484664e-10,Cysteine-Type Deubiquitinase Activity (GO:0004843),0.625358577165806,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,7,10,6,1.648376083270353e-08,Positive Regulation Of Immune System Process (GO:0002684),0.6949324324324324,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,8,13,5,6.905230412416938e-06,Iron-Sulfur Cluster Assembly (GO:0016226),0.4564450829306517,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,9,34,144,1.2395035024702036e-08,Protection From Natural Killer Cell Mediated Cytotoxicity (GO:0042270),0.2647058823529412,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,10,16,436,2.1624477860709443e-11,Transferrin Receptor Binding (GO:1990459),0.7732508532423208,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,11,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.4716666666666667,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,12,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,13,13,107,5.651202474374003e-07,SH3 Domain Binding (GO:0017124),0.7697531670366984,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,14,2,0,0.3432153498322286,Inhibition Of Cysteine-Type Endopeptidase Activity (GO:0097340),0.9816666666666667,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,15,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,16,16,90,1.9452762888269784e-06,Cysteine-Type Endopeptidase Activator Activity Involved In Apoptotic Process (GO:0008656),0.48293515358361777,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,17,9,81,3.2589354027568284e-08,Cyclin-Dependent Protein Serine/Threonine Kinase Regulator Activity (GO:0016538),0.7693460745737306,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,18,3,9,0.006160275509809233,Cellular Response To Bacterial Lipopeptide (GO:0071221),0.993322203672788,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,19,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,20,2,0,0.305080310961981,Inhibition Of Cysteine-Type Endopeptidase Activity (GO:0097340),0.9816666666666667,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,21,10,23,6.819511850325451e-10,Protein Neddylation (GO:0045116),0.8797297297297297,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,22,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,23,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,24,3,3,0.047874141104803175,Negative Regulation Of Inclusion Body Assembly (GO:0090084),0.9749582637729549,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,25,2,202,0.007040314868353408,Phosphatidic Acid Transfer Activity (GO:1990050),1.0,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,26,4,2,0.034616840343936355,'De Novo' Post-Translational Protein Folding (GO:0051084),0.9464882943143813,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,27,25,83,2.171430684102746e-06,Heparan Sulfate Proteoglycan Metabolic Process (GO:0030201),0.2782668977469671,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,28,19,24,1.3555141873758192e-09,Platelet Dense Granule Organization (GO:0060155),0.5160241942764286,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,29,9,210,6.90678767858231e-11,"Protein Localization To Chromosome, Telomeric Region (GO:0070198)",0.8821435263256511,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,30,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,31,8,31,2.9507450224839478e-08,U4/U6 X U5 tri-snRNP Complex (GO:0046540),0.8615319865319865,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,32,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,33,2,0,0.050287963345381485,Alkali Metal Ion Binding (GO:0031420),0.9983333333333333,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,34,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03005008347245409,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,35,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,36,9,373,5.0078790933135237e-08,Regulation Of Cellular Response To Heat (GO:1900034),0.9494097807757167,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,37,19,19,1.796046086544153e-05,Mitotic Chromosome Condensation (GO:0007076),0.36155998916674187,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,38,9,26,1.7123114068763163e-06,Positive Regulation Of CREB Transcription Factor Activity (GO:0032793),0.6599213041034289,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,39,11,21,7.983189525648851e-07,Azurophil Granule Lumen (GO:0035578),0.8363328718658668,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,40,6,3,0.02823308042154187,Macromolecule Modification (GO:0043412),0.7779642058165548,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,41,23,0,0.962943010096449,Regulation Of Lysosomal Lumen pH (GO:0035751),0.1252534354584366,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,42,6,60,1.1522793783302872e-10,Regulation Of Centrosome Cycle (GO:0046605),0.9983221476510067,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,43,13,787,1.722747606778597e-16,Inositol Lipid-Mediated Signaling (GO:0048017),0.9796264855687606,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,44,14,33,2.0760532131227844e-09,GTP Binding (GO:0005525),0.7517006802721088,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,45,27,59,1.4400312211038517e-08,Adherens Junction (GO:0005912),0.4837359098228663,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,46,20,41,1.5833631332458472e-05,Tumor Necrosis Factor Receptor Activity (GO:0005031),0.42766323024054986,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,47,41,60,8.334966445443146e-08,Phospholipase C-activating G Protein-Coupled Receptor Signaling Pathway (GO:0007200),0.2819877396634929,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,48,34,227,3.0864940361691067e-15,Regulation Of RNA Metabolic Process (GO:0051252),0.5376967688483845,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,49,8,0,0.09801288684709986,Cyclin-Dependent Protein Kinase Activity (GO:0097472),0.47474747474747475,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,50,4,4,0.0009375333043945302,Nuclear Polyadenylation-Dependent ncRNA Catabolic Process (GO:0071046),0.7483277591973244,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,51,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,52,1,0,0.6985519964896885,Pulmonary Valve Morphogenesis (GO:0003184),0.9966722129783694,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,53,9,2,0.0050835445229832224,Protein Export From Nucleus (GO:0006611),0.5370058085066517,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,54,13,92,1.6588342152549634e-08,Endopeptidase Regulator Activity (GO:0061135),0.7952200600757476,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_22_40,55,19,0,0.33426980117395866,Myosin II Binding (GO:0045159),0.156179470975896,False

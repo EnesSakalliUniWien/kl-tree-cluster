@@ -1,0 +1,25 @@
+{
+  "outdir": "raw/assets/benchmark-results/small_target_benchmark_dispatch_20260617",
+  "methods": [
+    "kl_current",
+    "kl_legacy_c2ef9a69",
+    "kl_internal_filter_v1",
+    "kl_internal_filter_branch_length_v1",
+    "kl_bandwidth_context_v1",
+    "kl_rescued_legacy_v1"
+  ],
+  "cases": [
+    "binary_2clusters",
+    "binary_2clusters__r1",
+    "cat_clear_3cat_4c",
+    "cat_clear_3cat_4c__r1",
+    "overlap_extreme_4c",
+    "overlap_extreme_4c__r1"
+  ],
+  "params": {
+    "significance_level": 0.01,
+    "edge_alpha": 0.001,
+    "tree_distance_metric": "hamming",
+    "tree_linkage_method": "average"
+  }
+}

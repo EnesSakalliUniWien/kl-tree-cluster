@@ -1,0 +1,25 @@
+run_id,kind,fraction,replicate,status,n_genes,n_features,n_clusters,largest_cluster,largest_cluster_fraction,ari_vs_reference,nmi_vs_reference,error
+feature_subsample_0.80_rep00,feature_subsample,0.8,0,ok,602.0,5094.0,12.0,183.0,0.30398671096345514,0.683506837170674,0.8155662519806706,
+feature_subsample_0.80_rep01,feature_subsample,0.8,1,failed,,,,,,,,ValueError('1 genes lost all active terms')
+feature_subsample_0.80_rep02,feature_subsample,0.8,2,ok,602.0,5094.0,15.0,166.0,0.2757475083056478,0.6394477599503949,0.8185021837117437,
+feature_subsample_0.80_rep03,feature_subsample,0.8,3,ok,602.0,5094.0,16.0,132.0,0.21926910299003322,0.7379719037292607,0.8030296774061255,
+feature_subsample_0.80_rep04,feature_subsample,0.8,4,failed,,,,,,,,ValueError('1 genes lost all active terms')
+feature_subsample_0.80_rep05,feature_subsample,0.8,5,ok,602.0,5094.0,14.0,253.0,0.420265780730897,0.4119301503658005,0.7048674430529221,
+feature_subsample_0.80_rep06,feature_subsample,0.8,6,ok,602.0,5094.0,17.0,193.0,0.32059800664451826,0.5091370628767145,0.7771225096544154,
+feature_subsample_0.80_rep07,feature_subsample,0.8,7,ok,602.0,5094.0,18.0,97.0,0.1611295681063123,0.7061878576492835,0.8175708740320239,
+feature_subsample_0.60_rep00,feature_subsample,0.6,0,ok,602.0,3821.0,22.0,218.0,0.36212624584717606,0.37026161331717755,0.6816240103454676,
+feature_subsample_0.60_rep01,feature_subsample,0.6,1,failed,,,,,,,,ValueError('1 genes lost all active terms')
+feature_subsample_0.60_rep02,feature_subsample,0.6,2,failed,,,,,,,,ValueError('2 genes lost all active terms')
+feature_subsample_0.60_rep03,feature_subsample,0.6,3,ok,602.0,3821.0,26.0,108.0,0.17940199335548174,0.6174390861495578,0.7788789224375382,
+feature_subsample_0.60_rep04,feature_subsample,0.6,4,ok,602.0,3821.0,20.0,192.0,0.31893687707641194,0.5981894551918631,0.7767846920822077,
+feature_subsample_0.60_rep05,feature_subsample,0.6,5,ok,602.0,3821.0,21.0,162.0,0.2691029900332226,0.4710650621326882,0.724982568127755,
+feature_subsample_0.60_rep06,feature_subsample,0.6,6,failed,,,,,,,,ValueError('2 genes lost all active terms')
+feature_subsample_0.60_rep07,feature_subsample,0.6,7,failed,,,,,,,,ValueError('2 genes lost all active terms')
+gene_subsample_0.80_rep00,gene_subsample,0.8,0,ok,482.0,6368.0,19.0,136.0,0.2821576763485477,0.5436821422371885,0.7881559445776937,
+gene_subsample_0.80_rep01,gene_subsample,0.8,1,ok,482.0,6368.0,14.0,114.0,0.23651452282157676,0.638982131006898,0.8119797515641141,
+gene_subsample_0.80_rep02,gene_subsample,0.8,2,ok,482.0,6368.0,17.0,181.0,0.3755186721991701,0.5149486808738003,0.7838206843985366,
+gene_subsample_0.80_rep03,gene_subsample,0.8,3,ok,482.0,6368.0,13.0,143.0,0.2966804979253112,0.6622263383998742,0.8468127325799857,
+gene_subsample_0.80_rep04,gene_subsample,0.8,4,ok,482.0,6368.0,16.0,166.0,0.34439834024896265,0.49343980304608664,0.7473787463576279,
+gene_subsample_0.80_rep05,gene_subsample,0.8,5,ok,482.0,6368.0,29.0,115.0,0.23858921161825727,0.61178239400066,0.7939416722970369,
+gene_subsample_0.80_rep06,gene_subsample,0.8,6,ok,482.0,6368.0,6.0,364.0,0.7551867219917012,0.1439370714354822,0.4920627935573489,
+gene_subsample_0.80_rep07,gene_subsample,0.8,7,ok,482.0,6368.0,25.0,134.0,0.27800829875518673,0.6126758872058049,0.8063742332358228,

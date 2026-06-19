@@ -1,0 +1,48 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,0,27,49,1.2365684452455055e-32,Proteasome Assembly (GO:0043248),0.8501127214170693,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,1,25,273,4.9077647290539605e-32,Fibrinolysis (GO:0042730),0.9478682842287696,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,2,36,897,1.9146361697271456e-41,Ephrin Receptor Binding (GO:0046875),0.969964664310954,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,3,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,4,52,307,1.0428690909703497e-23,Glycosaminoglycan Metabolic Process (GO:0030203),0.4423076923076923,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,5,32,73,3.5666719023444023e-06,Regulation Of I-kappaB kinase/NF-kappaB Signaling (GO:0043122),0.5190789473684211,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,6,9,4,0.0117703191590451,Ubiquitin-Dependent Protein Catabolic Process (GO:0006511),0.7571669477234402,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,7,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,8,3,77,0.0143622423314409,Positive Regulation Of Protein Export From Nucleus (GO:0046827),0.989983305509182,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,9,14,0,0.2869237820050889,Chaperone Cofactor-Dependent Protein Refolding (GO:0051085),0.3809523809523809,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,10,6,0,0.2423504833294799,Establishment Of Apical/Basal Cell Polarity (GO:0035089),0.4848993288590604,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,11,109,0,0.5740530576080825,Nucleotide-Sugar Biosynthetic Process (GO:0009226),0.0458715596330275,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,12,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,13,66,123,5.062727447862669e-16,Endoplasmic Reticulum Membrane (GO:0005789),0.5342039800995024,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,14,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030050083472454,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,15,2,0,0.2002089540688,Negative Regulation Of Response To Wounding (GO:1903035),0.9816666666666668,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,16,39,140,4.745531409897651e-07,Transmembrane Receptor Protein Tyrosine Kinase Signaling Pathway (GO:0007169),0.4425467960103839,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,17,130,898,6.705243726291046e-54,DNA Binding (GO:0003677),0.6764667535853977,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_02_05,18,44,602,5.739481746223208e-44,Regulation Of Tumor Necrosis Factor-Mediated Signaling Pathway (GO:0010803),0.9222873900293256,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,0,9,62,3.0252249925881035e-09,Phospholipase C-activating G Protein-Coupled Receptor Signaling Pathway (GO:0007200),0.8720254824807944,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,1,17,38,1.0720456355081136e-11,Regulation Of Telomerase RNA Localization To Cajal Body (GO:1904872),0.6368024132730016,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,2,12,144,1.8925104170104415e-08,Mitochondrial Outer Membrane (GO:0005741),0.853954802259887,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,3,3,27,0.0020534251699364,Regulation Of Protein Localization To Cell Periphery (GO:1904375),0.993322203672788,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,4,53,425,3.4832485304409e-20,Peptidyl-Serine Modification (GO:0018209),0.6063855380279753,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,5,30,64,4.073008641690049e-14,Endoplasmic Reticulum Membrane (GO:0005789),0.7461538461538462,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,6,45,146,1.8184980276504474e-07,Ubiquitin Conjugating Enzyme Activity (GO:0061631),0.3250349092359864,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,7,29,158,6.035082577551496e-07,Prespliceosome (GO:0071010),0.2413793103448276,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,8,5,80,3.891609605568855e-06,bBAF Complex (GO:0140092),0.9882747068676716,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,9,3,0,0.0903171821683051,Maturation Of LSU-rRNA (GO:0000470),0.6649972175848636,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,10,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,11,16,196,1.3800431691721192e-05,Histone Modification (GO:0016570),0.6544368600682594,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,12,39,9,0.0218331271122322,Spindle Assembly (GO:0051225),0.167053786947215,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,13,10,5,0.0149343991981457,Antiporter Activity (GO:0015297),0.3932432432432433,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,14,16,0,0.07131880473445,Actin Filament Depolymerization (GO:0030042),0.2448805460750853,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,15,82,31,0.0104631465385099,Regulation Of T-helper Cell Differentiation (GO:0045622),0.0834427767354596,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,16,8,15,0.0032854802718982,Voltage-Gated Monoatomic Cation Channel Activity (GO:0022843),0.375,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,17,24,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0311418685121107,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,18,5,0,0.5912447429397637,Cellular Response To Amino Acid Stimulus (GO:0071230),0.3865996649916248,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,19,15,2,0.0125287320160283,Positive Regulation Of Platelet Aggregation (GO:1901731),0.3231118682566723,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,20,45,3,0.0446989376627418,Mast Cell Mediated Immunity (GO:0002448),0.1279473369239976,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,21,18,36,8.707260393622076e-05,Endoderm Formation (GO:0001706),0.4657534246575342,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,22,8,0,0.5658832509278484,Regulation Of Podosome Assembly (GO:0071801),0.3632154882154882,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,23,47,0,0.0882923395892495,Acetylglucosaminyltransferase Activity (GO:0008375),0.1009775733179988,False
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,24,18,224,9.744717225187009e-12,Response To X-ray (GO:0010165),0.6025494672754947,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,25,29,26,0.0001222043543731,Keratinocyte Differentiation (GO:0030216),0.3444063308659806,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_16_19,26,15,63,3.4155068790345782e-06,Kinetochore Microtubule (GO:0005828),0.3982964224872232,True
+legacy_c2ef__raw_cosine_subspace__tfidf__adaptive_modes_53_80,0,602,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.0299003322259136,False

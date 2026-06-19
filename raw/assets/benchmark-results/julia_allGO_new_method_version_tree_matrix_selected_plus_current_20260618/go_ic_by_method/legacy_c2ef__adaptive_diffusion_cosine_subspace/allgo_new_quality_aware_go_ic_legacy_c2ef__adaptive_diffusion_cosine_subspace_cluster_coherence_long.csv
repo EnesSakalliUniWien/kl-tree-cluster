@@ -1,0 +1,110 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,0,17,39,5.4974303545160196e-24,Proteasome Assembly (GO:0043248),0.988034188034188,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,1,25,273,4.9077647290539605e-32,Fibrinolysis (GO:0042730),0.9478682842287696,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,2,15,551,1.1363799213223319e-17,Immune Response-Regulating Cell Surface Receptor Signaling Pathway (GO:0002768),0.9710391822827938,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,3,5,511,5.2212428874715466e-05,Inositol Lipid-Mediated Signaling (GO:0048017),0.966499162479062,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,4,17,397,3.1378144949902978e-15,Phosphotyrosine Residue Binding (GO:0001784),0.92991452991453,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,5,12,198,1.0164210879993725e-15,Monoubiquitinated Histone Deubiquitination (GO:0035521),0.9813559322033898,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,6,3,5,0.0468180938745501,"Positive Regulation Of DNA-templated Transcription, Elongation (GO:0032786)",0.973288814691152,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,7,2,0,0.3226810981328645,Swr1 Complex (GO:0000812),0.9883333333333332,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,8,5,48,0.0094004155816135,Regulation Of Stem Cell Population Maintenance (GO:2000036),0.9195979899497488,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,9,3,24,0.0211209446050602,N-acyltransferase Activity (GO:0016410),0.988313856427379,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,10,7,53,0.0095003175115737,RNA Biosynthetic Process (GO:0032774),0.6756302521008404,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,11,16,430,3.044220487699094e-18,Regulation Of Vascular Wound Healing (GO:0061043),0.8630546075085325,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,12,28,421,5.610062942272528e-23,Regulation Of Tumor Necrosis Factor-Mediated Signaling Pathway (GO:0010803),0.8693379790940767,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,13,31,237,2.136500612378303e-25,Glycosaminoglycan Metabolic Process (GO:0030203),0.673916727868482,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,14,29,80,5.519230128446623e-07,Transmembrane Receptor Protein Tyrosine Kinase Signaling Pathway (GO:0007169),0.5212132153818378,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,15,17,25,0.0140810109075885,ADP-D-ribose Modification-Dependent Protein Binding (GO:0160002),0.2855706385118149,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,16,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,17,11,2,0.0029937471845681,DNA Binding (GO:0003677),0.7297338870942931,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,18,23,404,3.3532816805280144e-14,DNA Binding (GO:0003677),0.8393782383419689,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,19,6,19,3.636006055527439e-05,Regulation Of Proteolysis Involved In Protein Catabolic Process (GO:1903050),0.9580536912751678,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,20,5,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0301507537688442,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,21,2,202,0.0070403148683534,Phosphatidic Acid Transfer Activity (GO:1990050),1.0,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,22,6,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0302013422818791,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,23,13,32,1.9143817232162228e-05,Cul2-RING Ubiquitin Ligase Complex (GO:0031462),0.4547472900613817,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,24,67,54,8.959623419329995e-10,Endoplasmic Reticulum Membrane (GO:0005789),0.4232389454596177,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,25,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,26,10,1,0.0298687983962915,Triglyceride Biosynthetic Process (GO:0019432),0.3915540540540541,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,27,3,0,0.4907010345332601,Mesenchymal Cell Differentiation Involved In Kidney Development (GO:0072161),0.3333333333333333,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,28,5,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0301507537688442,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,29,37,82,4.734615489759507e-05,Peptide Biosynthetic Process (GO:0043043),0.2343936857211193,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,30,39,69,1.0911743806454086e-10,Regulation Of I-kappaB kinase/NF-kappaB Signaling (GO:0043122),0.5855080384387668,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,31,140,0,0.0650960849299744,Transport Across Blood-Brain Barrier (GO:0150104),0.0705627705627705,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,0,16,41,4.23366404230882e-07,Proteasome-Mediated Ubiquitin-Dependent Protein Catabolic Process (GO:0043161),0.7798634812286689,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,1,10,182,3.7775697655172716e-11,Cysteine-Type Endopeptidase Activator Activity Involved In Apoptotic Process (GO:0008656),0.8847972972972973,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,2,29,137,8.48343971070171e-14,Phospholipase C-activating G Protein-Coupled Receptor Signaling Pathway (GO:0007200),0.4757778178973341,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,3,24,472,4.297736677744417e-12,Peptidyl-Serine Modification (GO:0018209),0.7364475201845444,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,4,30,75,5.671303278522551e-16,Organelle Membrane Fusion (GO:0090174),0.5544289044289045,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,5,22,297,2.894157956339346e-12,Positive Regulation Of Stem Cell Population Maintenance (GO:1902459),0.6507836990595611,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,6,24,162,6.731383510064444e-07,Cholesterol Transfer Activity (GO:0120020),0.3646193771626297,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,7,37,310,9.776913658611407e-10,Regulation Of Translation In Response To Endoplasmic Reticulum Stress (GO:0036490),0.3859363788567329,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,8,362,1,6.750990710753794e-05,Lysosomal Lumen (GO:0043202),0.1063305709023941,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,9,48,96,1.2449589910549365e-05,Cellular Response To Interleukin-15 (GO:0071350),0.2473676293622141,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,0,12,113,1.961788912617553e-09,Negative Regulation Of Endopeptidase Activity (GO:0010951),0.8675141242937853,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,1,14,85,7.428996090888415e-11,Positive Regulation Of Axonogenesis (GO:0050772),0.7023809523809524,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,2,7,74,1.3920153563721588e-10,Positive Regulation Of Bone Mineralization (GO:0030501),0.9949579831932772,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,3,11,329,2.833416762893833e-12,"Phosphatidylinositol-4,5-Bisphosphate 3-Kinase Activity (GO:0046934)",0.8131056760498385,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,4,8,79,6.818491624633932e-05,Complement Component C3b Binding (GO:0001851),0.6182659932659933,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,5,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,6,7,52,1.990581959612188e-09,Translation (GO:0006412),0.9899159663865548,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,7,5,0,0.1164626086437477,Positive Regulation Of Small Molecule Metabolic Process (GO:0062013),0.7597989949748745,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,8,11,78,4.197756049792132e-07,Regulation Of T-helper Cell Differentiation (GO:0045622),0.5420704506998922,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,9,11,131,1.361918710627851e-08,poly(A) Binding (GO:0008143),0.6329795416089832,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,10,10,0,0.5975230655686455,X Chromosome (GO:0000805),0.1983108108108108,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,11,2,0,0.4785214012083957,Regulation Of Viral-Induced Cytoplasmic Pattern Recognition Receptor Signaling Pathway (GO:0039531),0.9583333333333334,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,12,11,16,1.281348727134798e-11,NuA4 Histone Acetyltransferase Complex (GO:0035267),0.8097215812951855,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,13,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,14,8,8,0.0012209317227794,Regulation Of Telomere Maintenance Via Telomere Lengthening (GO:1904356),0.4966329966329966,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,15,11,3,0.0180691471516856,Anaphase-Promoting Complex-Dependent Catabolic Process (GO:0031145),0.4359329333948623,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,16,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,17,6,3,0.0140277392243402,Calcium-Independent Cell-Cell Adhesion Via Plasma Membrane Cell-Adhesion Molecules (GO:0016338),0.4983221476510067,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,18,9,40,3.7344473935865784e-06,Regulation Of Nucleotide-Excision Repair (GO:2000819),0.6565486228218099,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,19,5,6,0.0012349374481671,Guanyl Ribonucleotide Binding (GO:0032561),0.95142378559464,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,20,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.9717138103161398,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,21,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,22,7,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0302521008403361,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,23,5,277,5.078747081207032e-05,Regulation Of Leukocyte Activation (GO:0002694),0.9748743718592964,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,24,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,25,12,10,9.975074772618992e-05,Adenyl Ribonucleotide Binding (GO:0032559),0.7299435028248588,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,26,2,0,0.0784492228187951,Inhibition Of Cysteine-Type Endopeptidase Activity (GO:0097340),0.9816666666666668,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,27,8,23,0.0012209317227794,Regulation Of Immature T Cell Proliferation In Thymus (GO:0033084),0.4966329966329966,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,28,2,0,0.2226499577116765,Organonitrogen Compound Catabolic Process (GO:1901565),0.9783333333333332,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,29,13,5,1.508022159516014e-06,Mitochondrial Outer Membrane Translocase Complex (GO:0005742),0.5299725741151887,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,30,13,11,7.442921412343338e-05,Glucose Metabolic Process (GO:0006006),0.4530494971921118,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,31,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030050083472454,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,32,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,33,1,0,0.9012708013646588,Rho Protein Signal Transduction (GO:0007266),0.9717138103161398,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,34,3,9,0.0061602755098092,Cellular Response To Bacterial Lipopeptide (GO:0071221),0.993322203672788,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,35,5,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0301507537688442,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,36,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,37,3,0,0.158055068794534,AP-2 Adaptor Complex (GO:0030122),0.6649972175848636,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,38,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,39,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030050083472454,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,40,14,117,4.683722257911028e-11,Monocarboxylic Acid Catabolic Process (GO:0072329),0.5714285714285714,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,41,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,42,4,129,0.0070138696121701,Necroptotic Process (GO:0070266),0.9715719063545152,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,43,11,0,0.2846222732264917,Negative Regulation Of Double-Strand Break Repair Via Nonhomologous End Joining (GO:2001033),0.2693431779726196,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,44,26,130,2.9039393054527163e-06,Transcription Cis-Regulatory Region Binding (GO:0000976),0.5586271367521367,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,45,29,104,2.890564569285283e-05,Protein K63-linked Ubiquitination (GO:0070534),0.4387073478967322,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,46,25,9,0.0268564597939747,Negative Regulation Of Fibroblast Growth Factor Receptor Signaling Pathway (GO:0040037),0.1948006932409012,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,47,5,129,5.8963781902558436e-08,Cuprous Ion Binding (GO:1903136),0.998324958123953,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,48,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0299500831946755,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,49,16,54,0.0050051807499102,Fatty Acid Elongation (GO:0030497),0.3039675767918088,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,50,8,21,1.547754034443076e-06,Zinc Ion Transmembrane Transporter Activity (GO:0005385),0.8497474747474747,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,51,32,2,0.0422653961045056,Resolution Of Recombination Intermediates (GO:0071139),0.125,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,52,10,3,1.6483760832703532e-08,Endoplasmic Reticulum Tubular Network Organization (GO:0071786),0.6949324324324324,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,53,12,9,0.0076243119546424,Cellular Response To dsRNA (GO:0071359),0.4031073446327683,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,54,4,127,0.0001939318786775,Positive Regulation Of Actin Nucleation (GO:0051127),0.9882943143812708,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,55,28,3,0.0154376334669433,Negative Regulation Of Protein Binding (GO:0032091),0.279616724738676,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,56,25,2,0.0293685109007694,Dicarboxylic Acid Metabolic Process (GO:0043648),0.1930675909878683,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,57,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.4716666666666667,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,58,6,0,0.2890735135676554,Supramolecular Fiber (GO:0099512),0.4899328859060403,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,59,5,31,0.0028778453033181,Regulation Of DNA-templated Transcription Initiation (GO:2000142),0.7865996649916248,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,60,13,4,9.01095814095404e-05,Protein Localization To Plasma Membrane (GO:0072659),0.5180880240302991,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,61,16,21,4.2925633225062534e-05,Regulation Of T-helper 1 Cell Differentiation (GO:0045625),0.3125,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,62,2,0,0.2112094460506022,Negative Regulation Of Protein-Containing Complex Disassembly (GO:0043242),0.9966666666666668,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,63,7,3,0.0245176908437148,Vesicle-Mediated Transport In Synapse (GO:0099003),0.426890756302521,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,64,37,32,0.0002495367898847,P-type Calcium Transporter Activity (GO:0005388),0.2091365701985171,False
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,65,3,99,0.0071911787583895,Inhibition Of Cysteine-Type Endopeptidase Activity (GO:0097340),0.98330550918197,True
+legacy_c2ef__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,66,23,105,1.1107753578014406e-06,Heparan Sulfate Proteoglycan Metabolic Process (GO:0030201),0.3026207103702035,True

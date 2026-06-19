@@ -1,0 +1,31 @@
+{
+  "case_names": [
+    "sbm_moderate",
+    "sbm_hard",
+    "cat_highcard_20cat_4c",
+    "cat_overlap_3cat_4c",
+    "overlap_heavy_4c_med_feat",
+    "overlap_unbal_4c_small",
+    "overlap_extreme_4c",
+    "gauss_extreme_noise_3c"
+  ],
+  "elapsed_sec": 54.475561,
+  "generated_at_utc": "20260618_005845Z",
+  "kl_te_n_jobs": "1",
+  "methods": [
+    "kl",
+    "kl_legacy_c2ef9a69",
+    "kl_internal_filter_branch_length_v1"
+  ],
+  "n_cases": 8,
+  "n_rows": 24,
+  "results_csv": "raw/assets/benchmark-results/branch_length_candidate_run_gate_20260618/regression_gate_comparison.csv",
+  "suite": "regression_gate",
+  "thread_env": {
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1"
+  }
+}

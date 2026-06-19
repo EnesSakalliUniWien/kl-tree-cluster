@@ -1,0 +1,70 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,0,16,41,4.23366404230882e-07,Proteasome-Mediated Ubiquitin-Dependent Protein Catabolic Process (GO:0043161),0.7798634812286689,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,1,2,0,0.07844922281879511,Inhibition Of Cysteine-Type Endopeptidase Activity (GO:0097340),0.9816666666666667,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,2,8,106,9.685086043494932e-08,Cysteine-Type Endopeptidase Activator Activity Involved In Apoptotic Process (GO:0008656),0.8564814814814815,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,3,29,137,8.483439710701709e-14,Phospholipase C-activating G Protein-Coupled Receptor Signaling Pathway (GO:0007200),0.4757778178973341,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,4,7,90,0.005180384151127983,Inflammatory Response (GO:0006954),0.8638655462184874,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,5,2,0,0.10560472302530113,Histone Arginine Methylation (GO:0034969),0.9983333333333333,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,6,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,7,3,2,0.04004179081376001,Negative Regulation Of Glial Cell Apoptotic Process (GO:0034351),0.9799666110183639,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,8,2,0,0.05280236151265057,Positive Regulation Of Gliogenesis (GO:0014015),0.9983333333333333,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,9,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,10,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,11,2,0,0.2984481302888945,Negative Regulation Of Receptor Signaling Pathway Via JAK-STAT (GO:0046426),0.9583333333333334,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,12,4,15,0.00012341119552205477,Superoxide-Generating NAD(P)H Oxidase Activity (GO:0016175),0.9916387959866221,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,13,30,75,5.671303278522551e-16,Organelle Membrane Fusion (GO:0090174),0.5544289044289045,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,14,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,15,9,152,0.00010358101711238793,Negative Regulation Of Transforming Growth Factor Beta Receptor Signaling Pathway (GO:0030512),0.7322465804759228,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,16,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,17,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,18,3,36,0.0058242604820014565,Regulation Of Histone Acetylation (GO:0035065),0.9816360601001669,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,19,7,62,5.1214958230863866e-05,Plasma Membrane Repair (GO:0001778),0.5697478991596638,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,20,15,89,0.0002580252920617937,Precatalytic Spliceosome (GO:0071011),0.3880749574105622,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,21,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,22,2,0,0.2420108235996484,Cellular Response To Leucine (GO:0071233),0.9866666666666667,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,23,6,62,0.002336185345712018,Negative Regulation Of Coagulation (GO:0050819),0.6482102908277405,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,24,5,300,0.0002523436228538549,Inositol Lipid-Mediated Signaling (GO:0048017),0.966499162479062,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,25,9,137,1.5138712888922275e-07,Positive Regulation Of Translation In Response To Stress (GO:0032056),0.8568484167135094,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,26,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,27,2,0,0.4928220407847386,Lysosomal Microautophagy (GO:0016237),0.99,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,28,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,29,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,30,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,31,3,119,0.0001760078717088352,Acetylcholine Receptor Binding (GO:0033130),1.0,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,32,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,33,12,0,0.37426655759187194,Protein Modification By Small Protein Conjugation (GO:0032446),0.5415254237288136,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,34,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03005008347245409,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,35,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03005008347245409,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,36,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,37,4,65,0.015086389003614448,Cellular Response To Unfolded Protein (GO:0034620),0.7382943143812709,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,38,6,0,0.1445367567838277,Iron-Sulfur Cluster Assembly (GO:0016226),0.4899328859060403,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,39,12,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030508474576271188,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,40,61,39,0.0006801432208813096,Metal Ion Binding (GO:0046872),0.24678040059392142,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,41,68,72,1.358233167825603e-05,Protein Phosphorylation (GO:0006468),0.3635161929940516,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,42,28,0,0.05642527753061773,Cytoskeleton Organization (GO:0007010),0.2221254355400697,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,43,19,186,2.7110283747516384e-09,Response To X-ray (GO:0010165),0.5160241942764286,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,44,21,0,0.22977984509876065,Actin Filament Depolymerization (GO:0030042),0.1853126792885829,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,45,35,2,0.03077052475016566,'De Novo' AMP Biosynthetic Process (GO:0044208),0.11428571428571428,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,46,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,47,6,0,0.24828389381184973,Glycoprotein Metabolic Process (GO:0009100),0.6297539149888143,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,48,7,0,0.1213617647861973,Regulation Of Mesenchymal Stem Cell Differentiation (GO:2000739),0.4235294117647059,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,49,8,33,0.0012209317227794543,Chondroitin Sulfotransferase Activity (GO:0034481),0.49663299663299665,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,50,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,51,12,49,2.117037393816703e-05,Endoderm Formation (GO:0001706),0.6310734463276836,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,52,6,88,2.701311592207259e-05,Polysomal Ribosome (GO:0042788),0.8232662192393736,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,53,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03005008347245409,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,54,5,2,0.030493468679951,Mannosyl-Oligosaccharide Mannosidase Activity (GO:0015924),0.5932998324958124,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,55,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,56,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,57,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,58,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,59,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,60,15,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.03770584894946053,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,61,29,0,0.6431327632240839,"Positive Regulation Of Nuclear-Transcribed mRNA Catabolic Process, Deadenylation-Dependent Decay (GO:1900153)",0.10344827586206896,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,62,8,16,3.131583538861893e-06,Proteasome Assembly (GO:0043248),0.8463804713804713,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,63,1,0,0.867944458642133,Positive Regulation Of Keratinocyte Migration (GO:0051549),0.9966722129783694,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,64,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,65,2,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.4716666666666667,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,66,19,18,0.00029819824214072095,Positive Regulation Of Stress Fiber Assembly (GO:0051496),0.3970389094520177,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,67,5,57,1.9674248561486987e-05,Negative Regulation Of T-helper Cell Differentiation (GO:0045623),0.9849246231155779,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_16_19,68,12,16,1.1467530298708393e-09,Regulation Of Establishment Of Protein Localization To Telomere (GO:0070203),0.7330508474576272,True

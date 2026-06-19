@@ -1,0 +1,61 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,0,10,88,1.1719876670365204e-11,Semaphorin-Plexin Signaling Pathway Involved In Axon Guidance (GO:1902287),0.8898648648648649,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,1,11,125,8.433563751760155e-13,Hexosyltransferase Activity (GO:0016758),0.8972465774496231,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,2,4,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030100334448160536,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,3,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,4,4,162,1.7630170788864966e-05,Acylglycerol Metabolic Process (GO:0006639),0.9966555183946488,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,5,2,0,0.05280236151265057,Positive Regulation Of Gliogenesis (GO:0014015),0.9983333333333333,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,6,6,102,7.387954462102469e-06,Complement Component C3b Binding (GO:0001851),0.8266219239373602,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,7,12,60,1.0172774361057688e-10,Peptide Biosynthetic Process (GO:0043043),0.7415254237288136,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,8,12,139,3.2589354027568284e-08,poly(A) Binding (GO:0008143),0.5799435028248588,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,9,11,0,0.16419116731733752,Proteasome Assembly (GO:0043248),0.4223965543762498,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,10,2,0,0.5280236151265058,Negative Regulation Of Cation Transmembrane Transport (GO:1904063),0.9933333333333333,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,11,18,6,0.012986462737507577,Water Channel Activity (GO:0015250),0.21879756468797562,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,12,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,13,14,82,1.0199026843004321e-05,Endopeptidase Inhibitor Activity (GO:0004866),0.6547619047619048,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,14,10,2,0.0418716556235543,Platelet-Derived Growth Factor Binding (GO:0048407),0.3881756756756757,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,15,13,17,0.003075930350789565,Natural Killer Cell Mediated Immunity (GO:0002228),0.30429672195376783,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,16,4,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030100334448160536,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,17,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.9717138103161398,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,18,4,4,0.014027739224340221,Regulation Of Telomere Maintenance Via Telomere Lengthening (GO:1904356),0.7449832775919732,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,19,3,52,0.0024641102039236933,Cdc73/Paf1 Complex (GO:0016593),0.991652754590985,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,20,2,0,0.07844922281879511,Inhibition Of Cysteine-Type Endopeptidase Activity (GO:0097340),0.9816666666666667,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,21,2,0,0.07543194501807224,Neutrophil Mediated Immunity (GO:0002446),0.9933333333333333,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,22,3,8,0.0007040314868353408,Tetrahydrofolate Interconversion (GO:0035999),0.998330550918197,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,23,1,0,0.9148603753254915,Regulation Of Hematopoietic Stem Cell Differentiation (GO:1902036),0.9800332778702163,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,24,4,10,0.0017982774204642262,Negative Regulation Of Inclusion Body Assembly (GO:0090084),0.9765886287625418,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,25,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,26,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,27,6,7,0.014027739224340221,Fatty Acid Catabolic Process (GO:0009062),0.4983221476510067,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,28,9,324,5.835603657621221e-07,Regulation Of MHC Class II Biosynthetic Process (GO:0045346),0.8534757354318905,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,29,19,237,3.089385772810647e-07,Serine/Threonine Protein Kinase Complex (GO:1902554),0.5835515031145617,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,30,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,31,6,4,0.014027739224340221,Calcium-Independent Cell-Cell Adhesion Via Plasma Membrane Cell-Adhesion Molecules (GO:0016338),0.4983221476510067,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,32,3,0,0.12862655264481676,Regulation Of ER-associated Ubiquitin-Dependent Protein Catabolic Process (GO:1903069),0.9632721202003339,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,33,4,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030100334448160536,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,34,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,35,14,20,5.290380096387038e-06,Positive Regulation Of ER-associated Ubiquitin-Dependent Protein Catabolic Process (GO:1903071),0.5510204081632653,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,36,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,37,16,87,2.879882720035083e-10,Regulation Of Nucleotide-Excision Repair (GO:2000819),0.5573805460750854,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,38,18,12,0.017952802914301187,Regulation Of Voltage-Gated Calcium Channel Activity (GO:1901385),0.21708523592085235,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,39,19,1,0.0042558380556801875,Negative Regulation Of Cell Population Proliferation (GO:0008285),0.5063645391351449,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,40,5,429,4.540211206496998e-06,Blood Vessel Morphogenesis (GO:0048514),0.9899497487437185,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,41,7,0,0.25103438511635556,Supramolecular Fiber (GO:0099512),0.41848739495798315,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,42,5,5,0.0014509758314096657,Inner Mitochondrial Membrane Organization (GO:0007007),0.783249581239531,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,43,2,202,0.007040314868353408,Phosphatidic Acid Transfer Activity (GO:1990050),1.0,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,44,3,24,0.0007040314868353408,Regulation Of Rab Protein Signal Transduction (GO:0032483),0.998330550918197,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,45,5,8,0.020328979119967335,Response To BMP (GO:0071772),0.5932998324958124,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,46,13,6,0.001506410895152916,COPII-coated Vesicle Cargo Loading (GO:0090110),0.37782421313830483,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,47,15,1,0.0355758811130433,Endoplasmic Reticulum Membrane (GO:0005789),0.5561612720045428,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,48,22,1,0.04195306495176775,Negative Regulation Of Protein Exit From Endoplasmic Reticulum (GO:0070862),0.18009404388714734,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,49,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,50,9,0,0.07226837839191386,COPI Vesicle Coat (GO:0030126),0.32996065205171443,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,51,12,5,0.030628308039135466,"Vacuolar Proton-Transporting V-type ATPase, V0 Domain (GO:0000220)",0.2483050847457627,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,52,22,0,0.2610032942948972,Regulation Of Apoptotic Process (GO:0042981),0.441692789968652,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,53,8,17,0.002833560354503184,Cellular Response To Bacterial Lipopeptide (GO:0071221),0.494949494949495,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,54,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,55,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,56,9,0,0.6668526896196062,Base-Excision Repair (GO:0006284),0.49653363312722504,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,57,33,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.03248655269744901,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,58,85,2,0.021598006638314488,Exonucleolytic Trimming Involved In rRNA Processing (GO:0000459),0.07058823529411765,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_56_80,59,70,3,0.0025258806298663703,Regulation Of Cytosolic Calcium Ion Concentration (GO:0051480),0.12293233082706766,False

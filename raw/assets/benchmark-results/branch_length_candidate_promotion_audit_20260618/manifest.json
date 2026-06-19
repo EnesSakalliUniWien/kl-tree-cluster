@@ -1,0 +1,25 @@
+{
+  "decision": "do_not_promote_as_global_default_keep_as_candidate",
+  "generated_at_utc": "20260618T012951Z",
+  "methods": [
+    "kl",
+    "kl_internal_filter_branch_length_v1",
+    "kl_legacy_c2ef9a69"
+  ],
+  "n_cases": 121,
+  "n_rows": 363,
+  "outputs": {
+    "branch_current_losses": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/branch_current_losses.csv",
+    "branch_current_wins": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/branch_current_wins.csv",
+    "branch_only_ok_vs_current": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/branch_only_ok_vs_current.csv",
+    "branch_vs_current_by_category": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/branch_vs_current_by_category.csv",
+    "branch_vs_current_relation_summary": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/branch_vs_current_relation_summary.csv",
+    "case_pairwise_audit": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/case_pairwise_audit.csv",
+    "current_only_ok_vs_branch": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/current_only_ok_vs_branch.csv",
+    "hard_overlap_rows": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/hard_overlap_rows.csv",
+    "method_summary": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/method_summary.csv",
+    "promotion_audit_report": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/promotion_audit_report.md",
+    "skip_reason_summary": "raw/assets/benchmark-results/branch_length_candidate_promotion_audit_20260618/skip_reason_summary.csv"
+  },
+  "source_results": "raw/assets/benchmark-results/branch_length_candidate_full_big_20260618/full_benchmark_comparison.csv"
+}

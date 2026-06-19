@@ -1,0 +1,22 @@
+{
+  "created_at_utc": "2026-06-18T00:44:37.829677+00:00",
+  "schema_version": "c2ef_validate_cosine_subspace_split_reference/v1",
+  "source_commit": "c2ef9a69e0888168950bdee4a41ae8ab9996e32f",
+  "script": "scripts/validate_cosine_subspace_split.py",
+  "patched_runtime_script": "/tmp/validate_cosine_subspace_split_legacy.py",
+  "legacy_namespace": "kl_clustering_analysis.legacy_methods.commit_c2ef9a69.kl_clustering_analysis",
+  "input": "data/feature_matrices/feature_matrix_julia_allGO_new.tsv",
+  "n_genes": 602,
+  "n_features_after_zero_column_filter": 6368,
+  "reference_split": "tfidf_cosine_components_02_05",
+  "edge_alpha_alpha_local": 0.001,
+  "sibling_alpha": 0.01,
+  "n_clusters": 19,
+  "largest_cluster_size": 130,
+  "singleton_clusters": 1,
+  "outputs": {
+    "assignments": "raw/assets/benchmark-results/julia_allGO_new_c2ef_validate_cosine_subspace_split_legacy_20260618/reference_tfidf_components_02_05_legacy_assignments.csv",
+    "cluster_sizes": "raw/assets/benchmark-results/julia_allGO_new_c2ef_validate_cosine_subspace_split_legacy_20260618/reference_tfidf_components_02_05_legacy_cluster_sizes.csv"
+  },
+  "runtime_sec": 56.59187666700018
+}

@@ -1,0 +1,23 @@
+{
+  "run_id": "current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55",
+  "method_version": "current",
+  "tree_geometry": "adaptive_diffusion_cosine_subspace",
+  "weighting": "binary",
+  "block_id": 5,
+  "block_name": "adaptive_modes_41_55",
+  "block_type": "adaptive_decay_regime",
+  "block_start": 41,
+  "block_end": 55,
+  "subspace_dimensions": 15,
+  "block_energy_fraction": 0.0979830684472223,
+  "segmentation_bic": -650.2907944309735,
+  "common_mode_isolated": true,
+  "subspace_dir": "raw/assets/benchmark-results/julia_allGO_new_current_adaptive_diffusion_subspace_tree_20260618_163039/subspaces/binary/adaptive_modes_41_55",
+  "spectral_block": {
+    "block_id": 5,
+    "block_name": "adaptive_modes_41_55",
+    "block_start": 41,
+    "block_end": 55,
+    "block_type": "adaptive_decay_regime"
+  }
+}

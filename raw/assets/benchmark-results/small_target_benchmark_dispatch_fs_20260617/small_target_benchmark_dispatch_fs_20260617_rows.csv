@@ -1,0 +1,43 @@
+case_id,method,status,skip_reason,true_clusters,found_clusters,ari,data_role,method_profile
+binary_perfect_2c,kl_legacy_c2ef9a69,ok,,2,2,1.0,signal,kl_legacy_c2ef9a69
+binary_perfect_2c,kl_rescued_legacy_v1,ok,,2,2,1.0,signal,kl_rescued_legacy_v1
+binary_perfect_2c,kl_internal_filter_v1,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 4 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",2,0,,signal,kl_internal_filter_v1
+binary_perfect_2c,kl_internal_filter_branch_length_v1,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 4 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",2,0,,signal,kl_internal_filter_branch_length_v1
+binary_perfect_2c,kl_bandwidth_context_v1,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 4 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",2,0,,signal,kl_bandwidth_context_v1
+binary_perfect_2c,kl,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 4 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",2,0,,signal,kl
+binary_low_noise_2c,kl_legacy_c2ef9a69,ok,,2,2,1.0,signal,kl_legacy_c2ef9a69
+binary_low_noise_2c,kl_rescued_legacy_v1,ok,,2,4,0.9022556390977443,signal,kl_rescued_legacy_v1
+binary_low_noise_2c,kl_internal_filter_v1,ok,,2,2,1.0,signal,kl_internal_filter_v1
+binary_low_noise_2c,kl_internal_filter_branch_length_v1,ok,,2,2,1.0,signal,kl_internal_filter_branch_length_v1
+binary_low_noise_2c,kl_bandwidth_context_v1,ok,,2,12,0.4589114194236926,signal,kl_bandwidth_context_v1
+binary_low_noise_2c,kl,ok,,2,12,0.4589114194236926,signal,kl
+binary_null_small,kl_legacy_c2ef9a69,ok,,1,1,1.0,signal,kl_legacy_c2ef9a69
+binary_null_small,kl_rescued_legacy_v1,ok,,1,1,1.0,signal,kl_rescued_legacy_v1
+binary_null_small,kl_internal_filter_v1,ok,,1,1,1.0,signal,kl_internal_filter_v1
+binary_null_small,kl_internal_filter_branch_length_v1,ok,,1,1,1.0,signal,kl_internal_filter_branch_length_v1
+binary_null_small,kl_bandwidth_context_v1,ok,,1,1,1.0,signal,kl_bandwidth_context_v1
+binary_null_small,kl,ok,,1,1,1.0,signal,kl
+overlap_part_4c_small,kl_legacy_c2ef9a69,ok,,4,4,0.9534938148705171,signal,kl_legacy_c2ef9a69
+overlap_part_4c_small,kl_rescued_legacy_v1,ok,,4,4,0.9534938148705171,signal,kl_rescued_legacy_v1
+overlap_part_4c_small,kl_internal_filter_v1,ok,,4,4,0.9534938148705171,signal,kl_internal_filter_v1
+overlap_part_4c_small,kl_internal_filter_branch_length_v1,ok,,4,4,0.9534938148705171,signal,kl_internal_filter_branch_length_v1
+overlap_part_4c_small,kl_bandwidth_context_v1,ok,,4,4,0.9534938148705171,signal,kl_bandwidth_context_v1
+overlap_part_4c_small,kl,ok,,4,4,0.9534938148705171,signal,kl
+overlap_mod_4c_small,kl_legacy_c2ef9a69,ok,,4,4,0.7848286798556895,signal,kl_legacy_c2ef9a69
+overlap_mod_4c_small,kl_rescued_legacy_v1,ok,,4,4,0.7848286798556895,signal,kl_rescued_legacy_v1
+overlap_mod_4c_small,kl_internal_filter_v1,ok,,4,4,0.7848286798556895,signal,kl_internal_filter_v1
+overlap_mod_4c_small,kl_internal_filter_branch_length_v1,ok,,4,4,0.7848286798556895,signal,kl_internal_filter_branch_length_v1
+overlap_mod_4c_small,kl_bandwidth_context_v1,ok,,4,4,0.7848286798556895,signal,kl_bandwidth_context_v1
+overlap_mod_4c_small,kl,ok,,4,4,0.7848286798556895,signal,kl
+overlap_heavy_4c_small_feat,kl_legacy_c2ef9a69,ok,,4,1,0.0,signal,kl_legacy_c2ef9a69
+overlap_heavy_4c_small_feat,kl_rescued_legacy_v1,ok,,4,1,0.0,signal,kl_rescued_legacy_v1
+overlap_heavy_4c_small_feat,kl_internal_filter_v1,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 499 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,0,,signal,kl_internal_filter_v1
+overlap_heavy_4c_small_feat,kl_internal_filter_branch_length_v1,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 499 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,0,,signal,kl_internal_filter_branch_length_v1
+overlap_heavy_4c_small_feat,kl_bandwidth_context_v1,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 499 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,0,,signal,kl_bandwidth_context_v1
+overlap_heavy_4c_small_feat,kl,skip,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 499 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",4,0,,signal,kl
+cat_clear_3cat_4c,kl_legacy_c2ef9a69,ok,,4,3,0.7079646017699115,signal,kl_legacy_c2ef9a69
+cat_clear_3cat_4c,kl_rescued_legacy_v1,ok,,4,3,0.7079646017699115,signal,kl_rescued_legacy_v1
+cat_clear_3cat_4c,kl_internal_filter_v1,ok,,4,3,0.7079646017699115,signal,kl_internal_filter_v1
+cat_clear_3cat_4c,kl_internal_filter_branch_length_v1,ok,,4,3,0.7079646017699115,signal,kl_internal_filter_branch_length_v1
+cat_clear_3cat_4c,kl_bandwidth_context_v1,ok,,4,3,0.7079646017699115,signal,kl_bandwidth_context_v1
+cat_clear_3cat_4c,kl,ok,,4,3,0.7079646017699115,signal,kl

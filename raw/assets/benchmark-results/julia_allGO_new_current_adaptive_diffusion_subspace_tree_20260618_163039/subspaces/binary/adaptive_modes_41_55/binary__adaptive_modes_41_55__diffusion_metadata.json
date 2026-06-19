@@ -1,0 +1,11 @@
+{
+  "kernel": "pydiffmap_adaptive",
+  "backend": "pydiffmap",
+  "metric": "euclidean",
+  "neighbor_search_k": 15,
+  "bandwidth_type": "-1/(d+2)",
+  "epsilon": 0.009644282396214983,
+  "epsilon_method": "median",
+  "diffusion_time": 3,
+  "diffusion_components": 30
+}

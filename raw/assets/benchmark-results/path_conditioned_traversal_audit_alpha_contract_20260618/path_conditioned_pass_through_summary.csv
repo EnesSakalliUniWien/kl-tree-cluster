@@ -1,0 +1,9 @@
+schema_version,study_role,method,case_id,pass_through_rows,stacked_pass_through_rows,median_depth,max_depth,median_ancestor_pass_through_count,median_ancestor_sibling_closed_edge_open_count,median_incoming_branch_length,rows_with_truth_coherent_descendant_split,truth_coherent_pass_through_rows
+path_conditioned_traversal_audit/v1,diagnostic_path_conditioned_traversal_audit_not_policy,kl,gauss_outlier_cluster_4c,1,0,2.0,2,0.0,0.0,0.43408173076923073,0,0
+path_conditioned_traversal_audit/v1,diagnostic_path_conditioned_traversal_audit_not_policy,kl,phylo_dna_8taxa_low_mut,3,0,6.0,6,0.0,0.0,0.0027923976608187073,0,0
+path_conditioned_traversal_audit/v1,diagnostic_path_conditioned_traversal_audit_not_policy,kl,phylo_protein_4taxa,1,0,4.0,4,0.0,0.0,0.0019162561576354757,0,0
+path_conditioned_traversal_audit/v1,diagnostic_path_conditioned_traversal_audit_not_policy,kl,phylo_protein_8taxa,5,1,7.0,8,0.0,0.0,0.0004375000000000004,0,0
+path_conditioned_traversal_audit/v1,diagnostic_path_conditioned_traversal_audit_not_policy,kl_internal_filter_branch_length_v1,phylo_dna_4taxa_low_mut,3,1,2.0,4,0.0,0.0,0.018840579710144925,0,0
+path_conditioned_traversal_audit/v1,diagnostic_path_conditioned_traversal_audit_not_policy,kl_internal_filter_branch_length_v1,phylo_dna_8taxa_med_mut,2,0,3.5,4,0.0,0.0,0.12460226608187136,0,0
+path_conditioned_traversal_audit/v1,diagnostic_path_conditioned_traversal_audit_not_policy,kl_internal_filter_branch_length_v1,phylo_protein_4taxa,2,0,5.5,8,0.0,0.0,0.0012704738900391086,0,0
+path_conditioned_traversal_audit/v1,diagnostic_path_conditioned_traversal_audit_not_policy,kl_internal_filter_branch_length_v1,phylo_protein_8taxa,5,2,5.0,6,0.0,0.0,0.0010718954248365963,0,0

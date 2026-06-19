@@ -1,0 +1,13 @@
+case_id,rows,ok,skip,fail,mean_ari
+binary_2clusters,3,3,0,0,0.9738457432612758
+binary_hard_4c,3,3,0,0,1.0
+binary_low_noise_4c,3,3,0,0,1.0
+binary_moderate_4c,3,3,0,0,1.0
+binary_null_small,3,3,0,0,1.0
+cat_clear_3cat_4c,3,3,0,0,0.7079646017699114
+cat_highcard_20cat_4c,3,2,1,0,0.0
+cat_mod_3cat_4c,3,2,1,0,0.9559602353211419
+cat_overlap_3cat_4c,3,3,0,0,0.680293129257017
+overlap_extreme_4c,3,1,2,0,0.0027292221716810707
+overlap_mod_4c_small,3,3,0,0,0.7848286798556895
+overlap_unbal_4c_small,3,3,0,0,0.5000975768285938

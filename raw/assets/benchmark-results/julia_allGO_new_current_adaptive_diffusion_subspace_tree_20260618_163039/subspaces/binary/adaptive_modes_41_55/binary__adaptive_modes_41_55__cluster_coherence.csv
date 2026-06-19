@@ -1,0 +1,66 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,0,6,5,0.0054840635254043936,T Cell Activation (GO:0042110),0.9077181208053691,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,1,13,50,4.215910406032926e-06,Plasma Membrane Repair (GO:0001778),0.38461538461538464,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,2,8,7,0.002833560354503184,Actin Filament Depolymerization (GO:0030042),0.494949494949495,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,3,9,115,1.6655054322711598e-10,Heparan Sulfate Proteoglycan Metabolic Process (GO:0030201),0.7760914371369684,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,4,24,22,4.050412205607009e-05,Exocytosis (GO:0006887),0.3212226066897347,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,5,31,48,0.0007466188300457357,Cis-Regulatory Region Sequence-Specific DNA Binding (GO:0000987),0.3840460990904469,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,6,11,47,0.001994051738061349,GDP Binding (GO:0019003),0.44439317028149516,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,7,5,47,0.017468737781312745,Regulation Of Cellular Ketone Metabolic Process (GO:0010565),0.5949748743718593,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,8,5,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03015075376884422,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,9,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03005008347245409,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,10,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,11,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,12,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,13,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,14,2,16,0.017600787170883522,Positive Regulation Of Dendrite Extension (GO:1903861),1.0,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,15,11,0,0.06198221972995582,Immune Response-Activating Cell Surface Receptor Signaling Pathway (GO:0002429),0.42916474388555603,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,16,16,89,0.00018220098804135052,Regulation Of DNA Recombination (GO:0000018),0.4187286689419795,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,17,3,24,0.0351624614813873,Unsaturated Fatty Acid Biosynthetic Process (GO:0006636),0.6666666666666666,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,18,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),0.9717138103161398,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,19,11,0,0.05850362011258048,Endoplasmic Reticulum Lumen (GO:0005788),0.603753268727888,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,20,17,64,8.42100617847575e-06,Late Nucleophagy (GO:0044805),0.35123177476118655,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,21,16,5,0.00033981871758242195,Mitotic Chromosome Condensation (GO:0007076),0.36646757679180886,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,22,25,3,0.0030452877276676595,Cell Junction Disassembly (GO:0150146),0.19826689774696707,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,23,12,50,4.624301263300746e-05,Regulation Of Immature T Cell Proliferation In Thymus (GO:0033084),0.4149717514124294,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,24,3,119,0.0001760078717088352,Acetylcholine Receptor Binding (GO:0033130),1.0,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,25,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,26,5,13,2.9344308793506565e-05,Protein K27-linked Ubiquitination (GO:0044314),0.7983249581239531,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,27,16,46,3.7177175632913874e-09,Protein Kinase C Activity (GO:0004697),0.6601962457337884,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,28,48,88,1.1594564406038776e-07,Semaphorin-Plexin Signaling Pathway Involved In Neuron Projection Guidance (GO:1902285),0.22555655836341756,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,29,8,20,1.644072217001654e-06,Ceramide Catabolic Process (GO:0046514),0.6233164983164983,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,30,5,49,0.00019997566632252685,Positive Regulation Of Mesenchymal Cell Proliferation (GO:0002053),0.9731993299832495,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,31,12,1,0.030497247818569696,Response To Exogenous dsRNA (GO:0043330),0.39802259887005653,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,32,7,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030252100840336135,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,33,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03005008347245409,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,34,1,0,0.8815060908084164,Positive Regulation Of Fat Cell Differentiation (GO:0045600),0.9916805324459235,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,35,7,28,8.656676002327474e-05,Precatalytic Spliceosome (GO:0071011),0.7008403361344538,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,36,21,0,0.2356420285273853,Regulation Of Protein Modification By Small Protein Conjugation Or Removal (GO:1903320),0.3442340791738382,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,37,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,38,9,0,0.08070602803572956,Phosphatidylcholine Metabolic Process (GO:0046470),0.42252201611392165,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,39,9,34,0.005079838014247651,Transcription Initiation At RNA Polymerase I Promoter (GO:0006361),0.43938542252201607,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,40,11,3,0.025476906989788144,Positive Regulation Of Epithelial Cell Proliferation (GO:0050679),0.5652976465159206,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,41,11,8,1.796046086544153e-05,Zinc Ion Transmembrane Transport (GO:0071577),0.6160590678357176,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,42,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,43,6,0,0.17600787170883525,Ribonucleoside Bisphosphate Metabolic Process (GO:0033875),0.3333333333333333,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,44,9,10,0.0002765539029721154,Establishment Of Endothelial Barrier (GO:0061028),0.5454375117106989,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,45,28,2,0.011118590785129107,Cellular Response To Transforming Growth Factor Beta Stimulus (GO:0071560),0.3083623693379791,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,46,11,17,0.001994051738061349,Nucleobase-Containing Compound Catabolic Process (GO:0034655),0.44439317028149516,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,47,7,34,0.022892944340149757,Negative Regulation Of Interleukin-6 Production (GO:0032715),0.6739495798319328,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,48,5,0,0.5262635364094174,Regulation Of Phospholipid Metabolic Process (GO:1903725),0.39832495812395313,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,49,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,50,2,0,0.42241889210120454,Photoperiodism (GO:0009648),0.98,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,51,3,329,0.010677810883669337,T Cell Receptor Complex (GO:0042101),0.9816360601001669,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,52,4,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030100334448160536,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,53,18,72,0.0006375615430455018,"Fatty Acid Elongation, Unsaturated Fatty Acid (GO:0019368)",0.2726407914764079,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,54,2,20,0.007040314868353408,Negative Regulation Of Neuron Projection Regeneration (GO:0070571),1.0,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,55,2,202,0.007040314868353408,Phosphatidic Acid Transfer Activity (GO:1990050),1.0,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,56,4,0,0.05280236151265057,Positive Regulation Of Leukocyte Migration (GO:0002687),0.5,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,57,5,0,0.060986937359902,Sympathetic Nervous System Development (GO:0048485),0.5932998324958124,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,58,21,10,0.02601005215252787,AMP Biosynthetic Process (GO:0006167),0.14285714285714285,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,59,38,33,0.0004800537987051554,poly(A)-specific Ribonuclease Activity (GO:0004535),0.18066442702500932,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,60,10,2,0.014934399198145794,Postsynaptic Specialization Membrane (GO:0099634),0.3915540540540541,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,61,5,0,0.47364520175347524,"Negative Regulation Of Retrograde Protein Transport, ER To Cytosol (GO:1904153)",0.39664991624790624,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,62,3,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.03005008347245409,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,63,1,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.029950083194675542,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_41_55,64,5,3,0.0035113423487822724,G Protein-Coupled Glutamate Receptor Binding (GO:0035256),0.784924623115578,True

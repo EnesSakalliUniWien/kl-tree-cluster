@@ -1,0 +1,13 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,0,5,294,0.0007409624689003099,Cellular Response To Cadmium Ion (GO:0071276),0.9547738693467337,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,1,19,770,5.55454628964161e-14,Tumor Necrosis Factor-Mediated Signaling Pathway (GO:0033209),0.8833619210977701,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,2,37,1061,2.590441675026854e-20,Positive Regulation Of DNA-binding Transcription Factor Activity (GO:0051091),0.7942119110260704,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,3,22,11,0.00023756148782957476,Protein Kinase Binding (GO:0019901),0.5826018808777429,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,4,16,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030716723549488054,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,5,36,0,0.45209027428528925,Regulation Of T-helper Cell Differentiation (GO:0045622),0.10404397330192383,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,6,20,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.030927835051546393,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,7,61,49,0.000835790103403946,Homotypic Cell-Cell Adhesion (GO:0034109),0.18538832156601315,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,8,73,0,0.14238742426755885,Endopeptidase Regulator Activity (GO:0061135),0.1563301136805034,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,9,175,12,6.2655761534152205e-09,Endoplasmic Reticulum Membrane (GO:0005789),0.2623887587822014,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,10,84,184,1.3231123720889178e-07,Negative Regulation Of DNA-templated Transcription (GO:0045892),0.3500643500643501,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01,11,54,735,2.3385929115515525e-18,Negative Regulation Of Programmed Cell Death (GO:0043069),0.6553122465531225,True

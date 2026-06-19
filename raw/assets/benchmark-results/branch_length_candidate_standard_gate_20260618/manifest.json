@@ -1,0 +1,26 @@
+{
+  "case_names": [
+    "binary_2clusters",
+    "binary_low_noise_4c",
+    "binary_moderate_4c",
+    "binary_hard_4c",
+    "binary_null_small",
+    "cat_clear_3cat_4c",
+    "cat_mod_3cat_4c",
+    "cat_overlap_3cat_4c",
+    "cat_highcard_20cat_4c",
+    "overlap_mod_4c_small",
+    "overlap_unbal_4c_small",
+    "overlap_extreme_4c"
+  ],
+  "generated_at_utc": "20260618T005814Z",
+  "methods": [
+    "kl",
+    "kl_legacy_c2ef9a69",
+    "kl_internal_filter_branch_length_v1"
+  ],
+  "n_rows": 36,
+  "notes": "Standard benchmark path after guarded run_gate contract fix; no direct dispatch workaround.",
+  "output_dir": "raw/assets/benchmark-results/branch_length_candidate_standard_gate_20260618",
+  "runner": "benchmarks.shared.pipeline.benchmark_cluster_algorithm"
+}

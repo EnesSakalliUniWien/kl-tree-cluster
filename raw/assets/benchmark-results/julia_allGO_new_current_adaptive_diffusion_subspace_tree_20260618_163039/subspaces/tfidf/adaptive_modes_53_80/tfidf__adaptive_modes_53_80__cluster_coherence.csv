@@ -1,0 +1,23 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,0,12,113,1.961788912617553e-09,Negative Regulation Of Endopeptidase Activity (GO:0010951),0.8675141242937853,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,1,32,271,6.631490340155802e-08,Transforming Growth Factor Beta Receptor Activity (GO:0005024),0.30723684210526314,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,2,8,79,6.818491624633932e-05,Complement Component C3b Binding (GO:0001851),0.6182659932659933,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,3,13,42,1.178968537454596e-10,Translation (GO:0006412),0.6855165208306125,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,4,11,78,4.197756049792132e-07,Regulation Of T-helper Cell Differentiation (GO:0045622),0.5420704506998922,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,5,11,131,1.361918710627851e-08,poly(A) Binding (GO:0008143),0.6329795416089832,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,6,10,0,0.5975230655686455,X Chromosome (GO:0000805),0.1983108108108108,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,7,13,18,1.640476427494674e-10,NuA4 Histone Acetyltransferase Complex (GO:0035267),0.6838187279613426,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,8,20,3,0.02786327617427207,Establishment Of Planar Polarity (GO:0001736),0.19828178694158077,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,9,7,7,0.0152467343399755,Myosin Filament (GO:0032982),0.42521008403361343,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,10,23,28,0.00042286851376294133,Regulation Of Metaphase/Anaphase Transition Of Cell Cycle (GO:1902099),0.2939851317864384,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,11,18,258,1.0496883282901906e-06,ATP Binding (GO:0005524),0.6699010654490106,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,12,12,259,9.248602526601492e-06,Regulation Of Dendritic Cell Antigen Processing And Presentation (GO:0002604),0.4149717514124294,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,13,13,5,1.508022159516014e-06,Mitochondrial Outer Membrane Translocase Complex (GO:0005742),0.5299725741151887,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,14,13,11,7.442921412343338e-05,Glucose Metabolic Process (GO:0006006),0.4530494971921118,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,15,51,50,9.931472761572808e-06,Monocarboxylic Acid Catabolic Process (GO:0072329),0.1568627450980392,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,16,26,130,2.9039393054527163e-06,Transcription Cis-Regulatory Region Binding (GO:0000976),0.5586271367521367,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,17,29,104,2.890564569285283e-05,Protein K63-linked Ubiquitination (GO:0070534),0.43870734789673227,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,18,25,9,0.02685645979397471,Negative Regulation Of Fibroblast Growth Factor Receptor Signaling Pathway (GO:0040037),0.1948006932409012,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,19,5,129,5.8963781902558436e-08,Cuprous Ion Binding (GO:1903136),0.998324958123953,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,20,224,3,0.01684234883092257,G Protein-Coupled Receptor Activity (GO:0004930),0.08680555555555555,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_53_80,21,26,105,2.966942895292557e-06,Heparan Sulfate Proteoglycan Metabolic Process (GO:0030201),0.2674946581196581,True

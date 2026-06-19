@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-06-17T16:12:53.107239+00:00",
+  "generated_by": "benchmarks.diagnostics.calibration.legacy_c2ef9a69_method_comparison_panel",
+  "n_pairwise_rows": 12,
+  "n_rows": 24,
+  "outputs": {
+    "manifest": "raw/assets/benchmark-results/legacy_vs_current_smoke_20260617/manifest.json",
+    "pairwise": "raw/assets/benchmark-results/legacy_vs_current_smoke_20260617/legacy_c2ef9a69_method_comparison_pairwise.csv",
+    "rows": "raw/assets/benchmark-results/legacy_vs_current_smoke_20260617/legacy_c2ef9a69_method_comparison_rows.csv",
+    "summary": "raw/assets/benchmark-results/legacy_vs_current_smoke_20260617/legacy_c2ef9a69_method_comparison_summary.csv"
+  },
+  "parameters": {
+    "base_seed": 20260613,
+    "case_names": [
+      "binary_perfect_2c",
+      "binary_low_noise_2c",
+      "binary_null_small",
+      "overlap_part_4c_small",
+      "overlap_mod_4c_small",
+      "overlap_heavy_4c_small_feat"
+    ],
+    "data_roles": [
+      "null",
+      "signal"
+    ],
+    "edge_alpha": 0.001,
+    "replicates": 1,
+    "sibling_alpha": 0.01,
+    "suite": "binary"
+  },
+  "schema_version": "legacy_c2ef9a69_method_comparison_panel/v1",
+  "study_role": "diagnostic_legacy_c2ef9a69_method_comparison_not_calibration",
+  "variants": {
+    "current_kl": {
+      "method_id": "kl"
+    },
+    "legacy_c2ef9a69_full_method": {
+      "legacy_commit": "c2ef9a69e0888168950bdee4a41ae8ab9996e32f",
+      "method_id": "kl_legacy_c2ef9a69"
+    }
+  }
+}

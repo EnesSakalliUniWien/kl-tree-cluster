@@ -1,0 +1,23 @@
+{
+  "run_id": "current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_32_52",
+  "method_version": "current",
+  "tree_geometry": "adaptive_diffusion_cosine_subspace",
+  "weighting": "tfidf",
+  "block_id": 6,
+  "block_name": "adaptive_modes_32_52",
+  "block_type": "adaptive_decay_regime",
+  "block_start": 32,
+  "block_end": 52,
+  "subspace_dimensions": 21,
+  "block_energy_fraction": 0.16700195928676181,
+  "segmentation_bic": -657.800026236472,
+  "common_mode_isolated": true,
+  "subspace_dir": "raw/assets/benchmark-results/julia_allGO_new_current_adaptive_diffusion_subspace_tree_20260618_163039/subspaces/tfidf/adaptive_modes_32_52",
+  "spectral_block": {
+    "block_id": 6,
+    "block_name": "adaptive_modes_32_52",
+    "block_start": 32,
+    "block_end": 52,
+    "block_type": "adaptive_decay_regime"
+  }
+}

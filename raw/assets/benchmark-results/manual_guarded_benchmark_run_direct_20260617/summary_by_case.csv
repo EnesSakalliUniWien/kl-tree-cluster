@@ -1,0 +1,7 @@
+case_id,rows,ok,skip,fail,mean_ari
+binary_2clusters,6,6,0,0,0.8137176407792901
+binary_2clusters__r1,6,6,0,0,0.8079390056021222
+cat_clear_3cat_4c,6,6,0,0,0.7079646017699116
+cat_clear_3cat_4c__r1,6,6,0,0,0.9957276503765747
+overlap_extreme_4c,6,2,4,0,0.0015536007482460658
+overlap_extreme_4c__r1,6,3,3,0,0.0

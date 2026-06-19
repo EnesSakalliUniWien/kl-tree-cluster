@@ -1,0 +1,23 @@
+{
+  "input": "data/feature_matrices/feature_matrix_julia_allGO_new.tsv",
+  "output_dir": "raw/assets/benchmark-results/julia_allGO_new_current_adaptive_diffusion_subspace_tree_20260618_163039",
+  "method_version": "current",
+  "tree_geometry": "adaptive_diffusion_cosine_subspace",
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "max_rank": 80,
+  "min_segment_length": 4,
+  "max_segments": 8,
+  "diffusion_k_neighbors": 15,
+  "diffusion_time": 3,
+  "diffusion_components": 30,
+  "adaptive_bandwidth_type": "-1/(d+2)",
+  "adaptive_epsilon": "median",
+  "adaptive_metric": "euclidean",
+  "weightings": [
+    "binary",
+    "tfidf"
+  ],
+  "block_names": [],
+  "top_terms_per_axis": 20
+}

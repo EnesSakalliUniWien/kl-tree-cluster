@@ -1,0 +1,201 @@
+left,right,cosine_similarity
+Neurotrophin TRK Receptor Binding (GO:0005167),Neurotrophin TRKA Receptor Binding (GO:0005168),1.0000000000000007
+Negative Regulation Of miRNA Transcription (GO:1902894),Negative Regulation Of miRNA Metabolic Process (GO:2000629),1.0000000000000007
+Very-Low-Density Lipoprotein Particle (GO:0034361),Triglyceride-Rich Plasma Lipoprotein Particle (GO:0034385),1.0000000000000004
+"Blood Coagulation, Fibrin Clot Formation (GO:0072378)",Protein Activation Cascade (GO:0072376),1.0000000000000004
+Precatalytic Spliceosome (GO:0071011),U2-type Precatalytic Spliceosome (GO:0071005),1.0000000000000004
+Positive Regulation Of Protein Localization To Endosome (GO:1905668),Positive Regulation Of Protein Localization To Early Endosome (GO:1902966),1.0000000000000004
+Regulation Of Protein Localization To Early Endosome (GO:1902965),Positive Regulation Of Protein Localization To Early Endosome (GO:1902966),1.0000000000000004
+Positive Regulation Of Protein Localization To Endosome (GO:1905668),Regulation Of Protein Localization To Early Endosome (GO:1902965),1.0000000000000004
+Secondary Alcohol Biosynthetic Process (GO:1902653),Cholesterol Biosynthetic Process (GO:0006695),1.0000000000000004
+Response To Hepatocyte Growth Factor (GO:0035728),Cellular Response To Hepatocyte Growth Factor Stimulus (GO:0035729),1.0000000000000002
+Cellular Response To Nitrogen Starvation (GO:0006995),Cellular Response To Nitrogen Levels (GO:0043562),1.0000000000000002
+Ethanol Catabolic Process (GO:0006068),Sulfation (GO:0051923),1.0000000000000002
+Synaptonemal Complex Organization (GO:0070193),Synaptonemal Complex Assembly (GO:0007130),1.0000000000000002
+Dendritic Cell Migration (GO:0036336),Dendritic Cell Chemotaxis (GO:0002407),1.0000000000000002
+Response To Prostaglandin E (GO:0034695),Cellular Response To Prostaglandin Stimulus (GO:0071379),1.0000000000000002
+"Vacuolar Proton-Transporting V-type ATPase, V1 Domain (GO:0000221)","Proton-Transporting V-type ATPase, V1 Domain (GO:0033180)",1.0000000000000002
+Dopamine Transport (GO:0015872),Monoamine Transport (GO:0015844),1.0000000000000002
+Sulfation (GO:0051923),Primary Alcohol Catabolic Process (GO:0034310),1.0000000000000002
+Mesonephric Tubule Development (GO:0072164),Ureteric Bud Development (GO:0001657),1.0000000000000002
+Oxidative Phosphorylation (GO:0006119),Mitochondrial ATP Synthesis Coupled Electron Transport (GO:0042775),1.0000000000000002
+Regulation Of Nucleotide-Excision Repair (GO:2000819),Regulation Of G0 To G1 Transition (GO:0070316),1.0000000000000002
+Ethanol Catabolic Process (GO:0006068),Primary Alcohol Catabolic Process (GO:0034310),1.0000000000000002
+Voltage-Gated Potassium Channel Complex (GO:0008076),Potassium Channel Complex (GO:0034705),1.0000000000000002
+Positive Regulation Of Male Gonad Development (GO:2000020),Positive Regulation Of Gonad Development (GO:1905941),1.0000000000000002
+acetyl-CoA C-acyltransferase Activity (GO:0003988),3-hydroxyacyl-CoA Dehydrogenase Activity (GO:0003857),1.0000000000000002
+Cytosolic Large Ribosomal Subunit (GO:0022625),Large Ribosomal Subunit (GO:0015934),1.0000000000000002
+RNA Capping (GO:0036260),7-Methylguanosine Cap Hypermethylation (GO:0036261),1.0000000000000002
+Oxidative Phosphorylation (GO:0006119),Aerobic Respiration (GO:0009060),1.0000000000000002
+Hepoxilin Metabolic Process (GO:0051121),Hepoxilin Biosynthetic Process (GO:0051122),1.0000000000000002
+P-type Sodium:Potassium-Exchanging Transporter Activity (GO:0005391),P-type Sodium Transporter Activity (GO:0008554),1.0000000000000002
+AMP Biosynthetic Process (GO:0006167),Purine Ribonucleoside Monophosphate Biosynthetic Process (GO:0009168),1.0000000000000002
+Regulation Of Dendritic Cell Antigen Processing And Presentation (GO:0002604),Positive Regulation Of Dendritic Cell Antigen Processing And Presentation (GO:0002606),1.0000000000000002
+Regulation Of Dendritic Cell Antigen Processing And Presentation (GO:0002604),Positive Regulation Of Antigen Processing And Presentation (GO:0002579),1.0000000000000002
+mRNA Polyadenylation (GO:0006378),RNA Polyadenylation (GO:0043631),1.0000000000000002
+P-type Sodium:Potassium-Exchanging Transporter Activity (GO:0005391),P-type Potassium Transmembrane Transporter Activity (GO:0008556),1.0000000000000002
+Mitochondrial ATP Synthesis Coupled Electron Transport (GO:0042775),Aerobic Respiration (GO:0009060),1.0000000000000002
+Transmembrane Receptor Protein Phosphatase Activity (GO:0019198),Transmembrane Receptor Protein Tyrosine Phosphatase Activity (GO:0005001),1.0000000000000002
+rRNA Transcription (GO:0009303),5S Class rRNA Transcription By RNA Polymerase III (GO:0042791),1.0000000000000002
+Positive Regulation Of Viral Entry Into Host Cell (GO:0046598),Positive Regulation By Symbiont Of Entry Into Host (GO:0075294),1.0000000000000002
+Oxidative Phosphorylation (GO:0006119),Cellular Respiration (GO:0045333),1.0000000000000002
+"tRNA Splicing, Via Endonucleolytic Cleavage And Ligation (GO:0006388)","RNA Splicing, Via Endonucleolytic Cleavage And Ligation (GO:0000394)",1.0000000000000002
+Cyclic Nucleotide-Dependent Protein Kinase Activity (GO:0004690),cAMP-dependent Protein Kinase Activity (GO:0004691),1.0000000000000002
+Insulin-Responsive Compartment (GO:0032593),PTW/PP1 Phosphatase Complex (GO:0072357),1.0000000000000002
+Ammonium Transmembrane Transport (GO:0072488),Ammonium Transmembrane Transporter Activity (GO:0008519),1.0000000000000002
+Ammonium Transmembrane Transport (GO:0072488),Volume-Sensitive Anion Channel Activity (GO:0005225),1.0000000000000002
+Clathrin-Sculpted Gamma-Aminobutyric Acid Transport Vesicle (GO:0061200),Clathrin-Sculpted Gamma-Aminobutyric Acid Transport Vesicle Membrane (GO:0061202),1.0000000000000002
+Heat Acclimation (GO:0010286),Cellular Heat Acclimation (GO:0070370),1.0000000000000002
+Regulation Of Glucocorticoid Receptor Signaling Pathway (GO:2000322),Negative Regulation Of Glucocorticoid Receptor Signaling Pathway (GO:2000323),1.0000000000000002
+7-Methylguanosine Cap Hypermethylation (GO:0036261),U4 snRNP (GO:0005687),1.0000000000000002
+"Negative Regulation Of mRNA Splicing, Via Spliceosome (GO:0048025)",Negative Regulation Of mRNA Processing (GO:0050686),1.0000000000000002
+Peptidyl-Proline Hydroxylation To 4-hydroxy-L-proline (GO:0018401),Peptidyl-Proline 4-Dioxygenase Activity (GO:0031545),1.0000000000000002
+Negative Regulation Of Nitric Oxide Metabolic Process (GO:1904406),Negative Regulation Of Nitric Oxide Biosynthetic Process (GO:0045019),1.0000000000000002
+Fluid Transport (GO:0042044),Water Transmembrane Transporter Activity (GO:0005372),1.0000000000000002
+RNA Capping (GO:0036260),U4 snRNP (GO:0005687),1.0000000000000002
+Oxidative Phosphorylation (GO:0006119),Oxidoreduction-Driven Active Transmembrane Transporter Activity (GO:0015453),1.0000000000000002
+Male Gonad Development (GO:0008584),Development Of Primary Male Sexual Characteristics (GO:0046546),1.0000000000000002
+Negative Regulation Of Cation Channel Activity (GO:2001258),Positive Regulation Of Calcium Ion Import Across Plasma Membrane (GO:1905665),1.0000000000000002
+Negative Regulation Of Microglial Cell Activation (GO:1903979),Regulation Of Microglial Cell Activation (GO:1903978),1.0000000000000002
+Viral mRNA Export From Host Cell Nucleus (GO:0046784),Translocation Of Molecules Into Host (GO:0044417),1.0000000000000002
+Oxidoreduction-Driven Active Transmembrane Transporter Activity (GO:0015453),Cellular Respiration (GO:0045333),1.0000000000000002
+NMDA Selective Glutamate Receptor Complex (GO:0017146),NMDA Glutamate Receptor Activity (GO:0004972),1.0000000000000002
+Mitochondrial Proton-Transporting ATP Synthase Complex Assembly (GO:0033615),Proton-Transporting ATP Synthase Complex Assembly (GO:0043461),1.0000000000000002
+Positive Regulation Of Male Gonad Development (GO:2000020),Regulation Of Male Gonad Development (GO:2000018),1.0000000000000002
+Voltage-Gated Monoatomic Cation Channel Activity (GO:0022843),High Voltage-Gated Calcium Channel Activity (GO:0008331),1.0000000000000002
+Excitatory Postsynaptic Potential (GO:0060079),"Chemical Synaptic Transmission, Postsynaptic (GO:0099565)",1.0000000000000002
+Response To Caffeine (GO:0031000),Cellular Response To Caffeine (GO:0071313),1.0000000000000002
+Negative Regulation Of Cell Development (GO:0010721),Negative Regulation Of Nervous System Development (GO:0051961),1.0000000000000002
+Cellular Respiration (GO:0045333),Mitochondrial ATP Synthesis Coupled Electron Transport (GO:0042775),1.0000000000000002
+Negative Regulation Of Cation Channel Activity (GO:2001258),Negative Regulation Of Voltage-Gated Calcium Channel Activity (GO:1901386),1.0000000000000002
+P-type Potassium Transmembrane Transporter Activity (GO:0008556),P-type Sodium Transporter Activity (GO:0008554),1.0000000000000002
+Microbody Lumen (GO:0031907),Peroxisomal Matrix (GO:0005782),1.0000000000000002
+Ribonucleoside Bisphosphate Catabolic Process (GO:0034031),Purine Nucleoside Bisphosphate Catabolic Process (GO:0034034),1.0000000000000002
+MHC Class II Protein Complex Assembly (GO:0002399),Peptide Antigen Assembly With MHC Class II Protein Complex (GO:0002503),1.0000000000000002
+Cellular Respiration (GO:0045333),Aerobic Respiration (GO:0009060),1.0000000000000002
+Voltage-Gated Monoatomic Cation Channel Activity (GO:0022843),Voltage-Gated Calcium Channel Activity (GO:0005245),1.0000000000000002
+Inhibitory Synapse (GO:0060077),Postsynaptic Membrane Assembly (GO:0097104),1.0000000000000002
+Detection Of Light Stimulus Involved In Sensory Perception (GO:0050962),Detection Of Light Stimulus Involved In Visual Perception (GO:0050908),1.0000000000000002
+Leptin-Mediated Signaling Pathway (GO:0033210),Cellular Response To Leptin Stimulus (GO:0044320),1.0000000000000002
+AP-2 Adaptor Complex (GO:0030122),Clathrin Coat Of Endocytic Vesicle (GO:0030128),1.0000000000000002
+Vascular Process In Circulatory System (GO:0003018),Regulation Of Tube Diameter (GO:0035296),1.0000000000000002
+Regulation Of Angiotensin Levels In Blood (GO:0002002),Angiotensin Maturation (GO:0002003),1.0000000000000002
+Arylesterase Activity (GO:0004064),Aromatic Compound Catabolic Process (GO:0019439),1.0000000000000002
+Ammonium Transmembrane Transporter Activity (GO:0008519),Volume-Sensitive Anion Channel Activity (GO:0005225),1.0000000000000002
+Multivesicular Body Sorting Pathway (GO:0071985),Multivesicular Body Membrane (GO:0032585),1.0000000000000002
+Sensory Perception Of Mechanical Stimulus (GO:0050954),Sensory Perception Of Sound (GO:0007605),1.0000000000000002
+Cytidine Deaminase Activity (GO:0004126),DNA Cytosine Deamination (GO:0070383),1.0000000000000002
+Water Channel Activity (GO:0015250),Water Transmembrane Transporter Activity (GO:0005372),1.0000000000000002
+AMP Biosynthetic Process (GO:0006167),IMP Biosynthetic Process (GO:0006188),1.0000000000000002
+Cytidine Deaminase Activity (GO:0004126),Deoxycytidine Deaminase Activity (GO:0047844),1.0000000000000002
+Water Channel Activity (GO:0015250),Fluid Transport (GO:0042044),1.0000000000000002
+Organic Hydroxy Compound Transport (GO:0015850),Bile Acid And Bile Salt Transport (GO:0015721),1.0000000000000002
+Lysophospholipid Acyltransferase Activity (GO:0071617),Phosphatidylethanolamine Acyl-Chain Remodeling (GO:0036152),1.0000000000000002
+Positive Regulation Of Cholesterol Biosynthetic Process (GO:0045542),Positive Regulation Of Sterol Biosynthetic Process (GO:0106120),1.0000000000000002
+Negative Regulation Of Calcineurin-Mediated Signaling (GO:0106057),Negative Regulation Of calcineurin-NFAT Signaling Cascade (GO:0070885),1.0000000000000002
+Purine Ribonucleoside Monophosphate Biosynthetic Process (GO:0009168),IMP Biosynthetic Process (GO:0006188),1.0000000000000002
+Deoxycytidine Deaminase Activity (GO:0047844),DNA Cytosine Deamination (GO:0070383),1.0000000000000002
+High Voltage-Gated Calcium Channel Activity (GO:0008331),Voltage-Gated Calcium Channel Activity (GO:0005245),1.0000000000000002
+Water Channel Activity (GO:0015250),Water Transport (GO:0006833),1.0000000000000002
+Transcription Factor TFIIIC Complex (GO:0000127),5S Class rRNA Transcription By RNA Polymerase III (GO:0042791),1.0000000000000002
+Axon Extension Involved In Axon Guidance (GO:0048846),Neuron Projection Extension Involved In Neuron Projection Guidance (GO:1902284),1.0000000000000002
+Intracellular Sodium Ion Homeostasis (GO:0006883),Sodium Ion Homeostasis (GO:0055078),1.0000000000000002
+Negative Regulation Of Voltage-Gated Calcium Channel Activity (GO:1901386),Positive Regulation Of Calcium Ion Import Across Plasma Membrane (GO:1905665),1.0000000000000002
+Regulation Of Guanylate Cyclase Activity (GO:0031282),Arginine Binding (GO:0034618),1.0000000000000002
+Regulation Of Lysosomal Lumen pH (GO:0035751),Lysosomal Lumen Acidification (GO:0007042),1.0000000000000002
+G Protein-Coupled Acetylcholine Receptor Signaling Pathway (GO:0007213),Acetylcholine Receptor Signaling Pathway (GO:0095500),1.0000000000000002
+Fluid Transport (GO:0042044),Water Transport (GO:0006833),1.0000000000000002
+Oxidoreduction-Driven Active Transmembrane Transporter Activity (GO:0015453),Aerobic Respiration (GO:0009060),1.0000000000000002
+Positive Regulation Of Chromosome Condensation (GO:1905821),Regulation Of Chromosome Condensation (GO:0060623),1.0000000000000002
+7-Methylguanosine RNA Capping (GO:0009452),7-Methylguanosine mRNA Capping (GO:0006370),1.0000000000000002
+Water Transport (GO:0006833),Water Transmembrane Transporter Activity (GO:0005372),1.0000000000000002
+Positive Regulation Of Dendritic Cell Antigen Processing And Presentation (GO:0002606),Positive Regulation Of Antigen Processing And Presentation (GO:0002579),1.0000000000000002
+Regulation Of Peptidyl-Serine Phosphorylation Of STAT Protein (GO:0033139),Positive Regulation Of Peptidyl-Serine Phosphorylation Of STAT Protein (GO:0033141),1.0000000000000002
+Positive Regulation Of Gonad Development (GO:1905941),Regulation Of Male Gonad Development (GO:2000018),1.0000000000000002
+Zymogen Granule (GO:0042588),Zymogen Granule Membrane (GO:0042589),1.0000000000000002
+Neurotransmitter Reuptake (GO:0098810),Serotonin Uptake (GO:0051610),1.0000000000000002
+Embryonic Heart Tube Morphogenesis (GO:0003143),Heart Looping (GO:0001947),1.0000000000000002
+Oxidoreduction-Driven Active Transmembrane Transporter Activity (GO:0015453),Mitochondrial ATP Synthesis Coupled Electron Transport (GO:0042775),1.0000000000000002
+BH Domain Binding (GO:0051400),BH3 Domain Binding (GO:0051434),1.0000000000000002
+Negative Regulation Of T-helper 17 Cell Differentiation (GO:2000320),Negative Regulation Of T-helper 17 Type Immune Response (GO:2000317),1.0000000000000002
+rRNA Transcription (GO:0009303),Transcription Factor TFIIIC Complex (GO:0000127),1.0000000000000002
+Exonucleolytic Trimming Involved In rRNA Processing (GO:0000459),"Exonucleolytic Trimming To Generate Mature 3'-End Of 5.8S rRNA From Tricistronic rRNA Transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA) (GO:0000467)",1.0000000000000002
+Icosanoid Transport (GO:0071715),Sodium-Independent Organic Anion Transmembrane Transporter Activity (GO:0015347),1.0
+Fatty Acid Beta-Oxidation Using acyl-CoA Dehydrogenase (GO:0033539),Aldehyde Dehydrogenase (NAD+) Activity (GO:0004029),1.0
+Inositol Phosphate Biosynthetic Process (GO:0032958),Inositol Metabolic Process (GO:0006020),1.0
+Pigment Granule Membrane (GO:0090741),Exocytic Vesicle (GO:0070382),1.0
+Protein Localization To Nucleolus (GO:1902570),rRNA Methylation (GO:0031167),1.0
+Inositol Phosphate Biosynthetic Process (GO:0032958),Peroxisomal Membrane Transport (GO:0015919),1.0
+Insulin Processing (GO:0030070),Cellular Modified Amino Acid Biosynthetic Process (GO:0042398),1.0
+Icosanoid Transport (GO:0071715),Prostaglandin Transport (GO:0015732),1.0
+Amino Sugar Metabolic Process (GO:0006040),Sodium-Dependent Phosphate Transport (GO:0044341),1.0
+Icosanoid Transport (GO:0071715),G Protein-Coupled Opioid Receptor Activity (GO:0004985),1.0
+Proton-Transporting V-type ATPase Complex Assembly (GO:0070070),Monoatomic Cation Transmembrane Transporter Activity (GO:0008324),1.0
+Proton-Transporting V-type ATPase Complex Assembly (GO:0070070),"ATPase Activity, Coupled To Transmembrane Movement Of Ions, Rotational Mechanism (GO:0044769)",1.0
+Bradykinin Catabolic Process (GO:0010815),Alpha-Amino Acid Biosynthetic Process (GO:1901607),1.0
+Amylin Receptor Signaling Pathway (GO:0097647),Thiamine-Containing Compound Metabolic Process (GO:0042723),1.0
+P Granule (GO:0043186),Germ Plasm (GO:0060293),1.0
+Regulation Of Saliva Secretion (GO:0046877),Auditory Receptor Cell Morphogenesis (GO:0002093),1.0
+cAMP Biosynthetic Process (GO:0006171),Sodium-Dependent Phosphate Transport (GO:0044341),1.0
+Sensory Perception Of Taste (GO:0050909),Positive Regulation Of Phospholipid Biosynthetic Process (GO:0071073),1.0
+Negative Regulation Of Cytoplasmic Translation (GO:2000766),Regulation Of Post-Transcriptional Gene Silencing By RNA (GO:1900368),1.0
+Pigment Granule Membrane (GO:0090741),Endosome To Pigment Granule Transport (GO:0043485),1.0
+Positive Regulation Of DNA-directed DNA Polymerase Activity (GO:1900264),Regulation Of DNA-directed DNA Polymerase Activity (GO:1900262),1.0
+Catecholamine Catabolic Process (GO:0042424),Positive Regulation Of Stem Cell Differentiation (GO:2000738),1.0
+Pericardium Development (GO:0060039),Venous Blood Vessel Morphogenesis (GO:0048845),1.0
+CoA-ligase Activity (GO:0016405),Fatty Acid Beta-Oxidation (GO:0006635),1.0
+Cellular Response To Fatty Acid (GO:0071398),Diol Metabolic Process (GO:0034311),1.0
+Icosanoid Transport (GO:0071715),Sodium-Independent Organic Anion Transport (GO:0043252),1.0
+Negative Regulation Of Actin Nucleation (GO:0051126),Negative Regulation Of Lipopolysaccharide-Mediated Signaling Pathway (GO:0031665),1.0
+Positive Regulation Of T-helper 1 Cell Cytokine Production (GO:2000556),Regulation Of NAD(P)H Oxidase Activity (GO:0033860),1.0
+Sensory Perception Of Taste (GO:0050909),Endothelial Cell Proliferation (GO:0001935),1.0
+Pancreas Development (GO:0031016),Peptidyl-Lysine Trimethylation (GO:0018023),1.0
+Proton-Transporting V-type ATPase Complex Assembly (GO:0070070),Pyrophosphate Hydrolysis-Driven Proton Transmembrane Transporter Activity (GO:0009678),1.0
+Positive Regulation Of Flagellated Sperm Motility (GO:1902093),Positive Regulation Of Cilium Movement (GO:0003353),1.0
+Bradykinin Catabolic Process (GO:0010815),Prepulse Inhibition (GO:0060134),1.0
+Histone H4-K12 Acetylation (GO:0043983),Spermatid Development (GO:0007286),1.0
+L-ascorbic Acid Metabolic Process (GO:0019852),Glucose Import (GO:0046323),1.0
+Positive Regulation Of Brown Fat Cell Differentiation (GO:0090336),Regulation Of Axon Guidance (GO:1902667),1.0
+Icosanoid Transport (GO:0071715),Dicarboxylic Acid Transport (GO:0006835),1.0
+GPI Anchor Binding (GO:0034235),Nitric Oxide Biosynthetic Process (GO:0006809),1.0
+Aminoglycan Metabolic Process (GO:0006022),Aspartic-Type Endopeptidase Activity (GO:0004190),1.0
+Icosanoid Transport (GO:0071715),Monocarboxylic Acid Transmembrane Transporter Activity (GO:0008028),1.0
+Aminoglycan Metabolic Process (GO:0006022),Aspartic-Type Peptidase Activity (GO:0070001),1.0
+Regulation Of Saliva Secretion (GO:0046877),Auditory Receptor Cell Stereocilium Organization (GO:0060088),1.0
+Negative Regulation Of Appetite (GO:0032099),Positive Regulation Of Smooth Muscle Contraction (GO:0045987),1.0
+Positive Regulation Of Mitochondrial Membrane Permeability Involved In Apoptotic Process (GO:1902110),Mitochondrial Outer Membrane Permeabilization (GO:0097345),1.0
+Positive Regulation Of Epithelial Cell Differentiation (GO:0030858),Neuron Projection Arborization (GO:0140058),1.0
+Sodium-Independent Organic Anion Transport (GO:0043252),Glucose:Sodium Symporter Activity (GO:0005412),1.0
+Icosanoid Transport (GO:0071715),Glucose:Sodium Symporter Activity (GO:0005412),1.0
+Regulation Of Skeletal Muscle Contraction (GO:0014819),Fucosyltransferase Activity (GO:0008417),1.0
+Negative Regulation Of p38MAPK Cascade (GO:1903753),Cellular Response To Fatty Acid (GO:0071398),1.0
+B Cell Chemotaxis (GO:0035754),Positive Regulation Of Epithelial Tube Formation (GO:1905278),1.0
+Icosanoid Transport (GO:0071715),Acid Secretion (GO:0046717),1.0
+Positive Regulation Of Brown Fat Cell Differentiation (GO:0090336),tRNA Transport (GO:0051031),1.0
+Plasma Membrane Phospholipid Scrambling (GO:0017121),Phospholipid Scramblase Activity (GO:0017128),1.0
+Respiratory System Development (GO:0060541),Lung Development (GO:0030324),1.0
+Pyrimidine-Containing Compound Metabolic Process (GO:0072527),Proton-Transporting V-type ATPase Complex Assembly (GO:0070070),1.0
+Regulation Of Mitochondrial Translation (GO:0070129),Mitochondrial Ribosome Assembly (GO:0061668),1.0
+Monocarboxylic Acid Transmembrane Transporter Activity (GO:0008028),Acid Secretion (GO:0046717),1.0
+Basic Amino Acid Transmembrane Transport (GO:1990822),L-arginine Transmembrane Transport (GO:1903826),1.0
+Positive Regulation Of Leukocyte Activation (GO:0002696),"Oxidoreductase Activity, Acting On Single Donors With Incorporation Of Molecular Oxygen, Incorporation Of Two Atoms Of Oxygen (GO:0016702)",1.0
+Positive Regulation Of Mitochondrial Calcium Ion Concentration (GO:0051561),Negative Regulation Of Endoplasmic Reticulum Calcium Ion Concentration (GO:0032471),1.0
+Regulation Of Renal Sodium Excretion (GO:0035813),cGMP Biosynthetic Process (GO:0006182),1.0
+Negative Regulation Of p38MAPK Cascade (GO:1903753),Diol Metabolic Process (GO:0034311),1.0
+Fatty Acid Alpha-Oxidation (GO:0001561),Very Long-Chain Fatty Acid Catabolic Process (GO:0042760),1.0
+Aminoglycan Metabolic Process (GO:0006022),Negative Regulation Of Blood Pressure (GO:0045776),1.0
+Monocarboxylic Acid Transmembrane Transporter Activity (GO:0008028),Glucose:Sodium Symporter Activity (GO:0005412),1.0
+Positive Regulation Of Brown Fat Cell Differentiation (GO:0090336),Regulation Of Translational Termination (GO:0006449),1.0
+Amylin Receptor Signaling Pathway (GO:0097647),Acidic Amino Acid Transmembrane Transporter Activity (GO:0015172),1.0
+Enamel Mineralization (GO:0070166),Tooth Mineralization (GO:0034505),1.0
+Sensory Perception Of Taste (GO:0050909),Regulation Of T Cell Chemotaxis (GO:0010819),1.0
+Enamel Mineralization (GO:0070166),Detection Of Calcium Ion (GO:0005513),1.0
+Sodium-Independent Organic Anion Transport (GO:0043252),Acid Secretion (GO:0046717),1.0
+Sensory Organ Morphogenesis (GO:0090596),"Nuclear-Transcribed mRNA Catabolic Process, Deadenylation-Independent Decay (GO:0031086)",1.0
+Icosanoid Transport (GO:0071715),Prostaglandin Transmembrane Transporter Activity (GO:0015132),1.0
+"Vacuolar Proton-Transporting V-type ATPase, V0 Domain (GO:0000220)","Proton-Transporting V-type ATPase, V0 Domain (GO:0033179)",1.0
+Regulation Of Saliva Secretion (GO:0046877),"Pentose-Phosphate Shunt, Non-Oxidative Branch (GO:0009052)",1.0
+Negative Regulation Of Meiotic Cell Cycle (GO:0051447),Patched Binding (GO:0005113),1.0
+Potassium:Proton Antiporter Activity (GO:0015386),Cellular Response To pH (GO:0071467),1.0
+Phagolysosome Assembly (GO:0001845),Phagosome-Lysosome Fusion (GO:0090385),1.0
+Regulation Of T-helper 1 Cell Cytokine Production (GO:2000554),Positive Regulation Of T-helper 1 Cell Cytokine Production (GO:2000556),1.0

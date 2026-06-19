@@ -1,0 +1,19 @@
+{
+  "generated_at_utc": "20260618T011356Z",
+  "methods": [
+    "kl",
+    "kl_internal_filter_branch_length_v1",
+    "kl_legacy_c2ef9a69"
+  ],
+  "n_cases": 121,
+  "n_rows": 363,
+  "pairwise_branch_length_deltas_csv": "raw/assets/benchmark-results/branch_length_candidate_full_big_20260618/pairwise_branch_length_deltas.csv",
+  "plots_enabled": false,
+  "relationship_analysis_enabled": true,
+  "results_csv": "raw/assets/benchmark-results/branch_length_candidate_full_big_20260618/full_benchmark_comparison.csv",
+  "runner": "benchmarks.full.run",
+  "skip_reason_summary_csv": "raw/assets/benchmark-results/branch_length_candidate_full_big_20260618/skip_reason_summary.csv",
+  "suite": "full",
+  "summary_by_category_method_csv": "raw/assets/benchmark-results/branch_length_candidate_full_big_20260618/summary_by_category_method.csv",
+  "summary_by_method_csv": "raw/assets/benchmark-results/branch_length_candidate_full_big_20260618/summary_by_method.csv"
+}

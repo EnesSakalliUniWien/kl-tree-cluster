@@ -1,0 +1,7 @@
+method,row_count,ok_count,skip_count,mean_ari,exact_k,false_split_count,under_split_count
+kl,7.0,5.0,2.0,0.7810397031839622,3.0,1.0,1.0
+kl_bandwidth_context_v1,7.0,5.0,2.0,0.7810397031839622,3.0,1.0,1.0
+kl_internal_filter_branch_length_v1,7.0,5.0,2.0,0.8892574192992238,4.0,0.0,1.0
+kl_internal_filter_v1,7.0,5.0,2.0,0.8892574192992238,4.0,0.0,1.0
+kl_legacy_c2ef9a69,7.0,7.0,0.0,0.7780410137851598,5.0,0.0,2.0
+kl_rescued_legacy_v1,7.0,7.0,0.0,0.7640775336562661,4.0,1.0,2.0

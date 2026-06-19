@@ -1,0 +1,21 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+whole_adaptive_diffusion,0,24,46,2.8198821770103785e-32,Positive Regulation Of Proteolysis Involved In Protein Catabolic Process (GO:1903052),0.9844290657439446,True
+whole_adaptive_diffusion,1,12,228,6.313174459623431e-17,Secondary Alcohol Metabolic Process (GO:1902652),0.9864406779661016,True
+whole_adaptive_diffusion,2,33,857,1.04495183084329e-39,Neurotrophin TRK Receptor Binding (GO:0005167),0.9521222772540876,True
+whole_adaptive_diffusion,3,14,151,3.0520368024423367e-20,Transcription Factor TFTC Complex (GO:0033276),0.9897959183673468,True
+whole_adaptive_diffusion,4,30,567,1.271505724109086e-32,Positive Regulation Of JUN Kinase Activity (GO:0043507),0.9123543123543124,True
+whole_adaptive_diffusion,5,11,119,1.7118223052664607e-10,Negative Regulation Of Endopeptidase Activity (GO:0010951),0.9509306260575296,True
+whole_adaptive_diffusion,6,21,461,6.420889726864005e-12,"DNA-binding Transcription Activator Activity, RNA Polymerase II-specific (GO:0001228)",0.7710843373493975,True
+whole_adaptive_diffusion,7,2,202,0.0070403148683534,Phosphatidic Acid Transfer Activity (GO:1990050),1.0,False
+whole_adaptive_diffusion,8,3,0,0.2637184611104047,Protein Polymerization (GO:0051258),0.9532554257095158,False
+whole_adaptive_diffusion,9,8,123,1.4818776810446282e-08,Regulation Of T-helper Cell Differentiation (GO:0045622),0.7466329966329966,True
+whole_adaptive_diffusion,10,12,157,3.1991893564297474e-08,Activation Of Cysteine-Type Endopeptidase Activity (GO:0097202),0.7926553672316384,True
+whole_adaptive_diffusion,11,4,0,0.2112094460506022,Regulation Of Oxidative Phosphorylation (GO:0002082),0.5,False
+whole_adaptive_diffusion,12,10,149,4.559195883339954e-12,Glycosaminoglycan Metabolic Process (GO:0030203),0.9780405405405406,True
+whole_adaptive_diffusion,13,9,250,6.297803114730167e-12,3'-5' DNA Helicase Activity (GO:0043138),0.8855162076072699,True
+whole_adaptive_diffusion,14,5,132,2.197874970417865e-05,"Negative Regulation Of mRNA Splicing, Via Spliceosome (GO:0048025)",0.7966499162479063,True
+whole_adaptive_diffusion,15,14,0,1.0,Rho Protein Signal Transduction (GO:0007266),-0.0306122448979591,False
+whole_adaptive_diffusion,16,3,89,0.0008213700679745,Protein Localization To Phagophore Assembly Site (GO:0034497),0.994991652754591,True
+whole_adaptive_diffusion,17,3,49,0.0106778108836693,Regulation Of Transcription Of Nucleolar Large rRNA By RNA Polymerase I (GO:1901836),0.988313856427379,True
+whole_adaptive_diffusion,18,342,13,0.001994238559816,Endoplasmic Reticulum Membrane (GO:0005789),0.1602339181286549,False
+whole_adaptive_diffusion,19,42,243,1.551744618938763e-17,Transcription Cis-Regulatory Region Binding (GO:0000976),0.675,True
