@@ -442,6 +442,110 @@ class TestTreeDecompositionTraversal:
         cluster_leaf_sets = _cluster_leaf_sets(result)
         assert cluster_leaf_sets == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
 
+    def test_full_edge_traversal_walks_past_sibling_closed_root(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_deep_tree()
+        edge_divergent = {node: True for node in tree.nodes}
+        sibling_different = {node: False for node in tree.nodes}
+        sibling_different["B"] = True
+
+        annotations_df = _make_annotations(
+            tree,
+            edge_divergent=edge_divergent,
+            sibling_different=sibling_different,
+        )
+
+        result = _decompose_with_annotations(
+            tree,
+            annotations_df,
+            monkeypatch,
+            passthrough=False,
+        )
+
+        live_trace = result["traversal_trace"]
+        full_trace = result["full_edge_traversal_trace"]
+        assert [row["node_id"] for row in live_trace] == ["root"]
+        assert {row["node_id"] for row in full_trace} == set(tree.nodes)
+        assert full_trace[0]["node_id"] == "root"
+        assert full_trace[0]["actual_decision"] == "boundary"
+        assert full_trace[0]["actual_visited"] is True
+        assert full_trace[0]["edge_traversal_action"] == "continue"
+        assert any(row["node_id"] == "B" and not row["actual_visited"] for row in full_trace)
+
+    def test_full_edge_traversal_stops_when_child_edges_close(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_deep_tree()
+        edge_divergent = {node: False for node in tree.nodes}
+        edge_divergent["A"] = True
+        edge_divergent["B"] = True
+        sibling_different = {node: False for node in tree.nodes}
+
+        annotations_df = _make_annotations(
+            tree,
+            edge_divergent=edge_divergent,
+            sibling_different=sibling_different,
+        )
+
+        result = _decompose_with_annotations(
+            tree,
+            annotations_df,
+            monkeypatch,
+            passthrough=False,
+        )
+
+        full_trace = result["full_edge_traversal_trace"]
+        assert [row["node_id"] for row in full_trace] == ["root", "A", "B"]
+        stop_reasons = {row["node_id"]: row["edge_traversal_stop_reason"] for row in full_trace}
+        assert stop_reasons == {
+            "root": "edge_open_continue",
+            "A": "edge_closed",
+            "B": "edge_closed",
+        }
+
+    def test_full_edge_traversal_records_branch_lengths_and_counters(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_deep_tree()
+        tree.edges["root", "A"]["branch_length"] = 1.25
+        tree.edges["root", "B"]["branch_length"] = 2.5
+        edge_divergent = {node: False for node in tree.nodes}
+        edge_divergent["A"] = True
+        edge_divergent["B"] = True
+        sibling_different = {node: False for node in tree.nodes}
+
+        annotations_df = _make_annotations(
+            tree,
+            edge_divergent=edge_divergent,
+            sibling_different=sibling_different,
+        )
+
+        result = _decompose_with_annotations(
+            tree,
+            annotations_df,
+            monkeypatch,
+            passthrough=False,
+        )
+
+        root_row = result["full_edge_traversal_trace"][0]
+        assert root_row["left_child"] == "A"
+        assert root_row["right_child"] == "B"
+        assert root_row["left_branch_length"] == 1.25
+        assert root_row["right_branch_length"] == 2.5
+        assert root_row["left_branch_length_missing"] is False
+        assert root_row["right_branch_length_missing"] is False
+
+        counters = result["traversal_counters"]
+        assert counters["live_nodes_visited"] == len(result["traversal_trace"])
+        assert counters["live_internal_tuples"] == 1
+        assert counters["live_boundary_count"] == 1
+        assert counters["full_edge_nodes_visited"] == len(result["full_edge_traversal_trace"])
+        assert counters["full_edge_internal_tuples"] == 3
+        assert counters["full_edge_continue_count"] == 1
+        assert counters["full_edge_stop_count"] == 2
+        assert counters["full_edge_closed_stop_count"] == 2
+
     def test_decompose_tree_passthrough_ignores_blocked_descendant_signal(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

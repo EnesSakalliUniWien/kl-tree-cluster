@@ -516,6 +516,178 @@ class TreeDecomposition:
             coerce_index_to_str=False,
         )
 
+    # ---------- traversal audit helpers ----------
+
+    def _edge_branch_length(self, parent: object, child: object) -> float | None:
+        """Return the recorded branch length for an edge when present."""
+        edge_attrs = self.tree.edges[parent, child]
+        if "branch_length" not in edge_attrs:
+            return None
+        return float(edge_attrs["branch_length"])
+
+    def _full_edge_traversal_row(
+        self,
+        *,
+        node: object,
+        depth: int,
+        path: tuple[object, ...],
+        actual_decision: TraversalDecision,
+        actual_visited: bool,
+    ) -> dict[str, object]:
+        """Return one audit row for edge-reachable traversal."""
+        children = self._children[node]
+        left_child = children[0] if len(children) == 2 else None
+        right_child = children[1] if len(children) == 2 else None
+
+        left_edge_open = (
+            bool(self._edge_divergent[left_child]) if left_child is not None else False
+        )
+        right_edge_open = (
+            bool(self._edge_divergent[right_child]) if right_child is not None else False
+        )
+        edge_gate_open = bool(left_edge_open or right_edge_open)
+        sibling_skipped = bool(self._sibling_skipped[node])
+        sibling_different = bool(self._sibling_different[node])
+        sibling_gate_open = bool(sibling_different and not sibling_skipped)
+
+        left_branch_length = (
+            self._edge_branch_length(node, left_child)
+            if left_child is not None
+            else None
+        )
+        right_branch_length = (
+            self._edge_branch_length(node, right_child)
+            if right_child is not None
+            else None
+        )
+
+        if not children:
+            edge_traversal_action = "stop"
+            edge_traversal_stop_reason = "leaf"
+        elif len(children) != 2:
+            edge_traversal_action = "stop"
+            edge_traversal_stop_reason = "non_binary"
+        elif edge_gate_open:
+            edge_traversal_action = "continue"
+            edge_traversal_stop_reason = "edge_open_continue"
+        else:
+            edge_traversal_action = "stop"
+            edge_traversal_stop_reason = "edge_closed"
+
+        return {
+            "node_id": node,
+            "left_child": left_child,
+            "right_child": right_child,
+            "depth": int(depth),
+            "path": path,
+            "actual_visited": bool(actual_visited),
+            "actual_decision": actual_decision.value,
+            "edge_traversal_action": edge_traversal_action,
+            "edge_traversal_stop_reason": edge_traversal_stop_reason,
+            "is_leaf": len(children) == 0,
+            "n_children": len(children),
+            "n_descendant_leaves": len(self._descendant_leaf_sets[node]),
+            "left_edge_open": left_edge_open,
+            "right_edge_open": right_edge_open,
+            "edge_gate_open": edge_gate_open,
+            "sibling_different": sibling_different,
+            "sibling_skipped": sibling_skipped,
+            "sibling_gate_open": sibling_gate_open,
+            "left_branch_length": left_branch_length,
+            "right_branch_length": right_branch_length,
+            "left_branch_length_missing": (
+                left_child is not None and left_branch_length is None
+            ),
+            "right_branch_length_missing": (
+                right_child is not None and right_branch_length is None
+            ),
+        }
+
+    def _full_edge_traversal_trace(
+        self,
+        *,
+        actual_decision_by_node: dict[object, TraversalDecision],
+        actual_visited_nodes: set[object],
+    ) -> list[dict[str, object]]:
+        """Walk the tree until edge tests stop, independent of sibling gates."""
+        nodes_to_visit: list[tuple[object, int, tuple[object, ...]]] = [
+            (self._root, 0, (self._root,))
+        ]
+        processed: set[object] = set()
+        trace: list[dict[str, object]] = []
+
+        while nodes_to_visit:
+            node, depth, path = nodes_to_visit.pop()
+            if node in processed:
+                continue
+            processed.add(node)
+
+            actual_decision = actual_decision_by_node.get(node)
+            if actual_decision is None:
+                actual_decision = self._gate.decision(node)
+
+            row = self._full_edge_traversal_row(
+                node=node,
+                depth=depth,
+                path=path,
+                actual_decision=actual_decision,
+                actual_visited=node in actual_visited_nodes,
+            )
+            trace.append(row)
+
+            if row["edge_traversal_action"] == "continue":
+                left_child, right_child = self._children[node]
+                nodes_to_visit.append((right_child, depth + 1, (*path, right_child)))
+                nodes_to_visit.append((left_child, depth + 1, (*path, left_child)))
+
+        return trace
+
+    @staticmethod
+    def _traversal_counters(
+        *,
+        traversal_trace: list[dict[str, object]],
+        full_edge_traversal_trace: list[dict[str, object]],
+    ) -> dict[str, int]:
+        """Return compact counters for live and edge-reachable traversal."""
+        live_decisions = [str(row["decision"]) for row in traversal_trace]
+        full_stop_reasons = [
+            str(row["edge_traversal_stop_reason"])
+            for row in full_edge_traversal_trace
+        ]
+        return {
+            "live_nodes_visited": len(traversal_trace),
+            "live_internal_tuples": sum(
+                int(row["n_children"]) == 2 for row in traversal_trace
+            ),
+            "live_split_count": live_decisions.count(TraversalDecision.SPLIT.value),
+            "live_pass_through_count": live_decisions.count(
+                TraversalDecision.PASS_THROUGH.value
+            ),
+            "live_boundary_count": live_decisions.count(
+                TraversalDecision.BOUNDARY.value
+            ),
+            "full_edge_nodes_visited": len(full_edge_traversal_trace),
+            "full_edge_internal_tuples": sum(
+                int(row["n_children"]) == 2 for row in full_edge_traversal_trace
+            ),
+            "full_edge_continue_count": sum(
+                row["edge_traversal_action"] == "continue"
+                for row in full_edge_traversal_trace
+            ),
+            "full_edge_stop_count": sum(
+                row["edge_traversal_action"] == "stop"
+                for row in full_edge_traversal_trace
+            ),
+            "full_edge_leaf_stop_count": full_stop_reasons.count("leaf"),
+            "full_edge_non_binary_stop_count": full_stop_reasons.count("non_binary"),
+            "full_edge_closed_stop_count": full_stop_reasons.count("edge_closed"),
+            "full_edge_missing_branch_length_count": sum(
+                bool(row["left_branch_length_missing"])
+                + bool(row["right_branch_length_missing"])
+                for row in full_edge_traversal_trace
+            ),
+        }
+
     # ---------- core decomposition (iterative, no recursion) ----------
 
     def decompose_tree(self) -> dict[str, object]:
@@ -532,6 +704,7 @@ class TreeDecomposition:
         final_boundaries: list[ClusterBoundary] = []
         traversal_trace: list[dict[str, object]] = []
         processed: set[object] = set()
+        actual_decision_by_node: dict[object, TraversalDecision] = {}
 
         while nodes_to_visit:
             node = nodes_to_visit.pop()
@@ -540,6 +713,7 @@ class TreeDecomposition:
             processed.add(node)
 
             decision = self._gate.decision(node)
+            actual_decision_by_node[node] = decision
             children = self._children[node]
             passthrough_support = self._gate.passthrough_support_status(node)
             traversal_trace.append(
@@ -564,11 +738,20 @@ class TreeDecomposition:
             )
 
         cluster_assignments = build_cluster_assignments(final_boundaries)
+        full_edge_traversal_trace = self._full_edge_traversal_trace(
+            actual_decision_by_node=actual_decision_by_node,
+            actual_visited_nodes=processed,
+        )
 
         return {
             "cluster_assignments": cluster_assignments,
             "num_clusters": len(cluster_assignments),
             "traversal_trace": traversal_trace,
+            "full_edge_traversal_trace": full_edge_traversal_trace,
+            "traversal_counters": self._traversal_counters(
+                traversal_trace=traversal_trace,
+                full_edge_traversal_trace=full_edge_traversal_trace,
+            ),
             "independence_analysis": {
                 "edge_alpha": self.edge_alpha,
                 "sibling_alpha": self.sibling_alpha,
