@@ -123,6 +123,7 @@ METHOD_SPECS: dict[str, MethodSpec] = {
                 "spectral_include_internal_barycenters": True,
                 "spectral_internal_distribution_mode": "empirical_barycenter",
                 "spectral_mp_row_count_mode": "leaf_effective_rows",
+                "enforce_internal_support_thresholds": True,
             },
         ],
     ),
@@ -136,6 +137,7 @@ METHOD_SPECS: dict[str, MethodSpec] = {
                 "spectral_include_internal_barycenters": True,
                 "spectral_internal_distribution_mode": "branch_length_state",
                 "spectral_mp_row_count_mode": "leaf_effective_rows",
+                "enforce_internal_support_thresholds": True,
             },
         ],
     ),
@@ -162,6 +164,7 @@ METHOD_SPECS: dict[str, MethodSpec] = {
                 "spectral_include_internal_barycenters": True,
                 "spectral_internal_distribution_mode": "branch_length_state",
                 "spectral_mp_row_count_mode": "leaf_effective_rows",
+                "enforce_internal_support_thresholds": True,
                 "sibling_gate_profile": (
                     "fixed_coordinate_spectral_transport_passthrough_v1"
                 ),

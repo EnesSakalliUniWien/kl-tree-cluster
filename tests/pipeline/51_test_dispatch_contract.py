@@ -162,6 +162,7 @@ def test_run_clustering_result_forwards_kl_gate_profile_params(monkeypatch):
             "neighborhood_bandwidth_profile": (
                 "regional_tau_branch_length_support_only_v1"
             ),
+            "enforce_internal_support_thresholds": True,
             "passthrough": True,
         },
         seed=42,
@@ -204,6 +205,7 @@ def test_run_clustering_result_forwards_kl_gate_profile_params(monkeypatch):
     assert captured["kwargs"]["neighborhood_bandwidth_profile"] == (
         "regional_tau_branch_length_support_only_v1"
     )
+    assert captured["kwargs"]["enforce_internal_support_thresholds"] is True
     assert captured["kwargs"]["passthrough"] is True
 
 
@@ -269,9 +271,11 @@ def test_method_registry_exposes_guarded_rescue_profiles():
     assert internal["spectral_include_internal_barycenters"] is True
     assert internal["spectral_internal_distribution_mode"] == "empirical_barycenter"
     assert internal["spectral_mp_row_count_mode"] == "leaf_effective_rows"
+    assert internal["enforce_internal_support_thresholds"] is True
     assert branch_length["spectral_internal_distribution_mode"] == (
         "branch_length_state"
     )
+    assert branch_length["enforce_internal_support_thresholds"] is True
     assert bandwidth["neighborhood_bandwidth_profile"] == (
         "regional_tau_branch_length_support_only_v1"
     )
@@ -279,6 +283,7 @@ def test_method_registry_exposes_guarded_rescue_profiles():
         "fixed_coordinate_spectral_transport_passthrough_v1"
     )
     assert rescued["spectral_mp_row_count_mode"] == "leaf_effective_rows"
+    assert rescued["enforce_internal_support_thresholds"] is True
 
 
 def test_legacy_commit_package_imports_tree_decomposition():

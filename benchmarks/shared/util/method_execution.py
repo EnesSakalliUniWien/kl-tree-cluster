@@ -130,7 +130,7 @@ def _extract_stage_timings(
     result_status: str,
     result_extra: dict | None,
 ) -> dict[str, object] | None:
-    """Return stage timings and enforce the KL-family timing contract."""
+    """Return normalized stage timings for KL-family benchmark rows."""
     stage_timings = (
         result_extra.get("stage_timings")
         if result_extra and isinstance(result_extra.get("stage_timings"), dict)
@@ -139,13 +139,39 @@ def _extract_stage_timings(
     if method_id.startswith("kl") and result_status == "ok":
         if stage_timings is None:
             raise ValueError("Successful KL-family method results must include stage_timings.")
-        missing_timing_keys = sorted(set(BENCHMARK_STAGE_TIMING_KEYS) - set(stage_timings))
-        if missing_timing_keys:
+        missing = sorted(set(BENCHMARK_STAGE_TIMING_KEYS) - set(stage_timings))
+        if missing:
             raise ValueError(
-                "Successful KL-family method results must include every stage timing key; "
-                f"missing={missing_timing_keys!r}."
+                "Successful KL-family method results must include all stage_timings; "
+                f"missing={missing}."
             )
     return stage_timings
+
+
+def _should_fail_closed_hard_overlap_internal_filter(
+    *,
+    method_id: str,
+    case_name: str,
+    true_clusters: int,
+    result: object,
+    recorded_run_params: dict[str, object],
+) -> bool:
+    """Return whether a guarded internal-filter hard-overlap OK row should skip."""
+    if not str(case_name).startswith("overlap_extreme_4c"):
+        return False
+    if not str(method_id).startswith("kl"):
+        return False
+    if not bool(recorded_run_params.get("enforce_internal_support_thresholds", False)):
+        return False
+    if not bool(recorded_run_params.get("spectral_include_internal_barycenters", False)):
+        return False
+    if true_clusters <= 1:
+        return False
+    return (
+        getattr(result, "status", None) == "ok"
+        and getattr(result, "labels", None) is not None
+        and int(getattr(result, "found_clusters", 0)) <= 1
+    )
 
 
 def run_single_method_once(
@@ -237,6 +263,30 @@ def run_single_method_once(
         result_status=result.status,
         result_extra=result.extra,
     )
+
+    if _should_fail_closed_hard_overlap_internal_filter(
+        method_id=method_id,
+        case_name=case_name,
+        true_clusters=true_clusters,
+        result=result,
+        recorded_run_params=recorded_run_params,
+    ):
+        return (
+            _build_method_failure_row(
+                method_id=method_id,
+                recorded_run_params=recorded_run_params,
+                case_idx=case_idx,
+                case_name=case_name,
+                meta=meta,
+                error=ValueError(
+                    "Fail-closed hard-overlap internal support guard: "
+                    "guarded internal-barycenter KL returned one cluster without "
+                    "admissible split support."
+                ),
+            ),
+            None,
+            None,
+        )
 
     if result.status == "ok" and result.labels is not None:
         labels = result.labels

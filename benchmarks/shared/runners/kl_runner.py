@@ -65,6 +65,7 @@ def _run_kl_on_distance(
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    enforce_internal_support_thresholds: bool = False,
     sibling_gate_profile: str | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -169,6 +170,7 @@ def _run_kl_on_distance(
         ),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
         spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
+        enforce_internal_support_thresholds=bool(enforce_internal_support_thresholds),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -212,6 +214,7 @@ def _run_kl_on_distance(
         ),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
         spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
+        enforce_internal_support_thresholds=bool(enforce_internal_support_thresholds),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -256,6 +259,12 @@ def _run_kl_on_distance(
     result_extra = {
         "tree": tree,
         "decomposition": decomposition,
+        "traversal_trace": decomposition.get("traversal_trace", []),
+        "full_edge_traversal_trace": decomposition.get(
+            "full_edge_traversal_trace",
+            [],
+        ),
+        "traversal_counters": decomposition.get("traversal_counters", {}),
         "annotations": tree.annotations_df,
         "gate_bundle": gate_annotation_bundle,
         "linkage_matrix": linkage_matrix,
@@ -273,6 +282,9 @@ def _run_kl_on_distance(
         ),
         "spectral_mp_row_count_mode": str(
             resolved_gate_config.spectral_mp_row_count_mode
+        ),
+        "enforce_internal_support_thresholds": bool(
+            resolved_gate_config.enforce_internal_support_thresholds
         ),
         "passthrough": bool(passthrough),
         "sibling_gate_profile": resolved_gate_config.sibling_gate_profile_id,
@@ -370,6 +382,7 @@ def _run_kl_method(
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    enforce_internal_support_thresholds: bool = False,
     sibling_gate_profile: str | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -416,6 +429,7 @@ def _run_kl_method(
         ),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
         spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
+        enforce_internal_support_thresholds=bool(enforce_internal_support_thresholds),
         sibling_gate_profile=sibling_gate_profile,
         sibling_gate_method=sibling_gate_method,
         sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import networkx as nx
 import numpy as np
-
+from benchmarks.shared.cases import get_default_test_cases
+from benchmarks.shared.generators.generate_case_data import generate_case_data
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
+from benchmarks.shared.util import method_execution
 from benchmarks.shared.util.method_sets import KL_RUNNER_METHODS
 from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.neighborhood_bandwidth import (
     CoherentSupportDecision,
@@ -15,6 +17,7 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.nei
     role_allows_empirical_null_calibration,
     selected_neighborhood_kernel_weights,
 )
+from scipy.spatial.distance import pdist
 
 
 def test_branch_length_distance_cache_uses_weighted_paths_and_mean_fallback() -> None:
@@ -126,3 +129,42 @@ def test_rescued_legacy_profiles_are_exposed_but_not_default() -> None:
     assert rescued["neighborhood_bandwidth_profile"] == (
         "regional_tau_branch_length_support_only_v1"
     )
+    assert rescued["enforce_internal_support_thresholds"] is True
+
+
+def test_internal_filter_hard_overlap_r1_fails_closed() -> None:
+    case = next(
+        case.copy()
+        for case in get_default_test_cases()
+        if case["name"] == "overlap_extreme_4c"
+    )
+    case["name"] = "overlap_extreme_4c__r1"
+    case["seed"] = 9003
+    data_df, labels, original, metadata = generate_case_data(case)
+
+    params = METHOD_SPECS["kl_internal_filter_v1"].param_grid[0]
+    result_row, computed_result, method_audit = method_execution.run_single_method_once(
+        method_id="kl_internal_filter_v1",
+        spec=METHOD_SPECS["kl_internal_filter_v1"],
+        params=params,
+        case_idx=1,
+        case_name=str(case["name"]),
+        tc_seed=case["seed"],
+        significance_level=0.01,
+        edge_alpha=0.001,
+        data_t=data_df,
+        y_t=labels,
+        x_original=original,
+        meta=metadata,
+        distance_matrix=None,
+        distance_condensed=pdist(data_df.values, metric=params["tree_distance_metric"]),
+        matrix_audit=False,
+    )
+
+    assert result_row.status.value == "skip"
+    assert result_row.found_clusters == 0
+    assert result_row.labels_length == 0
+    assert result_row.skip_reason is not None
+    assert "internal support" in result_row.skip_reason
+    assert computed_result is None
+    assert method_audit is None

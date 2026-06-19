@@ -166,6 +166,9 @@ def run_clustering_result(
                 spectral_mp_row_count_mode=str(
                     params.get("spectral_mp_row_count_mode", "leaf_effective_rows")
                 ),
+                enforce_internal_support_thresholds=bool(
+                    params.get("enforce_internal_support_thresholds", False)
+                ),
                 sibling_gate_profile=params.get("sibling_gate_profile"),
                 sibling_gate_method=str(
                     params.get("sibling_gate_method", "projected_wald_inflation")

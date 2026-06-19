@@ -375,7 +375,7 @@ def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance
         )
 
 
-def test_run_single_method_once_requires_kl_stage_timings(monkeypatch):
+def test_run_single_method_once_requires_complete_kl_stage_timings(monkeypatch):
     data_t = pd.DataFrame(
         [[0, 1], [1, 0], [0, 0], [1, 1]],
         index=["S0", "S1", "S2", "S3"],
@@ -390,26 +390,26 @@ def test_run_single_method_once_requires_kl_stage_timings(monkeypatch):
             report_df=None,
             status="ok",
             skip_reason=None,
-            extra={},
+            extra={"stage_timings": {"tree_build_sec": 0.25}},
         )
 
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
 
     spec = MethodSpec(name="KL", runner=lambda **_kwargs: None, param_grid=[{}])
-    with pytest.raises(ValueError, match="stage_timings"):
+    with pytest.raises(ValueError, match="stage_timings.*missing"):
         method_execution.run_single_method_once(
             method_id="kl",
             spec=spec,
             params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
             case_idx=1,
-            case_name="missing_timing_case",
+            case_name="partial_timing_case",
             tc_seed=42,
             significance_level=0.05,
             edge_alpha=DEFAULT_EDGE_ALPHA,
             data_t=data_t,
             y_t=y_t,
             x_original=data_t.values.astype(float),
-            meta=_benchmark_meta(name="missing_timing_case"),
+            meta=_benchmark_meta(name="partial_timing_case"),
             distance_matrix=None,
             distance_condensed=None,
             matrix_audit=False,
