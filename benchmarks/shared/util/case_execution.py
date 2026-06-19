@@ -7,6 +7,8 @@ import os
 
 import pandas as pd
 
+from benchmarks.shared.plots.backend import configure_matplotlib_backend
+
 
 def _get_benchmark_fn():
     """Lazy import to break the circular dependency with benchmarks.shared.plots."""
@@ -33,6 +35,7 @@ def _run_case_worker(
     os.environ.setdefault("MKL_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
+    configure_matplotlib_backend()
 
     try:
         df_res, _ = _get_benchmark_fn()(
