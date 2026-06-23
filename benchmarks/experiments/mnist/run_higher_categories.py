@@ -1,7 +1,7 @@
 """
-MNIST Higher-Category Benchmark for KL Divergence Clustering.
+MNIST Higher-Category Benchmark for TBS Divergence Clustering.
 
-Runs the existing MNIST KL clustering pipeline and maps digit labels
+Runs the existing MNIST TBS clustering pipeline and maps digit labels
 (0-9) into coarser, higher-level categories.
 
 Usage:
@@ -23,14 +23,14 @@ repo_root = Path(__file__).resolve().parents[3]
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import BayesianGaussianMixture
 
-from benchmarks.experiments.mnist.run import load_mnist_subset, run_kl_clustering
-from benchmarks.shared.runners.kl_diffusion_runner import _build_diffusion_distance
+from benchmarks.experiments.mnist.run import load_mnist_subset, run_tbs_clustering
+from benchmarks.shared.runners.tbs_diffusion_runner import _build_diffusion_distance
 
 HIGHER_CATEGORY_SCHEMES: dict[str, dict[int, str]] = {
     "shape_3": {
@@ -75,7 +75,7 @@ def parse_arguments() -> argparse.Namespace:
         "--binarize-threshold",
         type=float,
         default=0.0,
-        help="Binarization threshold passed to run_kl_clustering",
+        help="Binarization threshold passed to run_tbs_clustering",
     )
     parser.add_argument(
         "--distance-metric",
@@ -224,14 +224,14 @@ def run_tree_decomposition_on_preprocessed_data(
     return np.array([label_map[sample_name] for sample_name in sample_names], dtype=int)
 
 
-def _run_diffusion_kl_clustering(
+def _run_diffusion_tbs_clustering(
     X: np.ndarray,
     verbose: bool = True,
     binarize_threshold: float = 0.1,
 ) -> np.ndarray:
-    """Run KL divergence clustering with diffusion HAC tree construction."""
+    """Run TBS divergence clustering with diffusion HAC tree construction."""
     if verbose:
-        print("\nRunning KL Divergence clustering (diffusion HAC)...")
+        print("\nRunning TBS Divergence clustering (diffusion HAC)...")
         print(f"  Data shape: {X.shape}")
 
     X_binary = (X > binarize_threshold).astype(int)
@@ -827,13 +827,13 @@ def main() -> None:
 
     if arguments.pixel_categorization == "binary_threshold":
         if arguments.tree_construction == "diffusion":
-            cluster_labels = _run_diffusion_kl_clustering(
+            cluster_labels = _run_diffusion_tbs_clustering(
                 feature_matrix,
                 verbose=True,
                 binarize_threshold=arguments.binarize_threshold,
             )
         else:
-            cluster_labels = run_kl_clustering(
+            cluster_labels = run_tbs_clustering(
                 feature_matrix,
                 verbose=True,
                 binarize_threshold=arguments.binarize_threshold,

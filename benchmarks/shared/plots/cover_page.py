@@ -12,8 +12,8 @@ from pathlib import Path
 from textwrap import dedent
 
 import matplotlib.pyplot as plt
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
@@ -117,9 +117,9 @@ def category_group(subcategory: str) -> str:
 
 _OVERVIEW_TEXT = dedent(
     """\
-    KL-TE Clustering -- Benchmark Report
+    Tree-Break Selection Clustering -- Benchmark Report
 
-    This report evaluates the KL-TE hierarchy decomposition method
+    This report evaluates the Tree-Break Selection hierarchy decomposition method
     across {n_cases} registered benchmark cases.  Each case is generated with
     known ground-truth cluster labels so that recovery accuracy can be measured
     objectively.
@@ -133,9 +133,9 @@ _OVERVIEW_TEXT = dedent(
       Gate 1 -- Binary structure:
         The parent node must have exactly 2 children.
       edge gate -- Child-parent divergence:
-        Projected Wald chi-squared test on KL(child || parent).
+        Projected Wald chi-squared test on TBS(child || parent).
       sibling gate -- Sibling divergence:
-        Calibrated projected Wald test on KL(left || right)
+        Calibrated projected Wald test on TBS(left || right)
         with Benjamini-Hochberg false discovery rate correction.
 
     Default configuration:
@@ -260,7 +260,7 @@ _SBM_TEXT = dedent(
       number of clusters         2 to 3
 
     The pre-computed modularity distance is passed directly to the
-    KL runner; raw adjacency data is not re-distance-transformed.
+    TBS runner; raw adjacency data is not re-distance-transformed.
 """
 )
 
@@ -297,7 +297,7 @@ _PHYLOGENETIC_TEXT = dedent(
       phylogenetic tree using a Jukes-Cantor-like substitution model.
       Each taxon acts as a cluster; samples_per_taxon sequences are drawn
       from the evolved distribution at each leaf.  The resulting category
-      matrix is one-hot encoded before the KL pipeline.
+      matrix is one-hot encoded before the TBS pipeline.
 
     Parameter ranges:
       number of taxa (= clusters)   4 to 64
@@ -386,7 +386,7 @@ _EVALUATION_TEXT = dedent(
       Exact K                        count     found K equals true K
 
     Primary method:
-      KL-divergence hierarchical clustering with the case-specific tree
+      TBS-divergence hierarchical clustering with the case-specific tree
       distance and average linkage.
 
     Competing methods (when included):

@@ -40,5 +40,5 @@ def test_method_proof_generators_satisfy_case_data_contract():
         assert metadata["source_family"]
         assert metadata["feature_representation"]
         if metadata["feature_representation"] == "continuous":
-            assert metadata["requires_precomputed_kl_distance"] is True
+            assert metadata["requires_precomputed_tbs_distance"] is True
             assert metadata["precomputed_distance_condensed"] is not None

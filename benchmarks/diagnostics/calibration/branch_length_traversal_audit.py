@@ -1,6 +1,6 @@
 """Audit fixed branch-length candidate traversal tuples.
 
-This diagnostic is evidence-only. It compares the live KL traversal with an
+This diagnostic is evidence-only. It compares the live TBS traversal with an
 edge-reachable traversal that keeps walking until child-parent edge tests close.
 It does not route between methods and does not promote an adaptive policy.
 """
@@ -19,7 +19,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
@@ -38,7 +38,7 @@ GENERATED_BY = (
     "benchmarks.diagnostics.calibration.branch_length_traversal_audit"
 )
 
-DEFAULT_METHODS = ("kl", "kl_internal_filter_branch_length_v1")
+DEFAULT_METHODS = ("tbs", "tbs_internal_filter_branch_length_v1")
 DEFAULT_CASE_NAMES = (
     "phylo_dna_8taxa_low_mut",
     "phylo_protein_8taxa",
@@ -429,7 +429,7 @@ def run_branch_length_traversal_audit(
             "cwd": str(Path.cwd()),
             "python": sys.version,
             "platform": platform.platform(),
-            "KL_TE_N_JOBS": os.environ.get("KL_TE_N_JOBS", ""),
+            "TBS_N_JOBS": os.environ.get("TBS_N_JOBS", ""),
         },
         "argv": sys.argv,
         "counts": {

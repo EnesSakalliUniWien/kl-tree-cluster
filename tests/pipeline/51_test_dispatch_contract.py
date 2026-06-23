@@ -5,8 +5,13 @@ from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.types.method_spec import MethodSpec
-from benchmarks.shared.util.method_sets import KL_RUNNER_METHODS
+from benchmarks.shared.util.method_sets import TBS_RUNNER_METHODS
 from scipy.spatial.distance import pdist, squareform
+from tree_break_selection.tree.continuous_distance import (
+    continuous_time_distance_condensed,
+    standardized_euclidean_distance_condensed,
+)
+from tree_break_selection.tree.feature_space import continuous_feature_space_from_columns
 
 
 def _toy_dataframe() -> pd.DataFrame:
@@ -73,12 +78,12 @@ def test_dispatch_result_records_unexpected_exception_as_skip(monkeypatch):
     assert result.skip_reason == "boom"
 
 
-def test_run_clustering_result_uses_provided_kl_distance_condensed():
+def test_run_clustering_result_uses_provided_tbs_distance_condensed():
     df = _toy_dataframe()
     dist_condensed = pdist(df.values, metric="euclidean")
     result = run_clustering_result(
         data_df=df,
-        method_id="kl",
+        method_id="tbs",
         params={"tree_distance_metric": "euclidean", "tree_linkage_method": "average"},
         seed=42,
         distance_condensed=dist_condensed,
@@ -95,7 +100,7 @@ def test_run_clustering_result_uses_provided_kl_distance_condensed():
         assert result.skip_reason.strip()
 
 
-def test_run_clustering_result_forwards_kl_gate_profile_params(monkeypatch):
+def test_run_clustering_result_builds_continuous_mahalanobis_time_distance(monkeypatch):
     captured = {}
 
     def _capture_runner(*args, **kwargs):
@@ -112,9 +117,106 @@ def test_run_clustering_result_forwards_kl_gate_profile_params(monkeypatch):
 
     monkeypatch.setitem(
         METHOD_SPECS,
-        "kl",
+        "tbs",
         MethodSpec(
-            name="KL Divergence",
+            name="TBS Divergence",
+            runner=_capture_runner,
+            param_grid=[
+                {
+                    "tree_distance_metric": "mahalanobis_time",
+                    "tree_linkage_method": "average",
+                }
+            ],
+        ),
+    )
+
+    df = _toy_dataframe()
+    feature_space = continuous_feature_space_from_columns(tuple(df.columns))
+    run_clustering_result(
+        data_df=df,
+        method_id="tbs",
+        params={"tree_distance_metric": "mahalanobis_time", "tree_linkage_method": "average"},
+        seed=42,
+        feature_space=feature_space,
+    )
+
+    np.testing.assert_allclose(
+        captured["args"][1],
+        continuous_time_distance_condensed(df.values, feature_space),
+    )
+
+
+def test_run_clustering_result_builds_continuous_standardized_euclidean_distance(
+    monkeypatch,
+):
+    captured = {}
+
+    def _capture_runner(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setitem(
+        METHOD_SPECS,
+        "tbs",
+        MethodSpec(
+            name="TBS Divergence",
+            runner=_capture_runner,
+            param_grid=[
+                {
+                    "tree_distance_metric": "standardized_euclidean",
+                    "tree_linkage_method": "average",
+                }
+            ],
+        ),
+    )
+
+    df = _toy_dataframe()
+    feature_space = continuous_feature_space_from_columns(tuple(df.columns))
+    run_clustering_result(
+        data_df=df,
+        method_id="tbs",
+        params={
+            "tree_distance_metric": "standardized_euclidean",
+            "tree_linkage_method": "average",
+        },
+        seed=42,
+        feature_space=feature_space,
+    )
+
+    np.testing.assert_allclose(
+        captured["args"][1],
+        standardized_euclidean_distance_condensed(df.values, feature_space),
+    )
+
+
+def test_run_clustering_result_forwards_tbs_gate_profile_params(monkeypatch):
+    captured = {}
+
+    def _capture_runner(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setitem(
+        METHOD_SPECS,
+        "tbs",
+        MethodSpec(
+            name="TBS Divergence",
             runner=_capture_runner,
             param_grid=[
                 {
@@ -128,7 +230,7 @@ def test_run_clustering_result_forwards_kl_gate_profile_params(monkeypatch):
     df = _toy_dataframe()
     run_clustering_result(
         data_df=df,
-        method_id="kl",
+        method_id="tbs",
         params={
             "tree_distance_metric": "euclidean",
             "tree_linkage_method": "average",
@@ -210,7 +312,7 @@ def test_run_clustering_result_forwards_kl_gate_profile_params(monkeypatch):
 
 
 def test_method_registry_exposes_conditional_topology_diagnostic_profile():
-    spec = METHOD_SPECS["kl_conditional_topology_diagnostic"]
+    spec = METHOD_SPECS["tbs_conditional_topology_diagnostic"]
     params = spec.param_grid[0]
 
     assert params["sibling_gate_profile"] == (
@@ -221,7 +323,7 @@ def test_method_registry_exposes_conditional_topology_diagnostic_profile():
 
 
 def test_method_registry_exposes_global_passthrough_refined_profile():
-    spec = METHOD_SPECS["kl_global_passthrough_refined_diagnostic"]
+    spec = METHOD_SPECS["tbs_global_passthrough_refined_diagnostic"]
     params = spec.param_grid[0]
 
     assert params["sibling_gate_profile"] == (
@@ -231,8 +333,27 @@ def test_method_registry_exposes_global_passthrough_refined_profile():
     assert params["tree_linkage_method"] == "average"
 
 
+def test_method_registry_exposes_fixed_fdr_benchmark_variants():
+    expected_methods = {
+        "tbs_fixed_coordinate_bh": "fixed_coordinate_bh",
+        "tbs_fixed_coordinate_by": "fixed_coordinate_by",
+        "tbs_fixed_coordinate_holm": "fixed_coordinate_holm",
+        "tbs_fixed_coordinate_bonferroni": "fixed_coordinate_bonferroni",
+        "tbs_fixed_block_bh": "fixed_block_bh",
+        "tbs_fixed_block_simes_bh": "fixed_block_simes_bh",
+    }
+
+    for method_id, sibling_gate_method in expected_methods.items():
+        spec = METHOD_SPECS[method_id]
+        params = spec.param_grid[0]
+        assert method_id in TBS_RUNNER_METHODS
+        assert params["sibling_gate_method"] == sibling_gate_method
+        assert params["tree_distance_metric"] == "hamming"
+        assert params["tree_linkage_method"] == "average"
+
+
 def test_method_registry_exposes_spectral_transport_passthrough_profile():
-    promoted = METHOD_SPECS["kl_spectral_transport_passthrough"]
+    promoted = METHOD_SPECS["tbs_spectral_transport_passthrough"]
     promoted_params = promoted.param_grid[0]
 
     assert promoted_params["sibling_gate_profile"] == (
@@ -241,7 +362,7 @@ def test_method_registry_exposes_spectral_transport_passthrough_profile():
     assert promoted_params["tree_distance_metric"] == "hamming"
     assert promoted_params["tree_linkage_method"] == "average"
 
-    spec = METHOD_SPECS["kl_spectral_transport_passthrough_diagnostic"]
+    spec = METHOD_SPECS["tbs_spectral_transport_passthrough_diagnostic"]
     params = spec.param_grid[0]
 
     assert params["sibling_gate_profile"] == (
@@ -252,10 +373,10 @@ def test_method_registry_exposes_spectral_transport_passthrough_profile():
 
 
 def test_method_registry_exposes_full_legacy_commit_method():
-    spec = METHOD_SPECS["kl_legacy_c2ef9a69"]
+    spec = METHOD_SPECS["tbs_legacy_c2ef9a69"]
     params = spec.param_grid[0]
 
-    assert "kl_legacy_c2ef9a69" in KL_RUNNER_METHODS
+    assert "tbs_legacy_c2ef9a69" in TBS_RUNNER_METHODS
     assert params["tree_distance_metric"] == "hamming"
     assert params["tree_linkage_method"] == "average"
     assert params["tree_builder"] == "linkage"
@@ -263,10 +384,10 @@ def test_method_registry_exposes_full_legacy_commit_method():
 
 
 def test_method_registry_exposes_guarded_rescue_profiles():
-    internal = METHOD_SPECS["kl_internal_filter_v1"].param_grid[0]
-    branch_length = METHOD_SPECS["kl_internal_filter_branch_length_v1"].param_grid[0]
-    bandwidth = METHOD_SPECS["kl_bandwidth_context_v1"].param_grid[0]
-    rescued = METHOD_SPECS["kl_rescued_legacy_v1"].param_grid[0]
+    internal = METHOD_SPECS["tbs_internal_filter_v1"].param_grid[0]
+    branch_length = METHOD_SPECS["tbs_internal_filter_branch_length_v1"].param_grid[0]
+    bandwidth = METHOD_SPECS["tbs_bandwidth_context_v1"].param_grid[0]
+    rescued = METHOD_SPECS["tbs_rescued_legacy_v1"].param_grid[0]
 
     assert internal["spectral_include_internal_barycenters"] is True
     assert internal["spectral_internal_distribution_mode"] == "empirical_barycenter"
@@ -287,8 +408,8 @@ def test_method_registry_exposes_guarded_rescue_profiles():
 
 
 def test_legacy_commit_package_imports_tree_decomposition():
-    from kl_clustering_analysis.legacy_methods.commit_c2ef9a69 import COMMIT
-    from kl_clustering_analysis.legacy_methods.commit_c2ef9a69.kl_clustering_analysis.hierarchy_analysis.tree_decomposition import (
+    from tree_break_selection.legacy_methods.commit_c2ef9a69 import COMMIT
+    from tree_break_selection.legacy_methods.commit_c2ef9a69.tree_break_selection.hierarchy_analysis.tree_decomposition import (
         TreeDecomposition,
     )
 
@@ -313,9 +434,9 @@ def test_run_clustering_result_dispatches_conditional_topology_as_kl(monkeypatch
 
     monkeypatch.setitem(
         METHOD_SPECS,
-        "kl_conditional_topology_diagnostic",
+        "tbs_conditional_topology_diagnostic",
         MethodSpec(
-            name="KL (Conditional Topology Diagnostic)",
+            name="TBS (Conditional Topology Diagnostic)",
             runner=_capture_runner,
             param_grid=[
                 {
@@ -331,7 +452,7 @@ def test_run_clustering_result_dispatches_conditional_topology_as_kl(monkeypatch
 
     run_clustering_result(
         data_df=_toy_dataframe(),
-        method_id="kl_conditional_topology_diagnostic",
+        method_id="tbs_conditional_topology_diagnostic",
         params={
             "tree_distance_metric": "euclidean",
             "tree_linkage_method": "average",
@@ -366,9 +487,9 @@ def test_run_clustering_result_dispatches_full_legacy_commit_as_kl(monkeypatch):
 
     monkeypatch.setitem(
         METHOD_SPECS,
-        "kl_legacy_c2ef9a69",
+        "tbs_legacy_c2ef9a69",
         MethodSpec(
-            name="KL Legacy Full Method (commit c2ef9a69)",
+            name="TBS Legacy Full Method (commit c2ef9a69)",
             runner=_capture_runner,
             param_grid=[
                 {
@@ -383,7 +504,7 @@ def test_run_clustering_result_dispatches_full_legacy_commit_as_kl(monkeypatch):
 
     run_clustering_result(
         data_df=_toy_dataframe(),
-        method_id="kl_legacy_c2ef9a69",
+        method_id="tbs_legacy_c2ef9a69",
         params={
             "tree_distance_metric": "euclidean",
             "tree_linkage_method": "average",
@@ -405,7 +526,7 @@ def test_run_clustering_result_runs_full_legacy_commit_smoke():
 
     result = run_clustering_result(
         data_df=df,
-        method_id="kl_legacy_c2ef9a69",
+        method_id="tbs_legacy_c2ef9a69",
         params={
             "tree_distance_metric": "euclidean",
             "tree_linkage_method": "average",
@@ -441,9 +562,9 @@ def test_run_clustering_result_dispatches_global_passthrough_refined_as_kl(monke
 
     monkeypatch.setitem(
         METHOD_SPECS,
-        "kl_global_passthrough_refined_diagnostic",
+        "tbs_global_passthrough_refined_diagnostic",
         MethodSpec(
-            name="KL (Global Passthrough Refined Diagnostic)",
+            name="TBS (Global Passthrough Refined Diagnostic)",
             runner=_capture_runner,
             param_grid=[
                 {
@@ -459,7 +580,7 @@ def test_run_clustering_result_dispatches_global_passthrough_refined_as_kl(monke
 
     run_clustering_result(
         data_df=_toy_dataframe(),
-        method_id="kl_global_passthrough_refined_diagnostic",
+        method_id="tbs_global_passthrough_refined_diagnostic",
         params={
             "tree_distance_metric": "euclidean",
             "tree_linkage_method": "average",
@@ -492,9 +613,9 @@ def test_run_clustering_result_dispatches_spectral_transport_as_kl(monkeypatch):
 
     monkeypatch.setitem(
         METHOD_SPECS,
-        "kl_spectral_transport_passthrough",
+        "tbs_spectral_transport_passthrough",
         MethodSpec(
-            name="KL (Spectral Transport Passthrough)",
+            name="TBS (Spectral Transport Passthrough)",
             runner=_capture_runner,
             param_grid=[
                 {
@@ -510,7 +631,7 @@ def test_run_clustering_result_dispatches_spectral_transport_as_kl(monkeypatch):
 
     run_clustering_result(
         data_df=_toy_dataframe(),
-        method_id="kl_spectral_transport_passthrough",
+        method_id="tbs_spectral_transport_passthrough",
         params={
             "tree_distance_metric": "euclidean",
             "tree_linkage_method": "average",
@@ -545,9 +666,9 @@ def test_run_clustering_result_dispatches_iqtree_without_condensed_distance(monk
 
     monkeypatch.setitem(
         METHOD_SPECS,
-        "kl_iqtree3",
+        "tbs_iqtree3",
         MethodSpec(
-            name="KL (IQ-TREE 3, MAD Root)",
+            name="TBS (IQ-TREE 3, MAD Root)",
             runner=_capture_runner,
             param_grid=[
                 {
@@ -562,7 +683,7 @@ def test_run_clustering_result_dispatches_iqtree_without_condensed_distance(monk
 
     run_clustering_result(
         data_df=_toy_dataframe(),
-        method_id="kl_iqtree3",
+        method_id="tbs_iqtree3",
         params={
             "tree_distance_metric": "hamming",
             "tree_linkage_method": "average",

@@ -44,8 +44,8 @@ DEFAULT_MANUAL_GUARDED_DIR = Path(
     "raw/assets/benchmark-results/manual_guarded_benchmark_run_direct_20260617"
 )
 
-CURRENT_METHOD = "kl"
-BRANCH_METHOD = "kl_internal_filter_branch_length_v1"
+CURRENT_METHOD = "tbs"
+BRANCH_METHOD = "tbs_internal_filter_branch_length_v1"
 
 BRANCH_CURRENT_TABLE = "branch_current_path_hypothesis_table.csv"
 METHOD_CASE_TABLE = "method_case_path_hypothesis_table.csv"
@@ -373,13 +373,13 @@ def build_method_case_table(
         "branch_vs_legacy_relation",
         f"{CURRENT_METHOD}_status",
         f"{BRANCH_METHOD}_status",
-        "kl_legacy_c2ef9a69_status",
+        "tbs_legacy_c2ef9a69_status",
         f"{CURRENT_METHOD}_found_clusters",
         f"{BRANCH_METHOD}_found_clusters",
-        "kl_legacy_c2ef9a69_found_clusters",
+        "tbs_legacy_c2ef9a69_found_clusters",
         CURRENT_METHOD,
         BRANCH_METHOD,
-        "kl_legacy_c2ef9a69",
+        "tbs_legacy_c2ef9a69",
     ]
     available = [column for column in pairwise_columns if column in pairwise.columns]
     method_case = method_case.merge(
@@ -573,19 +573,19 @@ def summarize_burden_outcomes(branch_current_table: pd.DataFrame) -> pd.DataFram
 
 def _method_connection_text(method: str) -> tuple[str, str]:
     mapping = {
-        "kl": (
+        "tbs": (
             "current_reference",
-            "Baseline guarded KL; path-conditioned burden measures what the current traversal already avoids or tolerates.",
+            "Baseline guarded TBS; path-conditioned burden measures what the current traversal already avoids or tolerates.",
         ),
-        "kl_current": (
+        "tbs_current": (
             "current_reference_alias",
-            "Direct-run alias for current KL in the guarded smoke; should match kl unless dispatch configuration differs.",
+            "Direct-run alias for current TBS in the guarded smoke; should match tbs unless dispatch configuration differs.",
         ),
-        "kl_legacy_c2ef9a69": (
+        "tbs_legacy_c2ef9a69": (
             "legacy_power_comparator",
             "Comparator with high completion power but no guarded fail-closed behavior; useful witness, not production rule.",
         ),
-        "kl_internal_filter_v1": (
+        "tbs_internal_filter_v1": (
             "internal_support_filter",
             "Tests the internal-barycenter support idea without branch-length state; separates support filtering from branch-length conditioning.",
         ),
@@ -593,11 +593,11 @@ def _method_connection_text(method: str) -> tuple[str, str]:
             "branch_length_candidate",
             "Fixed candidate under this audit; branch length is evaluated only through path-conditioned support and not as a router.",
         ),
-        "kl_bandwidth_context_v1": (
+        "tbs_bandwidth_context_v1": (
             "neighborhood_bandwidth_context",
             "Regional bandwidth support regularizer; connects to selected-neighborhood evidence but matched current in the smoke.",
         ),
-        "kl_rescued_legacy_v1": (
+        "tbs_rescued_legacy_v1": (
             "combined_guarded_legacy_candidate",
             "Combined branch-length, support, passthrough, and bandwidth components; smoke result did not justify promotion.",
         ),
@@ -648,7 +648,7 @@ def build_hypothesis_solution_matrix() -> pd.DataFrame:
             "diagnostic_signal": "pass_through_rows > 0 and stacked_pass_through_rows == 0",
             "solution": "Keep as diagnostic compression unless a future run shows truth-coherent descendant splits below isolated pass-throughs.",
             "admissibility_constraint": "No runtime truth labels and no outcome-conditioned method selection.",
-            "connection_to_recent_methods": "Current KL, bandwidth context, and branch-length can all produce isolated pass-throughs; the audit checks whether these are benign.",
+            "connection_to_recent_methods": "Current TBS, bandwidth context, and branch-length can all produce isolated pass-throughs; the audit checks whether these are benign.",
         },
         {
             "hypothesis_step": "stacked_pass_through",

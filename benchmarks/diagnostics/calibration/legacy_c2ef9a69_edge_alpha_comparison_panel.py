@@ -1,4 +1,4 @@
-"""Compare current and full legacy KL behavior over an edge-alpha grid.
+"""Compare current and full legacy TBS behavior over an edge-alpha grid.
 
 This panel is a diagnostic comparator, not a calibration claim. It keeps the
 edge-alpha dimension explicit so legacy signal gains cannot be summarized

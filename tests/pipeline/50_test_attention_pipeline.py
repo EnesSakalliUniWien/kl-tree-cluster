@@ -1,18 +1,17 @@
-"""Selected-nonnull calibration support contract for pipeline fixtures."""
+"""Pipeline fixture contracts for gate annotation."""
 
 import numpy as np
 import pandas as pd
-import pytest
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _create_test_case_data(
@@ -71,8 +70,8 @@ def _run_statistical_analysis(
     ).annotated_df
 
 
-def test_pipeline_rejects_selected_nonnull_only_calibration_support() -> None:
-    """The full pipeline must not calibrate from selected non-null records."""
+def test_pipeline_exposes_active_sibling_gate_calibration() -> None:
+    """The pipeline must annotate active sibling gate p-value provenance."""
     x, _y_true = _create_test_case_data(
         n_samples=90,
         n_features=60,
@@ -81,5 +80,11 @@ def test_pipeline_rejects_selected_nonnull_only_calibration_support() -> None:
         seed=42,
     )
     tree, _ = _build_hierarchical_tree(x)
-    with pytest.raises(ValueError, match="selected non-null"):
-        _run_statistical_analysis(tree, x, edge_alpha=0.01)
+    out = _run_statistical_analysis(tree, x, edge_alpha=0.01)
+
+    active = out[out["Sibling_Gate_P_Value_Role"].eq("active_traversal_sibling_gate")]
+    assert not active.empty
+    assert active["Sibling_Gate_P_Value_Calibration"].eq(
+        "empirical_null_inflation"
+    ).all()
+    assert active["Sibling_Divergence_P_Value"].between(0.0, 1.0).all()

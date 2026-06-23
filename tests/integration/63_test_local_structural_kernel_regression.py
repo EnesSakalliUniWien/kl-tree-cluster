@@ -4,30 +4,30 @@ import numpy as np
 import pandas as pd
 import pytest
 from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
-from benchmarks.shared.runners.kl_runner import _run_kl_method
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
+from scipy.spatial.distance import pdist
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
-from scipy.spatial.distance import pdist
 
 
 @pytest.mark.slow
 def test_strict_sibling_calibration_rejects_gauss_null_large_without_support() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "gauss_null_large")
-    context = build_kl_tree_context(case, populate_node_distributions=False)
+    context = build_tbs_tree_context(case, populate_node_distributions=False)
 
     with pytest.raises(ValueError, match="selected non-null"):
-        _run_kl_method(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
+        _run_tbs_method(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
 
 
 @pytest.mark.slow
 def test_leaf_only_cat_highcard_requires_explicit_calibration_support() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "cat_highcard_20cat_4c")
-    context = build_kl_tree_context(case, populate_node_distributions=False)
+    context = build_tbs_tree_context(case, populate_node_distributions=False)
 
     with pytest.raises(ValueError, match="selected non-null"):
-        _run_kl_method(
+        _run_tbs_method(
             context.data,
             context.distance_condensed,
             DEFAULT_SIBLING_ALPHA,
@@ -36,13 +36,35 @@ def test_leaf_only_cat_highcard_requires_explicit_calibration_support() -> None:
 
 
 @pytest.mark.slow
-def test_strict_sibling_calibration_preserves_gauss_clear_small() -> None:
+def test_default_sibling_calibration_marks_gauss_clear_small_boundary() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "gauss_clear_small")
-    context = build_kl_tree_context(case, populate_node_distributions=False)
+    context = build_tbs_tree_context(case, populate_node_distributions=False)
 
-    result = _run_kl_method(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
+    result = _run_tbs_method(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
 
-    assert result.found_clusters == 3
+    assert result.found_clusters == 2
+    visited_internal_nodes = [
+        node
+        for node in result.extra["full_edge_traversal_trace"]
+        if node["actual_visited"] and not node["is_leaf"]
+    ]
+    conservative_boundaries = [
+        node
+        for node in visited_internal_nodes
+        if node["n_descendant_leaves"] == 20
+        and node["edge_gate_open"] is True
+        and node["sibling_gate_open"] is False
+        and node["sibling_p_value"] > DEFAULT_SIBLING_ALPHA
+    ]
+    assert len(conservative_boundaries) == 1
+
+    relaxed_result = _run_tbs_method(
+        context.data,
+        context.distance_condensed,
+        0.03,
+    )
+    assert relaxed_result.found_clusters == 3
+
     stage_timings = result.extra["stage_timings"]
     for key in (
         "tree_build_sec",
@@ -66,14 +88,14 @@ def test_strict_sibling_calibration_preserves_gauss_clear_small() -> None:
         assert stage_timings[key] >= 0.0
 
 
-def test_kl_runner_accepts_fixed_sibling_gate_profile() -> None:
+def test_tbs_runner_accepts_fixed_sibling_gate_profile() -> None:
     rng = np.random.default_rng(123)
     data = pd.DataFrame(
         rng.integers(0, 2, size=(16, 8)),
         index=[f"S{index}" for index in range(16)],
         columns=[f"F{index}" for index in range(8)],
     )
-    result = _run_kl_method(
+    result = _run_tbs_method(
         data,
         pdist(data.to_numpy(), metric="hamming"),
         DEFAULT_SIBLING_ALPHA,
@@ -112,7 +134,7 @@ def test_kl_runner_accepts_fixed_sibling_gate_profile() -> None:
     assert result.extra["spectral_transport_require_mp_blocks"] is True
 
 
-def test_kl_runner_selected_root_guard_blocks_known_categorical_false_root() -> None:
+def test_tbs_runner_selected_root_guard_blocks_known_categorical_false_root() -> None:
     from benchmarks.diagnostics.calibration.data_independent_sibling_gate_traversal_panel import (
         _generate_data_with_truth,
     )
@@ -148,7 +170,7 @@ def test_kl_runner_selected_root_guard_blocks_known_categorical_false_root() -> 
             data_role=role,
             seed=seed,
         )
-        run = _run_kl_method(
+        run = _run_tbs_method(
             data,
             pdist(data.to_numpy(dtype=float), metric="hamming"),
             0.01,

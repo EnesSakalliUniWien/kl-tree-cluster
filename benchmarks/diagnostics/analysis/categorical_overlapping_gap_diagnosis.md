@@ -10,18 +10,18 @@ Reference run:
 
 ## Summary
 
-The full benchmark gap between `kl` and `leiden`/`louvain` is driven mainly by two families:
+The full benchmark gap between `tbs` and `leiden`/`louvain` is driven mainly by two families:
 
 - categorical:
-  - `kl` mean ARI `0.6946`
+  - `tbs` mean ARI `0.6946`
   - `leiden` mean ARI `0.9655`
   - `louvain` mean ARI `0.9655`
 - overlapping:
-  - `kl` mean ARI `0.6814`
+  - `tbs` mean ARI `0.6814`
   - `leiden` mean ARI `0.8381`
   - `louvain` mean ARI `0.8340`
 
-The failure mode is mostly `KL under-splitting`, not graph-method dominance across every case.
+The failure mode is mostly `TBS under-splitting`, not graph-method dominance across every case.
 
 ## Main finding
 
@@ -31,8 +31,8 @@ The two families fail for different reasons.
 
 This is mostly a conservative early-tree split problem.
 
-- `kl` under-splits on `7/12` categorical cases.
-- `kl` over-splits on `0/12` categorical cases.
+- `tbs` under-splits on `7/12` categorical cases.
+- `tbs` over-splits on `0/12` categorical cases.
 - In all `7/12` under-split categorical cases, the root raw sibling p-value is `< 0.05`.
 - In `6/7`, the root raw sibling p-value is `< 0.01`.
 
@@ -45,7 +45,7 @@ There are two recurring patterns:
 
 Representative cases:
 
-| Case | KL result | Root raw p | Root corrected p | Interpretation |
+| Case | TBS result | Root raw p | Root corrected p | Interpretation |
 | --- | --- | ---: | ---: | --- |
 | `cat_overlap_3cat_4c` | `1/4`, ARI `0.0` | `0.0182` | `0.4871` | Root signal exists, but corrected sibling decision is too conservative. |
 | `cat_highcard_20cat_4c` | `1/4`, ARI `0.0` | `3.73e-4` | `0.0350` | Strong root raw signal, but still above `SIBLING_ALPHA = 0.01`. |
@@ -62,10 +62,10 @@ Representative downstream miss:
 
 ### 2. Overlapping gap
 
-This family is mixed. Some misses are also conservative sibling decisions, but the hardest cases fail because `kl` does not see one clean global binary split at the root.
+This family is mixed. Some misses are also conservative sibling decisions, but the hardest cases fail because `tbs` does not see one clean global binary split at the root.
 
-- `kl` under-splits on `9/25` overlapping cases.
-- `kl` over-splits on `0/25`.
+- `tbs` under-splits on `9/25` overlapping cases.
+- `tbs` over-splits on `0/25`.
 - Only `3/9` under-split overlapping cases have root raw sibling p-value `< 0.05`.
 - Only `2/9` have root corrected sibling p-value `< 0.05`.
 - One root miss is a full sibling skip.
@@ -80,7 +80,7 @@ There are three regimes:
 
 Representative cases:
 
-| Case | KL result | Root raw p | Root corrected p | Interpretation |
+| Case | TBS result | Root raw p | Root corrected p | Interpretation |
 | --- | --- | ---: | ---: | --- |
 | `overlap_mod_4c_small` | `1/4`, ARI `0.0` | `0.00126` | `0.3940` | Root signal exists, but corrected sibling decision kills the split. |
 | `overlap_mod_6c_med` | `4/6`, ARI `0.6516` | `0.00238` | `0.0155` | Root almost opens, but correction still closes it. |
@@ -100,7 +100,7 @@ That is not a multiple-testing artifact. It is a failure to detect a useful root
 
 ## Why Leiden And Louvain Win Here
 
-`kl` is a top-down binary split method:
+`tbs` is a top-down binary split method:
 
 - edge gate requires at least one child-parent divergence.
 - sibling gate requires sibling difference.
@@ -109,17 +109,17 @@ That is not a multiple-testing artifact. It is a failure to detect a useful root
 
 Relevant code:
 
-- [config.py](/Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/config.py)
-- [gate_evaluator.py](/Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py)
-- [tree_decomposition.py](/Users/berksakalli/Projects/kl-te-cluster/kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py)
+- [config.py](/Users/berksakalli/Projects/tree-break-selection/tree_break_selection/config.py)
+- [gate_evaluator.py](/Users/berksakalli/Projects/tree-break-selection/tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py)
+- [tree_decomposition.py](/Users/berksakalli/Projects/tree-break-selection/tree_break_selection/hierarchy_analysis/tree_decomposition.py)
 
 In contrast, `leiden` and `louvain` work on a k-NN graph built from the benchmark distance matrix and can recover local communities without requiring one globally certifiable binary split near the root.
 
 Relevant code:
 
-- [core.py](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/shared/util/core.py)
-- [leiden_runner.py](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/shared/runners/leiden_runner.py)
-- [louvain_runner.py](/Users/berksakalli/Projects/kl-te-cluster/benchmarks/shared/runners/louvain_runner.py)
+- [core.py](/Users/berksakalli/Projects/tree-break-selection/benchmarks/shared/util/core.py)
+- [leiden_runner.py](/Users/berksakalli/Projects/tree-break-selection/benchmarks/shared/runners/leiden_runner.py)
+- [louvain_runner.py](/Users/berksakalli/Projects/tree-break-selection/benchmarks/shared/runners/louvain_runner.py)
 
 This matters most when:
 
@@ -133,15 +133,15 @@ The graph methods are not uniformly better in the hardest overlap cases.
 Examples:
 
 - `overlap_heavy_4c_med_feat`
-  - `kl`: `1/4`, ARI `0.0`
+  - `tbs`: `1/4`, ARI `0.0`
   - `leiden`: `8/4`, ARI `0.183`
   - `louvain`: `9/4`, ARI `0.137`
 - `overlap_heavy_8c_large_feat`
-  - `kl`: `1/8`, ARI `0.0`
+  - `tbs`: `1/8`, ARI `0.0`
   - `leiden`: `10/8`, ARI `0.032`
   - `louvain`: `12/8`, ARI `0.027`
 
-So some of the `leiden`/`louvain` advantage comes from legitimate local recovery, but some comes from tolerating over-splitting where `kl` refuses to split.
+So some of the `leiden`/`louvain` advantage comes from legitimate local recovery, but some comes from tolerating over-splitting where `tbs` refuses to split.
 
 ## Working interpretation
 

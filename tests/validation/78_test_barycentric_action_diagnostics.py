@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 from benchmarks.diagnostics.math_trace.barycentric_action import (
     action_budget,
     barycentric_contrast_residuals,
@@ -107,7 +106,7 @@ def test_cached_kak_trace_writes_reports(tmp_path: Path) -> None:
     full_results = pd.DataFrame(
         {
             "case_id": ["case_a", "case_b"],
-            "method": ["kl", "kl"],
+            "method": ["tbs", "tbs"],
             "status": ["ok", "skip"],
             "ari": [0.9, 0.0],
             "error": ["", "Cannot fit sibling inflation model"],

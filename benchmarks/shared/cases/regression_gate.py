@@ -1,7 +1,7 @@
 """Fixed case list for the fast regression-gate benchmark.
 
 This suite is intentionally smaller than the full benchmark. It focuses on
-historically regression-sensitive KL cases so it can serve as a reliable,
+historically regression-sensitive TBS cases so it can serve as a reliable,
 fast gate in local development and CI.
 """
 

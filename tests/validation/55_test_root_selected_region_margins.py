@@ -17,12 +17,12 @@ from benchmarks.diagnostics.calibration.root_selected_region_margins import (
     summarize_root_child_margin_geometry,
     summarize_root_selected_region_relationships,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
-    SpectralContext,
-)
 from scipy import stats
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+    SpectralContext,
+)
 
 
 def _four_leaf_condensed_distances() -> np.ndarray:

@@ -5,6 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_blobs
+from tree_break_selection.tree.continuous_distance import (
+    CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
+)
 
 from benchmarks.shared.generators.case_data_contracts import (
     CaseDataResult,
@@ -51,7 +54,7 @@ def generate_blobs_case(test_case: dict, seed: int | None) -> CaseDataResult:
         generator="blobs",
         source_family="gaussian_blobs",
         feature_representation="median_binary",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
     )
     return data_df, y, x_binary, metadata
 
@@ -73,6 +76,7 @@ def generate_blobs_continuous_case(test_case: dict, seed: int | None) -> CaseDat
         x_continuous,
         [f"S{j}" for j in range(n_samples)],
         [f"F{j}" for j in range(n_features)],
+        tree_distance_metric=CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
     )
     metadata = case_metadata(
         test_case=test_case,
@@ -83,9 +87,9 @@ def generate_blobs_continuous_case(test_case: dict, seed: int | None) -> CaseDat
         generator="blobs_continuous",
         source_family="gaussian_blobs",
         feature_representation="continuous",
-        requires_precomputed_kl_distance=True,
+        requires_precomputed_tbs_distance=True,
         precomputed_distance_condensed=distance_condensed,
-        distance_metric="euclidean",
+        distance_metric=CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
         extra={"feature_space": feature_space},
     )
     return data_df, y, x_continuous.astype(float, copy=False), metadata
@@ -128,7 +132,7 @@ def generate_blobs_quantile_case(test_case: dict, seed: int | None) -> CaseDataR
         generator="blobs_quantile",
         source_family="gaussian_blobs",
         feature_representation="quantile_one_hot",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "n_features_original": n_features,
             "n_categories": n_categories,
@@ -200,7 +204,7 @@ def generate_dimensional_gaussian_case(test_case: dict, seed: int | None) -> Cas
         generator="dimensional_gaussian",
         source_family="dimensional_gaussian",
         feature_representation="median_binary",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "informative_dims": config.informative_dims,
             "noise_dims": config.noise_dims,
@@ -227,6 +231,7 @@ def generate_dimensional_gaussian_continuous_case(
         x_continuous,
         [f"S{j}" for j in range(config.n_samples)],
         [f"F{j}" for j in range(n_features)],
+        tree_distance_metric=CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
     )
 
     metadata = case_metadata(
@@ -238,9 +243,9 @@ def generate_dimensional_gaussian_continuous_case(
         generator="dimensional_gaussian_continuous",
         source_family="dimensional_gaussian",
         feature_representation="continuous",
-        requires_precomputed_kl_distance=True,
+        requires_precomputed_tbs_distance=True,
         precomputed_distance_condensed=distance_condensed,
-        distance_metric="euclidean",
+        distance_metric=CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
         extra={
             "feature_space": feature_space,
             "informative_dims": config.informative_dims,
@@ -290,7 +295,7 @@ def generate_gaussian_outlier_case(test_case: dict, seed: int | None) -> CaseDat
         generator="gaussian_outliers",
         source_family="gaussian_outliers",
         feature_representation="median_binary",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "n_inlier_clusters": config.n_inlier_clusters,
             "binarization": "median",
@@ -311,6 +316,7 @@ def generate_gaussian_outlier_continuous_case(
         x_continuous,
         [f"S{j}" for j in range(config.n_samples)],
         [f"F{j}" for j in range(config.n_features)],
+        tree_distance_metric=CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
     )
     metadata = case_metadata(
         test_case=test_case,
@@ -321,9 +327,9 @@ def generate_gaussian_outlier_continuous_case(
         generator="gaussian_outliers_continuous",
         source_family="gaussian_outliers",
         feature_representation="continuous",
-        requires_precomputed_kl_distance=True,
+        requires_precomputed_tbs_distance=True,
         precomputed_distance_condensed=distance_condensed,
-        distance_metric="euclidean",
+        distance_metric=CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
         extra={
             "n_inlier_clusters": config.n_inlier_clusters,
             "feature_space": feature_space,

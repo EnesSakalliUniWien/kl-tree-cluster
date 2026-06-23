@@ -1,4 +1,4 @@
-"""Compare current KL with the full legacy c2ef9a69 KL method package."""
+"""Compare current TBS with the full legacy c2ef9a69 TBS method package."""
 
 from __future__ import annotations
 
@@ -34,8 +34,8 @@ GENERATED_BY = (
 
 CURRENT_VARIANT = "current_kl"
 LEGACY_VARIANT = "legacy_c2ef9a69_full_method"
-CURRENT_METHOD = "kl"
-LEGACY_METHOD = "kl_legacy_c2ef9a69"
+CURRENT_METHOD = "tbs"
+LEGACY_METHOD = "tbs_legacy_c2ef9a69"
 
 DEFAULT_CASE_NAMES = (
     "binary_perfect_2c",

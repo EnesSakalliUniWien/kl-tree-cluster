@@ -32,11 +32,11 @@ def test_benchmark_louvain_and_adaptive_diffusion_methods_smoke():
         test_cases=[case],
         verbose=False,
         plot_umap=False,
-        methods=["louvain", "kl_diffusion_adaptive"],
+        methods=["louvain", "tbs_diffusion_adaptive"],
     )
 
     assert len(df_results) == 2
-    assert set(df_results["method"]) == {"louvain", "kl_diffusion_adaptive"}
+    assert set(df_results["method"]) == {"louvain", "tbs_diffusion_adaptive"}
     assert set(df_results["status"]) == {"ok"}
     assert (df_results["labels_length"] == df_results["samples"]).all()
 
@@ -52,10 +52,10 @@ def test_hamming_diffusion_rejects_continuous_benchmark_input():
         test_cases=[case],
         verbose=False,
         plot_umap=False,
-        methods=["kl_diffusion"],
+        methods=["tbs_diffusion"],
     )
 
     row = df_results.iloc[0]
-    assert row["method"] == "kl_diffusion"
+    assert row["method"] == "tbs_diffusion"
     assert row["status"] == "skip"
     assert "requires binary or one-hot" in row["skip_reason"]

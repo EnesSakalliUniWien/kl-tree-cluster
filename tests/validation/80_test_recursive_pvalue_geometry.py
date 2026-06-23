@@ -6,8 +6,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-from scipy.stats import chi2
-
 from benchmarks.diagnostics.path_b.recursive_pvalue_geometry import (
     alpha_margin,
     build_recursive_pvalue_geometry_panels,
@@ -17,6 +15,7 @@ from benchmarks.diagnostics.path_b.recursive_pvalue_geometry import (
     principal_subspace_alignment,
     summarize_recursive_pvalue_geometry,
 )
+from scipy.stats import chi2
 
 
 class _SpectralContext:

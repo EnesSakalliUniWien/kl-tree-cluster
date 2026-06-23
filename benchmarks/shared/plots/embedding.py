@@ -18,7 +18,7 @@ from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
-from kl_clustering_analysis.plot.cluster_color_mapping import (
+from tree_break_selection.plot.cluster_color_mapping import (
     build_cluster_color_spec,
     present_cluster_ids,
 )
@@ -127,7 +127,7 @@ def _resolve_expected_cluster_count(
 
 def _embedding_cache_dir() -> Path | None:
     """Return the embedding cache directory, or None if caching is disabled."""
-    env_dir = os.getenv("KL_TE_EMBEDDING_CACHE_DIR", "").strip()
+    env_dir = os.getenv("TBS_EMBEDDING_CACHE_DIR", "").strip()
     if env_dir:
         p = Path(env_dir)
         p.mkdir(parents=True, exist_ok=True)
@@ -186,7 +186,7 @@ def _fit_embedding_2d(
 ) -> np.ndarray:
     """Return a 2D embedding with a stability-first backend strategy.
 
-    When ``cache_key`` is provided (or ``KL_TE_EMBEDDING_CACHE_DIR`` is set),
+    When ``cache_key`` is provided (or ``TBS_EMBEDDING_CACHE_DIR`` is set),
     the computed embedding is persisted to disk so subsequent runs can skip
     the expensive UMAP fit.
     """
@@ -196,7 +196,7 @@ def _fit_embedding_2d(
     if cached is not None:
         return cached
 
-    backend = (os.getenv("KL_TE_EMBEDDING_BACKEND") or "umap").strip().lower()
+    backend = (os.getenv("TBS_EMBEDDING_BACKEND") or "umap").strip().lower()
 
     if backend in {"umap", "auto"}:
         import umap
@@ -224,7 +224,7 @@ def _fit_embedding_2d(
         _save_cached_embedding(cache_dir, ck, result)
         return result
 
-    raise ValueError(f"Unknown KL_TE_EMBEDDING_BACKEND={backend!r}.")
+    raise ValueError(f"Unknown TBS_EMBEDDING_BACKEND={backend!r}.")
 
 
 _PARAM_KEY_ALIASES = {
@@ -550,7 +550,7 @@ def _fit_embedding_3d(
     if cached is not None:
         return cached
 
-    backend = (os.getenv("KL_TE_EMBEDDING_BACKEND_3D") or "umap").strip().lower()
+    backend = (os.getenv("TBS_EMBEDDING_BACKEND_3D") or "umap").strip().lower()
 
     if backend in {"umap", "auto"}:
         import umap
@@ -578,7 +578,7 @@ def _fit_embedding_3d(
         _save_cached_embedding(cache_dir, ck, result)
         return result
 
-    raise ValueError(f"Unknown KL_TE_EMBEDDING_BACKEND_3D={backend!r}.")
+    raise ValueError(f"Unknown TBS_EMBEDDING_BACKEND_3D={backend!r}.")
 
 
 def create_clustering_comparison_plot_3d(
@@ -627,7 +627,7 @@ def create_clustering_comparison_plot_3d(
     fig.suptitle(
         (
             f"3D Embedding – Test {test_case_num}: expected {expected_clusters_label} clusters "
-            f"(KL found {found_clusters})\n{meta_text}"
+            f"(TBS found {found_clusters})\n{meta_text}"
         ),
         fontsize=16,
         weight="bold",
@@ -636,7 +636,7 @@ def create_clustering_comparison_plot_3d(
 
     methods = [
         ("Ground Truth", y_true),
-        ("KL Divergence", y_kl),
+        ("TBS Divergence", y_kl),
         ("K-Means", y_kmeans),
         ("Spectral", y_spectral),
     ]

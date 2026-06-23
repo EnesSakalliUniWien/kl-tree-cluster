@@ -1,4 +1,4 @@
-"""Full diagnostic contracts for the KL-TE open mathematical questions.
+"""Full diagnostic contracts for the Tree-Break Selection open mathematical questions.
 
 This module converts the open-question ledger into executable diagnostic
 requirements. A row marked ``fully_specified`` is not a solved method claim.
@@ -115,7 +115,7 @@ CONTRACTS: tuple[DiagnosticContract, ...] = (
         "implemented_internal_open_external",
         "calibration_decision_contract",
         "local_and_cloud",
-        "kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/types/inflation_model.py",
+        "tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/types/inflation_model.py",
         "Internal calibration decisions plus external selected-tail context rows carrying admissibility and held-out tail metrics.",
         "Unified decision table with internal_admissible, undefined support failures, and external_admissible states.",
         "Pass when external_admissible is only returned for contexts satisfying Q1/Q7 tail and support contracts.",
@@ -170,7 +170,7 @@ CONTRACTS: tuple[DiagnosticContract, ...] = (
         "partially_diagnosed",
         "bandwidth_stability",
         "cloud_panel",
-        "kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py",
+        "tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py",
         "Calibration decisions over exact and relaxed axes for parent size, family, projection, spectral geometry, and barycentric balance/leverage.",
         "Bandwidth grid with c-hat variance, undefined rate, false-split rate, and support concentration.",
         "Pass when a bandwidth rule has stable c-hat under leave-one-record and matched-context perturbations in admissible contexts.",
@@ -225,7 +225,7 @@ CONTRACTS: tuple[DiagnosticContract, ...] = (
         "not_resolved",
         "all_selected_nonnull_support",
         "cloud_panel",
-        "kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/inflation_adjusted_sibling_tests.py",
+        "tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/inflation_adjusted_sibling_tests.py",
         "Leaf-only selected-nonnull contexts with no strict/stopped support, external admissibility rows, and planted/null labels.",
         "Decision table comparing fail-closed, external selected-tail, and candidate all-selected support policies.",
         "Pass only if a policy controls null false splits without borrowing selected-nonnull rows as empirical null support.",

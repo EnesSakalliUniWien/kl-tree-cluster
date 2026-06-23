@@ -8,18 +8,18 @@ from typing import Any
 import networkx as nx
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
-from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes, compute_node_depths
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.annotation_bundle import (
+from tree_break_selection import config
+from tree_break_selection.core_utils.tree_utils import bottom_up_nodes, compute_node_depths
+from tree_break_selection.hierarchy_analysis.decomposition.gates.annotation_bundle import (
     GateAnnotationBundle,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.gate_evaluator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.gate_evaluator import (
     TraversalDecision,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     predict_empirical_inflation_factor,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureSpace
+from tree_break_selection.tree.feature_space import FeatureSpace
 
 from benchmarks.diagnostics.calibration.sibling_inflation_diagnostic import (
     collect_sibling_inflation_inputs,
@@ -315,7 +315,7 @@ def build_gate_path_trace_dataframe(
     sibling_inflation_trace_by_parent: dict[object, SiblingInflationTrace],
     case_id: str,
     failure_class: str,
-    kl_ari: float,
+    tbs_ari: float,
     oracle_true_k_ari: float,
     oracle_any_k_ari: float,
     passthrough: bool = config.PASSTHROUGH,
@@ -346,7 +346,7 @@ def build_gate_path_trace_dataframe(
         row = {
             "case_id": case_id,
             "failure_class": failure_class,
-            "kl_ari": float(kl_ari),
+            "tbs_ari": float(tbs_ari),
             "oracle_true_k_ari": float(oracle_true_k_ari),
             "oracle_any_k_ari": float(oracle_any_k_ari),
             "node_id": node,
@@ -464,7 +464,7 @@ def summarize_gate_path_trace(trace_df: pd.DataFrame) -> pd.DataFrame:
             {
                 "case_id": case_id,
                 "failure_class": str(group["failure_class"].iloc[0]),
-                "kl_ari": float(group["kl_ari"].iloc[0]),
+                "tbs_ari": float(group["tbs_ari"].iloc[0]),
                 "oracle_true_k_ari": float(group["oracle_true_k_ari"].iloc[0]),
                 "oracle_any_k_ari": float(group["oracle_any_k_ari"].iloc[0]),
                 "n_nodes": int(len(group)),

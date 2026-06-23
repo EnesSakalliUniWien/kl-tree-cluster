@@ -24,8 +24,8 @@ GENERATED_BY = "benchmarks.diagnostics.calibration.spectral_transport_promotion_
 
 BASELINE_PROFILE = "fixed_coordinate_global_passthrough_refined_v1"
 CANDIDATE_PROFILE = "fixed_coordinate_spectral_transport_passthrough_v1"
-BASELINE_METHOD = "kl_global_passthrough_refined_diagnostic"
-CANDIDATE_METHOD = "kl_spectral_transport_passthrough"
+BASELINE_METHOD = "tbs_global_passthrough_refined_diagnostic"
+CANDIDATE_METHOD = "tbs_spectral_transport_passthrough"
 
 DEFAULT_RESULT_ROOT = Path(
     "raw/assets/benchmark-results/specific_small_method_benchmark_20260615"

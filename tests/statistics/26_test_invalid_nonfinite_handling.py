@@ -4,19 +4,19 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import (
     sibling_divergence_test,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.pair_testing.projection_dimension import (
     resolve_sibling_projection_dimension,
 )
 
@@ -160,7 +160,7 @@ def test_child_parent_nonfinite_results_raise_before_correction(
         )
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation.run_child_parent_tests_across_tree",
+        "tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation.run_child_parent_tests_across_tree",
         _fake_compute_p_values_via_projection,
     )
 
@@ -187,10 +187,9 @@ def test_sibling_nonfinite_results_raise_before_correction(
         right_distribution: np.ndarray,
         left_sample_size: float,
         right_sample_size: float,
-        branch_length_left: float | None = None,
-        branch_length_right: float | None = None,
-        mean_branch_length: float | None = None,
         *,
+        branch_length_sum: float | None = None,
+        mean_branch_length: float | None = None,
         projection_dimension_from_edge_comparisons: int | None = None,
         parent_principal_component_projection: np.ndarray | None = None,
         parent_principal_component_eigenvalues: np.ndarray | None = None,
@@ -200,7 +199,7 @@ def test_sibling_nonfinite_results_raise_before_correction(
         return np.nan, np.nan, np.nan, np.nan
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection.sibling_divergence_test",
+        "tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection.sibling_divergence_test",
         _fake_sibling_test,
     )
 
@@ -223,9 +222,8 @@ def test_sibling_divergence_nonfinite_z_raises(monkeypatch) -> None:
         second_sample_size: float,
         *,
         comparison: str,
-        branch_length_sum: float | None = None,
-        branch_length: float | None = None,
-        mean_branch_length: float | None = None,
+        tree_time: float | None = None,
+        tree_time_normalizer: float | None = None,
         feature_space: object | None = None,
         continuous_covariance_by_block: object | None = None,
         ridge: float = 1e-12,
@@ -233,7 +231,7 @@ def test_sibling_divergence_nonfinite_z_raises(monkeypatch) -> None:
         return np.array([np.nan, 0.0], dtype=float)
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_z_scores.compute_whitened_wald_contrast",
+        "tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_z_scores.compute_whitened_wald_contrast",
         _fake_compute_whitened_wald_contrast,
     )
 
@@ -324,10 +322,9 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         right_distribution: np.ndarray,
         left_sample_size: float,
         right_sample_size: float,
-        branch_length_left: float | None = None,
-        branch_length_right: float | None = None,
-        mean_branch_length: float | None = None,
         *,
+        branch_length_sum: float | None = None,
+        mean_branch_length: float | None = None,
         projection_dimension_from_edge_comparisons: int | None = None,
         parent_principal_component_projection: np.ndarray | None = None,
         parent_principal_component_eigenvalues: np.ndarray | None = None,
@@ -346,7 +343,7 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         return 1.0, 1.0, 1.0, 0.5
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection.sibling_divergence_test",
+        "tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection.sibling_divergence_test",
         _fake_sibling_test,
     )
 

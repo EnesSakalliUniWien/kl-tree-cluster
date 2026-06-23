@@ -14,15 +14,15 @@ import pandas as pd
 
 repo_root = Path(__file__).resolve().parents[3]
 
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null import (
     CONTINUOUS_LOCAL_EDGE_SELECTION_SCOPE,
@@ -41,7 +41,7 @@ from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
 )
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 
 _THREAD_ENV_VARS = (
     "OMP_NUM_THREADS",
@@ -128,7 +128,7 @@ def _parse_args() -> argparse.Namespace:
 def _configure_runtime_defaults() -> None:
     for env_var in _THREAD_ENV_VARS:
         os.environ.setdefault(env_var, "1")
-    os.environ.setdefault("KL_TE_N_JOBS", "1")
+    os.environ.setdefault("TBS_N_JOBS", "1")
 
 
 def _load_cases(suite: str) -> list[dict[str, object]]:
@@ -164,7 +164,7 @@ def _load_classification(path: Path | None) -> tuple[pd.DataFrame, Path]:
     required = {
         "case_id",
         "failure_class",
-        "kl_ari",
+        "tbs_ari",
         "oracle_true_k_subtree_ari",
     }
     missing = required - set(df.columns)
@@ -300,7 +300,7 @@ def _diagnose_case(
     chunk_size: int,
     seed: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    context = build_kl_tree_context(case, populate_node_distributions=True)
+    context = build_tbs_tree_context(case, populate_node_distributions=True)
     gate_annotation_bundle = run_gate_annotation_pipeline(
         context.tree,
         context.tree.annotations_df,
@@ -343,7 +343,7 @@ def _diagnose_case(
         sibling_inflation_trace_by_parent={},
         case_id=str(context.metadata["name"]),
         failure_class=str(classification_row.failure_class),
-        kl_ari=float(classification_row.kl_ari),
+        tbs_ari=float(classification_row.tbs_ari),
         oracle_true_k_ari=float(oracle_true_k.ari),
         oracle_any_k_ari=float(oracle_any.ari),
         passthrough=config.PASSTHROUGH,

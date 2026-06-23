@@ -51,7 +51,7 @@ def _write_alpha_shard(
                     "grid_edge_alpha": edge_alpha,
                     "grid_sibling_alpha": sibling_alpha,
                     "case_id": "case",
-                    "method": "kl",
+                    "method": "tbs",
                     "status": "ok",
                 }
             ]

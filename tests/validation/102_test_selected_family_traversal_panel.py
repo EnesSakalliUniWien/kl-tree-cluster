@@ -16,11 +16,11 @@ from benchmarks.diagnostics.calibration.selected_family_traversal_panel import (
     run_selected_family_traversal_panel,
     validate_methods,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scripts.analysis.multiscale_umap_overlay import (
     load_overlay_data,
     render_multiscale_umap_overlay,
 )
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _annotate_tree_structure(tree: nx.DiGraph, leaves: set[str]) -> None:
@@ -69,9 +69,26 @@ def test_multiscale_node_decisions_distinguish_guard_and_traversal_classes() -> 
     tree = _make_tree()
     annotations = pd.DataFrame(index=list(tree.nodes))
     annotations["Child_Parent_Divergence_Significant"] = True
+    annotations["Child_Parent_Divergence_P_Value"] = 0.02
+    annotations["Child_Parent_Divergence_P_Value_BH"] = 0.03
     annotations["Sibling_BH_Different"] = False
     annotations["Sibling_Divergence_P_Value"] = 0.5
+    annotations["Sibling_Divergence_P_Value_Corrected"] = 0.6
     annotations["Sibling_Projection_Dimension"] = 3.0
+    annotations["Sibling_Test_Method"] = "synthetic_fixed_coordinate"
+    annotations["Sibling_Gate_P_Value_Calibration"] = "fixed_subspace_bh"
+    annotations["Sibling_Gate_P_Value_Role"] = "active_traversal_sibling_gate"
+    annotations["Sibling_Sparse_Evidence_P_Value"] = 0.7
+    annotations["Sibling_Sparse_Evidence_Method"] = "fixed_coordinate_bh"
+    annotations["Sibling_Sparse_Evidence_Calibration"] = "fixed_subspace_bh"
+    annotations["Sibling_Dense_Evidence_P_Value"] = 0.4
+    annotations["Sibling_Dense_Evidence_Method"] = "fixed_global_chi_square"
+    annotations["Sibling_Dense_Evidence_Calibration"] = "fixed_subspace_chi_square"
+    annotations["Sibling_Dense_Evidence_Test_Statistic"] = 2.5
+    annotations["Sibling_Dense_Evidence_Degrees_of_Freedom"] = 3.0
+    annotations["Sibling_Fixed_Coordinate_BH_P_Value"] = 0.7
+    annotations["Sibling_Fixed_Block_BH_P_Value"] = 0.8
+    annotations["Sibling_Fixed_Global_P_Value"] = 0.4
     annotations["Root_Stability_Guard_Blocked"] = False
     annotations["Root_Selective_Permutation_Guard_Blocked"] = False
     annotations["Selective_Permutation_Guard_Blocked"] = False
@@ -162,6 +179,58 @@ def test_multiscale_node_decisions_distinguish_guard_and_traversal_classes() -> 
         rows["node_id"].eq("B"),
         "sibling_projection_dimension",
     ].iloc[0] == 3.0
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "incoming_edge_p_value",
+    ].iloc[0] == 0.02
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "incoming_edge_bh_p_value",
+    ].iloc[0] == 0.03
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "outgoing_left_edge_p_value",
+    ].iloc[0] == 0.02
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "outgoing_right_edge_bh_p_value",
+    ].iloc[0] == 0.03
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_p_value_corrected",
+    ].iloc[0] == 0.6
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_test_method",
+    ].iloc[0] == "synthetic_fixed_coordinate"
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_gate_p_value_calibration",
+    ].iloc[0] == "fixed_subspace_bh"
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_gate_p_value_role",
+    ].iloc[0] == "active_traversal_sibling_gate"
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_sparse_method",
+    ].iloc[0] == "fixed_coordinate_bh"
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_sparse_p_value",
+    ].iloc[0] == 0.7
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_dense_method",
+    ].iloc[0] == "fixed_global_chi_square"
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_dense_calibration",
+    ].iloc[0] == "fixed_subspace_chi_square"
+    assert rows.loc[
+        rows["node_id"].eq("B"),
+        "sibling_fixed_global_p_value",
+    ].iloc[0] == 0.4
     assert rows.loc[
         rows["node_id"].eq("B"),
         "branch_length_to_parent",

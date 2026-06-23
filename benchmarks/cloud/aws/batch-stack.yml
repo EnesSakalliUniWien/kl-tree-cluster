@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Batch Fargate stack for KL-TE benchmark diagnostics.
+Description: AWS Batch Fargate stack for Tree-Break Selection benchmark diagnostics.
 
 Parameters:
   ContainerImage:
@@ -99,13 +99,13 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/batch/kl-te-benchmark-diagnostics
+      LogGroupName: /aws/batch/tree-break-selection-benchmark-diagnostics
       RetentionInDays: 14
 
   ComputeEnvironment:
     Type: AWS::Batch::ComputeEnvironment
     Properties:
-      ComputeEnvironmentName: kl-te-benchmark-diagnostics-fargate
+      ComputeEnvironmentName: tree-break-selection-benchmark-diagnostics-fargate
       Type: MANAGED
       State: ENABLED
       ServiceRole: !GetAtt BatchServiceRole.Arn
@@ -118,7 +118,7 @@ Resources:
   JobQueue:
     Type: AWS::Batch::JobQueue
     Properties:
-      JobQueueName: kl-te-benchmark-diagnostics
+      JobQueueName: tree-break-selection-benchmark-diagnostics
       Priority: 1
       State: ENABLED
       ComputeEnvironmentOrder:
@@ -128,7 +128,7 @@ Resources:
   JobDefinition:
     Type: AWS::Batch::JobDefinition
     Properties:
-      JobDefinitionName: kl-te-benchmark-diagnostics
+      JobDefinitionName: tree-break-selection-benchmark-diagnostics
       Type: Container
       PlatformCapabilities:
         - FARGATE

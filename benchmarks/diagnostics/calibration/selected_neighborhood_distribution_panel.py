@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     SIBLING_GATE_PROFILES,
 )
 

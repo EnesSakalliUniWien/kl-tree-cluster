@@ -154,8 +154,8 @@ def run_multi_split_benchmark(
             # Run clustering
             run_result = run_clustering_result(
                 data_df,
-                "kl",
-                METHOD_SPECS["kl"].param_grid[0],
+                "tbs",
+                METHOD_SPECS["tbs"].param_grid[0],
                 base_seed + rep,
             )
             pred_labels = run_result.labels

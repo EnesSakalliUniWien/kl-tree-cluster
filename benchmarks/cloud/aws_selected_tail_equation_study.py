@@ -19,7 +19,7 @@ from pathlib import Path
 from time import perf_counter
 
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
@@ -144,8 +144,8 @@ def make_shard_spec(configured: AwsSelectedTailStudyConfig, shard_index: int) ->
 def current_git_state() -> dict[str, object]:
     """Capture reproducibility state without failing the benchmark."""
     state: dict[str, object] = {
-        "build_commit": os.environ.get("KL_TE_GIT_COMMIT", "unknown"),
-        "build_branch": os.environ.get("KL_TE_GIT_BRANCH", "unknown"),
+        "build_commit": os.environ.get("TBS_GIT_COMMIT", "unknown"),
+        "build_branch": os.environ.get("TBS_GIT_BRANCH", "unknown"),
     }
     commands = {
         "commit": ("git", "rev-parse", "HEAD"),

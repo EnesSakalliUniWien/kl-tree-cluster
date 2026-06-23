@@ -37,13 +37,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.colors import BoundaryNorm, ListedColormap
-from scipy.cluster.hierarchy import dendrogram, linkage
-from scipy.spatial.distance import pdist
-from sklearn.decomposition import PCA, TruncatedSVD
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
     SpectralBlock,
     coords_for_block,
@@ -54,6 +47,12 @@ from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import (
     load_matrix,
     safe_name,
 )
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.colors import BoundaryNorm, ListedColormap
+from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.spatial.distance import pdist
+from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
 EmbeddingMethod = Literal["umap", "svd"]
 

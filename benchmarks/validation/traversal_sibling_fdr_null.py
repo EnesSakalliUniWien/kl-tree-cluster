@@ -21,28 +21,28 @@ from pathlib import Path
 import networkx as nx
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.fdr_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.fdr_annotation import (
     apply_traversal_aligned_sibling_bh_results,
     init_sibling_annotation_df,
     mark_non_binary_as_skipped,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.projection_dimension_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.projection_dimension_annotation import (
     write_record_projection_dimensions,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
     collect_parent_principal_component_inputs_for_sibling_tests,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
@@ -516,9 +516,9 @@ def run_traversal_sibling_fdr_layer(
 def current_git_state() -> dict[str, object]:
     """Return git provenance without hiding command failures."""
     state: dict[str, object] = {
-        "build_commit": os.environ.get("KL_TE_GIT_COMMIT", "unknown"),
-        "build_branch": os.environ.get("KL_TE_GIT_BRANCH", "unknown"),
-        "build_dirty": os.environ.get("KL_TE_GIT_DIRTY", "unknown"),
+        "build_commit": os.environ.get("TBS_GIT_COMMIT", "unknown"),
+        "build_branch": os.environ.get("TBS_GIT_BRANCH", "unknown"),
+        "build_dirty": os.environ.get("TBS_GIT_DIRTY", "unknown"),
     }
     commands = {
         "commit": ("git", "rev-parse", "HEAD"),

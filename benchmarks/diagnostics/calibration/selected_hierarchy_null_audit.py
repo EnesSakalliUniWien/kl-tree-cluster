@@ -1,4 +1,4 @@
-"""Selected-hierarchy null audit for same-data KL-TE inference.
+"""Selected-hierarchy null audit for same-data Tree-Break Selection inference.
 
 This diagnostic rebuilds the hierarchy inside each null replicate, then reruns
 the edge gate and raw sibling-record collection. It estimates the selected
@@ -19,28 +19,28 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.core_utils.tree_utils import compute_node_depths
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
     collect_parent_principal_component_inputs_for_sibling_tests,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureSpace
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.feature_space import FeatureSpace
+from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import chi2
@@ -106,13 +106,13 @@ def _selected_cases(case_names: list[str]) -> list[dict[str, object]]:
 
 
 def _build_tree(data: pd.DataFrame, metadata: dict[str, object]) -> tuple[PosetTree, str]:
-    if bool(metadata["requires_precomputed_kl_distance"]):
+    if bool(metadata["requires_precomputed_tbs_distance"]):
         raise ValueError(
             "Selected-hierarchy null audit does not support cases requiring "
-            "precomputed KL tree distances. The null generator must own the "
+            "precomputed TBS tree distances. The null generator must own the "
             "tree-distance contract before those cases are audited."
         )
-    params = METHOD_SPECS["kl"].param_grid[0]
+    params = METHOD_SPECS["tbs"].param_grid[0]
     metric = str(params["tree_distance_metric"])
     linkage_method = str(params["tree_linkage_method"])
     tree = PosetTree.from_linkage(
@@ -531,7 +531,7 @@ def _diagnose_case(
     target_mode: str,
     context_match: str,
 ) -> dict[str, object]:
-    inputs = prepare_case_inputs(case, ["kl"])
+    inputs = prepare_case_inputs(case, ["tbs"])
     feature_space = inputs.metadata.get("feature_space")
     if feature_space is not None and not isinstance(feature_space, FeatureSpace):
         raise ValueError("Prepared feature_space metadata must be a FeatureSpace.")

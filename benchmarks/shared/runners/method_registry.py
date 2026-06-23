@@ -18,9 +18,9 @@ def _import_runner(module: str, attr: str):
 
 # Note: import names are updated to point to the new benchmarks.shared.runners package.
 METHOD_SPECS: dict[str, MethodSpec] = {
-    "kl": MethodSpec(
-        name="KL Divergence",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs": MethodSpec(
+        name="TBS Divergence",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             # Default: Hamming + Average (UPGMA)
             {
@@ -29,9 +29,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_complete": MethodSpec(
-        name="KL (Complete)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_complete": MethodSpec(
+        name="TBS (Complete)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -39,9 +39,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_single": MethodSpec(
-        name="KL (Single)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_single": MethodSpec(
+        name="TBS (Single)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -49,9 +49,75 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_conditional_topology_diagnostic": MethodSpec(
-        name="KL (Conditional Topology Diagnostic)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_fixed_coordinate_bh": MethodSpec(
+        name="TBS Fixed Coordinate BH",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_method": "fixed_coordinate_bh",
+            },
+        ],
+    ),
+    "tbs_fixed_coordinate_by": MethodSpec(
+        name="TBS Fixed Coordinate BY",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_method": "fixed_coordinate_by",
+            },
+        ],
+    ),
+    "tbs_fixed_coordinate_holm": MethodSpec(
+        name="TBS Fixed Coordinate Holm",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_method": "fixed_coordinate_holm",
+            },
+        ],
+    ),
+    "tbs_fixed_coordinate_bonferroni": MethodSpec(
+        name="TBS Fixed Coordinate Bonferroni",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_method": "fixed_coordinate_bonferroni",
+            },
+        ],
+    ),
+    "tbs_fixed_block_bh": MethodSpec(
+        name="TBS Fixed Block Chi-square BH",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_method": "fixed_block_bh",
+            },
+        ],
+    ),
+    "tbs_fixed_block_simes_bh": MethodSpec(
+        name="TBS Fixed Block Simes-BH",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "sibling_gate_method": "fixed_block_simes_bh",
+            },
+        ],
+    ),
+    "tbs_conditional_topology_diagnostic": MethodSpec(
+        name="TBS (Conditional Topology Diagnostic)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -62,9 +128,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_global_passthrough_refined_diagnostic": MethodSpec(
-        name="KL (Global Passthrough Refined Diagnostic)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_global_passthrough_refined_diagnostic": MethodSpec(
+        name="TBS (Global Passthrough Refined Diagnostic)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -75,9 +141,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_spectral_transport_passthrough_diagnostic": MethodSpec(
-        name="KL (Spectral Transport Passthrough Diagnostic)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_spectral_transport_passthrough_diagnostic": MethodSpec(
+        name="TBS (Spectral Transport Passthrough Diagnostic)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -88,9 +154,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_spectral_transport_passthrough": MethodSpec(
-        name="KL (Spectral Transport Passthrough)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_spectral_transport_passthrough": MethodSpec(
+        name="TBS (Spectral Transport Passthrough)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -101,9 +167,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_legacy_internal_spectral_diagnostic": MethodSpec(
-        name="KL (Legacy Internal-Node Spectral Diagnostic)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_legacy_internal_spectral_diagnostic": MethodSpec(
+        name="TBS (Legacy Internal-Node Spectral Diagnostic)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -113,9 +179,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_internal_filter_v1": MethodSpec(
-        name="KL Internal Spectral Filter",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_internal_filter_v1": MethodSpec(
+        name="TBS Internal Spectral Filter",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -127,9 +193,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_internal_filter_branch_length_v1": MethodSpec(
-        name="KL Branch-Length Internal Spectral Filter",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_internal_filter_branch_length_v1": MethodSpec(
+        name="TBS Branch-Length Internal Spectral Filter",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -141,9 +207,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_bandwidth_context_v1": MethodSpec(
-        name="KL Regional Bandwidth Context",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_bandwidth_context_v1": MethodSpec(
+        name="TBS Regional Bandwidth Context",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -154,9 +220,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_rescued_legacy_v1": MethodSpec(
-        name="KL Guarded Legacy-Stabilized Candidate",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_rescued_legacy_v1": MethodSpec(
+        name="TBS Guarded Legacy-Stabilized Candidate",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -174,11 +240,11 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_legacy_c2ef9a69": MethodSpec(
-        name="KL Legacy Full Method (commit c2ef9a69)",
+    "tbs_legacy_c2ef9a69": MethodSpec(
+        name="TBS Legacy Full Method (commit c2ef9a69)",
         runner=_import_runner(
             "benchmarks.shared.runners.legacy_commit_runner",
-            "_run_legacy_c2ef9a69_kl_method",
+            "_run_legacy_c2ef9a69_tbs_method",
         ),
         param_grid=[
             {
@@ -189,9 +255,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_neighbor_joining": MethodSpec(
-        name="KL (Neighbor Joining, MAD Root)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_neighbor_joining": MethodSpec(
+        name="TBS (Neighbor Joining, MAD Root)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -201,9 +267,9 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_iqtree3": MethodSpec(
-        name="KL (IQ-TREE 3, MAD Root)",
-        runner=_import_runner("benchmarks.shared.runners.kl_runner", "_run_kl_method"),
+    "tbs_iqtree3": MethodSpec(
+        name="TBS (IQ-TREE 3, MAD Root)",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
         param_grid=[
             {
                 "tree_distance_metric": "hamming",
@@ -216,19 +282,19 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "kl_diffusion": MethodSpec(
-        name="KL (Diffusion)",
+    "tbs_diffusion": MethodSpec(
+        name="TBS (Diffusion)",
         runner=_import_runner(
-            "benchmarks.shared.runners.kl_diffusion_runner",
-            "_run_kl_diffusion_method",
+            "benchmarks.shared.runners.tbs_diffusion_runner",
+            "_run_tbs_diffusion_method",
         ),
         param_grid=[{"k_neighbors": 15, "diffusion_time": 3}],
     ),
-    "kl_diffusion_adaptive": MethodSpec(
-        name="KL (Adaptive Diffusion)",
+    "tbs_diffusion_adaptive": MethodSpec(
+        name="TBS (Adaptive Diffusion)",
         runner=_import_runner(
-            "benchmarks.shared.runners.kl_diffusion_runner",
-            "_run_kl_diffusion_adaptive_method",
+            "benchmarks.shared.runners.tbs_diffusion_runner",
+            "_run_tbs_diffusion_adaptive_method",
         ),
         param_grid=[
             {

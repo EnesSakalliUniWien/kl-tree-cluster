@@ -68,7 +68,7 @@ def generate_sbm_case(test_case: dict, seed: int | None) -> CaseDataResult:
         generator="sbm",
         source_family="stochastic_block_model",
         feature_representation="graph_adjacency",
-        requires_precomputed_kl_distance=True,
+        requires_precomputed_tbs_distance=True,
         precomputed_distance_matrix=precomputed_distance_matrix,
         precomputed_distance_condensed=precomputed_distance_condensed,
         distance_metric=distance_metric,

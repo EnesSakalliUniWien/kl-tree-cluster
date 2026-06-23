@@ -8,19 +8,19 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     ClusterBoundary,
     build_cluster_assignments,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.gate_evaluator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.gate_evaluator import (
     GateEvaluator,
     TraversalDecision,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.spectral_transport import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.spectral_transport import (
     annotate_spectral_transport_passthrough_support,
 )
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _annotate_tree_structure(tree: nx.DiGraph, leaves: set[str]) -> None:
@@ -112,11 +112,36 @@ def _make_annotations(
     if sibling_skipped is None:
         sibling_skipped = {node: False for node in tree.nodes}
 
+    edge_p_values = {node: 0.01 if edge_divergent[node] else 0.90 for node in tree.nodes}
+    sibling_p_values = {
+        node: 0.02 if sibling_different[node] and not sibling_skipped[node] else 0.80
+        for node in tree.nodes
+    }
+
     return pd.DataFrame(
         {
             "Child_Parent_Divergence_Significant": pd.Series(edge_divergent, dtype=bool),
+            "Child_Parent_Divergence_P_Value": pd.Series(edge_p_values, dtype=float),
+            "Child_Parent_Divergence_P_Value_BH": pd.Series(edge_p_values, dtype=float),
+            "Child_Parent_Divergence_Tested": True,
+            "Child_Parent_Divergence_Ancestor_Blocked": False,
             "Sibling_BH_Different": pd.Series(sibling_different, dtype=bool),
             "Sibling_Divergence_Skipped": pd.Series(sibling_skipped, dtype=bool),
+            "Sibling_Divergence_P_Value": pd.Series(sibling_p_values, dtype=float),
+            "Sibling_Divergence_P_Value_Corrected": pd.Series(
+                sibling_p_values, dtype=float
+            ),
+            "Sibling_Test_Statistic": pd.Series(
+                {
+                    node: 8.0
+                    if sibling_different[node] and not sibling_skipped[node]
+                    else 0.5
+                    for node in tree.nodes
+                },
+                dtype=float,
+            ),
+            "Sibling_Degrees_of_Freedom": 1.0,
+            "Sibling_Test_Method": "synthetic_projected_wald",
         }
     ).reindex(list(tree.nodes))
 
@@ -153,8 +178,18 @@ def test_cluster_assignments_use_explicit_boundary_root() -> None:
     )
 
     assert assignments == {
-        0: {"root_node": "left_subtree", "leaves": ["L1", "L2"], "size": 2},
-        1: {"root_node": "right_leaf", "leaves": ["R"], "size": 1},
+        0: {
+            "root_node": "left_subtree",
+            "leaves": ["L1", "L2"],
+            "leaf_signature": ("L1", "L2"),
+            "size": 2,
+        },
+        1: {
+            "root_node": "right_leaf",
+            "leaves": ["R"],
+            "leaf_signature": ("R",),
+            "size": 1,
+        },
     }
 
 
@@ -169,6 +204,12 @@ class TestGateEvaluator:
             children_map={"root": ["A", "B", "C"], "A": [], "B": [], "C": []},
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
+        assert (
+            gate.passthrough_audit_status("root")[
+                "passthrough_split_prerequisites_open"
+            ]
+            is False
+        )
 
     def test_gate1_single_child_returns_false(self) -> None:
         tree = nx.DiGraph()
@@ -180,6 +221,12 @@ class TestGateEvaluator:
             children_map={"root": ["A"], "A": []},
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
+        assert (
+            gate.passthrough_audit_status("root")[
+                "passthrough_split_prerequisites_open"
+            ]
+            is False
+        )
 
     def test_edge_gate_neither_child_diverges(self) -> None:
         gate = _make_gate(
@@ -194,6 +241,12 @@ class TestGateEvaluator:
             },
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
+        assert (
+            gate.passthrough_audit_status("root")[
+                "passthrough_split_prerequisites_open"
+            ]
+            is False
+        )
 
     def test_edge_gate_one_child_diverges(self) -> None:
         gate = _make_gate(
@@ -262,6 +315,16 @@ class TestGateEvaluator:
             },
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
+        assert gate.passthrough_audit_status("root") == {
+            "passthrough_enabled": False,
+            "passthrough_split_prerequisites_open": True,
+            "passthrough_sibling_gate_open": False,
+            "passthrough_descendant_split_available": False,
+            "passthrough_candidate": False,
+            "passthrough_supported": True,
+            "passthrough_bottleneck": "",
+            "passthrough_decision_reason": "passthrough_disabled",
+        }
 
     def test_passthrough_when_sibling_gate_fails_with_descendant_signal(self) -> None:
         tree = _make_deep_tree()
@@ -273,6 +336,16 @@ class TestGateEvaluator:
             sibling_different=sibling_different,
         )
         assert gate.decision("root") is TraversalDecision.PASS_THROUGH
+        assert gate.passthrough_audit_status("root") == {
+            "passthrough_enabled": True,
+            "passthrough_split_prerequisites_open": True,
+            "passthrough_sibling_gate_open": False,
+            "passthrough_descendant_split_available": True,
+            "passthrough_candidate": True,
+            "passthrough_supported": True,
+            "passthrough_bottleneck": "",
+            "passthrough_decision_reason": "pass_through",
+        }
 
     def test_spectral_support_guard_blocks_passthrough(self) -> None:
         tree = _make_deep_tree()
@@ -292,6 +365,16 @@ class TestGateEvaluator:
         assert gate.passthrough_support_status("root") == {
             "passthrough_supported": False,
             "passthrough_bottleneck": "",
+        }
+        assert gate.passthrough_audit_status("root") == {
+            "passthrough_enabled": True,
+            "passthrough_split_prerequisites_open": True,
+            "passthrough_sibling_gate_open": False,
+            "passthrough_descendant_split_available": True,
+            "passthrough_candidate": True,
+            "passthrough_supported": False,
+            "passthrough_bottleneck": "",
+            "passthrough_decision_reason": "passthrough_support_blocked",
         }
 
     def test_passthrough_decision_uses_cached_gate_results(
@@ -319,6 +402,10 @@ class TestGateEvaluator:
             passthrough=True,
         )
         assert gate.decision("root") is TraversalDecision.SPLIT
+        assert (
+            gate.passthrough_audit_status("root")["passthrough_decision_reason"]
+            == "sibling_gate_open_split"
+        )
 
     def test_no_passthrough_when_gates_1_2_fail(self) -> None:
         gate = _make_gate(
@@ -334,6 +421,10 @@ class TestGateEvaluator:
             },
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
+        assert (
+            gate.passthrough_audit_status("root")["passthrough_decision_reason"]
+            == "split_prerequisites_closed"
+        )
 
     def test_no_passthrough_when_no_descendant_signal(self) -> None:
         gate = _make_gate(
@@ -349,6 +440,10 @@ class TestGateEvaluator:
             },
         )
         assert gate.decision("root") is TraversalDecision.BOUNDARY
+        assert (
+            gate.passthrough_audit_status("root")["passthrough_decision_reason"]
+            == "no_descendant_split"
+        )
 
 
 class TestTreeDecompositionTraversal:
@@ -417,6 +512,10 @@ class TestTreeDecompositionTraversal:
 
         cluster_leaf_sets = sorted(_cluster_leaf_sets(result), key=lambda leaves: min(leaves))
         assert cluster_leaf_sets == [{"A1", "A2"}, {"C1", "C2"}, {"D1", "D2"}]
+        root_trace = result["traversal_trace"][0]
+        assert root_trace["passthrough_candidate"] is True
+        assert root_trace["passthrough_decision_reason"] == "pass_through"
+        assert result["traversal_counters"]["live_passthrough_candidate_count"] == 1
 
     def test_decompose_tree_without_passthrough_merges_at_root(
         self, monkeypatch: pytest.MonkeyPatch
@@ -531,6 +630,31 @@ class TestTreeDecompositionTraversal:
         root_row = result["full_edge_traversal_trace"][0]
         assert root_row["left_child"] == "A"
         assert root_row["right_child"] == "B"
+        assert root_row["left_edge_test_tuple"] == ("root", "A")
+        assert root_row["right_edge_test_tuple"] == ("root", "B")
+        assert root_row["sibling_test_tuple"] == ("root", "A", "B")
+        assert root_row["left_edge_p_value"] == 0.01
+        assert root_row["left_edge_p_value_bh"] == 0.01
+        assert root_row["left_edge_tested"] is True
+        assert root_row["right_edge_p_value"] == 0.01
+        assert root_row["right_edge_p_value_bh"] == 0.01
+        assert root_row["right_edge_tested"] is True
+        assert root_row["sibling_p_value"] == 0.80
+        assert root_row["sibling_p_value_corrected"] == 0.80
+        assert root_row["sibling_test_statistic"] == 0.5
+        assert root_row["sibling_degrees_of_freedom"] == 1.0
+        assert root_row["sibling_test_method"] == "synthetic_projected_wald"
+        assert root_row["descendant_leaf_signature"] == (
+            "A1",
+            "A2",
+            "C1",
+            "C2",
+            "D1",
+            "D2",
+        )
+        assert root_row["passthrough_enabled"] is False
+        assert root_row["passthrough_candidate"] is False
+        assert root_row["passthrough_decision_reason"] == "passthrough_disabled"
         assert root_row["left_branch_length"] == 1.25
         assert root_row["right_branch_length"] == 2.5
         assert root_row["left_branch_length_missing"] is False
@@ -545,6 +669,7 @@ class TestTreeDecompositionTraversal:
         assert counters["full_edge_continue_count"] == 1
         assert counters["full_edge_stop_count"] == 2
         assert counters["full_edge_closed_stop_count"] == 2
+        assert counters["full_edge_passthrough_candidate_count"] == 0
 
     def test_decompose_tree_passthrough_ignores_blocked_descendant_signal(
         self, monkeypatch: pytest.MonkeyPatch
@@ -571,6 +696,45 @@ class TestTreeDecompositionTraversal:
 
         cluster_leaf_sets = _cluster_leaf_sets(result)
         assert cluster_leaf_sets == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
+
+    def test_decompose_tree_selected_family_guard_blocks_passthrough(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_deep_tree()
+        edge_divergent = {node: True for node in tree.nodes}
+        sibling_different = {node: False for node in tree.nodes}
+        sibling_different["B"] = True
+        annotations_df = _make_annotations(
+            tree,
+            edge_divergent=edge_divergent,
+            sibling_different=sibling_different,
+        )
+        annotations_df["Selective_Permutation_Guard_Would_Block"] = False
+        annotations_df["Selective_Permutation_Guard_Blocked"] = False
+        annotations_df.loc["root", "Selective_Permutation_Guard_Would_Block"] = True
+
+        monkeypatch.setattr(TreeDecomposition, "_prepare_annotations", lambda self, df: df)
+        decomposer = TreeDecomposition(
+            tree=tree,
+            annotations_df=annotations_df,
+            passthrough=True,
+            root_selective_permutation_guard_scope=(
+                "global_sibling_min_passthrough_descendant_refined"
+            ),
+        )
+
+        result = decomposer.decompose_tree()
+
+        assert _cluster_leaf_sets(result) == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
+        root_trace = result["traversal_trace"][0]
+        assert root_trace["decision"] == "boundary"
+        assert root_trace["passthrough_candidate"] is True
+        assert root_trace["passthrough_supported"] is False
+        assert root_trace["passthrough_bottleneck"] == (
+            "selected_family_passthrough_guard_blocked"
+        )
+        assert root_trace["passthrough_decision_reason"] == "passthrough_support_blocked"
+        assert result["traversal_counters"]["live_passthrough_support_blocked_count"] == 1
 
     def test_decompose_tree_spectral_support_guard_blocks_passthrough(
         self, monkeypatch: pytest.MonkeyPatch
@@ -602,8 +766,26 @@ class TestTreeDecompositionTraversal:
         assert _cluster_leaf_sets(result) == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
         root_trace = result["traversal_trace"][0]
         assert root_trace["decision"] == "boundary"
+        assert root_trace["left_edge_test_tuple"] == ("root", "A")
+        assert root_trace["right_edge_test_tuple"] == ("root", "B")
+        assert root_trace["sibling_test_tuple"] == ("root", "A", "B")
+        assert root_trace["left_edge_p_value"] == 0.01
+        assert root_trace["right_edge_p_value"] == 0.01
+        assert root_trace["sibling_p_value"] == 0.80
+        assert root_trace["sibling_p_value_corrected"] == 0.80
+        assert root_trace["descendant_leaf_signature"] == (
+            "A1",
+            "A2",
+            "C1",
+            "C2",
+            "D1",
+            "D2",
+        )
         assert root_trace["passthrough_supported"] is False
         assert root_trace["passthrough_bottleneck"] == "spectral_transport_bottleneck"
+        assert root_trace["passthrough_candidate"] is True
+        assert root_trace["passthrough_decision_reason"] == "passthrough_support_blocked"
+        assert result["traversal_counters"]["live_passthrough_support_blocked_count"] == 1
 
 
 def test_spectral_transport_annotation_supports_coherent_passthrough_path() -> None:

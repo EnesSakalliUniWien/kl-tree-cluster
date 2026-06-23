@@ -5,7 +5,7 @@ from dataclasses import dataclass
 # Prevent pytest from collecting functions whose names start with ``test_``
 # from the *source* package when they are re-exported into a test module's
 # namespace via ``from ... import test_node_pair_divergence`` etc.
-collect_ignore_glob = ["**/kl_clustering_analysis/**"]
+collect_ignore_glob = ["**/tree_break_selection/**"]
 
 
 @dataclass

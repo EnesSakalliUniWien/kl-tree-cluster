@@ -2,12 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-ARG KL_TE_GIT_COMMIT=unknown
-ARG KL_TE_GIT_BRANCH=unknown
-ARG KL_TE_GIT_DIRTY=unknown
-ENV KL_TE_GIT_COMMIT=${KL_TE_GIT_COMMIT}
-ENV KL_TE_GIT_BRANCH=${KL_TE_GIT_BRANCH}
-ENV KL_TE_GIT_DIRTY=${KL_TE_GIT_DIRTY}
+ARG TBS_GIT_COMMIT=unknown
+ARG TBS_GIT_BRANCH=unknown
+ARG TBS_GIT_DIRTY=unknown
+ENV TBS_GIT_COMMIT=${TBS_GIT_COMMIT}
+ENV TBS_GIT_BRANCH=${TBS_GIT_BRANCH}
+ENV TBS_GIT_DIRTY=${TBS_GIT_DIRTY}
 
 COPY pyproject.toml README.md ./
 
@@ -26,6 +26,6 @@ RUN pip install --no-cache-dir --upgrade pip \
         "tabulate>=0.9.0"
 
 COPY benchmarks ./benchmarks
-COPY kl_clustering_analysis ./kl_clustering_analysis
+COPY tree_break_selection ./tree_break_selection
 
 ENTRYPOINT ["python", "-m"]

@@ -190,7 +190,7 @@ def _run_one_variant(
     spectral = variant_id == SPECTRAL_VARIANT
     result = run_clustering_result(
         data,
-        method_id="kl",
+        method_id="tbs",
         params=_refined_passthrough_params(
             spectral_transport=spectral,
             threshold=threshold,

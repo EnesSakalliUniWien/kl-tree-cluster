@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.child_parent_edge_metadata import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.child_parent_edge_metadata import (
     determine_whether_sibling_pair_is_edge_blocked,
     determine_whether_sibling_pair_is_null_like,
     estimate_sibling_null_weight_from_child_parent_edges,

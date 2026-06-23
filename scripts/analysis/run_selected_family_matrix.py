@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run selected-family KL traversal diagnostics on one feature matrix."""
+"""Run selected-family TBS traversal diagnostics on one feature matrix."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from benchmarks.diagnostics.calibration.selected_family_traversal_panel import (
     _build_node_decisions,
     _build_regions_and_gene_assignments,
 )
-from benchmarks.shared.runners.kl_runner import _run_kl_method
+from benchmarks.shared.runners.tbs_runner import _run_tbs_method
 from benchmarks.shared.util.time import format_timestamp_utc
 from scipy.spatial.distance import pdist
 from scripts.analysis.multiscale_umap_overlay import (
@@ -107,7 +107,7 @@ def run_matrix(args: argparse.Namespace) -> dict[str, object]:
     data = load_binary_matrix(args.feature_matrix)
     distance = pdist(data.to_numpy(dtype=float), metric=str(args.tree_distance_metric))
     with time_limit(args.timeout_seconds):
-        result = _run_kl_method(
+        result = _run_tbs_method(
             data,
             distance,
             sibling_significance_level=float(args.sibling_alpha),

@@ -23,7 +23,7 @@ def test_split_collected_figs_to_pdfs(tmp_path: Path):
     # Tree fig
     f2 = plt.figure()
     ax2 = f2.add_subplot(111)
-    ax2.set_title("Hierarchical Tree with KL Divergence Clusters\nTest Case 1")
+    ax2.set_title("Hierarchical Tree with TBS Divergence Clusters\nTest Case 1")
     figs.append(f2)
 
     # UMAP fig (uses suptitle)

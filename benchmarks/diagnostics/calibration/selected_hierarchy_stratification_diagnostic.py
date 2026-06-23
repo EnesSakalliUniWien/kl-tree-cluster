@@ -15,11 +15,11 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureSpace
+from tree_break_selection.tree.feature_space import FeatureSpace
 
 from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import (
     DEFAULT_CASE_NAMES,
@@ -168,7 +168,7 @@ def _diagnose_case(
     n_replicates: int,
     seed: int,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
-    inputs = prepare_case_inputs(case, ["kl"])
+    inputs = prepare_case_inputs(case, ["tbs"])
     feature_space = inputs.metadata.get("feature_space")
     if feature_space is not None and not isinstance(feature_space, FeatureSpace):
         raise ValueError("Prepared feature_space metadata must be a FeatureSpace.")

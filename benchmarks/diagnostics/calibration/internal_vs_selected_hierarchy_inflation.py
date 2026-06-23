@@ -16,31 +16,31 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.core_utils.tree_utils import compute_node_depths
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.core_utils.tree_utils import compute_node_depths
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     fit_empirical_null_inflation_model,
     predict_empirical_inflation_factor,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
     collect_parent_principal_component_inputs_for_sibling_tests,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureSpace
+from tree_break_selection.tree.feature_space import FeatureSpace
 from scipy.stats import chi2
 
 from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import (
@@ -53,7 +53,7 @@ from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import (
     _simulate_null_data,
 )
 from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_internal_vs_selected_hierarchy_inflation_not_calibration"
@@ -143,7 +143,7 @@ def _observed_target(
     *,
     target_mode: str,
 ) -> tuple[ObservedSiblingTarget, pd.DataFrame, dict[str, object]]:
-    context = build_kl_tree_context(case, populate_node_distributions=True)
+    context = build_tbs_tree_context(case, populate_node_distributions=True)
     edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         context.tree,
         context.tree.annotations_df,

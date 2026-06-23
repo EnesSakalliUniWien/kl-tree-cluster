@@ -3,19 +3,19 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     SpectralContext,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
@@ -238,8 +238,12 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
         "top": test_projection_dimensions_by_node["top"],
     }
 
-    with pytest.raises(ValueError, match="selected non-null"):
-        run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
+    bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
+    assert (
+        bundle.edge_gate_result.spectral_context.test_projection_dimensions_by_node
+        == test_projection_dimensions_by_node
+    )
+    assert bundle.annotated_df.loc["root", "Sibling_BH_Different"]
 
 
 def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibling_projection_dimensions() -> None:

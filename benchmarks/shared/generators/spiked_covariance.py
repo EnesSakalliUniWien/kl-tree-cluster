@@ -53,9 +53,9 @@ def generate_continuous_spiked_covariance(test_case: dict, seed: int | None) -> 
         generator="continuous_spiked_covariance",
         source_family="continuous_spiked_covariance",
         feature_representation="continuous",
-        requires_precomputed_kl_distance=True,
+        requires_precomputed_tbs_distance=True,
         precomputed_distance_condensed=distance_condensed,
-        distance_metric="euclidean",
+        distance_metric="mahalanobis_time",
         extra={
             "feature_space": feature_space,
             "spike_strength": spike_name,

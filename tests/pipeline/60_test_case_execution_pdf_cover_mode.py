@@ -9,7 +9,7 @@ def test_run_case_worker_defaults_to_file_safe_matplotlib_backend(monkeypatch):
 
     def _fake_benchmark_fn(**kwargs):
         captured.update(kwargs)
-        df = pd.DataFrame([{"method": "kl", "ari": 1.0}])
+        df = pd.DataFrame([{"method": "tbs", "ari": 1.0}])
         return df, None
 
     monkeypatch.delenv("MPLBACKEND", raising=False)
@@ -26,7 +26,7 @@ def test_run_case_worker_defaults_to_file_safe_matplotlib_backend(monkeypatch):
     case_execution._run_case_worker(
         q,
         case={"name": "tiny_case"},
-        methods_to_test=["kl"],
+        methods_to_test=["tbs"],
         case_plot_umap=True,
         case_plot_manifold=False,
         enable_plots=True,
@@ -50,7 +50,7 @@ def test_run_case_with_optional_isolation_disables_cover_pages(monkeypatch):
 
     case_execution.run_case_with_optional_isolation(
         case={"name": "tiny_case"},
-        methods_to_test=["kl"],
+        methods_to_test=["tbs"],
         case_plot_umap=False,
         case_plot_manifold=False,
         enable_plots=True,
@@ -69,7 +69,7 @@ def test_run_case_worker_disables_cover_pages(monkeypatch):
 
     def _fake_benchmark_fn(**kwargs):
         captured.update(kwargs)
-        df = pd.DataFrame([{"method": "kl", "ari": 1.0}])
+        df = pd.DataFrame([{"method": "tbs", "ari": 1.0}])
         return df, None
 
     monkeypatch.setattr(case_execution, "_get_benchmark_fn", lambda: _fake_benchmark_fn)
@@ -85,7 +85,7 @@ def test_run_case_worker_disables_cover_pages(monkeypatch):
     case_execution._run_case_worker(
         q,
         case={"name": "tiny_case"},
-        methods_to_test=["kl"],
+        methods_to_test=["tbs"],
         case_plot_umap=True,
         case_plot_manifold=False,
         enable_plots=True,

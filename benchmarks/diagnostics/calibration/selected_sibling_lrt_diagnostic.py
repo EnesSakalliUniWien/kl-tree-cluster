@@ -22,18 +22,18 @@ from scipy.cluster.hierarchy import linkage
 from scipy.stats import chi2
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
-from benchmarks.shared.runners.kl_diffusion_runner import _build_diffusion_distance
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+from benchmarks.shared.runners.tbs_diffusion_runner import _build_diffusion_distance
+from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.tree.io import tree_from_linkage
+from tree_break_selection.tree.io import tree_from_linkage
 
 
 DEFAULT_GRID: tuple[tuple[int, int], ...] = ((15, 3), (15, 5), (30, 3))
@@ -87,7 +87,7 @@ def _p_value(value: object) -> float:
 
 
 def _bernoulli_kl(p: np.ndarray, q: np.ndarray, *, eps: float = 1e-12) -> np.ndarray:
-    """Coordinatewise Bernoulli KL, allowing empirical probabilities 0 or 1."""
+    """Coordinatewise Bernoulli TBS, allowing empirical probabilities 0 or 1."""
     p = np.asarray(p, dtype=float)
     q = np.clip(np.asarray(q, dtype=float), eps, 1.0 - eps)
     first = np.zeros_like(p, dtype=float)
@@ -472,7 +472,7 @@ def run_selected_sibling_lrt_diagnostic(
             [
                 "# Selected Sibling LRT Diagnostic",
                 "",
-                "Diagnostic-only Bernoulli sibling deviance panel for fixed diffusion KL trees.",
+                "Diagnostic-only Bernoulli sibling deviance panel for fixed diffusion TBS trees.",
                 "The nominal LRT tail is fixed-pair only and is not a selected-tree calibration rule.",
                 "",
                 summary.to_markdown(index=False),

@@ -17,11 +17,11 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     bernoulli_feature_space_from_columns,
     continuous_feature_space_from_columns,

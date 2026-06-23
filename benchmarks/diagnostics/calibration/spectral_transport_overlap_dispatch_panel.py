@@ -39,8 +39,8 @@ GENERATED_BY = (
     "spectral_transport_overlap_dispatch_panel"
 )
 
-BASELINE_METHOD = "kl_global_passthrough_refined_diagnostic"
-CANDIDATE_METHOD = "kl_spectral_transport_passthrough"
+BASELINE_METHOD = "tbs_global_passthrough_refined_diagnostic"
+CANDIDATE_METHOD = "tbs_spectral_transport_passthrough"
 DEFAULT_METHODS = (BASELINE_METHOD, CANDIDATE_METHOD)
 DEFAULT_CASE_NAMES = (
     "overlap_part_4c_small",
@@ -70,8 +70,8 @@ class SpectralTransportOverlapDispatchConfig:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Compare the registered spectral transport KL method against the "
-            "refined global pass-through KL baseline on overlap cases."
+            "Compare the registered spectral transport TBS method against the "
+            "refined global pass-through TBS baseline on overlap cases."
         )
     )
     parser.add_argument("--output-dir", type=Path, required=True)

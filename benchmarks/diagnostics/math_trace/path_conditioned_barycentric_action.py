@@ -356,35 +356,35 @@ def summarize_benchmark(benchmark: pd.DataFrame | None) -> dict[str, Any]:
         return {
             "available": False,
             "n_rows": 0,
-            "n_kl_rows": 0,
-            "n_kl_skips": 0,
-            "n_kl_calibration_support_skips": 0,
-            "n_kl_under_split_rows": 0,
-            "kl_mean_ari_ok": math.nan,
+            "n_tbs_rows": 0,
+            "n_tbs_skips": 0,
+            "n_tbs_calibration_support_skips": 0,
+            "n_tbs_under_split_rows": 0,
+            "tbs_mean_ari_ok": math.nan,
         }
 
     method = benchmark.get("method", pd.Series("", index=benchmark.index)).astype(str)
-    kl = benchmark[method.eq("kl")].copy()
-    status = kl.get("status", pd.Series("", index=kl.index)).astype(str)
-    skip_reason = kl.get("skip_reason", pd.Series("", index=kl.index)).astype(str)
-    ari = pd.to_numeric(kl.get("ari", pd.Series(np.nan, index=kl.index)), errors="coerce")
+    tbs = benchmark[method.eq("tbs")].copy()
+    status = tbs.get("status", pd.Series("", index=tbs.index)).astype(str)
+    skip_reason = tbs.get("skip_reason", pd.Series("", index=tbs.index)).astype(str)
+    ari = pd.to_numeric(tbs.get("ari", pd.Series(np.nan, index=tbs.index)), errors="coerce")
     ok = status.eq("ok")
     calibration_skips = (
         status.eq("skip")
         & skip_reason.str.contains("calibration|support|inflation", case=False, na=False)
     )
     under_split = pd.to_numeric(
-        kl.get("under_split", pd.Series(0, index=kl.index)),
+        tbs.get("under_split", pd.Series(0, index=tbs.index)),
         errors="coerce",
     ).fillna(0)
     return {
         "available": True,
         "n_rows": int(len(benchmark)),
-        "n_kl_rows": int(len(kl)),
-        "n_kl_skips": _status_count(kl, "status", "skip"),
-        "n_kl_calibration_support_skips": int(calibration_skips.sum()),
-        "n_kl_under_split_rows": int((under_split > 0).sum()),
-        "kl_mean_ari_ok": float(ari[ok].mean()) if ok.any() else math.nan,
+        "n_tbs_rows": int(len(tbs)),
+        "n_tbs_skips": _status_count(tbs, "status", "skip"),
+        "n_tbs_calibration_support_skips": int(calibration_skips.sum()),
+        "n_tbs_under_split_rows": int((under_split > 0).sum()),
+        "tbs_mean_ari_ok": float(ari[ok].mean()) if ok.any() else math.nan,
     }
 
 
@@ -405,8 +405,8 @@ def build_candidate_panel(
     radius_evidence = math.isfinite(radius_auc) and radius_auc >= 0.85
     median_angle = _finite_median(geometry_summary["angle_to_leading_axis_deg_median"])
     median_independent = _finite_median(geometry_summary["independent_fraction_median"])
-    support_skips = int(benchmark_summary.get("n_kl_calibration_support_skips", 0))
-    under_splits = int(benchmark_summary.get("n_kl_under_split_rows", 0))
+    support_skips = int(benchmark_summary.get("n_tbs_calibration_support_skips", 0))
+    under_splits = int(benchmark_summary.get("n_tbs_under_split_rows", 0))
     guard_candidates = (
         guard_panel["recursive_decision"].eq("candidate_guard_validation_panel").sum()
         if "recursive_decision" in guard_panel.columns
@@ -458,7 +458,7 @@ def build_candidate_panel(
             "recursive_decision": "needs_new_data" if support_skips else "keep_diagnostic",
             "priority": 4 if support_skips else 6,
             "evidence_summary": (
-                f"KL calibration-support skip count={support_skips}; external selected-tail "
+                f"TBS calibration-support skip count={support_skips}; external selected-tail "
                 "calibration remains fail-closed without support validation."
             ),
         },
@@ -469,7 +469,7 @@ def build_candidate_panel(
             "priority": 5,
             "evidence_summary": (
                 "Traversal must be modeled as a reached-and-split path event, "
-                f"with observed KL under-split rows={under_splits}."
+                f"with observed TBS under-split rows={under_splits}."
             ),
         },
         {
@@ -632,13 +632,13 @@ def _write_report(
         [
             "## Benchmark Evidence",
             "",
-            f"- KL rows: `{benchmark_summary.get('n_kl_rows', 0)}`",
-            f"- KL skips: `{benchmark_summary.get('n_kl_skips', 0)}`",
+            f"- TBS rows: `{benchmark_summary.get('n_tbs_rows', 0)}`",
+            f"- TBS skips: `{benchmark_summary.get('n_tbs_skips', 0)}`",
             (
-                "- KL calibration-support skips: "
-                f"`{benchmark_summary.get('n_kl_calibration_support_skips', 0)}`"
+                "- TBS calibration-support skips: "
+                f"`{benchmark_summary.get('n_tbs_calibration_support_skips', 0)}`"
             ),
-            f"- KL under-split rows: `{benchmark_summary.get('n_kl_under_split_rows', 0)}`",
+            f"- TBS under-split rows: `{benchmark_summary.get('n_tbs_under_split_rows', 0)}`",
             "",
         ]
     )

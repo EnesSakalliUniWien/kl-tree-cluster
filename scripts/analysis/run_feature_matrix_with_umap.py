@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run KL-tree decomposition on a TSV feature matrix and export UMAP results."""
+"""Run TBS-tree decomposition on a TSV feature matrix and export UMAP results."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-_RUNTIME_CACHE_ROOT = Path(tempfile.gettempdir()) / "kl_te_runtime_cache"
+_RUNTIME_CACHE_ROOT = Path(tempfile.gettempdir()) / "tbs_runtime_cache"
 for _cache_dir in (
     _RUNTIME_CACHE_ROOT / "numba",
     _RUNTIME_CACHE_ROOT / "matplotlib",
@@ -29,36 +29,36 @@ os.environ.setdefault("XDG_CACHE_HOME", str(_RUNTIME_CACHE_ROOT / "xdg"))
 
 import numpy as np
 import pandas as pd
-from benchmarks.shared.runners.kl_diffusion_runner import (
+from benchmarks.shared.runners.tbs_diffusion_runner import (
     _build_adaptive_diffusion_distance,
     _build_diffusion_distance,
 )
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
-    run_gate_annotation_pipeline,
-)
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
-    build_sample_cluster_assignments,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
-    DEFAULT_EDGE_ALPHA,
-    DEFAULT_SIBLING_ALPHA,
-)
-from kl_clustering_analysis.plot.cluster_color_mapping import (
-    build_cluster_color_spec,
-    present_cluster_ids,
-)
-from kl_clustering_analysis.plot.cluster_tree_visualization import plot_tree_with_clusters
-from kl_clustering_analysis.tree.io import tree_from_linkage
-from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import cut_tree, dendrogram, linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.cluster_assignments import (
+    build_sample_cluster_assignments,
+)
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
+from tree_break_selection.plot.cluster_color_mapping import (
+    build_cluster_color_spec,
+    present_cluster_ids,
+)
+from tree_break_selection.plot.cluster_tree_visualization import plot_tree_with_clusters
+from tree_break_selection.tree.io import tree_from_linkage
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run KL tree decomposition on a TSV matrix and generate UMAP outputs."
+        description="Run TBS tree decomposition on a TSV matrix and generate UMAP outputs."
     )
     parser.add_argument(
         "--input",
@@ -113,21 +113,21 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--tree-method",
-        choices=("kl", "kl_diffusion", "kl_diffusion_adaptive", "paper_cosine_complete"),
-        default="kl",
-        help="Tree construction method: standard KL tree, fixed-k diffusion tree, or adaptive diffusion tree.",
+        choices=("tbs", "tbs_diffusion", "tbs_diffusion_adaptive", "paper_cosine_complete"),
+        default="tbs",
+        help="Tree construction method: standard TBS tree, fixed-k diffusion tree, or adaptive diffusion tree.",
     )
     parser.add_argument(
         "--tree-distance-metric",
         choices=("hamming", "rogerstanimoto", "jaccard", "dice", "euclidean", "cosine"),
         default=config.TREE_DISTANCE_METRIC,
-        help="Pairwise distance metric for the KL tree path.",
+        help="Pairwise distance metric for the TBS tree path.",
     )
     parser.add_argument(
         "--tree-linkage-method",
         choices=("average", "complete", "single", "ward"),
         default=config.TREE_LINKAGE_METHOD,
-        help="Hierarchical linkage method for the KL tree path.",
+        help="Hierarchical linkage method for the TBS tree path.",
     )
     parser.add_argument(
         "--reference-endotypes",
@@ -145,7 +145,7 @@ def parse_args() -> argparse.Namespace:
         "--flat-cluster-count",
         type=int,
         default=None,
-        help="Optional exact flat cut K for non-paper tree methods. Uses the chosen tree geometry but skips KL gating.",
+        help="Optional exact flat cut K for non-paper tree methods. Uses the chosen tree geometry but skips TBS gating.",
     )
     parser.add_argument(
         "--diffusion-k-neighbors",
@@ -318,7 +318,7 @@ def _build_linkage_tree(
     adaptive_metric: str,
 ) -> tuple[np.ndarray, str, str, dict[str, object] | None]:
     adaptive_metadata: dict[str, object] | None = None
-    if tree_method == "kl_diffusion":
+    if tree_method == "tbs_diffusion":
         distance_condensed = _build_diffusion_distance(
             data_df,
             k_neighbors=diffusion_k_neighbors,
@@ -327,7 +327,7 @@ def _build_linkage_tree(
         )
         linkage_method = "average"
         distance_metric = "diffusion"
-    elif tree_method == "kl_diffusion_adaptive":
+    elif tree_method == "tbs_diffusion_adaptive":
         distance_condensed, adaptive_metadata = _build_adaptive_diffusion_distance(
             data_df,
             k_neighbors=adaptive_neighbor_k,
@@ -637,10 +637,10 @@ def _save_embedding_plot(
             top_cluster_ids = list(
                 cluster_sizes.sort_values(ascending=False).head(20).index.astype(int)
             )
-            legend_title = "Largest KL clusters"
+            legend_title = "Largest TBS clusters"
         else:
             top_cluster_ids = cluster_ids
-            legend_title = "KL clusters"
+            legend_title = "TBS clusters"
 
         legend_handles = [
             plt.Line2D(
@@ -716,20 +716,20 @@ def main() -> None:
                 f"Reference endotypes file not found: {args.reference_endotypes}"
             )
         print(f"Reference endotypes: {args.reference_endotypes}")
-    if args.tree_method == "kl_diffusion":
+    if args.tree_method == "tbs_diffusion":
         print(
             "Diffusion params: "
             f"k_neighbors={args.diffusion_k_neighbors}, "
             f"diffusion_time={args.diffusion_time}, "
             f"n_components={args.diffusion_components}"
         )
-    if args.tree_method == "kl":
+    if args.tree_method == "tbs":
         print(
-            "KL tree params: "
+            "TBS tree params: "
             f"distance_metric={args.tree_distance_metric}, "
             f"linkage_method={args.tree_linkage_method}"
         )
-    if args.tree_method == "kl_diffusion_adaptive":
+    if args.tree_method == "tbs_diffusion_adaptive":
         print(
             "Adaptive diffusion params: "
             f"neighbor_k={args.adaptive_neighbor_k}, "
@@ -835,7 +835,7 @@ def main() -> None:
                 output_dir,
             )
     else:
-        print("Running KL decomposition...")
+        print("Running TBS decomposition...")
         tree, decomposition, assignments = _run_decomposition(
             data_df=data_df,
             edge_alpha=args.edge_alpha,
@@ -939,7 +939,7 @@ def main() -> None:
         label_title=(
             "paper-faithful clusters"
             if args.tree_method == "paper_cosine_complete"
-            else "KL clusters"
+            else "TBS clusters"
         ),
     )
     embedding_elapsed = time.perf_counter() - embedding_start
@@ -991,7 +991,7 @@ def main() -> None:
             decomposition,
             annotations_df=tree.annotations_df,
             layout="rectangular",
-            title=f"KL Tree — {n_clusters} clusters (α={args.sibling_alpha})",
+            title=f"TBS Tree — {n_clusters} clusters (α={args.sibling_alpha})",
             ax=ax_tree,
             node_size=12,
             font_size=9,

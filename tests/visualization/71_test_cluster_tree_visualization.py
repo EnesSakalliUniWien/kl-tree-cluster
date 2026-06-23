@@ -7,7 +7,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
-from kl_clustering_analysis.plot.cluster_tree_visualization import (
+from tree_break_selection.plot.cluster_tree_visualization import (
     _group_edges_for_sibling_style,
     _group_internal_nodes_for_halo,
     plot_tree_with_clusters,

@@ -5,7 +5,7 @@ For each adaptive cosine/KAK block this diagnostic:
 1. computes the existing block coordinates,
 2. builds a k-NN diffusion operator in that separated coordinate space,
 3. builds an average-linkage tree from diffusion distance, and
-4. runs the normal KL-TE gate pipeline on the original feature matrix.
+4. runs the normal Tree-Break Selection gate pipeline on the original feature matrix.
 
 The result is diagnostic-only. It changes tree geometry, not the production
 edge/sibling test surface.
@@ -21,21 +21,21 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.types.inflation_model import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.types.inflation_model import (
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     CalibrationSupportThresholds,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
@@ -52,7 +52,7 @@ from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import (
     load_matrix,
     safe_name,
 )
-from benchmarks.shared.runners.kl_diffusion_runner import (
+from benchmarks.shared.runners.tbs_diffusion_runner import (
     _build_adaptive_diffusion_distance,
     _compute_diffusion_coordinates,
 )
@@ -62,7 +62,7 @@ DIFFUSION_SCHEMA_VERSION = f"{SCHEMA_VERSION}/matrix_block_diffusion"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run KL-TE diffusion trees inside adaptive cosine/KAK blocks."
+        description="Run Tree-Break Selection diffusion trees inside adaptive cosine/KAK blocks."
     )
     parser.add_argument(
         "--input",

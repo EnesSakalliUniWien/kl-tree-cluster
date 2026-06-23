@@ -38,7 +38,7 @@ LEVEL_MATRIX_QUALITY = AnalysisLevel(
     name="matrix quality only",
     order=0,
     is_canonical=False,
-    interpretation="Feature-matrix diagnostics before any tree or KL gate is run.",
+    interpretation="Feature-matrix diagnostics before any tree or TBS gate is run.",
     inconsistency=(
         "Input-quality level only: no tree assignments, GO-IC ranking, or "
         "reader-facing tree pages."
@@ -94,7 +94,7 @@ LEVEL_CANONICAL_CURRENT = AnalysisLevel(
     order=30,
     is_canonical=True,
     interpretation=(
-        "Current KL gates on adaptive-diffusion cosine subspace trees with "
+        "Current TBS gates on adaptive-diffusion cosine subspace trees with "
         "connected rankings, manifests, per-subspace artifacts, and method PDFs."
     ),
     inconsistency="Canonical target: current method/version and one tree-geometry contract.",
@@ -330,7 +330,7 @@ def write_audit_outputs(frame: pd.DataFrame, output_dir: Path) -> dict[str, str]
         "",
         "Canonical target:",
         (
-            "- `30_canonical_current_subspace_pipeline`: current KL gates on "
+            "- `30_canonical_current_subspace_pipeline`: current TBS gates on "
             "adaptive-diffusion cosine subspace trees with connected rankings, "
             "manifests, per-subspace artifacts, and method PDFs."
         ),

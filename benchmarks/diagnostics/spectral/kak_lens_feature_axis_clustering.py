@@ -8,7 +8,7 @@ feature-axis loading vector is
 
 and the gene coordinate is ``Z q_j = sqrt(lambda_j) u_j``. This diagnostic uses
 that exact dual relation for raw KAK/cosine lenses, writes feature loadings for
-the common axis and selected variant lens axes, then runs the normal KL-TE gate
+the common axis and selected variant lens axes, then runs the normal Tree-Break Selection gate
 pipeline on the lens tree.
 
 Separated diffusion lenses are intentionally excluded: their coordinates are a
@@ -30,13 +30,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
@@ -471,7 +471,7 @@ def write_report(summary: pd.DataFrame, output_dir: Path) -> None:
         "# KAK Lens Feature-Axis Clustering",
         "",
         "This diagnostic maps raw KAK/cosine lens axes back to original feature loadings using the exact dual SVD relation.",
-        "It then clusters genes through the normal KL-TE gate path on the selected lens tree.",
+        "It then clusters genes through the normal Tree-Break Selection gate path on the selected lens tree.",
         "",
         "Separated diffusion lenses are excluded because their feature attribution is nonlinear and not exact under this map.",
         "",

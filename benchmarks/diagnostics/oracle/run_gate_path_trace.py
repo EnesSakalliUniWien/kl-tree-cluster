@@ -14,15 +14,15 @@ import pandas as pd
 
 repo_root = Path(__file__).resolve().parents[3]
 
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 
 from benchmarks.diagnostics.oracle.gate_path_trace import (
     build_gate_path_trace_dataframe,
@@ -40,7 +40,7 @@ from benchmarks.diagnostics.oracle.statistical_decision_trace import (
 )
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 
 _THREAD_ENV_VARS = (
     "OMP_NUM_THREADS",
@@ -60,7 +60,7 @@ DEFAULT_FAILURE_CLASSES = (
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Build node-level traces that compare actual KL gate decisions "
+            "Build node-level traces that compare actual TBS gate decisions "
             "against oracle subtree-cut boundaries."
         )
     )
@@ -75,7 +75,7 @@ def _parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help=(
-            "Oracle recoverability CSV with failure_class and KL comparison columns. "
+            "Oracle recoverability CSV with failure_class and TBS comparison columns. "
             "Defaults to the latest oracle_tree_recoverability CSV containing "
             "failure_class."
         ),
@@ -102,7 +102,7 @@ def _parse_args() -> argparse.Namespace:
 def _configure_runtime_defaults() -> None:
     for env_var in _THREAD_ENV_VARS:
         os.environ.setdefault(env_var, "1")
-    os.environ.setdefault("KL_TE_N_JOBS", "1")
+    os.environ.setdefault("TBS_N_JOBS", "1")
 
 
 def _load_cases(suite: str) -> list[dict[str, object]]:
@@ -138,8 +138,8 @@ def _load_classification(path: Path | None) -> tuple[pd.DataFrame, Path]:
     required = {
         "case_id",
         "failure_class",
-        "kl_ari",
-        "kl_found_clusters",
+        "tbs_ari",
+        "tbs_found_clusters",
         "true_clusters",
         "oracle_subtree_ari",
         "oracle_true_k_subtree_ari",
@@ -193,7 +193,7 @@ def _make_output_dir(explicit_output_dir: Path | None) -> Path:
 
 
 def _trace_case(case: dict[str, object], classification_row) -> pd.DataFrame:
-    context = build_kl_tree_context(case, populate_node_distributions=True)
+    context = build_tbs_tree_context(case, populate_node_distributions=True)
     gate_annotation_bundle = run_gate_annotation_pipeline(
         context.tree,
         context.tree.annotations_df,
@@ -240,7 +240,7 @@ def _trace_case(case: dict[str, object], classification_row) -> pd.DataFrame:
         sibling_inflation_trace_by_parent=sibling_inflation_trace,
         case_id=str(context.metadata["name"]),
         failure_class=str(classification_row.failure_class),
-        kl_ari=float(classification_row.kl_ari),
+        tbs_ari=float(classification_row.tbs_ari),
         oracle_true_k_ari=float(oracle_true_k.ari),
         oracle_any_k_ari=float(oracle_any.ari),
         passthrough=config.PASSTHROUGH,

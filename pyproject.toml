@@ -1,10 +1,10 @@
 [project]
-name = "kl-clustering-analysis"
+name = "tree-break-selection"
 version = "0.1.0"
-description = "KL-TE hierarchy decomposition with projected-Wald gate testing"
+description = "Tree-Break Selection hierarchy decomposition with projected-Wald gate testing"
 requires-python = ">=3.11"
 authors = [
-    {name = "KL-TE contributors"}
+    {name = "Tree-Break Selection contributors"}
 ]
 readme = "README.md"
 
@@ -82,7 +82,7 @@ markers = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-src = ["benchmarks", "kl_clustering_analysis", "scripts", "tests"]
+src = ["benchmarks", "tree_break_selection", "scripts", "tests"]
 force-exclude = true
 extend-exclude = [
     "manuscript",
@@ -95,7 +95,7 @@ ignore = ["E402", "E501"]
 
 [tool.deptry]
 ignore_notebooks = true
-known_first_party = ["benchmarks", "kl_clustering_analysis"]
+known_first_party = ["benchmarks", "tree_break_selection"]
 pep621_dev_dependency_groups = ["dev", "benchmark", "viz", "all"]
 extend_exclude = ["^manuscript/", "^notebooks/"]
 package_module_name_map = { "python-louvain" = "community", "scikit-bio" = "skbio" }

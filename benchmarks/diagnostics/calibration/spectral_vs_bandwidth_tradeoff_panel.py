@@ -675,7 +675,7 @@ def build_old_stack_rows(
                     metric_id="adjusted_rand_index",
                     metric_value=float(first["adjusted_rand_index"]),
                     status="partition_overlap",
-                    interpretation="prior full KL stack versus current topology diagnostic",
+                    interpretation="prior full TBS stack versus current topology diagnostic",
                     source_path=config.old_stack_overlap_path,
                 ),
                 _metric_row(
@@ -684,7 +684,7 @@ def build_old_stack_rows(
                     metric_id="normalized_mutual_information",
                     metric_value=float(first["normalized_mutual_information"]),
                     status="partition_overlap",
-                    interpretation="prior full KL stack versus current topology diagnostic",
+                    interpretation="prior full TBS stack versus current topology diagnostic",
                     source_path=config.old_stack_overlap_path,
                 ),
             ]

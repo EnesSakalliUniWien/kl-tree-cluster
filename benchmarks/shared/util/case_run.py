@@ -41,9 +41,9 @@ def run_single_case(
             audit_root_inc = audit_root_inc.parent
     else:
         audit_root_inc = plots_root.parent if plots_root.name == "plots" else plots_root
-    previous_audit_root = os.environ.get("KL_TE_MATRIX_AUDIT_ROOT")
+    previous_audit_root = os.environ.get("TBS_MATRIX_AUDIT_ROOT")
     if matrix_audit:
-        os.environ["KL_TE_MATRIX_AUDIT_ROOT"] = str(audit_root_inc)
+        os.environ["TBS_MATRIX_AUDIT_ROOT"] = str(audit_root_inc)
     try:
         # Generate and process data/distances.
         inputs = prepare_case_inputs(tc, selected_methods)
@@ -104,9 +104,9 @@ def run_single_case(
     finally:
         if matrix_audit:
             if previous_audit_root is None:
-                os.environ.pop("KL_TE_MATRIX_AUDIT_ROOT", None)
+                os.environ.pop("TBS_MATRIX_AUDIT_ROOT", None)
             else:
-                os.environ["KL_TE_MATRIX_AUDIT_ROOT"] = previous_audit_root
+                os.environ["TBS_MATRIX_AUDIT_ROOT"] = previous_audit_root
 
 
 __all__ = ["run_single_case"]

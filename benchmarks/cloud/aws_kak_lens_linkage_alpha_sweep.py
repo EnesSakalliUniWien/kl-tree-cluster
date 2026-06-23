@@ -394,7 +394,7 @@ def _parse_args() -> argparse.Namespace:
             type=Path,
             default=Path(
                 "benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/"
-                "09_full_data_method_reference_comparison_20260610/kl_diffusion_adaptive/"
+                "09_full_data_method_reference_comparison_20260610/tbs_diffusion_adaptive/"
                 "cluster_assignments.csv"
             ),
         )

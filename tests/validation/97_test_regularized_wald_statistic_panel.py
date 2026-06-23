@@ -17,7 +17,7 @@ from benchmarks.diagnostics.calibration.regularized_wald_statistic_panel import 
     run_regularized_wald_statistic_panel,
     summarize_regularized_wald_rows,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
     bernoulli_feature_space_from_columns,

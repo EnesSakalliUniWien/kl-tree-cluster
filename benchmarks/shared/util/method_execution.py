@@ -5,6 +5,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist
+from tree_break_selection.tree.continuous_distance import (
+    CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
+    CONTINUOUS_TREE_DISTANCE_METRIC,
+    continuous_time_distance_condensed,
+    standardized_euclidean_distance_condensed,
+)
 
 from benchmarks.shared.metrics import _calculate_ari_nmi_purity_metrics
 from benchmarks.shared.result_records import (
@@ -16,33 +22,33 @@ from benchmarks.shared.result_records import (
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.types import MethodSpec
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
-from benchmarks.shared.util.method_sets import KL_DISTANCE_TREE_METHODS
+from benchmarks.shared.util.method_sets import TBS_DISTANCE_TREE_METHODS
 from benchmarks.shared.util.time import BENCHMARK_STAGE_TIMING_KEYS
 
-KL_TREE_DISTANCE_SOURCE_KEY = "tree_distance_source"
-KL_TREE_DISTANCE_SOURCE_FEATURE_METRIC = "feature_metric"
-KL_TREE_DISTANCE_SOURCE_PRECOMPUTED = "precomputed"
+TBS_TREE_DISTANCE_SOURCE_KEY = "tree_distance_source"
+TBS_TREE_DISTANCE_SOURCE_FEATURE_METRIC = "feature_metric"
+TBS_TREE_DISTANCE_SOURCE_PRECOMPUTED = "precomputed"
 
 
 def _slugify(value: str) -> str:
     return "".join(ch if ch.isalnum() or ch in "-_." else "_" for ch in value)
 
 
-def _require_precomputed_kl_distance_metric(
+def _require_precomputed_tbs_distance_metric(
     *,
     meta: dict[str, object],
     case_name: str,
 ) -> str:
-    """Return the named metric/source for a required precomputed KL distance."""
+    """Return the named metric/source for a required precomputed TBS distance."""
     if "distance_metric" not in meta:
         raise ValueError(
-            f"Case '{case_name}' requires precomputed KL distance metadata but "
+            f"Case '{case_name}' requires precomputed TBS distance metadata but "
             "does not define 'distance_metric'."
         )
     distance_metric = str(meta["distance_metric"])
     if not distance_metric:
         raise ValueError(
-            f"Case '{case_name}' requires non-empty precomputed KL distance metadata."
+            f"Case '{case_name}' requires non-empty precomputed TBS distance metadata."
         )
     return distance_metric
 
@@ -130,19 +136,19 @@ def _extract_stage_timings(
     result_status: str,
     result_extra: dict | None,
 ) -> dict[str, object] | None:
-    """Return normalized stage timings for KL-family benchmark rows."""
+    """Return normalized stage timings for TBS-family benchmark rows."""
     stage_timings = (
         result_extra.get("stage_timings")
         if result_extra and isinstance(result_extra.get("stage_timings"), dict)
         else None
     )
-    if method_id.startswith("kl") and result_status == "ok":
+    if method_id.startswith("tbs") and result_status == "ok":
         if stage_timings is None:
-            raise ValueError("Successful KL-family method results must include stage_timings.")
+            raise ValueError("Successful TBS-family method results must include stage_timings.")
         missing = sorted(set(BENCHMARK_STAGE_TIMING_KEYS) - set(stage_timings))
         if missing:
             raise ValueError(
-                "Successful KL-family method results must include all stage_timings; "
+                "Successful TBS-family method results must include all stage_timings; "
                 f"missing={missing}."
             )
     return stage_timings
@@ -159,7 +165,7 @@ def _should_fail_closed_hard_overlap_internal_filter(
     """Return whether a guarded internal-filter hard-overlap OK row should skip."""
     if not str(case_name).startswith("overlap_extreme_4c"):
         return False
-    if not str(method_id).startswith("kl"):
+    if not str(method_id).startswith("tbs"):
         return False
     if not bool(recorded_run_params.get("enforce_internal_support_thresholds", False)):
         return False
@@ -203,31 +209,50 @@ def run_single_method_once(
     feature_space = meta.get("feature_space")
     distance_condensed_for_run = None
     recorded_run_params = dict(run_params)
-    if method_id.startswith("kl"):
+    if method_id.startswith("tbs"):
         recorded_run_params["edge_alpha"] = float(edge_alpha)
         recorded_run_params["sibling_alpha"] = float(significance_level)
-    if method_id in KL_DISTANCE_TREE_METHODS:
+    if method_id in TBS_DISTANCE_TREE_METHODS:
         metric = str(run_params["tree_distance_metric"])
-        requires_precomputed_kl_distance = bool(meta["requires_precomputed_kl_distance"])
-        if requires_precomputed_kl_distance:
+        requires_precomputed_tbs_distance = bool(meta["requires_precomputed_tbs_distance"])
+        if requires_precomputed_tbs_distance:
             if distance_condensed is None:
                 raise ValueError(
                     f"Case '{meta['name']}' requires "
-                    "'precomputed_distance_condensed' for KL but it is missing."
+                    "'precomputed_distance_condensed' for TBS but it is missing."
                 )
             distance_condensed_for_run = distance_condensed
-            recorded_run_params["tree_distance_metric"] = _require_precomputed_kl_distance_metric(
+            recorded_run_params["tree_distance_metric"] = _require_precomputed_tbs_distance_metric(
                 meta=meta,
                 case_name=str(meta["name"]),
             )
-            recorded_run_params[KL_TREE_DISTANCE_SOURCE_KEY] = (
-                KL_TREE_DISTANCE_SOURCE_PRECOMPUTED
+            recorded_run_params[TBS_TREE_DISTANCE_SOURCE_KEY] = (
+                TBS_TREE_DISTANCE_SOURCE_PRECOMPUTED
             )
         else:
-            distance_condensed_for_run = pdist(data_t.values, metric=metric)
+            if metric == CONTINUOUS_TREE_DISTANCE_METRIC:
+                if feature_space is None:
+                    raise ValueError(
+                        "mahalanobis_time TBS tree distances require feature_space metadata."
+                    )
+                distance_condensed_for_run = continuous_time_distance_condensed(
+                    data_t.values,
+                    feature_space,
+                )
+            elif metric == CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC:
+                if feature_space is None:
+                    raise ValueError(
+                        "standardized_euclidean TBS tree distances require feature_space metadata."
+                    )
+                distance_condensed_for_run = standardized_euclidean_distance_condensed(
+                    data_t.values,
+                    feature_space,
+                )
+            else:
+                distance_condensed_for_run = pdist(data_t.values, metric=metric)
             recorded_run_params["tree_distance_metric"] = metric
-            recorded_run_params[KL_TREE_DISTANCE_SOURCE_KEY] = (
-                KL_TREE_DISTANCE_SOURCE_FEATURE_METRIC
+            recorded_run_params[TBS_TREE_DISTANCE_SOURCE_KEY] = (
+                TBS_TREE_DISTANCE_SOURCE_FEATURE_METRIC
             )
 
     try:
@@ -280,7 +305,7 @@ def run_single_method_once(
                 meta=meta,
                 error=ValueError(
                     "Fail-closed hard-overlap internal support guard: "
-                    "guarded internal-barycenter KL returned one cluster without "
+                    "guarded internal-barycenter TBS returned one cluster without "
                     "admissible split support."
                 ),
             ),
@@ -453,7 +478,7 @@ def run_single_method_once(
         params_slug = _slugify(result_row.params_display)
         method_tag = method_name if not params_slug else f"{method_name}__{params_slug}"
         matrices: dict[str, object] = {}
-        if method_id.startswith("kl"):
+        if method_id.startswith("tbs"):
             matrices["distance_condensed"] = distance_condensed_for_run
         if result.extra and result.extra.get("linkage_matrix") is not None:
             matrices["linkage_matrix"] = result.extra.get("linkage_matrix")

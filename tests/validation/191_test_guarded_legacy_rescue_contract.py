@@ -6,8 +6,9 @@ from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.generators.generate_case_data import generate_case_data
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util import method_execution
-from benchmarks.shared.util.method_sets import KL_RUNNER_METHODS
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.neighborhood_bandwidth import (
+from benchmarks.shared.util.method_sets import TBS_RUNNER_METHODS
+from scipy.spatial.distance import pdist
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.neighborhood_bandwidth import (
     CoherentSupportDecision,
     SupportRole,
     TauRegionKey,
@@ -17,7 +18,6 @@ from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.nei
     role_allows_empirical_null_calibration,
     selected_neighborhood_kernel_weights,
 )
-from scipy.spatial.distance import pdist
 
 
 def test_branch_length_distance_cache_uses_weighted_paths_and_mean_fallback() -> None:
@@ -114,13 +114,13 @@ def test_coherent_support_decision_fails_closed_on_root_invalid() -> None:
 
 
 def test_rescued_legacy_profiles_are_exposed_but_not_default() -> None:
-    assert "kl_internal_filter_v1" in KL_RUNNER_METHODS
-    assert "kl_internal_filter_branch_length_v1" in KL_RUNNER_METHODS
-    assert "kl_bandwidth_context_v1" in KL_RUNNER_METHODS
-    assert "kl_rescued_legacy_v1" in KL_RUNNER_METHODS
+    assert "tbs_internal_filter_v1" in TBS_RUNNER_METHODS
+    assert "tbs_internal_filter_branch_length_v1" in TBS_RUNNER_METHODS
+    assert "tbs_bandwidth_context_v1" in TBS_RUNNER_METHODS
+    assert "tbs_rescued_legacy_v1" in TBS_RUNNER_METHODS
 
-    current = METHOD_SPECS["kl"].param_grid[0]
-    rescued = METHOD_SPECS["kl_rescued_legacy_v1"].param_grid[0]
+    current = METHOD_SPECS["tbs"].param_grid[0]
+    rescued = METHOD_SPECS["tbs_rescued_legacy_v1"].param_grid[0]
 
     assert "spectral_include_internal_barycenters" not in current
     assert rescued["spectral_include_internal_barycenters"] is True
@@ -142,10 +142,10 @@ def test_internal_filter_hard_overlap_r1_fails_closed() -> None:
     case["seed"] = 9003
     data_df, labels, original, metadata = generate_case_data(case)
 
-    params = METHOD_SPECS["kl_internal_filter_v1"].param_grid[0]
+    params = METHOD_SPECS["tbs_internal_filter_v1"].param_grid[0]
     result_row, computed_result, method_audit = method_execution.run_single_method_once(
-        method_id="kl_internal_filter_v1",
-        spec=METHOD_SPECS["kl_internal_filter_v1"],
+        method_id="tbs_internal_filter_v1",
+        spec=METHOD_SPECS["tbs_internal_filter_v1"],
         params=params,
         case_idx=1,
         case_name=str(case["name"]),

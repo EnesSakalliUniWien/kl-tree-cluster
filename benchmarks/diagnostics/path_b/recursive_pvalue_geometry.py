@@ -25,8 +25,8 @@ from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.time import format_timestamp_utc
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
@@ -685,18 +685,18 @@ def _run_case(
     spectral_minimum_dimension: int,
     passthrough: bool,
 ) -> tuple[dict[str, object], pd.DataFrame, pd.DataFrame]:
-    inputs = prepare_case_inputs(case, ["kl"])
-    params = dict(METHOD_SPECS["kl"].param_grid[0])
+    inputs = prepare_case_inputs(case, ["tbs"])
+    params = dict(METHOD_SPECS["tbs"].param_grid[0])
     params["spectral_minimum_dimension"] = int(spectral_minimum_dimension)
     params["passthrough"] = bool(passthrough)
     distance_condensed = (
         inputs.distance_condensed
-        if bool(inputs.metadata.get("requires_precomputed_kl_distance"))
+        if bool(inputs.metadata.get("requires_precomputed_tbs_distance"))
         else None
     )
     result = run_clustering_result(
         data_df=inputs.data,
-        method_id="kl",
+        method_id="tbs",
         params=params,
         seed=case["seed"],
         significance_level=sibling_alpha,

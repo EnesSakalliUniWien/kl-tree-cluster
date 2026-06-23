@@ -1,6 +1,6 @@
 """Behavioral MP/projection-dimension sweep for sibling tests.
 
-This diagnostic reruns raw sibling projected-Wald tests on a fitted KL tree
+This diagnostic reruns raw sibling projected-Wald tests on a fitted TBS tree
 under candidate projection-dimension rules. It is diagnostic-only: it does not
 alter production MP thresholds, production zero-dimensional semantics, or
 calibrated sibling p-values.
@@ -16,29 +16,29 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
     extract_sibling_pair_observations,
     identify_binary_sibling_children,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import (
     sibling_divergence_test,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from kl_clustering_analysis.tree.distributions import (
+from tree_break_selection.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
 
 from benchmarks.shared.cases import get_test_cases_by_suite
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 from benchmarks.shared.util.time import format_timestamp_utc
 
 SCHEMA_VERSION = "mp_projection_dimension_behavior_sweep/v1"
@@ -246,7 +246,7 @@ def _collect_case_replicate(
     edge_alpha: float,
     sibling_alpha: float,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
-    context = build_kl_tree_context(
+    context = build_tbs_tree_context(
         _case_with_replicate_seed(case, replicate_index),
         populate_node_distributions=True,
     )

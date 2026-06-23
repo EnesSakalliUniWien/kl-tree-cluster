@@ -85,13 +85,13 @@ METHOD_DESCRIPTIONS = {
         "Historical c2ef legacy gates applied to adaptive diffusion trees built inside cosine eigenspace blocks."
     ),
     "current__whole_adaptive_diffusion": (
-        "Current KL gates applied to a full-matrix adaptive diffusion tree."
+        "Current TBS gates applied to a full-matrix adaptive diffusion tree."
     ),
     "current__raw_cosine_subspace": (
-        "Current KL gates applied to a raw cosine eigenspace block tree."
+        "Current TBS gates applied to a raw cosine eigenspace block tree."
     ),
     "current__adaptive_diffusion_cosine_subspace": (
-        "Current KL gates applied to adaptive diffusion trees built inside cosine eigenspace blocks."
+        "Current TBS gates applied to adaptive diffusion trees built inside cosine eigenspace blocks."
     ),
 }
 

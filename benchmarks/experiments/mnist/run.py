@@ -1,7 +1,7 @@
 """
-MNIST Benchmark for KL Divergence Clustering.
+MNIST Benchmark for TBS Divergence Clustering.
 
-Downloads a subset of MNIST and runs the KL clustering algorithm on it.
+Downloads a subset of MNIST and runs the TBS clustering algorithm on it.
 
 Usage:
     uv run python -m benchmarks.experiments.mnist.run
@@ -13,7 +13,7 @@ repo_root = Path(__file__).resolve().parents[3]
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import fetch_openml
@@ -53,16 +53,16 @@ def load_mnist_subset(
     return X_subset, y_subset
 
 
-def run_kl_clustering(
+def run_tbs_clustering(
     X: np.ndarray,
     verbose: bool = True,
     binarize_threshold: float = 0.1,
     distance_metric: str = "rogerstanimoto",
     linkage_method: str = "average",
 ) -> np.ndarray:
-    """Run KL divergence clustering on data."""
+    """Run TBS divergence clustering on data."""
     if verbose:
-        print("\nRunning KL Divergence clustering...")
+        print("\nRunning TBS Divergence clustering...")
         print(f"  Data shape: {X.shape}")
 
     # Binarize
@@ -134,7 +134,7 @@ def evaluate_clustering(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
 def main():
     """Run MNIST benchmark."""
     print("=" * 60)
-    print("MNIST Benchmark for KL Divergence Clustering")
+    print("MNIST Benchmark for TBS Divergence Clustering")
     print("=" * 60)
 
     # Use a single benchmark results root for all suites
@@ -156,7 +156,7 @@ def main():
         X, y_true = load_mnist_subset(n_samples=2000, seed=42, use_pca=False)
 
         try:
-            y_pred = run_kl_clustering(
+            y_pred = run_tbs_clustering(
                 X,
                 verbose=True,
                 binarize_threshold=0.0,

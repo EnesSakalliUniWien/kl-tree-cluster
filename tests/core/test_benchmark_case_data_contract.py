@@ -5,7 +5,7 @@ from benchmarks.shared.cases import get_default_test_cases, get_test_cases_by_su
 from benchmarks.shared.cases.geometry import case_recipe_geometry
 from benchmarks.shared.generators.case_data_contracts import case_metadata
 from benchmarks.shared.generators.generate_case_data import generate_case_data
-from kl_clustering_analysis.tree.feature_space import FeatureSpace
+from tree_break_selection.tree.feature_space import FeatureSpace
 
 
 def test_default_benchmark_cases_declare_generator_and_canonical_geometry() -> None:
@@ -97,8 +97,8 @@ def test_case_data_requires_explicit_name() -> None:
         )
 
 
-def test_precomputed_kl_distance_requires_explicit_metadata_flag() -> None:
-    with pytest.raises(ValueError, match="requires_precomputed_kl_distance=True"):
+def test_precomputed_tbs_distance_requires_explicit_metadata_flag() -> None:
+    with pytest.raises(ValueError, match="requires_precomputed_tbs_distance=True"):
         case_metadata(
             test_case={"name": "broken_distance_contract"},
             n_samples=2,
@@ -108,7 +108,7 @@ def test_precomputed_kl_distance_requires_explicit_metadata_flag() -> None:
             generator="test",
             source_family="test",
             feature_representation="test",
-            requires_precomputed_kl_distance=False,
+            requires_precomputed_tbs_distance=False,
             precomputed_distance_condensed=[1.0],
         )
 
@@ -206,7 +206,7 @@ def test_gaussian_source_cases_name_discretized_or_continuous_representation() -
         "gauss_single_outlier_4c_continuous",
     ],
 )
-def test_continuous_case_data_carries_feature_space_and_euclidean_distance(
+def test_gaussian_continuous_case_data_uses_standardized_euclidean_tree_distance(
     case_name: str,
 ) -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == case_name)
@@ -223,19 +223,47 @@ def test_continuous_case_data_carries_feature_space_and_euclidean_distance(
     assert data_df.attrs == {}
     assert x_original.shape == data_df.shape
     assert metadata["feature_representation"] == "continuous"
-    assert metadata["distance_metric"] == "euclidean"
-    assert metadata["requires_precomputed_kl_distance"] is True
+    assert metadata["distance_metric"] == "standardized_euclidean"
+    assert metadata["requires_precomputed_tbs_distance"] is True
     assert metadata["precomputed_distance_condensed"].shape[0] == (
         data_df.shape[0] * (data_df.shape[0] - 1) // 2
     )
 
 
-def test_sbm_case_data_names_precomputed_kl_distance_metric() -> None:
+@pytest.mark.parametrize(
+    "case_name",
+    [
+        "cont_lowrank_pggn_shrinkage",
+        "mp_spike_below_bbp_continuous",
+        "phylo_brownian_null_16taxa",
+    ],
+)
+def test_diagnostic_continuous_case_data_keeps_mahalanobis_time_distance(
+    case_name: str,
+) -> None:
+    case = next(case for case in get_default_test_cases() if case["name"] == case_name)
+
+    data_df, _labels, x_original, metadata = generate_case_data(case)
+
+    feature_space = metadata["feature_space"]
+    assert isinstance(feature_space, FeatureSpace)
+    assert feature_space.family_label == "continuous"
+    assert data_df.attrs == {}
+    assert x_original.shape == data_df.shape
+    assert metadata["feature_representation"] == "continuous"
+    assert metadata["distance_metric"] == "mahalanobis_time"
+    assert metadata["requires_precomputed_tbs_distance"] is True
+    assert metadata["precomputed_distance_condensed"].shape[0] == (
+        data_df.shape[0] * (data_df.shape[0] - 1) // 2
+    )
+
+
+def test_sbm_case_data_names_precomputed_tbs_distance_metric() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "sbm_moderate")
 
     data_df, _labels, _x_original, metadata = generate_case_data(case)
 
-    assert metadata["requires_precomputed_kl_distance"] is True
+    assert metadata["requires_precomputed_tbs_distance"] is True
     assert metadata["distance_metric"] == "sbm_shifted_modularity"
     assert metadata["precomputed_distance_condensed"].shape[0] == (
         data_df.shape[0] * (data_df.shape[0] - 1) // 2

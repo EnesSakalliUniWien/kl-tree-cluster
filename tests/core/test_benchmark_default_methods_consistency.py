@@ -8,7 +8,7 @@ from benchmarks.shared.util.method_selection import (
 
 
 def test_full_runner_default_method_selection_matches_shared_defaults(monkeypatch):
-    monkeypatch.delenv("KL_TE_METHODS", raising=False)
+    monkeypatch.delenv("TBS_METHODS", raising=False)
 
     resolved = resolve_methods_from_env(
         METHOD_SPECS,
@@ -19,7 +19,7 @@ def test_full_runner_default_method_selection_matches_shared_defaults(monkeypatc
 
 
 def test_full_runner_all_keyword_expands_to_shared_defaults(monkeypatch):
-    monkeypatch.setenv("KL_TE_METHODS", "all")
+    monkeypatch.setenv("TBS_METHODS", "all")
 
     resolved = resolve_methods_from_env(
         METHOD_SPECS,
@@ -32,8 +32,8 @@ def test_full_runner_all_keyword_expands_to_shared_defaults(monkeypatch):
 def test_explicit_empty_method_param_grid_is_invalid():
     with pytest.raises(ValueError, match="empty parameter grid"):
         resolve_selected_methods_and_param_sets(
-            methods=["kl"],
-            method_params={"kl": []},
+            methods=["tbs"],
+            method_params={"tbs": []},
             default_methods=DEFAULT_METHODS,
             method_specs=METHOD_SPECS,
         )

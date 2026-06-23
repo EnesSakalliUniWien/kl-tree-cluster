@@ -6,7 +6,6 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from benchmarks.shared.plots import embedding
 from benchmarks.shared.util.pdf.layout import PDF_WIDE_PAGE_SIZE_INCHES
 
@@ -14,7 +13,7 @@ from benchmarks.shared.util.pdf.layout import PDF_WIDE_PAGE_SIZE_INCHES
 def test_method_subplot_title_compacts_parameters_and_limits_lines():
     title = embedding._format_method_subplot_title(
         (
-            "KL diffusion tree (edge_alpha=0.001, sibling_alpha=0.01, "
+            "TBS diffusion tree (edge_alpha=0.001, sibling_alpha=0.01, "
             "tree_distance_metric=tree_distribution_kl, "
             "tree_linkage_method=average) [K=64, A=0.123, N=0.456]"
         )
@@ -43,8 +42,8 @@ def test_long_titles_use_relaxed_wide_grid(monkeypatch):
         X_original=X,
         labels_dict={
             "Ground Truth": labels,
-            "KL tree (tree_distance_metric=tree_distribution_kl, tree_linkage_method=average)": labels,
-            "KL diffusion tree (edge_alpha=0.001, sibling_alpha=0.01)": labels,
+            "TBS tree (tree_distance_metric=tree_distribution_kl, tree_linkage_method=average)": labels,
+            "TBS diffusion tree (edge_alpha=0.001, sibling_alpha=0.01)": labels,
             "K-Means": labels,
             "Spectral": labels,
         },

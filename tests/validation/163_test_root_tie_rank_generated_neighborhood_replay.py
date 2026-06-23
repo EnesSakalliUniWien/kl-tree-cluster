@@ -143,7 +143,7 @@ def test_generated_replay_builds_topology_frontier_rows(
 
     monkeypatch.setattr(
         replay,
-        "_run_kl_method",
+        "_run_tbs_method",
         lambda *args, **kwargs: SimpleNamespace(
             status="ok",
             skip_reason=None,
@@ -165,7 +165,7 @@ def test_generated_replay_builds_topology_frontier_rows(
         method_id=replay.DEFAULT_METHOD_ID,
     )
 
-    assert tables["run_rows"].iloc[0]["replay_status"] == "kl_replay_completed"
+    assert tables["run_rows"].iloc[0]["replay_status"] == "tbs_replay_completed"
     assert tables["node_decisions"].shape[0] == 3
     assert not tables["measurability_rows"].empty
     root = tables["topology_rows"].loc[
@@ -198,7 +198,7 @@ def test_generated_replay_runner_writes_outputs(
 
     monkeypatch.setattr(
         replay,
-        "_run_kl_method",
+        "_run_tbs_method",
         lambda *args, **kwargs: SimpleNamespace(
             status="ok",
             skip_reason=None,

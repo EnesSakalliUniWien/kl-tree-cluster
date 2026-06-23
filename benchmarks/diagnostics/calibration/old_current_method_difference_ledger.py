@@ -1,4 +1,4 @@
-"""Build a compact ledger of real old-vs-current KL method differences.
+"""Build a compact ledger of real old-vs-current TBS method differences.
 
 The ledger does not run clustering. It reads already-produced comparison
 artifacts and normalizes them into component-level rows so method changes can
@@ -234,7 +234,7 @@ def _legacy_comparison_row(
         difference_id=difference_id,
         component=component,
         old_method_behavior="full legacy c2ef9a69 package makes more permissive decisions",
-        current_method_behavior="current kl profile skips or fail-closes when support is missing",
+        current_method_behavior="current tbs profile skips or fail-closes when support is missing",
         difference_status="legacy_stronger_but_less_controlled",
         measurement_family="paired_legacy_current_clustering",
         measurement_source_path=str(summary_path),
@@ -444,7 +444,7 @@ def _spectral_bandwidth_rows(
         _base_row(
             difference_id="full_julia_fragmentation_gap",
             component="full_julia_flat_clustering_behavior",
-            old_method_behavior="prior full KL stack produced more clusters and singletons",
+            old_method_behavior="prior full TBS stack produced more clusters and singletons",
             current_method_behavior="current conditional-topology diagnostic produced fewer clusters",
             difference_status="fragmentation_symptom_tracked",
             measurement_family="spectral_vs_bandwidth_tradeoff",

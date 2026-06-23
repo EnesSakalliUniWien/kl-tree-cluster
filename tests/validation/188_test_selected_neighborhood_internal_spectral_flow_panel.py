@@ -6,7 +6,6 @@ from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
-
 from benchmarks.diagnostics.calibration import (
     selected_neighborhood_internal_spectral_flow_panel as panel,
 )

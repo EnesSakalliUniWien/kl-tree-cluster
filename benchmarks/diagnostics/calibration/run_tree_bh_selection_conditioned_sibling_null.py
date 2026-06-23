@@ -14,23 +14,23 @@ import pandas as pd
 
 repo_root = Path(__file__).resolve().parents[3]
 
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     fit_empirical_null_inflation_model,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
     collect_parent_principal_component_inputs_for_sibling_tests,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
@@ -41,7 +41,7 @@ from benchmarks.diagnostics.calibration.selection_conditioned_sibling_null impor
 from benchmarks.diagnostics.oracle.oracle_tree_recoverability import FAILURE_CLASS_GATE_UNDER_SPLIT
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 
 _THREAD_ENV_VARS = (
     "OMP_NUM_THREADS",
@@ -80,7 +80,7 @@ def _parse_args() -> argparse.Namespace:
 def _configure_runtime_defaults() -> None:
     for env_var in _THREAD_ENV_VARS:
         os.environ.setdefault(env_var, "1")
-    os.environ.setdefault("KL_TE_N_JOBS", "1")
+    os.environ.setdefault("TBS_N_JOBS", "1")
 
 
 def _load_cases(suite: str) -> list[dict[str, object]]:
@@ -186,7 +186,7 @@ def _diagnose_case(
     chunk_size: int,
     seed: int,
 ) -> dict[str, object]:
-    context = build_kl_tree_context(case, populate_node_distributions=True)
+    context = build_tbs_tree_context(case, populate_node_distributions=True)
     edge_df, spectral_context = annotate_child_parent_divergence_with_context(
         context.tree,
         context.tree.annotations_df,

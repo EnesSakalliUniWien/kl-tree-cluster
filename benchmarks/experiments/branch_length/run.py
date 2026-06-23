@@ -76,7 +76,7 @@ def run_replicated_benchmark(
             n_categories=n_categories,
             branch_lengths=branch_lengths,
             random_seed=base_seed + rep * 1000,
-            method="kl",
+            method="tbs",
             verbose=False,
         )
         df["replicate"] = rep
@@ -302,13 +302,13 @@ def main():
     )
     print(f"Saved: {output_dir / 'branch_length_single_run.png'}")
 
-    # Create embedding plots with KL clustering
+    # Create embedding plots with TBS clustering
     fig3 = plot_embedding_by_branch_length(
         n_leaves=n_leaves,
         n_features=n_features,
         branch_lengths=[0.01, 0.05, 0.1, 0.2, 0.5, 1.0],
         random_seed=base_seed,
-        show_kl_clustering=True,
+        show_tbs_clustering=True,
     )
     fig3.savefig(
         output_dir / "branch_length_embeddings.png", dpi=150, bbox_inches="tight"

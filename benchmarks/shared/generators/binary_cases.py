@@ -57,7 +57,7 @@ def generate_binary_case(test_case: dict, seed: int | None) -> CaseDataResult:
         generator="binary",
         source_family="binary_template",
         feature_representation="binary",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={"noise_features": noise_features},
     )
 

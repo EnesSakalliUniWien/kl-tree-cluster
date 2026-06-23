@@ -3,7 +3,7 @@
 
 The rows separate two axes that were easy to conflate:
 
-* ``method_version``: current KL gates versus the c2ef9a69 legacy gates.
+* ``method_version``: current TBS gates versus the c2ef9a69 legacy gates.
 * ``tree_geometry``: whole-matrix adaptive diffusion, raw cosine subspace, or
   adaptive diffusion inside a cosine subspace.
 """
@@ -27,17 +27,17 @@ from benchmarks.diagnostics.spectral.adaptive_cosine_kak_diffusion_matrix_probe 
     block_adaptive_diffusion_distance,
 )
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import load_matrix
-from benchmarks.shared.runners.kl_diffusion_runner import _build_adaptive_diffusion_distance
-from benchmarks.shared.runners.kl_runner import _run_kl_on_distance
 from benchmarks.shared.runners.legacy_commit_runner import (
-    _run_legacy_c2ef9a69_kl_method,
+    _run_legacy_c2ef9a69_tbs_method,
 )
+from benchmarks.shared.runners.tbs_diffusion_runner import _build_adaptive_diffusion_distance
+from benchmarks.shared.runners.tbs_runner import _run_tbs_on_distance
 from benchmarks.shared.types.method_run_result import MethodRunResult
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from scipy.spatial.distance import pdist
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from scipy.spatial.distance import pdist
 
 METHOD_VERSIONS = ("legacy_c2ef", "current")
 TREE_GEOMETRIES = (
@@ -102,7 +102,7 @@ def run_method(
     sibling_alpha: float,
 ) -> MethodRunResult:
     if method_version == "legacy_c2ef":
-        return _run_legacy_c2ef9a69_kl_method(
+        return _run_legacy_c2ef9a69_tbs_method(
             data,
             distances,
             sibling_alpha,
@@ -110,7 +110,7 @@ def run_method(
             edge_alpha=edge_alpha,
         )
     if method_version == "current":
-        return _run_kl_on_distance(
+        return _run_tbs_on_distance(
             data,
             distances,
             sibling_alpha,

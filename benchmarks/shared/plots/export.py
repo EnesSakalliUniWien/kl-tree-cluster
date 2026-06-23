@@ -9,9 +9,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from kl_clustering_analysis.plot.cluster_tree_visualization import plot_tree_with_clusters
 from matplotlib.axes import Axes
 from matplotlib.backends.backend_pdf import PdfPages
+from tree_break_selection.plot.cluster_tree_visualization import plot_tree_with_clusters
 
 from benchmarks.shared.result_records import ComputedResultRecord
 from benchmarks.shared.util.params import format_params_for_display

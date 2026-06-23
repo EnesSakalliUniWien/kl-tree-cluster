@@ -111,7 +111,7 @@ def generate_binary_barycentric_template(test_case: dict, seed: int | None) -> C
         generator="binary_barycentric_template",
         source_family="binary_template",
         feature_representation="binary",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "child_balance_grid": list(test_case.get("child_balance_grid", [])),
             "signal_strength": str(test_case.get("signal_strength", "moderate")),
@@ -197,7 +197,7 @@ def generate_planted_hierarchy_deep_signal(test_case: dict, seed: int | None) ->
         generator="planted_hierarchy_deep_signal",
         source_family="planted_hierarchy_binary",
         feature_representation="binary",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "root_sibling_effect": root_effect,
             "descendant_effect": descendant_effect,

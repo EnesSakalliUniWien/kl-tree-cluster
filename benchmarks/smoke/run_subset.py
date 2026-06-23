@@ -13,8 +13,8 @@ from benchmarks.shared.cases.geometry import case_recipe_cluster_count
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
 # Default to single-threaded spectral decomposition workers to avoid
-# thread oversubscription. Users can override by setting KL_TE_N_JOBS.
-spectral_jobs = os.environ.setdefault("KL_TE_N_JOBS", "1")
+# thread oversubscription. Users can override by setting TBS_N_JOBS.
+spectral_jobs = os.environ.setdefault("TBS_N_JOBS", "1")
 
 # Pick a representative subset: mix of easy/hard, different K, different types
 SUBSET_NAMES = {
@@ -44,7 +44,7 @@ SUBSET_NAMES = {
 all_cases = get_default_test_cases()
 subset = [c for c in all_cases if c["name"] in SUBSET_NAMES]
 print(f"Selected {len(subset)}/{len(all_cases)} cases:")
-print(f"Spectral settings: KL_TE_N_JOBS={spectral_jobs}")
+print(f"Spectral settings: TBS_N_JOBS={spectral_jobs}")
 for c in subset:
     print(f"  {c['name']:<35s}  K={case_recipe_cluster_count(c)}")
 print()
@@ -54,18 +54,18 @@ df_results, fig = benchmark_cluster_algorithm(
     verbose=True,
     plot_umap=True,
     concat_plots_pdf=True,
-    methods=["kl"],
+    methods=["tbs"],
 )
 
 print("\n" + "=" * 70)
 print("RESULTS SUMMARY")
 print("=" * 70)
-kl = df_results[df_results["method"] == "kl"].copy()
-kl = kl.sort_values("case_id")
+tbs = df_results[df_results["method"] == "tbs"].copy()
+tbs = tbs.sort_values("case_id")
 
 print(f"\n{'Case':<36s} {'True':>4s} {'Found':>5s} {'ARI':>7s} {'NMI':>7s} {'Status'}")
 print("-" * 70)
-for _, row in kl.iterrows():
+for _, row in tbs.iterrows():
     ari_val = row["ari"]
     nmi_val = row["nmi"]
     ari_str = f"{ari_val:.3f}" if not (ari_val != ari_val) else "  N/A"
@@ -80,9 +80,9 @@ for _, row in kl.iterrows():
         f"{row['case_id']:<36s} {true_str} {row['found_clusters']:>5.0f} {ari_str:>7s} {nmi_str:>7s} {row['status']}{marker}"
     )
 
-kl_with_truth = kl[kl["true_clusters"] > 0]
-exact_k = (kl_with_truth["found_clusters"] == kl_with_truth["true_clusters"]).sum()
-print(f"\nExact K: {exact_k}/{len(kl_with_truth)}")
-ari_valid = kl["ari"].dropna()
+tbs_with_truth = tbs[tbs["true_clusters"] > 0]
+exact_k = (tbs_with_truth["found_clusters"] == tbs_with_truth["true_clusters"]).sum()
+print(f"\nExact K: {exact_k}/{len(tbs_with_truth)}")
+ari_valid = tbs["ari"].dropna()
 print(f"Mean ARI: {ari_valid.mean():.3f}" if len(ari_valid) > 0 else "Mean ARI: N/A")
-print(f"Median ARI: {kl['ari'].median():.3f}")
+print(f"Median ARI: {tbs['ari'].median():.3f}")

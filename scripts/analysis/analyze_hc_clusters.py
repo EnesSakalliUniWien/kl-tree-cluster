@@ -3,7 +3,7 @@
 Biological Analysis of HC Gene Clustering Results
 ==================================================
 
-Analyses the KL-tree clustering of hypertrophic cardiomyopathy (HC) gene-pathway
+Analyses the TBS-tree clustering of hypertrophic cardiomyopathy (HC) gene-pathway
 feature matrices.  Reads the pre-computed cluster assignments (from
 `run_feature_matrix_with_umap.py`) and the original binary feature matrix, then
 produces:

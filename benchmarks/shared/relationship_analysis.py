@@ -1137,24 +1137,24 @@ def _summarize_pairwise_findings(pairwise_method_summary: pd.DataFrame) -> list[
         return []
 
     lines: list[str] = []
-    if "kl" in set(pairwise_method_summary["method_b"]):
+    if "tbs" in set(pairwise_method_summary["method_b"]):
         vs_kl = pairwise_method_summary[
-            (pairwise_method_summary["method_b"] == "kl")
-            & (pairwise_method_summary["method_a"] != "kl")
+            (pairwise_method_summary["method_b"] == "tbs")
+            & (pairwise_method_summary["method_a"] != "tbs")
         ].copy()
         if not vs_kl.empty:
             best = vs_kl.sort_values("mean_ari_delta_a_minus_b", ascending=False).iloc[0]
             worst = vs_kl.sort_values("mean_ari_delta_a_minus_b", ascending=True).iloc[0]
             lines.append(
                 (
-                    f"- Largest ARI gain over `kl`: `{best['method_a']}` "
+                    f"- Largest ARI gain over `tbs`: `{best['method_a']}` "
                     f"(`delta={best['mean_ari_delta_a_minus_b']:.3f}`, "
                     f"`win_rate={best['win_rate_a']:.3f}`, `n={int(best['n_cases'])}`)."
                 )
             )
             lines.append(
                 (
-                    f"- Weakest method relative to `kl`: `{worst['method_a']}` "
+                    f"- Weakest method relative to `tbs`: `{worst['method_a']}` "
                     f"(`delta={worst['mean_ari_delta_a_minus_b']:.3f}`, "
                     f"`win_rate={worst['win_rate_a']:.3f}`, `n={int(worst['n_cases'])}`)."
                 )
@@ -1899,8 +1899,8 @@ def _section_order(section: str) -> int:
 def _select_display_methods(method_summary: pd.DataFrame) -> list[str]:
     ordered = method_summary["method"].tolist()
     selected = ordered[:5]
-    if "kl" in ordered and "kl" not in selected:
-        selected.append("kl")
+    if "tbs" in ordered and "tbs" not in selected:
+        selected.append("tbs")
     return selected[:6]
 
 

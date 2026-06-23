@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.preprocessing import StandardScaler
+from tree_break_selection.tree.feature_space import infer_feature_space_from_columns
 
 from benchmarks.shared.evolution import (
     compute_expected_divergence,
@@ -29,6 +30,39 @@ from benchmarks.shared.evolution import (
 )
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
+
+
+def _one_hot_encode_sequence_matrix(
+    matrix: np.ndarray,
+    *,
+    n_categories: int,
+) -> tuple[np.ndarray, list[str]]:
+    """Return one-hot categorical site columns for integer sequence states."""
+    values = np.asarray(matrix, dtype=int)
+    if values.ndim != 2:
+        raise ValueError(f"matrix must be two-dimensional; got {values.shape}.")
+    if int(n_categories) < 2:
+        raise ValueError("n_categories must be at least 2.")
+    if values.size and (values.min() < 0 or values.max() >= int(n_categories)):
+        raise ValueError(
+            "sequence states must lie in [0, n_categories). "
+            f"Range=[{values.min()}, {values.max()}], n_categories={n_categories}."
+        )
+
+    n_samples, n_features = values.shape
+    encoded = np.zeros((n_samples, n_features * int(n_categories)), dtype=int)
+    row_indices = np.arange(n_samples)
+    for feature_index in range(n_features):
+        encoded[
+            row_indices,
+            feature_index * int(n_categories) + values[:, feature_index],
+        ] = 1
+    feature_names = [
+        f"F{feature_index}_c{category_index}"
+        for feature_index in range(n_features)
+        for category_index in range(int(n_categories))
+    ]
+    return encoded, feature_names
 
 
 def generate_two_group_data(
@@ -118,7 +152,7 @@ def run_branch_length_benchmark(
     n_categories: int = 4,
     branch_lengths: Optional[List[int]] = None,
     random_seed: Optional[int] = None,
-    method: str = "kl",
+    method: str = "tbs",
     method_params: Optional[Dict[str, Any]] = None,
     verbose: bool = True,
 ) -> pd.DataFrame:
@@ -162,11 +196,17 @@ def run_branch_length_benchmark(
             random_state=rng,
         )
 
-        # Build dataframe
+        # Build explicit categorical one-hot dataframe. TBS feature-space
+        # inference treats Fj_ck columns as one categorical site block, whereas
+        # raw integer states in Fj columns would be invalid Bernoulli inputs.
         sample_names = list(sample_dict.keys())
-        matrix = np.array([sample_dict[name] for name in sample_names], dtype=int)
-        feature_names = [f"F{j}" for j in range(n_features)]
+        raw_matrix = np.array([sample_dict[name] for name in sample_names], dtype=int)
+        matrix, feature_names = _one_hot_encode_sequence_matrix(
+            raw_matrix,
+            n_categories=n_categories,
+        )
         data_df = pd.DataFrame(matrix, index=sample_names, columns=feature_names)
+        feature_space = infer_feature_space_from_columns(data_df.columns)
         true_labels = np.array([cluster_assignments[name] for name in sample_names])
 
         if verbose:
@@ -178,6 +218,7 @@ def run_branch_length_benchmark(
             method,
             method_params,
             random_seed,
+            feature_space=feature_space,
         )
         pred_labels = run_result.labels
         n_found = int(run_result.found_clusters)
@@ -218,6 +259,7 @@ def run_branch_length_benchmark(
 __all__ = [
     "run_branch_length_benchmark",
     "generate_two_group_data",
+    "_one_hot_encode_sequence_matrix",
     "plot_branch_length_results",
     "plot_embedding_by_branch_length",
 ]
@@ -307,7 +349,7 @@ def plot_embedding_by_branch_length(
     n_categories: int = 4,
     branch_lengths: Optional[List[int]] = None,
     random_seed: Optional[int] = None,
-    show_kl_clustering: bool = True,
+    show_tbs_clustering: bool = True,
 ) -> plt.Figure:
     """Create UMAP/PCA embeddings showing data at different branch lengths.
 
@@ -317,7 +359,7 @@ def plot_embedding_by_branch_length(
         n_categories: Categories per feature
         branch_lengths: List of branch lengths to visualize
         random_seed: Seed for reproducibility
-        show_kl_clustering: If True, color by KL clustering results instead of true labels
+        show_tbs_clustering: If True, color by TBS clustering results instead of true labels
 
     Returns:
         matplotlib Figure with embedding plots
@@ -329,8 +371,8 @@ def plot_embedding_by_branch_length(
     n_cols = min(4, n_plots)
     n_rows = (n_plots + n_cols - 1) // n_cols
 
-    # If showing both true and KL, double the rows
-    if show_kl_clustering:
+    # If showing both true and TBS, double the rows
+    if show_tbs_clustering:
         n_rows *= 2
 
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
@@ -353,7 +395,7 @@ def plot_embedding_by_branch_length(
 
     for idx, bl in enumerate(branch_lengths):
         col = idx % n_cols
-        row_true = (idx // n_cols) * 2 if show_kl_clustering else idx // n_cols
+        row_true = (idx // n_cols) * 2 if show_tbs_clustering else idx // n_cols
 
         rng = np.random.RandomState(
             int(random_seed + bl * 10000) if random_seed else None
@@ -419,15 +461,15 @@ def plot_embedding_by_branch_length(
         ax_true.legend(frameon=False, fontsize=7, loc="upper right")
         ax_true.grid(True, alpha=0.3)
 
-        # Run KL clustering and plot
-        if show_kl_clustering:
+        # Run TBS clustering and plot
+        if show_tbs_clustering:
             row_kl = row_true + 1
             ax_kl = axes[row_kl, col]
 
             run_result = run_clustering_result(
                 data_df,
-                "kl",
-                METHOD_SPECS["kl"].param_grid[0],
+                "tbs",
+                METHOD_SPECS["tbs"].param_grid[0],
                 random_seed,
             )
             pred_labels = run_result.labels
@@ -453,13 +495,13 @@ def plot_embedding_by_branch_length(
 
                 ari = adjusted_rand_score(true_labels, pred_labels)
                 ax_kl.set_title(
-                    f"KL Clustering (BL={bl})\nFound {n_found}, ARI={ari:.2f}",
+                    f"TBS Clustering (BL={bl})\nFound {n_found}, ARI={ari:.2f}",
                     fontsize=10,
                     weight="bold",
                 )
             else:
                 ax_kl.set_title(
-                    f"KL Clustering (BL={bl})\nFailed: {skip_reason or status}",
+                    f"TBS Clustering (BL={bl})\nFailed: {skip_reason or status}",
                     fontsize=10,
                     weight="bold",
                 )
@@ -473,12 +515,12 @@ def plot_embedding_by_branch_length(
     # Hide unused axes
     for row in range(n_rows):
         for col in range(n_cols):
-            idx = (row // (2 if show_kl_clustering else 1)) * n_cols + col
+            idx = (row // (2 if show_tbs_clustering else 1)) * n_cols + col
             if idx >= len(branch_lengths):
                 axes[row, col].axis("off")
 
     embed_type = "UMAP" if use_umap else "PCA"
-    title = f"{embed_type} Embeddings: True Labels vs KL Clustering\n({n_leaves} leaves fixed)"
+    title = f"{embed_type} Embeddings: True Labels vs TBS Clustering\n({n_leaves} leaves fixed)"
     fig.suptitle(title, fontsize=14, weight="bold")
     plt.tight_layout()
     return fig

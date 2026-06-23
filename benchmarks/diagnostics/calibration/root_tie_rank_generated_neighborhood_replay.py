@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     bernoulli_feature_space_from_columns,
 )
 from scipy.spatial.distance import pdist
@@ -46,7 +46,7 @@ from benchmarks.diagnostics.calibration.selected_neighborhood_topology_frontier 
     build_topology_frontier_rows,
     summarize_topology_frontier_rows,
 )
-from benchmarks.shared.runners.kl_runner import _run_kl_method
+from benchmarks.shared.runners.tbs_runner import _run_tbs_method
 
 SCHEMA_VERSION = "root_tie_rank_generated_neighborhood_replay/v1"
 STUDY_ROLE = "diagnostic_root_tie_rank_generated_neighborhood_replay_not_calibration"
@@ -303,7 +303,7 @@ def _replay_one_matrix(
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
 
     try:
-        result = _run_kl_method(
+        result = _run_tbs_method(
             data,
             distance,
             sibling_significance_level=float(sibling_alpha),
@@ -464,7 +464,7 @@ def _run_summary_row(
             "leaf_fragment_count": int(
                 node_decisions["decision_class"].eq("leaf_fragment").sum()
             ),
-            "replay_status": "kl_replay_completed",
+            "replay_status": "tbs_replay_completed",
         }
     )
     return run_row

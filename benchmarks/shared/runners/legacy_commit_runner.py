@@ -1,4 +1,4 @@
-"""Runners for importable legacy KL-TE method snapshots."""
+"""Runners for importable legacy Tree-Break Selection method snapshots."""
 
 from __future__ import annotations
 
@@ -7,21 +7,21 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.legacy_methods.commit_c2ef9a69 import COMMIT
-from kl_clustering_analysis.legacy_methods.commit_c2ef9a69.kl_clustering_analysis import (
+from scipy.cluster.hierarchy import linkage
+from tree_break_selection.legacy_methods.commit_c2ef9a69 import COMMIT
+from tree_break_selection.legacy_methods.commit_c2ef9a69.tree_break_selection import (
     config as legacy_config,
 )
-from kl_clustering_analysis.legacy_methods.commit_c2ef9a69.kl_clustering_analysis.tree.poset_tree import (
+from tree_break_selection.legacy_methods.commit_c2ef9a69.tree_break_selection.tree.poset_tree import (
     PosetTree as LegacyPosetTree,
 )
-from scipy.cluster.hierarchy import linkage
 
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import _labels_and_report_from_decomposition
 from benchmarks.shared.util.time import elapsed_since
 
 
-def _run_legacy_c2ef9a69_kl_method(
+def _run_legacy_c2ef9a69_tbs_method(
     data_df: pd.DataFrame,
     distance_condensed: np.ndarray | None,
     sibling_significance_level: float,
@@ -33,7 +33,7 @@ def _run_legacy_c2ef9a69_kl_method(
     passthrough: bool = legacy_config.PASSTHROUGH,
     **unused_modern_kwargs: Any,
 ) -> MethodRunResult:
-    """Run the full KL-TE method snapshot from commit ``c2ef9a69``.
+    """Run the full Tree-Break Selection method snapshot from commit ``c2ef9a69``.
 
     The historical method only supports SciPy linkage trees over a condensed
     distance vector and Bernoulli-style leaf matrices. Newer options such as
@@ -43,14 +43,14 @@ def _run_legacy_c2ef9a69_kl_method(
     """
     if tree_builder != "linkage":
         raise ValueError(
-            "Legacy c2ef9a69 KL runner only supports tree_builder='linkage'."
+            "Legacy c2ef9a69 TBS runner only supports tree_builder='linkage'."
         )
     if tree_rooting != "linkage_root":
         raise ValueError(
-            "Legacy c2ef9a69 KL runner only supports tree_rooting='linkage_root'."
+            "Legacy c2ef9a69 TBS runner only supports tree_rooting='linkage_root'."
         )
     if distance_condensed is None:
-        raise ValueError("Legacy c2ef9a69 KL runner requires distance_condensed.")
+        raise ValueError("Legacy c2ef9a69 TBS runner requires distance_condensed.")
 
     stage_timings: dict[str, float] = {}
     tree_build_start_sec = perf_counter()
@@ -95,4 +95,4 @@ def _run_legacy_c2ef9a69_kl_method(
     )
 
 
-__all__ = ["_run_legacy_c2ef9a69_kl_method"]
+__all__ = ["_run_legacy_c2ef9a69_tbs_method"]

@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import kl_clustering_analysis.hierarchy_analysis.tree_decomposition as tree_decomposition_module
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+import tree_break_selection.hierarchy_analysis.tree_decomposition as tree_decomposition_module
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     CalibrationSupportThresholds,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:

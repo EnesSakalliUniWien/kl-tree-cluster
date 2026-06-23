@@ -48,8 +48,8 @@ def normalize_stage_timings(
 ) -> dict[str, float]:
     """Return canonical benchmark stage timing fields.
 
-    Missing fields are represented as ``NaN`` because non-KL methods do not
-    execute KL-specific stages.
+    Missing fields are represented as ``NaN`` because non-TBS methods do not
+    execute TBS-specific stages.
     """
     normalized = {key: np.nan for key in BENCHMARK_STAGE_TIMING_KEYS}
     if stage_timings is None:

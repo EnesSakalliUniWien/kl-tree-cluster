@@ -10,13 +10,13 @@ import numpy as np
 import pandas as pd
 from benchmarks.shared.generators import generate_random_feature_matrix
 from benchmarks.shared.util.decomposition import _labels_from_decomposition
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
-    DEFAULT_EDGE_ALPHA,
-)
-from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+)
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):

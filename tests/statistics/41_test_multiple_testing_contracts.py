@@ -3,10 +3,10 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing import (
+from tree_break_selection.hierarchy_analysis.statistics.multiple_testing import (
     benjamini_hochberg_correction,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.multiple_testing.tree_bh import (
+from tree_break_selection.hierarchy_analysis.statistics.multiple_testing.tree_bh import (
     apply_tree_bh_correction,
 )
 

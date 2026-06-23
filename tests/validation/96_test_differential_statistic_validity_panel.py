@@ -18,7 +18,7 @@ from benchmarks.diagnostics.calibration.production_admissibility_contract import
     evaluate_production_admissibility_components,
     summarize_production_admissibility_contracts,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
     bernoulli_feature_space_from_columns,

@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import numpy as np
-from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     compute_whitened_wald_contrast,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.wald_statistic.sibling_divergence_test import (
     sibling_divergence_test,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureSpace, infer_feature_space_from_columns
+from tree_break_selection.tree.feature_space import FeatureSpace, infer_feature_space_from_columns
 
 
 def _make_categorical_space(n_features: int, n_categories: int) -> FeatureSpace:

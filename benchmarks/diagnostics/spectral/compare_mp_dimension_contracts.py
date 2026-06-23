@@ -2,7 +2,7 @@
 """Compare explicit leaf-only Marchenko-Pastur dimension contracts.
 
 This diagnostic does not add production configuration. It monkeypatches the
-spectral worker in-process and forces ``KL_TE_N_JOBS=1`` so each variant has a
+spectral worker in-process and forces ``TBS_N_JOBS=1`` so each variant has a
 clear mathematical meaning:
 
 - leaf_only_floor*: PCA directions and MP threshold use leaf rows only.
@@ -24,32 +24,32 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import adjusted_rand_score
 
-os.environ.setdefault("KL_TE_N_JOBS", "1")
+os.environ.setdefault("TBS_N_JOBS", "1")
 
-import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as gate_orchestrator
-import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_context_module
-import kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur as mp_worker
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
+import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as gate_orchestrator
+import tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_context_module
+import tree_break_selection.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur as mp_worker
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     MarchenkoPasturDimensionEstimate,
     estimate_marchenko_pastur_dimension,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureSpace
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.feature_space import FeatureSpace
+from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 
 from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import _labels_and_report_from_decomposition
 
@@ -278,7 +278,7 @@ def _patched_variant(
         mp_worker.estimate_marchenko_pastur_dimension = original_estimator
 
 
-def _run_kl_with_gate_bundle(
+def _run_tbs_with_gate_bundle(
     data_df: pd.DataFrame,
     distance_condensed: np.ndarray,
     *,
@@ -363,14 +363,14 @@ def _run_case_variant(
     finite_null_quantile: float,
     seed: int,
 ) -> dict[str, object]:
-    context = build_kl_tree_context(case, populate_node_distributions=False)
+    context = build_tbs_tree_context(case, populate_node_distributions=False)
     with _patched_variant(
         variant,
         finite_null_reps=finite_null_reps,
         finite_null_quantile=finite_null_quantile,
         seed=seed,
     ):
-        result = _run_kl_with_gate_bundle(
+        result = _run_tbs_with_gate_bundle(
             context.data,
             context.distance_condensed,
             feature_space=context.feature_space,

@@ -19,14 +19,14 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
     INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE,
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
 )
@@ -48,7 +48,7 @@ from benchmarks.diagnostics.calibration.selected_neighborhood_spectral_flow impo
     build_multiplicity_spectral_panels,
     build_spectral_flow_panels,
 )
-from benchmarks.shared.runners.kl_runner import _run_kl_method
+from benchmarks.shared.runners.tbs_runner import _run_tbs_method
 from benchmarks.validation.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
@@ -429,7 +429,7 @@ def _run_one_variant(
     internal_distribution_mode: str,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, Any]:
     profile_id = None if method_id == "baseline_projected_wald" else str(method_id)
-    result = _run_kl_method(
+    result = _run_tbs_method(
         data,
         distance_condensed,
         sibling_significance_level=float(sibling_alpha),
@@ -443,7 +443,7 @@ def _run_one_variant(
     )
     if result.status != "ok":
         raise RuntimeError(
-            f"KL run failed for {case_id}/{data_role}/{variant_id}: "
+            f"TBS run failed for {case_id}/{data_role}/{variant_id}: "
             f"{result.skip_reason}"
         )
 

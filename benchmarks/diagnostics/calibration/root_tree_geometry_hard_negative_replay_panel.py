@@ -1,6 +1,6 @@
 """Replay a hard-negative root case across tree geometries.
 
-This diagnostic tests whether a warning case remains fail-closed when the KL
+This diagnostic tests whether a warning case remains fail-closed when the TBS
 tree is rebuilt with alternative tree builders, distances, and linkage methods.
 The motivating case is ``overlap_extreme_4c``: it can look selected-tail
 calibrated under the observed root event, but that root fails validity replay.
@@ -72,7 +72,7 @@ class RootTreeGeometryHardNegativeReplayConfig:
     suite: str = "binary"
     case_name: str = "overlap_extreme_4c"
     data_role: str = "signal"
-    method_id: str = "kl"
+    method_id: str = "tbs"
     profile_id: str = "fixed_coordinate_selective_root_v1"
     tree_geometries: tuple[TreeGeometrySpec, ...] = tuple(
         TreeGeometrySpec(*item.split(":")) for item in DEFAULT_TREE_GEOMETRIES
@@ -455,7 +455,7 @@ def _row_for_geometry(
             config.root_selective_permutation_alpha
         ),
     }
-    if config.method_id == "kl":
+    if config.method_id == "tbs":
         params["sibling_gate_profile"] = config.profile_id
     result = run_clustering_result(
         data_df=data,
@@ -522,7 +522,7 @@ def _row_for_geometry(
         "rootless_method_action": "inspect_tree_before_rootless_rescue",
     }
     if result.status != "ok":
-        if config.method_id == "kl_legacy_c2ef9a69":
+        if config.method_id == "tbs_legacy_c2ef9a69":
             status, action, validity_supported = classify_legacy_hard_negative_row(
                 base_row
             )
@@ -633,7 +633,7 @@ def _row_for_geometry(
             ),
         }
     )
-    if config.method_id == "kl_legacy_c2ef9a69":
+    if config.method_id == "tbs_legacy_c2ef9a69":
         status, action, validity_supported = classify_legacy_hard_negative_row(
             base_row
         )
@@ -663,8 +663,8 @@ def build_root_tree_geometry_hard_negative_replay_rows(
         raise ValueError("replicates must be positive.")
     if config.data_role not in {"signal", "null"}:
         raise ValueError("data_role must be 'signal' or 'null'.")
-    if config.method_id not in {"kl", "kl_legacy_c2ef9a69"}:
-        raise ValueError("method_id must be 'kl' or 'kl_legacy_c2ef9a69'.")
+    if config.method_id not in {"tbs", "tbs_legacy_c2ef9a69"}:
+        raise ValueError("method_id must be 'tbs' or 'tbs_legacy_c2ef9a69'.")
     if not 0.0 < float(config.sibling_alpha) < 1.0:
         raise ValueError("sibling_alpha must lie in (0, 1).")
     if not 0.0 < float(config.edge_alpha) < 1.0:
@@ -865,8 +865,8 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--data-role", default="signal", choices=("signal", "null"))
     parser.add_argument(
         "--method-id",
-        default="kl",
-        choices=("kl", "kl_legacy_c2ef9a69"),
+        default="tbs",
+        choices=("tbs", "tbs_legacy_c2ef9a69"),
     )
     parser.add_argument(
         "--profile-id",

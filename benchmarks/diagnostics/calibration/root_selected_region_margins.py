@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Root selected-region margin diagnostic.
 
-This diagnostic replays the agglomerative hierarchy used by KL-TE and records
+This diagnostic replays the agglomerative hierarchy used by Tree-Break Selection and records
 the merge-selection inequalities that create the two root child clusters. It
 then joins those margins to the observed root edge, sibling, and spectral
 quantities.
@@ -22,40 +22,40 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     compute_whitened_wald_contrast,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     effective_rank,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     fit_empirical_null_inflation_model,
     predict_empirical_inflation_factor,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
     collect_parent_principal_component_inputs_for_sibling_tests,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from kl_clustering_analysis.tree.distributions import (
+from tree_break_selection.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
 from scipy import integrate, stats
 from scipy.spatial.distance import squareform
 
 from benchmarks.shared.cases import get_test_cases_by_suite
-from benchmarks.shared.kl_tree_context import KlTreeContext, build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import TbsTreeContext, build_tbs_tree_context
 
 SCHEMA_VERSION = "root_selected_region_margins/v6"
 GENERATED_BY = "benchmarks.diagnostics.calibration.root_selected_region_margins"
@@ -1088,14 +1088,14 @@ def root_edge_sibling_wald_relationship(
     }
 
 
-def _standardized_contrast_dimension(context: KlTreeContext) -> int:
+def _standardized_contrast_dimension(context: TbsTreeContext) -> int:
     if context.feature_space is None:
         return int(context.data.shape[1])
     return int(context.feature_space.contrast_dimension)
 
 
 def _root_continuous_null_feature_covariance(
-    context: KlTreeContext,
+    context: TbsTreeContext,
     root: object,
 ) -> np.ndarray:
     """Return the root empirical-Gaussian feature covariance for iid leaves."""
@@ -1220,7 +1220,7 @@ def collect_observed_root_selected_region_row(
     near_active_absolute_tolerance: float = NEAR_ACTIVE_ABSOLUTE_TOLERANCE,
 ) -> tuple[dict[str, object], pd.DataFrame]:
     """Collect one observed root selected-region row and its merge margins."""
-    context = build_kl_tree_context(case, populate_node_distributions=True)
+    context = build_tbs_tree_context(case, populate_node_distributions=True)
     if context.tree_linkage_method != "average":
         raise ValueError(
             "Root selected-region margin replay currently supports average linkage; "

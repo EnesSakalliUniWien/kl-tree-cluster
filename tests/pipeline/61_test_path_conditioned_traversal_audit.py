@@ -20,7 +20,7 @@ from benchmarks.diagnostics.calibration.path_conditioned_traversal_audit import 
     add_truth_covariates,
     annotate_path_conditioned_tuples,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
@@ -31,7 +31,7 @@ def _tuple_rows() -> pd.DataFrame:
         [
             {
                 "case_id": "synthetic_case",
-                "method": "kl_internal_filter_branch_length_v1",
+                "method": "tbs_internal_filter_branch_length_v1",
                 "node_id": "root",
                 "left_child": "A",
                 "right_child": "B",
@@ -48,7 +48,7 @@ def _tuple_rows() -> pd.DataFrame:
             },
             {
                 "case_id": "synthetic_case",
-                "method": "kl_internal_filter_branch_length_v1",
+                "method": "tbs_internal_filter_branch_length_v1",
                 "node_id": "A",
                 "left_child": "C",
                 "right_child": "D",
@@ -65,7 +65,7 @@ def _tuple_rows() -> pd.DataFrame:
             },
             {
                 "case_id": "synthetic_case",
-                "method": "kl_internal_filter_branch_length_v1",
+                "method": "tbs_internal_filter_branch_length_v1",
                 "node_id": "B",
                 "left_child": "B1",
                 "right_child": "B2",
@@ -82,7 +82,7 @@ def _tuple_rows() -> pd.DataFrame:
             },
             {
                 "case_id": "synthetic_case",
-                "method": "kl_internal_filter_branch_length_v1",
+                "method": "tbs_internal_filter_branch_length_v1",
                 "node_id": "C",
                 "left_child": "C1",
                 "right_child": "C2",
@@ -99,7 +99,7 @@ def _tuple_rows() -> pd.DataFrame:
             },
             {
                 "case_id": "synthetic_case",
-                "method": "kl_internal_filter_branch_length_v1",
+                "method": "tbs_internal_filter_branch_length_v1",
                 "node_id": "D",
                 "left_child": "D1",
                 "right_child": "D2",

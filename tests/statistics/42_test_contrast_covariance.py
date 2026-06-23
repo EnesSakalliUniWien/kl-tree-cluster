@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-import kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance as contrast_covariance_module
 import numpy as np
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+import tree_break_selection.hierarchy_analysis.statistics.contrast_covariance as contrast_covariance_module
+from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_contrast_covariance,
     build_null_whitened_tangent_matrix,
     compute_whitened_wald_contrast,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.continuous_distance import (
+    continuous_time_distance_condensed,
+    standardized_euclidean_distance_condensed,
+)
+from tree_break_selection.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
     continuous_feature_space_from_columns,
@@ -95,6 +99,69 @@ def test_child_parent_bernoulli_contrast_covariance_uses_nested_variance() -> No
         _block_diagonal_entries(contrast_covariance.covariance_blocks),
         expected_variance,
     )
+
+
+def test_sibling_bernoulli_contrast_covariance_inflates_by_tree_time() -> None:
+    left = np.array([0.2, 0.7], dtype=np.float64)
+    right = np.array([0.5, 0.4], dtype=np.float64)
+    n_left = 40.0
+    n_right = 60.0
+
+    contrast_covariance = build_contrast_covariance(
+        left,
+        right,
+        n_left,
+        n_right,
+        comparison="sibling",
+        tree_time=0.4,
+        tree_time_normalizer=0.2,
+        ridge=0.0,
+    )
+
+    pooled = (n_left * left + n_right * right) / (n_left + n_right)
+    sampling_scale = 1.0 / n_left + 1.0 / n_right
+    expected_variance = pooled * (1.0 - pooled) * sampling_scale * 3.0
+
+    np.testing.assert_allclose(
+        _block_diagonal_entries(contrast_covariance.covariance_blocks),
+        expected_variance,
+    )
+
+
+def test_child_parent_bernoulli_contrast_covariance_inflates_by_branch_time() -> None:
+    child = np.array([0.3, 0.8], dtype=np.float64)
+    parent = np.array([0.5, 0.6], dtype=np.float64)
+
+    contrast_covariance = build_contrast_covariance(
+        child,
+        parent,
+        25.0,
+        100.0,
+        comparison="child_parent",
+        tree_time=0.25,
+        tree_time_normalizer=0.5,
+        ridge=0.0,
+    )
+
+    nested_factor = 1.0 / 25.0 - 1.0 / 100.0
+    expected_variance = parent * (1.0 - parent) * nested_factor * 1.5
+
+    np.testing.assert_allclose(
+        _block_diagonal_entries(contrast_covariance.covariance_blocks),
+        expected_variance,
+    )
+
+
+def test_positive_tree_time_requires_positive_normalizer() -> None:
+    with pytest.raises(ValueError, match="tree_time_normalizer"):
+        build_contrast_covariance(
+            np.array([0.2], dtype=np.float64),
+            np.array([0.4], dtype=np.float64),
+            20.0,
+            30.0,
+            comparison="sibling",
+            tree_time=0.2,
+        )
 
 
 def test_sibling_categorical_contrast_covariance_uses_multinomial_blocks() -> None:
@@ -252,6 +319,87 @@ def test_continuous_null_whitened_tangent_uses_empirical_covariance() -> None:
     cholesky = np.linalg.cholesky(covariance + ridge * np.eye(2))
     expected_rows = np.linalg.solve(cholesky, (observations - null_distribution).T).T
     np.testing.assert_allclose(tangent_rows, expected_rows)
+
+
+def test_continuous_diagonal_covariance_whitening_uses_variance_vector() -> None:
+    feature_space = continuous_feature_space_from_columns(("X0", "X1"))
+    covariance_by_block = {
+        "continuous": np.array([4.0, 9.0], dtype=np.float64),
+    }
+    left = np.array([2.0, -1.0], dtype=np.float64)
+    right = np.array([0.0, 2.0], dtype=np.float64)
+
+    z_scores = compute_whitened_wald_contrast(
+        left,
+        right,
+        20.0,
+        30.0,
+        comparison="sibling",
+        feature_space=feature_space,
+        continuous_covariance_by_block=covariance_by_block,
+        ridge=0.0,
+    )
+
+    variance_scale = 1.0 / 20.0 + 1.0 / 30.0
+    expected = (left - right) / np.sqrt(covariance_by_block["continuous"] * variance_scale)
+    np.testing.assert_allclose(z_scores, expected)
+
+
+def test_continuous_time_distance_matches_scaled_mahalanobis_formula() -> None:
+    feature_space = continuous_feature_space_from_columns(("X0", "X1"))
+    observations = np.array(
+        [
+            [0.0, 0.0],
+            [2.0, 0.0],
+            [0.0, 3.0],
+        ],
+        dtype=np.float64,
+    )
+    covariance_by_block = {
+        "continuous": np.diag(np.array([4.0, 9.0], dtype=np.float64)),
+    }
+
+    distances = continuous_time_distance_condensed(
+        observations,
+        feature_space,
+        covariance_by_block=covariance_by_block,
+    )
+
+    np.testing.assert_allclose(
+        distances,
+        np.array([0.5, 0.5, 1.0], dtype=np.float64),
+    )
+
+
+def test_standardized_euclidean_distance_matches_zscore_formula() -> None:
+    feature_space = continuous_feature_space_from_columns(("X0", "X1", "X2"))
+    observations = np.array(
+        [
+            [0.0, 0.0, 7.0],
+            [2.0, 0.0, 7.0],
+            [0.0, 3.0, 7.0],
+        ],
+        dtype=np.float64,
+    )
+
+    distances = standardized_euclidean_distance_condensed(
+        observations,
+        feature_space,
+    )
+
+    centered = observations - np.mean(observations, axis=0, keepdims=True)
+    scale = np.std(observations, axis=0, ddof=1, keepdims=True)
+    scale[scale <= 0.0] = 1.0
+    standardized = centered / scale
+    expected = np.array(
+        [
+            np.linalg.norm(standardized[0] - standardized[1]),
+            np.linalg.norm(standardized[0] - standardized[2]),
+            np.linalg.norm(standardized[1] - standardized[2]),
+        ],
+        dtype=np.float64,
+    )
+    np.testing.assert_allclose(distances, expected)
 
 
 def test_diagonal_bernoulli_null_whitening_matches_block_formula() -> None:

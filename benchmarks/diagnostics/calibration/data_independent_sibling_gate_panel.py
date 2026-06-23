@@ -19,17 +19,17 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_contrast_covariance,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.fixed_subspace_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.fixed_subspace_annotation import (
     fixed_coordinate_bh_p_value,
     fixed_subspace_sibling_p_value,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
     identify_binary_sibling_children,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     bernoulli_feature_space_from_columns,
 )

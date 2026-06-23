@@ -30,7 +30,7 @@ def _make_synthetic_results() -> pd.DataFrame:
                 "test_case": idx,
                 "case_id": case_id,
                 "case_category": category,
-                "method": "kl",
+                "method": "tbs",
                 "params": "tree_distance_metric=hamming",
                 "true_clusters": true_k,
                 "found_clusters": [3, 1, 4, 2, 12, 3, 1, 1][idx - 1],
@@ -233,10 +233,10 @@ def test_relationship_audit_summary_uses_root_row_for_root_split(tmp_path: Path)
                 "Sibling_BH_Different": False,
             },
         ]
-    ).to_csv(audit_dir / "case_1_kl_stats.csv", index=False)
+    ).to_csv(audit_dir / "case_1_tbs_stats.csv", index=False)
 
     artifacts = analyze_benchmark_relationships(
-        _make_synthetic_results().query("test_case == 1 and method == 'kl'"),
+        _make_synthetic_results().query("test_case == 1 and method == 'tbs'"),
         tmp_path,
         include_plots=False,
     )
@@ -252,7 +252,7 @@ def test_normalize_results_dataframe_uses_current_schema_only() -> None:
             "test_case": [1],
             "case_id": ["current_case"],
             "case_category": ["improved_gaussian"],
-            "method": ["kl"],
+            "method": ["tbs"],
             "true_clusters": [3],
             "found_clusters": [2],
             "samples": [30],
@@ -269,7 +269,7 @@ def test_normalize_results_dataframe_uses_current_schema_only() -> None:
 
     assert list(normalized["test_case"]) == [1]
     assert list(normalized["case_id"]) == ["current_case"]
-    assert list(normalized["method"]) == ["kl"]
+    assert list(normalized["method"]) == ["tbs"]
     assert list(normalized["ari"]) == [0.5]
     assert list(normalized["status"]) == ["ok"]
 
@@ -294,7 +294,7 @@ def test_normalize_results_dataframe_rejects_old_full_runner_csv_columns() -> No
             "Test": [1],
             "Case_Name": ["case_1"],
             "Case_Category": ["improved_gaussian"],
-            "Method": ["KL Divergence"],
+            "Method": ["TBS Divergence"],
             "Params": ["tree_distance_metric=hamming"],
             "True": [3],
             "Found": [3],
@@ -323,11 +323,11 @@ def test_normalize_results_dataframe_rejects_old_full_runner_csv_columns() -> No
 def test_prepare_relationship_frame_derives_split_flags() -> None:
     frame = prepare_relationship_frame(_make_synthetic_results())
 
-    kl_overlap = frame[(frame["method"] == "kl") & (frame["case_id"] == "overlap_hard")].iloc[0]
-    assert kl_overlap["section"] == "overlapping"
-    assert kl_overlap["over_split_flag"] == 1.0
-    assert kl_overlap["under_split_flag"] == 0.0
-    assert kl_overlap["exact_k"] == 0.0
+    tbs_overlap = frame[(frame["method"] == "tbs") & (frame["case_id"] == "overlap_hard")].iloc[0]
+    assert tbs_overlap["section"] == "overlapping"
+    assert tbs_overlap["over_split_flag"] == 1.0
+    assert tbs_overlap["under_split_flag"] == 0.0
+    assert tbs_overlap["exact_k"] == 0.0
 
     kmeans_easy = frame[(frame["method"] == "kmeans") & (frame["case_id"] == "gauss_easy")].iloc[0]
     assert kmeans_easy["exact_k"] == 1.0
@@ -335,9 +335,9 @@ def test_prepare_relationship_frame_derives_split_flags() -> None:
 
 
 def test_analyze_benchmark_relationships_writes_expected_artifacts(tmp_path: Path) -> None:
-    _write_synthetic_audit(tmp_path, case_num=1, method_slug="kl", accepted=False)
+    _write_synthetic_audit(tmp_path, case_num=1, method_slug="tbs", accepted=False)
     _write_synthetic_audit(tmp_path, case_num=1, method_slug="kmeans", accepted=True)
-    _write_synthetic_audit(tmp_path, case_num=2, method_slug="kl", accepted=False)
+    _write_synthetic_audit(tmp_path, case_num=2, method_slug="tbs", accepted=False)
     _write_synthetic_audit(tmp_path, case_num=2, method_slug="kmeans", accepted=True)
 
     artifacts = analyze_benchmark_relationships(
@@ -364,9 +364,9 @@ def test_analyze_benchmark_relationships_writes_expected_artifacts(tmp_path: Pat
     assert "audit_root_sibling_neglog10_p" in augmented_rows.columns
 
     method_summary = pd.read_csv(artifacts.method_summary_csv)
-    assert list(method_summary["method"][:2]) == ["kmeans", "kl"]
+    assert list(method_summary["method"][:2]) == ["kmeans", "tbs"]
     assert method_summary.loc[method_summary["method"] == "kmeans", "mean_ari"].iloc[0] > method_summary.loc[
-        method_summary["method"] == "kl", "mean_ari"
+        method_summary["method"] == "tbs", "mean_ari"
     ].iloc[0]
 
     section_summary = pd.read_csv(artifacts.section_summary_csv)
@@ -386,7 +386,7 @@ def test_analyze_benchmark_relationships_writes_expected_artifacts(tmp_path: Pat
 
 
 def test_attach_audit_factors_does_not_cross_assign_single_method_audits(tmp_path: Path) -> None:
-    _write_synthetic_audit(tmp_path, case_num=1, method_slug="kl", accepted=True)
+    _write_synthetic_audit(tmp_path, case_num=1, method_slug="tbs", accepted=True)
 
     artifacts = analyze_benchmark_relationships(
         pd.DataFrame(
@@ -395,7 +395,7 @@ def test_attach_audit_factors_does_not_cross_assign_single_method_audits(tmp_pat
                     "test_case": 1,
                     "case_id": "case_1",
                     "case_category": "improved_gaussian",
-                    "method": "kl",
+                    "method": "tbs",
                     "params": "",
                     "true_clusters": 2,
                     "found_clusters": 2,
@@ -430,9 +430,9 @@ def test_attach_audit_factors_does_not_cross_assign_single_method_audits(tmp_pat
     )
 
     augmented_rows = pd.read_csv(artifacts.augmented_rows_csv)
-    kl_row = augmented_rows.loc[augmented_rows["method"] == "kl"].iloc[0]
+    tbs_row = augmented_rows.loc[augmented_rows["method"] == "tbs"].iloc[0]
     kmeans_row = augmented_rows.loc[augmented_rows["method"] == "kmeans"].iloc[0]
-    assert kl_row["audit_available"] == 1.0
+    assert tbs_row["audit_available"] == 1.0
     assert kmeans_row["audit_available"] == 0.0
 
 
@@ -446,7 +446,7 @@ def test_attach_audit_factors_rejects_old_kl_divergence_audit_filename(tmp_path:
                     "test_case": 1,
                     "case_id": "case_1",
                     "case_category": "improved_gaussian",
-                    "method": "kl",
+                    "method": "tbs",
                     "params": "",
                     "true_clusters": 2,
                     "found_clusters": 2,
@@ -492,7 +492,7 @@ def test_attach_audit_factors_rejects_missing_sibling_decision_column(tmp_path: 
                 "Sibling_Divergence_P_Value": 0.001,
             },
         ]
-    ).to_csv(audit_dir / "case_1_kl_stats.csv", index=False)
+    ).to_csv(audit_dir / "case_1_tbs_stats.csv", index=False)
 
     artifacts = analyze_benchmark_relationships(
         pd.DataFrame(
@@ -501,7 +501,7 @@ def test_attach_audit_factors_rejects_missing_sibling_decision_column(tmp_path: 
                     "test_case": 1,
                     "case_id": "case_1",
                     "case_category": "improved_gaussian",
-                    "method": "kl",
+                    "method": "tbs",
                     "params": "",
                     "true_clusters": 2,
                     "found_clusters": 2,
@@ -559,7 +559,7 @@ def test_analyze_benchmark_relationships_handles_missing_branch_length_column(tm
                 "parent_label": "root",
             },
         ]
-    ).to_csv(audit_dir / "case_1_kl_stats.csv", index=False)
+    ).to_csv(audit_dir / "case_1_tbs_stats.csv", index=False)
 
     artifacts = analyze_benchmark_relationships(
         pd.DataFrame(
@@ -568,7 +568,7 @@ def test_analyze_benchmark_relationships_handles_missing_branch_length_column(tm
                     "test_case": 1,
                     "case_id": "case_1",
                     "case_category": "improved_gaussian",
-                    "method": "kl",
+                    "method": "tbs",
                     "params": "",
                     "true_clusters": 2,
                     "found_clusters": 2,

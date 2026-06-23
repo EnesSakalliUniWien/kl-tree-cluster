@@ -1,6 +1,6 @@
 """Mixed null/signal sweep for internal calibration thresholds and Q10 leakage.
 
-The sweep builds KL trees on benchmark cases, collects sibling records with
+The sweep builds TBS trees on benchmark cases, collects sibling records with
 internal support labels, and emits the labeled panels consumed by the Q9/Q10
 diagnostics. It is diagnostic-only and does not promote threshold values or
 install a replacement empirical-null weight rule.
@@ -16,30 +16,30 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     decide_empirical_null_calibration,
     fit_empirical_null_inflation_model,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.child_parent_edge_metadata import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.child_parent_edge_metadata import (
     extract_child_parent_edge_p_values_by_node,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
     collect_parent_principal_component_inputs_for_sibling_tests,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 
@@ -51,7 +51,7 @@ from benchmarks.diagnostics.calibration.sibling_null_weight_rule_validation impo
     evaluate_sibling_null_weight_rules,
 )
 from benchmarks.shared.cases import get_test_cases_by_suite
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 from benchmarks.shared.util.time import format_timestamp_utc
 
 STUDY_ROLE = "diagnostic_mixed_internal_calibration_sweep_not_calibration"
@@ -137,7 +137,7 @@ def _collect_case_replicate(
     edge_alpha: float,
     sibling_alpha: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
-    context = build_kl_tree_context(
+    context = build_tbs_tree_context(
         _case_with_replicate_seed(case, replicate_index),
         populate_node_distributions=True,
     )

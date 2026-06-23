@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import numpy as np
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.operators import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.operators import (
     build_primal_covariance_matrix,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.projection import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.projection import (
     build_pca_projection,
 )
 

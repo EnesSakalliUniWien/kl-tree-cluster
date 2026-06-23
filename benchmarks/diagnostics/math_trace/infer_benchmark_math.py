@@ -95,7 +95,7 @@ def infer_math(
         .items()
     }
     summary = {
-        "schema_version": "kl_te_math_inference/v1",
+        "schema_version": "tbs_math_inference/v1",
         "case_id": manifest.get("case_id"),
         "n_trace_rows": int(len(trace)),
         "failure_label_counts": label_counts,

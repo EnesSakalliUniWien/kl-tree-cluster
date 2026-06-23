@@ -27,23 +27,23 @@ from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.projection import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.projection import (
     build_pca_projection,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_null_whitened_tangent_matrix,
     compute_whitened_wald_contrast,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_kernel import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_kernel import (
     run_projected_wald_kernel,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     estimate_marchenko_pastur_dimension,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     continuous_feature_space_from_columns,
 )

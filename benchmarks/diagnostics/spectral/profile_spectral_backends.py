@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Profile exact spectral backend variants on production KL node matrices.
+"""Profile exact spectral backend variants on production TBS node matrices.
 
 This diagnostic answers a narrow performance question: how much runtime is
 spent in the local eigensolver, and whether an exact two-stage SciPy path
@@ -24,53 +24,53 @@ import numpy as np
 import pandas as pd
 from scipy import linalg
 
-os.environ.setdefault("KL_TE_N_JOBS", "1")
+os.environ.setdefault("TBS_N_JOBS", "1")
 
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.operators import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.operators import (
     build_dual_covariance_gram_matrix,
     build_primal_covariance_matrix,
     center_active_data,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.preparation import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.preparation import (
     PreparedCovarianceData,
     prepare_covariance_data,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.projection import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.projection import (
     build_pca_projection,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.representation import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.representation import (
     CovarianceRepresentation,
     select_covariance_representation,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.core.eigen_result import (
+from tree_break_selection.hierarchy_analysis.decomposition.core.eigen_result import (
     EigenResult,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_null_whitened_tangent_matrix,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.projection_dimension_estimation.projection_dimension_estimators import (
     estimate_marchenko_pastur_dimension,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur import (
     _process_node,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
     _build_spectral_tasks,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_helpers import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_helpers import (
     precompute_descendants,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     resolve_feature_space,
     validate_feature_matrix,
 )
 
 from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 
 DEFAULT_CASE_NAMES = (
     "binary_many_features",
@@ -108,7 +108,7 @@ class VariantResult:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Profile exact spectral backend variants on KL benchmark cases."
+        description="Profile exact spectral backend variants on TBS benchmark cases."
     )
     parser.add_argument(
         "--case-names",
@@ -174,7 +174,7 @@ def _build_matrix_records(
     str,
 ]:
     tree_start = time.perf_counter()
-    context = build_kl_tree_context(case, populate_node_distributions=True)
+    context = build_tbs_tree_context(case, populate_node_distributions=True)
     tree_seconds = time.perf_counter() - tree_start
 
     feature_space = resolve_feature_space(tuple(context.data.columns), context.feature_space)

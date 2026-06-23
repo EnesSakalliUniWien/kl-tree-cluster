@@ -28,7 +28,7 @@ from benchmarks.diagnostics.spectral.adaptive_cosine_kak_diffusion_matrix_probe 
     block_adaptive_diffusion_distance,
     block_diffusion_distance,
 )
-from benchmarks.shared.runners.kl_diffusion_runner import _build_adaptive_diffusion_distance
+from benchmarks.shared.runners.tbs_diffusion_runner import _build_adaptive_diffusion_distance
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from scipy.cluster.hierarchy import dendrogram, linkage

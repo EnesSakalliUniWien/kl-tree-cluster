@@ -4,11 +4,11 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.column_contracts import (
     EDGE_GATE_COLUMNS,
     SIBLING_GATE_COLUMNS,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     SIBLING_GATE_PROFILES,
     apply_root_selective_permutation_guard,
     apply_root_stability_guard,
@@ -17,13 +17,13 @@ from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator 
     run_gate_annotation_pipeline,
     selected_global_sibling_min_permutation_p_value,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_contrast_covariance,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.fixed_subspace_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.fixed_subspace_annotation import (
     fixed_subspace_sibling_p_value,
 )
-from kl_clustering_analysis.tree.feature_space import infer_feature_space_from_columns
+from tree_break_selection.tree.feature_space import infer_feature_space_from_columns
 
 
 def _build_small_tree_with_leaf_data() -> tuple[nx.DiGraph, pd.DataFrame, pd.DataFrame]:
@@ -136,6 +136,25 @@ def test_pipeline_supports_current_gate_annotation_contract() -> None:
     assert bundle.metadata.sibling.gate == "sibling"
     assert bundle.metadata.config.sibling_gate_method == "projected_wald_inflation"
     assert bundle.metadata.config.sibling_gate_alpha_penalty == 1.0
+    tested = out[out["Sibling_Sparse_Evidence_Method"].eq("fixed_coordinate_bh")]
+    assert not tested.empty
+    assert tested["Sibling_Sparse_Evidence_P_Value"].between(0.0, 1.0).all()
+    active_tested = out[
+        out["Sibling_Gate_P_Value_Role"].eq("active_traversal_sibling_gate")
+    ]
+    assert not active_tested.empty
+    assert active_tested["Sibling_Gate_P_Value_Calibration"].str.contains(
+        "empirical_null_inflation"
+    ).all()
+    assert active_tested["Sibling_Gate_P_Value_Role"].eq(
+        "active_traversal_sibling_gate"
+    ).all()
+    assert tested["Sibling_Dense_Evidence_Method"].eq(
+        "fixed_global_chi_square"
+    ).all()
+    assert tested["Sibling_Dense_Evidence_Calibration"].eq(
+        "fixed_subspace_chi_square"
+    ).all()
 
 
 def test_pipeline_supports_opt_in_fixed_coordinate_sibling_gate() -> None:
@@ -161,6 +180,20 @@ def test_pipeline_supports_opt_in_fixed_coordinate_sibling_gate() -> None:
     tested = out[out["Sibling_Test_Method"].eq("fixed_coordinate_bh")]
     assert not tested.empty
     assert tested["Sibling_Divergence_P_Value"].between(0.0, 1.0).all()
+    assert np.allclose(
+        tested["Sibling_Sparse_Evidence_P_Value"].astype(float),
+        tested["Sibling_Divergence_P_Value"].astype(float),
+    )
+    assert tested["Sibling_Sparse_Evidence_Method"].eq("fixed_coordinate_bh").all()
+    assert tested["Sibling_Gate_P_Value_Calibration"].eq("fixed_subspace_bh").all()
+    assert tested["Sibling_Gate_P_Value_Role"].eq(
+        "active_traversal_sibling_gate"
+    ).all()
+    assert tested["Sibling_Dense_Evidence_Method"].eq(
+        "fixed_global_chi_square"
+    ).all()
+    assert tested["Sibling_Fixed_Block_BH_P_Value"].between(0.0, 1.0).all()
+    assert tested["Sibling_Fixed_Global_P_Value"].between(0.0, 1.0).all()
     assert (tested["Sibling_Projection_Dimension"] == "").all() or tested[
         "Sibling_Projection_Dimension"
     ].isna().all()
@@ -183,6 +216,16 @@ def test_pipeline_supports_opt_in_fixed_global_sibling_gate() -> None:
     tested = out[out["Sibling_Test_Method"].eq("fixed_global_chi_square")]
     assert not tested.empty
     assert tested["Sibling_Divergence_P_Value"].between(0.0, 1.0).all()
+    assert np.allclose(
+        tested["Sibling_Dense_Evidence_P_Value"].astype(float),
+        tested["Sibling_Divergence_P_Value"].astype(float),
+    )
+    assert tested["Sibling_Dense_Evidence_Method"].eq(
+        "fixed_global_chi_square"
+    ).all()
+    assert tested["Sibling_Gate_P_Value_Calibration"].eq(
+        "fixed_subspace_chi_square"
+    ).all()
     assert tested["Sibling_Degrees_of_Freedom"].gt(0.0).all()
 
 
@@ -495,7 +538,7 @@ def test_fixed_profile_rejects_conflicting_explicit_method() -> None:
 
 
 def test_pipeline_profile_avoids_adaptive_sibling_pca(monkeypatch) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
 
@@ -536,7 +579,7 @@ def test_pipeline_profile_avoids_adaptive_sibling_pca(monkeypatch) -> None:
 
 
 def test_fixed_sibling_gate_does_not_resolve_parent_pca_inputs(monkeypatch) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
 
@@ -559,7 +602,7 @@ def test_fixed_sibling_gate_does_not_resolve_parent_pca_inputs(monkeypatch) -> N
 
 
 def test_sibling_gate_alpha_penalty_is_passed_as_effective_alpha(monkeypatch) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     seen_alpha = None
@@ -628,7 +671,7 @@ def test_root_stability_guard_closes_only_unstable_open_root() -> None:
 def test_root_selective_permutation_guard_closes_unselected_open_root(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -683,7 +726,7 @@ def test_root_selective_permutation_guard_closes_unselected_open_root(
 def test_selective_permutation_guard_closes_open_internal_context(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -739,7 +782,7 @@ def test_selective_permutation_guard_closes_open_internal_context(
 def test_selective_permutation_guard_closes_only_passthrough_descendant(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -794,7 +837,7 @@ def test_selective_permutation_guard_closes_only_passthrough_descendant(
 def test_global_selected_family_guard_closes_passthrough_descendant(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -851,7 +894,7 @@ def test_global_selected_family_guard_closes_passthrough_descendant(
 def test_global_selected_family_guard_keeps_significant_passthrough_descendant(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -899,7 +942,7 @@ def test_global_selected_family_guard_keeps_significant_passthrough_descendant(
 def test_refined_global_selected_family_guard_refines_floor_p_value(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -956,7 +999,7 @@ def test_refined_global_selected_family_guard_refines_floor_p_value(
 def test_global_selected_family_p_value_uses_add_one_monte_carlo(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     leaf_data = pd.DataFrame([[0], [1], [0]], index=["a", "b", "c"])
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -995,7 +1038,7 @@ def test_global_selected_family_p_value_uses_add_one_monte_carlo(
 
 
 def test_fast_bernoulli_coordinate_p_value_matches_canonical_contrast() -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, _annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -1026,7 +1069,7 @@ def test_fast_bernoulli_coordinate_p_value_matches_canonical_contrast() -> None:
 
 
 def test_fast_categorical_coordinate_p_value_matches_canonical_contrast() -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     feature_space = infer_feature_space_from_columns(
         ("F0_c0", "F0_c1", "F0_c2", "F1_c0", "F1_c1", "F1_c2")
@@ -1063,7 +1106,7 @@ def test_fast_categorical_coordinate_p_value_matches_canonical_contrast() -> Non
 def test_selective_permutation_passthrough_scope_keeps_descendant_after_open_root(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -1118,7 +1161,7 @@ def test_selective_permutation_passthrough_scope_keeps_descendant_after_open_roo
 def test_selective_permutation_passthrough_scope_skips_guard_blocked_ancestor(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -1172,7 +1215,7 @@ def test_selective_permutation_passthrough_scope_skips_guard_blocked_ancestor(
 
 
 def test_pipeline_runs_opt_in_root_stability_guard(monkeypatch) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
 
@@ -1212,7 +1255,7 @@ def test_pipeline_runs_opt_in_root_stability_guard(monkeypatch) -> None:
 
 
 def test_pipeline_runs_opt_in_root_selective_permutation_guard(monkeypatch) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -1251,7 +1294,7 @@ def test_pipeline_runs_opt_in_root_selective_permutation_guard(monkeypatch) -> N
 
 
 def test_pipeline_selective_root_profile_runs_packaged_guard(monkeypatch) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -1306,7 +1349,7 @@ def test_pipeline_selective_root_profile_runs_packaged_guard(monkeypatch) -> Non
 def test_pipeline_selective_traversal_profile_sets_open_internal_scope(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -1360,7 +1403,7 @@ def test_pipeline_selective_traversal_profile_sets_open_internal_scope(
 def test_pipeline_selective_passthrough_profile_sets_passthrough_scope(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
@@ -1414,7 +1457,7 @@ def test_pipeline_selective_passthrough_profile_sets_passthrough_scope(
 def test_pipeline_global_passthrough_profile_sets_global_scope(
     monkeypatch,
 ) -> None:
-    import kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
+    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
 
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))

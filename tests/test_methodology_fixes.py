@@ -10,10 +10,10 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_reference_distribution import (
+from scipy.stats import chi2
+from tree_break_selection.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_reference_distribution import (
     compute_projected_pvalue,
 )
-from scipy.stats import chi2
 
 # =============================================================================
 # Fix 3: Shared projected chi-square helper tests
@@ -64,8 +64,8 @@ class TestSpectralKFloor:
 
     def test_edge_gate_spectral_minimum_projection_dimension_is_fixed(self, monkeypatch):
         """The edge gate should pass the fixed spectral floor into the spectral estimator."""
-        import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
         import networkx as nx
+        import tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
 
         tree = nx.DiGraph()
         tree.add_edge("root", "L0")
@@ -79,7 +79,7 @@ class TestSpectralKFloor:
         captured: list[int] = []
 
         def _fake_compute_spectral_decomposition(*args, **kwargs):
-            from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
+            from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
                 SpectralDecompositionResult,
             )
 
@@ -107,8 +107,8 @@ class TestSpectralKFloor:
         self, monkeypatch
     ):
         """Edge-gate PCA projections and eigenvalues must be keyed identically."""
-        import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
         import networkx as nx
+        import tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
 
         tree = nx.DiGraph()
         tree.add_edges_from([("root", "L0"), ("root", "L1")])
@@ -118,7 +118,7 @@ class TestSpectralKFloor:
         leaf_data = pd.DataFrame([[0.0], [1.0]], index=["L0", "L1"], columns=["F0"])
 
         def _fake_compute_spectral_decomposition(*args, **kwargs):
-            from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
+            from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
                 SpectralDecompositionResult,
             )
 
@@ -144,8 +144,8 @@ class TestSpectralKFloor:
         self, monkeypatch
     ):
         """Edge-gate PCA projection row count must match the whitening eigenvalues."""
-        import kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
         import networkx as nx
+        import tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_module
 
         tree = nx.DiGraph()
         tree.add_edges_from([("root", "L0"), ("root", "L1")])
@@ -155,7 +155,7 @@ class TestSpectralKFloor:
         leaf_data = pd.DataFrame([[0.0], [1.0]], index=["L0", "L1"], columns=["F0"])
 
         def _fake_compute_spectral_decomposition(*args, **kwargs):
-            from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
+            from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.spectral_decomposition_result import (
                 SpectralDecompositionResult,
             )
 
@@ -180,8 +180,7 @@ class TestSpectralKFloor:
     def test_single_active_feature_spectral_path_returns_coordinate_projection(self):
         """A one-active-feature node is already a valid 1D spectral problem."""
         import networkx as nx
-        from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
-            MP_ROW_COUNT_LEGACY_STACKED_ROWS,
+        from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
             compute_spectral_decomposition,
         )
 
@@ -222,7 +221,7 @@ class TestSpectralKFloor:
     def test_legacy_internal_barycenter_spectral_path_adds_threshold_rows(self):
         """Legacy diagnostic mode appends descendant internal distributions."""
         import networkx as nx
-        from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+        from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
             MP_ROW_COUNT_LEGACY_STACKED_ROWS,
             compute_spectral_decomposition,
         )
@@ -272,7 +271,7 @@ class TestSpectralKFloor:
     def test_branch_length_internal_state_changes_internal_spectral_rows(self):
         """Branch-length state rows are a separate diagnostic from empirical barycenters."""
         import networkx as nx
-        from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+        from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
             INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE,
             MP_ROW_COUNT_LEGACY_STACKED_ROWS,
             compute_spectral_decomposition,
@@ -336,7 +335,7 @@ class TestSpectralKFloor:
     def test_spectral_decomposition_requires_leaf_data_for_every_leaf_label(self):
         """Missing leaf rows must fail instead of silently shrinking a subtree."""
         import networkx as nx
-        from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+        from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
             compute_spectral_decomposition,
         )
 
@@ -352,12 +351,12 @@ class TestSpectralKFloor:
             compute_spectral_decomposition(tree, leaf_data)
 
     def test_invalid_spectral_job_env_does_not_fall_back_to_auto(self, monkeypatch):
-        """Invalid KL_TE_N_JOBS should fail instead of silently using auto workers."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur import (
+        """Invalid TBS_N_JOBS should fail instead of silently using auto workers."""
+        from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur import (
             _get_n_jobs,
         )
 
-        monkeypatch.setenv("KL_TE_N_JOBS", "not-an-int")
+        monkeypatch.setenv("TBS_N_JOBS", "not-an-int")
 
         with pytest.raises(ValueError):
             _get_n_jobs(16)
@@ -428,7 +427,7 @@ class TestNonBinarySkippedFlag:
 
     def test_inflated_projected_wald_marks_leaves_as_skipped(self):
         """Adjusted Wald annotator should mark leaves as Sibling_Divergence_Skipped."""
-        from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
+        from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
             annotate_sibling_divergence,
         )
 

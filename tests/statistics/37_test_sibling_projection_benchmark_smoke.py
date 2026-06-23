@@ -3,15 +3,15 @@ from __future__ import annotations
 from benchmarks.shared.cases.binary import BINARY_CASES
 from benchmarks.shared.cases.gaussian import GAUSSIAN_CASES
 from benchmarks.shared.generators.generate_case_data import generate_case_data
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
-    run_gate_annotation_pipeline,
-)
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
-    derive_sibling_projection_dimensions_from_child_edge_comparisons,
-)
-from kl_clustering_analysis.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+    derive_sibling_projection_dimensions_from_child_edge_comparisons,
+)
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _build_case_tree(data_df):

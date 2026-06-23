@@ -2,13 +2,12 @@ import math
 
 import numpy as np
 import pandas as pd
-
 from benchmarks.diagnostics.calibration.selected_sibling_lrt_diagnostic import (
     bernoulli_sibling_deviance,
     extract_sibling_lrt_rows,
     parse_grid,
 )
-from kl_clustering_analysis.tree.io import tree_from_linkage
+from tree_break_selection.tree.io import tree_from_linkage
 
 
 def test_bernoulli_sibling_deviance_is_zero_for_identical_children() -> None:

@@ -56,7 +56,7 @@ misspecification.
 
 ## Usage
 
-Run an alpha-grid benchmark diagnostic over the active KL path:
+Run an alpha-grid benchmark diagnostic over the active TBS path:
 
 ```bash
 uv run python -m benchmarks.validation.alpha_grid_search \

@@ -457,7 +457,7 @@ def plot_radial_tree(
         fig.text(
             0.5,
             0.025,
-            "Radial hierarchy from the saved linkage matrix. Leaf points and pure subtrees are colored by final KL cluster id; mixed ancestral branches are gray.",
+            "Radial hierarchy from the saved linkage matrix. Leaf points and pure subtrees are colored by final TBS cluster id; mixed ancestral branches are gray.",
             ha="center",
             fontsize=9,
         )
@@ -544,7 +544,7 @@ def build_rosters(
         assignments = load_optional_table(assignments_path)
         coherence = cluster_lookup(load_optional_table(coherence_path))
         tfidf_quality = cluster_lookup(load_optional_table(tfidf_path))
-        assignment_source = "accepted_kl" if status == "ok" and not assignments.empty else ""
+        assignment_source = "accepted_tbs" if status == "ok" and not assignments.empty else ""
         if assignments.empty and linkage_matrix is not None:
             assignments = diagnostic_linkage_assignments(
                 linkage_matrix,
@@ -604,14 +604,14 @@ def build_rosters(
         tree_distance_embedding_path = organized_subspace_dir / "tree_distance_embedding_clusters.png"
         tree_distance_embedding_coordinates_path = organized_subspace_dir / "tree_distance_embedding_cluster_coordinates.csv"
         diagnostic_assignment_path = organized_subspace_dir / "diagnostic_linkage_cluster_assignments.csv"
-        accepted_assignment_path = organized_subspace_dir / "accepted_kl_cluster_assignments.csv"
+        accepted_assignment_path = organized_subspace_dir / "accepted_tbs_cluster_assignments.csv"
         radial_rendered = False
         full_space_rendered = False
         subspace_embedding_rendered = False
         tree_distance_embedding_rendered = False
         if has_assignments and assignment_source == "diagnostic_linkage_cut":
             assignments.to_csv(diagnostic_assignment_path, index=False)
-        if has_assignments and assignment_source == "accepted_kl":
+        if has_assignments and assignment_source == "accepted_tbs":
             assignments.to_csv(accepted_assignment_path, index=False)
         if has_assignments and render_radial_trees:
             if linkage_matrix is not None:
@@ -690,7 +690,7 @@ def build_rosters(
             "diagnostic_linkage_cluster_assignments": str(diagnostic_assignment_path)
             if assignment_source == "diagnostic_linkage_cut"
             else "",
-            "accepted_kl_cluster_assignments": str(accepted_assignment_path) if assignment_source == "accepted_kl" else "",
+            "accepted_tbs_cluster_assignments": str(accepted_assignment_path) if assignment_source == "accepted_tbs" else "",
             "failure_status": row.get("failure_status", ""),
             **{f"{key}_path": path_text(value) for key, value in resolved_paths.items()},
             "subspace_coordinates_path": path_text(subspace_coordinates_path),
@@ -805,8 +805,8 @@ def write_subspace_readme(
         "- `cluster_roster.csv`: one row per cluster with complete member-gene lists and local GO annotations.",
         "- `cluster_annotations.csv`: cluster-level annotation fields without the long member-gene cell.",
         "- `gene_membership.csv`: one row per gene in this subspace with its cluster annotation context.",
-        "- `accepted_kl_cluster_assignments.csv`: accepted final KL assignments when the KL gate completed.",
-        "- `diagnostic_linkage_cluster_assignments.csv`: diagnostic linkage-cut assignments when the KL gate failed.",
+        "- `accepted_tbs_cluster_assignments.csv`: accepted final TBS assignments when the TBS gate completed.",
+        "- `diagnostic_linkage_cluster_assignments.csv`: diagnostic linkage-cut assignments when the TBS gate failed.",
         "- `radial_tree_clusters.png`: radial hierarchy colored by the recorded cluster id when linkage and assignments are available.",
         "- `radial_tree_clusters_compact.png`: compact radial hierarchy used inside the annotation PDF.",
         "- `full_space_embedding_clusters.png`: full feature-matrix PCA coordinates colored by this subspace's cluster ids.",
@@ -839,14 +839,14 @@ def write_root_markdown(
         "",
         f"Experiment: `{experiment_dir}`",
         "",
-        "This file lists every exported cluster for each accepted KL or diagnostic linkage-cut subspace. The companion",
+        "This file lists every exported cluster for each accepted TBS or diagnostic linkage-cut subspace. The companion",
         "`subspace_cluster_roster.csv` keeps the complete semicolon-delimited gene list for",
         "each cluster; per-subspace folders under `subspaces/` hold the same data split by",
         "subspace plus radial tree plots, embedding plots, and copied source artifacts.",
         "",
-        "Rows with `assignment_source=accepted_kl` are final accepted KL assignments. Rows with",
+        "Rows with `assignment_source=accepted_tbs` are final accepted TBS assignments. Rows with",
         "`assignment_source=diagnostic_linkage_cut` are diagnostic cuts from saved linkage trees",
-        "for failed gates, not accepted KL output.",
+        "for failed gates, not accepted TBS output.",
         "",
     ]
     assigned = status[status["has_cluster_assignments"].eq(True)]
@@ -1012,7 +1012,7 @@ def main() -> None:
             "subspaces/failed##_weighting_block_name/",
         ],
         "assignment_sources": {
-            "accepted_kl": "final accepted KL assignments",
+            "accepted_tbs": "final accepted TBS assignments",
             "diagnostic_linkage_cut": "diagnostic linkage-tree cuts for failed gates",
         },
     }

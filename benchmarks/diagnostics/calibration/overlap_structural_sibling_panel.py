@@ -31,7 +31,7 @@ from benchmarks.diagnostics.calibration.selected_family_traversal_panel import (
     _build_node_decisions,
     _output_data_role,
 )
-from benchmarks.shared.runners.kl_runner import _run_kl_method
+from benchmarks.shared.runners.tbs_runner import _run_tbs_method
 from benchmarks.shared.util.time import format_timestamp_utc
 from benchmarks.validation.selected_edge_type1_geometry import (
     _case_contract,
@@ -598,7 +598,7 @@ def _run_one(
         seed=data_seed,
     )
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
-    result = _run_kl_method(
+    result = _run_tbs_method(
         data,
         distance,
         sibling_significance_level=float(config.sibling_alpha),

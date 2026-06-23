@@ -18,11 +18,11 @@ from typing import Any
 import networkx as nx
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
 from scipy.optimize import linear_sum_assignment
@@ -35,7 +35,7 @@ from benchmarks.diagnostics.calibration.data_independent_sibling_gate_traversal_
 from benchmarks.diagnostics.calibration.selected_family_traversal_panel import (
     _output_data_role,
 )
-from benchmarks.shared.runners.kl_runner import _run_kl_method
+from benchmarks.shared.runners.tbs_runner import _run_tbs_method
 from benchmarks.shared.util.time import format_timestamp_utc
 from benchmarks.validation.selected_edge_type1_geometry import (
     _case_contract,
@@ -1247,7 +1247,7 @@ def _run_one_spectral_flow(
     )
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
     profile_id = None if method_id == "baseline_projected_wald" else str(method_id)
-    result = _run_kl_method(
+    result = _run_tbs_method(
         data,
         distance,
         sibling_significance_level=float(sibling_alpha),
@@ -1258,7 +1258,7 @@ def _run_one_spectral_flow(
         sibling_gate_profile=profile_id,
     )
     if result.status != "ok":
-        raise RuntimeError(f"KL run failed for {case_id}/{data_role}: {result.skip_reason}")
+        raise RuntimeError(f"TBS run failed for {case_id}/{data_role}: {result.skip_reason}")
     gate_bundle = result.extra["gate_bundle"]
     spectral_context = gate_bundle.edge_gate_result.spectral_context
     node_rows, edge_rows = build_spectral_flow_panels(

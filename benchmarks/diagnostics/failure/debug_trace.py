@@ -41,7 +41,7 @@ def diagnose_benchmark_failures(
         return
 
     if "method" in df.columns:
-        bad_cases = df[(df["method"] == "kl") & (df["ari"] < 0.2)]
+        bad_cases = df[(df["method"] == "tbs") & (df["ari"] < 0.2)]
     else:
         bad_cases = df[df["ari"] < 0.2]
 
@@ -66,7 +66,7 @@ def diagnose_benchmark_failures(
         true_k = row.get("true_clusters", "?")
         found_k = row.get("found_clusters", "?")
 
-        audit_file = audit_root / f"case_{case_num}_kl_stats.csv"
+        audit_file = audit_root / f"case_{case_num}_tbs_stats.csv"
 
         diagnosis = analyze_single_case(audit_file)
 

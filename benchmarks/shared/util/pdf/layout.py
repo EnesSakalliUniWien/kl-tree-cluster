@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 PDF_PAGE_SIZE_INCHES = (11.0, 8.5)  # Landscape Letter
 PDF_WIDE_PAGE_SIZE_INCHES = (13.0, 8.5)
-PDF_PAGE_SIZE_ATTR = "_kl_te_pdf_page_size_inches"
+PDF_PAGE_SIZE_ATTR = "_tbs_pdf_page_size_inches"
 
 
 def set_pdf_page_size(fig: plt.Figure, page_size_inches: tuple[float, float]) -> None:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run current KL on adaptive-diffusion cosine subspace trees.
+"""Run current TBS on adaptive-diffusion cosine subspace trees.
 
 The output layout is intentionally subspace-first:
 
@@ -40,11 +40,7 @@ from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_diffusion_matrix_probe import (
     block_adaptive_diffusion_distance,
 )
-from benchmarks.shared.runners.kl_runner import _run_kl_on_distance
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
-    DEFAULT_EDGE_ALPHA,
-    DEFAULT_SIBLING_ALPHA,
-)
+from benchmarks.shared.runners.tbs_runner import _run_tbs_on_distance
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import squareform
@@ -58,6 +54,10 @@ from scripts.analysis.go_ic_tree_summary_plots import (
 from sklearn.decomposition import PCA
 from sklearn.manifold import MDS
 from sklearn.preprocessing import normalize
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
+    DEFAULT_EDGE_ALPHA,
+    DEFAULT_SIBLING_ALPHA,
+)
 
 RESULT_PREFIX = "current_adaptive_diffusion_subspace_tree"
 
@@ -571,7 +571,7 @@ def _draw_tree_subtree_clusters(
     ax_text.text(
         0.0,
         0.98,
-        "Tree cluster assignments: the colored strip is the final current KL cluster id in dendrogram leaf order.\n"
+        "Tree cluster assignments: the colored strip is the final current TBS cluster id in dendrogram leaf order.\n"
         f"Clusters: {n_clusters}; genes: {n_leaves}; largest cluster sizes: {top_sizes}",
         va="top",
         fontsize=12,
@@ -608,7 +608,7 @@ def run_current_kl(
     edge_alpha: float,
     sibling_alpha: float,
 ) -> np.ndarray:
-    result = _run_kl_on_distance(
+    result = _run_tbs_on_distance(
         data,
         distances,
         sibling_alpha,
@@ -616,7 +616,7 @@ def run_current_kl(
         edge_alpha=edge_alpha,
     )
     if result.labels is None:
-        raise RuntimeError(f"Current KL returned no labels: {result.skip_reason or result.status}")
+        raise RuntimeError(f"Current TBS returned no labels: {result.skip_reason or result.status}")
     return np.asarray(result.labels, dtype=int)
 
 
@@ -775,7 +775,7 @@ def write_workflow_pdfs(output_dir: Path, ranking: pd.DataFrame, artifact_prefix
                 f"{row.weighting} / {row.block_name}"
             )
             metrics = (
-                "Method: current KL gate on an average-linkage tree built from adaptive diffusion "
+                "Method: current TBS gate on an average-linkage tree built from adaptive diffusion "
                 "distances inside this cosine eigenspace subspace.\n"
                 "Values: GO-BIC/gene is lower-is-better within quality tier; specificity score "
                 "combines the fraction and strength of clusters with specific enriched GO terms.\n"
@@ -1037,7 +1037,7 @@ def main() -> None:
                 continue
             subspace_id = f"{weighting}__{block.block_name}"
             subspace_safe = safe_name(subspace_id)
-            print(f"[{subspace_id}] adaptive diffusion current KL", flush=True)
+            print(f"[{subspace_id}] adaptive diffusion current TBS", flush=True)
             subspace_dir = subspaces_dir / safe_name(weighting) / safe_name(block.block_name)
             subspace_dir.mkdir(parents=True, exist_ok=True)
             coords = coords_for_block(eigvals, eigvecs, block)
@@ -1166,7 +1166,7 @@ def main() -> None:
                     z,
                     assignments,
                     subspace_dir / f"{subspace_safe}__tree_subtree_clusters.png",
-                    f"{subspace_id}: adaptive diffusion tree with current KL cluster assignments",
+                    f"{subspace_id}: adaptive diffusion tree with current TBS cluster assignments",
                 )
                 plot_subspace_embedding(
                     coords,
@@ -1223,7 +1223,7 @@ def main() -> None:
                         {
                             "status": status,
                             "error": error,
-                            "note": "No cluster assignments were produced because the current KL gate did not complete for this subspace.",
+                            "note": "No cluster assignments were produced because the current TBS gate did not complete for this subspace.",
                         }
                     ]
                 ).to_csv(subspace_dir / f"{subspace_safe}__failure_status.csv", index=False)

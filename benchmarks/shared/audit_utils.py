@@ -297,7 +297,7 @@ def export_matrix_audit(
     except Exception as exc:
         raise RuntimeError(
             "TensorFlow is required for matrix audits but is not part of the "
-            "canonical KL-TE environment. Install TensorFlow deliberately in the "
+            "canonical Tree-Break Selection environment. Install TensorFlow deliberately in the "
             "active uv environment or disable matrix_audit."
         ) from exc
 

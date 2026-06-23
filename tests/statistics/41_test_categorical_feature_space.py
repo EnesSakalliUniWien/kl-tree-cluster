@@ -7,24 +7,24 @@ import pandas as pd
 import pytest
 from benchmarks.shared.cases.categorical import CATEGORICAL_CASES
 from benchmarks.shared.generators.generate_case_data import generate_case_data
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald.child_parent_standardized_z_scores import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald.child_parent_standardized_z_scores import (
     compute_child_parent_standardized_z_scores,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
     compute_spectral_decomposition,
 )
-from kl_clustering_analysis.tree.distributions import (
+from tree_break_selection.tree.distributions import (
     CONTINUOUS_COVARIANCE_BY_BLOCK,
     MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
     continuous_feature_space_from_columns,
     infer_feature_space_from_columns,
     validate_feature_matrix,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _expected_null_whitened_categorical_rows(
@@ -225,7 +225,7 @@ def test_populate_node_divergences_stores_continuous_means_and_covariances() -> 
     )
 
 
-def test_populate_node_divergences_rejects_oversized_dense_continuous_covariance() -> None:
+def test_populate_node_divergences_uses_diagonal_continuous_covariance_fallback() -> None:
     tree = PosetTree()
     tree.add_node("root", is_leaf=False)
     tree.add_node("L0", is_leaf=True, label="L0")
@@ -240,8 +240,10 @@ def test_populate_node_divergences_rejects_oversized_dense_continuous_covariance
     )
     feature_space = continuous_feature_space_from_columns(columns)
 
-    with pytest.raises(ValueError, match="Dense empirical-Gaussian covariance"):
-        tree.populate_node_divergences(leaf_data, feature_space=feature_space)
+    tree.populate_node_divergences(leaf_data, feature_space=feature_space)
+
+    covariance = tree.nodes["root"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
+    assert covariance.shape == (len(columns),)
 
 
 def test_populate_node_divergences_rejects_incomplete_one_hot_category_blocks() -> None:
@@ -331,7 +333,7 @@ def test_categorical_spectral_decomposition_uses_parent_null_whitened_tangent_ro
         return None
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral."
+        "tree_break_selection.hierarchy_analysis.statistics.projection.spectral."
         "marchenko_pastur.eigendecompose_covariance",
         _capture_eigendecompose_covariance,
     )
@@ -374,7 +376,7 @@ def test_continuous_spectral_decomposition_uses_parent_null_whitened_tangent_row
         return None
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.projection.spectral."
+        "tree_break_selection.hierarchy_analysis.statistics.projection.spectral."
         "marchenko_pastur.eigendecompose_covariance",
         _capture_eigendecompose_covariance,
     )
@@ -429,8 +431,8 @@ def test_feature_space_supports_mixed_bernoulli_and_unequal_categorical_blocks()
     assert feature_space.family_label == "mixed"
 
 
-def test_continuous_covariance_memory_contract_is_adjustable(monkeypatch) -> None:
-    """Dense continuous covariance memory cap can be raised explicitly."""
+def test_continuous_covariance_memory_contract_selects_diagonal_or_dense(monkeypatch) -> None:
+    """Dense continuous covariance memory cap controls storage mode."""
     columns = [f"X{j}" for j in range(400)]
     leaf_data = pd.DataFrame(
         np.arange(4 * 400, dtype=np.float64).reshape(4, 400),
@@ -440,13 +442,20 @@ def test_continuous_covariance_memory_contract_is_adjustable(monkeypatch) -> Non
     feature_space = continuous_feature_space_from_columns(tuple(columns))
 
     monkeypatch.setenv(MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV, "1")
-    with pytest.raises(ValueError, match="memory contract"):
-        _simple_binary_tree().populate_node_divergences(
-            leaf_data,
-            feature_space=feature_space,
-        )
+    diagonal_tree = _simple_binary_tree()
+    diagonal_tree.populate_node_divergences(
+        leaf_data,
+        feature_space=feature_space,
+    )
+    assert diagonal_tree.nodes["root"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"].shape == (
+        len(columns),
+    )
 
     monkeypatch.setenv(MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV, "8")
     tree = _simple_binary_tree()
     tree.populate_node_divergences(leaf_data, feature_space=feature_space)
     assert CONTINUOUS_COVARIANCE_BY_BLOCK in tree.nodes["root"]
+    assert tree.nodes["root"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"].shape == (
+        len(columns),
+        len(columns),
+    )

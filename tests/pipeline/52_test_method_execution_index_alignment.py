@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from benchmarks.shared.types import MethodRunResult, MethodSpec
 from benchmarks.shared.util import method_execution
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
 )
 
@@ -46,7 +46,7 @@ def _benchmark_meta(**overrides):
         "category": "regression",
         "source_family": "binary_template",
         "feature_representation": "binary",
-        "requires_precomputed_kl_distance": False,
+        "requires_precomputed_tbs_distance": False,
     }
     metadata.update(overrides)
     return metadata
@@ -86,9 +86,9 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
 
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
 
-    spec = MethodSpec(name="KL", runner=lambda **_kwargs: None, param_grid=[{}])
+    spec = MethodSpec(name="TBS", runner=lambda **_kwargs: None, param_grid=[{}])
     result_row, computed_result, method_audit = method_execution.run_single_method_once(
-        method_id="kl",
+        method_id="tbs",
         spec=spec,
         params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
         case_idx=1,
@@ -151,7 +151,7 @@ def test_run_single_method_once_aligns_report_rows_by_sample_id(monkeypatch):
     assert method_audit is None
 
 
-def test_run_single_method_once_records_precomputed_kl_distance_contract(monkeypatch):
+def test_run_single_method_once_records_precomputed_tbs_distance_contract(monkeypatch):
     data_t = pd.DataFrame(
         [[0.0, 0.0], [0.1, 0.0], [1.0, 1.0], [0.9, 1.0]],
         index=["S0", "S1", "S2", "S3"],
@@ -174,9 +174,9 @@ def test_run_single_method_once_records_precomputed_kl_distance_contract(monkeyp
 
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
 
-    spec = MethodSpec(name="KL", runner=lambda **_kwargs: None, param_grid=[{}])
+    spec = MethodSpec(name="TBS", runner=lambda **_kwargs: None, param_grid=[{}])
     result_row, computed_result, _method_audit = method_execution.run_single_method_once(
-        method_id="kl",
+        method_id="tbs",
         spec=spec,
         params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
         case_idx=1,
@@ -192,7 +192,7 @@ def test_run_single_method_once_records_precomputed_kl_distance_contract(monkeyp
             source_family="gaussian_blobs",
             feature_representation="continuous",
             distance_metric="euclidean",
-            requires_precomputed_kl_distance=True,
+            requires_precomputed_tbs_distance=True,
         ),
         distance_matrix=None,
         distance_condensed=precomputed_distance,
@@ -241,12 +241,12 @@ def test_run_single_method_once_records_conditional_topology_precomputed_distanc
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
 
     spec = MethodSpec(
-        name="KL (Conditional Topology Diagnostic)",
+        name="TBS (Conditional Topology Diagnostic)",
         runner=lambda **_kwargs: None,
         param_grid=[{}],
     )
     result_row, computed_result, _method_audit = method_execution.run_single_method_once(
-        method_id="kl_conditional_topology_diagnostic",
+        method_id="tbs_conditional_topology_diagnostic",
         spec=spec,
         params={
             "tree_distance_metric": "hamming",
@@ -266,7 +266,7 @@ def test_run_single_method_once_records_conditional_topology_precomputed_distanc
             source_family="gaussian_blobs",
             feature_representation="continuous",
             distance_metric="euclidean",
-            requires_precomputed_kl_distance=True,
+            requires_precomputed_tbs_distance=True,
         ),
         distance_matrix=None,
         distance_condensed=precomputed_distance,
@@ -303,9 +303,9 @@ def test_run_single_method_once_records_neighbor_joining_tree_contract(monkeypat
 
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
 
-    spec = MethodSpec(name="KL (Neighbor Joining)", runner=lambda **_kwargs: None, param_grid=[{}])
+    spec = MethodSpec(name="TBS (Neighbor Joining)", runner=lambda **_kwargs: None, param_grid=[{}])
     result_row, computed_result, _method_audit = method_execution.run_single_method_once(
-        method_id="kl_neighbor_joining",
+        method_id="tbs_neighbor_joining",
         spec=spec,
         params={
             "tree_distance_metric": "hamming",
@@ -336,7 +336,7 @@ def test_run_single_method_once_records_neighbor_joining_tree_contract(monkeypat
     assert computed_result.params["tree_rooting"] == "mad"
 
 
-def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance(monkeypatch):
+def test_run_single_method_once_requires_metric_name_for_precomputed_tbs_distance(monkeypatch):
     data_t = pd.DataFrame(
         [[0.0, 0.0], [0.1, 0.0], [1.0, 1.0], [0.9, 1.0]],
         index=["S0", "S1", "S2", "S3"],
@@ -349,10 +349,10 @@ def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance
 
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
 
-    spec = MethodSpec(name="KL", runner=lambda **_kwargs: None, param_grid=[{}])
+    spec = MethodSpec(name="TBS", runner=lambda **_kwargs: None, param_grid=[{}])
     with pytest.raises(ValueError, match="distance_metric"):
         method_execution.run_single_method_once(
-            method_id="kl",
+            method_id="tbs",
             spec=spec,
             params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
             case_idx=1,
@@ -367,7 +367,7 @@ def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance
                 name="broken_precomputed_case",
                 source_family="gaussian_blobs",
                 feature_representation="continuous",
-                requires_precomputed_kl_distance=True,
+                requires_precomputed_tbs_distance=True,
             ),
             distance_matrix=None,
             distance_condensed=np.ones(6, dtype=float),
@@ -375,7 +375,7 @@ def test_run_single_method_once_requires_metric_name_for_precomputed_kl_distance
         )
 
 
-def test_run_single_method_once_requires_complete_kl_stage_timings(monkeypatch):
+def test_run_single_method_once_requires_complete_tbs_stage_timings(monkeypatch):
     data_t = pd.DataFrame(
         [[0, 1], [1, 0], [0, 0], [1, 1]],
         index=["S0", "S1", "S2", "S3"],
@@ -395,10 +395,10 @@ def test_run_single_method_once_requires_complete_kl_stage_timings(monkeypatch):
 
     monkeypatch.setattr(method_execution, "run_clustering_result", _fake_run_clustering_result)
 
-    spec = MethodSpec(name="KL", runner=lambda **_kwargs: None, param_grid=[{}])
+    spec = MethodSpec(name="TBS", runner=lambda **_kwargs: None, param_grid=[{}])
     with pytest.raises(ValueError, match="stage_timings.*missing"):
         method_execution.run_single_method_once(
-            method_id="kl",
+            method_id="tbs",
             spec=spec,
             params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
             case_idx=1,
@@ -433,9 +433,9 @@ def test_run_single_method_once_records_runner_exception_as_skip(monkeypatch):
         _failing_run_clustering_result,
     )
 
-    spec = MethodSpec(name="KL", runner=lambda **_kwargs: None, param_grid=[{}])
+    spec = MethodSpec(name="TBS", runner=lambda **_kwargs: None, param_grid=[{}])
     result_row, computed_result, method_audit = method_execution.run_single_method_once(
-        method_id="kl",
+        method_id="tbs",
         spec=spec,
         params={"tree_distance_metric": "hamming", "tree_linkage_method": "average"},
         case_idx=1,

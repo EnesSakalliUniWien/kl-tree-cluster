@@ -4,7 +4,7 @@
 The pipeline keeps analysis levels explicit:
 
 1. matrix quality diagnostics,
-2. current adaptive-diffusion cosine-subspace KL trees,
+2. current adaptive-diffusion cosine-subspace TBS trees,
 3. optional method/tree-geometry candidate matrix for audit only,
 4. analysis-level inventory tying the output folder back to the canonical
    contract.
@@ -208,7 +208,7 @@ def build_pipeline_plan(args: argparse.Namespace, output_dir: Path | None = None
                 stage_id="10_current_adaptive_diffusion_subspace_tree",
                 analysis_level="30_canonical_current_subspace_pipeline",
                 description=(
-                    "Run the canonical current KL adaptive-diffusion cosine-subspace "
+                    "Run the canonical current TBS adaptive-diffusion cosine-subspace "
                     "tree pipeline with connected PDFs, rankings, and manifests."
                 ),
                 output_dir=root / "10_current_adaptive_diffusion_subspace_tree",
@@ -300,7 +300,7 @@ def write_pipeline_files(
         f"Dry run: `{dry_run}`",
         "",
         "Canonical interpretation level:",
-        "- `30_canonical_current_subspace_pipeline`: current KL gates on adaptive-diffusion cosine subspace trees.",
+        "- `30_canonical_current_subspace_pipeline`: current TBS gates on adaptive-diffusion cosine subspace trees.",
         "",
         "## Stages",
         "",

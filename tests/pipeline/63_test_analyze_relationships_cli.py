@@ -13,7 +13,7 @@ def _write_run_csv(results_dir: Path, run_name: str, csv_name: str) -> Path:
     csv_path.write_text(
         "test_case,case_id,case_category,method,true_clusters,found_clusters,"
         "samples,features,noise,ari,nmi,purity,status\n"
-        "1,case_a,improved_gaussian,kl,2,2,10,5,0.1,1.0,1.0,1.0,ok\n"
+        "1,case_a,improved_gaussian,tbs,2,2,10,5,0.1,1.0,1.0,1.0,ok\n"
     )
     return run_dir
 

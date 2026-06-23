@@ -17,12 +17,12 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
     extract_branch_length_observation,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import kstest

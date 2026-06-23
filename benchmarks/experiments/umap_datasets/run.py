@@ -1,7 +1,7 @@
 """
-UMAP Datasets Benchmark for KL Divergence Clustering.
+UMAP Datasets Benchmark for TBS Divergence Clustering.
 
-Benchmarks the KL clustering algorithm on the datasets used in the UMAP documentation:
+Benchmarks the TBS clustering algorithm on the datasets used in the UMAP documentation:
 1. Palmer Penguins - 333 samples, 4 features, 3 species
 2. Sklearn Digits - 1797 samples, 64 features (8x8 images), 10 classes
 
@@ -28,7 +28,7 @@ from sklearn.preprocessing import KBinsDiscretizer, StandardScaler
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def load_penguins() -> tuple[np.ndarray, np.ndarray, list[str]]:
@@ -145,7 +145,7 @@ def binarize_data(X: np.ndarray, threshold: float = None) -> np.ndarray:
     return X_binary
 
 
-def run_kl_clustering(
+def run_tbs_clustering(
     X: np.ndarray,
     sample_names: list[str] = None,
     distance_metric: str = "rogerstanimoto",
@@ -153,7 +153,7 @@ def run_kl_clustering(
     significance_level: float = 0.05,
     verbose: bool = True,
 ) -> tuple[np.ndarray, dict]:
-    """Run KL divergence clustering on data.
+    """Run TBS divergence clustering on data.
 
     Parameters
     ----------
@@ -296,7 +296,7 @@ def plot_umap_embedding(
             marker="x",
             label="Unclustered",
         )
-    ax_pred.set_title(f"{title} - KL Clusters ({len(np.unique(labels[mask_clustered]))})")
+    ax_pred.set_title(f"{title} - TBS Clusters ({len(np.unique(labels[mask_clustered]))})")
     ax_pred.set_aspect("equal", "datalim")
 
 
@@ -404,7 +404,7 @@ def create_bokeh_digits_plot(
 
     # Create figure for PREDICTED clusters
     plot_pred = figure(
-        title=f"UMAP - KL Clusters ({n_clusters} clusters)",
+        title=f"UMAP - TBS Clusters ({n_clusters} clusters)",
         width=600,
         height=600,
         tools=("pan, wheel_zoom, reset"),
@@ -478,7 +478,7 @@ def benchmark_dataset(
                 print(f"    Tree: {dist} + {link}...", end=" ")
 
             try:
-                labels, _ = run_kl_clustering(
+                labels, _ = run_tbs_clustering(
                     X_processed,
                     distance_metric=dist,
                     linkage_method=link,
@@ -525,7 +525,7 @@ def benchmark_dataset(
 def main():
     """Run the UMAP datasets benchmark."""
     print("\n" + "=" * 70)
-    print("UMAP DATASETS BENCHMARK - KL Divergence Clustering")
+    print("UMAP DATASETS BENCHMARK - TBS Divergence Clustering")
     print("=" * 70)
 
     # Use a single benchmark results root for all suites
@@ -637,7 +637,7 @@ def main():
         X_peng_proc = [p for p in preproc_continuous if p["name"] == best_peng["preprocessing"]][0][
             "transform"
         ](X_penguins)
-        labels_peng, _ = run_kl_clustering(
+        labels_peng, _ = run_tbs_clustering(
             X_peng_proc,
             distance_metric=best_peng["distance"],
             linkage_method=best_peng["linkage"],
@@ -650,7 +650,7 @@ def main():
         X_dig_proc = [p for p in preproc_image if p["name"] == best_dig["preprocessing"]][0][
             "transform"
         ](X_digits)
-        labels_dig, _ = run_kl_clustering(
+        labels_dig, _ = run_tbs_clustering(
             X_dig_proc,
             distance_metric=best_dig["distance"],
             linkage_method=best_dig["linkage"],

@@ -27,10 +27,10 @@ from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
-from kl_clustering_analysis.hierarchy_analysis.statistics.contrast_covariance import (
+from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     compute_whitened_wald_contrast,
 )
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     continuous_feature_space_from_columns,
     infer_feature_space_from_columns,

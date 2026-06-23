@@ -40,7 +40,7 @@ def generate_preloaded_case(test_case: dict, _seed: int | None) -> CaseDataResul
         generator="preloaded",
         source_family="preloaded_matrix",
         feature_representation="preloaded_matrix",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "source_file": str(path),
             "sparsity": float(1 - data_df.values.mean()),

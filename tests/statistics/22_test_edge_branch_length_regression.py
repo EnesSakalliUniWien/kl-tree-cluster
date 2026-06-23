@@ -3,10 +3,10 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.statistics.branch_length_utils import (
+from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
     run_child_parent_tests_across_tree,
 )
 
@@ -36,8 +36,8 @@ def _make_two_edge_tree(
 def _run_edge_projection_with_capture(
     tree: nx.DiGraph,
     monkeypatch: pytest.MonkeyPatch,
-) -> list[tuple[int, int]]:
-    captured: list[tuple[int, int]] = []
+) -> list[tuple[int, int, float | None, float | None]]:
+    captured: list[tuple[int, int, float | None, float | None]] = []
 
     def _fake_projected_test(
         child_dist: np.ndarray,
@@ -49,12 +49,14 @@ def _run_edge_projection_with_capture(
         pca_eigenvalues: np.ndarray | None = None,
         feature_space: object | None = None,
         continuous_covariance_by_block: object | None = None,
+        branch_length: float | None = None,
+        mean_branch_length: float | None = None,
     ) -> tuple[float, float, float, bool]:
-        captured.append((n_child, n_parent))
+        captured.append((n_child, n_parent, branch_length, mean_branch_length))
         return 0.0, 1.0, 1.0, False
 
     monkeypatch.setattr(
-        "kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.tree_testing.run_child_parent_projected_wald_test",
+        "tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.tree_testing.run_child_parent_projected_wald_test",
         _fake_projected_test,
     )
 
@@ -90,21 +92,20 @@ def test_branch_length_utility_rejects_malformed_observations() -> None:
         compute_mean_branch_length(tree)
 
 
-def test_edge_projection_does_not_use_branch_length_variance_scaling(
+def test_edge_projection_passes_branch_length_time_scaling(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     tree = _make_two_edge_tree(left_branch_length=1.0, right_branch_length=3.0)
 
     captured = _run_edge_projection_with_capture(tree, monkeypatch)
 
-    assert captured == [(5, 10), (5, 10)]
+    assert captured == [(5, 10, 1.0, 2.0), (5, 10, 3.0, 2.0)]
 
 
-def test_edge_projection_does_not_validate_unused_branch_lengths(
+def test_edge_projection_validates_used_branch_lengths(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     tree = _make_two_edge_tree(left_branch_length=float("nan"), right_branch_length=-1.0)
 
-    captured = _run_edge_projection_with_capture(tree, monkeypatch)
-
-    assert captured == [(5, 10), (5, 10)]
+    with pytest.raises(ValueError, match="finite non-negative branch length"):
+        _run_edge_projection_with_capture(tree, monkeypatch)

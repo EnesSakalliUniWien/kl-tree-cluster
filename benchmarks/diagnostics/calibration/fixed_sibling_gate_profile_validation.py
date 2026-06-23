@@ -1,4 +1,4 @@
-"""Validate fixed sibling-gate profiles through the shared KL runner.
+"""Validate fixed sibling-gate profiles through the shared TBS runner.
 
 This diagnostic is intentionally narrow: it verifies that named production-facing
 profiles route through fixed-subspace sibling statistics and records traversal
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     SIBLING_GATE_PROFILES,
     resolve_sibling_gate_profile,
     resolve_sibling_gate_profile_config,
@@ -39,7 +39,7 @@ from benchmarks.diagnostics.calibration.production_admissibility_contract import
     evaluate_production_admissibility_components,
     summarize_production_admissibility_contracts,
 )
-from benchmarks.shared.runners.kl_runner import _run_kl_method
+from benchmarks.shared.runners.tbs_runner import _run_tbs_method
 from benchmarks.shared.util.time import format_timestamp_utc
 from benchmarks.validation.selected_edge_type1_geometry import (
     _case_contract,
@@ -418,7 +418,7 @@ def _rows_for_replicate(
         seed=data_seed,
     )
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
-    result = _run_kl_method(
+    result = _run_tbs_method(
         data,
         distance,
         sibling_significance_level=float(sibling_alpha),
@@ -1013,7 +1013,7 @@ def build_method_constant_evidence_fields(
     )
     base = {
         "validation_design": (
-            "Shared KL runner smoke over selected null/signal benchmark cases; "
+            "Shared TBS runner smoke over selected null/signal benchmark cases; "
             "diagnostic-only fixed sibling-gate profile validation."
         ),
         "source_artifact_paths": paths,
@@ -1325,7 +1325,7 @@ def run_fixed_sibling_gate_profile_validation(
         },
         "interpretation": (
             "Diagnostic-only validation that named fixed sibling-gate profiles "
-            "avoid adaptive sibling projection in the shared KL runner and record "
+            "avoid adaptive sibling projection in the shared TBS runner and record "
             "traversal point/confidence evidence."
         ),
     }

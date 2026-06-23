@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _simple_tree() -> tuple[PosetTree, pd.DataFrame]:

@@ -10,14 +10,14 @@ from benchmarks.shared.types import MethodSpec
 
 
 def test_forced_runner_failure_records_skip_everywhere(monkeypatch):
-    original_kl = METHOD_SPECS["kl"]
+    original_kl = METHOD_SPECS["tbs"]
 
     def _raise_runner(*_args, **_kwargs):
         raise RuntimeError("forced integration failure")
 
     monkeypatch.setitem(
         METHOD_SPECS,
-        "kl",
+        "tbs",
         MethodSpec(
             name=original_kl.name,
             runner=_raise_runner,
@@ -39,7 +39,7 @@ def test_forced_runner_failure_records_skip_everywhere(monkeypatch):
     pipeline_df, _ = benchmark_cluster_algorithm(
         test_cases=[pipeline_case],
         verbose=False,
-        methods=["kl"],
+        methods=["tbs"],
         plot_umap=False,
         plot_manifold=False,
     )
@@ -51,7 +51,7 @@ def test_forced_runner_failure_records_skip_everywhere(monkeypatch):
         n_features=20,
         branch_lengths=[0.2],
         random_seed=7,
-        method="kl",
+        method="tbs",
         verbose=False,
     )
     assert branch_df.loc[0, "status"] == "skip"

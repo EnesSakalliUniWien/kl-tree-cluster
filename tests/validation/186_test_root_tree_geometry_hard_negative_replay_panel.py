@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
-from kl_clustering_analysis.tree.poset_tree import PosetTree
-
 from benchmarks.diagnostics.calibration import (
     root_tree_geometry_hard_negative_replay_panel as panel,
 )
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def test_tree_geometry_parser_requires_builder_rooting_distance_linkage() -> None:

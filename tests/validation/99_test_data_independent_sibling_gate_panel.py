@@ -20,13 +20,13 @@ from benchmarks.diagnostics.calibration.production_admissibility_contract import
     evaluate_production_admissibility_components,
     summarize_production_admissibility_contracts,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.fixed_subspace_annotation import (
+from scipy.stats import chi2
+from statsmodels.stats.multitest import multipletests
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.fixed_subspace_annotation import (
     fixed_coordinate_bh_p_value,
     fixed_subspace_sibling_p_value,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureBlock, FeatureSpace
-from scipy.stats import chi2
-from statsmodels.stats.multitest import multipletests
+from tree_break_selection.tree.feature_space import FeatureBlock, FeatureSpace
 
 
 def _summary_rows(

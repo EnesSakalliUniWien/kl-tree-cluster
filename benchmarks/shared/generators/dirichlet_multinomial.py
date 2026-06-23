@@ -64,7 +64,7 @@ def generate_categorical_dirichlet_multinomial(
         generator="categorical_dirichlet_multinomial",
         source_family="categorical_dirichlet_multinomial",
         feature_representation="categorical_one_hot",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "feature_space": feature_space,
             "n_features_original": n_features,

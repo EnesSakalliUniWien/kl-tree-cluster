@@ -3,7 +3,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
     SpectralBlock,
     cosine_eigendecomposition,

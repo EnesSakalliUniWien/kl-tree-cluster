@@ -16,8 +16,8 @@ from benchmarks.diagnostics.calibration.data_independent_sibling_gate_traversal_
     summarize_traversal_rows,
     summarize_traversal_transfer,
 )
-from kl_clustering_analysis.tree.feature_space import bernoulli_feature_space_from_columns
 from scipy.spatial.distance import pdist as scipy_pdist
+from tree_break_selection.tree.feature_space import bernoulli_feature_space_from_columns
 
 
 def test_summarize_traversal_rows_marks_null_and_signal_statuses() -> None:

@@ -6,26 +6,32 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.spectral_transport import (
+from scipy.spatial.distance import pdist, squareform
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.decomposition.gates.spectral_transport import (
     DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
     DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
     DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
-from kl_clustering_analysis.tree.feature_space import FeatureSpace
-from scipy.spatial.distance import pdist, squareform
+from tree_break_selection.tree.continuous_distance import (
+    CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
+    CONTINUOUS_TREE_DISTANCE_METRIC,
+    continuous_time_distance_condensed,
+    standardized_euclidean_distance_condensed,
+)
+from tree_break_selection.tree.feature_space import FeatureSpace
 
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import _create_report_dataframe_from_labels
-from benchmarks.shared.util.method_sets import KL_RUNNER_METHODS
+from benchmarks.shared.util.method_sets import TBS_RUNNER_METHODS
 
 
 def _normalize_method_result(
@@ -96,7 +102,7 @@ def run_clustering_result(
     spec = METHOD_SPECS[method_id]
     alpha = DEFAULT_SIBLING_ALPHA if significance_level is None else float(significance_level)
     resolved_edge_alpha = DEFAULT_EDGE_ALPHA if edge_alpha is None else float(edge_alpha)
-    if method_id == "kl_diffusion":
+    if method_id == "tbs_diffusion":
         try:
             result = spec.runner(
                 data_df,
@@ -108,7 +114,7 @@ def run_clustering_result(
         except Exception as exc:
             return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
-    if method_id == "kl_diffusion_adaptive":
+    if method_id == "tbs_diffusion_adaptive":
         try:
             result = spec.runner(
                 data_df,
@@ -125,19 +131,37 @@ def run_clustering_result(
             return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
 
-    if method_id in KL_RUNNER_METHODS:
+    if method_id in TBS_RUNNER_METHODS:
         metric = str(params["tree_distance_metric"])
-        if method_id == "kl_iqtree3":
-            kl_distance_condensed = None
+        if method_id == "tbs_iqtree3":
+            tbs_distance_condensed = None
         elif distance_condensed is not None:
             # Use precomputed distance (e.g. SBM modularity distance).
-            kl_distance_condensed = np.asarray(distance_condensed, dtype=float)
+            tbs_distance_condensed = np.asarray(distance_condensed, dtype=float)
+        elif metric == CONTINUOUS_TREE_DISTANCE_METRIC:
+            if feature_space is None:
+                raise ValueError(
+                    "mahalanobis_time TBS tree distances require a continuous feature_space."
+                )
+            tbs_distance_condensed = continuous_time_distance_condensed(
+                data_df.values,
+                feature_space,
+            )
+        elif metric == CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC:
+            if feature_space is None:
+                raise ValueError(
+                    "standardized_euclidean TBS tree distances require a continuous feature_space."
+                )
+            tbs_distance_condensed = standardized_euclidean_distance_condensed(
+                data_df.values,
+                feature_space,
+            )
         else:
-            kl_distance_condensed = pdist(data_df.values, metric=metric)
+            tbs_distance_condensed = pdist(data_df.values, metric=metric)
         try:
             result = spec.runner(
                 data_df,
-                kl_distance_condensed,
+                tbs_distance_condensed,
                 alpha,
                 tree_linkage_method=str(params["tree_linkage_method"]),
                 tree_builder=str(params.get("tree_builder", "linkage")),

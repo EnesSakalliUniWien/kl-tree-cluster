@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from benchmarks.shared.runners.kl_diffusion_runner import _build_adaptive_diffusion_distance
+from benchmarks.shared.runners.tbs_diffusion_runner import _build_adaptive_diffusion_distance
 
 
 def test_build_adaptive_diffusion_distance_returns_finite_condensed_matrix():

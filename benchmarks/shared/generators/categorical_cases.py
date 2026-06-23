@@ -60,7 +60,7 @@ def generate_categorical_case(test_case: dict, seed: int | None) -> CaseDataResu
         generator="categorical",
         source_family="categorical_multinomial",
         feature_representation="categorical_one_hot",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "n_features_original": n_features,
             "n_categories": n_categories,
@@ -111,7 +111,7 @@ def generate_phylogenetic_case(test_case: dict, seed: int | None) -> CaseDataRes
         generator="phylogenetic",
         source_family="phylogenetic_sequence",
         feature_representation="categorical_one_hot",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "n_features_original": n_features,
             "n_categories": n_categories,
@@ -169,7 +169,7 @@ def generate_temporal_evolution_case(test_case: dict, seed: int | None) -> CaseD
         generator="temporal_evolution",
         source_family="temporal_sequence",
         feature_representation="categorical_one_hot",
-        requires_precomputed_kl_distance=False,
+        requires_precomputed_tbs_distance=False,
         extra={
             "n_features_original": n_features,
             "n_categories": n_categories,

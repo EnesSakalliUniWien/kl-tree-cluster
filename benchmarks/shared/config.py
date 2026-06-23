@@ -7,8 +7,8 @@ both the full runner and the shared benchmarking pipeline.
 from __future__ import annotations
 
 DEFAULT_METHODS: tuple[str, ...] = (
-    "kl",
-    "kl_diffusion",
+    "tbs",
+    "tbs_diffusion",
     "leiden",
     "louvain",
     "kmeans",

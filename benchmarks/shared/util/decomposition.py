@@ -6,7 +6,7 @@ from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
 

@@ -1,6 +1,6 @@
 """Root binary-resolution strength diagnostic.
 
-KL-TE always builds a binary hierarchy, so the root is always represented as
+Tree-Break Selection always builds a binary hierarchy, so the root is always represented as
 
     r -> (L, R).
 

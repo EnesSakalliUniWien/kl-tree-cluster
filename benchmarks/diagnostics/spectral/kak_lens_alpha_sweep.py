@@ -17,17 +17,17 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.types.inflation_model import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.types.inflation_model import (
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     CalibrationSupportThresholds,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import (
@@ -47,7 +47,7 @@ from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import (
     load_matrix,
 )
-from benchmarks.shared.runners.kl_diffusion_runner import (
+from benchmarks.shared.runners.tbs_diffusion_runner import (
     _compute_diffusion_coordinates,
     _resolve_adaptive_epsilon,
     _resolve_neighbor_search_k,
@@ -149,7 +149,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path(
             "benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/"
-            "09_full_data_method_reference_comparison_20260610/kl_diffusion_adaptive/"
+            "09_full_data_method_reference_comparison_20260610/tbs_diffusion_adaptive/"
             "cluster_assignments.csv"
         ),
     )

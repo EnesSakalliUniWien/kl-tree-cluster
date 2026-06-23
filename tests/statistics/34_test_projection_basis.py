@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_projection_basis import (
     build_pca_projection_basis,
 )
 

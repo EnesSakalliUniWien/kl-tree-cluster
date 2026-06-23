@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
-
 from benchmarks.diagnostics.path_b.phase1_path_b_foundation import (
     add_phase1_variant_columns,
     build_phase1_param_grid,

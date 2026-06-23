@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Grid-search diagnostic for edge and sibling alpha method constants.
 
-This runner evaluates the active KL benchmark path over an explicit grid of
+This runner evaluates the active TBS benchmark path over an explicit grid of
 edge and sibling alpha values. It is validation evidence only: it does not
 change production defaults and does not add a fallback calibration rule.
 """
@@ -110,9 +110,9 @@ def summarize_alpha_result(
     elapsed_sec: float,
 ) -> dict[str, object]:
     """Summarize one full benchmark result table for one alpha pair."""
-    kl_rows = result[result["method"] == "kl"].copy()
-    ok_rows = kl_rows[kl_rows["status"] == "ok"].copy()
-    skip_rows = kl_rows[kl_rows["status"] != "ok"].copy()
+    tbs_rows = result[result["method"] == "tbs"].copy()
+    ok_rows = tbs_rows[tbs_rows["status"] == "ok"].copy()
+    skip_rows = tbs_rows[tbs_rows["status"] != "ok"].copy()
 
     exact_k = int((ok_rows["found_clusters"] == ok_rows["true_clusters"]).sum())
     under_split = int((ok_rows["found_clusters"] < ok_rows["true_clusters"]).sum())
@@ -129,7 +129,7 @@ def summarize_alpha_result(
     return {
         "edge_alpha": float(edge_alpha),
         "sibling_alpha": float(sibling_alpha),
-        "n_cases": int(len(kl_rows)),
+        "n_cases": int(len(tbs_rows)),
         "n_ok": int(len(ok_rows)),
         "n_skip": int(len(skip_rows)),
         "exact_k": exact_k,
@@ -175,7 +175,7 @@ def run_alpha_grid_search(config: AlphaGridConfig) -> dict[str, object]:
             verbose=False,
             plot_umap=False,
             plot_manifold=False,
-            methods=["kl"],
+            methods=["tbs"],
             concat_plots_pdf=False,
         )
         elapsed_sec = perf_counter() - started
@@ -239,9 +239,9 @@ def run_alpha_grid_search(config: AlphaGridConfig) -> dict[str, object]:
 def current_git_state() -> dict[str, object]:
     """Return git provenance without hiding command failures."""
     state: dict[str, object] = {
-        "build_commit": os.environ.get("KL_TE_GIT_COMMIT", "unknown"),
-        "build_branch": os.environ.get("KL_TE_GIT_BRANCH", "unknown"),
-        "build_dirty": os.environ.get("KL_TE_GIT_DIRTY", "unknown"),
+        "build_commit": os.environ.get("TBS_GIT_COMMIT", "unknown"),
+        "build_branch": os.environ.get("TBS_GIT_BRANCH", "unknown"),
+        "build_dirty": os.environ.get("TBS_GIT_DIRTY", "unknown"),
     }
     commands = {
         "commit": ("git", "rev-parse", "HEAD"),

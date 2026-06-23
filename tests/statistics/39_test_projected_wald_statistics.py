@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald.child_parent_projected_wald_test import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_projected_wald.child_parent_projected_wald_test import (
     run_child_parent_projected_wald_test,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_kernel import (
+from tree_break_selection.hierarchy_analysis.statistics.projection.projected_wald.projected_wald_kernel import (
     run_projected_wald_kernel,
 )
 

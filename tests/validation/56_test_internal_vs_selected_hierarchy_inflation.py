@@ -9,10 +9,10 @@ from benchmarks.diagnostics.calibration.internal_vs_selected_hierarchy_inflation
     required_inflation_to_block,
     run_internal_vs_selected_hierarchy_inflation_study,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
+from scipy.stats import chi2
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
 )
-from scipy.stats import chi2
 
 
 def _record(

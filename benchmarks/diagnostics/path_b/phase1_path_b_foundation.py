@@ -1,6 +1,6 @@
 """Phase-1 Path B foundation sweep.
 
-This diagnostic runs KL-only benchmark ablations for the MP minimum projection
+This diagnostic runs TBS-only benchmark ablations for the MP minimum projection
 dimension and pass-through traversal, then summarizes cluster-count behavior.
 It can also rerun the existing Q5 selected-tail law diagnostic and report the
 predictive gain from barycentric/spectral geometry covariates.
@@ -27,7 +27,7 @@ from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.method_execution import run_single_method_once
 from benchmarks.shared.util.time import format_timestamp_utc
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
@@ -80,7 +80,7 @@ def build_phase1_param_grid(
     k_min_values: Sequence[int],
     passthrough_values: Sequence[bool],
 ) -> list[dict[str, object]]:
-    base = dict(METHOD_SPECS["kl"].param_grid[0])
+    base = dict(METHOD_SPECS["tbs"].param_grid[0])
     rows: list[dict[str, object]] = []
     for k_min in k_min_values:
         for passthrough in passthrough_values:
@@ -310,7 +310,7 @@ def _run_benchmark_sweep(
     for case_index, case in enumerate(test_cases, start=1):
         case = dict(case)
         case["test_case_num"] = case_index
-        inputs = prepare_case_inputs(case, ["kl"])
+        inputs = prepare_case_inputs(case, ["tbs"])
         for params in param_grid:
             key = (
                 case_index,
@@ -320,8 +320,8 @@ def _run_benchmark_sweep(
             if key in completed:
                 continue
             row, _computed, _audit = run_single_method_once(
-                method_id="kl",
-                spec=METHOD_SPECS["kl"],
+                method_id="tbs",
+                spec=METHOD_SPECS["tbs"],
                 params=params,
                 case_idx=case_index,
                 case_name=str(case["name"]),

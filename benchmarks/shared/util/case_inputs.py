@@ -6,20 +6,20 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
-from kl_clustering_analysis.tree.feature_space import (
+from scipy.spatial.distance import pdist, squareform
+from tree_break_selection import config
+from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     contains_categorical_feature_columns,
     validate_feature_space,
 )
-from scipy.spatial.distance import pdist, squareform
 
 from benchmarks.shared.generators import generate_case_data
 from benchmarks.shared.util.method_sets import (
     DISTANCE_MATRIX_METHODS as _DISTANCE_MATRIX_METHODS,
 )
 from benchmarks.shared.util.method_sets import (
-    KL_DISTANCE_TREE_METHODS as _KL_DISTANCE_TREE_METHODS,
+    TBS_DISTANCE_TREE_METHODS as _TBS_DISTANCE_TREE_METHODS,
 )
 
 
@@ -54,21 +54,21 @@ def prepare_case_inputs(
     needs_distance_matrix = any(
         method_id in _DISTANCE_MATRIX_METHODS for method_id in selected_methods
     )
-    needs_kl_tree_distance = any(
-        method_id in _KL_DISTANCE_TREE_METHODS for method_id in selected_methods
+    needs_tbs_tree_distance = any(
+        method_id in _TBS_DISTANCE_TREE_METHODS for method_id in selected_methods
     )
-    requires_precomputed_kl_distance = bool(meta["requires_precomputed_kl_distance"])
+    requires_precomputed_tbs_distance = bool(meta["requires_precomputed_tbs_distance"])
     needs_distance_condensed = (
-        needs_distance_matrix or (needs_kl_tree_distance and requires_precomputed_kl_distance)
+        needs_distance_matrix or (needs_tbs_tree_distance and requires_precomputed_tbs_distance)
     )
 
     distance_condensed = None
     distance_matrix = None
     precomputed_distance_condensed = meta["precomputed_distance_condensed"]
-    if needs_kl_tree_distance and requires_precomputed_kl_distance:
+    if needs_tbs_tree_distance and requires_precomputed_tbs_distance:
         if precomputed_distance_condensed is None:
             raise ValueError(
-                f"Case '{meta['name']}' requires precomputed KL tree distance but "
+                f"Case '{meta['name']}' requires precomputed TBS tree distance but "
                 "metadata does not provide precomputed_distance_condensed."
             )
     if precomputed_distance_condensed is not None and needs_distance_condensed:

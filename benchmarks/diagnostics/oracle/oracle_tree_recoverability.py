@@ -8,7 +8,7 @@ from typing import Hashable
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.core_utils.tree_utils import bottom_up_nodes
+from tree_break_selection.core_utils.tree_utils import bottom_up_nodes
 from sklearn.metrics import adjusted_rand_score
 
 FAILURE_CLASS_SOLVED = "solved"
@@ -371,17 +371,17 @@ def oracle_subtree_cut(
 
 def classify_tree_recoverability_failure(
     *,
-    kl_ari: float,
-    kl_found_clusters: int,
+    tbs_ari: float,
+    tbs_found_clusters: int,
     true_clusters: int,
     oracle_true_k_subtree_ari: float,
     solved_ari_threshold: float = 0.95,
     recoverable_ari_threshold: float = 0.8,
     oracle_gap_tolerance: float = 1e-9,
 ) -> str:
-    """Classify whether a KL miss is tree-limited or gate/stopping-limited."""
+    """Classify whether a TBS miss is tree-limited or gate/stopping-limited."""
     metrics = {
-        "kl_ari": kl_ari,
+        "tbs_ari": tbs_ari,
         "oracle_true_k_subtree_ari": oracle_true_k_subtree_ari,
     }
     for name, value in metrics.items():
@@ -400,18 +400,18 @@ def classify_tree_recoverability_failure(
     if oracle_gap_tolerance < 0.0:
         raise ValueError("oracle_gap_tolerance must be non-negative.")
 
-    found = int(kl_found_clusters)
+    found = int(tbs_found_clusters)
     truth = int(true_clusters)
     if found < 1:
-        raise ValueError(f"kl_found_clusters must be positive, got {found}.")
+        raise ValueError(f"tbs_found_clusters must be positive, got {found}.")
     if truth < 1:
         raise ValueError(f"true_clusters must be positive, got {truth}.")
 
-    if float(kl_ari) >= solved_ari_threshold:
+    if float(tbs_ari) >= solved_ari_threshold:
         return FAILURE_CLASS_SOLVED
     if float(oracle_true_k_subtree_ari) < recoverable_ari_threshold:
         return FAILURE_CLASS_TREE_UNRECOVERABLE
-    if float(kl_ari) >= float(oracle_true_k_subtree_ari) - oracle_gap_tolerance:
+    if float(tbs_ari) >= float(oracle_true_k_subtree_ari) - oracle_gap_tolerance:
         return FAILURE_CLASS_ORACLE_MATCHED_BELOW_SOLVED
     if found < truth:
         return FAILURE_CLASS_GATE_UNDER_SPLIT

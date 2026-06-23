@@ -4,7 +4,6 @@ import zlib
 
 import numpy as np
 import pandas as pd
-
 from benchmarks.diagnostics.path_b.mixed_null_signal_geometry_validation import (
     _fold_ids,
     build_mixed_null_signal_geometry_panel,
@@ -14,7 +13,7 @@ from benchmarks.diagnostics.path_b.mixed_null_signal_geometry_validation import 
     summarize_geometry_models,
     summarize_labeled_calibration,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 class _SpectralContext:

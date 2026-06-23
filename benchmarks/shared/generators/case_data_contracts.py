@@ -7,12 +7,17 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.tree.continuous_distance import (
+    CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
+    CONTINUOUS_TREE_DISTANCE_METRIC,
+    continuous_time_distance_condensed,
+    standardized_euclidean_distance_condensed,
+)
+from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     continuous_feature_space_from_columns,
     infer_feature_space_from_columns,
 )
-from scipy.spatial.distance import pdist
 
 CaseDataResult = tuple[pd.DataFrame, np.ndarray, np.ndarray, dict[str, Any]]
 CaseGenerator = Callable[[dict, int | None], CaseDataResult]
@@ -27,7 +32,7 @@ CORE_METADATA_KEYS = frozenset(
         "generator",
         "source_family",
         "feature_representation",
-        "requires_precomputed_kl_distance",
+        "requires_precomputed_tbs_distance",
         "precomputed_distance_matrix",
         "precomputed_distance_condensed",
     }
@@ -55,7 +60,7 @@ def case_metadata(
     generator: str,
     source_family: str,
     feature_representation: str,
-    requires_precomputed_kl_distance: bool,
+    requires_precomputed_tbs_distance: bool,
     precomputed_distance_matrix: np.ndarray | None = None,
     precomputed_distance_condensed: np.ndarray | None = None,
     distance_metric: str | None = None,
@@ -65,14 +70,14 @@ def case_metadata(
     has_precomputed_distance = (
         precomputed_distance_matrix is not None or precomputed_distance_condensed is not None
     )
-    if has_precomputed_distance and not requires_precomputed_kl_distance:
+    if has_precomputed_distance and not requires_precomputed_tbs_distance:
         raise ValueError(
-            "Precomputed KL tree distances require "
-            "requires_precomputed_kl_distance=True."
+            "Precomputed TBS tree distances require "
+            "requires_precomputed_tbs_distance=True."
         )
-    if requires_precomputed_kl_distance and precomputed_distance_condensed is None:
+    if requires_precomputed_tbs_distance and precomputed_distance_condensed is None:
         raise ValueError(
-            "Cases requiring a precomputed KL tree distance must provide "
+            "Cases requiring a precomputed TBS tree distance must provide "
             "precomputed_distance_condensed."
         )
     metadata: dict[str, Any] = {
@@ -84,7 +89,7 @@ def case_metadata(
         "generator": generator,
         "source_family": source_family,
         "feature_representation": feature_representation,
-        "requires_precomputed_kl_distance": bool(requires_precomputed_kl_distance),
+        "requires_precomputed_tbs_distance": bool(requires_precomputed_tbs_distance),
         "precomputed_distance_matrix": precomputed_distance_matrix,
         "precomputed_distance_condensed": precomputed_distance_condensed,
     }
@@ -119,6 +124,8 @@ def continuous_dataframe_and_metadata(
     matrix: np.ndarray,
     sample_names: list[str],
     feature_names: list[str],
+    *,
+    tree_distance_metric: str = CONTINUOUS_TREE_DISTANCE_METRIC,
 ) -> tuple[pd.DataFrame, FeatureSpace, np.ndarray]:
     """Return continuous benchmark data with one empirical-Gaussian block contract."""
     continuous_matrix = np.asarray(matrix, dtype=np.float64)
@@ -128,5 +135,16 @@ def continuous_dataframe_and_metadata(
         columns=feature_names,
     )
     feature_space = continuous_feature_space_from_columns(tuple(data_df.columns))
-    distance_condensed = pdist(continuous_matrix, metric="euclidean")
+    if tree_distance_metric == CONTINUOUS_TREE_DISTANCE_METRIC:
+        distance_condensed = continuous_time_distance_condensed(
+            continuous_matrix,
+            feature_space,
+        )
+    elif tree_distance_metric == CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC:
+        distance_condensed = standardized_euclidean_distance_condensed(
+            continuous_matrix,
+            feature_space,
+        )
+    else:
+        raise ValueError(f"Unsupported continuous tree_distance_metric: {tree_distance_metric!r}.")
     return data_df, feature_space, distance_condensed

@@ -128,7 +128,7 @@ def test_legacy_c2ef9a69_panel_writes_outputs(
     summary = pd.read_csv(outputs["summary"])
     assert set(summary["data_role"]) == {"selected_null", "signal"}
     manifest = json.loads(outputs["manifest"].read_text(encoding="utf-8"))
-    assert manifest["variants"][panel.CURRENT_VARIANT]["method_id"] == "kl"
+    assert manifest["variants"][panel.CURRENT_VARIANT]["method_id"] == "tbs"
     assert manifest["variants"][panel.LEGACY_VARIANT]["method_id"] == (
-        "kl_legacy_c2ef9a69"
+        "tbs_legacy_c2ef9a69"
     )

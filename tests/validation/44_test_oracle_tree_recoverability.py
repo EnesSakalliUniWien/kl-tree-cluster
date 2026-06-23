@@ -13,7 +13,7 @@ from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     classify_tree_recoverability_failure,
     oracle_subtree_cut,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _tree_from_children(children: np.ndarray) -> PosetTree:
@@ -94,8 +94,8 @@ def test_oracle_subtree_cut_handles_single_class_truth() -> None:
 
 @pytest.mark.parametrize(
     (
-        "kl_ari",
-        "kl_found_clusters",
+        "tbs_ari",
+        "tbs_found_clusters",
         "true_clusters",
         "oracle_true_k_subtree_ari",
         "expected",
@@ -110,16 +110,16 @@ def test_oracle_subtree_cut_handles_single_class_truth() -> None:
     ],
 )
 def test_classify_tree_recoverability_failure(
-    kl_ari: float,
-    kl_found_clusters: int,
+    tbs_ari: float,
+    tbs_found_clusters: int,
     true_clusters: int,
     oracle_true_k_subtree_ari: float,
     expected: str,
 ) -> None:
     assert (
         classify_tree_recoverability_failure(
-            kl_ari=kl_ari,
-            kl_found_clusters=kl_found_clusters,
+            tbs_ari=tbs_ari,
+            tbs_found_clusters=tbs_found_clusters,
             true_clusters=true_clusters,
             oracle_true_k_subtree_ari=oracle_true_k_subtree_ari,
         )

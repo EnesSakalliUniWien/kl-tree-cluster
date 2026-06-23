@@ -15,7 +15,7 @@ investigation tools belong in `benchmarks/diagnostics/`.
 4. `runners/method_registry.py` defines available method IDs.
 5. `runners/dispatch.py` routes a method ID to the matching runner.
 6. `util/method_execution.py` runs one method on one generated case and records
-   the tree-distance source used by KL-family methods.
+   the tree-distance source used by TBS-family methods.
 7. `util/case_run.py` loops over selected methods for a single case.
 8. `pipeline.py` coordinates case iteration, metrics, and optional plotting.
 9. `result_records/` defines the canonical row shape written to benchmark CSVs.
@@ -51,9 +51,9 @@ post-run diagnostics.
   `feature_representation`. For example, Gaussian blob cases can return either
   `median_binary` features or `continuous` features while sharing the same
   `source_family`.
-- A precomputed KL tree distance is valid only when generated metadata sets
-  `requires_precomputed_kl_distance=True` and provides
-  `precomputed_distance_condensed`. Otherwise KL-family methods compute their
+- A precomputed TBS tree distance is valid only when generated metadata sets
+  `requires_precomputed_tbs_distance=True` and provides
+  `precomputed_distance_condensed`. Otherwise TBS-family methods compute their
   tree distance from the feature matrix and their own run parameters.
 - `get_test_cases_by_suite()` separates mathematical input contracts:
   `binary`, `categorical`, `continuous`, `discretized_gaussian`, `graph`, and
@@ -62,7 +62,7 @@ post-run diagnostics.
   not one continuous clone for every historical Gaussian stress case.
 - Method runners return `MethodRunResult`.
 - `result_records/` owns the CSV row contract and preserves `source_family`
-  plus `feature_representation` in every result row. KL-family rows also expose
+  plus `feature_representation` in every result row. TBS-family rows also expose
   fixed stage timing columns for tree build, node-divergence population, edge gate,
   edge gate substeps, spectral whitening/eigensolve/projection, sibling gate, sibling gate
   substeps, and traversal.

@@ -7,11 +7,11 @@ from benchmarks.diagnostics.oracle.statistical_decision_trace import (
     STATISTICAL_DECISION_TRACE_COLUMNS,
     statistical_decision_trace_from_gate_path_trace,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.column_contracts import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.column_contracts import (
     EDGE_GATE_COLUMNS,
     SIBLING_GATE_COLUMNS,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _tree() -> PosetTree:
@@ -91,7 +91,7 @@ def test_gate_path_trace_marks_oracle_boundary_split_by_actual_traversal() -> No
         sibling_inflation_trace_by_parent={},
         case_id="synthetic",
         failure_class="gate_over_split",
-        kl_ari=0.0,
+        tbs_ari=0.0,
         oracle_true_k_ari=1.0,
         oracle_any_k_ari=1.0,
     )

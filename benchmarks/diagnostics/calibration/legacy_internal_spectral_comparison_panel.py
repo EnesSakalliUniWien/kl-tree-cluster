@@ -1,6 +1,6 @@
 """Compare current leaf-only MP spectra with legacy internal-barycenter spectra.
 
-This panel runs the current KL spectral context and the commit-era diagnostic
+This panel runs the current TBS spectral context and the commit-era diagnostic
 variant that appends descendant internal node distributions to each local
 spectral matrix. The legacy variant is intentionally opt-in: internal
 barycenters are deterministic tree-filtered leaf averages, not independent
@@ -41,8 +41,8 @@ GENERATED_BY = (
 
 CURRENT_VARIANT = "current_leaf_only_spectral"
 LEGACY_VARIANT = "legacy_internal_barycenter_spectral"
-CURRENT_METHOD = "kl"
-LEGACY_METHOD = "kl_legacy_internal_spectral_diagnostic"
+CURRENT_METHOD = "tbs"
+LEGACY_METHOD = "tbs_legacy_internal_spectral_diagnostic"
 
 DEFAULT_CASE_NAMES = (
     "overlap_part_4c_small",

@@ -38,7 +38,7 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
+from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
 )
 

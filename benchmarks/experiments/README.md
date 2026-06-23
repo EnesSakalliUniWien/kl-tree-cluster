@@ -11,7 +11,7 @@ scientific question.
 | ---- | -------- |
 | `branch_length/` | How does phylogenetic divergence affect recovery? |
 | `branch_length_3d/` | How do divergence and feature count interact? |
-| `multi_split/` | How well does KL-TE recover K in a balanced star phylogeny? |
+| `multi_split/` | How well does Tree-Break Selection recover K in a balanced star phylogeny? |
 | `mnist/` | How does the method behave on MNIST image-derived inputs? |
 | `umap_datasets/` | How does it behave on small public datasets used in UMAP examples? |
 

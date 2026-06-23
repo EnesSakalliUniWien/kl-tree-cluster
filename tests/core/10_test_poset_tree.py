@@ -2,8 +2,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-from kl_clustering_analysis.tree.branch_lengths import compute_ultrametric_branch_lengths
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.branch_lengths import compute_ultrametric_branch_lengths
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def _leaf_labels_under(G: nx.DiGraph, node):
@@ -106,6 +106,30 @@ def test_compute_ultrametric_branch_lengths_requires_merge_distances():
 
     with pytest.raises(ValueError, match="merge distances"):
         compute_ultrametric_branch_lengths(2, children, distances=None)
+
+
+def test_compute_ultrametric_branch_lengths_normalizes_to_root_time():
+    children = np.array([[0, 1], [2, 3], [4, 5]], dtype=int)
+    distances = np.array([2.0, 6.0, 10.0], dtype=float)
+
+    lengths = compute_ultrametric_branch_lengths(4, children, distances)
+
+    assert lengths[("N4", "L0")] == pytest.approx(0.2)
+    assert lengths[("N4", "L1")] == pytest.approx(0.2)
+    assert lengths[("N5", "L2")] == pytest.approx(0.6)
+    assert lengths[("N5", "L3")] == pytest.approx(0.6)
+    assert lengths[("N6", "N4")] == pytest.approx(0.8)
+    assert lengths[("N6", "N5")] == pytest.approx(0.4)
+    assert lengths[("N6", "N4")] + lengths[("N4", "L0")] == pytest.approx(1.0)
+    assert lengths[("N6", "N5")] + lengths[("N5", "L2")] == pytest.approx(1.0)
+
+
+def test_compute_ultrametric_branch_lengths_rejects_nonmonotone_heights():
+    children = np.array([[0, 1], [2, 3], [4, 5]], dtype=int)
+    distances = np.array([2.0, 6.0, 5.0], dtype=float)
+
+    with pytest.raises(ValueError, match="nondecreasing"):
+        compute_ultrametric_branch_lengths(4, children, distances)
 
 
 def test_from_scipy_linkage_binary_data():

@@ -92,6 +92,14 @@ def _nan_metrics() -> ClusteringMetrics:
     )
 
 
+def _unit_interval_score(value: float) -> float:
+    """Normalize bounded scores against tiny floating-point overshoots."""
+    score = float(value)
+    if not np.isfinite(score):
+        return score
+    return float(np.clip(score, 0.0, 1.0))
+
+
 def _is_noise_label(value: object) -> bool:
     if pd.isna(value):
         return False
@@ -418,24 +426,24 @@ def _calculate_ari_nmi_purity_metrics(
 
     return ClusteringMetrics(
         ari=float(ari),
-        nmi=float(nmi),
+        nmi=_unit_interval_score(nmi),
         ami=float(ami),
-        purity=float(purity),
-        homogeneity=float(homogeneity),
-        completeness=float(completeness),
-        v_measure=float(v_measure),
-        fowlkes_mallows=float(fowlkes_mallows),
-        macro_recall=float(macro_recall),
-        macro_f1=float(macro_f1),
-        worst_cluster_recall=float(worst_cluster_recall),
+        purity=_unit_interval_score(purity),
+        homogeneity=_unit_interval_score(homogeneity),
+        completeness=_unit_interval_score(completeness),
+        v_measure=_unit_interval_score(v_measure),
+        fowlkes_mallows=_unit_interval_score(fowlkes_mallows),
+        macro_recall=_unit_interval_score(macro_recall),
+        macro_f1=_unit_interval_score(macro_f1),
+        worst_cluster_recall=_unit_interval_score(worst_cluster_recall),
         n_singleton_clusters=float(n_singleton_clusters),
-        singleton_fraction=float(singleton_fraction),
+        singleton_fraction=_unit_interval_score(singleton_fraction),
         median_cluster_size=float(median_cluster_size),
-        largest_cluster_fraction=float(largest_cluster_fraction),
+        largest_cluster_fraction=_unit_interval_score(largest_cluster_fraction),
         effective_cluster_count=float(effective_cluster_count),
         cluster_size_entropy=float(cluster_size_entropy),
-        cluster_size_gini=float(cluster_size_gini),
-        noise_label_fraction=float(noise_label_fraction),
+        cluster_size_gini=_unit_interval_score(cluster_size_gini),
+        noise_label_fraction=_unit_interval_score(noise_label_fraction),
         silhouette_score=float(internal_silhouette),
         davies_bouldin_index=float(davies_bouldin),
         calinski_harabasz_index=float(calinski_harabasz),

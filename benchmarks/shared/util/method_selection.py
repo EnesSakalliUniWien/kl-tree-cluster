@@ -10,7 +10,7 @@ from typing import Any
 def resolve_methods_from_env(
     method_specs: Mapping[str, object],
     *,
-    env_var: str = "KL_TE_METHODS",
+    env_var: str = "TBS_METHODS",
     default_methods: Sequence[str] | None = None,
 ) -> list[str]:
     """Resolve method ids from an env var.

@@ -11,7 +11,7 @@ def _write_audit(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def test_analyze_single_case_rejects_missing_sibling_decision_column(tmp_path: Path) -> None:
-    audit_path = tmp_path / "case_1_kl_stats.csv"
+    audit_path = tmp_path / "case_1_tbs_stats.csv"
     _write_audit(
         audit_path,
         [
@@ -45,7 +45,7 @@ def test_analyze_single_case_rejects_missing_sibling_decision_column(tmp_path: P
 
 
 def test_analyze_single_case_uses_sibling_decision_column(tmp_path: Path) -> None:
-    audit_path = tmp_path / "case_1_kl_stats.csv"
+    audit_path = tmp_path / "case_1_tbs_stats.csv"
     _write_audit(
         audit_path,
         [

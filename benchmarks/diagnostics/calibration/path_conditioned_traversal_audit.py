@@ -20,7 +20,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
@@ -768,7 +768,7 @@ def run_path_conditioned_traversal_audit(
             "cwd": str(Path.cwd()),
             "python": sys.version,
             "platform": platform.platform(),
-            "KL_TE_N_JOBS": os.environ.get("KL_TE_N_JOBS", ""),
+            "TBS_N_JOBS": os.environ.get("TBS_N_JOBS", ""),
         },
         "argv": sys.argv,
         "counts": {

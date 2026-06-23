@@ -1,6 +1,6 @@
 """Cross-fit selection diagnostics for hierarchy-selected edge tests.
 
-The KL hierarchy is a sample-leaf tree. A literal sample split cannot
+The TBS hierarchy is a sample-leaf tree. A literal sample split cannot
 recompute held-out node distributions without an additional assignment model
 that maps held-out samples into training-tree nodes. This diagnostic therefore
 uses a feature split as the canonical cross-fit regime: build the sample
@@ -18,36 +18,36 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis import config
-from kl_clustering_analysis.hierarchy_analysis.cluster_assignments import (
+from tree_break_selection import config
+from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract import (
+from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.parent_principal_component_inputs import (
     collect_parent_principal_component_inputs_for_sibling_tests,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from kl_clustering_analysis.hierarchy_analysis.tree_decomposition import TreeDecomposition
-from kl_clustering_analysis.tree.feature_space import (
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from tree_break_selection.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
     continuous_feature_space_from_columns,
 )
-from kl_clustering_analysis.tree.poset_tree import PosetTree
+from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
@@ -234,11 +234,11 @@ def _permute_test_features(
 
 
 def _tree_distance(data: pd.DataFrame, metadata: dict[str, object]) -> tuple[np.ndarray, str]:
-    params = METHOD_SPECS["kl"].param_grid[0]
-    if bool(metadata["requires_precomputed_kl_distance"]):
+    params = METHOD_SPECS["tbs"].param_grid[0]
+    if bool(metadata["requires_precomputed_tbs_distance"]):
         raise ValueError(
             "Feature-split selection audit does not support cases requiring "
-            "precomputed KL tree distances, because the precomputed distance is "
+            "precomputed TBS tree distances, because the precomputed distance is "
             "defined on the full feature contract."
         )
     metric = str(params["tree_distance_metric"])
@@ -247,7 +247,7 @@ def _tree_distance(data: pd.DataFrame, metadata: dict[str, object]) -> tuple[np.
 
 def _build_tree(selection_data: pd.DataFrame, metadata: dict[str, object]) -> tuple[PosetTree, str]:
     distance_condensed, metric = _tree_distance(selection_data, metadata)
-    linkage_method = str(METHOD_SPECS["kl"].param_grid[0]["tree_linkage_method"])
+    linkage_method = str(METHOD_SPECS["tbs"].param_grid[0]["tree_linkage_method"])
     tree = PosetTree.from_linkage(
         linkage(distance_condensed, method=linkage_method),
         leaf_names=selection_data.index.tolist(),
@@ -440,7 +440,7 @@ def run_feature_split_selection_audit(
     rng = np.random.default_rng(int(seed))
     rows: list[dict[str, object]] = []
     for case in _select_cases(case_names):
-        inputs = prepare_case_inputs(case, ["kl"])
+        inputs = prepare_case_inputs(case, ["tbs"])
         feature_space = inputs.metadata.get("feature_space")
         if feature_space is not None and not isinstance(feature_space, FeatureSpace):
             raise ValueError("Prepared feature_space metadata must be a FeatureSpace.")
@@ -501,7 +501,7 @@ def run_feature_split_selection_audit(
         "sibling_alpha": float(DEFAULT_SIBLING_ALPHA),
         "output": str(summary_path),
         "note": (
-            "Literal sample splitting is not implemented because KL-TE uses a "
+            "Literal sample splitting is not implemented because Tree-Break Selection uses a "
             "sample-leaf hierarchy. Held-out samples require an explicit node "
             "assignment model before their node distributions can be tested."
         ),
@@ -549,7 +549,7 @@ def main() -> None:
     args = _parse_args()
     if args.split_axis == "sample":
         raise ValueError(
-            "Literal sample splitting is not a valid KL-TE diagnostic yet: the "
+            "Literal sample splitting is not a valid Tree-Break Selection diagnostic yet: the "
             "tree leaves are samples, so held-out samples have no canonical "
             "membership in a tree built from training samples. Define an explicit "
             "assignment model before enabling sample-axis cross-fitting."

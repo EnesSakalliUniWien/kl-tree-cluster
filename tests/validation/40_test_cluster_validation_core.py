@@ -18,14 +18,14 @@ def test_cluster_algorithm_validation():
         test_cases=custom_cases,
         verbose=False,
         plot_umap=False,
-        methods=["kl"],
+        methods=["tbs"],
     )
 
-    kl_results = df_results[df_results["method"] == "kl"].reset_index(drop=True)
-    assert len(kl_results) >= len(SMALL_TEST_CASES)
+    tbs_results = df_results[df_results["method"] == "tbs"].reset_index(drop=True)
+    assert len(tbs_results) >= len(SMALL_TEST_CASES)
 
     for case_name in ("clear", "moderate", "noisy"):
-        rows = kl_results[(kl_results["case_id"] == case_name)]
+        rows = tbs_results[(tbs_results["case_id"] == case_name)]
         best = rows.sort_values(["ari", "params"], ascending=[False, True]).iloc[0]
 
         assert best["status"] == "ok"
@@ -60,7 +60,7 @@ def test_benchmark_cluster_algorithm_expected_columns():
         test_cases=[SMALL_TEST_CASES[0].copy()],
         verbose=False,
         plot_umap=False,
-        methods=["kl"],
+        methods=["tbs"],
     )
 
     expected_columns = {
@@ -109,10 +109,10 @@ def test_benchmark_cluster_algorithm_expected_columns():
         "labels_length",
     }
     assert expected_columns.issubset(df_results.columns)
-    kl_results = df_results[df_results["method"] == "kl"]
-    assert len(kl_results) >= 1
+    tbs_results = df_results[df_results["method"] == "tbs"]
+    assert len(tbs_results) >= 1
     assert fig is None
-    assert (kl_results["ari"].between(-1, 1)).all()
+    assert (tbs_results["ari"].between(-1, 1)).all()
 
 
 def test_benchmark_cluster_algorithm_handles_empty_cases():

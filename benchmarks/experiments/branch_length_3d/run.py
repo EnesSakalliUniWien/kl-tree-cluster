@@ -64,7 +64,7 @@ def run_3d_benchmark(
                 n_categories=n_categories,
                 branch_lengths=branch_lengths,
                 random_seed=base_seed + rep * 1000 + n_features,
-                method="kl",
+                method="tbs",
                 verbose=False,
             )
             df["n_features"] = n_features

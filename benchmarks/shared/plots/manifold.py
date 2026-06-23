@@ -1,15 +1,15 @@
-"""Manifold alignment plots (UMAP vs Isomap) with KL cluster coloring."""
+"""Manifold alignment plots (UMAP vs Isomap) with TBS cluster coloring."""
 
 from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
-from kl_clustering_analysis.plot.cluster_color_mapping import build_cluster_color_spec
 from skbio.stats.distance import mantel
 from sklearn.decomposition import PCA
 from sklearn.manifold import Isomap
 from sklearn.metrics import pairwise_distances
 from sklearn.preprocessing import StandardScaler
+from tree_break_selection.plot.cluster_color_mapping import build_cluster_color_spec
 
 from .embedding import (
     _coerce_nonnegative_cluster_count,
@@ -41,7 +41,7 @@ def create_manifold_alignment_plot(
     *,
     title: str | None = None,
 ):
-    """Compare UMAP and Isomap manifolds with KL cluster coloring."""
+    """Compare UMAP and Isomap manifolds with TBS cluster coloring."""
     labels_array = np.asarray(y_kl)
     X = np.asarray(X_original, dtype=float)
     scaler = StandardScaler()
@@ -107,7 +107,7 @@ def create_manifold_alignment_plot(
         if title is not None
         else (
             f"Test Case {test_case_num}: Manifold Alignment "
-            f"(expected={expected_clusters_label}, KL found={found_clusters})"
+            f"(expected={expected_clusters_label}, TBS found={found_clusters})"
         )
     )
     fig.suptitle(
@@ -137,7 +137,7 @@ def create_manifold_alignment_plot(
         ax.set_ylabel("dim 2")
         ax.set_zlabel("dim 3")
         if y_true is not None:
-            ax.text2D(0.02, 0.92, "color = KL labels", transform=ax.transAxes)
+            ax.text2D(0.02, 0.92, "color = TBS labels", transform=ax.transAxes)
 
     ax1 = fig.add_subplot(1, 3, 1, projection="3d")
     _scatter3d(ax1, embedding_umap, "3D UMAP embedding")

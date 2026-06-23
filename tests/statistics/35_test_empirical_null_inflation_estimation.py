@@ -3,20 +3,20 @@ from __future__ import annotations
 import math
 
 import pytest
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     CalibrationSupportThresholds,
     decide_empirical_null_calibration,
     fit_empirical_null_inflation_model,
     predict_empirical_inflation_factor,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.external_selected_tail_calibration import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.external_selected_tail_calibration import (
     ExternalSelectedTailCalibrationModel,
     ExternalSelectedTailCalibrationRule,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_adjusted_sibling_tests import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.inflation_adjusted_sibling_tests import (
     compute_inflation_adjusted_sibling_tests,
 )
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.types.sibling_pair_record import (
     SiblingPairRecord,
 )
 

@@ -19,7 +19,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from kl_clustering_analysis.hierarchy_analysis.decomposition.gates.orchestrator import (
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     SIBLING_GATE_PROFILES,
     resolve_sibling_gate_profile,
 )
@@ -39,7 +39,7 @@ from benchmarks.diagnostics.calibration.production_admissibility_contract import
     evaluate_production_admissibility_components,
     summarize_production_admissibility_contracts,
 )
-from benchmarks.shared.runners.kl_runner import _run_kl_method
+from benchmarks.shared.runners.tbs_runner import _run_tbs_method
 from benchmarks.shared.util.time import format_timestamp_utc
 from benchmarks.validation.selected_edge_type1_geometry import (
     _case_contract,
@@ -109,10 +109,34 @@ NODE_DECISION_COLUMNS = (
     "decision_class",
     "n_children",
     "n_descendant_leaves",
+    "descendant_leaf_signature",
     "child_parent_edge_open",
+    "incoming_edge_p_value",
+    "incoming_edge_bh_p_value",
+    "outgoing_left_child_id",
+    "outgoing_left_edge_p_value",
+    "outgoing_left_edge_bh_p_value",
+    "outgoing_right_child_id",
+    "outgoing_right_edge_p_value",
+    "outgoing_right_edge_bh_p_value",
     "sibling_open",
     "sibling_p_value",
+    "sibling_p_value_corrected",
     "sibling_projection_dimension",
+    "sibling_test_method",
+    "sibling_gate_p_value_calibration",
+    "sibling_gate_p_value_role",
+    "sibling_sparse_p_value",
+    "sibling_sparse_method",
+    "sibling_sparse_calibration",
+    "sibling_dense_p_value",
+    "sibling_dense_method",
+    "sibling_dense_calibration",
+    "sibling_dense_statistic",
+    "sibling_dense_degrees_of_freedom",
+    "sibling_fixed_coordinate_bh_p_value",
+    "sibling_fixed_block_bh_p_value",
+    "sibling_fixed_global_p_value",
     "root_stability_guard_blocked",
     "root_selective_guard_blocked",
     "selected_family_guard_blocked",
@@ -125,6 +149,14 @@ NODE_DECISION_COLUMNS = (
     "topology_has_outgoing_test",
     "topology_directed_degree",
     "topology_pass_through_candidate",
+    "passthrough_enabled",
+    "passthrough_split_prerequisites_open",
+    "passthrough_sibling_gate_open",
+    "passthrough_descendant_split_available",
+    "passthrough_candidate",
+    "passthrough_supported",
+    "passthrough_decision_reason",
+    "passthrough_bottleneck",
     "conditional_topology_status",
     "conditional_topology_log_odds",
     "conditional_topology_probability",
@@ -542,12 +574,20 @@ def _build_node_decisions(
         row["node_id"]: row
         for row in decomposition.get("traversal_trace", [])
     }
+    edge_trace = {
+        row["node_id"]: row
+        for row in decomposition.get("full_edge_traversal_trace", [])
+    }
     records: list[dict[str, object]] = []
     output_role = _output_data_role(data_role)
     for node in tree.nodes:
         parent = parents[node]
         children = list(tree.successors(node))
+        left_child = children[0] if len(children) == 2 else None
+        right_child = children[1] if len(children) == 2 else None
         trace_row = trace.get(node, {})
+        edge_trace_row = edge_trace.get(node, {})
+        audit_row = trace_row or edge_trace_row
         traversal_decision = str(trace_row.get("decision", "not_visited"))
         is_leaf = len(children) == 0
         decision_class = _decision_class(
@@ -586,10 +626,45 @@ def _build_node_decisions(
                 "decision_class": decision_class,
                 "n_children": int(len(children)),
                 "n_descendant_leaves": int(len(descendant_sets[node])),
+                "descendant_leaf_signature": "|".join(
+                    sorted(str(leaf) for leaf in descendant_sets[node])
+                ),
                 "child_parent_edge_open": _annotation_bool(
                     annotations,
                     node,
                     "Child_Parent_Divergence_Significant",
+                ),
+                "incoming_edge_p_value": _annotation_float(
+                    annotations,
+                    node,
+                    "Child_Parent_Divergence_P_Value",
+                ),
+                "incoming_edge_bh_p_value": _annotation_float(
+                    annotations,
+                    node,
+                    "Child_Parent_Divergence_P_Value_BH",
+                ),
+                "outgoing_left_child_id": "" if left_child is None else str(left_child),
+                "outgoing_left_edge_p_value": _annotation_float(
+                    annotations,
+                    left_child,
+                    "Child_Parent_Divergence_P_Value",
+                ),
+                "outgoing_left_edge_bh_p_value": _annotation_float(
+                    annotations,
+                    left_child,
+                    "Child_Parent_Divergence_P_Value_BH",
+                ),
+                "outgoing_right_child_id": "" if right_child is None else str(right_child),
+                "outgoing_right_edge_p_value": _annotation_float(
+                    annotations,
+                    right_child,
+                    "Child_Parent_Divergence_P_Value",
+                ),
+                "outgoing_right_edge_bh_p_value": _annotation_float(
+                    annotations,
+                    right_child,
+                    "Child_Parent_Divergence_P_Value_BH",
                 ),
                 "sibling_open": _annotation_bool(
                     annotations,
@@ -601,10 +676,85 @@ def _build_node_decisions(
                     node,
                     "Sibling_Divergence_P_Value",
                 ),
+                "sibling_p_value_corrected": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Divergence_P_Value_Corrected",
+                ),
                 "sibling_projection_dimension": _annotation_float(
                     annotations,
                     node,
                     "Sibling_Projection_Dimension",
+                ),
+                "sibling_test_method": _annotation_str(
+                    annotations,
+                    node,
+                    "Sibling_Test_Method",
+                ),
+                "sibling_gate_p_value_calibration": _annotation_str(
+                    annotations,
+                    node,
+                    "Sibling_Gate_P_Value_Calibration",
+                ),
+                "sibling_gate_p_value_role": _annotation_str(
+                    annotations,
+                    node,
+                    "Sibling_Gate_P_Value_Role",
+                ),
+                "sibling_sparse_p_value": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Sparse_Evidence_P_Value",
+                ),
+                "sibling_sparse_method": _annotation_str(
+                    annotations,
+                    node,
+                    "Sibling_Sparse_Evidence_Method",
+                ),
+                "sibling_sparse_calibration": _annotation_str(
+                    annotations,
+                    node,
+                    "Sibling_Sparse_Evidence_Calibration",
+                ),
+                "sibling_dense_p_value": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Dense_Evidence_P_Value",
+                ),
+                "sibling_dense_method": _annotation_str(
+                    annotations,
+                    node,
+                    "Sibling_Dense_Evidence_Method",
+                ),
+                "sibling_dense_calibration": _annotation_str(
+                    annotations,
+                    node,
+                    "Sibling_Dense_Evidence_Calibration",
+                ),
+                "sibling_dense_statistic": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Dense_Evidence_Test_Statistic",
+                ),
+                "sibling_dense_degrees_of_freedom": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Dense_Evidence_Degrees_of_Freedom",
+                ),
+                "sibling_fixed_coordinate_bh_p_value": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Fixed_Coordinate_BH_P_Value",
+                ),
+                "sibling_fixed_block_bh_p_value": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Fixed_Block_BH_P_Value",
+                ),
+                "sibling_fixed_global_p_value": _annotation_float(
+                    annotations,
+                    node,
+                    "Sibling_Fixed_Global_P_Value",
                 ),
                 "root_stability_guard_blocked": _annotation_bool(
                     annotations,
@@ -642,6 +792,30 @@ def _build_node_decisions(
                     "Selective_Permutation_Guard_Scope",
                 ),
                 **topology_fields,
+                "passthrough_enabled": bool(
+                    audit_row.get("passthrough_enabled", False)
+                ),
+                "passthrough_split_prerequisites_open": bool(
+                    audit_row.get("passthrough_split_prerequisites_open", False)
+                ),
+                "passthrough_sibling_gate_open": bool(
+                    audit_row.get("passthrough_sibling_gate_open", False)
+                ),
+                "passthrough_descendant_split_available": bool(
+                    audit_row.get("passthrough_descendant_split_available", False)
+                ),
+                "passthrough_candidate": bool(
+                    audit_row.get("passthrough_candidate", False)
+                ),
+                "passthrough_supported": bool(
+                    audit_row.get("passthrough_supported", True)
+                ),
+                "passthrough_decision_reason": str(
+                    audit_row.get("passthrough_decision_reason", "")
+                ),
+                "passthrough_bottleneck": str(
+                    audit_row.get("passthrough_bottleneck", "")
+                ),
                 "spectral_transport_node_mp_block_count": _annotation_float(
                     annotations,
                     node,
@@ -992,7 +1166,7 @@ def _run_one(
         seed=data_seed,
     )
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
-    result = _run_kl_method(
+    result = _run_tbs_method(
         data,
         distance,
         sibling_significance_level=float(sibling_alpha),

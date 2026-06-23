@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-
 from benchmarks.diagnostics.calibration import (
     selected_neighborhood_conditional_support_panel as panel,
 )

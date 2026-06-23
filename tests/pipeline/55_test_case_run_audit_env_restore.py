@@ -14,7 +14,7 @@ from benchmarks.shared.util.case_inputs import PreparedCaseInputs
 
 @pytest.mark.parametrize("initial_value", [None, "/tmp/original-audit-root"])
 def test_run_single_case_restores_matrix_audit_env(monkeypatch, initial_value):
-    env_name = "KL_TE_MATRIX_AUDIT_ROOT"
+    env_name = "TBS_MATRIX_AUDIT_ROOT"
     if initial_value is None:
         monkeypatch.delenv(env_name, raising=False)
     else:
@@ -54,8 +54,8 @@ def test_run_single_case_restores_matrix_audit_env(monkeypatch, initial_value):
     monkeypatch.setattr(case_run, "export_case_and_method_matrix_audits", lambda **_kwargs: None)
     monkeypatch.setattr(case_run, "export_decomposition_audit", lambda **_kwargs: None)
 
-    selected_methods = ["kl"]
-    param_sets = {"kl": [{}]}
+    selected_methods = ["tbs"]
+    param_sets = {"tbs": [{}]}
     case_run.run_single_case(
         tc={"name": "env_restore_case", "seed": 7, "test_case_num": 1},
         total_cases=1,

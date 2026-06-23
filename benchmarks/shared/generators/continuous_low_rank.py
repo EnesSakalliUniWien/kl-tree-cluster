@@ -46,9 +46,9 @@ def generate_continuous_low_rank_factor(test_case: dict, seed: int | None) -> Ca
         generator="continuous_low_rank_factor",
         source_family="continuous_low_rank_factor",
         feature_representation="continuous",
-        requires_precomputed_kl_distance=True,
+        requires_precomputed_tbs_distance=True,
         precomputed_distance_condensed=distance_condensed,
-        distance_metric="euclidean",
+        distance_metric="mahalanobis_time",
         extra={
             "feature_space": feature_space,
             "rank": rank,

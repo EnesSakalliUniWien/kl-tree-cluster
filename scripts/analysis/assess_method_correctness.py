@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Method Correctness Assessment — Biological Coherence of KL-Tree Clustering
+Method Correctness Assessment — Biological Coherence of TBS-Tree Clustering
 ==========================================================================
 
-Evaluates whether the KL-tree decomposition produces biologically meaningful
+Evaluates whether the TBS-tree decomposition produces biologically meaningful
 clusters by measuring:
 
   1. **Intra-cluster Jaccard coherence**: mean pairwise Jaccard similarity of
@@ -670,7 +670,7 @@ def biological_narrative(
                 "shared functional signal to be separated. It contains a mixture of "
                 "rare-variant cardiomyopathy genes (TAZ, LMNA, SCN4B, TECRL) whose "
                 "Reactome profiles do not converge. This is expected: genes with sparse "
-                "binary annotations share few pathway-level features, so the KL-divergence "
+                "binary annotations share few pathway-level features, so the TBS-divergence "
                 "test correctly groups them as statistically indistinguishable.",
                 width=68,
                 initial_indent="    ",
@@ -819,7 +819,7 @@ def overall_assessment(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Assess biological correctness of KL-tree clustering",
+        description="Assess biological correctness of TBS-tree clustering",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent(
             """\

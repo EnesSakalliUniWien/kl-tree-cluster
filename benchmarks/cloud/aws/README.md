@@ -7,7 +7,7 @@ only; they do not create production calibration fallbacks.
 ## Build
 
 ```bash
-docker build -f benchmarks/cloud/aws/Dockerfile -t kl-te-benchmark-diagnostics:latest .
+docker build -f benchmarks/cloud/aws/Dockerfile -t tree-break-selection-benchmark-diagnostics:latest .
 ```
 
 The image entrypoint is `python -m`, so job commands must begin with the Python
@@ -58,21 +58,21 @@ aws sts get-caller-identity
 Build and push the image, then deploy the Batch stack:
 
 ```bash
-aws ecr create-repository --repository-name kl-te-benchmark-diagnostics
+aws ecr create-repository --repository-name tree-break-selection-benchmark-diagnostics
 aws ecr get-login-password --region us-east-1 \
   | docker login --username AWS --password-stdin ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
 docker buildx build --platform linux/amd64 \
   -f benchmarks/cloud/aws/Dockerfile \
-  --build-arg KL_TE_GIT_COMMIT=$(git rev-parse HEAD) \
-  --build-arg KL_TE_GIT_BRANCH=$(git branch --show-current) \
-  -t ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/kl-te-benchmark-diagnostics:latest \
+  --build-arg TBS_GIT_COMMIT=$(git rev-parse HEAD) \
+  --build-arg TBS_GIT_BRANCH=$(git branch --show-current) \
+  -t ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/tree-break-selection-benchmark-diagnostics:latest \
   --push .
 aws cloudformation deploy \
-  --stack-name kl-te-benchmark-diagnostics-batch \
+  --stack-name tree-break-selection-benchmark-diagnostics-batch \
   --template-file benchmarks/cloud/aws/batch-stack.yml \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
-      ContainerImage=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/kl-te-benchmark-diagnostics:latest \
+      ContainerImage=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/tree-break-selection-benchmark-diagnostics:latest \
       OutputBucket=YOUR_BUCKET \
       OutputPrefix=alpha-grid-full \
       SubnetIds=subnet-1,subnet-2 \
@@ -84,9 +84,9 @@ owns one alpha pair over the full benchmark suite.
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-alpha-grid-shards \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-alpha-grid-shards \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --array-properties size=25 \
   --container-overrides '{
     "command": [
@@ -104,9 +104,9 @@ After all shards finish, submit one merge job:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-alpha-grid-merge \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-alpha-grid-merge \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --container-overrides '{
     "command": [
       "benchmarks.cloud.aws_alpha_grid_search",
@@ -122,7 +122,7 @@ aws batch submit-job \
 The merged alpha-grid outputs are:
 
 - `merged/alpha_grid_summary.csv`: one row per alpha pair.
-- `merged/alpha_grid_results.csv`: per-case KL benchmark rows for every alpha pair.
+- `merged/alpha_grid_results.csv`: per-case TBS benchmark rows for every alpha pair.
 - `merged/aws_alpha_grid_manifest.json`: grid, shard count, git state, and output paths.
 
 ## Run KAK/Cosine Lens Linkage Alpha Sweeps On AWS
@@ -169,9 +169,9 @@ summary rows before fail-closed gate rows are filtered by interpretation.
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-kak-lens-linkage-alpha-shards \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-kak-lens-linkage-alpha-shards \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --array-properties size=18 \
   --container-overrides '{
     "command": [
@@ -188,9 +188,9 @@ After the shard jobs finish, merge the outputs:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-kak-lens-linkage-alpha-merge \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-kak-lens-linkage-alpha-merge \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --container-overrides '{
     "command": [
       "benchmarks.cloud.aws_kak_lens_linkage_alpha_sweep",
@@ -228,9 +228,9 @@ Then run the panel builder:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-tree-strategy-semantic-panel \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-tree-strategy-semantic-panel \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --container-overrides '{
     "command": [
       "benchmarks.cloud.aws_tree_strategy_semantic_panel",
@@ -267,7 +267,7 @@ not a production calibration fallback.
 Local container smoke:
 
 ```bash
-docker run --rm kl-te-benchmark-diagnostics:local \
+docker run --rm tree-break-selection-benchmark-diagnostics:local \
   benchmarks.cloud.aws_selected_edge_type1_geometry run-shard \
   --suite binary \
   --case-names binary_2clusters \
@@ -285,9 +285,9 @@ AWS pilot array:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-selected-edge-type1-pilot \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-selected-edge-type1-pilot \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --array-properties size=4 \
   --container-overrides '{
     "command": [
@@ -311,9 +311,9 @@ Merge:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-selected-edge-type1-pilot-merge \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-selected-edge-type1-pilot-merge \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --container-overrides '{
     "command": [
       "benchmarks.cloud.aws_selected_edge_type1_geometry",
@@ -365,9 +365,9 @@ AWS array example:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-traversal-sibling-fdr-shards \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-traversal-sibling-fdr-shards \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --array-properties size=8 \
   --container-overrides '{
     "command": [
@@ -391,9 +391,9 @@ Merge after all shards finish:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-traversal-sibling-fdr-merge \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-traversal-sibling-fdr-merge \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --container-overrides '{
     "command": [
       "benchmarks.cloud.aws_traversal_sibling_fdr_null",
@@ -434,21 +434,21 @@ Create the ECR repository, build and push the image, then deploy the Batch
 stack:
 
 ```bash
-aws ecr create-repository --repository-name kl-te-benchmark-diagnostics
+aws ecr create-repository --repository-name tree-break-selection-benchmark-diagnostics
 aws ecr get-login-password --region us-east-1 \
   | docker login --username AWS --password-stdin ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
 docker buildx build --platform linux/amd64 \
   -f benchmarks/cloud/aws/Dockerfile \
-  --build-arg KL_TE_GIT_COMMIT=$(git rev-parse HEAD) \
-  --build-arg KL_TE_GIT_BRANCH=$(git branch --show-current) \
-  -t ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/kl-te-benchmark-diagnostics:latest \
+  --build-arg TBS_GIT_COMMIT=$(git rev-parse HEAD) \
+  --build-arg TBS_GIT_BRANCH=$(git branch --show-current) \
+  -t ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/tree-break-selection-benchmark-diagnostics:latest \
   --push .
 aws cloudformation deploy \
-  --stack-name kl-te-benchmark-diagnostics-batch \
+  --stack-name tree-break-selection-benchmark-diagnostics-batch \
   --template-file benchmarks/cloud/aws/batch-stack.yml \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
-      ContainerImage=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/kl-te-benchmark-diagnostics:latest \
+      ContainerImage=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/tree-break-selection-benchmark-diagnostics:latest \
       OutputBucket=YOUR_BUCKET \
       OutputPrefix=selected-tail-equation-cloud-run \
       SubnetIds=subnet-1,subnet-2 \
@@ -460,9 +460,9 @@ Submit the array job with size equal to `--shard-count`. AWS Batch provides
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-selected-tail-shards \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-selected-tail-shards \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --array-properties size=20
 ```
 
@@ -470,9 +470,9 @@ After all shards finish, run one merge job against the same output directory:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-selected-tail-merge \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-selected-tail-merge \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --container-overrides '{
     "command": [
       "benchmarks.cloud.aws_selected_tail_equation_study",

@@ -98,10 +98,10 @@ def _stamp_full_run_case_identity(
 def run_benchmarks():
     # Default to single-threaded spectral decomposition workers to avoid
     # thread oversubscription (outer benchmark parallelism + BLAS threads).
-    # Users can still override by setting KL_TE_N_JOBS explicitly.
-    spectral_jobs = os.environ.setdefault("KL_TE_N_JOBS", "1")
+    # Users can still override by setting TBS_N_JOBS explicitly.
+    spectral_jobs = os.environ.setdefault("TBS_N_JOBS", "1")
 
-    case_suite = os.environ.get("KL_TE_CASE_SUITE", "full").strip().lower()
+    case_suite = os.environ.get("TBS_CASE_SUITE", "full").strip().lower()
     print(f"Fetching benchmark case suite: {case_suite}")
     test_cases = get_test_cases_by_suite(case_suite)
     print(f"Found {len(test_cases)} test cases.")
@@ -110,30 +110,30 @@ def run_benchmarks():
         METHOD_SPECS,
         default_methods=DEFAULT_METHODS,
     )
-    # Ensure the primary KL (Hamming + average) method is always included for
+    # Ensure the primary TBS (Hamming + average) method is always included for
     # tree plot generation.
-    if "kl" not in methods_to_test:
-        methods_to_test.insert(0, "kl")
-        print("Added required tree method: kl")
+    if "tbs" not in methods_to_test:
+        methods_to_test.insert(0, "tbs")
+        print("Added required tree method: tbs")
     print(f"Methods: {methods_to_test}")
-    print(f"Spectral settings: KL_TE_N_JOBS={spectral_jobs}")
+    print(f"Spectral settings: TBS_N_JOBS={spectral_jobs}")
 
     # Keep plots enabled by default; UMAP comparison pages are always generated
     # when plotting is on.
-    enable_plots = get_env_bool("KL_TE_ENABLE_PLOTS", default=True)
+    enable_plots = get_env_bool("TBS_ENABLE_PLOTS", default=True)
     enable_umap = enable_plots
-    enable_manifold = get_env_bool("KL_TE_ENABLE_MANIFOLD", default=False) and enable_plots
-    isolate_umap_cases = get_env_bool("KL_TE_UMAP_ISOLATE_CASES", default=enable_umap)
-    case_timeout_sec = get_env_int("KL_TE_CASE_TIMEOUT_SEC", 1800)
-    if enable_umap and "KL_TE_EMBEDDING_BACKEND" not in os.environ:
-        os.environ["KL_TE_EMBEDDING_BACKEND"] = "umap"
-    if enable_umap and "KL_TE_EMBEDDING_BACKEND_3D" not in os.environ:
-        os.environ["KL_TE_EMBEDDING_BACKEND_3D"] = "umap"
-    if enable_umap and "KL_TE_FORCE_UMAP_FOR_LARGE" not in os.environ:
-        os.environ["KL_TE_FORCE_UMAP_FOR_LARGE"] = "1"
-    run_relationship_analysis = get_env_bool("KL_TE_RUN_RELATIONSHIP_ANALYSIS", default=True)
+    enable_manifold = get_env_bool("TBS_ENABLE_MANIFOLD", default=False) and enable_plots
+    isolate_umap_cases = get_env_bool("TBS_UMAP_ISOLATE_CASES", default=enable_umap)
+    case_timeout_sec = get_env_int("TBS_CASE_TIMEOUT_SEC", 1800)
+    if enable_umap and "TBS_EMBEDDING_BACKEND" not in os.environ:
+        os.environ["TBS_EMBEDDING_BACKEND"] = "umap"
+    if enable_umap and "TBS_EMBEDDING_BACKEND_3D" not in os.environ:
+        os.environ["TBS_EMBEDDING_BACKEND_3D"] = "umap"
+    if enable_umap and "TBS_FORCE_UMAP_FOR_LARGE" not in os.environ:
+        os.environ["TBS_FORCE_UMAP_FOR_LARGE"] = "1"
+    run_relationship_analysis = get_env_bool("TBS_RUN_RELATIONSHIP_ANALYSIS", default=True)
     enable_relationship_plots = get_env_bool(
-        "KL_TE_ENABLE_RELATIONSHIP_PLOTS",
+        "TBS_ENABLE_RELATIONSHIP_PLOTS",
         default=enable_plots,
     )
     if enable_umap:
@@ -151,7 +151,7 @@ def run_benchmarks():
     # Single benchmark results root
     timestamp = format_timestamp_utc()
     base_output_dir = repo_root / "benchmarks" / "results"
-    configured_run_dir = os.environ.get("KL_TE_RUN_DIR")
+    configured_run_dir = os.environ.get("TBS_RUN_DIR")
     run_dir = (
         Path(configured_run_dir).expanduser().resolve()
         if configured_run_dir

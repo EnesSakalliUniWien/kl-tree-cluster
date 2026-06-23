@@ -47,8 +47,8 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--methods",
-        default="kl",
-        help="Comma-separated method ids. Defaults to 'kl'.",
+        default="tbs",
+        help="Comma-separated method ids. Defaults to 'tbs'.",
     )
     parser.add_argument(
         "--case-names",
@@ -66,7 +66,7 @@ def _parse_args() -> argparse.Namespace:
 def _configure_runtime_defaults() -> None:
     for env_var in _THREAD_ENV_VARS:
         os.environ.setdefault(env_var, "1")
-    os.environ.setdefault("KL_TE_N_JOBS", "1")
+    os.environ.setdefault("TBS_N_JOBS", "1")
 
 
 def _parse_methods(raw: str) -> list[str]:
@@ -195,7 +195,7 @@ def main() -> None:
         "case_names": [case["name"] for case in test_cases],
         "n_cases": len(test_cases),
         "n_rows": len(normalized),
-        "kl_te_n_jobs": os.environ.get("KL_TE_N_JOBS"),
+        "tbs_n_jobs": os.environ.get("TBS_N_JOBS"),
         "thread_env": {env_var: os.environ.get(env_var) for env_var in _THREAD_ENV_VARS},
         "results_csv": str(output_csv),
     }

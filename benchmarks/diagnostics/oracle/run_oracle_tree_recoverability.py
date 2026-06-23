@@ -20,7 +20,7 @@ from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
 )
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.cases.regression_gate import get_regression_gate_test_cases
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 
 _THREAD_ENV_VARS = (
     "OMP_NUM_THREADS",
@@ -34,7 +34,7 @@ _THREAD_ENV_VARS = (
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Compute the best ARI recoverable from each KL hierarchy when the "
+            "Compute the best ARI recoverable from each TBS hierarchy when the "
             "statistical gate decisions are replaced by an oracle subtree cut."
         )
     )
@@ -53,7 +53,7 @@ def _parse_args() -> argparse.Namespace:
         "--benchmark-csv",
         type=Path,
         default=None,
-        help="Optional KL benchmark CSV to join current KL ARI/found_clusters into the output.",
+        help="Optional TBS benchmark CSV to join current TBS ARI/found_clusters into the output.",
     )
     parser.add_argument(
         "--output-dir",
@@ -65,7 +65,7 @@ def _parse_args() -> argparse.Namespace:
         "--solved-ari-threshold",
         type=float,
         default=0.95,
-        help="KL ARI at or above this value is classified as solved.",
+        help="TBS ARI at or above this value is classified as solved.",
     )
     parser.add_argument(
         "--recoverable-ari-threshold",
@@ -81,7 +81,7 @@ def _parse_args() -> argparse.Namespace:
         type=float,
         default=1e-9,
         help=(
-            "Tolerance for classifying KL as matching the exact-K oracle when "
+            "Tolerance for classifying TBS as matching the exact-K oracle when "
             "both are below the solved threshold."
         ),
     )
@@ -91,7 +91,7 @@ def _parse_args() -> argparse.Namespace:
 def _configure_runtime_defaults() -> None:
     for env_var in _THREAD_ENV_VARS:
         os.environ.setdefault(env_var, "1")
-    os.environ.setdefault("KL_TE_N_JOBS", "1")
+    os.environ.setdefault("TBS_N_JOBS", "1")
 
 
 def _load_cases(suite: str) -> list[dict]:
@@ -123,17 +123,17 @@ def _make_output_dir(explicit_output_dir: Path | None) -> Path:
     return output_dir
 
 
-def _load_kl_benchmark_rows(path: Path | None) -> pd.DataFrame:
+def _load_tbs_benchmark_rows(path: Path | None) -> pd.DataFrame:
     if path is None:
         return pd.DataFrame()
     df = pd.read_csv(path)
     if "method" in df.columns:
-        df = df[df["method"].astype(str).eq("kl")].copy()
+        df = df[df["method"].astype(str).eq("tbs")].copy()
     return df
 
 
 def _run_case(case_index: int, case: dict) -> dict[str, object]:
-    context = build_kl_tree_context(case, populate_node_distributions=False)
+    context = build_tbs_tree_context(case, populate_node_distributions=False)
 
     true_k = int(context.metadata["n_clusters"])
     any_k = oracle_subtree_cut(
@@ -184,28 +184,28 @@ def _attach_benchmark_comparison(
         raise ValueError(f"benchmark CSV is missing required columns: {sorted(missing)}.")
     comparison = benchmark_df[["case_id", "ari", "found_clusters"]].rename(
         columns={
-            "ari": "kl_ari",
-            "found_clusters": "kl_found_clusters",
+            "ari": "tbs_ari",
+            "found_clusters": "tbs_found_clusters",
         }
     )
     merged = oracle_df.merge(comparison, on="case_id", how="left", validate="one_to_one")
-    missing_comparison = merged["kl_ari"].isna() | merged["kl_found_clusters"].isna()
+    missing_comparison = merged["tbs_ari"].isna() | merged["tbs_found_clusters"].isna()
     if missing_comparison.any():
         missing_cases = merged.loc[missing_comparison, "case_id"].astype(str).tolist()
         raise ValueError(
-            "benchmark CSV does not contain matching KL rows for every oracle case. "
+            "benchmark CSV does not contain matching TBS rows for every oracle case. "
             f"Missing={missing_cases[:10]}."
         )
-    merged["kl_to_oracle_subtree_gap"] = (
-        merged["oracle_subtree_ari"] - merged["kl_ari"]
+    merged["tbs_to_oracle_subtree_gap"] = (
+        merged["oracle_subtree_ari"] - merged["tbs_ari"]
     )
-    merged["kl_to_oracle_true_k_gap"] = (
-        merged["oracle_true_k_subtree_ari"] - merged["kl_ari"]
+    merged["tbs_to_oracle_true_k_gap"] = (
+        merged["oracle_true_k_subtree_ari"] - merged["tbs_ari"]
     )
     merged["failure_class"] = [
         classify_tree_recoverability_failure(
-            kl_ari=float(row.kl_ari),
-            kl_found_clusters=int(row.kl_found_clusters),
+            tbs_ari=float(row.tbs_ari),
+            tbs_found_clusters=int(row.tbs_found_clusters),
             true_clusters=int(row.true_clusters),
             oracle_true_k_subtree_ari=float(row.oracle_true_k_subtree_ari),
             solved_ari_threshold=solved_ari_threshold,
@@ -233,7 +233,7 @@ def main() -> None:
         rows.append(_run_case(i, case))
 
     oracle_df = pd.DataFrame(rows)
-    benchmark_df = _load_kl_benchmark_rows(args.benchmark_csv)
+    benchmark_df = _load_tbs_benchmark_rows(args.benchmark_csv)
     oracle_df = _attach_benchmark_comparison(
         oracle_df,
         benchmark_df,
@@ -269,11 +269,11 @@ def main() -> None:
         f"mean={oracle_df['oracle_true_k_subtree_ari'].mean():.4f} "
         f"median={oracle_df['oracle_true_k_subtree_ari'].median():.4f}"
     )
-    if "kl_ari" in oracle_df.columns:
+    if "tbs_ari" in oracle_df.columns:
         print(
-            "kl_to_oracle_subtree_gap: "
-            f"mean={oracle_df['kl_to_oracle_subtree_gap'].mean():.4f} "
-            f"median={oracle_df['kl_to_oracle_subtree_gap'].median():.4f}"
+            "tbs_to_oracle_subtree_gap: "
+            f"mean={oracle_df['tbs_to_oracle_subtree_gap'].mean():.4f} "
+            f"median={oracle_df['tbs_to_oracle_subtree_gap'].median():.4f}"
         )
     if "failure_class" in oracle_df.columns:
         print("failure_class counts:")
