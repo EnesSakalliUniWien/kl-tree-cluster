@@ -4010,6 +4010,13 @@ verification, and maintenance events here in chronological order.
   the time multiplier changes ARI from `0.0` to `1.0` in both cases, whereas
   fixed-coordinate sibling gating alone is insufficient because child-parent
   prerequisites still close on the long pure edges.
+- Consolidated the GO annotation feature-matrix run path so
+  `scripts/analysis/run_go_annotation_feature_matrix_pipeline.py` is the
+  canonical entry point for publishable outputs. The wrapper now plans radial
+  tree roster export, systematic subspace annotation PDFs, cluster
+  meaningfulness audits, recurring top-annotation tables, input-matrix copying,
+  and `RUN_SUMMARY.md`; direct helper scripts are documented as repair/debug
+  tools rather than the ordinary upload path.
 
 ## Evidence
 

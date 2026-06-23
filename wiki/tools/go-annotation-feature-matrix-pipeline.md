@@ -2,7 +2,7 @@
 title: GO Annotation Feature-Matrix Pipeline
 type: tool
 status: reviewed
-updated: 2026-06-19
+updated: 2026-06-23
 sources:
   - scripts/analysis/run_go_annotation_feature_matrix_pipeline.py
   - scripts/analysis/inventory_go_annotation_datasets.py
@@ -65,9 +65,15 @@ MPLBACKEND=Agg python scripts/analysis/run_go_annotation_feature_matrix_pipeline
 ```
 
 Use `--dry-run` to write `PIPELINE.md`, per-stage command logs, and
-`pipeline_manifest.json` without recomputing the expensive tree stages. Use
-`--include-method-matrix` only when the legacy/current by tree-geometry matrix
-is needed as an audit stage; it is not the canonical reader PDF level.
+`pipeline_manifest.json` without recomputing the expensive tree stages. The
+wrapper is the source of truth for publishable GO annotation runs: by default
+it now continues past the current subspace tree stage into radial-tree export,
+systematic annotation PDF construction, cluster meaningfulness audit, input
+copying, recurring-annotation summaries, and `RUN_SUMMARY.md`. Use
+`--skip-subspace-package` only for low-level debugging runs where the
+publishable package is intentionally not required. Use `--include-method-matrix`
+only when the legacy/current by tree-geometry matrix is needed as an audit
+stage; it is not the canonical reader PDF level.
 
 The standard stages are:
 
@@ -79,8 +85,17 @@ The standard stages are:
   axis term-loading files, and per-subspace artifacts.
 - `20_method_tree_matrix_audit`: optional candidate-generation matrix across
   legacy/current and tree-geometry axes.
+- `40_subspace_rosters_radial_trees`: organized per-subspace cluster rosters,
+  copied source artifacts, full-space/subspace/tree-distance embeddings, and
+  radial cluster trees.
+- `45_subspace_annotation_pdf`: systematic two-page-per-subspace annotation
+  PDF built from the organized radial-tree package.
+- `50_cluster_meaningfulness_audit`: internal feature-enrichment and
+  eigenband-coherence audit against size-preserving null partitions.
 - `30_analysis_level_audit`: inventory that labels old and new output folders
   by analysis level.
+- `90_package_for_github`: input-matrix copy, radial-output verification,
+  recurring top-annotation tables, and `RUN_SUMMARY.md` for branch upload.
 
 The 2026-06-19 audit found five relevant levels among the pre-existing allGO
 outputs:
@@ -113,10 +128,14 @@ observed root-level `feature_matrix_julia_allGO_new (1).tsv` copy was
 byte-identical to the Julia matrix but non-canonical; it should not be used as
 an input path.
 
-Systematic subspace gene-annotation outputs are built with
+Systematic subspace gene-annotation outputs are built by the wrapper through
 `scripts/analysis/export_subspace_cluster_rosters.py` and
-`scripts/analysis/build_subspace_gene_annotation_pdf.py`. The roster exporter
-creates a `subspaces/rank##_weighting_block_name/` directory for every
+`scripts/analysis/build_subspace_gene_annotation_pdf.py`. These scripts remain
+directly runnable for repair/debugging, but ordinary analysis runs should enter
+through `scripts/analysis/run_go_annotation_feature_matrix_pipeline.py` so the
+radial trees, PDFs, audit tables, input copy, and upload summary stay in one
+contract. The roster exporter creates a
+`subspaces/rank##_weighting_block_name/` directory for every
 accepted subspace and a `subspaces/failed##_weighting_block_name/` directory
 for every failed-gate subspace with saved linkage evidence. Accepted rows keep
 `assignment_source=accepted_tbs`; failed-gate rows get an explicit

@@ -86,6 +86,7 @@ def parse_go_term(column: str) -> tuple[str, str | None]:
 
 def packed_pattern_groups(binary: np.ndarray, labels: pd.Index, *, axis: int) -> pd.DataFrame:
     """Find exact duplicate binary patterns over rows or columns."""
+    columns = ["duplicate_group_id", "n_members", "members"]
     values = binary if axis == 0 else binary.T
     packed = np.packbits(values.astype(np.uint8), axis=1)
     groups: dict[bytes, list[str]] = {}
@@ -102,7 +103,10 @@ def packed_pattern_groups(binary: np.ndarray, labels: pd.Index, *, axis: int) ->
                 "members": ";".join(members),
             }
         )
-    return pd.DataFrame(rows).sort_values(["n_members", "duplicate_group_id"], ascending=[False, True])
+    return pd.DataFrame(rows, columns=columns).sort_values(
+        ["n_members", "duplicate_group_id"],
+        ascending=[False, True],
+    )
 
 
 def top_similarity_pairs(
