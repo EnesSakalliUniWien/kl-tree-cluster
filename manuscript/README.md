@@ -1,7 +1,7 @@
 # Manuscript Workspace
 
 This directory contains a LaTeX workspace for drafting a manuscript about the
-current KL-TE clustering method.
+current Tree-Break Selection clustering method.
 
 ## Files
 
@@ -58,9 +58,9 @@ The current starter setup uses:
 
 - `write-good`
 - `alex`
-- local `KLTE` terminology and weak-phrase rules
+- local `TBS` terminology and weak-phrase rules
 
-The local `KLTE` rules intentionally flag repository-internal labels such as
+The local `TBS` rules intentionally flag repository-internal labels such as
 `edge gate`, `sibling gate`, `TreeBH`, and `erank` so the manuscript can replace them
 with clearer prose. The packaged styles are intentionally narrowed for
 LaTeX math writing, so the lint output focuses on terminology and weak phrasing

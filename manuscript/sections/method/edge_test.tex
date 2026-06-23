@@ -28,19 +28,22 @@ independent. This is what makes the edge test a nested comparison rather than
 an ordinary two-sample comparison.
 
 \paragraph{Step 2: Use the nested covariance model.}
-In the Bernoulli case, the nested variance is
+In the Bernoulli case, the branch-time-inflated nested variance is
 \begin{equation}
 \mathrm{Var}(\hat{\theta}_{c,j} - \hat{\theta}_{u,j})
 =
 \theta_{u,j}(1-\theta_{u,j})
-\left(\frac{1}{n_c} - \frac{1}{n_u}\right),
+\left(\frac{1}{n_c} - \frac{1}{n_u}\right)
+\left(1+\frac{t_{u,c}}{\bar t}\right),
 \end{equation}
 The subtraction term
 $\frac{1}{n_c} - \frac{1}{n_u}$ is the signature of the nested tree setting.
 In an ordinary two-sample test for independent groups, the variance factor
 would look like $\frac{1}{n_1} + \frac{1}{n_2}$. Here the parent already
 contains the child, so part of the uncertainty cancels out, which yields the
-nested factor $\frac{1}{n_c} - \frac{1}{n_u} > 0$.
+nested factor $\frac{1}{n_c} - \frac{1}{n_u} > 0$. The final multiplier allows
+longer normalized tree time to absorb more expected drift; if branch time is
+missing or zero, the formula reduces to the sampling-only nested variance.
 
 The implementation applies the same nested scale factor to the covariance model
 declared by the active feature-space block. Bernoulli blocks reduce to the
@@ -54,7 +57,9 @@ The standardized edge vector is therefore
 z_{u \to c,j}^{\mathrm{edge}}
 =
 \frac{\theta_{c,j} - \theta_{u,j}}
-{\sqrt{\theta_{u,j}(1-\theta_{u,j})\left(\frac{1}{n_c} - \frac{1}{n_u}\right)}}.
+{\sqrt{\theta_{u,j}(1-\theta_{u,j})
+\left(\frac{1}{n_c} - \frac{1}{n_u}\right)
+\left(1+\frac{t_{u,c}}{\bar t}\right)}}.
 \end{equation}
 For Bernoulli coordinates this standardization is applied
 \emph{coordinatewise}. Each feature first gets its own z-like score before the
@@ -264,11 +269,12 @@ One leading eigenvector is
 v_{R,1} = (0.5,0.5,-0.5,0.5)^\top.
 \end{equation}
 Now test the edge $R \to U_1$. Since $n_R=4$ and $n_{U_1}=2$, the nested
-variance factor is
+sampling factor is
 \begin{equation}
 \frac{1}{n_{U_1}} - \frac{1}{n_R} = \frac{1}{2} - \frac{1}{4} = \frac{1}{4}.
 \end{equation}
-Because each root coordinate equals $0.5$, every feature has variance
+Ignoring branch-time inflation for this arithmetic example, each root
+coordinate equals $0.5$, so every feature has variance
 \begin{equation}
 0.5(1-0.5)\left(\frac{1}{2}-\frac{1}{4}\right)=0.0625.
 \end{equation}

@@ -18,7 +18,7 @@ height, an inconsistency threshold, or a manually chosen number of clusters.
 Those choices are often difficult to defend when the goal is not only
 descriptive grouping but also reproducible statistical claims.
 
-KL-TE takes a different view of this tree. An internal node is not merely a
+Tree-Break Selection takes a different view of this tree. An internal node is not merely a
 merge produced by the algorithm; it is a candidate decision point. If a parent
 node $u$ has children $l(u)$ and $r(u)$, then that parent proposes a possible
 split of the data into two child subtrees. The central question is whether this
@@ -31,7 +31,7 @@ distribution, whether the two children are actually distinct enough to
 represent separate clusters, or whether scanning the entire tree has produced
 false positives.
 
-KL-TE treats that split decision as a two-stage statistical question. A split
+Tree-Break Selection treats that split decision as a two-stage statistical question. A split
 must first show evidence that at least one child departs from its parent. It
 must then show that the two children are distinct from one another. The final
 partition is built only after these local decisions have been corrected for the
@@ -44,7 +44,7 @@ squared feature scores would overcount repeated or noisy directions. Many candid
 are examined across the tree, so valid local $p$-values still require control
 for many tests. Finally, sibling comparisons are evaluated on a hierarchy
 constructed from the same data, so the raw sibling statistics are selected and
-inflated. KL-TE is one response to these four problems.
+inflated. Tree-Break Selection is one response to these four problems.
 
 This goal is related to, but distinct from, existing approaches for attaching
 uncertainty statements to hierarchical clustering. Multiscale-bootstrap methods
@@ -56,14 +56,14 @@ Recent selective inference work conditions on the clustering event and computes
 valid post-selection p-values for selected hierarchical clusters under Gaussian
 mean models \citep{gao2024selective}.
 
-KL-TE does not currently derive an exact selective law for its tree-selected
+Tree-Break Selection does not currently derive an exact selective law for its tree-selected
 sibling tests. Instead, it implements a projected-Wald testing pipeline over an
 explicit feature-space contract, with an empirical-null inflation layer for the
 sibling stage. That difference is important: the present draft should be read as
 a methods specification and validation plan, not as a proof of exact selective
 Type~I error control.
 
-KL-TE works on typed feature blocks rather than one universal binary
+Tree-Break Selection works on typed feature blocks rather than one universal binary
 representation. Bernoulli coordinates enter directly; categorical variables
 enter as one-hot blocks but are tested with their drop-last multinomial
 covariance. Explicit continuous inputs enter as empirical-Gaussian blocks whose

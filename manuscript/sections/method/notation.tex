@@ -10,11 +10,20 @@ node-level distributions $\theta_u$ estimated from descendant leaves. Edge-stage
 quantities compare a child $c$ to its parent $u$, sibling-stage quantities
 compare $l(u)$ and $r(u)$ under the same parent, and traversal quantities
 convert the resulting significance indicators into the final partition.
+Tree-Break Selection itself is the procedure
+\[
+\operatorname{TBS}(X,\mathcal T,\mathcal F;
+\alpha_{\mathrm{edge}},\alpha_{\mathrm{sib}})
+\longmapsto
+\mathcal C_{\mathrm{TBS}},
+\]
+where \(\mathcal F\) is the feature-space contract and
+\(\mathcal C_{\mathrm{TBS}}\) is the returned set of terminal cluster nodes.
 \Cref{tab:notation} summarizes the symbols that carry the rest of the method.
 
 {\small
 \begin{longtable}{@{}p{0.24\textwidth}p{0.70\textwidth}@{}}
-\caption{Core notation used throughout the KL-TE method description.}
+\caption{Core notation used throughout the Tree-Break Selection method description.}
 \label{tab:notation}\\
 \toprule
 Symbol & Meaning \\
@@ -29,6 +38,8 @@ Symbol & Meaning \\
 $n$ & Number of samples. \\
 $p$ & Number of raw working coordinates before block-specific contrast charts. \\
 $X \in \mathbb{R}^{n \times p}$ & Numeric working sample-feature matrix with a Bernoulli, categorical, continuous, or mixed feature-space contract. \\
+$\mathcal F$ & Feature-space contract declaring Bernoulli, categorical, continuous, or mixed covariance blocks. \\
+\(\operatorname{TBS}(X,\mathcal T,\mathcal F;\alpha_{\mathrm{edge}},\alpha_{\mathrm{sib}})\) & Tree-Break Selection procedure applied to a feature matrix, candidate hierarchy, feature-space contract, and edge/sibling testing levels. \\
 $X_i \in \mathbb{R}^p$ & Row vector for sample $i$. \\
 $\mathcal{T} = (V,E)$ & Rooted binary hierarchy built from the samples. \\
 $u, v, a$ & Generic tree nodes. \\
@@ -39,10 +50,12 @@ $l(u), r(u)$ & Left and right child of parent node $u$. \\
 $L(u)$ & Descendant leaf set of node $u$. \\
 $n_u = |L(u)|$ & Number of descendant leaves under node $u$. \\
 $e = (u,c)$ & Directed tree edge from parent $u$ to child $c$, representing immediate subtree containment. \\
+$t_{u,c}$ & Normalized branch time for edge $(u,c)$, with linkage-derived root-to-leaf paths summing to one. \\
+$\bar t$ & Mean positive branch time in the inferred tree, used only to form dimensionless branch-time variance multipliers. \\
 $\theta_u$ & Empirical node distribution at node $u$ in the active feature-space coordinates. \\
 $\beta_u=n_{l(u)}/n_u$ & Left-child barycentric weight at binary parent $u$. \\
 $b_u=\min(\beta_u,1-\beta_u)$ & Barycentric balance of the two children at parent $u$. \\
-$s_u^{\mathrm{samp}}=1/n_{l(u)}+1/n_{r(u)}$ & Two-sample sampling variance scale for the sibling contrast at parent $u$. \\
+$s_u^{\mathrm{sib}}=(1/n_{l(u)}+1/n_{r(u)})(1+\{t_{u,l(u)}+t_{u,r(u)}\}/(2\bar t))$ & Branch-time-inflated variance scale for the sibling contrast at parent $u$. \\
 $\ell_u^{\mathrm{bar}}$ & Barycentric leverage, defined as $\log\{\max(\beta_u,1-\beta_u)/\min(\beta_u,1-\beta_u)\}$. \\
 $H_{0,j}^{\mathrm{edge}}(u,c)$ & Coordinatewise child-parent edge null for feature $j$. \\
 $z_{u \to c}^{\mathrm{edge}}$ & Standardized child-parent edge vector. \\
@@ -65,8 +78,8 @@ $h$ & Null-weighted bandwidth vector used on active sibling calibration context 
 $n_{\mathrm{cal}}, n_{\mathrm{eff}}$ & Number of contributing sibling calibration records and their effective sample size. \\
 $\hat c_{f_u}(x_u)$ & Context-weighted empirical-null inflation estimate for sibling parent $u$ in feature family $f_u$. \\
 $S^{\mathrm{sib}}(u)$ & Sibling significance indicator after correction. \\
-$\mathrm{Split}(u)$ & Indicator that traversal keeps the split at node $u$. \\
+$B_{\mathrm{TBS}}(u)$ & Tree-break indicator; equals one when TBS accepts the proposed split at internal node $u$. \\
 $D^{\mathrm{sib}}(u)$ & Indicator that some proper descendant of $u$ has a significant sibling split among nodes where the sibling test was run. \\
-$\mathcal{C}$ & Final set of terminal cluster nodes returned by traversal. \\
+$\mathcal{C}_{\mathrm{TBS}}$ & Final set of terminal cluster nodes returned by TBS traversal. \\
 \end{longtable}
 }

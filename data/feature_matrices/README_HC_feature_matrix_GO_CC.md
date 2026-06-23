@@ -35,7 +35,7 @@ data = pd.read_csv("data/feature_matrices/HC_feature_matrix_GO_CC.tsv", sep="\t"
 
 ## Clustering Results
 
-KL-tree decomposition was run at three significance levels. Results are stored alongside this file:
+TBS tree decomposition was run at three significance levels. Results are stored alongside this file:
 
 | α level | Directory | Clusters | Key files |
 |---------|-----------|----------|-----------|

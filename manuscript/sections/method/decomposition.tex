@@ -12,10 +12,11 @@ not estimate any new model or compute any new $p$-values; it turns the
 precomputed evidence tables into a final partition.
 
 The final clusters are produced by a top-down traversal that reads the two test
-annotation tables. For an internal node $u$ with children $l(u)$ and $r(u)$,
-the split rule is
+annotation tables. A tree break means that TBS accepts the proposed split at an
+internal node and descends into its two children. For an internal node $u$ with
+children $l(u)$ and $r(u)$, the break rule is
 \begin{equation}
-\mathrm{Split}(u) = 1
+B_{\mathrm{TBS}}(u) = 1
 \end{equation}
 if and only if all three conditions hold:
 \begin{enumerate}[leftmargin=1.5em]
@@ -32,7 +33,7 @@ significant sibling split among nodes for which the sibling test was run. Then
 the traversal still descends into
 both children when
 \begin{equation}
-\mathrm{Split}(u) = 0,
+B_{\mathrm{TBS}}(u) = 0,
 \qquad
 u \text{ has exactly two children},
 \qquad
@@ -42,4 +43,4 @@ D^{\mathrm{sib}}(u) = 1.
 \end{equation}
 This pass-through rule is used to prevent a shallow sibling-test failure from
 masking deeper structure. The terminal nodes returned by this traversal define
-the final cluster partition directly.
+\(\mathcal C_{\mathrm{TBS}}\), the final cluster partition.

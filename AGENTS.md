@@ -2,7 +2,7 @@
 
 ## Project Context
 
-This repository develops the KL-TE clustering method and software. The durable
+This repository develops the Tree-Break Selection clustering method and software. The durable
 memory layer is a docs-as-code wiki: primary evidence remains in source files,
 raw captures, data notes, manuscripts, tests, benchmarks, and reports, while
 reusable synthesis lives in `wiki/`.
@@ -20,7 +20,7 @@ synthesis:
 - `README.md`, `CHANGELOG.md`, and root configuration files for current project
   intent.
 - `manuscript/` for the paper, derivations, terminology, and submission gaps.
-- `kl_clustering_analysis/`, `benchmarks/`, `tests/`, `scripts/`, and
+- `tree_break_selection/`, `benchmarks/`, `tests/`, `scripts/`, and
   `notebooks/` for implementation and validation behavior.
 - `data/`, `reports/`, `docs/`, and `local_data/` for datasets, outputs,
   audits, and local notes.
@@ -81,7 +81,7 @@ so links can resolve without directory prefixes.
 Start with:
 
 ```bash
-rg "term" wiki raw README.md manuscript kl_clustering_analysis benchmarks tests
+rg "term" wiki raw README.md manuscript tree_break_selection benchmarks tests
 ```
 
 Use `sed`, `nl`, and `find` for local inspection. Use `git status --short`
@@ -104,6 +104,6 @@ coverage.
 
 ## Seed Topic
 
-The initial wiki seed covers the KL-TE method, `PosetTree`,
+The initial wiki seed covers the Tree-Break Selection method, `PosetTree`,
 `TreeDecomposition`, projected-Wald testing, top-down traversal, and the wiki
 construction pattern itself.

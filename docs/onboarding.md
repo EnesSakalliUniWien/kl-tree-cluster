@@ -27,7 +27,7 @@ short: follow it before opening deep implementation directories.
    ```
 
 5. If you need current mathematical context, start at `wiki/index.md`, then
-   read `wiki/concepts/kl-te-method.md`,
+   read `wiki/concepts/tree-break-selection.md`,
    `wiki/concepts/projected-wald-statistic.md`, and
    `wiki/analyses/oracle-gate-path-diagnostic.md`.
 
@@ -39,10 +39,10 @@ short: follow it before opening deep implementation directories.
 
 | Need | Go to |
 | ---- | ----- |
-| Importable method code | `kl_clustering_analysis/` |
-| Tree structure and feature-space data contracts | `kl_clustering_analysis/tree/` |
-| Decomposition traversal and gate orchestration | `kl_clustering_analysis/hierarchy_analysis/` |
-| Statistical kernels, projection, inflation, and FDR | `kl_clustering_analysis/hierarchy_analysis/statistics/` |
+| Importable method code | `tree_break_selection/` |
+| Tree structure and feature-space data contracts | `tree_break_selection/tree/` |
+| Decomposition traversal and gate orchestration | `tree_break_selection/hierarchy_analysis/` |
+| Statistical kernels, projection, inflation, and FDR | `tree_break_selection/hierarchy_analysis/statistics/` |
 | Full, smoke, and regression benchmark execution | `benchmarks/full/`, `benchmarks/smoke/`, `benchmarks/regression/` |
 | Standalone benchmark experiments | `benchmarks/experiments/` |
 | Benchmark-only investigation tools | `benchmarks/diagnostics/` |
@@ -68,12 +68,12 @@ short: follow it before opening deep implementation directories.
 
 For the active method, read in this order:
 
-1. `kl_clustering_analysis/tree/feature_space.py`
-2. `kl_clustering_analysis/tree/poset_tree.py`
-3. `kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py`
-4. `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py`
-5. `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py`
-6. `kl_clustering_analysis/hierarchy_analysis/statistics/README.md`
+1. `tree_break_selection/tree/feature_space.py`
+2. `tree_break_selection/tree/poset_tree.py`
+3. `tree_break_selection/hierarchy_analysis/tree_decomposition.py`
+4. `tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py`
+5. `tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py`
+6. `tree_break_selection/hierarchy_analysis/statistics/README.md`
 
 ## Main Benchmark Route
 

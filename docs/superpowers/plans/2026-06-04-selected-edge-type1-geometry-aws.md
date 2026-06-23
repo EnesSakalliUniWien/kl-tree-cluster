@@ -654,7 +654,7 @@ Use existing production APIs without adding fallbacks:
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
-from benchmarks.shared.kl_tree_context import build_kl_tree_context
+from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 
 
 def run_selected_edge_replicate(
@@ -684,7 +684,7 @@ def run_selected_edge_replicate(
     )
     distances = pdist(data.to_numpy(dtype=float), metric="hamming")
     linkage_matrix = linkage(distances, method="average")
-    context = build_kl_tree_context(
+    context = build_tbs_tree_context(
         case_id=case_id,
         data=data,
         distance_condensed=distances,
@@ -1210,7 +1210,7 @@ git commit -m "docs: document selected-edge type-I smoke workflow"
 Run:
 
 ```bash
-docker build -f benchmarks/cloud/aws/Dockerfile -t kl-te-benchmark-diagnostics:local .
+docker build -f benchmarks/cloud/aws/Dockerfile -t tree-break-selection-benchmark-diagnostics:local .
 ```
 
 Expected: build succeeds.
@@ -1220,7 +1220,7 @@ Expected: build succeeds.
 Run:
 
 ```bash
-docker run --rm kl-te-benchmark-diagnostics:local \
+docker run --rm tree-break-selection-benchmark-diagnostics:local \
   benchmarks.cloud.aws_selected_edge_type1_geometry run-shard \
   --suite binary \
   --case-names binary_2clusters \
@@ -1242,9 +1242,9 @@ Use the existing ECR repository and Batch stack. Submit a 4-shard pilot:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-selected-edge-type1-pilot \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-selected-edge-type1-pilot \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --array-properties size=4 \
   --container-overrides '{
     "command": [
@@ -1259,7 +1259,7 @@ aws batch submit-job \
       "--base-seed", "20260604",
       "--output-dir", "/tmp/selected-edge-type1-pilot",
       "--shard-count", "4",
-      "--s3-uri", "s3://kl-te-benchmark-diagnostics-067744548702-us-east-1/selected-edge-type1-pilot-20260604"
+      "--s3-uri", "s3://tree-break-selection-benchmark-diagnostics-067744548702-us-east-1/selected-edge-type1-pilot-20260604"
     ]
   }'
 ```
@@ -1270,9 +1270,9 @@ Run:
 
 ```bash
 aws batch submit-job \
-  --job-name kl-te-selected-edge-type1-pilot-merge \
-  --job-queue kl-te-benchmark-diagnostics \
-  --job-definition kl-te-benchmark-diagnostics \
+  --job-name tree-break-selection-selected-edge-type1-pilot-merge \
+  --job-queue tree-break-selection-benchmark-diagnostics \
+  --job-definition tree-break-selection-benchmark-diagnostics \
   --container-overrides '{
     "command": [
       "benchmarks.cloud.aws_selected_edge_type1_geometry",
@@ -1286,7 +1286,7 @@ aws batch submit-job \
       "--base-seed", "20260604",
       "--output-dir", "/tmp/selected-edge-type1-pilot",
       "--shard-count", "4",
-      "--s3-uri", "s3://kl-te-benchmark-diagnostics-067744548702-us-east-1/selected-edge-type1-pilot-20260604"
+      "--s3-uri", "s3://tree-break-selection-benchmark-diagnostics-067744548702-us-east-1/selected-edge-type1-pilot-20260604"
     ]
   }'
 ```
@@ -1297,7 +1297,7 @@ Run:
 
 ```bash
 aws s3 sync \
-  s3://kl-te-benchmark-diagnostics-067744548702-us-east-1/selected-edge-type1-pilot-20260604/merged \
+  s3://tree-break-selection-benchmark-diagnostics-067744548702-us-east-1/selected-edge-type1-pilot-20260604/merged \
   raw/assets/benchmark-results/selected_edge_type1_pilot_20260604
 ```
 
@@ -1340,7 +1340,7 @@ Do not launch the full run if the estimate exceeds the user-approved budget.
 Submit with `--array-properties size=50` and S3 prefix:
 
 ```text
-s3://kl-te-benchmark-diagnostics-067744548702-us-east-1/selected-edge-type1-full-20260604
+s3://tree-break-selection-benchmark-diagnostics-067744548702-us-east-1/selected-edge-type1-full-20260604
 ```
 
 - [ ] **Step 4: Merge full outputs**

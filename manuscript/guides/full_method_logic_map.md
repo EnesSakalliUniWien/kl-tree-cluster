@@ -1,11 +1,11 @@
-# KL-TE Method Logic Map
+# Tree-Break Selection Method Logic Map
 
 This guide records the current mathematical contract behind the manuscript.
 It is not a results section.
 
 ## Central Mathematical Object
 
-KL-TE starts from a typed sample-feature matrix and a rooted binary
+Tree-Break Selection starts from a typed sample-feature matrix and a rooted binary
 agglomerative hierarchy. The active feature-space contract may contain
 Bernoulli coordinates, categorical one-hot blocks with drop-last multinomial
 covariance, continuous empirical-Gaussian blocks, or future mixed blocks. Each

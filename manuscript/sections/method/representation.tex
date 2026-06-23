@@ -9,8 +9,9 @@ summaries rather than directly on individual samples. All supported inputs are
 first mapped into one working sample-feature matrix $X$ with an explicit
 feature-space contract. In the current benchmark implementation, Bernoulli and
 one-hot cases use Hamming distance and average linkage for the candidate tree;
-explicit continuous benchmark cases use a precomputed Euclidean distance
-matrix.
+Gaussian location-style continuous benchmark cases use a precomputed
+standardized Euclidean distance matrix, while continuous covariance and
+Brownian diagnostic cases may declare separate precomputed tree distances.
 
 For a non-expert reader, the important point is that the tree is a
 bookkeeping device for nested groups of samples. Each leaf corresponds to one
@@ -130,18 +131,21 @@ child $R$,
 \end{equation}
 The sibling variance scale is
 \[
-s_u^{\mathrm{samp}}
+s_u^{\mathrm{sib}}
 =
-\frac{1}{n_L}+\frac{1}{n_R},
+\left(\frac{1}{n_L}+\frac{1}{n_R}\right)
+\left(1+\frac{t_{u,L}+t_{u,R}}{2\bar t}\right),
 \]
 while the nested left and right child-parent variance scales are
 \[
-\frac{1}{n_L}-\frac{1}{n_u}
+\left(\frac{1}{n_L}-\frac{1}{n_u}\right)
+\left(1+\frac{t_{u,L}}{\bar t}\right)
 \quad\text{and}\quad
-\frac{1}{n_R}-\frac{1}{n_u}.
+\left(\frac{1}{n_R}-\frac{1}{n_u}\right)
+\left(1+\frac{t_{u,R}}{\bar t}\right).
 \]
-Therefore, under a shared local covariance baseline, no branch-length scaling,
-and the same whitening chart, the barycentric coefficients in
+Without branch-time inflation, under a shared local covariance baseline and the
+same whitening chart, the barycentric coefficients in
 \Cref{eq:barycentric-raw-contrasts} cancel the nested variance scales:
 \begin{equation}
 z_{L\to u}^{\mathrm{edge}} = z_u^{\mathrm{sib}},
@@ -222,10 +226,12 @@ features.]
 Continuous inputs can enter through an explicit continuous feature-space
 contract. In that contract, the raw continuous columns form an
 empirical-Gaussian block, and each tree node stores the empirical descendant
-covariance matrix for that block. The active continuous benchmark cases keep
-the raw continuous values and use a precomputed Euclidean distance matrix for
-tree construction. Separate discretized Gaussian benchmark variants still exist
-for comparison. One such variant is median binarization,
+covariance matrix for that block. The active Gaussian location-style continuous
+benchmark cases keep the raw continuous values and use a precomputed
+standardized Euclidean distance matrix for tree construction; covariance,
+low-rank, and Brownian diagnostic cases may instead declare a metric-specific
+precomputed distance. Separate discretized Gaussian benchmark variants still
+exist for comparison. One such variant is median binarization,
 \begin{equation}
 X_{ij}^{\mathrm{bin}}
 =

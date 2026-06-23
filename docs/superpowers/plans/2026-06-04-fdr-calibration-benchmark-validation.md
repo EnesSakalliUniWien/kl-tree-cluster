@@ -6,7 +6,7 @@
 
 **Architecture:** Keep this diagnostic-only. Do not change production defaults, add external-null fallbacks, or tune alpha from incomplete evidence. Build layered validation: first test FDR machinery with valid synthetic p-values, then test fixed-tree projected-Wald calibration, then selected-tree/selected-hierarchy calibration, then benchmark impact.
 
-**Tech Stack:** Python, NumPy, pandas, scipy/statsmodels BH routines, pytest, existing KL-TE benchmark and wiki docs-as-code.
+**Tech Stack:** Python, NumPy, pandas, scipy/statsmodels BH routines, pytest, existing Tree-Break Selection benchmark and wiki docs-as-code.
 
 ---
 
@@ -269,7 +269,7 @@ def test_synthetic_valid_p_layer_controls_fdr_with_valid_null_p_values() -> None
 Add:
 
 ```python
-from kl_clustering_analysis.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.fdr_annotation import (
+from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.fdr_annotation import (
     apply_traversal_aligned_sibling_bh_results,
     init_sibling_annotation_df,
 )
@@ -631,13 +631,13 @@ git commit -m "Record traversal sibling FDR calibration evidence"
 - [ ] **Step 1: Run small local benchmark**
 
 ```bash
-python -m benchmarks.run_benchmark --suite binary --methods kl --no-plots
+python -m benchmarks.run_benchmark --suite binary --methods tbs --no-plots
 ```
 
 Expected:
 
 - no new hidden skips
-- KL rows record `edge_alpha` and `sibling_alpha`
+- TBS rows record `edge_alpha` and `sibling_alpha`
 
 - [ ] **Step 2: Run full benchmark only after calibration diagnostics complete**
 

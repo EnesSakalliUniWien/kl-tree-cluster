@@ -9,7 +9,7 @@
 **Tech Stack:** Python 3.11, pandas, NumPy, pytest, ruff, docs-as-code wiki lint via `make wiki-lint`, CSV/JSON evidence under `raw/assets/benchmark-results/`.
 
 Use `DEFAULT_SIBLING_ALPHA` from
-`kl_clustering_analysis.hierarchy_analysis.statistics.alpha_contract` in code
+`tree_break_selection.hierarchy_analysis.statistics.alpha_contract` in code
 snippets; statistical thresholds are not read from `config.py`.
 
 ---
@@ -42,7 +42,7 @@ snippets; statistical thresholds are not read from `config.py`.
 ### Task 1: Confirm The Worktree And Evidence Boundary
 
 **Files:**
-- Inspect: `/Users/berksakalli/Projects/kl-te-cluster`
+- Inspect: `/Users/berksakalli/Projects/tree-break-selection`
 
 - [ ] **Step 1: Inspect current git status**
 
@@ -558,7 +558,7 @@ uv run python -m benchmarks.diagnostics.calibration.selected_hierarchy_geometry_
   --output-dir raw/assets/benchmark-results/selected_hierarchy_tail_law_20260602_broad_200
 ```
 
-Expected: eight cases complete, and `sbm_moderate` is an explicit skip because the selected-hierarchy null generator does not support precomputed KL tree distances.
+Expected: eight cases complete, and `sbm_moderate` is an explicit skip because the selected-hierarchy null generator does not support precomputed TBS tree distances.
 
 - [ ] **Step 2: Summarize tail-law support**
 
@@ -652,7 +652,7 @@ production-admissible under the predeclared support contract.
   `0.002`.
 - The broad run used `200` replicates over nine requested cases. Eight cases
   completed. `sbm_moderate` was skipped because the selected-hierarchy null
-  generator does not own the precomputed KL tree-distance contract.
+  generator does not own the precomputed TBS tree-distance contract.
 - The selected-ratio tail table contains `104` contexts. `39` contexts have
   descriptive held-out tail-law folds; `65` have no valid tail-law folds.
 - `0` of `104` contexts are production-admissible. Every context fails the

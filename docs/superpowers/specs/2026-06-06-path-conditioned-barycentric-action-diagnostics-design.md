@@ -2,7 +2,7 @@
 
 ## Objective
 
-Develop diagnostics that trace the full equation path behind KL-TE split
+Develop diagnostics that trace the full equation path behind Tree-Break Selection split
 decisions and identify likely missing equations. The diagnostics are
 descriptive only. They must not promote radius, angle, KAK, cosine, or external
 selected-tail variables into production calibration unless a separate support
@@ -68,7 +68,7 @@ contrast algebra and quantify numerical residuals.
 
 Inputs:
 
-- Existing tree node distributions and leaf counts from the KL-TE gate or
+- Existing tree node distributions and leaf counts from the Tree-Break Selection gate or
   decomposition path.
 - Existing edge and sibling projected-Wald records when available.
 

@@ -1,6 +1,6 @@
-# KL-TE Clustering Toolkit
+# Tree-Break Selection Clustering Toolkit
 
-This repository develops the KL-TE hierarchy decomposition method and its
+This repository develops the Tree-Break Selection hierarchy decomposition method and its
 validation software. The active method builds a hierarchy, represents node
 distributions in an explicit feature space, tests child-parent and sibling
 contrasts with projected-Wald statistics, and uses strict calibration contracts
@@ -19,7 +19,7 @@ to decide where the tree should stop splitting.
 - Produce benchmark tables, diagnostic traces, manuscript figures, and wiki
   records that connect results back to source files.
 
-The package code lives under `kl_clustering_analysis/`. Benchmarks,
+The package code lives under `tree_break_selection/`. Benchmarks,
 diagnostics, manuscript material, and wiki synthesis are separate repository
 surfaces with their own contracts.
 
@@ -41,10 +41,10 @@ surfaces with their own contracts.
 
 ### Implementation Map
 
-- Core tree structure, node distributions, and I/O: `kl_clustering_analysis/tree/`.
-- Decomposition entrypoint and traversal: `kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py`.
-- Gate orchestration and split/merge evaluation: `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/`.
-- Statistical tests, projection helpers, and FDR correction: `kl_clustering_analysis/hierarchy_analysis/statistics/`.
+- Core tree structure, node distributions, and I/O: `tree_break_selection/tree/`.
+- Decomposition entrypoint and traversal: `tree_break_selection/hierarchy_analysis/tree_decomposition.py`.
+- Gate orchestration and split/merge evaluation: `tree_break_selection/hierarchy_analysis/decomposition/gates/`.
+- Statistical tests, projection helpers, and FDR correction: `tree_break_selection/hierarchy_analysis/statistics/`.
 - Benchmark harness and report generation: `benchmarks/`.
 - User-facing analysis commands: `scripts/analysis/`.
 - Scientific manuscript workspace: `manuscript/`.
@@ -52,7 +52,7 @@ surfaces with their own contracts.
 
 ### Repository Path Policy
 
-- `kl_clustering_analysis/`: importable package code only.
+- `tree_break_selection/`: importable package code only.
 - `benchmarks/`: benchmark runners, reusable benchmark infrastructure, and
   benchmark diagnostics. Generated benchmark outputs belong under
   `benchmarks/results/`.
@@ -132,7 +132,7 @@ The repository keeps the durable entrypoint docs in a small set of files:
   the repository.
 - `manuscript/sections/method/edge_test.tex` and `manuscript/sections/method/sibling_test.tex` for numeric walk-throughs.
 - `tests/README.md` and `benchmarks/README.md` for the validation and benchmark harnesses.
-- Package READMEs under `kl_clustering_analysis/` for module-level maps.
+- Package READMEs under `tree_break_selection/` for module-level maps.
 - `manuscript/README.md` for the paper workspace and build tooling.
 
 ## Highlights
@@ -204,7 +204,7 @@ performed without cleanup.
 
 ## Benchmark Methods (Optional)
 
-The benchmarking suite can run additional clustering baselines side-by-side with the KL pipeline:
+The benchmarking suite can run additional clustering baselines side-by-side with the TBS pipeline:
 
 - Graph community detection: Leiden, Louvain
 - Density-based clustering: DBSCAN, OPTICS, HDBSCAN (optional)
