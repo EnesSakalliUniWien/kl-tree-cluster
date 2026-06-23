@@ -1,0 +1,23 @@
+{
+  "run_id": "current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_common_mode_01",
+  "method_version": "current",
+  "tree_geometry": "adaptive_diffusion_cosine_subspace",
+  "weighting": "tfidf",
+  "block_id": 0,
+  "block_name": "adaptive_common_mode_01",
+  "block_type": "common_mode",
+  "block_start": 1,
+  "block_end": 1,
+  "subspace_dimensions": 1,
+  "block_energy_fraction": 0.14603701829495314,
+  "segmentation_bic": -569.9512357721026,
+  "common_mode_isolated": true,
+  "subspace_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/subspaces/tfidf/adaptive_common_mode_01",
+  "spectral_block": {
+    "block_id": 0,
+    "block_name": "adaptive_common_mode_01",
+    "block_start": 1,
+    "block_end": 1,
+    "block_type": "common_mode"
+  }
+}

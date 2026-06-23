@@ -1,0 +1,25 @@
+{
+  "input": "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv",
+  "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree",
+  "artifact_prefix": "aml_michel_reactome_msigdb",
+  "dataset_label": "aml_michel_reactome_msigdb",
+  "method_version": "current",
+  "tree_geometry": "adaptive_diffusion_cosine_subspace",
+  "edge_alpha": 0.001,
+  "sibling_alpha": 0.01,
+  "max_rank": 80,
+  "min_segment_length": 4,
+  "max_segments": 8,
+  "diffusion_k_neighbors": 15,
+  "diffusion_time": 3,
+  "diffusion_components": 30,
+  "adaptive_bandwidth_type": "-1/(d+2)",
+  "adaptive_epsilon": "median",
+  "adaptive_metric": "euclidean",
+  "weightings": [
+    "binary",
+    "tfidf"
+  ],
+  "block_names": [],
+  "top_terms_per_axis": 20
+}

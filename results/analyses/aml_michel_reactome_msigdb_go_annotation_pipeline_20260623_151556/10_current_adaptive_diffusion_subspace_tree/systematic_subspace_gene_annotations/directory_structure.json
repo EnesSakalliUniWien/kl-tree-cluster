@@ -1,0 +1,21 @@
+{
+  "dataset_label": "aml_michel_reactome_msigdb",
+  "experiment_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree",
+  "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations",
+  "root_files": [
+    "subspace_cluster_roster.csv",
+    "subspace_gene_membership_long.csv",
+    "subspace_cluster_status.csv",
+    "subspace_cluster_roster.md",
+    "full_space_embedding_coordinates.csv",
+    "aml_michel_reactome_msigdb_radial_tree_clusters.pdf"
+  ],
+  "subspace_directory_patterns": [
+    "subspaces/rank##_weighting_block_name/",
+    "subspaces/failed##_weighting_block_name/"
+  ],
+  "assignment_sources": {
+    "accepted_tbs": "final accepted TBS assignments",
+    "diagnostic_linkage_cut": "diagnostic linkage-tree cuts for failed gates"
+  }
+}

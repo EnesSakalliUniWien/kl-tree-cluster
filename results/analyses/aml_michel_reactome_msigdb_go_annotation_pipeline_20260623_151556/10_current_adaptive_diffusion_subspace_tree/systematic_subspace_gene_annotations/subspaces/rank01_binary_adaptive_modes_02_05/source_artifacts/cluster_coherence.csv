@@ -1,0 +1,6 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_02_05,0,21,383,5.2903756002584185e-24,IGF1R Signaling Cascade,1.0,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_02_05,1,20,87,3.8822190272094215e-14,Mitotic Telophase Cytokinesis,0.9153846153846154,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_02_05,2,19,70,6.456232992611924e-13,Transport of Mature mRNA Derived From an Intron-Containing Transcript,0.8565689031739655,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_02_05,3,43,154,1.703973302397416e-11,Epigenetic Regulation of Gene Expression,0.6735492284286024,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_02_05,4,47,117,2.986051346669027e-07,G2 M Transition,0.4736624664325553,True

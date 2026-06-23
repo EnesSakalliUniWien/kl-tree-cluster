@@ -1,0 +1,201 @@
+left,right,cosine_similarity
+Chromatin Modifying Enzymes,Chromatin Organization,1.0000000000000009
+Signaling by ALK in Cancer,Signaling by ALK Fusions and Activated Point Mutants,1.0000000000000007
+Downstream Signaling of Activated FGFR1,IRS-mediated Signalling,1.0000000000000004
+Signaling by PDGF,Downstream Signaling of Activated FGFR4,1.0000000000000004
+Signaling by FGFR4 in Disease,Insulin Receptor Signalling Cascade,1.0000000000000004
+Signaling by FGFR4 in Disease,Downstream Signaling of Activated FGFR3,1.0000000000000004
+Signaling by FGFR4 in Disease,IRS-mediated Signalling,1.0000000000000004
+Downstream Signaling of Activated FGFR2,Insulin Receptor Signalling Cascade,1.0000000000000004
+Signaling by FGFR4 in Disease,DAP12 Signaling,1.0000000000000004
+Insulin Receptor Signalling Cascade,IRS-mediated Signalling,1.0000000000000004
+Signaling by FGFR4 in Disease,Signaling by Erythropoietin,1.0000000000000004
+Downstream Signaling of Activated FGFR3,Downstream Signaling of Activated FGFR4,1.0000000000000004
+IRS-mediated Signalling,Downstream Signaling of Activated FGFR4,1.0000000000000004
+Downstream Signaling of Activated FGFR2,Downstream Signaling of Activated FGFR3,1.0000000000000004
+Signaling by Erythropoietin,Signaling by PDGF,1.0000000000000004
+IGF1R Signaling Cascade,Signaling by FGFR4 in Disease,1.0000000000000004
+Signaling by FGFR4 in Disease,IRS-related Events Triggered by IGF1R,1.0000000000000004
+IRS-mediated Signalling,Signaling by PDGF,1.0000000000000004
+Downstream Signaling of Activated FGFR2,Downstream Signaling of Activated FGFR4,1.0000000000000004
+Downstream Signaling of Activated FGFR2,IRS-mediated Signalling,1.0000000000000004
+Insulin Receptor Signalling Cascade,Downstream Signaling of Activated FGFR3,1.0000000000000004
+IGF1R Signaling Cascade,Insulin Receptor Signalling Cascade,1.0000000000000004
+DAP12 Signaling,Downstream Signaling of Activated FGFR4,1.0000000000000004
+IGF1R Signaling Cascade,Downstream Signaling of Activated FGFR3,1.0000000000000004
+Downstream Signaling of Activated FGFR1,Downstream Signaling of Activated FGFR2,1.0000000000000004
+Downstream Signaling of Activated FGFR1,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+IGF1R Signaling Cascade,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+IRS-related Events Triggered by IGF1R,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+Signaling by Erythropoietin,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+Downstream Signaling of Activated FGFR1,Signaling by EGFR,1.0000000000000004
+IGF1R Signaling Cascade,IRS-related Events Triggered by IGF1R,1.0000000000000004
+DAP12 Signaling,Signaling by EGFR,1.0000000000000004
+IRS-related Events Triggered by IGF1R,Downstream Signaling of Activated FGFR4,1.0000000000000004
+IGF1R Signaling Cascade,Signaling by Erythropoietin,1.0000000000000004
+Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),Signaling by PDGF,1.0000000000000004
+Downstream Signaling of Activated FGFR1,Signaling by PDGF,1.0000000000000004
+IGF1R Signaling Cascade,DAP12 Signaling,1.0000000000000004
+DAP12 Signaling,Signaling by PDGF,1.0000000000000004
+Downstream Signaling of Activated FGFR1,Downstream Signaling of Activated FGFR4,1.0000000000000004
+Downstream Signaling of Activated FGFR2,Signaling by FGFR4 in Disease,1.0000000000000004
+IGF1R Signaling Cascade,IRS-mediated Signalling,1.0000000000000004
+IRS-mediated Signalling,Signaling by EGFR,1.0000000000000004
+Downstream Signaling of Activated FGFR3,Signaling by PDGF,1.0000000000000004
+PI-3K Cascade FGFR4,PI-3K Cascade FGFR2,1.0000000000000004
+Signaling by PDGFRA Extracellular Domain Mutants,Signaling by FGFR1 in Disease,1.0000000000000004
+Downstream Signaling of Activated FGFR3,DAP12 Signaling,1.0000000000000004
+Signaling by PDGFRA Extracellular Domain Mutants,"Signaling by PDGFRA Transmembrane, Juxtamembrane and Kinase Domain Mutants",1.0000000000000004
+Downstream Signaling of Activated FGFR2,IRS-related Events Triggered by IGF1R,1.0000000000000004
+Downstream Signaling of Activated FGFR3,IRS-mediated Signalling,1.0000000000000004
+Signaling by Erythropoietin,Downstream Signaling of Activated FGFR4,1.0000000000000004
+Insulin Receptor Signalling Cascade,Signaling by EGFR,1.0000000000000004
+Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),Signaling by EGFR,1.0000000000000004
+Dual Incision in TC-NER,Gap-filling DNA Repair Synthesis and Ligation in TC-NER,1.0000000000000004
+Insulin Receptor Signalling Cascade,Signaling by PDGF,1.0000000000000004
+Signaling by EGFR,Downstream Signaling of Activated FGFR4,1.0000000000000004
+PI-3K Cascade FGFR1,PI-3K Cascade FGFR2,1.0000000000000004
+Downstream Signaling of Activated FGFR2,DAP12 Signaling,1.0000000000000004
+MAP Kinase Activation,Interleukin-17 Signaling,1.0000000000000004
+Downstream Signaling of Activated FGFR2,Signaling by EGFR,1.0000000000000004
+Downstream Signaling of Activated FGFR2,Signaling by Erythropoietin,1.0000000000000004
+Insulin Receptor Signalling Cascade,Downstream Signaling of Activated FGFR4,1.0000000000000004
+Recruitment of Mitotic Centrosome Proteins and Complexes,Centrosome Maturation,1.0000000000000004
+Formation of RNA Pol II Elongation Complex,RNA Polymerase II Transcription Elongation,1.0000000000000004
+Downstream Signaling of Activated FGFR2,Signaling by PDGF,1.0000000000000004
+Signaling by FGFR4 in Disease,Downstream Signaling of Activated FGFR4,1.0000000000000004
+Insulin Receptor Signalling Cascade,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+Downstream Signaling of Activated FGFR3,Signaling by Erythropoietin,1.0000000000000004
+Signaling by FGFR4 in Disease,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+IGF1R Signaling Cascade,Downstream Signaling of Activated FGFR2,1.0000000000000004
+IRS-mediated Signalling,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+Insulin Receptor Signalling Cascade,DAP12 Signaling,1.0000000000000004
+IGF1R Signaling Cascade,Downstream Signaling of Activated FGFR1,1.0000000000000004
+Signaling by Erythropoietin,IRS-related Events Triggered by IGF1R,1.0000000000000004
+Downstream Signaling of Activated FGFR3,Signaling by EGFR,1.0000000000000004
+Insulin Receptor Signalling Cascade,Signaling by Erythropoietin,1.0000000000000004
+Downstream Signaling of Activated FGFR3,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+IRS-mediated Signalling,IRS-related Events Triggered by IGF1R,1.0000000000000004
+Signaling by FGFR4 in Disease,Signaling by EGFR,1.0000000000000004
+IRS-mediated Signalling,Signaling by Erythropoietin,1.0000000000000004
+Signaling by FGFR4 in Disease,Signaling by PDGF,1.0000000000000004
+Signaling by EGFR,Signaling by PDGF,1.0000000000000004
+IRS-mediated Signalling,DAP12 Signaling,1.0000000000000004
+Downstream Signaling of Activated FGFR3,IRS-related Events Triggered by IGF1R,1.0000000000000004
+Signaling by FGFR1 in Disease,"Signaling by PDGFRA Transmembrane, Juxtamembrane and Kinase Domain Mutants",1.0000000000000004
+IRS-related Events Triggered by IGF1R,Signaling by PDGF,1.0000000000000004
+Insulin Receptor Signalling Cascade,IRS-related Events Triggered by IGF1R,1.0000000000000004
+Downstream Signaling of Activated FGFR1,Signaling by FGFR4 in Disease,1.0000000000000004
+Downstream Signaling of Activated FGFR2,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+DAP12 Signaling,IRS-related Events Triggered by IGF1R,1.0000000000000004
+IGF1R Signaling Cascade,Downstream Signaling of Activated FGFR4,1.0000000000000004
+IGF1R Signaling Cascade,Signaling by PDGF,1.0000000000000004
+MET Receptor Recycling,IL-6/JAK/STAT3 Signaling,1.0000000000000004
+IGF1R Signaling Cascade,Signaling by EGFR,1.0000000000000004
+Signaling by Erythropoietin,Signaling by EGFR,1.0000000000000004
+Downstream Signaling of Activated FGFR1,DAP12 Signaling,1.0000000000000004
+Downstream Signaling of Activated FGFR1,Insulin Receptor Signalling Cascade,1.0000000000000004
+IRS-related Events Triggered by IGF1R,Signaling by EGFR,1.0000000000000004
+DAP12 Signaling,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),1.0000000000000004
+Downstream Signaling of Activated FGFR1,IRS-related Events Triggered by IGF1R,1.0000000000000004
+Downstream Signaling of Activated FGFR1,Downstream Signaling of Activated FGFR3,1.0000000000000004
+Regulation of Necroptotic Cell Death,RIPK1-mediated Regulated Necrosis,1.0000000000000004
+Downstream Signaling of Activated FGFR1,Signaling by Erythropoietin,1.0000000000000004
+Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),Downstream Signaling of Activated FGFR4,1.0000000000000004
+DAP12 Signaling,Signaling by Erythropoietin,1.0000000000000004
+PI-3K Cascade FGFR4,PI-3K Cascade FGFR1,1.0000000000000004
+Resolution of D-loop Structures Through Synthesis-Dependent Strand Annealing (SDSA),Defective HDR Through Homologous Recombination Repair Due to PALB2 Loss of BRCA1 Binding Function,1.0000000000000002
+SARS-CoV-1 Genome Replication and Transcription,Replication of the SARS-CoV-1 Genome,1.0000000000000002
+Signaling by ERBB2 in Cancer,Signaling by ERBB2 KD Mutants,1.0000000000000002
+RNA Polymerase II Promoter Escape,RNA Polymerase II Transcription Initiation,1.0000000000000002
+RNA Polymerase II HIV Promoter Escape,RNA Polymerase II Transcription Initiation And Promoter Clearance,1.0000000000000002
+RNA Polymerase II Promoter Escape,RNA Polymerase II Transcription Initiation And Promoter Clearance,1.0000000000000002
+Signaling by MET,DAP12 Interactions,1.0000000000000002
+CTNNB1 S37 Mutants Aren'T Phosphorylated,Signaling by CTNNB1 Phospho-Site Mutants,1.0000000000000002
+RNA Polymerase II HIV Promoter Escape,HIV Transcription Initiation,1.0000000000000002
+SARS-CoV-2 Genome Replication and Transcription,Replication of the SARS-CoV-1 Genome,1.0000000000000002
+p53-Independent DNA Damage Response,p53-Independent G1 S DNA Damage Checkpoint,1.0000000000000002
+Regulation of CDH11 Function,CDH11 Homotypic and Heterotypic Interactions,1.0000000000000002
+Transport of the SLBP Dependant Mature mRNA,Transport of the SLBP Independent Mature mRNA,1.0000000000000002
+CTNNB1 S37 Mutants Aren'T Phosphorylated,CTNNB1 T41 Mutants Aren'T Phosphorylated,1.0000000000000002
+Signaling by GSK3beta Mutants,CTNNB1 S33 Mutants Aren'T Phosphorylated,1.0000000000000002
+Resolution of D-loop Structures Through Synthesis-Dependent Strand Annealing (SDSA),Defective Homologous Recombination Repair (HRR) Due to PALB2 Loss of Function,1.0000000000000002
+RNA Polymerase II Transcription Pre-Initiation And Promoter Opening,HIV Transcription Initiation,1.0000000000000002
+Regulation of Lipid Metabolism by PPARalpha,PPARA Activates Gene Expression,1.0000000000000002
+RNA Polymerase II Transcription Initiation And Promoter Clearance,HIV Transcription Initiation,1.0000000000000002
+Tie2 Signaling,Signaling by MET,1.0000000000000002
+Diseases Associated With the TLR Signaling Cascade,Diseases of Immune System,1.0000000000000002
+Defective HDR Through Homologous Recomb Repair Due to PALB2 Loss of BRCA2 RAD51 RAD51C Binding Fnc,Impaired BRCA2 Binding to PALB2,1.0000000000000002
+RNA Polymerase III Transcription Initiation From Type 2 Promoter,RNA Polymerase III Transcription Initiation From Type 1 Promoter,1.0000000000000002
+Signaling by GSK3beta Mutants,CTNNB1 T41 Mutants Aren'T Phosphorylated,1.0000000000000002
+Signaling by TGF-beta Receptor Complex in Cancer,Loss of Function of SMAD2 3 in Cancer,1.0000000000000002
+Hh Mutants Abrogate Ligand Secretion,Hh Mutants Are Degraded by ERAD,1.0000000000000002
+Defective HDR Through Homologous Recombination Repair Due to PALB2 Loss of BRCA1 Binding Function,Defective HDR Through Homologous Recomb Repair Due to PALB2 Loss of BRCA2 RAD51 RAD51C Binding Fnc,1.0000000000000002
+Amplification of Signal From the Kinetochores,Amplification of Signal From Unattached Kinetochores via a MAD2 Inhibitory Signal,1.0000000000000002
+VEGF Binds to VEGFR Leading to Receptor Dimerization,VEGF Ligand-Receptor Interactions,1.0000000000000002
+SHC1 Events in ERBB4 Signaling,SHC1 Events in ERBB2 Signaling,1.0000000000000002
+Erythropoietin Activates RAS,DAP12 Interactions,1.0000000000000002
+RNA Polymerase II Promoter Escape,HIV Transcription Initiation,1.0000000000000002
+Defective HDR Through Homologous Recombination Repair Due to PALB2 Loss of BRCA1 Binding Function,Impaired BRCA2 Binding to PALB2,1.0000000000000002
+Leishmania Infection,Parasitic Infection Pathways,1.0000000000000002
+Activation of Anterior HOX Genes in Hindbrain Development During Early Embryogenesis,Activation of HOX Genes During Differentiation,1.0000000000000002
+RNA Polymerase II HIV Promoter Escape,RNA Polymerase II Transcription Pre-Initiation And Promoter Opening,1.0000000000000002
+p53-Independent DNA Damage Response,Ubiquitin Mediated Degradation of Phosphorylated Cdc25A,1.0000000000000002
+Formation of the HIV-1 Early Elongation Complex,Formation of the Early Elongation Complex,1.0000000000000002
+Asparagine N-linked Glycosylation,Transport to the Golgi and Subsequent Modification,1.0000000000000002
+Transport of Mature mRNAs Derived From Intronless Transcripts,Transport of Mature mRNA Derived From an Intronless Transcript,1.0000000000000002
+Resolution of D-loop Structures Through Synthesis-Dependent Strand Annealing (SDSA),Defective HDR Through Homologous Recomb Repair Due to PALB2 Loss of BRCA2 RAD51 RAD51C Binding Fnc,1.0000000000000002
+Signaling by MET,Erythropoietin Activates RAS,1.0000000000000002
+CTNNB1 S45 Mutants Aren'T Phosphorylated,Signaling by GSK3beta Mutants,1.0000000000000002
+Replication of the SARS-CoV-2 Genome,SARS-CoV-2 Genome Replication and Transcription,1.0000000000000002
+Regulation of Pyruvate Dehydrogenase (PDH) Complex,PDH Complex Synthesizes acetyl-CoA From PYR,1.0000000000000002
+CTNNB1 S33 Mutants Aren'T Phosphorylated,CTNNB1 S37 Mutants Aren'T Phosphorylated,1.0000000000000002
+SARS-CoV-1 Genome Replication and Transcription,Replication of the SARS-CoV-2 Genome,1.0000000000000002
+"Defective Binding of RB1 Mutants to E2F1,(E2F2, E2F3)",Aberrant Regulation of Mitotic G1 S Transition in Cancer Due to RB1 Defects,1.0000000000000002
+RNA Polymerase II Transcription Initiation,RNA Polymerase II Transcription Initiation And Promoter Clearance,1.0000000000000002
+Membrane Binding and Targetting of GAG Proteins,TGF-beta Receptor Signaling in EMT (Epithelial to Mesenchymal Transition),1.0000000000000002
+RNA Polymerase II Promoter Escape,RNA Polymerase II Transcription Pre-Initiation And Promoter Opening,1.0000000000000002
+Purinergic Signaling in Leishmaniasis Infection,Cell Recruitment (Pro-Inflammatory Response),1.0000000000000002
+RNA Polymerase II Transcription Pre-Initiation And Promoter Opening,RNA Polymerase II Transcription Initiation And Promoter Clearance,1.0000000000000002
+Membrane Binding and Targetting of GAG Proteins,"Synthesis And Processing Of GAG, GAGPOL Polyproteins",1.0000000000000002
+RNA Polymerase II Transcription Initiation,RNA Polymerase II Transcription Pre-Initiation And Promoter Opening,1.0000000000000002
+SARS-CoV-1 Genome Replication and Transcription,SARS-CoV-2 Genome Replication and Transcription,1.0000000000000002
+"PI5P, PP2A and IER3 Regulate PI3K AKT Signaling",Negative Regulation of the PI3K AKT Network,1.0000000000000002
+p53-Dependent G1 S DNA Damage Checkpoint,G1 S DNA Damage Checkpoints,1.0000000000000002
+CTNNB1 S45 Mutants Aren'T Phosphorylated,CTNNB1 S33 Mutants Aren'T Phosphorylated,1.0000000000000002
+G1 S DNA Damage Checkpoints,p53-Dependent G1 DNA Damage Response,1.0000000000000002
+Signaling by GSK3beta Mutants,CTNNB1 S37 Mutants Aren'T Phosphorylated,1.0000000000000002
+Regulation of Homotypic Cell-Cell Adhesion,Regulation of CDH11 Expression and Function,1.0000000000000002
+p53-Dependent G1 S DNA Damage Checkpoint,p53-Dependent G1 DNA Damage Response,1.0000000000000002
+Defective Homologous Recombination Repair (HRR) Due to BRCA1 Loss of Function,Resolution of D-loop Structures Through Synthesis-Dependent Strand Annealing (SDSA),1.0000000000000002
+CTNNB1 S33 Mutants Aren'T Phosphorylated,CTNNB1 T41 Mutants Aren'T Phosphorylated,1.0000000000000002
+Resolution of D-loop Structures Through Synthesis-Dependent Strand Annealing (SDSA),Impaired BRCA2 Binding to PALB2,1.0000000000000002
+RNA Polymerase II Promoter Escape,RNA Polymerase II HIV Promoter Escape,1.0000000000000002
+RNA Polymerase II HIV Promoter Escape,RNA Polymerase II Transcription Initiation,1.0000000000000002
+CTNNB1 T41 Mutants Aren'T Phosphorylated,Signaling by CTNNB1 Phospho-Site Mutants,1.0000000000000002
+Endogenous Sterols,Bile Acid and Bile Salt Metabolism,1.0000000000000002
+CTNNB1 S45 Mutants Aren'T Phosphorylated,CTNNB1 S37 Mutants Aren'T Phosphorylated,1.0000000000000002
+RNA Pol II CTD Phosphorylation and Interaction With CE During HIV Infection,RNA Pol II CTD Phosphorylation and Interaction With CE,1.0000000000000002
+Telomere C-strand Synthesis Initiation,DNA Replication Initiation,1.0000000000000002
+rRNA Processing,Major Pathway of rRNA Processing in the Nucleolus and Cytosol,1.0000000000000002
+Mitochondrial Translation Termination,Mitochondrial Translation Initiation,1.0000000000000002
+Gain-of-function MRAS Complexes Activate RAF Signaling,SHOC2 M1731 Mutant Abolishes MRAS Complex Function,1.0000000000000002
+Peptide Chain Elongation,Eukaryotic Translation Elongation,1.0000000000000002
+Bile Acid and Bile Salt Metabolism,Synthesis of Bile Acids and Bile Salts via 7Alpha-Hydroxycholesterol,1.0000000000000002
+CTNNB1 S33 Mutants Aren'T Phosphorylated,Signaling by CTNNB1 Phospho-Site Mutants,1.0000000000000002
+Regulation of Expression and Function of Type II Classical Cadherins,Regulation of CDH11 Expression and Function,1.0000000000000002
+Defective EXT2 Causes Exostoses 2,"Defective EXT1 Causes Exostoses 1, TRPS2 and CHDS",1.0000000000000002
+Defective Homologous Recombination Repair (HRR) Due to BRCA1 Loss of Function,Impaired BRCA2 Binding to PALB2,1.0000000000000002
+Defective Homologous Recombination Repair (HRR) Due to BRCA1 Loss of Function,Defective HDR Through Homologous Recomb Repair Due to PALB2 Loss of BRCA2 RAD51 RAD51C Binding Fnc,1.0000000000000002
+RNA Polymerase II Transcription Initiation,HIV Transcription Initiation,1.0000000000000002
+Cellular Responses to Mechanical Stimuli,Response of Endothelial Cells to Shear Stress,1.0000000000000002
+Defective Homologous Recombination Repair (HRR) Due to BRCA1 Loss of Function,Defective HDR Through Homologous Recombination Repair Due to PALB2 Loss of BRCA1 Binding Function,1.0000000000000002
+Defective Homologous Recombination Repair (HRR) Due to BRCA1 Loss of Function,Defective Homologous Recombination Repair (HRR) Due to PALB2 Loss of Function,1.0000000000000002
+Replication of the SARS-CoV-2 Genome,Replication of the SARS-CoV-1 Genome,1.0000000000000002
+CTNNB1 S45 Mutants Aren'T Phosphorylated,CTNNB1 T41 Mutants Aren'T Phosphorylated,1.0000000000000002
+Regulation of Insulin Secretion,Glucagon-like Peptide-1 (GLP1) Regulates Insulin Secretion,1.0000000000000002
+Tie2 Signaling,Erythropoietin Activates RAS,1.0000000000000002
+Recycling Pathway of L1,Gap Junction Trafficking and Regulation,1.0000000000000002
+Activated NTRK2 Signals Through FRS2 and FRS3,Signaling by FGFR3 in Disease,1.0000000000000002
+VEGFA-VEGFR2 Pathway,Signaling by VEGF,1.0000000000000002
+Gap Junction Trafficking,Gap Junction Trafficking and Regulation,1.0000000000000002

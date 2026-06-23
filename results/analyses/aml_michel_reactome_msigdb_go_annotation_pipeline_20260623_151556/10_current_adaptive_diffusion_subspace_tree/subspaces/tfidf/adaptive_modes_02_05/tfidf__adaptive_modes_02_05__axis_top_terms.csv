@@ -1,0 +1,241 @@
+axis,axis_name,selection,go_term,go_id,column,support,prevalence,entropy_bits,loading,abs_loading,loading_sign,abs_rank
+2,mode_02,top_positive,SUMOylation,,SUMOylation,84,0.56,0.9895875212220556,0.041095400190230856,0.041095400190230856,positive,222
+2,mode_02,top_positive,SUMO E3 Ligases SUMOylate Target Proteins,,SUMO E3 Ligases SUMOylate Target Proteins,84,0.56,0.9895875212220556,0.041095400190230856,0.041095400190230856,positive,221
+2,mode_02,top_positive,SUMOylation of DNA Damage Response and Repair Proteins,,SUMOylation of DNA Damage Response and Repair Proteins,65,0.43333333333333335,0.9871377743721863,0.04100085507078167,0.04100085507078167,positive,223
+2,mode_02,top_positive,Epigenetic Regulation of Gene Expression,,Epigenetic Regulation of Gene Expression,57,0.38,0.9580420222262995,0.03994410115650666,0.03994410115650666,positive,232
+2,mode_02,top_positive,E2F Targets,,E2F Targets,65,0.43333333333333335,0.9871377743721863,0.03755225155564143,0.03755225155564143,positive,241
+2,mode_02,top_positive,Post-translational Protein Modification,,Post-translational Protein Modification,76,0.5066666666666667,0.999871756640849,0.037323365601354595,0.037323365601354595,positive,242
+2,mode_02,top_positive,Transcriptional Regulation by E2F6,,Transcriptional Regulation by E2F6,51,0.34,0.9248187049730301,0.03652584578581614,0.03652584578581614,positive,252
+2,mode_02,top_positive,Chromatin Organization,,Chromatin Organization,52,0.3466666666666667,0.931055823385033,0.036052964764326616,0.036052964764326616,positive,255
+2,mode_02,top_positive,Chromatin Modifying Enzymes,,Chromatin Modifying Enzymes,52,0.3466666666666667,0.931055823385033,0.036052964764326616,0.036052964764326616,positive,254
+2,mode_02,top_positive,SUMOylation of Chromatin Organization Proteins,,SUMOylation of Chromatin Organization Proteins,50,0.3333333333333333,0.9182958340544896,0.03571068066106436,0.03571068066106436,positive,257
+2,mode_02,top_positive,G2-M Checkpoint,,G2-M Checkpoint,62,0.41333333333333333,0.9782176659354247,0.03507177462422369,0.03507177462422369,positive,261
+2,mode_02,top_positive,Estrogen-dependent Gene Expression,,Estrogen-dependent Gene Expression,59,0.3933333333333333,0.9669170093596808,0.03444757661276769,0.03444757661276769,positive,265
+2,mode_02,top_positive,"Cell Cycle, Mitotic",,"Cell Cycle, Mitotic",73,0.4866666666666667,0.9994869809508898,0.03298844667835638,0.03298844667835638,positive,275
+2,mode_02,top_positive,M Phase,,M Phase,55,0.36666666666666664,0.9480782435939055,0.03285025469248119,0.03285025469248119,positive,276
+2,mode_02,top_positive,Separation of Sister Chromatids,,Separation of Sister Chromatids,43,0.2866666666666667,0.8643763438484613,0.032778450738611485,0.032778450738611485,positive,278
+2,mode_02,top_positive,Processing of Capped Intron-Containing Pre-mRNA,,Processing of Capped Intron-Containing Pre-mRNA,38,0.25333333333333335,0.8165187119538282,0.032163645360933954,0.032163645360933954,positive,286
+2,mode_02,top_positive,Regulation of PTEN Gene Transcription,,Regulation of PTEN Gene Transcription,55,0.36666666666666664,0.9480782435939055,0.0321481185388598,0.0321481185388598,positive,287
+2,mode_02,top_positive,PTEN Regulation,,PTEN Regulation,56,0.37333333333333335,0.9531971725430559,0.032132231540249995,0.032132231540249995,positive,288
+2,mode_02,top_positive,Mitotic Metaphase and Anaphase,,Mitotic Metaphase and Anaphase,47,0.31333333333333335,0.8969838216377446,0.0320227635432315,0.0320227635432315,positive,289
+2,mode_02,top_positive,Cell Cycle,,Cell Cycle,78,0.52,0.9988455359952018,0.03192011442963678,0.03192011442963678,positive,291
+2,mode_02,top_negative,Downstream Signaling of Activated FGFR1,,Downstream Signaling of Activated FGFR1,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,2
+2,mode_02,top_negative,Downstream Signaling of Activated FGFR4,,Downstream Signaling of Activated FGFR4,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,14
+2,mode_02,top_negative,DAP12 Signaling,,DAP12 Signaling,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,8
+2,mode_02,top_negative,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,11
+2,mode_02,top_negative,IRS-related Events Triggered by IGF1R,,IRS-related Events Triggered by IGF1R,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,10
+2,mode_02,top_negative,Signaling by PDGF,,Signaling by PDGF,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,13
+2,mode_02,top_negative,Signaling by EGFR,,Signaling by EGFR,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,12
+2,mode_02,top_negative,Insulin Receptor Signalling Cascade,,Insulin Receptor Signalling Cascade,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,5
+2,mode_02,top_negative,Downstream Signaling of Activated FGFR3,,Downstream Signaling of Activated FGFR3,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,6
+2,mode_02,top_negative,IGF1R Signaling Cascade,,IGF1R Signaling Cascade,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,1
+2,mode_02,top_negative,IRS-mediated Signalling,,IRS-mediated Signalling,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,7
+2,mode_02,top_negative,Downstream Signaling of Activated FGFR2,,Downstream Signaling of Activated FGFR2,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,3
+2,mode_02,top_negative,Signaling by Erythropoietin,,Signaling by Erythropoietin,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,9
+2,mode_02,top_negative,Signaling by FGFR4 in Disease,,Signaling by FGFR4 in Disease,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,4
+2,mode_02,top_negative,Signaling by ERBB2,,Signaling by ERBB2,22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,19
+2,mode_02,top_negative,"Signaling by Phosphorylated Juxtamembrane, Extracellular and Kinase Domain KIT Mutants",,"Signaling by Phosphorylated Juxtamembrane, Extracellular and Kinase Domain KIT Mutants",22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,18
+2,mode_02,top_negative,Signaling by NTRK2 (TRKB),,Signaling by NTRK2 (TRKB),22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,16
+2,mode_02,top_negative,Signaling by KIT in Disease,,Signaling by KIT in Disease,22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,15
+2,mode_02,top_negative,Signaling by SCF-KIT,,Signaling by SCF-KIT,22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,17
+2,mode_02,top_negative,Signaling by CSF1 (M-CSF) in Myeloid Cells,,Signaling by CSF1 (M-CSF) in Myeloid Cells,23,0.15333333333333332,0.6181194891000384,-0.06786111228949034,0.06786111228949034,negative,20
+2,mode_02,top_absolute,Downstream Signaling of Activated FGFR3,,Downstream Signaling of Activated FGFR3,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,6
+2,mode_02,top_absolute,Signaling by EGFR,,Signaling by EGFR,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,12
+2,mode_02,top_absolute,Signaling by PDGF,,Signaling by PDGF,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,13
+2,mode_02,top_absolute,Downstream Signaling of Activated FGFR1,,Downstream Signaling of Activated FGFR1,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,2
+2,mode_02,top_absolute,IRS-related Events Triggered by IGF1R,,IRS-related Events Triggered by IGF1R,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,10
+2,mode_02,top_absolute,Downstream Signaling of Activated FGFR2,,Downstream Signaling of Activated FGFR2,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,3
+2,mode_02,top_absolute,Signaling by Erythropoietin,,Signaling by Erythropoietin,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,9
+2,mode_02,top_absolute,Downstream Signaling of Activated FGFR4,,Downstream Signaling of Activated FGFR4,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,14
+2,mode_02,top_absolute,Insulin Receptor Signalling Cascade,,Insulin Receptor Signalling Cascade,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,5
+2,mode_02,top_absolute,IGF1R Signaling Cascade,,IGF1R Signaling Cascade,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,1
+2,mode_02,top_absolute,DAP12 Signaling,,DAP12 Signaling,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,8
+2,mode_02,top_absolute,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),,Signaling by Type 1 Insulin-like Growth Factor 1 Receptor (IGF1R),21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,11
+2,mode_02,top_absolute,IRS-mediated Signalling,,IRS-mediated Signalling,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,7
+2,mode_02,top_absolute,Signaling by FGFR4 in Disease,,Signaling by FGFR4 in Disease,21,0.14,0.584238811642856,-0.06961953340378961,0.06961953340378961,negative,4
+2,mode_02,top_absolute,Signaling by ERBB2,,Signaling by ERBB2,22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,19
+2,mode_02,top_absolute,Signaling by NTRK2 (TRKB),,Signaling by NTRK2 (TRKB),22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,16
+2,mode_02,top_absolute,Signaling by KIT in Disease,,Signaling by KIT in Disease,22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,15
+2,mode_02,top_absolute,Signaling by SCF-KIT,,Signaling by SCF-KIT,22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,17
+2,mode_02,top_absolute,"Signaling by Phosphorylated Juxtamembrane, Extracellular and Kinase Domain KIT Mutants",,"Signaling by Phosphorylated Juxtamembrane, Extracellular and Kinase Domain KIT Mutants",22,0.14666666666666667,0.6014353864290773,-0.06903802639803051,0.06903802639803051,negative,18
+2,mode_02,top_absolute,Signaling by CSF1 (M-CSF) in Myeloid Cells,,Signaling by CSF1 (M-CSF) in Myeloid Cells,23,0.15333333333333332,0.6181194891000384,-0.06786111228949034,0.06786111228949034,negative,20
+3,mode_03,top_positive,Activation of Anterior HOX Genes in Hindbrain Development During Early Embryogenesis,,Activation of Anterior HOX Genes in Hindbrain Development During Early Embryogenesis,36,0.24,0.7950402793845223,0.06551665731323963,0.06551665731323963,positive,62
+3,mode_03,top_positive,Activation of HOX Genes During Differentiation,,Activation of HOX Genes During Differentiation,36,0.24,0.7950402793845223,0.06551665731323963,0.06551665731323963,positive,63
+3,mode_03,top_positive,RUNX1 Interacts With Co-Factors Whose Precise Effect on RUNX1 Targets Is Not Known,,RUNX1 Interacts With Co-Factors Whose Precise Effect on RUNX1 Targets Is Not Known,43,0.2866666666666667,0.8643763438484613,0.06409919088525783,0.06409919088525783,positive,67
+3,mode_03,top_positive,Notch-HLH Transcription Pathway,,Notch-HLH Transcription Pathway,32,0.21333333333333335,0.7478061583312325,0.0634365925365397,0.0634365925365397,positive,68
+3,mode_03,top_positive,Regulation of PTEN Gene Transcription,,Regulation of PTEN Gene Transcription,55,0.36666666666666664,0.9480782435939055,0.06295342214042335,0.06295342214042335,positive,69
+3,mode_03,top_positive,Transcriptional Regulation by RUNX1,,Transcriptional Regulation by RUNX1,54,0.36,0.9426831892554922,0.06266557783413919,0.06266557783413919,positive,70
+3,mode_03,top_positive,SUMOylation of Transcription Cofactors,,SUMOylation of Transcription Cofactors,50,0.3333333333333333,0.9182958340544896,0.06252738395818407,0.06252738395818407,positive,71
+3,mode_03,top_positive,Signaling by NOTCH,,Signaling by NOTCH,38,0.25333333333333335,0.8165187119538282,0.060118434879121725,0.060118434879121725,positive,75
+3,mode_03,top_positive,Chromatin Modifying Enzymes,,Chromatin Modifying Enzymes,52,0.3466666666666667,0.931055823385033,0.05881081697020313,0.05881081697020313,positive,78
+3,mode_03,top_positive,Chromatin Organization,,Chromatin Organization,52,0.3466666666666667,0.931055823385033,0.05881081697020313,0.05881081697020313,positive,79
+3,mode_03,top_positive,Generic Transcription Pathway,,Generic Transcription Pathway,78,0.52,0.9988455359952018,0.058677238650044525,0.058677238650044525,positive,80
+3,mode_03,top_positive,p75NTR Negatively Regulates Cell Cycle via SC1,,p75NTR Negatively Regulates Cell Cycle via SC1,27,0.18,0.6800770457282798,0.05845419296845684,0.05845419296845684,positive,83
+3,mode_03,top_positive,PTEN Regulation,,PTEN Regulation,56,0.37333333333333335,0.9531971725430559,0.05746625015215156,0.05746625015215156,positive,85
+3,mode_03,top_positive,SUMOylation of DNA Methylation Proteins,,SUMOylation of DNA Methylation Proteins,38,0.25333333333333335,0.8165187119538282,0.05599549989530244,0.05599549989530244,positive,87
+3,mode_03,top_positive,RUNX1 Regulates Genes Involved in Megakaryocyte Differentiation and Platelet Function,,RUNX1 Regulates Genes Involved in Megakaryocyte Differentiation and Platelet Function,24,0.16,0.6343095546405662,0.05573916254806308,0.05573916254806308,positive,89
+3,mode_03,top_positive,Oxidative Stress Induced Senescence,,Oxidative Stress Induced Senescence,40,0.26666666666666666,0.8366407419411672,0.05566378410331611,0.05566378410331611,positive,90
+3,mode_03,top_positive,Signaling by NOTCH1,,Signaling by NOTCH1,39,0.26,0.8267463724926178,0.055255143357477485,0.055255143357477485,positive,93
+3,mode_03,top_positive,MLL4 and MLL3 Complexes Regulate Expression of PPARG Targets in Adipogenesis and Hepatic Steatosis,,MLL4 and MLL3 Complexes Regulate Expression of PPARG Targets in Adipogenesis and Hepatic Steatosis,30,0.2,0.7219280948873623,0.05429781916058966,0.05429781916058966,positive,96
+3,mode_03,top_positive,Epigenetic Regulation of Adipogenesis Genes by MLL3 and MLL4 Complexes,,Epigenetic Regulation of Adipogenesis Genes by MLL3 and MLL4 Complexes,30,0.2,0.7219280948873623,0.05429781916058966,0.05429781916058966,positive,97
+3,mode_03,top_positive,Epigenetic Regulation of Gene Expression by MLL3 and MLL4 Complexes,,Epigenetic Regulation of Gene Expression by MLL3 and MLL4 Complexes,30,0.2,0.7219280948873623,0.05429781916058966,0.05429781916058966,positive,95
+3,mode_03,top_negative,Mitotic Telophase Cytokinesis,,Mitotic Telophase Cytokinesis,31,0.20666666666666667,0.7350626941249581,-0.0991904442652945,0.0991904442652945,negative,1
+3,mode_03,top_negative,Telomere C-strand (Lagging Strand) Synthesis,,Telomere C-strand (Lagging Strand) Synthesis,19,0.12666666666666668,0.5482251174503202,-0.09802655138976146,0.09802655138976146,negative,2
+3,mode_03,top_negative,PCNA-Dependent Long Patch Base Excision Repair,,PCNA-Dependent Long Patch Base Excision Repair,18,0.12,0.5293608652873644,-0.09744108507543267,0.09744108507543267,negative,3
+3,mode_03,top_negative,Lagging Strand Synthesis,,Lagging Strand Synthesis,21,0.14,0.584238811642856,-0.09740633150381135,0.09740633150381135,negative,4
+3,mode_03,top_negative,Establishment of Sister Chromatid Cohesion,,Establishment of Sister Chromatid Cohesion,30,0.2,0.7219280948873623,-0.0972125622075935,0.0972125622075935,negative,5
+3,mode_03,top_negative,Termination of Translesion DNA Synthesis,,Termination of Translesion DNA Synthesis,20,0.13333333333333333,0.5665095065529053,-0.09679484347681376,0.09679484347681376,negative,7
+3,mode_03,top_negative,Gap-filling DNA Repair Synthesis and Ligation in GG-NER,,Gap-filling DNA Repair Synthesis and Ligation in GG-NER,20,0.13333333333333333,0.5665095065529053,-0.09679484347681376,0.09679484347681376,negative,6
+3,mode_03,top_negative,Resolution of Sister Chromatid Cohesion,,Resolution of Sister Chromatid Cohesion,42,0.28,0.8554508105601306,-0.09578050999669567,0.09578050999669567,negative,8
+3,mode_03,top_negative,Meiotic Synapsis,,Meiotic Synapsis,30,0.2,0.7219280948873623,-0.09568970246928737,0.09568970246928737,negative,9
+3,mode_03,top_negative,Activation of ATR in Response to Replication Stress,,Activation of ATR in Response to Replication Stress,23,0.15333333333333332,0.6181194891000384,-0.09539147338573006,0.09539147338573006,negative,10
+3,mode_03,top_negative,Cohesin Loading Onto Chromatin,,Cohesin Loading Onto Chromatin,31,0.20666666666666667,0.7350626941249581,-0.09528176577019766,0.09528176577019766,negative,11
+3,mode_03,top_negative,Processive Synthesis on the C-strand of the Telomere,,Processive Synthesis on the C-strand of the Telomere,17,0.11333333333333333,0.5098891423431209,-0.09526753803808469,0.09526753803808469,negative,12
+3,mode_03,top_negative,Meiosis,,Meiosis,30,0.2,0.7219280948873623,-0.09487863797299523,0.09487863797299523,negative,13
+3,mode_03,top_negative,Resolution of AP Sites via the Multiple-Nucleotide Patch Replacement Pathway,,Resolution of AP Sites via the Multiple-Nucleotide Patch Replacement Pathway,21,0.14,0.584238811642856,-0.09472439674466819,0.09472439674466819,negative,14
+3,mode_03,top_negative,Translesion Synthesis by Y Family DNA Polymerases Bypasses Lesions on DNA Template,,Translesion Synthesis by Y Family DNA Polymerases Bypasses Lesions on DNA Template,21,0.14,0.584238811642856,-0.09449361363860731,0.09449361363860731,negative,15
+3,mode_03,top_negative,Mitotic Prometaphase,,Mitotic Prometaphase,50,0.3333333333333333,0.9182958340544896,-0.09435021082222092,0.09435021082222092,negative,16
+3,mode_03,top_negative,Recognition of DNA Damage by PCNA-containing Replication Complex,,Recognition of DNA Damage by PCNA-containing Replication Complex,21,0.14,0.584238811642856,-0.0943043224285502,0.0943043224285502,negative,17
+3,mode_03,top_negative,Translesion Synthesis by POLH,,Translesion Synthesis by POLH,22,0.14666666666666667,0.6014353864290773,-0.09350654342523144,0.09350654342523144,negative,18
+3,mode_03,top_negative,DNA Strand Elongation,,DNA Strand Elongation,22,0.14666666666666667,0.6014353864290773,-0.09285902070561601,0.09285902070561601,negative,19
+3,mode_03,top_negative,Separation of Sister Chromatids,,Separation of Sister Chromatids,43,0.2866666666666667,0.8643763438484613,-0.09251710901973363,0.09251710901973363,negative,20
+3,mode_03,top_absolute,Mitotic Telophase Cytokinesis,,Mitotic Telophase Cytokinesis,31,0.20666666666666667,0.7350626941249581,-0.0991904442652945,0.0991904442652945,negative,1
+3,mode_03,top_absolute,Telomere C-strand (Lagging Strand) Synthesis,,Telomere C-strand (Lagging Strand) Synthesis,19,0.12666666666666668,0.5482251174503202,-0.09802655138976146,0.09802655138976146,negative,2
+3,mode_03,top_absolute,PCNA-Dependent Long Patch Base Excision Repair,,PCNA-Dependent Long Patch Base Excision Repair,18,0.12,0.5293608652873644,-0.09744108507543267,0.09744108507543267,negative,3
+3,mode_03,top_absolute,Lagging Strand Synthesis,,Lagging Strand Synthesis,21,0.14,0.584238811642856,-0.09740633150381135,0.09740633150381135,negative,4
+3,mode_03,top_absolute,Establishment of Sister Chromatid Cohesion,,Establishment of Sister Chromatid Cohesion,30,0.2,0.7219280948873623,-0.0972125622075935,0.0972125622075935,negative,5
+3,mode_03,top_absolute,Termination of Translesion DNA Synthesis,,Termination of Translesion DNA Synthesis,20,0.13333333333333333,0.5665095065529053,-0.09679484347681376,0.09679484347681376,negative,7
+3,mode_03,top_absolute,Gap-filling DNA Repair Synthesis and Ligation in GG-NER,,Gap-filling DNA Repair Synthesis and Ligation in GG-NER,20,0.13333333333333333,0.5665095065529053,-0.09679484347681376,0.09679484347681376,negative,6
+3,mode_03,top_absolute,Resolution of Sister Chromatid Cohesion,,Resolution of Sister Chromatid Cohesion,42,0.28,0.8554508105601306,-0.09578050999669567,0.09578050999669567,negative,8
+3,mode_03,top_absolute,Meiotic Synapsis,,Meiotic Synapsis,30,0.2,0.7219280948873623,-0.09568970246928737,0.09568970246928737,negative,9
+3,mode_03,top_absolute,Activation of ATR in Response to Replication Stress,,Activation of ATR in Response to Replication Stress,23,0.15333333333333332,0.6181194891000384,-0.09539147338573006,0.09539147338573006,negative,10
+3,mode_03,top_absolute,Cohesin Loading Onto Chromatin,,Cohesin Loading Onto Chromatin,31,0.20666666666666667,0.7350626941249581,-0.09528176577019766,0.09528176577019766,negative,11
+3,mode_03,top_absolute,Processive Synthesis on the C-strand of the Telomere,,Processive Synthesis on the C-strand of the Telomere,17,0.11333333333333333,0.5098891423431209,-0.09526753803808469,0.09526753803808469,negative,12
+3,mode_03,top_absolute,Meiosis,,Meiosis,30,0.2,0.7219280948873623,-0.09487863797299523,0.09487863797299523,negative,13
+3,mode_03,top_absolute,Resolution of AP Sites via the Multiple-Nucleotide Patch Replacement Pathway,,Resolution of AP Sites via the Multiple-Nucleotide Patch Replacement Pathway,21,0.14,0.584238811642856,-0.09472439674466819,0.09472439674466819,negative,14
+3,mode_03,top_absolute,Translesion Synthesis by Y Family DNA Polymerases Bypasses Lesions on DNA Template,,Translesion Synthesis by Y Family DNA Polymerases Bypasses Lesions on DNA Template,21,0.14,0.584238811642856,-0.09449361363860731,0.09449361363860731,negative,15
+3,mode_03,top_absolute,Mitotic Prometaphase,,Mitotic Prometaphase,50,0.3333333333333333,0.9182958340544896,-0.09435021082222092,0.09435021082222092,negative,16
+3,mode_03,top_absolute,Recognition of DNA Damage by PCNA-containing Replication Complex,,Recognition of DNA Damage by PCNA-containing Replication Complex,21,0.14,0.584238811642856,-0.0943043224285502,0.0943043224285502,negative,17
+3,mode_03,top_absolute,Translesion Synthesis by POLH,,Translesion Synthesis by POLH,22,0.14666666666666667,0.6014353864290773,-0.09350654342523144,0.09350654342523144,negative,18
+3,mode_03,top_absolute,DNA Strand Elongation,,DNA Strand Elongation,22,0.14666666666666667,0.6014353864290773,-0.09285902070561601,0.09285902070561601,negative,19
+3,mode_03,top_absolute,Separation of Sister Chromatids,,Separation of Sister Chromatids,43,0.2866666666666667,0.8643763438484613,-0.09251710901973363,0.09251710901973363,negative,20
+4,mode_04,top_positive,RNA Polymerase II Transcription Termination,,RNA Polymerase II Transcription Termination,18,0.12,0.5293608652873644,0.20297137439728294,0.20297137439728294,positive,1
+4,mode_04,top_positive,Transport of Mature Transcript to Cytoplasm,,Transport of Mature Transcript to Cytoplasm,23,0.15333333333333332,0.6181194891000384,0.19582788893968842,0.19582788893968842,positive,2
+4,mode_04,top_positive,Transport of Mature mRNA Derived From an Intron-Containing Transcript,,Transport of Mature mRNA Derived From an Intron-Containing Transcript,22,0.14666666666666667,0.6014353864290773,0.19384405776565816,0.19384405776565816,positive,3
+4,mode_04,top_positive,mRNA 3'-End Processing,,mRNA 3'-End Processing,17,0.11333333333333333,0.5098891423431209,0.18499911013802992,0.18499911013802992,positive,4
+4,mode_04,top_positive,Metabolism of RNA,,Metabolism of RNA,40,0.26666666666666666,0.8366407419411672,0.1827345100882476,0.1827345100882476,positive,5
+4,mode_04,top_positive,Processing of Capped Intron-Containing Pre-mRNA,,Processing of Capped Intron-Containing Pre-mRNA,38,0.25333333333333335,0.8165187119538282,0.17713562067681887,0.17713562067681887,positive,6
+4,mode_04,top_positive,snRNP Assembly,,snRNP Assembly,17,0.11333333333333333,0.5098891423431209,0.16334214306410716,0.16334214306410716,positive,7
+4,mode_04,top_positive,Metabolism of Non-Coding RNA,,Metabolism of Non-Coding RNA,17,0.11333333333333333,0.5098891423431209,0.16334214306410716,0.16334214306410716,positive,8
+4,mode_04,top_positive,mRNA Splicing,,mRNA Splicing,30,0.2,0.7219280948873623,0.1619402909811881,0.1619402909811881,positive,9
+4,mode_04,top_positive,mRNA Splicing - Major Pathway,,mRNA Splicing - Major Pathway,30,0.2,0.7219280948873623,0.1619402909811881,0.1619402909811881,positive,10
+4,mode_04,top_positive,SLBP Dependent Processing of Replication-Dependent Histone Pre-mRNAs,,SLBP Dependent Processing of Replication-Dependent Histone Pre-mRNAs,9,0.06,0.32744491915447627,0.14074052436345863,0.14074052436345863,positive,11
+4,mode_04,top_positive,SLBP Independent Processing of Histone Pre-mRNAs,,SLBP Independent Processing of Histone Pre-mRNAs,9,0.06,0.32744491915447627,0.14074052436345863,0.14074052436345863,positive,12
+4,mode_04,top_positive,SARS-CoV-2 Modulates Host Translation Machinery,,SARS-CoV-2 Modulates Host Translation Machinery,10,0.06666666666666667,0.35335933502142136,0.1397596730424153,0.1397596730424153,positive,13
+4,mode_04,top_positive,mRNA Splicing - Minor Pathway,,mRNA Splicing - Minor Pathway,23,0.15333333333333332,0.6181194891000384,0.13810010768549072,0.13810010768549072,positive,14
+4,mode_04,top_positive,Processing of Capped Intronless Pre-mRNA,,Processing of Capped Intronless Pre-mRNA,9,0.06,0.32744491915447627,0.13626252899936753,0.13626252899936753,positive,15
+4,mode_04,top_positive,SARS-CoV-2 Infection,,SARS-CoV-2 Infection,28,0.18666666666666668,0.6944460704939805,0.1314161973647429,0.1314161973647429,positive,16
+4,mode_04,top_positive,SARS-CoV-2-host Interactions,,SARS-CoV-2-host Interactions,31,0.20666666666666667,0.7350626941249581,0.13107552315810403,0.13107552315810403,positive,17
+4,mode_04,top_positive,Myc Targets V1,,Myc Targets V1,48,0.32,0.9043814577244939,0.12423693503795473,0.12423693503795473,positive,18
+4,mode_04,top_positive,SARS-CoV Infections,,SARS-CoV Infections,50,0.3333333333333333,0.9182958340544896,0.11782285275241804,0.11782285275241804,positive,19
+4,mode_04,top_positive,Influenza Infection,,Influenza Infection,13,0.08666666666666667,0.42524461248637185,0.08810617637608455,0.08810617637608455,positive,20
+4,mode_04,top_negative,Synthesis of DNA,,Synthesis of DNA,26,0.17333333333333334,0.6652735227649414,-0.05237192433896326,0.05237192433896326,negative,56
+4,mode_04,top_negative,DNA Replication Pre-Initiation,,DNA Replication Pre-Initiation,22,0.14666666666666667,0.6014353864290773,-0.05148553688403414,0.05148553688403414,negative,60
+4,mode_04,top_negative,Regulation of PLK1 Activity at G2 M Transition,,Regulation of PLK1 Activity at G2 M Transition,22,0.14666666666666667,0.6014353864290773,-0.05142254037497713,0.05142254037497713,negative,61
+4,mode_04,top_negative,DNA Replication,,DNA Replication,23,0.15333333333333332,0.6181194891000384,-0.050222954017097365,0.050222954017097365,negative,66
+4,mode_04,top_negative,G2 M Transition,,G2 M Transition,31,0.20666666666666667,0.7350626941249581,-0.04927891618740911,0.04927891618740911,negative,69
+4,mode_04,top_negative,Mitotic G2-G2 M Phases,,Mitotic G2-G2 M Phases,32,0.21333333333333335,0.7478061583312325,-0.04853722093309659,0.04853722093309659,negative,78
+4,mode_04,top_negative,Homology Directed Repair,,Homology Directed Repair,31,0.20666666666666667,0.7350626941249581,-0.04830184520544973,0.04830184520544973,negative,80
+4,mode_04,top_negative,HDR Through Homologous Recombination (HRR) or Single Strand Annealing (SSA),,HDR Through Homologous Recombination (HRR) or Single Strand Annealing (SSA),28,0.18666666666666668,0.6944460704939805,-0.04766972107709003,0.04766972107709003,negative,82
+4,mode_04,top_negative,Loss of Proteins Required for Interphase Microtubule Organization From the Centrosome,,Loss of Proteins Required for Interphase Microtubule Organization From the Centrosome,16,0.10666666666666667,0.48977901368693755,-0.047537804013609186,0.047537804013609186,negative,83
+4,mode_04,top_negative,Loss of Nlp From Mitotic Centrosomes,,Loss of Nlp From Mitotic Centrosomes,16,0.10666666666666667,0.48977901368693755,-0.047537804013609186,0.047537804013609186,negative,84
+4,mode_04,top_negative,AURKA Activation by TPX2,,AURKA Activation by TPX2,19,0.12666666666666668,0.5482251174503202,-0.04725580552535584,0.04725580552535584,negative,86
+4,mode_04,top_negative,Presynaptic Phase of Homologous DNA Pairing and Strand Exchange,,Presynaptic Phase of Homologous DNA Pairing and Strand Exchange,23,0.15333333333333332,0.6181194891000384,-0.04513654897876227,0.04513654897876227,negative,92
+4,mode_04,top_negative,Homologous DNA Pairing and Strand Exchange,,Homologous DNA Pairing and Strand Exchange,23,0.15333333333333332,0.6181194891000384,-0.04513654897876227,0.04513654897876227,negative,94
+4,mode_04,top_negative,Diseases of DNA Double-Strand Break Repair,,Diseases of DNA Double-Strand Break Repair,23,0.15333333333333332,0.6181194891000384,-0.04513654897876227,0.04513654897876227,negative,95
+4,mode_04,top_negative,Defective Homologous Recombination Repair (HRR) Due to BRCA2 Loss of Function,,Defective Homologous Recombination Repair (HRR) Due to BRCA2 Loss of Function,23,0.15333333333333332,0.6181194891000384,-0.04513654897876227,0.04513654897876227,negative,93
+4,mode_04,top_negative,Anchoring of the Basal Body to the Plasma Membrane,,Anchoring of the Basal Body to the Plasma Membrane,13,0.08666666666666667,0.42524461248637185,-0.04402410957161498,0.04402410957161498,negative,97
+4,mode_04,top_negative,Extension of Telomeres,,Extension of Telomeres,19,0.12666666666666668,0.5482251174503202,-0.043877330281590576,0.043877330281590576,negative,98
+4,mode_04,top_negative,G1 S Transition,,G1 S Transition,46,0.30666666666666664,0.8892881527272397,-0.04298197081176432,0.04298197081176432,negative,102
+4,mode_04,top_negative,Cilium Assembly,,Cilium Assembly,13,0.08666666666666667,0.42524461248637185,-0.042522547712848704,0.042522547712848704,negative,104
+4,mode_04,top_negative,HDR Through Homologous Recombination (HRR),,HDR Through Homologous Recombination (HRR),26,0.17333333333333334,0.6652735227649414,-0.04247082775352285,0.04247082775352285,negative,105
+4,mode_04,top_absolute,RNA Polymerase II Transcription Termination,,RNA Polymerase II Transcription Termination,18,0.12,0.5293608652873644,0.20297137439728294,0.20297137439728294,positive,1
+4,mode_04,top_absolute,Transport of Mature Transcript to Cytoplasm,,Transport of Mature Transcript to Cytoplasm,23,0.15333333333333332,0.6181194891000384,0.19582788893968842,0.19582788893968842,positive,2
+4,mode_04,top_absolute,Transport of Mature mRNA Derived From an Intron-Containing Transcript,,Transport of Mature mRNA Derived From an Intron-Containing Transcript,22,0.14666666666666667,0.6014353864290773,0.19384405776565816,0.19384405776565816,positive,3
+4,mode_04,top_absolute,mRNA 3'-End Processing,,mRNA 3'-End Processing,17,0.11333333333333333,0.5098891423431209,0.18499911013802992,0.18499911013802992,positive,4
+4,mode_04,top_absolute,Metabolism of RNA,,Metabolism of RNA,40,0.26666666666666666,0.8366407419411672,0.1827345100882476,0.1827345100882476,positive,5
+4,mode_04,top_absolute,Processing of Capped Intron-Containing Pre-mRNA,,Processing of Capped Intron-Containing Pre-mRNA,38,0.25333333333333335,0.8165187119538282,0.17713562067681887,0.17713562067681887,positive,6
+4,mode_04,top_absolute,snRNP Assembly,,snRNP Assembly,17,0.11333333333333333,0.5098891423431209,0.16334214306410716,0.16334214306410716,positive,7
+4,mode_04,top_absolute,Metabolism of Non-Coding RNA,,Metabolism of Non-Coding RNA,17,0.11333333333333333,0.5098891423431209,0.16334214306410716,0.16334214306410716,positive,8
+4,mode_04,top_absolute,mRNA Splicing - Major Pathway,,mRNA Splicing - Major Pathway,30,0.2,0.7219280948873623,0.1619402909811881,0.1619402909811881,positive,10
+4,mode_04,top_absolute,mRNA Splicing,,mRNA Splicing,30,0.2,0.7219280948873623,0.1619402909811881,0.1619402909811881,positive,9
+4,mode_04,top_absolute,SLBP Dependent Processing of Replication-Dependent Histone Pre-mRNAs,,SLBP Dependent Processing of Replication-Dependent Histone Pre-mRNAs,9,0.06,0.32744491915447627,0.14074052436345863,0.14074052436345863,positive,11
+4,mode_04,top_absolute,SLBP Independent Processing of Histone Pre-mRNAs,,SLBP Independent Processing of Histone Pre-mRNAs,9,0.06,0.32744491915447627,0.14074052436345863,0.14074052436345863,positive,12
+4,mode_04,top_absolute,SARS-CoV-2 Modulates Host Translation Machinery,,SARS-CoV-2 Modulates Host Translation Machinery,10,0.06666666666666667,0.35335933502142136,0.1397596730424153,0.1397596730424153,positive,13
+4,mode_04,top_absolute,mRNA Splicing - Minor Pathway,,mRNA Splicing - Minor Pathway,23,0.15333333333333332,0.6181194891000384,0.13810010768549072,0.13810010768549072,positive,14
+4,mode_04,top_absolute,Processing of Capped Intronless Pre-mRNA,,Processing of Capped Intronless Pre-mRNA,9,0.06,0.32744491915447627,0.13626252899936753,0.13626252899936753,positive,15
+4,mode_04,top_absolute,SARS-CoV-2 Infection,,SARS-CoV-2 Infection,28,0.18666666666666668,0.6944460704939805,0.1314161973647429,0.1314161973647429,positive,16
+4,mode_04,top_absolute,SARS-CoV-2-host Interactions,,SARS-CoV-2-host Interactions,31,0.20666666666666667,0.7350626941249581,0.13107552315810403,0.13107552315810403,positive,17
+4,mode_04,top_absolute,Myc Targets V1,,Myc Targets V1,48,0.32,0.9043814577244939,0.12423693503795473,0.12423693503795473,positive,18
+4,mode_04,top_absolute,SARS-CoV Infections,,SARS-CoV Infections,50,0.3333333333333333,0.9182958340544896,0.11782285275241804,0.11782285275241804,positive,19
+4,mode_04,top_absolute,Influenza Infection,,Influenza Infection,13,0.08666666666666667,0.42524461248637185,0.08810617637608455,0.08810617637608455,positive,20
+5,mode_05,top_positive,Transcriptional Regulation of Brown and Beige Adipocyte Differentiation,,Transcriptional Regulation of Brown and Beige Adipocyte Differentiation,33,0.22,0.7601675029619657,0.06428152937960266,0.06428152937960266,positive,52
+5,mode_05,top_positive,Transcriptional Regulation of Brown and Beige Adipocyte Differentiation by EBF2,,Transcriptional Regulation of Brown and Beige Adipocyte Differentiation by EBF2,33,0.22,0.7601675029619657,0.06428152937960266,0.06428152937960266,positive,51
+5,mode_05,top_positive,Epigenetic Regulation of Gene Expression,,Epigenetic Regulation of Gene Expression,57,0.38,0.9580420222262995,0.06112949838572719,0.06112949838572719,positive,59
+5,mode_05,top_positive,Telomere C-strand (Lagging Strand) Synthesis,,Telomere C-strand (Lagging Strand) Synthesis,19,0.12666666666666668,0.5482251174503202,0.060089436849691036,0.060089436849691036,positive,64
+5,mode_05,top_positive,DNA Strand Elongation,,DNA Strand Elongation,22,0.14666666666666667,0.6014353864290773,0.05881101856987667,0.05881101856987667,positive,68
+5,mode_05,top_positive,Gap-filling DNA Repair Synthesis and Ligation in GG-NER,,Gap-filling DNA Repair Synthesis and Ligation in GG-NER,20,0.13333333333333333,0.5665095065529053,0.05840335084071585,0.05840335084071585,positive,69
+5,mode_05,top_positive,Termination of Translesion DNA Synthesis,,Termination of Translesion DNA Synthesis,20,0.13333333333333333,0.5665095065529053,0.05840335084071585,0.05840335084071585,positive,70
+5,mode_05,top_positive,Resolution of AP Sites via the Multiple-Nucleotide Patch Replacement Pathway,,Resolution of AP Sites via the Multiple-Nucleotide Patch Replacement Pathway,21,0.14,0.584238811642856,0.05831145166450994,0.05831145166450994,positive,72
+5,mode_05,top_positive,Translesion Synthesis by Y Family DNA Polymerases Bypasses Lesions on DNA Template,,Translesion Synthesis by Y Family DNA Polymerases Bypasses Lesions on DNA Template,21,0.14,0.584238811642856,0.058050122939445746,0.058050122939445746,positive,75
+5,mode_05,top_positive,Activation of ATR in Response to Replication Stress,,Activation of ATR in Response to Replication Stress,23,0.15333333333333332,0.6181194891000384,0.055860992112477484,0.055860992112477484,positive,86
+5,mode_05,top_positive,Processive Synthesis on the C-strand of the Telomere,,Processive Synthesis on the C-strand of the Telomere,17,0.11333333333333333,0.5098891423431209,0.05520707438740243,0.05520707438740243,positive,88
+5,mode_05,top_positive,PCNA-Dependent Long Patch Base Excision Repair,,PCNA-Dependent Long Patch Base Excision Repair,18,0.12,0.5293608652873644,0.05513114199076424,0.05513114199076424,positive,89
+5,mode_05,top_positive,Recognition of DNA Damage by PCNA-containing Replication Complex,,Recognition of DNA Damage by PCNA-containing Replication Complex,21,0.14,0.584238811642856,0.05455961745400338,0.05455961745400338,positive,93
+5,mode_05,top_positive,Removal of the Flap Intermediate From the C-strand,,Removal of the Flap Intermediate From the C-strand,19,0.12666666666666668,0.5482251174503202,0.05346815469683845,0.05346815469683845,positive,96
+5,mode_05,top_positive,Mismatch Repair,,Mismatch Repair,22,0.14666666666666667,0.6014353864290773,0.053087527721136056,0.053087527721136056,positive,99
+5,mode_05,top_positive,Mismatch Repair (MMR) Directed by MSH2 MSH3 (MutSbeta),,Mismatch Repair (MMR) Directed by MSH2 MSH3 (MutSbeta),22,0.14666666666666667,0.6014353864290773,0.053087527721136056,0.053087527721136056,positive,100
+5,mode_05,top_positive,Mismatch Repair (MMR) Directed by MSH2 MSH6 (MutSalpha),,Mismatch Repair (MMR) Directed by MSH2 MSH6 (MutSalpha),21,0.14,0.584238811642856,0.05306967624745202,0.05306967624745202,positive,101
+5,mode_05,top_positive,DNA Damage Bypass,,DNA Damage Bypass,22,0.14666666666666667,0.6014353864290773,0.052761280162384024,0.052761280162384024,positive,102
+5,mode_05,top_positive,Lagging Strand Synthesis,,Lagging Strand Synthesis,21,0.14,0.584238811642856,0.052600981093127476,0.052600981093127476,positive,106
+5,mode_05,top_positive,HSF1 Activation,,HSF1 Activation,24,0.16,0.6343095546405662,0.05208788426289677,0.05208788426289677,positive,108
+5,mode_05,top_negative,G2 M Transition,,G2 M Transition,31,0.20666666666666667,0.7350626941249581,-0.09242992861731206,0.09242992861731206,negative,1
+5,mode_05,top_negative,Centrosome Maturation,,Centrosome Maturation,13,0.08666666666666667,0.42524461248637185,-0.09183146868711643,0.09183146868711643,negative,3
+5,mode_05,top_negative,Recruitment of Mitotic Centrosome Proteins and Complexes,,Recruitment of Mitotic Centrosome Proteins and Complexes,13,0.08666666666666667,0.42524461248637185,-0.09183146868711643,0.09183146868711643,negative,2
+5,mode_05,top_negative,Recruitment of NuMA to Mitotic Centrosomes,,Recruitment of NuMA to Mitotic Centrosomes,15,0.1,0.4689955935892812,-0.09130895534622213,0.09130895534622213,negative,4
+5,mode_05,top_negative,Mitotic G2-G2 M Phases,,Mitotic G2-G2 M Phases,32,0.21333333333333335,0.7478061583312325,-0.09060708417408747,0.09060708417408747,negative,5
+5,mode_05,top_negative,AURKA Activation by TPX2,,AURKA Activation by TPX2,19,0.12666666666666668,0.5482251174503202,-0.08988476036931416,0.08988476036931416,negative,6
+5,mode_05,top_negative,TRAF6 Mediated Induction of NFkB and MAP Kinases Upon TLR7 8 or 9 Activation,,TRAF6 Mediated Induction of NFkB and MAP Kinases Upon TLR7 8 or 9 Activation,23,0.15333333333333332,0.6181194891000384,-0.08982100670824178,0.08982100670824178,negative,8
+5,mode_05,top_negative,Toll Like Receptor 5 (TLR5) Cascade,,Toll Like Receptor 5 (TLR5) Cascade,23,0.15333333333333332,0.6181194891000384,-0.08982100670824178,0.08982100670824178,negative,9
+5,mode_05,top_negative,MyD88 Cascade Initiated on Plasma Membrane,,MyD88 Cascade Initiated on Plasma Membrane,23,0.15333333333333332,0.6181194891000384,-0.08982100670824178,0.08982100670824178,negative,10
+5,mode_05,top_negative,Toll Like Receptor 10 (TLR10) Cascade,,Toll Like Receptor 10 (TLR10) Cascade,23,0.15333333333333332,0.6181194891000384,-0.08982100670824178,0.08982100670824178,negative,7
+5,mode_05,top_negative,Loss of Nlp From Mitotic Centrosomes,,Loss of Nlp From Mitotic Centrosomes,16,0.10666666666666667,0.48977901368693755,-0.08840266769736202,0.08840266769736202,negative,12
+5,mode_05,top_negative,Loss of Proteins Required for Interphase Microtubule Organization From the Centrosome,,Loss of Proteins Required for Interphase Microtubule Organization From the Centrosome,16,0.10666666666666667,0.48977901368693755,-0.08840266769736202,0.08840266769736202,negative,11
+5,mode_05,top_negative,Toll Like Receptor TLR6 TLR2 Cascade,,Toll Like Receptor TLR6 TLR2 Cascade,24,0.16,0.6343095546405662,-0.08807097251778802,0.08807097251778802,negative,16
+5,mode_05,top_negative,Toll Like Receptor 2 (TLR2) Cascade,,Toll Like Receptor 2 (TLR2) Cascade,24,0.16,0.6343095546405662,-0.08807097251778802,0.08807097251778802,negative,14
+5,mode_05,top_negative,MyD88 MAL(TIRAP) Cascade Initiated on Plasma Membrane,,MyD88 MAL(TIRAP) Cascade Initiated on Plasma Membrane,24,0.16,0.6343095546405662,-0.08807097251778802,0.08807097251778802,negative,15
+5,mode_05,top_negative,Toll Like Receptor TLR1 TLR2 Cascade,,Toll Like Receptor TLR1 TLR2 Cascade,24,0.16,0.6343095546405662,-0.08807097251778802,0.08807097251778802,negative,13
+5,mode_05,top_negative,Toll Like Receptor 9 (TLR9) Cascade,,Toll Like Receptor 9 (TLR9) Cascade,23,0.15333333333333332,0.6181194891000384,-0.08710117417093878,0.08710117417093878,negative,18
+5,mode_05,top_negative,Toll Like Receptor 7 8 (TLR7 8) Cascade,,Toll Like Receptor 7 8 (TLR7 8) Cascade,23,0.15333333333333332,0.6181194891000384,-0.08710117417093878,0.08710117417093878,negative,19
+5,mode_05,top_negative,MyD88 Dependent Cascade Initiated on Endosome,,MyD88 Dependent Cascade Initiated on Endosome,23,0.15333333333333332,0.6181194891000384,-0.08710117417093878,0.08710117417093878,negative,17
+5,mode_05,top_negative,Toll Like Receptor 3 (TLR3) Cascade,,Toll Like Receptor 3 (TLR3) Cascade,28,0.18666666666666668,0.6944460704939805,-0.08339677025163629,0.08339677025163629,negative,20
+5,mode_05,top_absolute,G2 M Transition,,G2 M Transition,31,0.20666666666666667,0.7350626941249581,-0.09242992861731206,0.09242992861731206,negative,1
+5,mode_05,top_absolute,Recruitment of Mitotic Centrosome Proteins and Complexes,,Recruitment of Mitotic Centrosome Proteins and Complexes,13,0.08666666666666667,0.42524461248637185,-0.09183146868711643,0.09183146868711643,negative,2
+5,mode_05,top_absolute,Centrosome Maturation,,Centrosome Maturation,13,0.08666666666666667,0.42524461248637185,-0.09183146868711643,0.09183146868711643,negative,3
+5,mode_05,top_absolute,Recruitment of NuMA to Mitotic Centrosomes,,Recruitment of NuMA to Mitotic Centrosomes,15,0.1,0.4689955935892812,-0.09130895534622213,0.09130895534622213,negative,4
+5,mode_05,top_absolute,Mitotic G2-G2 M Phases,,Mitotic G2-G2 M Phases,32,0.21333333333333335,0.7478061583312325,-0.09060708417408747,0.09060708417408747,negative,5
+5,mode_05,top_absolute,AURKA Activation by TPX2,,AURKA Activation by TPX2,19,0.12666666666666668,0.5482251174503202,-0.08988476036931416,0.08988476036931416,negative,6
+5,mode_05,top_absolute,MyD88 Cascade Initiated on Plasma Membrane,,MyD88 Cascade Initiated on Plasma Membrane,23,0.15333333333333332,0.6181194891000384,-0.08982100670824178,0.08982100670824178,negative,10
+5,mode_05,top_absolute,TRAF6 Mediated Induction of NFkB and MAP Kinases Upon TLR7 8 or 9 Activation,,TRAF6 Mediated Induction of NFkB and MAP Kinases Upon TLR7 8 or 9 Activation,23,0.15333333333333332,0.6181194891000384,-0.08982100670824178,0.08982100670824178,negative,8
+5,mode_05,top_absolute,Toll Like Receptor 10 (TLR10) Cascade,,Toll Like Receptor 10 (TLR10) Cascade,23,0.15333333333333332,0.6181194891000384,-0.08982100670824178,0.08982100670824178,negative,7
+5,mode_05,top_absolute,Toll Like Receptor 5 (TLR5) Cascade,,Toll Like Receptor 5 (TLR5) Cascade,23,0.15333333333333332,0.6181194891000384,-0.08982100670824178,0.08982100670824178,negative,9
+5,mode_05,top_absolute,Loss of Proteins Required for Interphase Microtubule Organization From the Centrosome,,Loss of Proteins Required for Interphase Microtubule Organization From the Centrosome,16,0.10666666666666667,0.48977901368693755,-0.08840266769736202,0.08840266769736202,negative,11
+5,mode_05,top_absolute,Loss of Nlp From Mitotic Centrosomes,,Loss of Nlp From Mitotic Centrosomes,16,0.10666666666666667,0.48977901368693755,-0.08840266769736202,0.08840266769736202,negative,12
+5,mode_05,top_absolute,Toll Like Receptor TLR1 TLR2 Cascade,,Toll Like Receptor TLR1 TLR2 Cascade,24,0.16,0.6343095546405662,-0.08807097251778802,0.08807097251778802,negative,13
+5,mode_05,top_absolute,Toll Like Receptor 2 (TLR2) Cascade,,Toll Like Receptor 2 (TLR2) Cascade,24,0.16,0.6343095546405662,-0.08807097251778802,0.08807097251778802,negative,14
+5,mode_05,top_absolute,Toll Like Receptor TLR6 TLR2 Cascade,,Toll Like Receptor TLR6 TLR2 Cascade,24,0.16,0.6343095546405662,-0.08807097251778802,0.08807097251778802,negative,16
+5,mode_05,top_absolute,MyD88 MAL(TIRAP) Cascade Initiated on Plasma Membrane,,MyD88 MAL(TIRAP) Cascade Initiated on Plasma Membrane,24,0.16,0.6343095546405662,-0.08807097251778802,0.08807097251778802,negative,15
+5,mode_05,top_absolute,Toll Like Receptor 7 8 (TLR7 8) Cascade,,Toll Like Receptor 7 8 (TLR7 8) Cascade,23,0.15333333333333332,0.6181194891000384,-0.08710117417093878,0.08710117417093878,negative,19
+5,mode_05,top_absolute,MyD88 Dependent Cascade Initiated on Endosome,,MyD88 Dependent Cascade Initiated on Endosome,23,0.15333333333333332,0.6181194891000384,-0.08710117417093878,0.08710117417093878,negative,17
+5,mode_05,top_absolute,Toll Like Receptor 9 (TLR9) Cascade,,Toll Like Receptor 9 (TLR9) Cascade,23,0.15333333333333332,0.6181194891000384,-0.08710117417093878,0.08710117417093878,negative,18
+5,mode_05,top_absolute,Toll Like Receptor 3 (TLR3) Cascade,,Toll Like Receptor 3 (TLR3) Cascade,28,0.18666666666666668,0.6944460704939805,-0.08339677025163629,0.08339677025163629,negative,20

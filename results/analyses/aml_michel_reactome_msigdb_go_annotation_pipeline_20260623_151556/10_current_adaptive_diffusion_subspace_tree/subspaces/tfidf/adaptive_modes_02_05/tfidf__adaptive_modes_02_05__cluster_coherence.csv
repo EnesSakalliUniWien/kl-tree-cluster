@@ -1,0 +1,123 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,0,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,1,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,2,2,0,0.148993288590604,Formation of Annular Gap Junctions,0.9932432432432432,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,3,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,4,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,5,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,6,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,7,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,8,2,0,0.44697986577181203,Peptide Ligand-Binding Receptors,0.9932432432432432,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,9,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,10,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,11,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,12,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,13,2,0,1.0,O2 CO2 Exchange in Erythrocytes,0.5,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,14,1,0,0.8457142857142856,SHC-mediated Cascade FGFR3,0.9060402684563759,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,15,2,32,0.02483221476510067,Ionotropic Activity of Kainate Receptors,1.0,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,16,1,0,0.9946236559139784,SHC-mediated Cascade FGFR3,0.9060402684563759,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,17,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,18,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,19,1,0,0.6493036211699165,SHC-mediated Cascade FGFR3,0.9060402684563759,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,20,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,21,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,22,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,23,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,24,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,25,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,26,1,0,0.8598591549295773,SHC-mediated Cascade FGFR3,0.9060402684563759,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,27,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,28,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,29,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,30,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,31,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,32,1,0,0.8847826086956521,SHC-mediated Cascade FGFR3,0.9060402684563759,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,33,1,0,0.9886639676113359,SHC-mediated Cascade FGFR3,0.9060402684563759,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,34,2,0,0.26434293137042647,Disorders of Transmembrane Transporters,0.9662162162162162,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,35,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,36,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,37,6,15,0.0005404815421522614,SLBP Dependent Processing of Replication-Dependent Histone Pre-mRNAs,0.8055555555555556,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,38,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,39,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,40,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,41,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,42,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,43,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,44,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,45,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,46,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,47,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,48,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,49,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,50,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,51,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,52,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,53,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,54,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,55,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,56,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,57,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,58,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,59,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,60,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,61,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,62,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,63,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,64,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,65,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,66,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,67,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,68,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,69,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,70,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,71,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,72,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,73,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,74,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,75,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,76,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,77,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,78,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,79,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,80,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,81,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,82,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,83,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,84,4,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.00684931506849315,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,85,2,4,0.037248322147651,Defective B3GAT3 Causes JDSSDHD,1.0,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,86,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,87,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,88,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,89,3,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006802721088435374,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,90,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,91,3,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006802721088435374,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,92,2,0,0.44697986577181203,Maturation of TCA Enzymes and Regulation of TCA Cycle,0.9932432432432432,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,93,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,94,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,95,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,96,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,97,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,98,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,99,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,100,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,101,1,0,0.8358433734939759,ERKs Are Inactivated,0.9463087248322147,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,102,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,103,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,104,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,105,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,106,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,107,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,108,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,109,1,0,0.9154639175257733,ERKs Are Inactivated,0.9463087248322147,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,110,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,111,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,112,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,113,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,114,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,115,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,116,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,117,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,118,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,119,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,120,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_02_05,121,1,0,0.6727272727272726,VLDLR Internalisation and Degradation,0.9932885906040269,False

@@ -1,0 +1,61 @@
+gene,accession,entry,protein_name,gene_names
+ADAR,P55265,DSRAD_HUMAN,Double-stranded RNA-specific adenosine deaminase,ADAR
+AIRE,O43918,AIRE_HUMAN,Autoimmune regulator,AIRE
+AVEN,Q9NQS1,AVEN_HUMAN,Cell death regulator Aven,AVEN
+BNIPL,Q7Z465,BNIPL_HUMAN,Bcl-2/adenovirus E1B 19 kDa-interacting protein 2-like protein,BNIPL
+BRAF,P15056,BRAF_HUMAN,Serine/threonine-protein kinase B-raf,BRAF
+C19ORF43,Q9BQ61,TRIR_HUMAN,Telomerase RNA component-interacting RNase,TRIR
+CBL,P22681,CBL_HUMAN,E3 ubiquitin-protein ligase CBL,CBL
+CDK1,P06493,CDK1_HUMAN,Cyclin-dependent kinase 1,CDK1
+CEBPA,P49715,CEBPA_HUMAN,CCAAT/enhancer-binding protein alpha,CEBPA
+CIRSR,Q86X95,CIR1_HUMAN,Corepressor of RBPJ and splicing regulator,CIRSR
+CTBP1,Q13363,CTBP1_HUMAN,C-terminal-binding protein 1,CTBP1
+ELF4,Q99607,ELF4_HUMAN,ETS-related transcription factor Elf-4,ELF4
+FLT3,P36888,FLT3_HUMAN,Receptor-type tyrosine-protein kinase FLT3,FLT3
+FMO3,P31513,FMO3_HUMAN,Flavin-containing monooxygenase 3,FMO3
+GPR31,O00270,GPR31_HUMAN,"12-(S)-hydroxy-5,8,10,14-eicosatetraenoic acid receptor",GPR31
+GRB10,Q13322,GRB10_HUMAN,Growth factor receptor-bound protein 10,GRB10
+HIST1H3A,P68431,H31_HUMAN,Histone H3.1,H3C1;H3C2;H3C3;H3C4;H3C6;H3C7;H3C8;H3C10;H3C11;H3C12
+KIT,P10721,KIT_HUMAN,Mast/stem cell growth factor receptor Kit,KIT
+KMT2A,Q03164,KMT2A_HUMAN,Histone-lysine N-methyltransferase 2A,KMT2A
+KPNA4,O00629,IMA3_HUMAN,Importin subunit alpha-3,KPNA4
+KRAS,P01116,RASK_HUMAN,GTPase KRas,KRAS
+KRTAP10-3,P60369,KR103_HUMAN,Keratin-associated protein 10-3,KRTAP10-3
+MECOM,Q03112,MECOM_HUMAN,Histone-lysine N-methyltransferase MECOM,MECOM
+NFIA,Q12857,NFIA_HUMAN,Nuclear factor 1 A-type,NFIA
+NFIX,Q14938,NFIX_HUMAN,Nuclear factor 1 X-type,NFIX
+NIPBL,Q6KC79,NIPBL_HUMAN,Nipped-B-like protein,NIPBL
+NUP214,P35658,NU214_HUMAN,Nuclear pore complex protein Nup214,NUP214
+NUP93,Q8N1F7,NUP93_HUMAN,Nuclear pore complex protein Nup93,NUP93
+NXF2,Q9GZY0,NXF2_HUMAN,Nuclear RNA export factor 2,NXF2;NXF2B
+OVCA2,Q8WZ82,OVCA2_HUMAN,Esterase OVCA2,OVCA2
+PDS5B,Q9NTI5,PDS5B_HUMAN,Sister chromatid cohesion protein PDS5 homolog B,PDS5B
+PML,P29590,PML_HUMAN,Protein PML,PML
+PTPN11,Q06124,PTN11_HUMAN,Tyrosine-protein phosphatase non-receptor type 11,PTPN11
+QPRT,Q15274,NADC_HUMAN,Nicotinate-nucleotide pyrophosphorylase [carboxylating],QPRT
+RAD21,O60216,RAD21_HUMAN,Double-strand-break repair protein rad21 homolog,RAD21
+RARA,P10276,RARA_HUMAN,Retinoic acid receptor alpha,RARA
+RBM15,Q96T37,RBM15_HUMAN,RNA-binding protein 15,RBM15
+RGL2,O15211,RGL2_HUMAN,Ral guanine nucleotide dissociation stimulator-like 2,RGL2
+RGPD2,P0DJD1,RGPD2_HUMAN,RANBP2-like and GRIP domain-containing protein 2,RGPD2
+RNF2,Q99496,RING2_HUMAN,E3 ubiquitin-protein ligase RING2,RNF2
+RUNX1,Q01196,RUNX1_HUMAN,Runt-related transcription factor 1,RUNX1
+RYBP,Q8N488,RYBP_HUMAN,RING1 and YY1-binding protein,RYBP
+SF3B1,O75533,SF3B1_HUMAN,Splicing factor 3B subunit 1,SF3B1
+SMC1A,Q14683,SMC1A_HUMAN,Structural maintenance of chromosomes protein 1A,SMC1A
+SMC1B,Q8NDV3,SMC1B_HUMAN,Structural maintenance of chromosomes protein 1B,SMC1B
+SMC3,Q9UQE7,SMC3_HUMAN,Structural maintenance of chromosomes protein 3,SMC3
+SOCS1,O15524,SOCS1_HUMAN,Suppressor of cytokine signaling 1,SOCS1
+SP1,Q8N907,DAND5_HUMAN,DAN domain family member 5,DAND5
+SPI1,P17947,SPI1_HUMAN,Transcription factor PU.1,SPI1
+SRRM1,Q8IYB3,SRRM1_HUMAN,Serine/arginine repetitive matrix protein 1,SRRM1
+STAG1,Q969W9,PMEPA_HUMAN,Protein TMEPAI,PMEPA1
+STAG2,Q8N3U4,STAG2_HUMAN,Cohesin subunit SA-2,STAG2
+STAG3,Q9UJ98,STAG3_HUMAN,Cohesin subunit SA-3,STAG3
+TEC,Q92570,NR4A3_HUMAN,Nuclear receptor subfamily 4 group A member 3,NR4A3
+USP37,Q86T82,UBP37_HUMAN,Ubiquitin carboxyl-terminal hydrolase 37,USP37
+ZBTB7A,O95365,ZBT7A_HUMAN,Zinc finger and BTB domain-containing protein 7A,ZBTB7A
+ZNF207,O43670,ZN207_HUMAN,BUB3-interacting and GLEBS motif-containing protein ZNF207,ZNF207
+ZRSR1,Q15695,U2AFL_HUMAN,U2 small nuclear ribonucleoprotein auxiliary factor 35 kDa subunit-related protein 1,ZRSR2P1
+ZRSR2,Q15696,U2AFM_HUMAN,U2 small nuclear ribonucleoprotein auxiliary factor 35 kDa subunit-related protein 2,ZRSR2
+ZRSR2P1,Q15695,U2AFL_HUMAN,U2 small nuclear ribonucleoprotein auxiliary factor 35 kDa subunit-related protein 1,ZRSR2P1

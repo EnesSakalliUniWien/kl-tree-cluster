@@ -1,0 +1,366 @@
+{
+  "quickgo": {},
+  "uniprot": {
+    "ADAR": {
+      "accession": "P55265",
+      "entry": "DSRAD_HUMAN",
+      "gene_names": "ADAR",
+      "protein_name": "Double-stranded RNA-specific adenosine deaminase"
+    },
+    "AIRE": {
+      "accession": "O43918",
+      "entry": "AIRE_HUMAN",
+      "gene_names": "AIRE",
+      "protein_name": "Autoimmune regulator"
+    },
+    "AVEN": {
+      "accession": "Q9NQS1",
+      "entry": "AVEN_HUMAN",
+      "gene_names": "AVEN",
+      "protein_name": "Cell death regulator Aven"
+    },
+    "BNIPL": {
+      "accession": "Q7Z465",
+      "entry": "BNIPL_HUMAN",
+      "gene_names": "BNIPL",
+      "protein_name": "Bcl-2/adenovirus E1B 19 kDa-interacting protein 2-like protein"
+    },
+    "BRAF": {
+      "accession": "P15056",
+      "entry": "BRAF_HUMAN",
+      "gene_names": "BRAF",
+      "protein_name": "Serine/threonine-protein kinase B-raf"
+    },
+    "C19ORF43": {
+      "accession": "Q9BQ61",
+      "entry": "TRIR_HUMAN",
+      "gene_names": "TRIR",
+      "protein_name": "Telomerase RNA component-interacting RNase"
+    },
+    "CBL": {
+      "accession": "P22681",
+      "entry": "CBL_HUMAN",
+      "gene_names": "CBL",
+      "protein_name": "E3 ubiquitin-protein ligase CBL"
+    },
+    "CDK1": {
+      "accession": "P06493",
+      "entry": "CDK1_HUMAN",
+      "gene_names": "CDK1",
+      "protein_name": "Cyclin-dependent kinase 1"
+    },
+    "CEBPA": {
+      "accession": "P49715",
+      "entry": "CEBPA_HUMAN",
+      "gene_names": "CEBPA",
+      "protein_name": "CCAAT/enhancer-binding protein alpha"
+    },
+    "CIRSR": {
+      "accession": "Q86X95",
+      "entry": "CIR1_HUMAN",
+      "gene_names": "CIRSR",
+      "protein_name": "Corepressor of RBPJ and splicing regulator"
+    },
+    "CTBP1": {
+      "accession": "Q13363",
+      "entry": "CTBP1_HUMAN",
+      "gene_names": "CTBP1",
+      "protein_name": "C-terminal-binding protein 1"
+    },
+    "ELF4": {
+      "accession": "Q99607",
+      "entry": "ELF4_HUMAN",
+      "gene_names": "ELF4",
+      "protein_name": "ETS-related transcription factor Elf-4"
+    },
+    "FLT3": {
+      "accession": "P36888",
+      "entry": "FLT3_HUMAN",
+      "gene_names": "FLT3",
+      "protein_name": "Receptor-type tyrosine-protein kinase FLT3"
+    },
+    "FMO3": {
+      "accession": "P31513",
+      "entry": "FMO3_HUMAN",
+      "gene_names": "FMO3",
+      "protein_name": "Flavin-containing monooxygenase 3"
+    },
+    "GPR31": {
+      "accession": "O00270",
+      "entry": "GPR31_HUMAN",
+      "gene_names": "GPR31",
+      "protein_name": "12-(S)-hydroxy-5,8,10,14-eicosatetraenoic acid receptor"
+    },
+    "GRB10": {
+      "accession": "Q13322",
+      "entry": "GRB10_HUMAN",
+      "gene_names": "GRB10",
+      "protein_name": "Growth factor receptor-bound protein 10"
+    },
+    "HIST1H3A": {
+      "accession": "P68431",
+      "entry": "H31_HUMAN",
+      "gene_names": "H3C1;H3C2;H3C3;H3C4;H3C6;H3C7;H3C8;H3C10;H3C11;H3C12",
+      "protein_name": "Histone H3.1"
+    },
+    "KIT": {
+      "accession": "P10721",
+      "entry": "KIT_HUMAN",
+      "gene_names": "KIT",
+      "protein_name": "Mast/stem cell growth factor receptor Kit"
+    },
+    "KMT2A": {
+      "accession": "Q03164",
+      "entry": "KMT2A_HUMAN",
+      "gene_names": "KMT2A",
+      "protein_name": "Histone-lysine N-methyltransferase 2A"
+    },
+    "KPNA4": {
+      "accession": "O00629",
+      "entry": "IMA3_HUMAN",
+      "gene_names": "KPNA4",
+      "protein_name": "Importin subunit alpha-3"
+    },
+    "KRAS": {
+      "accession": "P01116",
+      "entry": "RASK_HUMAN",
+      "gene_names": "KRAS",
+      "protein_name": "GTPase KRas"
+    },
+    "KRTAP10-3": {
+      "accession": "P60369",
+      "entry": "KR103_HUMAN",
+      "gene_names": "KRTAP10-3",
+      "protein_name": "Keratin-associated protein 10-3"
+    },
+    "MECOM": {
+      "accession": "Q03112",
+      "entry": "MECOM_HUMAN",
+      "gene_names": "MECOM",
+      "protein_name": "Histone-lysine N-methyltransferase MECOM"
+    },
+    "NFIA": {
+      "accession": "Q12857",
+      "entry": "NFIA_HUMAN",
+      "gene_names": "NFIA",
+      "protein_name": "Nuclear factor 1 A-type"
+    },
+    "NFIX": {
+      "accession": "Q14938",
+      "entry": "NFIX_HUMAN",
+      "gene_names": "NFIX",
+      "protein_name": "Nuclear factor 1 X-type"
+    },
+    "NIPBL": {
+      "accession": "Q6KC79",
+      "entry": "NIPBL_HUMAN",
+      "gene_names": "NIPBL",
+      "protein_name": "Nipped-B-like protein"
+    },
+    "NUP214": {
+      "accession": "P35658",
+      "entry": "NU214_HUMAN",
+      "gene_names": "NUP214",
+      "protein_name": "Nuclear pore complex protein Nup214"
+    },
+    "NUP93": {
+      "accession": "Q8N1F7",
+      "entry": "NUP93_HUMAN",
+      "gene_names": "NUP93",
+      "protein_name": "Nuclear pore complex protein Nup93"
+    },
+    "NXF2": {
+      "accession": "Q9GZY0",
+      "entry": "NXF2_HUMAN",
+      "gene_names": "NXF2;NXF2B",
+      "protein_name": "Nuclear RNA export factor 2"
+    },
+    "OVCA2": {
+      "accession": "Q8WZ82",
+      "entry": "OVCA2_HUMAN",
+      "gene_names": "OVCA2",
+      "protein_name": "Esterase OVCA2"
+    },
+    "PDS5B": {
+      "accession": "Q9NTI5",
+      "entry": "PDS5B_HUMAN",
+      "gene_names": "PDS5B",
+      "protein_name": "Sister chromatid cohesion protein PDS5 homolog B"
+    },
+    "PML": {
+      "accession": "P29590",
+      "entry": "PML_HUMAN",
+      "gene_names": "PML",
+      "protein_name": "Protein PML"
+    },
+    "PTPN11": {
+      "accession": "Q06124",
+      "entry": "PTN11_HUMAN",
+      "gene_names": "PTPN11",
+      "protein_name": "Tyrosine-protein phosphatase non-receptor type 11"
+    },
+    "QPRT": {
+      "accession": "Q15274",
+      "entry": "NADC_HUMAN",
+      "gene_names": "QPRT",
+      "protein_name": "Nicotinate-nucleotide pyrophosphorylase [carboxylating]"
+    },
+    "RAD21": {
+      "accession": "O60216",
+      "entry": "RAD21_HUMAN",
+      "gene_names": "RAD21",
+      "protein_name": "Double-strand-break repair protein rad21 homolog"
+    },
+    "RARA": {
+      "accession": "P10276",
+      "entry": "RARA_HUMAN",
+      "gene_names": "RARA",
+      "protein_name": "Retinoic acid receptor alpha"
+    },
+    "RBM15": {
+      "accession": "Q96T37",
+      "entry": "RBM15_HUMAN",
+      "gene_names": "RBM15",
+      "protein_name": "RNA-binding protein 15"
+    },
+    "RGL2": {
+      "accession": "O15211",
+      "entry": "RGL2_HUMAN",
+      "gene_names": "RGL2",
+      "protein_name": "Ral guanine nucleotide dissociation stimulator-like 2"
+    },
+    "RGPD2": {
+      "accession": "P0DJD1",
+      "entry": "RGPD2_HUMAN",
+      "gene_names": "RGPD2",
+      "protein_name": "RANBP2-like and GRIP domain-containing protein 2"
+    },
+    "RNF2": {
+      "accession": "Q99496",
+      "entry": "RING2_HUMAN",
+      "gene_names": "RNF2",
+      "protein_name": "E3 ubiquitin-protein ligase RING2"
+    },
+    "RUNX1": {
+      "accession": "Q01196",
+      "entry": "RUNX1_HUMAN",
+      "gene_names": "RUNX1",
+      "protein_name": "Runt-related transcription factor 1"
+    },
+    "RYBP": {
+      "accession": "Q8N488",
+      "entry": "RYBP_HUMAN",
+      "gene_names": "RYBP",
+      "protein_name": "RING1 and YY1-binding protein"
+    },
+    "SF3B1": {
+      "accession": "O75533",
+      "entry": "SF3B1_HUMAN",
+      "gene_names": "SF3B1",
+      "protein_name": "Splicing factor 3B subunit 1"
+    },
+    "SMC1A": {
+      "accession": "Q14683",
+      "entry": "SMC1A_HUMAN",
+      "gene_names": "SMC1A",
+      "protein_name": "Structural maintenance of chromosomes protein 1A"
+    },
+    "SMC1B": {
+      "accession": "Q8NDV3",
+      "entry": "SMC1B_HUMAN",
+      "gene_names": "SMC1B",
+      "protein_name": "Structural maintenance of chromosomes protein 1B"
+    },
+    "SMC3": {
+      "accession": "Q9UQE7",
+      "entry": "SMC3_HUMAN",
+      "gene_names": "SMC3",
+      "protein_name": "Structural maintenance of chromosomes protein 3"
+    },
+    "SOCS1": {
+      "accession": "O15524",
+      "entry": "SOCS1_HUMAN",
+      "gene_names": "SOCS1",
+      "protein_name": "Suppressor of cytokine signaling 1"
+    },
+    "SP1": {
+      "accession": "Q8N907",
+      "entry": "DAND5_HUMAN",
+      "gene_names": "DAND5",
+      "protein_name": "DAN domain family member 5"
+    },
+    "SPI1": {
+      "accession": "P17947",
+      "entry": "SPI1_HUMAN",
+      "gene_names": "SPI1",
+      "protein_name": "Transcription factor PU.1"
+    },
+    "SRRM1": {
+      "accession": "Q8IYB3",
+      "entry": "SRRM1_HUMAN",
+      "gene_names": "SRRM1",
+      "protein_name": "Serine/arginine repetitive matrix protein 1"
+    },
+    "STAG1": {
+      "accession": "Q969W9",
+      "entry": "PMEPA_HUMAN",
+      "gene_names": "PMEPA1",
+      "protein_name": "Protein TMEPAI"
+    },
+    "STAG2": {
+      "accession": "Q8N3U4",
+      "entry": "STAG2_HUMAN",
+      "gene_names": "STAG2",
+      "protein_name": "Cohesin subunit SA-2"
+    },
+    "STAG3": {
+      "accession": "Q9UJ98",
+      "entry": "STAG3_HUMAN",
+      "gene_names": "STAG3",
+      "protein_name": "Cohesin subunit SA-3"
+    },
+    "TEC": {
+      "accession": "Q92570",
+      "entry": "NR4A3_HUMAN",
+      "gene_names": "NR4A3",
+      "protein_name": "Nuclear receptor subfamily 4 group A member 3"
+    },
+    "USP37": {
+      "accession": "Q86T82",
+      "entry": "UBP37_HUMAN",
+      "gene_names": "USP37",
+      "protein_name": "Ubiquitin carboxyl-terminal hydrolase 37"
+    },
+    "ZBTB7A": {
+      "accession": "O95365",
+      "entry": "ZBT7A_HUMAN",
+      "gene_names": "ZBTB7A",
+      "protein_name": "Zinc finger and BTB domain-containing protein 7A"
+    },
+    "ZNF207": {
+      "accession": "O43670",
+      "entry": "ZN207_HUMAN",
+      "gene_names": "ZNF207",
+      "protein_name": "BUB3-interacting and GLEBS motif-containing protein ZNF207"
+    },
+    "ZRSR1": {
+      "accession": "Q15695",
+      "entry": "U2AFL_HUMAN",
+      "gene_names": "ZRSR2P1",
+      "protein_name": "U2 small nuclear ribonucleoprotein auxiliary factor 35 kDa subunit-related protein 1"
+    },
+    "ZRSR2": {
+      "accession": "Q15696",
+      "entry": "U2AFM_HUMAN",
+      "gene_names": "ZRSR2",
+      "protein_name": "U2 small nuclear ribonucleoprotein auxiliary factor 35 kDa subunit-related protein 2"
+    },
+    "ZRSR2P1": {
+      "accession": "Q15695",
+      "entry": "U2AFL_HUMAN",
+      "gene_names": "ZRSR2P1",
+      "protein_name": "U2 small nuclear ribonucleoprotein auxiliary factor 35 kDa subunit-related protein 1"
+    }
+  },
+  "warnings": []
+}

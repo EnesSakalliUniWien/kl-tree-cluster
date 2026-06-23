@@ -1,0 +1,23 @@
+{
+  "run_id": "current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_02_05",
+  "method_version": "current",
+  "tree_geometry": "adaptive_diffusion_cosine_subspace",
+  "weighting": "binary",
+  "block_id": 1,
+  "block_name": "adaptive_modes_02_05",
+  "block_type": "adaptive_decay_regime",
+  "block_start": 2,
+  "block_end": 5,
+  "subspace_dimensions": 4,
+  "block_energy_fraction": 0.24974581658715356,
+  "segmentation_bic": -557.6921437384553,
+  "common_mode_isolated": true,
+  "subspace_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/subspaces/binary/adaptive_modes_02_05",
+  "spectral_block": {
+    "block_id": 1,
+    "block_name": "adaptive_modes_02_05",
+    "block_start": 2,
+    "block_end": 5,
+    "block_type": "adaptive_decay_regime"
+  }
+}

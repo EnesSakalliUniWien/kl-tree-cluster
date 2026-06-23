@@ -1,0 +1,7 @@
+{
+  "copied_input": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/input/feature_matrix_AML_michel_reactome_msigdb.tsv",
+  "run_summary": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/RUN_SUMMARY.md",
+  "radial_trees": 12,
+  "clusters": 1105,
+  "subspaces": 12
+}

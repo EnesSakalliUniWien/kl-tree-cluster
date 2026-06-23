@@ -1,0 +1,25 @@
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+/Users/berksakalli/Projects/kl-te-cluster/.venv/lib/python3.11/site-packages/sklearn/manifold/_mds.py:677: FutureWarning: The default value of `n_init` will change from 4 to 1 in 1.9.
+  warnings.warn(
+Wrote 1105 clusters and 1800 gene memberships to results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations

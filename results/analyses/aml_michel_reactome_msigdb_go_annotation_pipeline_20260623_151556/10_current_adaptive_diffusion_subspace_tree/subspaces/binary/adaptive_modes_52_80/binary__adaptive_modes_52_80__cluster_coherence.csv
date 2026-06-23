@@ -1,0 +1,17 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,0,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,1,6,144,0.005673166396996813,IGF1R Signaling Cascade,0.7222222222222223,True
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,2,5,1,0.030201342281879196,CaMK IV-mediated Phosphorylation of CREB,0.6,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,3,13,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.0072992700729927005,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,4,34,0,0.7831240982188592,AKT Phosphorylates Targets in the Nucleus,0.14705882352941177,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,5,6,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006944444444444444,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,6,12,0,0.16610738255033555,Hh Mutants Abrogate Ligand Secretion,0.25,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,7,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,8,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,9,1,0,0.6493036211699165,SHC-mediated Cascade FGFR3,0.9060402684563759,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,10,18,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.007575757575757576,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,11,3,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006802721088435374,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,12,2,0,1.0,O2 CO2 Exchange in Erythrocytes,0.5,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,13,27,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.008130081300813009,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,14,10,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.007142857142857143,False
+current__adaptive_diffusion_cosine_subspace__binary__adaptive_modes_52_80,15,10,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.007142857142857143,False

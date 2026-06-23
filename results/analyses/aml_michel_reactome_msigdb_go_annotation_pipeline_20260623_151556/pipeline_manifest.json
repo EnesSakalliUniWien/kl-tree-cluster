@@ -1,0 +1,198 @@
+{
+  "input": "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv",
+  "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556",
+  "dry_run": false,
+  "canonical_level": "30_canonical_current_subspace_pipeline",
+  "stages": [
+    {
+      "stage_id": "00_dataset_inventory",
+      "analysis_level": "dataset_inventory_and_naming_preflight",
+      "description": "Inventory GO feature matrices and check directory/naming conventions.",
+      "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/00_dataset_inventory",
+      "command": [
+        "/Users/berksakalli/Projects/kl-te-cluster/.venv/bin/python3",
+        "/Users/berksakalli/Projects/kl-te-cluster/scripts/analysis/inventory_go_annotation_datasets.py",
+        "--output-dir",
+        "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/00_dataset_inventory",
+        "--extra-paths",
+        "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv"
+      ],
+      "optional": false
+    },
+    {
+      "stage_id": "05_matrix_quality",
+      "analysis_level": "00_matrix_quality_only",
+      "description": "Validate binary GO matrix quality before tree analysis.",
+      "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/05_matrix_quality",
+      "command": [
+        "/Users/berksakalli/Projects/kl-te-cluster/.venv/bin/python3",
+        "/Users/berksakalli/Projects/kl-te-cluster/scripts/analysis/feature_matrix_quality_analysis.py",
+        "--input",
+        "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv",
+        "--output-dir",
+        "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/05_matrix_quality"
+      ],
+      "optional": false
+    },
+    {
+      "stage_id": "10_current_adaptive_diffusion_subspace_tree",
+      "analysis_level": "30_canonical_current_subspace_pipeline",
+      "description": "Run the canonical current TBS adaptive-diffusion cosine-subspace tree pipeline with connected PDFs, rankings, and manifests.",
+      "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree",
+      "command": [
+        "/Users/berksakalli/Projects/kl-te-cluster/.venv/bin/python3",
+        "/Users/berksakalli/Projects/kl-te-cluster/scripts/analysis/run_current_adaptive_diffusion_subspace_tree_experiment.py",
+        "--input",
+        "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv",
+        "--output-dir",
+        "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree",
+        "--dataset-label",
+        "aml_michel_reactome_msigdb",
+        "--max-rank",
+        "80",
+        "--min-segment-length",
+        "4",
+        "--max-segments",
+        "8",
+        "--diffusion-k-neighbors",
+        "15",
+        "--diffusion-time",
+        "3",
+        "--diffusion-components",
+        "30",
+        "--adaptive-bandwidth-type=-1/(d+2)",
+        "--adaptive-epsilon",
+        "median",
+        "--adaptive-metric",
+        "euclidean",
+        "--weightings",
+        "binary",
+        "tfidf"
+      ],
+      "optional": false
+    },
+    {
+      "stage_id": "40_subspace_rosters_radial_trees",
+      "analysis_level": "40_systematic_subspace_annotation_package",
+      "description": "Export per-subspace rosters, source artifacts, embeddings, and radial cluster trees.",
+      "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations",
+      "command": [
+        "/Users/berksakalli/Projects/kl-te-cluster/.venv/bin/python3",
+        "/Users/berksakalli/Projects/kl-te-cluster/scripts/analysis/export_subspace_cluster_rosters.py",
+        "--experiment-dir",
+        "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree",
+        "--feature-matrix",
+        "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv",
+        "--dataset-label",
+        "aml_michel_reactome_msigdb"
+      ],
+      "optional": false
+    },
+    {
+      "stage_id": "45_subspace_annotation_pdf",
+      "analysis_level": "40_systematic_subspace_annotation_package",
+      "description": "Build the systematic two-page-per-subspace annotation PDF.",
+      "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations",
+      "command": [
+        "/Users/berksakalli/Projects/kl-te-cluster/.venv/bin/python3",
+        "/Users/berksakalli/Projects/kl-te-cluster/scripts/analysis/build_subspace_gene_annotation_pdf.py",
+        "--feature-matrix",
+        "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv",
+        "--experiment-dir",
+        "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree",
+        "--dataset-label",
+        "aml_michel_reactome_msigdb"
+      ],
+      "optional": false
+    },
+    {
+      "stage_id": "50_cluster_meaningfulness_audit",
+      "analysis_level": "40_systematic_subspace_annotation_package",
+      "description": "Audit cluster feature enrichment and eigenband coherence against size-preserving nulls.",
+      "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations/cluster_meaningfulness_audit",
+      "command": [
+        "/Users/berksakalli/Projects/kl-te-cluster/.venv/bin/python3",
+        "/Users/berksakalli/Projects/kl-te-cluster/scripts/analysis/audit_go_cluster_meaningfulness.py",
+        "--dataset-label",
+        "aml_michel_reactome_msigdb",
+        "--feature-matrix",
+        "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv",
+        "--annotation-root",
+        "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations"
+      ],
+      "optional": false
+    },
+    {
+      "stage_id": "90_package_for_github",
+      "analysis_level": "90_github_upload_package",
+      "description": "Copy the input matrix, verify radial outputs, and write the upload run summary.",
+      "output_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556",
+      "command": [
+        "internal:finalize_go_annotation_results",
+        "--input",
+        "/Users/berksakalli/Downloads/feature_matrix_AML_michel_reactome_msigdb.tsv",
+        "--output-dir",
+        "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556",
+        "--dataset-label",
+        "aml_michel_reactome_msigdb"
+      ],
+      "optional": false
+    }
+  ],
+  "stage_results": [
+    {
+      "stage_id": "00_dataset_inventory",
+      "status": "ok",
+      "returncode": 0,
+      "log_path": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/00_dataset_inventory/00_dataset_inventory.log"
+    },
+    {
+      "stage_id": "05_matrix_quality",
+      "status": "ok",
+      "returncode": 0,
+      "log_path": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/05_matrix_quality/05_matrix_quality.log"
+    },
+    {
+      "stage_id": "10_current_adaptive_diffusion_subspace_tree",
+      "status": "ok",
+      "returncode": 0,
+      "log_path": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/10_current_adaptive_diffusion_subspace_tree.log"
+    },
+    {
+      "stage_id": "40_subspace_rosters_radial_trees",
+      "status": "ok",
+      "returncode": 0,
+      "log_path": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations/40_subspace_rosters_radial_trees.log"
+    },
+    {
+      "stage_id": "45_subspace_annotation_pdf",
+      "status": "ok",
+      "returncode": 0,
+      "log_path": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations/45_subspace_annotation_pdf.log"
+    },
+    {
+      "stage_id": "50_cluster_meaningfulness_audit",
+      "status": "ok",
+      "returncode": 0,
+      "log_path": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/systematic_subspace_gene_annotations/cluster_meaningfulness_audit/50_cluster_meaningfulness_audit.log"
+    },
+    {
+      "stage_id": "90_package_for_github",
+      "status": "ok",
+      "returncode": 0,
+      "log_path": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/90_package_for_github.log",
+      "outputs": {
+        "copied_input": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/input/feature_matrix_AML_michel_reactome_msigdb.tsv",
+        "run_summary": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/RUN_SUMMARY.md",
+        "radial_trees": 12,
+        "clusters": 1105,
+        "subspaces": 12
+      }
+    }
+  ],
+  "audit_outputs": {
+    "csv": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/30_analysis_level_audit/go_annotation_analysis_level_inventory.csv",
+    "json": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/30_analysis_level_audit/go_annotation_analysis_level_inventory.json",
+    "markdown": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/30_analysis_level_audit/go_annotation_analysis_level_summary.md"
+  }
+}

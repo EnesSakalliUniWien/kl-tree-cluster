@@ -1,0 +1,67 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,0,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,1,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,2,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,3,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,4,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,5,3,47,0.015100671140939595,HCMV Late Events,0.9863945578231292,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,6,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,7,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,8,2,0,0.148993288590604,Formation of Annular Gap Junctions,0.9932432432432432,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,9,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,10,4,8,0.014689768524859606,Recruitment of Mitotic Centrosome Proteins and Complexes,0.9383561643835616,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,11,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,12,4,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.00684931506849315,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,13,1,0,0.9154639175257733,ERKs Are Inactivated,0.9463087248322147,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,14,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,15,3,0,0.16086188625927234,Interleukin-1 Signaling,0.891156462585034,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,16,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,17,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,18,5,52,0.008726896109183768,Regulation of Lipid Metabolism by PPARalpha,0.896551724137931,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,19,5,0,0.06456785062776461,Circadian Clock,0.8,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,20,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,21,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,22,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,23,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,24,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,25,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,26,3,99,0.042281879194630875,Ras Activation Upon Ca2+ Influx Through NMDA Receptor,0.9659863945578231,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,27,3,226,0.0030201342281879194,Uptake and Function of Anthrax Toxins,1.0,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,28,3,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006802721088435374,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,29,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,30,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,31,6,4,0.0021619261686090458,RNA Polymerase II Transcription Termination,0.9166666666666666,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,32,5,25,0.009197897021482833,mRNA Splicing - Minor Pathway,0.8758620689655172,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,33,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,34,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,35,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,36,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,37,3,42,0.003020134228187919,NOTCH4 Activation and Transmission of Signal to the Nucleus,0.9863945578231292,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,38,8,46,0.00043773657101137977,Removal of the Flap Intermediate From the C-strand,0.7904929577464789,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,39,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,40,3,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006802721088435374,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,41,3,0,0.49832214765100674,RUNX1 Regulates Transcription of Genes Involved in Differentiation of HSCs,0.9455782312925171,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,42,4,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.00684931506849315,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,43,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,44,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,45,4,0,1.0,O2 CO2 Exchange in Erythrocytes,0.25,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,46,3,0,0.8202048746026138,ERKs Are Inactivated,0.6190476190476191,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,47,3,15,0.04429530201342281,APC C Cdh1 Mediated Degradation of Cdc20 and Other APC C Cdh1 Targets in Late Mitosis Early G1,0.9387755102040817,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,48,4,73,0.001232707848239967,Oxygen-dependent Proline Hydroxylation of Hypoxia-inducible Factor Alpha,0.9863013698630136,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,49,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,50,4,0,0.09837008628954938,Synthesis of PC,0.910958904109589,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,51,3,0,0.49616490891658666,Protein Folding,0.8571428571428572,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,52,3,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006802721088435374,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,53,4,0,0.112176414189837,MECP2 Regulates Transcription of Neuronal Ligands,0.9246575342465754,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,54,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,55,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,56,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,57,4,0,0.8196890836871661,Defective Pyroptosis,0.6883561643835616,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,58,2,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006756756756756757,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,59,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,60,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,61,2,0,0.12105704697986576,Antigen Activates B Cell Receptor (BCR) Leading to Generation of Second Messengers,0.9189189189189189,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,62,1,0,0.9886639676113359,SHC-mediated Cascade FGFR3,0.9060402684563759,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,63,1,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006711409395973154,False
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,64,4,270,0.0021093000958772768,Antigen Activates B Cell Receptor (BCR) Leading to Generation of Second Messengers,0.9315068493150684,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_06_10,65,3,0,1.0,O2 CO2 Exchange in Erythrocytes,-0.006802721088435374,False

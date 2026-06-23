@@ -1,0 +1,23 @@
+{
+  "run_id": "current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_63_80",
+  "method_version": "current",
+  "tree_geometry": "adaptive_diffusion_cosine_subspace",
+  "weighting": "tfidf",
+  "block_id": 5,
+  "block_name": "adaptive_modes_63_80",
+  "block_type": "adaptive_decay_regime",
+  "block_start": 63,
+  "block_end": 80,
+  "subspace_dimensions": 18,
+  "block_energy_fraction": 0.07080424389255628,
+  "segmentation_bic": -569.9512357721026,
+  "common_mode_isolated": true,
+  "subspace_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/subspaces/tfidf/adaptive_modes_63_80",
+  "spectral_block": {
+    "block_id": 5,
+    "block_name": "adaptive_modes_63_80",
+    "block_start": 63,
+    "block_end": 80,
+    "block_type": "adaptive_decay_regime"
+  }
+}

@@ -1,0 +1,6 @@
+run_id,cluster_id,cluster_size,n_significant_terms_q05,min_q_value,top_term,top_term_prevalence_delta,coherent_by_rule
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_11_21,0,9,26,1.375604832922592e-06,Defective Pyroptosis,0.8605200945626477,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_11_21,1,26,340,9.326069646597622e-08,Interleukin-6 Family Signaling,0.46153846153846156,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_11_21,2,8,24,2.6128395702917072e-08,CTNNB1 S45 Mutants Aren'T Phosphorylated,0.971830985915493,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_11_21,3,22,125,4.992363607123564e-06,Activation of RAS in B Cells,0.4090909090909091,True
+current__adaptive_diffusion_cosine_subspace__tfidf__adaptive_modes_11_21,4,85,1,0.04437723909031368,"Cell Cycle, Mitotic",0.34298642533936646,False

@@ -1,0 +1,61 @@
+axis,axis_name,selection,go_term,go_id,column,support,prevalence,entropy_bits,loading,abs_loading,loading_sign,abs_rank
+1,mode_01,top_positive,Activation of Matrix Metalloproteinases,,Activation of Matrix Metalloproteinases,1,0.006666666666666667,0.05777796017013378,-0.0002066807311511347,0.0002066807311511347,negative,1665
+1,mode_01,top_positive,Peroxisomal Lipid Metabolism,,Peroxisomal Lipid Metabolism,1,0.006666666666666667,0.05777796017013378,-0.0005834016405888623,0.0005834016405888623,negative,1664
+1,mode_01,top_positive,Chylomicron Remodeling,,Chylomicron Remodeling,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1663
+1,mode_01,top_positive,Histidine Catabolism,,Histidine Catabolism,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1661
+1,mode_01,top_positive,Plasma Lipoprotein Remodeling,,Plasma Lipoprotein Remodeling,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1659
+1,mode_01,top_positive,Chylomicron Clearance,,Chylomicron Clearance,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1658
+1,mode_01,top_positive,Scavenging by Class B Receptors,,Scavenging by Class B Receptors,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1657
+1,mode_01,top_positive,Plasma Lipoprotein Clearance,,Plasma Lipoprotein Clearance,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1656
+1,mode_01,top_positive,LDL Clearance,,LDL Clearance,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1655
+1,mode_01,top_positive,HDL Remodeling,,HDL Remodeling,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1662
+1,mode_01,top_positive,TBC RABGAPs,,TBC RABGAPs,1,0.006666666666666667,0.05777796017013378,-0.0007176696663490437,0.0007176696663490437,negative,1660
+1,mode_01,top_positive,Trafficking of AMPA Receptors,,Trafficking of AMPA Receptors,1,0.006666666666666667,0.05777796017013378,-0.0008399962519099208,0.0008399962519099208,negative,1654
+1,mode_01,top_positive,"Glutamate Binding, Activation of AMPA Receptors and Synaptic Plasticity",,"Glutamate Binding, Activation of AMPA Receptors and Synaptic Plasticity",1,0.006666666666666667,0.05777796017013378,-0.0008399962519099208,0.0008399962519099208,negative,1653
+1,mode_01,top_positive,Other Semaphorin Interactions,,Other Semaphorin Interactions,1,0.006666666666666667,0.05777796017013378,-0.001217803127757562,0.001217803127757562,negative,1650
+1,mode_01,top_positive,Laminin Interactions,,Laminin Interactions,1,0.006666666666666667,0.05777796017013378,-0.001217803127757562,0.001217803127757562,negative,1652
+1,mode_01,top_positive,Fibronectin Matrix Formation,,Fibronectin Matrix Formation,1,0.006666666666666667,0.05777796017013378,-0.001217803127757562,0.001217803127757562,negative,1651
+1,mode_01,top_positive,TNFR1-mediated Ceramide Production,,TNFR1-mediated Ceramide Production,1,0.006666666666666667,0.05777796017013378,-0.001217803127757562,0.001217803127757562,negative,1649
+1,mode_01,top_positive,Neurotoxicity of Clostridium Toxins,,Neurotoxicity of Clostridium Toxins,1,0.006666666666666667,0.05777796017013378,-0.0012251746676584024,0.0012251746676584024,negative,1646
+1,mode_01,top_positive,Cristae Formation,,Cristae Formation,1,0.006666666666666667,0.05777796017013378,-0.0012251746676584024,0.0012251746676584024,negative,1647
+1,mode_01,top_positive,Toxicity of Botulinum Toxin Type B (botB),,Toxicity of Botulinum Toxin Type B (botB),1,0.006666666666666667,0.05777796017013378,-0.0012251746676584024,0.0012251746676584024,negative,1645
+1,mode_01,top_negative,SUMO E3 Ligases SUMOylate Target Proteins,,SUMO E3 Ligases SUMOylate Target Proteins,84,0.56,0.9895875212220556,-0.0855788041491825,0.0855788041491825,negative,1
+1,mode_01,top_negative,SUMOylation,,SUMOylation,84,0.56,0.9895875212220556,-0.0855788041491825,0.0855788041491825,negative,2
+1,mode_01,top_negative,Gene Expression (Transcription),,Gene Expression (Transcription),93,0.62,0.9580420222262995,-0.08523697087054591,0.08523697087054591,negative,3
+1,mode_01,top_negative,RNA Polymerase II Transcription,,RNA Polymerase II Transcription,85,0.5666666666666667,0.9871377743721863,-0.08184220108876403,0.08184220108876403,negative,4
+1,mode_01,top_negative,Cellular Responses to Stress,,Cellular Responses to Stress,81,0.54,0.9953784388202257,-0.07995309511932348,0.07995309511932348,negative,5
+1,mode_01,top_negative,Post-translational Protein Modification,,Post-translational Protein Modification,76,0.5066666666666667,0.999871756640849,-0.07968011017250319,0.07968011017250319,negative,6
+1,mode_01,top_negative,Generic Transcription Pathway,,Generic Transcription Pathway,78,0.52,0.9988455359952018,-0.07927859286896133,0.07927859286896133,negative,7
+1,mode_01,top_negative,Regulation of TP53 Activity,,Regulation of TP53 Activity,66,0.44,0.9895875212220556,-0.07853718598500573,0.07853718598500573,negative,8
+1,mode_01,top_negative,Epigenetic Regulation of Gene Expression,,Epigenetic Regulation of Gene Expression,57,0.38,0.9580420222262995,-0.07807097572822402,0.07807097572822402,negative,9
+1,mode_01,top_negative,SUMOylation of DNA Damage Response and Repair Proteins,,SUMOylation of DNA Damage Response and Repair Proteins,65,0.43333333333333335,0.9871377743721863,-0.07707750717219015,0.07707750717219015,negative,10
+1,mode_01,top_negative,PTEN Regulation,,PTEN Regulation,56,0.37333333333333335,0.9531971725430559,-0.07675070858532645,0.07675070858532645,negative,11
+1,mode_01,top_negative,Regulation of PTEN Gene Transcription,,Regulation of PTEN Gene Transcription,55,0.36666666666666664,0.9480782435939055,-0.07630209176841084,0.07630209176841084,negative,12
+1,mode_01,top_negative,Cell Cycle,,Cell Cycle,78,0.52,0.9988455359952018,-0.07617998060781432,0.07617998060781432,negative,13
+1,mode_01,top_negative,Cellular Responses to Stimuli,,Cellular Responses to Stimuli,85,0.5666666666666667,0.9871377743721863,-0.07576008738212107,0.07576008738212107,negative,14
+1,mode_01,top_negative,Transcriptional Regulation by TP53,,Transcriptional Regulation by TP53,69,0.46,0.9953784388202257,-0.07518498074308826,0.07518498074308826,negative,15
+1,mode_01,top_negative,Transcriptional Regulation by E2F6,,Transcriptional Regulation by E2F6,51,0.34,0.9248187049730301,-0.07495389069906337,0.07495389069906337,negative,16
+1,mode_01,top_negative,"Cell Cycle, Mitotic",,"Cell Cycle, Mitotic",73,0.4866666666666667,0.9994869809508898,-0.07416775393813752,0.07416775393813752,negative,17
+1,mode_01,top_negative,Chromatin Modifying Enzymes,,Chromatin Modifying Enzymes,52,0.3466666666666667,0.931055823385033,-0.07405868706102323,0.07405868706102323,negative,18
+1,mode_01,top_negative,Chromatin Organization,,Chromatin Organization,52,0.3466666666666667,0.931055823385033,-0.07405868706102323,0.07405868706102323,negative,19
+1,mode_01,top_negative,PIP3 Activates AKT Signaling,,PIP3 Activates AKT Signaling,71,0.47333333333333333,0.9979471932237238,-0.07282808222793609,0.07282808222793609,negative,20
+1,mode_01,top_absolute,SUMO E3 Ligases SUMOylate Target Proteins,,SUMO E3 Ligases SUMOylate Target Proteins,84,0.56,0.9895875212220556,-0.0855788041491825,0.0855788041491825,negative,1
+1,mode_01,top_absolute,SUMOylation,,SUMOylation,84,0.56,0.9895875212220556,-0.0855788041491825,0.0855788041491825,negative,2
+1,mode_01,top_absolute,Gene Expression (Transcription),,Gene Expression (Transcription),93,0.62,0.9580420222262995,-0.08523697087054591,0.08523697087054591,negative,3
+1,mode_01,top_absolute,RNA Polymerase II Transcription,,RNA Polymerase II Transcription,85,0.5666666666666667,0.9871377743721863,-0.08184220108876403,0.08184220108876403,negative,4
+1,mode_01,top_absolute,Cellular Responses to Stress,,Cellular Responses to Stress,81,0.54,0.9953784388202257,-0.07995309511932348,0.07995309511932348,negative,5
+1,mode_01,top_absolute,Post-translational Protein Modification,,Post-translational Protein Modification,76,0.5066666666666667,0.999871756640849,-0.07968011017250319,0.07968011017250319,negative,6
+1,mode_01,top_absolute,Generic Transcription Pathway,,Generic Transcription Pathway,78,0.52,0.9988455359952018,-0.07927859286896133,0.07927859286896133,negative,7
+1,mode_01,top_absolute,Regulation of TP53 Activity,,Regulation of TP53 Activity,66,0.44,0.9895875212220556,-0.07853718598500573,0.07853718598500573,negative,8
+1,mode_01,top_absolute,Epigenetic Regulation of Gene Expression,,Epigenetic Regulation of Gene Expression,57,0.38,0.9580420222262995,-0.07807097572822402,0.07807097572822402,negative,9
+1,mode_01,top_absolute,SUMOylation of DNA Damage Response and Repair Proteins,,SUMOylation of DNA Damage Response and Repair Proteins,65,0.43333333333333335,0.9871377743721863,-0.07707750717219015,0.07707750717219015,negative,10
+1,mode_01,top_absolute,PTEN Regulation,,PTEN Regulation,56,0.37333333333333335,0.9531971725430559,-0.07675070858532645,0.07675070858532645,negative,11
+1,mode_01,top_absolute,Regulation of PTEN Gene Transcription,,Regulation of PTEN Gene Transcription,55,0.36666666666666664,0.9480782435939055,-0.07630209176841084,0.07630209176841084,negative,12
+1,mode_01,top_absolute,Cell Cycle,,Cell Cycle,78,0.52,0.9988455359952018,-0.07617998060781432,0.07617998060781432,negative,13
+1,mode_01,top_absolute,Cellular Responses to Stimuli,,Cellular Responses to Stimuli,85,0.5666666666666667,0.9871377743721863,-0.07576008738212107,0.07576008738212107,negative,14
+1,mode_01,top_absolute,Transcriptional Regulation by TP53,,Transcriptional Regulation by TP53,69,0.46,0.9953784388202257,-0.07518498074308826,0.07518498074308826,negative,15
+1,mode_01,top_absolute,Transcriptional Regulation by E2F6,,Transcriptional Regulation by E2F6,51,0.34,0.9248187049730301,-0.07495389069906337,0.07495389069906337,negative,16
+1,mode_01,top_absolute,"Cell Cycle, Mitotic",,"Cell Cycle, Mitotic",73,0.4866666666666667,0.9994869809508898,-0.07416775393813752,0.07416775393813752,negative,17
+1,mode_01,top_absolute,Chromatin Organization,,Chromatin Organization,52,0.3466666666666667,0.931055823385033,-0.07405868706102323,0.07405868706102323,negative,19
+1,mode_01,top_absolute,Chromatin Modifying Enzymes,,Chromatin Modifying Enzymes,52,0.3466666666666667,0.931055823385033,-0.07405868706102323,0.07405868706102323,negative,18
+1,mode_01,top_absolute,PIP3 Activates AKT Signaling,,PIP3 Activates AKT Signaling,71,0.47333333333333333,0.9979471932237238,-0.07282808222793609,0.07282808222793609,negative,20

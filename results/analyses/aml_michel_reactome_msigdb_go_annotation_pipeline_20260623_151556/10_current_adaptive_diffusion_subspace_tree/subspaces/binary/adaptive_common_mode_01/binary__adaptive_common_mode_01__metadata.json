@@ -1,0 +1,23 @@
+{
+  "run_id": "current__adaptive_diffusion_cosine_subspace__binary__adaptive_common_mode_01",
+  "method_version": "current",
+  "tree_geometry": "adaptive_diffusion_cosine_subspace",
+  "weighting": "binary",
+  "block_id": 0,
+  "block_name": "adaptive_common_mode_01",
+  "block_type": "common_mode",
+  "block_start": 1,
+  "block_end": 1,
+  "subspace_dimensions": 1,
+  "block_energy_fraction": 0.20322993642603207,
+  "segmentation_bic": -557.6921437384553,
+  "common_mode_isolated": true,
+  "subspace_dir": "results/analyses/aml_michel_reactome_msigdb_go_annotation_pipeline_20260623_151556/10_current_adaptive_diffusion_subspace_tree/subspaces/binary/adaptive_common_mode_01",
+  "spectral_block": {
+    "block_id": 0,
+    "block_name": "adaptive_common_mode_01",
+    "block_start": 1,
+    "block_end": 1,
+    "block_type": "common_mode"
+  }
+}

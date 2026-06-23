@@ -1,0 +1,42 @@
+top_go_id,top_term,is_obsolete,n_clusters,n_subspaces,min_q,median_lift,max_lift,total_hits,total_cluster_genes
+,Synthesis of PC,False,2,1,0.0001275030281969,8.823529411764707,8.823529411764707,7,7
+,IGF1R Signaling Cascade,False,1,1,9.269744481053548e-26,7.142857142857142,7.142857142857142,21,21
+,Mitotic Telophase Cytokinesis,False,1,1,3.4114402699555546e-17,4.838709677419355,4.838709677419355,20,20
+,Transport of Mature mRNA Derived From an Intron-Containing Transcript,False,1,1,5.274700157362683e-16,6.100478468899522,6.100478468899522,17,19
+,Epigenetic Regulation of Gene Expression,False,1,1,2.6280169022513756e-14,2.26438188494492,2.26438188494492,37,43
+,Interleukin-6 Family Signaling,False,1,1,1.4945624433650035e-10,5.769230769230769,5.769230769230769,12,26
+,CTNNB1 S45 Mutants Aren'T Phosphorylated,False,1,1,1.6228817206780792e-10,12.5,12.5,8,8
+,G2 M Transition,False,1,1,6.88030264209453e-10,2.5737817433081673,2.5737817433081673,25,47
+,Defective Pyroptosis,False,1,1,1.1747265866119487e-09,11.11111111111111,11.11111111111111,8,9
+,RAS Signaling Downstream of NF1 Loss-Of-Function Variants,False,1,1,1.3751528663121464e-08,6.198347107438016,6.198347107438016,10,22
+,Processive Synthesis on the C-strand of the Telomere,False,1,1,6.269071755036826e-07,7.720588235294118,7.720588235294118,7,8
+,Oxygen-dependent Proline Hydroxylation of Hypoxia-inducible Factor Alpha,False,1,1,1.0393826713659082e-06,25.0,25.0,4,4
+,SLBP Dependent Processing of Replication-Dependent Histone Pre-mRNAs,False,1,1,1.3165137188879557e-06,13.88888888888889,13.88888888888889,5,6
+,RNA Polymerase II Transcription Termination,False,1,1,1.3320555567523383e-06,8.333333333333334,8.333333333333334,6,6
+,Uptake and Function of Anthrax Toxins,False,1,1,2.548636479483476e-06,50.0,50.0,3,3
+,Downregulation of ERBB4 Signaling,False,1,1,8.270563838031725e-06,16.666666666666668,16.666666666666668,4,4
+,Class I Peroxisomal Membrane Protein Import,False,1,1,8.33140476741495e-06,37.5,37.5,3,3
+,mRNA 3'-End Processing,False,1,1,1.1928435861807902e-05,8.823529411764707,8.823529411764707,5,5
+,HCMV Late Events,False,1,1,1.9856240816488615e-05,30.0,30.0,3,3
+,CaMK IV-mediated Phosphorylation of CREB,False,1,1,3.3261390178281054e-05,30.0,30.0,3,5
+,Regulation of Lipid Metabolism by PPARalpha,False,1,1,3.430383690716889e-05,7.5,7.5,5,5
+,Recruitment of Mitotic Centrosome Proteins and Complexes,False,1,1,3.658721923999901e-05,11.538461538461538,11.538461538461538,4,4
+,Extra-nuclear Estrogen Signaling,False,1,1,4.066207971270352e-05,5.357142857142857,5.357142857142857,6,6
+,MECP2 Regulates Transcription of Neuronal Ligands,False,1,1,8.609087811959861e-05,10.0,10.0,4,4
+,Ras Activation Upon Ca2+ Influx Through NMDA Receptor,False,1,1,0.0001229124395192,18.75,18.75,3,3
+,APC C Cdc20 Mediated Degradation of Securin,False,1,1,0.0001400062224987,18.75,18.75,3,3
+,SCF-beta-TrCP Mediated Degradation of Emi1,False,1,1,0.0001916097244469,16.666666666666668,16.666666666666668,3,3
+,Epigenetic Regulation of Gene Expression by MLL3 and MLL4 Complexes,False,1,1,0.0002850526633325,5.0,5.0,5,5
+,RUNX1 Regulates Transcription of Genes Involved in Differentiation of HSCs,False,1,1,0.0003367041538182,13.636363636363637,13.636363636363637,3,3
+,DNA Methylation,False,1,1,0.000652321527119,12.5,12.5,3,4
+,Regulation of RUNX3 Expression and Activity,False,1,1,0.0007844478794013,6.25,6.25,5,12
+,TNF-alpha Signaling via NF-kB,False,1,1,0.0008475935690519,10.714285714285714,10.714285714285714,3,3
+,Formation of the Cornified Envelope,False,1,1,0.000913057282759,11.249999999999998,11.249999999999998,3,10
+,SUMOylation of Ubiquitinylation Proteins,False,1,1,0.0015994480336197,8.823529411764707,8.823529411764707,3,3
+,AKT Phosphorylates Targets in the Nucleus,False,1,1,0.0018825098514876,4.411764705882353,4.411764705882353,5,34
+,Leishmania Infection,False,1,1,0.0022360494213665,9.375,9.375,3,4
+,Integration of Provirus,False,1,1,0.0030031620327387,9.0,9.0,3,5
+,E3 Ubiquitin Ligases Ubiquitinate Target Proteins,False,1,1,0.0033826628565802,8.035714285714285,8.035714285714285,3,4
+,NoRC Negatively Regulates rRNA Expression,False,1,1,0.0038881647865476,4.166666666666667,4.166666666666667,5,10
+,RMTs Methylate Histone Arginines,False,1,1,0.0042664051089283,4.120879120879121,4.120879120879121,5,13
+,Protein-protein Interactions at Synapses,False,1,1,0.0099565788092926,4.444444444444445,4.444444444444445,4,27
