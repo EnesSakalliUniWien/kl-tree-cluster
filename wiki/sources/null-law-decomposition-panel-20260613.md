@@ -27,7 +27,7 @@ operator itself or by data-dependent projection selection.
 
 ## Key Points
 
-- The panel is diagnostic-only and does not change production KL-TE
+- The panel is diagnostic-only and does not change production Tree-Break Selection
   calibration.
 - The maintained `binary_2clusters` fixed-topology smoke with `20` replicates
   shows that same-sample adaptive projection has severely inflated tails:

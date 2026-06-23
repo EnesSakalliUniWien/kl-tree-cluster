@@ -23,16 +23,16 @@ tags:
 
 ## Summary
 
-This rerun separates current full-suite KL failures into hierarchy/metric,
+This rerun separates current full-suite TBS failures into hierarchy/metric,
 gate, calibration-support, covariance-boundary, oracle-matched, and solved
 buckets before any statistical change is considered. It uses the latest
-strict KL-only full benchmark, runs oracle tree recoverability only for the 85
-runnable KL rows, and keeps the 25 skipped rows as explicit contract outcomes
+strict TBS-only full benchmark, runs oracle tree recoverability only for the 85
+runnable TBS rows, and keeps the 25 skipped rows as explicit contract outcomes
 rather than imputing a partition.
 
 ## Key Points
 
-- The latest strict KL-only full benchmark has `110` cases: `85` `ok` rows and
+- The latest strict TBS-only full benchmark has `110` cases: `85` `ok` rows and
   `25` explicit skips.
 - Among the `85` runnable rows, oracle recoverability classification gives:
   `62` solved, `14` tree/metric unrecoverable, `4` oracle-matched below solved,
@@ -67,7 +67,7 @@ gate_under_split                   1
   alpha changes. They require hierarchy, metric, representation, or
   benchmark-construction analysis before changing statistics.
 - The `4` oracle-matched-below-solved rows also should not drive statistical
-  changes: KL already matches the best available exact-\(K\) tree cut within
+  changes: TBS already matches the best available exact-\(K\) tree cut within
   tolerance, but that tree cut is below the solved threshold.
 - Calibration-support undefined skips are a separate selected-hierarchy null
   problem. They require an admissible selected calibration support contract or
@@ -78,7 +78,7 @@ gate_under_split                   1
 - `benchmarks/results/run_20260601_173845Z_full/full_benchmark_comparison.csv`
   is the source benchmark with `85` `ok` rows and `25` skips.
 - `raw/assets/benchmark-results/hierarchy_gate_separation_20260603/oracle_ok_cases/oracle_tree_recoverability.csv`
-  records oracle recoverability for the runnable KL rows.
+  records oracle recoverability for the runnable TBS rows.
 - `raw/assets/benchmark-results/hierarchy_gate_separation_20260603/gate_path_trace_ok_cases/gate_path_trace_summary.csv`
   records the five gate-failure traces.
 - `raw/assets/benchmark-results/hierarchy_gate_separation_20260603/case_failure_separation.csv`

@@ -7,7 +7,7 @@ sources:
   - benchmarks/diagnostics/calibration/overlap_conditional_topology_law_panel.py
   - tests/validation/134_test_overlap_conditional_topology_law_panel.py
   - raw/inbox/c2ef-cosine-subspace-method-notes-20260615.md
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
   - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
   - benchmarks/shared/runners/method_registry.py
   - raw/assets/benchmark-results/overlap_structural_sibling_replicates_20260614/conditional_topology_law/overlap_conditional_topology_law_rows.csv

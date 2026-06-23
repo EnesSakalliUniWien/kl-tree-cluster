@@ -7,7 +7,7 @@ sources:
   - benchmarks/diagnostics/oracle/oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/gate_path_trace.py
   - benchmarks/diagnostics/calibration/sibling_inflation_diagnostic.py
-  - benchmarks/shared/kl_tree_context.py
+  - benchmarks/shared/tbs_tree_context.py
   - benchmarks/diagnostics/oracle/run_oracle_tree_recoverability.py
   - benchmarks/diagnostics/oracle/run_gate_path_trace.py
   - benchmarks/diagnostics/calibration/run_sibling_inflation_diagnostic.py
@@ -22,11 +22,11 @@ sources:
   - raw/assets/benchmark-results/edge_selection_null_audit_20260601/edge_selection_null_replicate_summary.csv
   - raw/assets/benchmark-results/sample_split_selection_audit_20260601/sample_split_selection_audit_summary.csv
   - raw/assets/benchmark-results/selected_hierarchy_null_audit_20260601/selected_hierarchy_null_audit_summary.csv
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/child_parent_edge_metadata.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
-  - kl_clustering_analysis/config.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
-  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/child_parent_edge_metadata.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
+  - tree_break_selection/config.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
 tags:
   - analysis
   - oracle
@@ -40,7 +40,7 @@ tags:
 ## Summary
 
 The oracle gate-path diagnostic separates two mathematical questions that were
-previously entangled. The first question is whether the fixed KL hierarchy
+previously entangled. The first question is whether the fixed TBS hierarchy
 contains a good subtree cut. The second question is whether the implemented
 statistical gates select that cut. The current evidence shows that the main
 active gate failures are not tree-construction failures: twelve full-benchmark
@@ -56,7 +56,7 @@ not different.
 
 ### Mathematical Object
 
-Let \(T=(V,E)\) be the rooted binary hierarchy built by the KL benchmark
+Let \(T=(V,E)\) be the rooted binary hierarchy built by the TBS benchmark
 runner for a case. Its leaves are the samples \(1,\ldots,n\), and the true
 labels are \(y_i\in\{1,\ldots,K\}\). A valid subtree cut \(C\subset V\) is a
 set of pairwise-disjoint nodes whose descendant leaf sets partition all leaves.
@@ -134,7 +134,7 @@ tree_unrecoverable              24
 ```
 
 The `oracle_matched_below_solved` class is important. These cases are not gate
-failures: the implemented KL cut matches the exact-\(K\) oracle within
+failures: the implemented TBS cut matches the exact-\(K\) oracle within
 tolerance, but both are below the solved ARI threshold. They should not drive
 gate changes. The `tree_unrecoverable` class also should not drive gate
 changes, because the current hierarchy does not contain a good exact-\(K\) cut.
@@ -143,7 +143,7 @@ The gate-path trace therefore targets twelve cases: five under-splits and seven
 over-splits. Their summaries are:
 
 ```text
-case_id                              class              KL ARI   oracle true-K ARI
+case_id                              class              TBS ARI   oracle true-K ARI
 gauss_extreme_noise_highd            under-split        0.0000   1.0000
 gauss_extreme_noise_highd_continuous under-split        0.0000   1.0000
 binary_balanced_low_noise            under-split        0.7054   0.9624
@@ -671,11 +671,11 @@ partition.
 - `benchmarks/diagnostics/calibration/run_tree_bh_selection_conditioned_sibling_null.py` runs the
   fixed-tree root Tree-BH edge-path diagnostic without fitting unsupported
   sibling calibration.
-- `benchmarks/shared/kl_tree_context.py` centralizes the benchmark KL tree
+- `benchmarks/shared/tbs_tree_context.py` centralizes the benchmark TBS tree
   construction contract so oracle and trace diagnostics use the same distance
   and linkage path.
 - `raw/assets/benchmark-results/oracle_tree_recoverability_20260524_155532Z/oracle_tree_recoverability.csv`
-  records the corrected five-way classification for the full KL benchmark.
+  records the corrected five-way classification for the full TBS benchmark.
 - `raw/assets/benchmark-results/gate_path_trace_20260524_155551Z/gate_path_trace.csv`
   records the node-level gate evidence for the twelve true gate/stopping
   failures.
@@ -711,17 +711,17 @@ partition.
   records the fixed-tree root Tree-BH selection diagnostic and the unsupported
   production calibration status for the two high-dimensional Gaussian
   blockers.
-- `kl_clustering_analysis/hierarchy_analysis/statistics/alpha_contract.py`
+- `tree_break_selection/hierarchy_analysis/statistics/alpha_contract.py`
   records the canonical statistical thresholds: `DEFAULT_EDGE_ALPHA = 0.001`
   and `DEFAULT_SIBLING_ALPHA = 0.01`.
-- `kl_clustering_analysis/config.py` records the runtime traversal option
+- `tree_break_selection/config.py` records the runtime traversal option
   `PASSTHROUGH = True`.
-- `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py`
+- `tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py`
   implements the split and pass-through gate logic described here.
 
 ## Links
 
-- [[kl-te-method]]
+- [[tree-break-selection]]
 - [[projected-wald-statistic]]
 - [[top-down-traversal]]
 - [[tree-decomposition]]

@@ -34,7 +34,7 @@ calibration or traversal rule.
 
 ## Key Points
 
-- The full KL-only diagnostic completed `110` ok cases and skipped `10` cases.
+- The full TBS-only diagnostic completed `110` ok cases and skipped `10` cases.
   Skips were the expected strict calibration-support or dense continuous
   covariance memory-contract failures.
 - The edge and sibling p-value fields are connected but not equivalent. Raw

@@ -53,7 +53,7 @@ production traversal profile. The panel verdict is
   best-case calculation reopens `579/716` selected-null direct positives
   (`0.808659`) while recovering only `388/861` signal direct positives
   (`0.450639`).
-- On full Julia, the prior old KL stack remains more fragmented than the
+- On full Julia, the prior old TBS stack remains more fragmented than the
   current conditional-topology diagnostic summary: `670` clusters with `648`
   singleton clusters versus `410` clusters with `312` singleton clusters.
   Their pairwise ARI is `0.062803` and NMI is `0.923045`.

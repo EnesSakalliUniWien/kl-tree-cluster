@@ -2,7 +2,7 @@
 title: Projected-Wald Statistic
 type: concept
 status: reviewed
-updated: 2026-06-14
+updated: 2026-06-23
 sources:
   - manuscript/guides/full_method_logic_map.md
   - manuscript/sections/method/edge_test.tex
@@ -15,7 +15,9 @@ sources:
   - benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py
   - benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py
   - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/fixed_subspace_annotation.py
+  - tests/statistics/44_test_fixed_coordinate_fdr_candidates.py
 tags:
   - method
   - statistics
@@ -32,10 +34,11 @@ with a chi-square reference under the fixed-subspace approximation.
 ## Details
 
 For edge tests, the raw child-parent contrast is standardized coordinatewise
-with the nested variance model. For sibling tests, the left-right contrast is
-standardized with the two-sample Bernoulli variance model. In both cases, the
-standardized vector is projected into parent-local spectral directions before
-summing squared projected coordinates.
+with the nested variance model, multiplied by a normalized branch-time variance
+factor. For sibling tests, the left-right contrast is standardized with the
+two-sample Bernoulli variance model multiplied by the sibling branch-time
+factor. In both cases, the standardized vector is projected into parent-local
+spectral directions before summing squared projected coordinates.
 
 The manuscript terminology distinguishes the implemented orthonormal
 projected-Wald reference from alternative whitening statistics. Eigenvalues
@@ -164,36 +167,37 @@ false root in the 73-replicate support run, leaving Wilson upper confidence at
 `root_stability_seed = 0`, the known binary null root is blocked by root
 stability, but the known `cat_clear_3cat_4c` null root still opens. A targeted
 99-draw selected-root permutation diagnostic blocks that categorical false root
-while retaining the matched signal. The concrete replacement candidate is
-therefore fixed coordinate BH sibling p-values plus selected-topology penalty
-plus root-stability guarding, with selected-root permutation as the next
-non-cross-fit layer to validate. Production remains fail-closed until broad
-confidence evidence or a derivation supports that selected-root layer.
+while retaining the matched signal. That result is evidence about where the
+selected root is fragile; it is not a proposed TBS runtime rule. The concrete
+non-resampling replacement candidate remains fixed coordinate BH sibling
+p-values plus selected-topology penalty plus root-stability guarding.
+Production remains fail-closed outside independently validated regimes.
 
-The selected-root permutation layer is now implemented as a default-off runtime
-guard for fixed-subspace sibling gates. It does not change the fixed
-coordinate/block/global sibling statistic. Instead, it conditions the root
+The selected-root permutation layer is implemented only as a default-off
+validation diagnostic for fixed-subspace sibling gates. It does not change the
+fixed coordinate/block/global sibling statistic. Instead, it conditions the root
 decision on a Monte-Carlo selected-tree null that preserves
 Bernoulli/categorical feature-block margins and reruns Hamming/average tree
 selection. A targeted profile replay closes the known `cat_clear_3cat_4c`
-null root and retains the matched signal, so the remaining projected-Wald
-issue is production validation of this selected-root null layer and supported
-tree domains, not the original same-sample adaptive PCA statistic.
+null root and retains the matched signal, so this evidence helps identify the
+selected-root failure mode; it should not be folded into the TBS method
+definition.
 
-The packaged non-cross-fit candidate is
+The packaged validation stress profile is
 `fixed_coordinate_selective_root_v1`: fixed coordinate BH replaces the
 same-sample adaptive sibling projection, selected-topology penalty `50`
 controls edge-selected traversal multiplicity, root-stability threshold `0.24`
 guards unstable selected roots, and the `99`-draw selected-root permutation
-guard conditions the remaining root decision on selected-tree null behavior.
-This is a named diagnostic profile, not a production default.
+diagnostic probes selected-tree null behavior. This is not a production default
+and not the non-resampling TBS runtime method.
 
-The newest rooting/null-sibling refinement is
+The newest rooting/null-sibling validation refinement is
 `fixed_coordinate_selective_passthrough_v1`. It keeps the fixed coordinate BH
-statistic and selected-root guard, but adds selected-subtree permutation only
-for descendant splits reached through an ordinary closed sibling ancestor. This
-targets the pass-through leak that root-only guarding misses without applying
-the broad `open_internal` guard to every internal signal split. In the
+statistic and selected-root diagnostic, but adds selected-subtree permutation
+only for descendant splits reached through an ordinary closed sibling ancestor.
+This targets the pass-through leak that root-only diagnostics miss without
+applying the broad `open_internal` diagnostic to every internal signal split. In
+the
 six-case two-replicate mixed smoke, the narrowed scope has zero observed null
 false splits, binary signal mean ARI `0.941101`, and categorical signal mean
 ARI `0.848463`; production remains fail-closed because the null confidence
@@ -202,6 +206,16 @@ the support requirement directly: with zero observed false splits, production
 confidence at a `0.05` Wilson upper-bound target requires `73` null replicates
 per case, so the current smoke needs `71` additional zero-false null replicates
 per case.
+
+The fixed-coordinate FDR reaction panel now makes the aggregation choice
+explicit. Plain coordinate BH reacts to repeated moderate coordinate evidence
+that Bonferroni, Holm, and BY leave closed, while BY is deliberately more
+conservative under arbitrary dependence. For dense categorical/block movement,
+coordinate BH and Simes-within-block/BH-over-blocks can both stay closed because
+no single coordinate is strong enough; a block chi-square p-value followed by
+BH over blocks opens the same synthetic block shift. This supports treating BH
+as one interpretable sparse-coordinate evidence channel, not the final FDR
+principle for all TBS regimes.
 
 The ten-replicate pass-through recheck shows that the local selected-subtree
 law is still too narrow. `binary_many_clusters`, null replicate `7`, selects a
@@ -283,7 +297,7 @@ categorical support evidence remains open.
 
 ## Links
 
-- [[kl-te-method]]
+- [[tree-break-selection]]
 - [[top-down-traversal]]
 - [[tree-decomposition]]
 - [[differential-statistic-validity-panel-20260613]]

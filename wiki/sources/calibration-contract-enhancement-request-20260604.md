@@ -16,7 +16,7 @@ tags:
 
 ## Summary
 
-This request reviews the active KL-TE calibration path and argues that the
+This request reviews the active Tree-Break Selection calibration path and argues that the
 method should preserve its fail-closed internal empirical-null contract while
 making calibration statuses explicit. It also identifies a manuscript mismatch:
 the production spectral basis uses descendant leaf rows only, while

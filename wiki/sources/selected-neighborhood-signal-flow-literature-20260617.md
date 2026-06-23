@@ -17,7 +17,7 @@ tags:
 
 ## Summary
 
-This literature capture connects KL-TE's selected-neighborhood development to
+This literature capture connects Tree-Break Selection's selected-neighborhood development to
 two nearby but distinct mathematical lines. Selective inference and multiscale
 bootstrap support the fail-closed rule for algorithm-selected roots and
 clusters. Diffusion maps, tree wavelets, and treelets support the use of local
@@ -35,20 +35,20 @@ an unconditional p-value rescue.
   tail.
 - The Suzuki-Shimodaira pvclust and Terada-Shimodaira selected-region line
   treats selected hypotheses through multiscale geometry. Its scale coordinate
-  is bootstrap sample size and region curvature; KL-TE's scale coordinates are
+  is bootstrap sample size and region curvature; Tree-Break Selection's scale coordinates are
   selected tree topology, spectral state, and traversal neighborhood.
 - Diffusion maps interpret a kernel graph through a Markov/diffusion operator.
-  For KL-TE, this makes \(\tau\) a locality/diffusion scale and makes slow
+  For Tree-Break Selection, this makes \(\tau\) a locality/diffusion scale and makes slow
   eigenvectors plausible coherent support coordinates, not automatic split
   evidence.
 - Multiscale wavelets on trees and treelets show why tree coarsening can keep
   coherent low-frequency signal while attenuating high-frequency local
-  artifacts. For KL-TE, this supports treating internal-node or barycentric
+  artifacts. For Tree-Break Selection, this supports treating internal-node or barycentric
   distributions as tree filters.
 - Internal-node information is dependent on the leaves. It can improve signal
   localization, but it must not be counted as extra independent rows in a
   Marchenko--Pastur or selected-tail calibration.
-- The safe KL-TE object is therefore a support-gated conditional tail:
+- The safe Tree-Break Selection object is therefore a support-gated conditional tail:
   \[
   \Pr_0\{S_{H_u}\ge s_u \mid
   R_{\mathrm{root}},G_u,T_u,A_u,E_u,B_u,H_u,\mathcal N_\tau(u)\}.
@@ -59,7 +59,7 @@ an unconditional p-value rescue.
 ## Evidence
 
 - `raw/inbox/selected-neighborhood-signal-flow-literature-20260617.md`
-  records the source list and KL-TE relationship.
+  records the source list and Tree-Break Selection relationship.
 - [Gao, Bien, and Witten, 2024](https://arxiv.org/abs/2012.02936) motivate
   selective inference after hierarchical clustering.
 - [Suzuki and Shimodaira, 2006](https://academic.oup.com/bioinformatics/article/22/12/1540/207339)

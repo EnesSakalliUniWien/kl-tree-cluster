@@ -35,16 +35,16 @@ regenerated with the corrected analyzer.
 
 ## Key Points
 
-- Corrected KL root outcome over `92` ok rows: `79` root-accepted rows have
+- Corrected TBS root outcome over `92` ok rows: `79` root-accepted rows have
   mean ARI `0.901264`, while `13` root-rejected rows have mean ARI `0.307692`.
-- The low-ARI KL rows are not all root-rejection cases. Nine low-ARI rows are
+- The low-ARI TBS rows are not all root-rejection cases. Nine low-ARI rows are
   root rejections, but four low-ARI rows have accepted root splits and then
   stall below the root: `dim_consolidated_4c_72f`,
   `dim_consolidated_4c_272f`, `dim_diffuse_6c_536f`, and `sbm_moderate`.
 - In those four post-root stall rows, deeper sibling split rate is `0.0` even
   though median deeper edge action remains `2.0`. This points to a recursive
   sibling calibration/traversal failure, not a root-edge failure.
-- The skip profile is unchanged: `92` KL rows are ok, while `28` fail closed,
+- The skip profile is unchanged: `92` TBS rows are ok, while `28` fail closed,
   mostly due to missing strict-null or stopped-edge sibling calibration
   support; two dense continuous cases hit explicit covariance contracts.
 - The aligned `k_min=2` mixed null/signal panel remains the right companion

@@ -14,7 +14,7 @@ sources:
   - benchmarks/diagnostics/spectral/covariance_axis_stability.py
   - benchmarks/cloud/aws_kak_lens_linkage_alpha_sweep.py
   - benchmarks/cloud/aws_tree_strategy_semantic_panel.py
-  - kl_clustering_analysis/plot/cluster_tree_visualization.py
+  - tree_break_selection/plot/cluster_tree_visualization.py
   - tests/validation/82_test_aws_kak_lens_linkage_alpha_sweep.py
   - tests/validation/83_test_covariance_axis_stability.py
   - tests/validation/84_test_kak_lens_feature_axis_clustering.py
@@ -186,7 +186,7 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
   overlaps with reference labels without validating a stable selected-tree
   clustering rule.
 - The same-label comparison against historical full-matrix methods shows why
-  NMI alone is misleading. The current KL gate has NMI `0.633958`, similar to
+  NMI alone is misleading. The current TBS gate has NMI `0.633958`, similar to
   the top KAK block, but it creates `670` clusters and has ARI `0.001812`.
   The top-NMI KAK block creates `650` clusters and has ARI `0.002297`.
 - By ARI, fixed diffusion with gates is the best recreated comparator on the
@@ -199,7 +199,7 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
   comparators but still below fixed diffusion and paper cosine complete by
   adjusted overlap.
 - A separated-space diffusion follow-up ran a k-NN Gaussian diffusion operator
-  inside each adaptive cosine/KAK block, then ran the normal KL-TE gates on the
+  inside each adaptive cosine/KAK block, then ran the normal Tree-Break Selection gates on the
   original Julia GO feature matrix. It produced `12` ok rows and `3`
   calibration-support fail-closed rows. The best row was
   `binary__adaptive_modes_02_05` with `153` clusters, singleton fraction
@@ -316,7 +316,7 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
   diffusion lenses are excluded from this exact map because their coordinates
   are nonlinear overlays.
 - The first feature-axis clustering run mapped raw KAK binary `10-15` and raw
-  KAK TF-IDF `14-30` to features, then clustered with the usual KL-TE gate
+  KAK TF-IDF `14-30` to features, then clustered with the usual Tree-Break Selection gate
   path. Binary `10-15` reproduced the useful `101`-cluster lens with singleton
   fraction `0.022760`; TF-IDF `14-30` produced `311` clusters and singleton
   fraction `0.220484`. For both lenses, the top common-to-variant feature
@@ -385,7 +385,7 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
 - A feature-side KAK subspace diagnostic was added to correct the previously
   gene-side-only interpretation. It treats matrix columns as leaves, embeds
   binary GO features in each raw KAK block as `Q_B sqrt(Lambda_B)`, and then
-  attempts the normal KL-TE gate path on those feature coordinates using an
+  attempts the normal Tree-Break Selection gate path on those feature coordinates using an
   explicit continuous feature-space contract. On the Julia binary matrix,
   all `8` adaptive blocks wrote feature coordinates but failed closed in the
   gate layer (`zero-dimensional spectral context` or no positive active PCA

@@ -38,7 +38,7 @@ has nonzero \(S_{H_u}\).
 ## Key Points
 
 - The five-target tiny smoke generated `5` target-conditioned external-null
-  candidates and all `5` completed KL replay.
+  candidates and all `5` completed TBS replay.
 - None of the `5` candidates hit the target pre-topology stratum
   \((C,T,A,E)\).
 - After topology and \(H_u\) joining, `1/5` target rows had same-tail-stratum

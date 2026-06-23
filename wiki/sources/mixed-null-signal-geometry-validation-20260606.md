@@ -44,7 +44,7 @@ or traversal rule.
 
 ## Key Points
 
-- The full run completed `110` ok KL cases and `10` expected skips. Skips were
+- The full run completed `110` ok TBS cases and `10` expected skips. Skips were
   the same strict calibration-support or dense continuous covariance contract
   failures seen in the recursive p-value geometry run.
 - The full labeled panel contains `26369` binary sibling contexts:

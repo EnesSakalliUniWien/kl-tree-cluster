@@ -10,10 +10,10 @@ sources:
   - benchmarks/results/diagnostics/spectral_backend_profile_after_diagonal_vectorization_20260526.csv
   - benchmarks/results/diagnostics/spectral_backend_profile_broader_after_diagonal_vectorization_20260526.csv
   - benchmarks/results/diagnostics/spectral_backend_profile_after_grouped_categorical_20260526.csv
-  - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/decomposition.py
+  - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
+  - tree_break_selection/hierarchy_analysis/decomposition/backends/eigen/decomposition.py
 tags:
   - method
   - spectral
@@ -24,7 +24,7 @@ tags:
 
 ## Summary
 
-The main KL spectral runtime bottleneck was not SciPy eigendecomposition. On
+The main TBS spectral runtime bottleneck was not SciPy eigendecomposition. On
 representative slow cases, eigensolves on already materialized node-local
 matrices took milliseconds. Runtime was dominated by repeated construction of
 null-whitened tangent matrices.
@@ -61,7 +61,7 @@ not change the mathematical map: it computes
   +\epsilon I .
 \]
 A production A/B comparison against the generic block loop produced identical
-KL result rows on selected categorical and phylogenetic cases. The post-change
+TBS result rows on selected categorical and phylogenetic cases. The post-change
 profile reduced `cat_highd_3cat_500feat` from about 14.86 s to 0.31 s,
 `phylo_dna_16taxa_low_mut` from about 21.83 s to 0.46 s, and
 `phylo_large_32taxa` from about 27.32 s to 0.70 s in the spectral worker.

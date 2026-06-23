@@ -32,7 +32,7 @@ calibration fallback and it does not change production inference.
 Build the container:
 
 ```bash
-docker build -f benchmarks/cloud/aws/Dockerfile -t kl-te-selected-tail:latest .
+docker build -f benchmarks/cloud/aws/Dockerfile -t tree-break-selection-selected-tail:latest .
 ```
 
 Run one local shard for smoke testing:

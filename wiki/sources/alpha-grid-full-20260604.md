@@ -21,7 +21,7 @@ tags:
 ## Summary
 
 This AWS Batch diagnostic swept `25` edge/sibling alpha pairs over the full
-`110`-case KL benchmark suite. The run used five edge alpha values
+`110`-case TBS benchmark suite. The run used five edge alpha values
 `0.0001`, `0.0003`, `0.001`, `0.003`, and `0.01`, crossed with five sibling
 alpha values `0.001`, `0.003`, `0.01`, `0.03`, and `0.1`. The merged output
 contains `2,750` result rows: `2,055` completed rows and `695` strict skip

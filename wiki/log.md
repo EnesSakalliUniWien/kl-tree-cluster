@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-19
+updated: 2026-06-23
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -30,7 +30,7 @@ verification, and maintenance events here in chronological order.
   `make wiki-lint` validation path.
 - Captured the wiki construction brief in `raw/inbox/` and summarized it as
   [[wiki-construction-brief]].
-- Seeded project and method pages: [[project-overview]], [[kl-te-method]],
+- Seeded project and method pages: [[project-overview]], [[tree-break-selection]],
   [[poset-tree]], [[tree-decomposition]], [[projected-wald-statistic]], and
   [[top-down-traversal]].
 - Recorded wiki design references in [[github-wiki-structure-research]].
@@ -38,7 +38,7 @@ verification, and maintenance events here in chronological order.
   [[markdown-validation]].
 - Added [[oracle-gate-path-diagnostic]] to record the mathematical
   recoverability oracle, corrected failure classes, gate-path trace evidence,
-  and method implications from the current full KL benchmark diagnostics.
+  and method implications from the current full TBS benchmark diagnostics.
 - Updated [[oracle-gate-path-diagnostic]] with the sibling-inflation follow-up:
   leave-one-out inflation still blocks the high-dimensional binary Gaussian
   case, the continuous Gaussian case lacks positive calibration support, and
@@ -96,7 +96,7 @@ verification, and maintenance events here in chronological order.
   tests, benchmark docs, and the oracle gate-path wiki evidence paths without
   keeping old-path compatibility wrappers.
 - Removed local workspace clutter from the repository root by moving large
-  ignored artifacts to `/Users/berksakalli/Projects/kl-te-cluster-local-artifacts`
+  ignored artifacts to `/Users/berksakalli/Projects/tree-break-selection-local-artifacts`
   and deleting cache/build products. Promoted only the small benchmark CSV/MD
   files cited by wiki or diagnostic notes into `raw/assets/benchmark-results/`
   so evidence paths remain durable without restoring `benchmarks/results/`.
@@ -135,14 +135,14 @@ verification, and maintenance events here in chronological order.
   selection-aware MP calibration as an open research question rather than a
   production fallback.
 - Added benchmark case-suite selection by mathematical input contract. The
-  full runner now accepts `KL_TE_CASE_SUITE` with `binary`, `categorical`,
+  full runner now accepts `TBS_CASE_SUITE` with `binary`, `categorical`,
   `continuous`, `discretized_gaussian`, `graph`, or `full`, so native Bernoulli
   results can be interpreted separately from experimental continuous
   empirical-Gaussian results and historical discretized-Gaussian stress cases.
 - Systematized generated benchmark metadata: every generated case now names a
   `source_family` and a `feature_representation`, and generator dispatch uses a
   single registry instead of a long conditional chain. This separates the
-  stochastic source process from the matrix representation consumed by KL-TE;
+  stochastic source process from the matrix representation consumed by Tree-Break Selection;
   benchmark result rows preserve both fields.
 - Split benchmark case-data generation by family while preserving
   `generate_case_data()` as the stable dispatch entry point. The continuous
@@ -159,7 +159,7 @@ verification, and maintenance events here in chronological order.
   active execution order: full runner orchestration, optional subprocess
   isolation, shared one-case pipeline, generated-data validation, method
   dispatch, result-row construction, and report assembly. The page also records
-  the strict precomputed KL tree-distance contract.
+  the strict precomputed TBS tree-distance contract.
 - Moved standalone benchmark experiments under `benchmarks/experiments/`, moved
   the subset and regression runners under `benchmarks/smoke/` and
   `benchmarks/regression/`, split active MP diagnostics into
@@ -237,9 +237,9 @@ verification, and maintenance events here in chronological order.
   error for oversized \(p \gg n\) continuous blocks instead of allowing the
   process to be killed by scatter-matrix allocation. The 2026-06-01 full
   benchmark completed with plots disabled after the 20,000-feature continuous
-  stress case was recorded as an explicit KL skip; a validated low-rank or
+  stress case was recorded as an explicit TBS skip; a validated low-rank or
   regularized continuous covariance model remains open.
-- Corrected manuscript and wiki method text that still described KL-TE as a
+- Corrected manuscript and wiki method text that still described Tree-Break Selection as a
   discrete-only or discretize-continuous pipeline. The manuscript now describes
   the active typed feature-space contract: Bernoulli coordinates, categorical
   one-hot blocks with drop-last multinomial covariance, and explicit continuous
@@ -266,7 +266,7 @@ verification, and maintenance events here in chronological order.
   floor fallback. Updated [[local-marchenko-pastur-rule]],
   [[selected-pca-projected-wald-validation]], and
   [[open-mathematical-questions]] with the benchmark reaction.
-- Ran the full KL-only benchmark with plots and relationship analysis disabled
+- Ran the full TBS-only benchmark with plots and relationship analysis disabled
   under the leaf-only spectral contract. The run completed 110 cases with 85
   `ok` rows, 25 explicit `skip` rows, valid-row mean ARI `0.8612`, valid-row
   median ARI `1.0`, and exact \(K\) in 63 of 110 rows. The full CSV and failure
@@ -281,7 +281,7 @@ verification, and maintenance events here in chronological order.
   Added [[edge-selection-null-audit-20260601]] and updated
   [[oracle-gate-path-diagnostic]] and [[open-mathematical-questions]].
 - Added `benchmarks/diagnostics/calibration/sample_split_selection_audit.py`.
-  The script explicitly rejects literal sample splitting because KL-TE uses a
+  The script explicitly rejects literal sample splitting because Tree-Break Selection uses a
   sample-leaf hierarchy and held-out samples have no canonical training-tree
   node membership. It implements the valid feature-split cross-fit diagnostic:
   build the tree from one feature block, test gates on a held-out feature block,
@@ -438,7 +438,7 @@ verification, and maintenance events here in chronological order.
   strongly tied to node size/aspect ratio, and `cat_highd_3cat_500feat` mixes
   root/half-tree extremes with many tiny selected extreme nodes.
 - Added [[hierarchy-gate-separation-20260603]] after rerunning oracle
-  recoverability on the `85` runnable rows from the latest strict KL-only full
+  recoverability on the `85` runnable rows from the latest strict TBS-only full
   benchmark and tracing the five runnable gate failures. The current full
   separation is `62` solved, `24` calibration-support-undefined skips, `14`
   tree/metric unrecoverable rows, `4` gate over-splits, `4`
@@ -583,7 +583,7 @@ verification, and maintenance events here in chronological order.
   cannot undercount independent regenerations by reusing local replicate
   indices.
 - Deployed the AWS Batch selected-tail stack in account `067744548702`, pushed
-  `067744548702.dkr.ecr.us-east-1.amazonaws.com/kl-te-selected-tail:latest`,
+  `067744548702.dkr.ecr.us-east-1.amazonaws.com/tree-break-selection-selected-tail:latest`,
   ran a successful one-shard smoke job, then ran the 20-shard selected-tail
   cloud diagnostic and merge job. Synced compact merged outputs into
   `raw/assets/benchmark-results/selected_tail_equation_cloud_run_20260603_1000/`
@@ -592,7 +592,7 @@ verification, and maintenance events here in chronological order.
   `local_deployment_context.json` because the container did not include `.git`
   and therefore could not record commit/branch inside its generated manifest.
 - Rebuilt and pushed the AWS Batch image after adding explicit
-  `KL_TE_GIT_COMMIT` and `KL_TE_GIT_BRANCH` build arguments plus `.dockerignore`
+  `TBS_GIT_COMMIT` and `TBS_GIT_BRANCH` build arguments plus `.dockerignore`
   pruning. The post-run rebuilt smoke job
   `5d72447b-9921-4163-8249-df4b922f912a` succeeded and its shard manifest
   records `build_commit=a61f1cfe81ded8923b4f11cc16697036f0ed6220` and
@@ -621,7 +621,7 @@ verification, and maintenance events here in chronological order.
 - Debugged benchmark creation and representation contracts. A generation audit
   over the 110 default cases found no case-recipe geometry, label-length,
   value-domain, forwarded-representation, or precomputed-distance metadata
-  mismatch. The actual skew was method compatibility: `kl_diffusion` used
+  mismatch. The actual skew was method compatibility: `tbs_diffusion` used
   Hamming diffusion on continuous float matrices and could return `ok` rows
   with meaningless ARI. The Hamming diffusion runner now rejects continuous
   `FeatureSpace` inputs and non-binary values, and the full-run console summary
@@ -642,16 +642,16 @@ verification, and maintenance events here in chronological order.
   `tests/validation/60_test_sibling_null_prior_interpolation_audit.py` and
   wrote compact outputs under
   `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_20260604/`.
-- Ran the same interpolation audit over the 24 KL calibration-support skips
+- Ran the same interpolation audit over the 24 TBS calibration-support skips
   from the complete `run_20260604_115308Z_full` benchmark. All 24 remain
   `no_strict_internal_support`; 23 receive positive diagnostic interpolated
   selected-nonnull weights, while `gauss_extreme_noise_highd` receives none.
   Recorded outputs under
   `raw/assets/benchmark-results/sibling_null_prior_interpolation_audit_full_skips_20260604/`.
 - Removed statistical alpha thresholds from mutable `config.py` and introduced
-  `kl_clustering_analysis/hierarchy_analysis/statistics/alpha_contract.py` as
+  `tree_break_selection/hierarchy_analysis/statistics/alpha_contract.py` as
   the canonical source for `DEFAULT_EDGE_ALPHA = 0.001` and
-  `DEFAULT_SIBLING_ALPHA = 0.01`. Benchmark KL rows now record both alpha
+  `DEFAULT_SIBLING_ALPHA = 0.01`. Benchmark TBS rows now record both alpha
   values in their parameter contract, and decomposition output reports both
   edge and sibling alpha values.
 - Removed the disabled branch-length variance-scaling config path from the
@@ -767,7 +767,7 @@ verification, and maintenance events here in chronological order.
   [[full-benchmark-run-20260605]]. The run completed `120` cases and `9`
   methods with `1080` result rows in
   `benchmarks/results/run_20260605_084136Z_full/`. Added generator geometry
-  coverage for the method-proof cases, a `KL_TE_RUN_DIR` resume/report
+  coverage for the method-proof cases, a `TBS_RUN_DIR` resume/report
   override for the full runner, and a `method_proof` report section so the
   completed CSV could be post-processed into relationship, failure, and PDF
   reports.
@@ -887,9 +887,9 @@ verification, and maintenance events here in chronological order.
   The run completed `120` cases and `1080` method rows in
   `benchmarks/results/run_20260605_224254Z_full_big/`, with plots,
   relationship analysis, failure diagnosis, and a merged PDF report. The mean
-  ARI leaderboard and KL skip profile match the previous full run: `kmeans`
-  leads ok-row mean ARI, `kl` has `92` ok rows and `28` strict-support or dense
-  covariance skips, and low-ARI ok `kl` rows are dominated by root-rejection
+  ARI leaderboard and TBS skip profile match the previous full run: `kmeans`
+  leads ok-row mean ARI, `tbs` has `92` ok rows and `28` strict-support or dense
+  covariance skips, and low-ARI ok `tbs` rows are dominated by root-rejection
   under-splits.
 - Added [[path-conditioned-barycentric-action-diagnostics-20260606]] after
   implementing cached-output diagnostics for the path-conditioned barycentric
@@ -921,7 +921,7 @@ verification, and maintenance events here in chronological order.
   guard remains net-positive once delaying a mixed context costs `3x` or more
   than preventing a pure fragment.
 - Added [[phase1-path-b-foundation-20260606]] after implementing
-  `benchmarks/diagnostics/path_b/phase1_path_b_foundation.py`. The full KL-only
+  `benchmarks/diagnostics/path_b/phase1_path_b_foundation.py`. The full TBS-only
   Phase 1 Path B sweep wrote `960` rows over `k_min in {0,1,2,3}` crossed with
   pass-through on/off. The penalized full-suite optimum is `k_min=1` with
   pass-through enabled: penalized mean ARI `0.728301`, ok-row mean ARI
@@ -931,7 +931,7 @@ verification, and maintenance events here in chronological order.
   `0.260780` versus the no-spectral baseline.
 - Added [[recursive-pvalue-geometry-20260606]] after implementing
   `benchmarks/diagnostics/path_b/recursive_pvalue_geometry.py`. The full
-  recursive p-value geometry diagnostic completed `110` ok KL cases and `10`
+  recursive p-value geometry diagnostic completed `110` ok TBS cases and `10`
   expected skips. It found connected but asymmetric p-value fields: raw
   edge-vs-parent-sibling coupling `0.392907`, raw recursive sibling continuity
   `0.443386`, raw subspace-rotation-vs-gap coupling `0.254220`, and
@@ -941,7 +941,7 @@ verification, and maintenance events here in chronological order.
   must remain separate equations.
 - Added [[mixed-null-signal-geometry-validation-20260606]] after implementing
   `benchmarks/diagnostics/path_b/mixed_null_signal_geometry_validation.py`.
-  The full labeled panel completed `110` ok KL cases with `26369` sibling
+  The full labeled panel completed `110` ok TBS cases with `26369` sibling
   contexts: `22599` `null_context`, `2366` `mixed_context`, and `1404`
   `signal_context`. Corrected sibling splitting is conservative on clean
   truth-null contexts (`0.002611`) but weak on truth-signal contexts
@@ -962,18 +962,18 @@ verification, and maintenance events here in chronological order.
   the edge/sibling/KAK relationship as a continuous diagnostic surface before
   any threshold guard or production calibration rule.
 - Added [[diagnostic-framework-github-scan-20260606]] after scanning GitHub for
-  analytical and machine learning frameworks that could strengthen KL-TE
+  analytical and machine learning frameworks that could strengthen Tree-Break Selection
   calibration diagnostics. No open GitHub issues or PRs were found in the
   project remote for calibration, selected-tail, KAK, FDR, or sibling search
   terms. The useful framework stack is selective-inference formalization,
   simulation-based inference for amortized selected-tail diagnostics, conformal
   risk control for held-out guards, and calibration/observability tooling for
   monitoring and interpretation.
-- Debugged KL clustering failure attribution and added
+- Debugged TBS clustering failure attribution and added
   [[clustering-root-audit-debug-20260606]]. The root sibling decision is stored
   on the root audit row, so the failure and relationship analyzers now read the
   root row instead of root children. Corrected artifacts show `79` accepted-root
-  ok KL rows with mean ARI `0.901264`, `13` rejected-root rows with mean ARI
+  ok TBS rows with mean ARI `0.901264`, `13` rejected-root rows with mean ARI
   `0.307692`, and four low-ARI accepted-root post-root sibling traversal
   stalls where deeper sibling split rate is `0.0` despite persistent edge
   action.
@@ -985,7 +985,7 @@ verification, and maintenance events here in chronological order.
   analyzer fix. The refreshed `benchmark_relationship_*` artifacts,
   `failure_report.md`, `benchmark_relationship_plots.pdf`, and
   `full_benchmark_report.pdf` now use the root-row sibling decision. The
-  canonical low-ARI KL diagnosis now separates nine true root rejections from
+  canonical low-ARI TBS diagnosis now separates nine true root rejections from
   four accepted-root post-root sibling traversal stalls.
 
 ### 2026-06-10
@@ -1011,7 +1011,7 @@ verification, and maintenance events here in chronological order.
   current gate-annotation bundle path. Against the same `262` saved Julia
   reference-label matches, fixed diffusion with gates led the recreated
   comparators by ARI (`0.062392`, `54` clusters), followed by paper cosine
-  complete `K=20` (`0.058671`, `20` clusters). The high-NMI KAK/KL gate rows
+  complete `K=20` (`0.058671`, `20` clusters). The high-NMI KAK/TBS gate rows
   were near-zero ARI because they split the `703` genes into roughly `650` to
   `670` clusters. The comparison artifacts are under
   `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/09_full_data_method_reference_comparison_20260610/`.
@@ -1111,7 +1111,7 @@ verification, and maintenance events here in chronological order.
   and `tests/validation/84_test_kak_lens_feature_axis_clustering.py` to map
   raw KAK/cosine lens axes back to GO feature loadings using
   \(q_j = Z^T u_j / \sqrt{\lambda_j}\), then cluster genes through the normal
-  KL-TE gate path. The diagnostic intentionally accepts only `raw_kak` lenses;
+  Tree-Break Selection gate path. The diagnostic intentionally accepts only `raw_kak` lenses;
   separated diffusion lenses need separate nonlinear attribution. The Julia
   run under
   `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/20_kak_lens_feature_axis_clustering_20260612/`
@@ -1136,7 +1136,7 @@ verification, and maintenance events here in chronological order.
   fragmentation-lens rows, and `1` coarse baseline row. AWS submission was not
   completed because the local AWS CLI could not reach the AWS sign-in endpoint.
 - Corrected the main rectangular tree renderer in
-  `kl_clustering_analysis/plot/cluster_tree_visualization.py` to draw routed
+  `tree_break_selection/plot/cluster_tree_visualization.py` to draw routed
   elbow edges instead of straight parent-child diagonals. The crossing-edge
   artifact was a visualization routing problem in deep unbalanced trees, not a
   graph or clustering change. The Plotly subembedding white lines were
@@ -1300,8 +1300,8 @@ verification, and maintenance events here in chronological order.
   documentation and publication references. The note is relational, not a
   direct comparator: TooManyCells is recorded as a tree-first divisive
   hierarchical spectral clustering method with Newman-Girvan modularity
-  stopping. It is not a repair for the current KL-TE projected-Wald null law and
-  not a proposed replacement for the KL-TE gate.
+  stopping. It is not a repair for the current Tree-Break Selection projected-Wald null law and
+  not a proposed replacement for the Tree-Break Selection gate.
 - Added `benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py`,
   `tests/validation/99_test_data_independent_sibling_gate_panel.py`,
   `raw/inbox/data-independent-sibling-gate-smoke-20260613.md`, and
@@ -1437,7 +1437,7 @@ verification, and maintenance events here in chronological order.
   production-ready without broader generalization or threshold derivation.
 - Added a relational TooManyCells check and broader fixed-gate stress probes.
   TooManyCells is recorded only as a tree-first divisive spectral reference
-  with Newman-Girvan modularity stopping, not as a direct KL-TE comparator. The
+  with Newman-Girvan modularity stopping, not as a direct Tree-Break Selection comparator. The
   full supported traversal surface contains 42 binary-template and 11 direct
   categorical-multinomial cases, but all-surface inline runs need checkpointed
   output before they are practical. Three-replicate targeted probes with the
@@ -1509,8 +1509,8 @@ verification, and maintenance events here in chronological order.
   verify profile resolution, conflict detection, avoidance of parent-PCA
   sibling inputs, and recomputation when a cached adaptive bundle is reused
   under a fixed profile request.
-- Wired fixed sibling-gate profiles through the shared KL benchmark runner.
-  `_run_kl_method` and `_run_kl_on_distance` now forward profile/fixed-gate
+- Wired fixed sibling-gate profiles through the shared TBS benchmark runner.
+  `_run_tbs_method` and `_run_tbs_on_distance` now forward profile/fixed-gate
   settings into gate annotation and decomposition and record them in
   `MethodRunResult.extra`. Added a runner regression for
   `fixed_global_guarded_v1`. The method-constants manifest now includes the
@@ -1525,14 +1525,14 @@ verification, and maintenance events here in chronological order.
   `tests/validation/101_test_fixed_sibling_gate_profile_validation.py`,
   `raw/inbox/fixed-sibling-gate-profile-validation-20260613.md`, and
   [[fixed-sibling-gate-profile-validation-20260613]]. The panel validates named
-  fixed sibling-gate profiles through the shared KL runner, records whether
+  fixed sibling-gate profiles through the shared TBS runner, records whether
   adaptive projected-Wald sibling rows were avoided, writes method-constant
   evidence fields, and emits conservative production-admissibility components.
   TooManyCells remains relational context only, not a direct comparator.
 - Fixed the production-facing root-stability guard replay contract. The guard
   now records root replay distance metric and linkage method in gate config
   metadata and recomputes feature-subsample roots with the same Hamming/average
-  contract used by the shared KL fixed-profile runner, instead of falling back
+  contract used by the shared TBS fixed-profile runner, instead of falling back
   to default Euclidean linkage replay. Focused tests cover metadata propagation,
   cache invalidation, runner extras, and profile-validation output columns.
 - Aligned the data-independent sibling-gate traversal diagnostic with the same
@@ -1592,7 +1592,7 @@ verification, and maintenance events here in chronological order.
   `projected_wald_inflation`, because the same-sample adaptive PCA statistic is
   the invalid layer being avoided.
 - Threaded the guard through `run_gate_annotation_pipeline`,
-  `TreeDecomposition`, shared KL runner extras, gate annotation cache metadata,
+  `TreeDecomposition`, shared TBS runner extras, gate annotation cache metadata,
   fixed-profile validation rows, summaries, method-constant evidence fields,
   and validation tests. Added method-constant targets for
   `root_selective_permutation_guard_replicates` and
@@ -1615,7 +1615,7 @@ verification, and maintenance events here in chronological order.
   `0.24`, `12` stability subsamples, feature fraction `0.8`, selected-root
   permutation replicates `99`, seed `0`, and guard alpha `0.01`. Existing
   guarded profiles keep selected-root permutation disabled by default but still
-  accept explicit guard settings for targeted replay. The shared KL runner now
+  accept explicit guard settings for targeted replay. The shared TBS runner now
   records resolved profile settings in `MethodRunResult.extra`, so validation
   artifacts report the actual method constants that ran.
 - Updated fixed-profile method-constant evidence to use resolved profile
@@ -1737,14 +1737,14 @@ verification, and maintenance events here in chronological order.
   [[root-selection-literature-20260614]] after a literature check on root
   selection, hierarchical-clustering significance, TooManyCells, divisive
   high-dimensional split objectives, phylogenetic rooting, and trajectory-root
-  orientation. The synthesis separates KL-TE's selected all-sample root split
+  orientation. The synthesis separates Tree-Break Selection's selected all-sample root split
   from biological or phylogenetic root orientation and records that the current
   method issue is selected-root/traversal null validity, not optimizing a free
   high-dimensional root point.
 - Added `raw/inbox/selected-root-selected-family-traversal-literature-20260614.md`
   and [[selected-root-selected-family-traversal-literature-20260614]] after a
   focused literature check for the selected-root/selected-family traversal null
-  law. The synthesis records that no exact KL-TE law was found, but the closest
+  law. The synthesis records that no exact Tree-Break Selection law was found, but the closest
   technical relatives are selective inference after hierarchical clustering,
   selective inference on multiple selected families, hierarchical FDR/FWER,
   TreeScan and scan-statistic max tests, and cluster-based permutation
@@ -1763,7 +1763,7 @@ verification, and maintenance events here in chronological order.
 - Added
   `benchmarks/diagnostics/calibration/selected_family_traversal_panel.py`,
   `tests/validation/102_test_selected_family_traversal_panel.py`, and
-  [[selected-family-traversal-panel-20260614]]. The panel compares baseline KL
+  [[selected-family-traversal-panel-20260614]]. The panel compares baseline TBS
   traversal with fixed-coordinate selected-root, local pass-through, and
   refined global selected-family profiles, writes selected-family guard rows,
   and emits multi-scale node, region, and sample outputs so stable boundaries,
@@ -1795,18 +1795,18 @@ verification, and maintenance events here in chronological order.
   overlay shows stable regions more clearly after annotating the dominant
   selected-root guard zone `zone_N1404` covering `665` genes instead of
   outlining nearly every point.
-- Added opt-in phylogenetic tree construction for KL runs:
-  `kl_neighbor_joining` builds a neighbor-joining tree from the KL tree
-  distance vector, `kl_iqtree3` calls an external IQ-TREE 3 binary and parses
+- Added opt-in phylogenetic tree construction for TBS runs:
+  `tbs_neighbor_joining` builds a neighbor-joining tree from the TBS tree
+  distance vector, `tbs_iqtree3` calls an external IQ-TREE 3 binary and parses
   the resulting Newick tree, and both are rooted with minimum ancestor
   deviation before conversion to `PosetTree`. Added
   [[phylogenetic-tree-builders-20260614]] to keep this root-orientation
   implementation separate from the still-open selected-root/selected-family
   null-law problem.
-- Ran the combined Julia GO matrix through baseline KL, MAD-rooted neighbor
+- Ran the combined Julia GO matrix through baseline TBS, MAD-rooted neighbor
   joining, and IQ-TREE 3 fast/MAD, then copied compact artifacts to
   `raw/assets/benchmark-results/julia_tree_estimators_20260614/` and added
-  [[julia-tree-estimator-run-20260614]]. Baseline KL produced `670` clusters
+  [[julia-tree-estimator-run-20260614]]. Baseline TBS produced `670` clusters
   with reference NMI `0.633958`; neighbor joining produced `494` clusters with
   reference NMI `0.616780`; IQ-TREE fast/MAD produced `566` clusters with
   reference NMI `0.629320`. The result shows tree estimator changes alter
@@ -2264,12 +2264,12 @@ verification, and maintenance events here in chronological order.
   in `0/5`. This supports the interpretation that the missing conditioning
   variable is structural selected-neighborhood topology, not selected-family
   evidence or context alone.
-- Added [[topology-vector-benchmark-20260615]] after forwarding KL
+- Added [[topology-vector-benchmark-20260615]] after forwarding TBS
   gate-profile parameters through `benchmarks/shared/runners/dispatch.py`,
   adding dispatch coverage in `tests/pipeline/51_test_dispatch_contract.py`,
-  and running the regression-gate KL benchmark with default projected-Wald and
+  and running the regression-gate TBS benchmark with default projected-Wald and
   `fixed_coordinate_global_passthrough_refined_v1` variants. The refined
-  profile eliminates default KL skips (`17/17` ok versus `11/17`), improves
+  profile eliminates default TBS skips (`17/17` ok versus `11/17`), improves
   skip-as-zero mean ARI from `0.388484` to `0.445742`, and improves exact-K
   count from `3/17` to `5/17`, but ok-only mean ARI is lower
   (`0.445742` versus `0.600384`) and several easy non-overlap rows under-split.
@@ -2288,7 +2288,7 @@ verification, and maintenance events here in chronological order.
   clarifies that the next mathematical object is a support-aware selected
   neighborhood conditional law, not raw edge strength, global homogeneity, or
   a tuned topology threshold. The benchmark-facing
-  `kl_conditional_topology_diagnostic` method id also runs the 17-case
+  `tbs_conditional_topology_diagnostic` method id also runs the 17-case
   regression gate with `17/17` ok rows, mean ARI `0.460293`, median ARI
   `0.480000`, and exact-K count `4/17`. A Julia binary matrix run writes a
   UMAP overlay and returns `410` final clusters from `703` samples, confirming
@@ -2317,7 +2317,7 @@ verification, and maintenance events here in chronological order.
   (`tau_b`, `tau_t`, `tau_s`, `h_k`) encode structural neighborhood evidence
   more directly than the current strict support model, but a fresh full-Julia
   rerun stopped inside the adaptive bandwidth tree-distance loop after more
-  than five minutes. Existing Julia outputs show the prior full KL stack at
+  than five minutes. Existing Julia outputs show the prior full TBS stack at
   `670` clusters and the current conditional-topology diagnostic at `410`
   clusters, with ARI `0.062803` and NMI `0.923045`.
 - Updated [[overlap-conditional-topology-law-panel-20260615]] so the old
@@ -2901,8 +2901,8 @@ verification, and maintenance events here in chronological order.
   sibling splits. This initial smoke result was later superseded by the
   matched-mode-only rule and fresh current-code overlap reruns recorded below.
 - Exposed the spectral transport pass-through profile through the standard
-  benchmark registry as `kl_spectral_transport_passthrough_diagnostic`. Dispatch
-  now forwards spectral transport parameters to the KL runner, result metadata
+  benchmark registry as `tbs_spectral_transport_passthrough_diagnostic`. Dispatch
+  now forwards spectral transport parameters to the TBS runner, result metadata
   records the resolved guard configuration, targeted dispatch/registry tests
   pass, and a direct smoke run returns `status='ok'` with the spectral
   pass-through guard enabled.
@@ -2935,7 +2935,7 @@ verification, and maintenance events here in chronological order.
   this targeted traversal-promotion evidence.
 - Added promoted traversal profile
   `fixed_coordinate_spectral_transport_passthrough_v1` and benchmark method id
-  `kl_spectral_transport_passthrough`, while keeping the diagnostic alias for
+  `tbs_spectral_transport_passthrough`, while keeping the diagnostic alias for
   backward-compatible comparisons. Regenerated promoted standard-dispatch,
   selected-family, and default promotion-gate outputs; the promoted gate again
   records `promotion_admissible` with `3/3` required components passing.
@@ -2957,7 +2957,7 @@ verification, and maintenance events here in chronological order.
   interpolation catches no direct signal positives and widened `tau_s = 20`
   reopens selected-null rows faster than it recovers signal.
 - Added [[legacy-internal-spectral-comparison-panel-20260616]] and the
-  opt-in `kl_legacy_internal_spectral_diagnostic` path copied from the old
+  opt-in `tbs_legacy_internal_spectral_diagnostic` path copied from the old
   internal-node spectral behavior. The current code can now append descendant
   internal barycenters to node-local spectral matrices while preserving the
   leaf count as effective independent rows. A one-replicate overlap benchmark
@@ -2965,13 +2965,13 @@ verification, and maintenance events here in chronological order.
   MP threshold and raw signal counts, but completed partitions are unchanged
   versus current leaf-only spectra.
 - Added [[legacy-c2ef9a69-method-package-20260616]] and extracted the full old
-  `kl_clustering_analysis` method package from commit `c2ef9a69` into
-  `kl_clustering_analysis.legacy_methods.commit_c2ef9a69`. The snapshot's
+  `tree_break_selection` method package from commit `c2ef9a69` into
+  `tree_break_selection.legacy_methods.commit_c2ef9a69`. The snapshot's
   absolute imports were rewritten into the nested namespace, the benchmark
-  registry now exposes `kl_legacy_c2ef9a69`, and targeted tests verify package
+  registry now exposes `tbs_legacy_c2ef9a69`, and targeted tests verify package
   import, dispatcher routing, and a small real-run smoke.
 - Added [[legacy-c2ef9a69-method-comparison-panel-20260616]] and ran the full
-  legacy package against current `kl` on six compact binary/overlap cases with
+  legacy package against current `tbs` on six compact binary/overlap cases with
   selected-null and signal roles. The output writes `24` method rows and `12`
   paired comparisons under
   `raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel/`.
@@ -3105,7 +3105,7 @@ verification, and maintenance events here in chronological order.
   `root_tie_rank_generated_neighborhood_replay.py`, then reran the proposal
   frontier and coupling equation with generated topology-frontier rows joined.
   The generated replay writes `10` run rows and `9,990` node/neighborhood rows
-  for each replay table, with all generated matrices completing KL replay. The
+  for each replay table, with all generated matrices completing TBS replay. The
   rebuilt proposal frontier changes generated bandwidth from missing to
   measured: `3/10` generated roots reopen at reference bandwidth and `7/10`
   are measured no-reopen. The updated coupling panel has
@@ -3484,7 +3484,7 @@ verification, and maintenance events here in chronological order.
   (`overlap_part_4c_small`), and one tail-calibrated but root-invalid root
   (`overlap_extreme_4c`).
 - Added [[root-tree-geometry-hard-negative-replay-20260617]] and
-  `root_tree_geometry_hard_negative_replay_panel.py`. The KL runner and shared
+  `root_tree_geometry_hard_negative_replay_panel.py`. The TBS runner and shared
   dispatcher now expose root replay distance/linkage knobs so selected-root
   validity can be replayed under alternative tree geometry. The
   `overlap_extreme_4c` signal seed was replayed across six geometries
@@ -3493,7 +3493,7 @@ verification, and maintenance events here in chronological order.
   `0/6` geometries are root-validity supported, `0/6` leak, and all rows are
   `hard_negative_control_blocked_root_unstable`.
 - Reran the tree-geometry hard-negative benchmark with the copied old commit
-  method `kl_legacy_c2ef9a69`. The old runner supports only linkage trees, so
+  method `tbs_legacy_c2ef9a69`. The old runner supports only linkage trees, so
   the neighbor-joining geometries are explicit skips. Among the four supported
   linkage geometries, three under-split to one cluster and Rogers-Tanimoto
   average linkage fragments to `5` clusters with ARI `-0.002225`, while the
@@ -3608,7 +3608,7 @@ verification, and maintenance events here in chronological order.
   split under the tested geometric methods.
 - Added [[legacy-c2ef9a69-edge-alpha-comparison-20260617]] and
   `legacy_c2ef9a69_edge_alpha_comparison_panel.py`. The panel reruns current
-  `kl` and full legacy `kl_legacy_c2ef9a69` on the seven overlap/root-tail
+  `tbs` and full legacy `tbs_legacy_c2ef9a69` on the seven overlap/root-tail
   cases over edge alpha `0.0001, 0.0003, 0.001, 0.003, 0.01`, writing `140`
   method rows and `70` pairwise rows. Every alpha has one legacy signal gain
   and at least one legacy extra selected-null false split; the strictest alpha
@@ -3621,7 +3621,7 @@ verification, and maintenance events here in chronological order.
   `cat_clear_3cat_4c` shows legacy `c2ef9a69` at `0/4` selected-null false
   splits and signal mean ARI `1.0`, while unguarded coordinate/block gates
   fragment selected null and signal rows. The follow-up diffusion run on the
-  same null/signal shape shows plain `kl_diffusion` has selected-null false
+  same null/signal shape shows plain `tbs_diffusion` has selected-null false
   split rate `0.25` and signal mean ARI `0.897059`; adaptive diffusion has
   signal mean ARI `0.986815` but selected-null false split rate `0.50` and only
   `2/4` null rows complete. This supports diffusion/bandwidth geometry as a
@@ -3633,10 +3633,10 @@ verification, and maintenance events here in chronological order.
   current and bandwidth-context as identical on this panel, and hard-overlap
   strict-support skips as safety behavior distinct from legacy or rescued
   low-ARI completions. The note also corrects the hard-negative nuance:
-  `kl_internal_filter_v1` skips `overlap_extreme_4c` but returns one cluster
+  `tbs_internal_filter_v1` skips `overlap_extreme_4c` but returns one cluster
   with ARI `0.0` on `overlap_extreme_4c__r1`.
 - Added [[benchmark-runner-guarded-contract-fix-20260618]]. The standard
-  benchmark runner requires complete OK KL `stage_timings`, forwards
+  benchmark runner requires complete OK TBS `stage_timings`, forwards
   `enforce_internal_support_thresholds`, enables that flag on the internal
   filter, branch-length internal filter, and rescued legacy candidate
   profiles, and converts guarded internal-barycenter one-cluster OK rows on
@@ -3654,16 +3654,16 @@ verification, and maintenance events here in chronological order.
   all feature-subset failures are zero-active-term input failures rather than
   legacy decomposition exceptions.
 - Added [[branch-length-candidate-run-gate-20260618]]. The standard
-  regression gate now compares `kl`, `kl_legacy_c2ef9a69`, and
-  `kl_internal_filter_branch_length_v1` across eight gate-supported SBM,
+  regression gate now compares `tbs`, `tbs_legacy_c2ef9a69`, and
+  `tbs_internal_filter_branch_length_v1` across eight gate-supported SBM,
   categorical, overlap, and extreme-noise cases without direct dispatch.
   Branch-length remains fail-closed on severe unsupported overlap, while legacy
   completes `overlap_extreme_4c` with six clusters and ARI `0.002729`; the
   broader supplemental shared-catalog panel keeps branch-length as the next
   candidate to test but does not promote it as production-ready.
 - Added [[branch-length-candidate-full-big-20260618]]. The non-plotted full
-  benchmark compared `kl`, `kl_legacy_c2ef9a69`, and
-  `kl_internal_filter_branch_length_v1` across `121` cases. Current KL has the
+  benchmark compared `tbs`, `tbs_legacy_c2ef9a69`, and
+  `tbs_internal_filter_branch_length_v1` across `121` cases. Current TBS has the
   best completed-row mean ARI (`0.819354`) with `66` exact-K rows, branch-length
   is close (`0.801364`) with `62` exact-K rows and preserved fail-closed
   behavior on `overlap_extreme_4c`, and legacy completes all rows but has the
@@ -3695,13 +3695,13 @@ verification, and maintenance events here in chronological order.
   `method_proof` run completed all `11` cases and merged the PDF report.
 - Added [[branch-length-candidate-promotion-audit-20260618]]. The full-suite
   branch-length comparison was converted into an explicit promotion decision:
-  do not promote `kl_internal_filter_branch_length_v1` over current `kl` as the
+  do not promote `tbs_internal_filter_branch_length_v1` over current `tbs` as the
   global default. Branch-length improves `6` matched current rows, loses `7`,
   ties `66`, is branch-only OK on `12`, and current-only OK on `14`; it remains
   the next guarded candidate, but the next test should be a fixed-candidate
   traversal/support audit rather than a global replacement or adaptive policy.
 - Added [[branch-length-traversal-audit-20260618]]. The diagnostic records
-  current KL and branch-length internal filtering on `16` selected cases,
+  current TBS and branch-length internal filtering on `16` selected cases,
   producing `32` method rows, `3032` edge-reachable traversal tuple rows,
   `3352` traversal edge-map rows, run logs, and verification logs. The audit
   keeps live clustering traversal separate from the edge-reachable walk that
@@ -3736,7 +3736,7 @@ verification, and maintenance events here in chronological order.
 - Added [[julia-allgo-new-current-adaptive-diffusion-subspace-tree-20260618]].
   The current-method adaptive diffusion cosine-subspace experiment writes one
   directory per subspace, adds axis-level GO-term loading explanations, and
-  ranks `14` completed current KL trees plus one explicit failed-gate subspace.
+  ranks `14` completed current TBS trees plus one explicit failed-gate subspace.
   The top quality-aware row is `tfidf / adaptive_modes_02_05` with `40`
   clusters, `21/40` coherent clusters, and GO-BIC active per gene
   `1687.966840`; the raw GO-IC winner remains degenerate because of
@@ -3755,7 +3755,7 @@ verification, and maintenance events here in chronological order.
   writes the full connected result structure in one run: rankings,
   specificity-aware rank, method-separated PDFs, all-tree PDFs, manifests, and
   one artifact-complete directory per subspace. The interactome run on
-  `feature_matrix_allGO_new_interactome.tsv` completed `7/12` current KL
+  `feature_matrix_allGO_new_interactome.tsv` completed `7/12` current TBS
   subspaces and failed closed for `5/12`; the top specificity-aware row is
   `tfidf / adaptive_modes_06_11`.
 - Added [[go-annotation-feature-matrix-pipeline]]. The new wrapper records a
@@ -3794,9 +3794,9 @@ verification, and maintenance events here in chronological order.
   and `2373` gene memberships.
 - Rebuilt the systematic subspace gene-annotation outputs to include
   failed-gate eigenband directories and explicit diagnostic cluster rosters.
-  Accepted subspaces keep `assignment_source=accepted_kl`, while failed-gate
+  Accepted subspaces keep `assignment_source=accepted_tbs`, while failed-gate
   rows use `assignment_source=diagnostic_linkage_cut` from saved linkage trees
-  and are not labeled as final accepted KL output. The Julia report is now
+  and are not labeled as final accepted TBS output. The Julia report is now
   `30` pages with `15` subspaces, `2828` cluster rows, `9030` gene memberships,
   and invariant `602`-leaf trees. The interactome report is now `24` pages
   with `12` subspaces, `920` cluster rows, `4068` gene memberships, and
@@ -3807,13 +3807,209 @@ verification, and maintenance events here in chronological order.
   uses one-sided hypergeometric GO-feature enrichment with BH correction per
   cluster and `30` size-preserving random partitions per eigenband. Julia has
   many meaningful clusters (`506` strong and `138` moderate), but strict
-  eigenband coherence is mixed: only `2/14` accepted KL eigenbands are coherent,
+  eigenband coherence is mixed: only `2/14` accepted TBS eigenbands are coherent,
   with `7/14` above-null-mean, `4/14` null-like or weak, and `1/14`
   under-tested. Interactome is stronger at the eigenband level: `3/7` accepted
-  KL eigenbands are coherent, `2/7` above-null-mean, and `2/7` null-like or
+  TBS eigenbands are coherent, `2/7` above-null-mean, and `2/7` null-like or
   weak. Diagnostic linkage-cut eigenbands show internal enrichment but remain
-  diagnostic, not accepted final KL output. QuickGO rechecks found `4/27`
+  diagnostic, not accepted final TBS output. QuickGO rechecks found `4/27`
   Julia top terms obsolete and `0/21` interactome top terms obsolete.
+- Clarified and hardened the cluster-assignment identity contract. Final
+  cluster metadata now includes a sorted `leaf_signature` tuple alongside the
+  tree-local boundary `root_node`; sample assignment construction rejects
+  mismatched signatures and overlapping leaves. Traversal traces now expose
+  explicit edge-test tuples `(parent, child)`, sibling-test tuples
+  `(parent, left_child, right_child)`, and descendant leaf signatures, making
+  edge and sibling decisions interpretable without relying on implicit
+  node-key conventions.
+- Added p-value diagnostics to live and full-edge traversal traces. Edge debug
+  fields report raw and Tree-BH-corrected p-values for the left and right
+  child-parent edge tuples, while sibling debug fields report raw/corrected
+  sibling p-values, test statistic, degrees of freedom, and method label for
+  the parent-keyed sibling tuple. This makes untested sibling rows visible as
+  missing p-values rather than silently conflating them with non-significant
+  sibling tests.
+- Extended selected-family overlap benchmark node decisions with p-value
+  context for incoming child-parent edges, outgoing left/right child-parent
+  edges, corrected sibling p-values, and sibling method labels. A two-case
+  overlap smoke on `overlap_mod_4c_small` and `overlap_heavy_4c_small_feat`
+  now writes interpretable edge and sibling p-values to
+  `benchmarks/results/selected_family_pvalue_debug_20260619_fixed_edgep/`.
+- Checked the baseline overlap fail-closed path on
+  `overlap_heavy_4c_small_feat` selected-null data. The default
+  `projected_wald_inflation` fit sees `499` positive-weight sibling records
+  but `0` strict-null and `0` stopped-edge supported records, so the existing
+  calibration-support error is an intended empirical-null contract failure
+  rather than a missing p-value or node-key wiring failure. Added the reusable
+  `edge_sibling_pvalue_relationship` diagnostic, which joins each parent
+  sibling test to its left and right outgoing child-parent edge tests and writes
+  parent-level pairs, tidy p-value distributions, a summary table, and an HTML
+  report for the overlap benchmark output.
+- Added a same-z functional decomposition for the overlap p-value scaling
+  problem. The diagnostic recomputes the shared sibling z-vector at every
+  binary parent and evaluates fixed-coordinate BH, fixed-global chi-square,
+  fixed-block BH, selected projected sibling, and outgoing projected edge
+  functionals side by side. On the two-case overlap smoke, outgoing edge
+  `-log10` p-values and selected projected sibling `-log10` p-values lie on the
+  same scale, while fixed-coordinate sibling BH is typically `8`--`14`
+  `-log10` units weaker. This supports the interpretation that the problematic
+  scale gap is selected dense-direction/L2 energy versus coordinate-wise BH,
+  not a failure of the barycentric child-parent/sibling z-identity.
+- Added pass-through audit fields to `GateEvaluator`, live traversal rows, full
+  edge-reachable traversal rows, traversal counters, and selected-family node
+  decisions. The audit separates disabled pass-through, closed split
+  prerequisites, sibling-open normal splits, missing descendant splits,
+  support-blocked candidates, and actual pass-through decisions. Also carried
+  sorted leaf signatures into sample assignment tables and selected-family node
+  decisions so internal nodes created from leaves can be compared by set
+  identity rather than only by runtime node id.
+- Added explicit sparse and dense sibling evidence channels to the sibling gate
+  annotation contract. The active sibling gate p-value now carries a calibration
+  label, while sparse fixed-subspace evidence, dense fixed-global evidence, and
+  the underlying fixed-coordinate/block/global p-values are reported separately.
+  Regenerated the overlap debug smoke under
+  `benchmarks/results/selected_family_sparse_dense_debug_20260619/`; the
+  relationship summary has median edge `-log10` BH `15.146020`, active sibling
+  `0.283232`, sparse sibling `0.391545`, and dense fixed-global `0.126605`.
+  The same-z decomposition still shows projected sibling energy on the edge
+  scale (`14.860817`), supporting the policy that selected projected energy is
+  diagnostic unless selected-tree calibrated or made data-independent.
+- Debugged the `overlap_mod_4c_small` selected-null false split in the sparse
+  dense smoke. The case is an iid Bernoulli selected-null matrix with one
+  truth cluster; the old traversal found six selected Hamming-compact fragments
+  after root pass-through. The selected-family guard recorded
+  `selected_p_value=0.09` and `guard_would_block=True`, but pass-through support
+  only consumed spectral-transport support, so the root still passed through.
+  `TreeDecomposition` now combines selected-family pass-through guard support
+  with optional spectral support. Rerunning the same seed under
+  `benchmarks/results/selected_family_passthrough_support_fix_debug_20260620/`
+  returns one cluster with ARI `1.0` and records
+  `passthrough_support_blocked` with bottleneck
+  `selected_family_passthrough_guard_blocked`.
+- Renamed the active method and software identity from KL-TE to Tree-Break
+  Selection (TBS). The breaking rename changed the import package to
+  `tree_break_selection`, benchmark method ids to the `tbs` family, active
+  environment variables to `TBS_*`, the manuscript notation to
+  \(\operatorname{TBS}\), \(B_{\mathrm{TBS}}(u)\), and
+  \(\mathcal C_{\mathrm{TBS}}\), and the wiki concept page to
+  [[tree-break-selection]]. The GitHub repository was renamed to
+  `EnesSakalliUniWien/tree-break-selection`, with local `origin` updated to the
+  new URL.
+- Clarified the TBS method/validation boundary for selected permutations. The
+  non-resampling TBS runtime method should inspect the selected tree and fixed
+  coordinate evidence directly; selected-root and selected-family permutations
+  remain default-off validation diagnostics for understanding selected-tree null
+  behavior, not components of the method definition.
+- Added a fixed-coordinate FDR reaction panel. The new helper/test coverage
+  compares coordinate BH, BY, Holm, Bonferroni, Simes-within-block/BH-over-blocks,
+  and block chi-square/BH behavior, showing that BH is a sparse-coordinate
+  evidence channel while dense categorical/block movement is better captured by
+  block-level quadratic evidence.
+- Added benchmark method ids for fixed sibling-gate FDR variants and ran the
+  four-case overlap regression subset under default TBS plus coordinate BH, BY,
+  Holm, Bonferroni, block chi-square/BH, and block Simes-BH. All fixed-FDR
+  variants avoided the default empirical-null support skips, but they over-split
+  hard overlap cases; BY was the least aggressive coordinate rule in this
+  subset and the only fixed-FDR variant with one exact-K overlap case.
+- Repaired the branch-length benchmark feature contract by one-hot encoding
+  categorical sequence sites as `Fj_ck` blocks before TBS runs. The compact
+  seven-point branch-length sweep now runs for default TBS, the branch-length
+  internal filter, and the fixed-FDR variants. Default TBS recovers the correct
+  two-way split from branch length `0.20` onward; the branch-length internal
+  filter also recovers `0.20`--`1.00` but over-splits at `2.00`; all fixed-FDR
+  variants run but over-split strong-signal branch-length cases.
+- Normalized linkage-derived TBS branch lengths to relative tree time. The
+  constructor now computes
+  \(\ell(u,c)=(h(u)-h(c))/h(\mathrm{root})\) when the root merge height is
+  positive, so each root-to-leaf path sums to `1` instead of carrying raw
+  linkage-distance units. Verified with targeted tree, branch-length utility,
+  guarded-rescue, and methodology tests plus `ruff`.
+- Ran the post-normalization branch-length comparison smoke under
+  `benchmarks/results/branch_length_normalized_comparison_20260623/`. Default
+  TBS has `2/7` exact two-split rows and one calibration-support skip in this
+  seed; `tbs_internal_filter_branch_length_v1` has `2/7` exact two-split rows
+  without skips; IQ-TREE and single-linkage TBS each have `4/7` exact two-split
+  rows; fixed-coordinate and fixed-block FDR variants complete but over-split
+  all seven rows. K-known K-means and spectral baselines recover `6/7` rows
+  when supplied the true `K=2`, so they remain supervised-oracle baselines
+  rather than comparable adaptive cluster-count methods.
+- Ran the normalized-branch cross-regime smoke requested after the sequence
+  benchmark under
+  `benchmarks/results/normalized_branch_cross_regime_20260623/`. The panel
+  covers non-sequence categorical, binary Bernoulli, continuous Gaussian plus
+  low-rank, overlap selected-root, and SBM graph cases. Default TBS and the
+  branch-length internal candidate both solve the binary rows; the
+  branch-length candidate improves one categorical row but is not uniformly
+  better; fixed-coordinate/block FDR variants complete but over-split binary,
+  categorical, and overlap rows; continuous rows fail closed under the active
+  continuous-covariance contract; and graph rows favor default/neighbor-joining
+  tree geometry over branch-length internal filtering. K-known K-means and
+  spectral baselines solve binary/categorical rows but remain weak on
+  continuous low-rank, overlap, and SBM rows.
+
+### 2026-06-23
+
+- Added a continuous-data TBS execution path using Mahalanobis-time tree
+  distances and continuous covariance fallback storage. Continuous generators now
+  precompute `mahalanobis_time` distances
+  \((x_a-x_b)^T\widehat\Sigma^{-1}(x_a-x_b)/d\); direct TBS dispatch can compute
+  the same metric from a continuous `FeatureSpace`; fixed-subspace sibling
+  gates now pass parent node continuous covariance blocks; and high-dimensional
+  continuous nodes store diagonal empirical-Gaussian variance vectors when full
+  dense covariance would exceed the active memory contract. Focused checks show
+  the previous continuous covariance/memory skips are removed, while moderate
+  continuous Gaussian and low-rank cases still under-split or fail default
+  empirical-null support, so continuous calibration remains a method question.
+- Updated projected-Wald contrast covariance to use normalized branch time as a
+  conservative variance multiplier. Child-parent edge tests now use
+  \((1/n_c-1/n_u)(1+t_{u,c}/\bar t)\), sibling tests use
+  \((1/n_L+1/n_R)(1+(t_{u,L}+t_{u,R})/(2\bar t))\), and missing or zero branch
+  time preserves the previous sampling-only variance. The method notes and wiki
+  formulas were updated to distinguish this runtime branch-time relaxation from
+  a full Brownian phylogenetic covariance model.
+- Added `continuous-tree-geometry-rethink-20260623` after rerunning compact
+  family-level and oracle diagnostics. The note records that the pre-patch
+  Gaussian continuous generator used pooled `mahalanobis_time`, that
+  standardized Euclidean geometry repairs the consolidated continuous
+  mean-shift case, and that low-rank, overlap, and SBM failures are separate
+  tree-recoverability or selected-gate problems rather than the same continuous
+  geometry bug.
+- Changed Gaussian location-style continuous generators to precompute
+  `standardized_euclidean` tree distances while retaining `mahalanobis_time`
+  for low-rank, spiked covariance, and phylogenetic Brownian diagnostic
+  continuous generators. The post-patch compact run solves
+  `dim_consolidated_4c_24f_continuous` for default TBS and fixed-FDR variants
+  with ARI `1.0`. The added eigen/size diagnostic shows the old failure is
+  strongly tied to pooled total-covariance eigenvectors: `0.998799` of the
+  between-cluster signal lies in the top `K-1` total-covariance eigenvectors,
+  the center-subspace cosine-squared is `0.998783`, Mahalanobis weighting
+  compresses between energy to `0.086563` of raw, and the old root split is
+  `1/159` instead of the repaired `40/120`.
+- Ran the canonical full benchmark after the continuous-geometry change under
+  `benchmarks/results/run_20260623_110027Z_full_big/`. The run completed `121`
+  cases and `9` methods (`1089` rows), with `tbs` producing `98` ok rows and
+  `23` skips. Mean ARI over ok rows ranked `kmeans` first (`0.863921`) and
+  default `tbs` fifth (`0.763189`). The large run confirms the
+  `dim_consolidated_4c_24f_continuous` repair but also shows several
+  continuous Gaussian/default-gate regressions and persistent low-rank,
+  selected-root, SBM, and method-proof boundaries, so standardized Euclidean is
+  a targeted tree-geometry repair rather than a full continuous calibration
+  solution.
+- Debugged where the continuous Gaussian full-run edges changed. The immediate
+  closure mechanism is the active branch-time variance multiplier in the
+  projected-Wald contrast covariance, not standardized Euclidean alone.
+  `gauss_clear_medium_continuous` and `gauss_moderate_3c_continuous` both
+  reopen to the expected `K=4` and `K=3` in a throwaway run that disables only
+  tree-time variance inflation; their active root sibling multipliers are
+  large (`6.13x`, `4.74x`), while the repaired
+  `dim_consolidated_4c_24f_continuous` root multiplier is only `1.12x`.
+- Added an inner-node Gaussian branch-time debug source. The audit shows that
+  `gauss_clear_medium_continuous` and `gauss_moderate_3c_continuous` have the
+  correct standardized pure-split topology, but long child edges are treated as
+  null variance by the active child-parent and sibling Wald gates. Removing only
+  the time multiplier changes ARI from `0.0` to `1.0` in both cases, whereas
+  fixed-coordinate sibling gating alone is insufficient because child-parent
+  prerequisites still close on the long pure edges.
 
 ## Evidence
 

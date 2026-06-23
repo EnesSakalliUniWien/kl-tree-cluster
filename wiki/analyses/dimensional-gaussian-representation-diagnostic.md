@@ -46,7 +46,7 @@ before adding the noise dimensions.
 The 2026-05-26 full benchmark and local geometry check gave the following
 diagnostic values:
 
-| Case | Representation | \(p\) | Oracle any-\(K\) ARI | Oracle true-\(K\) ARI | KL ARI | Distance gap / within SD |
+| Case | Representation | \(p\) | Oracle any-\(K\) ARI | Oracle true-\(K\) ARI | TBS ARI | Distance gap / within SD |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | `dim_consolidated_4c_24f` | median binary | 24 | 0.490 | 0.447 | 0.447 | 1.00 |
 | `dim_consolidated_4c_24f_continuous` | continuous | 24 | 1.000 | 1.000 | 1.000 | 4.03 |
@@ -87,7 +87,7 @@ poor oracle tree.
 - `generate_dimensional_gaussian.py` defines the consolidated and diffuse mean
   constructions and records informative/noise dimensions in metadata.
 - `full_benchmark_comparison.csv` records that consolidated continuous cases
-  achieved KL ARI 1.0 and 0.708, while the diffuse continuous case achieved
+  achieved TBS ARI 1.0 and 0.708, while the diffuse continuous case achieved
   about -0.002.
 - `oracle_tree_recoverability.csv` records that the two consolidated continuous
   trees were recoverable or near-recoverable, while the diffuse continuous tree

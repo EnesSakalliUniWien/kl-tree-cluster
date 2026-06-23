@@ -119,9 +119,9 @@ Systematic subspace gene-annotation outputs are built with
 creates a `subspaces/rank##_weighting_block_name/` directory for every
 accepted subspace and a `subspaces/failed##_weighting_block_name/` directory
 for every failed-gate subspace with saved linkage evidence. Accepted rows keep
-`assignment_source=accepted_kl`; failed-gate rows get an explicit
+`assignment_source=accepted_tbs`; failed-gate rows get an explicit
 `assignment_source=diagnostic_linkage_cut` generated from the saved linkage
-tree and should not be described as final accepted KL output. Each directory
+tree and should not be described as final accepted TBS output. Each directory
 copies the source assignment/coherence/loading artifacts, writes complete
 cluster rosters and gene-membership tables, renders darker radial trees colored
 by cluster id, and renders full feature-space, subspace, and tree-distance
@@ -140,12 +140,12 @@ and UniProt reviewed human protein labels where available.
 The 2026-06-19 reports are:
 
 - `julia_allgo_new_systematic_subspace_gene_annotation_report.pdf`: `31`
-  pages, with `15` subspace plot/annotation pairs (`14` accepted KL and `1`
+  pages, with `15` subspace plot/annotation pairs (`14` accepted TBS and `1`
   diagnostic linkage cut) and `120` top cluster summaries. The complete roster
   contains `2828` cluster rows and `9030` gene-subspace memberships. All
   subspace trees have `602` leaves and `602` unique genes.
 - `allgo_new_interactome_systematic_subspace_gene_annotation_report.pdf`: `25`
-  pages, with `12` subspace plot/annotation pairs (`7` accepted KL and `5`
+  pages, with `12` subspace plot/annotation pairs (`7` accepted TBS and `5`
   diagnostic linkage cuts) and `96` top cluster summaries. The complete roster
   contains `920` cluster rows and `4068` gene-subspace memberships. All
   subspace trees have `339` leaves and `339` unique genes.
@@ -164,10 +164,10 @@ distribution. This is not an external validation because the clusters are
 formed from GO features, but it does test whether the discovered groups are
 more coherent than size-matched random groupings.
 
-For the Julia allGO-new matrix, accepted KL subspaces have mean strong-cluster
+For the Julia allGO-new matrix, accepted TBS subspaces have mean strong-cluster
 fraction `0.776` and mean enriched-cluster fraction `0.940`; the diagnostic
 linkage-cut eigenband has strong-cluster fraction `0.882` and enriched-cluster
-fraction `1.000`. At the stricter eigenband level, only `2/14` accepted KL
+fraction `1.000`. At the stricter eigenband level, only `2/14` accepted TBS
 eigenbands are called `coherent`, `7/14` are above the null mean but not above
 the null 95th percentile for enrichment, `4/14` are null-like or weak, and
 `1/14` has too few tested clusters. The diagnostic failed-gate eigenband is
@@ -175,13 +175,13 @@ above the null mean but not coherent by the strict null-95 rule. Cluster-level
 counts are `506` strong, `138` moderate, `8` weak or not enriched, `10`
 untested, and `2166` too small for the audit threshold.
 
-For the interactome matrix, accepted KL subspaces have mean strong-cluster
+For the interactome matrix, accepted TBS subspaces have mean strong-cluster
 fraction `0.787` and mean enriched-cluster fraction `1.000`; diagnostic
 linkage-cut subspaces have mean strong-cluster fraction `0.713` and mean
-enriched-cluster fraction `0.991`. At the eigenband level, `3/7` accepted KL
+enriched-cluster fraction `0.991`. At the eigenband level, `3/7` accepted TBS
 eigenbands are coherent, `2/7` are above-null-mean but not strong, and `2/7`
 are null-like or weak. The diagnostic linkage-cut eigenbands are not accepted
-KL output: `4/5` are above-null-mean but not strong and `1/5` is null-like or
+TBS output: `4/5` are above-null-mean but not strong and `1/5` is null-like or
 weak. Cluster-level counts are `384` strong, `153` moderate, `1` weak or not
 enriched, `1` untested, and `381` too small for the audit threshold.
 

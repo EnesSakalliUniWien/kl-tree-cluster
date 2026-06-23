@@ -77,10 +77,10 @@ diagnostic outputs.
   available.
 - [[mixed-internal-calibration-sweeps-20260605]] records the labeled sweep
   outputs and interpretation.
-- `kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/inflation_adjusted_sibling_tests.py`,
-  `kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflated_projected_wald_annotation/pipeline.py`,
-  `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py`,
-  and `kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py` now
+- `tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/inflation_adjusted_sibling_tests.py`,
+  `tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflated_projected_wald_annotation/pipeline.py`,
+  `tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py`,
+  and `tree_break_selection/hierarchy_analysis/tree_decomposition.py` now
   carry the opt-in support-threshold parameters through the pipeline.
 
 ## Links

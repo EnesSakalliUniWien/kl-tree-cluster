@@ -59,7 +59,7 @@ interpretation under `edge_alpha=0.001` and `sibling_alpha=0.01`.
 - `traversal_deep_signal_under_same_parent` remains a branch-only OK row with
   one mixed boundary and no branch pass-through burden, supporting a separate
   root/deep support-stop failure mode rather than a pass-through-chain rule.
-- The method-connection table keeps current KL as the reference, legacy as a
+- The method-connection table keeps current TBS as the reference, legacy as a
   power comparator, internal filtering as support-threshold evidence,
   branch-length as the fixed candidate, bandwidth context as selected-
   neighborhood support evidence, and rescued legacy as a negative control from
@@ -74,7 +74,7 @@ interpretation under `edge_alpha=0.001` and `sibling_alpha=0.01`.
   joined to tuple-burden aggregates.
 - `path_burden_outcome_summary.csv` summarizes case counts and path-burden
   totals by guarded hypothesis class.
-- `recent_method_connection_summary.csv` connects `kl`, branch-length, legacy,
+- `recent_method_connection_summary.csv` connects `tbs`, branch-length, legacy,
   internal-filter, bandwidth-context, and rescued-legacy methods to the
   hypothesis.
 - `hypothesis_solution_matrix.csv` records admissible solutions for isolated

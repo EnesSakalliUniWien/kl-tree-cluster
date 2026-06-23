@@ -6,8 +6,8 @@ updated: 2026-06-14
 sources:
   - raw/inbox/refined-profile-all-benchmark-tests-20260614.md
   - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
-  - benchmarks/shared/runners/kl_runner.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - benchmarks/shared/runners/tbs_runner.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
 tags:
   - source
   - diagnostics
@@ -70,9 +70,9 @@ continuous feature families fail the current covariance contract.
   single-seed performance outputs.
 - `benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py`
   defines the selected-null profile validation runner.
-- `benchmarks/shared/runners/kl_runner.py` exposes the profile-capable KL
+- `benchmarks/shared/runners/tbs_runner.py` exposes the profile-capable TBS
   runner used by the full-suite performance pass.
-- `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py`
+- `tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py`
   defines the refined profile and selected-family guard behavior.
 
 ## Links

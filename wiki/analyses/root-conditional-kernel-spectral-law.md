@@ -13,9 +13,9 @@ sources:
   - wiki/sources/root-selected-validity-replay-panel-20260617.md
   - wiki/sources/root-tree-geometry-hard-negative-replay-20260617.md
   - wiki/sources/selected-neighborhood-signal-flow-literature-20260617.md
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/adaptive_kernel_bandwidths.py
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/kernel_interpolation.py
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/child_prior_estimation.py
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/adaptive_kernel_bandwidths.py
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/kernel_interpolation.py
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/child_prior_estimation.py
 tags:
   - analysis
   - root
@@ -180,7 +180,7 @@ The signal-flow analogy makes the scale interpretation explicit. In diffusion
 maps, \(\tau\) controls local diffusion over a kernel graph and the slow modes
 describe coherent geometry. In tree wavelets and treelets, coarse tree scales
 retain low-frequency structure while fine-scale details carry localized
-artifacts. For KL-TE, \(\tau_b,\tau_t,\tau_s,h_k\) should therefore be read as
+artifacts. For Tree-Break Selection, \(\tau_b,\tau_t,\tau_s,h_k\) should therefore be read as
 support-locality coordinates for a selected conditional law, not as knobs that
 make an unsupported root significant.
 

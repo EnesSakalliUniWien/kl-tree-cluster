@@ -8,8 +8,8 @@ sources:
   - tests/validation/94_test_covariance_laplacian_panel.py
   - benchmarks/validation/selected_edge_type1_geometry.py
   - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
+  - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
   - wiki/questions/open-mathematical-questions.md
 tags:
   - source

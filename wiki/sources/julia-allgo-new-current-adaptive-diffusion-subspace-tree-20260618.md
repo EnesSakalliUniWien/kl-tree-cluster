@@ -41,7 +41,7 @@ GO-term loading tables and plots for every cosine mode in each subspace.
 
 ## Key Points
 
-- The experiment scored `15` subspaces: `14` completed with current KL cluster
+- The experiment scored `15` subspaces: `14` completed with current TBS cluster
   assignments and `1` failed closed at the current gate layer.
 - The preferred display rank is now specificity-aware: quality tier first, then
   cluster specificity score, specific-cluster fraction, weighted specificity
@@ -56,7 +56,7 @@ GO-term loading tables and plots for every cosine mode in each subspace.
   `tfidf / adaptive_modes_32_52` has raw GO-IC rank `1` but `592` clusters and
   singleton-gene fraction `0.968439`, so it is demoted to the degenerate tier.
 - The failed subspace is `binary / adaptive_modes_02_06`. The adaptive
-  diffusion tree and axis-term outputs were written, but current KL did not
+  diffusion tree and axis-term outputs were written, but current TBS did not
   produce cluster assignments because the sibling inflation model had no valid
   strict-null or stopped-edge empirical-null calibration records.
 - Per-axis term-loading outputs are stored in each subspace directory as
@@ -71,7 +71,7 @@ GO-term loading tables and plots for every cosine mode in each subspace.
   `*_subspace_embedding_terms_only.png` for all `15` bands, plus
   `*_subspace_embedding_clusters_annotated_terms.png` and
   `*_adaptive_diffusion_embedding_clusters_annotated_terms.png` for the `14`
-  bands with current KL cluster assignments.
+  bands with current TBS cluster assignments.
 - The workflow-style PDFs were recreated under
   `allgo_new_quality_aware_go_ic_by_method/current__adaptive_diffusion_cosine_subspace/`
   and `allgo_new_quality_aware_go_ic_plots/`. The method PDF has `15` pages,
@@ -97,7 +97,7 @@ and granule terms from TNF/NF-kappaB/apoptotic signaling terms.
   display rank, raw GO-IC rank, quality tier, GO-BIC fields, cluster counts,
   coherent-cluster fields, and paths back to subspace-specific artifacts.
 - `subspaces/<weighting>/<block_name>/` stores the subspace coordinates,
-  diffusion metadata, linkage matrix, cluster assignments when current KL
+  diffusion metadata, linkage matrix, cluster assignments when current TBS
   completed, failure status when it did not, cluster quality tables, and
   per-axis GO-term loading outputs.
 - `ARTIFACT_INDEX.md`, `artifact_index.csv`, `subspace_plot_index.csv`, and

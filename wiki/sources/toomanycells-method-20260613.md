@@ -16,7 +16,7 @@ tags:
 
 ## Summary
 
-TooManyCells is a relational reference point for KL-TE, not a direct
+TooManyCells is a relational reference point for Tree-Break Selection, not a direct
 comparator. It is a single-cell clade analysis method centered on divisive
 hierarchical spectral clustering: it recursively partitions cells into a binary
 tree and stops recursion using a Newman-Girvan modularity criterion rather than
@@ -35,18 +35,18 @@ a post-selection projected-Wald test.
 - The paper/project description emphasizes matrix-free hierarchical spectral
   clustering, avoiding explicit full cell-cell similarity and normalized
   Laplacian eigendecompositions at each candidate split.
-- For KL-TE, the useful role is relational. TooManyCells helps position KL-TE
+- For Tree-Break Selection, the useful role is relational. TooManyCells helps position Tree-Break Selection
   among tree-first single-cell clustering methods and shows a different
   recursive spectral-tree stopping philosophy.
 - TooManyCells is not a direct benchmark comparator, not a calibration proof,
-  and not a replacement proposal for the current KL-TE sibling gate. It does
-  not validate the current KL-TE Wald p-values.
+  and not a replacement proposal for the current Tree-Break Selection sibling gate. It does
+  not validate the current Tree-Break Selection Wald p-values.
 
 ## Evidence
 
 - `raw/inbox/toomanycells-method-notes-20260613.md` records the external
   public documentation and publication links consulted on 2026-06-13.
-- The relational check follows the null-law decomposition result: the KL-TE
+- The relational check follows the null-law decomposition result: the Tree-Break Selection
   fixed chi-square reference is valid only for a fixed projection, while
   same-sample projection adaptation breaks the sibling null law.
 

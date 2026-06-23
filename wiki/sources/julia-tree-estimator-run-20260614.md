@@ -38,7 +38,7 @@ tags:
 ## Summary
 
 The combined Julia GO binary matrix was run through the baseline Hamming
-average-linkage KL tree, MAD-rooted neighbor joining, and a bounded IQ-TREE 3
+average-linkage TBS tree, MAD-rooted neighbor joining, and a bounded IQ-TREE 3
 fast likelihood tree rooted by MAD. All three methods remain highly fragmented
 on the full `703 x 14766` matrix. Neighbor joining reduces fragmentation most
 and gives the best reference ARI, but the reference NMI remains near the same
@@ -48,15 +48,15 @@ selected traversal null-law problem.
 
 ## Key Points
 
-- Baseline `kl` produced `670` clusters, reference ARI `0.001812`, and
+- Baseline `tbs` produced `670` clusters, reference ARI `0.001812`, and
   reference NMI `0.633958` over `262` matched Julia-reference genes.
 - `kl_neighbor_joining` produced `494` clusters, reference ARI `0.021596`, and
   reference NMI `0.616780`.
-- `kl_iqtree3_fast` used IQ-TREE 3.1.2 with `JC2 --fast`, produced `566`
+- `tbs_iqtree3_fast` used IQ-TREE 3.1.2 with `JC2 --fast`, produced `566`
   clusters, reference ARI `0.015612`, and reference NMI `0.629320`.
 - The IQ-TREE fast treefile was rooted by minimum ancestor deviation before
-  the normal KL gate/traversal layer ran.
-- UMAP overlays show the same fragmentation visually: baseline KL is almost
+  the normal TBS gate/traversal layer ran.
+- UMAP overlays show the same fragmentation visually: baseline TBS is almost
   entirely singleton clusters, neighbor joining creates the largest visible
   multi-gene islands, and IQ-TREE fast/MAD creates many small `2`--`5` gene
   groups but no large coherent endotype-scale regions.
@@ -67,7 +67,7 @@ selected traversal null-law problem.
 - The clustering-diagnostic panel separates fragmentation, reference recovery,
   UMAP compactness, and active-feature Jaccard coherence. It shows that
   neighbor joining groups substantially more genes, but its grouped clusters
-  have weaker active-feature overlap than the tiny baseline KL clusters.
+  have weaker active-feature overlap than the tiny baseline TBS clusters.
 - The full UMAP exports show all `703` genes. Static full views include
   reference-endotype colors and per-method cluster-size classes; the
   interactive HTML views expose gene, cluster ID, cluster size, and reference

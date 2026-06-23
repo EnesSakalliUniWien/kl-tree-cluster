@@ -25,7 +25,7 @@ tags:
 ## Summary
 
 `benchmarks/diagnostics/calibration/root_selected_region_margins.py` replays
-the average-linkage hierarchy used by KL-TE and records the merge-selection
+the average-linkage hierarchy used by Tree-Break Selection and records the merge-selection
 inequality margins that construct the two root child clusters. It joins those
 margins to observed root edge, sibling, and spectral quantities. The diagnostic
 is descriptive selected-region geometry, not an external calibration model.

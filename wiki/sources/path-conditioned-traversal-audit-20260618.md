@@ -40,7 +40,7 @@ branch-length internal filtering, or introduce adaptive method routing.
   `ancestor_chain_complete=True` for every row and the total missing-ancestor
   count is `0`.
 - The audit records `34` live pass-through rows, split evenly between current
-  `kl` and `kl_internal_filter_branch_length_v1`.
+  `tbs` and `tbs_internal_filter_branch_length_v1`.
 - All live non-root pass-through rows have a closed sibling gate and an open
   incoming child-parent edge, matching the intended pass-through diagnostic
   condition rather than a changed traversal rule.

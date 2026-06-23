@@ -5,8 +5,8 @@ status: reviewed
 updated: 2026-06-04
 sources:
   - raw/inbox/recursive-method-program-20260604.txt
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/types/inflation_model.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/types/inflation_model.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
   - tests/statistics/35_test_empirical_null_inflation_estimation.py
   - benchmarks/diagnostics/calibration/sibling_null_weight_rule_validation.py
   - tests/validation/69_test_sibling_null_weight_rule_validation.py

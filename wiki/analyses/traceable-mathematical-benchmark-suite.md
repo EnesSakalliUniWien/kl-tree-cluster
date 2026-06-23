@@ -19,7 +19,7 @@ tags:
 
 ## Summary
 
-The method-proof benchmark suite turns KL-TE benchmark cases into explicit
+The method-proof benchmark suite turns Tree-Break Selection benchmark cases into explicit
 mathematical probes. Each case declares the contract it is meant to validate or
 falsify, and the math-trace tool classifies each trace row by the first failed
 layer: tree recoverability, covariance, projected-Wald, selected MP,

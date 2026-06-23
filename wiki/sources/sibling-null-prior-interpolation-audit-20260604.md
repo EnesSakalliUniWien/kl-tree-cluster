@@ -32,7 +32,7 @@ role as `diagnostic_interpolated_sibling_null_prior_not_calibration`.
 The first run covers four representative cases:
 `binary_perfect_4c`, `cat_highcard_20cat_4c`,
 `overlap_heavy_4c_small_feat`, and `phylo_large_32taxa`. The second run covers
-the 24 KL calibration-support skips from
+the 24 TBS calibration-support skips from
 `benchmarks/results/run_20260604_115308Z_full/full_benchmark_comparison.csv`;
 it excludes the separate high-dimensional continuous covariance-boundary skip.
 

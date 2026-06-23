@@ -18,7 +18,7 @@ tags:
 ## Summary
 
 There is related literature, but no exact off-the-shelf selected-root plus
-selected-family pass-through null law for KL-TE. The closest pieces are
+selected-family pass-through null law for Tree-Break Selection. The closest pieces are
 selective inference after hierarchical clustering, selective inference on
 selected families of hypotheses, hierarchical FDR/FWER testing, TreeScan or
 scan-statistic max tests over many overlapping tree regions, and
@@ -38,18 +38,18 @@ family, not the one descendant node after it has already been selected.
   separately or pooling all hypotheses globally.
 - Hierarchical FDR and hierarchical FWER methods provide useful traversal
   discipline for tree-structured hypotheses, especially root-down procedures.
-  Their usual contract is weaker for KL-TE because the tree of hypotheses is
-  often assumed predeclared, while KL-TE rebuilds selected topology from the
+  Their usual contract is weaker for Tree-Break Selection because the tree of hypotheses is
+  often assumed predeclared, while Tree-Break Selection rebuilds selected topology from the
   same data.
 - TreeScan and spatial/tree scan statistics are the closest operational shape
-  to the KL-TE pass-through law: scan many overlapping branches or cells,
+  to the Tree-Break Selection pass-through law: scan many overlapping branches or cells,
   compute a maximum statistic, and use Monte Carlo calibration to account for
   the search over the whole family.
 - Cluster-based permutation testing is an adjacent max-statistic method. It
   creates connected suprathreshold clusters, scores them, and uses the maximum
   cluster statistic under permutations. It supports whole-frontier calibration
   and warns against overinterpreting localization after a global family test.
-- For KL-TE, the selected-root law and selected-family pass-through law should
+- For Tree-Break Selection, the selected-root law and selected-family pass-through law should
   be kept separate. Root-selected inference asks whether the first split opens;
   selected-family traversal inference asks whether any split reachable below a
   closed root is stronger than expected under the same whole-tree search.
@@ -61,7 +61,7 @@ family, not the one descendant node after it has already been selected.
 - `benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py`
   implements the current selected-root and selected-family permutation
   diagnostics.
-- `kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py`
+- `tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py`
   exposes `global_sibling_min_passthrough_descendant_refined`, the current
   TreeScan/maxT-like diagnostic candidate for pass-through descendants.
 

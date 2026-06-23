@@ -8,11 +8,11 @@ sources:
   - wiki/analyses/selected-hierarchy-selection-geometry.md
   - wiki/analyses/selected-hierarchy-null-support-contract.md
   - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/branch_length_utils.py
-  - kl_clustering_analysis/tree/distributions.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py
+  - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
+  - tree_break_selection/hierarchy_analysis/statistics/branch_length_utils.py
+  - tree_break_selection/tree/distributions.py
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_100/candidate_equations.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_holdout_100/candidate_equation_holdout.csv
   - raw/assets/benchmark-results/selected_hierarchy_geometry_covariates_20260602_broad_200/candidate_equation_holdout.csv
@@ -89,7 +89,7 @@ domain.
 The no-bootstrap analytic direction is now sharper. The useful object in the
 selective-inference literature is the selected region in the same local
 tangent coordinate system used by the statistic. Shimodaira and Terada use
-multiscale bootstrap to estimate signed distance and curvature, but KL-TE does
+multiscale bootstrap to estimate signed distance and curvature, but Tree-Break Selection does
 not need that estimator as a production path. The retained mathematical
 objects are the selected region, tangent cone or local boundary, signed
 distance/action, curvature, and conditional selected-error law.
@@ -178,7 +178,7 @@ and support edges obtained from
 z(m)=-\frac{1}{m}+c\int\frac{t}{1+t\,m}\,dH(t).
 \]
 This integral-based Marchenko--Pastur route should be studied before changing
-KL-TE's production dimension rule. It asks whether each local tangent spectrum
+Tree-Break Selection's production dimension rule. It asks whether each local tangent spectrum
 is close enough to \(H=\delta_1\), or whether categorical, continuous, or
 selected contexts need a deformed local spectral edge.
 
@@ -264,17 +264,28 @@ standard-error scaling, not a separate physical law.
 ### Branch Length
 
 Branch length is related to Brownian-motion variance accumulation on a
-phylogenetic tree. Under an explicit Brownian phylogenetic covariance model,
-independent branch variances would add:
+phylogenetic tree. The current runtime now uses normalized branch time as a
+dimensionless variance multiplier on top of sampling variance. For an edge,
 
 \[
-\operatorname{Var}(X_L-X_R)\propto b_L+b_R.
+s^2_{u,c}
+=
+\left(\frac{1}{n_c}-\frac{1}{n_u}\right)
+\left(1+\frac{t_{u,c}}{\bar t}\right).
 \]
 
-The current KL-TE Wald kernel does not implement that covariance model.
-Branch lengths are recorded as descriptive tree covariates for topology and
-selection diagnostics; they are not injected into edge or sibling
-projected-Wald variance.
+For a sibling pair,
+
+\[
+s^2_{\mathrm{sib}}(u)
+=
+\left(\frac{1}{n_L}+\frac{1}{n_R}\right)
+\left(1+\frac{t_{u,L}+t_{u,R}}{2\bar t}\right).
+\]
+
+This is not a full Brownian phylogenetic covariance model. It is a conservative
+branch-time relaxation: longer normalized tree time allows more expected drift,
+while missing or zero branch time reduces to the sampling-only variance model.
 
 ### Barycenters And Coarse-Graining
 
@@ -329,13 +340,13 @@ calibration law.
 - `wiki/sources/selected-geometry-mp-integral-literature-20260602.md` records
   the no-bootstrap selected-region geometry direction and the
   Stieltjes-transform integral route for deformed MP spectra.
-- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py`
+- `tree_break_selection/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py`
   defines the fixed-subspace chi-square reference.
-- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py`
+- `tree_break_selection/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py`
   defines the Marchenko--Pastur signal-count rule and effective rank.
-- `kl_clustering_analysis/hierarchy_analysis/statistics/branch_length_utils.py`
+- `tree_break_selection/hierarchy_analysis/statistics/branch_length_utils.py`
   validates and aggregates observed branch-length metadata.
-- `kl_clustering_analysis/tree/distributions.py` implements internal node
+- `tree_break_selection/tree/distributions.py` implements internal node
   distributions as empirical subtree barycenters.
 
 ## Links
@@ -367,7 +378,7 @@ calibration law.
   extreme-value problem over selected barycentric contrasts, using analytic
   selected-region geometry rather than bootstrap-estimated geometry?
 - Does the local null-whitened tangent spectrum have \(H\approx\delta_1\), or
-  does KL-TE need a deformed Marchenko--Pastur edge computed from a local
+  does Tree-Break Selection need a deformed Marchenko--Pastur edge computed from a local
   population-spectrum integral?
 - Should branch-length geometry enter the selected law for phylogenetic cases
   only through descriptive topology covariates, or through a future explicit

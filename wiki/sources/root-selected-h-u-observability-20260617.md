@@ -4,11 +4,11 @@ type: source
 status: draft
 updated: 2026-06-17
 sources:
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/node_spectral_result.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/spectral_decomposition_result.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/child_parent_divergence/child_parent_divergence_annotation/spectral_context.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/node_spectral_result.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/spectral_decomposition_result.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
+  - tree_break_selection/hierarchy_analysis/statistics/child_parent_divergence/child_parent_divergence_annotation/spectral_context.py
   - benchmarks/diagnostics/calibration/root_selected_region_margins.py
   - benchmarks/diagnostics/calibration/root_tie_rank_conditioned_coherent_topology_join.py
   - benchmarks/diagnostics/calibration/root_selected_h_u_observability_panel.py

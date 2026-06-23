@@ -1,0 +1,97 @@
+Continuous tree-geometry rethink compact diagnostics
+Date: 2026-06-23
+
+Active implementation check:
+- Continuous benchmark generators precompute distance_metric=mahalanobis_time.
+- Dispatch forwards the precomputed distance for cases with
+  requires_precomputed_tbs_distance=True.
+- Manuscript representation text currently says explicit continuous benchmark
+  cases use precomputed Euclidean distance, which does not match the live code.
+
+Formula implemented for continuous tree distance:
+
+  d(a,b) = (x_a - x_b)^T Sigma_hat^{-1} (x_a - x_b) / p
+
+where Sigma_hat is the shrinkage covariance estimated from the full generated
+continuous matrix.
+
+Compact method results, active distance unless otherwise noted:
+
+CASE binary_low_noise_4c
+  active/tbs: K=39, ARI=0.306
+  active/tbs_fixed_coordinate_by: K=25, ARI=0.557
+  active/tbs_fixed_block_bh: K=35, ARI=0.379
+  active/tbs_neighbor_joining: K=5, ARI=0.968
+  oracle active_hamming/average: any-K K=4 ARI=1.000; exact-K K=4 ARI=1.000
+
+CASE cat_clear_3cat_4c
+  active/tbs: skipped for missing strict-null/stopped-edge empirical-null support
+  active/tbs_fixed_coordinate_by: K=9, ARI=0.880
+  active/tbs_fixed_block_bh: K=12, ARI=0.808
+  active/tbs_neighbor_joining: K=5, ARI=0.846
+  oracle active_hamming/average: any-K K=5 ARI=0.960; exact-K K=4 ARI=0.705
+
+CASE dim_consolidated_4c_24f_continuous
+  active mahalanobis_time/average:
+    tbs K=1 ARI=0.000
+    tbs_fixed_coordinate_by K=1 ARI=0.000
+    tbs_fixed_block_bh K=1 ARI=0.000
+    tbs_neighbor_joining K=5 ARI=0.510
+  zscore_euclidean/average:
+    tbs K=4 ARI=1.000
+    tbs_fixed_coordinate_by K=4 ARI=1.000
+    tbs_fixed_block_bh K=4 ARI=1.000
+  zscore_euclidean/complete:
+    tbs K=4 ARI=1.000
+    tbs_fixed_coordinate_by K=4 ARI=1.000
+    tbs_fixed_block_bh K=4 ARI=1.000
+  oracle active_precomputed/average:
+    any-K K=34 ARI=0.514; exact-K K=4 ARI=0.000
+  oracle zscore_euclidean/average:
+    any-K K=4 ARI=1.000; exact-K K=4 ARI=1.000
+  oracle zscore_euclidean/complete:
+    any-K K=4 ARI=1.000; exact-K K=4 ARI=1.000
+  oracle zscore_euclidean/ward:
+    any-K K=4 ARI=1.000; exact-K K=4 ARI=1.000
+
+CASE cont_lowrank_pggn_shrinkage
+  active/tbs: skipped for missing strict-null/stopped-edge empirical-null support
+  active/tbs_fixed_coordinate_by: K=1, ARI=0.000
+  active/tbs_fixed_block_bh: K=35, ARI=0.026
+  active/tbs_neighbor_joining: skipped for missing strict-null/stopped-edge empirical-null support
+  zscore_euclidean/average:
+    tbs skipped; fixed_coordinate_by K=1 ARI=0.000; fixed_block_bh K=26 ARI=-0.001
+  zscore_euclidean/complete:
+    tbs skipped; fixed_coordinate_by K=1 ARI=0.000; fixed_block_bh K=11 ARI=0.026
+  zscore_euclidean/ward:
+    tbs skipped; fixed_coordinate_by K=1 ARI=0.000; fixed_block_bh K=14 ARI=0.014
+  oracle active_precomputed/average:
+    any-K K=51 ARI=0.043; exact-K K=4 ARI=0.002
+  oracle zscore_euclidean/average:
+    any-K K=31 ARI=0.046; exact-K K=4 ARI=0.002
+  oracle zscore_euclidean/complete:
+    any-K K=24 ARI=0.072; exact-K K=4 ARI=0.022
+  oracle zscore_euclidean/ward:
+    any-K K=7 ARI=0.069; exact-K K=4 ARI=0.065
+
+CASE overlap_unbal_4c_small
+  active/tbs: K=4, ARI=0.500
+  active/tbs_fixed_coordinate_by: K=7, ARI=0.483
+  active/tbs_fixed_block_bh: K=19, ARI=0.357
+  active/tbs_neighbor_joining: skipped for missing strict-null/stopped-edge empirical-null support
+  oracle active_hamming/average: any-K K=29 ARI=0.516; exact-K K=4 ARI=0.500
+
+CASE sbm_moderate
+  active/tbs: K=8, ARI=0.100
+  active/tbs_fixed_coordinate_by: K=1, ARI=0.000
+  active/tbs_fixed_block_bh: K=3, ARI=0.189
+  active/tbs_neighbor_joining: K=3, ARI=0.041
+  oracle active_precomputed/average: any-K K=21 ARI=0.218; exact-K K=3 ARI=0.201
+
+Interpretation:
+- Consolidated continuous failure is primarily a tree-distance geometry failure.
+- Low-rank continuous failure is not repaired by z-score Euclidean geometry.
+- Binary/categorical examples show recoverable or partially recoverable trees
+  but require selected traversal/gate validation.
+- Overlap and SBM examples are weakly recoverable under the active tree
+  geometry; they should not be treated as pure gate failures.

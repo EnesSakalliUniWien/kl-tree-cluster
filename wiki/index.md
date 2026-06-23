@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-19
+updated: 2026-06-23
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -34,7 +34,7 @@ renamed, or promoted.
 
 ### Project
 
-- [[project-overview]] - concise map of the KL-TE repository, source surfaces,
+- [[project-overview]] - concise map of the Tree-Break Selection repository, source surfaces,
   method purpose, and implementation entry points.
 
 ### Tools
@@ -262,7 +262,7 @@ renamed, or promoted.
   splits, so its kernel smoother is useful locality evidence rather than a
   production root rescue.
 - [[legacy-c2ef9a69-edge-alpha-comparison-20260617]] - edge-alpha grid
-  comparison between current `kl` and full legacy `kl_legacy_c2ef9a69` on the
+  comparison between current `tbs` and full legacy `tbs_legacy_c2ef9a69` on the
   same seven overlap/root-tail cases; every tested alpha has one legacy signal
   gain and at least one legacy extra selected-null false split, so edge alpha
   alone does not produce an admissible legacy rule.
@@ -272,27 +272,27 @@ renamed, or promoted.
   profile, current and bandwidth-context match exactly, and guarded hard
   overlap skips remain distinct from legacy-style low-ARI completions.
 - [[benchmark-runner-guarded-contract-fix-20260618]] - standard benchmark
-  runner fix for guarded KL variants: partial OK timing metadata is completed,
+  runner fix for guarded TBS variants: partial OK timing metadata is completed,
   internal-barycenter candidate profiles enforce internal support thresholds,
   and `overlap_extreme_4c*` one-cluster guarded OK rows become explicit skips.
 - [[branch-length-candidate-run-gate-20260618]] - first standard `run_gate`
-  comparison after the guarded runner fix for `kl`, `kl_legacy_c2ef9a69`, and
-  `kl_internal_filter_branch_length_v1`; branch-length remains fail-closed on
+  comparison after the guarded runner fix for `tbs`, `tbs_legacy_c2ef9a69`, and
+  `tbs_internal_filter_branch_length_v1`; branch-length remains fail-closed on
   severe overlap but over-skips several sparse-context gate rows, so it stays
   the next candidate to test rather than a production promotion.
 - [[branch-length-candidate-full-big-20260618]] - full `121`-case comparison
-  of current KL, legacy c2ef, and branch-length internal filtering; current KL
+  of current TBS, legacy c2ef, and branch-length internal filtering; current TBS
   has the best completed-row mean ARI, branch-length remains close and
   fail-closed on unsupported severe overlap, and legacy completes all rows but
   has the weakest mean ARI.
 - [[branch-length-candidate-promotion-audit-20260618]] - decision record for
-  branch-length promotion: do not replace current KL globally; keep
+  branch-length promotion: do not replace current TBS globally; keep
   branch-length as the next guarded candidate and evaluate fixed-candidate
   traversal/support evidence because it improves some
   phylogenetic/categorical/binary rows but regresses solved continuous and
   phylogenetic cases.
 - [[branch-length-traversal-audit-20260618]] - fixed-candidate traversal audit
-  for current KL and branch-length internal filtering; records live traversal
+  for current TBS and branch-length internal filtering; records live traversal
   counters, edge-reachable traversal tuples, edge maps, branch lengths, run
   logs, and verification logs without introducing adaptive method routing.
 - [[path-conditioned-traversal-audit-20260618]] - path-conditioned extension
@@ -453,10 +453,10 @@ renamed, or promoted.
   chooses `k=0` and reduces false splits, while nonzero floors recover signal
   but keep selected-tree raw sibling p-values anti-conservative.
 - [[traceable-benchmark-suite-request-20260604]] - benchmark-suite design
-  request reframing new KL-TE cases as traceable mathematical probes with
+  request reframing new Tree-Break Selection cases as traceable mathematical probes with
   manifests, node traces, failure attribution, and metamorphic checks.
 - [[full-benchmark-run-20260605]] - completed 120-case full benchmark including
-  method-proof cases; k-means leads mean ARI over ok rows, KL remains strong on
+  method-proof cases; k-means leads mean ARI over ok rows, TBS remains strong on
   binary/overlapping ok rows, and method-proof cases expose calibration,
   covariance, and under-split stress modes.
 - [[mnist-benchmark-run-20260605]] - canonical MNIST example over 20
@@ -502,17 +502,25 @@ renamed, or promoted.
   calibration while radius/angle variables explain KAK traversal fragmentation.
 - [[full-benchmark-run-20260606]] - rerun of the canonical 120-case full
   benchmark with default methods, plots, relationship analysis, and failure
-  diagnosis; results reproduce the prior leaderboard and strict KL
+  diagnosis; results reproduce the prior leaderboard and strict TBS
   calibration-support skip profile.
+- [[full-benchmark-run-20260623]] - 121-case full benchmark after the
+  standardized continuous-tree geometry change; confirms the
+  `dim_consolidated_4c_24f_continuous` repair but shows default TBS still
+  under-splits several continuous Gaussian and method-proof regimes.
+- [[gaussian-inner-node-branch-time-debug-20260623]] - inner-node audit for
+  the two continuous Gaussian under-splits, showing that standardized topology
+  contains the correct pure splits but the branch-time covariance multiplier
+  closes the relevant child-parent and sibling gates.
 - [[clustering-root-audit-debug-20260606]] - corrected root-row interpretation
-  for KL failure diagnosis and relationship audit factors; separates true
+  for TBS failure diagnosis and relationship audit factors; separates true
   root rejection from accepted-root post-root sibling traversal stalls.
 - [[path-conditioned-barycentric-action-diagnostics-20260606]] - cached-output
   diagnostic and fresh full-benchmark join tracing the exact barycentric
   edge/sibling identity, KAK radius/angle traversal signal, action-budget
   candidate, high-action angular-shell guard and utility panels,
   calibration-support gap, and traversal-survival path.
-- [[phase1-path-b-foundation-20260606]] - Phase 1 Path B full KL-only sweep
+- [[phase1-path-b-foundation-20260606]] - Phase 1 Path B full TBS-only sweep
   over `k_min in {0,1,2,3}` and pass-through on/off, plus Q5 selected-tail
   geometry covariate gain; selects `k_min=1` with pass-through as the current
   penalized full-suite optimum.
@@ -530,7 +538,7 @@ renamed, or promoted.
   projected-Wald selected ratios without increasing median deviance per changed
   feature.
 - [[diagnostic-framework-github-scan-20260606]] - GitHub scan of analytical and
-  machine learning frameworks for KL-TE diagnostics, selecting selective
+  machine learning frameworks for Tree-Break Selection diagnostics, selecting selective
   inference, simulation-based inference, conformal risk control, and
   calibration/observability tooling as the most relevant framework stack.
 - [[data-independent-sibling-gate-panel-20260613]] - diagnostic same-data,
@@ -539,16 +547,17 @@ renamed, or promoted.
   controls the selected null near `0.01` while remaining diagnostic-only.
 - [[data-independent-sibling-gate-traversal-panel-20260613]] - traversal-level
   diagnostic showing that fixed data-independent sibling gates recover strong
-  binary signal and useful categorical signal; the selected-root permutation
-  layer now has both traversal diagnostics and a default-off runtime guard, but
-  production remains fail-closed pending broad confidence evidence.
+  binary signal and useful categorical signal; selected-root permutation is
+  tracked as a default-off validation diagnostic, not as the TBS runtime method,
+  and production remains fail-closed pending broad confidence evidence.
 - [[fixed-sibling-gate-profile-validation-20260613]] - shared-runner
   validation artifact proving that named fixed sibling-gate profiles avoid
-  adaptive projected-Wald sibling rows, exposing the selected-root permutation
-  guard in the runtime profile path, packaging
+  adaptive projected-Wald sibling rows, exposing selected-root permutation as a
+  validation diagnostic in the profile path, packaging
   `fixed_coordinate_selective_root_v1` and the narrower
-  `fixed_coordinate_selective_passthrough_v1`, and recording the ten-replicate
-  recheck that rejects a hard closed-root barrier, the support run showing
+  `fixed_coordinate_selective_passthrough_v1` validation stress profiles, and
+  recording the ten-replicate recheck that rejects a hard closed-root barrier,
+  the support run showing
   `fixed_coordinate_global_passthrough_v1` still has boundary false splits,
   and `fixed_coordinate_global_passthrough_refined_v1` as the current
   selected-family pass-through diagnostic candidate after binary support
@@ -566,7 +575,7 @@ renamed, or promoted.
 ### Concepts
 
 - [[llm-wiki-pattern]] - the docs-as-code memory pattern used by this project.
-- [[kl-te-method]] - the main inferential pipeline: candidate hierarchy,
+- [[tree-break-selection]] - the main inferential pipeline: candidate hierarchy,
   subtree distributions, edge and sibling tests, and final traversal.
 - [[projected-wald-statistic]] - projected quadratic statistic used in edge and
   sibling tests.
@@ -662,11 +671,11 @@ renamed, or promoted.
   pass-through support guard; strict `require_mp_blocks=True` semantics now
   treat unmeasured no-MP paths as bottlenecks rather than support, and the
   profile is exposed as standard benchmark method id
-  `kl_spectral_transport_passthrough` with the old diagnostic id kept as an
+  `tbs_spectral_transport_passthrough` with the old diagnostic id kept as an
   alias.
 - [[spectral-transport-overlap-dispatch-panel-20260616]] - standard-dispatch
-  comparison between `kl_global_passthrough_refined_diagnostic` and
-  `kl_spectral_transport_passthrough`; the current strict measured
+  comparison between `tbs_global_passthrough_refined_diagnostic` and
+  `tbs_spectral_transport_passthrough`; the current strict measured
   MP support rule preserves the three overlap signal rows and the selected-
   family rerun fixes the `overlap_mod_4c_small` selected-null oversplit by
   blocking one pass-through node.
@@ -695,11 +704,11 @@ renamed, or promoted.
   MP row and raw signal counts but leave completed small-overlap partitions
   unchanged in the one-replicate panel.
 - [[legacy-c2ef9a69-method-package-20260616]] - full old
-  `kl_clustering_analysis` method package from commit `c2ef9a69`, isolated
-  under `kl_clustering_analysis.legacy_methods.commit_c2ef9a69` and exposed to
-  standard benchmark dispatch as `kl_legacy_c2ef9a69`.
+  `tree_break_selection` method package from commit `c2ef9a69`, isolated
+  under `tree_break_selection.legacy_methods.commit_c2ef9a69` and exposed to
+  standard benchmark dispatch as `tbs_legacy_c2ef9a69`.
 - [[legacy-c2ef9a69-method-comparison-panel-20260616]] - small binary and
-  overlap comparison between current `kl` and the full legacy commit package;
+  overlap comparison between current `tbs` and the full legacy commit package;
   legacy fixes one current over-split and avoids some skips, but introduces one
   selected-null false split and under-splits the hardest overlap signal case.
 - [[edge-null-calibration-panel-20260613]] - executable first-phase edge-null
@@ -740,7 +749,7 @@ renamed, or promoted.
   projections are near nominal.
 - [[toomanycells-method-20260613]] - relational method note positioning
   TooManyCells as a tree-first divisive hierarchical spectral clustering
-  approach with Newman-Girvan modularity stopping, not as a direct KL-TE
+  approach with Newman-Girvan modularity stopping, not as a direct Tree-Break Selection
   comparator.
 - [[overlap-structural-sibling-panel-20260614]] - overlap-focused structural
   sibling diagnostic showing that refined-profile binary overlap null failures
@@ -943,26 +952,26 @@ renamed, or promoted.
   families; a log-p sibling frontier removes binary-suite margin thinness but
   still leaves expanded-overlap support and unsupported sibling-rescue
   failures, so the law remains fail-closed for production.
-- [[topology-vector-benchmark-20260615]] - regression-gate KL benchmark and
+- [[topology-vector-benchmark-20260615]] - regression-gate TBS benchmark and
   topology-vector summary showing the refined pass-through profile reduces
   skips and improves skip-as-zero ARI, but is not a broad production clustering
   default; the topology vector remains a diagnostic conditioning object.
 - [[root-selection-literature-20260614]] - literature synthesis separating
   clustering root split inference from phylogenetic or trajectory root
-  orientation, and arguing that KL-TE should validate selected-root stopping
+  orientation, and arguing that Tree-Break Selection should validate selected-root stopping
   rather than optimize a free root parameter.
 - [[selected-root-selected-family-traversal-literature-20260614]] - literature
-  synthesis mapping KL-TE's selected-root and pass-through selected-family null
+  synthesis mapping Tree-Break Selection's selected-root and pass-through selected-family null
   problem to selective clustering inference, selective families, hierarchical
   FDR/FWER, TreeScan/scan statistics, and cluster-permutation max tests.
 - [[selected-root-pass-through-null-fixture-20260614]] - compact iid Bernoulli
   null fixture showing a closed selected root with one pass-through descendant
   split under `fixed_coordinate_global_passthrough_refined_v1`.
 - [[phylogenetic-tree-builders-20260614]] - implementation note for opt-in
-  neighbor-joining and IQ-TREE 3 KL tree builders, both rooted by minimum
+  neighbor-joining and IQ-TREE 3 TBS tree builders, both rooted by minimum
   ancestor deviation before conversion to `PosetTree`.
 - [[julia-tree-estimator-run-20260614]] - full Julia GO matrix tree-estimator
-  comparison showing baseline KL, MAD-rooted neighbor joining, and IQ-TREE 3
+  comparison showing baseline TBS, MAD-rooted neighbor joining, and IQ-TREE 3
   fast/MAD remain highly fragmented and do not solve traversal calibration.
 - [[julia-selected-family-run-20260614]] - full Julia GO matrix run of
   `fixed_coordinate_global_passthrough_refined_v1`, with multi-scale traversal
@@ -998,6 +1007,11 @@ renamed, or promoted.
 - [[dimensional-gaussian-representation-diagnostic]] - why selected continuous
   dimensional Gaussian cases improve consolidated signals but not diffuse
   high-noise signals.
+- [[continuous-tree-geometry-rethink-20260623]] - compact reanalysis showing
+  that pre-patch pooled `mahalanobis_time` tree geometry fails consolidated
+  continuous mean-shift cases, active standardized Euclidean geometry repairs
+  Gaussian location-style continuous cases, and low-rank, overlap, and SBM
+  failures remain separate method problems.
 - [[benchmark-pipeline-contract]] - active benchmark execution order and the
   strict case-generation, distance, method-dispatch, and report-orchestration
   contracts.

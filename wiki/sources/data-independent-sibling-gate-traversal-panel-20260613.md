@@ -7,8 +7,8 @@ sources:
   - benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py
   - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
   - tests/validation/100_test_data_independent_sibling_gate_traversal_panel.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - tests/statistics/31_test_registry_config_wiring.py
   - tests/core/test_gate_annotation_reuse.py
   - raw/inbox/data-independent-sibling-gate-traversal-20260613.md
@@ -31,7 +31,7 @@ and reports cluster-level outcomes.
 
 ## Key Points
 
-- The panel is diagnostic-only and does not change production KL-TE behavior.
+- The panel is diagnostic-only and does not change production Tree-Break Selection behavior.
 - It caches each replicate's tree, edge annotations, and fixed sibling p-values,
   then evaluates multiple methods and selected-topology penalties without
   recomputing the spectral edge gate.
@@ -123,7 +123,7 @@ and reports cluster-level outcomes.
   confidence checks: both families had max null false split `0.0`, null upper
   confidence `0.049992`, and signal lower confidence above `0.75`.
 - The traversal panel's selected-tree replay is now explicitly aligned with
-  the shared KL runner: selected trees, selected-tree oracle cuts, root-
+  the shared TBS runner: selected trees, selected-tree oracle cuts, root-
   selective p-values, and root feature-subsample stability replays use Hamming
   distance and average linkage. Row outputs and the manifest record this
   metric/linkage contract. Earlier traversal numbers from before this
@@ -204,7 +204,7 @@ and reports cluster-level outcomes.
   row, and `Root_Stability_*` diagnostic columns record the guard evidence.
   Defaults keep the guard off.
 - The production-facing guard now also records the root replay metric and
-  linkage in config metadata. For the shared KL runner fixed-profile path, the
+  linkage in config metadata. For the shared TBS runner fixed-profile path, the
   guard uses Hamming distance and the runner's tree linkage method instead of
   default Euclidean linkage replay, aligning the root-stability diagnostic with
   the selected tree being guarded.
@@ -226,7 +226,7 @@ and reports cluster-level outcomes.
   `50`, root-stability threshold `0.24`, `12` stability subsamples, feature
   fraction `0.8`, and deterministic seed `0`; the profile id is stored in
   gate config metadata and participates in cache reuse checks.
-- The shared KL benchmark runner now forwards profile/fixed-gate settings to
+- The shared TBS benchmark runner now forwards profile/fixed-gate settings to
   both gate annotation and decomposition, and records them in
   `MethodRunResult.extra`. The method-constants manifest tracks
   `sibling_gate_profile`, `fixed_sibling_gate_alpha_penalty`,

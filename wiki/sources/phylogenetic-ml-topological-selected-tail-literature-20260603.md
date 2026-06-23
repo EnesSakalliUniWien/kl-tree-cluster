@@ -35,7 +35,7 @@ and tree balance can be part of the selected object.
 - The pvclust and Shimodaira literature is useful for selected-region geometry:
   selected hypotheses are regions with signed-distance, curvature, and
   sample-size behavior. This does not imply that bootstrap should become a
-  KL-TE production fallback.
+  Tree-Break Selection production fallback.
 - Phylogenetic comparative methods make branch-length covariance explicit.
   Brownian or OU-like assumptions produce a covariance model; a precomputed
   distance matrix alone is not a null law.
@@ -46,7 +46,7 @@ and tree balance can be part of the selected object.
 - Tree topology matters. Tree balance, merge persistence, topology distances,
   and graph/TDA summaries suggest that medium/large parents can mix many
   selected-region shapes inside one parent-size bin.
-- For KL-TE, medium/large high-edge contexts that pass simulation support but
+- For Tree-Break Selection, medium/large high-edge contexts that pass simulation support but
   fail held-out precision likely lack tail homogeneity, not only replicate
   count.
 - Candidate diagnostic variables are local subtree balance, child-size

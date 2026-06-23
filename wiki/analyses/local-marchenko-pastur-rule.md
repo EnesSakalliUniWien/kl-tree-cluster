@@ -7,12 +7,12 @@ sources:
   - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
   - wiki/sources/local-mp-identity-law-diagnostic-20260602.md
   - wiki/sources/legacy-internal-spectral-comparison-panel-20260616.md
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/decomposition.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/backends/eigen/operators.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/spectral_decomposition_result.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
+  - tree_break_selection/hierarchy_analysis/decomposition/backends/eigen/decomposition.py
+  - tree_break_selection/hierarchy_analysis/decomposition/backends/eigen/operators.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/projection_dimension_estimation/projection_dimension_estimators.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/spectral_decomposition_result.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
   - benchmarks/diagnostics/spectral/compare_mp_dimension_contracts.py
   - manuscript/sections/method/edge_test.tex
   - manuscript/sections/method/assumptions_validation.tex
@@ -89,7 +89,7 @@ validated fix; the exposed problem is missing empirical-null calibration
 support when the stricter leaf-only spectral basis opens all local sibling
 contexts as selected non-null.
 
-The 2026-06-01 full KL-only benchmark with plots and relationship analysis
+The 2026-06-01 full TBS-only benchmark with plots and relationship analysis
 disabled completed 110 cases under the same contract. It produced 85 `ok` rows
 and 25 explicit `skip` rows, with valid-row mean ARI \(0.8612\), valid-row
 median ARI \(1.0\), and exact \(K\) in 63 of 110 rows. All but one skip were
@@ -344,7 +344,7 @@ and selected large-node extremes.
   reaction after removing internal spectral rows from the production path.
 - `20260601-full-kl-only-leaf-only-spectral.csv` and
   `20260601-full-kl-only-leaf-only-spectral-failure-report.md` record the
-  full-suite KL-only benchmark reaction under the same production contract.
+  full-suite TBS-only benchmark reaction under the same production contract.
 - `wiki/sources/selected-geometry-mp-integral-literature-20260602.md` records
   the Stieltjes-transform integral route for general MP spectra and the
   no-bootstrap selected-region geometry boundary.

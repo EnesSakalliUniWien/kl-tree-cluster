@@ -48,9 +48,9 @@ traversal, projection, or calibration behavior.
   `benchmarks/results/run_20260606_path_action_full/` completed `120` cases
   and `1080` method rows with plots disabled and relationship analysis
   enabled.
-- In the fresh benchmark, `kl` has `92` ok rows and `28` skips. The ok-row
+- In the fresh benchmark, `tbs` has `92` ok rows and `28` skips. The ok-row
   mean ARI is `0.824578`.
-- Of the `28` `kl` skips, `27` are calibration-support skips caused by
+- Of the `28` `tbs` skips, `27` are calibration-support skips caused by
   selected non-null positive-weight records without strict-null or stopped-edge
   empirical-null calibration support.
 - The diagnostic ranks the exact barycentric edge/sibling identity as the base

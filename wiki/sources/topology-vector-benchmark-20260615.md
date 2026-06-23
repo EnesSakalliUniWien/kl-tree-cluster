@@ -33,17 +33,17 @@ tags:
 ## Summary
 
 The topology-vector benchmark runs the standard regression-gate cases with two
-KL variants and summarizes the already generated context-negative topology-law
-diagnostics. A small dispatcher fix forwards KL gate-profile parameters from
-benchmark param grids into the KL runner, allowing
+TBS variants and summarizes the already generated context-negative topology-law
+diagnostics. A small dispatcher fix forwards TBS gate-profile parameters from
+benchmark param grids into the TBS runner, allowing
 `fixed_coordinate_global_passthrough_refined_v1` to be benchmarked as a normal
-KL parameter variant.
+TBS parameter variant.
 
 ## Key Points
 
 - The regression gate covers `17` historically sensitive cases, including
   categorical, phylogenetic, SBM, Gaussian, and overlap cases.
-- Default projected-Wald KL has `11/17` ok rows and `6/17` skips. Its ok-only
+- Default projected-Wald TBS has `11/17` ok rows and `6/17` skips. Its ok-only
   mean ARI is `0.600384`, but skip-as-zero mean ARI is `0.388484`.
 - `fixed_coordinate_global_passthrough_refined_v1` has `17/17` ok rows and no
   skips. Its mean ARI is `0.445742`, median ARI is `0.467063`, and exact-K
@@ -64,7 +64,7 @@ KL parameter variant.
   rank `1`, with conditional log-odds margin `4.694486`, but the support
   status is `support_insufficient_fail_closed` because the internal incidence
   stratum has only one truth-recovery row.
-- The benchmark-facing `kl_conditional_topology_diagnostic` method id runs the
+- The benchmark-facing `tbs_conditional_topology_diagnostic` method id runs the
   17-case regression gate with `17/17` ok rows, mean ARI `0.460293`, median
   ARI `0.480000`, and exact-K count `4/17`. This confirms registry/dispatch
   integration but does not promote the law to production.
@@ -78,7 +78,7 @@ KL parameter variant.
 
 - `tests/pipeline/51_test_dispatch_contract.py` verifies that the benchmark
   dispatcher forwards `sibling_gate_profile`, root-stability settings,
-  selected-root/selected-family guard settings, and `passthrough` to the KL
+  selected-root/selected-family guard settings, and `passthrough` to the TBS
   runner.
 - The benchmark artifacts are stored under
   `raw/assets/benchmark-results/topology_vector_benchmark_20260615/`.

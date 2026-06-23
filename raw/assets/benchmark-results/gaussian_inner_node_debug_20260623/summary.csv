@@ -1,0 +1,3 @@
+case_id,n_samples,n_features,tree_distance_metric,mean_branch_length,active_found_clusters,no_time_found_clusters,active_ari,no_time_ari,active_open_sibling_nodes,no_time_open_sibling_nodes,active_open_split_nodes,no_time_open_split_nodes,changed_nodes,csv
+gauss_clear_medium_continuous,60,40,standardized_euclidean,0.08474924868065216,1,4,0.0,1.0,0,3,0,3,3,raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/gauss_clear_medium_continuous_standardized_active_vs_no_time_inner_nodes.csv
+gauss_moderate_3c_continuous,45,30,standardized_euclidean,0.11957812835619828,1,3,0.0,1.0,0,2,0,2,2,raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/gauss_moderate_3c_continuous_standardized_active_vs_no_time_inner_nodes.csv

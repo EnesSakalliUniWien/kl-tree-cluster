@@ -5,8 +5,8 @@ status: reviewed
 updated: 2026-06-18
 sources:
   - raw/inbox/c2ef-cosine-subspace-method-notes-20260615.md
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/METADATA.md
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/config.py
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/METADATA.md
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/config.py
   - data/feature_matrices/feature_matrix_julia_allGO_new.tsv
   - raw/assets/benchmark-results/julia_allGO_new_c2ef_validate_cosine_subspace_split_legacy_20260618/reference_split_manifest.json
   - raw/assets/benchmark-results/julia_allGO_new_c2ef_validate_cosine_subspace_split_legacy_20260618/reference_tfidf_components_02_05_legacy_assignments.csv
@@ -65,7 +65,7 @@ best-Jaccard stability.
   `14`, and `8` are weakly recovered under perturbation.
 - A previously existing adaptive-diffusion run uses
   `feature_matrix_julia_GOCC_GOBP_GOMF_combined.tsv` (`703 x 14766`), not this
-  allGO-new matrix. Its `kl_diffusion_adaptive` parameters were
+  allGO-new matrix. Its `tbs_diffusion_adaptive` parameters were
   `k = 15`, diffusion time `3`, components `30`, pydiffmap hamming metric,
   bandwidth `-1/(d+2)`, and median epsilon. That run should not be treated as
   the adaptive-diffusion result for `feature_matrix_julia_allGO_new.tsv`.

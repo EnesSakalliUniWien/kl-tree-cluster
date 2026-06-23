@@ -8,8 +8,8 @@ sources:
   - tests/validation/93_test_statistic_distribution_shape_panel.py
   - benchmarks/validation/selected_edge_type1_geometry.py
   - benchmarks/diagnostics/calibration/differential_statistic_validity_panel.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/wald_statistic/sibling_divergence_test.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_reference_distribution.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/wald_statistic/sibling_divergence_test.py
   - raw/assets/benchmark-results/selected-edge-type1-binary-categorical-pilot-20260604/merged/selected_edge_geometry_edges.csv
 tags:
   - source

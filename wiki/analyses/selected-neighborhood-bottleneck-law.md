@@ -17,9 +17,9 @@ sources:
   - wiki/sources/retained-pass-through-topology-likelihood-panel-20260615.md
   - wiki/sources/selected-neighborhood-spectral-flow-diagnostic-20260616.md
   - wiki/sources/spectral-transport-passthrough-guard-20260616.md
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
   - benchmarks/diagnostics/calibration/overlap_conditional_topology_law_panel.py
   - benchmarks/diagnostics/calibration/selected_neighborhood_distribution_panel.py
 tags:

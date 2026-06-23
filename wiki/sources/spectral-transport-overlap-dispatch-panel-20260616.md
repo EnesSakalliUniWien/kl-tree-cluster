@@ -8,7 +8,7 @@ sources:
   - tests/validation/147_test_spectral_transport_overlap_dispatch_panel.py
   - benchmarks/shared/runners/method_registry.py
   - benchmarks/shared/util/method_sets.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/spectral_transport.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
   - benchmarks/diagnostics/calibration/spectral_transport_threshold_calibration_panel.py
   - benchmarks/diagnostics/calibration/spectral_transport_promotion_gate.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_overlap_dispatch_panel/manifest.json
@@ -36,8 +36,8 @@ tags:
 ## Summary
 
 `spectral_transport_overlap_dispatch_panel.py` compares the promoted
-`kl_spectral_transport_passthrough` method against the matched
-`kl_global_passthrough_refined_diagnostic` baseline on the same overlap cases
+`tbs_spectral_transport_passthrough` method against the matched
+`tbs_global_passthrough_refined_diagnostic` baseline on the same overlap cases
 through the standard benchmark dispatch path. The promoted method uses strict
 measured MP support when `require_mp_blocks=True`: unmeasured no-MP paths are
 bottlenecks rather than support, while the optional non-required mode keeps
@@ -46,9 +46,9 @@ floor-only paths neutral for diagnostic comparison.
 ## Key Points
 
 - The refined global pass-through baseline is now exposed as
-  `kl_global_passthrough_refined_diagnostic`, so the spectral method can be
+  `tbs_global_passthrough_refined_diagnostic`, so the spectral method can be
   compared against the same profile without the spectral guard.
-- The promoted spectral method is exposed as `kl_spectral_transport_passthrough`
+- The promoted spectral method is exposed as `tbs_spectral_transport_passthrough`
   and resolves to `fixed_coordinate_spectral_transport_passthrough_v1`. The
   old diagnostic id remains available as an alias for diagnostic runs.
 - The default spectral transport max-cost threshold is `1.2`. Under strict

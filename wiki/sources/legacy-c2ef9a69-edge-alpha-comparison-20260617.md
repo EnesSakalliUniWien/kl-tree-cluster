@@ -23,8 +23,8 @@ tags:
 
 ## Summary
 
-This diagnostic runs current `kl` and the full copied legacy
-`kl_legacy_c2ef9a69` method over the same seven overlap/root-tail cases used
+This diagnostic runs current `tbs` and the full copied legacy
+`tbs_legacy_c2ef9a69` method over the same seven overlap/root-tail cases used
 by the selected-root work, both selected-null and signal roles, one replicate,
 and the edge-alpha grid `0.0001, 0.0003, 0.001, 0.003, 0.01`.
 

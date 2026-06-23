@@ -16,7 +16,7 @@ tags:
 
 ## Summary
 
-This request argues that the next KL-TE benchmark program should be a
+This request argues that the next Tree-Break Selection benchmark program should be a
 traceable mathematical benchmark suite rather than a larger collection of ARI
 tables. Each case should target a specific mathematical contract: selected-tail
 calibration, internal support, MP/projection, categorical or continuous

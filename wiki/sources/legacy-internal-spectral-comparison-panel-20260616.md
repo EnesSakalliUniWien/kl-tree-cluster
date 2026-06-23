@@ -10,10 +10,10 @@ sources:
   - tests/pipeline/51_test_dispatch_contract.py
   - benchmarks/shared/runners/method_registry.py
   - benchmarks/shared/runners/dispatch.py
-  - benchmarks/shared/runners/kl_runner.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/node_spectral_task.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
+  - benchmarks/shared/runners/tbs_runner.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/node_spectral_task.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel/manifest.json
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel/legacy_internal_spectral_comparison_rows.csv
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel/legacy_internal_spectral_comparison_pairwise.csv
@@ -35,7 +35,7 @@ MP spectral path against an opt-in reconstruction of the commit-era behavior
 that appends descendant internal node distributions to each local spectral
 matrix. The copied behavior is exposed as
 `include_internal_barycenters=True` in the spectral estimator and as benchmark
-method id `kl_legacy_internal_spectral_diagnostic`.
+method id `tbs_legacy_internal_spectral_diagnostic`.
 
 The one-replicate overlap benchmark shows that the legacy rows strongly change
 the spectral diagnostics but do not change the resulting partitions on the
@@ -72,8 +72,8 @@ spectral perturbation, not as a production rescue rule.
 
 - `node_spectral_task.py`, `tree_estimator.py`, and `marchenko_pastur.py`
   implement the opt-in internal-barycenter spectral task and worker path.
-- `method_registry.py`, `dispatch.py`, and `kl_runner.py` expose the
-  diagnostic as `kl_legacy_internal_spectral_diagnostic` for standard
+- `method_registry.py`, `dispatch.py`, and `tbs_runner.py` expose the
+  diagnostic as `tbs_legacy_internal_spectral_diagnostic` for standard
   benchmark dispatch.
 - `151_test_legacy_internal_spectral_comparison_panel.py` verifies the
   pairwise comparison and output-writing contract.

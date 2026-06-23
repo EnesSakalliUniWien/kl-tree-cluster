@@ -56,7 +56,7 @@ added, retained only diagnostically, and still unresolved between the old
   selected-family panel but has `4` signal regressions, so it remains a guard
   candidate rather than a standalone method.
 - The full-Julia fragmentation row records the descriptive gap:
-  old prior KL stack `670` clusters versus current conditional-topology
+  old prior TBS stack `670` clusters versus current conditional-topology
   diagnostic `410` clusters.
 - The kernel-spectral candidate row records `kernel_available_count = 2` and
   `strict_fail_closed_kernel_available_count = 1`, but

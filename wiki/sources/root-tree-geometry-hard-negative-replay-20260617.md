@@ -7,7 +7,7 @@ sources:
   - benchmarks/diagnostics/calibration/root_tree_geometry_hard_negative_replay_panel.py
   - tests/validation/186_test_root_tree_geometry_hard_negative_replay_panel.py
   - tests/pipeline/51_test_dispatch_contract.py
-  - benchmarks/shared/runners/kl_runner.py
+  - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/runners/dispatch.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_v1/manifest.json
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_v1/root_tree_geometry_hard_negative_replay_rows.csv
@@ -47,7 +47,7 @@ fail-closed.
 
 ## Key Points
 
-- The shared KL runner now accepts explicit
+- The shared TBS runner now accepts explicit
   `root_stability_tree_distance_metric`,
   `root_stability_tree_linkage_method`,
   `root_selective_permutation_guard_tree_distance_metric`, and
@@ -71,7 +71,7 @@ fail-closed.
   `6` clusters and Rogers-Tanimoto average linkage finds `6` clusters, but the
   root partition truth ARI remains near zero.
 - The same benchmark was rerun with the full copied old commit method
-  `kl_legacy_c2ef9a69`. The legacy runner supports only linkage trees, so both
+  `tbs_legacy_c2ef9a69`. The legacy runner supports only linkage trees, so both
   neighbor-joining geometries are explicit skips.
 - On the four linkage geometries, the old method finds one cluster for
   Hamming average, Hamming complete, and Jaccard average linkage. It fragments
@@ -97,7 +97,7 @@ distance/linkage/rooting families.
   parsing, fail-closed unstable-root classification, leak classification, and
   summary failure when any geometry leaks.
 - `51_test_dispatch_contract.py` verifies that root replay distance/linkage
-  parameters are forwarded through the shared KL dispatcher.
+  parameters are forwarded through the shared TBS dispatcher.
 - `root_tree_geometry_hard_negative_replay_summary.csv` records
   `row_count = 6`, `ok_geometry_count = 6`,
   `root_validity_supported_count = 0`, `hard_negative_leak_count = 0`, and

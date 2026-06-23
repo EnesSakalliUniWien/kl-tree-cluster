@@ -179,7 +179,7 @@ Proof by counterexample. Take \(\mathcal S=\{W>c\}\) for any finite
 whereas \(\Pr(\chi^2_k\le c)>0\). Hence the conditional law differs from the
 unconditional chi-square law.
 
-The KL-TE same-data hierarchy event is more complex than \(\{W>c\}\), but the
+The Tree-Break Selection same-data hierarchy event is more complex than \(\{W>c\}\), but the
 logic is the same: hierarchy construction, edge opening, and focal sibling
 selection are functions of the same feature matrix that supplies the tested
 contrast. A fixed-object proof cannot be reused without conditioning on that

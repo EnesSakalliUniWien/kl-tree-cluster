@@ -1,22 +1,22 @@
 ---
-title: KL-TE Method
+title: Tree-Break Selection Method
 type: concept
 status: reviewed
-updated: 2026-05-24
+updated: 2026-06-23
 sources:
   - README.md
   - manuscript/guides/full_method_logic_map.md
   - manuscript/sections/method/overview.tex
 tags:
   - method
-  - kl-te
+  - tree-break-selection
 ---
 
-# KL-TE Method
+# Tree-Break Selection Method
 
 ## Summary
 
-KL-TE evaluates a candidate binary hierarchy by estimating subtree feature
+Tree-Break Selection evaluates a candidate binary hierarchy by estimating subtree feature
 distributions, testing child-parent and sibling contrasts with projected-Wald
 statistics, correcting p-values, and traversing the tree to decide the final
 cluster partition.

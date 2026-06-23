@@ -17,9 +17,9 @@ sources:
   - wiki/sources/selected-geometry-mp-integral-literature-20260602.md
   - benchmarks/diagnostics/calibration/selected_hierarchy_null_audit.py
   - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
-  - kl_clustering_analysis/tree/distributions.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_kernel.py
+  - tree_break_selection/tree/distributions.py
+  - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
+  - tree_break_selection/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_kernel.py
 tags:
   - analysis
   - geometry
@@ -71,7 +71,7 @@ projected-Wald and selected-PCA diagnostics: the whitened tangent coordinates
 and orthonormal projection are not enough by themselves to explain the very
 large sibling inflation factors seen in unsupported high-dimensional contexts.
 
-The hierarchy adds a second geometric object. KL-TE builds a sample-leaf tree
+The hierarchy adds a second geometric object. Tree-Break Selection builds a sample-leaf tree
 from the same feature matrix that later supplies the tests. Each internal node
 distribution is the leaf-count-weighted empirical barycenter of its descendant
 leaves. If \(D(v)\) is the descendant leaf set under node \(v\), then
@@ -313,12 +313,12 @@ model is provided.
 - `wiki/analyses/oracle-gate-path-diagnostic.md` records the support-status
   contract and the distinction between invalid selected-non-null calibration
   support and valid empirical-null support.
-- `kl_clustering_analysis/tree/distributions.py` implements internal node
+- `tree_break_selection/tree/distributions.py` implements internal node
   distributions as empirical subtree barycenters.
-- `kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py`
+- `tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py`
   implements the null-whitened tangent maps used by edge, sibling, and spectral
   calculations.
-- `kl_clustering_analysis/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_kernel.py`
+- `tree_break_selection/hierarchy_analysis/statistics/projection/projected_wald/projected_wald_kernel.py`
   implements the shared projected-Wald kernel.
 
 ## Links

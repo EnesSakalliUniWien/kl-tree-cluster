@@ -22,7 +22,7 @@ tags:
 ## Summary
 
 `root_selected_binary_resolution_panel.py` encodes the corrected root idea for
-the current method: KL-TE always returns a binary hierarchy, so the root is
+the current method: Tree-Break Selection always returns a binary hierarchy, so the root is
 always represented as \(r\to(L,R)\), but the first binary split can be only one
 selected refinement of a weak or unresolved top-level event.
 

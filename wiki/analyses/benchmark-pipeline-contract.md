@@ -11,7 +11,7 @@ sources:
   - benchmarks/shared/util/case_inputs.py
   - benchmarks/shared/util/method_execution.py
   - benchmarks/shared/util/case_execution.py
-  - benchmarks/shared/runners/kl_diffusion_runner.py
+  - benchmarks/shared/runners/tbs_diffusion_runner.py
   - tests/integration/60_test_benchmark_methods_smoke.py
 tags:
   - benchmark
@@ -44,9 +44,9 @@ The active full-benchmark order is:
    method IDs and parameter sets.
 5. `prepare_case_inputs()` validates the generated matrix contract and returns
    a typed `PreparedCaseInputs` object with shared distances only for declared
-   precomputed KL tree distances or distance-matrix methods.
+   precomputed TBS tree distances or distance-matrix methods.
 6. `run_single_method_once()` applies method-specific parameter resolution,
-   records the KL tree-distance source, dispatches the method, computes
+   records the TBS tree-distance source, dispatches the method, computes
    metrics, and builds the canonical result row.
 7. `run_clustering_result()` routes the method ID to the registered runner and
    normalizes ok/skip results.
@@ -57,18 +57,18 @@ The strict distance contract is:
 
 - Case recipes do not carry generated data.
 - `generate_case_data()` is the only case recipe to generated-data boundary.
-- A precomputed KL tree distance is valid only when metadata sets
-  `requires_precomputed_kl_distance=True` and provides
+- A precomputed TBS tree distance is valid only when metadata sets
+  `requires_precomputed_tbs_distance=True` and provides
   `precomputed_distance_condensed`.
-- Otherwise, KL-family feature-space methods compute their tree distance inside
+- Otherwise, TBS-family feature-space methods compute their tree distance inside
   the method execution stage from the selected run parameters.
 - Case recipe geometry belongs in `benchmarks/shared/cases/geometry.py`, so
   runner large-case decisions and report manifests use the same shape rules.
-- `kl_diffusion` is a Hamming-diffusion method for binary or one-hot matrices.
+- `tbs_diffusion` is a Hamming-diffusion method for binary or one-hot matrices.
   Continuous `FeatureSpace` inputs are not scored by that method; they are
   reported as explicit skip rows instead of producing misleading Hamming-on-float
-  results. Continuous KL tree construction belongs to the precomputed Euclidean
-  KL path or to a separately declared diffusion method with an explicit
+  results. Continuous TBS tree construction belongs to the precomputed Euclidean
+  TBS path or to a separately declared diffusion method with an explicit
   continuous metric.
 
 The creation audit on 2026-06-04 found no generator-level geometry or metadata
@@ -102,12 +102,12 @@ entry points:
   one-case execution, metrics, and plots.
 - `benchmarks/shared/util/case_inputs.py` validates generated matrices and
   resolves shared distance objects.
-- `benchmarks/shared/util/method_execution.py` records whether the KL tree
+- `benchmarks/shared/util/method_execution.py` records whether the TBS tree
   distance came from a feature metric or a declared precomputed source.
-- `benchmarks/shared/runners/kl_diffusion_runner.py` enforces the binary/one-hot
+- `benchmarks/shared/runners/tbs_diffusion_runner.py` enforces the binary/one-hot
   Hamming diffusion input contract.
 - `tests/integration/60_test_benchmark_methods_smoke.py` checks that continuous
-  cases are skipped by `kl_diffusion` with an explicit contract reason.
+  cases are skipped by `tbs_diffusion` with an explicit contract reason.
 - `benchmarks/shared/README.md` documents this execution order and the
   canonical distance contract.
 

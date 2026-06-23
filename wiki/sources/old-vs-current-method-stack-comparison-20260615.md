@@ -12,9 +12,9 @@ sources:
   - raw/assets/benchmark-results/julia_tree_estimators_20260614/summary.csv
   - raw/assets/benchmark-results/julia_tree_estimators_20260614/kl_assignments.csv
   - raw/assets/benchmark-results/conditional_topology_law_20260615/julia_selected_family/cluster_assignments.csv
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/fixed_subspace_annotation.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/fixed_subspace_annotation.py
 tags:
   - source
   - diagnostics
@@ -75,7 +75,7 @@ gate.
   signal-neighborhood tree-distance loop. This confirms the old structural
   bandwidth layer is both method-relevant and computationally problematic on
   the full Julia tree unless tree distances are cached or vectorized.
-- Existing full-Julia outputs show the prior full KL stack returning `670`
+- Existing full-Julia outputs show the prior full TBS stack returning `670`
   clusters with `648` singleton clusters, while the current conditional
   topology diagnostic profile returns `410` clusters with `312` singleton
   clusters. Their overlap has ARI `0.062803` and NMI `0.923045`, indicating
@@ -92,7 +92,7 @@ gate.
 - `raw/assets/benchmark-results/old_vs_current_method_stack_20260615/stack_contract_comparison/method_stack_behavior_summary.csv`
   records the existing full-Julia behavior summaries.
 - `raw/assets/benchmark-results/old_vs_current_method_stack_20260615/stack_contract_comparison/method_stack_pairwise_overlap.csv`
-  records overlap between the prior full KL stack and current conditional
+  records overlap between the prior full TBS stack and current conditional
   topology output.
 
 ## Links

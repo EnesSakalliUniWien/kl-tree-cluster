@@ -19,7 +19,7 @@ tags:
 ## Summary
 
 This audit tests whether cross-fitting hierarchy selection and gate testing
-restores edge calibration and sibling empirical-null support. Because KL-TE
+restores edge calibration and sibling empirical-null support. Because Tree-Break Selection
 uses a sample-leaf hierarchy, literal sample splitting is not yet a valid
 diagnostic without an explicit assignment model for held-out samples. The
 implemented cross-fit regime therefore splits feature blocks: one feature

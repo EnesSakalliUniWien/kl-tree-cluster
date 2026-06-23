@@ -23,8 +23,8 @@ tags:
 ## Summary
 
 `legacy_c2ef9a69_method_comparison_panel.py` compares the current standard
-`kl` method against the full old package snapshot exposed as
-`kl_legacy_c2ef9a69`. The one-replicate panel covers six compact binary cases:
+`tbs` method against the full old package snapshot exposed as
+`tbs_legacy_c2ef9a69`. The one-replicate panel covers six compact binary cases:
 `binary_perfect_2c`, `binary_low_noise_2c`, `binary_null_small`,
 `overlap_part_4c_small`, `overlap_mod_4c_small`, and
 `overlap_heavy_4c_small_feat`, each in selected-null and signal roles.

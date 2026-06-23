@@ -5,9 +5,9 @@ status: reviewed
 updated: 2026-06-14
 sources:
   - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
-  - benchmarks/shared/runners/kl_runner.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+  - benchmarks/shared/runners/tbs_runner.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - tests/validation/101_test_fixed_sibling_gate_profile_validation.py
   - benchmarks/diagnostics/calibration/production_admissibility_contract.py
   - raw/inbox/fixed-sibling-gate-profile-validation-20260613.md
@@ -23,14 +23,14 @@ tags:
 ## Summary
 
 `fixed_sibling_gate_profile_validation.py` validates the named fixed
-sibling-gate profiles through the shared KL benchmark runner. It is a
+sibling-gate profiles through the shared TBS benchmark runner. It is a
 diagnostic artifact for routing and evidence fields, not a production
 calibration rule.
 
 ## Key Points
 
 - The panel runs selected binary or direct categorical null/signal cases
-  through `_run_kl_method` with a named profile such as
+  through `_run_tbs_method` with a named profile such as
   `fixed_coordinate_guarded_v1` or `fixed_global_guarded_v1`.
 - It records gate config metadata, observed `Sibling_Test_Method` values,
   whether any `projected_wald_inflation` sibling rows were used, traversal
@@ -38,9 +38,9 @@ calibration rule.
   root-level sibling p-values/open decisions, root-stability mean/median/q10,
   and the effective profile sibling alpha.
 - The root-stability guard now records and uses the selected-tree replay
-  contract for fixed-profile KL runs: Hamming distance and average linkage.
+  contract for fixed-profile TBS runs: Hamming distance and average linkage.
   This removes an earlier diagnostic mismatch where feature-subsample root
-  splits were recomputed with SciPy's default Euclidean metric while the KL
+  splits were recomputed with SciPy's default Euclidean metric while the TBS
   selected tree was Hamming/average.
 - Profile rows require `adaptive_projection_avoided=True`: the emitted profile
   id and sibling method must match the profile, no adaptive projected-Wald
@@ -61,7 +61,7 @@ calibration rule.
   `root_selective_permutation_guard_alpha`.
 - TooManyCells is not used as a direct comparator. It is only relational
   context for tree-first divisive stopping, while this artifact validates
-  KL-TE's fixed sibling-gate profile routing.
+  Tree-Break Selection's fixed sibling-gate profile routing.
 - A targeted profile replay at data seed `20309045` shows the current profile
   boundary: `fixed_coordinate_guarded_v1` blocks the known binary null root via
   root stability with seed `0`, but still opens the known
@@ -69,7 +69,7 @@ calibration rule.
   root stability are not yet a full categorical root/null fix.
 - The selected-root permutation guard is now executable in the production-facing
   gate annotation path as a default-off opt-in. The fixed-profile validation
-  CLI forwards guard replicates, seed, and alpha into the shared KL runner,
+  CLI forwards guard replicates, seed, and alpha into the shared TBS runner,
   records `Root_Selective_Permutation_*` audit columns, and summarizes
   selected-root p-values and guard block rates.
 - The selected-root method layer is now packaged as
@@ -85,7 +85,7 @@ calibration rule.
 - The guard is deliberately limited to fixed-subspace sibling methods. It
   raises with `projected_wald_inflation` because the same-sample adaptive PCA
   statistic is the layer being avoided, not a valid input to repair.
-- The shared KL runner now records resolved profile settings in
+- The shared TBS runner now records resolved profile settings in
   `MethodRunResult.extra`, so benchmark artifacts report the actual fixed
   sibling method, selected-topology penalty, stability constants, and
   selected-root guard constants rather than only raw explicit kwargs.

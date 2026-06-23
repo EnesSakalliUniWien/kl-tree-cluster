@@ -30,7 +30,7 @@ tags:
 `cosine_band_coherence_comparator.py` ports the useful c2ef cosine-subspace
 checks into the current diagnostic framework without restoring the old scripts
 as production method paths. It keeps the fixed historical cosine eigen-bands,
-builds a current KL decomposition tree for each band, and reports cluster
+builds a current TBS decomposition tree for each band, and reports cluster
 coherence evidence.
 
 ## Key Points
@@ -59,7 +59,7 @@ coherence evidence.
   `c7i.xlarge` shard per fixed band. The merged manifest records
   `all_exit_codes_zero: true`, `row_count: 8`, `coherence_row_count: 2927`,
   `spectrum_row_count: 640`, and S3 provenance under
-  `s3://phylomovies-iqtree-067744548702-us-east-1/topology-search/kl-te-cosine-julia-binary-sharded-20260615-140208Z`.
+  `s3://phylomovies-iqtree-067744548702-us-east-1/topology-search/tree-break-selection-cosine-julia-binary-sharded-20260615-140208Z`.
 - The Julia run is fragmentation-heavy. The best coherent-cluster fraction is
   `variation_36_80` with `102/292 = 0.349315`; the least singleton-heavy broad
   band is `broad_variation_02_35` with `224` clusters, singleton fraction

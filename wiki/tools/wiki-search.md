@@ -30,7 +30,7 @@ sed -n '1,220p' wiki/index.md
 Search wiki and source surfaces:
 
 ```bash
-rg "term" wiki raw README.md manuscript kl_clustering_analysis benchmarks tests
+rg "term" wiki raw README.md manuscript tree_break_selection benchmarks tests
 ```
 
 Inspect matches without editing:

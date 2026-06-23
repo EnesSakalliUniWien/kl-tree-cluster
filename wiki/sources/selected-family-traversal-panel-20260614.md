@@ -6,7 +6,7 @@ updated: 2026-06-14
 sources:
   - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
   - scripts/analysis/multiscale_umap_overlay.py
-  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - tests/validation/102_test_selected_family_traversal_panel.py
   - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
 tags:
@@ -21,7 +21,7 @@ tags:
 ## Summary
 
 `selected_family_traversal_panel.py` is a diagnostic-only runner that compares
-baseline KL traversal with fixed-coordinate selected-root and selected-family
+baseline TBS traversal with fixed-coordinate selected-root and selected-family
 profiles, then emits multi-scale node, region, and sample outputs instead of
 only one flat clustering.
 

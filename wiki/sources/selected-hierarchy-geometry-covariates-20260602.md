@@ -53,7 +53,7 @@ A broader 200-replicate run adds diffuse dimensional Gaussian, high-cardinality
 categorical, high-dimensional categorical, heavy-overlap binary, phylogenetic
 DNA, and an SBM boundary case. Eight cases completed; `sbm_moderate` was
 reported as an explicit skip because the current selected-hierarchy null
-generator does not own the precomputed KL tree-distance contract. The broad run
+generator does not own the precomputed TBS tree-distance contract. The broad run
 adds leave-one-source-family-out scoring.
 
 ## Key Points

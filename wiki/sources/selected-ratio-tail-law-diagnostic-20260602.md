@@ -69,7 +69,7 @@ a general external calibration law.
   case-replicates that share the same numeric `replicate_index`.
 - The broad run used `200` replicates over nine requested cases. Eight cases
   completed. `sbm_moderate` was skipped because the selected-hierarchy null
-  generator does not own the precomputed KL tree-distance contract.
+  generator does not own the precomputed TBS tree-distance contract.
 - The selected-ratio tail table contains `104` contexts. `39` contexts have
   descriptive held-out tail-law folds; `65` have no valid tail-law folds.
 - `0` of `104` contexts are production-admissible. Every context fails the

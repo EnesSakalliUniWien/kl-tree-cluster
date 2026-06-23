@@ -30,8 +30,8 @@ This ad hoc smoke compares sibling-gate and tree-construction variants on small
 signal and selected-null cases. The first user-run panel covers
 `binary_2clusters` and `cat_clear_3cat_4c`, null plus signal, two replicates,
 Hamming/average tree, `edge_alpha = 0.001`, and `sibling_alpha = 0.01`. The
-follow-up diffusion runs evaluate registered `kl_diffusion` and
-`kl_diffusion_adaptive` on the same selected-null/signal shape, plus a
+follow-up diffusion runs evaluate registered `tbs_diffusion` and
+`tbs_diffusion_adaptive` on the same selected-null/signal shape, plus a
 four-case signal-only smoke.
 
 The main result is that legacy `c2ef9a69` is the cleanest method on this tiny
@@ -52,14 +52,14 @@ especially adaptive diffusion, but still leaks selected-null rows.
 - `fixed_coordinate_selective_root_v1` reduces selected-null false split rate
   to `0.25` and raises signal mean ARI to `0.879946`, but signal exact-K remains
   `0.0`.
-- On the same selected-null/signal shape, plain `kl_diffusion` has selected-null
+- On the same selected-null/signal shape, plain `tbs_diffusion` has selected-null
   false split rate `0.25`, signal mean ARI `0.897059`, and signal exact-K rate
   `0.75`.
-- `kl_diffusion_adaptive` has strong signal behavior, with signal mean ARI
+- `tbs_diffusion_adaptive` has strong signal behavior, with signal mean ARI
   `0.986815` and signal exact-K rate `1.0`, but selected-null false split rate
   `0.50` over all null rows and only `2/4` null rows completing.
-- On the four-case signal-only smoke, `kl_diffusion` has mean ARI `0.965497`
-  and exact-K rate `1.0`; `kl_diffusion_adaptive` has mean ARI `0.922392` and
+- On the four-case signal-only smoke, `tbs_diffusion` has mean ARI `0.965497`
+  and exact-K rate `1.0`; `tbs_diffusion_adaptive` has mean ARI `0.922392` and
   exact-K rate `0.75`.
 
 ## Evidence

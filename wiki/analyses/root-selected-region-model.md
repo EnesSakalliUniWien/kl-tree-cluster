@@ -13,7 +13,7 @@ sources:
   - wiki/sources/root-selected-region-margins-20260603.md
   - benchmarks/diagnostics/calibration/selected_hierarchy_geometry_covariates.py
   - benchmarks/diagnostics/calibration/root_selected_region_margins.py
-  - benchmarks/shared/kl_tree_context.py
+  - benchmarks/shared/tbs_tree_context.py
 tags:
   - analysis
   - selection
@@ -25,7 +25,7 @@ tags:
 
 ## Summary
 
-This page defines the first tractable selected-region object for KL-TE: a root
+This page defines the first tractable selected-region object for Tree-Break Selection: a root
 sibling context with a fixed hierarchy-construction procedure, fixed feature
 chart, fixed projected-Wald kernel, no sibling FDR, and no traversal. It does
 not solve the full production selected-hierarchy law. It defines the event
@@ -166,7 +166,7 @@ p_R-p_u
 =
 -\frac{n_L}{n_u}(p_L-p_R).
 \]
-In the default no-branch-scaling path, the variance scales are
+In the no-branch-time limit, the variance scales are
 \[
 s_{\mathrm{sib}}
 =
@@ -188,8 +188,11 @@ s_{R,u}
 =
 \frac{n_L}{n_Rn_u}.
 \]
-Because both edge and sibling contrasts use the same parent/null covariance
-at a binary parent, these scales cancel the barycentric coefficients:
+The current runtime multiplies these sampling scales by normalized branch-time
+factors, \(1+t_{u,c}/\bar t\) for child-parent edges and
+\(1+(t_{u,L}+t_{u,R})/(2\bar t)\) for siblings. Without those multipliers, both
+edge and sibling contrasts use the same parent/null covariance at a binary
+parent, so these scales cancel the barycentric coefficients:
 \[
 z_{L,u}=z_{L,R},
 \qquad

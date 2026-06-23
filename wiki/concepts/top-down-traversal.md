@@ -2,10 +2,10 @@
 title: Top-Down Traversal
 type: concept
 status: reviewed
-updated: 2026-05-24
+updated: 2026-06-23
 sources:
   - manuscript/sections/method/decomposition.tex
-  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
 tags:
   - method
   - traversal
@@ -35,12 +35,12 @@ building per-sample cluster assignments.
 
 - `manuscript/sections/method/decomposition.tex` states the decision-extraction
   role and pass-through rule.
-- `kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py` implements
+- `tree_break_selection/hierarchy_analysis/tree_decomposition.py` implements
   the traversal loop in `TreeDecomposition.decompose_tree`.
 
 ## Links
 
-- [[kl-te-method]]
+- [[tree-break-selection]]
 - [[tree-decomposition]]
 - [[poset-tree]]
 

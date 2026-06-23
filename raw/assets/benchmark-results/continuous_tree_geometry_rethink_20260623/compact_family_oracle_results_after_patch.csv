@@ -1,0 +1,7 @@
+case_id,geometry,linkage,oracle_any_k,oracle_any_ari,oracle_exact_k,oracle_exact_ari,root_child_min_size,root_child_max_size,root_child_balance,root_mean_child_purity
+binary_low_noise_4c,active_hamming,average,4,1.0,4,1.0,20,60,0.3333333333333333,0.6666666666666666
+cat_clear_3cat_4c,active_hamming,average,5,0.9601288763592428,4,0.7049518569463549,50,50,1.0,0.5
+dim_consolidated_4c_24f_continuous,active_standardized_euclidean,average,4,1.0,4,1.0,40,120,0.3333333333333333,0.6666666666666666
+cont_lowrank_pggn_shrinkage,active_mahalanobis_time,average,51,0.04307536607735855,4,0.0019999333355554816,1,79,0.012658227848101266,0.6265822784810127
+overlap_unbal_4c_small,active_hamming,average,29,0.5161961139253545,4,0.5000975768285938,193,207,0.9323671497584541,0.4969712898300418
+sbm_moderate,active_sbm_shifted_modularity,average,21,0.21811706749384213,3,0.2010841999798451,53,67,0.7910447761194029,0.594480428048437

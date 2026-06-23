@@ -6,7 +6,7 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/spectral_transport_promotion_gate.py
   - tests/validation/148_test_spectral_transport_promotion_gate.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/spectral_transport.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
   - benchmarks/diagnostics/calibration/spectral_transport_threshold_calibration_panel.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_promotion_gate/manifest.json
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_promotion_gate/spectral_transport_promotion_components.csv
@@ -39,7 +39,7 @@ an explicit traversal-promotion decision. The gate requires three components:
 standard-dispatch signal retention, selected-family signal retention, and
 selected-null false-split reduction. After correcting strict MP-required
 support so unmeasured no-MP paths no longer support pass-through, the promoted
-entry point is `kl_spectral_transport_passthrough` /
+entry point is `tbs_spectral_transport_passthrough` /
 `fixed_coordinate_spectral_transport_passthrough_v1`. The one-replicate gate
 passes, but the 50-replicate selected-family gate fails signal retention. The
 current default promotion decision is therefore `diagnostic_only_not_promoted`.
@@ -47,8 +47,8 @@ current default promotion decision is therefore `diagnostic_only_not_promoted`.
 ## Key Points
 
 - The standard-dispatch component compares
-  `kl_spectral_transport_passthrough` against
-  `kl_global_passthrough_refined_diagnostic`. It passes: `3` paired rows are
+  `tbs_spectral_transport_passthrough` against
+  `tbs_global_passthrough_refined_diagnostic`. It passes: `3` paired rows are
   ok, minimum ARI delta is `0.0`, mean ARI delta is `0.0`, and mean partition
   ARI between methods is `1.0`.
 - The one-replicate selected-family signal component passes, but the

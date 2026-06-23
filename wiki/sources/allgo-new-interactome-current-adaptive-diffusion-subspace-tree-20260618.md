@@ -35,7 +35,7 @@ columns.
   [[current-adaptive-diffusion-subspace-tree-pipeline]].
 - The adaptive spectral split produced `12` subspaces: `6` binary and `6`
   TF-IDF.
-- Current KL completed for `7` subspaces and failed closed for `5` subspaces.
+- Current TBS completed for `7` subspaces and failed closed for `5` subspaces.
   Failed subspaces still have coordinates, diffusion metadata, tree artifacts,
   axis-term outputs, and explicit `*_failure_status.csv` files.
 - The top specificity-aware subspace is `tfidf / adaptive_modes_06_11`: `13`

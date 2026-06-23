@@ -2,7 +2,7 @@
 title: Project Overview
 type: project
 status: reviewed
-updated: 2026-06-01
+updated: 2026-06-23
 sources:
   - README.md
   - docs/onboarding.md
@@ -10,14 +10,14 @@ sources:
   - manuscript/sections/method/overview.tex
 tags:
   - project
-  - kl-te
+  - tree-break-selection
 ---
 
 # Project Overview
 
 ## Summary
 
-This repository implements and documents KL-TE, a clustering workflow that
+This repository implements and documents Tree-Break Selection, a clustering workflow that
 starts from a typed sample-feature matrix and a rooted binary candidate
 hierarchy, evaluates local splits with child-parent and sibling tests, and
 returns terminal clusters through a top-down traversal. The active feature-space
@@ -27,10 +27,10 @@ blocks.
 
 ## Details
 
-The source code centers on `kl_clustering_analysis/`, with tree structures in
-`kl_clustering_analysis/tree/`, decomposition logic in
-`kl_clustering_analysis/hierarchy_analysis/`, statistical tests under
-`kl_clustering_analysis/hierarchy_analysis/statistics/`, benchmark and
+The source code centers on `tree_break_selection/`, with tree structures in
+`tree_break_selection/tree/`, decomposition logic in
+`tree_break_selection/hierarchy_analysis/`, statistical tests under
+`tree_break_selection/hierarchy_analysis/statistics/`, benchmark and
 diagnostic harnesses under `benchmarks/`, user-facing real-data commands under
 `scripts/analysis/`, and validation coverage under `tests/`.
 
@@ -46,7 +46,7 @@ route through package code, benchmarks, tests, wiki, and manuscript context.
 The manuscript describes the inferential objective: the hierarchy proposes
 candidate splits, but the statistical method decides whether each split has
 enough evidence to remain in the final partition. The durable method concepts
-are [[kl-te-method]], [[projected-wald-statistic]], and
+are [[tree-break-selection]], [[projected-wald-statistic]], and
 [[top-down-traversal]].
 
 The main implementation entities are [[poset-tree]] and
@@ -66,7 +66,7 @@ The main implementation entities are [[poset-tree]] and
 
 ## Links
 
-- [[kl-te-method]]
+- [[tree-break-selection]]
 - [[poset-tree]]
 - [[tree-decomposition]]
 - [[projected-wald-statistic]]

@@ -27,7 +27,7 @@ tags:
 
 ## Summary
 
-A diagnostic runner now reruns raw sibling projected-Wald tests on the same KL
+A diagnostic runner now reruns raw sibling projected-Wald tests on the same TBS
 tree under five candidate sibling projection-dimension rules: current
 edge-derived dimension, parent test dimension, raw parent MP count, raw MP
 floor-1, and raw MP floor-2. It adds null false-split and signal-retention

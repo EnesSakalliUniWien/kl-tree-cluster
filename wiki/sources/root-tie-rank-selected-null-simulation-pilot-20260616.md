@@ -58,7 +58,7 @@ rows.
 ## Evidence
 
 - The implementation uses `preloaded` generated null matrices so the canonical
-  KL context builder and root selected-region extractor remain unchanged.
+  TBS context builder and root selected-region extractor remain unchanged.
 - The unit test validates the Bernoulli null marginal-rate calculation,
   target-stratum support counting, simulation-summary statuses, and output
   writing.

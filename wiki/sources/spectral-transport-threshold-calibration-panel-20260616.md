@@ -6,7 +6,7 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/spectral_transport_threshold_calibration_panel.py
   - tests/validation/149_test_spectral_transport_threshold_calibration_panel.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/spectral_transport.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
   - tests/localization/35_test_gates_traversal.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel/manifest.json
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel/spectral_transport_threshold_rows.csv

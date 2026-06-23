@@ -25,20 +25,20 @@ signed distance, curvature, and conditional selective error. The useful part
 of the Marchenko--Pastur literature is not only the closed-form white-noise
 edge. Silverstein--Choi and Ledoit--Wolf give the Stieltjes-transform integral
 route for a general population spectrum, which is the correct analytic
-candidate if KL-TE's local null-whitened spectra are not identity-like.
+candidate if Tree-Break Selection's local null-whitened spectra are not identity-like.
 
 ## Key Points
 
 - Gao, Bien, and Witten show that ordinary mean-comparison tests can have
   inflated type I error when the tested clusters are selected by hierarchical
-  clustering. This supports KL-TE's separation between fixed-tree projected
+  clustering. This supports Tree-Break Selection's separation between fixed-tree projected
   Wald validity and selected-hierarchy calibration.
 - Terada and Shimodaira represent selected hypotheses as regions in a
   multivariate-normal parameter space and use signed distance and mean
   curvature to adjust selection bias. Their papers estimate these quantities
-  with multiscale bootstrap, but KL-TE can retain the differential-geometric
+  with multiscale bootstrap, but Tree-Break Selection can retain the differential-geometric
   target without adopting bootstrap as a production estimator.
-- For KL-TE, the local fixed-subspace statistic remains
+- For Tree-Break Selection, the local fixed-subspace statistic remains
   \[
   W_u(P)=\lVert P\Sigma_0(u)^{-1/2}\delta_u\rVert^2.
   \]
@@ -64,7 +64,7 @@ candidate if KL-TE's local null-whitened spectra are not identity-like.
   \[
   z(m)=-\frac{1}{m}+c\int\frac{t}{1+t\,m}\,dH(t).
   \]
-- Ledoit--Wolf's QuEST work is the practical numerical route if KL-TE needs to
+- Ledoit--Wolf's QuEST work is the practical numerical route if Tree-Break Selection needs to
   discretize or invert this MP equation for local covariance spectra.
 - Johnstone--Paul's high-dimensional PCA review supports keeping eigenvalue
   bias, eigenvector inconsistency, selected PCA, and soft-edge behavior as

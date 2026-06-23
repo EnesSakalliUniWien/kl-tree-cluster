@@ -6,10 +6,10 @@ updated: 2026-06-17
 sources:
   - benchmarks/diagnostics/calibration/legacy_c2ef9a69_method_comparison_panel.py
   - benchmarks/shared/runners/legacy_commit_runner.py
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/adaptive_kernel_bandwidths.py
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/kernel_interpolation.py
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/child_prior_estimation.py
-  - kl_clustering_analysis/legacy_methods/commit_c2ef9a69/kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/sibling_null_prior_interpolation.py
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/adaptive_kernel_bandwidths.py
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/kernel_interpolation.py
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/child_prior_estimation.py
+  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/sibling_null_prior_interpolation.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_root_tail_overlap_comparison_20260617/manifest.json
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_root_tail_overlap_comparison_20260617/legacy_c2ef9a69_method_comparison_pairwise.csv
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_root_tail_overlap_comparison_20260617/legacy_c2ef9a69_method_comparison_summary.csv
@@ -67,8 +67,8 @@ root law.
 
 ## Evidence
 
-- `legacy_c2ef9a69_method_comparison_panel.py` runs current `kl` and full
-  `kl_legacy_c2ef9a69` through the same benchmark dispatch on the seven root
+- `legacy_c2ef9a69_method_comparison_panel.py` runs current `tbs` and full
+  `tbs_legacy_c2ef9a69` through the same benchmark dispatch on the seven root
   overlap cases.
 - `legacy_c2ef9a69_method_comparison_summary.csv` reports selected-null
   `legacy_false_split_count = 2`, selected-null mean paired ARI delta

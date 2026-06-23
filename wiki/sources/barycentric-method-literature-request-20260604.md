@@ -25,7 +25,7 @@ tags:
 ## Summary
 
 This source captures the request to make the barycentric layer explicit in the
-KL-TE method and to use that algebra in later result-finding. The code already
+Tree-Break Selection method and to use that algebra in later result-finding. The code already
 stores internal node distributions as leaf-count weighted empirical subtree
 barycenters and existing diagnostics verify the edge/sibling barycentric
 z-identity. The follow-up adds manuscript literature framing, explicit

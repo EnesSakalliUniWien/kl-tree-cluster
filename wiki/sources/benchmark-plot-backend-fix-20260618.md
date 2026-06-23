@@ -52,8 +52,8 @@ command-line benchmark runs and in spawned case workers.
   defaulting to the file-safe backend.
 - `tests/pipeline/58_test_pipeline_pdf_behavior.py` continues to cover PDF
   streaming behavior.
-- The verification run with `KL_TE_CASE_SUITE=method_proof`,
-  `KL_TE_ENABLE_PLOTS=1`, and `KL_TE_METHODS=kl` completed the plotted
+- The verification run with `TBS_CASE_SUITE=method_proof`,
+  `TBS_ENABLE_PLOTS=1`, and `TBS_METHODS=tbs` completed the plotted
   isolated subprocess path that previously failed with subprocess exit `-6`.
 
 ## Links

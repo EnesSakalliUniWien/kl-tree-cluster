@@ -30,24 +30,24 @@ tags:
 
 This audit converts the full `121`-case branch-length benchmark into an
 explicit promotion decision. The decision is not to promote
-`kl_internal_filter_branch_length_v1` as the global production default. It
+`tbs_internal_filter_branch_length_v1` as the global production default. It
 should remain the next candidate to test and a guarded comparator.
 
 The reason is not that branch-length lacks signal. It improves important rows
 and preserves fail-closed severe-overlap behavior. The blocker is that current
-`kl` still has better full-suite completed-row mean ARI, more exact-K rows, and
+`tbs` still has better full-suite completed-row mean ARI, more exact-K rows, and
 fewer skips. A global replacement would regress known solved continuous and
 phylogenetic rows.
 
 ## Key Points
 
-- Current `kl` records `93` OK rows, `28` skips, `66/121` exact-K rows, mean
+- Current `tbs` records `93` OK rows, `28` skips, `66/121` exact-K rows, mean
   ARI `0.819354`, and median ARI `1.0`.
-- `kl_internal_filter_branch_length_v1` records `91` OK rows, `30` skips,
+- `tbs_internal_filter_branch_length_v1` records `91` OK rows, `30` skips,
   `62/121` exact-K rows, mean ARI `0.801364`, and median ARI `1.0`.
-- Legacy `kl_legacy_c2ef9a69` records `121` OK rows, no skips, `78/121`
+- Legacy `tbs_legacy_c2ef9a69` records `121` OK rows, no skips, `78/121`
   exact-K rows, mean ARI `0.726685`, and median ARI `0.994656`.
-- Against current KL, branch-length has higher ARI on `6` cases, lower ARI on
+- Against current TBS, branch-length has higher ARI on `6` cases, lower ARI on
   `7` cases, tied ARI on `66` cases, branch-only OK status on `12` cases,
   current-only OK status on `14` cases, and both-skip or non-OK status on
   `16` cases.
@@ -84,7 +84,7 @@ before they can support promotion.
   branch-length, and legacy methods.
 - `branch_only_ok_vs_current.csv` and `current_only_ok_vs_branch.csv` expose the
   status asymmetry that blocks a simple global replacement.
-- `hard_overlap_rows.csv` records the safety boundary: current KL and
+- `hard_overlap_rows.csv` records the safety boundary: current TBS and
   branch-length skip `overlap_extreme_4c`, while legacy completes with near-zero
   ARI.
 

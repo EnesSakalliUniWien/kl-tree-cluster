@@ -23,8 +23,8 @@ tags:
 
 ## Summary
 
-This audit records fixed-candidate traversal evidence for current `kl` and
-`kl_internal_filter_branch_length_v1`. It does not define an adaptive routing
+This audit records fixed-candidate traversal evidence for current `tbs` and
+`tbs_internal_filter_branch_length_v1`. It does not define an adaptive routing
 policy. For each successful method row it saves the live traversal counters and
 an edge-reachable traversal that walks from the root until child-parent edge
 tests close, along with parent/left/right tuples and branch lengths.
@@ -32,11 +32,11 @@ tests close, along with parent/left/right tuples and branch lengths.
 ## Key Points
 
 - The run covers `16` selected cases, `2` methods, and `32` method rows.
-- Current `kl` has `9` OK rows and `7` skips; branch-length internal filtering
+- Current `tbs` has `9` OK rows and `7` skips; branch-length internal filtering
   has `11` OK rows and `5` skips on this targeted panel.
 - The diagnostic writes `3032` traversal tuple rows and `3352` traversal edge
   rows.
-- Current `kl` contributes `477` live visited nodes and `1713` full edge-
+- Current `tbs` contributes `477` live visited nodes and `1713` full edge-
   reachable nodes across OK rows.
 - Branch-length internal filtering contributes `277` live visited nodes and
   `1319` full edge-reachable nodes across OK rows.

@@ -2,10 +2,10 @@
 title: PosetTree
 type: entity
 status: reviewed
-updated: 2026-05-24
+updated: 2026-06-23
 sources:
-  - kl_clustering_analysis/tree/README.md
-  - kl_clustering_analysis/tree/poset_tree.py
+  - tree_break_selection/tree/README.md
+  - tree_break_selection/tree/poset_tree.py
 tags:
   - entity
   - tree
@@ -15,7 +15,7 @@ tags:
 
 ## Summary
 
-`PosetTree` is the central directed tree structure for the KL-TE pipeline. It
+`PosetTree` is the central directed tree structure for the Tree-Break Selection pipeline. It
 stores parent-child topology, node metadata, descendant sets, distributions,
 and helpers for decomposition and sample cluster assignments.
 
@@ -32,14 +32,14 @@ structure into [[tree-decomposition]].
 
 ## Evidence
 
-- `kl_clustering_analysis/tree/README.md` maps the public methods and related
+- `tree_break_selection/tree/README.md` maps the public methods and related
   topology and distribution helpers.
-- `kl_clustering_analysis/tree/poset_tree.py` contains the class
+- `tree_break_selection/tree/poset_tree.py` contains the class
   implementation.
 
 ## Links
 
-- [[kl-te-method]]
+- [[tree-break-selection]]
 - [[tree-decomposition]]
 - [[top-down-traversal]]
 

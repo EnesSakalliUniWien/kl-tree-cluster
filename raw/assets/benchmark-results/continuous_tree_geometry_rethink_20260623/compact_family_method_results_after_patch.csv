@@ -1,0 +1,25 @@
+case_id,geometry,linkage,method,status,found_clusters,ari,skip_reason
+binary_low_noise_4c,active_hamming,average,tbs,ok,39,0.306035704165486,
+binary_low_noise_4c,active_hamming,average,tbs_fixed_coordinate_by,ok,25,0.5567544238239103,
+binary_low_noise_4c,active_hamming,average,tbs_fixed_block_bh,ok,35,0.37925135550465366,
+binary_low_noise_4c,active_hamming,average,tbs_neighbor_joining,ok,5,0.9683027952387321,
+cat_clear_3cat_4c,active_hamming,average,tbs,skip,0,,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 99 selected non-null positive-weight record(s), which are not valid empirical-null calibration support."
+cat_clear_3cat_4c,active_hamming,average,tbs_fixed_coordinate_by,ok,9,0.8801675977653631,
+cat_clear_3cat_4c,active_hamming,average,tbs_fixed_block_bh,ok,12,0.807715491259795,
+cat_clear_3cat_4c,active_hamming,average,tbs_neighbor_joining,ok,5,0.8460726567021892,
+dim_consolidated_4c_24f_continuous,active_standardized_euclidean,average,tbs,ok,4,1.0,
+dim_consolidated_4c_24f_continuous,active_standardized_euclidean,average,tbs_fixed_coordinate_by,ok,4,1.0,
+dim_consolidated_4c_24f_continuous,active_standardized_euclidean,average,tbs_fixed_block_bh,ok,4,1.0,
+dim_consolidated_4c_24f_continuous,active_standardized_euclidean,average,tbs_neighbor_joining,ok,4,1.0,
+cont_lowrank_pggn_shrinkage,active_mahalanobis_time,average,tbs,skip,0,,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 79 selected non-null positive-weight record(s), which are not valid empirical-null calibration support."
+cont_lowrank_pggn_shrinkage,active_mahalanobis_time,average,tbs_fixed_coordinate_by,ok,1,0.0,
+cont_lowrank_pggn_shrinkage,active_mahalanobis_time,average,tbs_fixed_block_bh,ok,35,0.02561433393268351,
+cont_lowrank_pggn_shrinkage,active_mahalanobis_time,average,tbs_neighbor_joining,skip,0,,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 79 selected non-null positive-weight record(s), which are not valid empirical-null calibration support."
+overlap_unbal_4c_small,active_hamming,average,tbs,ok,4,0.5000975768285938,
+overlap_unbal_4c_small,active_hamming,average,tbs_fixed_coordinate_by,ok,7,0.48253889314340115,
+overlap_unbal_4c_small,active_hamming,average,tbs_fixed_block_bh,ok,19,0.3569214782282731,
+overlap_unbal_4c_small,active_hamming,average,tbs_neighbor_joining,skip,0,,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 399 selected non-null positive-weight record(s), which are not valid empirical-null calibration support."
+sbm_moderate,active_sbm_shifted_modularity,average,tbs,ok,8,0.09950721136592479,
+sbm_moderate,active_sbm_shifted_modularity,average,tbs_fixed_coordinate_by,ok,1,0.0,
+sbm_moderate,active_sbm_shifted_modularity,average,tbs_fixed_block_bh,ok,3,0.18874686396928766,
+sbm_moderate,active_sbm_shifted_modularity,average,tbs_neighbor_joining,ok,3,0.040627703440439894,

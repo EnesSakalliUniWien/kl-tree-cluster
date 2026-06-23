@@ -26,7 +26,7 @@ boundary instability detected by the differential statistic-validity panel.
 
 ## Key Points
 
-- The panel is diagnostic-only and does not change production KL-TE statistics.
+- The panel is diagnostic-only and does not change production Tree-Break Selection statistics.
 - Fixed-tree rows are evaluated before selected-tree rows because a statistic
   that fails fixed-tree null calibration cannot be rescued by selected-tree
   conditioning.

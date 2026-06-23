@@ -18,7 +18,7 @@ tags:
 ## Summary
 
 This source summarizes a GitHub scan for analytical and machine learning
-frameworks that could strengthen KL-TE selected-tail, sibling, edge, and
+frameworks that could strengthen Tree-Break Selection selected-tail, sibling, edge, and
 traversal diagnostics. The scan found no open GitHub issues or PRs in the
 current project remote for the searched calibration terms, and it identified
 external packages that are useful mainly as diagnostic patterns rather than
@@ -27,13 +27,13 @@ drop-in production calibration.
 ## Key Points
 
 - The local GitHub remote is
-  [EnesSakalliUniWien/kl-tree-cluster](https://github.com/EnesSakalliUniWien/kl-tree-cluster).
+  [EnesSakalliUniWien/tbs-tree-cluster](https://github.com/EnesSakalliUniWien/tbs-tree-cluster).
   Connector searches for open issues and PRs matching calibration,
   selected-tail, KAK, FDR, or sibling returned no results.
 - [selective-inference/Python-software](https://github.com/selective-inference/Python-software)
   is the closest mathematical software reference. It supports post-selection
   inference ideas, but it is oriented toward regression selection rather than
-  KL-TE selected trees, selected PCA frames, and sibling Wald statistics.
+  Tree-Break Selection selected trees, selected PCA frames, and sibling Wald statistics.
 - Conformal risk-control tools such as
   [aangelopoulos/conformal-risk](https://github.com/aangelopoulos/conformal-risk),
   [scikit-learn-contrib/MAPIE](https://github.com/scikit-learn-contrib/MAPIE),
@@ -49,7 +49,7 @@ drop-in production calibration.
   an FDR and null/signal symmetry design reference, not as a direct sibling
   p-value correction.
 - [sbi-dev/sbi](https://github.com/sbi-dev/sbi) is the strongest machine
-  learning framework candidate for this project because KL-TE already has
+  learning framework candidate for this project because Tree-Break Selection already has
   simulators. It can learn selected-tail likelihood ratios or posterior
   summaries from generated null/signal panels, with strict held-out validation.
 - [arviz-devs/arviz](https://github.com/arviz-devs/arviz) is useful if the

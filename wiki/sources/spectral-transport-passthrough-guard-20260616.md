@@ -4,13 +4,13 @@ type: source
 status: reviewed
 updated: 2026-06-16
 sources:
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/spectral_transport.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - benchmarks/shared/runners/method_registry.py
   - benchmarks/shared/runners/dispatch.py
-  - benchmarks/shared/runners/kl_runner.py
+  - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/util/method_sets.py
   - benchmarks/diagnostics/calibration/spectral_transport_overlap_dispatch_panel.py
   - benchmarks/diagnostics/calibration/spectral_transport_threshold_calibration_panel.py
@@ -57,9 +57,9 @@ supported MP-mode path reaches a descendant split. Under the promoted
 than support; the optional non-required mode keeps floor-only paths neutral for
 diagnostic comparison. The guard does not open sibling splits and does not
 create calibrated p-values. The opt-in profile is available through the
-standard benchmark registry as `kl_spectral_transport_passthrough`; the older
+standard benchmark registry as `tbs_spectral_transport_passthrough`; the older
 `fixed_coordinate_spectral_transport_passthrough_diagnostic_v1` and
-`kl_spectral_transport_passthrough_diagnostic` names remain diagnostic aliases.
+`tbs_spectral_transport_passthrough_diagnostic` names remain diagnostic aliases.
 
 ## Key Points
 
@@ -82,14 +82,14 @@ standard benchmark registry as `kl_spectral_transport_passthrough`; the older
 - The opt-in profile `fixed_coordinate_spectral_transport_passthrough_v1` has
   status `opt_in_candidate_not_default` and the same strict guard parameters.
 - The standard benchmark method registry exposes
-  `kl_spectral_transport_passthrough`, which points to the KL runner with the
+  `tbs_spectral_transport_passthrough`, which points to the TBS runner with the
   promoted spectral transport sibling-gate profile. The diagnostic method id
   remains available for backward compatibility.
 - The refined baseline profile is also exposed as
-  `kl_global_passthrough_refined_diagnostic`, which lets the standard benchmark
+  `tbs_global_passthrough_refined_diagnostic`, which lets the standard benchmark
   path isolate the spectral guard effect.
 - `run_clustering_result` forwards explicit spectral transport parameters into
-  the KL runner, and `_run_kl_method` records the resolved spectral transport
+  the TBS runner, and `_run_tbs_method` records the resolved spectral transport
   configuration in `result.extra`.
 - A direct dispatch smoke with the registry method id returned `status='ok'`,
   the expected spectral sibling-gate profile, and
@@ -122,8 +122,8 @@ standard benchmark registry as `kl_spectral_transport_passthrough`; the older
   selected.
 - `tree_decomposition.py` passes spectral transport support into traversal and
   records support/bottleneck fields in the traversal trace.
-- `method_registry.py`, `method_sets.py`, `dispatch.py`, and `kl_runner.py`
-  expose the diagnostic profile as a standard KL benchmark method and carry its
+- `method_registry.py`, `method_sets.py`, `dispatch.py`, and `tbs_runner.py`
+  expose the diagnostic profile as a standard TBS benchmark method and carry its
   resolved runtime configuration through result metadata.
 - `spectral_transport_overlap_dispatch_panel.py` compares the registered
   spectral method to the refined baseline through the standard benchmark
@@ -133,9 +133,9 @@ standard benchmark registry as `kl_spectral_transport_passthrough`; the older
 - `spectral_transport_promotion_gate.py` now defaults to the 50-replicate
   selected-family evidence and records selected-family signal retention as the
   blocking component.
-- `51_test_dispatch_contract.py` covers registry exposure, dispatch as a KL
+- `51_test_dispatch_contract.py` covers registry exposure, dispatch as a TBS
   runner method, and forwarding of spectral transport parameters.
-- `63_test_local_structural_kernel_regression.py` checks that KL runner result
+- `63_test_local_structural_kernel_regression.py` checks that TBS runner result
   metadata includes default spectral transport values.
 - The current paired standard-dispatch signal rows remain neutral, while the
   selected-family and promotion-gate outputs record targeted traversal

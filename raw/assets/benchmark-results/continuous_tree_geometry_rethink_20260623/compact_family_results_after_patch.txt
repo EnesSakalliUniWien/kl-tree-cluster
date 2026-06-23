@@ -1,0 +1,44 @@
+Continuous tree-geometry rethink compact diagnostics after standardized Euclidean patch
+Date: 2026-06-23
+
+CASE binary_low_noise_4c family=binary_template repr=binary metric=hamming pre=False
+  active/tbs: K=39, ARI=0.306
+  active/tbs_fixed_coordinate_by: K=25, ARI=0.557
+  active/tbs_fixed_block_bh: K=35, ARI=0.379
+  active/tbs_neighbor_joining: K=5, ARI=0.968
+  oracle active/hamming: any-K K=4 ARI=1.000; exact-K K=4 ARI=1.000; root_balance=0.333
+
+CASE cat_clear_3cat_4c family=categorical_multinomial repr=categorical_one_hot metric=hamming pre=False
+  active/tbs: SKIP Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration re
+  active/tbs_fixed_coordinate_by: K=9, ARI=0.880
+  active/tbs_fixed_block_bh: K=12, ARI=0.808
+  active/tbs_neighbor_joining: K=5, ARI=0.846
+  oracle active/hamming: any-K K=5 ARI=0.960; exact-K K=4 ARI=0.705; root_balance=1.000
+
+CASE dim_consolidated_4c_24f_continuous family=dimensional_gaussian repr=continuous metric=standardized_euclidean pre=True
+  active/tbs: K=4, ARI=1.000
+  active/tbs_fixed_coordinate_by: K=4, ARI=1.000
+  active/tbs_fixed_block_bh: K=4, ARI=1.000
+  active/tbs_neighbor_joining: K=4, ARI=1.000
+  oracle active/standardized_euclidean: any-K K=4 ARI=1.000; exact-K K=4 ARI=1.000; root_balance=0.333
+
+CASE cont_lowrank_pggn_shrinkage family=continuous_low_rank_factor repr=continuous metric=mahalanobis_time pre=True
+  active/tbs: SKIP Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration re
+  active/tbs_fixed_coordinate_by: K=1, ARI=0.000
+  active/tbs_fixed_block_bh: K=35, ARI=0.026
+  active/tbs_neighbor_joining: SKIP Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration re
+  oracle active/mahalanobis_time: any-K K=51 ARI=0.043; exact-K K=4 ARI=0.002; root_balance=0.013
+
+CASE overlap_unbal_4c_small family=binary_template repr=binary metric=hamming pre=False
+  active/tbs: K=4, ARI=0.500
+  active/tbs_fixed_coordinate_by: K=7, ARI=0.483
+  active/tbs_fixed_block_bh: K=19, ARI=0.357
+  active/tbs_neighbor_joining: SKIP Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration re
+  oracle active/hamming: any-K K=29 ARI=0.516; exact-K K=4 ARI=0.500; root_balance=0.932
+
+CASE sbm_moderate family=stochastic_block_model repr=graph_adjacency metric=sbm_shifted_modularity pre=True
+  active/tbs: K=8, ARI=0.100
+  active/tbs_fixed_coordinate_by: K=1, ARI=0.000
+  active/tbs_fixed_block_bh: K=3, ARI=0.189
+  active/tbs_neighbor_joining: K=3, ARI=0.041
+  oracle active/sbm_shifted_modularity: any-K K=21 ARI=0.218; exact-K K=3 ARI=0.201; root_balance=0.791

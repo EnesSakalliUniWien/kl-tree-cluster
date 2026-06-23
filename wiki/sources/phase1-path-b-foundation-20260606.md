@@ -25,15 +25,15 @@ tags:
 ## Summary
 
 This diagnostic implements the Phase 1 Path B foundation sweep. It exposes
-`spectral_minimum_dimension` and `passthrough` as KL benchmark parameters,
-runs the full KL-only benchmark over `k_min in {0,1,2,3}` crossed with
+`spectral_minimum_dimension` and `passthrough` as TBS benchmark parameters,
+runs the full TBS-only benchmark over `k_min in {0,1,2,3}` crossed with
 pass-through on/off, and reruns the Q5 selected-tail diagnostic to measure
 geometry covariate gain. The outputs are diagnostic only and do not promote a
 production traversal or calibration rule.
 
 ## Key Points
 
-- The full sweep wrote `960` KL rows: `120` cases times `4` `k_min` settings
+- The full sweep wrote `960` TBS rows: `120` cases times `4` `k_min` settings
   times `2` pass-through settings.
 - The selected full-suite optimum by penalized mean ARI is
   `k_min=1, passthrough=True`.

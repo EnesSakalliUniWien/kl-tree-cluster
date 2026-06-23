@@ -24,7 +24,7 @@ tags:
 
 A mixed null/signal diagnostic runner generated labeled internal-calibration
 panels for method-proof, binary, and categorical benchmark suites. The sweep
-collects sibling records from production KL trees, attaches internal support
+collects sibling records from production TBS trees, attaches internal support
 labels (`is_null_like`, `is_edge_blocked`), derives conservative true
 null/signal context labels from benchmark cluster labels, and runs the Q9/Q10
 diagnostics over the resulting panels.

@@ -25,7 +25,7 @@ tags:
 
 This diagnostic adds a Bernoulli likelihood-ratio-style sibling deviance beside
 the existing projected-Wald sibling statistic for whole-space fixed-diffusion
-KL trees. It is diagnostic-only: the nominal fixed-pair chi-square tail in the
+TBS trees. It is diagnostic-only: the nominal fixed-pair chi-square tail in the
 output is not a selected-tree calibration rule.
 
 ## Key Points

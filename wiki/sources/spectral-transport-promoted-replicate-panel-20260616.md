@@ -6,7 +6,7 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
   - benchmarks/diagnostics/calibration/spectral_transport_promotion_gate.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates/manifest.json
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates/selected_family_traversal_rows.csv
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates/multiscale_node_decisions.csv

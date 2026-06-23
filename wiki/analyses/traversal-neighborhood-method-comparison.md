@@ -4,12 +4,12 @@ type: analysis
 status: reviewed
 updated: 2026-06-15
 sources:
-  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/gate_evaluator.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/child_parent_edge_metadata.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/record_collection.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/child_parent_edge_metadata.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/collection/record_collection.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
   - wiki/sources/old-vs-current-method-stack-comparison-20260615.md
   - wiki/sources/overlap-conditional-topology-law-panel-20260615.md
   - wiki/sources/specific-small-method-benchmark-20260615.md
@@ -28,7 +28,7 @@ tags:
 
 ## Summary
 
-The previous and current KL-TE method stacks share the same basic top-down
+The previous and current Tree-Break Selection method stacks share the same basic top-down
 traversal skeleton. They differ mainly in how the sibling gate is produced and
 calibrated. The old stack used richer tree-neighborhood bandwidth ideas around
 stopping and nearby stable/signal nodes, but with permissive support handling.

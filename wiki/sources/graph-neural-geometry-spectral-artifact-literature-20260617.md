@@ -18,7 +18,7 @@ tags:
 
 ## Summary
 
-This literature capture connects KL-TE's internal-barycenter and
+This literature capture connects Tree-Break Selection's internal-barycenter and
 selected-neighborhood spectral problem to graph signal processing, graph neural
 network smoothing theory, and graph geometry. The central message is
 consistent across the papers: graph smoothing and low-pass filtering can
@@ -26,7 +26,7 @@ increase coherent-looking spectral support, but this is not sufficient for a
 valid decision because smoothing can also create selected-null artifacts,
 oversmooth discriminative structure, or distort flow through bottlenecks.
 
-For KL-TE, internal distributions should therefore be treated as a graph
+For Tree-Break Selection, internal distributions should therefore be treated as a graph
 low-pass/tree-filter diagnostic. They need angle/radius persistence and
 selected-topology conditioning before they can support a decision.
 
@@ -34,7 +34,7 @@ selected-topology conditioning before they can support a decision.
 
 - Graph signal processing defines graph Fourier modes, graph filters, and
   localized multiscale transforms. This is the right mathematical frame for
-  KL-TE's internal-barycenter operator: it is a graph/tree low-pass filter, not
+  Tree-Break Selection's internal-barycenter operator: it is a graph/tree low-pass filter, not
   an independent-sample generator.
 - Spectral graph wavelets, diffusion wavelets, and graph scattering support
   multiscale persistence diagnostics. A real coarse mode should persist across
@@ -45,22 +45,22 @@ selected-topology conditioning before they can support a decision.
 - The oversmoothing literature gives the warning. Repeated smoothing can drive
   embeddings toward indistinguishable low-energy states, so smoothness alone
   is not discriminative evidence.
-- The KL-TE diagnostic result mirrors that warning: internal barycenters create
+- The Tree-Break Selection diagnostic result mirrors that warning: internal barycenters create
   many new MP-supported edges on both selected-null and signal rows.
 - Oversquashing/curvature papers identify graph bottlenecks as places where
-  information flow is distorted. For KL-TE, root validity, selected tie-rank,
+  information flow is distorted. For Tree-Break Selection, root validity, selected tie-rank,
   edge action, child balance, and topology replay are the corresponding
   conditioning coordinates.
 - Vector diffusion maps and the connection Laplacian are the closest analogy
   for the angle-specific transport panel. They use local vector-frame
-  transport and connection consistency; KL-TE's version compares principal
+  transport and connection consistency; Tree-Break Selection's version compares principal
   angles/projectors and log-eigenvalue radii across selected-tree spectral
   objects.
 
 ## Evidence
 
 - `raw/inbox/graph-neural-geometry-spectral-artifact-literature-20260617.md`
-  records the source list and KL-TE relationship.
+  records the source list and Tree-Break Selection relationship.
 - [Shuman et al., 2013](https://arxiv.org/abs/1211.0053) frame graph signals,
   graph spectral domains, graph filtering, and localized multiscale graph
   transforms.

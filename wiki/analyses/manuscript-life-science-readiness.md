@@ -60,7 +60,7 @@ overlapping, and not independent Bernoulli features.
 
 ## Evidence
 
-- `manuscript/main.tex` presents KL-TE as a methods draft and does not include
+- `manuscript/main.tex` presents Tree-Break Selection as a methods draft and does not include
   a completed real-data result section.
 - `manuscript/sections/experiments/section.tex` explicitly says the evaluation
   section is prospective and requires locked outputs before claims enter the
@@ -79,7 +79,7 @@ overlapping, and not independent Bernoulli features.
 ## Links
 
 - [[project-overview]]
-- [[kl-te-method]]
+- [[tree-break-selection]]
 - [[oracle-gate-path-diagnostic]]
 
 ## Open Questions

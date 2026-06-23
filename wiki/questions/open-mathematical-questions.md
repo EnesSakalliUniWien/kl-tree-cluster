@@ -10,10 +10,10 @@ sources:
   - manuscript/sections/method/sibling_test.tex
   - manuscript/sections/method/representation.tex
   - manuscript/sections/experiments/section.tex
-  - kl_clustering_analysis/tree/feature_space.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/contrast_covariance.py
+  - tree_break_selection/tree/feature_space.py
+  - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
   - benchmarks/shared/generators/case_data_contracts.py
-  - kl_clustering_analysis/tree/distributions.py
+  - tree_break_selection/tree/distributions.py
   - wiki/analyses/oracle-gate-path-diagnostic.md
   - wiki/sources/edge-selection-null-audit-20260601.md
   - wiki/sources/selected-edge-type1-geometry-pilot-20260604.md
@@ -35,8 +35,8 @@ sources:
   - raw/assets/benchmark-results/internal_vs_selected_hierarchy_inflation_20260603/internal_vs_selected_hierarchy_inflation.csv
   - wiki/sources/sibling-null-prior-interpolation-audit-20260604.md
   - wiki/sources/calibration-contract-enhancement-request-20260604.md
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/types/inflation_model.py
-  - kl_clustering_analysis/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/types/inflation_model.py
+  - tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/inflation_correction/empirical_null_inflation_estimation.py
   - wiki/sources/selected-tail-law-q5-validation-20260604.md
   - benchmarks/diagnostics/calibration/selected_tail_law_q5_validation.py
   - raw/assets/benchmark-results/selected_tail_law_q5_validation_20260604/q5_selected_tail_law_validation.csv
@@ -101,8 +101,8 @@ sources:
   - benchmarks/diagnostics/calibration/data_independent_sibling_gate_panel.py
   - benchmarks/diagnostics/calibration/data_independent_sibling_gate_traversal_panel.py
   - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
-  - kl_clustering_analysis/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - kl_clustering_analysis/hierarchy_analysis/tree_decomposition.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - raw/inbox/data-independent-sibling-gate-smoke-20260613.md
   - raw/inbox/data-independent-sibling-gate-transfer-20260613.md
   - raw/inbox/data-independent-sibling-gate-traversal-20260613.md
@@ -132,7 +132,7 @@ tags:
 
 ## Question
 
-Which mathematical questions remain open for KL-TE before the method can be
+Which mathematical questions remain open for Tree-Break Selection before the method can be
 treated as publication-ready rather than a gap-marked methods draft?
 
 ## Current State
@@ -189,12 +189,12 @@ remaining mathematical problem is therefore selective/adaptive projection and
 hierarchy conditioning, not a wrong fixed-subspace chi-square formula.
 
 The project direction explicitly excludes cross-fit/sample-split methods as the
-next production path. The immediate KL-TE work is therefore selective/adaptive
+next production path. The immediate Tree-Break Selection work is therefore selective/adaptive
 projection null theory for the current same-data gate, plus careful study of
 same-data topology objectives. The TooManyCells note is relational only: it
-positions KL-TE against a tree-first divisive spectral method with
+positions Tree-Break Selection against a tree-first divisive spectral method with
 Newman-Girvan modularity stopping. It is not a direct comparator or a proposed
-replacement for the KL-TE gate.
+replacement for the Tree-Break Selection gate.
 
 The same-date data-independent sibling-gate panel gives the first non-cross-fit
 candidate direction that directly removes the broken adaptive projection layer.
@@ -318,24 +318,23 @@ attach null false-split confidence, signal ARI confidence, profile metadata,
 and adaptive-projection avoidance checks. The method is therefore runnable as a
 standard benchmark candidate without being silently promoted.
 
-The selected-root permutation guard is now also represented in this auditable
-runtime path. `root_selective_permutation_guard_replicates` and
+The selected-root permutation diagnostic is now also represented in this
+auditable runtime path for validation runs.
+`root_selective_permutation_guard_replicates` and
 `root_selective_permutation_guard_alpha` are method-constant validation targets,
-and the guard writes root-level selected-permutation audit columns when
-explicitly enabled. The guard is default-off and restricted to fixed-subspace
-sibling methods; it is not allowed to wrap `projected_wald_inflation`, because
-the learned same-sample parent projection is the invalid statistic layer being
-removed.
+and the diagnostic writes root-level selected-permutation audit columns when
+explicitly enabled. It is default-off, restricted to fixed-subspace sibling
+methods, and should not be treated as part of the TBS runtime method; it exists
+to reveal selected-tree null behavior.
 
-The packaged method candidate is now
+The packaged validation stress profile is now
 `fixed_coordinate_selective_root_v1`. It combines fixed coordinate BH sibling
 p-values, selected-topology penalty `50`, root-stability threshold `0.24`,
 `12` stability subsamples, feature fraction `0.8`, and a `99`-draw
-selected-root permutation guard at alpha `0.01`. The older guarded profiles
-remain compatibility candidates with selected-root permutation disabled unless
-explicitly requested. The KL runner records resolved profile constants in its
-result metadata, so downstream validation artifacts can audit the actual method
-that ran.
+selected-root permutation diagnostic at alpha `0.01`. The non-resampling TBS
+candidate excludes that permutation layer. The TBS runner records resolved
+profile constants in its result metadata, so downstream validation artifacts can
+audit whether a run used the method path or a resampling diagnostic.
 
 The first executable selective-null object is now available but not sufficient:
 the traversal panel's selected-root permutation diagnostic preserves
@@ -412,7 +411,7 @@ post-run and must be tested prospectively or derived from an independent
 stability criterion.
 
 The prospective validation had to be rerun after aligning the diagnostic tree
-replay with the KL runner's Hamming/average selected-tree contract. Under the
+replay with the TBS runner's Hamming/average selected-tree contract. Under the
 corrected replay, fixed coordinate BH, edge alpha `0.001`, selected-topology
 penalty `50`, feature-subsample fraction `0.8`, `12` stability subsamples, and
 stability threshold `0.24` remain point-transfer candidates on the six-case
@@ -608,7 +607,7 @@ selection problem. It also needs a finite-sample categorical one-hot
 projected-Wald/Tree-BH calibration analysis under a fixed hierarchy.
 
 The thresholds are now recorded as canonical method constants in
-`kl_clustering_analysis/hierarchy_analysis/statistics/alpha_contract.py`, not
+`tree_break_selection/hierarchy_analysis/statistics/alpha_contract.py`, not
 as mutable `config.py` values: `DEFAULT_EDGE_ALPHA = 0.001` and
 `DEFAULT_SIBLING_ALPHA = 0.01`. These values are deliberately conservative
 and still need validation as method constants; the cleanup only made their
@@ -639,7 +638,7 @@ Wald has mean FDP `0.95`; and the active inflated selected-tree layer has
 FDR question, but it shows that we must validate algorithmic FDR, fixed-tree
 Wald calibration, selected-tree effects, and inflation support separately.
 
-The first cross-fit diagnostic supports this interpretation. Because the KL
+The first cross-fit diagnostic supports this interpretation. Because the TBS
 tree is a sample-leaf hierarchy, literal sample splitting is undefined without
 a held-out-sample assignment model. The implemented feature-split audit builds
 the tree from one feature block and tests node distributions on a held-out
@@ -851,7 +850,7 @@ support labels before any replacement weight rule can be promoted.
 The bootstrap estimator is not the desired production direction. The selected
 inference literature is still useful because it identifies the mathematical
 objects: selected regions, signed distances, mean curvature, tangent cones, and
-conditional selected-error probabilities. For KL-TE, the analytic target is to
+conditional selected-error probabilities. For Tree-Break Selection, the analytic target is to
 express hierarchy construction, edge opening, and focal sibling selection as a
 selected region in the null-whitened tangent chart, then derive or validate the
 selected-ratio tail from that geometry. Resampling may remain a diagnostic to
@@ -971,7 +970,7 @@ than an inflation change. These cases should not be collapsed into one
 threshold-tuning problem.
 
 The 2026-06-03 hierarchy/gate separation makes this a current full-suite rule,
-not only a historical oracle observation. In the latest strict KL-only
+not only a historical oracle observation. In the latest strict TBS-only
 full-suite output, `62` of `110` cases are solved, `24` are explicit
 calibration-support-undefined skips, `14` are tree/metric unrecoverable,
 `4` are oracle-matched below the solved threshold, `4` are gate over-splits,
@@ -981,7 +980,7 @@ changes before additional hierarchy/metric work. The tree/metric rows must be
 handled through representation, distance, linkage, or benchmark construction
 analysis first.
 The completed 2026-06-05 full benchmark extends this separation to `120` cases
-and `9` methods. KL remains strong on binary, overlapping, categorical, and
+and `9` methods. TBS remains strong on binary, overlapping, categorical, and
 phylogenetic ok rows, but produces `28` skips under the strict empirical-null
 support contract; the new method-proof cases intentionally expose covariance,
 calibration-support, and under-split stress modes rather than serving as an
@@ -1869,7 +1868,7 @@ is only `0.16343`.
     traversal law or a stable flat clustering rule.
     The regression-gate benchmark separates this diagnostic conclusion from
     production clustering behavior. Passing the refined profile through the
-    standard benchmark path eliminates default KL skips on the 17-case
+    standard benchmark path eliminates default TBS skips on the 17-case
     regression gate and improves skip-as-zero mean ARI from `0.388484` to
     `0.445742`, but ok-only mean ARI drops from `0.600384` to `0.445742` and
     some easy non-overlap cases under-split. Thus the vector law is a
@@ -2375,11 +2374,11 @@ is only `0.16343`.
   selected-null false positives.
 - `wiki/sources/topology-vector-benchmark-20260615.md` records the regression
   gate benchmark and the dispatch plumbing required to run the refined profile
-  as a standard KL benchmark parameter variant.
+  as a standard TBS benchmark parameter variant.
 
 ## Links
 
-- [[kl-te-method]]
+- [[tree-break-selection]]
 - [[projected-wald-statistic]]
 - [[local-marchenko-pastur-rule]]
 - [[dimensional-gaussian-representation-diagnostic]]

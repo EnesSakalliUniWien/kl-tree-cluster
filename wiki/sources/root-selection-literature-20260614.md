@@ -22,25 +22,25 @@ split inference. In ordinary hierarchical clustering, the root is the
 all-sample cluster and the hard question is whether the first selected split is
 valid under a selected null. Phylogenetic and trajectory roots are different
 objects: they require external direction, time, ancestor, outgroup, clock, or
-lineage information. For KL-TE, the current production blocker is therefore
+lineage information. For Tree-Break Selection, the current production blocker is therefore
 not "find a better root" as an abstract high-dimensional point; it is validate
 or replace the selected root split/stopping law.
 
 ## Key Points
 
 - Hierarchical clustering conventionally roots the dendrogram at the unique
-  cluster containing all samples. KL-TE's root is therefore a whole-sample
+  cluster containing all samples. Tree-Break Selection's root is therefore a whole-sample
   parent whose children are the selected first split.
-- Selective inference for hierarchical clustering directly supports the KL-TE
+- Selective inference for hierarchical clustering directly supports the Tree-Break Selection
   diagnosis: testing selected clusters with a classical mean-difference/Wald
   law is anti-conservative unless the selection event is accounted for.
 - Pvclust and Shimodaira-style multiscale bootstrap give cluster uncertainty
   and selected-region geometry tools, including sample-size behavior and
   curvature ideas. They are useful diagnostics but not an automatic production
-  calibration rule for KL-TE.
+  calibration rule for Tree-Break Selection.
 - SHC/SigClust is the nearest root-down testing family: it tests nodes starting
   at the root under a fitted single-Gaussian null and supplies an FWER
-  procedure. Its inferential object differs from KL-TE's Bernoulli/categorical
+  procedure. Its inferential object differs from Tree-Break Selection's Bernoulli/categorical
   selected-topology null.
 - Gap statistic, silhouette-like criteria, PDDP, bisecting k-means, and graph
   modularity objectives are tree-construction or stopping tools. They can
@@ -48,9 +48,9 @@ or replace the selected root split/stopping law.
   subsequently tested root.
 - TooManyCells is relationally important: it starts at the all-cell root and
   stops recursive spectral splits using Newman-Girvan modularity rather than a
-  selected projected-Wald p-value. It is not a direct KL-TE comparator.
+  selected projected-Wald p-value. It is not a direct Tree-Break Selection comparator.
 - Phylogenetic rooting and pseudotime root selection are orientation problems.
-  They are relevant only if KL-TE adds external temporal, ancestor, outgroup,
+  They are relevant only if Tree-Break Selection adds external temporal, ancestor, outgroup,
   or lineage assumptions.
 - High-dimensional root splitting is hard because distances inflate,
   eigen-directions can be unstable, and many weak feature effects can dominate

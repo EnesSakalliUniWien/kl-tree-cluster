@@ -22,13 +22,13 @@ tags:
 ## Summary
 
 This benchmark records the first standard `run_gate` comparison after the
-guarded runner-contract fix, using `kl`, `kl_legacy_c2ef9a69`, and
-`kl_internal_filter_branch_length_v1`.
+guarded runner-contract fix, using `tbs`, `tbs_legacy_c2ef9a69`, and
+`tbs_internal_filter_branch_length_v1`.
 
 The canonical `run_gate` panel has `24` rows: eight gate-supported cases times
 three methods. It confirms that the branch-length internal filter remains
 fail-closed on unsupported severe overlap contexts, but it does not show a
-broad completed-row ARI win over current KL on this particular gate panel.
+broad completed-row ARI win over current TBS on this particular gate panel.
 Branch-length remains the next candidate to test because its safety behavior is
 better aligned with the guarded contract than legacy, not because this run
 promotes it as production-ready.
@@ -41,21 +41,21 @@ promotes it as production-ready.
   `cat_highcard_20cat_4c`, `cat_overlap_3cat_4c`,
   `overlap_heavy_4c_med_feat`, `overlap_unbal_4c_small`,
   `overlap_extreme_4c`, and `gauss_extreme_noise_3c`.
-- `kl` records mean ARI `0.4777`, median ARI `0.5001`, and exact K `2/8`.
+- `tbs` records mean ARI `0.4777`, median ARI `0.5001`, and exact K `2/8`.
   It skips `cat_highcard_20cat_4c`, `overlap_heavy_4c_med_feat`, and
   `overlap_extreme_4c` for missing strict-null or stopped-edge empirical-null
   support.
-- `kl_legacy_c2ef9a69` records mean ARI `0.3338`, median ARI `0.2481`, and
+- `tbs_legacy_c2ef9a69` records mean ARI `0.3338`, median ARI `0.2481`, and
   exact K `4/8`. It completes every row, including severe unsupported overlap,
   where `overlap_extreme_4c` returns six clusters with ARI `0.002729`.
-- `kl_internal_filter_branch_length_v1` records mean ARI `0.3935`, median ARI
+- `tbs_internal_filter_branch_length_v1` records mean ARI `0.3935`, median ARI
   `0.5001`, and exact K `1/8`. It skips both severe overlap rows for missing
   empirical-null support and skips several sparse-context rows as internally
   inadmissible.
-- On rows where both current KL and branch-length complete in the canonical
+- On rows where both current TBS and branch-length complete in the canonical
   gate, their labels and ARI match for `cat_overlap_3cat_4c` and
   `overlap_unbal_4c_small`. Branch-length additionally completes
-  `cat_highcard_20cat_4c` as one cluster with ARI `0.0`, while current KL
+  `cat_highcard_20cat_4c` as one cluster with ARI `0.0`, while current TBS
   skips that row.
 
 ## Supplemental Shared-Catalog Panel
@@ -65,9 +65,9 @@ does not include the binary controls and several categorical controls used in
 the desired broader panel. That supplemental panel has `36` rows: twelve cases
 times the same three methods.
 
-On this broader panel, `kl_internal_filter_branch_length_v1` records `11` OK
+On this broader panel, `tbs_internal_filter_branch_length_v1` records `11` OK
 rows, `1` skip, `8` exact-K rows, mean completed-row ARI `0.784468`, and
-median ARI `0.955960`. Current `kl` records `9` OK rows, `3` skips, `6`
+median ARI `0.955960`. Current `tbs` records `9` OK rows, `3` skips, `6`
 exact-K rows, mean completed-row ARI `0.848217`, and median ARI `0.960769`.
 Legacy completes all `12` rows with `7` exact-K rows and mean ARI `0.716054`.
 
@@ -83,7 +83,7 @@ canonical run.
 - `regression_gate_metadata.json` records the canonical `run_gate` case list,
   methods, elapsed time, thread environment, and row count.
 - `regression_gate_comparison.csv` records the hard-overlap distinction:
-  current KL and branch-length skip `overlap_extreme_4c` for missing strict
+  current TBS and branch-length skip `overlap_extreme_4c` for missing strict
   empirical-null support, while legacy returns six clusters with near-zero ARI.
 - The same CSV records branch-length sparse-context skips with
   `status='undefined_sparse_context'`, separating internal-admissibility
