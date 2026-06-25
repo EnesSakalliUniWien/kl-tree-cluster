@@ -11,7 +11,7 @@
 </head>
 <body>
   <h1>MNIST TBS Plotly Analysis</h1>
-  <p class="note"><strong>Generated at:</strong> 2026-06-24T22:13:29+02:00</p>
+  <p class="note"><strong>Generated at:</strong> 2026-06-25T08:50:56+02:00</p>
   <p class="note">Saved run: 2,000 normalized MNIST images, PCA50 representation
   with 83.13% variance retained, continuous TBS alpha sweep over complete,
   weighted, and Ward linkage. The UMAP pages use the same sample/PCA50 setup
@@ -20,13 +20,19 @@
   with the existing MNIST Plotly 3D writer. The visible-label 3D page draws
   each point with its true MNIST digit as text. The docs-style 3D page follows
   the UMAP basic-usage convention: one embedding, colored by true digit with a
-  digit colorbar. UMAP hover labels start with the true digit number. Each linked
-  page contains one Plotly figure.</p>
+  digit colorbar. The 2D and 3D image-inspector pages show the original 28x28
+  MNIST bitmap for the hovered or clicked point, enlarged in a fixed side panel,
+  with a radial TBS tree context panel showing the selected point's final cluster
+  in the best-run hierarchy. UMAP hover labels start with the true digit number.
+  Each linked page contains one Plotly figure unless it is an inspector page,
+  where the UMAP and radial tree are coordinated.</p>
   <ol>
     <li><a href="00_mnist_umap_true_digit_best_tbs_cluster.html">MNIST UMAP: true digit and best TBS cluster</a></li>
 <li><a href="00b_mnist_umap3d_true_digit_best_tbs_cluster.html">MNIST 3D UMAP: true digit and best TBS cluster</a></li>
 <li><a href="00c_mnist_umap3d_visible_digit_labels.html">MNIST 3D UMAP: visible digit labels</a></li>
 <li><a href="00d_mnist_umap3d_docstyle_digit_colorbar.html">MNIST 3D UMAP: docs-style digit colorbar</a></li>
+<li><a href="00e_mnist_umap_point_image_inspector.html">MNIST UMAP: point image inspector</a></li>
+<li><a href="00f_mnist_umap3d_point_image_inspector.html">MNIST 3D UMAP: point image inspector</a></li>
 <li><a href="01_best_alpha_setting_per_linkage.html">Best alpha setting per linkage</a></li>
 <li><a href="02_ward_ari_alpha_heatmap.html">Ward ARI reaction to alpha</a></li>
 <li><a href="03_ward_cluster_count_alpha_heatmap.html">Ward cluster-count reaction to alpha</a></li>

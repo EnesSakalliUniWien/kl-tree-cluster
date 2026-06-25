@@ -17,6 +17,9 @@ from benchmarks.experiments.mnist.run import load_mnist_subset
 from benchmarks.experiments.mnist.run_higher_categories import (
     create_plotly_higher_category_plot_3d,
 )
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from tree_break_selection.tree.poset_tree import PosetTree
 
 ROOT = Path("/Users/berksakalli/Projects/kl-te-cluster")
 SOURCE_DIR = ROOT / "benchmarks/results/experiments/mnist"
@@ -31,6 +34,8 @@ OUT_MANIFEST = OUT_DIR / "manifest.json"
 OUT_UMAP3D_HTML = OUT_DIR / "00b_mnist_umap3d_true_digit_best_tbs_cluster.html"
 OUT_UMAP3D_DIGIT_LABELS_HTML = OUT_DIR / "00c_mnist_umap3d_visible_digit_labels.html"
 OUT_UMAP3D_DOCSTYLE_HTML = OUT_DIR / "00d_mnist_umap3d_docstyle_digit_colorbar.html"
+OUT_UMAP_IMAGE_INSPECTOR_HTML = OUT_DIR / "00e_mnist_umap_point_image_inspector.html"
+OUT_UMAP3D_IMAGE_INSPECTOR_HTML = OUT_DIR / "00f_mnist_umap3d_point_image_inspector.html"
 
 DIGIT_COLORS = {
     0: "#4e79a7",
@@ -247,8 +252,12 @@ def _write_index(pages: list[tuple[str, str]], generated_at: str) -> None:
   with the existing MNIST Plotly 3D writer. The visible-label 3D page draws
   each point with its true MNIST digit as text. The docs-style 3D page follows
   the UMAP basic-usage convention: one embedding, colored by true digit with a
-  digit colorbar. UMAP hover labels start with the true digit number. Each linked
-  page contains one Plotly figure.</p>
+  digit colorbar. The 2D and 3D image-inspector pages show the original 28x28
+  MNIST bitmap for the hovered or clicked point, enlarged in a fixed side panel,
+  with a radial TBS tree context panel showing the selected point's final cluster
+  in the best-run hierarchy. UMAP hover labels start with the true digit number.
+  Each linked page contains one Plotly figure unless it is an inspector page,
+  where the UMAP and radial tree are coordinated.</p>
   <ol>
     {links}
   </ol>
@@ -342,6 +351,664 @@ def _load_or_create_umap(assignments: pd.DataFrame, best_key: str) -> pd.DataFra
         raise ValueError("UMAP samples did not all join to saved TBS assignments")
     frame.to_csv(OUT_UMAP_COORDS, index=False)
     return frame
+
+
+def _load_mnist_raw_images(expected_digits: pd.Series) -> np.ndarray:
+    raw_images, y_subset = load_mnist_subset(
+        n_samples=2000,
+        seed=42,
+        use_pca=False,
+    )
+    expected_digit_values = expected_digits.astype(int).to_numpy()
+    if len(raw_images) != len(expected_digit_values):
+        raise ValueError("Raw MNIST image count does not match the UMAP frame")
+    if y_subset.astype(int).tolist() != expected_digit_values.tolist():
+        raise ValueError("Raw MNIST labels do not match the saved assignment order")
+    return np.asarray(raw_images, dtype=np.float64)
+
+
+def _mnist_pixel_payload(raw_images: np.ndarray) -> tuple[list[list[int]], int]:
+    image_matrix = np.asarray(raw_images, dtype=np.float64)
+    if image_matrix.ndim != 2:
+        raise ValueError(f"MNIST image payload must be a 2D matrix; got {image_matrix.shape}.")
+    image_side = int(round(np.sqrt(image_matrix.shape[1])))
+    if image_side * image_side != image_matrix.shape[1]:
+        raise ValueError(
+            "Flattened MNIST image width must be a square number of pixels; "
+            f"got {image_matrix.shape[1]}."
+        )
+    if image_matrix.size == 0:
+        return [], image_side
+    max_value = float(np.nanmax(image_matrix))
+    scale = 255.0 if max_value <= 1.0 else 1.0
+    pixels = np.clip(np.rint(image_matrix * scale), 0, 255).astype(np.uint8)
+    return pixels.tolist(), image_side
+
+
+def _build_tbs_radial_tree_context(
+    assignments: pd.DataFrame,
+    best_key: str,
+    feature_matrix: np.ndarray,
+    linkage_method: str,
+    *,
+    div_id: str = "mnist-radial-tbs-tree",
+) -> dict[str, object]:
+    if best_key not in assignments.columns:
+        raise KeyError(f"Missing saved assignment column: {best_key}")
+    if len(assignments) != int(feature_matrix.shape[0]):
+        raise ValueError("Saved TBS assignments do not match the MNIST feature matrix")
+
+    sample_names = assignments["sample"].astype(str).tolist()
+    cluster_labels = assignments[best_key].astype(int).to_numpy()
+    digit_labels = assignments["true_digit"].astype(int).to_numpy()
+
+    linkage_matrix = linkage(pdist(feature_matrix), method=str(linkage_method))
+    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=sample_names)
+    descendant_sets = tree.compute_descendant_sets(use_labels=True)
+    node_by_leaf_set = {frozenset(leaves): node for node, leaves in descendant_sets.items()}
+    leaf_node_by_label = {
+        str(attrs["label"]): node
+        for node, attrs in tree.nodes(data=True)
+        if bool(attrs.get("is_leaf", False))
+    }
+    parent_by_child = {child: parent for parent, child in tree.edges()}
+
+    cluster_roots: dict[int, object] = {}
+    cluster_records: dict[int, dict[str, object]] = {}
+    for cluster_id in sorted(np.unique(cluster_labels).astype(int).tolist()):
+        is_member = cluster_labels == cluster_id
+        cluster_samples = assignments.loc[is_member, "sample"].astype(str).tolist()
+        cluster_leaf_set = frozenset(cluster_samples)
+        root_node = node_by_leaf_set.get(cluster_leaf_set)
+        exact_tree_boundary = root_node is not None
+        if root_node is None:
+            root_node = tree.find_lca_for_set(leaf_node_by_label[sample] for sample in cluster_samples)
+        cluster_roots[cluster_id] = root_node
+
+        cluster_digits = digit_labels[is_member]
+        digit_values, digit_counts = np.unique(cluster_digits, return_counts=True)
+        dominant_index = int(np.argmax(digit_counts))
+        dominant_digit = int(digit_values[dominant_index])
+        dominant_count = int(digit_counts[dominant_index])
+        size = int(is_member.sum())
+        cluster_records[cluster_id] = {
+            "cluster_id": cluster_id,
+            "node_id": str(root_node),
+            "size": size,
+            "dominant_digit": dominant_digit,
+            "purity": dominant_count / size,
+            "exact_tree_boundary": exact_tree_boundary,
+        }
+
+    root_node = tree.root()
+    included_nodes = {root_node}
+    for cluster_root in cluster_roots.values():
+        node = cluster_root
+        included_nodes.add(node)
+        while node in parent_by_child:
+            node = parent_by_child[node]
+            included_nodes.add(node)
+
+    pruned_children: dict[object, list[object]] = {node: [] for node in included_nodes}
+    for node in included_nodes:
+        if node == root_node:
+            continue
+        parent = parent_by_child[node]
+        while parent not in included_nodes:
+            parent = parent_by_child[parent]
+        pruned_children[parent].append(node)
+
+    cluster_root_set = set(cluster_roots.values())
+
+    def min_sample_index(node: object) -> int:
+        sample_indices = [
+            int(str(sample).split("_")[-1]) for sample in descendant_sets[node] if "_" in str(sample)
+        ]
+        return min(sample_indices) if sample_indices else 0
+
+    for children in pruned_children.values():
+        children.sort(key=min_sample_index)
+
+    ordered_cluster_roots: list[object] = []
+
+    def visit(node: object) -> None:
+        if node in cluster_root_set:
+            ordered_cluster_roots.append(node)
+            return
+        for child in pruned_children.get(node, []):
+            visit(child)
+
+    visit(root_node)
+    if len(ordered_cluster_roots) != len(cluster_roots):
+        ordered_cluster_roots = sorted(cluster_root_set, key=min_sample_index)
+
+    leaf_ordinals = {
+        node: float(index)
+        for index, node in enumerate(ordered_cluster_roots)
+    }
+    depths = {root_node: 0}
+    stack = [root_node]
+    while stack:
+        node = stack.pop()
+        for child in pruned_children.get(node, []):
+            depths[child] = depths[node] + 1
+            stack.append(child)
+    max_depth = max(depths.values()) if depths else 1
+
+    ordinals: dict[object, float] = {}
+
+    def assign_ordinal(node: object) -> float:
+        if node in leaf_ordinals:
+            ordinals[node] = leaf_ordinals[node]
+            return ordinals[node]
+        child_values = [assign_ordinal(child) for child in pruned_children.get(node, [])]
+        ordinals[node] = float(np.mean(child_values)) if child_values else 0.0
+        return ordinals[node]
+
+    assign_ordinal(root_node)
+    n_clusters = max(len(cluster_roots), 1)
+    coordinates: dict[object, tuple[float, float]] = {}
+    for node in included_nodes:
+        angle = 2.0 * np.pi * (ordinals.get(node, 0.0) / n_clusters) - (np.pi / 2.0)
+        radius = 0.0 if max_depth == 0 else depths[node] / max_depth
+        coordinates[node] = (float(radius * np.cos(angle)), float(radius * np.sin(angle)))
+
+    edge_x: list[float | None] = []
+    edge_y: list[float | None] = []
+    for parent, children in pruned_children.items():
+        parent_x, parent_y = coordinates[parent]
+        for child in children:
+            child_x, child_y = coordinates[child]
+            edge_x.extend([parent_x, child_x, None])
+            edge_y.extend([parent_y, child_y, None])
+
+    cluster_id_by_root = {root: cluster_id for cluster_id, root in cluster_roots.items()}
+    node_x: list[float] = []
+    node_y: list[float] = []
+    node_text: list[str] = []
+    node_hover: list[str] = []
+    node_color: list[float] = []
+    node_size: list[int] = []
+    for node in sorted(included_nodes, key=lambda item: (depths[item], ordinals.get(item, 0.0))):
+        x_value, y_value = coordinates[node]
+        node_x.append(x_value)
+        node_y.append(y_value)
+        cluster_id = cluster_id_by_root.get(node)
+        if cluster_id is None:
+            descendant_cluster_count = sum(
+                descendant_sets[cluster_root].issubset(descendant_sets[node])
+                for cluster_root in cluster_root_set
+            )
+            node_text.append("")
+            node_hover.append(
+                f"Tree node: {node}<br>Depth: {depths[node]}<br>"
+                f"Descendant final clusters: {descendant_cluster_count}"
+            )
+            node_color.append(-1.0)
+            node_size.append(8)
+        else:
+            record = cluster_records[cluster_id]
+            node_text.append(f"C{cluster_id}")
+            node_hover.append(
+                f"Final TBS cluster C{cluster_id}<br>Tree boundary: {node}<br>"
+                f"Samples: {record['size']}<br>Dominant digit: {record['dominant_digit']} "
+                f"({record['purity']:.0%})"
+            )
+            node_color.append(float(cluster_id))
+            node_size.append(15)
+
+    initial_cluster = sorted(cluster_records)[0]
+    initial_node = cluster_roots[initial_cluster]
+    initial_x, initial_y = coordinates[initial_node]
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=edge_x,
+            y=edge_y,
+            mode="lines",
+            line={"color": "#94a3b8", "width": 1},
+            hoverinfo="skip",
+            showlegend=False,
+            name="tree edge",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=node_x,
+            y=node_y,
+            mode="markers+text",
+            text=node_text,
+            textposition="middle center",
+            textfont={"size": 10, "color": "#111827"},
+            marker={
+                "size": node_size,
+                "color": node_color,
+                "colorscale": "Turbo",
+                "cmin": -1,
+                "showscale": False,
+                "line": {"color": "#ffffff", "width": 1},
+            },
+            hovertext=node_hover,
+            hovertemplate="%{hovertext}<extra></extra>",
+            showlegend=False,
+            name="tree node",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=[initial_x],
+            y=[initial_y],
+            mode="markers",
+            marker={
+                "size": 26,
+                "color": "rgba(0,0,0,0)",
+                "line": {"color": "#dc2626", "width": 3},
+            },
+            hoverinfo="skip",
+            showlegend=False,
+            name="selected cluster",
+        )
+    )
+    fig.update_layout(
+        title={"text": "Best-run TBS radial tree", "x": 0.02, "xanchor": "left"},
+        template="plotly_white",
+        font={"family": "Arial, sans-serif", "size": 12},
+        height=360,
+        margin={"l": 8, "r": 8, "t": 46, "b": 8},
+        xaxis={"visible": False, "scaleanchor": "y", "scaleratio": 1},
+        yaxis={"visible": False},
+        plot_bgcolor="#ffffff",
+    )
+
+    cluster_payload: list[dict[str, object]] = []
+    for cluster_id, record in cluster_records.items():
+        x_value, y_value = coordinates[cluster_roots[cluster_id]]
+        payload = dict(record)
+        payload["x"] = x_value
+        payload["y"] = y_value
+        cluster_payload.append(payload)
+
+    return {
+        "html": fig.to_html(include_plotlyjs=False, full_html=False, div_id=div_id),
+        "div_id": div_id,
+        "cluster_records": cluster_payload,
+        "n_clusters": len(cluster_records),
+    }
+
+
+def _write_image_inspector_page(
+    fig: go.Figure,
+    plot_frame: pd.DataFrame,
+    raw_images: np.ndarray,
+    *,
+    output_path: Path,
+    plot_div_id: str,
+    page_title: str,
+    tree_context: dict[str, object] | None = None,
+) -> Path:
+    image_pixels, image_side = _mnist_pixel_payload(raw_images)
+    if len(image_pixels) != len(plot_frame):
+        raise ValueError("MNIST image payload length does not match the UMAP frame")
+
+    plot_frame = plot_frame.reset_index(drop=True).copy()
+    if "point_index" not in plot_frame.columns:
+        plot_frame["point_index"] = np.arange(len(plot_frame), dtype=int)
+    sample_count_text = f"{len(plot_frame):,}"
+    tree_html = ""
+    tree_records: list[dict[str, object]] = []
+    tree_div_id = ""
+    tree_cluster_count = 0
+    if tree_context is not None:
+        tree_html = str(tree_context["html"])
+        tree_records = list(tree_context["cluster_records"])
+        tree_div_id = str(tree_context["div_id"])
+        tree_cluster_count = int(tree_context["n_clusters"])
+
+    plot_html = fig.to_html(
+        include_plotlyjs=True,
+        full_html=False,
+        div_id=plot_div_id,
+    )
+    records = plot_frame[["sample", "true_digit", "best_tbs_cluster", "point_index"]].to_dict(
+        orient="records"
+    )
+    output_path.write_text(
+        f"""<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{html.escape(page_title)}</title>
+  <style>
+    body {{
+      font-family: Arial, sans-serif;
+      margin: 0;
+      color: #111827;
+      background: #f8fafc;
+    }}
+    .shell {{
+      display: grid;
+      grid-template-columns: minmax(680px, 1fr) 430px;
+      gap: 18px;
+      padding: 18px;
+      align-items: start;
+    }}
+    .plot-panel, .inspector, .tree-panel {{
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }}
+    .inspector {{
+      padding: 16px;
+    }}
+    .side-panel {{
+      position: sticky;
+      top: 18px;
+      display: grid;
+      gap: 14px;
+    }}
+    #digit-canvas {{
+      width: 224px;
+      height: 224px;
+      image-rendering: pixelated;
+      border: 1px solid #111827;
+      background: #000000;
+      display: block;
+      margin: 0 auto 14px;
+    }}
+    .tree-panel {{
+      padding: 10px 10px 12px;
+    }}
+    .meta {{
+      font-size: 14px;
+      line-height: 1.55;
+    }}
+    .label {{
+      color: #6b7280;
+      display: inline-block;
+      min-width: 92px;
+    }}
+    .hint {{
+      color: #4b5563;
+      font-size: 13px;
+      line-height: 1.45;
+      margin: 14px 0 0;
+    }}
+    .tree-meta {{
+      color: #4b5563;
+      font-size: 13px;
+      line-height: 1.45;
+      margin: 8px 4px 0;
+    }}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="plot-panel">{plot_html}</div>
+    <div class="side-panel">
+      <aside class="inspector">
+        <canvas id="digit-canvas" width="{image_side}" height="{image_side}"></canvas>
+        <div class="meta">
+          <div><span class="label">Sample</span><span id="sample-value">Sample_0</span></div>
+          <div><span class="label">True digit</span><span id="digit-value">-</span></div>
+          <div><span class="label">TBS cluster</span><span id="cluster-value">-</span></div>
+          <div><span class="label">Tree node</span><span id="tree-node-value">-</span></div>
+        </div>
+        <p class="hint">Hover or click a UMAP point to show the original MNIST image used for that point. Contains {sample_count_text} MNIST examples. Source images are {image_side}x{image_side} pixels; this canvas enlarges them for inspection.</p>
+      </aside>
+      <aside class="tree-panel">
+        {tree_html}
+        <p class="tree-meta">Radial tree uses the same best-run TBS hierarchy and highlights the selected point's final cluster among {tree_cluster_count} clusters.</p>
+      </aside>
+    </div>
+  </div>
+  <script>
+    const imagePixels = {json.dumps(image_pixels, separators=(",", ":"))};
+    const pointRecords = {json.dumps(records, separators=(",", ":"))};
+    const imageSide = {image_side};
+    const treeRecords = {json.dumps(tree_records, separators=(",", ":"))};
+    const treeRecordByCluster = new Map(treeRecords.map((record) => [Number(record.cluster_id), record]));
+    const canvas = document.getElementById("digit-canvas");
+    const context = canvas.getContext("2d");
+    const sampleValue = document.getElementById("sample-value");
+    const digitValue = document.getElementById("digit-value");
+    const clusterValue = document.getElementById("cluster-value");
+    const treeNodeValue = document.getElementById("tree-node-value");
+
+    function updateTreeHighlight(clusterId) {{
+      const treeRecord = treeRecordByCluster.get(Number(clusterId));
+      const treePlot = document.getElementById("{tree_div_id}");
+      if (!treeRecord) {{
+        treeNodeValue.textContent = "-";
+        return;
+      }}
+      treeNodeValue.textContent = treeRecord.node_id;
+      if (treePlot && window.Plotly) {{
+        Plotly.restyle(treePlot, {{x: [[treeRecord.x]], y: [[treeRecord.y]]}}, [2]);
+      }}
+    }}
+
+    function drawDigitImage(pointIndex) {{
+      const pixels = imagePixels[pointIndex];
+      const record = pointRecords[pointIndex];
+      if (!pixels || !record) {{
+        return;
+      }}
+      const imageData = context.createImageData(imageSide, imageSide);
+      for (let index = 0; index < pixels.length; index += 1) {{
+        const value = pixels[index];
+        const offset = index * 4;
+        imageData.data[offset] = value;
+        imageData.data[offset + 1] = value;
+        imageData.data[offset + 2] = value;
+        imageData.data[offset + 3] = 255;
+      }}
+      context.putImageData(imageData, 0, 0);
+      sampleValue.textContent = record.sample;
+      digitValue.textContent = record.true_digit;
+      clusterValue.textContent = record.best_tbs_cluster;
+      updateTreeHighlight(record.best_tbs_cluster);
+    }}
+
+    const plot = document.getElementById("{plot_div_id}");
+    plot.on("plotly_hover", function(eventData) {{
+      const point = eventData.points[0];
+      drawDigitImage(Number(point.customdata[3]));
+    }});
+    plot.on("plotly_click", function(eventData) {{
+      const point = eventData.points[0];
+      drawDigitImage(Number(point.customdata[3]));
+    }});
+    drawDigitImage(0);
+  </script>
+</body>
+</html>
+""",
+        encoding="utf-8",
+    )
+    return output_path
+
+
+def _write_umap_image_inspector(
+    frame: pd.DataFrame,
+    raw_images: np.ndarray,
+    *,
+    output_path: Path = OUT_UMAP_IMAGE_INSPECTOR_HTML,
+    tree_context: dict[str, object] | None = None,
+) -> Path:
+    plot_frame = frame.reset_index(drop=True).copy()
+    plot_frame["point_index"] = np.arange(len(plot_frame), dtype=int)
+    hovertext = [
+        f"Digit number: {int(row.true_digit)}<br>Sample: {row.sample}<br>"
+        f"Best TBS cluster: {int(row.best_tbs_cluster)}"
+        for row in plot_frame.itertuples(index=False)
+    ]
+    fig = go.Figure(
+        go.Scattergl(
+            x=plot_frame["umap1"],
+            y=plot_frame["umap2"],
+            mode="markers",
+            name="MNIST sample",
+            marker={
+                "size": 7,
+                "opacity": 0.76,
+                "color": plot_frame["true_digit"].astype(int),
+                "colorscale": "Spectral",
+                "cmin": -0.5,
+                "cmax": 9.5,
+                "colorbar": {
+                    "title": "true digit",
+                    "tickmode": "array",
+                    "tickvals": list(range(10)),
+                    "ticktext": [str(digit) for digit in range(10)],
+                },
+            },
+            customdata=plot_frame[
+                ["sample", "true_digit", "best_tbs_cluster", "point_index"]
+            ].to_numpy(),
+            hovertext=hovertext,
+            hovertemplate=(
+                "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<extra></extra>"
+            ),
+        )
+    )
+    fig.update_layout(
+        title={"text": "MNIST PCA50 UMAP: point image inspector", "x": 0.02, "xanchor": "left"},
+        template="plotly_white",
+        font={"family": "Arial, sans-serif", "size": 13},
+        width=960,
+        height=720,
+        margin={"l": 70, "r": 24, "t": 76, "b": 70},
+    )
+    fig.update_xaxes(title_text="UMAP1")
+    fig.update_yaxes(title_text="UMAP2", scaleanchor="x", scaleratio=1)
+
+    return _write_image_inspector_page(
+        fig,
+        plot_frame,
+        raw_images,
+        output_path=output_path,
+        plot_div_id="mnist-image-inspector-plot",
+        page_title="MNIST UMAP Point Image Inspector",
+        tree_context=tree_context,
+    )
+
+
+def _write_umap3d_image_inspector(
+    assignments: pd.DataFrame,
+    best_key: str,
+    raw_images: np.ndarray,
+    *,
+    output_path: Path = OUT_UMAP3D_IMAGE_INSPECTOR_HTML,
+    tree_context: dict[str, object] | None = None,
+    feature_matrix: np.ndarray | None = None,
+    digit_labels: np.ndarray | None = None,
+) -> Path:
+    if best_key not in assignments.columns:
+        raise KeyError(f"Missing saved assignment column: {best_key}")
+
+    if feature_matrix is None or digit_labels is None:
+        feature_matrix, digit_labels = load_mnist_subset(
+            n_samples=2000,
+            seed=42,
+            use_pca=True,
+            n_components=50,
+        )
+    cluster_labels = assignments[best_key].astype(int).to_numpy()
+    digit_labels = np.asarray(digit_labels, dtype=int)
+    if len(cluster_labels) != len(digit_labels):
+        raise ValueError("Saved TBS assignments do not match the MNIST sample size")
+    if len(raw_images) != len(digit_labels):
+        raise ValueError("Raw MNIST image payload does not match the 3D UMAP sample size")
+
+    reducer = umap.UMAP(n_components=3, random_state=42, n_neighbors=15, min_dist=0.1)
+    embedding = reducer.fit_transform(feature_matrix)
+    plot_frame = pd.DataFrame(
+        {
+            "sample": assignments["sample"].astype(str).to_numpy(),
+            "true_digit": digit_labels,
+            "best_tbs_cluster": cluster_labels,
+            "umap1": embedding[:, 0],
+            "umap2": embedding[:, 1],
+            "umap3": embedding[:, 2],
+            "point_index": np.arange(len(digit_labels), dtype=int),
+        }
+    )
+    hovertext = [
+        f"Digit number: {int(row.true_digit)}<br>Sample: {row.sample}<br>"
+        f"Best TBS cluster: {int(row.best_tbs_cluster)}"
+        for row in plot_frame.itertuples(index=False)
+    ]
+    customdata = plot_frame[
+        ["sample", "true_digit", "best_tbs_cluster", "point_index"]
+    ].to_numpy()
+    hovertemplate = (
+        "%{hovertext}<br>UMAP1=%{x:.3f}<br>UMAP2=%{y:.3f}<br>"
+        "UMAP3=%{z:.3f}<extra></extra>"
+    )
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter3d(
+            x=plot_frame["umap1"],
+            y=plot_frame["umap2"],
+            z=plot_frame["umap3"],
+            mode="markers",
+            name="MNIST sample",
+            marker={
+                "size": 5,
+                "opacity": 0.62,
+                "color": digit_labels,
+                "colorscale": "Spectral",
+                "cmin": -0.5,
+                "cmax": 9.5,
+                "colorbar": {
+                    "title": "true digit",
+                    "tickmode": "array",
+                    "tickvals": list(range(10)),
+                    "ticktext": [str(digit) for digit in range(10)],
+                },
+            },
+            customdata=customdata,
+            hovertext=hovertext,
+            hovertemplate=hovertemplate,
+        )
+    )
+    fig.add_trace(
+        go.Scatter3d(
+            x=plot_frame["umap1"],
+            y=plot_frame["umap2"],
+            z=plot_frame["umap3"],
+            mode="markers",
+            name="hover target",
+            showlegend=False,
+            marker={"size": 22, "opacity": 0.01, "color": "#111827"},
+            customdata=customdata,
+            hovertext=hovertext,
+            hovertemplate=hovertemplate,
+        )
+    )
+    fig.update_layout(
+        title={"text": "MNIST PCA50 3D UMAP: point image inspector", "x": 0.02, "xanchor": "left"},
+        template="plotly_white",
+        font={"family": "Arial, sans-serif", "size": 13},
+        width=960,
+        height=760,
+        margin={"l": 4, "r": 4, "t": 76, "b": 4},
+        scene={
+            "xaxis_title": "UMAP-1",
+            "yaxis_title": "UMAP-2",
+            "zaxis_title": "UMAP-3",
+        },
+    )
+    return _write_image_inspector_page(
+        fig,
+        plot_frame,
+        raw_images,
+        output_path=output_path,
+        plot_div_id="mnist-3d-image-inspector-plot",
+        page_title="MNIST 3D UMAP Point Image Inspector",
+        tree_context=tree_context,
+    )
 
 
 def _write_umap3d_with_existing_writer(
@@ -584,6 +1251,32 @@ def main() -> None:
         visible_digit_labels=True,
     )
     umap3d_docstyle_path = _write_umap3d_docstyle(assignments, best_key)
+    raw_mnist_images = _load_mnist_raw_images(umap_frame["true_digit"])
+    pca50, y_subset = load_mnist_subset(
+        n_samples=2000,
+        seed=42,
+        use_pca=True,
+        n_components=50,
+    )
+    tree_context = _build_tbs_radial_tree_context(
+        assignments,
+        best_key,
+        pca50,
+        str(best["linkage"]),
+    )
+    umap_image_inspector_path = _write_umap_image_inspector(
+        umap_frame,
+        raw_mnist_images,
+        tree_context=tree_context,
+    )
+    umap3d_image_inspector_path = _write_umap3d_image_inspector(
+        assignments,
+        best_key,
+        raw_mnist_images,
+        tree_context=tree_context,
+        feature_matrix=pca50,
+        digit_labels=y_subset,
+    )
 
     analysis_summary = _best_rows(summary)
     analysis_summary.insert(0, "generated_at", generated_at)
@@ -608,6 +1301,14 @@ def main() -> None:
         (
             "MNIST 3D UMAP: docs-style digit colorbar",
             umap3d_docstyle_path.name,
+        ),
+        (
+            "MNIST UMAP: point image inspector",
+            umap_image_inspector_path.name,
+        ),
+        (
+            "MNIST 3D UMAP: point image inspector",
+            umap3d_image_inspector_path.name,
         ),
         (
             "Best alpha setting per linkage",
@@ -659,6 +1360,8 @@ def main() -> None:
     print(OUT_UMAP3D_HTML)
     print(OUT_UMAP3D_DIGIT_LABELS_HTML)
     print(OUT_UMAP3D_DOCSTYLE_HTML)
+    print(OUT_UMAP_IMAGE_INSPECTOR_HTML)
+    print(OUT_UMAP3D_IMAGE_INSPECTOR_HTML)
     for _title, page in pages:
         print(OUT_DIR / page)
 

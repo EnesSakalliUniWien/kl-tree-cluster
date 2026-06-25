@@ -84,6 +84,120 @@ def test_2d_report_hover_shows_number_before_sample():
     assert "Digit: %{customdata[0]}" not in html
 
 
+def test_2d_image_inspector_embeds_digit_pixels(monkeypatch, tmp_path):
+    report = _load_mnist_report_module()
+    output_path = tmp_path / "mnist_image_inspector.html"
+    frame = pd.DataFrame(
+        {
+            "sample": ["Sample_0", "Sample_1"],
+            "true_digit": [3, 8],
+            "umap1": [0.0, 1.0],
+            "umap2": [1.0, 0.0],
+            "best_tbs_cluster": [7, 9],
+        }
+    )
+    raw_images = np.array(
+        [
+            [0.0, 0.5, 0.75, 1.0],
+            [1.0, 0.75, 0.5, 0.0],
+        ],
+        dtype=float,
+    )
+
+    report._write_umap_image_inspector(frame, raw_images, output_path=output_path)
+
+    html = output_path.read_text(encoding="utf-8")
+    assert "mnist-image-inspector-plot" in html
+    assert "const imagePixels = [[0,128,191,255],[255,191,128,0]];" in html
+    assert "const imageSide = 2;" in html
+    assert "function drawDigitImage(pointIndex)" in html
+    assert 'plot.on("plotly_hover"' in html
+    assert 'plot.on("plotly_click"' in html
+    assert "Digit number: 3" in html
+    assert '"sample":"Sample_0"' in html
+    assert '"best_tbs_cluster":7' in html
+    assert "Contains 2 MNIST examples" in html
+    assert "Source images are 2x2 pixels" in html
+
+
+def test_radial_tree_context_recovers_final_cluster_boundaries():
+    report = _load_mnist_report_module()
+    assignments = pd.DataFrame(
+        {
+            "sample": ["Sample_0", "Sample_1", "Sample_2", "Sample_3"],
+            "true_digit": [0, 0, 9, 9],
+            "best": [0, 0, 1, 1],
+        }
+    )
+    feature_matrix = np.array([[0.0], [0.1], [10.0], [10.1]], dtype=float)
+
+    context = report._build_tbs_radial_tree_context(
+        assignments,
+        "best",
+        feature_matrix,
+        "ward",
+    )
+
+    assert context["n_clusters"] == 2
+    assert "mnist-radial-tbs-tree" in context["html"]
+    records = {record["cluster_id"]: record for record in context["cluster_records"]}
+    assert sorted(records) == [0, 1]
+    assert records[0]["size"] == 2
+    assert records[0]["dominant_digit"] == 0
+    assert records[1]["dominant_digit"] == 9
+    assert records[0]["exact_tree_boundary"] is True
+
+
+def test_3d_image_inspector_embeds_digit_pixels_and_tree(monkeypatch, tmp_path):
+    report = _load_mnist_report_module()
+    output_path = tmp_path / "mnist_3d_image_inspector.html"
+    monkeypatch.setattr(report.umap, "UMAP", _DummyUMAP)
+    assignments = pd.DataFrame(
+        {
+            "sample": ["Sample_0", "Sample_1"],
+            "true_digit": [3, 8],
+            "best": [7, 9],
+        }
+    )
+    raw_images = np.array(
+        [
+            [0.0, 0.5, 0.75, 1.0],
+            [1.0, 0.75, 0.5, 0.0],
+        ],
+        dtype=float,
+    )
+    tree_context = {
+        "html": '<div id="mnist-radial-tbs-tree"></div>',
+        "div_id": "mnist-radial-tbs-tree",
+        "cluster_records": [
+            {"cluster_id": 7, "node_id": "N2", "x": 0.0, "y": 1.0},
+            {"cluster_id": 9, "node_id": "N3", "x": 1.0, "y": 0.0},
+        ],
+        "n_clusters": 2,
+    }
+
+    report._write_umap3d_image_inspector(
+        assignments,
+        "best",
+        raw_images,
+        output_path=output_path,
+        tree_context=tree_context,
+        feature_matrix=np.ones((2, 3)),
+        digit_labels=np.array([3, 8]),
+    )
+
+    html = output_path.read_text(encoding="utf-8")
+    assert "mnist-3d-image-inspector-plot" in html
+    assert "mnist-radial-tbs-tree" in html
+    assert "const imagePixels = [[0,128,191,255],[255,191,128,0]];" in html
+    assert "const imageSide = 2;" in html
+    assert "function drawDigitImage(pointIndex)" in html
+    assert "function updateTreeHighlight(clusterId)" in html
+    assert "UMAP3=%{z:.3f}" in html
+    assert "Digit number: 3" in html
+    assert '"node_id":"N2"' in html
+
+
 def test_report_index_writes_timestamp(monkeypatch, tmp_path):
     report = _load_mnist_report_module()
     output_path = tmp_path / "index.html"
