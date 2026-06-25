@@ -392,6 +392,7 @@ def _build_tbs_radial_tree_context(
     linkage_method: str,
     *,
     div_id: str = "mnist-radial-tbs-tree",
+    full_tree: bool = False,
 ) -> dict[str, object]:
     if best_key not in assignments.columns:
         raise KeyError(f"Missing saved assignment column: {best_key}")
@@ -412,6 +413,12 @@ def _build_tbs_radial_tree_context(
         if bool(attrs.get("is_leaf", False))
     }
     parent_by_child = {child: parent for parent, child in tree.edges()}
+    leaf_cluster_by_sample = dict(
+        zip(assignments["sample"].astype(str), cluster_labels.astype(int), strict=True)
+    )
+    digit_by_sample = dict(
+        zip(assignments["sample"].astype(str), digit_labels.astype(int), strict=True)
+    )
 
     cluster_roots: dict[int, object] = {}
     cluster_records: dict[int, dict[str, object]] = {}
@@ -441,23 +448,6 @@ def _build_tbs_radial_tree_context(
         }
 
     root_node = tree.root()
-    included_nodes = {root_node}
-    for cluster_root in cluster_roots.values():
-        node = cluster_root
-        included_nodes.add(node)
-        while node in parent_by_child:
-            node = parent_by_child[node]
-            included_nodes.add(node)
-
-    pruned_children: dict[object, list[object]] = {node: [] for node in included_nodes}
-    for node in included_nodes:
-        if node == root_node:
-            continue
-        parent = parent_by_child[node]
-        while parent not in included_nodes:
-            parent = parent_by_child[parent]
-        pruned_children[parent].append(node)
-
     cluster_root_set = set(cluster_roots.values())
 
     def min_sample_index(node: object) -> int:
@@ -466,31 +456,69 @@ def _build_tbs_radial_tree_context(
         ]
         return min(sample_indices) if sample_indices else 0
 
-    for children in pruned_children.values():
+    if full_tree:
+        included_nodes = set(tree.nodes)
+        display_children = {
+            node: sorted(list(tree.successors(node)), key=min_sample_index)
+            for node in included_nodes
+        }
+        ordered_layout_leaves: list[object] = []
+
+        def visit_full(node: object) -> None:
+            children = display_children.get(node, [])
+            if not children:
+                ordered_layout_leaves.append(node)
+                return
+            for child in children:
+                visit_full(child)
+
+        visit_full(root_node)
+    else:
+        included_nodes = {root_node}
+        for cluster_root in cluster_roots.values():
+            node = cluster_root
+            included_nodes.add(node)
+            while node in parent_by_child:
+                node = parent_by_child[node]
+                included_nodes.add(node)
+
+        display_children = {node: [] for node in included_nodes}
+        for node in included_nodes:
+            if node == root_node:
+                continue
+            parent = parent_by_child[node]
+            while parent not in included_nodes:
+                parent = parent_by_child[parent]
+            display_children[parent].append(node)
+
+        for children in display_children.values():
+            children.sort(key=min_sample_index)
+
+        ordered_layout_leaves = []
+
+        def visit_boundary(node: object) -> None:
+            if node in cluster_root_set:
+                ordered_layout_leaves.append(node)
+                return
+            for child in display_children.get(node, []):
+                visit_boundary(child)
+
+        visit_boundary(root_node)
+        if len(ordered_layout_leaves) != len(cluster_roots):
+            ordered_layout_leaves = sorted(cluster_root_set, key=min_sample_index)
+
+    for children in display_children.values():
         children.sort(key=min_sample_index)
-
-    ordered_cluster_roots: list[object] = []
-
-    def visit(node: object) -> None:
-        if node in cluster_root_set:
-            ordered_cluster_roots.append(node)
-            return
-        for child in pruned_children.get(node, []):
-            visit(child)
-
-    visit(root_node)
-    if len(ordered_cluster_roots) != len(cluster_roots):
-        ordered_cluster_roots = sorted(cluster_root_set, key=min_sample_index)
 
     leaf_ordinals = {
         node: float(index)
-        for index, node in enumerate(ordered_cluster_roots)
+        for index, node in enumerate(ordered_layout_leaves)
     }
     depths = {root_node: 0}
     stack = [root_node]
     while stack:
         node = stack.pop()
-        for child in pruned_children.get(node, []):
+        for child in display_children.get(node, []):
             depths[child] = depths[node] + 1
             stack.append(child)
     max_depth = max(depths.values()) if depths else 1
@@ -501,21 +529,21 @@ def _build_tbs_radial_tree_context(
         if node in leaf_ordinals:
             ordinals[node] = leaf_ordinals[node]
             return ordinals[node]
-        child_values = [assign_ordinal(child) for child in pruned_children.get(node, [])]
+        child_values = [assign_ordinal(child) for child in display_children.get(node, [])]
         ordinals[node] = float(np.mean(child_values)) if child_values else 0.0
         return ordinals[node]
 
     assign_ordinal(root_node)
-    n_clusters = max(len(cluster_roots), 1)
+    angular_slots = max(len(ordered_layout_leaves), 1)
     coordinates: dict[object, tuple[float, float]] = {}
     for node in included_nodes:
-        angle = 2.0 * np.pi * (ordinals.get(node, 0.0) / n_clusters) - (np.pi / 2.0)
+        angle = 2.0 * np.pi * (ordinals.get(node, 0.0) / angular_slots) - (np.pi / 2.0)
         radius = 0.0 if max_depth == 0 else depths[node] / max_depth
         coordinates[node] = (float(radius * np.cos(angle)), float(radius * np.sin(angle)))
 
     edge_x: list[float | None] = []
     edge_y: list[float | None] = []
-    for parent, children in pruned_children.items():
+    for parent, children in display_children.items():
         parent_x, parent_y = coordinates[parent]
         for child in children:
             child_x, child_y = coordinates[child]
@@ -555,7 +583,18 @@ def _build_tbs_radial_tree_context(
                 f"({record['purity']:.0%})"
             )
             node_color.append(float(cluster_id))
-            node_size.append(15)
+            node_size.append(14 if full_tree else 15)
+            continue
+
+        if full_tree and bool(tree.nodes[node].get("is_leaf", False)):
+            sample = str(tree.nodes[node]["label"])
+            node_text[-1] = ""
+            node_hover[-1] = (
+                f"Leaf: {sample}<br>Digit number: {digit_by_sample[sample]}<br>"
+                f"Final TBS cluster: C{leaf_cluster_by_sample[sample]}"
+            )
+            node_color[-1] = float(leaf_cluster_by_sample[sample])
+            node_size[-1] = 2
 
     initial_cluster = sorted(cluster_records)[0]
     initial_node = cluster_roots[initial_cluster]
@@ -586,7 +625,7 @@ def _build_tbs_radial_tree_context(
                 "colorscale": "Turbo",
                 "cmin": -1,
                 "showscale": False,
-                "line": {"color": "#ffffff", "width": 1},
+                "line": {"color": "#ffffff", "width": 0.5 if full_tree else 1},
             },
             hovertext=node_hover,
             hovertemplate="%{hovertext}<extra></extra>",
@@ -610,10 +649,14 @@ def _build_tbs_radial_tree_context(
         )
     )
     fig.update_layout(
-        title={"text": "Best-run TBS radial tree", "x": 0.02, "xanchor": "left"},
+        title={
+            "text": "Full best-run TBS radial tree" if full_tree else "Best-run TBS radial tree",
+            "x": 0.02,
+            "xanchor": "left",
+        },
         template="plotly_white",
         font={"family": "Arial, sans-serif", "size": 12},
-        height=360,
+        height=520 if full_tree else 360,
         margin={"l": 8, "r": 8, "t": 46, "b": 8},
         xaxis={"visible": False, "scaleanchor": "y", "scaleratio": 1},
         yaxis={"visible": False},
@@ -633,6 +676,9 @@ def _build_tbs_radial_tree_context(
         "div_id": div_id,
         "cluster_records": cluster_payload,
         "n_clusters": len(cluster_records),
+        "n_nodes": len(included_nodes),
+        "n_edges": sum(len(children) for children in display_children.values()),
+        "tree_mode": "full" if full_tree else "cluster_boundary",
     }
 
 
@@ -658,11 +704,26 @@ def _write_image_inspector_page(
     tree_records: list[dict[str, object]] = []
     tree_div_id = ""
     tree_cluster_count = 0
+    tree_node_count = 0
+    tree_edge_count = 0
+    tree_mode = "cluster_boundary"
     if tree_context is not None:
         tree_html = str(tree_context["html"])
         tree_records = list(tree_context["cluster_records"])
         tree_div_id = str(tree_context["div_id"])
         tree_cluster_count = int(tree_context["n_clusters"])
+        tree_node_count = int(tree_context.get("n_nodes", 0))
+        tree_edge_count = int(tree_context.get("n_edges", 0))
+        tree_mode = str(tree_context.get("tree_mode", "cluster_boundary"))
+    tree_note = (
+        f"Full radial tree uses the same best-run TBS hierarchy: {tree_node_count:,} nodes, "
+        f"{tree_edge_count:,} edges, and {tree_cluster_count} highlighted final clusters."
+        if tree_mode == "full"
+        else (
+            "Radial tree uses the same best-run TBS hierarchy and highlights the selected "
+            f"point's final cluster among {tree_cluster_count} clusters."
+        )
+    )
 
     plot_html = fig.to_html(
         include_plotlyjs=True,
@@ -758,7 +819,7 @@ def _write_image_inspector_page(
       </aside>
       <aside class="tree-panel">
         {tree_html}
-        <p class="tree-meta">Radial tree uses the same best-run TBS hierarchy and highlights the selected point's final cluster among {tree_cluster_count} clusters.</p>
+        <p class="tree-meta">{tree_note}</p>
       </aside>
     </div>
   </div>
@@ -1258,22 +1319,30 @@ def main() -> None:
         use_pca=True,
         n_components=50,
     )
-    tree_context = _build_tbs_radial_tree_context(
+    boundary_tree_context = _build_tbs_radial_tree_context(
         assignments,
         best_key,
         pca50,
         str(best["linkage"]),
     )
+    full_tree_context = _build_tbs_radial_tree_context(
+        assignments,
+        best_key,
+        pca50,
+        str(best["linkage"]),
+        div_id="mnist-full-radial-tbs-tree",
+        full_tree=True,
+    )
     umap_image_inspector_path = _write_umap_image_inspector(
         umap_frame,
         raw_mnist_images,
-        tree_context=tree_context,
+        tree_context=boundary_tree_context,
     )
     umap3d_image_inspector_path = _write_umap3d_image_inspector(
         assignments,
         best_key,
         raw_mnist_images,
-        tree_context=tree_context,
+        tree_context=full_tree_context,
         feature_matrix=pca50,
         digit_labels=y_subset,
     )

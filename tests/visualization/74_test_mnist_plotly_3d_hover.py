@@ -139,6 +139,7 @@ def test_radial_tree_context_recovers_final_cluster_boundaries():
     )
 
     assert context["n_clusters"] == 2
+    assert context["tree_mode"] == "cluster_boundary"
     assert "mnist-radial-tbs-tree" in context["html"]
     records = {record["cluster_id"]: record for record in context["cluster_records"]}
     assert sorted(records) == [0, 1]
@@ -146,6 +147,34 @@ def test_radial_tree_context_recovers_final_cluster_boundaries():
     assert records[0]["dominant_digit"] == 0
     assert records[1]["dominant_digit"] == 9
     assert records[0]["exact_tree_boundary"] is True
+
+
+def test_full_radial_tree_context_includes_all_linkage_nodes():
+    report = _load_mnist_report_module()
+    assignments = pd.DataFrame(
+        {
+            "sample": ["Sample_0", "Sample_1", "Sample_2", "Sample_3"],
+            "true_digit": [0, 0, 9, 9],
+            "best": [0, 0, 1, 1],
+        }
+    )
+    feature_matrix = np.array([[0.0], [0.1], [10.0], [10.1]], dtype=float)
+
+    context = report._build_tbs_radial_tree_context(
+        assignments,
+        "best",
+        feature_matrix,
+        "ward",
+        full_tree=True,
+    )
+
+    assert context["tree_mode"] == "full"
+    assert context["n_nodes"] == 7
+    assert context["n_edges"] == 6
+    assert context["n_clusters"] == 2
+    assert "Full best-run TBS radial tree" in context["html"]
+    assert "Leaf: Sample_0" in context["html"]
+    assert "Final TBS cluster C0" in context["html"]
 
 
 def test_3d_image_inspector_embeds_digit_pixels_and_tree(monkeypatch, tmp_path):
@@ -174,6 +203,9 @@ def test_3d_image_inspector_embeds_digit_pixels_and_tree(monkeypatch, tmp_path):
             {"cluster_id": 9, "node_id": "N3", "x": 1.0, "y": 0.0},
         ],
         "n_clusters": 2,
+        "n_nodes": 7,
+        "n_edges": 6,
+        "tree_mode": "full",
     }
 
     report._write_umap3d_image_inspector(
@@ -196,6 +228,7 @@ def test_3d_image_inspector_embeds_digit_pixels_and_tree(monkeypatch, tmp_path):
     assert "UMAP3=%{z:.3f}" in html
     assert "Digit number: 3" in html
     assert '"node_id":"N2"' in html
+    assert "Full radial tree uses the same best-run TBS hierarchy: 7 nodes, 6 edges" in html
 
 
 def test_report_index_writes_timestamp(monkeypatch, tmp_path):
