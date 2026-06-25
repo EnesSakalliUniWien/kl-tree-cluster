@@ -16,6 +16,12 @@ import pandas as pd
 
 from .. import config
 from ..core_utils.data_utils import extract_bool_column_dict
+from ..tree.distributions import (
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    validate_continuous_covariance_min_child_leaf_count,
+    validate_continuous_covariance_policy,
+)
 from .cluster_assignments import ClusterBoundary, build_cluster_assignments
 from .decomposition.gates.annotation_bundle import GateAnnotationBundle
 from .decomposition.gates.column_contracts import (
@@ -36,6 +42,10 @@ from .decomposition.gates.spectral_transport import (
     DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
 )
 from .statistics.alpha_contract import DEFAULT_EDGE_ALPHA, DEFAULT_SIBLING_ALPHA
+from .statistics.branch_length_utils import (
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+    validate_edge_branch_length_variance_policy,
+)
 from .statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
@@ -83,9 +93,15 @@ class TreeDecomposition:
         leaf_data: pd.DataFrame | None = None,
         feature_space: FeatureSpace | None = None,
         spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+        adaptive_projection_dimension_energy_fraction: float | None = None,
         spectral_include_internal_barycenters: bool = False,
         spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
         spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+        continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+        continuous_covariance_min_child_leaf_count: int = (
+            DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+        ),
+        edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
         sibling_gate_profile: str | SiblingGateProfile | None = None,
         sibling_gate_method: str = "projected_wald_inflation",
         sibling_gate_alpha_penalty: float = 1.0,
@@ -169,13 +185,25 @@ class TreeDecomposition:
         self._leaf_data = leaf_data
         self._feature_space = feature_space
         self._spectral_minimum_dimension = int(spectral_minimum_dimension)
-        self._spectral_include_internal_barycenters = bool(
-            spectral_include_internal_barycenters
+        self._adaptive_projection_dimension_energy_fraction = (
+            None
+            if adaptive_projection_dimension_energy_fraction is None
+            else float(adaptive_projection_dimension_energy_fraction)
         )
-        self._spectral_internal_distribution_mode = str(
-            spectral_internal_distribution_mode
-        )
+        self._spectral_include_internal_barycenters = bool(spectral_include_internal_barycenters)
+        self._spectral_internal_distribution_mode = str(spectral_internal_distribution_mode)
         self._spectral_mp_row_count_mode = str(spectral_mp_row_count_mode)
+        self._continuous_covariance_policy = validate_continuous_covariance_policy(
+            continuous_covariance_policy
+        )
+        self._continuous_covariance_min_child_leaf_count = (
+            validate_continuous_covariance_min_child_leaf_count(
+                continuous_covariance_min_child_leaf_count
+            )
+        )
+        self._edge_branch_length_variance_policy = validate_edge_branch_length_variance_policy(
+            edge_branch_length_variance_policy
+        )
         (
             self._sibling_gate_profile_id,
             self._sibling_gate_method,
@@ -204,36 +232,18 @@ class TreeDecomposition:
             root_selective_permutation_guard_replicates=(
                 root_selective_permutation_guard_replicates
             ),
-            root_selective_permutation_guard_seed=(
-                root_selective_permutation_guard_seed
-            ),
-            root_selective_permutation_guard_alpha=(
-                root_selective_permutation_guard_alpha
-            ),
-            root_selective_permutation_guard_scope=(
-                root_selective_permutation_guard_scope
-            ),
-            spectral_transport_passthrough_guard=(
-                spectral_transport_passthrough_guard
-            ),
+            root_selective_permutation_guard_seed=(root_selective_permutation_guard_seed),
+            root_selective_permutation_guard_alpha=(root_selective_permutation_guard_alpha),
+            root_selective_permutation_guard_scope=(root_selective_permutation_guard_scope),
+            spectral_transport_passthrough_guard=(spectral_transport_passthrough_guard),
             spectral_transport_max_cost=spectral_transport_max_cost,
             spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
-            spectral_transport_block_log_tolerance=(
-                spectral_transport_block_log_tolerance
-            ),
-            spectral_transport_unmatched_mode_penalty=(
-                spectral_transport_unmatched_mode_penalty
-            ),
+            spectral_transport_block_log_tolerance=(spectral_transport_block_log_tolerance),
+            spectral_transport_unmatched_mode_penalty=(spectral_transport_unmatched_mode_penalty),
         )
-        self._enforce_internal_support_thresholds = bool(
-            enforce_internal_support_thresholds
-        )
-        self._root_stability_tree_distance_metric = str(
-            root_stability_tree_distance_metric
-        )
-        self._root_stability_tree_linkage_method = str(
-            root_stability_tree_linkage_method
-        )
+        self._enforce_internal_support_thresholds = bool(enforce_internal_support_thresholds)
+        self._root_stability_tree_distance_metric = str(root_stability_tree_distance_metric)
+        self._root_stability_tree_linkage_method = str(root_stability_tree_linkage_method)
         self._root_selective_permutation_guard_replicates = int(
             resolved_root_selective_permutation_guard_replicates
         )
@@ -258,9 +268,7 @@ class TreeDecomposition:
         self._spectral_transport_passthrough_guard = bool(
             resolved_spectral_transport_passthrough_guard
         )
-        self._spectral_transport_max_cost = float(
-            resolved_spectral_transport_max_cost
-        )
+        self._spectral_transport_max_cost = float(resolved_spectral_transport_max_cost)
         self._spectral_transport_require_mp_blocks = bool(
             resolved_spectral_transport_require_mp_blocks
         )
@@ -365,17 +373,13 @@ class TreeDecomposition:
         bottlenecks: dict[object, str] = {}
         for node in self._node_ids:
             reasons: list[str] = []
-            if (
-                self._uses_selected_family_passthrough_guard()
-                and self._annotation_bool_value(
-                    node, "Selective_Permutation_Guard_Would_Block"
-                )
+            if self._uses_selected_family_passthrough_guard() and self._annotation_bool_value(
+                node, "Selective_Permutation_Guard_Would_Block"
             ):
                 reasons.append("selected_family_passthrough_guard_blocked")
             if (
                 self._spectral_transport_passthrough_guard
-                and "Spectral_Transport_Pass_Through_Supported"
-                in self.annotations_df.columns
+                and "Spectral_Transport_Pass_Through_Supported" in self.annotations_df.columns
                 and not self._annotation_bool_value(
                     node, "Spectral_Transport_Pass_Through_Supported"
                 )
@@ -410,60 +414,44 @@ class TreeDecomposition:
             leaf_data=self._leaf_data,
             feature_space=self._feature_space,
             spectral_minimum_dimension=self._spectral_minimum_dimension,
-            spectral_include_internal_barycenters=(
-                self._spectral_include_internal_barycenters
+            adaptive_projection_dimension_energy_fraction=(
+                self._adaptive_projection_dimension_energy_fraction
             ),
-            spectral_internal_distribution_mode=(
-                self._spectral_internal_distribution_mode
-            ),
+            spectral_include_internal_barycenters=(self._spectral_include_internal_barycenters),
+            spectral_internal_distribution_mode=(self._spectral_internal_distribution_mode),
             spectral_mp_row_count_mode=self._spectral_mp_row_count_mode,
+            continuous_covariance_policy=self._continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(
+                self._continuous_covariance_min_child_leaf_count
+            ),
+            edge_branch_length_variance_policy=(self._edge_branch_length_variance_policy),
             sibling_gate_profile=self._sibling_gate_profile_id,
             sibling_gate_method=self._sibling_gate_method,
             sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
             root_stability_guard_threshold=self._root_stability_guard_threshold,
-            root_stability_subsample_replicates=(
-                self._root_stability_subsample_replicates
-            ),
+            root_stability_subsample_replicates=(self._root_stability_subsample_replicates),
             root_stability_feature_fraction=self._root_stability_feature_fraction,
             root_stability_seed=self._root_stability_seed,
-            root_stability_tree_distance_metric=(
-                self._root_stability_tree_distance_metric
-            ),
-            root_stability_tree_linkage_method=(
-                self._root_stability_tree_linkage_method
-            ),
+            root_stability_tree_distance_metric=(self._root_stability_tree_distance_metric),
+            root_stability_tree_linkage_method=(self._root_stability_tree_linkage_method),
             root_selective_permutation_guard_replicates=(
                 self._root_selective_permutation_guard_replicates
             ),
-            root_selective_permutation_guard_seed=(
-                self._root_selective_permutation_guard_seed
-            ),
-            root_selective_permutation_guard_alpha=(
-                self._root_selective_permutation_guard_alpha
-            ),
-            root_selective_permutation_guard_scope=(
-                self._root_selective_permutation_guard_scope
-            ),
+            root_selective_permutation_guard_seed=(self._root_selective_permutation_guard_seed),
+            root_selective_permutation_guard_alpha=(self._root_selective_permutation_guard_alpha),
+            root_selective_permutation_guard_scope=(self._root_selective_permutation_guard_scope),
             root_selective_permutation_guard_tree_distance_metric=(
                 self._root_selective_permutation_guard_tree_distance_metric
             ),
             root_selective_permutation_guard_tree_linkage_method=(
                 self._root_selective_permutation_guard_tree_linkage_method
             ),
-            enforce_internal_support_thresholds=(
-                self._enforce_internal_support_thresholds
-            ),
+            enforce_internal_support_thresholds=(self._enforce_internal_support_thresholds),
             internal_support_thresholds=self._internal_support_thresholds,
-            spectral_transport_passthrough_guard=(
-                self._spectral_transport_passthrough_guard
-            ),
+            spectral_transport_passthrough_guard=(self._spectral_transport_passthrough_guard),
             spectral_transport_max_cost=self._spectral_transport_max_cost,
-            spectral_transport_require_mp_blocks=(
-                self._spectral_transport_require_mp_blocks
-            ),
-            spectral_transport_block_log_tolerance=(
-                self._spectral_transport_block_log_tolerance
-            ),
+            spectral_transport_require_mp_blocks=(self._spectral_transport_require_mp_blocks),
+            spectral_transport_block_log_tolerance=(self._spectral_transport_block_log_tolerance),
             spectral_transport_unmatched_mode_penalty=(
                 self._spectral_transport_unmatched_mode_penalty
             ),
@@ -504,34 +492,30 @@ class TreeDecomposition:
             and metadata.config
             == build_gate_annotation_config_metadata(
                 spectral_minimum_dimension=self._spectral_minimum_dimension,
-                spectral_include_internal_barycenters=(
-                    self._spectral_include_internal_barycenters
+                adaptive_projection_dimension_energy_fraction=(
+                    self._adaptive_projection_dimension_energy_fraction
                 ),
-                spectral_internal_distribution_mode=(
-                    self._spectral_internal_distribution_mode
-                ),
+                spectral_include_internal_barycenters=(self._spectral_include_internal_barycenters),
+                spectral_internal_distribution_mode=(self._spectral_internal_distribution_mode),
                 spectral_mp_row_count_mode=self._spectral_mp_row_count_mode,
+                continuous_covariance_policy=self._continuous_covariance_policy,
+                continuous_covariance_min_child_leaf_count=(
+                    self._continuous_covariance_min_child_leaf_count
+                ),
+                edge_branch_length_variance_policy=(self._edge_branch_length_variance_policy),
                 sibling_gate_profile_id=self._sibling_gate_profile_id,
                 sibling_gate_method=self._sibling_gate_method,
                 sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
                 root_stability_guard_threshold=self._root_stability_guard_threshold,
-                root_stability_subsample_replicates=(
-                    self._root_stability_subsample_replicates
-                ),
+                root_stability_subsample_replicates=(self._root_stability_subsample_replicates),
                 root_stability_feature_fraction=self._root_stability_feature_fraction,
                 root_stability_seed=self._root_stability_seed,
-                root_stability_tree_distance_metric=(
-                    self._root_stability_tree_distance_metric
-                ),
-                root_stability_tree_linkage_method=(
-                    self._root_stability_tree_linkage_method
-                ),
+                root_stability_tree_distance_metric=(self._root_stability_tree_distance_metric),
+                root_stability_tree_linkage_method=(self._root_stability_tree_linkage_method),
                 root_selective_permutation_guard_replicates=(
                     self._root_selective_permutation_guard_replicates
                 ),
-                root_selective_permutation_guard_seed=(
-                    self._root_selective_permutation_guard_seed
-                ),
+                root_selective_permutation_guard_seed=(self._root_selective_permutation_guard_seed),
                 root_selective_permutation_guard_alpha=(
                     self._root_selective_permutation_guard_alpha
                 ),
@@ -544,17 +528,11 @@ class TreeDecomposition:
                 root_selective_permutation_guard_tree_linkage_method=(
                     self._root_selective_permutation_guard_tree_linkage_method
                 ),
-                enforce_internal_support_thresholds=(
-                    self._enforce_internal_support_thresholds
-                ),
+                enforce_internal_support_thresholds=(self._enforce_internal_support_thresholds),
                 internal_support_thresholds=self._internal_support_thresholds,
-                spectral_transport_passthrough_guard=(
-                    self._spectral_transport_passthrough_guard
-                ),
+                spectral_transport_passthrough_guard=(self._spectral_transport_passthrough_guard),
                 spectral_transport_max_cost=self._spectral_transport_max_cost,
-                spectral_transport_require_mp_blocks=(
-                    self._spectral_transport_require_mp_blocks
-                ),
+                spectral_transport_require_mp_blocks=(self._spectral_transport_require_mp_blocks),
                 spectral_transport_block_log_tolerance=(
                     self._spectral_transport_block_log_tolerance
                 ),
@@ -630,15 +608,11 @@ class TreeDecomposition:
             "right_edge_ancestor_blocked": self._annotation_value(
                 right_child, "Child_Parent_Divergence_Ancestor_Blocked"
             ),
-            "sibling_p_value": self._annotation_value(
-                node, "Sibling_Divergence_P_Value"
-            ),
+            "sibling_p_value": self._annotation_value(node, "Sibling_Divergence_P_Value"),
             "sibling_p_value_corrected": self._annotation_value(
                 node, "Sibling_Divergence_P_Value_Corrected"
             ),
-            "sibling_test_statistic": self._annotation_value(
-                node, "Sibling_Test_Statistic"
-            ),
+            "sibling_test_statistic": self._annotation_value(node, "Sibling_Test_Statistic"),
             "sibling_degrees_of_freedom": self._annotation_value(
                 node, "Sibling_Degrees_of_Freedom"
             ),
@@ -646,24 +620,16 @@ class TreeDecomposition:
             "sibling_gate_p_value_calibration": self._annotation_value(
                 node, "Sibling_Gate_P_Value_Calibration"
             ),
-            "sibling_gate_p_value_role": self._annotation_value(
-                node, "Sibling_Gate_P_Value_Role"
-            ),
+            "sibling_gate_p_value_role": self._annotation_value(node, "Sibling_Gate_P_Value_Role"),
             "sibling_sparse_p_value": self._annotation_value(
                 node, "Sibling_Sparse_Evidence_P_Value"
             ),
-            "sibling_sparse_method": self._annotation_value(
-                node, "Sibling_Sparse_Evidence_Method"
-            ),
+            "sibling_sparse_method": self._annotation_value(node, "Sibling_Sparse_Evidence_Method"),
             "sibling_sparse_calibration": self._annotation_value(
                 node, "Sibling_Sparse_Evidence_Calibration"
             ),
-            "sibling_dense_p_value": self._annotation_value(
-                node, "Sibling_Dense_Evidence_P_Value"
-            ),
-            "sibling_dense_method": self._annotation_value(
-                node, "Sibling_Dense_Evidence_Method"
-            ),
+            "sibling_dense_p_value": self._annotation_value(node, "Sibling_Dense_Evidence_P_Value"),
+            "sibling_dense_method": self._annotation_value(node, "Sibling_Dense_Evidence_Method"),
             "sibling_dense_calibration": self._annotation_value(
                 node, "Sibling_Dense_Evidence_Calibration"
             ),
@@ -697,21 +663,15 @@ class TreeDecomposition:
         children = self._children[node]
         left_child = children[0] if len(children) == 2 else None
         right_child = children[1] if len(children) == 2 else None
-        left_edge_test_tuple = (
-            (node, left_child) if left_child is not None else None
-        )
-        right_edge_test_tuple = (
-            (node, right_child) if right_child is not None else None
-        )
+        left_edge_test_tuple = (node, left_child) if left_child is not None else None
+        right_edge_test_tuple = (node, right_child) if right_child is not None else None
         sibling_test_tuple = (
             (node, left_child, right_child)
             if left_child is not None and right_child is not None
             else None
         )
 
-        left_edge_open = (
-            bool(self._edge_divergent[left_child]) if left_child is not None else False
-        )
+        left_edge_open = bool(self._edge_divergent[left_child]) if left_child is not None else False
         right_edge_open = (
             bool(self._edge_divergent[right_child]) if right_child is not None else False
         )
@@ -722,14 +682,10 @@ class TreeDecomposition:
         passthrough_audit = self._gate.passthrough_audit_status(node)
 
         left_branch_length = (
-            self._edge_branch_length(node, left_child)
-            if left_child is not None
-            else None
+            self._edge_branch_length(node, left_child) if left_child is not None else None
         )
         right_branch_length = (
-            self._edge_branch_length(node, right_child)
-            if right_child is not None
-            else None
+            self._edge_branch_length(node, right_child) if right_child is not None else None
         )
 
         if not children:
@@ -776,9 +732,7 @@ class TreeDecomposition:
             **passthrough_audit,
             "left_branch_length": left_branch_length,
             "right_branch_length": right_branch_length,
-            "left_branch_length_missing": (
-                left_child is not None and left_branch_length is None
-            ),
+            "left_branch_length_missing": (left_child is not None and left_branch_length is None),
             "right_branch_length_missing": (
                 right_child is not None and right_branch_length is None
             ),
@@ -832,21 +786,14 @@ class TreeDecomposition:
         """Return compact counters for live and edge-reachable traversal."""
         live_decisions = [str(row["decision"]) for row in traversal_trace]
         full_stop_reasons = [
-            str(row["edge_traversal_stop_reason"])
-            for row in full_edge_traversal_trace
+            str(row["edge_traversal_stop_reason"]) for row in full_edge_traversal_trace
         ]
         return {
             "live_nodes_visited": len(traversal_trace),
-            "live_internal_tuples": sum(
-                int(row["n_children"]) == 2 for row in traversal_trace
-            ),
+            "live_internal_tuples": sum(int(row["n_children"]) == 2 for row in traversal_trace),
             "live_split_count": live_decisions.count(TraversalDecision.SPLIT.value),
-            "live_pass_through_count": live_decisions.count(
-                TraversalDecision.PASS_THROUGH.value
-            ),
-            "live_boundary_count": live_decisions.count(
-                TraversalDecision.BOUNDARY.value
-            ),
+            "live_pass_through_count": live_decisions.count(TraversalDecision.PASS_THROUGH.value),
+            "live_boundary_count": live_decisions.count(TraversalDecision.BOUNDARY.value),
             "live_passthrough_candidate_count": sum(
                 bool(row["passthrough_candidate"]) for row in traversal_trace
             ),
@@ -859,27 +806,23 @@ class TreeDecomposition:
                 int(row["n_children"]) == 2 for row in full_edge_traversal_trace
             ),
             "full_edge_continue_count": sum(
-                row["edge_traversal_action"] == "continue"
-                for row in full_edge_traversal_trace
+                row["edge_traversal_action"] == "continue" for row in full_edge_traversal_trace
             ),
             "full_edge_stop_count": sum(
-                row["edge_traversal_action"] == "stop"
-                for row in full_edge_traversal_trace
+                row["edge_traversal_action"] == "stop" for row in full_edge_traversal_trace
             ),
             "full_edge_leaf_stop_count": full_stop_reasons.count("leaf"),
             "full_edge_non_binary_stop_count": full_stop_reasons.count("non_binary"),
             "full_edge_closed_stop_count": full_stop_reasons.count("edge_closed"),
             "full_edge_passthrough_candidate_count": sum(
-                bool(row["passthrough_candidate"])
-                for row in full_edge_traversal_trace
+                bool(row["passthrough_candidate"]) for row in full_edge_traversal_trace
             ),
             "full_edge_passthrough_support_blocked_count": sum(
                 row["passthrough_decision_reason"] == "passthrough_support_blocked"
                 for row in full_edge_traversal_trace
             ),
             "full_edge_missing_branch_length_count": sum(
-                bool(row["left_branch_length_missing"])
-                + bool(row["right_branch_length_missing"])
+                bool(row["left_branch_length_missing"]) + bool(row["right_branch_length_missing"])
                 for row in full_edge_traversal_trace
             ),
         }
@@ -913,12 +856,8 @@ class TreeDecomposition:
             children = self._children[node]
             left_child = children[0] if len(children) == 2 else None
             right_child = children[1] if len(children) == 2 else None
-            left_edge_test_tuple = (
-                (node, left_child) if left_child is not None else None
-            )
-            right_edge_test_tuple = (
-                (node, right_child) if right_child is not None else None
-            )
+            left_edge_test_tuple = (node, left_child) if left_child is not None else None
+            right_edge_test_tuple = (node, right_child) if right_child is not None else None
             sibling_test_tuple = (
                 (node, left_child, right_child)
                 if left_child is not None and right_child is not None
@@ -942,9 +881,7 @@ class TreeDecomposition:
                     "is_leaf": len(children) == 0,
                     "n_children": len(children),
                     "n_descendant_leaves": len(self._descendant_leaf_sets[node]),
-                    "descendant_leaf_signature": tuple(
-                        sorted(self._descendant_leaf_sets[node])
-                    ),
+                    "descendant_leaf_signature": tuple(sorted(self._descendant_leaf_sets[node])),
                     "final_boundary": decision is TraversalDecision.BOUNDARY,
                     **passthrough_audit,
                 }

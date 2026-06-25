@@ -12,12 +12,19 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.spectral_transp
     DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
     DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
 )
+from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+)
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     SpectralContext,
 )
 from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree_estimator import (
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+)
+from tree_break_selection.tree.distributions import (
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
 )
 
 
@@ -34,9 +41,15 @@ class GateAnnotationConfigMetadata:
     """Config values that affect gate annotation outputs."""
 
     spectral_minimum_dimension: int
+    adaptive_projection_dimension_energy_fraction: float | None = None
     spectral_include_internal_barycenters: bool = False
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER
     spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    )
+    edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE
     sibling_gate_profile_id: str | None = None
     sibling_gate_method: str = "projected_wald_inflation"
     sibling_gate_alpha_penalty: float = 1.0

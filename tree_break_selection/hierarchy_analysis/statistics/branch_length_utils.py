@@ -12,6 +12,24 @@ from __future__ import annotations
 import networkx as nx
 import numpy as np
 
+EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE = "none"
+EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED = "normalized_branch_length"
+EDGE_BRANCH_LENGTH_VARIANCE_POLICIES = (
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
+)
+
+
+def validate_edge_branch_length_variance_policy(value: str) -> str:
+    """Return the configured edge branch-length variance policy."""
+    policy = str(value)
+    if policy not in EDGE_BRANCH_LENGTH_VARIANCE_POLICIES:
+        raise ValueError(
+            "edge_branch_length_variance_policy must be 'none' or "
+            f"'normalized_branch_length'; got {value!r}."
+        )
+    return policy
+
 
 def validate_branch_length_observation(
     value: object,
@@ -98,8 +116,12 @@ def compute_sibling_branch_length_sum(
 
 
 __all__ = [
+    "EDGE_BRANCH_LENGTH_VARIANCE_POLICIES",
+    "EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE",
+    "EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED",
     "compute_mean_branch_length",
     "compute_sibling_branch_length_sum",
     "extract_branch_length_observation",
+    "validate_edge_branch_length_variance_policy",
     "validate_branch_length_observation",
 ]

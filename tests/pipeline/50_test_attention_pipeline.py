@@ -11,6 +11,9 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
+)
 from tree_break_selection.tree.poset_tree import PosetTree
 
 
@@ -67,6 +70,7 @@ def _run_statistical_analysis(
         edge_alpha=edge_alpha,
         sibling_alpha=sibling_alpha,
         leaf_data=x,
+        edge_branch_length_variance_policy=EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
     ).annotated_df
 
 

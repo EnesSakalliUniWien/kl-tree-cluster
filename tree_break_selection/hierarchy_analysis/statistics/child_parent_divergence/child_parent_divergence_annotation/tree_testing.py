@@ -8,11 +8,16 @@ import networkx as nx
 import numpy as np
 
 from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
     compute_mean_branch_length,
     extract_branch_length_observation,
+    validate_edge_branch_length_variance_policy,
 )
 from tree_break_selection.tree.distributions import (
-    require_node_continuous_covariance_by_block,
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    resolve_node_continuous_covariance_by_block,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 
@@ -31,6 +36,12 @@ def run_child_parent_tests_across_tree(
     pca_projections: dict[str, np.ndarray],
     pca_eigenvalues: dict[str, np.ndarray],
     feature_space: FeatureSpace | None = None,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
+    edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+    adaptive_projection_dimension_energy_fraction: float | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute projected Wald results for all child-parent edges in the tree."""
@@ -39,7 +50,9 @@ def run_child_parent_tests_across_tree(
     degrees_of_freedom = np.full(n_edge_tests, np.nan)
     p_values = np.full(n_edge_tests, np.nan)
     invalid_test_flags = np.zeros(n_edge_tests, dtype=bool)
-    mean_branch_length = compute_mean_branch_length(tree)
+    branch_policy = validate_edge_branch_length_variance_policy(edge_branch_length_variance_policy)
+    use_branch_time = branch_policy == EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED
+    mean_branch_length = compute_mean_branch_length(tree) if use_branch_time else None
 
     for edge_index in range(n_edge_tests):
         child_dist = tree.nodes[child_ids[edge_index]]["distribution"]
@@ -48,16 +61,20 @@ def run_child_parent_tests_across_tree(
         node_spectral_dimension = spectral_dims[parent_ids[edge_index]]
         node_pca_projection = pca_projections[parent_ids[edge_index]]
         node_pca_eigenvalues = pca_eigenvalues[parent_ids[edge_index]]
-        continuous_covariance_by_block = require_node_continuous_covariance_by_block(
+        continuous_covariance_by_block = resolve_node_continuous_covariance_by_block(
             tree,
             parent_ids[edge_index],
             feature_space,
+            continuous_covariance_policy=continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         )
-        branch_length = extract_branch_length_observation(
-            tree,
-            parent_ids[edge_index],
-            child_ids[edge_index],
-        )
+        branch_length = None
+        if use_branch_time:
+            branch_length = extract_branch_length_observation(
+                tree,
+                parent_ids[edge_index],
+                child_ids[edge_index],
+            )
 
         test_kwargs = {
             "spectral_k": node_spectral_dimension,
@@ -67,6 +84,9 @@ def run_child_parent_tests_across_tree(
             "continuous_covariance_by_block": continuous_covariance_by_block,
             "branch_length": branch_length,
             "mean_branch_length": mean_branch_length,
+            "adaptive_projection_dimension_energy_fraction": (
+                adaptive_projection_dimension_energy_fraction
+            ),
         }
         if stage_timings is not None:
             test_kwargs["stage_timings"] = stage_timings

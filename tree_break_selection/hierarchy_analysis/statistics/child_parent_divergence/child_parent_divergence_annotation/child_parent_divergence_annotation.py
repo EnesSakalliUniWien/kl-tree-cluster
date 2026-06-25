@@ -16,6 +16,13 @@ from tree_break_selection.core_utils.data_utils import (
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
 )
+from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+)
+from tree_break_selection.tree.distributions import (
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+)
 from tree_break_selection.tree.feature_space import FeatureSpace
 
 from .child_parent_divergence_tree_bh import (
@@ -39,9 +46,16 @@ def annotate_child_parent_divergence(
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    spectral_projection_basis_dimension: int | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
+    edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+    adaptive_projection_dimension_energy_fraction: float | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
     """Test child-parent divergence using the projected Wald pipeline.
@@ -56,9 +70,16 @@ def annotate_child_parent_divergence(
         leaf_data=leaf_data,
         feature_space=feature_space,
         spectral_minimum_dimension=spectral_minimum_dimension,
+        spectral_projection_basis_dimension=spectral_projection_basis_dimension,
         spectral_include_internal_barycenters=spectral_include_internal_barycenters,
         spectral_internal_distribution_mode=spectral_internal_distribution_mode,
         spectral_mp_row_count_mode=spectral_mp_row_count_mode,
+        continuous_covariance_policy=continuous_covariance_policy,
+        continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
+        edge_branch_length_variance_policy=edge_branch_length_variance_policy,
+        adaptive_projection_dimension_energy_fraction=(
+            adaptive_projection_dimension_energy_fraction
+        ),
         stage_timings=stage_timings,
     )
     return annotated_df
@@ -72,9 +93,16 @@ def annotate_child_parent_divergence_with_context(
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    spectral_projection_basis_dimension: int | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
+    edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+    adaptive_projection_dimension_energy_fraction: float | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[pd.DataFrame, SpectralContext]:
     """Test child-parent divergence and return typed edge-gate spectral context."""
@@ -101,6 +129,7 @@ def annotate_child_parent_divergence_with_context(
         leaf_data,
         feature_space=feature_space,
         minimum_projection_dimension=spectral_minimum_dimension,
+        projection_basis_dimension=spectral_projection_basis_dimension,
         include_internal_barycenters=bool(spectral_include_internal_barycenters),
         internal_distribution_mode=str(spectral_internal_distribution_mode),
         mp_row_count_mode=str(spectral_mp_row_count_mode),
@@ -116,6 +145,12 @@ def annotate_child_parent_divergence_with_context(
         "pca_projections": spectral_context.principal_component_projections_by_node,
         "pca_eigenvalues": spectral_context.principal_component_eigenvalues_by_node,
         "feature_space": feature_space,
+        "continuous_covariance_policy": continuous_covariance_policy,
+        "continuous_covariance_min_child_leaf_count": (continuous_covariance_min_child_leaf_count),
+        "edge_branch_length_variance_policy": edge_branch_length_variance_policy,
+        "adaptive_projection_dimension_energy_fraction": (
+            adaptive_projection_dimension_energy_fraction
+        ),
     }
     if stage_timings is not None:
         test_kwargs["stage_timings"] = stage_timings

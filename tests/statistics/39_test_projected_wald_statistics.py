@@ -58,3 +58,30 @@ def test_projected_wald_kernel_rejects_projection_width_mismatch() -> None:
             pca_projection=np.zeros((2, 6), dtype=np.float64),
             pca_eigenvalues=np.ones(2, dtype=np.float64),
         )
+
+
+def test_projected_wald_kernel_adapts_dimension_by_local_contrast_energy() -> None:
+    result = run_projected_wald_kernel(
+        np.array([3.0, 4.0, 0.0, 0.0], dtype=np.float64),
+        spectral_k=1,
+        pca_projection=np.eye(4, dtype=np.float64),
+        pca_eigenvalues=np.ones(4, dtype=np.float64),
+        adaptive_dimension_energy_fraction=0.90,
+    )
+
+    assert result.projection_dimension == 2
+    assert result.degrees_of_freedom == 2.0
+    assert np.isclose(result.statistic, 25.0)
+
+
+def test_projected_wald_kernel_keeps_nominal_dimension_when_adaptive_fraction_is_unset() -> None:
+    result = run_projected_wald_kernel(
+        np.array([3.0, 4.0, 0.0, 0.0], dtype=np.float64),
+        spectral_k=1,
+        pca_projection=np.eye(4, dtype=np.float64),
+        pca_eigenvalues=np.ones(4, dtype=np.float64),
+    )
+
+    assert result.projection_dimension == 1
+    assert result.degrees_of_freedom == 1.0
+    assert np.isclose(result.statistic, 9.0)

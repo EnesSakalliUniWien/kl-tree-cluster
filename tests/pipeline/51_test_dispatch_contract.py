@@ -261,6 +261,8 @@ def test_run_clustering_result_forwards_tbs_gate_profile_params(monkeypatch):
             "spectral_include_internal_barycenters": True,
             "spectral_internal_distribution_mode": "branch_length_state",
             "spectral_mp_row_count_mode": "leaf_effective_rows",
+            "continuous_covariance_policy": "guarded_within_child",
+            "continuous_covariance_min_child_leaf_count": 8,
             "neighborhood_bandwidth_profile": (
                 "regional_tau_branch_length_support_only_v1"
             ),
@@ -304,11 +306,74 @@ def test_run_clustering_result_forwards_tbs_gate_profile_params(monkeypatch):
         "branch_length_state"
     )
     assert captured["kwargs"]["spectral_mp_row_count_mode"] == "leaf_effective_rows"
+    assert captured["kwargs"]["continuous_covariance_policy"] == "guarded_within_child"
+    assert captured["kwargs"]["continuous_covariance_min_child_leaf_count"] == 8
     assert captured["kwargs"]["neighborhood_bandwidth_profile"] == (
         "regional_tau_branch_length_support_only_v1"
     )
     assert captured["kwargs"]["enforce_internal_support_thresholds"] is True
     assert captured["kwargs"]["passthrough"] is True
+
+
+def test_run_clustering_result_uses_continuous_sibling_gate_only_for_continuous_blocks(
+    monkeypatch,
+):
+    captured_calls = []
+
+    def _capture_runner(*args, **kwargs):
+        captured_calls.append({"args": args, "kwargs": kwargs})
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setitem(
+        METHOD_SPECS,
+        "tbs",
+        MethodSpec(
+            name="TBS Adaptive Gate Test",
+            runner=_capture_runner,
+            param_grid=[
+                {
+                    "tree_distance_metric": "euclidean",
+                    "tree_linkage_method": "average",
+                }
+            ],
+        ),
+    )
+
+    df = _toy_dataframe()
+    params = {
+        "tree_distance_metric": "euclidean",
+        "tree_linkage_method": "average",
+        "continuous_sibling_gate_method": "fixed_coordinate_bh",
+    }
+    distance_condensed = pdist(df.values, metric="euclidean")
+    run_clustering_result(
+        data_df=df,
+        method_id="tbs",
+        params=params,
+        seed=42,
+        distance_condensed=distance_condensed,
+        feature_space=None,
+    )
+    run_clustering_result(
+        data_df=df,
+        method_id="tbs",
+        params=params,
+        seed=42,
+        distance_condensed=distance_condensed,
+        feature_space=continuous_feature_space_from_columns(tuple(df.columns)),
+    )
+
+    assert captured_calls[0]["kwargs"]["sibling_gate_method"] == (
+        "projected_wald_inflation"
+    )
+    assert captured_calls[1]["kwargs"]["sibling_gate_method"] == "fixed_coordinate_bh"
 
 
 def test_method_registry_exposes_conditional_topology_diagnostic_profile():
@@ -350,6 +415,36 @@ def test_method_registry_exposes_fixed_fdr_benchmark_variants():
         assert params["sibling_gate_method"] == sibling_gate_method
         assert params["tree_distance_metric"] == "hamming"
         assert params["tree_linkage_method"] == "average"
+
+
+def test_method_registry_exposes_continuous_guarded_covariance_candidate():
+    spec = METHOD_SPECS["tbs_continuous_guarded_within_covariance"]
+    params = spec.param_grid[0]
+
+    assert "tbs_continuous_guarded_within_covariance" in TBS_RUNNER_METHODS
+    assert params["tree_distance_metric"] == "hamming"
+    assert params["tree_linkage_method"] == "average"
+    assert params["continuous_covariance_policy"] == "guarded_within_child"
+    assert params["continuous_covariance_min_child_leaf_count"] == 8
+    assert "sibling_gate_method" not in params
+    assert params["continuous_sibling_gate_method"] == "fixed_coordinate_bh"
+
+
+def test_continuous_guarded_covariance_candidate_runs_non_continuous_input():
+    df = _toy_dataframe()
+    params = METHOD_SPECS["tbs_continuous_guarded_within_covariance"].param_grid[0]
+
+    result = run_clustering_result(
+        data_df=df,
+        method_id="tbs_continuous_guarded_within_covariance",
+        params=params,
+        seed=42,
+        distance_condensed=pdist(df.values, metric="euclidean"),
+        feature_space=None,
+    )
+
+    assert result.status == "ok"
+    assert result.labels is not None
 
 
 def test_method_registry_exposes_spectral_transport_passthrough_profile():

@@ -22,7 +22,9 @@ from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance impo
     compute_whitened_wald_contrast,
 )
 from tree_break_selection.tree.distributions import (
-    require_node_continuous_covariance_by_block,
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    resolve_node_continuous_covariance_by_block,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 
@@ -242,6 +244,11 @@ def _sibling_fixed_subspace_contrast(
     parent: object,
     left: object,
     right: object,
+    *,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
 ) -> np.ndarray:
     return compute_whitened_wald_contrast(
         np.asarray(tree.nodes[left]["distribution"], dtype=float),
@@ -250,10 +257,14 @@ def _sibling_fixed_subspace_contrast(
         float(tree.nodes[right]["leaf_count"]),
         comparison="sibling",
         feature_space=feature_space,
-        continuous_covariance_by_block=require_node_continuous_covariance_by_block(
+        continuous_covariance_by_block=resolve_node_continuous_covariance_by_block(
             tree,
             parent,
             feature_space,
+            continuous_covariance_policy=continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(
+                continuous_covariance_min_child_leaf_count
+            ),
         ),
     )
 
@@ -289,6 +300,10 @@ def annotate_fixed_subspace_sibling_evidence_channels(
     feature_space: FeatureSpace,
     sparse_method: FixedSubspaceSiblingGateMethod = "fixed_coordinate_bh",
     dense_method: FixedSubspaceSiblingGateMethod = "fixed_global_chi_square",
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
 ) -> pd.DataFrame:
     """Annotate interpretable sparse and dense fixed-subspace sibling channels.
 
@@ -313,7 +328,17 @@ def annotate_fixed_subspace_sibling_evidence_channels(
         if children is None:
             continue
         left, right = children
-        z = _sibling_fixed_subspace_contrast(tree, feature_space, parent, left, right)
+        z = _sibling_fixed_subspace_contrast(
+            tree,
+            feature_space,
+            parent,
+            left,
+            right,
+            continuous_covariance_policy=continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(
+                continuous_covariance_min_child_leaf_count
+            ),
+        )
         values = _fixed_subspace_channel_values(z, feature_space)
 
         out.loc[parent, "Sibling_Fixed_Coordinate_BH_P_Value"] = values[
@@ -354,6 +379,10 @@ def _fixed_subspace_sibling_results(
     feature_space: FeatureSpace,
     *,
     method: FixedSubspaceSiblingGateMethod,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
 ) -> tuple[list[object], list[tuple[float, float, float]], list[object]]:
     parents: list[object] = []
     results: list[tuple[float, float, float]] = []
@@ -365,7 +394,17 @@ def _fixed_subspace_sibling_results(
             skipped.append(parent)
             continue
         left, right = children
-        z = _sibling_fixed_subspace_contrast(tree, feature_space, parent, left, right)
+        z = _sibling_fixed_subspace_contrast(
+            tree,
+            feature_space,
+            parent,
+            left,
+            right,
+            continuous_covariance_policy=continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(
+                continuous_covariance_min_child_leaf_count
+            ),
+        )
         statistic = float(np.dot(z, z))
         degrees_of_freedom = float(feature_space.contrast_dimension)
         p_value = fixed_subspace_sibling_p_value(
@@ -386,6 +425,10 @@ def annotate_fixed_subspace_sibling_divergence(
     feature_space: FeatureSpace,
     method: FixedSubspaceSiblingGateMethod = "fixed_coordinate_bh",
     significance_level_alpha: float = DEFAULT_SIBLING_ALPHA,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
 ) -> pd.DataFrame:
     """Annotate sibling divergence with an opt-in fixed-subspace gate."""
     if method not in FIXED_SUBSPACE_SIBLING_GATE_METHODS:
@@ -398,6 +441,10 @@ def annotate_fixed_subspace_sibling_divergence(
         tree,
         feature_space,
         method=method,
+        continuous_covariance_policy=continuous_covariance_policy,
+        continuous_covariance_min_child_leaf_count=(
+            continuous_covariance_min_child_leaf_count
+        ),
     )
     mark_non_binary_as_skipped(annotations_df, skipped)
     if not results:

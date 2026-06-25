@@ -11,7 +11,9 @@ from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils impo
     compute_mean_branch_length,
 )
 from tree_break_selection.tree.distributions import (
-    require_node_continuous_covariance_by_block,
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    resolve_node_continuous_covariance_by_block,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 
@@ -45,15 +47,18 @@ def collect_sibling_pair_records(
     parent_principal_component_projections: dict[object, np.ndarray],
     parent_principal_component_eigenvalues: dict[object, np.ndarray],
     feature_space: FeatureSpace | None = None,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
+    adaptive_projection_dimension_energy_fraction: float | None = None,
 ) -> tuple[list[SiblingPairRecord], list[object]]:
     """Collect raw sibling-test records for every binary-child parent node."""
     validate_child_parent_edge_annotation_requirements(annotations_df)
     child_parent_edge_significance_by_node = extract_child_parent_edge_significance_by_node(
         annotations_df
     )
-    child_parent_edge_p_values_by_node = extract_child_parent_edge_p_values_by_node(
-        annotations_df
-    )
+    child_parent_edge_p_values_by_node = extract_child_parent_edge_p_values_by_node(annotations_df)
     (
         child_parent_edge_tested_by_node,
         child_parent_edge_ancestor_blocked_by_node,
@@ -114,10 +119,17 @@ def collect_sibling_pair_records(
                 parent_principal_component_eigenvalues_for_parent
             ),
             feature_space=feature_space,
-            continuous_covariance_by_block=require_node_continuous_covariance_by_block(
+            continuous_covariance_by_block=resolve_node_continuous_covariance_by_block(
                 tree,
                 parent_node_id,
                 feature_space,
+                continuous_covariance_policy=continuous_covariance_policy,
+                continuous_covariance_min_child_leaf_count=(
+                    continuous_covariance_min_child_leaf_count
+                ),
+            ),
+            adaptive_projection_dimension_energy_fraction=(
+                adaptive_projection_dimension_energy_fraction
             ),
         )
 
@@ -125,9 +137,7 @@ def collect_sibling_pair_records(
             left_child_id,
             right_child_id,
             child_parent_edge_tested_by_node=child_parent_edge_tested_by_node,
-            child_parent_edge_ancestor_blocked_by_node=(
-                child_parent_edge_ancestor_blocked_by_node
-            ),
+            child_parent_edge_ancestor_blocked_by_node=(child_parent_edge_ancestor_blocked_by_node),
         )
         is_null_like = determine_whether_sibling_pair_is_null_like(
             left_child_id,
@@ -140,9 +150,7 @@ def collect_sibling_pair_records(
             child_parent_edge_p_values_by_node=child_parent_edge_p_values_by_node,
             child_parent_edge_significance_by_node=child_parent_edge_significance_by_node,
             child_parent_edge_tested_by_node=child_parent_edge_tested_by_node,
-            child_parent_edge_ancestor_blocked_by_node=(
-                child_parent_edge_ancestor_blocked_by_node
-            ),
+            child_parent_edge_ancestor_blocked_by_node=(child_parent_edge_ancestor_blocked_by_node),
         )
         records.append(
             build_sibling_pair_record(
@@ -158,7 +166,7 @@ def collect_sibling_pair_records(
                 is_null_like=is_null_like,
                 is_edge_blocked=is_edge_blocked,
                 sibling_null_weight=sibling_null_weight,
-                sibling_projection_dimension=float(projection_dimension_from_edge_comparisons),
+                sibling_projection_dimension=float(degrees_of_freedom),
                 feature_family=(
                     "bernoulli" if feature_space is None else feature_space.family_label
                 ),

@@ -58,14 +58,14 @@ def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
     tree.add_node(
         "C",
         is_leaf=True,
-        distribution=np.array([0.45, 0.45, 0.45, 0.55, 0.55, 0.55], dtype=float),
+        distribution=np.array([0.495, 0.495, 0.495, 0.505, 0.505, 0.505], dtype=float),
         label="C",
         leaf_count=100,
     )
     tree.add_node(
         "D",
         is_leaf=True,
-        distribution=np.array([0.55, 0.55, 0.55, 0.45, 0.45, 0.45], dtype=float),
+        distribution=np.array([0.505, 0.505, 0.505, 0.495, 0.495, 0.495], dtype=float),
         label="D",
         leaf_count=100,
     )
@@ -94,8 +94,8 @@ def _build_cherry_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
         [
             [0, 0, 0, 1, 1, 1],
             [1, 1, 1, 0, 0, 0],
-            [0.45, 0.45, 0.45, 0.55, 0.55, 0.55],
-            [0.55, 0.55, 0.55, 0.45, 0.45, 0.45],
+            [0.495, 0.495, 0.495, 0.505, 0.505, 0.505],
+            [0.505, 0.505, 0.505, 0.495, 0.495, 0.495],
         ],
         index=["A", "B", "C", "D"],
         dtype=float,
@@ -215,9 +215,7 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
         annotations_df.copy(),
         leaf_data=leaf_data,
     )
-    test_projection_dimensions_by_node = (
-        spectral_context.test_projection_dimensions_by_node
-    )
+    test_projection_dimensions_by_node = spectral_context.test_projection_dimensions_by_node
     assert test_projection_dimensions_by_node["A"] == 0
     assert test_projection_dimensions_by_node["B"] == 0
     assert test_projection_dimensions_by_node["C"] == 0
@@ -235,7 +233,15 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
     assert sibling_projection_dimensions_from_edge_comparisons == {
         "root": test_projection_dimensions_by_node["root"],
         "cal": test_projection_dimensions_by_node["cal"],
-        "top": test_projection_dimensions_by_node["top"],
+        "top": min(
+            test_projection_dimensions_by_node["top"],
+            round(
+                np.sqrt(
+                    test_projection_dimensions_by_node["root"]
+                    * test_projection_dimensions_by_node["cal"]
+                )
+            ),
+        ),
     }
 
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
@@ -246,7 +252,9 @@ def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> N
     assert bundle.annotated_df.loc["root", "Sibling_BH_Different"]
 
 
-def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibling_projection_dimensions() -> None:
+def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibling_projection_dimensions() -> (
+    None
+):
     tree, annotations_df, leaf_data = _build_mixed_tree()
 
     bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
@@ -277,14 +285,18 @@ def test_mixed_parent_with_leaf_data_keeps_internal_parent_in_edge_derived_sibli
         "top",
     }
     assert sibling_projection_dimensions_from_edge_comparisons["root"] > 0
-    assert sibling_projection_dimensions_from_edge_comparisons["I"] == (
-        test_projection_dimensions_by_node["I"]
+    assert (
+        sibling_projection_dimensions_from_edge_comparisons["I"]
+        == (test_projection_dimensions_by_node["I"])
     )
-    assert sibling_projection_dimensions_from_edge_comparisons["cal"] == (
-        test_projection_dimensions_by_node["cal"]
+    assert (
+        sibling_projection_dimensions_from_edge_comparisons["cal"]
+        == (test_projection_dimensions_by_node["cal"])
     )
-    assert 0 < sibling_projection_dimensions_from_edge_comparisons["top"] <= (
-        test_projection_dimensions_by_node["top"]
+    assert (
+        0
+        < sibling_projection_dimensions_from_edge_comparisons["top"]
+        <= (test_projection_dimensions_by_node["top"])
     )
 
 

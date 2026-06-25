@@ -147,11 +147,13 @@ def test_child_parent_nonfinite_results_raise_before_correction(
         parent_ids: list[str],
         child_leaf_counts: np.ndarray,
         parent_leaf_counts: np.ndarray,
-            spectral_dims=None,
-            pca_projections=None,
-            pca_eigenvalues=None,
-            feature_space=None,
-        ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        *,
+        spectral_dims=None,
+        pca_projections=None,
+        pca_eigenvalues=None,
+        feature_space=None,
+        **_unused_kwargs,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         return (
             np.array([np.nan, 3.0], dtype=float),  # stats
             np.array([np.nan, 1.0], dtype=float),  # dfs
@@ -195,6 +197,7 @@ def test_sibling_nonfinite_results_raise_before_correction(
         parent_principal_component_eigenvalues: np.ndarray | None = None,
         feature_space: object | None = None,
         continuous_covariance_by_block: object | None = None,
+        adaptive_projection_dimension_energy_fraction: float | None = None,
     ) -> tuple[float, float, float, float]:
         return np.nan, np.nan, np.nan, np.nan
 
@@ -330,6 +333,7 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         parent_principal_component_eigenvalues: np.ndarray | None = None,
         feature_space: object | None = None,
         continuous_covariance_by_block: object | None = None,
+        adaptive_projection_dimension_energy_fraction: float | None = None,
     ) -> tuple[float, float, float, float]:
         captured["projection_dimension_from_edge_comparisons"] = (
             projection_dimension_from_edge_comparisons
@@ -366,7 +370,7 @@ def test_collect_sibling_pair_records_requires_edge_derived_dimension_and_parent
         captured["parent_principal_component_eigenvalues"],
         np.ones(2, dtype=float),
     )
-    assert records[0].sibling_projection_dimension == 2.0
+    assert records[0].sibling_projection_dimension == records[0].degrees_of_freedom == 1.0
 
 
 def test_annotate_sibling_divergence_persists_projection_dimension() -> None:

@@ -7,7 +7,7 @@ subtree barycenters: leaf-count-weighted means of their child distributions.
 """
 
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Literal
 
 import networkx as nx
 import numpy as np
@@ -22,6 +22,12 @@ from tree_break_selection.tree.feature_space import (
 )
 
 CONTINUOUS_COVARIANCE_BY_BLOCK = "continuous_covariance_by_block"
+ContinuousCovariancePolicy = Literal["parent_total", "guarded_within_child"]
+DEFAULT_CONTINUOUS_COVARIANCE_POLICY: ContinuousCovariancePolicy = "parent_total"
+GUARDED_WITHIN_CHILD_CONTINUOUS_COVARIANCE_POLICY: ContinuousCovariancePolicy = (
+    "guarded_within_child"
+)
+DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT = 8
 _CONTINUOUS_SCATTER_BY_BLOCK = "_continuous_scatter_by_block"
 MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION = 4096
 MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES = 512 * 1024 * 1024
@@ -57,6 +63,33 @@ def _continuous_covariance_limits() -> tuple[int, int]:
         MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_BYTES // (1024 * 1024),
     )
     return max_block_dimension, max_work_mib * 1024 * 1024
+
+
+def validate_continuous_covariance_policy(
+    policy: str,
+) -> ContinuousCovariancePolicy:
+    """Validate and normalize the continuous covariance policy name."""
+    value = str(policy)
+    if value not in {
+        DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+        GUARDED_WITHIN_CHILD_CONTINUOUS_COVARIANCE_POLICY,
+    }:
+        raise ValueError(
+            "continuous_covariance_policy must be 'parent_total' or "
+            f"'guarded_within_child'; got {policy!r}."
+        )
+    return value  # type: ignore[return-value]
+
+
+def validate_continuous_covariance_min_child_leaf_count(value: int) -> int:
+    """Validate the child-mass guard used by guarded continuous covariance."""
+    count = int(value)
+    if count <= 0:
+        raise ValueError(
+            "continuous_covariance_min_child_leaf_count must be positive; "
+            f"got {value!r}."
+        )
+    return count
 
 
 def _use_dense_continuous_covariance(
@@ -342,10 +375,94 @@ def require_node_continuous_covariance_by_block(
     return covariance_by_block
 
 
+def resolve_node_continuous_covariance_by_block(
+    tree: nx.DiGraph,
+    node_id: object,
+    feature_space: FeatureSpace | None,
+    *,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
+) -> dict[str, npt.NDArray[np.float64]] | None:
+    """Resolve the continuous covariance blocks used by node-level Wald tests.
+
+    ``parent_total`` preserves the historical empirical subtree covariance. The
+    guarded within-child candidate uses the immediate children's residual
+    covariance only when both child subtrees have enough leaves; otherwise it
+    falls back to parent-total covariance.
+    """
+    if feature_space is None or not feature_space.has_continuous_blocks:
+        return None
+
+    policy = validate_continuous_covariance_policy(continuous_covariance_policy)
+    min_child_leaf_count = validate_continuous_covariance_min_child_leaf_count(
+        continuous_covariance_min_child_leaf_count
+    )
+    parent_covariance_by_block = require_node_continuous_covariance_by_block(
+        tree,
+        node_id,
+        feature_space,
+    )
+    if policy == DEFAULT_CONTINUOUS_COVARIANCE_POLICY:
+        return parent_covariance_by_block
+
+    children = list(tree.successors(node_id))
+    if len(children) != 2:
+        return parent_covariance_by_block
+
+    child_leaf_counts = [
+        int(tree.nodes[child_id]["leaf_count"])
+        for child_id in children
+    ]
+    if any(count < min_child_leaf_count for count in child_leaf_counts):
+        return parent_covariance_by_block
+
+    residual_denominator = sum(count - 1 for count in child_leaf_counts)
+    if residual_denominator <= 0:
+        return parent_covariance_by_block
+
+    child_covariances_by_block = [
+        require_node_continuous_covariance_by_block(
+            tree,
+            child_id,
+            feature_space,
+        )
+        for child_id in children
+    ]
+
+    within_covariance_by_block: dict[str, npt.NDArray[np.float64]] = {}
+    for block in feature_space.continuous_blocks:
+        weighted_covariance_sum = np.zeros_like(
+            np.asarray(parent_covariance_by_block[block.name], dtype=np.float64),
+            dtype=np.float64,
+        )
+        for child_leaf_count, child_covariance_by_block in zip(
+            child_leaf_counts,
+            child_covariances_by_block,
+            strict=True,
+        ):
+            weighted_covariance_sum += (
+                float(child_leaf_count - 1)
+                * np.asarray(child_covariance_by_block[block.name], dtype=np.float64)
+            )
+        within_covariance_by_block[block.name] = (
+            weighted_covariance_sum / float(residual_denominator)
+        )
+
+    return within_covariance_by_block
+
+
 __all__ = [
     "CONTINUOUS_COVARIANCE_BY_BLOCK",
+    "DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT",
+    "DEFAULT_CONTINUOUS_COVARIANCE_POLICY",
+    "GUARDED_WITHIN_CHILD_CONTINUOUS_COVARIANCE_POLICY",
     "MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION_ENV",
     "MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV",
     "populate_distributions",
     "require_node_continuous_covariance_by_block",
+    "resolve_node_continuous_covariance_by_block",
+    "validate_continuous_covariance_min_child_leaf_count",
+    "validate_continuous_covariance_policy",
 ]

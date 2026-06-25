@@ -51,9 +51,7 @@ def _get_n_jobs(n_tasks: int) -> int:
     if configured_jobs is not None:
         configured_job_count = int(configured_jobs)
         if configured_job_count < 1:
-            raise ValueError(
-                f"TBS_N_JOBS must be a positive integer; got {configured_jobs!r}."
-            )
+            raise ValueError(f"TBS_N_JOBS must be a positive integer; got {configured_jobs!r}.")
         return configured_job_count
     if n_tasks < _DEFAULT_MIN_NODES_FOR_PARALLEL:
         return 1
@@ -64,6 +62,7 @@ def _process_node(
     spectral_task: NodeSpectralTask,
     full_feature_matrix: np.ndarray,
     minimum_projection_dimension: int,
+    projection_basis_dimension: int | None,
     feature_count: int,
     compute_eigendecomposition_outputs: bool,
 ) -> NodeSpectralResult:
@@ -125,12 +124,8 @@ def _process_node(
             spectral_task.continuous_covariance_by_block or {},
             ridge=1e-12,
         )
-        stage_timings["tangent_whitening_sec"] += float(
-            perf_counter() - whitening_start_sec
-        )
-        descendant_feature_matrix = np.vstack(
-            [descendant_leaf_feature_rows, internal_feature_rows]
-        )
+        stage_timings["tangent_whitening_sec"] += float(perf_counter() - whitening_start_sec)
+        descendant_feature_matrix = np.vstack([descendant_leaf_feature_rows, internal_feature_rows])
 
     eigensolve_start_sec = perf_counter()
     eigendecomposition_result = eigendecompose_covariance(
@@ -180,15 +175,21 @@ def _process_node(
 
     if compute_eigendecomposition_outputs and test_projection_dimension > 0:
         projection_start_sec = perf_counter()
+        basis_projection_dimension = test_projection_dimension
+        if projection_basis_dimension is not None:
+            basis_projection_dimension = max(
+                basis_projection_dimension,
+                min(
+                    int(projection_basis_dimension),
+                    int(eigendecomposition_result.active_feature_count),
+                ),
+            )
         projection_matrix, pca_eigenvalues = build_pca_projection(
             eigendecomposition_result,
-            projection_dimension=test_projection_dimension,
+            projection_dimension=basis_projection_dimension,
             n_features_total=feature_count,
         )
-        stage_timings["pca_projection_sec"] = float(
-            perf_counter() - projection_start_sec
-        )
-        test_projection_dimension = int(projection_matrix.shape[0])
+        stage_timings["pca_projection_sec"] = float(perf_counter() - projection_start_sec)
     elif not compute_eigendecomposition_outputs:
         projection_matrix, pca_eigenvalues = None, None
 

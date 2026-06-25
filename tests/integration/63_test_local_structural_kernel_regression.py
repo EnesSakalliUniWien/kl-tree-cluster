@@ -10,6 +10,9 @@ from scipy.spatial.distance import pdist
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
+)
 
 
 @pytest.mark.slow
@@ -40,7 +43,13 @@ def test_default_sibling_calibration_marks_gauss_clear_small_boundary() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "gauss_clear_small")
     context = build_tbs_tree_context(case, populate_node_distributions=False)
 
-    result = _run_tbs_method(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
+    result = _run_tbs_method(
+        context.data,
+        context.distance_condensed,
+        DEFAULT_SIBLING_ALPHA,
+        edge_branch_length_variance_policy=EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
+        allow_linkage_ultrametric_branch_time=True,
+    )
 
     assert result.found_clusters == 2
     visited_internal_nodes = [
@@ -62,6 +71,8 @@ def test_default_sibling_calibration_marks_gauss_clear_small_boundary() -> None:
         context.data,
         context.distance_condensed,
         0.03,
+        edge_branch_length_variance_policy=EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
+        allow_linkage_ultrametric_branch_time=True,
     )
     assert relaxed_result.found_clusters == 3
 

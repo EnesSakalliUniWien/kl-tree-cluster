@@ -28,6 +28,7 @@ def run_child_parent_projected_wald_test(
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
     branch_length: float | None = None,
     mean_branch_length: float | None = None,
+    adaptive_projection_dimension_energy_fraction: float | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[float, float, float, bool]:
     """Compute projected Wald test for one child-parent edge."""
@@ -54,6 +55,7 @@ def run_child_parent_projected_wald_test(
         spectral_k=spectral_k,
         pca_projection=pca_projection,
         pca_eigenvalues=pca_eigenvalues,
+        adaptive_dimension_energy_fraction=(adaptive_projection_dimension_energy_fraction),
         stage_timings=stage_timings,
         timing_prefix="edge_gate",
     )

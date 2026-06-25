@@ -19,6 +19,16 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
+    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
+    validate_edge_branch_length_variance_policy,
+)
+from tree_break_selection.tree.distributions import (
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    validate_continuous_covariance_min_child_leaf_count,
+    validate_continuous_covariance_policy,
+)
 from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     infer_feature_space_from_columns,
@@ -113,9 +123,7 @@ class SiblingGateProfile:
     spectral_transport_passthrough_guard: bool = False
     spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST
     spectral_transport_require_mp_blocks: bool = True
-    spectral_transport_block_log_tolerance: float = (
-        DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
-    )
+    spectral_transport_block_log_tolerance: float = DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
     spectral_transport_unmatched_mode_penalty: float = (
         DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
     )
@@ -245,9 +253,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         root_selective_permutation_guard_replicates=99,
         root_selective_permutation_guard_seed=0,
         root_selective_permutation_guard_alpha=0.01,
-        root_selective_permutation_guard_scope=(
-            "global_sibling_min_passthrough_descendant"
-        ),
+        root_selective_permutation_guard_scope=("global_sibling_min_passthrough_descendant"),
     ),
     "fixed_coordinate_global_passthrough_refined_v1": SiblingGateProfile(
         profile_id="fixed_coordinate_global_passthrough_refined_v1",
@@ -295,9 +301,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         spectral_transport_passthrough_guard=True,
         spectral_transport_max_cost=DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
         spectral_transport_require_mp_blocks=True,
-        spectral_transport_block_log_tolerance=(
-            DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
-        ),
+        spectral_transport_block_log_tolerance=(DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE),
         spectral_transport_unmatched_mode_penalty=(
             DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
         ),
@@ -329,9 +333,7 @@ SIBLING_GATE_PROFILES: dict[str, SiblingGateProfile] = {
         spectral_transport_passthrough_guard=True,
         spectral_transport_max_cost=DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
         spectral_transport_require_mp_blocks=True,
-        spectral_transport_block_log_tolerance=(
-            DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
-        ),
+        spectral_transport_block_log_tolerance=(DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE),
         spectral_transport_unmatched_mode_penalty=(
             DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
         ),
@@ -599,8 +601,7 @@ def resolve_effective_sibling_alpha(
         raise ValueError(f"sibling_alpha must lie in (0, 1); got {alpha!r}.")
     if penalty <= 0.0 or not math.isfinite(penalty):
         raise ValueError(
-            "sibling_gate_alpha_penalty must be finite and positive; "
-            f"got {penalty!r}."
+            f"sibling_gate_alpha_penalty must be finite and positive; got {penalty!r}."
         )
     effective = alpha / penalty
     if not 0.0 < effective < 1.0:
@@ -615,18 +616,21 @@ def resolve_effective_sibling_alpha(
 def _support_thresholds_signature(
     thresholds: CalibrationSupportThresholds,
 ) -> tuple[tuple[str, float | int], ...]:
-    return tuple(
-        (field, getattr(thresholds, field))
-        for field in thresholds.__dataclass_fields__
-    )
+    return tuple((field, getattr(thresholds, field)) for field in thresholds.__dataclass_fields__)
 
 
 def build_gate_annotation_config_metadata(
     *,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    adaptive_projection_dimension_energy_fraction: float | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
+    edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
     sibling_gate_profile_id: str | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -660,11 +664,25 @@ def build_gate_annotation_config_metadata(
     """Capture config values that affect gate annotation outputs."""
     return GateAnnotationConfigMetadata(
         spectral_minimum_dimension=int(spectral_minimum_dimension),
-        spectral_include_internal_barycenters=bool(
-            spectral_include_internal_barycenters
+        adaptive_projection_dimension_energy_fraction=(
+            None
+            if adaptive_projection_dimension_energy_fraction is None
+            else float(adaptive_projection_dimension_energy_fraction)
         ),
+        spectral_include_internal_barycenters=bool(spectral_include_internal_barycenters),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
         spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
+        continuous_covariance_policy=validate_continuous_covariance_policy(
+            continuous_covariance_policy
+        ),
+        continuous_covariance_min_child_leaf_count=(
+            validate_continuous_covariance_min_child_leaf_count(
+                continuous_covariance_min_child_leaf_count
+            )
+        ),
+        edge_branch_length_variance_policy=(
+            validate_edge_branch_length_variance_policy(edge_branch_length_variance_policy)
+        ),
         sibling_gate_profile_id=(
             None if sibling_gate_profile_id is None else str(sibling_gate_profile_id)
         ),
@@ -675,9 +693,7 @@ def build_gate_annotation_config_metadata(
             if root_stability_guard_threshold is None
             else float(root_stability_guard_threshold)
         ),
-        root_stability_subsample_replicates=int(
-            root_stability_subsample_replicates
-        ),
+        root_stability_subsample_replicates=int(root_stability_subsample_replicates),
         root_stability_feature_fraction=float(root_stability_feature_fraction),
         root_stability_seed=int(root_stability_seed),
         root_stability_tree_distance_metric=str(root_stability_tree_distance_metric),
@@ -685,17 +701,13 @@ def build_gate_annotation_config_metadata(
         root_selective_permutation_guard_replicates=int(
             root_selective_permutation_guard_replicates
         ),
-        root_selective_permutation_guard_seed=int(
-            root_selective_permutation_guard_seed
-        ),
+        root_selective_permutation_guard_seed=int(root_selective_permutation_guard_seed),
         root_selective_permutation_guard_alpha=(
             None
             if root_selective_permutation_guard_alpha is None
             else float(root_selective_permutation_guard_alpha)
         ),
-        root_selective_permutation_guard_scope=str(
-            root_selective_permutation_guard_scope
-        ),
+        root_selective_permutation_guard_scope=str(root_selective_permutation_guard_scope),
         root_selective_permutation_guard_tree_distance_metric=str(
             root_selective_permutation_guard_tree_distance_metric
         ),
@@ -706,25 +718,17 @@ def build_gate_annotation_config_metadata(
         internal_support_thresholds_signature=_support_thresholds_signature(
             internal_support_thresholds
         ),
-        external_selected_tail_calibration_enabled=(
-            external_selected_tail_model is not None
-        ),
+        external_selected_tail_calibration_enabled=(external_selected_tail_model is not None),
         external_selected_tail_rule_count=(
             0
             if external_selected_tail_model is None
             else int(len(external_selected_tail_model.rules))
         ),
-        spectral_transport_passthrough_guard=bool(
-            spectral_transport_passthrough_guard
-        ),
+        spectral_transport_passthrough_guard=bool(spectral_transport_passthrough_guard),
         spectral_transport_max_cost=float(spectral_transport_max_cost),
         spectral_transport_require_mp_blocks=bool(spectral_transport_require_mp_blocks),
-        spectral_transport_block_log_tolerance=float(
-            spectral_transport_block_log_tolerance
-        ),
-        spectral_transport_unmatched_mode_penalty=float(
-            spectral_transport_unmatched_mode_penalty
-        ),
+        spectral_transport_block_log_tolerance=float(spectral_transport_block_log_tolerance),
+        spectral_transport_unmatched_mode_penalty=float(spectral_transport_unmatched_mode_penalty),
     )
 
 
@@ -750,17 +754,13 @@ def build_gate_annotation_leaf_data_metadata(
         .tobytes()
     )
     content_hash.update(
-        pd.util.hash_pandas_object(leaf_data, index=True)
-        .to_numpy(dtype=np.uint64)
-        .tobytes()
+        pd.util.hash_pandas_object(leaf_data, index=True).to_numpy(dtype=np.uint64).tobytes()
     )
     return GateAnnotationLeafDataMetadata(
         present=True,
         shape=(int(leaf_data.shape[0]), int(leaf_data.shape[1])),
         content_hash=content_hash.hexdigest(),
-        feature_space_signature=(
-            None if feature_space is None else feature_space.signature
-        ),
+        feature_space_signature=(None if feature_space is None else feature_space.signature),
     )
 
 
@@ -797,12 +797,8 @@ def _resolve_sibling_gate_inputs(
         projection_dimensions_from_edge_comparisons=(
             resolved_projection_dimensions_from_edge_comparisons
         ),
-        parent_principal_component_projections=(
-            resolved_parent_principal_component_projections
-        ),
-        parent_principal_component_eigenvalues=(
-            resolved_parent_principal_component_eigenvalues
-        ),
+        parent_principal_component_projections=(resolved_parent_principal_component_projections),
+        parent_principal_component_eigenvalues=(resolved_parent_principal_component_eigenvalues),
     )
 
 
@@ -819,6 +815,27 @@ def _resolve_fixed_sibling_gate_feature_space(
             "columns for feature-space inference."
         )
     return infer_feature_space_from_columns(tuple(leaf_data.columns))
+
+
+def _resolve_edge_spectral_minimum_dimension(
+    *,
+    spectral_minimum_dimension: int,
+    sibling_gate_method: str,
+    feature_space: FeatureSpace | None,
+    leaf_data: pd.DataFrame | None,
+) -> int:
+    """Validate the edge projection floor.
+
+    The edge gate owns its projection floor. Fixed-subspace sibling evidence may
+    still be computed as diagnostic channels, but it must not silently force the
+    edge gate into a full-rank test.
+    """
+    requested_minimum = int(spectral_minimum_dimension)
+    if requested_minimum < 0:
+        raise ValueError(
+            f"spectral_minimum_dimension must be non-negative; got {spectral_minimum_dimension!r}."
+        )
+    return requested_minimum
 
 
 def _validate_root_stability_guard_config(
@@ -838,8 +855,7 @@ def _validate_root_stability_guard_config(
     threshold_value = float(threshold)
     if not math.isfinite(threshold_value) or not -1.0 <= threshold_value <= 1.0:
         raise ValueError(
-            "root_stability_guard_threshold must be finite and lie in [-1, 1]; "
-            f"got {threshold!r}."
+            f"root_stability_guard_threshold must be finite and lie in [-1, 1]; got {threshold!r}."
         )
     if replicates <= 0:
         raise ValueError(
@@ -856,14 +872,11 @@ def _validate_root_selective_permutation_guard_config(
 ) -> None:
     count = int(replicates)
     if count < 0:
-        raise ValueError(
-            "root_selective_permutation_guard_replicates must be nonnegative."
-        )
+        raise ValueError("root_selective_permutation_guard_replicates must be nonnegative.")
     alpha_value = float(alpha)
     if not 0.0 < alpha_value < 1.0:
         raise ValueError(
-            "root_selective_permutation_guard_alpha must lie in (0, 1); "
-            f"got {alpha!r}."
+            f"root_selective_permutation_guard_alpha must lie in (0, 1); got {alpha!r}."
         )
     allowed_scopes = {
         "root",
@@ -1021,8 +1034,7 @@ def _fixed_bernoulli_coordinate_sibling_p_value(
     second_values = np.asarray(second, dtype=float)
     variance_scale = 1.0 / float(first_sample_size) + 1.0 / float(second_sample_size)
     pooled = (
-        float(first_sample_size) * first_values
-        + float(second_sample_size) * second_values
+        float(first_sample_size) * first_values + float(second_sample_size) * second_values
     ) / (float(first_sample_size) + float(second_sample_size))
     variance = pooled * (1.0 - pooled) * variance_scale + float(ridge)
     z = (first_values - second_values) / np.sqrt(variance)
@@ -1370,11 +1382,7 @@ def compute_root_feature_subsample_stability(
     scores: list[float] = []
     for _ in range(int(subsample_replicates)):
         selected_blocks = rng.choice(n_blocks, size=n_selected, replace=False)
-        columns = [
-            column
-            for block_index in selected_blocks
-            for column in blocks[int(block_index)]
-        ]
+        columns = [column for block_index in selected_blocks for column in blocks[int(block_index)]]
         subsampled = leaf_data.iloc[:, columns]
         selected_labels = _selected_linkage_root_split_labels(
             subsampled,
@@ -1492,13 +1500,10 @@ def _root_stability_blocked(
     node: object,
     root: object,
 ) -> bool:
-    return (
-        node == root
-        and _annotation_bool(
-            annotations_df,
-            node,
-            "Root_Stability_Guard_Blocked",
-        )
+    return node == root and _annotation_bool(
+        annotations_df,
+        node,
+        "Root_Stability_Guard_Blocked",
     )
 
 
@@ -1538,16 +1543,10 @@ def _passthrough_descendant_guard_candidates(
     node_ids = tuple(tree.nodes)
     children = {node: list(tree.successors(node)) for node in node_ids}
     split_prerequisites = {
-        node: _node_split_prerequisites(tree, annotations_df, node)
-        for node in node_ids
+        node: _node_split_prerequisites(tree, annotations_df, node) for node in node_ids
     }
-    sibling_open = {
-        node: _node_sibling_gate_open(annotations_df, node) for node in node_ids
-    }
-    can_split = {
-        node: bool(split_prerequisites[node] and sibling_open[node])
-        for node in node_ids
-    }
+    sibling_open = {node: _node_sibling_gate_open(annotations_df, node) for node in node_ids}
+    can_split = {node: bool(split_prerequisites[node] and sibling_open[node]) for node in node_ids}
     has_descendant_split: dict[object, bool] = {}
     for node in bottom_up_nodes(tree):
         has_descendant_split[node] = any(
@@ -1568,18 +1567,14 @@ def _passthrough_descendant_guard_candidates(
     while stack:
         node, ancestor_passthrough = stack.pop()
         passthrough_reachable[node] = bool(ancestor_passthrough)
-        child_passthrough = bool(
-            ancestor_passthrough or node in closed_passthrough_ancestors
-        )
+        child_passthrough = bool(ancestor_passthrough or node in closed_passthrough_ancestors)
         for child in children[node]:
             stack.append((child, child_passthrough))
 
     return [
         node
         for node in annotations_df.index
-        if node != root
-        and can_split.get(node, False)
-        and passthrough_reachable.get(node, False)
+        if node != root and can_split.get(node, False) and passthrough_reachable.get(node, False)
     ]
 
 
@@ -1655,9 +1650,7 @@ def apply_root_selective_permutation_guard(
             else None
         )
         out.loc[node, "Selective_Permutation_Guard_Alpha"] = float(alpha)
-        out.loc[node, "Selective_Permutation_Guard_Replicates"] = int(
-            bootstrap_replicates
-        )
+        out.loc[node, "Selective_Permutation_Guard_Replicates"] = int(bootstrap_replicates)
         out.loc[node, "Selective_Permutation_Guard_Seed"] = int(seed) + seed_offset
         out.loc[node, "Selective_Permutation_Guard_Scope"] = scope_value
         result = selected_root_permutation_p_value(
@@ -1670,12 +1663,8 @@ def apply_root_selective_permutation_guard(
             tree_linkage_method=tree_linkage_method,
             observed_p_value=observed,
         )
-        out.loc[node, "Selective_Permutation_Observed_P_Value"] = result[
-            "root_observed_p_value"
-        ]
-        out.loc[node, "Selective_Permutation_P_Value"] = result[
-            "root_selective_p_value"
-        ]
+        out.loc[node, "Selective_Permutation_Observed_P_Value"] = result["root_observed_p_value"]
+        out.loc[node, "Selective_Permutation_P_Value"] = result["root_selective_p_value"]
         out.loc[node, "Selective_Permutation_Null_Min_P_Value"] = result[
             "root_selective_null_min_p_value"
         ]
@@ -1693,9 +1682,7 @@ def apply_root_selective_permutation_guard(
             out.loc[root, "Root_Selective_Permutation_Observed_P_Value"] = result[
                 "root_observed_p_value"
             ]
-            out.loc[root, "Root_Selective_Permutation_P_Value"] = result[
-                "root_selective_p_value"
-            ]
+            out.loc[root, "Root_Selective_Permutation_P_Value"] = result["root_selective_p_value"]
             out.loc[root, "Root_Selective_Permutation_Null_Min_P_Value"] = result[
                 "root_selective_null_min_p_value"
             ]
@@ -1703,15 +1690,9 @@ def apply_root_selective_permutation_guard(
                 "root_selective_null_q05_p_value"
             ]
             out.loc[root, "Root_Selective_Permutation_Guard_Alpha"] = float(alpha)
-            out.loc[root, "Root_Selective_Permutation_Guard_Replicates"] = int(
-                bootstrap_replicates
-            )
-            out.loc[root, "Root_Selective_Permutation_Guard_Seed"] = int(
-                seed
-            ) + seed_offset
-            out.loc[root, "Root_Selective_Permutation_Guard_Would_Block"] = (
-                would_block
-            )
+            out.loc[root, "Root_Selective_Permutation_Guard_Replicates"] = int(bootstrap_replicates)
+            out.loc[root, "Root_Selective_Permutation_Guard_Seed"] = int(seed) + seed_offset
+            out.loc[root, "Root_Selective_Permutation_Guard_Would_Block"] = would_block
             out.loc[root, "Root_Selective_Permutation_Guard_Blocked"] = bool(
                 out.loc[root, "Selective_Permutation_Guard_Blocked"]
             )
@@ -1778,12 +1759,8 @@ def apply_root_selective_permutation_guard(
                 "root_selective_null_q05_p_value"
             ]
             out.loc[node, "Selective_Permutation_Guard_Alpha"] = float(alpha)
-            out.loc[node, "Selective_Permutation_Guard_Replicates"] = int(
-                used_replicates
-            )
-            out.loc[node, "Selective_Permutation_Guard_Seed"] = int(
-                seed
-            ) + seed_offset
+            out.loc[node, "Selective_Permutation_Guard_Replicates"] = int(used_replicates)
+            out.loc[node, "Selective_Permutation_Guard_Seed"] = int(seed) + seed_offset
             out.loc[node, "Selective_Permutation_Guard_Scope"] = scope_value
             out.loc[node, "Selective_Permutation_Guard_Refined"] = refined
             out.loc[node, "Selective_Permutation_Guard_Would_Block"] = would_block
@@ -1794,19 +1771,14 @@ def apply_root_selective_permutation_guard(
         return True
 
     if scope_value == "root":
-        candidate_nodes = (
-            [root] if _selective_guard_root_candidate(out, root, root) else []
-        )
+        candidate_nodes = [root] if _selective_guard_root_candidate(out, root, root) else []
     elif scope_value == "open_internal":
         candidate_nodes = [
             node
             for node in out.index
             if node in descendant_sets
             and len(descendant_sets[node]) >= 2
-            and (
-                _node_sibling_gate_open(out, node)
-                or _root_stability_blocked(out, node, root)
-            )
+            and (_node_sibling_gate_open(out, node) or _root_stability_blocked(out, node, root))
         ]
     else:
         candidate_nodes = []
@@ -1865,9 +1837,15 @@ def run_gate_annotation_pipeline(
     leaf_data: pd.DataFrame | None = None,
     feature_space: FeatureSpace | None = None,
     spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    adaptive_projection_dimension_energy_fraction: float | None = None,
     spectral_include_internal_barycenters: bool = False,
     spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     spectral_mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
+    edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
     sibling_gate_profile: str | SiblingGateProfile | None = None,
     sibling_gate_method: str = "projected_wald_inflation",
     sibling_gate_alpha_penalty: float = 1.0,
@@ -1888,9 +1866,7 @@ def run_gate_annotation_pipeline(
         DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
     ),
     external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
-    external_selected_tail_context_by_parent: Mapping[
-        object, Mapping[str, object]
-    ] | None = None,
+    external_selected_tail_context_by_parent: Mapping[object, Mapping[str, object]] | None = None,
     spectral_transport_passthrough_guard: bool = False,
     spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
     spectral_transport_require_mp_blocks: bool = True,
@@ -1944,21 +1920,26 @@ def run_gate_annotation_pipeline(
         root_stability_subsample_replicates=root_stability_subsample_replicates,
         root_stability_feature_fraction=root_stability_feature_fraction,
         root_stability_seed=root_stability_seed,
-        root_selective_permutation_guard_replicates=(
-            root_selective_permutation_guard_replicates
-        ),
+        root_selective_permutation_guard_replicates=(root_selective_permutation_guard_replicates),
         root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
-        root_selective_permutation_guard_alpha=(
-            root_selective_permutation_guard_alpha
-        ),
+        root_selective_permutation_guard_alpha=(root_selective_permutation_guard_alpha),
         root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
         spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
         spectral_transport_max_cost=spectral_transport_max_cost,
         spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
         spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
-        spectral_transport_unmatched_mode_penalty=(
-            spectral_transport_unmatched_mode_penalty
-        ),
+        spectral_transport_unmatched_mode_penalty=(spectral_transport_unmatched_mode_penalty),
+    )
+    continuous_covariance_policy = validate_continuous_covariance_policy(
+        continuous_covariance_policy
+    )
+    continuous_covariance_min_child_leaf_count = (
+        validate_continuous_covariance_min_child_leaf_count(
+            continuous_covariance_min_child_leaf_count
+        )
+    )
+    edge_branch_length_variance_policy = validate_edge_branch_length_variance_policy(
+        edge_branch_length_variance_policy
     )
     if sibling_gate_method not in {
         "projected_wald_inflation",
@@ -1997,6 +1978,29 @@ def run_gate_annotation_pipeline(
             "gate; projected_wald_inflation would reintroduce adaptive "
             "projection into the guarded root statistic."
         )
+    effective_spectral_minimum_dimension = _resolve_edge_spectral_minimum_dimension(
+        spectral_minimum_dimension=spectral_minimum_dimension,
+        sibling_gate_method=sibling_gate_method,
+        feature_space=feature_space,
+        leaf_data=leaf_data,
+    )
+    adaptive_projection_fraction = (
+        None
+        if adaptive_projection_dimension_energy_fraction is None
+        else float(adaptive_projection_dimension_energy_fraction)
+    )
+    if adaptive_projection_fraction is not None and not 0.0 < adaptive_projection_fraction <= 1.0:
+        raise ValueError(
+            "adaptive_projection_dimension_energy_fraction must lie in (0, 1] "
+            f"when set; got {adaptive_projection_dimension_energy_fraction!r}."
+        )
+    adaptive_projection_basis_dimension = None
+    if adaptive_projection_fraction is not None:
+        adaptive_feature_space = _resolve_fixed_sibling_gate_feature_space(
+            feature_space=feature_space,
+            leaf_data=leaf_data,
+        )
+        adaptive_projection_basis_dimension = int(adaptive_feature_space.contrast_dimension)
 
     # Run edge-divergence gate: child-parent edge tests
     edge_gate_start_sec = perf_counter()
@@ -2006,12 +2010,15 @@ def run_gate_annotation_pipeline(
         significance_level_alpha=edge_alpha,
         leaf_data=leaf_data,
         feature_space=feature_space,
-        spectral_minimum_dimension=spectral_minimum_dimension,
-        spectral_include_internal_barycenters=(
-            spectral_include_internal_barycenters
-        ),
+        spectral_minimum_dimension=effective_spectral_minimum_dimension,
+        spectral_projection_basis_dimension=adaptive_projection_basis_dimension,
+        spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
         spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
         spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
+        continuous_covariance_policy=continuous_covariance_policy,
+        continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
+        edge_branch_length_variance_policy=edge_branch_length_variance_policy,
+        adaptive_projection_dimension_energy_fraction=adaptive_projection_fraction,
         stage_timings=stage_timings,
     )
     edge_gate_sec = float(perf_counter() - edge_gate_start_sec)
@@ -2047,12 +2054,13 @@ def run_gate_annotation_pipeline(
                 sibling_inputs.parent_principal_component_eigenvalues
             ),
             feature_space=feature_space,
+            continuous_covariance_policy=continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
+            adaptive_projection_dimension_energy_fraction=adaptive_projection_fraction,
             enforce_support_thresholds=enforce_internal_support_thresholds,
             support_thresholds=internal_support_thresholds,
             external_selected_tail_model=external_selected_tail_model,
-            external_selected_tail_context_by_parent=(
-                external_selected_tail_context_by_parent
-            ),
+            external_selected_tail_context_by_parent=(external_selected_tail_context_by_parent),
             stage_timings=stage_timings,
         )
     else:
@@ -2066,6 +2074,8 @@ def run_gate_annotation_pipeline(
             significance_level_alpha=effective_sibling_alpha,
             feature_space=fixed_feature_space,
             method=sibling_gate_method,
+            continuous_covariance_policy=continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         )
     sibling_gate_sec = float(perf_counter() - sibling_gate_start_sec)
     channel_feature_space = (
@@ -2087,6 +2097,8 @@ def run_gate_annotation_pipeline(
             feature_space=channel_feature_space,
             sparse_method=sparse_channel_method,  # type: ignore[arg-type]
             dense_method="fixed_global_chi_square",
+            continuous_covariance_policy=continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
         )
     if root_stability_guard_threshold is not None:
         root_guard_start_sec = perf_counter()
@@ -2113,9 +2125,7 @@ def run_gate_annotation_pipeline(
             root_stability,
             threshold=root_stability_guard_threshold,
         )
-        stage_timings["root_stability_guard_sec"] = float(
-            perf_counter() - root_guard_start_sec
-        )
+        stage_timings["root_stability_guard_sec"] = float(perf_counter() - root_guard_start_sec)
     if int(root_selective_permutation_guard_replicates) > 0:
         root_selective_start_sec = perf_counter()
         if leaf_data is None:
@@ -2149,9 +2159,7 @@ def run_gate_annotation_pipeline(
             spectral_context,
             max_cost=float(spectral_transport_max_cost),
             require_mp_blocks=bool(spectral_transport_require_mp_blocks),
-            eigenvalue_block_log_tolerance=float(
-                spectral_transport_block_log_tolerance
-            ),
+            eigenvalue_block_log_tolerance=float(spectral_transport_block_log_tolerance),
             unmatched_mode_penalty=float(spectral_transport_unmatched_mode_penalty),
         )
         stage_timings["spectral_transport_passthrough_guard_sec"] = float(
@@ -2171,12 +2179,14 @@ def run_gate_annotation_pipeline(
         edge=edge_metadata,
         sibling=sibling_metadata,
         config=build_gate_annotation_config_metadata(
-            spectral_minimum_dimension=spectral_minimum_dimension,
-            spectral_include_internal_barycenters=(
-                spectral_include_internal_barycenters
-            ),
+            spectral_minimum_dimension=effective_spectral_minimum_dimension,
+            adaptive_projection_dimension_energy_fraction=(adaptive_projection_fraction),
+            spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
             spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
             spectral_mp_row_count_mode=str(spectral_mp_row_count_mode),
+            continuous_covariance_policy=continuous_covariance_policy,
+            continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
+            edge_branch_length_variance_policy=edge_branch_length_variance_policy,
             sibling_gate_profile_id=sibling_gate_profile_id,
             sibling_gate_method=sibling_gate_method,
             sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
@@ -2189,15 +2199,9 @@ def run_gate_annotation_pipeline(
             root_selective_permutation_guard_replicates=(
                 root_selective_permutation_guard_replicates
             ),
-            root_selective_permutation_guard_seed=(
-                root_selective_permutation_guard_seed
-            ),
-            root_selective_permutation_guard_alpha=(
-                root_selective_permutation_guard_alpha
-            ),
-            root_selective_permutation_guard_scope=(
-                root_selective_permutation_guard_scope
-            ),
+            root_selective_permutation_guard_seed=(root_selective_permutation_guard_seed),
+            root_selective_permutation_guard_alpha=(root_selective_permutation_guard_alpha),
+            root_selective_permutation_guard_scope=(root_selective_permutation_guard_scope),
             root_selective_permutation_guard_tree_distance_metric=(
                 root_selective_permutation_guard_tree_distance_metric
             ),
@@ -2210,12 +2214,8 @@ def run_gate_annotation_pipeline(
             spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
             spectral_transport_max_cost=spectral_transport_max_cost,
             spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
-            spectral_transport_block_log_tolerance=(
-                spectral_transport_block_log_tolerance
-            ),
-            spectral_transport_unmatched_mode_penalty=(
-                spectral_transport_unmatched_mode_penalty
-            ),
+            spectral_transport_block_log_tolerance=(spectral_transport_block_log_tolerance),
+            spectral_transport_unmatched_mode_penalty=(spectral_transport_unmatched_mode_penalty),
         ),
         leaf_data=build_gate_annotation_leaf_data_metadata(
             leaf_data,

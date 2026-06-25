@@ -87,8 +87,7 @@ def _validate_mp_row_count_mode(mp_row_count_mode: str) -> str:
     mode = str(mp_row_count_mode)
     if mode not in MP_ROW_COUNT_MODES:
         raise ValueError(
-            f"Unknown MP row-count mode {mp_row_count_mode!r}; "
-            f"allowed={MP_ROW_COUNT_MODES!r}."
+            f"Unknown MP row-count mode {mp_row_count_mode!r}; allowed={MP_ROW_COUNT_MODES!r}."
         )
     return mode
 
@@ -193,9 +192,7 @@ def _precompute_branch_length_internal_states(
                 state_by_node[node_id] = distribution_array
 
     return {
-        node_id: state
-        for node_id, state in state_by_node.items()
-        if not is_leaf(tree, node_id)
+        node_id: state for node_id, state in state_by_node.items() if not is_leaf(tree, node_id)
     }
 
 
@@ -211,14 +208,10 @@ def _build_spectral_tasks(
 ) -> list[NodeSpectralTask]:
     """Build per-node spectral tasks from precomputed descendant metadata."""
     feature_count = int(feature_space.raw_dimension)
-    internal_distribution_mode = _validate_internal_distribution_mode(
-        internal_distribution_mode
-    )
+    internal_distribution_mode = _validate_internal_distribution_mode(internal_distribution_mode)
     mp_row_count_mode = _validate_mp_row_count_mode(mp_row_count_mode)
     descendant_internal_nodes_by_node = (
-        precompute_descendant_internal_nodes(tree)
-        if include_internal_barycenters
-        else {}
+        precompute_descendant_internal_nodes(tree) if include_internal_barycenters else {}
     )
     branch_length_internal_states = (
         _precompute_branch_length_internal_states(
@@ -269,6 +262,7 @@ def _run_spectral_tasks_parallel(
     full_feature_matrix: np.ndarray,
     *,
     minimum_projection_dimension: int,
+    projection_basis_dimension: int | None,
     feature_count: int,
     compute_eigendecomposition_outputs: bool,
 ) -> list[NodeSpectralResult]:
@@ -279,6 +273,7 @@ def _run_spectral_tasks_parallel(
             task,
             full_feature_matrix,
             minimum_projection_dimension,
+            projection_basis_dimension,
             feature_count,
             compute_eigendecomposition_outputs,
         )
@@ -301,13 +296,9 @@ def _aggregate_spectral_results(
 ) -> None:
     """Write per-node worker outputs into decomposition result dicts."""
     for node_result in spectral_results:
-        test_projection_dimensions[node_result.node_id] = (
-            node_result.test_projection_dimension
-        )
+        test_projection_dimensions[node_result.node_id] = node_result.test_projection_dimension
         raw_mp_signal_counts[node_result.node_id] = node_result.raw_mp_signal_count
-        effective_independent_rows[node_result.node_id] = (
-            node_result.effective_independent_rows
-        )
+        effective_independent_rows[node_result.node_id] = node_result.effective_independent_rows
         mp_threshold_rows[node_result.node_id] = node_result.mp_threshold_rows
         if node_result.projection_matrix is None or node_result.eigenvalues is None:
             raise ValueError(
@@ -321,9 +312,7 @@ def _aggregate_spectral_results(
             if node_result.full_eigenvalues is not None
             else node_result.eigenvalues
         )
-        active_feature_counts[node_result.node_id] = int(
-            node_result.active_feature_count
-        )
+        active_feature_counts[node_result.node_id] = int(node_result.active_feature_count)
 
 
 def compute_spectral_decomposition(
@@ -335,6 +324,7 @@ def compute_spectral_decomposition(
     include_internal_barycenters: bool = False,
     internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
     mp_row_count_mode: str = MP_ROW_COUNT_LEAF_EFFECTIVE_ROWS,
+    projection_basis_dimension: int | None = None,
 ) -> SpectralDecompositionResult:
     """Compute MP dimension metadata, PCA projections, and eigenvalues.
 
@@ -381,9 +371,7 @@ def compute_spectral_decomposition(
         are exposed separately.
     """
     spectral_start_sec = perf_counter()
-    internal_distribution_mode = _validate_internal_distribution_mode(
-        internal_distribution_mode
-    )
+    internal_distribution_mode = _validate_internal_distribution_mode(internal_distribution_mode)
     mp_row_count_mode = _validate_mp_row_count_mode(mp_row_count_mode)
     active_feature_space = resolve_feature_space(tuple(leaf_data.columns), feature_space)
     feature_count = active_feature_space.contrast_dimension
@@ -435,6 +423,7 @@ def compute_spectral_decomposition(
         spectral_tasks,
         leaf_feature_matrix,
         minimum_projection_dimension=minimum_projection_dimension,
+        projection_basis_dimension=projection_basis_dimension,
         feature_count=feature_count,
         compute_eigendecomposition_outputs=True,
     )
@@ -462,10 +451,7 @@ def compute_spectral_decomposition(
             sum(result.stage_timings.get("eigensolve_sec", 0.0) for result in spectral_results)
         ),
         "pca_projection_sec": float(
-            sum(
-                result.stage_timings.get("pca_projection_sec", 0.0)
-                for result in spectral_results
-            )
+            sum(result.stage_timings.get("pca_projection_sec", 0.0) for result in spectral_results)
         ),
     }
 

@@ -4,6 +4,7 @@ DISTANCE_MATRIX_METHODS = {"leiden", "louvain", "dbscan", "optics", "hdbscan"}
 
 TBS_DISTANCE_TREE_METHODS = {
     "tbs",
+    "tbs_continuous_guarded_within_covariance",
     "tbs_complete",
     "tbs_single",
     "tbs_fixed_coordinate_bh",

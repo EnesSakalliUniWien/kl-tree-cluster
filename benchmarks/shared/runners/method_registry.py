@@ -8,6 +8,11 @@ from __future__ import annotations
 
 import importlib
 
+from tree_break_selection.tree.distributions import (
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    GUARDED_WITHIN_CHILD_CONTINUOUS_COVARIANCE_POLICY,
+)
+
 from benchmarks.shared.types import MethodSpec
 
 
@@ -26,6 +31,23 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             {
                 "tree_distance_metric": "hamming",
                 "tree_linkage_method": "average",
+            },
+        ],
+    ),
+    "tbs_continuous_guarded_within_covariance": MethodSpec(
+        name="TBS Continuous Guarded Within-Child Covariance",
+        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
+        param_grid=[
+            {
+                "tree_distance_metric": "hamming",
+                "tree_linkage_method": "average",
+                "continuous_covariance_policy": (
+                    GUARDED_WITHIN_CHILD_CONTINUOUS_COVARIANCE_POLICY
+                ),
+                "continuous_covariance_min_child_leaf_count": (
+                    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+                ),
+                "continuous_sibling_gate_method": "fixed_coordinate_bh",
             },
         ],
     ),

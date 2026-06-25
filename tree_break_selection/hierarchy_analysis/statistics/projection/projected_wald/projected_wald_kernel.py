@@ -30,9 +30,7 @@ def _add_elapsed(
 ) -> None:
     if stage_timings is None:
         return
-    stage_timings[key] = float(stage_timings.get(key, 0.0)) + float(
-        perf_counter() - start_sec
-    )
+    stage_timings[key] = float(stage_timings.get(key, 0.0)) + float(perf_counter() - start_sec)
 
 
 def run_projected_wald_kernel(
@@ -41,6 +39,7 @@ def run_projected_wald_kernel(
     spectral_k: int | None = None,
     pca_projection: np.ndarray | None = None,
     pca_eigenvalues: np.ndarray | None = None,
+    adaptive_dimension_energy_fraction: float | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
     timing_prefix: str | None = None,
 ) -> ProjectedWaldResult:
@@ -84,7 +83,50 @@ def run_projected_wald_kernel(
             f"Projected Wald spectral_k={projection_dim} exceeds feature count {n_features}."
         )
 
+    adaptive_fraction = (
+        None
+        if adaptive_dimension_energy_fraction is None
+        else float(adaptive_dimension_energy_fraction)
+    )
+    if adaptive_fraction is not None and not 0.0 < adaptive_fraction <= 1.0:
+        raise ValueError(
+            "adaptive_dimension_energy_fraction must lie in (0, 1] when set; "
+            f"got {adaptive_dimension_energy_fraction!r}."
+        )
+
     projection_start_sec = perf_counter()
+    if adaptive_fraction is not None and pca_projection is not None:
+        candidate_projection_dim = min(int(np.asarray(pca_projection).shape[0]), n_features)
+        if candidate_projection_dim <= 0:
+            projection_dim = 0
+        else:
+            candidate_projection_matrix, _candidate_eigenvalues = build_pca_projection_basis(
+                k=candidate_projection_dim,
+                pca_projection=pca_projection,
+                pca_eigenvalues=pca_eigenvalues,
+            )
+            if candidate_projection_matrix.shape[1] != n_features:
+                raise ValueError(
+                    "PCA projection width must match the projected-Wald z-score dimension. "
+                    f"Got projection width {candidate_projection_matrix.shape[1]} "
+                    f"for z dimension {n_features}."
+                )
+            candidate_projected_diff = candidate_projection_matrix @ standardized_diff
+            component_energy = candidate_projected_diff * candidate_projected_diff
+            total_energy = float(np.sum(component_energy))
+            if total_energy <= 1e-24:
+                projection_dim = 1
+            else:
+                projection_dim = int(
+                    np.searchsorted(
+                        np.cumsum(component_energy),
+                        adaptive_fraction * total_energy,
+                        side="left",
+                    )
+                    + 1
+                )
+            projection_dim = max(1, min(projection_dim, candidate_projection_dim))
+
     projection_matrix, whitening_eigenvalues = build_pca_projection_basis(
         k=projection_dim,
         pca_projection=pca_projection,

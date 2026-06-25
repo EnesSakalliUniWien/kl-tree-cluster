@@ -88,9 +88,7 @@ def effective_rank(eigenvalues: np.ndarray) -> float:
 
     # Shannon entropy H = -Σᵢ pᵢ ln(pᵢ): high when energy is evenly spread
     # across many dimensions, low when one dimension dominates.
-    shannon_entropy = -float(
-        np.sum(nonzero_spectrum_weights * np.log(nonzero_spectrum_weights))
-    )
+    shannon_entropy = -float(np.sum(nonzero_spectrum_weights * np.log(nonzero_spectrum_weights)))
 
     # exp(H) maps entropy back to a "number of effective dimensions" scale:
     # exp(0) = 1 (single dominant dimension), exp(ln d) = d (all equal).
@@ -143,9 +141,7 @@ def marchenko_pastur_signal_count(
         of random matrices. Mathematical USSR-Sbornik, 1(4), 457-483.
     """
     if mp_threshold_rows <= 0 or n_active_features <= 0:
-        raise ValueError(
-            "Marchenko-Pastur signal count requires positive row and feature counts."
-        )
+        raise ValueError("Marchenko-Pastur signal count requires positive row and feature counts.")
 
     # Convert to float64 for numerical stability in eigenvalue comparison
     eigenvalues_f64 = np.asarray(eigenvalues, dtype=np.float64)
@@ -159,6 +155,19 @@ def marchenko_pastur_signal_count(
     mp_upper_bound = (1.0 + np.sqrt(node_aspect_ratio)) ** 2
 
     return int(np.sum(eigenvalues_f64 > mp_upper_bound))
+
+
+def _positive_eigenvalue_count(eigenvalues: np.ndarray) -> int:
+    """Count numerically positive eigenvalues that expose PCA directions."""
+    eigenvalues_f64 = np.asarray(eigenvalues, dtype=np.float64)
+    if eigenvalues_f64.size == 0:
+        return 0
+    tolerance = (
+        np.finfo(np.float64).eps
+        * max(eigenvalues_f64.shape[0], 1)
+        * max(float(np.max(eigenvalues_f64)), 1.0)
+    )
+    return int(np.count_nonzero(eigenvalues_f64 > tolerance))
 
 
 def estimate_marchenko_pastur_dimension(
@@ -179,9 +188,7 @@ def estimate_marchenko_pastur_dimension(
     same; diagnostics may vary them explicitly.
     """
     independent_row_count = (
-        int(n_samples)
-        if effective_independent_rows is None
-        else int(effective_independent_rows)
+        int(n_samples) if effective_independent_rows is None else int(effective_independent_rows)
     )
     row_count_for_threshold = (
         independent_row_count if mp_threshold_rows is None else int(mp_threshold_rows)
@@ -213,7 +220,14 @@ def estimate_marchenko_pastur_dimension(
         int(raw_mp_signal_count),
         minimum_dimension,
     )
-    test_projection_dimension = min(test_projection_dimension, int(n_features))
+    available_projection_directions = min(
+        int(n_features),
+        _positive_eigenvalue_count(np.asarray(eigenvalues, dtype=np.float64)),
+    )
+    test_projection_dimension = min(
+        test_projection_dimension,
+        int(available_projection_directions),
+    )
     return MarchenkoPasturDimensionEstimate(
         raw_mp_signal_count=int(raw_mp_signal_count),
         test_projection_dimension=int(test_projection_dimension),

@@ -892,12 +892,18 @@ def _block_contrast_covariance(
         covariance_block = continuous_covariance_by_block[block.name]
         if covariance_block.ndim == 1:
             covariance = np.diag(
-                covariance_block * variance_scale + ridge,
+                np.maximum(covariance_block, 0.0) * variance_scale + ridge,
             )
         else:
-            covariance = (
-                covariance_block * variance_scale
-                + ridge * np.eye(block.raw_dimension, dtype=np.float64)
+            scaled_covariance = covariance_block * variance_scale
+            scaled_covariance = 0.5 * (scaled_covariance + scaled_covariance.T)
+            min_eigenvalue = float(np.min(np.linalg.eigvalsh(scaled_covariance)))
+            jitter = ridge
+            if min_eigenvalue + jitter <= 0.0:
+                jitter = -min_eigenvalue + ridge
+            covariance = scaled_covariance + jitter * np.eye(
+                block.raw_dimension,
+                dtype=np.float64,
             )
         return (
             (block_first - block_second).astype(np.float64, copy=False),

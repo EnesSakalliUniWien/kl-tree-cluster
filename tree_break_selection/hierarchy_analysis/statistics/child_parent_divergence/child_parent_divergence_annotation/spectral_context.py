@@ -88,10 +88,10 @@ def _validate_spectral_context_outputs(
                 f"Edge-gate PCA projection/eigenvalue row count mismatch for node {node_id!r}: "
                 f"{projection.shape[0]} projection row(s), {eigenvalues.shape[0]} eigenvalue(s)."
             )
-        if projection.shape[0] != int(test_projection_dimensions_by_node[node_id]):
+        if projection.shape[0] < int(test_projection_dimensions_by_node[node_id]):
             raise ValueError(
-                f"Edge-gate PCA projection row count for node {node_id!r} must match its "
-                "test projection dimension."
+                f"Edge-gate PCA projection row count for node {node_id!r} must be at "
+                "least its test projection dimension."
             )
 
 
@@ -100,6 +100,7 @@ def compute_child_parent_spectral_context(
     leaf_data: pd.DataFrame,
     *,
     minimum_projection_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
+    projection_basis_dimension: int | None = None,
     feature_space: FeatureSpace | None = None,
     include_internal_barycenters: bool = False,
     internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
@@ -112,6 +113,7 @@ def compute_child_parent_spectral_context(
         leaf_data,
         feature_space=feature_space,
         minimum_projection_dimension=int(minimum_projection_dimension),
+        projection_basis_dimension=projection_basis_dimension,
         include_internal_barycenters=bool(include_internal_barycenters),
         internal_distribution_mode=str(internal_distribution_mode),
         mp_row_count_mode=str(mp_row_count_mode),

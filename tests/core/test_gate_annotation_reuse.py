@@ -221,6 +221,36 @@ def test_decompose_recomputes_when_sibling_gate_penalty_changes(monkeypatch) -> 
     assert result["num_clusters"] >= 1
 
 
+def test_decompose_recomputes_when_continuous_covariance_policy_changes(monkeypatch) -> None:
+    tree, annotations_df, leaf_data = _build_cherry_tree()
+    bundle = run_gate_annotation_pipeline(tree, annotations_df.copy(), leaf_data=leaf_data)
+
+    calls = 0
+
+    def counted_pipeline(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        assert kwargs["continuous_covariance_policy"] == "guarded_within_child"
+        assert kwargs["continuous_covariance_min_child_leaf_count"] == 8
+        return run_gate_annotation_pipeline(*args, **kwargs)
+
+    monkeypatch.setattr(
+        tree_decomposition_module,
+        "run_gate_annotation_pipeline",
+        counted_pipeline,
+    )
+
+    result = tree.decompose(
+        gate_annotation_bundle=bundle,
+        leaf_data=leaf_data,
+        continuous_covariance_policy="guarded_within_child",
+        continuous_covariance_min_child_leaf_count=8,
+    )
+
+    assert calls == 1
+    assert result["num_clusters"] >= 1
+
+
 def test_decompose_recomputes_when_root_stability_guard_changes(monkeypatch) -> None:
     tree, annotations_df, leaf_data = _build_cherry_tree()
     bundle = run_gate_annotation_pipeline(

@@ -29,6 +29,7 @@ def sibling_divergence_test(
     parent_principal_component_eigenvalues: np.ndarray | None = None,
     feature_space: FeatureSpace | None = None,
     continuous_covariance_by_block: Mapping[str, NDArray[np.floating]] | None = None,
+    adaptive_projection_dimension_energy_fraction: float | None = None,
 ) -> tuple[float, float, float, float]:
     """Two-sample Wald test for sibling divergence."""
     z_scores = _compute_sibling_z_scores(
@@ -63,6 +64,7 @@ def sibling_divergence_test(
         spectral_k=sibling_projection_dimension,
         pca_projection=parent_principal_component_projection,
         pca_eigenvalues=parent_principal_component_eigenvalues,
+        adaptive_dimension_energy_fraction=(adaptive_projection_dimension_energy_fraction),
     )
 
     return (

@@ -15,7 +15,9 @@ from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree
 )
 from tree_break_selection.tree.distributions import (
     CONTINUOUS_COVARIANCE_BY_BLOCK,
+    MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION_ENV,
     MAX_EXACT_CONTINUOUS_COVARIANCE_WORK_MIB_ENV,
+    resolve_node_continuous_covariance_by_block,
 )
 from tree_break_selection.tree.feature_space import (
     FeatureBlock,
@@ -77,6 +79,34 @@ def _simple_binary_tree() -> PosetTree:
         tree.add_node(leaf, is_leaf=True, label=leaf)
         tree.add_edge("root", leaf)
     return tree
+
+
+def _balanced_continuous_tree(n_per_child: int = 8) -> PosetTree:
+    tree = PosetTree()
+    tree.add_node("root", is_leaf=False)
+    tree.add_node("left", is_leaf=False)
+    tree.add_node("right", is_leaf=False)
+    tree.add_edge("root", "left")
+    tree.add_edge("root", "right")
+    for index in range(n_per_child):
+        left_leaf = f"L{index}"
+        right_leaf = f"R{index}"
+        tree.add_node(left_leaf, is_leaf=True, label=left_leaf)
+        tree.add_node(right_leaf, is_leaf=True, label=right_leaf)
+        tree.add_edge("left", left_leaf)
+        tree.add_edge("right", right_leaf)
+    return tree
+
+
+def _balanced_continuous_leaf_data(n_per_child: int = 8) -> pd.DataFrame:
+    centered = np.linspace(-1.0, 1.0, n_per_child, dtype=np.float64)
+    left = np.column_stack([centered, centered * 0.5])
+    right = left + np.array([10.0, -2.0], dtype=np.float64)
+    values = np.vstack([left, right])
+    index = [f"L{i}" for i in range(n_per_child)] + [
+        f"R{i}" for i in range(n_per_child)
+    ]
+    return pd.DataFrame(values, index=index, columns=["X0", "X1"])
 
 
 def _continuous_feature_space() -> FeatureSpace:
@@ -222,6 +252,115 @@ def test_populate_node_divergences_stores_continuous_means_and_covariances() -> 
     np.testing.assert_allclose(
         tree.nodes["L0"][CONTINUOUS_COVARIANCE_BY_BLOCK]["X"],
         np.zeros((2, 2), dtype=np.float64),
+    )
+
+
+def test_guarded_within_child_continuous_covariance_excludes_between_child_shift() -> None:
+    tree = _balanced_continuous_tree(n_per_child=8)
+    leaf_data = _balanced_continuous_leaf_data(n_per_child=8)
+    feature_space = continuous_feature_space_from_columns(tuple(leaf_data.columns))
+
+    tree.populate_node_divergences(leaf_data, feature_space=feature_space)
+
+    guarded = resolve_node_continuous_covariance_by_block(
+        tree,
+        "root",
+        feature_space,
+        continuous_covariance_policy="guarded_within_child",
+        continuous_covariance_min_child_leaf_count=8,
+    )
+    parent_total = resolve_node_continuous_covariance_by_block(
+        tree,
+        "root",
+        feature_space,
+    )
+    left_covariance = tree.nodes["left"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
+    right_covariance = tree.nodes["right"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
+    expected_within = ((8 - 1) * left_covariance + (8 - 1) * right_covariance) / (
+        8 + 8 - 2
+    )
+
+    assert guarded is not None
+    assert parent_total is not None
+    np.testing.assert_allclose(guarded["continuous"], expected_within)
+    assert guarded["continuous"][0, 0] < parent_total["continuous"][0, 0]
+
+
+def test_guarded_within_child_continuous_covariance_falls_back_for_tiny_children() -> None:
+    tree = _balanced_continuous_tree(n_per_child=2)
+    leaf_data = _balanced_continuous_leaf_data(n_per_child=2)
+    feature_space = continuous_feature_space_from_columns(tuple(leaf_data.columns))
+
+    tree.populate_node_divergences(leaf_data, feature_space=feature_space)
+
+    guarded = resolve_node_continuous_covariance_by_block(
+        tree,
+        "root",
+        feature_space,
+        continuous_covariance_policy="guarded_within_child",
+        continuous_covariance_min_child_leaf_count=8,
+    )
+    parent_total = resolve_node_continuous_covariance_by_block(
+        tree,
+        "root",
+        feature_space,
+    )
+
+    assert guarded is not None
+    assert parent_total is not None
+    np.testing.assert_allclose(guarded["continuous"], parent_total["continuous"])
+
+
+def test_guarded_within_child_continuous_covariance_supports_diagonal_blocks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tree = _balanced_continuous_tree(n_per_child=8)
+    leaf_data = _balanced_continuous_leaf_data(n_per_child=8)
+    feature_space = continuous_feature_space_from_columns(tuple(leaf_data.columns))
+    monkeypatch.setenv(MAX_EXACT_CONTINUOUS_COVARIANCE_BLOCK_DIMENSION_ENV, "1")
+
+    tree.populate_node_divergences(leaf_data, feature_space=feature_space)
+
+    guarded = resolve_node_continuous_covariance_by_block(
+        tree,
+        "root",
+        feature_space,
+        continuous_covariance_policy="guarded_within_child",
+        continuous_covariance_min_child_leaf_count=8,
+    )
+    left_covariance = tree.nodes["left"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
+    right_covariance = tree.nodes["right"][CONTINUOUS_COVARIANCE_BY_BLOCK]["continuous"]
+    expected_within = ((8 - 1) * left_covariance + (8 - 1) * right_covariance) / (
+        8 + 8 - 2
+    )
+
+    assert guarded is not None
+    assert guarded["continuous"].shape == (2,)
+    np.testing.assert_allclose(guarded["continuous"], expected_within)
+
+
+def test_guarded_continuous_covariance_policy_is_discrete_noop() -> None:
+    tree = _simple_binary_tree()
+    categorical_space = infer_feature_space_from_columns(tuple(_categorical_leaf_data().columns))
+    bernoulli_space = infer_feature_space_from_columns(("B0", "B1"))
+
+    assert (
+        resolve_node_continuous_covariance_by_block(
+            tree,
+            "root",
+            categorical_space,
+            continuous_covariance_policy="guarded_within_child",
+        )
+        is None
+    )
+    assert (
+        resolve_node_continuous_covariance_by_block(
+            tree,
+            "root",
+            bernoulli_space,
+            continuous_covariance_policy="guarded_within_child",
+        )
+        is None
     )
 
 

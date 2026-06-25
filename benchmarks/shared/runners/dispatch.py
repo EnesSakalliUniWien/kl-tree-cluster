@@ -20,11 +20,18 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
+from tree_break_selection.hierarchy_analysis.statistics.distributional_action import (
+    DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
+)
 from tree_break_selection.tree.continuous_distance import (
     CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
     CONTINUOUS_TREE_DISTANCE_METRIC,
     continuous_time_distance_condensed,
     standardized_euclidean_distance_condensed,
+)
+from tree_break_selection.tree.distributions import (
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 
@@ -81,6 +88,23 @@ def _method_failure_result(error: Exception) -> MethodRunResult:
         skip_reason=str(error),
         extra={},
     )
+
+
+def _resolve_tbs_sibling_gate_method(
+    *,
+    params: Dict[str, Any],
+    feature_space: FeatureSpace | None,
+) -> str:
+    """Resolve the active TBS sibling gate for the feature-family contract."""
+    default_method = str(params.get("sibling_gate_method", "projected_wald_inflation"))
+    continuous_method = params.get("continuous_sibling_gate_method")
+    if (
+        continuous_method is not None
+        and feature_space is not None
+        and feature_space.has_continuous_blocks
+    ):
+        return str(continuous_method)
+    return default_method
 
 
 def run_clustering_result(
@@ -178,6 +202,11 @@ def run_clustering_result(
                         EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
                     )
                 ),
+                adaptive_projection_dimension_energy_fraction=(
+                    None
+                    if params.get("adaptive_projection_dimension_energy_fraction") is None
+                    else float(params["adaptive_projection_dimension_energy_fraction"])
+                ),
                 spectral_include_internal_barycenters=bool(
                     params.get("spectral_include_internal_barycenters", False)
                 ),
@@ -190,19 +219,31 @@ def run_clustering_result(
                 spectral_mp_row_count_mode=str(
                     params.get("spectral_mp_row_count_mode", "leaf_effective_rows")
                 ),
+                continuous_covariance_policy=str(
+                    params.get(
+                        "continuous_covariance_policy",
+                        DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+                    )
+                ),
+                continuous_covariance_min_child_leaf_count=int(
+                    params.get(
+                        "continuous_covariance_min_child_leaf_count",
+                        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+                    )
+                ),
+                edge_branch_length_variance_policy=str(
+                    params.get("edge_branch_length_variance_policy", "none")
+                ),
                 enforce_internal_support_thresholds=bool(
                     params.get("enforce_internal_support_thresholds", False)
                 ),
                 sibling_gate_profile=params.get("sibling_gate_profile"),
-                sibling_gate_method=str(
-                    params.get("sibling_gate_method", "projected_wald_inflation")
+                sibling_gate_method=_resolve_tbs_sibling_gate_method(
+                    params=params,
+                    feature_space=feature_space,
                 ),
-                sibling_gate_alpha_penalty=float(
-                    params.get("sibling_gate_alpha_penalty", 1.0)
-                ),
-                root_stability_guard_threshold=params.get(
-                    "root_stability_guard_threshold"
-                ),
+                sibling_gate_alpha_penalty=float(params.get("sibling_gate_alpha_penalty", 1.0)),
+                root_stability_guard_threshold=params.get("root_stability_guard_threshold"),
                 root_stability_subsample_replicates=int(
                     params.get("root_stability_subsample_replicates", 0)
                 ),
@@ -213,9 +254,7 @@ def run_clustering_result(
                 root_stability_tree_distance_metric=str(
                     params.get("root_stability_tree_distance_metric", "hamming")
                 ),
-                root_stability_tree_linkage_method=params.get(
-                    "root_stability_tree_linkage_method"
-                ),
+                root_stability_tree_linkage_method=params.get("root_stability_tree_linkage_method"),
                 root_selective_permutation_guard_replicates=int(
                     params.get("root_selective_permutation_guard_replicates", 0)
                 ),
@@ -261,8 +300,43 @@ def run_clustering_result(
                         DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
                     )
                 ),
-                neighborhood_bandwidth_profile=params.get(
-                    "neighborhood_bandwidth_profile"
+                neighborhood_bandwidth_profile=params.get("neighborhood_bandwidth_profile"),
+                distributional_action_split_filter_policy=str(
+                    params.get(
+                        "distributional_action_split_filter_policy",
+                        DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
+                    )
+                ),
+                distributional_action_split_filter_quantile=float(
+                    params.get("distributional_action_split_filter_quantile", 0.0)
+                ),
+                branch_length_optimization_method=str(
+                    params.get("branch_length_optimization_method", "linkage_ultrametric")
+                ),
+                branch_length_optimization_target_metric=str(
+                    params.get(
+                        "branch_length_optimization_target_metric",
+                        "squared_standardized_euclidean",
+                    )
+                ),
+                branch_length_optimization_pair_sample_size=(
+                    None
+                    if params.get("branch_length_optimization_pair_sample_size") is None
+                    else int(params["branch_length_optimization_pair_sample_size"])
+                ),
+                branch_length_optimization_random_state=int(
+                    params.get("branch_length_optimization_random_state", 0)
+                ),
+                branch_length_optimization_solver_tolerance=float(
+                    params.get("branch_length_optimization_solver_tolerance", 1e-6)
+                ),
+                branch_length_optimization_max_iterations=(
+                    None
+                    if params.get("branch_length_optimization_max_iterations") is None
+                    else int(params["branch_length_optimization_max_iterations"])
+                ),
+                allow_linkage_ultrametric_branch_time=bool(
+                    params.get("allow_linkage_ultrametric_branch_time", False)
                 ),
                 passthrough=bool(params.get("passthrough", config.PASSTHROUGH)),
             )

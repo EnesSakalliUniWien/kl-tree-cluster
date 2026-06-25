@@ -36,6 +36,8 @@ def _make_two_edge_tree(
 def _run_edge_projection_with_capture(
     tree: nx.DiGraph,
     monkeypatch: pytest.MonkeyPatch,
+    *,
+    edge_branch_length_variance_policy: str = "none",
 ) -> list[tuple[int, int, float | None, float | None]]:
     captured: list[tuple[int, int, float | None, float | None]] = []
 
@@ -51,6 +53,8 @@ def _run_edge_projection_with_capture(
         continuous_covariance_by_block: object | None = None,
         branch_length: float | None = None,
         mean_branch_length: float | None = None,
+        adaptive_projection_dimension_energy_fraction: float | None = None,
+        stage_timings: object | None = None,
     ) -> tuple[float, float, float, bool]:
         captured.append((n_child, n_parent, branch_length, mean_branch_length))
         return 0.0, 1.0, 1.0, False
@@ -69,6 +73,7 @@ def _run_edge_projection_with_capture(
         spectral_dims={"root": 1},
         pca_projections={"root": np.array([[1.0, 0.0]], dtype=float)},
         pca_eigenvalues={"root": np.array([1.0], dtype=float)},
+        edge_branch_length_variance_policy=edge_branch_length_variance_policy,
     )
     return captured
 
@@ -92,12 +97,26 @@ def test_branch_length_utility_rejects_malformed_observations() -> None:
         compute_mean_branch_length(tree)
 
 
-def test_edge_projection_passes_branch_length_time_scaling(
+def test_edge_projection_ignores_branch_lengths_by_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     tree = _make_two_edge_tree(left_branch_length=1.0, right_branch_length=3.0)
 
     captured = _run_edge_projection_with_capture(tree, monkeypatch)
+
+    assert captured == [(5, 10, None, None), (5, 10, None, None)]
+
+
+def test_edge_projection_can_opt_into_normalized_branch_length_time_scaling(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tree = _make_two_edge_tree(left_branch_length=1.0, right_branch_length=3.0)
+
+    captured = _run_edge_projection_with_capture(
+        tree,
+        monkeypatch,
+        edge_branch_length_variance_policy="normalized_branch_length",
+    )
 
     assert captured == [(5, 10, 1.0, 2.0), (5, 10, 3.0, 2.0)]
 
@@ -108,4 +127,8 @@ def test_edge_projection_validates_used_branch_lengths(
     tree = _make_two_edge_tree(left_branch_length=float("nan"), right_branch_length=-1.0)
 
     with pytest.raises(ValueError, match="finite non-negative branch length"):
-        _run_edge_projection_with_capture(tree, monkeypatch)
+        _run_edge_projection_with_capture(
+            tree,
+            monkeypatch,
+            edge_branch_length_variance_policy="normalized_branch_length",
+        )

@@ -12,6 +12,10 @@ import pandas as pd
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.tree.distributions import (
+    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
+    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+)
 from tree_break_selection.tree.feature_space import FeatureSpace
 
 from ..inflation_correction.empirical_null_inflation_estimation import (
@@ -63,12 +67,15 @@ def annotate_sibling_divergence(
     parent_principal_component_eigenvalues: dict[str, np.ndarray],
     significance_level_alpha: float = DEFAULT_SIBLING_ALPHA,
     feature_space: FeatureSpace | None = None,
+    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
+    continuous_covariance_min_child_leaf_count: int = (
+        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
+    ),
     enforce_support_thresholds: bool = False,
     support_thresholds: CalibrationSupportThresholds = DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     external_selected_tail_model: ExternalSelectedTailCalibrationModel | None = None,
-    external_selected_tail_context_by_parent: Mapping[
-        object, Mapping[str, object]
-    ] | None = None,
+    external_selected_tail_context_by_parent: Mapping[object, Mapping[str, object]] | None = None,
+    adaptive_projection_dimension_energy_fraction: float | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
 ) -> pd.DataFrame:
     """Test sibling divergence using context-weighted empirical-null inflation."""
@@ -84,6 +91,11 @@ def annotate_sibling_divergence(
         parent_principal_component_projections=parent_principal_component_projections,
         parent_principal_component_eigenvalues=parent_principal_component_eigenvalues,
         feature_space=feature_space,
+        continuous_covariance_policy=continuous_covariance_policy,
+        continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
+        adaptive_projection_dimension_energy_fraction=(
+            adaptive_projection_dimension_energy_fraction
+        ),
     )
     if stage_timings is not None:
         stage_timings["sibling_gate_pair_record_collection_sec"] = float(
