@@ -2,13 +2,14 @@
 title: Continuous Tree Geometry Rethink
 type: analysis
 status: reviewed
-updated: 2026-06-23
+updated: 2026-06-24
 sources:
   - tree_break_selection/tree/continuous_distance.py
   - benchmarks/shared/generators/case_data_contracts.py
   - benchmarks/shared/runners/dispatch.py
   - tree_break_selection/tree/branch_lengths.py
   - manuscript/sections/method/representation.tex
+  - raw/assets/benchmark-results/continuous_tree_geometry_rethink_20260623/manifest.json
   - raw/assets/benchmark-results/continuous_tree_geometry_rethink_20260623/compact_family_results.txt
   - raw/assets/benchmark-results/continuous_tree_geometry_rethink_20260623/compact_family_results_after_patch.txt
   - raw/assets/benchmark-results/continuous_tree_geometry_rethink_20260623/compact_family_method_results_after_patch.csv
@@ -203,6 +204,10 @@ The practical method revision is:
 - `manuscript/sections/method/representation.tex` states the split between
   Gaussian location-style standardized Euclidean tree distances and diagnostic
   continuous metric-specific distances.
+- `raw/assets/benchmark-results/continuous_tree_geometry_rethink_20260623/manifest.json`
+  records static provenance for the evidence bundle with
+  `provenance_timestamp = 2026-06-24T20:30:09+02:00`; the original text reports
+  record date-level provenance only.
 - `raw/assets/benchmark-results/continuous_tree_geometry_rethink_20260623/compact_family_results.txt`
   records the pre-patch compact current-vs-standardized-Euclidean and oracle
   checks.

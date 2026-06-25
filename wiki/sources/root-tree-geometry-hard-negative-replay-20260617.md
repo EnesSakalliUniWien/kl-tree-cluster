@@ -9,12 +9,8 @@ sources:
   - tests/pipeline/51_test_dispatch_contract.py
   - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/runners/dispatch.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_v1/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_v1/root_tree_geometry_hard_negative_replay_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_v1/root_tree_geometry_hard_negative_replay_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_legacy_c2ef9a69_v1/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_legacy_c2ef9a69_v1/root_tree_geometry_hard_negative_replay_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_legacy_c2ef9a69_v1/root_tree_geometry_hard_negative_replay_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_v1
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tree_geometry_hard_negative_overlap_extreme_4c_legacy_c2ef9a69_v1
 tags:
   - source
   - diagnostics

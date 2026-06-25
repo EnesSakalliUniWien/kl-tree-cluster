@@ -15,13 +15,9 @@ sources:
   - tests/validation/55_test_root_selected_region_margins.py
   - tests/validation/168_test_root_tie_rank_conditioned_coherent_topology_join.py
   - tests/validation/175_test_root_selected_h_u_observability_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family/root_selected_region_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_topology_join_mild_accumulated/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_topology_join_mild_accumulated/conditioned_coherent_joined_feasibility_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_h_u_observability_mild_accumulated/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_h_u_observability_mild_accumulated/root_selected_h_u_observability_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_h_u_observability_mild_accumulated/root_selected_h_u_observability_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_importance_external_null_topology_join_mild_accumulated
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_h_u_observability_mild_accumulated
 tags:
   - source
   - diagnostics

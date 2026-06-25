@@ -6,9 +6,7 @@ updated: 2026-06-17
 sources:
   - benchmarks/diagnostics/calibration/root_selected_conditional_tilt_feasibility_panel.py
   - tests/validation/179_test_root_selected_conditional_tilt_feasibility_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_conditional_tilt_feasibility_mild_replay_v3_smoke/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_conditional_tilt_feasibility_mild_replay_v3_smoke/root_selected_conditional_tilt_feasibility_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_conditional_tilt_feasibility_mild_replay_v3_smoke/root_selected_conditional_tilt_feasibility_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_conditional_tilt_feasibility_mild_replay_v3_smoke
 tags:
   - source
   - diagnostics

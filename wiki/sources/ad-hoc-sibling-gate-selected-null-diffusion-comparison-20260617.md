@@ -4,15 +4,9 @@ type: source
 status: reviewed
 updated: 2026-06-17
 sources:
-  - raw/assets/benchmark-results/ad_hoc_sibling_gate_selected_null_legacy_comparison_20260617/rows.csv
-  - raw/assets/benchmark-results/ad_hoc_sibling_gate_selected_null_legacy_comparison_20260617/summary_by_method_role.csv
-  - raw/assets/benchmark-results/ad_hoc_sibling_gate_selected_null_legacy_comparison_20260617/summary_by_case_method_role.csv
-  - raw/assets/benchmark-results/ad_hoc_sibling_gate_selected_null_legacy_comparison_20260617/manifest.json
-  - raw/assets/benchmark-results/ad_hoc_kl_diffusion_tree_comparison_20260617/summary.csv
-  - raw/assets/benchmark-results/ad_hoc_kl_diffusion_tree_comparison_20260617/aggregate.csv
-  - raw/assets/benchmark-results/ad_hoc_kl_diffusion_selected_null_legacy_comparison_20260617/rows.csv
-  - raw/assets/benchmark-results/ad_hoc_kl_diffusion_selected_null_legacy_comparison_20260617/summary_by_method_role.csv
-  - raw/assets/benchmark-results/ad_hoc_kl_diffusion_selected_null_legacy_comparison_20260617/combined_method_tradeoff.csv
+  - raw/assets/benchmark-results/ad_hoc_sibling_gate_selected_null_legacy_comparison_20260617
+  - raw/assets/benchmark-results/ad_hoc_kl_diffusion_tree_comparison_20260617
+  - raw/assets/benchmark-results/ad_hoc_kl_diffusion_selected_null_legacy_comparison_20260617
 tags:
   - source
   - diagnostics

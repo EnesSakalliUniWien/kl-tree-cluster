@@ -4,21 +4,12 @@ type: source
 status: reviewed
 updated: 2026-06-15
 sources:
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/context_negative_topology_conditioning/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/context_negative_topology_conditioning/overlap_context_negative_topology_conditioning_metric_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight0_min2/overlap_conditional_topology_law_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight1_min2/overlap_conditional_topology_law_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight1_min2/overlap_conditional_topology_law_component_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight1_min2/overlap_conditional_topology_law_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight1_min1_diagnostic/overlap_conditional_topology_law_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/focused_overlap_balance_product/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/focused_overlap_balance_product/focused_overlap_positive_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/focused_overlap_balance_product/focused_overlap_balance_metric_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/focused_overlap_balance_product/focused_overlap_conditional_law_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/small_overlap_selected_family/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/small_overlap_selected_family/selected_family_traversal_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/small_overlap_selected_family/production_admissibility_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/context_negative_topology_conditioning
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight0_min2
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight1_min2
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/conditional_law_weight1_min1_diagnostic
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/focused_overlap_balance_product
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/small_overlap_selected_family
 tags:
   - source
   - diagnostics

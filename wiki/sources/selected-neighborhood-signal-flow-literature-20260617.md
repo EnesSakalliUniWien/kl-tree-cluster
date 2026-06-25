@@ -4,7 +4,7 @@ type: source
 status: reviewed
 updated: 2026-06-17
 sources:
-  - raw/inbox/selected-neighborhood-signal-flow-literature-20260617.md
+  - raw/inbox
 tags:
   - source
   - literature

@@ -2,11 +2,13 @@
 title: Gaussian Inner Node Branch-Time Debug 2026-06-23
 type: source
 status: reviewed
-updated: 2026-06-23
+updated: 2026-06-24
 sources:
+  - raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/manifest.json
   - raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/summary.csv
   - raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/gauss_clear_medium_continuous_standardized_active_vs_no_time_inner_nodes.csv
   - raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/gauss_moderate_3c_continuous_standardized_active_vs_no_time_inner_nodes.csv
+  - raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/gaussian_eigen_branch_alignment_20260623.csv
 tags:
   - source
   - benchmarks
@@ -52,9 +54,29 @@ is removed from the Wald covariance path.
   but switching only the sibling gate to fixed-coordinate is insufficient for
   full recovery because the traversal child-parent prerequisite still uses the
   branch-time multiplier.
+- Eigen diagnostics show that the tested Gaussian contrast is already embedded
+  in the parent covariance. At the audited nodes, the mass-weighted between
+  term accounts for `0.34` to `0.95` of the parent covariance trace; the top one
+  or two raw covariance eigenvectors capture `0.87` to essentially `1.0` of
+  the child-contrast energy.
+- After null-whitening by that same parent covariance, the descendant covariance
+  eigenvalues flatten: the whitened eigenvalue max/min ratio is `1.0` and the
+  raw MP signal count is `0` at the audited nodes. The continuous spectral
+  selector therefore falls back to the minimum projection dimension instead of
+  detecting the Gaussian mean-shift axes as signal.
+- The full no-time Wald norm saturates near the parent node size (`58.98` for
+  root size `60`, `43.98` for root size `45`, and `29.0` for size-`30`
+  binary splits). This matches the algebra for a parent covariance of the form
+  within covariance plus \(m_L m_R \Delta\Delta^\top\): as separation grows,
+  \(\Delta^\top\widehat\Sigma_u^{-1}\Delta\) saturates instead of continuing to
+  grow.
 
 ## Evidence
 
+- `raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/manifest.json`
+  records static provenance for the CSV bundle with
+  `provenance_timestamp = 2026-06-24T20:27:01+02:00`; the original generation
+  timestamp was not recorded in the CSV artifacts.
 - `raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/summary.csv`
   records active versus no-time cluster counts, ARI, open sibling counts, and
   changed-node counts.
@@ -64,6 +86,10 @@ is removed from the Wald covariance path.
 - `raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/gauss_moderate_3c_continuous_standardized_active_vs_no_time_inner_nodes.csv`
   records all internal node values for the moderate three-cluster continuous
   Gaussian case.
+- `raw/assets/benchmark-results/gaussian_inner_node_debug_20260623/gaussian_eigen_branch_alignment_20260623.csv`
+  records raw covariance eigen alignment, whitened spectral eigenvalues,
+  no-time/full Wald norms, projected Wald shares, and branch-time multipliers
+  for the audited Gaussian internal nodes.
 
 ## Links
 

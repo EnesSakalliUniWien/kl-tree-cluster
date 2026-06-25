@@ -6,14 +6,8 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/overlap_signal_suppression_localizer.py
   - tests/validation/143_test_overlap_signal_suppression_localizer.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization/overlap_signal_suppression_localization_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization/overlap_signal_suppression_case_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization/overlap_signal_suppression_status_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization_binary_suite/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization_binary_suite/overlap_signal_suppression_localization_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization_binary_suite/overlap_signal_suppression_case_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization_binary_suite/overlap_signal_suppression_status_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_signal_suppression_localization_binary_suite
 tags:
   - source
   - diagnostics

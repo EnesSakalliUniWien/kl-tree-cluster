@@ -6,9 +6,7 @@ updated: 2026-06-17
 sources:
   - benchmarks/diagnostics/calibration/root_selected_action_conditioning_ladder_panel.py
   - tests/validation/172_test_root_selected_action_conditioning_ladder_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_action_conditioning_ladder_mild_accumulated/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_action_conditioning_ladder_mild_accumulated/root_selected_action_conditioning_ladder_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_action_conditioning_ladder_mild_accumulated/root_selected_action_conditioning_ladder_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_action_conditioning_ladder_mild_accumulated
 tags:
   - source
   - diagnostics

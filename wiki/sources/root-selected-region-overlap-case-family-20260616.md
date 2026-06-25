@@ -5,10 +5,7 @@ status: reviewed
 updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/root_selected_region_margins.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family/root_selected_region_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family/root_selected_region_merge_margins.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family/root_selected_region_relationships.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_region_margins_overlap_case_family
 tags:
   - source
   - diagnostics

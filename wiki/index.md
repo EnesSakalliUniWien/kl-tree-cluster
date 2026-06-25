@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-23
+updated: 2026-06-24
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -116,6 +116,44 @@ renamed, or promoted.
   for the internal-barycenter artifact problem; it frames internal rows as
   graph low-pass/tree-filter evidence and points to angle/radius transport plus
   topology/curvature conditioning.
+- [[pancreas-scrna-clustering-benchmark-20260623]] - public human pancreas
+  scRNA AnnData benchmark using a classical Scanpy PCA-neighbor workflow,
+  showing the repaired adaptive projected edge/sibling gates at 90% local
+  contrast energy, recomputed fixed-topology NNLS branch-time rows,
+  raw-linkage diagnostic rows, split/merge metrics, and six-row side-by-side
+  UMAP/full-tree cluster plots.
+- [[pancreas-tbs-inner-node-progenitor-comparison-20260624]] - adaptive-diffusion
+  TBS inner-node review showing one lineage-coherent endocrine super-node and
+  several endocrine-neighbor nodes, with an exact monophyletic-subtree meeting
+  pass confirming `N4963` as the only large balanced mixed endocrine join; a
+  progenitor-signature comparison finds `0/2,500` `NEUROG3+` cells in the TBS
+  subset and no marker-supported progenitor state.
+- [[goncalves-pancreas-progenitor-benchmark-prep-20260624]] - executed
+  Goncalves fetal pancreas benchmark using the UCSC processed/scaled
+  expression matrix, showing Louvain/Leiden strongest by V-measure, adaptive
+  diffusion TBS close but fragmented, and standardized branch-time TBS
+  collapsing on this processed matrix.
+- [[goncalves-tbs-progenitor-analysis-20260624]] - marker/signature comparison
+  of Goncalves fetal populations, adaptive-diffusion TBS clusters, internal
+  nodes, and exact monophyletic meeting nodes, showing pure tip and endocrine
+  clusters plus mixed trunk/tip/proliferating progenitor-rich tree structure.
+- [[scrna-branch-length-effect-audit-20260624]] - adult pancreas and Goncalves
+  scRNA rerun audit showing that tree topology is inferred from distance
+  matrices before branch lengths are stored or refit; adaptive-diffusion TBS is
+  stable across branch-time variants, while standardized-PCA branch-time can
+  collapse clusters.
+- [[scrna-distributional-action-audit-20260624]] - adult pancreas and Goncalves
+  scRNA tree audit adding `subtree_distributional_action` as leaf-count-weighted
+  child-parent PCA movement, showing that leaf count and branch length are not
+  enough to rank biologically important internal-node changes; activated q50
+  action filters are now treated as superseded negative controls, while the
+  current benchmark path exports action diagnostics without changing traversal
+  gates.
+- [[barycentric-split-action-formula-20260624]] - corrected derivation showing
+  that distributional action belongs to the internal-node split
+  \(\sum_i m_i\lVert\mu_i-\mu_p\rVert^2\), tying topology, descendant mass,
+  child-parent edge contributions, and the sibling contrast into one
+  barycentric object.
 - [[local-mp-identity-law-diagnostic-20260602]] - production-spectrum screen
   showing that the identity MP law is not a uniform description across
   Bernoulli, categorical, discretized Gaussian, and continuous contexts.
@@ -512,6 +550,25 @@ renamed, or promoted.
   the two continuous Gaussian under-splits, showing that standardized topology
   contains the correct pure splits but the branch-time covariance multiplier
   closes the relevant child-parent and sibling gates.
+- [[gaussian-within-covariance-replay-20260623]] - focused covariance replay
+  showing that parent-total covariance saturates Gaussian mean-shift tests,
+  unguarded within covariance over-splits, and guarded full within-child
+  covariance can recover the focused Gaussian failures while branch time remains
+  active.
+- [[guarded-continuous-covariance-implementation-20260623]] - implementation
+  note for the opt-in guarded continuous covariance candidate, including
+  adaptive continuous-only fixed-coordinate sibling gating and focused
+  benchmark validation artifacts.
+- [[guarded-continuous-covariance-big-benchmark-20260623]] - full 121-case
+  benchmark comparing default TBS with the integrated guarded covariance
+  candidate; shows no paired regressions, four continuous Gaussian
+  improvements, two additional continuous ok rows, and unchanged paired
+  binary/categorical/graph/encoded-feature behavior.
+- [[discrete-within-covariance-guard-check-20260623]] - Bernoulli/categorical
+  covariance replay showing that pooled discrete null covariance is not the same
+  failure mode as Gaussian parent-total covariance, and that within-child
+  discrete covariance opens too many selected null nodes without stronger
+  calibration.
 - [[clustering-root-audit-debug-20260606]] - corrected root-row interpretation
   for TBS failure diagnosis and relationship audit factors; separates true
   root rejection from accepted-root post-root sibling traversal stalls.
@@ -590,6 +647,15 @@ renamed, or promoted.
 
 ### Analyses
 
+- [[scrna-plot-pipeline-audit-20260624]] - audit and cleanup contract for the
+  adult pancreas and Goncalves fetal pancreas plot surfaces, separating
+  verified cluster-to-tree assignment from ambiguous plot aliases, overlapping
+  UMAP review views, orphaned previous-run plots, and the new
+  `scripts/run_scrna_plot_pipeline.py` manifest/orchestration path.
+- [[redundant-and-legacy-code-map-20260623]] - static map of the intentional
+  c2ef9a69 legacy snapshot, live benchmark bridges that still call it, and the
+  main non-legacy redundancy surfaces in gate helpers, validation reports, cloud
+  sharding, diagnostic-panel utilities, and tests.
 - [[null-edge-sibling-calibration-enhancement-plan]] - calibration roadmap
   separating selected edge-null law, sibling null support/external selected-tail
   law, and KAK/action traversal geometry before any production rule promotion.
@@ -1012,6 +1078,10 @@ renamed, or promoted.
   continuous mean-shift cases, active standardized Euclidean geometry repairs
   Gaussian location-style continuous cases, and low-rank, overlap, and SBM
   failures remain separate method problems.
+- [[edge-gate-distance-time-contract-20260623]] - production math contract that
+  separates tree topology from branch-time variance, makes normalized branch
+  time opt-in, and records that fixed-coordinate sibling evidence must not force
+  the edge projection floor.
 - [[benchmark-pipeline-contract]] - active benchmark execution order and the
   strict case-generation, distance, method-dispatch, and report-orchestration
   contracts.
@@ -1027,6 +1097,10 @@ renamed, or promoted.
 
 ### Questions
 
+- [[pancreas-progenitor-dataset-selection-20260624]] - dataset decision record
+  recommending a progenitor-rich human fetal pancreas rerun, with Goncalves
+  UCSC processed data first, Olaniru `GSE197064` as the broader fetal
+  time-course, and Krentz `GSE120522` as a NEUROG3-positive control.
 - [[open-mathematical-questions]] - consolidated mathematical backlog for
   calibration, projection, feature-space covariance, FDR, traversal, hierarchy
   recoverability, and manuscript evidence gaps.

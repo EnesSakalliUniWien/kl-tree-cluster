@@ -7,10 +7,7 @@ sources:
   - benchmarks/diagnostics/calibration/legacy_c2ef9a69_method_comparison_panel.py
   - tests/validation/152_test_legacy_c2ef9a69_method_comparison_panel.py
   - benchmarks/shared/runners/legacy_commit_runner.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel/legacy_c2ef9a69_method_comparison_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel/legacy_c2ef9a69_method_comparison_pairwise.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel/legacy_c2ef9a69_method_comparison_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel
 tags:
   - source
   - diagnostics

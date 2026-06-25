@@ -6,9 +6,7 @@ updated: 2026-06-17
 sources:
   - benchmarks/diagnostics/calibration/root_selected_deformed_external_law_target_panel.py
   - tests/validation/178_test_root_selected_deformed_external_law_target_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_deformed_external_law_target_mild_replay_v3_smoke/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_deformed_external_law_target_mild_replay_v3_smoke/root_selected_deformed_external_law_target_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_deformed_external_law_target_mild_replay_v3_smoke/root_selected_deformed_external_law_target_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_deformed_external_law_target_mild_replay_v3_smoke
 tags:
   - source
   - diagnostics

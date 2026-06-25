@@ -14,10 +14,7 @@ sources:
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/node_spectral_task.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/tree_estimator.py
   - tree_break_selection/hierarchy_analysis/statistics/projection/spectral/marchenko_pastur.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel/legacy_internal_spectral_comparison_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel/legacy_internal_spectral_comparison_pairwise.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel/legacy_internal_spectral_comparison_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel
 tags:
   - source
   - diagnostics

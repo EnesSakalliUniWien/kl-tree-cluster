@@ -7,13 +7,8 @@ sources:
   - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
   - benchmarks/diagnostics/calibration/spectral_transport_promotion_gate.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates/selected_family_traversal_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates/multiscale_node_decisions.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates/production_admissibility_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_promotion_gate_promoted_replicates/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_promotion_gate_promoted_replicates/spectral_transport_promotion_components.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_promotion_gate_promoted_replicates/spectral_transport_promotion_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_family_traversal_spectral_transport_promoted_replicates
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_promotion_gate_promoted_replicates
 tags:
   - source
   - diagnostics

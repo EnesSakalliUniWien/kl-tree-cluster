@@ -8,12 +8,8 @@ sources:
   - tests/validation/149_test_spectral_transport_threshold_calibration_panel.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
   - tests/localization/35_test_gates_traversal.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel/spectral_transport_threshold_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel/spectral_transport_threshold_pairwise.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel/spectral_transport_threshold_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel_strict_mp_low_grid/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel_strict_mp_low_grid/spectral_transport_threshold_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/spectral_transport_threshold_calibration_panel_strict_mp_low_grid
 tags:
   - source
   - diagnostics

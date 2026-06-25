@@ -6,9 +6,7 @@ updated: 2026-06-17
 sources:
   - benchmarks/diagnostics/calibration/root_selected_action_dominance_tail_panel.py
   - tests/validation/173_test_root_selected_action_dominance_tail_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_action_dominance_tail_mild_accumulated/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_action_dominance_tail_mild_accumulated/root_selected_action_dominance_tail_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_action_dominance_tail_mild_accumulated/root_selected_action_dominance_tail_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_action_dominance_tail_mild_accumulated
 tags:
   - source
   - diagnostics

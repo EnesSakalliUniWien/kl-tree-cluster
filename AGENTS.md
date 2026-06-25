@@ -11,6 +11,18 @@ The wiki is not a replacement for the project source tree. Treat it as a cited
 index of what is known, where the evidence lives, and which questions remain
 open.
 
+## Mex Compatibility
+
+The `.mex/` directory is a compatibility bridge for the `mex-agent` CLI, not a
+second memory system. Root `AGENTS.md`, `wiki/index.md`, `wiki/schema.md`,
+`wiki/maintenance.md`, and `wiki/log.md` remain authoritative.
+
+When using mex, keep `.mex/` as a thin router into the wiki. Do not record
+durable project events in mex event files; append them to `wiki/log.md`.
+Mex scanner output may under-report this Python project's `pyproject.toml`
+dependencies, so inspect `pyproject.toml` directly for setup and dependency
+decisions.
+
 ## Source Surfaces
 
 Primary evidence is read from these surfaces before creating or updating wiki

@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-23
+updated: 2026-06-24
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -4010,6 +4010,55 @@ verification, and maintenance events here in chronological order.
   the time multiplier changes ARI from `0.0` to `1.0` in both cases, whereas
   fixed-coordinate sibling gating alone is insufficient because child-parent
   prerequisites still close on the long pure edges.
+- Extended the Gaussian inner-node debug with eigen-alignment evidence. The
+  parent covariance eigenvectors align with the tested child contrast, the
+  between-child term explains a large share of parent covariance trace, and
+  whitening by that same parent covariance flattens the descendant eigenvalues
+  so the MP signal count is `0`. The no-time Wald norm then saturates near the
+  parent node size, identifying total-parent-covariance whitening as a separate
+  continuous Gaussian calibration problem from branch-time variance inflation.
+- Tested within-child covariance replays for the continuous Gaussian failures.
+  Node-level statistics confirm that parent-total covariance suppresses the
+  Gaussian split direction, but unguarded within covariance over-splits both
+  signal and null cases. A guarded full within-child covariance replay, applied
+  only when immediate children have enough mass, recovers the two focused
+  Gaussian signal cases with branch time still active, keeps the Gaussian null
+  closed, and preserves the solved `dim_consolidated_4c_24f_continuous` case
+  under both fixed-coordinate BH and the default empirical-null sibling layer.
+- Checked whether the guarded within-child covariance idea transfers to
+  Bernoulli and categorical sibling tests. The discrete replay keeps branch
+  time active and compares current pooled null covariance against Jeffreys
+  within-child and `25%` pooled-guard variants. Unlike Gaussian parent-total
+  empirical covariance, pooled Bernoulli/multinomial covariance is the ordinary
+  two-sample null MLE. The representative selected-node panel shows discrete
+  within-child covariance opens many more selected nulls: Bernoulli strict-null
+  nodes rise from `4/722` current opens to `18/722`, categorical strict-null
+  nodes rise from `12/994` to `72/994`, and a synthetic categorical null rises
+  from `0/119` to `14/119` (`7/119` with the `25%` pooled guard). The all-suite
+  root replay confirms most binary/categorical roots are already open under
+  current pooled covariance, while within covariance closes tiny-child
+  categorical Dirichlet-multinomial roots. The discrete covariance fix should
+  therefore not be ported directly without a separate boundary/selected-null
+  calibration.
+- Implemented the opt-in guarded continuous covariance candidate. The code
+  adds `continuous_covariance_policy=guarded_within_child` with an `8`-leaf
+  child-mass guard, keeps discrete pooled null covariance unchanged, routes the
+  policy through edge, sibling, fixed-coordinate evidence, benchmark dispatch,
+  and annotation metadata, and registers
+  `tbs_continuous_guarded_within_covariance` without aliases. Focused validation
+  repairs the two continuous Gaussian under-splits, preserves the Gaussian null
+  and `dim_consolidated_4c_24f_continuous`, and the current dispatch runs
+  non-continuous inputs through default TBS sibling gating rather than skipping
+  them.
+- Ran the full 121-case benchmark for `tbs` versus
+  `tbs_continuous_guarded_within_covariance` with plots and relationship
+  analysis disabled. Default `tbs` produced `98` ok rows and `23` skips; the
+  integrated guarded candidate produced `100` ok rows and `21` skips. Among
+  `98` paired ok rows, guarded covariance had four continuous Gaussian/outlier
+  ARI improvements, `94` ties, and no regressions; binary, categorical,
+  graph-adjacency, median-binary, and quantile-one-hot paired rows were exact
+  ties. The candidate still under-splits dimensional, low-rank, and above-BBP
+  continuous method-proof cases.
 - Consolidated the GO annotation feature-matrix run path so
   `scripts/analysis/run_go_annotation_feature_matrix_pipeline.py` is the
   canonical entry point for publishable outputs. The wrapper now plans radial
@@ -4017,6 +4066,774 @@ verification, and maintenance events here in chronological order.
   meaningfulness audits, recurring top-annotation tables, input-matrix copying,
   and `RUN_SUMMARY.md`; direct helper scripts are documented as repair/debug
   tools rather than the ordinary upload path.
+- Repaired the memory validation contract after introducing mex. Missing wiki
+  source citations were normalized to existing local evidence directories so
+  `make wiki-lint` remains strict and enforceable. The `.mex/` scaffold is now
+  documented as a compatibility bridge into the wiki rather than a second memory
+  source, durable logging remains in `wiki/log.md`, and
+  `tests/wiki/test_memory_contract.py` verifies wiki lint, mex routing, mex
+  placeholder removal, and lookup of core method pages.
+- Downloaded the public Scanpy human pancreas AnnData object and added
+  `scripts/pancreas_scrna_cluster_benchmark.py` for a reproducible classical
+  Scanpy PCA-neighbor workflow plus clustering benchmark. Outputs live in
+  `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/`;
+  [[pancreas-scrna-clustering-benchmark-20260623]] records that the original
+  adaptive 2D edge projection collapses TBS at the root, while the corrected
+  `spectral_minimum_dimension = 20` edge setting opens traversal and gives
+  `76` clusters with `ARI 0.2710` and `NMI 0.6263`.
+- Repaired the production edge-gate math contract after the pancreas failure.
+  Branch lengths are now topology/support diagnostics by default and only enter
+  child-parent Wald variance through the explicit
+  `edge_branch_length_variance_policy="normalized_branch_length"` setting.
+  Fixed-coordinate sibling gates now raise the edge-gate projection floor to
+  the fixed feature-space dimension, and gate-reuse metadata records the branch
+  time policy. Focused tests cover default no-time behavior, normalized
+  branch-time opt-in, projection-floor compatibility, and reuse metadata.
+- Reran the pancreas benchmark with topology-only TBS, normalized branch-time
+  TBS, and adaptive diffusion topology TBS at sibling alpha `0.01` and edge
+  alpha `0.001`. The benchmark now reports split/merge diagnostics instead of
+  relying on ARI alone. TBS is purity-heavy but fragmentation-heavy: topology
+  only gives `102` clusters, purity `0.9368`, dominant-cluster recall `0.2852`,
+  and split error `0.7148`; normalized branch time gives `69` clusters, purity
+  `0.9076`, recall `0.3392`, and split error `0.6608`; adaptive diffusion gives
+  `72` clusters, purity `0.9448`, recall `0.3496`, and split error `0.6504`.
+  [[edge-gate-distance-time-contract-20260623]] records the math contract and
+  [[pancreas-scrna-clustering-benchmark-20260623]] records the updated outputs.
+- Added a fixed-topology branch-time transform scan to the pancreas benchmark.
+  The scan rescales edge Wald statistics, reapplies Tree-BH, reruns traversal,
+  and scores split/merge behavior as supervised failure analysis. On the
+  standardized-PCA topology, `linear_scale_2` improves dominant-cluster recall
+  to `0.4684` with `55` clusters but lowers purity to `0.9044`; stronger
+  scaling reaches `33` clusters but collapses purity to `0.6696`. On adaptive
+  diffusion topology, `quadratic_scale_1` gives V-measure `0.6481` with `37`
+  clusters, purity `0.9252`, and recall `0.3876`. The result shows branch-time
+  transforms are a split/merge dial, not yet an unsupervised production fix.
+- Installed local R plotting dependencies (`BiocManager`, `ggtree`, `treeio`,
+  `ape`, and an updated local `ggplot2`) and added
+  `scripts/plot_pancreas_tbs_radial_trees_ggtree.R`. The script converts the
+  three TBS edge tables from the pancreas benchmark into `ape::phylo` objects
+  and renders whole-tree circular `ggtree` plots. Each plot contains `2,500`
+  tips, `2,499` internal nodes, and `4,998` edges, with PNG/PDF paths recorded
+  in `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_radial_tree_ggtree_outputs.csv`.
+- Corrected the pancreas TBS UMAP-plus-tree panel after review showed the left
+  UMAP side was ambiguous with the earlier readable-large-cluster plot. The
+  regenerated
+  `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_umap_cluster_radial_tree_combo_all_clusters_ggtree.png`
+  colors every final TBS cluster on the UMAP and matching terminal tree
+  subtrees, labels only clusters with at least `50` cells, and leaves shared
+  tree ancestors grey. The legacy combo filename is overwritten as an alias to
+  the same all-cluster figure.
+- Rescaled the same pancreas TBS UMAP-plus-tree panel for readability. The new
+  primary artifact
+  `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_umap_cluster_radial_tree_combo_scaled_umap_ggtree.png`
+  uses tight global UMAP limits, larger points, larger cluster labels, no UMAP
+  axis chrome, and a balanced UMAP/tree width allocation. The all-cluster and
+  legacy combo paths are overwritten as aliases to this scaled rendering.
+- Mapped redundant and legacy code surfaces in
+  [[redundant-and-legacy-code-map-20260623]]. The audit identifies the
+  c2ef9a69 package as an intentional non-production comparator snapshot that is
+  still live through benchmark registries, and ranks cleanup targets in shared
+  gate predicates, validation-report scaffolding, cloud sharding helpers,
+  diagnostic-panel utilities, and small lint-level unused code.
+- Repaired the pancreas gate-dimension path so both production gates are
+  projected/adaptive instead of using the rejected fixed-coordinate full-rank
+  edge workaround. The edge and sibling projected-Wald kernels now accept
+  `adaptive_projection_dimension_energy_fraction`; the benchmark uses `0.9`.
+  The MP/floor dimension remains `2`, while local contrasts choose the shortest
+  PCA prefix carrying 90% projected energy. The rerun gives adaptive-diffusion
+  TBS `43` clusters, purity `0.9288`, recall `0.4840`, split error `0.5160`,
+  and V-measure `0.6620`; topology-only TBS gives `45` clusters and V-measure
+  `0.6020`; the raw-linkage branch-time diagnostic collapses to `9` clusters
+  and V-measure `0.3124`. The updated side-by-side UMAP/full-tree plot is
+  `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_umap_cluster_radial_tree_combo_scaled_umap_ggtree.png`.
+- Added and benchmarked native fixed-topology NNLS branch-length optimization
+  for continuous pancreas PCA distances. The standardized-PCA NNLS branch-time
+  row completes with `45` clusters, purity `0.7928`, dominant-cluster recall
+  `0.5800`, and V-measure `0.6020`; the adaptive-diffusion NNLS branch-time row
+  completes with `43` clusters, purity `0.9288`, recall `0.4840`, and
+  V-measure `0.6620`. Both avoid the raw linkage branch-time collapse to `9`
+  clusters. The NNLS fits use `50,000` sampled leaf pairs and record residual
+  RMSE about `0.30` in
+  `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_tree_branch_length_summary.csv`.
+  The adaptive NNLS run also required a continuous-covariance Cholesky repair
+  after branch-time scaling. Regenerated six-row `ggtree` UMAP/tree plots use a
+  display-only sqrt-capped branch-length transform and audit `226/226` colored
+  clusters as exact clades.
+- Corrected the branch-time linkage-tree contract so raw linkage ultrametric
+  heights cannot be used for normalized branch-time variance unless the run
+  explicitly opts into `allow_linkage_ultrametric_branch_time=True` as a
+  diagnostic/negative-control path. The pancreas benchmark now labels the real
+  branch-time rows as recomputed-NNLS and the old raw-height rows as
+  raw-linkage diagnostics. The rerun preserves the result pattern:
+  standardized recomputed-NNLS branch time gives `45` clusters and V-measure
+  `0.6020`, adaptive-diffusion recomputed-NNLS gives `43` clusters and
+  V-measure `0.6620`, while the standardized raw-linkage diagnostic still
+  collapses to `9` clusters and V-measure `0.3124`.
+- Corrected the pancreas UMAP rendering contract after review found that the
+  standalone readable UMAP greyed out small clusters, which made real assigned
+  clusters look unassigned. `scripts/plot_pancreas_tbs_readable_umap_clusters.py`
+  now colors every final TBS cluster and thresholds only labels, while
+  `scripts/plot_pancreas_all_method_umap_clusters.py` writes
+  `all_methods_umap_clusters_all_colored.png` for curated labels, all six TBS
+  rows, and the classical baselines. The six-row `ggtree` UMAP/tree combo was
+  regenerated with larger UMAP points, larger labels, thicker readable branch
+  strokes, and the same exact-clade audit result: `226/226` colored TBS
+  clusters are exact clades.
+- Compared adaptive-diffusion TBS internal nodes with pancreas progenitor-style
+  lineage expectations. `scripts/analyze_pancreas_tbs_inner_nodes.py` now writes
+  `tbs_adaptive_inner_node_lineage_summary.csv`,
+  `tbs_adaptive_inner_node_progenitor_review.csv`, and
+  `tbs_adaptive_inner_node_progenitor_comparison.png`. Among internal nodes
+  with at least `50` leaves, the review finds `61` mature cell-type nodes, `21`
+  local geometry nodes, `17` broad mixed-pancreas nodes, and `4` endocrine
+  mixed descendant nodes. The main shared ancestor `N4963` contains `947`
+  descendants (`beta:463`, `alpha:418`, `delta:34`, `gamma:24`), but `NEUROG3`
+  is zero and marker means are dominated by mature endocrine hormones, so the
+  correct interpretation is lineage-coherent hierarchy ancestor rather than
+  validated progenitor.
+- Extended the pancreas inner-node analysis to every terminal final-cluster
+  root. All `43` adaptive TBS final clusters have exact internal clade roots.
+  Terminal root groupings are `33` local geometry nodes, `9` mature cell-type
+  nodes, and `1` endocrine mixed descendant node. The only terminal root with an
+  ancestor-like mixed endocrine composition is cluster `36`, node `N4881`
+  (`delta:85`, `gamma:31`, `epsilon:3`, `NEUROG3 = 0.0`). Internal mixed nodes
+  inside final cluster subtrees are limited to `N4789` and `N4881` in cluster
+  `36`, plus `N4921` inside beta-dominant cluster `42`; none supports a true
+  progenitor call.
+- Checked direct junction nodes where exactly two or three final adaptive TBS
+  clusters meet. There are `10` direct two/three-cluster junctions and `5`
+  compositionally mixed ones: `N4957` (`C14,C15,C16`, `43` cells, mostly
+  alpha), `N4964` (`C7,C8`, `28` beta-dominant endocrine cells), `N4922`
+  (`C15,C16`, `20` alpha/beta/gamma cells plus one ductal), `N4965`
+  (`C30,C31`, `20` stromal/ductal cells), and `N4857` (`C38,C39`, `19`
+  gamma/alpha/beta cells). All have `NEUROG3 = 0.0`; the UMAP highlight shows
+  localized contact neighborhoods rather than broad bridges, so these remain
+  local mature-state/boundary contacts rather than progenitor-supported nodes.
+- Added an exact monophyletic-subtree meeting pass to
+  `scripts/analyze_pancreas_tbs_inner_nodes.py`. It keeps only nodes whose
+  immediate children are exact unions of complete final adaptive TBS clusters,
+  producing `42` meetings for the `43` terminal clusters. Most are ladder-like
+  broad context splits. The focused mixed set is `N4963`, `N4917`, `N4957`,
+  `N4964`, `N4922`, `N4965`, and `N4857`. `N4963` is the only large balanced
+  mixed meeting (`C38,C39,C40,C41` versus `C42`, `947` cells, `99.3%`
+  endocrine), but `NEUROG3 = 0.0`, so the call remains endocrine hierarchy
+  ancestor over mature states rather than validated progenitor. New outputs are
+  `tbs_adaptive_monophyletic_subtree_meeting_review.csv`,
+  `tbs_adaptive_monophyletic_subtree_meeting_child_summary.csv`, and
+  `tbs_adaptive_monophyletic_subtree_meeting_mixed_umap.png`.
+- Added `scripts/compare_pancreas_tbs_to_progenitor_signatures.py` to compare
+  focused monophyletic-subtree meetings, child branches, TBS clusters, and
+  celltype states against pancreas progenitor and mature-state signatures. The
+  full AnnData has only `5/14,693` `NEUROG3+` cells, and the `2,500`-cell TBS
+  benchmark subset has `0/2,500`, so no TBS node can be a sampled `NEUROG3+`
+  endocrine progenitor population. `N4963` has `NEUROG3 = 0.0`, `0%`
+  `NEUROG3+`, endocrine-progenitor-core score `-0.049`, and low endocrine
+  commitment score `-0.314`, supporting the mature endocrine hierarchy-ancestor
+  interpretation. The small junctions `N4957`, `N4964`, and `N4922` score high
+  for `PAX4`/endocrine-commitment and mature hormone programs but still lack
+  `NEUROG3`, so they are endocrine-committed or mature-state neighborhoods, not
+  progenitor-supported states. New outputs include
+  `pancreas_progenitor_signature_dataset_summary.csv`,
+  `pancreas_full_neurog3_positive_cells.csv`,
+  `tbs_adaptive_monophyletic_meeting_progenitor_signature_comparison.csv`,
+  `pancreas_benchmark_celltype_progenitor_signature_scores.csv`,
+  `tbs_adaptive_cluster_progenitor_signature_scores.csv`,
+  `pancreas_progenitor_signature_comparison.png`, and
+  `pancreas_progenitor_signature_umap.png`.
+- Added [[pancreas-progenitor-dataset-selection-20260624]] after the
+  progenitor-signature analysis showed that the current adult pancreas subset
+  has `0/2,500` `NEUROG3+` cells. The decision record ranks Goncalves et al.
+  human fetal pancreas UCSC processed data as the immediate rerun target,
+  Olaniru et al. `GSE197064` as the broader fetal time-course benchmark, and
+  Krentz et al. `GSE120522` as a NEUROG3-positive-control benchmark.
+- Added `scripts/goncalves_pancreas_progenitor_benchmark.py` for the selected
+  Goncalves fetal pancreas dataset and parameterized the all-method UMAP,
+  radial-tree, and UMAP-plus-tree plotting scripts with `--output-dir`. The
+  benchmark preserves counts, recomputes a standard Scanpy workflow, reuses the
+  current TBS/classical method set, and writes the same split/merge, branch
+  length, UMAP, and tree diagnostics. The local sandbox cannot resolve
+  `cells.ucsc.edu`, so the run currently stops at a clean download blocker
+  instructing where to place `exprMatrix.tsv.gz` and `meta.tsv` for
+  `--skip-download`; [[goncalves-pancreas-progenitor-benchmark-prep-20260624]]
+  records the validation checks.
+- Reran the Goncalves fetal pancreas benchmark after network access was enabled.
+  The UCSC `exprMatrix.tsv.gz` and `meta.tsv` were downloaded to
+  `raw/inbox/goncalves_human_pancreas_dev/fetal-pancreas/`, and the benchmark
+  used all `1,465` cells with `8` `population` labels. The matrix contains
+  negative non-integer values, so the workflow treats it as processed/scaled
+  expression rather than raw counts. Louvain leads the current table
+  (`12` clusters, V-measure `0.4431`, ARI `0.3264`), Leiden is close
+  (`11` clusters, V-measure `0.4394`), adaptive-diffusion TBS gives
+  `24` clusters with V-measure `0.4100`, and standardized branch-time TBS
+  collapses to one cluster. The generated all-method UMAP and TBS
+  UMAP-plus-full-radial-tree plots live under
+  `raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/`,
+  and the tree highlighting audit reports `114/114` colored TBS clusters as
+  exact clades.
+- Added `scripts/analyze_goncalves_tbs_progenitors.py` for marker/signature
+  analysis of the Goncalves fetal pancreas benchmark. The script maps marker
+  symbols to Ensembl IDs, scores fetal trunk, tip, proliferating,
+  endocrine-progenitor, mesenchyme, neuronal, and blood signatures, and writes
+  population, TBS-cluster, inner-node, and monophyletic-meeting tables plus
+  UMAP/heatmap/meeting plots. The analysis maps `37/39` markers, finds pure
+  tip cluster `C6`, pure proliferating cluster `C1`, compact endocrine cluster
+  `C12`, large mixed progenitor-rich cluster `C22`, within-cluster progenitor
+  nodes such as `N2851`, `N2903`, and `N2758`, and exact monophyletic
+  proliferating meetings `N2876` and `N2910`; [[goncalves-tbs-progenitor-analysis-20260624]]
+  records the result.
+- Added `scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R` and rendered
+  progenitor-specific whole radial trees for the adaptive-diffusion TBS
+  Goncalves run. Outputs include dominant fetal population,
+  trunk/tip/proliferating fraction, interpreted progenitor state, and a combined
+  panel under
+  `raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/`.
+  The tree plots label `N2851`, `N2903`, `N2758`, `N2876`, `N2910`, `N2907`,
+  and `N2872` on the full `1,465`-tip tree.
+- Consolidated the Goncalves progenitor UMAP/tree rendering into the same
+  `scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R` plotting line. Running
+  `Rscript scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R --pdf-width=30
+  --pdf-height=42 --page-width=30 --page-height=16 --png-dpi=180` now writes
+  `goncalves_tbs_progenitor_umap_tree_panel_wide_ggtree.pdf`, a wider vector
+  row-wise UMAP/tree panel with one UMAP/tree pair per row, plus
+  `goncalves_tbs_progenitor_umap_tree_pages_ggtree.pdf`, a multi-page vector
+  PDF with one UMAP/tree pair per page. The PNG previews are now screen-sized
+  instead of poster-sized, dropping the page preview from `16200 x 8400` pixels
+  to `5400 x 2880`; the UMAP render uses larger cell points, centered UMAP
+  titles, and a slightly wider UMAP column. The script records dimensions and
+  PNG DPI in `goncalves_tbs_progenitor_tree_outputs.csv`.
+- Added [[scrna-plot-pipeline-audit-20260624]] after reviewing the adult
+  pancreas and Goncalves plot generators and outputs. The audit records that
+  TBS cluster-to-tree assignment is exact in the highlighting audits
+  (`226/226` adult and `114/114` Goncalves), while the plot surface is
+  ambiguous because byte-identical alias images and overlapping UMAP/tree
+  review views are listed as peer artifacts. It recommends one plot manifest,
+  canonical all-method and TBS UMAP/tree outputs, explicit alias metadata, and
+  a single documented plotting order.
+- Added `scripts/run_scrna_plot_pipeline.py` as the scRNA plotting
+  orchestration and manifest layer. The script defines the adult pancreas and
+  Goncalves plot-generator order, accepts `--run-generators` for rerendering,
+  and writes `plot_manifest.csv`/`.json` with canonical, derivative, alias, and
+  orphaned previous-run classifications. Strict manifest generation passed for
+  both current output folders: the adult manifest records `112` plot artifacts
+  with `46` orphaned previous-run files, while the Goncalves manifest records
+  `58` plot artifacts with no orphaned status. Added `--output-dir` to the
+  hard-coded readable TBS UMAP, cluster radial tree, and Goncalves progenitor
+  analyzer entry points so the wrapper can call them consistently; the
+  Goncalves analyzer now reuses cached marker mapping unless refresh is
+  requested.
+- Regenerated the adult pancreas and Goncalves scRNA plot surfaces through
+  `scripts/run_scrna_plot_pipeline.py --run-generators --strict`, using
+  `/Users/berksakalli/miniconda3/bin/python` and the local R runtime at
+  `/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/bin/Rscript`.
+  The adult rerender regenerated the all-method UMAP, readable TBS UMAP,
+  edge-state radial trees, cluster radial trees, UMAP/tree combo aliases, and
+  plot manifest; the exact-clade audits report `226/226` UMAP/tree clusters and
+  `226/226` cluster-radial-tree clusters. The Goncalves rerender regenerated
+  the all-method UMAP, TBS radial trees, UMAP/tree combo aliases, progenitor
+  signature plots, progenitor UMAP/tree pages, and plot manifest; its UMAP/tree
+  audit reports `114/114` exact clades. The adult manifest remains
+  `112` plots with `46` orphaned previous-run files, and the Goncalves manifest
+  remains `58` present plots with no orphaned status.
+- Added `scripts/plot_goncalves_clustering_progenitor_relation.py` and wired it
+  into the Goncalves scRNA plot manifest as a canonical relation overview. The
+  new plot stacks the adaptive-diffusion TBS final-cluster UMAP/tree row above
+  the Goncalves progenitor UMAP/tree panel so clustering and progenitor
+  interpretation can be read in one view. It writes
+  `goncalves_tbs_clustering_progenitor_relation_overview.png` and `.pdf`; the
+  Goncalves plot manifest now records `60` present plot artifacts.
+- Replaced the Goncalves relation overview screenshot-composite with direct
+  ggtree outputs from `scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R`.
+  The obsolete `scripts/plot_goncalves_clustering_progenitor_relation.py` helper
+  and its `goncalves_tbs_clustering_progenitor_relation_overview.*` outputs were
+  removed. New canonical relation artifacts are
+  `goncalves_tbs_relation_umap_grid_ggtree.*`,
+  `goncalves_tbs_relation_tree_grid_ggtree.*`, and
+  `goncalves_tbs_relation_umap_tree_pages_ggtree.pdf`; the Goncalves manifest
+  now records `66` present plot artifacts.
+- Added `scripts/audit_scrna_branch_length_effects.py` and
+  [[scrna-branch-length-effect-audit-20260624]] after rerunning the adult
+  pancreas and Goncalves scRNA analyses. The audit joins method metrics,
+  branch-length summaries, assignment similarities, and branch-time sensitivity
+  scans. It records that branch lengths do not place cells on the tree:
+  topology is inferred first from standardized-PCA or adaptive-diffusion
+  distance matrices, then branch lengths are stored or refit. Adaptive-diffusion
+  TBS is stable across branch-time variants (`43` adult clusters for topology
+  and NNLS, `41` for raw-linkage; `24` Goncalves clusters for all three
+  variants), while standardized-PCA branch-time is unstable (`45` to `9` adult
+  clusters under raw-linkage, and `40` to `1` Goncalves clusters under both
+  branch-time rows). The refreshed Goncalves relation PDF has `4` pages and the
+  current plot manifest records `66` present artifacts.
+- Added `scripts/audit_scrna_distributional_action.py` and
+  [[scrna-distributional-action-audit-20260624]] after checking whether leaf
+  count alone captures internal-node mass. The audit reconstructs node
+  barycenters from saved PCA leaves and TBS edge tables, then writes
+  `subtree_distributional_action = child_leaf_count *
+  mean_standardized_PCA_delta^2` for each edge. Adult and Goncalves
+  adaptive-diffusion TBS both have `0/10` overlap between top action edges and
+  top descendant-mass edges; Goncalves action-vs-leaf-count rank correlation is
+  `-0.0334`, showing that leaf count and branch length must remain separate
+  from distributional movement when interpreting internal nodes.
+- Added a `generated_at` timestamp to scRNA plot-manifest JSON summaries and
+  regenerated strict adult pancreas and Goncalves plot manifests without
+  rerunning plot generators. Current strict manifests record adult pancreas
+  `120` plot rows (`66` present, `54` orphaned previous-run files) and
+  Goncalves `74` plot rows (`66` present, `8` orphaned q50 action/split-action
+  diagnostics). Verified with py-compile, `ruff check`, focused pipeline
+  pytest, strict manifest generation, and a manifest timestamp/canonical/alias
+  checker.
+- Added `Generated at:` timestamps to the generated scRNA branch-length and
+  distributional-action audit markdown reports, then reran both audit scripts.
+  The refreshed reports record timestamps
+  `2026-06-24T19:26:13+02:00` and `2026-06-24T19:26:17+02:00`, respectively.
+  Verified with py-compile, `ruff check`, focused pipeline/statistics pytest,
+  and direct artifact timestamp checks.
+- Promoted distributional action into a tested statistics helper. Added
+  `tree_break_selection/hierarchy_analysis/statistics/distributional_action.py`
+  with `edge_distributional_action` and `binary_split_distributional_action`,
+  wired the scRNA audit script through the helper, and added
+  `tests/statistics/47_test_distributional_action_contract.py`. The tests lock
+  the binary split variance identity and verify that edge action changes with
+  child-parent distributional movement while remaining independent of branch
+  length.
+- Extended the distributional-action helper with mass-bearing summary objects.
+  Edge summaries now expose `parent_mass`, `child_mass`, and
+  `child_parent_mass_fraction`; binary split summaries expose `left_mass`,
+  `right_mass`, `parent_mass`, and both child-parent mass fractions. The scRNA
+  audit script now uses the tested summary path for `child_parent_fraction` and
+  action values.
+- Integrated distributional action into the scRNA benchmark exporter and reran
+  the adult pancreas and Goncalves benchmarks. Current canonical TBS
+  `*_tree_edges.csv` files now include `distributional_action_parent_mass`,
+  `distributional_action_child_mass`,
+  `distributional_action_child_parent_mass_fraction`,
+  `distributional_action_squared_displacement`, `distributional_action`, and
+  `distributional_action_per_branch_length`. Added
+  `tests/pipeline/66_test_scrna_benchmark_distributional_action.py` so the
+  benchmark-export path verifies these columns on a generated tree edge table.
+- Added an off-by-default distributional-action edge-filter toggle to the TBS
+  benchmark runner and registered activated q50 topology rows for the adult
+  pancreas and Goncalves scRNA benchmarks. This first edge-local toggle is now
+  a superseded negative control. Rerunning both benchmarks showed that closing
+  child edges independently is destructive: adult adaptive-diffusion TBS drops
+  from `43` clusters, `ARI = 0.412704`, `NMI = 0.662011` to `26` clusters,
+  `ARI = 0.161019`, `NMI = 0.463299`; Goncalves adaptive-diffusion TBS
+  collapses from `24` clusters, `ARI = 0.205837`, `NMI = 0.409991` to one
+  cluster with zero ARI/NMI. The recursive distributional-action audit now
+  includes those superseded q50 rows and records `63,408` edge diagnostics.
+- Added [[barycentric-split-action-formula-20260624]] after revisiting the
+  barycentric internal-node view. The corrected formula is the parent split
+  action \(A(p)=\sum_i m_i\lVert\mu_i-\mu_p\rVert^2\), with binary form
+  \(A(p)=m_Lm_R(m_L+m_R)^{-1}\lVert\mu_L-\mu_R\rVert^2\). New tests verify
+  mass-tied child edge shares, the `1:99` counterexample where a tiny large-child
+  edge contribution still belongs to a large split, and recursive topology-level
+  inertia decomposition across internal nodes.
+- Rewrote the distributional-action activation path from edge-local filtering
+  to parent split-action filtering. The runner and dispatch parameters are now
+  `distributional_action_split_filter_policy` and
+  `distributional_action_split_filter_quantile`; the activated benchmark rows
+  are labeled split-action q50. The annotator writes child edge contributions
+  plus `Distributional_Split_Action_*` columns and closes or keeps whole parent
+  splits rather than individual children.
+- Reran the full adult pancreas and Goncalves fetal pancreas scRNA benchmarks
+  after the parent split-action rewrite, then reran
+  `scripts/audit_scrna_distributional_action.py`. The corrected q50 filter is
+  mathematically tied to parent splits, but it is not better as a benchmark
+  method: adult standardized-PCA TBS drops from `45` clusters and
+  `V = 0.602029` to `9` clusters and `V = 0.312426`; adult adaptive-diffusion
+  TBS drops from `43` clusters and `V = 0.662011` to `25` clusters and
+  `V = 0.462233`; Goncalves standardized-PCA and adaptive-diffusion split-action
+  q50 both collapse to one cluster with zero V-measure. The trace reason is
+  that q50 filters the small parent split nodes used by the unfiltered
+  traversal: `2/3` adult standardized-PCA split nodes, `5/6` adult adaptive
+  split nodes, and all `3/3` split nodes in both Goncalves geometries.
+- Corrected the distributional-action integration after auditing the actual
+  TBS gate formula and traversal. Non-`none` split-action filters now raise as
+  diagnostic-only until calibrated against the projected-Wald edge/sibling gate
+  system, the scRNA benchmark registry no longer registers `split-action q50`
+  rows, and the audit script no longer reads stale q50 files. Focused tests
+  passed (`42` tests), the continuous smoke rerun completed with guarded
+  within-child covariance at `9/9` ok and mean `ARI = 0.769202`, and the full
+  adult pancreas plus Goncalves scRNA benchmarks were rerun with `11` active
+  rows each and no action/split filter method labels. The refreshed
+  distributional-action audit records `47,556` canonical edge diagnostics, all
+  with `split_filter_policy = none` and `split_filter_filtered_count = 0`.
+- Updated and regenerated the MNIST Plotly report so the visible-label 3D UMAP
+  pages use centered digit text on larger marker hit targets while preserving
+  `Number:` hover labels. The refreshed files in
+  `raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/` were
+  generated on 2026-06-24 at 19:34 local time; focused tests and artifact
+  checks confirmed `Number:` hover templates for the 2D UMAP, visible-label 3D
+  UMAP, and docs-style 3D digit-colorbar UMAP pages.
+- Repaired the static MNIST TBS report provenance path in
+  `scripts/plot_mnist_tbs_analysis_report.py`. The regenerated static report
+  in `raw/assets/benchmark-results/mnist_tbs_analysis_20260624/` records
+  `generated_at = 2026-06-24T19:42:46+02:00` in the CSV, embeds the timestamp
+  in PDF metadata/pages, and adds a visible PNG footer. Focused tests, Ruff,
+  and direct artifact checks passed.
+- Repaired selected scRNA adaptive-diffusion NNLS report timestamp coverage so
+  standalone colored-tree/radial-tree PNG pages receive the `Generated at`
+  footer before `savefig`, matching the PDF and CSV provenance. The regenerated
+  selected NNLS full-report summary CSV records
+  `2026-06-24T19:38:32+02:00`; the one-plot-per-page fit-summary CSV records
+  `2026-06-24T19:38:33+02:00`. Focused tests, Ruff, direct artifact checks, and
+  PDF metadata checks passed.
+- Repaired the Goncalves progenitor-analysis provenance path in
+  `scripts/analyze_goncalves_tbs_progenitors.py`. The regenerated
+  `goncalves_progenitor_analysis_manifest.json` records
+  `generated_at = 2026-06-24T19:45:56+02:00`; the three directly generated
+  progenitor plots now include visible PNG footers and PDF metadata. Focused
+  tests, Ruff, and direct artifact checks passed.
+- Repaired the top-level Goncalves fetal pancreas benchmark provenance path in
+  `scripts/goncalves_pancreas_progenitor_benchmark.py`. The benchmark
+  `manifest.json` and `summary.md` now record
+  `generated_at = 2026-06-24T19:57:27+02:00`; these two files were refreshed
+  from existing benchmark outputs without rerunning the full clustering
+  benchmark. Focused tests, Ruff, and direct artifact checks passed.
+- Repaired the MNIST Plotly 3D hover targets in
+  `benchmarks/experiments/mnist/run_higher_categories.py` and
+  `scripts/plot_mnist_tbs_analysis_plotly.py`. The regenerated
+  `raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/index.html`
+  records `generated_at = 2026-06-24T20:04:03+02:00`; the 3D MNIST HTML files
+  now include larger transparent hover-picking traces whose tooltips begin with
+  the true digit `Number:`. Focused tests, Ruff, and direct artifact checks
+  passed.
+- Repaired the top-level adult pancreas benchmark provenance path in
+  `scripts/pancreas_scrna_cluster_benchmark.py`. The adult benchmark
+  `manifest.json` and `summary.md` now record
+  `generated_at = 2026-06-24T20:07:07+02:00`; these two files were refreshed
+  from existing benchmark outputs without rerunning the full clustering
+  benchmark. Focused tests, Ruff, py_compile, and direct artifact checks passed.
+- Repaired the categorical discrete covariance diagnostic provenance path in
+  `scripts/discrete_covariance_guard_diagnostic.py`. The representative
+  selected-node and all-suite-root output folders now include `manifest.json`
+  files with `generated_at = 2026-06-24T20:10:31+02:00`, created from existing
+  CSV outputs without rerunning the diagnostic computations. Focused tests,
+  Ruff, py_compile, direct artifact checks, and wiki-lint passed.
+- Repaired the benchmark failure-diagnosis report provenance path in
+  `benchmarks/diagnostics/failure/debug_trace.py`. Future benchmark
+  `failure_report.md` files now include a visible `Generated at:` line, and the
+  continuous distributional-action smoke failure report was refreshed from the
+  existing comparison CSV with `Generated at: 2026-06-24T20:14:29+02:00`.
+  Focused tests, Ruff, py_compile, direct artifact checks, and wiki-lint passed.
+- Repaired the scRNA edge gate distance/time report provenance path in
+  `scripts/pancreas_scrna_cluster_benchmark.py` and the Goncalves benchmark
+  call site. Future adult/Goncalves benchmark runs pass the benchmark
+  `generated_at` into `edge_gate_distance_time_model_analysis.md`; the existing
+  adult report now records `2026-06-24T20:07:07+02:00` and the Goncalves report
+  records `2026-06-24T19:57:27+02:00`. Focused tests, Ruff, py_compile, direct
+  artifact checks, and wiki-lint passed.
+- Refreshed the recent guarded continuous-covariance benchmark failure reports
+  with the timestamped `benchmarks/diagnostics/failure/debug_trace.py` helper.
+  The adaptive, original, and integrated guarded benchmark `failure_report.md`
+  files now record `Generated at: 2026-06-24T20:20:27+02:00`, regenerated from
+  existing comparison CSVs without rerunning the benchmarks. Focused tests,
+  Ruff, direct artifact checks, and wiki-lint passed.
+- Added explicit provenance to the static adult pancreas
+  `tbs_failure_diagnostic.md` artifact. No generator for this Markdown file is
+  present in the repo, so the original generation timestamp remains recorded as
+  unavailable; the artifact now states that provenance was added at
+  `2026-06-24T20:22:42+02:00`. Direct artifact checks and wiki-lint passed.
+- Audited recent `20260623`/`20260624` Markdown and HTML report artifacts under
+  `raw/assets/benchmark-results` for visible timestamp/provenance text. The scan
+  found `0` missing current report timestamps after the failure-report,
+  distance/time-report, plot-report, MNIST, and static diagnostic repairs.
+  This checkpoint covers current report surfaces only; older archived reports
+  remain untouched unless they become active evidence.
+- Added static provenance manifests for the Gaussian formula-rewrite CSV
+  evidence directories `gaussian_inner_node_debug_20260623` and
+  `gaussian_within_covariance_test_20260623`. Both manifests record
+  `provenance_timestamp = 2026-06-24T20:27:01+02:00`, row and column counts for
+  each CSV, and that the original generation timestamp was not recorded.
+  Direct manifest/CSV checks and wiki-lint passed.
+- Added static provenance for the continuous tree-geometry rethink evidence
+  directory `continuous_tree_geometry_rethink_20260623`. The new manifest
+  records `provenance_timestamp = 2026-06-24T20:30:09+02:00`, file sizes,
+  text-line counts, CSV row/column counts, and that the original text reports
+  only carried date-level provenance. Direct manifest/file checks and wiki-lint
+  passed.
+- Added a root-level static provenance manifest for the selected scRNA NNLS
+  report bundle. `scrna_selected_adaptive_diffusion_nnls_manifest.json` ties
+  together the full report PDF, individual PNG pages, fit-summary report, and
+  summary CSVs; it records `provenance_timestamp =
+  2026-06-24T20:32:41+02:00` and preserves the CSV generation timestamps
+  `2026-06-24T19:38:32+02:00` and `2026-06-24T19:38:33+02:00`. Direct
+  manifest/file checks and wiki-lint passed.
+- Repaired the MNIST Plotly UMAP hover labels at
+  `2026-06-24T20:39:03+02:00`. The existing 3D writer now includes sample ids
+  in its hover `customdata`, and the regenerated 2D/3D MNIST Plotly pages show
+  `Number`, `Sample`, and `Best TBS cluster` in point hovers. Focused
+  visualization tests, Ruff, direct generated-HTML checks, and wiki-lint
+  passed.
+- Added a static provenance manifest for the static MNIST TBS report bundle at
+  `2026-06-24T20:40:20+02:00`. The new
+  `raw/assets/benchmark-results/mnist_tbs_analysis_20260624/manifest.json`
+  ties together the one-plot-per-page PDF, summary PNG, and summary CSV with
+  file sizes, SHA-256 hashes, and the report `generated_at` value
+  `2026-06-24T19:42:46+02:00`. Direct manifest/hash/CSV checks, the focused
+  static-report timestamp test, Ruff, and wiki-lint passed.
+- Repaired the MNIST Plotly report provenance path in
+  `scripts/plot_mnist_tbs_analysis_plotly.py`. Regenerating the bundle now
+  writes `raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/manifest.json`
+  with `generated_at = 2026-06-24T20:43:54+02:00`, source inputs, file sizes,
+  SHA-256 hashes, and CSV row/column metadata; the Plotly summary CSV now also
+  has a `generated_at` column. Direct manifest/hash/CSV checks, generated HTML
+  hover checks, focused visualization tests, Ruff, and wiki-lint passed.
+- Repaired the scRNA audit provenance paths in
+  `scripts/audit_scrna_branch_length_effects.py` and
+  `scripts/audit_scrna_distributional_action.py`. Rerunning the two audit
+  generators now writes manifest files for
+  `scrna_branch_length_effect_audit_20260624` and
+  `scrna_distributional_action_audit_20260624`, each with
+  `generated_at = 2026-06-24T20:48:26+02:00`, source inputs, file sizes,
+  SHA-256 hashes, and CSV row/column metadata. Direct manifest/hash/CSV/report
+  checks, focused pipeline tests, Ruff, and wiki-lint passed.
+- Added static provenance for the continuous distributional-action smoke
+  diagnostic bundle. The new
+  `raw/assets/benchmark-results/distributional_action_continuous_smoke_20260624/manifest.json`
+  records `provenance_timestamp = 2026-06-24T20:51:24+02:00`, preserves the
+  failure-report timestamp `2026-06-24T20:14:29+02:00`, and records file sizes,
+  SHA-256 hashes, and CSV row/column counts for the comparison CSV and failure
+  report. A follow-up scan of recent `20260623`/`20260624` benchmark-result
+  folders found `0` remaining timestamp/provenance coverage gaps. Direct
+  manifest checks and wiki-lint passed.
+- Added `scripts/verify_recent_benchmark_provenance.py` to make the recent
+  benchmark-result provenance scan repeatable. The verifier checks active
+  `20260623`/`20260624` result folders for manifest files, visible report
+  timestamps, or timestamped CSV headers. It also validates
+  `static_artifact_provenance/v1` manifests against current artifact file
+  sizes, SHA-256 hashes, text line counts, and CSV row/column counts.
+  `tests/pipeline/78_test_recent_benchmark_provenance.py` covers the scan and
+  stale-manifest checks with small fixture directories. Running the verifier
+  against current `raw/assets/benchmark-results` reported `15` folders checked
+  and no gaps; focused pytest, Ruff, and wiki-lint passed.
+- Tightened the recent benchmark-result provenance verifier so static artifact
+  validation covers every manifest-like JSON file declaring
+  `static_artifact_provenance/v1`, including root-level `*_manifest.json` files
+  such as the selected scRNA NNLS report manifest. Added a fixture test that
+  proves stale row counts are caught in a root-level named manifest; focused
+  pytest, Ruff, the live verifier, and wiki-lint passed.
+- Tightened static provenance validation again so every
+  `static_artifact_provenance/v1` manifest must carry a top-level
+  `generated_at` or `provenance_timestamp`. The current active static manifests
+  already satisfy this, and the new fixture test proves a timestamp-free static
+  manifest fails validation. Focused pytest, Ruff, the live verifier, and
+  wiki-lint passed.
+- Extended the recent benchmark-result provenance verifier to validate
+  `plot_manifest.json` summaries. Rows marked `present`,
+  `orphaned_existing_file`, or `unclassified_existing_file` now have their plot
+  paths, byte counts, and SHA-256 hashes checked against the filesystem, and
+  `plot_count`, `status_counts`, and `role_counts` must match the manifest
+  rows. The new check caught stale Goncalves progenitor plot hashes, so
+  `scripts/run_scrna_plot_pipeline.py --dataset goncalves --strict` was rerun
+  without rerunning plot generators; the refreshed Goncalves plot manifest
+  records `generated_at = 2026-06-24T21:06:45+02:00` with `74` rows
+  (`66` present, `8` orphaned existing files). Focused pytest, Ruff, the live
+  verifier, and wiki-lint passed.
+- Extended the same verifier to cross-check each `plot_manifest.csv` against
+  its sibling `plot_manifest.json`. The CSV row count and each row's `plot_id`,
+  `path`, `role`, `status`, `sha256`, and `bytes` fields must now match the
+  JSON rows, closing a second stale-report surface for the scRNA plot pipeline.
+  Current adult pancreas and Goncalves plot manifests already satisfy the rule;
+  the focused fixture proves a stale CSV status is rejected. Focused pytest,
+  Ruff, the live verifier, and wiki-lint passed.
+- Extended recent manifest timestamp validation beyond static manifests. Every
+  manifest-like JSON file under active `20260623`/`20260624` result paths must
+  now carry one of `generated_at`, `provenance_timestamp`, or legacy
+  `run_at_utc`; the continuous guarded covariance benchmark manifests already
+  satisfy this through `run_at_utc`, so no artifact rewrite was needed. The
+  verifier CLI was also renamed to `--skip-manifest-validation` while keeping
+  `--skip-static-manifest-validation` as a compatibility alias. Focused pytest,
+  Ruff, the live verifier, and wiki-lint passed.
+- Extended recent manifest validation to check top-level file-reference fields
+  ending in `_csv`, `_md`, or `_json`. This covers generic benchmark manifests
+  that name result tables and failure reports outside the static-artifact
+  schema. The current active manifests reference `19` such CSV/Markdown/JSON
+  paths and all exist; the focused fixture proves a missing current
+  `results_csv` is rejected while older inactive dated manifests remain outside
+  the scan. Focused pytest, Ruff, the live verifier, and wiki-lint passed.
+- Extended recent manifest validation to check local `source_script`,
+  `source_scripts`, and `source_inputs` paths. The audit found one stale source
+  provenance entry in the static MNIST report manifest:
+  `ward_e0.001_s0.05_top_cluster_digit_composition.csv` did not exist. The
+  manifest now points to the actual best-run source file
+  `ward_e0.0001_s0.0001_top_cluster_digit_composition.csv`, matching the static
+  report generator's best-ARI key. The focused fixture proves a missing current
+  `source_script` is rejected while older inactive dated manifests remain
+  outside the scan. Focused pytest, Ruff, the live verifier, and wiki-lint
+  passed.
+- Extended static artifact manifest validation to check declared
+  `generated_at_values` for CSV artifacts. When a static manifest declares the
+  expected generated timestamp values, the verifier now reads the CSV
+  `generated_at` column and compares the unique values against the manifest.
+  The current static MNIST report CSV and MNIST Plotly summary CSV already
+  match their declared timestamp values; the focused fixture proves stale
+  declared CSV timestamps are rejected. Focused pytest, Ruff, the live verifier,
+  and wiki-lint passed.
+- Extended plot-manifest validation to check local `generator_script`
+  provenance for every plot row. Semicolon-separated generator script lists are
+  split and checked as local paths unless the value is `unknown` or an external
+  reference. The current adult pancreas and Goncalves plot manifests already
+  point to existing generator scripts; the focused fixture proves a missing
+  plot generator script is rejected while the plot artifact itself can otherwise
+  be valid. Focused pytest, Ruff, the live verifier, and wiki-lint passed.
+- Regenerated the MNIST Plotly report after making the UMAP hover labels
+  explicit about the true digit number. The 2D UMAP, three-panel 3D UMAP,
+  visible-label 3D UMAP, and docs-style 3D UMAP pages now start their hover
+  labels with `Digit number:`. The focused Plotly hover regression tests and
+  Ruff passed.
+- Extended plot-manifest validation to check exact local `input_tables` entries
+  for active `present` plot rows. Wildcard, unknown, and external inputs remain
+  skipped because they are not exact file claims. The current adult pancreas and
+  Goncalves plot manifests contain 160 exact present-row input-table references,
+  all of which resolve; the focused fixture proves a stale exact input table is
+  rejected. Focused pytest, Ruff, and the live recent benchmark provenance
+  verifier passed.
+- Extended plot-manifest CSV parity validation from the original core fields
+  to every field present in `plot_manifest.csv`. The current adult pancreas and
+  Goncalves plot manifest CSV files already match their JSON rows for all CSV
+  header fields, including `generator_script`, `input_tables`, `notes`, and
+  stage metadata; the focused fixture proves a stale CSV `input_tables` value is
+  rejected. Focused pytest, Ruff, and the live recent benchmark provenance
+  verifier passed.
+- Extended recent benchmark manifest validation from timestamp presence to
+  parseable ISO timestamp values for `generated_at`, `provenance_timestamp`, and
+  `run_at_utc`. All 23 current manifest timestamp values under
+  `raw/assets/benchmark-results` parse successfully; focused fixtures now reject
+  malformed recent, static, and plot-manifest timestamps. Focused pytest, Ruff,
+  and the live recent benchmark provenance verifier passed.
+- Extended recent CSV timestamp validation so CSV files with `generated_at` or
+  `provenance_timestamp` columns must contain at least one non-empty parseable
+  ISO timestamp value per timestamp column. The current recent benchmark CSVs
+  contain six timestamp values and all parse successfully; focused fixtures now
+  reject malformed and empty recent CSV timestamp columns while ignoring older
+  inactive folders outside the scan pattern. Focused pytest, Ruff, and the live
+  recent benchmark provenance verifier passed.
+- Extended recent text/HTML timestamp validation so files with explicit
+  timestamp labels such as `Generated at` or `Provenance timestamp` must include
+  parseable ISO timestamp values. The current recent benchmark markdown/HTML
+  reports contain 12 timestamp labels, including the MNIST Plotly HTML index,
+  and all parse successfully after simple HTML tag stripping; focused fixtures
+  now reject timestamp labels without parseable values and accept the current
+  HTML generated-at format. Focused pytest, Ruff, and the live recent benchmark
+  provenance verifier passed.
+- Extended static artifact manifest validation so CSV artifacts with
+  `generated_at` or `provenance_timestamp` columns must declare the matching
+  unique timestamp values in the manifest. This found a real metadata gap in
+  `scrna_selected_adaptive_diffusion_nnls_manifest.json`; its two timestamped
+  CSV artifact records now declare `generated_at_values` matching the current
+  CSV contents. Focused pytest, Ruff, and the live recent benchmark provenance
+  verifier passed.
+- Extended static artifact manifest validation to check declared local
+  `source_script`, `source_scripts`, and `source_inputs` paths even for
+  root-level static manifests whose filenames do not match the active date
+  pattern. The current static manifests declare 20 local source references and
+  all resolve; three older static manifests have no source fields and were not
+  forced to add new claims. Focused pytest, Ruff, and the live recent benchmark
+  provenance verifier passed.
+- Extended static artifact manifest validation to require `sha256` for every
+  listed artifact, not just compare hashes when they happen to be present. This
+  found 28 artifact records without hashes across the continuous geometry,
+  Gaussian debug/covariance, and selected scRNA NNLS static manifests; each now
+  records a `sha256` computed from the current artifact file. Focused pytest,
+  Ruff, and the live recent benchmark provenance verifier passed.
+- Extended static artifact manifest validation to require `bytes` for every
+  listed artifact, not just compare byte counts when present. This found 13
+  artifact records without byte counts in the continuous geometry and Gaussian
+  debug/covariance static manifests; each now records the current artifact file
+  size. Focused pytest, Ruff, and the live recent benchmark provenance verifier
+  passed.
+- Extended static artifact manifest validation to require `rows` and `columns`
+  for every CSV artifact, not just compare shape metadata when present. The
+  current static manifests already had complete shape metadata for all 24 CSV
+  artifacts, so no artifact metadata repair was required. Focused pytest, Ruff,
+  and the live recent benchmark provenance verifier passed.
+- Extended static artifact manifest validation to require `lines` for plain
+  text artifacts (`.md` and `.txt`), not just compare line counts when present.
+  This found three markdown artifact records without line counts in the
+  distributional-action smoke and scRNA audit manifests; each now records the
+  current file line count. Focused pytest, Ruff, and the live recent benchmark
+  provenance verifier passed.
+- Extended plot-manifest validation so each `plot_manifest.json` pins its
+  sibling `plot_manifest.csv` with `manifest_csv_bytes` and
+  `manifest_csv_sha256`, in addition to row-by-row parity checks. The adult
+  pancreas and Goncalves plot manifests now record byte counts and SHA-256
+  hashes for their CSV manifests. Focused pytest, Ruff, and the live recent
+  benchmark provenance verifier passed.
+- Extended manifest timestamp validation beyond the core top-level timestamp
+  fields to any top-level field whose name contains `timestamp` or
+  `generated_at`, including list-valued fields such as
+  `generated_artifact_timestamps`. Current recent/static manifest timestamp-like
+  fields parse successfully; the focused fixture now rejects malformed
+  timestamp-list entries. Focused pytest, Ruff, and the live recent benchmark
+  provenance verifier passed.
+- Regenerated the MNIST Plotly report after enlarging all 3D UMAP transparent
+  hover-target traces to 24 px so hovering over dense digit labels exposes the
+  `Digit number` tooltip more reliably. The focused hover tests, Ruff, and the
+  live recent benchmark provenance verifier passed.
+- Extended recent manifest reference validation so top-level `_csv`, `_md`, and
+  `_json` path claims are checked when stored as either strings or lists of
+  strings. The current recent manifests only use string-valued reference fields,
+  but the regression fixture now covers list-valued `results_csv`; focused
+  pytest, Ruff, and the live recent benchmark provenance verifier passed.
+- Tightened manifest source/reference path-field validation so malformed
+  declared path fields are reported instead of being skipped. The current recent
+  manifests use valid string or list-of-string source/reference fields; focused
+  fixtures now reject malformed `results_csv` and `source_inputs` fields, and
+  focused pytest, Ruff, and the live recent benchmark provenance verifier
+  passed.
+- Tightened static artifact numeric metadata validation so `bytes`, `rows`,
+  `columns`, and `lines` must be real JSON integers, not booleans or other
+  types that can compare equal accidentally in Python. The current static
+  artifact manifests already use integer numeric metadata; focused fixtures now
+  reject boolean byte and CSV-shape metadata, and focused pytest, Ruff, and the
+  live recent benchmark provenance verifier passed.
+- Tightened plot-manifest numeric metadata validation so `plot_count`,
+  `manifest_csv_bytes`, and per-plot `bytes` must be real JSON integers. The
+  current adult pancreas and Goncalves plot manifests already use integer
+  numeric metadata; focused fixtures now reject boolean plot-count, manifest
+  CSV byte, and plot byte fields, and focused pytest, Ruff, and the live recent
+  benchmark provenance verifier passed.
+- Hardened plot-manifest row validation so non-object rows are reported as row
+  errors instead of crashing during `status_counts` or `role_counts`
+  recomputation. Current adult pancreas and Goncalves plot manifests contain
+  only object rows; the focused malformed-row fixture now returns a clean
+  validation error, and focused pytest, Ruff, and the live recent benchmark
+  provenance verifier passed.
+- Tightened static artifact string metadata validation so artifact `sha256`
+  values must be non-empty strings and CSV timestamp-value declarations such as
+  `generated_at_values` must be lists of strings. Current static artifact
+  manifests already satisfy these type contracts; focused fixtures now reject
+  boolean hashes and malformed timestamp-value lists, and focused pytest, Ruff,
+  and the live recent benchmark provenance verifier passed.
+- Tightened plot-manifest hash metadata validation so `manifest_csv_sha256` and
+  per-plot `sha256` values must be non-empty strings before digest comparison.
+  Current adult pancreas and Goncalves plot manifests already satisfy these
+  type contracts; focused fixtures now reject boolean manifest-CSV and plot hash
+  fields, and focused pytest, Ruff, and the live recent benchmark provenance
+  verifier passed.
+- Tightened plot-manifest count-map validation so `status_counts` and
+  `role_counts` must be dictionaries from strings to real JSON integers before
+  comparing them with recomputed row counts. Current adult pancreas and
+  Goncalves plot manifests already satisfy this type contract; the focused
+  fixture now rejects boolean count values, and focused pytest, Ruff, and the
+  live recent benchmark provenance verifier passed.
+- Tightened manifest timestamp-field validation so timestamp-like fields must
+  hold ISO timestamp strings or lists of ISO timestamp strings, while
+  non-timestamp provenance fields such as `report_generated_at_source` remain
+  allowed. Removed four `original_generation_timestamp: null` entries from
+  repaired manifests where notes already state that the original generation
+  timestamp was not recorded. Focused pytest, Ruff, and the live recent
+  benchmark provenance verifier passed.
+- Regenerated the MNIST Plotly report after changing the 2D and 3D UMAP hover
+  traces to carry resolved per-point hover text such as `Digit number: 0`,
+  rather than relying only on Plotly `customdata` placeholders. The focused
+  MNIST hover regression tests, Ruff, and a Chrome-side Plotly data check
+  passed.
+- Added a canonical matched adult/Goncalves selected NNLS-TBS report so both
+  scRNA analyses use the same page structure: selected-cluster UMAP, real full
+  radial tree, metric box, and cluster-size/dominant-label panel. The matched
+  report writes a timestamped PDF, two page PNGs, a summary CSV, and a manifest;
+  focused py_compile, Ruff, and the selected scRNA timestamp regression passed.
 
 ## Evidence
 

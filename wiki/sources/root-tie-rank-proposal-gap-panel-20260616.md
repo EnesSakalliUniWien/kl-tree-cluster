@@ -6,9 +6,7 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/root_tie_rank_proposal_gap_panel.py
   - tests/validation/159_test_root_tie_rank_proposal_gap_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_proposal_gap_panel_two_case_smoke/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_proposal_gap_panel_two_case_smoke/root_tie_rank_proposal_gap_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_proposal_gap_panel_two_case_smoke/root_tie_rank_proposal_gap_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_proposal_gap_panel_two_case_smoke
 tags:
   - source
   - diagnostics

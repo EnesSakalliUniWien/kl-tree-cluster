@@ -49,7 +49,6 @@ sources:
   - raw/assets/benchmark-results/mp_kmin_q14_q15_smoke_20260604/mp_kmin_contract_smoke.csv
   - wiki/sources/barycentric-method-literature-request-20260604.md
   - raw/inbox/barycentric-method-literature-request-20260604.txt
-  - manuscript/sections/method/representation.tex
   - manuscript/sections/method/notation.tex
   - manuscript/references.bib
   - wiki/sources/open-question-diagnostic-audit-20260604.md

@@ -6,10 +6,7 @@ updated: 2026-06-17
 sources:
   - benchmarks/diagnostics/calibration/selected_neighborhood_conditional_support_panel.py
   - tests/validation/187_test_selected_neighborhood_conditional_support_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_conditional_support_overlap_expanded_candidates/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_conditional_support_overlap_expanded_candidates/selected_neighborhood_conditional_support_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_conditional_support_overlap_expanded_candidates/selected_neighborhood_conditional_support_case_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_conditional_support_overlap_expanded_candidates/selected_neighborhood_conditional_support_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_conditional_support_overlap_expanded_candidates
 tags:
   - source
   - diagnostics

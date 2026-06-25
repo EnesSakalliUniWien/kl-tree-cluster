@@ -6,9 +6,7 @@ updated: 2026-06-17
 sources:
   - benchmarks/diagnostics/calibration/root_selected_kernel_spectral_tail_law_panel.py
   - tests/validation/184_test_root_selected_kernel_spectral_tail_law_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_kernel_spectral_tail_law_20260617/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_kernel_spectral_tail_law_20260617/root_selected_kernel_spectral_tail_law_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_kernel_spectral_tail_law_20260617/root_selected_kernel_spectral_tail_law_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_kernel_spectral_tail_law_20260617
 tags:
   - source
   - diagnostics

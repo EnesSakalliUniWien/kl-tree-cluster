@@ -6,11 +6,9 @@ updated: 2026-06-17
 sources:
   - benchmarks/diagnostics/calibration/root_selected_spectral_tail_law_panel.py
   - tests/validation/169_test_root_selected_spectral_tail_law_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_spectral_tail_law_with_legacy_overlay/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_spectral_tail_law_with_legacy_overlay/root_selected_spectral_tail_law_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_spectral_tail_law_with_legacy_overlay/root_selected_spectral_tail_law_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel/legacy_c2ef9a69_method_comparison_pairwise.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel/legacy_internal_spectral_comparison_pairwise.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_spectral_tail_law_with_legacy_overlay
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_internal_spectral_comparison_panel
 tags:
   - source
   - diagnostics

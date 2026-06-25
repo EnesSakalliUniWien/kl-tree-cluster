@@ -8,10 +8,7 @@ sources:
   - tests/validation/190_test_legacy_c2ef9a69_edge_alpha_comparison_panel.py
   - benchmarks/diagnostics/calibration/legacy_c2ef9a69_method_comparison_panel.py
   - benchmarks/shared/runners/legacy_commit_runner.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_edge_alpha_overlap_comparison_20260617/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_edge_alpha_overlap_comparison_20260617/legacy_c2ef9a69_edge_alpha_comparison_pairwise.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_edge_alpha_overlap_comparison_20260617/legacy_c2ef9a69_edge_alpha_comparison_alpha_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_edge_alpha_overlap_comparison_20260617/legacy_c2ef9a69_edge_alpha_comparison_tradeoff_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_edge_alpha_overlap_comparison_20260617
 tags:
   - source
   - diagnostics

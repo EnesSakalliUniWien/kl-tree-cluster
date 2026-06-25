@@ -6,10 +6,7 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/root_tie_rank_calibration_feasibility.py
   - tests/validation/156_test_root_tie_rank_calibration_feasibility.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_calibration_feasibility_overlap_case_family/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_calibration_feasibility_overlap_case_family/root_tie_rank_calibration_feasibility_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_calibration_feasibility_overlap_case_family/root_tie_rank_calibration_feasibility_strata.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_calibration_feasibility_overlap_case_family/root_tie_rank_calibration_feasibility_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_calibration_feasibility_overlap_case_family
 tags:
   - source
   - diagnostics

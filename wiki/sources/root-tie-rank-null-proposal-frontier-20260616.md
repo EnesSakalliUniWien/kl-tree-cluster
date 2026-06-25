@@ -6,11 +6,7 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/root_tie_rank_null_proposal_frontier.py
   - tests/validation/158_test_root_tie_rank_null_proposal_frontier.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_null_proposal_frontier_two_case_smoke/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_null_proposal_frontier_two_case_smoke/root_tie_rank_null_proposal_mixed_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_null_proposal_frontier_two_case_smoke/root_tie_rank_null_proposal_target_frontier.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_null_proposal_frontier_two_case_smoke/root_tie_rank_null_proposal_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_null_proposal_frontier_two_case_smoke/root_tie_rank_null_proposal_combined_feasibility_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_null_proposal_frontier_two_case_smoke
 tags:
   - source
   - diagnostics

@@ -6,14 +6,8 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/overlap_method_clustering_comparison.py
   - tests/validation/142_test_overlap_method_clustering_comparison.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison/overlap_method_clustering_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison/overlap_method_clustering_pairwise.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison/overlap_method_clustering_summary.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison_binary_suite/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison_binary_suite/overlap_method_clustering_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison_binary_suite/overlap_method_clustering_pairwise.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison_binary_suite/overlap_method_clustering_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/overlap_method_clustering_comparison_binary_suite
 tags:
   - source
   - diagnostics

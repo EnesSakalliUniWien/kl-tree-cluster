@@ -6,11 +6,8 @@ updated: 2026-06-15
 sources:
   - benchmarks/diagnostics/calibration/retained_pass_through_topology_likelihood_panel.py
   - tests/validation/138_test_retained_pass_through_topology_likelihood_panel.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/retained_pass_through_topology_likelihood/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_distribution/selected_neighborhood_distribution_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/retained_pass_through_topology_likelihood/retained_pass_through_topology_likelihood_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/retained_pass_through_topology_likelihood/retained_pass_through_topology_match_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/retained_pass_through_topology_likelihood/retained_pass_through_topology_likelihood_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/retained_pass_through_topology_likelihood
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/selected_neighborhood_distribution
 tags:
   - source
   - diagnostics

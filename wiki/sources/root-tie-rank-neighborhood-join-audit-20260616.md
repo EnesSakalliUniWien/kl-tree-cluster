@@ -6,9 +6,7 @@ updated: 2026-06-16
 sources:
   - benchmarks/diagnostics/calibration/root_tie_rank_neighborhood_join_audit.py
   - tests/validation/162_test_root_tie_rank_neighborhood_join_audit.py
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_neighborhood_join_audit_two_case_smoke/manifest.json
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_neighborhood_join_audit_two_case_smoke/root_tie_rank_neighborhood_join_audit_rows.csv
-  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_neighborhood_join_audit_two_case_smoke/root_tie_rank_neighborhood_join_audit_summary.csv
+  - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_tie_rank_neighborhood_join_audit_two_case_smoke
 tags:
   - source
   - diagnostics
