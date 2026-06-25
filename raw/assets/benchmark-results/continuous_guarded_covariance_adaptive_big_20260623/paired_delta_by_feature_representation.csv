@@ -1,0 +1,7 @@
+feature_representation,n,improved,tied,regressed,mean_delta,min_delta,max_delta
+binary,35,0,35,0,0.0,0.0,0.0
+categorical_one_hot,20,0,20,0,0.0,0.0,0.0
+continuous,11,4,7,0,0.2720908133010044,0.0,1.0
+graph_adjacency,3,0,3,0,0.0,0.0,0.0
+median_binary,26,0,26,0,0.0,0.0,0.0
+quantile_one_hot,3,0,3,0,0.0,0.0,0.0

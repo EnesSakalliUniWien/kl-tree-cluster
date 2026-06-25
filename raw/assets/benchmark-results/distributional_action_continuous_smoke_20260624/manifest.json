@@ -1,0 +1,27 @@
+{
+  "manifest_schema_version": "static_artifact_provenance/v1",
+  "bundle": "distributional_action_continuous_smoke_20260624",
+  "provenance_timestamp": "2026-06-24T20:51:24+02:00",
+  "failure_report_generated_at": "2026-06-24T20:14:29+02:00",
+  "source_script": "benchmarks/diagnostics/failure/debug_trace.py",
+  "artifacts": [
+    {
+      "path": "raw/assets/benchmark-results/distributional_action_continuous_smoke_20260624/continuous_benchmark_comparison.csv",
+      "bytes": 16511,
+      "sha256": "60188058e5bdf5c09d2b81d165a97725ad50deb086c6a0c448f63a661ffba549",
+      "rows": 18,
+      "columns": 62
+    },
+    {
+      "path": "raw/assets/benchmark-results/distributional_action_continuous_smoke_20260624/failure_report.md",
+      "bytes": 805,
+      "sha256": "c08c6ce85d9bb5ce4fc3242af6595163e354be73b52b7c083074381e3ddbd72d",
+      "generated_at": "2026-06-24T20:14:29+02:00",
+      "lines": 13
+    }
+  ],
+  "notes": [
+    "Static sidecar added after generation to tie the continuous smoke comparison CSV and failure report together.",
+    "The failure report records its generation timestamp; the comparison CSV does not record an original generation timestamp."
+  ]
+}

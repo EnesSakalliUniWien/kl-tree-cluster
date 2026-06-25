@@ -1,0 +1,31 @@
+{
+  "schema_version": "continuous_guarded_covariance_adaptive_big_benchmark/v1",
+  "run_at_utc": "2026-06-23T15:01:38.953207+00:00",
+  "command": "TBS_CASE_SUITE=full TBS_METHODS=tbs,tbs_continuous_guarded_within_covariance TBS_ENABLE_PLOTS=0 TBS_RUN_RELATIONSHIP_ANALYSIS=0 TBS_RUN_DIR=... TBS_N_JOBS=1 uv run python benchmarks/full/run.py",
+  "suite": "full",
+  "n_cases": 121,
+  "methods": [
+    "tbs",
+    "tbs_continuous_guarded_within_covariance"
+  ],
+  "results_csv": "raw/assets/benchmark-results/continuous_guarded_covariance_adaptive_big_20260623/full_benchmark_comparison.csv",
+  "comparison_csv": "raw/assets/benchmark-results/continuous_guarded_covariance_adaptive_big_20260623/tbs_vs_guarded_case_comparison.csv",
+  "paired_delta_by_feature_representation_csv": "raw/assets/benchmark-results/continuous_guarded_covariance_adaptive_big_20260623/paired_delta_by_feature_representation.csv",
+  "summary_by_category_csv": "raw/assets/benchmark-results/continuous_guarded_covariance_adaptive_big_20260623/summary_by_category.csv",
+  "failure_report_md": "raw/assets/benchmark-results/continuous_guarded_covariance_adaptive_big_20260623/failure_report.md",
+  "status_counts": {
+    "tbs": {
+      "ok": 98,
+      "skip": 23
+    },
+    "tbs_continuous_guarded_within_covariance": {
+      "ok": 100,
+      "skip": 21
+    }
+  },
+  "notes": [
+    "Run after removing the benchmark-level continuous-feature-space skip guard and making fixed-coordinate sibling gating continuous-family adaptive.",
+    "Continuous feature-space rows use guarded within-child covariance plus fixed-coordinate BH; non-continuous rows use default TBS sibling gating and existing discrete covariance paths.",
+    "No paired regressions occurred; improvements are confined to continuous feature-space cases where the Gaussian covariance policy is active, plus one default TBS skip rescued on a continuous stress case."
+  ]
+}

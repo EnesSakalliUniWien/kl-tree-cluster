@@ -1,0 +1,24 @@
+{
+  "case_set": "default",
+  "cases": [
+    "binary_null_small",
+    "binary_null_medium",
+    "binary_2clusters",
+    "binary_moderate_4c",
+    "overlap_heavy_4c_small_feat",
+    "overlap_unbal_4c_small",
+    "cat_null_3cat_120x60",
+    "cat_clear_3cat_4c",
+    "cat_mod_3cat_4c",
+    "cat_highcard_20cat_4c",
+    "cat_overlap_3cat_4c",
+    "cat_simplex_face_rare_20cat",
+    "cat_dirichlet_overdispersed_20cat"
+  ],
+  "command": "python scripts/discrete_covariance_guard_diagnostic.py",
+  "generated_at": "2026-06-24T20:10:31+02:00",
+  "node_rows": 2697,
+  "output_dir": "raw/assets/benchmark-results/discrete_covariance_guard_check_20260623",
+  "root_only": false,
+  "summary_rows": 32
+}

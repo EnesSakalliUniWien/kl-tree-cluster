@@ -1,0 +1,43 @@
+{
+  "manifest_schema_version": "static_artifact_provenance/v1",
+  "generated_at": "2026-06-24T22:26:26+02:00",
+  "output_dir": "assets/benchmark-results",
+  "source_scripts": [
+    "scripts/plot_selected_scrna_nnls_matched_report.py",
+    "scripts/plot_selected_scrna_nnls_report.py",
+    "scripts/plot_selected_scrna_nnls_fit_summary.py"
+  ],
+  "selected_method_column": "tbs_adaptive_diffusion_branch_time_recomputed_nnls_projected_adaptive_k90_alpha0p01_edge0p001",
+  "artifacts": [
+    {
+      "path": "scrna_selected_adaptive_diffusion_nnls_matched_report.pdf",
+      "role": "matched adult/Goncalves report PDF",
+      "bytes": 1323862,
+      "sha256": "49190d1ce9cc4237042c7d1abb94b98513cd681243a13f5a2f82bc2fdcfca645"
+    },
+    {
+      "path": "scrna_selected_adaptive_diffusion_nnls_matched_adult_page.png",
+      "role": "matched adult report page PNG",
+      "bytes": 635223,
+      "sha256": "4e803454d6f2b1fa396fefd494ba04235421743f45b217e6998c8996c0f0c19a"
+    },
+    {
+      "path": "scrna_selected_adaptive_diffusion_nnls_matched_goncalves_page.png",
+      "role": "matched Goncalves report page PNG",
+      "bytes": 918321,
+      "sha256": "4e079c4661ce264e08f8c6c1d3bb714017bcdece2ec4211e1b07ff9029760a9d"
+    },
+    {
+      "path": "scrna_selected_adaptive_diffusion_nnls_matched_summary.csv",
+      "role": "matched adult/Goncalves summary table",
+      "bytes": 644,
+      "sha256": "6205d2b0d713684d5d7dc711644f7f6e1ccef0598237529eee972eb683f06323",
+      "rows": 2,
+      "columns": 14,
+      "generated_at": "2026-06-24T22:26:26+02:00",
+      "generated_at_values": [
+        "2026-06-24T22:26:26+02:00"
+      ]
+    }
+  ]
+}

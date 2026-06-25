@@ -1,0 +1,53 @@
+{
+  "artifacts": [
+    {
+      "columns": 17,
+      "path": "node_covariance_variant_statistics.csv",
+      "rows": 30,
+      "sha256": "9eba07c5c215a8dea93774177b7a66139a958930b4d303f21bdce6161bc85fcf",
+      "bytes": 6613
+    },
+    {
+      "columns": 15,
+      "path": "pipeline_covariance_variant_summary.csv",
+      "rows": 36,
+      "sha256": "4d415656129c80e00fb40a8588349678081d8161d289aae25f81dbd48ee5cdce",
+      "bytes": 10007
+    },
+    {
+      "columns": 16,
+      "path": "pipeline_covariance_variant_by_sibling_gate.csv",
+      "rows": 144,
+      "sha256": "2985f31952677a1217991fed2d04b3b90eb1aae578c1c5894485c2df0df3651f",
+      "bytes": 34656
+    },
+    {
+      "columns": 15,
+      "path": "pipeline_guarded_within_covariance_focused.csv",
+      "rows": 56,
+      "sha256": "06ebaae38deb09d3aa3d556e304e8d5bd1e86fe20aca42f46e063d1f47b029f0",
+      "bytes": 8148
+    },
+    {
+      "columns": 12,
+      "path": "pipeline_guarded_full_within_active_time.csv",
+      "rows": 12,
+      "sha256": "8b43492a90a403ecf2d49c36f2c4e673a28ccb61b0536faf261db9463b4f6190",
+      "bytes": 1550
+    },
+    {
+      "columns": 10,
+      "path": "pipeline_guarded_full_within_default_empirical_active_time.csv",
+      "rows": 4,
+      "sha256": "bca98f1f6003454bf7e317054db48c0cbbbb5da247dfa78c3ed59334ae556918",
+      "bytes": 432
+    }
+  ],
+  "manifest_schema_version": "static_artifact_provenance/v1",
+  "notes": [
+    "Original generation timestamp was not recorded in the CSV artifacts.",
+    "This manifest was added as a provenance repair without rerunning the diagnostic."
+  ],
+  "output_dir": "raw/assets/benchmark-results/gaussian_within_covariance_test_20260623",
+  "provenance_timestamp": "2026-06-24T20:27:01+02:00"
+}

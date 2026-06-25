@@ -1,0 +1,47 @@
+{
+  "manifest_schema_version": "static_artifact_provenance/v1",
+  "bundle": "scrna_distributional_action_audit_20260624",
+  "generated_at": "2026-06-24T20:48:26+02:00",
+  "source_script": "scripts/audit_scrna_distributional_action.py",
+  "source_inputs": [
+    "raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623",
+    "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624"
+  ],
+  "artifacts": [
+    {
+      "path": "raw/assets/benchmark-results/scrna_distributional_action_audit_20260624/scrna_distributional_action_edges.csv",
+      "bytes": 33098128,
+      "sha256": "ec6b0bd14b5c357cd68a1c15cbdc60d06f9260da87e7fddfcb8a2c02244cad9a",
+      "rows": 47556,
+      "columns": 51
+    },
+    {
+      "path": "raw/assets/benchmark-results/scrna_distributional_action_audit_20260624/scrna_distributional_action_method_summary.csv",
+      "bytes": 5499,
+      "sha256": "64ed29ac7857778fcbf5b270029aae70f1a8fa7999327e09e3c123dd4e6467ec",
+      "rows": 12,
+      "columns": 26
+    },
+    {
+      "path": "raw/assets/benchmark-results/scrna_distributional_action_audit_20260624/distributional_action_vs_branch_length.png",
+      "bytes": 1126364,
+      "sha256": "0eba5d1d3d848d1fd05d4c0b3972c4562c9cf39af4d391d4b0878c9f821420fe"
+    },
+    {
+      "path": "raw/assets/benchmark-results/scrna_distributional_action_audit_20260624/top_internal_distributional_action_edges.png",
+      "bytes": 198308,
+      "sha256": "4787b0cc83c3734861bc3c79fd68fdd1dc28a2590ed30b4f26033ae146f6049d"
+    },
+    {
+      "path": "raw/assets/benchmark-results/scrna_distributional_action_audit_20260624/distributional_action_vs_edge_statistic.png",
+      "bytes": 204263,
+      "sha256": "618d802d014013067a95cfaa56064423cc60dc3ff2fbcc32f9d0d27865717cf5"
+    },
+    {
+      "path": "raw/assets/benchmark-results/scrna_distributional_action_audit_20260624/scrna_distributional_action_audit.md",
+      "bytes": 15637,
+      "sha256": "286a123a60bca22cbc792a7100b54362f6d79106dc8dca82606301fefb10134a",
+      "lines": 100
+    }
+  ]
+}

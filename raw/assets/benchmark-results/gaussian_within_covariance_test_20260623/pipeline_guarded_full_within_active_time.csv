@@ -1,0 +1,13 @@
+case_id,model,min_child_size,status,found_clusters,ari,open_sibling_nodes,significant_child_edges,root_sibling_p,root_child_edge_min_p,root_raw_mp_signal_count,error
+gauss_clear_medium_continuous,guard_full_within_min8_active_time,8,ok,4,1.0,3,6,1.9087180836843947e-139,0.0,1,
+gauss_clear_medium_continuous,guard_full_within_min12_active_time,12,ok,4,1.0,3,6,1.9087180836843947e-139,0.0,1,
+gauss_clear_medium_continuous,guard_full_within_min15_active_time,15,ok,4,1.0,3,6,1.9087180836843947e-139,0.0,1,
+gauss_moderate_3c_continuous,guard_full_within_min8_active_time,8,ok,3,1.0,2,4,9.694249236505881e-209,0.0,1,
+gauss_moderate_3c_continuous,guard_full_within_min12_active_time,12,ok,3,1.0,2,4,9.694249236505881e-209,0.0,1,
+gauss_moderate_3c_continuous,guard_full_within_min15_active_time,15,ok,3,1.0,2,4,9.694249236505881e-209,0.0,1,
+gauss_null_large_continuous,guard_full_within_min8_active_time,8,ok,1,1.0,0,0,0.35434313064225836,0.45297876811717885,0,
+gauss_null_large_continuous,guard_full_within_min12_active_time,12,ok,1,1.0,0,0,0.35434313064225836,0.45297876811717885,0,
+gauss_null_large_continuous,guard_full_within_min15_active_time,15,ok,1,1.0,0,0,0.35434313064225836,0.45297876811717885,0,
+dim_consolidated_4c_24f_continuous,guard_full_within_min8_active_time,8,ok,4,1.0,3,6,7.4539244297621715e-78,0.0,1,
+dim_consolidated_4c_24f_continuous,guard_full_within_min12_active_time,12,ok,4,1.0,3,6,7.4539244297621715e-78,0.0,1,
+dim_consolidated_4c_24f_continuous,guard_full_within_min15_active_time,15,ok,4,1.0,3,6,7.4539244297621715e-78,0.0,1,

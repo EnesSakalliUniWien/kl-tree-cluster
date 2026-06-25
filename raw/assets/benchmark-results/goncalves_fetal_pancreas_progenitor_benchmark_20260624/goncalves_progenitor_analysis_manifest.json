@@ -1,0 +1,18 @@
+{
+  "cells": 1465,
+  "elapsed_sec": 2.725385917001404,
+  "generated_at": "2026-06-24T19:45:56+02:00",
+  "inner_nodes": 1464,
+  "mapped_markers": 37,
+  "method_key": "tbs_adaptive_diffusion_topology_projected_adaptive_k90_alpha0p01_edge0p001",
+  "monophyletic_meeting_nodes": 23,
+  "output_dir": "/Users/berksakalli/Projects/kl-te-cluster/raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624",
+  "progenitor_populations": [
+    "proliferating",
+    "tip",
+    "trunk"
+  ],
+  "raw_genes": 28237,
+  "requested_markers": 39,
+  "script": "/Users/berksakalli/Projects/kl-te-cluster/scripts/analyze_goncalves_tbs_progenitors.py"
+}

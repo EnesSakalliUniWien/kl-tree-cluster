@@ -1,0 +1,45 @@
+{
+  "artifacts": [
+    {
+      "bytes": 4111,
+      "lines": 97,
+      "path": "compact_family_results.txt",
+      "sha256": "3e8d0d751b9fa656eaf150660a7f403be069144b86a5d7bd5db21bd5c39a32a8"
+    },
+    {
+      "bytes": 2667,
+      "lines": 44,
+      "path": "compact_family_results_after_patch.txt",
+      "sha256": "4f7d2182c387871af6e931db83717001892c6352de867ee550dd1e87b99949e0"
+    },
+    {
+      "columns": 8,
+      "path": "compact_family_method_results_after_patch.csv",
+      "rows": 24,
+      "sha256": "06978dd3a79ce33cdb15f64c47c07d05d604a3c6809ee853b4905ef91d72fe01",
+      "bytes": 3132
+    },
+    {
+      "columns": 11,
+      "path": "compact_family_oracle_results_after_patch.csv",
+      "rows": 6,
+      "sha256": "e0ee4459728ae5f56c78568c5e460a86edef3b442bd85872aa0164a7e3c3bc13",
+      "bytes": 918
+    },
+    {
+      "columns": 35,
+      "path": "continuous_geometry_spectral_size_eigen_diagnostics.csv",
+      "rows": 8,
+      "sha256": "2ee44223b8d2d2937d7ac216c3c834c13a40e267fd85d4e7eec74d9c85fa6c7b",
+      "bytes": 5099
+    }
+  ],
+  "manifest_schema_version": "static_artifact_provenance/v1",
+  "notes": [
+    "The text reports record date-level provenance as 2026-06-23 but not a full generation timestamp.",
+    "This manifest was added as a provenance repair without rerunning the diagnostic."
+  ],
+  "original_generation_date": "2026-06-23",
+  "output_dir": "raw/assets/benchmark-results/continuous_tree_geometry_rethink_20260623",
+  "provenance_timestamp": "2026-06-24T20:30:09+02:00"
+}

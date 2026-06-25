@@ -1,0 +1,8 @@
+signature,genes,interpretation_note
+endocrine_progenitor_core,"NEUROG3,PAX4",Strict endocrine-progenitor evidence; NEUROG3 is required for a strong call.
+endocrine_commitment_tf,"RFX6,NEUROD1,ISL1,PAX6,NKX2-2,FOXA2",Endocrine differentiation transcription factors; many persist in mature endocrine cells.
+pancreatic_trunk_progenitor,"PDX1,SOX9,HNF1B,HES1,ONECUT1,NKX6-1,KRT19",Fetal trunk/progenitor-associated markers that overlap adult ductal programs.
+adult_ductal_state,"SOX9,HNF1B,ONECUT1,KRT19,EPCAM,MUC1,CFTR",Adult ductal epithelial state markers; high score alone is not progenitor evidence.
+tip_acinar_progenitor_or_acinar,"PTF1A,CPA1,PRSS1,REG1A",Tip/acinar-associated markers; in adult pancreas this is mostly mature acinar signal.
+mature_endocrine_hormone,"INS,GCG,SST,PPY,GHRL,CHGA,CHGB",Mature endocrine hormone/secretory markers.
+mature_exocrine_enzyme,"PRSS1,CPA1,REG1A",Mature exocrine enzyme markers.

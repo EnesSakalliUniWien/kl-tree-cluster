@@ -1,0 +1,39 @@
+{
+  "artifacts": [
+    {
+      "columns": 15,
+      "path": "summary.csv",
+      "rows": 2,
+      "sha256": "510e6fa8f6e5443d3ae911d08767535a07b4d0e2090865de24c4dd335aa44f5a",
+      "bytes": 739
+    },
+    {
+      "columns": 56,
+      "path": "gauss_clear_medium_continuous_standardized_active_vs_no_time_inner_nodes.csv",
+      "rows": 59,
+      "sha256": "94835bbbfe121d43ccb7998a723182db6cc7d048b1ec5a9b0825a92f7d652215",
+      "bytes": 31074
+    },
+    {
+      "columns": 56,
+      "path": "gauss_moderate_3c_continuous_standardized_active_vs_no_time_inner_nodes.csv",
+      "rows": 44,
+      "sha256": "04837275e7ec47b7a9978e56f7baac6ff37f2b9b52c4b89e3796d762b85df241",
+      "bytes": 23448
+    },
+    {
+      "columns": 43,
+      "path": "gaussian_eigen_branch_alignment_20260623.csv",
+      "rows": 5,
+      "sha256": "718ce6780f606b17d2d23d854b94f3613904c92ced64a2bb23d05f303da0b7e2",
+      "bytes": 4475
+    }
+  ],
+  "manifest_schema_version": "static_artifact_provenance/v1",
+  "notes": [
+    "Original generation timestamp was not recorded in the CSV artifacts.",
+    "This manifest was added as a provenance repair without rerunning the diagnostic."
+  ],
+  "output_dir": "raw/assets/benchmark-results/gaussian_inner_node_debug_20260623",
+  "provenance_timestamp": "2026-06-24T20:27:01+02:00"
+}

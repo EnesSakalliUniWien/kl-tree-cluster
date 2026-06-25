@@ -1,0 +1,24 @@
+{
+  "schema_version": "continuous_guarded_covariance_validation/v4",
+  "run_at_utc": "2026-06-23T14:55:41.022640+00:00",
+  "command": "uv run python - <<'PY' ... benchmark_cluster_algorithm focused guarded covariance ... PY",
+  "cases": [
+    "gauss_clear_medium_continuous",
+    "gauss_moderate_3c_continuous",
+    "gauss_null_large_continuous",
+    "dim_consolidated_4c_24f_continuous",
+    "binary_null_small",
+    "cat_overlap_3cat_4c"
+  ],
+  "methods": [
+    "tbs",
+    "tbs_continuous_guarded_within_covariance"
+  ],
+  "significance_level": 0.01,
+  "edge_alpha": 0.001,
+  "results_csv": "raw/assets/benchmark-results/continuous_guarded_covariance_validation_20260623/focused_guarded_covariance_results.csv",
+  "notes": [
+    "Rerun after replacing the benchmark-level continuous skip with family-adaptive sibling-gate dispatch.",
+    "Continuous feature-space rows use fixed-coordinate BH with guarded within-child covariance; non-continuous rows use the default sibling gate and existing discrete covariance paths."
+  ]
+}

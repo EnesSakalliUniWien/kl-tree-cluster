@@ -1,0 +1,32 @@
+method,method_short,cluster,n_cells,cluster_purity,n_celltypes,dominant_celltype,top_celltypes
+HDBSCAN,HDBSCAN,12,1035,0.4454106280193237,5,beta,beta:461; alpha:405; delta:114; gamma:52; epsilon:3
+HDBSCAN,HDBSCAN,-1,446,0.468609865470852,15,ductal,ductal:209; acinar:49; alpha:34; beta:32; gamma:26; delta:19
+HDBSCAN,HDBSCAN,7,299,0.5250836120401338,6,alpha,alpha:157; beta:88; delta:32; gamma:20; epsilon:1; ductal:1
+HDBSCAN,HDBSCAN,6,60,0.5833333333333334,3,alpha,alpha:35; beta:23; gamma:2
+K-means true K,Kmeans,1,582,0.788659793814433,9,beta,beta:459; delta:102; gamma:13; ductal:2; alpha:2; endothelial:1
+K-means true K,Kmeans,2,303,0.5181518151815182,6,alpha,alpha:157; beta:88; delta:33; gamma:20; ductal:4; epsilon:1
+K-means true K,Kmeans,9,273,0.63003663003663,6,alpha,alpha:172; beta:46; gamma:31; delta:22; epsilon:1; ductal:1
+K-means true K,Kmeans,0,88,0.4204545454545454,6,alpha,alpha:37; beta:29; ductal:15; gamma:4; mesenchyme:2; delta:1
+Leiden,Leiden,7,164,0.676829268292683,4,delta,delta:111; gamma:49; epsilon:3; beta:1
+Leiden,Leiden,9,116,0.4655172413793103,6,activated_stellate,activated_stellate:54; quiescent_stellate:33; mesenchymal:15; PSC:10; mesenchyme:3; ductal:1
+Leiden,Leiden,10,98,0.4693877551020408,4,beta,beta:46; gamma:29; delta:22; alpha:1
+Leiden,Leiden,11,89,0.4382022471910112,6,alpha,alpha:39; beta:29; ductal:15; gamma:4; mesenchyme:1; delta:1
+Leiden,Leiden,14,59,0.5423728813559322,5,delta,delta:32; gamma:20; beta:3; ductal:3; epsilon:1
+Louvain,Louvain,7,169,0.6568047337278107,5,delta,delta:111; gamma:50; epsilon:3; beta:3; ductal:2
+Louvain,Louvain,2,139,0.3884892086330935,9,activated_stellate,activated_stellate:54; quiescent_stellate:33; mesenchymal:15; macrophage:10; PSC:10; ductal:7
+Louvain,Louvain,13,98,0.4693877551020408,4,beta,beta:46; gamma:29; delta:22; alpha:1
+Louvain,Louvain,17,89,0.4382022471910112,6,alpha,alpha:39; beta:29; ductal:15; gamma:4; mesenchyme:1; delta:1
+Louvain,Louvain,12,55,0.5636363636363636,4,delta,delta:31; gamma:20; beta:3; epsilon:1
+Spectral true K,Spectral,14,599,0.6928213689482471,8,alpha,alpha:415; delta:104; gamma:53; macrophage:10; mast:6; ductal:4
+Spectral true K,Spectral,11,221,0.7782805429864253,4,alpha,alpha:172; gamma:31; delta:17; epsilon:1
+Spectral true K,Spectral,8,113,0.4778761061946903,5,activated_stellate,activated_stellate:54; quiescent_stellate:33; mesenchymal:15; PSC:10; ductal:1
+Spectral true K,Spectral,6,92,0.4239130434782608,6,alpha,alpha:39; beta:29; ductal:15; mesenchyme:4; gamma:4; delta:1
+Spectral true K,Spectral,3,59,0.5423728813559322,6,delta,delta:32; gamma:20; beta:3; ductal:2; epsilon:1; alpha:1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,TBS-adiff-NNLS,36,119,0.7142857142857143,3,delta,delta:85; gamma:31; epsilon:3
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,TBS-adiff-topo,36,119,0.7142857142857143,3,delta,delta:85; gamma:31; epsilon:3
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,TBS-rawdiag,4,2308,0.3440207972270364,9,alpha,alpha:794; beta:631; ductal:333; acinar:258; delta:173; gamma:108
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,TBS-rawdiag,8,86,0.6162790697674418,2,activated_stellate,activated_stellate:53; quiescent_stellate:33
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,TBS-std-topo,27,613,0.7536704730831973,6,beta,beta:462; delta:109; gamma:37; epsilon:2; alpha:2; ductal:1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,TBS-std-topo,10,573,0.5759162303664922,6,alpha,alpha:330; beta:134; delta:55; gamma:51; epsilon:2; ductal:1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,TBS-std-topo,40,86,0.4534883720930232,5,alpha,alpha:39; beta:27; ductal:15; gamma:4; delta:1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,TBS-std-topo,44,86,0.6162790697674418,2,activated_stellate,activated_stellate:53; quiescent_stellate:33

@@ -1,0 +1,6 @@
+skip_class,feature_representation,n_cases
+binary/discrete expected,binary,47
+categorical/sequence expected,categorical_one_hot,26
+gaussian-derived categorical expected,quantile_one_hot,3
+gaussian-derived median-binary expected,median_binary,29
+graph expected,graph_adjacency,3

@@ -1,0 +1,5 @@
+case_id,status,found_clusters,ari,open_sibling_nodes,significant_child_edges,root_sibling_p,root_child_edge_min_p,root_raw_mp_signal_count,error
+gauss_clear_medium_continuous,ok,4,1.0,3,6,1.256957954093868e-115,0.0,1,
+gauss_moderate_3c_continuous,ok,3,1.0,2,4,2.218915654572828e-126,0.0,1,
+gauss_null_large_continuous,ok,1,1.0,0,0,,0.45297876811717885,0,
+dim_consolidated_4c_24f_continuous,ok,4,1.0,3,6,8.718808934001494e-49,0.0,1,

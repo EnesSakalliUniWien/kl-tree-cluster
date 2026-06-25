@@ -1,0 +1,110 @@
+{
+  "artifacts": [
+    {
+      "bytes": 3071789,
+      "path": "scrna_selected_adaptive_diffusion_nnls_full_report.pdf",
+      "role": "selected NNLS full report PDF",
+      "sha256": "f037fb95f95dd4eb9184bb93c1d08fc1e548b4096a005f3b5e1ed10c33cc8e69"
+    },
+    {
+      "bytes": 752873,
+      "path": "scrna_selected_adaptive_diffusion_nnls_adult_colored_tree_page.png",
+      "role": "adult colored tree report page",
+      "sha256": "89da1e28ca1b54723e3ce9d43d3e4382e89b1af01c5a0bd6797f7afecef81575"
+    },
+    {
+      "bytes": 644810,
+      "path": "scrna_selected_adaptive_diffusion_nnls_goncalves_colored_tree_page.png",
+      "role": "Goncalves colored tree report page",
+      "sha256": "6c0a165d7f3a605546c88155b3bc89af140c32604c9679c26c2f01824b5267dd"
+    },
+    {
+      "bytes": 595706,
+      "path": "scrna_selected_adaptive_diffusion_nnls_adult_radial_tree_page.png",
+      "role": "adult selected radial tree report page",
+      "sha256": "d9e5a05ad00fdb19aa5c03628496349010e33b4ef9a71c8f5528d33fb3b6c60e"
+    },
+    {
+      "bytes": 501467,
+      "path": "scrna_selected_adaptive_diffusion_nnls_goncalves_radial_tree_page.png",
+      "role": "Goncalves selected radial tree report page",
+      "sha256": "9983764e1f610a9c2f2cf6557f3af4bc56deead12dfe47f6747b13bbdd1af6f2"
+    },
+    {
+      "bytes": 539665,
+      "path": "scrna_selected_adaptive_diffusion_nnls_adult_full_radial_tree_page.png",
+      "role": "adult full radial tree report page",
+      "sha256": "9d88a8808291ebcfcf50285725f682094f81198ac0e02bf199242375b5f04361"
+    },
+    {
+      "bytes": 1032347,
+      "path": "scrna_selected_adaptive_diffusion_nnls_goncalves_full_radial_tree_page.png",
+      "role": "Goncalves full radial tree report page",
+      "sha256": "31800ce6b9409654849255c686a479c989ee5029a7fd9f5cfddb9d1078c07447"
+    },
+    {
+      "bytes": 6481,
+      "columns": 11,
+      "generated_at": "2026-06-24T19:38:32+02:00",
+      "generated_at_values": [
+        "2026-06-24T19:38:32+02:00"
+      ],
+      "path": "scrna_selected_adaptive_diffusion_nnls_cluster_boundary_summary.csv",
+      "role": "cluster boundary summary table",
+      "rows": 67,
+      "sha256": "24c58998df1e60274f363d323899c7e7cd059357fa65d42a88bfe32ffe8513da"
+    },
+    {
+      "bytes": 1163923,
+      "path": "scrna_selected_adaptive_diffusion_nnls_fit_summary.png",
+      "role": "NNLS fit summary PNG",
+      "sha256": "f3cc50f038d3400cd4646780aeda7eaf66d6b369af8c8232207abeea8398f837"
+    },
+    {
+      "bytes": 1340051,
+      "path": "scrna_selected_adaptive_diffusion_nnls_fit_summary_one_plot_per_page.pdf",
+      "role": "NNLS fit summary PDF",
+      "sha256": "602ca260b28ae50786e27850bc9ec69a76dca2b027e69410e0ed43b54689ef3e"
+    },
+    {
+      "bytes": 622,
+      "columns": 15,
+      "generated_at": "2026-06-24T19:38:33+02:00",
+      "generated_at_values": [
+        "2026-06-24T19:38:33+02:00"
+      ],
+      "path": "scrna_selected_adaptive_diffusion_nnls_fit_summary.csv",
+      "role": "NNLS fit summary table",
+      "rows": 2,
+      "sha256": "2288c4b8d111b607f5fecc84747348666d69e9cab313b16368ac540512ccfc21"
+    },
+    {
+      "bytes": 853353,
+      "path": "scrna_selected_adaptive_diffusion_nnls_tbs_umap.png",
+      "role": "selected NNLS TBS UMAP",
+      "sha256": "6ba26d3294634faffbf393eae8e2ca62dc59d277faa0a996c975781dcd6670be"
+    },
+    {
+      "bytes": 1845266,
+      "path": "scrna_selected_adaptive_diffusion_nnls_tbs_umap_trees.png",
+      "role": "selected NNLS TBS UMAP plus trees",
+      "sha256": "9c128c86f57615c20c1b9607ee5b1d2385108ef3aa8dbbfa91c2fe7939a203e2"
+    }
+  ],
+  "generated_artifact_timestamps": [
+    "2026-06-24T19:38:32+02:00",
+    "2026-06-24T19:38:33+02:00"
+  ],
+  "manifest_schema_version": "static_artifact_provenance/v1",
+  "notes": [
+    "This manifest ties together the root-level selected NNLS scRNA report artifacts.",
+    "CSV artifacts record generation timestamps; PNG/PDF files were produced by the selected NNLS plotting scripts with visible timestamp footers or PDF metadata.",
+    "This manifest was added as a provenance repair without rerunning the plotting scripts."
+  ],
+  "output_dir": "raw/assets/benchmark-results",
+  "provenance_timestamp": "2026-06-24T20:32:41+02:00",
+  "source_scripts": [
+    "scripts/plot_selected_scrna_nnls_report.py",
+    "scripts/plot_selected_scrna_nnls_fit_summary.py"
+  ]
+}

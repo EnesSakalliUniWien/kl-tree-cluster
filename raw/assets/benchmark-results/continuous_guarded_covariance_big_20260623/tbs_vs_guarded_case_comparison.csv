@@ -1,0 +1,122 @@
+case_id,case_category,feature_representation,true_clusters,tbs_status,guarded_status,tbs_k,guarded_k,tbs_ari,guarded_ari,delta_ari,guarded_skip_reason
+bar_binary_balanced_4c,method_proof,binary,4,ok,skip,1,0,0.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+bar_binary_unbalanced_95_5,method_proof,binary,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_2clusters,improved_binary_edge_cases,binary,2,ok,skip,2,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_balanced_low_noise,binary_balanced_low_noise,binary,4,ok,skip,4,0,0.962424205767166,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_balanced_low_noise__2,binary_balanced_low_noise,binary,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_hard_4c,improved_binary_hard,binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_hard_8c,improved_binary_hard,binary,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_low_noise_12c,improved_binary_low_noise,binary,12,ok,skip,12,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_low_noise_2c,improved_binary_low_noise,binary,2,ok,skip,6,0,0.7832759989415189,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_low_noise_4c,improved_binary_low_noise,binary,4,ok,skip,7,0,0.919692522072849,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_low_noise_8c,improved_binary_low_noise,binary,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_many_clusters,improved_binary_edge_cases,binary,15,ok,skip,15,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_many_features,improved_binary_edge_cases,binary,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_moderate_4c,improved_binary_moderate,binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_moderate_6c,improved_binary_moderate,binary,6,ok,skip,6,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_moderate_8c,improved_binary_moderate,binary,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_multiscale_4c,binary_multiscale,binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_multiscale_6c,binary_multiscale,binary,6,ok,skip,6,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_noise_feat_30i_500n,binary_noise_features,binary,3,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_noise_feat_50i_200n,binary_noise_features,binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_noise_feat_80i_400n,binary_noise_features,binary,6,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_null_medium,binary_null,binary,1,ok,skip,1,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_null_small,binary_null,binary,1,ok,skip,1,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_perfect_2c,improved_binary_perfect,binary,2,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_perfect_4c,improved_binary_perfect,binary,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_perfect_8c,improved_binary_perfect,binary,8,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_unbalanced_low,improved_binary_unbalanced,binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+binary_unbalanced_med,improved_binary_unbalanced,binary,6,ok,skip,6,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_clear_3cat_4c,categorical_clear,categorical_one_hot,4,ok,skip,3,0,0.7079646017699115,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_clear_4cat_4c,categorical_clear,categorical_one_hot,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_clear_5cat_6c,categorical_clear,categorical_one_hot,6,ok,skip,6,0,0.9837791962248472,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_dirichlet_overdispersed_20cat,method_proof,categorical_one_hot,4,ok,skip,1,0,0.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_highcard_10cat_4c,categorical_high_cardinality,categorical_one_hot,4,ok,skip,4,0,0.8819400413859186,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_highcard_20cat_4c,categorical_high_cardinality,categorical_one_hot,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_highd_3cat_500feat,categorical_high_dimensional,categorical_one_hot,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_highd_4cat_1000feat,categorical_high_dimensional,categorical_one_hot,6,ok,skip,6,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_mod_3cat_4c,categorical_moderate,categorical_one_hot,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_mod_4cat_6c,categorical_moderate,categorical_one_hot,6,ok,skip,4,0,0.6780575539568345,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_overlap_3cat_4c,categorical_overlapping,categorical_one_hot,4,ok,skip,3,0,0.6802931292570171,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_simplex_face_rare_20cat,method_proof,categorical_one_hot,4,ok,skip,1,0,0.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cat_unbal_3cat_4c,categorical_unbalanced,categorical_one_hot,4,ok,skip,4,0,0.9282381249143422,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+cont_lowrank_pggn_shrinkage,method_proof,continuous,4,skip,ok,0,1,,0.0,,
+dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,median_binary,4,ok,skip,11,0,0.3515649287483579,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+dim_consolidated_4c_24f_continuous,continuous_dimensional_gaussian_examples,continuous,4,ok,ok,4,4,1.0,1.0,0.0,
+dim_consolidated_4c_272f,gaussian_dimensionality_consolidated,median_binary,4,ok,skip,2,0,-0.0082275170019498,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,median_binary,4,ok,skip,2,0,0.0009785802922182,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+dim_consolidated_4c_72f_continuous,continuous_dimensional_gaussian_examples,continuous,4,ok,ok,1,1,0.0,0.0,0.0,
+dim_diffuse_6c_136f,gaussian_dimensionality_diffuse,median_binary,6,ok,skip,2,0,0.0132456629412952,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+dim_diffuse_6c_136f_continuous,continuous_dimensional_gaussian_examples,continuous,6,ok,ok,1,1,0.0,0.0,0.0,
+dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,median_binary,6,ok,skip,9,0,0.0662750663987296,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+dim_diffuse_6c_536f,gaussian_dimensionality_diffuse,median_binary,6,ok,skip,2,0,-0.0049122807017543,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_clear_large,improved_gaussian,median_binary,5,ok,skip,5,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_clear_medium,improved_gaussian,median_binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_clear_medium_continuous,continuous_gaussian_examples,continuous,4,ok,ok,1,4,0.0,1.0,1.0,
+gauss_clear_small,improved_gaussian,median_binary,3,ok,skip,2,0,0.5538461538461539,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_extreme_noise_3c,gaussian_extreme_noise,median_binary,3,ok,skip,3,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_extreme_noise_highd,gaussian_extreme_noise,median_binary,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_extreme_noise_highd_continuous,continuous_gaussian_examples,continuous,4,skip,ok,0,4,,1.0,,
+gauss_extreme_noise_many,gaussian_extreme_noise,median_binary,30,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_moderate_3c,improved_gaussian,median_binary,3,ok,skip,3,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_moderate_3c_continuous,continuous_gaussian_examples,continuous,3,ok,ok,1,3,0.0,1.0,1.0,
+gauss_moderate_5c,improved_gaussian,median_binary,5,ok,skip,5,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_noisy_3c,improved_gaussian,median_binary,3,ok,skip,3,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_noisy_many,improved_gaussian,median_binary,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_null_large,gaussian_null,median_binary,1,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_null_large_continuous,continuous_gaussian_examples,continuous,1,ok,ok,1,1,1.0,1.0,0.0,
+gauss_null_small,gaussian_null,median_binary,1,ok,skip,2,0,0.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_outlier_cluster_4c,gaussian_outlier_contamination,median_binary,5,ok,skip,7,0,0.976327313570338,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_outlier_cluster_4c_continuous,continuous_gaussian_outlier_examples,continuous,5,ok,ok,2,4,0.4611910810047982,0.95165987186954,0.4904687908647418,
+gauss_outlier_shell_4c,gaussian_outlier_contamination,median_binary,5,ok,skip,10,0,0.97160982710024,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_3c_small,overlapping_gaussian,median_binary,3,ok,skip,3,0,0.9702555619013858,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_3c_small_q3,overlapping_gaussian_quantile,quantile_one_hot,3,ok,skip,3,0,0.9899831669528852,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_3c_small_q4,overlapping_gaussian_quantile,quantile_one_hot,3,ok,skip,3,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_3c_small_q5,overlapping_gaussian_quantile,quantile_one_hot,3,ok,skip,3,0,0.9800666666666666,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_4c_med,overlapping_gaussian,median_binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_6c_large,overlapping_gaussian,median_binary,6,ok,skip,6,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_8c_highd,overlapping_gaussian,median_binary,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_dense_8c,overlapping_gaussian,median_binary,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_extreme_4c,overlapping_gaussian,median_binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_extreme_6c,overlapping_gaussian,median_binary,6,ok,skip,6,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_overlap_many_10c,overlapping_gaussian,median_binary,10,ok,skip,10,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_single_outlier_4c,gaussian_outlier_singleton,median_binary,5,ok,skip,15,0,0.7183261100773072,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+gauss_single_outlier_4c_continuous,continuous_gaussian_outlier_examples,continuous,5,ok,ok,2,4,0.4890471398715071,0.9915772953178132,0.5025301554463062,
+mp_spike_above_bbp_continuous,method_proof,continuous,2,ok,ok,1,1,0.0,0.0,0.0,
+mp_spike_below_bbp_continuous,method_proof,continuous,1,ok,ok,1,1,1.0,1.0,0.0,
+overlap_extreme_4c,overlapping_binary_heavy,binary,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_hd_4c_1k,overlapping_binary_highd,binary,4,ok,skip,4,0,0.9946559286607272,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_heavy_4c_med_feat,overlapping_binary_heavy,binary,4,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_heavy_4c_small_feat,overlapping_binary_heavy,binary,4,ok,skip,9,0,0.0541077234840329,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_heavy_8c_large_feat,overlapping_binary_heavy,binary,8,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_mod_4c_small,overlapping_binary_moderate,binary,4,ok,skip,4,0,0.7848286798556895,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_mod_6c_med,overlapping_binary_moderate,binary,6,ok,skip,6,0,0.9444653613697336,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_mod_8c_large,overlapping_binary_moderate,binary,8,ok,skip,8,0,0.9914106479870332,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_part_4c_small,overlapping_binary_partial,binary,4,ok,skip,4,0,0.9534938148705172,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_part_6c_med,overlapping_binary_partial,binary,6,ok,skip,6,0,0.9959865525047962,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_part_8c_large,overlapping_binary_partial,binary,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_unbal_4c_small,overlapping_binary_unbalanced,binary,4,ok,skip,4,0,0.5000975768285938,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_unbal_6c_med,overlapping_binary_unbalanced,binary,6,ok,skip,6,0,0.9817306285757762,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+overlap_unbal_8c_large,overlapping_binary_unbalanced,binary,8,ok,skip,8,0,0.9295804687948276,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_brownian_null_16taxa,method_proof,continuous,16,ok,ok,1,1,0.0,0.0,0.0,
+phylo_conserved_4taxa,phylogenetic_conserved,categorical_one_hot,4,ok,skip,10,0,0.91862605494391,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_conserved_8taxa,phylogenetic_conserved,categorical_one_hot,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_divergent_4taxa,phylogenetic_divergent,categorical_one_hot,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_divergent_8taxa,phylogenetic_divergent,categorical_one_hot,8,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_dna_16taxa_low_mut,phylogenetic_dna,categorical_one_hot,16,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_dna_4taxa_low_mut,phylogenetic_dna,categorical_one_hot,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_dna_8taxa_low_mut,phylogenetic_dna,categorical_one_hot,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_dna_8taxa_med_mut,phylogenetic_dna,categorical_one_hot,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_large_32taxa,phylogenetic_large,categorical_one_hot,32,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_large_64taxa,phylogenetic_large,categorical_one_hot,64,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_protein_12taxa,phylogenetic_protein,categorical_one_hot,12,ok,skip,25,0,0.9180761180905168,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_protein_4taxa,phylogenetic_protein,categorical_one_hot,4,ok,skip,6,0,0.977711181869264,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+phylo_protein_8taxa,phylogenetic_protein,categorical_one_hot,8,ok,skip,8,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+sbm_clear_small,sbm_graphs,graph_adjacency,2,ok,skip,3,0,0.7015789372463797,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+sbm_hard,sbm_graphs,graph_adjacency,3,ok,skip,4,0,-0.0085638062552786,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+sbm_moderate,sbm_graphs,graph_adjacency,3,ok,skip,8,0,0.0995072113659247,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+sparse_features_100x500,binary_sparse_features,binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+sparse_features_72x72,binary_sparse_features,binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+support_selected_only_fail_closed,method_proof,binary,4,ok,skip,4,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+traversal_deep_branch_recovery_stress,method_proof,binary,6,ok,skip,6,0,1.0,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.
+traversal_deep_signal_under_same_parent,method_proof,binary,6,skip,skip,0,0,,,,TBS continuous guarded covariance candidate requires continuous feature_space metadata.

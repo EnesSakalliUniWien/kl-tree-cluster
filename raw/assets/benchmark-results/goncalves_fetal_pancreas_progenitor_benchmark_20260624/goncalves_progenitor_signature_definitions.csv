@@ -1,0 +1,10 @@
+signature,requested_genes,available_genes,missing_genes,n_available
+endocrine_progenitor_core,"NEUROG3,PAX4","NEUROG3,PAX4",,2
+endocrine_commitment,"RFX6,NEUROD1,ISL1,PAX6,NKX2-2","RFX6,NEUROD1,ISL1,PAX6,NKX2-2",,5
+trunk_progenitor,"PDX1,SOX9,HNF1B,HES1,NKX6-1,KRT19,SPP1","PDX1,SOX9,HNF1B,HES1,NKX6-1,KRT19,SPP1",,7
+tip_progenitor,"PTF1A,CPA1,CPA2,RBPJL,CEL,CTRB2,GATA4,NR5A2","PTF1A,CPA1,CPA2,RBPJL,CEL,CTRB2,GATA4,NR5A2",,8
+proliferation,"MKI67,TOP2A,PCNA,CDK1","MKI67,TOP2A,PCNA,CDK1",,4
+mesenchyme,"VIM,DCN,COL1A1,COL3A1","VIM,DCN,COL1A1,COL3A1",,4
+mature_endocrine,"CHGA,INS,GCG,SST,PPY","CHGA,INS,SST","GCG,PPY",3
+neuronal,"PRPH,GAP43","PRPH,GAP43",,2
+blood,"ALAS2,HBG1","ALAS2,HBG1",,2

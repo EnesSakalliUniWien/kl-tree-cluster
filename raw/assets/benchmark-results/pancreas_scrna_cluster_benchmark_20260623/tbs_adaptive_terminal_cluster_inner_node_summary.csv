@@ -1,0 +1,70 @@
+cluster_id,terminal_root_node,inner_node,n_leaves,grouping,progenitor_call,dominant_celltype,dominant_celltype_fraction,top_celltypes,child_summary
+24,N4939,N4854,77,mature cell-type node,"mature-cell state/subcluster, not progenitor",ductal,1.0,ductal:77,N4811 n=48 ductal:48 | N4841 n=29 ductal:29
+24,N4939,N4939,81,mature cell-type node,"mature-cell state/subcluster, not progenitor",ductal,1.0,ductal:81,N4854 n=77 ductal:77 | N4885 n=4 ductal:4
+25,N4908,N4590,55,local geometry node,too small or too local for progenitor interpretation,beta,0.9272727272727272,beta:51; alpha:2; ductal:1; delta:1,"N4037 n=7 beta:5,alpha:1,ductal:1 | N4532 n=48 beta:46,alpha:1,delta:1"
+25,N4908,N4689,73,local geometry node,too small or too local for progenitor interpretation,beta,0.9452054794520548,beta:69; alpha:2; ductal:1; delta:1,"N4323 n=18 beta:18 | N4590 n=55 beta:51,alpha:2,ductal:1,delta:1"
+25,N4908,N4908,88,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9545454545454546,beta:84; alpha:2; ductal:1; delta:1,"N4689 n=73 beta:69,alpha:2,ductal:1,delta:1 | N4845 n=15 beta:15"
+26,N4919,N4919,66,mature cell-type node,"mature-cell state/subcluster, not progenitor",ductal,0.9696969696969697,ductal:64; acinar:2,"N4877 n=42 ductal:42 | N4890 n=24 ductal:22,acinar:2"
+29,N4906,N4906,57,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:57,N4637 n=10 alpha:10 | N4843 n=47 alpha:47
+32,N4923,N4831,50,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:50,N4716 n=39 alpha:39 | N4746 n=11 alpha:11
+32,N4923,N4879,55,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:55,N4831 n=50 alpha:50 | N4833 n=5 alpha:5
+32,N4923,N4905,57,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9824561403508771,alpha:56; gamma:1,"N4758 n=2 gamma:1,alpha:1 | N4879 n=55 alpha:55"
+32,N4923,N4923,91,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.989010989010989,alpha:90; gamma:1,"N4824 n=34 alpha:34 | N4905 n=57 alpha:56,gamma:1"
+33,N4952,N4868,50,mature cell-type node,"mature-cell state/subcluster, not progenitor",ductal,1.0,ductal:50,N4752 n=14 ductal:14 | N4818 n=36 ductal:36
+33,N4952,N4941,51,mature cell-type node,"mature-cell state/subcluster, not progenitor",ductal,1.0,ductal:51,N4859 n=2 ductal:2 | N4894 n=49 ductal:49
+33,N4952,N4952,101,mature cell-type node,"mature-cell state/subcluster, not progenitor",ductal,1.0,ductal:101,N4868 n=50 ductal:50 | N4941 n=51 ductal:51
+35,N4954,N4485,57,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:57,N4274 n=15 alpha:15 | N4317 n=42 alpha:42
+35,N4954,N4586,103,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:103,N4425 n=46 alpha:46 | N4485 n=57 alpha:57
+35,N4954,N4691,105,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9904761904761905,alpha:104; beta:1,"N4298 n=2 beta:1,alpha:1 | N4586 n=103 alpha:103"
+35,N4954,N4783,137,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9927007299270073,alpha:136; beta:1,"N4627 n=32 alpha:32 | N4691 n=105 alpha:104,beta:1"
+35,N4954,N4836,143,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.993006993006993,alpha:142; beta:1,"N4761 n=6 alpha:6 | N4783 n=137 alpha:136,beta:1"
+35,N4954,N4893,151,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9933774834437086,alpha:150; beta:1,"N4720 n=8 alpha:8 | N4836 n=143 alpha:142,beta:1"
+35,N4954,N4951,153,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9934640522875817,alpha:152; beta:1,"N4735 n=2 alpha:2 | N4893 n=151 alpha:150,beta:1"
+35,N4954,N4954,158,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9873417721518988,alpha:156; delta:1; beta:1,"N4938 n=5 alpha:4,delta:1 | N4951 n=153 alpha:152,beta:1"
+36,N4881,N4572,52,local geometry node,too small or too local for progenitor interpretation,delta,0.9038461538461539,delta:47; gamma:5,"N4365 n=31 delta:27,gamma:4 | N4414 n=21 delta:20,gamma:1"
+36,N4881,N4648,54,local geometry node,too small or too local for progenitor interpretation,delta,0.9074074074074074,delta:49; gamma:5,"N4045 n=2 delta:2 | N4572 n=52 delta:47,gamma:5"
+36,N4881,N4731,58,local geometry node,too small or too local for progenitor interpretation,delta,0.8620689655172413,delta:50; gamma:8,"N4364 n=4 gamma:3,delta:1 | N4648 n=54 delta:49,gamma:5"
+36,N4881,N4789,100,endocrine mixed descendant node,"lineage-consistent ancestor node, but not validated progenitor",delta,0.67,delta:67; gamma:31; epsilon:2,"N4731 n=58 delta:50,gamma:8 | N4768 n=42 gamma:23,delta:17,epsilon:2"
+36,N4881,N4881,119,endocrine mixed descendant node,"lineage-consistent ancestor node, but not validated progenitor",delta,0.7142857142857143,delta:85; gamma:31; epsilon:3,"N4459 n=19 delta:18,epsilon:1 | N4789 n=100 delta:67,gamma:31,epsilon:2"
+37,N4929,N4476,51,mature cell-type node,"mature-cell state/subcluster, not progenitor",acinar,1.0,acinar:51,N4269 n=31 acinar:31 | N4386 n=20 acinar:20
+37,N4929,N4667,87,mature cell-type node,"mature-cell state/subcluster, not progenitor",acinar,0.9770114942528736,acinar:85; alpha:1; beta:1,"N4476 n=51 acinar:51 | N4542 n=36 acinar:34,alpha:1,beta:1"
+37,N4929,N4703,112,mature cell-type node,"mature-cell state/subcluster, not progenitor",acinar,0.9821428571428571,acinar:110; alpha:1; beta:1,"N4553 n=25 acinar:25 | N4667 n=87 acinar:85,alpha:1,beta:1"
+37,N4929,N4803,117,mature cell-type node,"mature-cell state/subcluster, not progenitor",acinar,0.9829059829059829,acinar:115; alpha:1; beta:1,"N4649 n=5 acinar:5 | N4703 n=112 acinar:110,alpha:1,beta:1"
+37,N4929,N4849,151,mature cell-type node,"mature-cell state/subcluster, not progenitor",acinar,0.9801324503311258,acinar:148; alpha:2; beta:1,"N4803 n=117 acinar:115,alpha:1,beta:1 | N4817 n=34 acinar:33,alpha:1"
+37,N4929,N4883,167,mature cell-type node,"mature-cell state/subcluster, not progenitor",acinar,0.9820359281437125,acinar:164; alpha:2; beta:1,"N4528 n=16 acinar:16 | N4849 n=151 acinar:148,alpha:2,beta:1"
+37,N4929,N4929,209,local geometry node,too small or too local for progenitor interpretation,acinar,0.9473684210526315,acinar:198; alpha:6; beta:4; ductal:1,"N4883 n=167 acinar:164,alpha:2,beta:1 | N4925 n=42 acinar:34,alpha:4,beta:3,ductal:1"
+40,N4887,N4474,86,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:86,N4168 n=48 alpha:48 | N4288 n=38 alpha:38
+40,N4887,N4573,95,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:95,N4400 n=9 alpha:9 | N4474 n=86 alpha:86
+40,N4887,N4707,137,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:137,N4573 n=95 alpha:95 | N4612 n=42 alpha:42
+40,N4887,N4815,140,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:140,N4707 n=137 alpha:137 | N4767 n=3 alpha:3
+40,N4887,N4855,155,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:155,N4454 n=15 alpha:15 | N4815 n=140 alpha:140
+40,N4887,N4887,203,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9950738916256158,alpha:202; delta:1,"N4812 n=48 alpha:47,delta:1 | N4855 n=155 alpha:155"
+41,N4958,N4399,70,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9857142857142858,alpha:69; beta:1,"N4322 n=40 alpha:40 | N4344 n=30 alpha:29,beta:1"
+41,N4958,N4478,72,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9861111111111112,alpha:71; beta:1,"N4071 n=2 alpha:2 | N4399 n=70 alpha:69,beta:1"
+41,N4958,N4582,73,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9863013698630136,alpha:72; beta:1,"L807 n=1 alpha:1 | N4478 n=72 alpha:71,beta:1"
+41,N4958,N4600,53,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:53,N4162 n=7 alpha:7 | N4492 n=46 alpha:46
+41,N4958,N4723,126,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9920634920634921,alpha:125; beta:1,"N4582 n=73 alpha:72,beta:1 | N4600 n=53 alpha:53"
+41,N4958,N4774,62,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,1.0,alpha:62,N4665 n=29 alpha:29 | N4751 n=33 alpha:33
+41,N4958,N4830,188,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9946808510638298,alpha:187; beta:1,"N4723 n=126 alpha:125,beta:1 | N4774 n=62 alpha:62"
+41,N4958,N4866,190,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9947368421052631,alpha:189; beta:1,"N3853 n=2 alpha:2 | N4830 n=188 alpha:187,beta:1"
+41,N4958,N4898,207,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9951690821256038,alpha:206; beta:1,"N4705 n=17 alpha:17 | N4866 n=190 alpha:189,beta:1"
+41,N4958,N4958,208,mature cell-type node,"mature-cell state/subcluster, not progenitor",alpha,0.9903846153846154,alpha:206; macrophage:1; beta:1,"L1198 n=1 macrophage:1 | N4898 n=207 alpha:206,beta:1"
+42,N4962,N4411,57,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9824561403508771,beta:56; delta:1,"N4201 n=31 beta:31 | N4311 n=26 beta:25,delta:1"
+42,N4962,N4583,102,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9901960784313726,beta:101; delta:1,"N4411 n=57 beta:56,delta:1 | N4546 n=45 beta:45"
+42,N4962,N4623,90,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,1.0,beta:90,N4432 n=49 beta:49 | N4567 n=41 beta:41
+42,N4962,N4634,58,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,1.0,beta:58,N4435 n=12 beta:12 | N4563 n=46 beta:46
+42,N4962,N4713,134,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9925373134328358,beta:133; delta:1,"N4583 n=102 beta:101,delta:1 | N4587 n=32 beta:32"
+42,N4962,N4722,66,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,1.0,beta:66,N4550 n=48 beta:48 | N4693 n=18 beta:18
+42,N4962,N4743,86,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,1.0,beta:86,N4634 n=58 beta:58 | N4701 n=28 beta:28
+42,N4962,N4764,85,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9529411764705882,beta:81; delta:2; acinar:1; alpha:1,"N4604 n=19 beta:15,delta:2,acinar:1,alpha:1 | N4722 n=66 beta:66"
+42,N4962,N4793,96,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,1.0,beta:96,N4623 n=90 beta:90 | N4663 n=6 beta:6
+42,N4962,N4799,137,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9927007299270073,beta:136; delta:1,"N3712 n=3 beta:3 | N4713 n=134 beta:133,delta:1"
+42,N4962,N4809,91,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9560439560439561,beta:87; delta:2; acinar:1; alpha:1,"N4530 n=6 beta:6 | N4764 n=85 beta:81,delta:2,acinar:1,alpha:1"
+42,N4962,N4837,129,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,1.0,beta:129,N4743 n=86 beta:86 | N4766 n=43 beta:43
+42,N4962,N4842,100,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.98,beta:98; ductal:2,"N4702 n=4 ductal:2,beta:2 | N4793 n=96 beta:96"
+42,N4962,N4856,228,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9780701754385965,beta:223; delta:3; acinar:1; alpha:1,"N4799 n=137 beta:136,delta:1 | N4809 n=91 beta:87,delta:2,acinar:1,alpha:1"
+42,N4962,N4914,229,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9912663755458515,beta:227; ductal:2,"N4837 n=129 beta:129 | N4842 n=100 beta:98,ductal:2"
+42,N4962,N4921,275,endocrine mixed descendant node,"lineage-consistent ancestor node, but not validated progenitor",beta,0.84,beta:231; delta:30; gamma:7; alpha:4; ductal:2; acinar:1,"N4856 n=228 beta:223,delta:3,acinar:1,alpha:1 | N4875 n=47 delta:27,beta:8,gamma:7,alpha:3"
+42,N4962,N4945,232,mature cell-type node,"mature-cell state/subcluster, not progenitor",beta,0.9913793103448276,beta:230; ductal:2,"N4655 n=3 beta:3 | N4914 n=229 beta:227,ductal:2"
+42,N4962,N4953,507,local geometry node,too small or too local for progenitor interpretation,beta,0.9092702169625246,beta:461; delta:30; gamma:7; alpha:4; ductal:4; acinar:1,"N4921 n=275 beta:231,delta:30,gamma:7,alpha:4 | N4945 n=232 beta:230,ductal:2"
+42,N4962,N4962,517,local geometry node,too small or too local for progenitor interpretation,beta,0.8916827852998066,beta:461; delta:33; gamma:9; alpha:7; ductal:5; epsilon:1; acinar:1,"N4946 n=10 delta:3,alpha:3,gamma:2,epsilon:1 | N4953 n=507 beta:461,delta:30,gamma:7,alpha:4"
