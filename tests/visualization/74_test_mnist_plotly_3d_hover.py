@@ -173,6 +173,7 @@ def test_full_radial_tree_context_includes_all_linkage_nodes():
     assert context["n_edges"] == 6
     assert context["n_clusters"] == 2
     assert "Full best-run TBS radial tree" in context["html"]
+    assert "height:820px" in context["html"]
     assert "Leaf: Sample_0" in context["html"]
     assert "Final TBS cluster C0" in context["html"]
 
@@ -221,6 +222,8 @@ def test_3d_image_inspector_embeds_digit_pixels_and_tree(monkeypatch, tmp_path):
     html = output_path.read_text(encoding="utf-8")
     assert "mnist-3d-image-inspector-plot" in html
     assert "mnist-radial-tbs-tree" in html
+    assert "shell-with-under-tree" in html
+    assert "tree-under-plot" in html
     assert "const imagePixels = [[0,128,191,255],[255,191,128,0]];" in html
     assert "const imageSide = 2;" in html
     assert "function drawDigitImage(pointIndex)" in html

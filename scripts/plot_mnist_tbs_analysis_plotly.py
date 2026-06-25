@@ -656,7 +656,7 @@ def _build_tbs_radial_tree_context(
         },
         template="plotly_white",
         font={"family": "Arial, sans-serif", "size": 12},
-        height=520 if full_tree else 360,
+        height=820 if full_tree else 360,
         margin={"l": 8, "r": 8, "t": 46, "b": 8},
         xaxis={"visible": False, "scaleanchor": "y", "scaleratio": 1},
         yaxis={"visible": False},
@@ -733,6 +733,42 @@ def _write_image_inspector_page(
     records = plot_frame[["sample", "true_digit", "best_tbs_cluster", "point_index"]].to_dict(
         orient="records"
     )
+    inspector_html = f"""
+      <aside class="inspector">
+        <canvas id="digit-canvas" width="{image_side}" height="{image_side}"></canvas>
+        <div class="meta">
+          <div><span class="label">Sample</span><span id="sample-value">Sample_0</span></div>
+          <div><span class="label">True digit</span><span id="digit-value">-</span></div>
+          <div><span class="label">TBS cluster</span><span id="cluster-value">-</span></div>
+          <div><span class="label">Tree node</span><span id="tree-node-value">-</span></div>
+        </div>
+        <p class="hint">Hover or click a UMAP point to show the original MNIST image used for that point. Contains {sample_count_text} MNIST examples. Source images are {image_side}x{image_side} pixels; this canvas enlarges them for inspection.</p>
+      </aside>
+""".strip()
+    tree_panel_html = f"""
+      <aside class="tree-panel">
+        {tree_html}
+        <p class="tree-meta">{tree_note}</p>
+      </aside>
+""".strip()
+    shell_class = "shell shell-with-under-tree" if tree_mode == "full" else "shell"
+    sidebar_tree_panel_html = "" if tree_mode == "full" else tree_panel_html
+    side_panel_inner_html = "\n".join(
+        panel for panel in (inspector_html, sidebar_tree_panel_html) if panel
+    )
+    under_plot_tree_panel_html = (
+        f"""
+    <section class="tree-panel tree-under-plot">
+      {tree_html}
+      <p class="tree-meta">{tree_note}</p>
+    </section>
+""".strip()
+        if tree_mode == "full"
+        else ""
+    )
+    under_plot_tree_section_html = (
+        f"\n    {under_plot_tree_panel_html}" if under_plot_tree_panel_html else ""
+    )
     output_path.write_text(
         f"""<!doctype html>
 <html>
@@ -752,6 +788,9 @@ def _write_image_inspector_page(
       gap: 18px;
       padding: 18px;
       align-items: start;
+    }}
+    .shell-with-under-tree {{
+      grid-template-columns: minmax(760px, 1fr) 300px;
     }}
     .plot-panel, .inspector, .tree-panel {{
       background: #ffffff;
@@ -780,6 +819,10 @@ def _write_image_inspector_page(
     .tree-panel {{
       padding: 10px 10px 12px;
     }}
+    .tree-under-plot {{
+      grid-column: 1 / -1;
+      padding: 12px 12px 14px;
+    }}
     .meta {{
       font-size: 14px;
       line-height: 1.55;
@@ -804,24 +847,11 @@ def _write_image_inspector_page(
   </style>
 </head>
 <body>
-  <div class="shell">
+  <div class="{shell_class}">
     <div class="plot-panel">{plot_html}</div>
     <div class="side-panel">
-      <aside class="inspector">
-        <canvas id="digit-canvas" width="{image_side}" height="{image_side}"></canvas>
-        <div class="meta">
-          <div><span class="label">Sample</span><span id="sample-value">Sample_0</span></div>
-          <div><span class="label">True digit</span><span id="digit-value">-</span></div>
-          <div><span class="label">TBS cluster</span><span id="cluster-value">-</span></div>
-          <div><span class="label">Tree node</span><span id="tree-node-value">-</span></div>
-        </div>
-        <p class="hint">Hover or click a UMAP point to show the original MNIST image used for that point. Contains {sample_count_text} MNIST examples. Source images are {image_side}x{image_side} pixels; this canvas enlarges them for inspection.</p>
-      </aside>
-      <aside class="tree-panel">
-        {tree_html}
-        <p class="tree-meta">{tree_note}</p>
-      </aside>
-    </div>
+      {side_panel_inner_html}
+    </div>{under_plot_tree_section_html}
   </div>
   <script>
     const imagePixels = {json.dumps(image_pixels, separators=(",", ":"))};

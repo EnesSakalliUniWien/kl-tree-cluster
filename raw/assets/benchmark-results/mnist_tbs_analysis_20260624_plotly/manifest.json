@@ -1,7 +1,7 @@
 {
   "manifest_schema_version": "static_artifact_provenance/v1",
   "bundle": "mnist_tbs_analysis_20260624_plotly",
-  "generated_at": "2026-06-25T08:56:26+02:00",
+  "generated_at": "2026-06-25T09:01:36+02:00",
   "source_script": "scripts/plot_mnist_tbs_analysis_plotly.py",
   "source_inputs": [
     "benchmarks/results/experiments/mnist/alpha_sweep_continuous_pca50_20260605/alpha_sweep_summary.csv",
@@ -14,16 +14,16 @@
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/index.html",
       "bytes": 2638,
-      "sha256": "ef18a98f998dace4efe45231e16dfd8d3f20934f970aab0bc66ffcc777bd2719"
+      "sha256": "4afe7f0464862d5045935d6a4e4eb0a3f0bff9cc0adb82fe93cc45951adffe00"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/mnist_tbs_analysis_summary.csv",
       "bytes": 790,
-      "sha256": "7c9da536b96be84d717bb94d9cb5dbcf72cf83f352e0f21cad987eb21dc91a4e",
+      "sha256": "5d3ee3a7ce250109d5d138659244a11be86460bd589c54a69386ce2429a5d0b5",
       "rows": 3,
       "columns": 19,
       "generated_at_values": [
-        "2026-06-25T08:56:26+02:00"
+        "2026-06-25T09:01:36+02:00"
       ]
     },
     {
@@ -36,57 +36,57 @@
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/00_mnist_umap_true_digit_best_tbs_cluster.html",
       "bytes": 5068020,
-      "sha256": "b54cb6a6b3fea111dc072ea71033d78fa002eb2584685cd4a8d46165b1284a7f"
+      "sha256": "e4aeb7994763b675c1abbdd39e756b38efdccbefe4f44d421a7d216892801828"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/00b_mnist_umap3d_true_digit_best_tbs_cluster.html",
       "bytes": 7241742,
-      "sha256": "3e1fbea37406fe527f72cbcc52453ca189130b5b1bf5b1ebfab3724e06cc6968"
+      "sha256": "cda76db7a1642c1b8bc7f60c6c1c09b80f44a0e2adb008daac29a264a24c5c97"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/00c_mnist_umap3d_visible_digit_labels.html",
       "bytes": 7266286,
-      "sha256": "eaa623c39e808fa90c73e9182a0129e18a798d276954105e08e87668b0ff1e43"
+      "sha256": "b4f3cfd04c77e1f38dddcacf4fd3a8b53596e6d5e03022846bf8b4c839107354"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/00d_mnist_umap3d_docstyle_digit_colorbar.html",
       "bytes": 5123169,
-      "sha256": "f817e5c409a6d0b343f562dd68ede9c7156b6ede2a3f7262f1cffe691cf03984"
+      "sha256": "1d2ca2437276d23f81e4fe655dffd43a3e66e0274200ddb0f534363e1bfa569f"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/00e_mnist_umap_point_image_inspector.html",
-      "bytes": 8659825,
-      "sha256": "f380970f7457bb87a91ecf87209fa6ec074de817c20fa23d33d6b3fc0d164ff0"
+      "bytes": 8659996,
+      "sha256": "58639571d8f470950a309234c38327db68dede7848497318d988ec820f9aa7e4"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/00f_mnist_umap3d_point_image_inspector.html",
-      "bytes": 9832658,
-      "sha256": "1e7222658e942fecf5892f11b7f44c03760e27f91a3ce72b42d3c386d53b5fae"
+      "bytes": 9832869,
+      "sha256": "02bbe868d4f860787f5750c2857886fc9d15449f413ab4ceaa47a54bd97e1f00"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/01_best_alpha_setting_per_linkage.html",
       "bytes": 4568619,
-      "sha256": "c44c00d0e6cff51305b6688f78f872a4cc2466efcd440814368e8dbab25f6048"
+      "sha256": "06b183c36fb6650947f93625a8e1aef1568e7d83783731c574c9d0bb708db629"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/02_ward_ari_alpha_heatmap.html",
       "bytes": 4568193,
-      "sha256": "0b9afa3a3f4e288540ae0ea735889e974db9b9fe82711a0824b0f1b1571ecda5"
+      "sha256": "a412c94a24b2084df874b4d776322e7dc5334f89759457c572ce3405b1c09013"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/03_ward_cluster_count_alpha_heatmap.html",
       "bytes": 4567799,
-      "sha256": "5086570b6a4931d2ba08ec0fb034f09a7bf5a5429d7f085b544eabbea95bfca3"
+      "sha256": "fcfefeb850204510776e1c6d1d6f205ba0d8485826b6f3797dd58b5e698f8be7"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/04_best_ward_cluster_digit_composition.html",
       "bytes": 4572125,
-      "sha256": "b839e3e270d679e0091e40b46a0110939297722e0123ac57bc7817e01b408c7c"
+      "sha256": "7acb3b81ff1d40b49b7905d7f23d849fd15825890565cf6a52a665e5a712f711"
     },
     {
       "path": "raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/05_result_source_comparison.html",
       "bytes": 4567799,
-      "sha256": "1d9a0de8eeeb1524d77d534b39675fc6d536e277aeff7fcdec9cbffd002db1aa"
+      "sha256": "790a62603a12befb97708ba4a3da83f4da7a64b1dea8c6f0466c4b4c5023daaa"
     }
   ],
   "notes": [
