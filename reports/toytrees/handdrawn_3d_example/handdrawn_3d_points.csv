@@ -1,0 +1,10 @@
+node,kind,f1,f2,f3
+C1,leaf,0,1,2
+C2,leaf,0,2,1
+C3,leaf,1,3,3
+C4,leaf,2,0,4
+C5,leaf,3,1,5
+C1-C2,internal,0,1.5,1.5
+C3-C4,internal,1.5,1.5,3.5
+C3-C5,internal,2,1.33333,4
+Root,internal,1.2,1.4,3

@@ -23,11 +23,11 @@ repo_root = Path(__file__).resolve().parents[3]
 
 import numpy as np
 import pandas as pd
-from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import BayesianGaussianMixture
+from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.experiments.mnist.run import load_mnist_subset, run_tbs_clustering
 from benchmarks.shared.runners.tbs_diffusion_runner import _build_diffusion_distance
@@ -632,6 +632,8 @@ def create_plotly_higher_category_plot_3d(
     true_higher_category_names: np.ndarray,
     predicted_higher_category_names: np.ndarray,
     output_path: Path,
+    *,
+    visible_digit_labels: bool = False,
 ) -> None:
     """Create interactive 3D UMAP HTML with panels for true/predicted/cluster labels."""
     try:
@@ -654,6 +656,7 @@ def create_plotly_higher_category_plot_3d(
 
     plot_dataframe = pd.DataFrame(
         {
+            "sample": [f"Sample_{sample_index}" for sample_index in range(feature_matrix.shape[0])],
             "x": embedding_3d[:, 0],
             "y": embedding_3d[:, 1],
             "z": embedding_3d[:, 2],
@@ -707,36 +710,62 @@ def create_plotly_higher_category_plot_3d(
         for factor in factors:
             factor_mask = plot_dataframe[color_column] == factor
             panel_points = plot_dataframe[factor_mask]
-            hover_text = [
-                (
-                    f"Digit: {digit}<br>"
-                    f"Tree Cluster: {cluster}<br>"
-                    f"True Higher Category: {true_category}<br>"
-                    f"Pred Higher Category: {pred_category}"
-                )
-                for digit, cluster, true_category, pred_category in zip(
-                    panel_points["digit"],
-                    panel_points["cluster"],
-                    panel_points["true_higher_category"],
-                    panel_points["pred_higher_category"],
-                )
+            customdata = panel_points[
+                ["digit", "sample", "cluster", "true_higher_category", "pred_higher_category"]
+            ].to_numpy()
+            hovertext = [
+                "Digit number: "
+                f"{row.digit}<br>Sample: {row.sample}<br>Tree Cluster: {row.cluster}<br>"
+                f"True Higher Category: {row.true_higher_category}<br>"
+                f"Pred Higher Category: {row.pred_higher_category}"
+                for row in panel_points.itertuples(index=False)
             ]
+            mode = "markers+text" if visible_digit_labels else "markers"
+            text = panel_points["digit"].to_numpy() if visible_digit_labels else None
+            marker_size = 5 if visible_digit_labels else 3
+            textposition = "middle center" if visible_digit_labels else "top center"
+            hovertemplate = "%{hovertext}<extra></extra>"
+            figure.add_trace(
+                go.Scatter3d(
+                    x=panel_points["x"],
+                    y=panel_points["y"],
+                    z=panel_points["z"],
+                    mode=mode,
+                    name=factor,
+                    legendgroup=f"{color_column}_{factor}",
+                    showlegend=(col == 1),
+                    marker={
+                        "size": marker_size,
+                        "opacity": 0.58 if visible_digit_labels else 0.78,
+                        "color": color_by_factor[factor],
+                    },
+                    customdata=customdata,
+                    hovertext=hovertext,
+                    hovertemplate=hovertemplate,
+                    text=text,
+                    textfont={"size": 8, "color": "#111827"},
+                    textposition=textposition,
+                ),
+                row=row,
+                col=col,
+            )
             figure.add_trace(
                 go.Scatter3d(
                     x=panel_points["x"],
                     y=panel_points["y"],
                     z=panel_points["z"],
                     mode="markers",
-                    name=factor,
+                    name=f"{factor} hover target",
                     legendgroup=f"{color_column}_{factor}",
-                    showlegend=(col == 1),
+                    showlegend=False,
                     marker={
-                        "size": 3,
-                        "opacity": 0.78,
-                        "color": color_by_factor[factor],
+                        "size": 24,
+                        "opacity": 0.01,
+                        "color": "#111827",
                     },
-                    hovertemplate="%{text}<extra></extra>",
-                    text=hover_text,
+                    customdata=customdata,
+                    hovertext=hovertext,
+                    hovertemplate=hovertemplate,
                 ),
                 row=row,
                 col=col,

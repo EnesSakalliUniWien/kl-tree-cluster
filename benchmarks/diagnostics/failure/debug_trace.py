@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -17,7 +18,11 @@ AUDIT_CONTRACT_COLUMNS = frozenset(
 
 
 def diagnose_benchmark_failures(
-    results_csv_path: str, audit_dir: str, output_path: str = "failure_report.md"
+    results_csv_path: str,
+    audit_dir: str,
+    output_path: str = "failure_report.md",
+    *,
+    generated_at: str | None = None,
 ):
     """
     Analyzes benchmark results to diagnose underperforming cases (ARI < 0.2).
@@ -49,8 +54,13 @@ def diagnose_benchmark_failures(
         logger.info("No failure cases found (ARI < 0.2).")
         return
 
+    if generated_at is None:
+        generated_at = datetime.now().astimezone().isoformat(timespec="seconds")
+
     report_lines = [
         "# Benchmark Failure Diagnosis",
+        "",
+        f"Generated at: {generated_at}",
         "",
         f"**Source**: `{results_csv_path}`",
         f"**Audit Dir**: `{audit_dir}`",
