@@ -467,23 +467,44 @@ def test_method_registry_exposes_spectral_transport_passthrough_profile():
     assert params["tree_linkage_method"] == "average"
 
 
-def test_method_registry_exposes_full_legacy_commit_method():
-    spec = METHOD_SPECS["tbs_legacy_c2ef9a69"]
-    params = spec.param_grid[0]
+def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly():
+    nn_diffusion = METHOD_SPECS["tbs_diffusion"]
+    nn_params = nn_diffusion.param_grid[0]
+    adaptive_diffusion = METHOD_SPECS["tbs_diffusion_adaptive"]
+    adaptive_params = adaptive_diffusion.param_grid[0]
+    graphtools_diffusion = METHOD_SPECS["tbs_diffusion_graphtools"]
+    graphtools_params = graphtools_diffusion.param_grid[0]
 
-    assert "tbs_legacy_c2ef9a69" in TBS_RUNNER_METHODS
-    assert params["tree_distance_metric"] == "hamming"
-    assert params["tree_linkage_method"] == "average"
-    assert params["tree_builder"] == "linkage"
-    assert params["tree_rooting"] == "linkage_root"
+    assert nn_diffusion.name == "TBS (Hamming NN Diffusion)"
+    assert nn_params["diffusion_method"] == "hamming_nn_diffusion"
+    assert nn_params["k_neighbors"] == 15
+    assert nn_params["branch_length_optimization_method"] == "linkage_ultrametric"
+
+    assert adaptive_diffusion.name == "TBS (Adaptive pydiffmap Diffusion)"
+    assert adaptive_params["diffusion_method"] == "adaptive_pydiffmap_diffusion"
+    assert adaptive_params["bandwidth_type"] == "-1/(d+2)"
+    assert adaptive_params["epsilon"] == "median"
+    assert adaptive_params["branch_length_optimization_method"] == "linkage_ultrametric"
+
+    assert graphtools_diffusion.name == "TBS (graphtools Kernel Diffusion)"
+    assert graphtools_params["diffusion_method"] == "graphtools_kernel_diffusion"
+    assert graphtools_params["k_neighbors"] == 10
+    assert graphtools_params["decay"] == 40
+    assert graphtools_params["kernel_symm"] == "+"
+    assert graphtools_params["branch_length_optimization_method"] == "linkage_ultrametric"
 
 
-def test_method_registry_exposes_guarded_rescue_profiles():
+def test_method_registry_exposes_current_support_profiles_without_legacy_ids():
     internal = METHOD_SPECS["tbs_internal_filter_v1"].param_grid[0]
     branch_length = METHOD_SPECS["tbs_internal_filter_branch_length_v1"].param_grid[0]
     bandwidth = METHOD_SPECS["tbs_bandwidth_context_v1"].param_grid[0]
-    rescued = METHOD_SPECS["tbs_rescued_legacy_v1"].param_grid[0]
 
+    assert "tbs_legacy_c2ef9a69" not in METHOD_SPECS
+    assert "tbs_legacy_internal_spectral_diagnostic" not in METHOD_SPECS
+    assert "tbs_rescued_legacy_v1" not in METHOD_SPECS
+    assert "tbs_legacy_c2ef9a69" not in TBS_RUNNER_METHODS
+    assert "tbs_legacy_internal_spectral_diagnostic" not in TBS_RUNNER_METHODS
+    assert "tbs_rescued_legacy_v1" not in TBS_RUNNER_METHODS
     assert internal["spectral_include_internal_barycenters"] is True
     assert internal["spectral_internal_distribution_mode"] == "empirical_barycenter"
     assert internal["spectral_mp_row_count_mode"] == "leaf_effective_rows"
@@ -495,21 +516,6 @@ def test_method_registry_exposes_guarded_rescue_profiles():
     assert bandwidth["neighborhood_bandwidth_profile"] == (
         "regional_tau_branch_length_support_only_v1"
     )
-    assert rescued["sibling_gate_profile"] == (
-        "fixed_coordinate_spectral_transport_passthrough_v1"
-    )
-    assert rescued["spectral_mp_row_count_mode"] == "leaf_effective_rows"
-    assert rescued["enforce_internal_support_thresholds"] is True
-
-
-def test_legacy_commit_package_imports_tree_decomposition():
-    from tree_break_selection.legacy_methods.commit_c2ef9a69 import COMMIT
-    from tree_break_selection.legacy_methods.commit_c2ef9a69.tree_break_selection.hierarchy_analysis.tree_decomposition import (
-        TreeDecomposition,
-    )
-
-    assert COMMIT == "c2ef9a69e0888168950bdee4a41ae8ab9996e32f"
-    assert TreeDecomposition.__name__ == "TreeDecomposition"
 
 
 def test_run_clustering_result_dispatches_conditional_topology_as_kl(monkeypatch):
@@ -563,81 +569,6 @@ def test_run_clustering_result_dispatches_conditional_topology_as_kl(monkeypatch
         "fixed_coordinate_conditional_topology_diagnostic_v1"
     )
     assert captured["kwargs"]["tree_linkage_method"] == "average"
-
-
-def test_run_clustering_result_dispatches_full_legacy_commit_as_kl(monkeypatch):
-    captured = {}
-
-    def _capture_runner(*args, **kwargs):
-        captured["args"] = args
-        captured["kwargs"] = kwargs
-        return MethodRunResult(
-            labels=np.array([0, 0, 1, 1], dtype=int),
-            found_clusters=2,
-            report_df=None,
-            status="ok",
-            skip_reason=None,
-            extra={},
-        )
-
-    monkeypatch.setitem(
-        METHOD_SPECS,
-        "tbs_legacy_c2ef9a69",
-        MethodSpec(
-            name="TBS Legacy Full Method (commit c2ef9a69)",
-            runner=_capture_runner,
-            param_grid=[
-                {
-                    "tree_distance_metric": "hamming",
-                    "tree_linkage_method": "average",
-                    "tree_builder": "linkage",
-                    "tree_rooting": "linkage_root",
-                }
-            ],
-        ),
-    )
-
-    run_clustering_result(
-        data_df=_toy_dataframe(),
-        method_id="tbs_legacy_c2ef9a69",
-        params={
-            "tree_distance_metric": "euclidean",
-            "tree_linkage_method": "average",
-            "tree_builder": "linkage",
-            "tree_rooting": "linkage_root",
-        },
-        seed=42,
-        distance_condensed=pdist(_toy_dataframe().values, metric="euclidean"),
-    )
-
-    assert captured["args"][1] is not None
-    assert captured["kwargs"]["tree_builder"] == "linkage"
-    assert captured["kwargs"]["tree_rooting"] == "linkage_root"
-    assert captured["kwargs"]["tree_linkage_method"] == "average"
-
-
-def test_run_clustering_result_runs_full_legacy_commit_smoke():
-    df = _toy_dataframe()
-
-    result = run_clustering_result(
-        data_df=df,
-        method_id="tbs_legacy_c2ef9a69",
-        params={
-            "tree_distance_metric": "euclidean",
-            "tree_linkage_method": "average",
-            "tree_builder": "linkage",
-            "tree_rooting": "linkage_root",
-        },
-        seed=42,
-        distance_condensed=pdist(df.values, metric="euclidean"),
-    )
-
-    assert result.status == "ok"
-    assert result.labels is not None
-    assert len(result.labels) == len(df)
-    assert result.extra["legacy_commit"] == (
-        "c2ef9a69e0888168950bdee4a41ae8ab9996e32f"
-    )
 
 
 def test_run_clustering_result_dispatches_global_passthrough_refined_as_kl(monkeypatch):

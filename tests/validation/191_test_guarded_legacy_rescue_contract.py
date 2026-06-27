@@ -113,23 +113,25 @@ def test_coherent_support_decision_fails_closed_on_root_invalid() -> None:
     assert decision.method_action == "fail_closed_root_invalid"
 
 
-def test_rescued_legacy_profiles_are_exposed_but_not_default() -> None:
+def test_current_support_profiles_are_exposed_without_rescued_legacy() -> None:
     assert "tbs_internal_filter_v1" in TBS_RUNNER_METHODS
     assert "tbs_internal_filter_branch_length_v1" in TBS_RUNNER_METHODS
     assert "tbs_bandwidth_context_v1" in TBS_RUNNER_METHODS
-    assert "tbs_rescued_legacy_v1" in TBS_RUNNER_METHODS
+    assert "tbs_rescued_legacy_v1" not in TBS_RUNNER_METHODS
+    assert "tbs_rescued_legacy_v1" not in METHOD_SPECS
 
     current = METHOD_SPECS["tbs"].param_grid[0]
-    rescued = METHOD_SPECS["tbs_rescued_legacy_v1"].param_grid[0]
+    branch_length = METHOD_SPECS["tbs_internal_filter_branch_length_v1"].param_grid[0]
+    bandwidth = METHOD_SPECS["tbs_bandwidth_context_v1"].param_grid[0]
 
     assert "spectral_include_internal_barycenters" not in current
-    assert rescued["spectral_include_internal_barycenters"] is True
-    assert rescued["spectral_internal_distribution_mode"] == "branch_length_state"
-    assert rescued["spectral_mp_row_count_mode"] == "leaf_effective_rows"
-    assert rescued["neighborhood_bandwidth_profile"] == (
+    assert branch_length["spectral_include_internal_barycenters"] is True
+    assert branch_length["spectral_internal_distribution_mode"] == "branch_length_state"
+    assert branch_length["spectral_mp_row_count_mode"] == "leaf_effective_rows"
+    assert branch_length["enforce_internal_support_thresholds"] is True
+    assert bandwidth["neighborhood_bandwidth_profile"] == (
         "regional_tau_branch_length_support_only_v1"
     )
-    assert rescued["enforce_internal_support_thresholds"] is True
 
 
 def test_internal_filter_hard_overlap_r1_fails_closed() -> None:

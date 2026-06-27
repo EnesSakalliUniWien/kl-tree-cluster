@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import textwrap
 from collections.abc import Callable
 from pathlib import Path
@@ -28,6 +29,20 @@ from .embedding import (
 )
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_BENCHMARK_TREE_LAYOUT = "radial"
+
+
+def _benchmark_tree_layout() -> str:
+    """Return the tree layout used by benchmark report pages."""
+    layout = os.getenv("TBS_BENCHMARK_TREE_LAYOUT", DEFAULT_BENCHMARK_TREE_LAYOUT)
+    layout = layout.strip().lower()
+    if layout not in {"radial", "rectangular"}:
+        raise ValueError(
+            "TBS_BENCHMARK_TREE_LAYOUT must be 'radial' or 'rectangular', "
+            f"got {layout!r}."
+        )
+    return layout
 
 
 def _format_ari_nmi(result: ComputedResultRecord, *, compact: bool = False) -> str:
@@ -94,6 +109,7 @@ def _tree_plot_style(tree, decomposition: dict) -> dict[str, object]:
         "figsize": PDF_WIDE_PAGE_SIZE_INCHES if dense else PDF_PAGE_SIZE_INCHES,
         "node_size": 5 if dense else 12,
         "font_size": 7 if dense else 9,
+        "show_legend": not dense,
         "max_cluster_legend_entries": 0 if num_clusters > 20 else 20,
         "subplots_right": 0.82 if num_clusters <= 20 else 0.88,
     }
@@ -233,6 +249,7 @@ def _create_tree_figures_for_case(
 
     for idx, result in enumerate(tree_results, start=1):
         plot_style = _tree_plot_style(result.tree, result.decomposition)
+        layout = _benchmark_tree_layout()
         fig, ax = plt.subplots(1, 1, figsize=plot_style["figsize"])
         set_pdf_page_size(fig, plot_style["figsize"])
         fig.suptitle(
@@ -266,7 +283,9 @@ def _create_tree_figures_for_case(
             node_size=int(plot_style["node_size"]),
             font_size=int(plot_style["font_size"]),
             title=title,
+            layout=layout,
             ax=ax,
+            show_legend=bool(plot_style["show_legend"]),
             max_cluster_legend_entries=int(plot_style["max_cluster_legend_entries"]),
             legend_outside=True,
         )
@@ -309,6 +328,7 @@ def _create_tree_panel_renderers_for_case(
                 node_size=8,
                 font_size=6,
                 title="",
+                layout=_benchmark_tree_layout(),
                 ax=ax,
                 show_legend=False,
             )
@@ -686,4 +706,5 @@ __all__ = [
     "create_tree_plots_from_results",
     "create_umap_then_tree_plots_from_results",
     "create_tree_then_umap_plots_from_results",
+    "DEFAULT_BENCHMARK_TREE_LAYOUT",
 ]

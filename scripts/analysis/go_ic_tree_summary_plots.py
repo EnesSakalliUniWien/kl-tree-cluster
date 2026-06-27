@@ -70,7 +70,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--raw-kak-dir", type=Path)
     parser.add_argument("--adaptive-diffusion-kak-dir", type=Path)
-    parser.add_argument("--legacy-c2ef-assignments", type=Path)
     parser.add_argument("--whole-adaptive-dir", type=Path)
     parser.add_argument(
         "--method-matrix-summary",
@@ -108,7 +107,6 @@ def reader_run_id(run_id: str) -> str:
 def display_label(run_id: str) -> str:
     replacements = {
         "whole_adaptive_diffusion": "whole adaptive diffusion",
-        "legacy_c2ef__tfidf__components_02_05": "legacy c2ef, TF-IDF modes 02-05",
     }
     if run_id in replacements:
         return replacements[run_id]
@@ -117,7 +115,6 @@ def display_label(run_id: str) -> str:
     label = label.replace("adaptive_diffusion_cosine_subspace__", "adaptive diffusion cosine subspace, ")
     label = label.replace("raw_kak__", "raw cosine subspace, ")
     label = label.replace("raw_cosine_subspace__", "raw cosine subspace, ")
-    label = label.replace("legacy_c2ef__", "legacy c2ef, ")
     label = label.replace("current__", "current, ")
     label = label.replace("whole_adaptive_diffusion__", "whole adaptive diffusion, ")
     label = label.replace("__", ", ")
@@ -268,27 +265,6 @@ def add_candidates_from_diffusion_kak(path: Path | None) -> list[Candidate]:
     return rows
 
 
-def add_legacy_candidate(path: Path | None) -> list[Candidate]:
-    if path is None or not path.exists():
-        return []
-    return [
-        Candidate(
-            family="legacy_c2ef",
-            run_id="legacy_c2ef__tfidf__components_02_05",
-            weighting="tfidf",
-            block_name="components_02_05",
-            block_start=2,
-            block_end=5,
-            assignments_path=path,
-            summary={
-                "block_energy_fraction": math.nan,
-                "segmentation_bic": math.nan,
-                "n_clusters": math.nan,
-            },
-        )
-    ]
-
-
 def add_whole_adaptive_candidate(path: Path | None) -> list[Candidate]:
     if path is None:
         return []
@@ -369,7 +345,7 @@ def candidate_subspace_and_tree(
     if tree_geometry == "":
         if candidate.family == "whole_adaptive_diffusion":
             tree_geometry = "whole_adaptive_diffusion"
-        elif candidate.family in {"raw_kak", "legacy_c2ef"}:
+        elif candidate.family == "raw_kak":
             tree_geometry = "raw_cosine_subspace"
         elif candidate.family == "adaptive_diffusion_kak":
             tree_geometry = "adaptive_diffusion_cosine_subspace"
@@ -895,7 +871,6 @@ def main() -> None:
     candidates.extend(add_candidates_from_method_matrix(args.method_matrix_summary))
     candidates.extend(add_candidates_from_raw_kak(args.raw_kak_dir))
     candidates.extend(add_candidates_from_diffusion_kak(args.adaptive_diffusion_kak_dir))
-    candidates.extend(add_legacy_candidate(args.legacy_c2ef_assignments))
     candidates.extend(add_whole_adaptive_candidate(args.whole_adaptive_dir))
     if not candidates:
         raise ValueError("No candidate tree assignments were found.")

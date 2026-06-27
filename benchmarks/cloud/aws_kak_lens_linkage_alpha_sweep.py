@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from dataclasses import dataclass, replace
@@ -31,6 +30,7 @@ from benchmarks.diagnostics.spectral.kak_lens_alpha_sweep import (
     parse_lens,
     parse_linkage_methods,
 )
+from benchmarks.shared.env import resolve_aws_batch_shard_index as resolve_shard_index
 
 AWS_KAK_LENS_SWEEP_ROLE = "aws_distributed_kak_lens_linkage_alpha_sweep"
 SHARD_MANIFEST_NAME = "aws_kak_lens_linkage_alpha_sweep_shard_manifest.json"
@@ -98,28 +98,6 @@ def parse_lenses(raw_lenses: str | None) -> tuple[LensSpec, ...]:
     if raw_lenses is None or not raw_lenses.strip():
         return DEFAULT_LENSES
     return tuple(parse_lens(item.strip()) for item in raw_lenses.split(",") if item.strip())
-
-
-def resolve_shard_index(
-    explicit_index: int | None,
-    environ: dict[str, str] | None = None,
-) -> int:
-    if explicit_index is not None:
-        if explicit_index < 0:
-            raise ValueError(f"shard_index must be non-negative; got {explicit_index!r}.")
-        return int(explicit_index)
-
-    environment = os.environ if environ is None else environ
-    raw_index = environment.get("AWS_BATCH_JOB_ARRAY_INDEX")
-    if raw_index is None:
-        raise ValueError(
-            "Shard index is required. Pass --shard-index outside AWS Batch, or "
-            "run as an AWS Batch array job with AWS_BATCH_JOB_ARRAY_INDEX."
-        )
-    shard_index = int(raw_index)
-    if shard_index < 0:
-        raise ValueError(f"AWS_BATCH_JOB_ARRAY_INDEX must be non-negative; got {raw_index!r}.")
-    return shard_index
 
 
 def build_groups(configured: AwsKakLensSweepConfig) -> tuple[LensLinkageGroup, ...]:

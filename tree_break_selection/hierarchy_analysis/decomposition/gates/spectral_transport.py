@@ -21,6 +21,8 @@ from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.
     SpectralContext,
 )
 
+from .annotation_predicates import node_sibling_gate_open, node_split_prerequisites
+
 DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE = 0.05
 DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY = 1.0
 DEFAULT_SPECTRAL_TRANSPORT_MAX_COST = 1.2
@@ -259,50 +261,6 @@ def match_mode_transport_edge(
     )
 
 
-def _annotation_bool(
-    annotations_df: pd.DataFrame,
-    node: object,
-    column: str,
-) -> bool:
-    if node not in annotations_df.index or column not in annotations_df.columns:
-        return False
-    value = annotations_df.loc[node, column]
-    return bool(pd.notna(value) and bool(value))
-
-
-def _node_split_prerequisites(
-    tree,
-    annotations_df: pd.DataFrame,
-    node: object,
-) -> bool:
-    children = list(tree.successors(node))
-    if len(children) != 2:
-        return False
-    return any(
-        _annotation_bool(
-            annotations_df,
-            child,
-            "Child_Parent_Divergence_Significant",
-        )
-        for child in children
-    )
-
-
-def _node_sibling_gate_open(
-    annotations_df: pd.DataFrame,
-    node: object,
-) -> bool:
-    return _annotation_bool(
-        annotations_df,
-        node,
-        "Sibling_BH_Different",
-    ) and not _annotation_bool(
-        annotations_df,
-        node,
-        "Sibling_Divergence_Skipped",
-    )
-
-
 def _empty_output(
     annotations_df: pd.DataFrame,
     *,
@@ -401,11 +359,9 @@ def annotate_spectral_transport_passthrough_support(
                 not measured_transport or (finite_cost and transport.cost <= threshold)
             )
 
-    split_prerequisites = {
-        node: _node_split_prerequisites(tree, out, node) for node in tree.nodes
-    }
+    split_prerequisites = {node: node_split_prerequisites(tree, out, node) for node in tree.nodes}
     can_split = {
-        node: bool(split_prerequisites[node] and _node_sibling_gate_open(out, node))
+        node: bool(split_prerequisites[node] and node_sibling_gate_open(out, node))
         for node in tree.nodes
     }
 

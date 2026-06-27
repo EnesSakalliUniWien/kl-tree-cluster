@@ -189,18 +189,6 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "tbs_legacy_internal_spectral_diagnostic": MethodSpec(
-        name="TBS (Legacy Internal-Node Spectral Diagnostic)",
-        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
-        param_grid=[
-            {
-                "tree_distance_metric": "hamming",
-                "tree_linkage_method": "average",
-                "spectral_include_internal_barycenters": True,
-                "spectral_mp_row_count_mode": "legacy_stacked_rows",
-            },
-        ],
-    ),
     "tbs_internal_filter_v1": MethodSpec(
         name="TBS Internal Spectral Filter",
         runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
@@ -242,41 +230,6 @@ METHOD_SPECS: dict[str, MethodSpec] = {
             },
         ],
     ),
-    "tbs_rescued_legacy_v1": MethodSpec(
-        name="TBS Guarded Legacy-Stabilized Candidate",
-        runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
-        param_grid=[
-            {
-                "tree_distance_metric": "hamming",
-                "tree_linkage_method": "average",
-                "spectral_include_internal_barycenters": True,
-                "spectral_internal_distribution_mode": "branch_length_state",
-                "spectral_mp_row_count_mode": "leaf_effective_rows",
-                "enforce_internal_support_thresholds": True,
-                "sibling_gate_profile": (
-                    "fixed_coordinate_spectral_transport_passthrough_v1"
-                ),
-                "neighborhood_bandwidth_profile": (
-                    "regional_tau_branch_length_support_only_v1"
-                ),
-            },
-        ],
-    ),
-    "tbs_legacy_c2ef9a69": MethodSpec(
-        name="TBS Legacy Full Method (commit c2ef9a69)",
-        runner=_import_runner(
-            "benchmarks.shared.runners.legacy_commit_runner",
-            "_run_legacy_c2ef9a69_tbs_method",
-        ),
-        param_grid=[
-            {
-                "tree_distance_metric": "hamming",
-                "tree_linkage_method": "average",
-                "tree_builder": "linkage",
-                "tree_rooting": "linkage_root",
-            },
-        ],
-    ),
     "tbs_neighbor_joining": MethodSpec(
         name="TBS (Neighbor Joining, MAD Root)",
         runner=_import_runner("benchmarks.shared.runners.tbs_runner", "_run_tbs_method"),
@@ -305,27 +258,57 @@ METHOD_SPECS: dict[str, MethodSpec] = {
         ],
     ),
     "tbs_diffusion": MethodSpec(
-        name="TBS (Diffusion)",
+        name="TBS (Hamming NN Diffusion)",
         runner=_import_runner(
             "benchmarks.shared.runners.tbs_diffusion_runner",
             "_run_tbs_diffusion_method",
         ),
-        param_grid=[{"k_neighbors": 15, "diffusion_time": 3}],
+        param_grid=[
+            {
+                "diffusion_method": "hamming_nn_diffusion",
+                "k_neighbors": 15,
+                "diffusion_time": 3,
+                "branch_length_optimization_method": "linkage_ultrametric",
+            }
+        ],
     ),
     "tbs_diffusion_adaptive": MethodSpec(
-        name="TBS (Adaptive Diffusion)",
+        name="TBS (Adaptive pydiffmap Diffusion)",
         runner=_import_runner(
             "benchmarks.shared.runners.tbs_diffusion_runner",
             "_run_tbs_diffusion_adaptive_method",
         ),
         param_grid=[
             {
+                "diffusion_method": "adaptive_pydiffmap_diffusion",
                 "k_neighbors": 10,
                 "diffusion_time": 3,
                 "n_components": 30,
                 "metric": "hamming",
                 "bandwidth_type": "-1/(d+2)",
                 "epsilon": "median",
+                "branch_length_optimization_method": "linkage_ultrametric",
+            }
+        ],
+    ),
+    "tbs_diffusion_graphtools": MethodSpec(
+        name="TBS (graphtools Kernel Diffusion)",
+        runner=_import_runner(
+            "benchmarks.shared.runners.tbs_diffusion_runner",
+            "_run_tbs_diffusion_graphtools_method",
+        ),
+        param_grid=[
+            {
+                "diffusion_method": "graphtools_kernel_diffusion",
+                "k_neighbors": 10,
+                "diffusion_time": 3,
+                "n_components": 30,
+                "metric": "hamming",
+                "decay": 40,
+                "anisotropy": 0.0,
+                "kernel_symm": "+",
+                "random_state": 0,
+                "branch_length_optimization_method": "linkage_ultrametric",
             }
         ],
     ),

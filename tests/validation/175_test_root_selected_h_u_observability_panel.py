@@ -36,7 +36,6 @@ def _requirement(
         "required_population_law_status": status,
         "required_mp_edge_multiplier": multiplier,
         "production_inference_status": production_status,
-        "legacy_comparison_interpretation": "legacy_comparison_neutral_or_missing",
     }
 
 

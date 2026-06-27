@@ -161,6 +161,12 @@ def run_benchmarks():
     if configured_run_dir:
         print(f"Using configured run directory: {run_dir}")
 
+    if enable_umap and "TBS_EMBEDDING_CACHE_DIR" not in os.environ:
+        embedding_cache_dir = base_output_dir / ".embedding_cache"
+        embedding_cache_dir.mkdir(parents=True, exist_ok=True)
+        os.environ["TBS_EMBEDDING_CACHE_DIR"] = str(embedding_cache_dir)
+        print(f"Embedding cache: {embedding_cache_dir}")
+
     output_path = run_dir / f"{case_suite}_benchmark_comparison.csv"
     pdf_dir = run_dir / "plots"
     if enable_plots:

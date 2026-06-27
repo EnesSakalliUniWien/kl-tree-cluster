@@ -54,21 +54,6 @@ def test_hard_negative_leaks_only_when_validity_supported_and_open() -> None:
     assert supported is True
 
 
-def test_legacy_classifier_marks_invalid_root_fragmentation() -> None:
-    status, action, supported = panel.classify_legacy_hard_negative_row(
-        {
-            "run_status": "ok",
-            "true_clusters": 4,
-            "found_clusters": 6,
-            "root_partition_truth_ari": 0.001,
-        }
-    )
-
-    assert status == "legacy_fragments_with_invalid_root_no_validity_guard"
-    assert action == "treat_as_legacy_warning_fragmentation_without_root_validity"
-    assert supported is False
-
-
 def _toy_tree_for_rootless_cut() -> PosetTree:
     tree = PosetTree()
     tree.add_edges_from(

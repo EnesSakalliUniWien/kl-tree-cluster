@@ -62,7 +62,6 @@ ROW_COLUMNS = (
     "required_population_law_status",
     "production_inference_status",
     "next_mathematical_step",
-    "legacy_comparison_interpretation",
 )
 
 SUMMARY_COLUMNS = (
@@ -163,7 +162,6 @@ def build_root_selected_population_law_requirement_rows(
             "exact_support_count",
             "action_dominating_support_count",
             "best_action_dominating_support_s_root_log",
-            "legacy_comparison_interpretation",
         },
         "action dominance rows",
     )
@@ -221,10 +219,6 @@ def build_root_selected_population_law_requirement_rows(
                     else "use_exact_root_tail_panel"
                     if exact_count > 0
                     else "generate_support_before_estimating_H_u"
-                ),
-                "legacy_comparison_interpretation": _string_value(
-                    row,
-                    "legacy_comparison_interpretation",
                 ),
             }
         )

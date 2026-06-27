@@ -36,22 +36,11 @@ def _action_dominating_support() -> dict[str, object]:
     }
 
 
-def _tail() -> dict[str, object]:
-    return {
-        "target_case_id": "target",
-        "legacy_full_selected_null_legacy_false_split": True,
-        "legacy_comparison_interpretation": (
-            "legacy_full_method_leaks_selected_null_root_risk"
-        ),
-    }
-
-
 def test_action_dominating_support_does_not_become_production_p_value() -> None:
     rows = panel.build_root_selected_action_dominance_tail_rows(
         joined_feasibility_rows=pd.DataFrame.from_records(
             [_target(), _action_dominating_support()]
         ),
-        root_tail_rows=pd.DataFrame.from_records([_tail()]),
     )
 
     row = rows.iloc[0]
@@ -68,7 +57,7 @@ def test_action_dominating_support_does_not_become_production_p_value() -> None:
     assert row["next_mathematical_step"] == (
         "prove_or_reject_one_sided_action_spectral_tail_monotonicity"
     )
-    assert row["legacy_full_selected_null_legacy_false_split"]
+    assert "legacy_full_selected_null_legacy_false_split" not in rows.columns
 
 
 def test_action_dominance_summary_counts_new_diagnostic_support() -> None:
@@ -76,7 +65,6 @@ def test_action_dominance_summary_counts_new_diagnostic_support() -> None:
         joined_feasibility_rows=pd.DataFrame.from_records(
             [_target(), _action_dominating_support()]
         ),
-        root_tail_rows=pd.DataFrame.from_records([_tail()]),
     )
 
     summary = panel.summarize_root_selected_action_dominance_tail_rows(rows).iloc[0]

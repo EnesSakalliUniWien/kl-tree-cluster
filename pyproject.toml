@@ -48,6 +48,7 @@ viz = [
     "umap-learn>=0.5.11",
     "kaleido>=0.2.1",
     "pypdf>=5.0.0",
+    "pygraphviz>=2.0",
 ]
 all = [
     "jupyter>=1.0.0",
@@ -67,6 +68,10 @@ all = [
     "umap-learn>=0.5.11",
     "kaleido>=0.2.1",
     "pypdf>=5.0.0",
+    "pygraphviz>=2.0",
+]
+experimental-gpl = [
+    "graphtools>=2.1.0",
 ]
 
 [build-system]
@@ -96,6 +101,6 @@ ignore = ["E402", "E501"]
 [tool.deptry]
 ignore_notebooks = true
 known_first_party = ["benchmarks", "tree_break_selection"]
-pep621_dev_dependency_groups = ["dev", "benchmark", "viz", "all"]
+pep621_dev_dependency_groups = ["dev", "benchmark", "viz", "all", "experimental-gpl"]
 extend_exclude = ["^manuscript/", "^notebooks/"]
 package_module_name_map = { "python-louvain" = "community", "scikit-bio" = "skbio" }

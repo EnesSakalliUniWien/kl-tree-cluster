@@ -200,45 +200,6 @@ def classify_hard_negative_row(
     )
 
 
-def classify_legacy_hard_negative_row(
-    row: dict[str, object] | pd.Series,
-    *,
-    root_truth_ari_tolerance: float = 0.05,
-) -> tuple[str, str, bool]:
-    """Return a comparator status for the old method without root-validity guards."""
-    if str(row.get("run_status", "ok")) != "ok":
-        return (
-            "legacy_geometry_skipped",
-            "legacy_geometry_unsupported_or_failed",
-            False,
-        )
-
-    root_ari = _finite_float(row.get("root_partition_truth_ari"))
-    found_clusters = _finite_float(row.get("found_clusters"))
-    true_clusters = _finite_float(row.get("true_clusters"))
-    root_misaligned = (
-        not math.isfinite(root_ari)
-        or abs(root_ari) <= float(root_truth_ari_tolerance)
-    )
-    if root_misaligned and found_clusters > true_clusters:
-        return (
-            "legacy_fragments_with_invalid_root_no_validity_guard",
-            "treat_as_legacy_warning_fragmentation_without_root_validity",
-            False,
-        )
-    if root_misaligned:
-        return (
-            "legacy_no_validity_guard_root_misaligned_but_not_fragmented",
-            "treat_as_legacy_fail_closed_comparator",
-            False,
-        )
-    return (
-        "legacy_root_truth_aligned_without_validity_guard",
-        "inspect_legacy_root_alignment_not_a_current_rescue_rule",
-        False,
-    )
-
-
 def _root_node(tree: object) -> object:
     if hasattr(tree, "root"):
         return tree.root()
@@ -522,18 +483,13 @@ def _row_for_geometry(
         "rootless_method_action": "inspect_tree_before_rootless_rescue",
     }
     if result.status != "ok":
-        if config.method_id == "tbs_legacy_c2ef9a69":
-            status, action, validity_supported = classify_legacy_hard_negative_row(
-                base_row
-            )
-        else:
-            status, action, validity_supported = classify_hard_negative_row(
-                base_row,
-                root_stability_threshold=float(config.root_stability_threshold),
-                root_selective_permutation_alpha=float(
-                    config.root_selective_permutation_alpha
-                ),
-            )
+        status, action, validity_supported = classify_hard_negative_row(
+            base_row,
+            root_stability_threshold=float(config.root_stability_threshold),
+            root_selective_permutation_alpha=float(
+                config.root_selective_permutation_alpha
+            ),
+        )
         base_row.update(
             {
                 "root_validity_supported": bool(validity_supported),
@@ -633,18 +589,13 @@ def _row_for_geometry(
             ),
         }
     )
-    if config.method_id == "tbs_legacy_c2ef9a69":
-        status, action, validity_supported = classify_legacy_hard_negative_row(
-            base_row
-        )
-    else:
-        status, action, validity_supported = classify_hard_negative_row(
-            base_row,
-            root_stability_threshold=float(config.root_stability_threshold),
-            root_selective_permutation_alpha=(
-                float(config.root_selective_permutation_alpha)
-            ),
-        )
+    status, action, validity_supported = classify_hard_negative_row(
+        base_row,
+        root_stability_threshold=float(config.root_stability_threshold),
+        root_selective_permutation_alpha=(
+            float(config.root_selective_permutation_alpha)
+        ),
+    )
     base_row.update(
         {
             "root_validity_supported": bool(validity_supported),
@@ -663,8 +614,8 @@ def build_root_tree_geometry_hard_negative_replay_rows(
         raise ValueError("replicates must be positive.")
     if config.data_role not in {"signal", "null"}:
         raise ValueError("data_role must be 'signal' or 'null'.")
-    if config.method_id not in {"tbs", "tbs_legacy_c2ef9a69"}:
-        raise ValueError("method_id must be 'tbs' or 'tbs_legacy_c2ef9a69'.")
+    if config.method_id != "tbs":
+        raise ValueError("method_id must be 'tbs'.")
     if not 0.0 < float(config.sibling_alpha) < 1.0:
         raise ValueError("sibling_alpha must lie in (0, 1).")
     if not 0.0 < float(config.edge_alpha) < 1.0:
@@ -732,9 +683,6 @@ def summarize_root_tree_geometry_hard_negative_replay_rows(
     leak_mask = rows["hard_negative_control_status"].eq(
         "hard_negative_control_leaked_root_validity_supported"
     )
-    legacy_warning_mask = rows["hard_negative_control_status"].eq(
-        "legacy_fragments_with_invalid_root_no_validity_guard"
-    )
     rootless_supported_mask = (
         rows["unrooted_geometry_status"].eq(
             "unrooted_edge_cut_truth_aligned_bipartition_available"
@@ -769,9 +717,6 @@ def summarize_root_tree_geometry_hard_negative_replay_rows(
                 "skipped_geometry_count": int(skipped_mask.sum()),
                 "root_validity_supported_count": int(valid_mask.sum()),
                 "hard_negative_leak_count": int(leak_mask.sum()),
-                "legacy_invalid_root_fragmentation_count": int(
-                    legacy_warning_mask.sum()
-                ),
                 "rootless_truth_aligned_geometry_count": int(
                     rootless_supported_mask.sum()
                 ),
@@ -866,7 +811,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--method-id",
         default="tbs",
-        choices=("tbs", "tbs_legacy_c2ef9a69"),
+        choices=("tbs",),
     )
     parser.add_argument(
         "--profile-id",

@@ -62,7 +62,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--include-method-matrix",
         action="store_true",
-        help="Also run the legacy/current x tree-geometry candidate matrix as an audit stage.",
+        help="Also run the current x tree-geometry candidate matrix as an audit stage.",
     )
     parser.add_argument(
         "--audit-paths",
@@ -92,8 +92,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--method-versions",
         nargs="+",
-        default=["legacy_c2ef", "current"],
-        choices=["legacy_c2ef", "current"],
+        default=["current"],
+        choices=["current"],
     )
     parser.add_argument(
         "--tree-geometries",
@@ -271,7 +271,7 @@ def build_pipeline_plan(args: argparse.Namespace, output_dir: Path | None = None
                 stage_id="20_method_tree_matrix_audit",
                 analysis_level="10_candidate_tree_generation",
                 description=(
-                    "Optional legacy/current x tree-geometry candidate matrix. "
+                    "Optional current x tree-geometry candidate matrix. "
                     "Use as an audit, not as the canonical reader PDF pipeline."
                 ),
                 output_dir=root / "20_method_tree_matrix_audit",

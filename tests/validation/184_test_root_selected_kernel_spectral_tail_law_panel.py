@@ -165,23 +165,6 @@ def _deformed_support() -> pd.DataFrame:
     )
 
 
-def _legacy_rows() -> pd.DataFrame:
-    return pd.DataFrame.from_records(
-        [
-            {
-                "case_id": "target_supported",
-                "data_role": "selected_null",
-                "legacy_false_split": False,
-            },
-            {
-                "case_id": "target_supported",
-                "data_role": "signal",
-                "delta_ari_legacy_minus_current": 0.2,
-            },
-        ]
-    )
-
-
 def _observed_root_summary() -> pd.DataFrame:
     return pd.DataFrame.from_records(
         [
@@ -211,7 +194,6 @@ def test_kernel_spectral_tail_adds_support_without_using_diagnostic_neighbors(
         strict_tail_rows=_strict_rows(),
         deformed_mp_edge_rows=_deformed_targets(),
         deformed_mp_edge_support_rows=_deformed_support(),
-        legacy_full_pairwise_rows=_legacy_rows(),
         config=config,
     )
 
@@ -245,12 +227,10 @@ def test_kernel_spectral_tail_summary_and_writes_outputs(tmp_path: Path) -> None
     strict_path = tmp_path / "strict.csv"
     deformed_path = tmp_path / "deformed.csv"
     support_path = tmp_path / "support.csv"
-    legacy_path = tmp_path / "legacy.csv"
     _joined_rows().to_csv(joined_path, index=False)
     _strict_rows().to_csv(strict_path, index=False)
     _deformed_targets().to_csv(deformed_path, index=False)
     _deformed_support().to_csv(support_path, index=False)
-    _legacy_rows().to_csv(legacy_path, index=False)
 
     outputs = panel.run_kernel_spectral_tail_law_panel(
         panel.RootSelectedKernelSpectralTailLawConfig(
@@ -259,7 +239,6 @@ def test_kernel_spectral_tail_summary_and_writes_outputs(tmp_path: Path) -> None
             strict_tail_rows_path=strict_path,
             deformed_mp_edge_rows_path=deformed_path,
             deformed_mp_edge_support_rows_path=support_path,
-            legacy_full_pairwise_rows_path=legacy_path,
             min_topology_effective_sample_size=1.0,
             max_topology_weight_share=1.0,
         )
@@ -292,7 +271,6 @@ def test_positive_target_without_nonzero_support_fails_closed(tmp_path: Path) ->
         strict_tail_rows=_strict_rows(),
         deformed_mp_edge_rows=_deformed_targets(),
         deformed_mp_edge_support_rows=support,
-        legacy_full_pairwise_rows=_legacy_rows(),
         config=config,
     )
     supported = rows.set_index("target_case_id").loc["target_supported"]
@@ -325,7 +303,6 @@ def test_observed_root_summary_enriches_missing_target_topology(
         deformed_mp_edge_rows=_deformed_targets(),
         deformed_mp_edge_support_rows=_deformed_support(),
         observed_root_summary_rows=_observed_root_summary(),
-        legacy_full_pairwise_rows=_legacy_rows(),
         config=panel.RootSelectedKernelSpectralTailLawConfig(
             output_dir=tmp_path,
             min_topology_effective_sample_size=1.0,

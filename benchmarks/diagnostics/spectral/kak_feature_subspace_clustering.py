@@ -23,6 +23,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -35,8 +37,6 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 )
 from tree_break_selection.tree.feature_space import continuous_feature_space_from_columns
 from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
     SpectralBlock,
@@ -267,7 +267,7 @@ def run_feature_block(
         )
         assignments = build_sample_cluster_assignments(decomposition).loc[active_coordinates.index]
         assignments.to_csv(assignments_path)
-        cluster_summary = write_feature_cluster_summary(
+        write_feature_cluster_summary(
             assignments=assignments,
             feature_energy=active_energy,
             output_path=cluster_summary_path,

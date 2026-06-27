@@ -18,26 +18,18 @@ from matplotlib.backends.backend_pdf import PdfPages
 from PIL import Image, ImageDraw, ImageFont
 
 METHOD_ORDER = [
-    "legacy_c2ef",
     "whole_adaptive_diffusion",
     "adaptive_diffusion_kak",
     "raw_kak",
-    "legacy_c2ef__whole_adaptive_diffusion",
-    "legacy_c2ef__raw_cosine_subspace",
-    "legacy_c2ef__adaptive_diffusion_cosine_subspace",
     "current__whole_adaptive_diffusion",
     "current__raw_cosine_subspace",
     "current__adaptive_diffusion_cosine_subspace",
 ]
 
 METHOD_SLUGS = {
-    "legacy_c2ef": "legacy_c2ef",
     "whole_adaptive_diffusion": "whole_adaptive_diffusion",
     "adaptive_diffusion_kak": "adaptive_diffusion_cosine_subspace",
     "raw_kak": "raw_cosine_subspace",
-    "legacy_c2ef__whole_adaptive_diffusion": "legacy_c2ef__whole_adaptive_diffusion",
-    "legacy_c2ef__raw_cosine_subspace": "legacy_c2ef__raw_cosine_subspace",
-    "legacy_c2ef__adaptive_diffusion_cosine_subspace": "legacy_c2ef__adaptive_diffusion_cosine_subspace",
     "current__whole_adaptive_diffusion": "current__whole_adaptive_diffusion",
     "current__raw_cosine_subspace": "current__raw_cosine_subspace",
     "current__adaptive_diffusion_cosine_subspace": "current__adaptive_diffusion_cosine_subspace",
@@ -45,13 +37,9 @@ METHOD_SLUGS = {
 
 
 METHOD_LABELS = {
-    "legacy_c2ef": "legacy c2ef",
     "whole_adaptive_diffusion": "whole adaptive diffusion",
     "adaptive_diffusion_kak": "adaptive diffusion cosine subspace",
     "raw_kak": "raw cosine subspace",
-    "legacy_c2ef__whole_adaptive_diffusion": "legacy c2ef + whole adaptive diffusion",
-    "legacy_c2ef__raw_cosine_subspace": "legacy c2ef + raw cosine subspace",
-    "legacy_c2ef__adaptive_diffusion_cosine_subspace": "legacy c2ef + adaptive diffusion cosine subspace",
     "current__whole_adaptive_diffusion": "current + whole adaptive diffusion",
     "current__raw_cosine_subspace": "current + raw cosine subspace",
     "current__adaptive_diffusion_cosine_subspace": "current + adaptive diffusion cosine subspace",
@@ -59,10 +47,6 @@ METHOD_LABELS = {
 
 
 METHOD_DESCRIPTIONS = {
-    "legacy_c2ef": (
-        "Historical c2ef legacy method using the TF-IDF gene-gene cosine "
-        "subspace components 02-05 and the legacy PosetTree gate."
-    ),
     "whole_adaptive_diffusion": (
         "Adaptive diffusion tree built from the full allGO feature matrix, "
         "using the full matrix rather than a decomposed cosine subspace."
@@ -74,15 +58,6 @@ METHOD_DESCRIPTIONS = {
     "raw_kak": (
         "Raw cosine eigenspace component-block tree: the PosetTree gate is "
         "run directly on cosine eigenspace blocks without adaptive diffusion smoothing."
-    ),
-    "legacy_c2ef__whole_adaptive_diffusion": (
-        "Historical c2ef legacy gates applied to a full-matrix adaptive diffusion tree."
-    ),
-    "legacy_c2ef__raw_cosine_subspace": (
-        "Historical c2ef legacy gates applied to a raw cosine eigenspace block tree."
-    ),
-    "legacy_c2ef__adaptive_diffusion_cosine_subspace": (
-        "Historical c2ef legacy gates applied to adaptive diffusion trees built inside cosine eigenspace blocks."
     ),
     "current__whole_adaptive_diffusion": (
         "Current TBS gates applied to a full-matrix adaptive diffusion tree."
@@ -131,10 +106,8 @@ def get_method_description(method: str) -> str:
 def short_run_label(run_id: str) -> str:
     label = run_id
     label = label.replace("whole_adaptive_diffusion", "whole adaptive diffusion")
-    label = label.replace("legacy_c2ef__tfidf__components_02_05", "legacy c2ef, TF-IDF modes 02-05")
     label = label.replace("adaptive_diffusion_kak__", "adaptive diffusion cosine subspace, ")
     label = label.replace("raw_kak__", "raw cosine subspace, ")
-    label = label.replace("legacy_c2ef__", "legacy c2ef, ")
     label = label.replace("current__", "current, ")
     label = label.replace("__", ", ")
     label = label.replace("adaptive_common_mode_01", "common mode 01")

@@ -34,6 +34,10 @@ from tree_break_selection.tree.distributions import (
     DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
+from tree_break_selection.tree.optimized_branch_lengths import (
+    BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
+    BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN,
+)
 
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.types import MethodRunResult
@@ -107,6 +111,40 @@ def _resolve_tbs_sibling_gate_method(
     return default_method
 
 
+def _tbs_branch_length_optimization_kwargs(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Resolve the shared optimized-branch-length runner contract."""
+    return {
+        "branch_length_optimization_method": str(
+            params.get(
+                "branch_length_optimization_method",
+                BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
+            )
+        ),
+        "branch_length_optimization_target_metric": str(
+            params.get(
+                "branch_length_optimization_target_metric",
+                BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN,
+            )
+        ),
+        "branch_length_optimization_pair_sample_size": (
+            None
+            if params.get("branch_length_optimization_pair_sample_size") is None
+            else int(params["branch_length_optimization_pair_sample_size"])
+        ),
+        "branch_length_optimization_random_state": int(
+            params.get("branch_length_optimization_random_state", 0)
+        ),
+        "branch_length_optimization_solver_tolerance": float(
+            params.get("branch_length_optimization_solver_tolerance", 1e-6)
+        ),
+        "branch_length_optimization_max_iterations": (
+            None
+            if params.get("branch_length_optimization_max_iterations") is None
+            else int(params["branch_length_optimization_max_iterations"])
+        ),
+    }
+
+
 def run_clustering_result(
     data_df: pd.DataFrame,
     method_id: str,
@@ -134,6 +172,7 @@ def run_clustering_result(
                 k_neighbors=int(params["k_neighbors"]),
                 diffusion_time=int(params["diffusion_time"]),
                 feature_space=feature_space,
+                **_tbs_branch_length_optimization_kwargs(params),
             )
         except Exception as exc:
             return _method_failure_result(exc)
@@ -150,6 +189,26 @@ def run_clustering_result(
                 bandwidth_type=params["bandwidth_type"],
                 epsilon=params["epsilon"],
                 feature_space=feature_space,
+                **_tbs_branch_length_optimization_kwargs(params),
+            )
+        except Exception as exc:
+            return _method_failure_result(exc)
+        return _normalize_method_result(result, data_df.index)
+    if method_id == "tbs_diffusion_graphtools":
+        try:
+            result = spec.runner(
+                data_df,
+                alpha,
+                k_neighbors=int(params["k_neighbors"]),
+                diffusion_time=int(params["diffusion_time"]),
+                n_components=int(params["n_components"]),
+                metric=str(params["metric"]),
+                decay=None if params.get("decay") is None else int(params["decay"]),
+                anisotropy=float(params["anisotropy"]),
+                kernel_symm=str(params["kernel_symm"]),
+                random_state=int(params.get("random_state", 0)),
+                feature_space=feature_space,
+                **_tbs_branch_length_optimization_kwargs(params),
             )
         except Exception as exc:
             return _method_failure_result(exc)
@@ -311,12 +370,15 @@ def run_clustering_result(
                     params.get("distributional_action_split_filter_quantile", 0.0)
                 ),
                 branch_length_optimization_method=str(
-                    params.get("branch_length_optimization_method", "linkage_ultrametric")
+                    params.get(
+                        "branch_length_optimization_method",
+                        BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
+                    )
                 ),
                 branch_length_optimization_target_metric=str(
                     params.get(
                         "branch_length_optimization_target_metric",
-                        "squared_standardized_euclidean",
+                        BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN,
                     )
                 ),
                 branch_length_optimization_pair_sample_size=(

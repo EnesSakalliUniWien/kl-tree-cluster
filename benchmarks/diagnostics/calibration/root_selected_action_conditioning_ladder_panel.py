@@ -47,12 +47,6 @@ DEFAULT_JOINED_FEASIBILITY_ROWS = (
     / "root_tie_rank_importance_external_null_topology_join_mild_accumulated"
     / "conditioned_coherent_joined_feasibility_rows.csv"
 )
-DEFAULT_ROOT_TAIL_ROWS = (
-    DEFAULT_RESULT_ROOT
-    / "root_selected_spectral_tail_law_importance_external_mild_accumulated"
-    / "root_selected_spectral_tail_law_rows.csv"
-)
-
 ROWS_OUTPUT = "root_selected_action_conditioning_ladder_rows.csv"
 SUMMARY_OUTPUT = "root_selected_action_conditioning_ladder_summary.csv"
 MANIFEST_OUTPUT = "manifest.json"
@@ -89,8 +83,6 @@ ROW_COLUMNS = (
     "p_value_status",
     "production_inference_status",
     "conditioning_gap_interpretation",
-    "legacy_full_selected_null_legacy_false_split",
-    "legacy_comparison_interpretation",
 )
 
 SUMMARY_COLUMNS = (
@@ -111,7 +103,6 @@ class RootSelectedActionConditioningLadderConfig:
 
     output_dir: Path
     joined_feasibility_rows_path: Path = DEFAULT_JOINED_FEASIBILITY_ROWS
-    root_tail_rows_path: Path = DEFAULT_ROOT_TAIL_ROWS
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated"
 
 
@@ -123,7 +114,6 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_JOINED_FEASIBILITY_ROWS,
     )
-    parser.add_argument("--root-tail-rows-path", type=Path, default=DEFAULT_ROOT_TAIL_ROWS)
     parser.add_argument(
         "--h-u-population-law-status",
         default="identity_mp_assumed_deformed_mp_unestimated",
@@ -156,16 +146,6 @@ def _string_value(row: pd.Series | dict[str, object], column: str, default: str 
     if pd.isna(value):
         return default
     return str(value)
-
-
-def _tail_lookup(root_tail_rows: pd.DataFrame) -> dict[str, pd.Series]:
-    if root_tail_rows.empty:
-        return {}
-    _require_columns(root_tail_rows, {"target_case_id"}, "root tail rows")
-    return {
-        str(row["target_case_id"]): row
-        for _, row in root_tail_rows.set_index("target_case_id", drop=False).iterrows()
-    }
 
 
 def _support_rows(rows: pd.DataFrame) -> pd.DataFrame:
@@ -274,7 +254,6 @@ def _build_level_row(
     *,
     target_case_id: str,
     target: dict[str, object],
-    target_tail: pd.Series | None,
     level: str,
     level_support: pd.DataFrame,
     exact_count: int,
@@ -343,22 +322,12 @@ def _build_level_row(
             support_count,
             exact_count,
         ),
-        "legacy_full_selected_null_legacy_false_split": bool(
-            target_tail.get("legacy_full_selected_null_legacy_false_split", False)
-            if target_tail is not None
-            else False
-        ),
-        "legacy_comparison_interpretation": _string_value(
-            target_tail if target_tail is not None else {},
-            "legacy_comparison_interpretation",
-        ),
     }
 
 
 def build_root_selected_action_conditioning_ladder_rows(
     *,
     joined_feasibility_rows: pd.DataFrame,
-    root_tail_rows: pd.DataFrame,
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated",
 ) -> pd.DataFrame:
     """Build exact and relaxed action-conditioning support rows."""
@@ -386,7 +355,6 @@ def build_root_selected_action_conditioning_ladder_rows(
         _support_rows(rows),
         h_u_population_law_status=h_u_population_law_status,
     )
-    tail_lookup = _tail_lookup(root_tail_rows)
     records: list[dict[str, object]] = []
     for _, target_row in targets.sort_values("case_id").iterrows():
         target_case_id = _string_value(target_row, "case_id")
@@ -394,7 +362,6 @@ def build_root_selected_action_conditioning_ladder_rows(
             target_row,
             h_u_population_law_status=h_u_population_law_status,
         )
-        target_tail = tail_lookup.get(target_case_id)
         exact_support = support.loc[
             _level_mask(support, target=target, level="exact_T_A_E_B_H")
         ]
@@ -405,7 +372,6 @@ def build_root_selected_action_conditioning_ladder_rows(
                 _build_level_row(
                     target_case_id=target_case_id,
                     target=target,
-                    target_tail=target_tail,
                     level=level,
                     level_support=level_support,
                     exact_count=exact_count,
@@ -455,10 +421,8 @@ def evaluate_root_selected_action_conditioning_ladder_panel(
     config: RootSelectedActionConditioningLadderConfig,
 ) -> dict[str, pd.DataFrame]:
     joined = pd.read_csv(config.joined_feasibility_rows_path)
-    tail = pd.read_csv(config.root_tail_rows_path)
     rows = build_root_selected_action_conditioning_ladder_rows(
         joined_feasibility_rows=joined,
-        root_tail_rows=tail,
         h_u_population_law_status=config.h_u_population_law_status,
     )
     summary = summarize_root_selected_action_conditioning_ladder_rows(rows)
@@ -500,7 +464,6 @@ def main() -> None:
         RootSelectedActionConditioningLadderConfig(
             output_dir=args.output_dir,
             joined_feasibility_rows_path=args.joined_feasibility_rows_path,
-            root_tail_rows_path=args.root_tail_rows_path,
             h_u_population_law_status=str(args.h_u_population_law_status),
         )
     )

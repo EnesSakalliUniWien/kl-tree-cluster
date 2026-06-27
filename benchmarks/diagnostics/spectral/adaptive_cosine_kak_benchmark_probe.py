@@ -20,10 +20,13 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+from sklearn.preprocessing import normalize
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -40,10 +43,6 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from sklearn.preprocessing import normalize
 
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.util.case_inputs import prepare_case_inputs

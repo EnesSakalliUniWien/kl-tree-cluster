@@ -22,7 +22,6 @@ def _action_row(
         "exact_support_count": exact_support,
         "action_dominating_support_count": action_support,
         "best_action_dominating_support_s_root_log": support_s,
-        "legacy_comparison_interpretation": "legacy_comparison_neutral_or_missing",
     }
 
 

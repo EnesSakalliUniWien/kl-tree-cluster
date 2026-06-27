@@ -38,20 +38,9 @@ def _support(*, selected_ratio: float = 1000.0) -> dict[str, object]:
     }
 
 
-def _tail() -> dict[str, object]:
-    return {
-        "target_case_id": "target",
-        "legacy_full_selected_null_legacy_false_split": True,
-        "legacy_comparison_interpretation": (
-            "legacy_full_method_leaks_selected_null_root_risk"
-        ),
-    }
-
-
 def test_action_relaxed_level_finds_support_without_production_p_value() -> None:
     rows = panel.build_root_selected_action_conditioning_ladder_rows(
         joined_feasibility_rows=pd.DataFrame.from_records([_target(), _support()]),
-        root_tail_rows=pd.DataFrame.from_records([_tail()]),
     )
 
     exact = rows.loc[rows["ladder_level"].eq("exact_T_A_E_B_H")].iloc[0]
@@ -68,13 +57,12 @@ def test_action_relaxed_level_finds_support_without_production_p_value() -> None
     assert relaxed["conditioning_gap_interpretation"] == (
         "selected_ratio_action_is_minimal_missing_coordinate"
     )
-    assert relaxed["legacy_full_selected_null_legacy_false_split"]
+    assert "legacy_full_selected_null_legacy_false_split" not in rows.columns
 
 
 def test_ladder_summary_counts_action_only_gap() -> None:
     rows = panel.build_root_selected_action_conditioning_ladder_rows(
         joined_feasibility_rows=pd.DataFrame.from_records([_target(), _support()]),
-        root_tail_rows=pd.DataFrame.from_records([_tail()]),
     )
 
     summary = panel.summarize_root_selected_action_conditioning_ladder_rows(rows).iloc[0]

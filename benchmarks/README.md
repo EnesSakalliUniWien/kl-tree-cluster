@@ -399,15 +399,17 @@ Note: K-Means and Spectral Clustering are given the **true K** as input, making 
 
 ## Clustering Methods
 
-The method registry currently exposes 11 methods, while the canonical default
-benchmark uses the 9-method subset in `benchmarks.shared.config.DEFAULT_METHODS`.
+The method registry exposes the canonical methods plus additional diagnostic
+TBS variants, while the default full benchmark uses the 9-method subset in
+`benchmarks.shared.config.DEFAULT_METHODS`.
 
 | Key                 | Name                 | Distance          | Linkage  | Notes                               |
 | ------------------- | -------------------- | ----------------- | -------- | ----------------------------------- |
 | `tbs`                | TBS Divergence        | hamming           | average  | Default — binary-native             |
 | `tbs_complete`       | TBS (Complete)        | hamming           | complete | Complete-linkage variant            |
 | `tbs_single`         | TBS (Single)          | hamming           | single   | Single-linkage variant              |
-| `tbs_diffusion`      | TBS (Diffusion)       | diffusion graph   | —        | Experimental diffusion variant      |
+| `tbs_diffusion`      | TBS (Hamming NN Diffusion) | Hamming nearest-neighbor diffusion tree | average | Default diffusion method; branch lengths default to `linkage_ultrametric` |
+| `tbs_diffusion_adaptive` | TBS (Adaptive pydiffmap Diffusion) | pydiffmap adaptive diffusion tree | average | Separate adaptive diffusion variant; not part of the canonical default set |
 | `leiden`            | Leiden               | KNN graph         | —        | Community detection, resolution=1.0 |
 | `louvain`           | Louvain              | KNN graph         | —        | Community detection, resolution=1.0 |
 | `kmeans`            | K-Means              | —                 | —        | **Oracle**: uses true K             |

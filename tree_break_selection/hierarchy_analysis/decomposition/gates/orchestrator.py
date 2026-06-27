@@ -84,6 +84,11 @@ from .annotation_bundle import (
     GateAnnotationMetadata,
     GateMetadata,
 )
+from .annotation_predicates import (
+    annotation_bool,
+    node_sibling_gate_open,
+    node_split_prerequisites,
+)
 from .column_contracts import (
     validate_edge_gate_columns,
     validate_sibling_gate_columns,
@@ -1451,56 +1456,12 @@ def apply_root_stability_guard(
     return out
 
 
-def _annotation_bool(
-    annotations_df: pd.DataFrame,
-    node: object,
-    column: str,
-) -> bool:
-    if node not in annotations_df.index or column not in annotations_df.columns:
-        return False
-    value = annotations_df.loc[node, column]
-    return bool(pd.notna(value) and bool(value))
-
-
-def _node_split_prerequisites(
-    tree,
-    annotations_df: pd.DataFrame,
-    node: object,
-) -> bool:
-    children = list(tree.successors(node))
-    if len(children) != 2:
-        return False
-    return any(
-        _annotation_bool(
-            annotations_df,
-            child,
-            "Child_Parent_Divergence_Significant",
-        )
-        for child in children
-    )
-
-
-def _node_sibling_gate_open(
-    annotations_df: pd.DataFrame,
-    node: object,
-) -> bool:
-    return _annotation_bool(
-        annotations_df,
-        node,
-        "Sibling_BH_Different",
-    ) and not _annotation_bool(
-        annotations_df,
-        node,
-        "Sibling_Divergence_Skipped",
-    )
-
-
 def _root_stability_blocked(
     annotations_df: pd.DataFrame,
     node: object,
     root: object,
 ) -> bool:
-    return node == root and _annotation_bool(
+    return node == root and annotation_bool(
         annotations_df,
         node,
         "Root_Stability_Guard_Blocked",
@@ -1512,7 +1473,7 @@ def _selective_guard_root_candidate(
     node: object,
     root: object,
 ) -> bool:
-    return _node_sibling_gate_open(annotations_df, node) or _root_stability_blocked(
+    return node_sibling_gate_open(annotations_df, node) or _root_stability_blocked(
         annotations_df,
         node,
         root,
@@ -1524,7 +1485,7 @@ def _node_closed_by_explicit_guard(
     node: object,
 ) -> bool:
     return any(
-        _annotation_bool(annotations_df, node, column)
+        annotation_bool(annotations_df, node, column)
         for column in (
             "Root_Stability_Guard_Blocked",
             "Root_Selective_Permutation_Guard_Blocked",
@@ -1543,9 +1504,9 @@ def _passthrough_descendant_guard_candidates(
     node_ids = tuple(tree.nodes)
     children = {node: list(tree.successors(node)) for node in node_ids}
     split_prerequisites = {
-        node: _node_split_prerequisites(tree, annotations_df, node) for node in node_ids
+        node: node_split_prerequisites(tree, annotations_df, node) for node in node_ids
     }
-    sibling_open = {node: _node_sibling_gate_open(annotations_df, node) for node in node_ids}
+    sibling_open = {node: node_sibling_gate_open(annotations_df, node) for node in node_ids}
     can_split = {node: bool(split_prerequisites[node] and sibling_open[node]) for node in node_ids}
     has_descendant_split: dict[object, bool] = {}
     for node in bottom_up_nodes(tree):
@@ -1778,7 +1739,7 @@ def apply_root_selective_permutation_guard(
             for node in out.index
             if node in descendant_sets
             and len(descendant_sets[node]) >= 2
-            and (_node_sibling_gate_open(out, node) or _root_stability_blocked(out, node, root))
+            and (node_sibling_gate_open(out, node) or _root_stability_blocked(out, node, root))
         ]
     else:
         candidate_nodes = []

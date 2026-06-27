@@ -1,9 +1,9 @@
 """Kernel-weighted selected-root spectral tail diagnostic.
 
-This is the first candidate bridge between the old neighborhood smoother and
-the current fail-closed root-tail law. It does not alter clustering. It uses
-old-style local smoothing only as admissible support weights for the selected
-root spectral tail:
+This is a candidate bridge between neighborhood smoothing and the current
+fail-closed root-tail law. It does not alter clustering. It uses local
+smoothing only as admissible support weights for the selected root spectral
+tail:
 
     P(S_Hu >= s | R_root, T, A, E, B, H_u, N_tau).
 
@@ -28,9 +28,6 @@ from benchmarks.diagnostics.calibration.root_selected_spectral_tail_law_panel im
     _finite_int,
     _is_calibration_support,
     _is_observed_target,
-    _legacy_bool,
-    _legacy_float,
-    _legacy_row,
     _lookup_numeric_by_key,
     _safe_log1p,
     _string_value,
@@ -64,11 +61,6 @@ DEFAULT_OBSERVED_ROOT_SUMMARY_ROWS = (
     DEFAULT_RESULT_ROOT
     / "root_selected_region_margins_overlap_case_family"
     / "root_selected_region_summary.csv"
-)
-DEFAULT_LEGACY_ROOT_TAIL_PAIRWISE_ROWS = (
-    DEFAULT_RESULT_ROOT
-    / "legacy_c2ef9a69_root_tail_overlap_comparison_20260617"
-    / "legacy_c2ef9a69_method_comparison_pairwise.csv"
 )
 
 ROWS_OUTPUT = "root_selected_kernel_spectral_tail_law_rows.csv"
@@ -124,9 +116,7 @@ ROW_COLUMNS = (
     "topology_nearest_support_weight_share",
     "topology_nearest_support_s_h_u_excess_log",
     "topology_nearest_support_signature",
-    "legacy_full_selected_null_legacy_false_split",
-    "legacy_full_signal_delta_ari",
-    "comparison_to_current_and_legacy",
+    "comparison_to_current",
     "next_tracking_step",
 )
 
@@ -148,8 +138,6 @@ SUMMARY_COLUMNS = (
     "topology_degenerate_support_count",
     "topology_nonzero_support_target_count",
     "kernel_selected_null_leakage_flag_count",
-    "legacy_selected_null_false_split_count",
-    "legacy_signal_improvement_count",
     "summary_status",
 )
 
@@ -178,7 +166,6 @@ class RootSelectedKernelSpectralTailLawConfig:
     deformed_mp_edge_rows_path: Path = DEFAULT_DEFORMED_MP_EDGE_ROWS
     deformed_mp_edge_support_rows_path: Path = DEFAULT_DEFORMED_MP_EDGE_SUPPORT_ROWS
     observed_root_summary_rows_path: Path | None = DEFAULT_OBSERVED_ROOT_SUMMARY_ROWS
-    legacy_full_pairwise_rows_path: Path | None = DEFAULT_LEGACY_ROOT_TAIL_PAIRWISE_ROWS
     min_kernel_effective_sample_size: float = 1.0
     max_kernel_weight_share: float = 1.0
     min_kernel_weight: float = 1e-12
@@ -217,11 +204,6 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_OBSERVED_ROOT_SUMMARY_ROWS,
     )
     parser.add_argument("--no-observed-root-summary", action="store_true")
-    parser.add_argument(
-        "--legacy-full-pairwise-rows-path",
-        type=Path,
-        default=DEFAULT_LEGACY_ROOT_TAIL_PAIRWISE_ROWS,
-    )
     parser.add_argument("--min-kernel-effective-sample-size", type=float, default=1.0)
     parser.add_argument("--max-kernel-weight-share", type=float, default=1.0)
     parser.add_argument("--min-kernel-weight", type=float, default=1e-12)
@@ -247,7 +229,6 @@ def config_from_args(args: argparse.Namespace) -> RootSelectedKernelSpectralTail
             if bool(args.no_observed_root_summary)
             else args.observed_root_summary_rows_path
         ),
-        legacy_full_pairwise_rows_path=args.legacy_full_pairwise_rows_path,
         min_kernel_effective_sample_size=float(args.min_kernel_effective_sample_size),
         max_kernel_weight_share=float(args.max_kernel_weight_share),
         min_kernel_weight=float(args.min_kernel_weight),
@@ -956,18 +937,10 @@ def _comparison_text(
     *,
     strict_status: str,
     kernel_decision: str,
-    legacy_false_split: bool,
-    legacy_signal_delta: float,
 ) -> str:
-    if legacy_false_split:
-        return "legacy_has_selected_null_false_split_risk"
-    if math.isfinite(legacy_signal_delta) and legacy_signal_delta > 0:
-        if strict_status.startswith("fail_closed") and kernel_decision.startswith("candidate"):
-            return "candidate_recovers_legacy_like_power_channel"
-        return "legacy_signal_gain_remains_unrecovered_or_already_strict"
     if strict_status.startswith("fail_closed") and kernel_decision.startswith("candidate"):
-        return "candidate_adds_support_without_legacy_signal_gain"
-    return "no_candidate_change_against_current"
+        return "kernel_candidate_adds_support_against_fail_closed_current"
+    return "no_kernel_candidate_change_against_current"
 
 
 def build_kernel_spectral_tail_rows(
@@ -977,7 +950,6 @@ def build_kernel_spectral_tail_rows(
     deformed_mp_edge_rows: pd.DataFrame,
     deformed_mp_edge_support_rows: pd.DataFrame,
     observed_root_summary_rows: pd.DataFrame | None = None,
-    legacy_full_pairwise_rows: pd.DataFrame | None = None,
     config: RootSelectedKernelSpectralTailLawConfig,
 ) -> pd.DataFrame:
     """Return candidate kernel-spectral tail rows."""
@@ -1000,7 +972,6 @@ def build_kernel_spectral_tail_rows(
     non_support = non_support.loc[~non_support.apply(_is_calibration_support, axis=1)].copy()
     bandwidths = _coordinate_bandwidths(targets, support)
     strict_lookup = _strict_tail_lookup(strict_tail_rows)
-    legacy_full = legacy_full_pairwise_rows if legacy_full_pairwise_rows is not None else pd.DataFrame()
 
     records: list[dict[str, object]] = []
     for _, target in targets.sort_values("case_id").iterrows():
@@ -1019,11 +990,7 @@ def build_kernel_spectral_tail_rows(
             config=config,
         )
         excluded_count = int(non_support.shape[0])
-        full_null = _legacy_row(legacy_full, case_id=case_id, data_role="selected_null")
-        full_signal = _legacy_row(legacy_full, case_id=case_id, data_role="signal")
         strict_status = _string_value(strict, "root_tail_inference_status")
-        legacy_false = _legacy_bool(full_null, "legacy_false_split")
-        legacy_signal_delta = _legacy_float(full_signal, "delta_ari_legacy_minus_current")
         records.append(
             {
                 "schema_version": SCHEMA_VERSION,
@@ -1122,13 +1089,9 @@ def build_kernel_spectral_tail_rows(
                 "topology_nearest_support_signature": topology_summary[
                     "nearest_signature"
                 ],
-                "legacy_full_selected_null_legacy_false_split": legacy_false,
-                "legacy_full_signal_delta_ari": legacy_signal_delta,
-                "comparison_to_current_and_legacy": _comparison_text(
+                "comparison_to_current": _comparison_text(
                     strict_status=strict_status,
                     kernel_decision=str(support_summary["decision"]),
-                    legacy_false_split=legacy_false,
-                    legacy_signal_delta=legacy_signal_delta,
                 ),
                 "next_tracking_step": (
                     "promote_only_after_selected_null_false_split_check"
@@ -1153,10 +1116,6 @@ def summarize_kernel_spectral_tail_rows(rows: pd.DataFrame) -> pd.DataFrame:
         "topology_candidate_tail_available_diagnostic_only"
     )
     strict_fail_closed = strict_status.str.startswith("fail_closed")
-    legacy_signal_delta = pd.to_numeric(
-        rows["legacy_full_signal_delta_ari"],
-        errors="coerce",
-    ).fillna(0.0)
     summary = {
         "schema_version": SCHEMA_VERSION,
         "study_role": STUDY_ROLE,
@@ -1210,10 +1169,6 @@ def summarize_kernel_spectral_tail_rows(rows: pd.DataFrame) -> pd.DataFrame:
         "kernel_selected_null_leakage_flag_count": int(
             rows["non_support_neighbor_excluded_count"].fillna(0).astype(float).lt(0).sum()
         ),
-        "legacy_selected_null_false_split_count": int(
-            rows["legacy_full_selected_null_legacy_false_split"].astype(bool).sum()
-        ),
-        "legacy_signal_improvement_count": int(legacy_signal_delta.gt(0.0).sum()),
         "summary_status": (
             "topology_kernel_adds_candidate_support_diagnostic_only"
             if int(topology_available.sum()) > 0
@@ -1236,14 +1191,12 @@ def evaluate_kernel_spectral_tail_law_panel(
     deformed_rows = _read_optional_csv(config.deformed_mp_edge_rows_path)
     deformed_support = _read_optional_csv(config.deformed_mp_edge_support_rows_path)
     observed_root_summary = _read_optional_csv(config.observed_root_summary_rows_path)
-    legacy_full = _read_optional_csv(config.legacy_full_pairwise_rows_path)
     rows = build_kernel_spectral_tail_rows(
         joined_feasibility_rows=joined,
         strict_tail_rows=strict,
         deformed_mp_edge_rows=deformed_rows,
         deformed_mp_edge_support_rows=deformed_support,
         observed_root_summary_rows=observed_root_summary,
-        legacy_full_pairwise_rows=legacy_full,
         config=config,
     )
     summary = summarize_kernel_spectral_tail_rows(rows)

@@ -88,7 +88,6 @@ ROW_COLUMNS = (
     "missing_h_u_fields",
     "production_inference_status",
     "next_mathematical_step",
-    "legacy_comparison_interpretation",
 )
 
 SUMMARY_COLUMNS = (
@@ -304,7 +303,6 @@ def build_root_selected_h_u_observability_rows(
             "required_population_law_status",
             "required_mp_edge_multiplier",
             "production_inference_status",
-            "legacy_comparison_interpretation",
         },
         "population law requirement rows",
     )
@@ -381,11 +379,6 @@ def build_root_selected_h_u_observability_rows(
                 ),
                 "production_inference_status": production_status,
                 "next_mathematical_step": _next_step(status),
-                "legacy_comparison_interpretation": (
-                    _string_value(requirement, "legacy_comparison_interpretation")
-                    if requirement is not None
-                    else "legacy_comparison_missing"
-                ),
             }
         )
     return pd.DataFrame.from_records(records, columns=ROW_COLUMNS)

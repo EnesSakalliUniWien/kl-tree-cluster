@@ -11,6 +11,11 @@ from tree_break_selection.tree.continuous_distance import (
     continuous_time_distance_condensed,
     standardized_euclidean_distance_condensed,
 )
+from tree_break_selection.tree.optimized_branch_lengths import (
+    BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS,
+    BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
+    BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN,
+)
 
 from benchmarks.shared.metrics import _calculate_ari_nmi_purity_metrics
 from benchmarks.shared.result_records import (
@@ -212,6 +217,20 @@ def run_single_method_once(
     if method_id.startswith("tbs"):
         recorded_run_params["edge_alpha"] = float(edge_alpha)
         recorded_run_params["sibling_alpha"] = float(significance_level)
+        branch_length_method = str(
+            recorded_run_params.get(
+                "branch_length_optimization_method",
+                BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
+            )
+        )
+        recorded_run_params["branch_length_optimization_method"] = branch_length_method
+        if branch_length_method == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS:
+            recorded_run_params.setdefault(
+                "branch_length_optimization_target_metric",
+                BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN,
+            )
+            recorded_run_params.setdefault("branch_length_optimization_pair_sample_size", 100_000)
+            recorded_run_params.setdefault("branch_length_optimization_random_state", 0)
     if method_id in TBS_DISTANCE_TREE_METHODS:
         metric = str(run_params["tree_distance_metric"])
         requires_precomputed_tbs_distance = bool(meta["requires_precomputed_tbs_distance"])

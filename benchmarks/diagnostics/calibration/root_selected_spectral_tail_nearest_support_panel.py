@@ -28,8 +28,6 @@ import numpy as np
 import pandas as pd
 
 from benchmarks.diagnostics.calibration.root_selected_spectral_tail_law_panel import (
-    DEFAULT_LEGACY_FULL_PAIRWISE_ROWS,
-    DEFAULT_LEGACY_INTERNAL_PAIRWISE_ROWS,
     DEFAULT_RESULT_ROOT,
     _action_band,
     _finite_float,
@@ -93,8 +91,6 @@ ROW_COLUMNS = (
     "dominant_conditioning_gap",
     "nearest_support_status",
     "production_inference_status",
-    "legacy_full_selected_null_legacy_false_split",
-    "legacy_comparison_interpretation",
 )
 
 SUMMARY_COLUMNS = (
@@ -104,7 +100,6 @@ SUMMARY_COLUMNS = (
     "exact_support_target_count",
     "nearest_support_available_count",
     "fail_closed_nearest_only_count",
-    "legacy_full_selected_null_false_split_count",
     "summary_status",
 )
 
@@ -117,8 +112,6 @@ class RootSelectedSpectralTailNearestSupportConfig:
     joined_feasibility_rows_path: Path = DEFAULT_JOINED_FEASIBILITY_ROWS
     root_tail_rows_path: Path = DEFAULT_ROOT_TAIL_ROWS
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated"
-    legacy_full_pairwise_rows_path: Path | None = DEFAULT_LEGACY_FULL_PAIRWISE_ROWS
-    legacy_internal_pairwise_rows_path: Path | None = DEFAULT_LEGACY_INTERNAL_PAIRWISE_ROWS
 
 
 def parse_args() -> argparse.Namespace:
@@ -133,16 +126,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--h-u-population-law-status",
         default="identity_mp_assumed_deformed_mp_unestimated",
-    )
-    parser.add_argument(
-        "--legacy-full-pairwise-rows-path",
-        type=Path,
-        default=DEFAULT_LEGACY_FULL_PAIRWISE_ROWS,
-    )
-    parser.add_argument(
-        "--legacy-internal-pairwise-rows-path",
-        type=Path,
-        default=DEFAULT_LEGACY_INTERNAL_PAIRWISE_ROWS,
     )
     return parser.parse_args()
 
@@ -421,15 +404,6 @@ def build_root_selected_spectral_tail_nearest_support_rows(
                     else "no_calibration_support_rows_available"
                 ),
                 "production_inference_status": production_status,
-                "legacy_full_selected_null_legacy_false_split": bool(
-                    tail.get("legacy_full_selected_null_legacy_false_split", False)
-                    if tail is not None
-                    else False
-                ),
-                "legacy_comparison_interpretation": _string_value(
-                    tail if tail is not None else {},
-                    "legacy_comparison_interpretation",
-                ),
             }
         )
     return pd.DataFrame.from_records(records, columns=ROW_COLUMNS)
@@ -451,7 +425,6 @@ def summarize_root_selected_spectral_tail_nearest_support_rows(
         .eq("fail_closed_nearest_support_only")
         .sum()
     )
-    legacy_false = int(rows["legacy_full_selected_null_legacy_false_split"].sum())
     return pd.DataFrame.from_records(
         [
             {
@@ -461,7 +434,6 @@ def summarize_root_selected_spectral_tail_nearest_support_rows(
                 "exact_support_target_count": exact,
                 "nearest_support_available_count": nearest,
                 "fail_closed_nearest_only_count": fail_closed,
-                "legacy_full_selected_null_false_split_count": legacy_false,
                 "summary_status": (
                     "nearest_support_localized_but_tail_support_missing"
                     if fail_closed
@@ -525,8 +497,6 @@ def main() -> None:
             joined_feasibility_rows_path=args.joined_feasibility_rows_path,
             root_tail_rows_path=args.root_tail_rows_path,
             h_u_population_law_status=str(args.h_u_population_law_status),
-            legacy_full_pairwise_rows_path=args.legacy_full_pairwise_rows_path,
-            legacy_internal_pairwise_rows_path=args.legacy_internal_pairwise_rows_path,
         )
     )
     print(json.dumps({name: str(path) for name, path in outputs.items()}, indent=2))

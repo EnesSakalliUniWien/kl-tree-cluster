@@ -1,5 +1,6 @@
 """Smoke test for benchmark method runners."""
 
+import pytest
 from benchmarks.shared.cases import SMALL_TEST_CASES, get_default_test_cases
 from benchmarks.shared.pipeline import benchmark_cluster_algorithm
 
@@ -39,6 +40,23 @@ def test_benchmark_louvain_and_adaptive_diffusion_methods_smoke():
     assert set(df_results["method"]) == {"louvain", "tbs_diffusion_adaptive"}
     assert set(df_results["status"]) == {"ok"}
     assert (df_results["labels_length"] == df_results["samples"]).all()
+
+
+def test_benchmark_graphtools_diffusion_method_smoke():
+    """Run the optional graphtools diffusion backend when it is installed."""
+    pytest.importorskip("graphtools")
+    case = SMALL_TEST_CASES[0].copy()
+    df_results, _ = benchmark_cluster_algorithm(
+        test_cases=[case],
+        verbose=False,
+        plot_umap=False,
+        methods=["tbs_diffusion_graphtools"],
+    )
+
+    row = df_results.iloc[0]
+    assert row["method"] == "tbs_diffusion_graphtools"
+    assert row["status"] == "ok"
+    assert row["labels_length"] == row["samples"]
 
 
 def test_hamming_diffusion_rejects_continuous_benchmark_input():

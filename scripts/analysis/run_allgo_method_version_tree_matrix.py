@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Run allGO tree-geometry examples with current and legacy gates.
+"""Run allGO tree-geometry examples with current TBS gates.
 
-The rows separate two axes that were easy to conflate:
+The rows separate tree-geometry choices:
 
-* ``method_version``: current TBS gates versus the c2ef9a69 legacy gates.
 * ``tree_geometry``: whole-matrix adaptive diffusion, raw cosine subspace, or
   adaptive diffusion inside a cosine subspace.
 """
@@ -27,9 +26,6 @@ from benchmarks.diagnostics.spectral.adaptive_cosine_kak_diffusion_matrix_probe 
     block_adaptive_diffusion_distance,
 )
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import load_matrix
-from benchmarks.shared.runners.legacy_commit_runner import (
-    _run_legacy_c2ef9a69_tbs_method,
-)
 from benchmarks.shared.runners.tbs_diffusion_runner import _build_adaptive_diffusion_distance
 from benchmarks.shared.runners.tbs_runner import _run_tbs_on_distance
 from benchmarks.shared.types.method_run_result import MethodRunResult
@@ -39,7 +35,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 
-METHOD_VERSIONS = ("legacy_c2ef", "current")
+METHOD_VERSIONS = ("current",)
 TREE_GEOMETRIES = (
     "whole_adaptive_diffusion",
     "raw_cosine_subspace",
@@ -101,14 +97,6 @@ def run_method(
     edge_alpha: float,
     sibling_alpha: float,
 ) -> MethodRunResult:
-    if method_version == "legacy_c2ef":
-        return _run_legacy_c2ef9a69_tbs_method(
-            data,
-            distances,
-            sibling_alpha,
-            tree_linkage_method="average",
-            edge_alpha=edge_alpha,
-        )
     if method_version == "current":
         return _run_tbs_on_distance(
             data,
@@ -391,7 +379,7 @@ def main() -> None:
         f"Rows x columns: `{data.shape[0]} x {data.shape[1]}`",
         "",
         "Axes:",
-        "- `method_version`: `legacy_c2ef` or `current` gate/decomposition layer.",
+        "- `method_version`: `current` gate/decomposition layer.",
         "- `tree_geometry`: `whole_adaptive_diffusion`, `raw_cosine_subspace`, or `adaptive_diffusion_cosine_subspace`.",
         "",
         "`raw_cosine_subspace` is the reader-facing name for the internal KAK/cosine eigenspace diagnostic.",

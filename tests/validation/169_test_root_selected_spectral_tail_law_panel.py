@@ -73,7 +73,7 @@ def test_root_spectral_tail_fails_closed_when_support_missing() -> None:
     )
 
 
-def test_root_spectral_tail_uses_conservative_empirical_support_and_legacy_overlay() -> None:
+def test_root_spectral_tail_uses_conservative_empirical_support() -> None:
     rows = pd.DataFrame.from_records(
         [
             _target(case_id="overlap_mod_4c_small", spectral_ratio=4.0),
@@ -93,28 +93,9 @@ def test_root_spectral_tail_uses_conservative_empirical_support_and_legacy_overl
             ),
         ]
     )
-    legacy_full = pd.DataFrame.from_records(
-        [
-            {
-                "case_id": "overlap_mod_4c_small",
-                "data_role": "selected_null",
-                "current_found_clusters": 1,
-                "legacy_found_clusters": 3,
-                "legacy_false_split": True,
-            },
-            {
-                "case_id": "overlap_mod_4c_small",
-                "data_role": "signal",
-                "current_found_clusters": 4,
-                "legacy_found_clusters": 4,
-                "delta_ari_legacy_minus_current": 0.0,
-            },
-        ]
-    )
 
     tail = panel.build_root_selected_spectral_tail_law_rows(
         joined_feasibility_rows=rows,
-        legacy_full_pairwise_rows=legacy_full,
     ).iloc[0]
 
     assert tail["selected_null_support_count"] == 2
@@ -123,10 +104,7 @@ def test_root_spectral_tail_uses_conservative_empirical_support_and_legacy_overl
     assert tail["root_tail_inference_status"] == (
         "calibrated_selected_root_spectral_tail_available"
     )
-    assert tail["legacy_full_selected_null_legacy_false_split"]
-    assert tail["legacy_comparison_interpretation"] == (
-        "legacy_full_method_leaks_selected_null_root_risk"
-    )
+    assert "legacy_full_selected_null_legacy_false_split" not in tail.index
 
 
 def test_root_spectral_tail_uses_importance_weighted_external_support() -> None:
@@ -234,8 +212,6 @@ def test_root_spectral_tail_runner_writes_outputs(tmp_path: Path) -> None:
         panel.RootSelectedSpectralTailLawConfig(
             output_dir=tmp_path / "out",
             joined_feasibility_rows_path=input_path,
-            legacy_full_pairwise_rows_path=None,
-            legacy_internal_pairwise_rows_path=None,
         )
     )
 

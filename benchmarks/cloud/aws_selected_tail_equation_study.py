@@ -43,6 +43,7 @@ from benchmarks.diagnostics.calibration.selected_hierarchy_geometry_covariates i
     summarize_selected_geometry_by_case,
 )
 from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import DEFAULT_CASE_NAMES
+from benchmarks.shared.env import resolve_aws_batch_shard_index as resolve_shard_index
 
 AWS_SELECTED_TAIL_STUDY_ROLE = "aws_distributed_selected_tail_equation_diagnostic"
 SHARD_RECORDS_NAME = "selected_geometry_records.csv"
@@ -89,26 +90,6 @@ def shard_seed(*, base_seed: int, shard_index: int) -> int:
     if shard_index < 0:
         raise ValueError(f"shard_index must be non-negative; got {shard_index!r}.")
     return int(base_seed) + int(shard_index) * 1_000_000_000
-
-
-def resolve_shard_index(explicit_index: int | None, environ: dict[str, str] | None = None) -> int:
-    """Resolve the zero-based shard index from CLI or AWS Batch environment."""
-    if explicit_index is not None:
-        if explicit_index < 0:
-            raise ValueError(f"shard_index must be non-negative; got {explicit_index!r}.")
-        return int(explicit_index)
-
-    environment = os.environ if environ is None else environ
-    raw_index = environment.get("AWS_BATCH_JOB_ARRAY_INDEX")
-    if raw_index is None:
-        raise ValueError(
-            "Shard index is required. Pass --shard-index outside AWS Batch, or "
-            "run as an AWS Batch array job with AWS_BATCH_JOB_ARRAY_INDEX."
-        )
-    shard_index = int(raw_index)
-    if shard_index < 0:
-        raise ValueError(f"AWS_BATCH_JOB_ARRAY_INDEX must be non-negative; got {raw_index!r}.")
-    return shard_index
 
 
 def validate_shard_contract(*, shard_index: int, shard_count: int, replicates_per_shard: int) -> None:

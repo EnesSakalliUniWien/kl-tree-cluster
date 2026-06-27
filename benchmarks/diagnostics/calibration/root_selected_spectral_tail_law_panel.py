@@ -11,8 +11,7 @@ This panel expresses the current root inference target explicitly:
 
 Rows are diagnostic only. They estimate a conservative empirical tail p-value
 only when selected-null/external-null support exists in the same coarse root
-stratum. Otherwise they fail closed. Optional legacy pairwise outputs are
-joined to show how the old commit behaved on the same cases.
+stratum. Otherwise they fail closed.
 """
 
 from __future__ import annotations
@@ -40,16 +39,6 @@ DEFAULT_JOINED_FEASIBILITY_ROWS = (
     DEFAULT_RESULT_ROOT
     / "root_tie_rank_conditioned_coherent_topology_join_after_replay"
     / "conditioned_coherent_joined_feasibility_rows.csv"
-)
-DEFAULT_LEGACY_FULL_PAIRWISE_ROWS = (
-    DEFAULT_RESULT_ROOT
-    / "legacy_c2ef9a69_method_comparison_panel"
-    / "legacy_c2ef9a69_method_comparison_pairwise.csv"
-)
-DEFAULT_LEGACY_INTERNAL_PAIRWISE_ROWS = (
-    DEFAULT_RESULT_ROOT
-    / "legacy_internal_spectral_comparison_panel"
-    / "legacy_internal_spectral_comparison_pairwise.csv"
 )
 
 ROWS_OUTPUT = "root_selected_spectral_tail_law_rows.csv"
@@ -87,15 +76,6 @@ ROW_COLUMNS = (
     "spectral_tail_p_value_status",
     "root_tail_inference_status",
     "next_mathematical_step",
-    "legacy_full_selected_null_current_clusters",
-    "legacy_full_selected_null_legacy_clusters",
-    "legacy_full_selected_null_legacy_false_split",
-    "legacy_full_signal_current_clusters",
-    "legacy_full_signal_legacy_clusters",
-    "legacy_full_signal_delta_ari",
-    "legacy_internal_selected_null_delta_raw_mp_signal_count_sum",
-    "legacy_internal_signal_delta_raw_mp_signal_count_sum",
-    "legacy_comparison_interpretation",
 )
 
 SUMMARY_COLUMNS = (
@@ -104,8 +84,6 @@ SUMMARY_COLUMNS = (
     "row_count",
     "calibrated_tail_count",
     "fail_closed_missing_support_count",
-    "legacy_full_selected_null_false_split_count",
-    "legacy_full_signal_improvement_count",
     "summary_status",
 )
 
@@ -116,8 +94,6 @@ class RootSelectedSpectralTailLawConfig:
 
     output_dir: Path
     joined_feasibility_rows_path: Path = DEFAULT_JOINED_FEASIBILITY_ROWS
-    legacy_full_pairwise_rows_path: Path | None = DEFAULT_LEGACY_FULL_PAIRWISE_ROWS
-    legacy_internal_pairwise_rows_path: Path | None = DEFAULT_LEGACY_INTERNAL_PAIRWISE_ROWS
     deformed_mp_edge_rows_path: Path | None = None
     deformed_mp_edge_support_rows_path: Path | None = None
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated"
@@ -130,16 +106,6 @@ def parse_args() -> argparse.Namespace:
         "--joined-feasibility-rows-path",
         type=Path,
         default=DEFAULT_JOINED_FEASIBILITY_ROWS,
-    )
-    parser.add_argument(
-        "--legacy-full-pairwise-rows-path",
-        type=Path,
-        default=DEFAULT_LEGACY_FULL_PAIRWISE_ROWS,
-    )
-    parser.add_argument(
-        "--legacy-internal-pairwise-rows-path",
-        type=Path,
-        default=DEFAULT_LEGACY_INTERNAL_PAIRWISE_ROWS,
     )
     parser.add_argument("--deformed-mp-edge-rows-path", type=Path, default=None)
     parser.add_argument(
@@ -400,65 +366,14 @@ def _weighted_tail_summary(
     return conservative_p, effective_n, weighted_exceedance, status
 
 
-def _legacy_row(
-    legacy_pairwise: pd.DataFrame,
-    *,
-    case_id: str,
-    data_role: str,
-) -> pd.Series | None:
-    if legacy_pairwise.empty:
-        return None
-    rows = legacy_pairwise.loc[
-        legacy_pairwise["case_id"].astype(str).eq(str(case_id))
-        & legacy_pairwise["data_role"].astype(str).eq(str(data_role))
-    ]
-    return None if rows.empty else rows.iloc[0]
-
-
-def _legacy_float(row: pd.Series | None, column: str) -> float:
-    if row is None:
-        return math.nan
-    return _finite_float(row.get(column, math.nan))
-
-
-def _legacy_bool(row: pd.Series | None, column: str) -> bool:
-    if row is None:
-        return False
-    return bool(row.get(column, False))
-
-
-def _legacy_interpretation(
-    *,
-    selected_null_row: pd.Series | None,
-    signal_row: pd.Series | None,
-    internal_selected_null_row: pd.Series | None,
-    internal_signal_row: pd.Series | None,
-) -> str:
-    legacy_false_split = _legacy_bool(selected_null_row, "legacy_false_split")
-    signal_delta = _legacy_float(signal_row, "delta_ari_legacy_minus_current")
-    internal_delta = max(
-        _legacy_float(internal_selected_null_row, "delta_raw_mp_signal_count_sum"),
-        _legacy_float(internal_signal_row, "delta_raw_mp_signal_count_sum"),
-    )
-    if legacy_false_split:
-        return "legacy_full_method_leaks_selected_null_root_risk"
-    if math.isfinite(signal_delta) and signal_delta > 1e-12:
-        return "legacy_full_method_signal_improves_but_not_calibration"
-    if math.isfinite(internal_delta) and internal_delta > 0:
-        return "legacy_internal_spectral_changes_mp_counts_only"
-    return "legacy_comparison_neutral_or_missing"
-
-
 def build_root_selected_spectral_tail_law_rows(
     *,
     joined_feasibility_rows: pd.DataFrame,
-    legacy_full_pairwise_rows: pd.DataFrame | None = None,
-    legacy_internal_pairwise_rows: pd.DataFrame | None = None,
     deformed_mp_edge_rows: pd.DataFrame | None = None,
     deformed_mp_edge_support_rows: pd.DataFrame | None = None,
     h_u_population_law_status: str = "identity_mp_assumed_deformed_mp_unestimated",
 ) -> pd.DataFrame:
-    """Return support-aware root spectral tail rows with legacy comparison."""
+    """Return support-aware root spectral tail rows."""
     _require_columns(
         joined_feasibility_rows,
         {
@@ -481,12 +396,6 @@ def build_root_selected_spectral_tail_law_rows(
     target_mask = rows.apply(_is_observed_target, axis=1)
     targets = rows[target_mask].copy()
     generated = rows[~target_mask].copy()
-    legacy_full = legacy_full_pairwise_rows if legacy_full_pairwise_rows is not None else pd.DataFrame()
-    legacy_internal = (
-        legacy_internal_pairwise_rows
-        if legacy_internal_pairwise_rows is not None
-        else pd.DataFrame()
-    )
     target_deformed = (
         deformed_mp_edge_rows if deformed_mp_edge_rows is not None else pd.DataFrame()
     )
@@ -563,14 +472,6 @@ def build_root_selected_spectral_tail_law_rows(
             if support_count > 0
             else "generate_selected_null_roots_in_same_root_tail_stratum"
         )
-        full_null = _legacy_row(legacy_full, case_id=case_id, data_role="selected_null")
-        full_signal = _legacy_row(legacy_full, case_id=case_id, data_role="signal")
-        internal_null = _legacy_row(
-            legacy_internal,
-            case_id=case_id,
-            data_role="selected_null",
-        )
-        internal_signal = _legacy_row(legacy_internal, case_id=case_id, data_role="signal")
         records.append(
             {
                 "schema_version": SCHEMA_VERSION,
@@ -603,55 +504,13 @@ def build_root_selected_spectral_tail_law_rows(
                 "spectral_tail_p_value_status": p_value_status,
                 "root_tail_inference_status": inference_status,
                 "next_mathematical_step": next_step,
-                "legacy_full_selected_null_current_clusters": _finite_int(
-                    full_null.get("current_found_clusters", math.nan)
-                    if full_null is not None
-                    else math.nan
-                ),
-                "legacy_full_selected_null_legacy_clusters": _finite_int(
-                    full_null.get("legacy_found_clusters", math.nan)
-                    if full_null is not None
-                    else math.nan
-                ),
-                "legacy_full_selected_null_legacy_false_split": _legacy_bool(
-                    full_null,
-                    "legacy_false_split",
-                ),
-                "legacy_full_signal_current_clusters": _finite_int(
-                    full_signal.get("current_found_clusters", math.nan)
-                    if full_signal is not None
-                    else math.nan
-                ),
-                "legacy_full_signal_legacy_clusters": _finite_int(
-                    full_signal.get("legacy_found_clusters", math.nan)
-                    if full_signal is not None
-                    else math.nan
-                ),
-                "legacy_full_signal_delta_ari": _legacy_float(
-                    full_signal,
-                    "delta_ari_legacy_minus_current",
-                ),
-                "legacy_internal_selected_null_delta_raw_mp_signal_count_sum": _legacy_float(
-                    internal_null,
-                    "delta_raw_mp_signal_count_sum",
-                ),
-                "legacy_internal_signal_delta_raw_mp_signal_count_sum": _legacy_float(
-                    internal_signal,
-                    "delta_raw_mp_signal_count_sum",
-                ),
-                "legacy_comparison_interpretation": _legacy_interpretation(
-                    selected_null_row=full_null,
-                    signal_row=full_signal,
-                    internal_selected_null_row=internal_null,
-                    internal_signal_row=internal_signal,
-                ),
             }
         )
     return pd.DataFrame.from_records(records, columns=ROW_COLUMNS)
 
 
 def summarize_root_selected_spectral_tail_law_rows(rows: pd.DataFrame) -> pd.DataFrame:
-    """Summarize root spectral-tail support and legacy overlay."""
+    """Summarize root spectral-tail support."""
     if rows.empty:
         return pd.DataFrame(columns=SUMMARY_COLUMNS)
     calibrated = int(
@@ -666,13 +525,6 @@ def summarize_root_selected_spectral_tail_law_rows(rows: pd.DataFrame) -> pd.Dat
         .eq("fail_closed_selected_root_spectral_tail_support_missing")
         .sum()
     )
-    legacy_false = int(rows["legacy_full_selected_null_legacy_false_split"].sum())
-    legacy_signal_improve = int(
-        pd.to_numeric(rows["legacy_full_signal_delta_ari"], errors="coerce")
-        .fillna(0.0)
-        .gt(1e-12)
-        .sum()
-    )
     return pd.DataFrame.from_records(
         [
             {
@@ -681,8 +533,6 @@ def summarize_root_selected_spectral_tail_law_rows(rows: pd.DataFrame) -> pd.Dat
                 "row_count": int(rows.shape[0]),
                 "calibrated_tail_count": calibrated,
                 "fail_closed_missing_support_count": fail_closed,
-                "legacy_full_selected_null_false_split_count": legacy_false,
-                "legacy_full_signal_improvement_count": legacy_signal_improve,
                 "summary_status": (
                     "selected_root_spectral_tail_support_missing"
                     if fail_closed
@@ -705,16 +555,12 @@ def evaluate_root_selected_spectral_tail_law_panel(
 ) -> dict[str, pd.DataFrame]:
     """Read inputs and return root spectral-tail law tables."""
     joined = pd.read_csv(config.joined_feasibility_rows_path, low_memory=False)
-    legacy_full = _read_optional_csv(config.legacy_full_pairwise_rows_path)
-    legacy_internal = _read_optional_csv(config.legacy_internal_pairwise_rows_path)
     deformed_rows = _read_optional_csv(config.deformed_mp_edge_rows_path)
     deformed_support_rows = _read_optional_csv(
         config.deformed_mp_edge_support_rows_path
     )
     rows = build_root_selected_spectral_tail_law_rows(
         joined_feasibility_rows=joined,
-        legacy_full_pairwise_rows=legacy_full,
-        legacy_internal_pairwise_rows=legacy_internal,
         deformed_mp_edge_rows=deformed_rows,
         deformed_mp_edge_support_rows=deformed_support_rows,
         h_u_population_law_status=str(config.h_u_population_law_status),
@@ -759,8 +605,6 @@ def main() -> None:
         RootSelectedSpectralTailLawConfig(
             output_dir=args.output_dir,
             joined_feasibility_rows_path=args.joined_feasibility_rows_path,
-            legacy_full_pairwise_rows_path=args.legacy_full_pairwise_rows_path,
-            legacy_internal_pairwise_rows_path=args.legacy_internal_pairwise_rows_path,
             deformed_mp_edge_rows_path=args.deformed_mp_edge_rows_path,
             deformed_mp_edge_support_rows_path=args.deformed_mp_edge_support_rows_path,
             h_u_population_law_status=str(args.h_u_population_law_status),

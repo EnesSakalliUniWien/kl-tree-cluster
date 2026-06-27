@@ -53,10 +53,6 @@ def _tail_row(*, support_count: int = 0) -> dict[str, object]:
             else "selected_root_spectral_tail_support_missing"
         ),
         "conservative_spectral_tail_p_value": 0.5 if support_count else math.nan,
-        "legacy_full_selected_null_legacy_false_split": True,
-        "legacy_comparison_interpretation": (
-            "legacy_full_method_leaks_selected_null_root_risk"
-        ),
     }
 
 
@@ -71,10 +67,7 @@ def test_nearest_support_is_diagnostic_and_production_fails_closed() -> None:
     assert row["nearest_support_status"] == "nearest_support_diagnostic_only"
     assert row["production_inference_status"] == "fail_closed_nearest_support_only"
     assert not row["nearest_support_root_tail_stratum_match"]
-    assert row["legacy_full_selected_null_legacy_false_split"]
-    assert row["legacy_comparison_interpretation"] == (
-        "legacy_full_method_leaks_selected_null_root_risk"
-    )
+    assert "legacy_full_selected_null_legacy_false_split" not in rows.columns
 
 
 def test_summary_counts_exact_support_separately_from_nearest_support() -> None:

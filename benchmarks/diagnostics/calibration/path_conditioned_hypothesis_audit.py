@@ -370,16 +370,12 @@ def build_method_case_table(
         "feature_representation",
         "branch_minus_current_ari",
         "branch_vs_current_relation",
-        "branch_vs_legacy_relation",
         f"{CURRENT_METHOD}_status",
         f"{BRANCH_METHOD}_status",
-        "tbs_legacy_c2ef9a69_status",
         f"{CURRENT_METHOD}_found_clusters",
         f"{BRANCH_METHOD}_found_clusters",
-        "tbs_legacy_c2ef9a69_found_clusters",
         CURRENT_METHOD,
         BRANCH_METHOD,
-        "tbs_legacy_c2ef9a69",
     ]
     available = [column for column in pairwise_columns if column in pairwise.columns]
     method_case = method_case.merge(
@@ -581,10 +577,6 @@ def _method_connection_text(method: str) -> tuple[str, str]:
             "current_reference_alias",
             "Direct-run alias for current TBS in the guarded smoke; should match tbs unless dispatch configuration differs.",
         ),
-        "tbs_legacy_c2ef9a69": (
-            "legacy_power_comparator",
-            "Comparator with high completion power but no guarded fail-closed behavior; useful witness, not production rule.",
-        ),
         "tbs_internal_filter_v1": (
             "internal_support_filter",
             "Tests the internal-barycenter support idea without branch-length state; separates support filtering from branch-length conditioning.",
@@ -596,10 +588,6 @@ def _method_connection_text(method: str) -> tuple[str, str]:
         "tbs_bandwidth_context_v1": (
             "neighborhood_bandwidth_context",
             "Regional bandwidth support regularizer; connects to selected-neighborhood evidence but matched current in the smoke.",
-        ),
-        "tbs_rescued_legacy_v1": (
-            "combined_guarded_legacy_candidate",
-            "Combined branch-length, support, passthrough, and bandwidth components; smoke result did not justify promotion.",
         ),
     }
     return mapping.get(method, ("other", "No specific connection annotation."))
@@ -655,7 +643,7 @@ def build_hypothesis_solution_matrix() -> pd.DataFrame:
             "diagnostic_signal": "ancestor_pass_through_count > 0 under sibling_gate_open=False and incoming_edge_open=True",
             "solution": "Treat as a candidate failure marker; if predictive across reruns, encode only as a predeclared guard in a new fixed method variant.",
             "admissibility_constraint": "The guard must be calibrated or predeclared before benchmarking; do not switch methods after observing outcomes.",
-            "connection_to_recent_methods": "This is the strongest branch-length traversal-specific burden and separates branch-length from rescued-legacy/bandwidth components.",
+            "connection_to_recent_methods": "This is the strongest branch-length traversal-specific burden and separates branch-length from bandwidth components.",
         },
         {
             "hypothesis_step": "branch_length_ambiguity",
@@ -669,14 +657,7 @@ def build_hypothesis_solution_matrix() -> pd.DataFrame:
             "diagnostic_signal": "mixed_boundary_rows > 0, especially without pass-through ancestry",
             "solution": "Handle as calibration/support failure or conservative root stop; evaluate fail-closed behavior separately from pass-through chains.",
             "admissibility_constraint": "Truth-label boundary diagnosis is benchmark-only evidence and cannot enter runtime decisions.",
-            "connection_to_recent_methods": "Hard-overlap fail-closed behavior belongs to guarded current/internal-filter methods, not legacy completion.",
-        },
-        {
-            "hypothesis_step": "legacy_and_rescued_methods",
-            "diagnostic_signal": "legacy completes unsupported cases; rescued legacy underperforms in guarded smoke",
-            "solution": "Keep legacy as a comparator/power witness and rescued legacy as a negative control unless new support evidence changes the picture.",
-            "admissibility_constraint": "Do not promote legacy-style completion when selected-null support is missing.",
-            "connection_to_recent_methods": "Manual smoke showed rescued legacy weak mean ARI while branch-length internal filtering had the best smoke profile.",
+            "connection_to_recent_methods": "Hard-overlap fail-closed behavior belongs to guarded current/internal-filter methods.",
         },
     ]
     out = pd.DataFrame(rows)
@@ -787,7 +768,7 @@ def build_report(
         "- Branch length should be read through path state and support, not as a standalone threshold.",
         "- Cases with outcome/path status mismatch are connection failures between artifacts; they should be rerun under one runner before path burden is used to explain a full-suite delta.",
         "- Cases with delta-direction consistency but different delta magnitude are weaker evidence than exact matches, but still useful for sign-level hypothesis checks.",
-        "- Legacy remains a power/completion comparator; rescued legacy and bandwidth-context results are connection evidence but not promotion evidence.",
+        "- Bandwidth-context results are connection evidence, not promotion evidence.",
         "- Any eventual guard must become a new fixed, predeclared method variant and then be rerun.",
     ]
     return "\n".join(lines) + "\n"
