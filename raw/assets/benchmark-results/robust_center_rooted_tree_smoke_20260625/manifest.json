@@ -1,0 +1,30 @@
+{
+  "config": {
+    "base_seed": 20260625,
+    "branch_count": 4,
+    "branch_sep": 2.5,
+    "candidate_pool_size": 400,
+    "dimensions": [
+      5,
+      20,
+      100
+    ],
+    "min_root_side_fraction": 0.05,
+    "n_per_cluster": 80,
+    "noise": 1.0,
+    "outlier_distance": 12.0,
+    "outlier_fraction": 0.1,
+    "output_dir": "raw/assets/benchmark-results/robust_center_rooted_tree_smoke_20260625",
+    "random_depth_directions": 1024,
+    "replicates": 30
+  },
+  "generated_at": "2026-06-25T13:45:13.790727+00:00",
+  "generated_by": "benchmarks.diagnostics.calibration.robust_center_rooted_tree_smoke",
+  "interpretation": "Center-rooting can improve the selected root edge when outliers pull the centroid, but it remains a rooting diagnostic rather than a selected-root validity or calibration proof.",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/robust_center_rooted_tree_smoke_20260625/robust_center_rooted_tree_rows.csv",
+    "summary": "raw/assets/benchmark-results/robust_center_rooted_tree_smoke_20260625/robust_center_rooted_tree_summary.csv"
+  },
+  "schema_version": "robust_center_rooted_tree_smoke/v1",
+  "study_role": "diagnostic_robust_center_rooted_tree_not_calibration"
+}

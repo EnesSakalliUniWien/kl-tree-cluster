@@ -1,0 +1,29 @@
+{
+  "config": {
+    "base_seed": 20260625,
+    "branch_count": 4,
+    "branch_sep": 2.5,
+    "candidate_pool_size": 400,
+    "dimensions": [
+      5,
+      20,
+      100
+    ],
+    "n_per_cluster": 80,
+    "noise": 1.0,
+    "outlier_distance": 12.0,
+    "outlier_fraction": 0.1,
+    "output_dir": "raw/assets/benchmark-results/robust_root_center_smoke_20260625",
+    "random_depth_directions": 1024,
+    "replicates": 40
+  },
+  "generated_at": "2026-06-25T10:05:09.783117+00:00",
+  "generated_by": "benchmarks.diagnostics.calibration.robust_root_center_smoke",
+  "interpretation": "Robust centers can improve a latent root anchor under outliers, but center estimation is not selected-root topology validation.",
+  "outputs": {
+    "rows": "raw/assets/benchmark-results/robust_root_center_smoke_20260625/robust_root_center_rows.csv",
+    "summary": "raw/assets/benchmark-results/robust_root_center_smoke_20260625/robust_root_center_summary.csv"
+  },
+  "schema_version": "robust_root_center_smoke/v1",
+  "study_role": "diagnostic_robust_center_root_anchor_not_calibration"
+}
