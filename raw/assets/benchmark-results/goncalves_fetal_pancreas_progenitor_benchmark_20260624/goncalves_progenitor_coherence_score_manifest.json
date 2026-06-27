@@ -1,0 +1,37 @@
+{
+  "manifest_schema_version": "static_artifact_provenance/v1",
+  "generated_at": "2026-06-25T09:20:41+02:00",
+  "source_script": "scripts/plot_goncalves_progenitor_coherence.py",
+  "score_definition": "mean(dominant_population_fraction, progenitor_population_fraction)",
+  "source_tables": [
+    "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_tbs_cluster_progenitor_signature_scores.csv",
+    "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_tbs_inner_node_progenitor_signature_scores.csv",
+    "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_tbs_monophyletic_meeting_progenitor_signature_scores.csv"
+  ],
+  "artifacts": [
+    {
+      "path": "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_progenitor_coherence_score.png",
+      "role": "Goncalves progenitor coherence score PNG",
+      "bytes": 147054,
+      "sha256": "8910aebaedec7911604defec8a08004d1d6fd5594c4296f3d3741ab33b871b10"
+    },
+    {
+      "path": "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_progenitor_coherence_score.pdf",
+      "role": "Goncalves progenitor coherence score PDF",
+      "bytes": 27226,
+      "sha256": "a52c4f88a47e9769fa8fc9369956b251546860123cdbb32c7fdac8c91d61a54a"
+    },
+    {
+      "path": "raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_progenitor_coherence_score.csv",
+      "role": "Goncalves progenitor coherence score table",
+      "bytes": 1257,
+      "sha256": "ab18e860f1d7d065b25f651106d627a81480498d6a7aa09b22e9d13f824ce87d",
+      "rows": 7,
+      "columns": 10,
+      "generated_at": "2026-06-25T09:20:41+02:00",
+      "generated_at_values": [
+        "2026-06-25T09:20:41+02:00"
+      ]
+    }
+  ]
+}

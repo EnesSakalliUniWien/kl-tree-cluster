@@ -1,0 +1,8 @@
+generated_at,label,source,class,n_cells,dominant_population,dominant_population_fraction,progenitor_population_fraction,coherence_score,top_populations
+2026-06-25T09:20:41+02:00,C6,cluster,clear progenitor structure,31,tip,1.0,1.0,1.0,tip:31
+2026-06-25T09:20:41+02:00,C1,cluster,clear progenitor structure,19,proliferating,1.0,1.0,1.0,proliferating:19
+2026-06-25T09:20:41+02:00,N2851,inner_node,clear progenitor structure,31,tip,1.0,1.0,1.0,tip:31
+2026-06-25T09:20:41+02:00,N2876,meeting_node,clear progenitor structure,27,proliferating,0.925925925925926,0.9629629629629628,0.9444444444444444,proliferating:25; mesenchyme:1; trunk:1
+2026-06-25T09:20:41+02:00,N2910,meeting_node,clear progenitor structure,47,proliferating,0.851063829787234,0.8723404255319149,0.8617021276595744,proliferating:40; mesenchyme:6; trunk:1
+2026-06-25T09:20:41+02:00,C22,cluster,broad mixed neighborhood,683,trunk,0.5021961932650073,0.8389458272327965,0.670571010248902,trunk:343; tip:147; mesenchyme:86; proliferating:83; blood:10; neurons:7; endocrine:7
+2026-06-25T09:20:41+02:00,N2907,meeting_node,broad mixed neighborhood,713,trunk,0.4824684431977559,0.8050490883590463,0.6437587657784011,trunk:344; tip:147; mesenchyme:115; proliferating:83; blood:10; neurons:7; endocrine:7
