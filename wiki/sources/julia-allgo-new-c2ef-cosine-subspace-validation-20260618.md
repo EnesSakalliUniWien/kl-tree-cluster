@@ -5,8 +5,6 @@ status: reviewed
 updated: 2026-06-18
 sources:
   - raw/inbox/c2ef-cosine-subspace-method-notes-20260615.md
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/METADATA.md
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/config.py
   - data/feature_matrices/feature_matrix_julia_allGO_new.tsv
   - raw/assets/benchmark-results/julia_allGO_new_c2ef_validate_cosine_subspace_split_legacy_20260618/reference_split_manifest.json
   - raw/assets/benchmark-results/julia_allGO_new_c2ef_validate_cosine_subspace_split_legacy_20260618/reference_tfidf_components_02_05_legacy_assignments.csv
@@ -32,6 +30,8 @@ commit `c2ef9a69e0888168950bdee4a41ae8ab9996e32f`. The reference split is the
 historical TF-IDF gene-gene cosine components `2-5` tree, followed by legacy
 `PosetTree.decompose` with `alpha_local = 0.001`, `sibling_alpha = 0.01`, and
 legacy `PASSTHROUGH = True`.
+The copied package was retired from active source on 2026-06-25; this source
+page is retained for the raw validation outputs.
 
 The run produced a `602 x 6368` allGO-new matrix split into `19` clusters. The
 largest reference cluster has `130` genes and only one cluster is a singleton.

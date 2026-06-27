@@ -13,9 +13,6 @@ sources:
   - wiki/sources/root-selected-validity-replay-panel-20260617.md
   - wiki/sources/root-tree-geometry-hard-negative-replay-20260617.md
   - wiki/sources/selected-neighborhood-signal-flow-literature-20260617.md
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/adaptive_kernel_bandwidths.py
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/kernel_interpolation.py
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/child_prior_estimation.py
 tags:
   - analysis
   - root
@@ -32,6 +29,9 @@ The old kernel smoother should not be restored as an unconditional sibling
 p-value rescue. The useful part is the local averaging measure: it encodes
 which nearby tree states look stable, which nearby states look signal-like, and
 how far the target is from its stopping-edge ancestry and structural scale.
+The vendored old-method implementation that motivated this comparison was
+retired on 2026-06-25; this page remains historical synthesis over retained raw
+diagnostic outputs and current kernel-tail diagnostics.
 
 The root law to learn is therefore a selected conditional spectral-tail law
 with kernel-smoothed admissible support, not a lower p-value threshold.

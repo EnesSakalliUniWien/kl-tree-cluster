@@ -4,10 +4,6 @@ type: source
 status: reviewed
 updated: 2026-06-17
 sources:
-  - benchmarks/diagnostics/calibration/legacy_c2ef9a69_edge_alpha_comparison_panel.py
-  - tests/validation/190_test_legacy_c2ef9a69_edge_alpha_comparison_panel.py
-  - benchmarks/diagnostics/calibration/legacy_c2ef9a69_method_comparison_panel.py
-  - benchmarks/shared/runners/legacy_commit_runner.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_edge_alpha_overlap_comparison_20260617
 tags:
   - source
@@ -30,6 +26,8 @@ clean edge-alpha choice. Every tested edge alpha has one legacy signal gain and
 at least one legacy extra selected-null false split. The panel therefore keeps
 legacy as a power-source witness and safety-warning comparator, not as a
 calibrated production rule.
+The active panel and runner were retired on 2026-06-25; the raw output
+directory remains as historical evidence.
 
 ## Key Points
 

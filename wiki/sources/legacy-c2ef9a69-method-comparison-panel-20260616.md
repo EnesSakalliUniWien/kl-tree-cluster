@@ -4,9 +4,6 @@ type: source
 status: reviewed
 updated: 2026-06-16
 sources:
-  - benchmarks/diagnostics/calibration/legacy_c2ef9a69_method_comparison_panel.py
-  - tests/validation/152_test_legacy_c2ef9a69_method_comparison_panel.py
-  - benchmarks/shared/runners/legacy_commit_runner.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_method_comparison_panel
 tags:
   - source
@@ -30,6 +27,8 @@ The result is mixed. The full legacy method avoids some strict current-method
 skips and fixes one current over-split, but it also creates a selected-null
 false split and under-splits the hardest overlap signal case. This supports
 using the old method as a diagnostic comparison, not as a direct replacement.
+The active comparison panel and legacy runner were retired on 2026-06-25; this
+page now cites only the retained raw output directory.
 
 ## Key Points
 

@@ -5,8 +5,6 @@ status: draft
 updated: 2026-06-23
 sources:
   - pyproject.toml
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/METADATA.md
-  - benchmarks/shared/runners/legacy_commit_runner.py
   - benchmarks/shared/runners/method_registry.py
   - benchmarks/shared/util/method_sets.py
   - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
@@ -23,16 +21,16 @@ tags:
 
 ## Summary
 
-The project has one intentional legacy code island and several repeated
-diagnostic scaffolds.
+The project had one intentional legacy code island and several repeated
+diagnostic scaffolds. The legacy code island was retired on 2026-06-25.
 
-The intentional legacy island is
+The retired legacy island was
 `tree_break_selection/legacy_methods/commit_c2ef9a69/`, a full importable copy
 of the old `tree_break_selection` package. Its metadata says it exists for
 diagnostic old-versus-current comparisons and is not a production path.
-However, it remains live through benchmark registries and tests, so it should
-not be deleted without first retiring `tbs_legacy_c2ef9a69` and related
-comparison panels.
+It has now been deleted along with `tbs_legacy_c2ef9a69`,
+`tbs_legacy_internal_spectral_diagnostic`, `tbs_rescued_legacy_v1`, and the
+related comparison panels.
 
 The main redundancy outside that snapshot is repeated benchmark/report
 plumbing: JSON serialization helpers, path builders, finite-number coercion,

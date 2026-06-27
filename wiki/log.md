@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-24
+updated: 2026-06-26
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -4834,6 +4834,126 @@ verification, and maintenance events here in chronological order.
   radial tree, metric box, and cluster-size/dominant-label panel. The matched
   report writes a timestamped PDF, two page PNGs, a summary CSV, and a manifest;
   focused py_compile, Ruff, and the selected scRNA timestamp regression passed.
+
+### 2026-06-25
+
+- Added `scripts/plot_goncalves_progenitor_coherence.py` to render a compact
+  quantitative Goncalves progenitor coherence plot for the selected clear
+  progenitor structures (`C6`, `C1`, `N2851`, `N2876`, `N2910`) versus broad
+  mixed neighborhoods (`C22`, `N2907`). The score is
+  `mean(dominant_population_fraction, progenitor_population_fraction)`, with
+  component fractions overlaid as points and group means shown as dashed
+  reference lines. The script writes PNG, PDF, CSV, and static provenance
+  manifest artifacts under the Goncalves benchmark result folder; py_compile
+  and Ruff passed.
+- Published the full MNIST result bundle to GitHub Pages at
+  `https://enessakalliuniwien.github.io/tree-break-selection/mnist/results/`.
+  The upload includes the Plotly report, 2D/3D UMAP pages, digit image
+  inspectors, summary CSVs, UMAP coordinates, static PNG summary, and static
+  one-plot-per-page PDF. A direct assignment audit confirmed `2,000/2,000`
+  UMAP coordinate rows match the saved alpha-sweep assignment rows by sample id,
+  with `0` true-digit mismatches and `0` best-cluster mismatches for the
+  displayed Ward `edge_alpha=0.0001`, `sibling_alpha=0.0001` run.
+- Added `benchmarks/diagnostics/calibration/robust_root_center_smoke.py` to
+  test whether robust center estimators help recover a latent high-dimensional
+  root anchor. The diagnostic writes row, summary, and manifest artifacts under
+  `raw/assets/benchmark-results/robust_root_center_smoke_20260625/`; geometric
+  median and continuous approximate halfspace-depth centers improve root-anchor
+  recovery under outliers, while observed-point medoid/depth proxies fail in
+  high dimensions and the result remains diagnostic-only rather than a
+  selected-root topology rescue. Added
+  [[robust-root-center-smoke-20260625]] to the wiki; py_compile and Ruff passed.
+- Added `benchmarks/diagnostics/calibration/robust_center_rooted_tree_smoke.py`
+  to compare centroid-rooted, geometric-median-rooted, and Tukey-depth-rooted
+  versions of the same unrooted average-linkage tree. The default `5%`
+  side-size guard often lets all methods select the same outlier-isolating
+  root edge in outlier scenarios, so robust centers improve center error but
+  not the root edge. A `15%` guard sensitivity reduces that trivial root and
+  shows modest robust-rooting branch-integrity gains in some outlier rows, but
+  not a general centroid replacement. Added
+  [[robust-center-rooted-tree-smoke-20260625]] to the wiki.
+- Reduced redundant code in gate and AWS benchmark infrastructure. Shared gate
+  annotation predicates now live in
+  `tree_break_selection/hierarchy_analysis/decomposition/gates/annotation_predicates.py`
+  and are reused by the gate orchestrator and spectral-transport support.
+  Shared AWS Batch shard-index resolution now lives in
+  `benchmarks/shared/env.py` and is re-exported by the cloud benchmark wrappers.
+  Shared validation-report envelope and metadata checks now live in
+  `benchmarks/validation/report_contract.py` and are reused by the feature
+  covariance and selected-PCA projected-Wald validation scripts. Also removed
+  the focused Ruff `F401/F841` leftovers from two spectral diagnostics.
+  Touched-file Ruff, gate traversal/config tests, AWS wrapper tests,
+  selected-edge AWS validation tests, validation-report tests, and `make
+  wiki-lint` passed.
+- Removed active legacy TBS method wiring from the Python codebase. Deleted the
+  vendored `tree_break_selection/legacy_methods/` implementation, the legacy
+  commit runner, legacy comparison panels/tests, and the old/current method
+  difference ledger. The method registry, method sets, allGO matrix scripts,
+  root-tail diagnostics, nearest-support/action-ladder/action-dominance
+  diagnostics, kernel-tail diagnostics, population-law/H_u diagnostics, and
+  hard-negative replay contracts now expose current-only method surfaces.
+  Legacy method IDs remain only in absence assertions. Touched-file Ruff,
+  full `F401/F841` scan, targeted dispatch/path-conditioned/root-tail/kernel
+  validation tests, and contract searches passed.
+
+### 2026-06-26
+
+- Ran the categorical adaptive-diffusion fixed-coordinate benchmark and focused
+  audit for the quantized Gaussian overlap and `phylo_large` rows. Added
+  [[categorical-adaptive-diffusion-focus-audit-20260626]], which records that
+  adaptive topology alone determines the focus-case partitions: quantized
+  Gaussian losses are mostly pure over-fragmentation, phylo-large losses are
+  mostly taxon merges, and NNLS branch-time refitting leaves those assignments
+  unchanged.
+- Installed and verified the Graphviz-backed `pygraphviz` plotting path,
+  enabled radial benchmark tree plots by default, added a default UMAP
+  embedding cache for plotted full runs, fixed dense radial tree legend
+  clipping, and reran the plotted full benchmark at
+  `benchmarks/results/run_20260626_1506_full_radial_plots_layoutfix/`. Added
+  [[full-radial-plots-benchmark-run-20260626]] to record the PDF/UMAP/tree
+  artifacts and the quantized Gaussian plus `phylo_large` observations.
+- Extracted the `gauss_overlap_3c_small_q4/q5` examples to
+  `benchmarks/results/focus_gauss_overlap_q4_q5_20260626/`, including
+  assignments, cluster crosstabs, UMAP page PNGs, node stats, and p-value
+  traces. The focused traces show `tbs_diffusion` merges true classes `1` and
+  `2` because the `200`-sample branch has open edge gates but corrected sibling
+  p-values just above `0.01` (`0.01220272` for q4 and `0.01091002` for q5),
+  while plain TBS splits the analogous branch with corrected sibling p-values
+  below alpha.
+- Clarified diffusion method naming in the benchmark registry and extracted
+  q4/q5 metadata: `tbs_diffusion` is displayed as
+  `TBS (Hamming NN Diffusion)` with `diffusion_method=hamming_nn_diffusion`,
+  while `tbs_diffusion_adaptive` is displayed as
+  `TBS (Adaptive pydiffmap Diffusion)`. TBS-family benchmark rows now record
+  `branch_length_optimization_method`, defaulting to `linkage_ultrametric`, and
+  the diffusion dispatch path can forward fixed-topology NNLS branch-length
+  settings when configured.
+
+### 2026-06-27
+
+- Reran the full plotted 121-case benchmark with
+  `tbs_diffusion_adaptive` replacing Hamming NN diffusion. Added
+  [[full-adaptive-pydiffmap-benchmark-run-20260627]], which records that
+  adaptive pydiffmap diffusion recovers the quantized Gaussian overlap q3/q4/q5
+  rows exactly, improves `phylo_large_32taxa` to ARI `0.9770`, remains partial
+  on `phylo_large_64taxa` at ARI `0.5612`, and averages ARI `0.531196` over
+  ok rows with `106` ok rows and `15` skips.
+- Added [[phylo-large-adaptive-pydiffmap-focus-audit-20260627]] after a
+  focused `phylo_large` rerun. The audit records that raw categorical Hamming
+  separates every true taxon in both large phylogenetic cases, while adaptive
+  pydiffmap keeps strict sample gaps for only `30/64` taxa in
+  `phylo_large_64taxa`, reducing nearest-neighbor label purity and leaving
+  mixed final boundaries with closed sibling gates. `phylo_large_32taxa`
+  remains a pure-fragmentation case with no mixed final clusters.
+- Added optional `tbs_diffusion_graphtools` as
+  `TBS (graphtools Kernel Diffusion)` under the GPL-isolated
+  `experimental-gpl` dependency extra, then ran the five-case focus benchmark
+  in `benchmarks/results/focus_graphtools_diffusion_20260627/`. Added
+  [[graphtools-diffusion-focus-benchmark-20260627]], which records exact
+  recovery on quantized Gaussian q3/q4/q5, `phylo_large_32taxa` at ARI
+  `0.902655` with `29` clusters, and `phylo_large_64taxa` at ARI `0.709257`
+  with `102` clusters. The result improves the 64-taxon adaptive pydiffmap
+  row but remains experimental rather than canonical.
 
 ## Evidence
 

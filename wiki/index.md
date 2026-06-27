@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-24
+updated: 2026-06-26
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -413,6 +413,16 @@ renamed, or promoted.
   linkage/rooting choices; current `0/6` geometries become root-validity
   supported, while the old commit either under-splits or fragments without a
   valid-root guard, so the case is a hard negative for root-tail rescue.
+- [[robust-root-center-smoke-20260625]] - robust center root-anchor smoke
+  showing geometric median and continuous approximate halfspace-depth centers
+  improve latent root-center recovery under outliers, while observed-point
+  medoid/depth proxies fail badly in high dimensions and do not replace
+  selected-root topology validation.
+- [[robust-center-rooted-tree-smoke-20260625]] - centroid, geometric-median,
+  and Tukey-depth rooted-tree smoke showing that robust centers improve the
+  center anchor but do not automatically change the nearest root edge on an
+  already-built average-linkage tree; stricter side-size guards reduce trivial
+  outlier-rooting and give modest branch-integrity gains in some outlier rows.
 - [[root-selected-population-law-requirement-20260617]] - diagnostic
   \(H_u\)-requirement panel for selected-root spectral tails; after active
   feature count capture, the three action-dominance fail-closed roots need
@@ -546,6 +556,23 @@ renamed, or promoted.
   standardized continuous-tree geometry change; confirms the
   `dim_consolidated_4c_24f_continuous` repair but shows default TBS still
   under-splits several continuous Gaussian and method-proof regimes.
+- [[full-radial-plots-benchmark-run-20260626]] - 121-case full plotted
+  benchmark with radial tree pages, cached UMAP embeddings, dense-tree legend
+  clipping fixed, and focused notes on the quantized Gaussian overlap and
+  `phylo_large` UMAP/tree pages.
+- [[full-adaptive-pydiffmap-benchmark-run-20260627]] - 121-case full plotted
+  benchmark replacing Hamming NN diffusion with adaptive pydiffmap diffusion;
+  q3/q4/q5 quantized Gaussian overlap recover exactly, `phylo_large_32taxa`
+  is strong, and `phylo_large_64taxa` remains partial.
+- [[phylo-large-adaptive-pydiffmap-focus-audit-20260627]] - focused
+  `phylo_large_32taxa`/`64taxa` audit showing that raw categorical Hamming
+  separates every taxon, while adaptive pydiffmap collapses selected
+  between-taxon distances and drives fragmentation plus mixed final
+  boundaries.
+- [[graphtools-diffusion-focus-benchmark-20260627]] - optional GPL
+  `tbs_diffusion_graphtools` backend and five-case focus benchmark; it fixes
+  quantized Gaussian q3/q4/q5 and improves `phylo_large_64taxa` over pydiffmap
+  but remains partial, so it stays experimental.
 - [[gaussian-inner-node-branch-time-debug-20260623]] - inner-node audit for
   the two continuous Gaussian under-splits, showing that standardized topology
   contains the correct pure splits but the branch-time covariance multiplier
@@ -647,6 +674,11 @@ renamed, or promoted.
 
 ### Analyses
 
+- [[categorical-adaptive-diffusion-focus-audit-20260626]] - focused audit of
+  the 2026-06-26 categorical adaptive-diffusion benchmark, showing that
+  quantized Gaussian losses are pure over-fragmentation, `phylo_large` losses
+  are nearby-taxon merges, and NNLS branch-time refitting does not change the
+  selected partitions on the focus cases.
 - [[scrna-plot-pipeline-audit-20260624]] - audit and cleanup contract for the
   adult pancreas and Goncalves fetal pancreas plot surfaces, separating
   verified cluster-to-tree assignment from ambiguous plot aliases, overlapping

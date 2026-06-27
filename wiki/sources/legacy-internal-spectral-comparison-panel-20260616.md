@@ -4,8 +4,6 @@ type: source
 status: reviewed
 updated: 2026-06-16
 sources:
-  - benchmarks/diagnostics/calibration/legacy_internal_spectral_comparison_panel.py
-  - tests/validation/151_test_legacy_internal_spectral_comparison_panel.py
   - tests/test_methodology_fixes.py
   - tests/pipeline/51_test_dispatch_contract.py
   - benchmarks/shared/runners/method_registry.py
@@ -33,6 +31,9 @@ that appends descendant internal node distributions to each local spectral
 matrix. The copied behavior is exposed as
 `include_internal_barycenters=True` in the spectral estimator and as benchmark
 method id `tbs_legacy_internal_spectral_diagnostic`.
+The benchmark method id and active comparison panel were retired on
+2026-06-25; the internal-barycenter spectral mode remains covered only as a
+low-level methodology test.
 
 The one-replicate overlap benchmark shows that the legacy rows strongly change
 the spectral diagnostics but do not change the resulting partitions on the

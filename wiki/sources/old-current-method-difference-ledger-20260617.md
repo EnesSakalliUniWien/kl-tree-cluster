@@ -4,8 +4,6 @@ type: source
 status: reviewed
 updated: 2026-06-17
 sources:
-  - benchmarks/diagnostics/calibration/old_current_method_difference_ledger.py
-  - tests/validation/183_test_old_current_method_difference_ledger.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/old_current_method_difference_ledger_20260617
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/root_selected_kernel_spectral_tail_law_20260617
 tags:
@@ -28,6 +26,8 @@ bandwidth tradeoff, and kernel-spectral candidate summaries.
 The ledger is the current durable overview of what was removed, replaced,
 added, retained only diagnostically, and still unresolved between the old
 `c2ef9a69` method and the current method.
+The active ledger script and test were retired on 2026-06-25; this page now
+records only the retained generated output.
 
 ## Key Points
 

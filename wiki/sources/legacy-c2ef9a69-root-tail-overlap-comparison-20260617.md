@@ -4,12 +4,6 @@ type: source
 status: reviewed
 updated: 2026-06-17
 sources:
-  - benchmarks/diagnostics/calibration/legacy_c2ef9a69_method_comparison_panel.py
-  - benchmarks/shared/runners/legacy_commit_runner.py
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/adaptive_kernel_bandwidths.py
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/kernel_interpolation.py
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/child_prior_estimation.py
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/statistics/sibling_divergence/pair_testing/sibling_null_prior_interpolation/sibling_null_prior_interpolation.py
   - raw/assets/benchmark-results/specific_small_method_benchmark_20260615/legacy_c2ef9a69_root_tail_overlap_comparison_20260617
 tags:
   - source
@@ -33,6 +27,8 @@ and signal roles.
 The old method completes more rows than the current strict method and improves
 one signal row, but it also creates two selected-null false splits. This
 supports the narrower conclusion that the old kernel/neighborhood layer is
+historical diagnostic evidence, not active code. The panel, runner, and
+vendored old-method package were retired on 2026-06-25.
 useful evidence, not a valid direct replacement for the current fail-closed
 root law.
 

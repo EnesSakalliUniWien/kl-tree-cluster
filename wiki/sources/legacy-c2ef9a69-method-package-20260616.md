@@ -4,11 +4,6 @@ type: source
 status: reviewed
 updated: 2026-06-16
 sources:
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/METADATA.md
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/__init__.py
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/hierarchy_analysis/tree_decomposition.py
-  - tree_break_selection/legacy_methods/commit_c2ef9a69/tree_break_selection/tree/poset_tree.py
-  - benchmarks/shared/runners/legacy_commit_runner.py
   - benchmarks/shared/runners/method_registry.py
   - benchmarks/shared/util/method_sets.py
   - tests/pipeline/51_test_dispatch_contract.py
@@ -24,15 +19,18 @@ tags:
 ## Summary
 
 The full old `tree_break_selection` method package from commit
-`c2ef9a69e0888168950bdee4a41ae8ab9996e32f` is now available as an isolated
-nested package:
+`c2ef9a69e0888168950bdee4a41ae8ab9996e32f` was available as an isolated nested
+package until it was retired on 2026-06-25:
 
 `tree_break_selection.legacy_methods.commit_c2ef9a69.tree_break_selection`
 
-This is a whole-package method snapshot, not only the internal-node spectral
+This was a whole-package method snapshot, not only the internal-node spectral
 patch. Its absolute imports were mechanically rewritten into the nested
 namespace so the old implementation can be imported in the same Python process
 as the current code.
+The active package, runner, registry entries, and comparison panels have now
+been removed; this page is retained as historical context for the raw legacy
+comparison artifacts.
 
 ## Key Points
 
