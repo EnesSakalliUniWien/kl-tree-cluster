@@ -210,6 +210,7 @@ def _trace_case(case: dict[str, object], classification_row) -> pd.DataFrame:
         leaf_data=context.data,
         feature_space=context.feature_space,
         passthrough=config.PASSTHROUGH,
+        trace_level="full",
     )
     decomposition = decomposer.decompose_tree()
 

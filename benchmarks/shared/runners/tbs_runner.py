@@ -128,6 +128,7 @@ def _run_tbs_on_distance(
     branch_length_optimization_max_iterations: int | None = None,
     allow_linkage_ultrametric_branch_time: bool = False,
     passthrough: bool = config.PASSTHROUGH,
+    trace_level: str = "full",
     extra: dict[str, object] | None = None,
 ) -> MethodRunResult:
     stage_timings: dict[str, float] = {}
@@ -339,6 +340,7 @@ def _run_tbs_on_distance(
         edge_alpha=edge_alpha,
         sibling_alpha=sibling_significance_level,
         passthrough=passthrough,
+        trace_level=trace_level,
     )
     traversal_start_sec = perf_counter()
     decomposition = decomposer.decompose_tree()
@@ -522,6 +524,7 @@ def _run_tbs_method(
     branch_length_optimization_max_iterations: int | None = None,
     allow_linkage_ultrametric_branch_time: bool = False,
     passthrough: bool = config.PASSTHROUGH,
+    trace_level: str = "full",
 ) -> MethodRunResult:
     return _run_tbs_on_distance(
         data_df,
@@ -582,4 +585,5 @@ def _run_tbs_method(
         branch_length_optimization_max_iterations=branch_length_optimization_max_iterations,
         allow_linkage_ultrametric_branch_time=allow_linkage_ultrametric_branch_time,
         passthrough=passthrough,
+        trace_level=trace_level,
     )

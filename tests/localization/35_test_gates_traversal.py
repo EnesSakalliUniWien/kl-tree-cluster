@@ -160,6 +160,7 @@ def _decompose_with_annotations(
         annotations_df=annotations_df,
         passthrough=passthrough,
         spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
+        trace_level="full",
     )
     return decomposer.decompose_tree()
 
@@ -489,6 +490,37 @@ class TestTreeDecompositionTraversal:
         assert result["independence_analysis"]["edge_alpha"] == 0.007
         assert result["independence_analysis"]["sibling_alpha"] == 0.123
 
+    def test_decompose_tree_default_trace_level_is_compact(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        tree = _make_binary_tree()
+        annotations_df = _make_annotations(
+            tree,
+            edge_divergent={node: True for node in tree.nodes},
+            sibling_different={node: False for node in tree.nodes},
+        )
+
+        monkeypatch.setattr(TreeDecomposition, "_prepare_annotations", lambda self, df: df)
+        decomposer = TreeDecomposition(
+            tree=tree,
+            annotations_df=annotations_df,
+            passthrough=False,
+        )
+
+        result = decomposer.decompose_tree()
+
+        assert "traversal_trace" not in result
+        assert "full_edge_traversal_trace" not in result
+        assert result["traversal_counters"] == {
+            "live_nodes_visited": 1,
+            "live_internal_tuples": 1,
+            "live_split_count": 0,
+            "live_pass_through_count": 0,
+            "live_boundary_count": 1,
+            "live_passthrough_candidate_count": 0,
+            "live_passthrough_support_blocked_count": 0,
+        }
+
     def test_decompose_tree_passthrough_reaches_descendant_split(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -721,6 +753,7 @@ class TestTreeDecompositionTraversal:
             root_selective_permutation_guard_scope=(
                 "global_sibling_min_passthrough_descendant_refined"
             ),
+            trace_level="full",
         )
 
         result = decomposer.decompose_tree()

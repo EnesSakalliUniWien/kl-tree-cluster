@@ -222,6 +222,7 @@ def _diagnose_case(
         leaf_data=context.data,
         feature_space=context.feature_space,
         passthrough=config.PASSTHROUGH,
+        trace_level="full",
     )
     decomposition = decomposer.decompose_tree()
 
