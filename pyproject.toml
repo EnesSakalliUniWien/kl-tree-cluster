@@ -69,9 +69,15 @@ all = [
     "kaleido>=0.2.1",
     "pypdf>=5.0.0",
     "pygraphviz>=2.0",
+    "anndata>=0.10.0",
+    "scanpy>=1.10.0",
 ]
 experimental-gpl = [
     "graphtools>=2.1.0",
+]
+scrna = [
+    "anndata>=0.10.0",
+    "scanpy>=1.10.0",
 ]
 
 [build-system]

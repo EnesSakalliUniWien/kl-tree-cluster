@@ -1,5 +1,6 @@
 """Tests for Goncalves benchmark manifest timestamps."""
 
+import builtins
 import importlib.util
 import json
 import re
@@ -31,6 +32,21 @@ def _load_benchmark_module():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def test_goncalves_module_imports_without_anndata(monkeypatch):
+    original_import = builtins.__import__
+
+    def guarded_import(name, *args, **kwargs):
+        if name == "anndata" or name.startswith("anndata."):
+            raise ImportError("No module named 'anndata'")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+
+    module = _load_benchmark_module()
+
+    assert callable(module._anndata_module)
 
 
 def test_goncalves_benchmark_manifest_and_summary_record_generated_timestamp(monkeypatch, tmp_path):

@@ -6,7 +6,7 @@ short: follow it before opening deep implementation directories.
 ## First 30 Minutes
 
 1. Read `README.md` for the method summary and repository path policy.
-2. Install the locked development environment:
+2. Install the locked lean development environment:
 
    ```bash
    uv venv --python 3.11 .venv
@@ -24,6 +24,13 @@ short: follow it before opening deep implementation directories.
 
    ```bash
    uv run python -m benchmarks.smoke.run_subset
+   ```
+
+   Before running the full `uv run pytest` suite, switch to the full test
+   environment:
+
+   ```bash
+   uv sync --extra all --extra experimental-gpl --locked
    ```
 
 5. If you need current mathematical context, start at `wiki/index.md`, then
@@ -93,4 +100,5 @@ For benchmark behavior, read in this order:
 - Gate/traversal change: run `tests/core/`, `tests/statistics/`, and
   `tests/localization/`.
 - Benchmark/report change: run `tests/pipeline/` and `tests/integration/`.
-- Before committing: run `uv run pytest`, `make wiki-lint`, and `git diff --check`.
+- Before committing: sync the full test environment, then run `uv run pytest`,
+  `make wiki-lint`, and `git diff --check`.

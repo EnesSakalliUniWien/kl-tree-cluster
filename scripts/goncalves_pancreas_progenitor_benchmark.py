@@ -23,7 +23,6 @@ from typing import Any
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/kl_te_cluster_matplotlib")
 os.environ.setdefault("NUMBA_CACHE_DIR", "/tmp/kl_te_cluster_numba")
 
-import anndata as ad
 import matplotlib
 
 matplotlib.use("Agg")
@@ -69,6 +68,12 @@ BATCH_CANDIDATES = (
     "batch",
     "Batch",
 )
+
+
+def _anndata_module() -> Any:
+    import anndata as ad
+
+    return ad
 
 
 def _project_root() -> Path:
@@ -157,7 +162,8 @@ def _read_metadata(meta_path: Path, cell_ids: pd.Index) -> pd.DataFrame:
     return metadata
 
 
-def _build_adata(expr_path: Path, meta_path: Path, output_dir: Path) -> tuple[ad.AnnData, str]:
+def _build_adata(expr_path: Path, meta_path: Path, output_dir: Path) -> tuple[Any, str]:
+    ad = _anndata_module()
     sc = _scanpy_module()
     matrix, orientation = _read_ucsc_expression(expr_path)
     metadata = _read_metadata(meta_path, matrix.index)
@@ -214,12 +220,12 @@ def _build_adata(expr_path: Path, meta_path: Path, output_dir: Path) -> tuple[ad
 
 
 def _prepare_classical_workflow(
-    adata: ad.AnnData,
+    adata: Any,
     output_dir: Path,
     *,
     n_pcs: int,
     n_hvgs: int,
-) -> tuple[ad.AnnData, int]:
+) -> tuple[Any, int]:
     sc = _scanpy_module()
     expression_kind = str(adata.uns.get("input_expression_kind", "unknown"))
     if expression_kind == "count_like":
@@ -255,7 +261,7 @@ def _write_dataset_report(
     output_dir: Path,
     expr_path: Path,
     meta_path: Path,
-    adata: ad.AnnData,
+    adata: Any,
     qc_summary: dict[str, object],
     results: pd.DataFrame,
     max_cells: int,

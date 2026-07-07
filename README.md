@@ -154,12 +154,20 @@ short route through the package, benchmarks, wiki, manuscript, and tests.
 
 ### Install Dependencies
 
-Use the locked `uv` environment. This is the canonical install path for
+Use the locked `uv` environment. This is the lean install path for ordinary
 development, benchmarks, visualization, and manuscript-adjacent checks.
 
 ```bash
 uv venv --python 3.11 .venv
 uv sync --extra dev --extra benchmark --extra viz --locked
+```
+
+For the full repository test suite, include the scRNA and optional GPL extras.
+Several full-suite tests import or exercise Scanpy/AnnData and graphtools
+paths that are intentionally outside the lean development environment.
+
+```bash
+uv sync --extra all --extra experimental-gpl --locked
 ```
 
 ## Run the Quick Start Pipeline
@@ -198,7 +206,11 @@ performed without cleanup.
 
 ## Validation & Testing
 
-- Run the automated tests with `uv run pytest`.
+- After the full test environment sync above, run the automated tests with
+  `uv run pytest`.
+- In the lean development environment, run targeted tests for the code you
+  changed. scRNA-only tests are skipped when their optional dependencies are
+  absent, but full-suite parity expects the full environment.
 - Use `tests/README.md` for the current suite layout and staged execution order.
 - Consider recording ARI or other metrics alongside your experiments to compare runs.
 

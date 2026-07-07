@@ -79,6 +79,20 @@ tests/
 
 ## Recommended Test Execution Order
 
+Use the lean development environment for targeted suites:
+
+```bash
+uv sync --extra dev --extra benchmark --extra viz --locked
+```
+
+Use the full test environment before running the full suite. The full suite
+includes scRNA and optional GPL paths backed by `scanpy`, `anndata`, and
+`graphtools`.
+
+```bash
+uv sync --extra all --extra experimental-gpl --locked
+```
+
 Use the helper script when you want the staged order the repository expects:
 
 ```bash
