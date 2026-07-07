@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-06-26
+updated: 2026-07-06
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -149,6 +149,11 @@ renamed, or promoted.
   action filters are now treated as superseded negative controls, while the
   current benchmark path exports action diagnostics without changing traversal
   gates.
+- [[scrna-space-decomposition-rerun-20260627]] - fresh adult pancreas and
+  Goncalves scRNA benchmark rerun plus invariant/equivariant PCA-space
+  diagnostic, showing adult celltype structure concentrated more in
+  equivariant radius while the Goncalves subset has weak celltype separation in
+  this diagnostic.
 - [[barycentric-split-action-formula-20260624]] - corrected derivation showing
   that distributional action belongs to the internal-node split
   \(\sum_i m_i\lVert\mu_i-\mu_p\rVert^2\), tying topology, descendant mass,
@@ -564,6 +569,48 @@ renamed, or promoted.
   benchmark replacing Hamming NN diffusion with adaptive pydiffmap diffusion;
   q3/q4/q5 quantized Gaussian overlap recover exactly, `phylo_large_32taxa`
   is strong, and `phylo_large_64taxa` remains partial.
+- [[full-adaptive-nnls-benchmark-run-20260628]] - 121-case full benchmark with
+  default `tbs_diffusion_adaptive_nnls`, showing mean ok-row ARI `0.736107`,
+  paired ARI delta `+0.359403` versus Hamming NN diffusion, q4/q5 quantized
+  Gaussian recovery, and remaining high-dimensional categorical/regression
+  plus skip failure modes.
+- [[full-graphtools-nnls-benchmark-run-20260630]] - 121-case optional-GPL
+  graphtools+NNLS full benchmark showing `117` ok rows, `4` skips, mean ok-row
+  ARI `0.741645`, high-dimensional categorical and phylogenetic repairs, and
+  mixed paired behavior versus pydiffmap NNLS.
+- [[graphtools-adaptive-k-nnls-focus-benchmark-20260630]] - seven-case
+  adaptive-K graphtools NNLS focus benchmark; the registered
+  `fragmentation_guard` profile keeps K `10` on the panel, matching fixed-K
+  graphtools NNLS, repairing high-dimensional categorical and 8-cluster
+  Gaussian fragmentation versus pydiffmap NNLS, but not repairing
+  `dim_consolidated_4c_24f` or `gauss_overlap_3c_small`.
+- [[graphtools-adaptive-k-tree-inference-focus-benchmark-20260630]] -
+  seven-case adaptive-K graphtools NNLS tree-inference panel across all
+  applicable diffusion-distance tree builders: SciPy average, complete,
+  weighted, single, centroid, median, Ward linkage, and MAD-rooted neighbor
+  joining. Weighted linkage has the best mean ARI on the panel, while centroid,
+  Ward, neighbor joining, and weighted/single/centroid/NJ each win specific
+  regression cases.
+- [[graphtools-adaptive-k-tree-consensus-focus-benchmark-20260630]] -
+  sample-label consensus analysis over the same eight adaptive-K graphtools
+  NNLS topology strategies. A label-free selector using internal fit,
+  parsimony, a dominant-cluster guard, and partition-agreement tie-breaks
+  improves mean ARI by `+0.119951` over average linkage and lands within mean
+  ARI `0.001710` of the external per-case best topology on the seven-case
+  focus panel.
+- [[full-graphtools-tree-consensus-gate-20260706]] - full `121`-case hard gate
+  for the frozen adaptive-K graphtools NNLS topology selector across the eight
+  existing topology cells. The run emits `968` result rows, passes label
+  integrity and label-free invariance checks, selects valid topologies for
+  `101` cases, and passes paired mean/median ARI, NMI, macro F1, and
+  category-regression promotion criteria without making a production-default
+  promotion.
+- [[adaptive-nnls-regression-skip-analysis-20260628]] - focused analysis of
+  the adaptive NNLS benchmark regressions and skips across ARI, NMI, AMI,
+  V-measure, macro F1, cluster-count errors, fragmentation, and unsupervised
+  shape metrics, showing that most finite ARI regressions are already
+  adaptive-pydiffmap topology effects, while the `kth` skips arise in pydiffmap
+  bandwidth support before TBS or NNLS runs.
 - [[phylo-large-adaptive-pydiffmap-focus-audit-20260627]] - focused
   `phylo_large_32taxa`/`64taxa` audit showing that raw categorical Hamming
   separates every taxon, while adaptive pydiffmap collapses selected
@@ -573,6 +620,10 @@ renamed, or promoted.
   `tbs_diffusion_graphtools` backend and five-case focus benchmark; it fixes
   quantized Gaussian q3/q4/q5 and improves `phylo_large_64taxa` over pydiffmap
   but remains partial, so it stays experimental.
+- [[alpha-structure-sweep-20260627]] - methodological edge-alpha and
+  sibling-alpha sweep with p-value boundary margins, partition transitions, and
+  a Cartesian audit showing `phylo_large_64taxa` adaptive structure changes
+  with sibling alpha while edge gates are saturated over the tested range.
 - [[gaussian-inner-node-branch-time-debug-20260623]] - inner-node audit for
   the two continuous Gaussian under-splits, showing that standardized topology
   contains the correct pure splits but the branch-time covariance multiplier
@@ -674,6 +725,14 @@ renamed, or promoted.
 
 ### Analyses
 
+- [[adaptive-alpha-gate-design-20260628]] - adaptive-resolution design for TBS
+  alpha gates, keeping edge alpha conservative while using a no-perturbation
+  sibling-alpha ladder, test-context guards, and explicit
+  `sibling_alpha_required` reporting.
+- [[paper-figure-map-20260629]] - bundle-level map of all generated paper
+  figure surfaces, separating the one current manuscript-wired TikZ figure from
+  toy explanatory figures, scRNA benchmark/review figures, GO/subspace decks,
+  MNIST exploratory figures, and legacy diagnostic pools.
 - [[categorical-adaptive-diffusion-focus-audit-20260626]] - focused audit of
   the 2026-06-26 categorical adaptive-diffusion benchmark, showing that
   quantized Gaussian losses are pure over-fragmentation, `phylo_large` losses

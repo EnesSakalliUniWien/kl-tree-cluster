@@ -1,0 +1,37 @@
+case_id,generator,samples,features,unique_rows,variant,method_id,status,ari,nmi,found_clusters,edge_branch_length_variance_policy,adaptive_epsilon,branch_length_optimization_residual_rmse,branch_length_optimization_branch_length_mean,branch_length_optimization_branch_length_max,skip_reason
+cat_highd_3cat_500feat,categorical,200,1500,200,old_diffusion,tbs_diffusion,ok,0.5618052275494115,0.7325113957184034,14,none,,,,,
+cat_highd_3cat_500feat,categorical,200,1500,200,adaptive_linkage,tbs_diffusion_adaptive,ok,0.09846003742076347,0.5128082479920396,68,none,0.0273017653991942,,,,
+cat_highd_3cat_500feat,categorical,200,1500,200,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,ok,0.09846003742076347,0.5128082479920396,68,none,0.0273017653991942,0.09982088451777817,0.3847898100890846,0.828324566517285,
+cat_highd_3cat_500feat,categorical,200,1500,200,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,ok,0.09846003742076347,0.5128082479920396,68,normalized_branch_length,0.0273017653991942,0.09982088451777817,0.3847898100890846,0.828324566517285,
+gauss_overlap_3c_small,blobs,300,30,300,old_diffusion,tbs_diffusion,ok,0.8611942162456394,0.890462071410876,4,none,,,,,
+gauss_overlap_3c_small,blobs,300,30,300,adaptive_linkage,tbs_diffusion_adaptive,ok,0.6743691150605863,0.78641566840447,6,none,0.013054553385196732,,,,
+gauss_overlap_3c_small,blobs,300,30,300,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,ok,0.6743691150605863,0.78641566840447,6,none,0.013054553385196732,0.3116402369339032,0.20967832243985626,0.6268701532945506,
+gauss_overlap_3c_small,blobs,300,30,300,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,ok,0.6743691150605863,0.78641566840447,6,normalized_branch_length,0.013054553385196732,0.3116402369339032,0.20967832243985626,0.6268701532945506,
+cat_simplex_face_rare_20cat,categorical_dirichlet_multinomial,240,1200,240,old_diffusion,tbs_diffusion,ok,0.14218610093253647,0.18064771421120737,2,none,,,,,
+cat_simplex_face_rare_20cat,categorical_dirichlet_multinomial,240,1200,240,adaptive_linkage,tbs_diffusion_adaptive,ok,0.0,0.0,1,none,0.005532258064527043,,,,
+cat_simplex_face_rare_20cat,categorical_dirichlet_multinomial,240,1200,240,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,ok,0.0,0.0,1,none,0.005532258064527043,0.05029815398111269,0.4391952226779636,1.3639865989071922,
+cat_simplex_face_rare_20cat,categorical_dirichlet_multinomial,240,1200,240,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,ok,0.0,0.0,1,normalized_branch_length,0.005532258064527043,0.05029815398111269,0.4391952226779636,1.3639865989071922,
+cat_overlap_3cat_4c,categorical,400,300,400,old_diffusion,tbs_diffusion,ok,0.9484121212121213,0.939426952729396,4,none,,,,,
+cat_overlap_3cat_4c,categorical,400,300,400,adaptive_linkage,tbs_diffusion_adaptive,ok,0.8644848643817469,0.897442106959732,4,none,0.02021361815569436,,,,
+cat_overlap_3cat_4c,categorical,400,300,400,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,ok,0.8644848643817469,0.897442106959732,4,none,0.02021361815569436,0.1405707143902947,0.34682977815096894,0.9263702364912099,
+cat_overlap_3cat_4c,categorical,400,300,400,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,ok,0.8644848643817469,0.897442106959732,4,normalized_branch_length,0.02021361815569436,0.1405707143902947,0.34682977815096894,0.9263702364912099,
+overlap_unbal_4c_small,binary,400,100,400,old_diffusion,tbs_diffusion,ok,0.670168096745273,0.6507028031897798,4,none,,,,,
+overlap_unbal_4c_small,binary,400,100,400,adaptive_linkage,tbs_diffusion_adaptive,ok,0.6024203432333544,0.5873263604020399,4,none,0.022063964298009844,,,,
+overlap_unbal_4c_small,binary,400,100,400,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,ok,0.6024203432333544,0.5873263604020399,4,none,0.022063964298009844,0.19901413899687712,0.3456914615674276,0.9294275369474243,
+overlap_unbal_4c_small,binary,400,100,400,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,ok,0.6024203432333544,0.5873263604020399,4,normalized_branch_length,0.022063964298009844,0.19901413899687712,0.3456914615674276,0.9294275369474243,
+gauss_overlap_8c_highd,blobs,800,300,800,old_diffusion,tbs_diffusion,ok,1.0,1.0,8,none,,,,,
+gauss_overlap_8c_highd,blobs,800,300,800,adaptive_linkage,tbs_diffusion_adaptive,ok,0.9343004944078713,0.9522472089968301,14,none,0.008459691423002489,,,,
+gauss_overlap_8c_highd,blobs,800,300,800,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,ok,0.9343004944078713,0.9522472089968301,14,none,0.008459691423002489,0.17331689785032914,0.14740835969226104,0.8604142437495096,
+gauss_overlap_8c_highd,blobs,800,300,800,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,ok,0.9343004944078713,0.9522472089968301,14,normalized_branch_length,0.008459691423002489,0.17331689785032914,0.14740835969226104,0.8604142437495096,
+dim_consolidated_4c_24f,dimensional_gaussian,160,24,160,old_diffusion,tbs_diffusion,ok,0.58258082274491,0.6390847062217933,7,none,,,,,
+dim_consolidated_4c_24f,dimensional_gaussian,160,24,160,adaptive_linkage,tbs_diffusion_adaptive,ok,0.6653289059824976,0.6468461249428579,4,none,0.028464963433245342,,,,
+dim_consolidated_4c_24f,dimensional_gaussian,160,24,160,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,ok,0.5298028928480344,0.6053801842553829,7,none,0.028464963433245342,0.3751855297599547,0.30595611357187047,0.7877489656313184,
+dim_consolidated_4c_24f,dimensional_gaussian,160,24,160,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,ok,0.5298028928480344,0.6053801842553829,7,normalized_branch_length,0.028464963433245342,0.3751855297599547,0.30595611357187047,0.7877489656313184,
+binary_perfect_2c,binary,40,50,5,old_diffusion,tbs_diffusion,ok,1.0,1.0,2,none,,,,,
+binary_perfect_2c,binary,40,50,5,adaptive_linkage,tbs_diffusion_adaptive,skip,,,0,,,,,,kth(=6) out of bounds (1)
+binary_perfect_2c,binary,40,50,5,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,skip,,,0,,,,,,kth(=6) out of bounds (1)
+binary_perfect_2c,binary,40,50,5,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,skip,,,0,,,,,,kth(=6) out of bounds (1)
+gauss_clear_medium,blobs,60,40,41,old_diffusion,tbs_diffusion,ok,0.0,0.0,1,none,,,,,
+gauss_clear_medium,blobs,60,40,41,adaptive_linkage,tbs_diffusion_adaptive,skip,,,0,,,,,,kth(=6) out of bounds (6)
+gauss_clear_medium,blobs,60,40,41,adaptive_nnls_no_edge_time,tbs_diffusion_adaptive_nnls,skip,,,0,,,,,,kth(=6) out of bounds (6)
+gauss_clear_medium,blobs,60,40,41,adaptive_nnls_edge_time,tbs_diffusion_adaptive_nnls,skip,,,0,,,,,,kth(=6) out of bounds (6)

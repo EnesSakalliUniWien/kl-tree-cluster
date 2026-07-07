@@ -1,0 +1,8 @@
+case_id,best_ari_tree_inference,best_ari,best_ari_found_clusters,best_internal_tree_inference,best_internal_silhouette,best_internal_davies_bouldin,best_internal_found_clusters
+cat_overlap_3cat_4c,centroid_linkage,0.9362041386776105,4,complete_linkage,0.047455234402703786,4.364682325141503,4
+overlap_unbal_4c_small,average_linkage,0.6590088044947379,4,average_linkage,0.028006096678279465,4.831153866407739,4
+overlap_mod_4c_small,ward_linkage,0.9217285793957946,4,ward_linkage,0.06373513702740377,3.3731905790033703,4
+dim_consolidated_4c_24f,neighbor_joining,0.6867739105930168,4,neighbor_joining,0.07445106477895953,2.767124037816473,4
+cat_highd_3cat_500feat,average_linkage,1.0,4,average_linkage,0.10307516027702875,2.8477027431230404,4
+gauss_overlap_3c_small,weighted_linkage,1.0,3,neighbor_joining,0.2655629237724614,1.716187245442334,3
+gauss_overlap_8c_highd,average_linkage,1.0,8,complete_linkage,0.32088611336984085,1.28965371641419,8

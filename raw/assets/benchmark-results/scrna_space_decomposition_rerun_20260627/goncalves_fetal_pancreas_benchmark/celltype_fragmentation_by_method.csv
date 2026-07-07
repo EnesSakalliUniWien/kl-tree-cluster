@@ -1,0 +1,89 @@
+method,celltype,n_cells,n_predicted_clusters,effective_cluster_count,dominant_cluster,dominant_cluster_cells,dominant_cluster_recall,clusters_ge_5pct,clusters_ge_10pct
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,blood,77,7,2.0015967801671906,2,65,0.8441558441558441,2,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,endocrine,28,7,3.212255612326317,5,19,0.6785714285714286,3,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,mesenchyme,349,19,3.654986360443823,10,239,0.6848137535816619,3,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,neurons,26,5,3.1852477348292654,5,16,0.6153846153846154,4,3
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,proliferating,289,20,9.843416395377398,2,67,0.23183391003460208,5,3
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,tip,188,21,6.70244258098174,19,75,0.39893617021276595,4,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,trunk,434,31,12.64163869065372,32,102,0.2350230414746544,6,3
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,unknown,74,3,1.2158736293925785,1,71,0.9594594594594594,1,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,blood,77,1,1.0,0,77,1.0,1,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,endocrine,28,1,1.0,0,28,1.0,1,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,mesenchyme,349,1,1.0,0,349,1.0,1,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,neurons,26,1,1.0,0,26,1.0,1,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,proliferating,289,1,1.0,0,289,1.0,1,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,tip,188,1,1.0,0,188,1.0,1,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,trunk,434,1,1.0,0,434,1.0,1,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,unknown,74,1,1.0,0,74,1.0,1,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,blood,77,1,1.0,0,77,1.0,1,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,endocrine,28,1,1.0,0,28,1.0,1,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,mesenchyme,349,1,1.0,0,349,1.0,1,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,neurons,26,1,1.0,0,26,1.0,1,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,proliferating,289,1,1.0,0,289,1.0,1,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,tip,188,1,1.0,0,188,1.0,1,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,trunk,434,1,1.0,0,434,1.0,1,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,unknown,74,1,1.0,0,74,1.0,1,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,blood,77,8,4.483520260557432,7,36,0.4675324675324675,4,4
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,endocrine,28,4,2.334306415057723,12,19,0.6785714285714286,2,2
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,mesenchyme,349,18,9.452310072048954,22,86,0.24641833810888253,5,4
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,neurons,26,5,3.275281519546578,0,14,0.5384615384615384,3,3
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,proliferating,289,13,7.506363779123686,22,83,0.28719723183391005,5,3
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,tip,188,6,2.0351180245455938,22,147,0.7819148936170213,2,2
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,trunk,434,11,2.405390082302815,22,343,0.7903225806451613,2,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,unknown,74,4,1.7044859104721874,23,63,0.8513513513513513,2,2
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,blood,77,8,4.483520260557432,7,36,0.4675324675324675,4,4
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,endocrine,28,4,2.334306415057723,12,19,0.6785714285714286,2,2
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,mesenchyme,349,18,9.452310072048954,22,86,0.24641833810888253,5,4
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,neurons,26,5,3.275281519546578,0,14,0.5384615384615384,3,3
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,proliferating,289,13,7.506363779123686,22,83,0.28719723183391005,5,3
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,tip,188,6,2.0351180245455938,22,147,0.7819148936170213,2,2
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,trunk,434,11,2.405390082302815,22,343,0.7903225806451613,2,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,unknown,74,4,1.7044859104721874,23,63,0.8513513513513513,2,2
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,blood,77,8,4.483520260557432,7,36,0.4675324675324675,4,4
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,endocrine,28,4,2.334306415057723,12,19,0.6785714285714286,2,2
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,mesenchyme,349,18,9.452310072048954,22,86,0.24641833810888253,5,4
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,neurons,26,5,3.275281519546578,0,14,0.5384615384615384,3,3
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,proliferating,289,13,7.506363779123686,22,83,0.28719723183391005,5,3
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,tip,188,6,2.0351180245455938,22,147,0.7819148936170213,2,2
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,trunk,434,11,2.405390082302815,22,343,0.7903225806451613,2,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,unknown,74,4,1.7044859104721874,23,63,0.8513513513513513,2,2
+Leiden,blood,77,5,1.7966472962192659,2,65,0.8441558441558441,2,2
+Leiden,endocrine,28,4,1.930152373629878,4,23,0.8214285714285714,3,1
+Leiden,mesenchyme,349,9,3.165853666193019,1,242,0.6934097421203438,3,2
+Leiden,neurons,26,6,3.2291208122124657,4,17,0.6538461538461539,4,2
+Leiden,proliferating,289,9,6.897316458965209,5,72,0.2491349480968858,7,5
+Leiden,tip,188,6,3.704199415888376,6,78,0.4148936170212766,3,3
+Leiden,trunk,434,9,4.111092357788899,0,179,0.41244239631336405,4,3
+Leiden,unknown,74,4,1.7044859104721874,8,63,0.8513513513513513,2,2
+Louvain,blood,77,5,1.8445754645988208,11,64,0.8311688311688312,2,2
+Louvain,endocrine,28,5,2.414745043508735,1,21,0.75,3,2
+Louvain,mesenchyme,349,10,3.048332912751473,6,255,0.7306590257879656,2,1
+Louvain,neurons,26,6,3.4730847184276086,1,16,0.6153846153846154,4,3
+Louvain,proliferating,289,11,7.727400642326962,9,63,0.2179930795847751,6,5
+Louvain,tip,188,6,3.4256887358828427,3,89,0.4734042553191489,3,3
+Louvain,trunk,434,9,4.2215554866556655,7,175,0.4032258064516129,4,3
+Louvain,unknown,74,4,1.7044859104721874,0,63,0.8513513513513513,2,2
+K-means true K,blood,77,6,2.046764178854589,2,63,0.8181818181818182,2,1
+K-means true K,endocrine,28,5,3.993559254365928,6,12,0.42857142857142855,4,4
+K-means true K,mesenchyme,349,7,2.8403743276115376,3,253,0.7249283667621776,4,1
+K-means true K,neurons,26,6,4.856227430455419,5,9,0.34615384615384615,5,4
+K-means true K,proliferating,289,8,5.624420549652773,0,74,0.2560553633217993,5,4
+K-means true K,tip,188,5,1.8786945279973466,6,156,0.8297872340425532,2,2
+K-means true K,trunk,434,7,4.533559462597451,6,172,0.39631336405529954,4,3
+K-means true K,unknown,74,3,1.5442946719471482,4,65,0.8783783783783784,2,1
+Spectral true K,blood,77,4,2.578533617891196,5,48,0.6233766233766234,3,3
+Spectral true K,endocrine,28,5,3.0308628747138444,5,18,0.6428571428571429,4,3
+Spectral true K,mesenchyme,349,7,2.2742529073318885,7,279,0.7994269340974212,3,1
+Spectral true K,neurons,26,5,2.9024983846231525,3,17,0.6538461538461539,3,3
+Spectral true K,proliferating,289,7,6.10803839614243,4,75,0.25951557093425603,6,5
+Spectral true K,tip,188,6,1.6191344991067984,6,168,0.8936170212765957,1,1
+Spectral true K,trunk,434,7,4.272301514299473,6,235,0.5414746543778802,5,3
+Spectral true K,unknown,74,4,1.7651786557449562,2,63,0.8513513513513513,2,1
+HDBSCAN,blood,77,3,2.319133740562021,-1,44,0.5714285714285714,3,2
+HDBSCAN,endocrine,28,1,1.0,-1,28,1.0,1,1
+HDBSCAN,mesenchyme,349,2,1.9463712434058962,-1,215,0.6160458452722063,2,2
+HDBSCAN,neurons,26,2,1.3115234140474163,-1,24,0.9230769230769231,2,1
+HDBSCAN,proliferating,289,2,1.9998922436371138,-1,146,0.5051903114186851,2,2
+HDBSCAN,tip,188,2,1.9296744320093353,1,119,0.6329787234042553,2,2
+HDBSCAN,trunk,434,3,2.0740408984259777,1,219,0.5046082949308756,2,2
+HDBSCAN,unknown,74,3,1.5930359487289523,2,63,0.8513513513513513,2,2

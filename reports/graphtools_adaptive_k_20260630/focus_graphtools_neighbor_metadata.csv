@@ -1,0 +1,22 @@
+case_id,method,status,skip_reason,found_clusters,neighbor_search_k,adaptive_neighbor_profile,adaptive_neighbor_status,adaptive_neighbor_requested_k,adaptive_neighbor_selected_k,adaptive_neighbor_candidates,adaptive_neighbor_component_counts,adaptive_neighbor_component_min_sizes,adaptive_neighbor_fragmentation_max_components,adaptive_neighbor_fragmentation_min_component_size,adaptive_neighbor_duplicate_rows,adaptive_neighbor_max_duplicate_count,kernel_nonzero_entries,graph_class
+cat_overlap_3cat_4c,tbs_diffusion_graphtools,ok,,3,10,fixed,fixed,10,10,null,{},{},,,0,1,16340,kNNGraph
+cat_overlap_3cat_4c,tbs_diffusion_graphtools_nnls,ok,,4,10,fixed,fixed,10,10,null,{},{},,,0,1,16340,kNNGraph
+cat_overlap_3cat_4c,tbs_diffusion_graphtools_adaptive_nnls,ok,,4,10,fragmentation_guard,connected,10,10,"[10, 15, 25, 40, 80, 160]","{""10"": 1}","{""10"": 400}",20.0,4.0,0,1,16340,kNNGraph
+overlap_unbal_4c_small,tbs_diffusion_graphtools,ok,,4,10,fixed,fixed,10,10,null,{},{},,,0,1,13982,kNNGraph
+overlap_unbal_4c_small,tbs_diffusion_graphtools_nnls,ok,,4,10,fixed,fixed,10,10,null,{},{},,,0,1,13982,kNNGraph
+overlap_unbal_4c_small,tbs_diffusion_graphtools_adaptive_nnls,ok,,4,10,fragmentation_guard,connected,10,10,"[10, 15, 25, 40, 80, 160]","{""10"": 1}","{""10"": 400}",20.0,4.0,0,1,13982,kNNGraph
+overlap_mod_4c_small,tbs_diffusion_graphtools,ok,,4,10,fixed,fixed,10,10,null,{},{},,,0,1,10344,kNNGraph
+overlap_mod_4c_small,tbs_diffusion_graphtools_nnls,ok,,4,10,fixed,fixed,10,10,null,{},{},,,0,1,10344,kNNGraph
+overlap_mod_4c_small,tbs_diffusion_graphtools_adaptive_nnls,ok,,4,10,fragmentation_guard,connected,10,10,"[10, 15, 25, 40, 80, 160]","{""10"": 1}","{""10"": 400}",20.0,4.0,0,1,10344,kNNGraph
+dim_consolidated_4c_24f,tbs_diffusion_graphtools,ok,,5,10,fixed,fixed,10,10,null,{},{},,,0,1,2766,kNNGraph
+dim_consolidated_4c_24f,tbs_diffusion_graphtools_nnls,ok,,9,10,fixed,fixed,10,10,null,{},{},,,0,1,2766,kNNGraph
+dim_consolidated_4c_24f,tbs_diffusion_graphtools_adaptive_nnls,ok,,9,10,fragmentation_guard,connected,10,10,"[10, 15, 25, 40, 80, 159]","{""10"": 1}","{""10"": 160}",13.0,3.0,0,1,2766,kNNGraph
+cat_highd_3cat_500feat,tbs_diffusion_graphtools,ok,,4,10,fixed,fixed,10,10,null,{},{},,,0,1,8192,kNNGraph
+cat_highd_3cat_500feat,tbs_diffusion_graphtools_nnls,ok,,4,10,fixed,fixed,10,10,null,{},{},,,0,1,8192,kNNGraph
+cat_highd_3cat_500feat,tbs_diffusion_graphtools_adaptive_nnls,ok,,4,10,fragmentation_guard,stable_components,10,10,"[10, 15, 25, 40, 80, 160]","{""10"": 4}","{""10"": 50}",15.0,3.0,0,1,8192,kNNGraph
+gauss_overlap_3c_small,tbs_diffusion_graphtools,ok,,8,10,fixed,fixed,10,10,null,{},{},,,0,1,6482,kNNGraph
+gauss_overlap_3c_small,tbs_diffusion_graphtools_nnls,ok,,8,10,fixed,fixed,10,10,null,{},{},,,0,1,6482,kNNGraph
+gauss_overlap_3c_small,tbs_diffusion_graphtools_adaptive_nnls,ok,,8,10,fragmentation_guard,connected,10,10,"[10, 15, 25, 40, 80, 160]","{""10"": 1}","{""10"": 300}",18.0,3.0,0,1,6482,kNNGraph
+gauss_overlap_8c_highd,tbs_diffusion_graphtools,ok,,8,10,fixed,fixed,10,10,null,{},{},,,0,1,27772,kNNGraph
+gauss_overlap_8c_highd,tbs_diffusion_graphtools_nnls,ok,,8,10,fixed,fixed,10,10,null,{},{},,,0,1,27772,kNNGraph
+gauss_overlap_8c_highd,tbs_diffusion_graphtools_adaptive_nnls,ok,,8,10,fragmentation_guard,stable_components,10,10,"[10, 15, 25, 40, 80, 160]","{""10"": 8}","{""10"": 100}",29.0,8.0,0,1,27772,kNNGraph

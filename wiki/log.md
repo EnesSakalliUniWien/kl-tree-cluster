@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-26
+updated: 2026-07-06
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -4954,6 +4954,179 @@ verification, and maintenance events here in chronological order.
   `0.902655` with `29` clusters, and `phylo_large_64taxa` at ARI `0.709257`
   with `102` clusters. The result improves the 64-taxon adaptive pydiffmap
   row but remains experimental rather than canonical.
+- Installed and synced the scRNA dependency extra (`scanpy` and `anndata`),
+  reran the adult pancreas and Goncalves fetal pancreas scRNA benchmarks into
+  `raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/`,
+  then added `scripts/analyze_scrna_space_decomposition.py` for an
+  invariant/equivariant PCA-space diagnostic. Added
+  [[scrna-space-decomposition-rerun-20260627]], which records that adult
+  pancreas celltype separation is stronger in equivariant radius than the
+  invariant axis, while the Goncalves subset shows weak celltype separation in
+  this diagnostic.
+- Added `benchmarks/validation/alpha_structure_sweep.py` and ran focused plus
+  Cartesian alpha sweeps for quantized Gaussian overlap and `phylo_large`
+  adaptive-diffusion cases. Added [[alpha-structure-sweep-20260627]], which
+  records p-value boundary margins, partition transitions, and the main
+  methodological finding that `phylo_large_64taxa` structure changes with
+  sibling alpha while edge gates are saturated across the compact tested edge
+  alpha range.
+
+### 2026-06-28
+
+- Added `raw/inbox/adaptive-alpha-method-literature-20260628.md` and
+  [[adaptive-alpha-gate-design-20260628]], recording a conservative adaptive
+  alpha design: keep edge alpha fixed initially, make sibling alpha the
+  adaptive-resolution axis, report `sibling_alpha_required`, use
+  no-perturbation test-context guards for relaxed sibling splits, and avoid
+  adaptive FDR claims until selected-hierarchy calibration exists.
+- Promoted fixed-topology NNLS branch-time into the shared benchmark setup as
+  `tbs_diffusion_adaptive_nnls`, a default adaptive pydiffmap method that uses
+  `edge_branch_length_variance_policy="normalized_branch_length"` with fitted
+  `fixed_topology_nnls` branch lengths. Diffusion dispatch now forwards the
+  branch-length variance policy into the TBS runner, while
+  `tbs_diffusion_adaptive` remains available as the linkage-ultrametric
+  baseline.
+- Ran the full `121`-case benchmark with plots and relationship analysis
+  disabled after promoting `tbs_diffusion_adaptive_nnls`. Added
+  [[full-adaptive-nnls-benchmark-run-20260628]], which records
+  `tbs_diffusion_adaptive_nnls` mean ok-row ARI `0.736107`, `106` ok rows and
+  `15` skips, paired ARI delta `+0.359403` versus `tbs_diffusion`, exact q4/q5
+  quantized Gaussian recovery, improved `phylo_large` rows, and remaining
+  high-dimensional categorical regressions plus sibling-inflation/`kth`
+  skip modes.
+- Added focused regression/skip diagnostics under
+  `reports/adaptive_nnls_regression_analysis_20260628/` and
+  [[adaptive-nnls-regression-skip-analysis-20260628]]. The analysis separates
+  adaptive-pydiffmap topology regressions from NNLS branch-length effects:
+  most top finite regressions match the adaptive-linkage baseline before NNLS,
+  while `dim_consolidated_4c_24f` changes only after NNLS branch refitting.
+  The `kth(=6)` skips reproduce in pydiffmap adaptive bandwidth construction
+  before TBS or NNLS runs; strict sibling-inflation skips remain calibration
+  support-contract failures.
+- Extended the adaptive NNLS regression analysis beyond ARI by adding
+  multi-metric deltas and aggregate win/loss/tie reports for NMI, AMI,
+  V-measure, macro F1, split errors, fragmentation metrics, and finite
+  unsupervised shape metrics. The broader view keeps the positive full-run
+  conclusion but separates broad quality regressions
+  (`cat_overlap_3cat_4c`, `overlap_unbal_4c_small`, `overlap_mod_4c_small`,
+  `dim_consolidated_4c_24f`) from mixed ARI/fragmentation-sensitive rows such
+  as `cat_highd_3cat_500feat` and `gauss_overlap_3c_small`.
+- Added the independent-metric context table for the adaptive NNLS regression
+  cases. The update narrows the broad unsupervised regression set:
+  `cat_overlap_3cat_4c` and `overlap_mod_4c_small` degrade across all checked
+  independent compactness/balance metrics, `overlap_unbal_4c_small` degrades
+  on most with a Davies-Bouldin exception, `gauss_overlap_8c_highd` is
+  over-fragmentation with broad independent degradation, while
+  `dim_consolidated_4c_24f` is label-alignment/NNLS-gate semantic regression
+  despite mostly improved independent metrics.
+- Installed the optional `experimental-gpl` extra and restored the full
+  dev/benchmark/viz/scrna extras, making `graphtools 2.1.0` available under
+  `uv run`. Added a seven-case diffusion-backend plus NNLS panel under
+  `reports/adaptive_nnls_regression_analysis_20260628/`. The panel shows that
+  pydiffmap topology, not NNLS, drives most current over-fragmentation;
+  `dim_consolidated_4c_24f` is NNLS-sensitive across Hamming, pydiffmap, and
+  graphtools; and graphtools repairs `cat_highd_3cat_500feat` and
+  `gauss_overlap_8c_highd` but over-fragments `gauss_overlap_3c_small`.
+- Registered `tbs_diffusion_graphtools_nnls` as a named optional GPL benchmark
+  method and ran it through the full `121`-case suite with plots and
+  relationship analysis disabled. Added
+  [[full-graphtools-nnls-benchmark-run-20260630]], recording `117` ok rows,
+  `4` skips, mean ok-row ARI `0.741645`, NMI `0.761942`, macro F1 `0.811544`,
+  strong high-dimensional categorical and phylogenetic repairs, and mixed
+  paired behavior versus pydiffmap NNLS (`15` wins, `70` ties, `19` losses by
+  ARI on paired finite rows).
+- Added `tbs_diffusion_graphtools_adaptive_nnls` as an optional GPL
+  graphtools diffusion method with fixed-topology NNLS branch times and a
+  `fragmentation_guard` adaptive-kNN profile. Ran the seven-case
+  diffusion/NNLS focus panel under `reports/graphtools_adaptive_k_20260630/`
+  and added [[graphtools-adaptive-k-nnls-focus-benchmark-20260630]]. The
+  focused evidence shows the guard keeps K `10` on the panel, matches fixed-K
+  graphtools NNLS, repairs `cat_highd_3cat_500feat` and
+  `gauss_overlap_8c_highd` versus pydiffmap NNLS, but leaves
+  `dim_consolidated_4c_24f` and `gauss_overlap_3c_small` over-fragmented.
+- Expanded adaptive-K graphtools NNLS tree inference to all applicable
+  diffusion-distance tree builders: SciPy average, complete, weighted, single,
+  centroid, median, Ward linkage, and MAD-rooted neighbor joining. Added a
+  topology-only linkage fallback for nonmonotone centroid/median merge heights
+  when fixed-topology NNLS will replace placeholder branch lengths. Reran the
+  seven-case panel under
+  `reports/graphtools_adaptive_k_tree_inference_20260630/` and added
+  [[graphtools-adaptive-k-tree-inference-focus-benchmark-20260630]], recording
+  `56` ok rows, weighted linkage as the best mean-ARI topology (`0.831689`),
+  centroid as best on `cat_overlap_3cat_4c`, Ward as best on
+  `overlap_mod_4c_small`, neighbor joining as best on
+  `dim_consolidated_4c_24f`, and weighted/single/centroid/NJ repairs for
+  `gauss_overlap_3c_small`.
+
+### 2026-06-29
+
+- Added [[paper-figure-map-20260629]], a bundle-level map of generated paper
+  figure surfaces. The map separates the one current manuscript-wired TikZ
+  figure from toy explanatory figures, adult/Goncalves scRNA plot surfaces,
+  the 2026-06-27 scRNA space-decomposition rerun, scRNA audit and selected-NNLS
+  report pages, GO/subspace figure decks, MNIST static/interactive figures,
+  and legacy Julia/conditional diagnostic pools.
+
+### 2026-06-30
+
+- Cleaned the shared benchmark contract around explicit grid-search rows:
+  added benchmark row annotations (`run_id`, `benchmark_class`,
+  `benchmark_grid`, `benchmark_repeat`), a reusable Cartesian grid helper with
+  repeats, duplicate `run_id` validation, and full-run resume tracking by
+  `run_id`. Consolidated the optional graphtools adaptive-K NNLS tree-topology
+  variants into one method with an eight-cell tree-strategy grid instead of
+  duplicate method IDs, and documented the benchmark classification and grid
+  contract in `benchmarks/README.md`.
+- Added the canonical benchmark performance-grid writer. Full benchmark runs
+  now emit `benchmark_performance_grid.md`,
+  `benchmark_performance_grid_summary.csv`, and case-by-run ARI, NMI, purity,
+  and status grids so method/grid-cell performance is visible directly from
+  the run directory rather than inferred from the raw comparison CSV.
+- Ran the canonical full benchmark grid with default methods, plots,
+  manifold, and relationship analysis disabled under
+  `benchmarks/results/run_20260630_202253Z_full_performance_grid_default/`.
+  The run completed `1210` method-case rows across `121` cases and `10` run
+  cells, emitted the performance-grid artifacts and failure report, and showed
+  oracle-k baselines leading mean ARI while TBS-family methods had high median
+  ARI on applicable rows but substantial skip and stress-case sensitivity.
+  Clarified the grid summary rank column as `rank_skip_rate_then_mean_ari`
+  because the report intentionally sorts skip-free run cells before comparing
+  available-row mean ARI.
+- Reran the seven-case adaptive-K graphtools NNLS tree-inference panel to
+  capture labels for all eight topology strategies, then added
+  [[graphtools-adaptive-k-tree-consensus-focus-benchmark-20260630]]. The
+  consensus analysis records `56` ok rows, `21,280` label assignments, and
+  `196` pairwise partition-agreement rows; its final label-free selector uses
+  internal fit, a small parsimony term, a dominant-cluster guard, and
+  agreement tie-breaks, improving mean ARI by `+0.119951` over average linkage
+  and landing within mean ARI `0.001710` of the external per-case best
+  topology on the focus panel.
+
+### 2026-07-06
+
+- Implemented and ran the full-grid adaptive-K graphtools NNLS tree consensus
+  gate. The full `121`-case run under
+  `benchmarks/results/run_20260706_170815Z_full_graphtools_tree_consensus/`
+  produced `968` result rows across the eight topology cells, `925` ok rows,
+  `43` skips, and `221,800` persisted label assignments. Added
+  [[full-graphtools-tree-consensus-gate-20260706]], recording
+  `gate_status = pass`: completeness, label integrity, label-free invariance,
+  paired mean/median ARI, NMI, macro F1, and category-level regression checks
+  all pass for the frozen selector, while production-default promotion remains
+  a separate decision.
+
+### 2026-07-07
+
+- Reviewed the current diff as a contract cleanup pass. Clarified setup docs so
+  the lean development environment is separate from the full test environment
+  that includes scRNA and GPL extras, made the Goncalves scRNA benchmark module
+  import without eager `anndata`, and refactored decomposition internals toward a
+  slimmer engine: immutable `DecompositionConfig`, compact default traversal
+  counters, explicit `trace_level="full"` diagnostics, and a separate
+  sibling-gate profile registry under `decomposition/gates/profiles.py`.
+  Extracted root-stability and selected-permutation guard layers into
+  `decomposition/gates/guards.py` while preserving the public orchestrator
+  imports used by existing callers.
 
 ## Evidence
 

@@ -1,0 +1,14 @@
+case_id,case_category,old_found_clusters,new_found_clusters,ari_delta,nmi_delta,macro_f1_delta,quality_metrics_worse_list,quality_metrics_improved_list,quality_worse_count,quality_improved_count
+cat_overlap_3cat_4c,categorical_overlapping,4,4,-0.08392725683037427,-0.04198484576966399,-0.03827062906944356,nmi;ami;v_measure;fowlkes_mallows;macro_recall;macro_f1;worst_cluster_recall,,7,0
+overlap_unbal_4c_small,overlapping_binary_unbalanced,4,4,-0.06774775351191864,-0.0633764427877399,-0.03657529072993593,nmi;ami;v_measure;fowlkes_mallows;macro_recall;macro_f1;worst_cluster_recall,,7,0
+overlap_mod_4c_small,overlapping_binary_moderate,4,4,-0.06266605009157511,-0.04602626171801405,-0.02451120325161238,nmi;ami;v_measure;fowlkes_mallows;macro_recall;macro_f1;worst_cluster_recall,,7,0
+dim_consolidated_4c_24f,gaussian_dimensionality_consolidated,7,7,-0.052777929896875575,-0.03370452196641038,-0.012365392546426768,nmi;ami;v_measure;fowlkes_mallows;macro_recall;macro_f1,,6,0
+cat_simplex_face_rare_20cat,method_proof,2,1,-0.1421861009325364,-0.1806477142112073,-0.1842822774659181,nmi;ami;v_measure;macro_recall;macro_f1,fowlkes_mallows,5,1
+dim_consolidated_4c_72f,gaussian_dimensionality_consolidated,2,2,-0.0028618236825379006,-0.0029282701460661004,-0.012653122278790702,nmi;ami;v_measure;macro_recall;macro_f1,fowlkes_mallows,5,1
+dim_diffuse_6c_36f,gaussian_dimensionality_diffuse,7,7,-0.0014461735303569964,-0.014902783868577796,-6.520335244980524e-05,nmi;ami;v_measure;fowlkes_mallows;macro_f1,worst_cluster_recall,5,1
+cat_highd_3cat_500feat,categorical_high_dimensional,14,68,-0.46334519012864817,-0.2197031477263638,0.0,nmi;ami;v_measure;fowlkes_mallows,,4,0
+gauss_overlap_3c_small,overlapping_gaussian,4,6,-0.18682510118505313,-0.104046403006406,0.0033334166687499778,nmi;ami;v_measure;fowlkes_mallows,macro_recall;macro_f1;worst_cluster_recall,4,3
+gauss_overlap_8c_highd,overlapping_gaussian,8,14,-0.06569950559212878,-0.04775279100316998,0.0,nmi;ami;v_measure;fowlkes_mallows,,4,0
+phylo_protein_12taxa,phylogenetic_protein,13,16,-0.03078386165221736,-0.01965021145217405,0.0,nmi;ami;v_measure;fowlkes_mallows,,4,0
+gauss_overlap_many_10c,overlapping_gaussian,10,11,-0.002201454765346167,-0.002124369741029586,0.0,nmi;ami;v_measure;fowlkes_mallows,,4,0
+overlap_part_4c_small,overlapping_binary_partial,4,4,-4.511564628550957e-07,2.751857317573325e-07,1.2752212744771008e-05,fowlkes_mallows,nmi;ami;v_measure;macro_f1;worst_cluster_recall,1,5

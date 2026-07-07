@@ -1,0 +1,54 @@
+{
+  "schema_version": "scrna_space_decomposition/v1",
+  "study_role": "diagnostic_scrna_invariant_equivariant_axis_decomposition",
+  "generated_by": "scripts/analyze_scrna_space_decomposition.py",
+  "generated_at": "2026-06-27T19:32:15.915226+00:00",
+  "output_dir": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition",
+  "datasets": [
+    {
+      "dataset_id": "adult_pancreas",
+      "input_dir": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/adult_pancreas_benchmark",
+      "n_cells": 2500,
+      "n_pca_features": 30,
+      "equivariant_dim": 5,
+      "invariant_axis_energy_fraction": 0.059867503693867764,
+      "equivariant_axes_energy_fraction": 0.2302333276734775,
+      "celltype_between_fraction_invariant_axis": 0.2775335798806518,
+      "celltype_between_fraction_equivariant_radius": 0.4846709987314116,
+      "outputs": {
+        "cell_space_decomposition": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/adult_pancreas/cell_space_decomposition.csv",
+        "celltype_space_summary": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/adult_pancreas/celltype_space_summary.csv",
+        "method_cluster_space_summary": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/adult_pancreas/method_cluster_space_summary.csv",
+        "method_space_summary": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/adult_pancreas/method_space_summary.csv",
+        "axis_loadings": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/adult_pancreas/axis_loadings.csv",
+        "cell_space_plot": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/adult_pancreas/cell_space_decomposition.png",
+        "method_space_plot": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/adult_pancreas/method_space_summary.png"
+      }
+    },
+    {
+      "dataset_id": "goncalves_fetal_pancreas",
+      "input_dir": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/goncalves_fetal_pancreas_benchmark",
+      "n_cells": 1465,
+      "n_pca_features": 30,
+      "equivariant_dim": 5,
+      "invariant_axis_energy_fraction": 0.03333336718608327,
+      "equivariant_axes_energy_fraction": 0.16666676553476928,
+      "celltype_between_fraction_invariant_axis": 0.09090879677598927,
+      "celltype_between_fraction_equivariant_radius": 0.01676368044261035,
+      "outputs": {
+        "cell_space_decomposition": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/goncalves_fetal_pancreas/cell_space_decomposition.csv",
+        "celltype_space_summary": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/goncalves_fetal_pancreas/celltype_space_summary.csv",
+        "method_cluster_space_summary": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/goncalves_fetal_pancreas/method_cluster_space_summary.csv",
+        "method_space_summary": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/goncalves_fetal_pancreas/method_space_summary.csv",
+        "axis_loadings": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/goncalves_fetal_pancreas/axis_loadings.csv",
+        "cell_space_plot": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/goncalves_fetal_pancreas/cell_space_decomposition.png",
+        "method_space_plot": "raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/goncalves_fetal_pancreas/method_space_summary.png"
+      }
+    }
+  ],
+  "config": {
+    "equivariant_dim": 5,
+    "axis_contract": "standardize saved benchmark PCA coordinates; decompose centered cell-by-PC matrix by SVD; axis 1 is the common/invariant axis; axes 2..k are the orthogonal/equivariant axes",
+    "formal_cartan_claim": false
+  }
+}

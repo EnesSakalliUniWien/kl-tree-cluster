@@ -1,0 +1,14 @@
+case_id,new_ari,new_found,new_status,new_skip,case_category,source_family,feature_representation,samples,features,true_clusters,old_ari,old_found,old_status,old_skip,delta
+cat_highd_3cat_500feat,0.0984600374207634,68,ok,,categorical_high_dimensional,categorical_multinomial,categorical_one_hot,200,1500,4,0.5618052275494115,14,ok,,-0.46334519012864817
+gauss_overlap_3c_small,0.6743691150605863,6,ok,,overlapping_gaussian,gaussian_blobs,median_binary,300,30,3,0.8611942162456394,4,ok,,-0.18682510118505313
+cat_simplex_face_rare_20cat,0.0,1,ok,,method_proof,categorical_dirichlet_multinomial,categorical_one_hot,240,1200,4,0.1421861009325364,2,ok,,-0.1421861009325364
+cat_overlap_3cat_4c,0.8644848643817469,4,ok,,categorical_overlapping,categorical_multinomial,categorical_one_hot,400,300,4,0.9484121212121212,4,ok,,-0.08392725683037427
+overlap_unbal_4c_small,0.6024203432333544,4,ok,,overlapping_binary_unbalanced,binary_template,binary,400,100,4,0.670168096745273,4,ok,,-0.06774775351191864
+gauss_overlap_8c_highd,0.9343004944078712,14,ok,,overlapping_gaussian,gaussian_blobs,median_binary,800,300,8,1.0,8,ok,,-0.06569950559212878
+overlap_mod_4c_small,0.8520629763241513,4,ok,,overlapping_binary_moderate,binary_template,binary,400,80,4,0.9147290264157264,4,ok,,-0.06266605009157511
+dim_consolidated_4c_24f,0.5298028928480344,7,ok,,gaussian_dimensionality_consolidated,dimensional_gaussian,median_binary,160,24,4,0.58258082274491,7,ok,,-0.052777929896875575
+phylo_protein_12taxa,0.9631584037374742,16,ok,,phylogenetic_protein,phylogenetic_sequence,categorical_one_hot,180,3000,12,0.9939422653896915,13,ok,,-0.03078386165221736
+dim_consolidated_4c_72f,-0.0083613817537643,2,ok,,gaussian_dimensionality_consolidated,dimensional_gaussian,median_binary,160,72,4,-0.0054995580712264,2,ok,,-0.0028618236825379006
+gauss_overlap_many_10c,0.9977985452346538,11,ok,,overlapping_gaussian,gaussian_blobs,median_binary,1000,150,10,1.0,10,ok,,-0.002201454765346167
+dim_diffuse_6c_36f,0.0316432964697783,7,ok,,gaussian_dimensionality_diffuse,dimensional_gaussian,median_binary,180,36,6,0.0330894700001353,7,ok,,-0.0014461735303569964
+overlap_part_4c_small,0.9866666397310956,4,ok,,overlapping_binary_partial,binary_template,binary,400,60,4,0.9866670908875584,4,ok,,-4.511564628550957e-07

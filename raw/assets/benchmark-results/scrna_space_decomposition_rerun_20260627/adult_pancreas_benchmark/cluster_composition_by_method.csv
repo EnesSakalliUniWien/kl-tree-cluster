@@ -1,0 +1,316 @@
+method,cluster,n_cells,n_celltypes,effective_celltype_count,dominant_celltype,dominant_celltype_cells,cluster_purity,celltypes_ge_10pct
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,0,10,2,1.6493848884661177,macrophage,8,0.8,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,1,7,2,1.8189685116531733,mesenchyme,5,0.7142857142857143,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,2,51,1,1.0,endothelial,51,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,3,8,3,2.0867794400977164,mast,6,0.75,3
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,4,121,4,1.3276822743325218,ductal,114,0.9421487603305785,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,5,57,3,1.2708586779010536,acinar,54,0.9473684210526315,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,6,2,1,1.0,macrophage,2,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,7,201,3,1.1375748659552356,ductal,196,0.9751243781094527,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,8,1,1,1.0,alpha,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,9,4,1,1.0,endothelial,4,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,10,573,6,3.0915731434614875,alpha,330,0.5759162303664922,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,11,1,1,1.0,delta,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,12,3,1,1.0,acinar,3,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,13,1,1,1.0,acinar,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,14,1,1,1.0,acinar,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,15,12,2,1.8898815748423097,alpha,8,0.6666666666666666,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,16,48,2,1.1065696420459927,acinar,47,0.9791666666666666,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,17,1,1,1.0,acinar,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,18,119,1,1.0,acinar,119,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,19,11,1,1.0,acinar,11,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,20,13,1,1.0,acinar,13,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,21,2,1,1.0,alpha,2,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,22,3,2,1.8898815748423097,alpha,2,0.6666666666666666,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,23,2,2,2.0,acinar,1,0.5,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,24,1,1,1.0,ductal,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,25,1,1,1.0,alpha,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,26,2,1,1.0,alpha,2,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,27,613,6,2.09072184953938,beta,462,0.7536704730831973,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,28,2,1,1.0,alpha,2,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,29,11,2,1.3561314133862727,gamma,10,0.9090909090909091,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,30,1,1,1.0,alpha,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,31,3,1,1.0,alpha,3,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,32,3,1,1.0,alpha,3,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,33,136,1,1.0,alpha,136,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,34,13,1,1.0,alpha,13,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,35,14,1,1.0,alpha,14,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,36,8,1,1.0,alpha,8,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,37,21,1,1.0,alpha,21,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,38,207,3,1.1614247648557283,alpha,201,0.9710144927536232,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,39,10,4,3.389245277339832,delta,5,0.5,4
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,40,86,5,3.391974035272783,alpha,39,0.45348837209302323,3
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,41,1,1,1.0,activated_stellate,1,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,42,10,1,1.0,PSC,10,1.0,1
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,43,19,2,1.673058126758513,mesenchymal,15,0.7894736842105263,2
+TBS topology projected adaptive-k90 alpha=0.01 edge=0.001,44,86,2,1.946156408736835,activated_stellate,53,0.6162790697674418,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,0,10,2,1.6493848884661177,macrophage,8,0.8,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,1,7,2,1.8189685116531733,mesenchyme,5,0.7142857142857143,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,2,51,1,1.0,endothelial,51,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,3,8,3,2.0867794400977164,mast,6,0.75,3
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,4,121,4,1.3276822743325218,ductal,114,0.9421487603305785,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,5,57,3,1.2708586779010536,acinar,54,0.9473684210526315,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,6,2,1,1.0,macrophage,2,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,7,201,3,1.1375748659552356,ductal,196,0.9751243781094527,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,8,1,1,1.0,alpha,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,9,4,1,1.0,endothelial,4,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,10,573,6,3.0915731434614875,alpha,330,0.5759162303664922,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,11,1,1,1.0,delta,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,12,3,1,1.0,acinar,3,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,13,1,1,1.0,acinar,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,14,1,1,1.0,acinar,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,15,12,2,1.8898815748423097,alpha,8,0.6666666666666666,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,16,48,2,1.1065696420459927,acinar,47,0.9791666666666666,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,17,1,1,1.0,acinar,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,18,119,1,1.0,acinar,119,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,19,11,1,1.0,acinar,11,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,20,13,1,1.0,acinar,13,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,21,2,1,1.0,alpha,2,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,22,3,2,1.8898815748423097,alpha,2,0.6666666666666666,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,23,2,2,2.0,acinar,1,0.5,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,24,1,1,1.0,ductal,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,25,1,1,1.0,alpha,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,26,2,1,1.0,alpha,2,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,27,613,6,2.09072184953938,beta,462,0.7536704730831973,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,28,2,1,1.0,alpha,2,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,29,11,2,1.3561314133862727,gamma,10,0.9090909090909091,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,30,1,1,1.0,alpha,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,31,3,1,1.0,alpha,3,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,32,3,1,1.0,alpha,3,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,33,136,1,1.0,alpha,136,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,34,13,1,1.0,alpha,13,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,35,14,1,1.0,alpha,14,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,36,8,1,1.0,alpha,8,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,37,21,1,1.0,alpha,21,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,38,207,3,1.1614247648557283,alpha,201,0.9710144927536232,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,39,10,4,3.389245277339832,delta,5,0.5,4
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,40,86,5,3.391974035272783,alpha,39,0.45348837209302323,3
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,41,1,1,1.0,activated_stellate,1,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,42,10,1,1.0,PSC,10,1.0,1
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,43,19,2,1.673058126758513,mesenchymal,15,0.7894736842105263,2
+TBS branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,44,86,2,1.946156408736835,activated_stellate,53,0.6162790697674418,2
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,0,10,2,1.6493848884661177,macrophage,8,0.8,2
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,1,7,2,1.8189685116531733,mesenchyme,5,0.7142857142857143,2
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,2,51,1,1.0,endothelial,51,1.0,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,3,8,3,2.0867794400977164,mast,6,0.75,3
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,4,2308,9,5.021900216975522,alpha,794,0.3440207972270364,4
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,5,1,1,1.0,activated_stellate,1,1.0,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,6,10,1,1.0,PSC,10,1.0,1
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,7,19,2,1.673058126758513,mesenchymal,15,0.7894736842105263,2
+TBS raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,8,86,2,1.946156408736835,activated_stellate,53,0.6162790697674418,2
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,0,8,3,2.0867794400977164,mast,6,0.75,3
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,1,11,2,1.6066307960863546,macrophage,9,0.8181818181818182,2
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,2,15,1,1.0,mesenchymal,15,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,3,15,2,1.2775319170740629,ductal,14,0.9333333333333333,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,4,20,1,1.0,activated_stellate,20,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,5,35,3,1.4149112747251498,acinar,32,0.9142857142857143,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,6,9,4,3.709079297755367,alpha,3,0.3333333333333333,4
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,7,19,1,1.0,beta,19,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,8,34,2,1.2507183622782252,quiescent_stellate,32,0.9411764705882353,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,9,24,3,1.7233735445411187,gamma,20,0.8333333333333334,2
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,10,37,3,1.5181254820479928,ductal,33,0.8918918918918919,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,11,31,1,1.0,delta,31,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,12,33,2,1.1454458601843736,activated_stellate,32,0.9696969696969697,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,13,25,1,1.0,acinar,25,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,14,23,1,1.0,alpha,23,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,15,8,3,2.649351128562104,beta,4,0.5,3
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,16,12,4,2.309401076758503,alpha,9,0.75,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,17,47,2,1.1084544531043852,beta,46,0.9787234042553191,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,18,31,2,1.1531598469792317,ductal,30,0.967741935483871,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,19,13,1,1.0,endothelial,13,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,20,15,1,1.0,endothelial,15,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,21,10,1,1.0,endothelial,10,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,22,18,2,1.239315430729068,endothelial,17,0.9444444444444444,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,23,48,2,1.9722859800819112,gamma,28,0.5833333333333334,2
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,24,81,1,1.0,ductal,81,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,25,88,4,1.2613309010869749,beta,84,0.9545454545454546,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,26,66,2,1.1454458601843736,ductal,64,0.9696969696969697,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,27,14,1,1.0,alpha,14,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,28,8,1,1.0,alpha,8,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,29,57,1,1.0,alpha,57,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,30,9,3,2.8888455168024434,mesenchyme,4,0.4444444444444444,3
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,31,11,2,1.3561314133862727,PSC,10,0.9090909090909091,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,32,91,2,1.0623657852814319,alpha,90,0.989010989010989,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,33,101,1,1.0,ductal,101,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,34,158,3,1.0796762781139613,alpha,156,0.9873417721518988,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,35,119,3,1.980871627290719,delta,85,0.7142857142857143,2
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,36,209,4,1.2897224557048788,acinar,198,0.9473684210526315,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,37,9,1,1.0,gamma,9,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,38,10,3,2.4545555958911476,gamma,6,0.6,3
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,39,206,2,1.0311823370110782,alpha,205,0.9951456310679612,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,40,1,1,1.0,macrophage,1,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,41,40,1,1.0,alpha,40,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,42,2,1,1.0,alpha,2,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,43,103,2,1.0561802094555428,alpha,102,0.9902912621359223,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,44,29,1,1.0,alpha,29,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,45,18,1,1.0,alpha,18,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,46,12,1,1.0,alpha,12,1.0,1
+TBS adaptive diffusion topology projected adaptive-k90 alpha=0.01 edge=0.001,47,517,7,1.6090668642343051,beta,461,0.8916827852998066,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,0,8,3,2.0867794400977164,mast,6,0.75,3
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,1,11,2,1.6066307960863546,macrophage,9,0.8181818181818182,2
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,2,15,1,1.0,mesenchymal,15,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,3,15,2,1.2775319170740629,ductal,14,0.9333333333333333,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,4,20,1,1.0,activated_stellate,20,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,5,35,3,1.4149112747251498,acinar,32,0.9142857142857143,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,6,9,4,3.709079297755367,alpha,3,0.3333333333333333,4
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,7,19,1,1.0,beta,19,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,8,34,2,1.2507183622782252,quiescent_stellate,32,0.9411764705882353,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,9,24,3,1.7233735445411187,gamma,20,0.8333333333333334,2
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,10,37,3,1.5181254820479928,ductal,33,0.8918918918918919,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,11,31,1,1.0,delta,31,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,12,33,2,1.1454458601843736,activated_stellate,32,0.9696969696969697,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,13,25,1,1.0,acinar,25,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,14,23,1,1.0,alpha,23,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,15,8,3,2.649351128562104,beta,4,0.5,3
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,16,12,4,2.309401076758503,alpha,9,0.75,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,17,47,2,1.1084544531043852,beta,46,0.9787234042553191,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,18,31,2,1.1531598469792317,ductal,30,0.967741935483871,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,19,13,1,1.0,endothelial,13,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,20,15,1,1.0,endothelial,15,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,21,10,1,1.0,endothelial,10,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,22,18,2,1.239315430729068,endothelial,17,0.9444444444444444,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,23,48,2,1.9722859800819112,gamma,28,0.5833333333333334,2
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,24,81,1,1.0,ductal,81,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,25,88,4,1.2613309010869749,beta,84,0.9545454545454546,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,26,66,2,1.1454458601843736,ductal,64,0.9696969696969697,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,27,14,1,1.0,alpha,14,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,28,8,1,1.0,alpha,8,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,29,57,1,1.0,alpha,57,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,30,9,3,2.8888455168024434,mesenchyme,4,0.4444444444444444,3
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,31,11,2,1.3561314133862727,PSC,10,0.9090909090909091,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,32,91,2,1.0623657852814319,alpha,90,0.989010989010989,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,33,101,1,1.0,ductal,101,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,34,158,3,1.0796762781139613,alpha,156,0.9873417721518988,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,35,119,3,1.980871627290719,delta,85,0.7142857142857143,2
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,36,209,4,1.2897224557048788,acinar,198,0.9473684210526315,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,37,9,1,1.0,gamma,9,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,38,10,3,2.4545555958911476,gamma,6,0.6,3
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,39,206,2,1.0311823370110782,alpha,205,0.9951456310679612,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,40,1,1,1.0,macrophage,1,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,41,40,1,1.0,alpha,40,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,42,2,1,1.0,alpha,2,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,43,103,2,1.0561802094555428,alpha,102,0.9902912621359223,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,44,29,1,1.0,alpha,29,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,45,18,1,1.0,alpha,18,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,46,12,1,1.0,alpha,12,1.0,1
+TBS adaptive diffusion branch-time recomputed-NNLS projected adaptive-k90 alpha=0.01 edge=0.001,47,517,7,1.6090668642343051,beta,461,0.8916827852998066,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,0,8,3,2.0867794400977164,mast,6,0.75,3
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,1,11,2,1.6066307960863546,macrophage,9,0.8181818181818182,2
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,2,15,1,1.0,mesenchymal,15,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,3,15,2,1.2775319170740629,ductal,14,0.9333333333333333,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,4,20,1,1.0,activated_stellate,20,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,5,35,3,1.4149112747251498,acinar,32,0.9142857142857143,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,6,9,4,3.709079297755367,alpha,3,0.3333333333333333,4
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,7,19,1,1.0,beta,19,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,8,34,2,1.2507183622782252,quiescent_stellate,32,0.9411764705882353,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,9,24,3,1.7233735445411187,gamma,20,0.8333333333333334,2
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,10,37,3,1.5181254820479928,ductal,33,0.8918918918918919,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,11,31,1,1.0,delta,31,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,12,33,2,1.1454458601843736,activated_stellate,32,0.9696969696969697,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,13,25,1,1.0,acinar,25,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,14,23,1,1.0,alpha,23,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,15,8,3,2.649351128562104,beta,4,0.5,3
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,16,12,4,2.309401076758503,alpha,9,0.75,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,17,47,2,1.1084544531043852,beta,46,0.9787234042553191,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,18,31,2,1.1531598469792317,ductal,30,0.967741935483871,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,19,13,1,1.0,endothelial,13,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,20,15,1,1.0,endothelial,15,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,21,10,1,1.0,endothelial,10,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,22,18,2,1.239315430729068,endothelial,17,0.9444444444444444,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,23,48,2,1.9722859800819112,gamma,28,0.5833333333333334,2
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,24,81,1,1.0,ductal,81,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,25,88,4,1.2613309010869749,beta,84,0.9545454545454546,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,26,66,2,1.1454458601843736,ductal,64,0.9696969696969697,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,27,79,1,1.0,alpha,79,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,28,9,3,2.8888455168024434,mesenchyme,4,0.4444444444444444,3
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,29,11,2,1.3561314133862727,PSC,10,0.9090909090909091,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,30,91,2,1.0623657852814319,alpha,90,0.989010989010989,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,31,101,1,1.0,ductal,101,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,32,158,3,1.0796762781139613,alpha,156,0.9873417721518988,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,33,119,3,1.980871627290719,delta,85,0.7142857142857143,2
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,34,209,4,1.2897224557048788,acinar,198,0.9473684210526315,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,35,9,1,1.0,gamma,9,1.0,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,36,10,3,2.4545555958911476,gamma,6,0.6,3
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,37,206,2,1.0311823370110782,alpha,205,0.9951456310679612,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,38,205,3,1.0635795531278736,alpha,203,0.9902439024390244,1
+TBS adaptive diffusion raw-linkage branch-time diagnostic projected adaptive-k90 alpha=0.01 edge=0.001,39,517,7,1.6090668642343051,beta,461,0.8916827852998066,1
+Leiden,0,247,4,1.1635683524703708,beta,240,0.97165991902834,1
+Leiden,1,243,4,1.7791126082839748,acinar,202,0.831275720164609,2
+Leiden,2,221,2,1.052941868943016,beta,219,0.9909502262443439,1
+Leiden,3,213,2,1.0303042875383683,alpha,212,0.9953051643192489,1
+Leiden,4,209,4,1.1678080760936405,alpha,203,0.9712918660287081,1
+Leiden,5,190,6,1.594833183648963,ductal,170,0.8947368421052632,1
+Leiden,6,176,4,1.141223983936951,alpha,172,0.9772727272727273,1
+Leiden,7,164,4,2.073881587284001,delta,111,0.676829268292683,2
+Leiden,8,156,2,1.0395215284755581,alpha,155,0.9935897435897436,1
+Leiden,9,116,6,3.7616707917656,activated_stellate,54,0.46551724137931033,3
+Leiden,10,98,4,2.9966587397543103,beta,46,0.46938775510204084,3
+Leiden,11,89,6,3.5513519085274705,alpha,39,0.43820224719101125,3
+Leiden,12,89,4,1.3095846004844482,beta,84,0.9438202247191011,1
+Leiden,13,84,2,1.1665796643952542,ductal,81,0.9642857142857143,1
+Leiden,14,59,5,2.917101618950974,delta,32,0.5423728813559322,2
+Leiden,15,56,2,1.0937126687378802,endothelial,55,0.9821428571428571,1
+Leiden,16,53,3,1.2885888117534887,acinar,50,0.9433962264150944,1
+Leiden,17,37,3,1.5181254820479928,ductal,33,0.8918918918918919,1
+Louvain,0,56,2,1.0937126687378802,endothelial,55,0.9821428571428571,1
+Louvain,1,208,3,1.111648728905457,alpha,204,0.9807692307692307,1
+Louvain,2,139,9,5.652506403289793,activated_stellate,54,0.38848920863309355,3
+Louvain,3,167,2,1.0670482827881216,ductal,165,0.9880239520958084,1
+Louvain,4,212,2,1.0304264596362882,alpha,211,0.9952830188679245,1
+Louvain,5,253,4,1.1601766816906076,beta,246,0.9723320158102767,1
+Louvain,6,240,4,1.7597696294264784,acinar,200,0.8333333333333334,2
+Louvain,7,169,5,2.2980175517382975,delta,111,0.6568047337278107,2
+Louvain,8,216,2,1.0539756277919188,beta,214,0.9907407407407407,1
+Louvain,9,157,3,1.0801156752869412,alpha,155,0.9872611464968153,1
+Louvain,10,37,3,1.5181254820479928,ductal,33,0.8918918918918919,1
+Louvain,11,89,4,1.3095846004844482,beta,84,0.9438202247191011,1
+Louvain,12,55,4,2.5156510264386363,delta,31,0.5636363636363636,2
+Louvain,13,98,4,2.9966587397543103,beta,46,0.46938775510204084,3
+Louvain,14,84,2,1.1665796643952542,ductal,81,0.9642857142857143,1
+Louvain,15,176,4,1.141223983936951,alpha,172,0.9772727272727273,1
+Louvain,16,55,3,1.2794195509763808,acinar,52,0.9454545454545454,1
+Louvain,17,89,6,3.5513519085274705,alpha,39,0.43820224719101125,3
+K-means true K,0,88,6,3.702716497581641,alpha,37,0.42045454545454547,3
+K-means true K,1,582,9,1.935017065396467,beta,459,0.788659793814433,2
+K-means true K,2,303,6,3.308961665434754,alpha,157,0.5181518151815182,3
+K-means true K,3,82,2,1.1699208659077562,ductal,79,0.9634146341463414,1
+K-means true K,4,186,2,1.1094244052274624,ductal,182,0.978494623655914,1
+K-means true K,5,218,4,1.4363477614047637,acinar,200,0.9174311926605505,1
+K-means true K,6,33,2,1.1454458601843736,quiescent_stellate,32,0.9696969696969697,1
+K-means true K,7,52,1,1.0,endothelial,52,1.0,1
+K-means true K,8,53,2,1.0981203695313506,activated_stellate,52,0.9811320754716981,1
+K-means true K,9,273,6,2.951187770913795,alpha,172,0.63003663003663,3
+K-means true K,10,56,3,1.475171410734013,acinar,50,0.8928571428571429,1
+K-means true K,11,29,4,2.8833009528004303,mesenchymal,15,0.5172413793103449,3
+K-means true K,12,38,3,1.5060022429136557,ductal,34,0.8947368421052632,1
+K-means true K,13,19,4,3.2038862046840033,macrophage,9,0.47368421052631576,3
+K-means true K,14,488,8,1.7969455326403143,alpha,419,0.8586065573770492,1
+Spectral true K,0,38,3,1.5060022429136557,ductal,34,0.8947368421052632,1
+Spectral true K,1,53,3,1.2885888117534887,acinar,50,0.9433962264150944,1
+Spectral true K,2,53,3,1.5596780797590484,beta,46,0.8679245283018868,2
+Spectral true K,3,59,6,3.013058435092107,delta,32,0.5423728813559322,2
+Spectral true K,4,56,2,1.0937126687378802,endothelial,55,0.9821428571428571,1
+Spectral true K,5,86,2,1.2069698076337374,ductal,82,0.9534883720930233,1
+Spectral true K,6,92,6,3.839144450961185,alpha,39,0.42391304347826086,3
+Spectral true K,7,89,4,1.3095846004844482,beta,84,0.9438202247191011,1
+Spectral true K,8,113,5,3.4445710882447047,activated_stellate,54,0.4778761061946903,3
+Spectral true K,9,155,2,1.0397382334938605,alpha,154,0.9935483870967742,1
+Spectral true K,10,170,2,1.092790904644783,ductal,167,0.9823529411764705,1
+Spectral true K,11,221,4,1.998382102097838,alpha,172,0.7782805429864253,2
+Spectral true K,12,241,4,1.7976289508346737,acinar,200,0.8298755186721992,2
+Spectral true K,13,475,5,1.1912720765664495,beta,459,0.9663157894736842,1
+Spectral true K,14,599,8,2.666242279258587,alpha,415,0.6928213689482471,2
+HDBSCAN,-1,446,15,6.987676910326398,ductal,209,0.46860986547085204,2
+HDBSCAN,0,43,1,1.0,endothelial,43,1.0,1
+HDBSCAN,1,34,3,1.5585521545710281,ductal,30,0.8823529411764706,1
+HDBSCAN,2,42,1,1.0,activated_stellate,42,1.0,1
+HDBSCAN,3,57,1,1.0,ductal,57,1.0,1
+HDBSCAN,4,27,2,1.302195976214733,quiescent_stellate,25,0.9259259259259259,1
+HDBSCAN,5,31,3,1.328348268110442,acinar,29,0.9354838709677419,1
+HDBSCAN,6,60,3,2.215209919733197,alpha,35,0.5833333333333334,2
+HDBSCAN,7,299,6,3.1786254005543673,alpha,157,0.5250836120401338,3
+HDBSCAN,8,42,1,1.0,ductal,42,1.0,1
+HDBSCAN,9,26,1,1.0,beta,26,1.0,1
+HDBSCAN,10,175,3,1.4465827807344618,alpha,159,0.9085714285714286,1
+HDBSCAN,11,183,3,1.0986524277402205,acinar,180,0.9836065573770492,1
+HDBSCAN,12,1035,5,3.1191474375827193,beta,461,0.4454106280193237,3
