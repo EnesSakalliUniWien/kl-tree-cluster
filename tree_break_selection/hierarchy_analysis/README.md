@@ -10,7 +10,10 @@ clustering pipeline.
 | `tree_decomposition.py` | Public decomposition engine. Prepares or accepts explicit gate annotation bundles, evaluates gates, and emits cluster assignments. |
 | `cluster_assignments.py` | Builds cluster-root and per-sample assignment tables from explicit final tree boundaries. |
 | `bootstrap_consensus.py` | Bootstrap-based stability helpers layered on top of decomposition results. |
+| `decomposition/config.py` | Immutable traversal and gate-annotation configuration, including compact vs. full trace collection. |
 | `decomposition/gates/orchestrator.py` | Runs the edge-divergence gate then the configured sibling-divergence gate and returns a node-indexed annotation bundle. |
+| `decomposition/gates/profiles.py` | Named sibling-gate profile registry and profile-resolution contract. |
+| `decomposition/gates/guards.py` | Optional root-stability and selected-permutation guard layers used by auditable profiles. |
 | `decomposition/gates/gate_evaluator.py` | Encapsulates the binary-structure prerequisite, edge-divergence gate, sibling-divergence gate, and pass-through traversal decision as one action. |
 | `decomposition/gates/column_contracts.py` | Shared checks for the gate-column contract carried through the explicit annotation bundle. |
 
@@ -24,6 +27,10 @@ clustering pipeline.
 
 ## Notes
 
+- `TreeDecomposition` defaults to `trace_level="compact"`: results contain
+  cluster assignments, independence metadata, and live traversal counters.
+  Row-level `traversal_trace` and `full_edge_traversal_trace` payloads are
+  produced only when diagnostics opt into `trace_level="full"`.
 - The default sibling gate remains `projected_wald_inflation`. Opt-in
   `fixed_global_chi_square`, `fixed_coordinate_bh`, and `fixed_block_bh` gates
   avoid learning parent PCA projection rows and projection dimension from the

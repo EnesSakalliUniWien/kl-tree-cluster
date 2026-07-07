@@ -4,6 +4,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
+import tree_break_selection.hierarchy_analysis.decomposition.gates.guards as guard_module
 from tree_break_selection.hierarchy_analysis.decomposition.gates.column_contracts import (
     EDGE_GATE_COLUMNS,
     SIBLING_GATE_COLUMNS,
@@ -671,8 +672,6 @@ def test_root_stability_guard_closes_only_unstable_open_root() -> None:
 def test_root_selective_permutation_guard_closes_unselected_open_root(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     bundle = run_gate_annotation_pipeline(
@@ -699,7 +698,7 @@ def test_root_selective_permutation_guard_closes_unselected_open_root(
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -726,8 +725,6 @@ def test_root_selective_permutation_guard_closes_unselected_open_root(
 def test_selective_permutation_guard_closes_open_internal_context(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     bundle = run_gate_annotation_pipeline(
@@ -754,7 +751,7 @@ def test_selective_permutation_guard_closes_open_internal_context(
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -782,8 +779,6 @@ def test_selective_permutation_guard_closes_open_internal_context(
 def test_selective_permutation_guard_closes_only_passthrough_descendant(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     annotated = annotations_df.copy()
@@ -808,7 +803,7 @@ def test_selective_permutation_guard_closes_only_passthrough_descendant(
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -837,8 +832,6 @@ def test_selective_permutation_guard_closes_only_passthrough_descendant(
 def test_global_selected_family_guard_closes_passthrough_descendant(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     annotated = annotations_df.copy()
@@ -864,7 +857,7 @@ def test_global_selected_family_guard_closes_passthrough_descendant(
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_global_sibling_min_permutation_p_value",
         fake_selected_family,
     )
@@ -894,8 +887,6 @@ def test_global_selected_family_guard_closes_passthrough_descendant(
 def test_global_selected_family_guard_keeps_significant_passthrough_descendant(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     annotated = annotations_df.copy()
@@ -917,7 +908,7 @@ def test_global_selected_family_guard_keeps_significant_passthrough_descendant(
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_global_sibling_min_permutation_p_value",
         fake_selected_family,
     )
@@ -942,8 +933,6 @@ def test_global_selected_family_guard_keeps_significant_passthrough_descendant(
 def test_refined_global_selected_family_guard_refines_floor_p_value(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     annotated = annotations_df.copy()
@@ -970,7 +959,7 @@ def test_refined_global_selected_family_guard_refines_floor_p_value(
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_global_sibling_min_permutation_p_value",
         fake_selected_family,
     )
@@ -999,8 +988,6 @@ def test_refined_global_selected_family_guard_refines_floor_p_value(
 def test_global_selected_family_p_value_uses_add_one_monte_carlo(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     leaf_data = pd.DataFrame([[0], [1], [0]], index=["a", "b", "c"])
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     null_values = iter([0.01, 0.20, 0.05])
@@ -1012,12 +999,12 @@ def test_global_selected_family_p_value_uses_add_one_monte_carlo(
         return next(null_values)
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "_block_permutation_null_sample",
         fake_null_sample,
     )
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "_selected_tree_fixed_sibling_min_p_value",
         fake_min_p_value,
     )
@@ -1038,18 +1025,17 @@ def test_global_selected_family_p_value_uses_add_one_monte_carlo(
 
 
 def test_fast_bernoulli_coordinate_p_value_matches_canonical_contrast() -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, _annotations_df, leaf_data = _build_small_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     left = tree.nodes["A"]
     right = tree.nodes["B"]
 
-    fast = orchestrator._fixed_bernoulli_coordinate_sibling_p_value(
+    fast = guard_module._fixed_discrete_coordinate_sibling_p_value(
         np.asarray(left["distribution"], dtype=float),
         np.asarray(right["distribution"], dtype=float),
         float(left["leaf_count"]),
         float(right["leaf_count"]),
+        feature_space,
     )
     contrast = build_contrast_covariance(
         np.asarray(left["distribution"], dtype=float),
@@ -1069,8 +1055,6 @@ def test_fast_bernoulli_coordinate_p_value_matches_canonical_contrast() -> None:
 
 
 def test_fast_categorical_coordinate_p_value_matches_canonical_contrast() -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     feature_space = infer_feature_space_from_columns(
         ("F0_c0", "F0_c1", "F0_c2", "F1_c0", "F1_c1", "F1_c2")
     )
@@ -1079,7 +1063,7 @@ def test_fast_categorical_coordinate_p_value_matches_canonical_contrast() -> Non
     first_sample_size = 11.0
     second_sample_size = 13.0
 
-    fast = orchestrator._fixed_discrete_coordinate_sibling_p_value(
+    fast = guard_module._fixed_discrete_coordinate_sibling_p_value(
         first,
         second,
         first_sample_size,
@@ -1106,8 +1090,6 @@ def test_fast_categorical_coordinate_p_value_matches_canonical_contrast() -> Non
 def test_selective_permutation_passthrough_scope_keeps_descendant_after_open_root(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     annotated = annotations_df.copy()
@@ -1135,7 +1117,7 @@ def test_selective_permutation_passthrough_scope_keeps_descendant_after_open_roo
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -1161,8 +1143,6 @@ def test_selective_permutation_passthrough_scope_keeps_descendant_after_open_roo
 def test_selective_permutation_passthrough_scope_skips_guard_blocked_ancestor(
     monkeypatch,
 ) -> None:
-    import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as orchestrator
-
     tree, annotations_df, leaf_data = _build_passthrough_tree_with_leaf_data()
     feature_space = infer_feature_space_from_columns(tuple(leaf_data.columns))
     annotated = annotations_df.copy()
@@ -1190,7 +1170,7 @@ def test_selective_permutation_passthrough_scope_skips_guard_blocked_ancestor(
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -1269,7 +1249,7 @@ def test_pipeline_runs_opt_in_root_selective_permutation_guard(monkeypatch) -> N
         }
 
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -1320,7 +1300,7 @@ def test_pipeline_selective_root_profile_runs_packaged_guard(monkeypatch) -> Non
         stable_root,
     )
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -1375,7 +1355,7 @@ def test_pipeline_selective_traversal_profile_sets_open_internal_scope(
         stable_root,
     )
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -1429,7 +1409,7 @@ def test_pipeline_selective_passthrough_profile_sets_passthrough_scope(
         stable_root,
     )
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
@@ -1491,12 +1471,12 @@ def test_pipeline_global_passthrough_profile_sets_global_scope(
         stable_root,
     )
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_root_permutation_p_value",
         fake_selected_root,
     )
     monkeypatch.setattr(
-        orchestrator,
+        guard_module,
         "selected_global_sibling_min_permutation_p_value",
         fake_selected_family,
     )
