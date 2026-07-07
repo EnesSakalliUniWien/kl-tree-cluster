@@ -14,3 +14,5 @@ class MethodSpec:
     name: str
     runner: Callable[..., "MethodRunResult"]
     param_grid: list[dict[str, object]]
+    benchmark_class: str = "diagnostic"
+    benchmark_grid: str = "default"

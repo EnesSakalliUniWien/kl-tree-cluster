@@ -12,10 +12,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from benchmarks.diagnostics.failure.debug_trace import diagnose_benchmark_failures
+from benchmarks.shared.benchmark_grid import benchmark_run_id
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.cases.geometry import case_recipe_geometry
 from benchmarks.shared.config import DEFAULT_METHODS
 from benchmarks.shared.env import get_env_bool, get_env_int
+from benchmarks.shared.performance_grid import write_benchmark_performance_grid
 from benchmarks.shared.plots.cover_page import (
     GROUP_ORDER,
     category_group,
@@ -25,15 +27,19 @@ from benchmarks.shared.plots.cover_page import (
 )
 from benchmarks.shared.relationship_analysis import analyze_benchmark_relationships
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
+from benchmarks.shared.tree_consensus import write_tree_consensus_artifacts
 from benchmarks.shared.util.case_execution import run_case_with_optional_isolation
-from benchmarks.shared.util.method_selection import resolve_methods_from_env
+from benchmarks.shared.util.method_selection import (
+    resolve_methods_from_env,
+    resolve_selected_methods_and_param_sets,
+)
 from benchmarks.shared.util.pdf.merge import merge_existing_pdfs
 from benchmarks.shared.util.time import format_timestamp_utc
 
 
 def _compute_resume_coverage(
     existing_results: pd.DataFrame,
-    expected_methods: list[str],
+    expected_run_ids: list[str],
 ) -> tuple[set[int], dict[int, list[str]], int]:
     """Compute fully-complete and partial case coverage from an existing CSV."""
     if existing_results.empty:
@@ -42,35 +48,64 @@ def _compute_resume_coverage(
     if "test_case" not in existing_results.columns:
         return set(), {}, 0
 
-    if "method" not in existing_results.columns:
+    if "run_id" not in existing_results.columns:
         return set(), {}, 0
 
-    expected_set = set(expected_methods)
+    expected_set = set(expected_run_ids)
 
     case_keys = pd.to_numeric(existing_results["test_case"], errors="coerce")
-    methods_raw = existing_results["method"].astype(str)
-    methods_norm = methods_raw.where(methods_raw.isin(expected_set))
-    progress = pd.DataFrame({"case_key": case_keys, "method_id": methods_norm})
-    progress = progress.dropna(subset=["case_key", "method_id"])
+    run_ids_raw = existing_results["run_id"].astype(str)
+    run_ids_norm = run_ids_raw.where(run_ids_raw.isin(expected_set))
+    progress = pd.DataFrame({"case_key": case_keys, "run_id": run_ids_norm})
+    progress = progress.dropna(subset=["case_key", "run_id"])
     if progress.empty:
         return set(), {}, 0
 
     progress["case_key"] = progress["case_key"].astype(int)
 
-    methods_by_case = (
-        progress.groupby("case_key")["method_id"].agg(lambda s: set(s.tolist())).to_dict()
-    )
+    run_ids_by_case = progress.groupby("case_key")["run_id"].agg(lambda s: set(s.tolist())).to_dict()
 
     completed_cases: set[int] = set()
-    missing_methods_by_case: dict[int, list[str]] = {}
-    for case_key, seen_methods in methods_by_case.items():
-        missing = [method_id for method_id in expected_methods if method_id not in seen_methods]
+    missing_run_ids_by_case: dict[int, list[str]] = {}
+    for case_key, seen_run_ids in run_ids_by_case.items():
+        missing = [run_id for run_id in expected_run_ids if run_id not in seen_run_ids]
         if not missing:
             completed_cases.add(int(case_key))
         else:
-            missing_methods_by_case[int(case_key)] = missing
+            missing_run_ids_by_case[int(case_key)] = missing
 
-    return completed_cases, missing_methods_by_case, len(methods_by_case)
+    return completed_cases, missing_run_ids_by_case, len(run_ids_by_case)
+
+
+def _run_ids_for_params(
+    methods: list[str],
+    param_sets: dict[str, list[dict[str, object]]],
+) -> list[str]:
+    return [
+        benchmark_run_id(method_id, params)
+        for method_id in methods
+        for params in param_sets[method_id]
+    ]
+
+
+def _filter_methods_and_params_by_run_ids(
+    *,
+    methods: list[str],
+    param_sets: dict[str, list[dict[str, object]]],
+    run_ids: set[str],
+) -> tuple[list[str], dict[str, list[dict[str, object]]]]:
+    filtered_methods: list[str] = []
+    filtered_params: dict[str, list[dict[str, object]]] = {}
+    for method_id in methods:
+        selected_params = [
+            params
+            for params in param_sets[method_id]
+            if benchmark_run_id(method_id, params) in run_ids
+        ]
+        if selected_params:
+            filtered_methods.append(method_id)
+            filtered_params[method_id] = selected_params
+    return filtered_methods, filtered_params
 
 
 def _stamp_full_run_case_identity(
@@ -106,21 +141,30 @@ def run_benchmarks():
     test_cases = get_test_cases_by_suite(case_suite)
     print(f"Found {len(test_cases)} test cases.")
 
+    # Keep plots enabled by default; UMAP comparison pages are always generated
+    # when plotting is on.
+    enable_plots = get_env_bool("TBS_ENABLE_PLOTS", default=True)
+
     methods_to_test = resolve_methods_from_env(
         METHOD_SPECS,
         default_methods=DEFAULT_METHODS,
     )
-    # Ensure the primary TBS (Hamming + average) method is always included for
-    # tree plot generation.
-    if "tbs" not in methods_to_test:
+    # Ensure the primary TBS (Hamming + average) method is included only when
+    # tree plots need it.
+    if enable_plots and "tbs" not in methods_to_test:
         methods_to_test.insert(0, "tbs")
         print("Added required tree method: tbs")
+    methods_to_test, param_sets = resolve_selected_methods_and_param_sets(
+        methods=methods_to_test,
+        method_params=None,
+        default_methods=DEFAULT_METHODS,
+        method_specs=METHOD_SPECS,
+    )
+    expected_run_ids = _run_ids_for_params(methods_to_test, param_sets)
     print(f"Methods: {methods_to_test}")
+    print(f"Benchmark run cells: {len(expected_run_ids)}")
     print(f"Spectral settings: TBS_N_JOBS={spectral_jobs}")
 
-    # Keep plots enabled by default; UMAP comparison pages are always generated
-    # when plotting is on.
-    enable_plots = get_env_bool("TBS_ENABLE_PLOTS", default=True)
     enable_umap = enable_plots
     enable_manifold = get_env_bool("TBS_ENABLE_MANIFOLD", default=False) and enable_plots
     isolate_umap_cases = get_env_bool("TBS_UMAP_ISOLATE_CASES", default=enable_umap)
@@ -132,6 +176,7 @@ def run_benchmarks():
     if enable_umap and "TBS_FORCE_UMAP_FOR_LARGE" not in os.environ:
         os.environ["TBS_FORCE_UMAP_FOR_LARGE"] = "1"
     run_relationship_analysis = get_env_bool("TBS_RUN_RELATIONSHIP_ANALYSIS", default=True)
+    run_tree_consensus = get_env_bool("TBS_RUN_TREE_CONSENSUS", default=False)
     enable_relationship_plots = get_env_bool(
         "TBS_ENABLE_RELATIONSHIP_PLOTS",
         default=enable_plots,
@@ -147,6 +192,7 @@ def run_benchmarks():
         "Relationship analysis settings: "
         f"enabled={run_relationship_analysis}, plots={enable_relationship_plots}"
     )
+    print(f"Tree consensus gate enabled: {run_tree_consensus}")
 
     # Single benchmark results root
     timestamp = format_timestamp_utc()
@@ -171,14 +217,17 @@ def run_benchmarks():
     pdf_dir = run_dir / "plots"
     if enable_plots:
         pdf_dir.mkdir(exist_ok=True)
+    tree_consensus_label_dir = run_dir / "tree_consensus_labels" if run_tree_consensus else None
+    if tree_consensus_label_dir is not None:
+        tree_consensus_label_dir.mkdir(parents=True, exist_ok=True)
 
     # Load existing results if any to resume
     if output_path.exists():
         all_results = pd.read_csv(output_path)
-        completed_case_keys, missing_methods_by_case, tracked_case_count = (
+        completed_case_keys, missing_run_ids_by_case, tracked_case_count = (
             _compute_resume_coverage(
                 all_results,
-                methods_to_test,
+                expected_run_ids,
             )
         )
         partial_case_count = max(0, tracked_case_count - len(completed_case_keys))
@@ -190,7 +239,7 @@ def run_benchmarks():
     else:
         all_results = pd.DataFrame()
         completed_case_keys = set()
-        missing_methods_by_case = {}
+        missing_run_ids_by_case = {}
 
     for i, case in enumerate(test_cases):
         case_key = i + 1
@@ -204,14 +253,20 @@ def run_benchmarks():
             )
             continue
 
-        if case_key in missing_methods_by_case:
-            methods_for_case = missing_methods_by_case[case_key]
+        if case_key in missing_run_ids_by_case:
+            missing_run_ids = set(missing_run_ids_by_case[case_key])
+            methods_for_case, method_params_for_case = _filter_methods_and_params_by_run_ids(
+                methods=methods_to_test,
+                param_sets=param_sets,
+                run_ids=missing_run_ids,
+            )
         else:
             methods_for_case = methods_to_test
-        if case_key in missing_methods_by_case:
+            method_params_for_case = param_sets
+        if case_key in missing_run_ids_by_case:
             print(
                 f"[{i + 1}/{len(test_cases)}] Resuming partial case: {case_id} "
-                f"(missing methods: {methods_for_case})",
+                f"(missing run IDs: {missing_run_ids_by_case[case_key]})",
                 flush=True,
             )
 
@@ -232,6 +287,7 @@ def run_benchmarks():
         df_res = run_case_with_optional_isolation(
             case=case,
             methods_to_test=methods_for_case,
+            method_params=method_params_for_case,
             case_plot_umap=case_plot_umap,
             case_plot_manifold=case_plot_manifold,
             enable_plots=enable_plots,
@@ -239,6 +295,11 @@ def run_benchmarks():
             isolate_umap_cases=isolate_umap_cases,
             timeout_sec=case_timeout_sec,
             include_validation_page=False,
+            tree_consensus_label_dir=(
+                None
+                if tree_consensus_label_dir is None
+                else str(tree_consensus_label_dir)
+            ),
         )
         df_res = _stamp_full_run_case_identity(
             df_res,
@@ -253,13 +314,8 @@ def run_benchmarks():
             df_res.to_csv(output_path, mode="a", header=write_header, index=False)
 
             print("  Results:", flush=True)
-            for method in methods_for_case:
-                row = df_res[df_res["method"] == method]
-                if not row.empty:
-                    ari_val = row["ari"].values[0]
-                    print(f"    {method}: ARI={ari_val:.4f}", flush=True)
-                else:
-                    print(f"    {method}: No result", flush=True)
+            for row in df_res.sort_values(["method", "run_id"]).itertuples():
+                print(f"    {row.run_id}: ARI={row.ari:.4f}", flush=True)
         else:
             print("  No results returned.", flush=True)
 
@@ -291,6 +347,28 @@ def run_benchmarks():
             print(f"Relationship report written: {relationship_outputs.report_md}")
             if relationship_pdf is not None:
                 print(f"Relationship plots written: {relationship_pdf}")
+
+        print("\nWriting benchmark performance grid...")
+        performance_grid_outputs = write_benchmark_performance_grid(
+            df,
+            run_dir,
+            source_path=output_path,
+        )
+        print(f"Performance grid report written: {performance_grid_outputs.report_md}")
+        print(f"Performance grid summary written: {performance_grid_outputs.summary_csv}")
+
+        if run_tree_consensus:
+            if tree_consensus_label_dir is None:
+                raise AssertionError("Tree consensus label directory was not initialized.")
+            print("\nWriting tree consensus gate artifacts...")
+            tree_consensus_outputs = write_tree_consensus_artifacts(
+                df,
+                tree_consensus_label_dir,
+                run_dir,
+                source_path=output_path,
+            )
+            print(f"Tree consensus report written: {tree_consensus_outputs.report_md}")
+            print(f"Tree consensus summary written: {tree_consensus_outputs.summary_csv}")
 
         summary = df.groupby(["method"])["ari"].mean()
         print("\nMean ARI by Method (ok rows only; skipped rows have NaN ARI):")

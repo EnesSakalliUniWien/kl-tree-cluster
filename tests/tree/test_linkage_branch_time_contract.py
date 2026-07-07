@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import pytest
 from benchmarks.shared.runners.tbs_runner import _run_tbs_on_distance
@@ -64,3 +65,45 @@ def test_linkage_branch_time_raw_heights_are_explicit_diagnostic_only(
         )
 
     assert "called" not in captured
+
+
+def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data = _small_continuous_frame()
+    captured: dict[str, object] = {}
+
+    def fake_linkage(*args: object, **kwargs: object) -> np.ndarray:
+        return np.array(
+            [
+                [0, 1, 2.0, 2],
+                [2, 3, 6.0, 2],
+                [4, 5, 5.0, 4],
+            ],
+            dtype=float,
+        )
+
+    def fake_fit(tree: object, *args: object, **kwargs: object) -> None:
+        captured["edge_lengths"] = [
+            attrs["branch_length"] for _, _, attrs in tree.edges(data=True)
+        ]
+        raise RuntimeError("stop after topology-only tree construction")
+
+    monkeypatch.setattr("benchmarks.shared.runners.tbs_runner.linkage", fake_linkage)
+    monkeypatch.setattr(
+        "benchmarks.shared.runners.tbs_runner.fit_fixed_topology_nnls_branch_lengths",
+        fake_fit,
+    )
+
+    with pytest.raises(RuntimeError, match="topology-only tree construction"):
+        _run_tbs_on_distance(
+            data,
+            pdist(data.to_numpy(), metric="euclidean"),
+            0.01,
+            tree_linkage_method="centroid",
+            feature_space=continuous_feature_space_from_columns(tuple(data.columns)),
+            edge_branch_length_variance_policy="normalized_branch_length",
+            branch_length_optimization_method="fixed_topology_nnls",
+        )
+
+    assert captured["edge_lengths"] == [1.0] * 6

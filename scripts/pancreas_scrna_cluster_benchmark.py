@@ -1663,12 +1663,22 @@ def main() -> None:
     parser.add_argument("--max-cells", type=int, default=2500)
     parser.add_argument("--n-pcs", type=int, default=30)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Output directory for benchmark artifacts.",
+    )
     args = parser.parse_args()
 
     root = _project_root()
     input_h5ad = root / "raw" / "inbox" / "pancreas.h5ad"
-    output_dir = (
-        root / "raw" / "assets" / "benchmark-results" / "pancreas_scrna_cluster_benchmark_20260623"
+    output_dir = args.output_dir or (
+        root
+        / "raw"
+        / "assets"
+        / "benchmark-results"
+        / "pancreas_scrna_cluster_benchmark_20260623"
     )
     output_dir.mkdir(parents=True, exist_ok=True)
 

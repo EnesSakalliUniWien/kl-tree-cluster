@@ -26,6 +26,8 @@ def _run_case_worker(
     enable_plots: bool,
     pdf_path: str | None,
     include_validation_page: bool,
+    method_params: dict[str, list[dict[str, object]]] | None = None,
+    tree_consensus_label_dir: str | None = None,
 ) -> None:
     """Execute one case in a fresh process and return rows via a queue."""
     # Reduce native runtime contention in spawned workers. This materially
@@ -41,6 +43,7 @@ def _run_case_worker(
         df_res, _ = _get_benchmark_fn()(
             test_cases=[case],
             methods=methods_to_test,
+            method_params=method_params,
             verbose=False,
             plot_umap=case_plot_umap,
             plot_manifold=case_plot_manifold,
@@ -49,6 +52,7 @@ def _run_case_worker(
             matrix_audit=False,
             include_cover_pages=False,
             include_validation_page=include_validation_page,
+            tree_consensus_label_dir=tree_consensus_label_dir,
         )
         queue.put({"ok": True, "rows": df_res.to_dict(orient="records")})
     except Exception as exc:
@@ -59,12 +63,14 @@ def run_case_isolated(
     *,
     case: dict,
     methods_to_test: list[str],
+    method_params: dict[str, list[dict[str, object]]] | None,
     case_plot_umap: bool,
     case_plot_manifold: bool,
     enable_plots: bool,
     pdf_path: str | None,
     timeout_sec: int,
     include_validation_page: bool,
+    tree_consensus_label_dir: str | None = None,
 ) -> pd.DataFrame:
     """Run a single benchmark case in an isolated subprocess."""
     ctx = mp.get_context("spawn")
@@ -80,6 +86,8 @@ def run_case_isolated(
             enable_plots,
             pdf_path,
             include_validation_page,
+            method_params,
+            tree_consensus_label_dir,
         ),
     )
     proc.start()
@@ -117,24 +125,29 @@ def run_case_with_optional_isolation(
     pdf_path: str | None,
     isolate_umap_cases: bool,
     timeout_sec: int,
+    method_params: dict[str, list[dict[str, object]]] | None = None,
     include_validation_page: bool = True,
+    tree_consensus_label_dir: str | None = None,
 ) -> pd.DataFrame:
     """Run a benchmark case, optionally in a subprocess."""
     if case_plot_umap and isolate_umap_cases:
         return run_case_isolated(
             case=case,
             methods_to_test=methods_to_test,
+            method_params=method_params,
             case_plot_umap=case_plot_umap,
             case_plot_manifold=case_plot_manifold,
             enable_plots=enable_plots,
             pdf_path=pdf_path,
             timeout_sec=timeout_sec,
             include_validation_page=include_validation_page,
+            tree_consensus_label_dir=tree_consensus_label_dir,
         )
 
     df_res, _ = _get_benchmark_fn()(
         test_cases=[case],
         methods=methods_to_test,
+        method_params=method_params,
         verbose=False,
         plot_umap=case_plot_umap,
         plot_manifold=case_plot_manifold,
@@ -143,6 +156,7 @@ def run_case_with_optional_isolation(
         matrix_audit=False,  # Disable heavy TensorBoard exports to prevent memory crashes
         include_cover_pages=False,
         include_validation_page=include_validation_page,
+        tree_consensus_label_dir=tree_consensus_label_dir,
     )
     return df_res
 

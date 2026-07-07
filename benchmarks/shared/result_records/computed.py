@@ -33,6 +33,10 @@ class ComputedResultRecord:
     tree: Any
     decomposition: Any
     annotations: Any
+    run_id: str = ""
+    benchmark_class: str = "unclassified"
+    benchmark_grid: str = "default"
+    benchmark_repeat: int = 0
 
 
 def build_computed_result_record(
@@ -57,12 +61,20 @@ def build_computed_result_record(
     tree: Any,
     decomposition: Any,
     annotations: Any,
+    run_id: str | None = None,
+    benchmark_class: str = "unclassified",
+    benchmark_grid: str = "default",
+    benchmark_repeat: int = 0,
 ) -> ComputedResultRecord:
     """Build a typed computed-result record."""
     return ComputedResultRecord(
         test_case_num=int(test_case_num),
         method=str(method),
         method_name=str(method_name),
+        run_id=str(run_id or method),
+        benchmark_class=str(benchmark_class),
+        benchmark_grid=str(benchmark_grid),
+        benchmark_repeat=int(benchmark_repeat),
         params=dict(params),
         ari=float(ari),
         nmi=float(nmi),

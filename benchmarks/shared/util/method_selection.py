@@ -6,6 +6,8 @@ import os
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from benchmarks.shared.benchmark_grid import benchmark_run_id
+
 
 def resolve_methods_from_env(
     method_specs: Mapping[str, object],
@@ -57,6 +59,7 @@ def resolve_selected_methods_and_param_sets(
             raise ValueError(f"Unknown method: {method_id}")
 
     param_sets: dict[str, list[dict[str, object]]] = {}
+    seen_run_ids: set[str] = set()
     for method_id in selected_methods:
         if method_id in params_by_method:
             explicit_params = params_by_method[method_id]
@@ -67,6 +70,11 @@ def resolve_selected_methods_and_param_sets(
             param_sets[method_id] = explicit_params
         else:
             param_sets[method_id] = method_specs[method_id].param_grid
+        for params in param_sets[method_id]:
+            run_id = benchmark_run_id(method_id, params)
+            if run_id in seen_run_ids:
+                raise ValueError(f"Duplicate benchmark run_id: {run_id}")
+            seen_run_ids.add(run_id)
     return selected_methods, param_sets
 
 

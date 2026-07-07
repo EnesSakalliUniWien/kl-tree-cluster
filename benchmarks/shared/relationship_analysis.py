@@ -72,6 +72,7 @@ _NUMERIC_COLUMNS = (
     "sibling_gate_fdr_sec",
     "traversal_sec",
     "labels_length",
+    "benchmark_repeat",
 )
 
 _OLD_RESULT_COLUMNS = frozenset(
@@ -207,7 +208,16 @@ def normalize_results_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     for col in _NUMERIC_COLUMNS:
         normalized[col] = pd.to_numeric(normalized[col], errors="coerce")
 
-    for col in ("case_id", "case_category", "method", "params", "skip_reason"):
+    for col in (
+        "case_id",
+        "case_category",
+        "method",
+        "run_id",
+        "benchmark_class",
+        "benchmark_grid",
+        "params",
+        "skip_reason",
+    ):
         normalized[col] = normalized[col].fillna("").astype(str)
 
     normalized["status"] = normalized["status"].fillna("").astype(str).str.lower()

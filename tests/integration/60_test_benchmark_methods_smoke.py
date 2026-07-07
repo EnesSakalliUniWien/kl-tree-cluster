@@ -50,13 +50,26 @@ def test_benchmark_graphtools_diffusion_method_smoke():
         test_cases=[case],
         verbose=False,
         plot_umap=False,
-        methods=["tbs_diffusion_graphtools"],
+        methods=[
+            "tbs_diffusion_graphtools",
+            "tbs_diffusion_graphtools_adaptive_nnls",
+        ],
     )
 
-    row = df_results.iloc[0]
-    assert row["method"] == "tbs_diffusion_graphtools"
-    assert row["status"] == "ok"
-    assert row["labels_length"] == row["samples"]
+    assert set(df_results["method"]) == {
+        "tbs_diffusion_graphtools",
+        "tbs_diffusion_graphtools_adaptive_nnls",
+    }
+    assert len(df_results) == 9
+    assert df_results["run_id"].nunique() == 9
+    assert (
+        df_results[df_results["method"] == "tbs_diffusion_graphtools_adaptive_nnls"][
+            "benchmark_grid"
+        ]
+        == "graphtools_adaptive_k_tree_strategy"
+    ).all()
+    assert set(df_results["status"]) == {"ok"}
+    assert (df_results["labels_length"] == df_results["samples"]).all()
 
 
 def test_hamming_diffusion_rejects_continuous_benchmark_input():

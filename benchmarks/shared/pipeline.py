@@ -59,6 +59,7 @@ def benchmark_cluster_algorithm(
     matrix_audit: bool = False,
     include_cover_pages: bool = True,
     include_validation_page: bool = True,
+    tree_consensus_label_dir: str | Path | None = None,
 ):
     """
     Benchmark the cluster decomposition algorithm across multiple test cases.
@@ -178,6 +179,7 @@ def benchmark_cluster_algorithm(
                 plots_root=plots_root,
                 matrix_audit=matrix_audit,
                 verbose=verbose,
+                tree_consensus_label_dir=tree_consensus_label_dir,
             )
             result_rows.extend(case_result_rows)
             computed_results.extend(case_computed_results)

@@ -46,6 +46,7 @@ from tree_break_selection.tree.distributions import (
     DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
+from tree_break_selection.tree.io import tree_from_linkage_topology
 from tree_break_selection.tree.optimized_branch_lengths import (
     BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS,
     BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
@@ -153,11 +154,29 @@ def _run_tbs_on_distance(
     linkage_matrix = None
     phylogenetic_rooting = None
     iqtree_metadata = None
+    linkage_topology_only_branch_lengths = False
+    linkage_topology_only_reason = None
     if tree_builder == "linkage":
         if distance_condensed is None:
             raise ValueError("Linkage TBS tree construction requires distance_condensed.")
         linkage_matrix = linkage(distance_condensed, method=tree_linkage_method)
-        tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
+        try:
+            tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
+        except ValueError as exc:
+            if (
+                branch_length_optimization_method
+                == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
+                and "nondecreasing" in str(exc)
+            ):
+                tree = tree_from_linkage_topology(
+                    linkage_matrix,
+                    leaf_names=data_df.index.tolist(),
+                    fallback_branch_length=1.0,
+                )
+                linkage_topology_only_branch_lengths = True
+                linkage_topology_only_reason = str(exc)
+            else:
+                raise
     elif tree_builder == "neighbor_joining":
         if distance_condensed is None:
             raise ValueError("Neighbor-joining TBS tree construction requires distance_condensed.")
@@ -365,6 +384,8 @@ def _run_tbs_on_distance(
         "linkage_matrix": linkage_matrix,
         "tree_builder": str(tree_builder),
         "tree_rooting": str(tree_rooting),
+        "linkage_topology_only_branch_lengths": bool(linkage_topology_only_branch_lengths),
+        "linkage_topology_only_reason": linkage_topology_only_reason,
         "phylogenetic_rooting": phylogenetic_rooting,
         "iqtree_metadata": iqtree_metadata,
         "stage_timings": stage_timings,

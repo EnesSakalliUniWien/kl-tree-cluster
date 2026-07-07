@@ -17,6 +17,10 @@ from tree_break_selection.tree.optimized_branch_lengths import (
     BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN,
 )
 
+from benchmarks.shared.benchmark_grid import (
+    benchmark_param_metadata,
+    strip_benchmark_metadata,
+)
 from benchmarks.shared.metrics import _calculate_ari_nmi_purity_metrics
 from benchmarks.shared.result_records import (
     BenchmarkResultRow,
@@ -95,6 +99,7 @@ def _report_for_metric_evaluation(
 def _build_method_failure_row(
     *,
     method_id: str,
+    benchmark_metadata: dict[str, object],
     recorded_run_params: dict[str, object],
     case_idx: int,
     case_name: str,
@@ -110,6 +115,10 @@ def _build_method_failure_row(
         feature_representation=meta["feature_representation"],
         method=method_id,
         run_params=recorded_run_params,
+        run_id=str(benchmark_metadata["run_id"]),
+        benchmark_class=str(benchmark_metadata["benchmark_class"]),
+        benchmark_grid=str(benchmark_metadata["benchmark_grid"]),
+        benchmark_repeat=int(benchmark_metadata["benchmark_repeat"]),
         true_clusters=int(meta["n_clusters"]),
         found_clusters=0,
         samples=int(meta["n_samples"]),
@@ -204,16 +213,28 @@ def run_single_method_once(
     matrix_audit: bool,
 ) -> tuple[BenchmarkResultRow, ComputedResultRecord | None, tuple[str, dict[str, object]] | None]:
     """Execute one method+params run and return typed outputs."""
-    run_params = dict(params)
+    benchmark_metadata = benchmark_param_metadata(
+        method_id,
+        params,
+        default_class=spec.benchmark_class,
+        default_grid=spec.benchmark_grid,
+    )
+    run_params = strip_benchmark_metadata(params)
     if method_id in {"kmeans", "spectral"}:
         raw_k = run_params["n_clusters"]
         if str(raw_k).strip().lower() in {"true", "expected", "auto"}:
             run_params["n_clusters"] = int(meta["n_clusters"])
 
+    run_seed = tc_seed
+    repeat = int(benchmark_metadata["benchmark_repeat"])
+    if repeat and tc_seed is not None:
+        run_seed = int(tc_seed) + repeat
+
     meta_run = meta.copy()
     feature_space = meta.get("feature_space")
     distance_condensed_for_run = None
     recorded_run_params = dict(run_params)
+    recorded_run_params["benchmark_seed"] = run_seed
     if method_id.startswith("tbs"):
         recorded_run_params["edge_alpha"] = float(edge_alpha)
         recorded_run_params["sibling_alpha"] = float(significance_level)
@@ -279,7 +300,7 @@ def run_single_method_once(
             data_df=data_t,
             method_id=method_id,
             params=run_params,
-            seed=tc_seed,
+            seed=run_seed,
             significance_level=significance_level,
             edge_alpha=edge_alpha,
             distance_matrix=distance_matrix,
@@ -290,6 +311,7 @@ def run_single_method_once(
         return (
             _build_method_failure_row(
                 method_id=method_id,
+                benchmark_metadata=benchmark_metadata,
                 recorded_run_params=recorded_run_params,
                 case_idx=case_idx,
                 case_name=case_name,
@@ -318,6 +340,7 @@ def run_single_method_once(
         return (
             _build_method_failure_row(
                 method_id=method_id,
+                benchmark_metadata=benchmark_metadata,
                 recorded_run_params=recorded_run_params,
                 case_idx=case_idx,
                 case_name=case_name,
@@ -414,6 +437,10 @@ def run_single_method_once(
         feature_representation=meta["feature_representation"],
         method=method_id,
         run_params=recorded_run_params,
+        run_id=str(benchmark_metadata["run_id"]),
+        benchmark_class=str(benchmark_metadata["benchmark_class"]),
+        benchmark_grid=str(benchmark_metadata["benchmark_grid"]),
+        benchmark_repeat=int(benchmark_metadata["benchmark_repeat"]),
         true_clusters=true_clusters,
         found_clusters=found_clusters,
         samples=meta["n_samples"],
@@ -464,6 +491,10 @@ def run_single_method_once(
             test_case_num=case_idx,
             method=method_id,
             method_name=spec.name,
+            run_id=str(benchmark_metadata["run_id"]),
+            benchmark_class=str(benchmark_metadata["benchmark_class"]),
+            benchmark_grid=str(benchmark_metadata["benchmark_grid"]),
+            benchmark_repeat=int(benchmark_metadata["benchmark_repeat"]),
             params=recorded_run_params,
             ari=float(ari) if np.isfinite(ari) else np.nan,
             nmi=float(nmi) if np.isfinite(nmi) else np.nan,

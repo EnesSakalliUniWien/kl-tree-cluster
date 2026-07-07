@@ -5,7 +5,7 @@ This directory contains the benchmark infrastructure for Tree-Break Selection cl
 ## Quick Start
 
 ```bash
-# Run full benchmark (currently 110 cases, 9 default methods)
+# Run the canonical default benchmark
 uv run python -m benchmarks.full.run
 
 # Run a contract-specific case suite
@@ -50,6 +50,35 @@ Both `benchmarks/full/run.py` and
 `benchmarks/shared/pipeline.py::benchmark_cluster_algorithm()` should reflect
 those same defaults. The README documents those code-backed defaults and is not
 an independent source of truth.
+
+### Benchmark Classification
+
+Benchmark code is classified by role, not by age or filename:
+
+| Class | Location | Role |
+| ----- | -------- | ---- |
+| `canonical` | `benchmarks/full/`, `benchmarks/smoke/`, `benchmarks/regression/`, `benchmarks/shared/` | Current benchmark contract, shared runners, default method set, and fast gates. |
+| `experiment` | `benchmarks/experiments/` | Standalone scientific studies with explicit sweeps or real datasets. |
+| `validation` | `benchmarks/validation/` | Focused calibration or method-constant checks with manifests. |
+| `diagnostic` | `benchmarks/diagnostics/` | Investigation-only panels, failure analysis, and post-run diagnosis. |
+| `cloud` | `benchmarks/cloud/` | AWS wrappers for large validation or diagnostic jobs. |
+| `result` | `benchmarks/results/` | Generated outputs; never a source of benchmark defaults. |
+
+Method result rows carry `run_id`, `benchmark_class`, `benchmark_grid`, and
+`benchmark_repeat` columns. Resume logic uses `run_id`, so grid cells and
+repeats do not collapse into a single method-level completion flag.
+
+### Grid Contract
+
+Method variants should be represented as parameter grids, not duplicated method
+IDs. Use `benchmarks.shared.benchmark_grid.benchmark_grid()` for Cartesian
+sweeps and repeats. Each grid cell gets one stable method-qualified `run_id`;
+duplicate `run_id` values fail during method selection.
+
+Use separate method IDs only for genuinely different runner families, for
+example `tbs_diffusion_graphtools` versus `tbs_diffusion_graphtools_nnls`.
+Use grid axes for settings such as linkage, tree builder, alpha, nearest-neighbor
+K, and repeat index.
 
 ### Shared Features
 
@@ -105,6 +134,9 @@ Results saved to timestamped directories under each benchmark's `results/` folde
 ```
 benchmarks/results/run_YYYYMMDD_HHMMSSZ_<case_suite>/
 ├── <case_suite>_benchmark_comparison.csv    # Main results
+├── benchmark_performance_grid.md            # Ranked grid-cell report
+├── benchmark_performance_grid_summary.csv   # One row per run_id/grid cell
+├── benchmark_performance_grid_*.csv         # Case-by-run ARI/NMI/Purity/status grids
 ├── failure_report.md              # Failed cases analysis
 ├── benchmark_relationship_report.md   # Factor/method relationship summary
 ├── benchmark_relationship_*.csv       # Method/section summaries + modeled effects
@@ -135,11 +167,18 @@ benchmark CSV preserves both fields in every result row.
 **Experiment setup**:
 
 - Default methods: `benchmarks.shared.config.DEFAULT_METHODS`, currently
-  `tbs`, `tbs_diffusion`, `leiden`, `louvain`, `kmeans`, `spectral`, `dbscan`,
-  `optics`, and `hdbscan`.
+  `tbs`, `tbs_diffusion`, `tbs_diffusion_adaptive_nnls`, `leiden`, `louvain`,
+  `kmeans`, `spectral`, `dbscan`, `optics`, and `hdbscan`.
 - Additional registered methods such as `tbs_complete` and `tbs_single` are
   available through `TBS_METHODS`, but they are not part of the canonical
   default benchmark unless explicitly requested.
+- Optional GPL diffusion methods such as `tbs_diffusion_graphtools`,
+  `tbs_diffusion_graphtools_nnls`, and
+  `tbs_diffusion_graphtools_adaptive_nnls` require the `experimental-gpl` extra:
+  `uv sync --extra experimental-gpl`.
+  `tbs_diffusion_graphtools_adaptive_nnls` exposes linkage and
+  neighbor-joining tree strategies as one parameter grid, not as duplicate
+  method IDs.
 - Each case runs in an isolated subprocess (optional), with configurable timeout (default 1800 s) and retry count (default 4).
 - Per-case PDF plots (tree, UMAP embedding, manifold comparison) are generated and merged into `<case_suite>_benchmark_report.pdf`.
 - Set `TBS_CASE_SUITE` to run one mathematical input-contract suite:
@@ -400,7 +439,7 @@ Note: K-Means and Spectral Clustering are given the **true K** as input, making 
 ## Clustering Methods
 
 The method registry exposes the canonical methods plus additional diagnostic
-TBS variants, while the default full benchmark uses the 9-method subset in
+TBS variants, while the default full benchmark uses the method subset in
 `benchmarks.shared.config.DEFAULT_METHODS`.
 
 | Key                 | Name                 | Distance          | Linkage  | Notes                               |
@@ -409,7 +448,11 @@ TBS variants, while the default full benchmark uses the 9-method subset in
 | `tbs_complete`       | TBS (Complete)        | hamming           | complete | Complete-linkage variant            |
 | `tbs_single`         | TBS (Single)          | hamming           | single   | Single-linkage variant              |
 | `tbs_diffusion`      | TBS (Hamming NN Diffusion) | Hamming nearest-neighbor diffusion tree | average | Default diffusion method; branch lengths default to `linkage_ultrametric` |
-| `tbs_diffusion_adaptive` | TBS (Adaptive pydiffmap Diffusion) | pydiffmap adaptive diffusion tree | average | Separate adaptive diffusion variant; not part of the canonical default set |
+| `tbs_diffusion_adaptive` | TBS (Adaptive pydiffmap Diffusion) | pydiffmap adaptive diffusion tree | average | Adaptive diffusion baseline with linkage-ultrametric branch lengths |
+| `tbs_diffusion_adaptive_nnls` | TBS (Adaptive pydiffmap Diffusion, NNLS Branch-Time) | pydiffmap adaptive diffusion tree | average | Default adaptive diffusion branch-time candidate; fixed-topology NNLS lengths plus normalized branch-length variance |
+| `tbs_diffusion_graphtools` | TBS (graphtools Kernel Diffusion) | graphtools kernel diffusion tree | average | Optional GPL backend; requires `uv sync --extra experimental-gpl`; linkage-ultrametric branch lengths |
+| `tbs_diffusion_graphtools_nnls` | TBS (graphtools Kernel Diffusion, NNLS Branch-Time) | graphtools kernel diffusion tree | average | Optional GPL backend; fixed-topology NNLS lengths plus normalized branch-length variance |
+| `tbs_diffusion_graphtools_adaptive_nnls` | TBS (graphtools Kernel Diffusion, Adaptive-K NNLS Branch-Time) | graphtools kernel diffusion tree with fragmentation-guard K selection | grid | Optional GPL backend; one tree-strategy grid over average, complete, weighted, single, centroid, median, Ward, and MAD-rooted neighbor joining; fixed-topology NNLS lengths plus normalized branch-length variance |
 | `leiden`            | Leiden               | KNN graph         | —        | Community detection, resolution=1.0 |
 | `louvain`           | Louvain              | KNN graph         | —        | Community detection, resolution=1.0 |
 | `kmeans`            | K-Means              | —                 | —        | **Oracle**: uses true K             |

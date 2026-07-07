@@ -12,6 +12,7 @@ from benchmarks.shared.audit_utils import (
 from benchmarks.shared.logging import log_test_case_start
 from benchmarks.shared.result_records import BenchmarkResultRow, ComputedResultRecord
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
+from benchmarks.shared.tree_consensus import export_tree_consensus_label_files
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.method_execution import run_single_method_once
 
@@ -28,6 +29,7 @@ def run_single_case(
     plots_root: Path,
     matrix_audit: bool,
     verbose: bool,
+    tree_consensus_label_dir: Path | str | None = None,
 ) -> tuple[list[BenchmarkResultRow], list[ComputedResultRecord]]:
     """Run one benchmark case across all selected methods and params."""
     case_idx = tc["test_case_num"]
@@ -99,6 +101,11 @@ def run_single_case(
             output_root=audit_root_inc,
             verbose=verbose,
         )
+        if tree_consensus_label_dir is not None:
+            export_tree_consensus_label_files(
+                case_computed_results,
+                tree_consensus_label_dir,
+            )
 
         return case_result_rows, case_computed_results
     finally:

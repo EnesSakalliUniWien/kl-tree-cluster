@@ -9,6 +9,7 @@ from __future__ import annotations
 DEFAULT_METHODS: tuple[str, ...] = (
     "tbs",
     "tbs_diffusion",
+    "tbs_diffusion_adaptive_nnls",
     "leiden",
     "louvain",
     "kmeans",

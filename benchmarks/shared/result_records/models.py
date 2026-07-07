@@ -23,6 +23,10 @@ class BenchmarkResultRow:
     source_family: str
     feature_representation: str
     method: str
+    run_id: str
+    benchmark_class: str
+    benchmark_grid: str
+    benchmark_repeat: int
     params_raw: dict[str, object]
     params_display: str
     true_clusters: int

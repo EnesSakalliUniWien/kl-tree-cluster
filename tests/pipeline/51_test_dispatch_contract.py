@@ -249,9 +249,7 @@ def test_run_clustering_result_forwards_tbs_gate_profile_params(monkeypatch):
             "root_selective_permutation_guard_scope": (
                 "global_sibling_min_passthrough_descendant_refined"
             ),
-            "root_selective_permutation_guard_tree_distance_metric": (
-                "rogerstanimoto"
-            ),
+            "root_selective_permutation_guard_tree_distance_metric": ("rogerstanimoto"),
             "root_selective_permutation_guard_tree_linkage_method": "weighted",
             "spectral_transport_passthrough_guard": True,
             "spectral_transport_max_cost": 0.75,
@@ -263,9 +261,7 @@ def test_run_clustering_result_forwards_tbs_gate_profile_params(monkeypatch):
             "spectral_mp_row_count_mode": "leaf_effective_rows",
             "continuous_covariance_policy": "guarded_within_child",
             "continuous_covariance_min_child_leaf_count": 8,
-            "neighborhood_bandwidth_profile": (
-                "regional_tau_branch_length_support_only_v1"
-            ),
+            "neighborhood_bandwidth_profile": ("regional_tau_branch_length_support_only_v1"),
             "enforce_internal_support_thresholds": True,
             "passthrough": True,
         },
@@ -290,21 +286,18 @@ def test_run_clustering_result_forwards_tbs_gate_profile_params(monkeypatch):
     assert captured["kwargs"]["root_selective_permutation_guard_scope"] == (
         "global_sibling_min_passthrough_descendant_refined"
     )
-    assert captured["kwargs"][
-        "root_selective_permutation_guard_tree_distance_metric"
-    ] == "rogerstanimoto"
-    assert captured["kwargs"][
-        "root_selective_permutation_guard_tree_linkage_method"
-    ] == "weighted"
+    assert (
+        captured["kwargs"]["root_selective_permutation_guard_tree_distance_metric"]
+        == "rogerstanimoto"
+    )
+    assert captured["kwargs"]["root_selective_permutation_guard_tree_linkage_method"] == "weighted"
     assert captured["kwargs"]["spectral_transport_passthrough_guard"] is True
     assert captured["kwargs"]["spectral_transport_max_cost"] == 0.75
     assert captured["kwargs"]["spectral_transport_require_mp_blocks"] is False
     assert captured["kwargs"]["spectral_transport_block_log_tolerance"] == 0.02
     assert captured["kwargs"]["spectral_transport_unmatched_mode_penalty"] == 1.5
     assert captured["kwargs"]["spectral_include_internal_barycenters"] is True
-    assert captured["kwargs"]["spectral_internal_distribution_mode"] == (
-        "branch_length_state"
-    )
+    assert captured["kwargs"]["spectral_internal_distribution_mode"] == ("branch_length_state")
     assert captured["kwargs"]["spectral_mp_row_count_mode"] == "leaf_effective_rows"
     assert captured["kwargs"]["continuous_covariance_policy"] == "guarded_within_child"
     assert captured["kwargs"]["continuous_covariance_min_child_leaf_count"] == 8
@@ -370,9 +363,7 @@ def test_run_clustering_result_uses_continuous_sibling_gate_only_for_continuous_
         feature_space=continuous_feature_space_from_columns(tuple(df.columns)),
     )
 
-    assert captured_calls[0]["kwargs"]["sibling_gate_method"] == (
-        "projected_wald_inflation"
-    )
+    assert captured_calls[0]["kwargs"]["sibling_gate_method"] == ("projected_wald_inflation")
     assert captured_calls[1]["kwargs"]["sibling_gate_method"] == "fixed_coordinate_bh"
 
 
@@ -380,9 +371,7 @@ def test_method_registry_exposes_conditional_topology_diagnostic_profile():
     spec = METHOD_SPECS["tbs_conditional_topology_diagnostic"]
     params = spec.param_grid[0]
 
-    assert params["sibling_gate_profile"] == (
-        "fixed_coordinate_conditional_topology_diagnostic_v1"
-    )
+    assert params["sibling_gate_profile"] == ("fixed_coordinate_conditional_topology_diagnostic_v1")
     assert params["tree_distance_metric"] == "hamming"
     assert params["tree_linkage_method"] == "average"
 
@@ -391,9 +380,7 @@ def test_method_registry_exposes_global_passthrough_refined_profile():
     spec = METHOD_SPECS["tbs_global_passthrough_refined_diagnostic"]
     params = spec.param_grid[0]
 
-    assert params["sibling_gate_profile"] == (
-        "fixed_coordinate_global_passthrough_refined_v1"
-    )
+    assert params["sibling_gate_profile"] == ("fixed_coordinate_global_passthrough_refined_v1")
     assert params["tree_distance_metric"] == "hamming"
     assert params["tree_linkage_method"] == "average"
 
@@ -472,8 +459,16 @@ def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly()
     nn_params = nn_diffusion.param_grid[0]
     adaptive_diffusion = METHOD_SPECS["tbs_diffusion_adaptive"]
     adaptive_params = adaptive_diffusion.param_grid[0]
+    adaptive_nnls_diffusion = METHOD_SPECS["tbs_diffusion_adaptive_nnls"]
+    adaptive_nnls_params = adaptive_nnls_diffusion.param_grid[0]
     graphtools_diffusion = METHOD_SPECS["tbs_diffusion_graphtools"]
     graphtools_params = graphtools_diffusion.param_grid[0]
+    graphtools_nnls_diffusion = METHOD_SPECS["tbs_diffusion_graphtools_nnls"]
+    graphtools_nnls_params = graphtools_nnls_diffusion.param_grid[0]
+    graphtools_adaptive_nnls_diffusion = METHOD_SPECS[
+        "tbs_diffusion_graphtools_adaptive_nnls"
+    ]
+    graphtools_adaptive_nnls_params = graphtools_adaptive_nnls_diffusion.param_grid[0]
 
     assert nn_diffusion.name == "TBS (Hamming NN Diffusion)"
     assert nn_params["diffusion_method"] == "hamming_nn_diffusion"
@@ -486,12 +481,243 @@ def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly()
     assert adaptive_params["epsilon"] == "median"
     assert adaptive_params["branch_length_optimization_method"] == "linkage_ultrametric"
 
+    assert adaptive_nnls_diffusion.name == ("TBS (Adaptive pydiffmap Diffusion, NNLS Branch-Time)")
+    assert adaptive_nnls_params["diffusion_method"] == "adaptive_pydiffmap_diffusion"
+    assert adaptive_nnls_params["bandwidth_type"] == "-1/(d+2)"
+    assert adaptive_nnls_params["epsilon"] == "median"
+    assert adaptive_nnls_params["edge_branch_length_variance_policy"] == (
+        "normalized_branch_length"
+    )
+    assert adaptive_nnls_params["branch_length_optimization_method"] == "fixed_topology_nnls"
+    assert adaptive_nnls_params["branch_length_optimization_target_metric"] == (
+        "squared_standardized_euclidean"
+    )
+    assert adaptive_nnls_params["branch_length_optimization_pair_sample_size"] == 50_000
+    assert adaptive_nnls_params["branch_length_optimization_random_state"] == 0
+    assert adaptive_nnls_params["branch_length_optimization_solver_tolerance"] == 1e-5
+    assert adaptive_nnls_params["branch_length_optimization_max_iterations"] == 300
+
     assert graphtools_diffusion.name == "TBS (graphtools Kernel Diffusion)"
     assert graphtools_params["diffusion_method"] == "graphtools_kernel_diffusion"
     assert graphtools_params["k_neighbors"] == 10
     assert graphtools_params["decay"] == 40
     assert graphtools_params["kernel_symm"] == "+"
     assert graphtools_params["branch_length_optimization_method"] == "linkage_ultrametric"
+
+    assert graphtools_nnls_diffusion.name == (
+        "TBS (graphtools Kernel Diffusion, NNLS Branch-Time)"
+    )
+    assert graphtools_nnls_params["diffusion_method"] == "graphtools_kernel_diffusion"
+    assert graphtools_nnls_params["k_neighbors"] == 10
+    assert graphtools_nnls_params["decay"] == 40
+    assert graphtools_nnls_params["kernel_symm"] == "+"
+    assert graphtools_nnls_params["edge_branch_length_variance_policy"] == (
+        "normalized_branch_length"
+    )
+    assert graphtools_nnls_params["branch_length_optimization_method"] == (
+        "fixed_topology_nnls"
+    )
+    assert graphtools_nnls_params["branch_length_optimization_pair_sample_size"] == 50_000
+
+    assert graphtools_adaptive_nnls_diffusion.name == (
+        "TBS (graphtools Kernel Diffusion, Adaptive-K NNLS Branch-Time)"
+    )
+    assert graphtools_adaptive_nnls_params["diffusion_method"] == (
+        "graphtools_kernel_diffusion"
+    )
+    assert graphtools_adaptive_nnls_params["k_neighbors"] == 10
+    assert graphtools_adaptive_nnls_params["adaptive_neighbor_profile"] == (
+        "fragmentation_guard"
+    )
+    assert graphtools_adaptive_nnls_params["adaptive_neighbor_grid"] == (
+        5,
+        10,
+        15,
+        25,
+        40,
+        80,
+        160,
+    )
+    assert graphtools_adaptive_nnls_params["branch_length_optimization_method"] == (
+        "fixed_topology_nnls"
+    )
+    assert graphtools_adaptive_nnls_params["tree_builder"] == "linkage"
+    assert graphtools_adaptive_nnls_params["tree_linkage_method"] == "average"
+
+    tree_strategy_grid = graphtools_adaptive_nnls_diffusion.param_grid
+    assert len(tree_strategy_grid) == 8
+    assert len({params["benchmark_run_id"] for params in tree_strategy_grid}) == 8
+    assert {params["benchmark_class"] for params in tree_strategy_grid} == {"optional_gpl"}
+    assert {params["benchmark_grid"] for params in tree_strategy_grid} == {
+        "graphtools_adaptive_k_tree_strategy"
+    }
+    assert {params["benchmark_repeat"] for params in tree_strategy_grid} == {0}
+
+    linkage_methods = {
+        params["tree_linkage_method"]
+        for params in tree_strategy_grid
+        if params["tree_builder"] == "linkage"
+    }
+    assert linkage_methods == {
+        "average",
+        "complete",
+        "weighted",
+        "single",
+        "centroid",
+        "median",
+        "ward",
+    }
+    for params in tree_strategy_grid:
+        assert params["branch_length_optimization_method"] == "fixed_topology_nnls"
+
+    graphtools_adaptive_nnls_neighbor_joining_params = next(
+        params for params in tree_strategy_grid if params["tree_builder"] == "neighbor_joining"
+    )
+    assert graphtools_adaptive_nnls_neighbor_joining_params["tree_builder"] == (
+        "neighbor_joining"
+    )
+    assert graphtools_adaptive_nnls_neighbor_joining_params["tree_rooting"] == "mad"
+    assert graphtools_adaptive_nnls_neighbor_joining_params[
+        "branch_length_optimization_method"
+    ] == "fixed_topology_nnls"
+
+
+def test_run_clustering_result_forwards_adaptive_nnls_branch_time_params(monkeypatch):
+    captured = {}
+    original_spec = METHOD_SPECS["tbs_diffusion_adaptive_nnls"]
+
+    def _capture_runner(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setitem(
+        METHOD_SPECS,
+        "tbs_diffusion_adaptive_nnls",
+        MethodSpec(
+            name=original_spec.name,
+            runner=_capture_runner,
+            param_grid=original_spec.param_grid,
+        ),
+    )
+
+    df = _toy_dataframe()
+    result = run_clustering_result(
+        data_df=df,
+        method_id="tbs_diffusion_adaptive_nnls",
+        params=original_spec.param_grid[0],
+        seed=42,
+    )
+
+    assert result.status == "ok"
+    assert captured["kwargs"]["edge_branch_length_variance_policy"] == ("normalized_branch_length")
+    assert captured["kwargs"]["branch_length_optimization_method"] == "fixed_topology_nnls"
+    assert captured["kwargs"]["branch_length_optimization_target_metric"] == (
+        "squared_standardized_euclidean"
+    )
+    assert captured["kwargs"]["branch_length_optimization_pair_sample_size"] == 50_000
+    assert captured["kwargs"]["branch_length_optimization_random_state"] == 0
+    assert captured["kwargs"]["branch_length_optimization_solver_tolerance"] == 1e-5
+    assert captured["kwargs"]["branch_length_optimization_max_iterations"] == 300
+
+
+def test_run_clustering_result_forwards_graphtools_adaptive_k_params(monkeypatch):
+    captured = {}
+    original_spec = METHOD_SPECS["tbs_diffusion_graphtools_adaptive_nnls"]
+
+    def _capture_runner(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setitem(
+        METHOD_SPECS,
+        "tbs_diffusion_graphtools_adaptive_nnls",
+        MethodSpec(
+            name=original_spec.name,
+            runner=_capture_runner,
+            param_grid=original_spec.param_grid,
+        ),
+    )
+
+    result = run_clustering_result(
+        data_df=_toy_dataframe(),
+        method_id="tbs_diffusion_graphtools_adaptive_nnls",
+        params=original_spec.param_grid[0],
+        seed=42,
+    )
+
+    assert result.status == "ok"
+    assert captured["kwargs"]["adaptive_neighbor_profile"] == "fragmentation_guard"
+    assert captured["kwargs"]["adaptive_neighbor_grid"] == (5, 10, 15, 25, 40, 80, 160)
+    assert captured["kwargs"]["tree_builder"] == "linkage"
+    assert captured["kwargs"]["tree_rooting"] == "linkage_root"
+    assert captured["kwargs"]["tree_linkage_method"] == "average"
+    assert captured["kwargs"]["edge_branch_length_variance_policy"] == (
+        "normalized_branch_length"
+    )
+    assert captured["kwargs"]["branch_length_optimization_method"] == (
+        "fixed_topology_nnls"
+    )
+
+
+def test_run_clustering_result_forwards_graphtools_neighbor_joining_tree_params(
+    monkeypatch,
+):
+    captured = {}
+    original_spec = METHOD_SPECS["tbs_diffusion_graphtools_adaptive_nnls"]
+    neighbor_joining_params = next(
+        params for params in original_spec.param_grid if params["tree_builder"] == "neighbor_joining"
+    )
+
+    def _capture_runner(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return MethodRunResult(
+            labels=np.array([0, 0, 1, 1], dtype=int),
+            found_clusters=2,
+            report_df=None,
+            status="ok",
+            skip_reason=None,
+            extra={},
+        )
+
+    monkeypatch.setitem(
+        METHOD_SPECS,
+        "tbs_diffusion_graphtools_adaptive_nnls",
+        MethodSpec(
+            name=original_spec.name,
+            runner=_capture_runner,
+            param_grid=original_spec.param_grid,
+        ),
+    )
+
+    result = run_clustering_result(
+        data_df=_toy_dataframe(),
+        method_id="tbs_diffusion_graphtools_adaptive_nnls",
+        params=neighbor_joining_params,
+        seed=42,
+    )
+
+    assert result.status == "ok"
+    assert captured["kwargs"]["tree_builder"] == "neighbor_joining"
+    assert captured["kwargs"]["tree_rooting"] == "mad"
+    assert captured["kwargs"]["tree_linkage_method"] == "average"
+    assert captured["kwargs"]["adaptive_neighbor_profile"] == "fragmentation_guard"
 
 
 def test_method_registry_exposes_current_support_profiles_without_legacy_ids():
@@ -509,9 +735,7 @@ def test_method_registry_exposes_current_support_profiles_without_legacy_ids():
     assert internal["spectral_internal_distribution_mode"] == "empirical_barycenter"
     assert internal["spectral_mp_row_count_mode"] == "leaf_effective_rows"
     assert internal["enforce_internal_support_thresholds"] is True
-    assert branch_length["spectral_internal_distribution_mode"] == (
-        "branch_length_state"
-    )
+    assert branch_length["spectral_internal_distribution_mode"] == ("branch_length_state")
     assert branch_length["enforce_internal_support_thresholds"] is True
     assert bandwidth["neighborhood_bandwidth_profile"] == (
         "regional_tau_branch_length_support_only_v1"
@@ -543,9 +767,7 @@ def test_run_clustering_result_dispatches_conditional_topology_as_kl(monkeypatch
                 {
                     "tree_distance_metric": "hamming",
                     "tree_linkage_method": "average",
-                    "sibling_gate_profile": (
-                        "fixed_coordinate_conditional_topology_diagnostic_v1"
-                    ),
+                    "sibling_gate_profile": ("fixed_coordinate_conditional_topology_diagnostic_v1"),
                 }
             ],
         ),
@@ -557,9 +779,7 @@ def test_run_clustering_result_dispatches_conditional_topology_as_kl(monkeypatch
         params={
             "tree_distance_metric": "euclidean",
             "tree_linkage_method": "average",
-            "sibling_gate_profile": (
-                "fixed_coordinate_conditional_topology_diagnostic_v1"
-            ),
+            "sibling_gate_profile": ("fixed_coordinate_conditional_topology_diagnostic_v1"),
         },
         seed=42,
         distance_condensed=pdist(_toy_dataframe().values, metric="euclidean"),
@@ -596,9 +816,7 @@ def test_run_clustering_result_dispatches_global_passthrough_refined_as_kl(monke
                 {
                     "tree_distance_metric": "hamming",
                     "tree_linkage_method": "average",
-                    "sibling_gate_profile": (
-                        "fixed_coordinate_global_passthrough_refined_v1"
-                    ),
+                    "sibling_gate_profile": ("fixed_coordinate_global_passthrough_refined_v1"),
                 }
             ],
         ),
@@ -647,9 +865,7 @@ def test_run_clustering_result_dispatches_spectral_transport_as_kl(monkeypatch):
                 {
                     "tree_distance_metric": "hamming",
                     "tree_linkage_method": "average",
-                    "sibling_gate_profile": (
-                        "fixed_coordinate_spectral_transport_passthrough_v1"
-                    ),
+                    "sibling_gate_profile": ("fixed_coordinate_spectral_transport_passthrough_v1"),
                 }
             ],
         ),
@@ -661,9 +877,7 @@ def test_run_clustering_result_dispatches_spectral_transport_as_kl(monkeypatch):
         params={
             "tree_distance_metric": "euclidean",
             "tree_linkage_method": "average",
-            "sibling_gate_profile": (
-                "fixed_coordinate_spectral_transport_passthrough_v1"
-            ),
+            "sibling_gate_profile": ("fixed_coordinate_spectral_transport_passthrough_v1"),
         },
         seed=42,
         distance_condensed=pdist(_toy_dataframe().values, metric="euclidean"),

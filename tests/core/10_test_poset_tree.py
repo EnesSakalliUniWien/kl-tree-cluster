@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from tree_break_selection.tree.branch_lengths import compute_ultrametric_branch_lengths
+from tree_break_selection.tree.io import tree_from_linkage_topology
 from tree_break_selection.tree.poset_tree import PosetTree
 
 
@@ -130,6 +131,34 @@ def test_compute_ultrametric_branch_lengths_rejects_nonmonotone_heights():
 
     with pytest.raises(ValueError, match="nondecreasing"):
         compute_ultrametric_branch_lengths(4, children, distances)
+
+
+def test_tree_from_linkage_topology_accepts_nonmonotone_heights_with_placeholders():
+    linkage_matrix = np.array(
+        [
+            [0, 1, 2.0, 2],
+            [2, 3, 6.0, 2],
+            [4, 5, 5.0, 4],
+        ],
+        dtype=float,
+    )
+
+    tree = tree_from_linkage_topology(
+        linkage_matrix,
+        leaf_names=["a", "b", "c", "d"],
+        fallback_branch_length=1.0,
+    )
+
+    assert tree.number_of_nodes() == 7
+    assert nx.is_directed_acyclic_graph(tree)
+    assert nx.is_tree(tree.to_undirected())
+    assert {tree.nodes[leaf]["label"] for leaf in tree.get_leaves(return_labels=False)} == {
+        "a",
+        "b",
+        "c",
+        "d",
+    }
+    assert all(attrs["branch_length"] == 1.0 for _, _, attrs in tree.edges(data=True))
 
 
 def test_from_scipy_linkage_binary_data():

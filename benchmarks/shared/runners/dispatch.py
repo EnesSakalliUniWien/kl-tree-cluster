@@ -145,6 +145,18 @@ def _tbs_branch_length_optimization_kwargs(params: Dict[str, Any]) -> Dict[str, 
     }
 
 
+def _optional_int_sequence(value: Any) -> tuple[int, ...] | None:
+    """Parse optional integer-list method parameters from registry/env inputs."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        value = stripped.replace(";", ",").split(",")
+    return tuple(int(item) for item in value)
+
+
 def run_clustering_result(
     data_df: pd.DataFrame,
     method_id: str,
@@ -172,12 +184,15 @@ def run_clustering_result(
                 k_neighbors=int(params["k_neighbors"]),
                 diffusion_time=int(params["diffusion_time"]),
                 feature_space=feature_space,
+                edge_branch_length_variance_policy=str(
+                    params.get("edge_branch_length_variance_policy", "none")
+                ),
                 **_tbs_branch_length_optimization_kwargs(params),
             )
         except Exception as exc:
             return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
-    if method_id == "tbs_diffusion_adaptive":
+    if method_id in {"tbs_diffusion_adaptive", "tbs_diffusion_adaptive_nnls"}:
         try:
             result = spec.runner(
                 data_df,
@@ -189,12 +204,19 @@ def run_clustering_result(
                 bandwidth_type=params["bandwidth_type"],
                 epsilon=params["epsilon"],
                 feature_space=feature_space,
+                edge_branch_length_variance_policy=str(
+                    params.get("edge_branch_length_variance_policy", "none")
+                ),
                 **_tbs_branch_length_optimization_kwargs(params),
             )
         except Exception as exc:
             return _method_failure_result(exc)
         return _normalize_method_result(result, data_df.index)
-    if method_id == "tbs_diffusion_graphtools":
+    if method_id in {
+        "tbs_diffusion_graphtools",
+        "tbs_diffusion_graphtools_nnls",
+        "tbs_diffusion_graphtools_adaptive_nnls",
+    }:
         try:
             result = spec.runner(
                 data_df,
@@ -207,7 +229,17 @@ def run_clustering_result(
                 anisotropy=float(params["anisotropy"]),
                 kernel_symm=str(params["kernel_symm"]),
                 random_state=int(params.get("random_state", 0)),
+                adaptive_neighbor_profile=params.get("adaptive_neighbor_profile"),
+                adaptive_neighbor_grid=_optional_int_sequence(
+                    params.get("adaptive_neighbor_grid")
+                ),
+                tree_builder=str(params.get("tree_builder", "linkage")),
+                tree_rooting=str(params.get("tree_rooting", "linkage_root")),
+                tree_linkage_method=str(params.get("tree_linkage_method", "average")),
                 feature_space=feature_space,
+                edge_branch_length_variance_policy=str(
+                    params.get("edge_branch_length_variance_policy", "none")
+                ),
                 **_tbs_branch_length_optimization_kwargs(params),
             )
         except Exception as exc:
@@ -369,34 +401,7 @@ def run_clustering_result(
                 distributional_action_split_filter_quantile=float(
                     params.get("distributional_action_split_filter_quantile", 0.0)
                 ),
-                branch_length_optimization_method=str(
-                    params.get(
-                        "branch_length_optimization_method",
-                        BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
-                    )
-                ),
-                branch_length_optimization_target_metric=str(
-                    params.get(
-                        "branch_length_optimization_target_metric",
-                        BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN,
-                    )
-                ),
-                branch_length_optimization_pair_sample_size=(
-                    None
-                    if params.get("branch_length_optimization_pair_sample_size") is None
-                    else int(params["branch_length_optimization_pair_sample_size"])
-                ),
-                branch_length_optimization_random_state=int(
-                    params.get("branch_length_optimization_random_state", 0)
-                ),
-                branch_length_optimization_solver_tolerance=float(
-                    params.get("branch_length_optimization_solver_tolerance", 1e-6)
-                ),
-                branch_length_optimization_max_iterations=(
-                    None
-                    if params.get("branch_length_optimization_max_iterations") is None
-                    else int(params["branch_length_optimization_max_iterations"])
-                ),
+                **_tbs_branch_length_optimization_kwargs(params),
                 allow_linkage_ultrametric_branch_time=bool(
                     params.get("allow_linkage_ultrametric_branch_time", False)
                 ),
