@@ -1,4 +1,4 @@
-"""Continuous-data branch-length optimization for rooted ``PosetTree`` objects.
+"""Geometry-based branch-length optimization for rooted ``PosetTree`` objects.
 
 The default linkage constructor stores ultrametric merge-height differences as
 ``branch_length``.  Those heights are useful topology diagnostics, but they are
@@ -7,7 +7,8 @@ non-negative least-squares fit for continuous data:
 
     D_ij ~= sum_{e in path(i, j)} tau_e,  tau_e >= 0
 
-where ``D_ij`` is a held-out squared standardized continuous distance.
+where ``D_ij`` is either a squared standardized continuous distance or a
+squared distance from an already prepared Euclidean geometry.
 """
 
 from __future__ import annotations
@@ -29,6 +30,11 @@ BRANCH_LENGTH_OPTIMIZATION_METHODS = (
 )
 
 BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN = "squared_standardized_euclidean"
+BRANCH_LENGTH_TARGET_SQUARED_EUCLIDEAN = "squared_euclidean"
+BRANCH_LENGTH_TARGET_METRICS = (
+    BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN,
+    BRANCH_LENGTH_TARGET_SQUARED_EUCLIDEAN,
+)
 
 
 @dataclass(frozen=True)
@@ -181,6 +187,18 @@ def _squared_standardized_targets(
     return np.sum(diffs * diffs, axis=1) / float(standardized.shape[1])
 
 
+def _squared_euclidean_targets(
+    data: pd.DataFrame,
+    left: np.ndarray,
+    right: np.ndarray,
+) -> np.ndarray:
+    matrix = data.to_numpy(dtype=np.float64, copy=False)
+    if matrix.ndim != 2 or matrix.shape[0] < 2 or matrix.shape[1] < 1:
+        raise ValueError("Branch-length optimization requires a 2-D geometry matrix.")
+    diffs = matrix[left] - matrix[right]
+    return np.sum(diffs * diffs, axis=1)
+
+
 def _path_incidence_matrix(
     root_path_sets: list[frozenset[int]],
     left: np.ndarray,
@@ -215,14 +233,15 @@ def fit_fixed_topology_nnls_branch_lengths(
 
     The function mutates ``tree`` by replacing each edge's ``branch_length``
     with the fitted value.  The previous value is preserved as
-    ``linkage_branch_length`` when present.
+    ``linkage_branch_length`` when present. ``continuous_data`` is interpreted
+    as raw continuous observations for the standardized target and as a
+    prepared Euclidean embedding for the unstandardized target.
     """
     start_sec = perf_counter()
-    if target_metric != BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN:
+    if target_metric not in BRANCH_LENGTH_TARGET_METRICS:
         raise ValueError(
             "Unsupported branch-length target metric "
-            f"{target_metric!r}; expected "
-            f"{BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN!r}."
+            f"{target_metric!r}; expected one of {BRANCH_LENGTH_TARGET_METRICS!r}."
         )
     if not isinstance(continuous_data, pd.DataFrame):
         raise TypeError("continuous_data must be a pandas DataFrame.")
@@ -241,7 +260,10 @@ def fit_fixed_topology_nnls_branch_lengths(
         pair_sample_size=pair_sample_size,
         random_state=random_state,
     )
-    targets = _squared_standardized_targets(continuous_data, left, right)
+    if target_metric == BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN:
+        targets = _squared_standardized_targets(continuous_data, left, right)
+    else:
+        targets = _squared_euclidean_targets(continuous_data, left, right)
     design = _path_incidence_matrix(root_path_sets, left, right, n_edges)
 
     solution = lsq_linear(
@@ -306,6 +328,8 @@ __all__ = [
     "BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS",
     "BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC",
     "BRANCH_LENGTH_OPTIMIZATION_METHODS",
+    "BRANCH_LENGTH_TARGET_METRICS",
+    "BRANCH_LENGTH_TARGET_SQUARED_EUCLIDEAN",
     "BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN",
     "BranchLengthOptimizationResult",
     "fit_fixed_topology_nnls_branch_lengths",

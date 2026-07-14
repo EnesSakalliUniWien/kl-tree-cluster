@@ -48,9 +48,7 @@ def test_linkage_branch_time_raw_heights_are_explicit_diagnostic_only(
     )
     monkeypatch.setattr(
         "benchmarks.shared.runners.tbs_runner.run_gate_annotation_pipeline",
-        lambda *args, **kwargs: (_ for _ in ()).throw(
-            RuntimeError("stop after branch contract")
-        ),
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("stop after branch contract")),
     )
 
     with pytest.raises(RuntimeError, match="stop after branch contract"):
@@ -84,9 +82,7 @@ def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
         )
 
     def fake_fit(tree: object, *args: object, **kwargs: object) -> None:
-        captured["edge_lengths"] = [
-            attrs["branch_length"] for _, _, attrs in tree.edges(data=True)
-        ]
+        captured["edge_lengths"] = [attrs["branch_length"] for _, _, attrs in tree.edges(data=True)]
         raise RuntimeError("stop after topology-only tree construction")
 
     monkeypatch.setattr("benchmarks.shared.runners.tbs_runner.linkage", fake_linkage)
@@ -107,3 +103,53 @@ def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
         )
 
     assert captured["edge_lengths"] == [1.0] * 6
+
+
+def test_fixed_topology_nnls_accepts_separate_aligned_branch_geometry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data = _small_continuous_frame()
+    geometry = pd.DataFrame(
+        {"geometry": [0.0, 0.1, 1.0, 1.1]},
+        index=data.index,
+    )
+    captured: dict[str, object] = {}
+
+    def fake_fit(_tree: object, branch_data: pd.DataFrame, **_kwargs: object) -> None:
+        captured["branch_data"] = branch_data
+        raise RuntimeError("stop after aligned branch geometry")
+
+    monkeypatch.setattr(
+        "benchmarks.shared.runners.tbs_runner.fit_fixed_topology_nnls_branch_lengths",
+        fake_fit,
+    )
+
+    with pytest.raises(RuntimeError, match="aligned branch geometry"):
+        _run_tbs_on_distance(
+            data,
+            pdist(geometry.to_numpy(), metric="euclidean"),
+            0.01,
+            tree_linkage_method="average",
+            feature_space=continuous_feature_space_from_columns(tuple(data.columns)),
+            branch_length_data_df=geometry,
+            branch_length_optimization_method="fixed_topology_nnls",
+            branch_length_optimization_target_metric="squared_euclidean",
+        )
+
+    assert captured["branch_data"] is geometry
+
+
+def test_fixed_topology_nnls_rejects_misaligned_branch_geometry() -> None:
+    data = _small_continuous_frame()
+    geometry = data.iloc[::-1]
+
+    with pytest.raises(ValueError, match="index must exactly match"):
+        _run_tbs_on_distance(
+            data,
+            pdist(data.to_numpy(), metric="euclidean"),
+            0.01,
+            tree_linkage_method="average",
+            feature_space=continuous_feature_space_from_columns(tuple(data.columns)),
+            branch_length_data_df=geometry,
+            branch_length_optimization_method="fixed_topology_nnls",
+        )

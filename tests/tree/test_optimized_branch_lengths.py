@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from tree_break_selection.tree.optimized_branch_lengths import (
     BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS,
+    BRANCH_LENGTH_TARGET_SQUARED_EUCLIDEAN,
     fit_fixed_topology_nnls_branch_lengths,
 )
 from tree_break_selection.tree.poset_tree import PosetTree
@@ -65,8 +66,7 @@ def test_fixed_topology_nnls_recovers_additive_tree_distances() -> None:
     assert result.residual_rmse < 1e-8
     assert result.branch_length_min >= -1e-10
     assert {
-        tree.edges[parent, child]["branch_length_source"]
-        for parent, child in tree.edges()
+        tree.edges[parent, child]["branch_length_source"] for parent, child in tree.edges()
     } == {BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS}
     assert all("linkage_branch_length" in tree.edges[parent, child] for parent, child in tree.edges)
     assert np.isclose(
@@ -75,3 +75,31 @@ def test_fixed_topology_nnls_recovers_additive_tree_distances() -> None:
     )
     assert np.isclose(tree.edges["A", "a"]["branch_length"], tree.edges["A", "b"]["branch_length"])
     assert np.isclose(tree.edges["B", "c"]["branch_length"], tree.edges["B", "d"]["branch_length"])
+
+
+def test_fixed_topology_nnls_uses_prepared_geometry_without_restandardizing() -> None:
+    tree = _small_binary_tree()
+    geometry = pd.DataFrame(
+        {
+            "left": [1.0, 1.0, 0.0, 0.0],
+            "right": [0.0, 0.0, 1.0, 1.0],
+            "leaf_a": [1.0, 0.0, 0.0, 0.0],
+            "leaf_b": [0.0, 1.0, 0.0, 0.0],
+            "leaf_c": [0.0, 0.0, 1.0, 0.0],
+            "leaf_d": [0.0, 0.0, 0.0, 1.0],
+        },
+        index=["a", "b", "c", "d"],
+    )
+
+    result = fit_fixed_topology_nnls_branch_lengths(
+        tree,
+        geometry,
+        target_metric=BRANCH_LENGTH_TARGET_SQUARED_EUCLIDEAN,
+        pair_sample_size=None,
+        solver_tolerance=1e-10,
+    )
+
+    assert result.status == "ok"
+    assert result.target_metric == BRANCH_LENGTH_TARGET_SQUARED_EUCLIDEAN
+    assert result.residual_rmse < 1e-8
+    assert np.isclose(result.target_mean, 10.0 / 3.0)

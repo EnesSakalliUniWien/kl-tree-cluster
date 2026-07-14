@@ -120,6 +120,7 @@ def _run_tbs_on_distance(
     distributional_action_split_filter_policy: str = DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
     distributional_action_split_filter_quantile: float = 0.0,
     branch_length_optimization_method: str = BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
+    branch_length_data_df: pd.DataFrame | None = None,
     branch_length_optimization_target_metric: str = (
         BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN
     ),
@@ -164,8 +165,7 @@ def _run_tbs_on_distance(
             tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
         except ValueError as exc:
             if (
-                branch_length_optimization_method
-                == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
+                branch_length_optimization_method == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
                 and "nondecreasing" in str(exc)
             ):
                 tree = tree_from_linkage_topology(
@@ -202,9 +202,14 @@ def _run_tbs_on_distance(
         "branch_length_optimization_method": branch_length_optimization_method,
     }
     if branch_length_optimization_method == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS:
+        branch_data = data_df if branch_length_data_df is None else branch_length_data_df
+        if not branch_data.index.equals(data_df.index):
+            raise ValueError(
+                "branch_length_data_df index must exactly match the original data index."
+            )
         optimization_result = fit_fixed_topology_nnls_branch_lengths(
             tree,
-            data_df,
+            branch_data,
             target_metric=branch_length_optimization_target_metric,
             pair_sample_size=branch_length_optimization_pair_sample_size,
             random_state=branch_length_optimization_random_state,
@@ -218,10 +223,12 @@ def _run_tbs_on_distance(
                 for key, value in optimization_result.to_dict().items()
             }
         )
+        branch_length_optimization_metadata["branch_length_geometry_source"] = (
+            "original_data" if branch_length_data_df is None else "aligned_geometry_embedding"
+        )
     elif branch_length_optimization_method != BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC:
         raise ValueError(
-            "Unsupported branch_length_optimization_method "
-            f"{branch_length_optimization_method!r}."
+            f"Unsupported branch_length_optimization_method {branch_length_optimization_method!r}."
         )
 
     neighborhood_bandwidth_metadata: dict[str, object] = {}

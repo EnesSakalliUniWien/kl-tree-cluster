@@ -614,6 +614,8 @@ def _run_tbs_diffusion_graphtools_method(
     tree_rooting: str = "linkage_root",
     tree_linkage_method: str = "average",
     feature_space: FeatureSpace | None = None,
+    graph_data_df: pd.DataFrame | None = None,
+    branch_length_data_df: pd.DataFrame | None = None,
     branch_length_optimization_method: str = BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
     branch_length_optimization_target_metric: str = (
         BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN
@@ -625,8 +627,11 @@ def _run_tbs_diffusion_graphtools_method(
     edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
 ) -> MethodRunResult:
     """Run TBS decomposition on a graphtools kernel diffusion tree."""
+    graph_data = data_df if graph_data_df is None else graph_data_df
+    if not graph_data.index.equals(data_df.index):
+        raise ValueError("graph_data_df index must exactly match the original data index.")
     diff_dist, graph_metadata = _build_graphtools_diffusion_distance(
-        data_df,
+        graph_data,
         k_neighbors=k_neighbors,
         diffusion_time=diffusion_time,
         n_components=n_components,
@@ -648,6 +653,7 @@ def _run_tbs_diffusion_graphtools_method(
         tree_rooting=tree_rooting,
         tree_linkage_method=tree_linkage_method,
         feature_space=feature_space,
+        branch_length_data_df=branch_length_data_df,
         branch_length_optimization_method=branch_length_optimization_method,
         branch_length_optimization_target_metric=branch_length_optimization_target_metric,
         branch_length_optimization_pair_sample_size=(branch_length_optimization_pair_sample_size),
@@ -657,6 +663,9 @@ def _run_tbs_diffusion_graphtools_method(
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
         extra={
             "diffusion_method": "graphtools_kernel_diffusion",
+            "graph_geometry_source": (
+                "original_data" if graph_data_df is None else "aligned_geometry_embedding"
+            ),
             "graphtools_diffusion": graph_metadata,
         },
     )
