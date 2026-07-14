@@ -75,6 +75,10 @@ all = [
 experimental-gpl = [
     "graphtools>=2.1.0",
 ]
+brancharchitect = [
+    "biopython>=1.85",
+    "orjson>=3.10.0",
+]
 scrna = [
     "anndata>=0.10.0",
     "scanpy>=1.10.0",
@@ -106,7 +110,8 @@ ignore = ["E402", "E501"]
 
 [tool.deptry]
 ignore_notebooks = true
-known_first_party = ["benchmarks", "tree_break_selection"]
-pep621_dev_dependency_groups = ["dev", "benchmark", "viz", "all", "experimental-gpl"]
-extend_exclude = ["^manuscript/", "^notebooks/"]
+known_first_party = ["benchmarks", "tree_break_selection", "brancharchitect"]
+pep621_dev_dependency_groups = ["dev", "benchmark", "viz", "all", "experimental-gpl", "brancharchitect"]
+extend_exclude = ["^manuscript/", "^notebooks/", "^vendor/"]
+per_rule_ignores = { DEP002 = ["biopython", "orjson"] }
 package_module_name_map = { "python-louvain" = "community", "scikit-bio" = "skbio" }

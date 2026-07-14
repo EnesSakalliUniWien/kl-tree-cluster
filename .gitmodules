@@ -1,0 +1,4 @@
+[submodule "vendor/BranchArchitect"]
+	path = vendor/BranchArchitect
+	url = https://github.com/EnesSakalliUniWien/BranchArchitect.git
+	branch = main
