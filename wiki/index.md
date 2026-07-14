@@ -604,7 +604,60 @@ renamed, or promoted.
   integrity and label-free invariance checks, selects valid topologies for
   `101` cases, and passes paired mean/median ARI, NMI, macro F1, and
   category-regression promotion criteria without making a production-default
-  promotion.
+  promotion. A follow-up p-value audit of the `14` real fail-closed
+  under-splits separates `9` global edge-gate closures from `5` sibling-gate
+  closures after edge support and shows that weighted-topology fallback does
+  not rescue those cases. A focused sibling-alpha sweep shows overlap
+  diagnostic p-values react, but alpha-only relaxation is not a production
+  fix: heavy overlap needs `sibling_alpha = 0.20` for weak recovery and
+  extreme overlap remains effectively unrecovered. A literature-policy replay
+  shows hierarchical FDR, TreeBH-style BH, dependence-robust BY, and graphical
+  alpha recycling rescue `0/14` cases at the `0.01` sibling budget; exact
+  selective/randomized alpha-spending variants fail closed without their
+  required p-value objects; a trace-only adaptive proxy opens only
+  `sbm_moderate` and a weak dominant `overlap_heavy_8c_large_feat` candidate.
+  The follow-up [[family-metric-nnls-grid-20260709]] replaces universal
+  Hamming with aligned family geometry in a `96`-cell focused panel. It gives
+  perfect topology to clear Gaussian and balanced binary cases and strong
+  categorical clades, while separating the still-missing Gaussian sibling law
+  from genuine high-dimensional and SBM topology failures.
+  A BranchArchitect comparison of the same `14` fail-closed cases rebuilds
+  complete trees with branch lengths and shows all `101` successful topology
+  cells still return exactly one cluster: topology and branch paths differ,
+  but no current topology/NNLS branch-length cell changes the cluster
+  structure. A follow-up subtree diagnosis parses the branch-length Newick
+  exports and records `9,106` rooted subtree-support rows: continuous
+  edge-closed cases are mainly stable-core-vs-centroid/median clade
+  disagreements, while overlap/SBM cases contain large unstable subtrees that
+  still collapse because the active selected sibling/null calibration is
+  missing. A selected-node sibling-null law report now formalizes the missing
+  target as `P_0(W_v >= W_obs | E_sel(T,v,k,U,ell,Sigma,topology_stability),
+  H0_sibling(v))`, separates the same `5` edge-supported sibling-law cases
+  from the `9` edge-null cases, and uses smaller examples to isolate
+  branch-length, covariance/eigenvector, multiplicity, and accepted-dimension
+  effects on the projected-Wald statistic. A benchmark replay of the adaptive
+  selected-node law opens `0/14` cases under the strict missing-exact-p-value
+  policy and `0/14` under topology/branch/covariance spending; only the
+  no-stability ablation opens `sbm_moderate`, and the nearest actual rerun at
+  `sibling_alpha = 0.20` remains weak with ARI `0.071841` and `6` clusters. A
+  strict-law diagnosis clarifies that `0/14` is not fourteen evaluated
+  selected p-values: the strict branch is an unconditional fail-closed
+  placeholder, only `5` cases reach the sibling-law question, and `9` remain
+  upstream edge failures. The formal event also conditions on exact continuous
+  NNLS/covariance/eigensystem state, which has zero rejection-sampling mass;
+  an executable law must separate discrete selection conditioning from
+  continuously recomputed nuisance quantities and use family-specific local
+  null generators. A geometry audit further shows that all ten continuous
+  fail-closed cases enter graphtools through degenerate raw-coordinate Hamming
+  distance (all off-diagonal sampled distances equal `1`), before Euclidean
+  diffusion distance and the eight topology methods are applied. NNLS then
+  fits branch lengths to a different, squared standardized Euclidean geometry
+  and can only inflate test variance. The primary repair is therefore a
+  feature-family-aware graph metric plus aligned branch target and fit gate,
+  not a stronger linkage method or unconditional branch-time use.
+  BranchArchitect is now reproducibly pinned as a git submodule with an
+  isolated optional runtime extra; this MIT-licensed comparison layer does not
+  change the experimental status of the GPL graphtools backend.
 - [[adaptive-nnls-regression-skip-analysis-20260628]] - focused analysis of
   the adaptive NNLS benchmark regressions and skips across ARI, NMI, AMI,
   V-measure, macro F1, cluster-count errors, fragmentation, and unsupervised

@@ -1,0 +1,15 @@
+case_id,adaptive_weighted_status,adaptive_weighted_clusters,adaptive_weighted_ari,current_tbs_status,current_tbs_clusters,current_tbs_ari,current_tbs_nmi,current_tbs_macro_f1,best_default_method,best_default_clusters,best_default_ari,best_default_nmi,best_default_macro_f1
+cont_lowrank_pggn_shrinkage,ok,1,0.0,skip,0,,,,leiden,5,0.0363094897199473,0.0899218750087904,0.4468880821559393
+dim_consolidated_4c_24f_continuous,ok,1,0.0,ok,4,1.0,1.0,1.0,tbs,4,1.0,1.0,1.0
+dim_consolidated_4c_72f_continuous,ok,1,0.0,ok,1,0.0,0.0,0.1,leiden,4,1.0,1.0,1.0
+dim_diffuse_6c_136f_continuous,ok,1,0.0,ok,1,0.0,0.0,0.0476190476190476,spectral,6,0.0827133397581372,0.1352325666993484,0.3205553547583908
+gauss_clear_medium_continuous,ok,1,0.0,ok,1,0.0,0.0,0.1,leiden,4,1.0,1.0,1.0
+gauss_moderate_3c_continuous,ok,1,0.0,ok,1,0.0,0.0,0.1666666666666666,leiden,3,1.0,1.0,1.0
+gauss_outlier_cluster_4c_continuous,ok,1,0.0,ok,2,0.4611910810047982,0.6341016937442855,0.2603174603174603,leiden,5,1.0,1.0,1.0
+gauss_single_outlier_4c_continuous,ok,1,0.0,ok,2,0.4890471398715071,0.6574403533001908,0.265564738292011,kmeans,5,1.0,1.0,1.0
+mp_spike_above_bbp_continuous,ok,1,0.0,ok,1,0.0,0.0,0.3333333333333333,spectral,2,0.0053666126082443,0.0100274671775515,0.5568253083408822
+overlap_extreme_4c,ok,1,0.0,skip,0,,,,kmeans,4,0.0081783586805307,0.014584947598879,0.3077235754177964
+overlap_heavy_8c_large_feat,ok,1,0.0,skip,0,,,,kmeans,8,0.0919773725744254,0.1277147990714245,0.3126764483588174
+phylo_brownian_null_16taxa,ok,1,0.0,ok,1,0.0,0.0,0.0073529411764705,leiden,16,1.0,1.0,1.0
+sbm_hard,ok,1,0.0,ok,4,-0.0085638062552786,0.0209811108905175,0.3603577794754265,louvain,7,0.0261144018331964,0.0548692020239153,0.4716931216931216
+sbm_moderate,ok,1,0.0,ok,8,0.0995072113659247,0.1818091891471456,0.620014245014245,spectral,3,0.270551804977255,0.2183215662958229,0.6486871234412218

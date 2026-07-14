@@ -1,0 +1,37 @@
+{
+  "created_utc": "2026-07-09T13:27:35.622226+00:00",
+  "generated_by": "benchmarks.validation.tree_literature_alpha_replay",
+  "git": {
+    "branch": "experiment",
+    "commit": "6769e94bd59c8ec967e76fc8cf91c38ef2e4d348",
+    "status_short": "M wiki/index.md\n M wiki/log.md\n M wiki/sources/full-graphtools-tree-consensus-gate-20260706.md\n?? benchmarks/validation/tree_literature_alpha_replay.py\n?? reports/tree_consensus_alpha_sensitivity_20260709/\n?? reports/tree_consensus_fail_closed_pvalues_20260709/\n?? reports/tree_consensus_literature_policy_replay_20260709/\n?? tests/validation/193_test_tree_literature_alpha_replay.py"
+  },
+  "n_case_summary_rows": 112,
+  "n_cell_summary_rows": 304,
+  "n_decision_rows": 316,
+  "n_method_summary_rows": 8,
+  "n_requirement_audit_rows": 6,
+  "note": "Replay diagnostics only. Executable analogues and proxies are not paper-exact production methods unless explicitly marked native_current.",
+  "output_dir": "reports/tree_consensus_literature_policy_replay_20260709",
+  "outputs": {
+    "case_summary": "reports/tree_consensus_literature_policy_replay_20260709/literature_policy_replay_case_summary.csv",
+    "cell_summary": "reports/tree_consensus_literature_policy_replay_20260709/literature_policy_replay_cell_summary.csv",
+    "decisions": "reports/tree_consensus_literature_policy_replay_20260709/literature_policy_replay_decisions.csv",
+    "method_summary": "reports/tree_consensus_literature_policy_replay_20260709/literature_policy_replay_method_summary.csv",
+    "report": "reports/tree_consensus_literature_policy_replay_20260709/literature_policy_replay_report.md",
+    "requirement_audit": "reports/tree_consensus_literature_policy_replay_20260709/literature_policy_replay_requirement_audit.csv"
+  },
+  "policies": [
+    "current_traversal_gate",
+    "yekutieli_hierarchical_fdr_bh",
+    "treebh_multiresolution_bh",
+    "lynch_guo_dependence_robust_by",
+    "bretz_graphical_gatekeeping_recycle",
+    "gao_selective_inference_required",
+    "wu_randomized_alpha_spending_required",
+    "trace_adaptive_alpha_spending_proxy"
+  ],
+  "schema_version": "tree_literature_alpha_replay/v1",
+  "taxonomy_path": "reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_loss_taxonomy.csv",
+  "trace_path": "reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_traversal_trace.csv"
+}

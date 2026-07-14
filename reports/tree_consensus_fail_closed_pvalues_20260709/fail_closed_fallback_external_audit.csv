@@ -1,0 +1,99 @@
+case_id,fallback_method,status,found_clusters,ari,nmi,macro_f1,skip_reason,source
+gauss_clear_medium_continuous,average,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+gauss_moderate_3c_continuous,average,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_24f_continuous,average,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_72f_continuous,average,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+dim_diffuse_6c_136f_continuous,average,ok,1,0.0,0.0,0.0476190476190476,,adaptive_graphtools_nnls_topology_cell
+gauss_single_outlier_4c_continuous,average,ok,1,0.0,0.0,0.0796019900497512,,adaptive_graphtools_nnls_topology_cell
+gauss_outlier_cluster_4c_continuous,average,ok,1,0.0,0.0,0.0776699029126213,,adaptive_graphtools_nnls_topology_cell
+sbm_moderate,average,ok,1,0.0,0.0,0.196078431372549,,adaptive_graphtools_nnls_topology_cell
+sbm_hard,average,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+overlap_heavy_8c_large_feat,average,ok,1,0.0,0.0,0.0277777777777777,,adaptive_graphtools_nnls_topology_cell
+overlap_extreme_4c,average,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+mp_spike_above_bbp_continuous,average,ok,1,0.0,0.0,0.3333333333333333,,adaptive_graphtools_nnls_topology_cell
+cont_lowrank_pggn_shrinkage,average,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+phylo_brownian_null_16taxa,average,ok,1,0.0,0.0,0.0073529411764705,,adaptive_graphtools_nnls_topology_cell
+gauss_clear_medium_continuous,weighted,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+gauss_moderate_3c_continuous,weighted,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_24f_continuous,weighted,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_72f_continuous,weighted,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+dim_diffuse_6c_136f_continuous,weighted,ok,1,0.0,0.0,0.0476190476190476,,adaptive_graphtools_nnls_topology_cell
+gauss_single_outlier_4c_continuous,weighted,ok,1,0.0,0.0,0.0796019900497512,,adaptive_graphtools_nnls_topology_cell
+gauss_outlier_cluster_4c_continuous,weighted,ok,1,0.0,0.0,0.0776699029126213,,adaptive_graphtools_nnls_topology_cell
+sbm_moderate,weighted,ok,1,0.0,0.0,0.196078431372549,,adaptive_graphtools_nnls_topology_cell
+sbm_hard,weighted,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+overlap_heavy_8c_large_feat,weighted,ok,1,0.0,0.0,0.0277777777777777,,adaptive_graphtools_nnls_topology_cell
+overlap_extreme_4c,weighted,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+mp_spike_above_bbp_continuous,weighted,ok,1,0.0,0.0,0.3333333333333333,,adaptive_graphtools_nnls_topology_cell
+cont_lowrank_pggn_shrinkage,weighted,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+phylo_brownian_null_16taxa,weighted,ok,1,0.0,0.0,0.0073529411764705,,adaptive_graphtools_nnls_topology_cell
+gauss_clear_medium_continuous,ward,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+gauss_moderate_3c_continuous,ward,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_24f_continuous,ward,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_72f_continuous,ward,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+dim_diffuse_6c_136f_continuous,ward,ok,1,0.0,0.0,0.0476190476190476,,adaptive_graphtools_nnls_topology_cell
+gauss_single_outlier_4c_continuous,ward,ok,1,0.0,0.0,0.0796019900497512,,adaptive_graphtools_nnls_topology_cell
+gauss_outlier_cluster_4c_continuous,ward,ok,1,0.0,0.0,0.0776699029126213,,adaptive_graphtools_nnls_topology_cell
+sbm_moderate,ward,ok,1,0.0,0.0,0.196078431372549,,adaptive_graphtools_nnls_topology_cell
+sbm_hard,ward,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+overlap_heavy_8c_large_feat,ward,skip,0,,,,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 799 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",adaptive_graphtools_nnls_topology_cell
+overlap_extreme_4c,ward,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+mp_spike_above_bbp_continuous,ward,ok,1,0.0,0.0,0.3333333333333333,,adaptive_graphtools_nnls_topology_cell
+cont_lowrank_pggn_shrinkage,ward,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+phylo_brownian_null_16taxa,ward,ok,1,0.0,0.0,0.0073529411764705,,adaptive_graphtools_nnls_topology_cell
+gauss_clear_medium_continuous,complete,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+gauss_moderate_3c_continuous,complete,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_24f_continuous,complete,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_72f_continuous,complete,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+dim_diffuse_6c_136f_continuous,complete,ok,1,0.0,0.0,0.0476190476190476,,adaptive_graphtools_nnls_topology_cell
+gauss_single_outlier_4c_continuous,complete,ok,1,0.0,0.0,0.0796019900497512,,adaptive_graphtools_nnls_topology_cell
+gauss_outlier_cluster_4c_continuous,complete,ok,1,0.0,0.0,0.0776699029126213,,adaptive_graphtools_nnls_topology_cell
+sbm_moderate,complete,ok,1,0.0,0.0,0.196078431372549,,adaptive_graphtools_nnls_topology_cell
+sbm_hard,complete,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+overlap_heavy_8c_large_feat,complete,ok,1,0.0,0.0,0.0277777777777777,,adaptive_graphtools_nnls_topology_cell
+overlap_extreme_4c,complete,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+mp_spike_above_bbp_continuous,complete,ok,1,0.0,0.0,0.3333333333333333,,adaptive_graphtools_nnls_topology_cell
+cont_lowrank_pggn_shrinkage,complete,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+phylo_brownian_null_16taxa,complete,ok,1,0.0,0.0,0.0073529411764705,,adaptive_graphtools_nnls_topology_cell
+gauss_clear_medium_continuous,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+gauss_moderate_3c_continuous,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_24f_continuous,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+dim_consolidated_4c_72f_continuous,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+dim_diffuse_6c_136f_continuous,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+gauss_single_outlier_4c_continuous,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+gauss_outlier_cluster_4c_continuous,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+sbm_moderate,neighbor_joining,ok,1,0.0,0.0,0.196078431372549,,adaptive_graphtools_nnls_topology_cell
+sbm_hard,neighbor_joining,ok,1,0.0,0.0,0.1666666666666666,,adaptive_graphtools_nnls_topology_cell
+overlap_heavy_8c_large_feat,neighbor_joining,ok,1,0.0,0.0,0.0277777777777777,,adaptive_graphtools_nnls_topology_cell
+overlap_extreme_4c,neighbor_joining,ok,1,0.0,0.0,0.1,,adaptive_graphtools_nnls_topology_cell
+mp_spike_above_bbp_continuous,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+cont_lowrank_pggn_shrinkage,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+phylo_brownian_null_16taxa,neighbor_joining,skip,0,,,,MAD rooting requires positive distances between leaf pairs.,adaptive_graphtools_nnls_topology_cell
+gauss_clear_medium_continuous,current_tbs,ok,1,0.0,0.0,0.1,,default_grid_20260630
+gauss_clear_medium_continuous,best_default_grid_by_ari:leiden,ok,4,1.0,1.0,1.0,,default_grid_20260630
+gauss_moderate_3c_continuous,current_tbs,ok,1,0.0,0.0,0.1666666666666666,,default_grid_20260630
+gauss_moderate_3c_continuous,best_default_grid_by_ari:leiden,ok,3,1.0,1.0,1.0,,default_grid_20260630
+dim_consolidated_4c_24f_continuous,current_tbs,ok,4,1.0,1.0,1.0,,default_grid_20260630
+dim_consolidated_4c_24f_continuous,best_default_grid_by_ari:tbs,ok,4,1.0,1.0,1.0,,default_grid_20260630
+dim_consolidated_4c_72f_continuous,current_tbs,ok,1,0.0,0.0,0.1,,default_grid_20260630
+dim_consolidated_4c_72f_continuous,best_default_grid_by_ari:leiden,ok,4,1.0,1.0,1.0,,default_grid_20260630
+dim_diffuse_6c_136f_continuous,current_tbs,ok,1,0.0,0.0,0.0476190476190476,,default_grid_20260630
+dim_diffuse_6c_136f_continuous,best_default_grid_by_ari:spectral,ok,6,0.0827133397581372,0.1352325666993484,0.3205553547583908,,default_grid_20260630
+gauss_single_outlier_4c_continuous,current_tbs,ok,2,0.4890471398715071,0.6574403533001908,0.265564738292011,,default_grid_20260630
+gauss_single_outlier_4c_continuous,best_default_grid_by_ari:kmeans,ok,5,1.0,1.0,1.0,,default_grid_20260630
+gauss_outlier_cluster_4c_continuous,current_tbs,ok,2,0.4611910810047982,0.6341016937442855,0.2603174603174603,,default_grid_20260630
+gauss_outlier_cluster_4c_continuous,best_default_grid_by_ari:leiden,ok,5,1.0,1.0,1.0,,default_grid_20260630
+sbm_moderate,current_tbs,ok,8,0.0995072113659247,0.1818091891471456,0.620014245014245,,default_grid_20260630
+sbm_moderate,best_default_grid_by_ari:spectral,ok,3,0.270551804977255,0.2183215662958229,0.6486871234412218,,default_grid_20260630
+sbm_hard,current_tbs,ok,4,-0.0085638062552786,0.0209811108905175,0.3603577794754265,,default_grid_20260630
+sbm_hard,best_default_grid_by_ari:louvain,ok,7,0.0261144018331964,0.0548692020239153,0.4716931216931216,,default_grid_20260630
+overlap_heavy_8c_large_feat,current_tbs,skip,0,,,,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 799 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",default_grid_20260630
+overlap_heavy_8c_large_feat,best_default_grid_by_ari:kmeans,ok,8,0.0919773725744254,0.1277147990714245,0.3126764483588174,,default_grid_20260630
+overlap_extreme_4c,current_tbs,skip,0,,,,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 599 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",default_grid_20260630
+overlap_extreme_4c,best_default_grid_by_ari:kmeans,ok,4,0.0081783586805307,0.014584947598879,0.3077235754177964,,default_grid_20260630
+mp_spike_above_bbp_continuous,current_tbs,ok,1,0.0,0.0,0.3333333333333333,,default_grid_20260630
+mp_spike_above_bbp_continuous,best_default_grid_by_ari:spectral,ok,2,0.0053666126082443,0.0100274671775515,0.5568253083408822,,default_grid_20260630
+cont_lowrank_pggn_shrinkage,current_tbs,skip,0,,,,"Cannot fit sibling inflation model: no strict-null or stopped-edge empirical-null calibration records with positive weight. Found 79 selected non-null positive-weight record(s), which are not valid empirical-null calibration support.",default_grid_20260630
+cont_lowrank_pggn_shrinkage,best_default_grid_by_ari:leiden,ok,5,0.0363094897199473,0.0899218750087904,0.4468880821559393,,default_grid_20260630
+phylo_brownian_null_16taxa,current_tbs,ok,1,0.0,0.0,0.0073529411764705,,default_grid_20260630
+phylo_brownian_null_16taxa,best_default_grid_by_ari:leiden,ok,16,1.0,1.0,1.0,,default_grid_20260630

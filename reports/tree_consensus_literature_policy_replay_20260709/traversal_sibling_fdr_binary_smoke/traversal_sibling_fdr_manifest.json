@@ -1,0 +1,56 @@
+{
+  "alpha": 0.01,
+  "base_seed": 20260604,
+  "case_names": [
+    "binary_2clusters"
+  ],
+  "created_utc": "2026-07-09T13:22:49.929389+00:00",
+  "edge_alpha": 0.001,
+  "generated_by": "benchmarks.validation.traversal_sibling_fdr_null",
+  "git": {
+    "branch": "experiment",
+    "build_branch": "unknown",
+    "build_commit": "unknown",
+    "build_dirty": "unknown",
+    "commit": "6769e94bd59c8ec967e76fc8cf91c38ef2e4d348",
+    "status_short": "M wiki/index.md\n M wiki/log.md\n M wiki/sources/full-graphtools-tree-consensus-gate-20260706.md\n?? benchmarks/validation/tree_literature_alpha_replay.py\n?? reports/tree_consensus_alpha_sensitivity_20260709/\n?? reports/tree_consensus_fail_closed_pvalues_20260709/\n?? reports/tree_consensus_literature_policy_replay_20260709/\n?? tests/validation/193_test_tree_literature_alpha_replay.py"
+  },
+  "layers": [
+    "synthetic_valid_p",
+    "fixed_tree_wald",
+    "selected_tree_wald",
+    "selected_tree_inflated"
+  ],
+  "n_simulation_rows": 80,
+  "n_summary_rows": 4,
+  "note": "Diagnostic traversal-aligned sibling FDR evidence only. Does not change production FDR, alpha defaults, or calibration behavior.",
+  "outputs": {
+    "simulations": "reports/tree_consensus_literature_policy_replay_20260709/traversal_sibling_fdr_binary_smoke/traversal_sibling_fdr_simulations.csv",
+    "summary": "reports/tree_consensus_literature_policy_replay_20260709/traversal_sibling_fdr_binary_smoke/traversal_sibling_fdr_summary.csv"
+  },
+  "replicate_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "replicates": 20,
+  "schema_version": "traversal_sibling_fdr_null/v1",
+  "suite": "binary"
+}

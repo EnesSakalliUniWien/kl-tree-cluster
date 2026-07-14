@@ -1,0 +1,45 @@
+{
+  "created_utc": "20260709_180648Z",
+  "generated_by": "benchmarks.validation.selected_node_sibling_null_law",
+  "git": {
+    "commit": "6769e94bd59c8ec967e76fc8cf91c38ef2e4d348",
+    "status_short": [
+      "M pyproject.toml",
+      " M uv.lock",
+      " M wiki/index.md",
+      " M wiki/log.md",
+      " M wiki/sources/full-graphtools-tree-consensus-gate-20260706.md",
+      "?? benchmarks/validation/brancharchitect_tree_comparison.py",
+      "?? benchmarks/validation/selected_node_sibling_null_law.py",
+      "?? benchmarks/validation/tree_literature_alpha_replay.py",
+      "?? benchmarks/validation/tree_topology_difference_diagnosis.py",
+      "?? reports/selected_node_sibling_null_law_20260709/",
+      "?? reports/tree_consensus_alpha_sensitivity_20260709/",
+      "?? reports/tree_consensus_brancharchitect_tree_comparison_20260709/",
+      "?? reports/tree_consensus_fail_closed_pvalues_20260709/",
+      "?? reports/tree_consensus_literature_policy_replay_20260709/",
+      "?? reports/tree_consensus_topology_difference_diagnosis_20260709/",
+      "?? tests/validation/193_test_tree_literature_alpha_replay.py",
+      "?? tests/validation/194_test_brancharchitect_tree_comparison.py",
+      "?? tests/validation/195_test_tree_topology_difference_diagnosis.py",
+      "?? tests/validation/196_test_selected_node_sibling_null_law.py"
+    ]
+  },
+  "inputs": {
+    "case_diagnosis_path": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_case_diagnosis.csv",
+    "traversal_trace_path": "reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_traversal_trace.csv"
+  },
+  "outputs": {
+    "conditions": "reports/selected_node_sibling_null_law_20260709/selected_node_sibling_null_law_conditions.csv",
+    "examples": "reports/selected_node_sibling_null_law_20260709/selected_node_sibling_null_law_examples.csv",
+    "manifest": "reports/selected_node_sibling_null_law_20260709/selected_node_sibling_null_law_manifest.json",
+    "occurrences": "reports/selected_node_sibling_null_law_20260709/selected_node_sibling_null_law_occurrences.csv",
+    "report": "reports/selected_node_sibling_null_law_20260709/selected_node_sibling_null_law_report.md"
+  },
+  "row_counts": {
+    "conditions": 7,
+    "examples": 10,
+    "occurrences": 2
+  },
+  "schema_version": "selected_node_sibling_null_law/v1"
+}

@@ -1,0 +1,56 @@
+{
+  "created_utc": "20260709_180648Z",
+  "generated_by": "benchmarks.validation.selected_node_sibling_null_law",
+  "git": {
+    "commit": "6769e94bd59c8ec967e76fc8cf91c38ef2e4d348",
+    "status_short": [
+      "M pyproject.toml",
+      " M uv.lock",
+      " M wiki/index.md",
+      " M wiki/log.md",
+      " M wiki/sources/full-graphtools-tree-consensus-gate-20260706.md",
+      "?? benchmarks/validation/brancharchitect_tree_comparison.py",
+      "?? benchmarks/validation/selected_node_sibling_null_law.py",
+      "?? benchmarks/validation/tree_literature_alpha_replay.py",
+      "?? benchmarks/validation/tree_topology_difference_diagnosis.py",
+      "?? reports/selected_node_adaptive_law_replay_20260709/",
+      "?? reports/selected_node_sibling_null_law_20260709/",
+      "?? reports/tree_consensus_alpha_sensitivity_20260709/",
+      "?? reports/tree_consensus_brancharchitect_tree_comparison_20260709/",
+      "?? reports/tree_consensus_fail_closed_pvalues_20260709/",
+      "?? reports/tree_consensus_literature_policy_replay_20260709/",
+      "?? reports/tree_consensus_topology_difference_diagnosis_20260709/",
+      "?? tests/validation/193_test_tree_literature_alpha_replay.py",
+      "?? tests/validation/194_test_brancharchitect_tree_comparison.py",
+      "?? tests/validation/195_test_tree_topology_difference_diagnosis.py",
+      "?? tests/validation/196_test_selected_node_sibling_null_law.py"
+    ]
+  },
+  "inputs": {
+    "alpha_sweep_summary_path": "reports/tree_consensus_alpha_sensitivity_20260709/sibling_alpha_sweep_summary.csv",
+    "case_diagnosis_path": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_case_diagnosis.csv",
+    "traversal_trace_path": "reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_traversal_trace.csv"
+  },
+  "outputs": {
+    "case_summary": "reports/selected_node_adaptive_law_replay_20260709/selected_node_adaptive_law_case_summary.csv",
+    "cell_summary": "reports/selected_node_adaptive_law_replay_20260709/selected_node_adaptive_law_cell_summary.csv",
+    "decisions": "reports/selected_node_adaptive_law_replay_20260709/selected_node_adaptive_law_decisions.csv",
+    "external_audit": "reports/selected_node_adaptive_law_replay_20260709/selected_node_adaptive_law_external_audit.csv",
+    "manifest": "reports/selected_node_adaptive_law_replay_20260709/selected_node_adaptive_law_replay_manifest.json",
+    "method_summary": "reports/selected_node_adaptive_law_replay_20260709/selected_node_adaptive_law_method_summary.csv",
+    "report": "reports/selected_node_adaptive_law_replay_20260709/selected_node_adaptive_law_replay_report.md"
+  },
+  "policies": [
+    "strict_selected_law_required",
+    "adaptive_topology_branch_spending_proxy",
+    "adaptive_no_stability_ablation"
+  ],
+  "row_counts": {
+    "case_summary": 42,
+    "cell_summary": 114,
+    "decisions": 122,
+    "external_audit": 42,
+    "method_summary": 3
+  },
+  "schema_version": "selected_node_adaptive_law_replay/v1"
+}

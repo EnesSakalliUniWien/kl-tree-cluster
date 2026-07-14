@@ -1,0 +1,13 @@
+case_id,test_case,case_category,selector_status,selected_run_id,selected_tree_inference,selected_found_clusters,selected_sharp_label_free_score,selected_mean_partition_agreement,selected_ari,selected_nmi,selected_macro_f1,selected_purity,average_ari,average_nmi,average_macro_f1,weighted_ari,weighted_nmi,weighted_macro_f1
+gauss_clear_medium_continuous::none,13,continuous_gaussian,skip_no_valid_topology,,,,,,,,,,0.0,0.0,0.1,0.0,0.0,0.1
+gauss_clear_medium_continuous::normalized_branch_length,13,continuous_gaussian,skip_no_valid_topology,,,,,,,,,,0.0,0.0,0.1,0.0,0.0,0.1
+binary_low_noise_4c::none,39,balanced_binary,selected,family_metric_tree_linkage_method_weighted,weighted,4.0,5.625,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+binary_low_noise_4c::normalized_branch_length,39,balanced_binary,selected,family_metric_tree_linkage_method_weighted,weighted,4.0,5.625,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+sbm_moderate::none,60,sbm,skip_no_valid_topology,,,,,,,,,,0.0,0.0,0.19607843137254902,0.0,0.0,0.19607843137254902
+sbm_moderate::normalized_branch_length,60,sbm,skip_no_valid_topology,,,,,,,,,,0.0,0.0,0.19607843137254902,0.0,0.0,0.19607843137254902
+cat_clear_3cat_4c::none,62,categorical,selected,family_metric_tree_linkage_method_complete,complete,4.0,4.125,0.8331226295828066,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.7079646017699115,0.8571428571428572,0.6666666666666666
+cat_clear_3cat_4c::normalized_branch_length,62,categorical,selected,family_metric_tree_linkage_method_complete,complete,4.0,4.125,0.8331226295828066,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.7079646017699115,0.8571428571428572,0.6666666666666666
+overlap_mod_4c_small::none,90,sparse_overlap_binary,selected,family_metric_tree_linkage_method_average,average,4.0,1.75,0.666168224164975,0.9147788543485026,0.8882959279087826,0.9675670496256451,0.9675,0.9147788543485026,0.8882959279087826,0.9675670496256451,0.7907713360041502,0.8099202413442246,0.9649652815535568
+overlap_mod_4c_small::normalized_branch_length,90,sparse_overlap_binary,selected,family_metric_tree_linkage_method_average,average,4.0,1.75,0.666168224164975,0.9147788543485026,0.8882959279087826,0.9675670496256451,0.9675,0.9147788543485026,0.8882959279087826,0.9675670496256451,0.7907713360041502,0.8099202413442246,0.9649652815535568
+cont_lowrank_pggn_shrinkage::none,117,high_dimensional_continuous,selected,family_metric_tree_linkage_method_centroid,centroid,7.0,4.25,0.0,0.06270318332113847,0.15290552218286393,0.4179410640580782,0.4625,,,,,,
+cont_lowrank_pggn_shrinkage::normalized_branch_length,117,high_dimensional_continuous,selected,family_metric_tree_linkage_method_centroid,centroid,7.0,4.25,0.0,0.06270318332113847,0.15290552218286393,0.4179410640580782,0.4625,,,,,,

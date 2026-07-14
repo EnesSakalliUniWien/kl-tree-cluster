@@ -1,0 +1,34 @@
+{
+  "schema_version": "tree_topology_difference_diagnosis/v1",
+  "generated_by": "benchmarks.validation.tree_topology_difference_diagnosis",
+  "generated_at_utc": "20260709_153948Z",
+  "git_revision": "6769e94bd59c8ec967e76fc8cf91c38ef2e4d348",
+  "inputs": {
+    "tree_cells": "reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_cells.csv",
+    "tree_pairwise": "reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_pairwise.csv",
+    "tree_newick": "reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_newick.csv",
+    "loss_taxonomy": "reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_loss_taxonomy.csv",
+    "pvalue_cells": "reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_pvalue_cells.csv",
+    "traversal_trace": "reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_traversal_trace.csv",
+    "alpha_best_by_case": "reports/tree_consensus_alpha_sensitivity_20260709/sibling_alpha_sweep_best_by_case.csv",
+    "literature_case_summary": "reports/tree_consensus_literature_policy_replay_20260709/literature_policy_replay_case_summary.csv"
+  },
+  "outputs": {
+    "method_summary": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_method_summary.csv",
+    "pair_family_summary": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_pair_family_summary.csv",
+    "subtree_support": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_subtree_support.csv",
+    "subtree_highlights": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_subtree_highlights.csv",
+    "case_diagnosis": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_case_diagnosis.csv",
+    "null_recommendations": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_null_recommendations.csv",
+    "report": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_diagnosis_report.md",
+    "manifest": "reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_diagnosis_manifest.json"
+  },
+  "row_counts": {
+    "method_summary": 8,
+    "pair_family_summary": 28,
+    "subtree_support": 9106,
+    "subtree_highlights": 168,
+    "case_diagnosis": 14,
+    "null_recommendations": 3
+  }
+}

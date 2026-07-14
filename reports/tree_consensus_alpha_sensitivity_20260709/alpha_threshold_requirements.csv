@@ -1,0 +1,15 @@
+case_id,loss_bucket,alpha_parameter,minimal_observed_alpha_to_open,note
+dim_diffuse_6c_136f_continuous,edge_gate_closed_global,edge_alpha,0.0119395792603464,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+phylo_brownian_null_16taxa,edge_gate_closed_global,edge_alpha,0.0334549903725075,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+dim_consolidated_4c_24f_continuous,edge_gate_closed_global,edge_alpha,0.0807087970718598,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+dim_consolidated_4c_72f_continuous,edge_gate_closed_global,edge_alpha,0.1736620608744417,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+gauss_clear_medium_continuous,edge_gate_closed_global,edge_alpha,0.4211575721516045,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+gauss_single_outlier_4c_continuous,edge_gate_closed_global,edge_alpha,0.4555071735271706,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+mp_spike_above_bbp_continuous,edge_gate_closed_global,edge_alpha,0.5678578445064908,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+gauss_moderate_3c_continuous,edge_gate_closed_global,edge_alpha,0.621264137217943,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+gauss_outlier_cluster_4c_continuous,edge_gate_closed_global,edge_alpha,0.637371390388745,threshold for any current all-node corrected edge evidence; does not guarantee valid clustering
+sbm_hard,sibling_gate_closed_after_edge_open,sibling_alpha,0.0125726905933696,threshold for active corrected sibling gate after edge support; does not guarantee valid clustering
+sbm_moderate,sibling_gate_closed_after_edge_open,sibling_alpha,0.0221596594655376,threshold for active corrected sibling gate after edge support; does not guarantee valid clustering
+cont_lowrank_pggn_shrinkage,sibling_gate_closed_after_edge_open,sibling_alpha,0.0819282189061434,threshold for active corrected sibling gate after edge support; does not guarantee valid clustering
+overlap_heavy_8c_large_feat,sibling_gate_closed_after_edge_open,sibling_alpha,0.0994726829369209,threshold for active corrected sibling gate after edge support; does not guarantee valid clustering
+overlap_extreme_4c,sibling_gate_closed_after_edge_open,sibling_alpha,0.1941247067925768,threshold for active corrected sibling gate after edge support; does not guarantee valid clustering

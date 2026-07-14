@@ -5114,6 +5114,13 @@ verification, and maintenance events here in chronological order.
   paired mean/median ARI, NMI, macro F1, and category-level regression checks
   all pass for the frozen selector, while production-default promotion remains
   a separate decision.
+- Added a fail-closed breakdown for the full tree-consensus gate: the `20`
+  `skip_no_valid_topology` selections consist of `14` real multi-cluster
+  one-cluster under-splits, `4` expected/null one-cluster rows that lack
+  two-cluster internal metrics, and `2` all-cell calibration/support failures.
+  The `43` skipped run cells are mostly localized topology-cell failures; only
+  `30` sit inside fail-closed selection cases and `13` occur in cases that
+  still receive a selected topology.
 
 ### 2026-07-07
 
@@ -5127,6 +5134,146 @@ verification, and maintenance events here in chronological order.
   Extracted root-stability and selected-permutation guard layers into
   `decomposition/gates/guards.py` while preserving the public orchestrator
   imports used by existing callers.
+
+### 2026-07-09
+
+- Ran a focused p-value and traversal audit for the `14` real multi-cluster
+  under-splits inside the full adaptive-K graphtools NNLS tree-consensus gate's
+  `skip_no_valid_topology` selections. The audit writes
+  `reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_pvalue_report.md`,
+  `fail_closed_loss_taxonomy.csv`, cell p-value tables, live/full-edge
+  traversal traces, and an external fallback audit. The loss-site split is `9`
+  global edge-gate closures and `5` sibling-gate closures after edge support:
+  no weighted topology cell rescues the cases, while current default `tbs`
+  helps only a subset and has its own support skips. The skipped diagnostic
+  topology cells are runtime support/precondition failures; the separate
+  packaging issue is that local `graphtools` and `tasklogger` metadata report
+  GPLv2 licenses.
+- Ran a focused sibling-alpha sweep for the five edge-supported fail-closed
+  cases using `sibling_alpha` values `0.015`, `0.025`, `0.05`, `0.10`, and
+  `0.20` on topology cells with existing edge-open traversal. The resulting
+  `reports/tree_consensus_alpha_sensitivity_20260709/alpha_sensitivity_report.md`
+  shows alpha-only relaxation is not an adequate overlap fix:
+  `overlap_heavy_8c_large_feat` needs `sibling_alpha = 0.20` for weak recovery
+  with ARI `0.076480` and `22` clusters, while `overlap_extreme_4c` remains
+  effectively unrecovered at ARI `0.000107`.
+- Added and ran a pass-through-aware literature-policy replay in
+  `benchmarks/validation/tree_literature_alpha_replay.py`, writing
+  `reports/tree_consensus_literature_policy_replay_20260709/literature_policy_replay_report.md`.
+  The replay covers current traversal, hierarchical FDR, TreeBH-style
+  multiresolution BH, dependence-robust BY, graphical alpha recycling,
+  selective-inference-required, randomized-alpha-spending-required, and a
+  trace-only adaptive alpha proxy. The formal `0.01` budget procedures rescue
+  `0/14` fail-closed cases; the exact selective/randomized variants fail
+  closed because their required p-value objects are absent; the adaptive proxy
+  opens only `sbm_moderate` and one weak dominant
+  `overlap_heavy_8c_large_feat` candidate. The new
+  `literature_policy_replay_requirement_audit.csv` records one row per
+  requested literature family with paper-exact status and production
+  interpretation. A companion `20`-replicate binary null FDR smoke records
+  algorithmic synthetic-p control, fixed/selected-tree Wald over-rejection, and
+  selected-inflated support failures.
+- Added and ran a BranchArchitect-backed rebuilt-tree comparison for the `14`
+  real multi-cluster fail-closed under-splits in
+  `benchmarks/validation/brancharchitect_tree_comparison.py`, writing
+  `reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_comparison_report.md`.
+  The run rebuilt `112` adaptive-K graphtools NNLS topology cells (`101` ok,
+  `11` skips), emitted branch-length Newick strings and `315` pairwise tree
+  comparisons, and loaded BranchArchitect from `TBS_BRANCHARCHITECT_PATH` for
+  RF/weighted-RF plus leaf-capped interpolation events. All successful cells
+  still returned one cluster, so topology and NNLS branch-path differences do
+  not change the fail-closed cluster structure; the remaining loss is upstream
+  edge/sibling support and selected-hierarchy calibration.
+- Added and ran a topology/subtree difference diagnosis in
+  `benchmarks/validation/tree_topology_difference_diagnosis.py`, writing
+  `reports/tree_consensus_topology_difference_diagnosis_20260709/topology_difference_diagnosis_report.md`.
+  The diagnosis parses BranchArchitect branch-length Newick exports, emits
+  `9,106` rooted subtree-support rows and `168` ranked unstable-subtree
+  highlights, and explains why topology cells differ without rescuing the
+  cluster structure. Continuous edge-closed cases are dominated by
+  stable-core-vs-centroid/median clade contrasts; overlap/SBM cases contain
+  large unstable subtrees supported by one or a small subset of topology
+  methods. The resulting statistical direction is a selected-pipeline edge
+  null for edge-closed cases and a topology/branch-length-conditioned selected
+  sibling null plus topology-stability alpha spending for edge-supported
+  cases, not a global alpha increase.
+- Added and ran the selected-node sibling-null law diagnostic in
+  `benchmarks/validation/selected_node_sibling_null_law.py`, writing
+  `reports/selected_node_sibling_null_law_20260709/selected_node_sibling_null_law_report.md`.
+  The report formalizes the fixed conditional statistic and the missing
+  selected law
+  `P_0(W_v >= W_obs | E_sel(T,v,k,U,ell,Sigma,topology_stability),
+  H0_sibling(v))`, records seven law components, emits ten deterministic
+  smaller examples for sample-size, NNLS branch-length, covariance/eigenvector,
+  multiplicity, and accepted-dimension effects, and preserves the empirical
+  split of `5` edge-supported selected-node sibling-law cases versus `9`
+  selected-pipeline edge-null cases. The generated report now includes a
+  selective-inference literature anchor and an explicit requirement-coverage
+  section for the requested mathematical/statistical ingredients.
+- Extended the selected-node law diagnostic with an adaptive-law benchmark
+  replay, writing
+  `reports/selected_node_adaptive_law_replay_20260709/selected_node_adaptive_law_replay_report.md`.
+  The strict selected-law policy opens `0/14` cases because exact
+  selected-node conditional p-values are still absent; the
+  topology/branch/covariance spending proxy also opens `0/14`; the
+  no-stability ablation opens only `sbm_moderate` in `3` topology cells. The
+  nearest prior rerun at `sibling_alpha = 0.20` has ARI `0.071841`, NMI
+  `0.171602`, macro F1 `0.472963`, and `6` clusters, so this replay remains
+  diagnostic evidence rather than promotion support.
+- Diagnosed why the strict selected-node replay opens `0/14` cases. The strict
+  policy is hard-coded to fail before evaluating either edge state or an input
+  p-value, and no selected-node conditional p-value exists in the replay schema
+  or benchmark output. The aggregate result also mixes `9` upstream edge-gate
+  failures with only `5` selected-node sibling-law cases; their `38` root-cell
+  decisions comprise `20` edge-open cells with ordinary p-values and `18`
+  edge-closed cells. The formal conditioning event is not yet executable by
+  naive rejection Monte Carlo because exact continuous NNLS lengths,
+  covariance, eigenvectors, and stability values define a probability-zero
+  match. Recorded the required repair direction: condition on discrete
+  selection state, recompute or validly condition continuous nuisance
+  quantities, and build separate local-null generators for binary overlap, SBM
+  adjacency, and continuous low-rank contexts.
+- Audited the distance, topology-inference, and branch-time layers for the
+  fourteen real fail-closed cases. The frozen adaptive graphtools method uses
+  raw-coordinate Hamming KNN for every feature family, Euclidean distance in
+  `30` diffusion coordinates for seven linkage methods plus neighbor joining,
+  then fixed-topology NNLS against squared standardized Euclidean raw-feature
+  distance. Reconstructed continuous inputs have off-diagonal Hamming distance
+  identically `1`, producing mostly tiny outlier-versus-rest linkage roots;
+  this is the primary defect for clear Gaussian/outlier/phylogenetic cases.
+  Binary overlap and SBM distances are nondegenerate but have between/within
+  distance ratios near one. Across topology methods no sibling gate opens.
+  NNLS branch time only multiplies contrast variance, with median root
+  multipliers around `1.1`--`1.6`, and a root-only no-branch counterfactual
+  still leaves all nine edge-closed cases above `edge_alpha=0.001`. Recorded
+  the resulting method direction: family-aware graph distance, aligned branch
+  target, and branch-fit admissibility checks before branch lengths affect
+  inferential variance.
+- Added aligned prepared-geometry support to fixed-topology NNLS and the
+  graphtools runner, preserving original observations for TBS tests and all
+  existing defaults. Added and ran
+  `benchmarks/validation/family_metric_nnls_grid.py` over six representative
+  families, eight topology methods, and branch-time off/on (`96` cells, `86`
+  successful, `10` fail-closed). The panel gives perfect known-K topology to
+  clear Gaussian and balanced binary cases, strong categorical clade recovery,
+  a selected average-linkage overlap partition with ARI `0.9148`, poor
+  high-dimensional/SBM topology, and zero final partition changes across `43`
+  paired branch-time cells. The clear Gaussian failure is now localized after
+  topology recovery: sibling p-values remain above threshold and branch-time
+  closes the root edge path. Recorded the evidence in
+  [[family-metric-nnls-grid-20260709]] and retained explicit `no_promotion`
+  status.
+
+### 2026-07-14
+
+- Reviewed the family-geometry, selected-node-law, topology-diagnosis, and
+  BranchArchitect comparison changes as one development integration. Pinned
+  BranchArchitect at commit `bfa33713d61e74df109990c018436fe4330f2e95`
+  through `vendor/BranchArchitect`, added the minimal optional runtime extra,
+  made installed and bundled adapter loading explicit, and retained
+  fail-closed behavior when neither source is available. The comparison stays
+  evidence-only and MIT-licensed; the separate GPL graphtools/tasklogger
+  packaging constraint is unchanged.
 
 ## Evidence
 

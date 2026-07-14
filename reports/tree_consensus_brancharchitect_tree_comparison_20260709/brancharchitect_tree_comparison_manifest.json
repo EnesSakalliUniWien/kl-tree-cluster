@@ -1,0 +1,41 @@
+{
+  "brancharchitect_error": "",
+  "brancharchitect_interpolation_max_leaves": 120,
+  "brancharchitect_path": "/private/tmp/BranchArchitect-inspect",
+  "brancharchitect_status": "interpolation_available",
+  "case_names": [
+    "cont_lowrank_pggn_shrinkage",
+    "dim_consolidated_4c_24f_continuous",
+    "dim_consolidated_4c_72f_continuous",
+    "dim_diffuse_6c_136f_continuous",
+    "gauss_clear_medium_continuous",
+    "gauss_moderate_3c_continuous",
+    "gauss_outlier_cluster_4c_continuous",
+    "gauss_single_outlier_4c_continuous",
+    "mp_spike_above_bbp_continuous",
+    "overlap_extreme_4c",
+    "overlap_heavy_8c_large_feat",
+    "phylo_brownian_null_16taxa",
+    "sbm_hard",
+    "sbm_moderate"
+  ],
+  "cwd": "/Users/berksakalli/Projects/kl-te-cluster",
+  "enable_brancharchitect_interpolation": true,
+  "generated_at_utc": "20260709_140426Z",
+  "generated_by": "benchmarks.validation.brancharchitect_tree_comparison",
+  "max_path_pairs": 20000,
+  "outputs": {
+    "report": "reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_comparison_report.md",
+    "tree_case_summary": "reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_case_summary.csv",
+    "tree_cells": "reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_cells.csv",
+    "tree_newick": "reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_newick.csv",
+    "tree_pairwise": "reports/tree_consensus_brancharchitect_tree_comparison_20260709/brancharchitect_tree_pairwise.csv"
+  },
+  "platform": "macOS-26.5.1-arm64-arm-64bit",
+  "python": "3.11.12",
+  "schema_version": "brancharchitect_tree_comparison/v1",
+  "source_paths": [
+    "reports/tree_consensus_fail_closed_pvalues_20260709/fail_closed_loss_taxonomy.csv"
+  ],
+  "target_method": "tbs_diffusion_graphtools_adaptive_nnls"
+}
