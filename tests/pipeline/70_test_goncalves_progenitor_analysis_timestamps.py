@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 
 
 def _load_analysis_module():
-    script_path = Path(__file__).resolve().parents[2] / "scripts/analyze_goncalves_tbs_progenitors.py"
+    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/analysis/analyze_goncalves_progenitors.py"
     spec = importlib.util.spec_from_file_location("analyze_goncalves_tbs_progenitors", script_path)
     assert spec is not None
     assert spec.loader is not None

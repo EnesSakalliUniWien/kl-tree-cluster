@@ -4,8 +4,8 @@ type: source
 status: reviewed
 updated: 2026-06-24
 sources:
-  - scripts/analyze_goncalves_tbs_progenitors.py
-  - scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R
+  - applications/scrna/analysis/analyze_goncalves_progenitors.py
+  - applications/scrna/plots/goncalves_progenitor_trees_ggtree.R
   - raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_population_progenitor_signature_scores.csv
   - raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_tbs_cluster_progenitor_signature_scores.csv
   - raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_tbs_inner_node_progenitor_signature_scores.csv
@@ -63,13 +63,13 @@ and endocrine/endocrine-progenitor-like reference states.
 - Exact monophyletic meeting node `N2907` joins a small mesenchyme subtree
   (`C19-C21`) to the large progenitor-rich `C22`, so it is best interpreted as
   a progenitor/mesenchyme neighborhood join, not a pure progenitor ancestor.
-- `scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R` renders the whole
+- `applications/scrna/plots/goncalves_progenitor_trees_ggtree.R` renders the whole
   `1,465`-tip adaptive-diffusion TBS tree as three progenitor-specific radial
   trees: dominant fetal population, trunk/tip/proliferating fraction, and
   interpreted progenitor state. The plots label `N2851`, `N2903`, `N2758`,
   `N2876`, `N2910`, `N2907`, and `N2872`.
 - The same plotting script is the consolidated Goncalves progenitor UMAP/tree
-  plotting line: `Rscript scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R
+  plotting line: `Rscript applications/scrna/plots/goncalves_progenitor_trees_ggtree.R
   --pdf-width=30 --pdf-height=42 --page-width=30 --page-height=16
   --png-dpi=180`. It writes screen-readable PNG previews, a row-wise vector PDF,
   and a separate multi-page PDF with one UMAP/tree pair per page; UMAP cells are
@@ -95,9 +95,9 @@ and endocrine/endocrine-progenitor-like reference states.
 - `raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_tbs_progenitor_umap_tree_pages_ggtree.pdf`
   is the `30` by `16` inch-per-page vector PDF with the population,
   progenitor-fraction, and progenitor-state UMAP/tree views on separate pages.
-- `ruff check scripts/analyze_goncalves_tbs_progenitors.py` and
-  `python -m py_compile scripts/analyze_goncalves_tbs_progenitors.py` passed.
-- `Rscript -e "parse('scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R')"`
+- `ruff check applications/scrna/analysis/analyze_goncalves_progenitors.py` and
+  `python -m py_compile applications/scrna/analysis/analyze_goncalves_progenitors.py` passed.
+- `Rscript -e "parse('applications/scrna/plots/goncalves_progenitor_trees_ggtree.R')"`
   passed, and the plotting script regenerated
   `goncalves_tbs_progenitor_tree_outputs.csv`.
 

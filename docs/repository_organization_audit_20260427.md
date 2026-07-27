@@ -1,5 +1,11 @@
 # Repository Organization Audit - 2026-04-27
 
+> Historical audit. The 2026-07-27 organization pass supersedes its
+> `scripts/analysis/` recommendation: maintained dataset commands now live in
+> `applications/`, reusable space separation in
+> `tree_break_selection/space_separation/`, and reusable plotting engines in
+> `tree_break_selection/plot/`.
+
 ## Scope
 
 This audit checks repository-level organization after the `benchmarks/results` cleanup. It focuses on structural inconsistencies, misplaced generated artifacts, duplicate result roots, and tracked files that look like outputs rather than source.
@@ -95,23 +101,25 @@ evidence.
 
 ### 1. Entrypoints Are Categorized By Domain
 
-Runnable scripts are now grouped by domain. User-facing matrix-analysis
-utilities live under `scripts/analysis/`; benchmark runners and diagnostics live
-under `benchmarks/`; test orchestration lives under `scripts/run_tests_ordered.py`.
-Notebook-only Python helpers were removed from `notebooks/`.
+Runnable commands are grouped by domain. User-facing matrix-analysis utilities
+now live under `applications/endotypes/`; benchmark runners and diagnostics
+live under `benchmarks/`; test orchestration lives under
+`scripts/run_tests_ordered.py`. Notebook-only Python helpers were removed from
+`notebooks/`.
 
 Examples:
 
 - `quick_start.py`
 - `benchmarks/smoke/run_subset.py`
 - `benchmarks/regression/run_gate.py`
-- `scripts/analysis/run_feature_matrix_with_umap.py`
-- `scripts/analysis/analyze_hc_clusters.py`
-- `scripts/analysis/assess_method_correctness.py`
+- `applications/endotypes/run_feature_matrix_with_umap.py`
+- `applications/endotypes/analyze_hc_clusters.py`
+- `applications/endotypes/assess_method_correctness.py`
 
 Recommendation:
 
-- Keep this separation: `scripts/analysis/` for user-facing analysis commands,
+- Keep this separation: `applications/` for dataset commands,
+  `tree_break_selection/` for reusable methods and plotting engines,
   `benchmarks/` for benchmark execution, `benchmarks/diagnostics/` for
   investigation commands, and `notebooks/` for notebooks only.
 

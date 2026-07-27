@@ -21,8 +21,8 @@ sources:
   - tests/validation/85_test_tree_strategy_semantic_panel.py
   - tests/validation/86_test_kak_feature_subspace_clustering.py
   - tests/visualization/71_test_cluster_tree_visualization.py
-  - scripts/kak_signal_adaptive_umap_tree_page.py
-  - scripts/analysis/run_feature_matrix_with_umap.py
+  - applications/endotypes/kak_signal_adaptive_umap_tree_page.py
+  - applications/endotypes/run_feature_matrix_with_umap.py
   - benchmarks/results/diagnostics/adaptive_cosine_kak_probe_method_proof_cal_default_20260605/kak_benchmark_probe_rows.csv
   - benchmarks/results/diagnostics/adaptive_cosine_kak_probe_method_proof_cal_enforced_20260605/kak_benchmark_probe_rows.csv
   - benchmarks/results/diagnostics/adaptive_cosine_kak_probe_full_gate_bundle_20260605/kak_benchmark_probe_rows.csv
@@ -416,7 +416,7 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_spectral_blocks_gate_bundle_20260605/matrix_kak_probe_summary.csv`
   and `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_spectral_blocks_support_enforced_20260605/matrix_kak_probe_summary.csv`
   contain the combined Julia GO matrix default and support-enforced summaries.
-- `scripts/kak_signal_adaptive_umap_tree_page.py` restores the visualization
+- `applications/endotypes/kak_signal_adaptive_umap_tree_page.py` restores the visualization
   layer against current matrix-probe outputs and adds per-sample and per-merge
   geometry diagnostics.
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_20260606/kak_signal_adaptive_block_geometry_summary.csv`
@@ -438,7 +438,7 @@ and Ward-Euclidean lens trees, and an AWS Batch wrapper shards the larger
   is the NMI ranking plot for the Julia rerun.
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_nmi_ordered_20260610/kak_signal_adaptive_umap_tree_page.png`
   is the consolidated Julia diagnostic page sorted by reference NMI.
-- `scripts/analysis/run_feature_matrix_with_umap.py` was updated to use the
+- `applications/endotypes/run_feature_matrix_with_umap.py` was updated to use the
   current gate-annotation bundle path before recreating the historical
   full-matrix method outputs.
 - `benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/09_full_data_method_reference_comparison_20260610/all_method_and_kak_reference_comparison.csv`

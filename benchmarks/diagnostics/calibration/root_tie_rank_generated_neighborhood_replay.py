@@ -18,10 +18,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import pdist
 from tree_break_selection.tree.feature_space import (
     bernoulli_feature_space_from_columns,
 )
-from scipy.spatial.distance import pdist
 
 from benchmarks.diagnostics.calibration.selected_family_traversal_panel import (
     _build_node_decisions,

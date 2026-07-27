@@ -17,6 +17,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import fcluster, linkage
+from scipy.spatial.distance import pdist
+from scipy.stats import norm, t
+from sklearn.metrics import adjusted_rand_score
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     ClusterBoundary,
     build_cluster_assignments,
@@ -45,10 +49,6 @@ from tree_break_selection.tree.feature_space import (
     bernoulli_feature_space_from_columns,
 )
 from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import fcluster, linkage
-from scipy.spatial.distance import pdist
-from scipy.stats import norm, t
-from sklearn.metrics import adjusted_rand_score
 
 from benchmarks.diagnostics.calibration.data_independent_sibling_gate_panel import (
     DEFAULT_CANDIDATE_METHODS,

@@ -1,0 +1,23 @@
+# Endotype and GO-Annotation Application
+
+This application groups all user-facing feature-matrix, GO-annotation,
+subspace, endotype/reference, and report commands.
+
+Start with the orchestrator:
+
+```bash
+python applications/endotypes/run_go_annotation_feature_matrix_pipeline.py --help
+```
+
+The canonical adaptive-cosine subspace application is
+`run_current_adaptive_diffusion_subspace_tree_experiment.py`. It consumes the
+main `tree_break_selection.space_separation` interface; it does not import the
+spectral method from a benchmark diagnostic.
+
+Reference endotype tables belong in `data/reference/`. Canonical input feature
+matrices belong in `data/feature_matrices/`.
+
+The `kak_signal_adaptive_umap_tree_page.py` command assembles KAK/cosine
+geometry and tree pages from matrix-probe outputs. Application commands may
+compose domain reports; reusable separation and plotting primitives belong in
+`tree_break_selection/`.

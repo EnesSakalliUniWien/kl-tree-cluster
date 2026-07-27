@@ -17,6 +17,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from sklearn.metrics import (
+    adjusted_rand_score,
+    normalized_mutual_info_score,
+)
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -27,30 +33,24 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     CalibrationSupportThresholds,
 )
-from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from sklearn.metrics import (
-    adjusted_rand_score,
-    normalized_mutual_info_score,
+from tree_break_selection.space_separation import (
+    SpectralBlock,
+    adaptive_spectral_blocks,
+    compute_diffusion_coordinates,
+    coordinates_for_block,
+    cosine_eigendecomposition,
+    resolve_adaptive_epsilon,
+    resolve_neighbor_search_k,
+    weight_feature_matrix,
 )
+from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
     SCHEMA_VERSION,
-    SpectralBlock,
-    adaptive_spectral_blocks,
-    coords_for_block,
-    cosine_eigendecomposition,
     sibling_method_counts,
-    weighted_matrix,
 )
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import (
     load_matrix,
-)
-from benchmarks.shared.runners.tbs_diffusion_runner import (
-    _compute_diffusion_coordinates,
-    _resolve_adaptive_epsilon,
-    _resolve_neighbor_search_k,
 )
 
 SCHEMA = f"{SCHEMA_VERSION}/kak_lens_alpha_sweep"
@@ -259,7 +259,7 @@ def block_diffusion_coordinates(
             weights[i, int(j)] = max(float(weights[i, int(j)]), similarity)
             weights[int(j), i] = max(float(weights[int(j), i]), similarity)
 
-    diffusion_coords = _compute_diffusion_coordinates(
+    diffusion_coords = compute_diffusion_coordinates(
         weights.toarray(),
         diffusion_time=diffusion_time,
         n_components=n_components,
@@ -293,7 +293,7 @@ def block_adaptive_diffusion_coordinates(
     if not np.isfinite(x).all():
         raise ValueError("Block coordinates contain non-finite values.")
 
-    neighbor_k = _resolve_neighbor_search_k(x.shape[0], k_neighbors)
+    neighbor_k = resolve_neighbor_search_k(x.shape[0], k_neighbors)
     kernel_object = kernel.Kernel(
         epsilon=1.0 if not isinstance(epsilon, (float, int)) else float(epsilon),
         k=neighbor_k,
@@ -302,7 +302,7 @@ def block_adaptive_diffusion_coordinates(
         bandwidth_type=bandwidth_type,
     )
     kernel_object.fit(x)
-    epsilon_value, epsilon_method = _resolve_adaptive_epsilon(
+    epsilon_value, epsilon_method = resolve_adaptive_epsilon(
         kernel_object,
         epsilon,
         metric=metric,
@@ -315,7 +315,7 @@ def block_adaptive_diffusion_coordinates(
         if hasattr(adaptive_kernel, "toarray")
         else np.asarray(adaptive_kernel, dtype=float)
     )
-    diffusion_coords = _compute_diffusion_coordinates(
+    diffusion_coords = compute_diffusion_coordinates(
         weights,
         diffusion_time=diffusion_time,
         n_components=n_components,
@@ -343,7 +343,7 @@ def build_lens_coordinates(
     spec: LensSpec,
     args: argparse.Namespace,
 ) -> tuple[np.ndarray, dict[str, object]]:
-    coords = coords_for_block(eigvals, eigvecs, block)
+    coords = coordinates_for_block(eigvals, eigvecs, block)
     if spec.family == "raw_kak":
         return coords, {"tree_metric": "raw_kak_block_euclidean"}
     elif spec.family == "sep_fixed_diffusion":
@@ -652,7 +652,7 @@ def main() -> None:
     for spec in lens_specs:
         print(f"[lens] {spec.lens_id}", flush=True)
         if spec.weighting not in eigensystems:
-            values = weighted_matrix(data, spec.weighting)
+            values = weight_feature_matrix(data, spec.weighting)
             eigvals, eigvecs = cosine_eigendecomposition(values, args.max_rank)
             blocks, diagnostics = adaptive_spectral_blocks(
                 eigvals,

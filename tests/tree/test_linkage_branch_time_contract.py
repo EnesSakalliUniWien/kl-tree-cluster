@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from benchmarks.shared.runners.tbs_runner import _run_tbs_on_distance
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from scipy.spatial.distance import pdist
 from tree_break_selection.tree.feature_space import continuous_feature_space_from_columns
 
@@ -22,7 +22,7 @@ def test_linkage_branch_time_requires_recomputed_branch_lengths() -> None:
     data = _small_continuous_frame()
 
     with pytest.raises(ValueError, match="requires recomputed fixed-topology branch lengths"):
-        _run_tbs_on_distance(
+        run_tbs_on_distance(
             data,
             pdist(data.to_numpy(), metric="euclidean"),
             0.01,
@@ -52,7 +52,7 @@ def test_linkage_branch_time_raw_heights_are_explicit_diagnostic_only(
     )
 
     with pytest.raises(RuntimeError, match="stop after branch contract"):
-        _run_tbs_on_distance(
+        run_tbs_on_distance(
             data,
             pdist(data.to_numpy(), metric="euclidean"),
             0.01,
@@ -92,7 +92,7 @@ def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
     )
 
     with pytest.raises(RuntimeError, match="topology-only tree construction"):
-        _run_tbs_on_distance(
+        run_tbs_on_distance(
             data,
             pdist(data.to_numpy(), metric="euclidean"),
             0.01,
@@ -125,7 +125,7 @@ def test_fixed_topology_nnls_accepts_separate_aligned_branch_geometry(
     )
 
     with pytest.raises(RuntimeError, match="aligned branch geometry"):
-        _run_tbs_on_distance(
+        run_tbs_on_distance(
             data,
             pdist(geometry.to_numpy(), metric="euclidean"),
             0.01,
@@ -144,7 +144,7 @@ def test_fixed_topology_nnls_rejects_misaligned_branch_geometry() -> None:
     geometry = data.iloc[::-1]
 
     with pytest.raises(ValueError, match="index must exactly match"):
-        _run_tbs_on_distance(
+        run_tbs_on_distance(
             data,
             pdist(data.to_numpy(), metric="euclidean"),
             0.01,

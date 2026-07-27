@@ -12,8 +12,11 @@ import pandas as pd
 
 
 def _load_diagnostic_module():
-    script_path = Path(__file__).resolve().parents[2] / "scripts/discrete_covariance_guard_diagnostic.py"
-    spec = importlib.util.spec_from_file_location("discrete_covariance_guard_diagnostic", script_path)
+    script_path = (
+        Path(__file__).resolve().parents[2]
+        / "benchmarks/diagnostics/calibration/discrete_covariance_guard.py"
+    )
+    spec = importlib.util.spec_from_file_location("discrete_covariance_guard", script_path)
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -57,7 +60,7 @@ def test_discrete_covariance_diagnostic_writes_manifest_timestamp(monkeypatch, t
     monkeypatch.setattr(
         sys,
         "argv",
-        ["discrete_covariance_guard_diagnostic.py", "--root-only"],
+        ["discrete_covariance_guard.py", "--root-only"],
     )
 
     module.main()
@@ -67,7 +70,7 @@ def test_discrete_covariance_diagnostic_writes_manifest_timestamp(monkeypatch, t
         r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}",
         manifest["generated_at"],
     )
-    assert manifest["command"] == "discrete_covariance_guard_diagnostic.py --root-only"
+    assert manifest["command"] == "discrete_covariance_guard.py --root-only"
     assert manifest["cases"] == ["case_a"]
     assert manifest["root_only"] is True
     assert manifest["node_rows"] == 1

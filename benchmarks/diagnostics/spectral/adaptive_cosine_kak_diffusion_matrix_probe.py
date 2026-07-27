@@ -21,6 +21,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -35,26 +37,23 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     CalibrationSupportThresholds,
 )
+from tree_break_selection.space_separation import (
+    adaptive_spectral_blocks,
+    block_adaptive_diffusion_distance,
+    block_diffusion_distance,
+    coordinates_for_block,
+    cosine_eigendecomposition,
+    weight_feature_matrix,
+)
 from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
     SCHEMA_VERSION,
-    adaptive_spectral_blocks,
-    coords_for_block,
-    cosine_eigendecomposition,
     sibling_method_counts,
-    weighted_matrix,
 )
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import (
     load_matrix,
     safe_name,
-)
-from benchmarks.shared.runners.tbs_diffusion_runner import (
-    _build_adaptive_diffusion_distance,
-    _compute_diffusion_coordinates,
 )
 
 DIFFUSION_SCHEMA_VERSION = f"{SCHEMA_VERSION}/matrix_block_diffusion"
@@ -110,106 +109,6 @@ def default_output_dir(input_path: Path) -> Path:
     )
 
 
-def block_diffusion_distance(
-    coords: np.ndarray,
-    *,
-    k_neighbors: int,
-    diffusion_time: int,
-    n_components: int,
-) -> tuple[np.ndarray, dict[str, object]]:
-    from scipy.sparse import lil_matrix
-    from sklearn.neighbors import NearestNeighbors
-
-    x = np.asarray(coords, dtype=float)
-    if x.ndim != 2 or x.shape[0] < 3:
-        raise ValueError("Block diffusion requires at least three coordinate rows.")
-    if not np.isfinite(x).all():
-        raise ValueError("Block coordinates contain non-finite values.")
-
-    n_samples = x.shape[0]
-    neighbor_count = min(max(2, int(k_neighbors) + 1), n_samples)
-    nn = NearestNeighbors(n_neighbors=neighbor_count, metric="euclidean")
-    nn.fit(x)
-    knn_dist, knn_idx = nn.kneighbors(x)
-
-    positive_sq = (knn_dist[knn_dist > 0.0]) ** 2
-    if positive_sq.size == 0:
-        raise ValueError("Degenerate block coordinates for diffusion.")
-    epsilon = float(np.median(positive_sq))
-    if not np.isfinite(epsilon) or epsilon <= 0.0:
-        raise ValueError("Could not resolve a positive block diffusion epsilon.")
-
-    weights = lil_matrix((n_samples, n_samples), dtype=float)
-    for i in range(n_samples):
-        for distance, j in zip(knn_dist[i], knn_idx[i], strict=False):
-            if int(j) == i:
-                continue
-            similarity = math.exp(-float(distance * distance) / epsilon)
-            similarity = max(similarity, 1e-12)
-            weights[i, int(j)] = max(float(weights[i, int(j)]), similarity)
-            weights[int(j), i] = max(float(weights[int(j), i]), similarity)
-
-    dense_weights = weights.toarray()
-    diffusion_coords = _compute_diffusion_coordinates(
-        dense_weights,
-        diffusion_time=diffusion_time,
-        n_components=n_components,
-    )
-    distances = pdist(diffusion_coords, metric="euclidean")
-    if not np.isfinite(distances).all() or np.allclose(distances, 0.0):
-        raise ValueError("Degenerate diffusion distances for block.")
-
-    metadata = {
-        "kernel": "knn_gaussian",
-        "metric": "euclidean",
-        "neighbor_search_k": int(neighbor_count - 1),
-        "epsilon": epsilon,
-        "diffusion_time": int(diffusion_time),
-        "diffusion_components": int(min(n_components, n_samples - 1)),
-    }
-    return distances, metadata
-
-
-def block_adaptive_diffusion_distance(
-    coords: np.ndarray,
-    *,
-    k_neighbors: int,
-    diffusion_time: int,
-    n_components: int,
-    metric: str,
-    bandwidth_type: str | float | None,
-    epsilon: str | float,
-) -> tuple[np.ndarray, dict[str, object]]:
-    x = np.asarray(coords, dtype=float)
-    if x.ndim != 2 or x.shape[0] < 3:
-        raise ValueError("Adaptive block diffusion requires at least three coordinate rows.")
-    if not np.isfinite(x).all():
-        raise ValueError("Block coordinates contain non-finite values.")
-
-    coord_df = pd.DataFrame(
-        x,
-        columns=[f"coord_{idx + 1}" for idx in range(x.shape[1])],
-    )
-    distances, metadata = _build_adaptive_diffusion_distance(
-        coord_df,
-        k_neighbors=k_neighbors,
-        diffusion_time=diffusion_time,
-        n_components=n_components,
-        metric=metric,
-        bandwidth_type=bandwidth_type,
-        epsilon=epsilon,
-        return_metadata=True,
-    )
-    distances = np.asarray(distances, dtype=float)
-    if not np.isfinite(distances).all() or np.allclose(distances, 0.0):
-        raise ValueError("Degenerate adaptive diffusion distances for block.")
-
-    return distances, {
-        "kernel": "pydiffmap_adaptive",
-        **metadata,
-        "diffusion_time": int(diffusion_time),
-        "diffusion_components": int(min(n_components, x.shape[0] - 1)),
-    }
 
 
 def run_block_diffusion_tree(
@@ -403,7 +302,7 @@ def main() -> None:
     for weighting in args.weightings:
         print(f"[{weighting}] eigendecomposition", flush=True)
         try:
-            values = weighted_matrix(data, weighting)
+            values = weight_feature_matrix(data, weighting)
             eigvals, eigvecs = cosine_eigendecomposition(values, args.max_rank)
             total_energy = float(np.sum(eigvals))
             blocks, diagnostics = adaptive_spectral_blocks(
@@ -453,7 +352,7 @@ def main() -> None:
             block_rows.append(block_record)
             start_sec = time.perf_counter()
             try:
-                coords = coords_for_block(eigvals, eigvecs, block)
+                coords = coordinates_for_block(eigvals, eigvecs, block)
                 assignments, decomposition, annotations_df, diffusion_metadata = (
                     run_block_diffusion_tree(
                         data=data,

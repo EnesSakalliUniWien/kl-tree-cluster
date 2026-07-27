@@ -8,8 +8,8 @@ from typing import Hashable
 
 import numpy as np
 import pandas as pd
-from tree_break_selection.core_utils.tree_utils import bottom_up_nodes
 from sklearn.metrics import adjusted_rand_score
+from tree_break_selection.core_utils.tree_utils import bottom_up_nodes
 
 FAILURE_CLASS_SOLVED = "solved"
 FAILURE_CLASS_TREE_UNRECOVERABLE = "tree_unrecoverable"

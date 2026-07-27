@@ -5,14 +5,14 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scripts.analysis.audit_go_annotation_analysis_levels import audit_paths
-from scripts.analysis.feature_matrix_quality_analysis import packed_pattern_groups
-from scripts.analysis.inventory_go_annotation_datasets import (
+from applications.endotypes.audit_go_annotation_analysis_levels import audit_paths
+from applications.endotypes.feature_matrix_quality_analysis import packed_pattern_groups
+from applications.endotypes.inventory_go_annotation_datasets import (
     canonical_matrix_name,
     dataset_slug_from_matrix_name,
     matrix_inventory,
 )
-from scripts.analysis.run_go_annotation_feature_matrix_pipeline import (
+from applications.endotypes.run_go_annotation_feature_matrix_pipeline import (
     build_pipeline_plan,
     finalize_go_annotation_results,
     matrix_slug,

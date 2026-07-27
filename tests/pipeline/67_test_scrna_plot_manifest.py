@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def _load_scrna_plot_pipeline_module():
-    script_path = Path(__file__).resolve().parents[2] / "scripts/run_scrna_plot_pipeline.py"
+    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/plot_pipeline.py"
     spec = importlib.util.spec_from_file_location("run_scrna_plot_pipeline", script_path)
     assert spec is not None
     assert spec.loader is not None
@@ -51,3 +51,15 @@ def test_plot_manifest_json_records_generated_timestamp(tmp_path):
     )
     assert written["generated_at"] == summary["generated_at"]
     assert (tmp_path / "plot_manifest.csv").exists()
+
+
+def test_pipeline_commands_resolve_relocated_application_entrypoints(tmp_path):
+    pipeline = _load_scrna_plot_pipeline_module()
+
+    for dataset in ("pancreas", "goncalves"):
+        commands = pipeline.pipeline_commands(dataset, tmp_path)
+        assert commands
+        for command in commands:
+            script_path = Path(command[1])
+            assert script_path.is_file(), command
+            assert "scripts" not in script_path.parts

@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import pdist
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     compute_whitened_wald_contrast,
 )
@@ -29,7 +30,6 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
-from scipy.spatial.distance import pdist
 
 from benchmarks.diagnostics.calibration.selected_family_traversal_panel import (
     NULL_OUTPUT_ROLE,

@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import networkx as nx
 import numpy as np
 import pandas as pd
+from scipy.special import logsumexp
+from scipy.stats import chi2
 from tree_break_selection.hierarchy_analysis.decomposition.gates.annotation_bundle import (
     GateAnnotationBundle,
 )
@@ -30,8 +32,6 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
-from scipy.special import logsumexp
-from scipy.stats import chi2
 
 
 @dataclass(frozen=True)

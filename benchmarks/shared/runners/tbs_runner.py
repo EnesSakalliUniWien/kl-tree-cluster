@@ -61,13 +61,11 @@ from tree_break_selection.tree.phylogenetic import (
 from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.shared.types import MethodRunResult
-from benchmarks.shared.util.decomposition import (
-    _labels_and_report_from_decomposition,
-)
+from benchmarks.shared.util.decomposition import labels_and_report_from_decomposition
 from benchmarks.shared.util.time import elapsed_since
 
 
-def _run_tbs_on_distance(
+def run_tbs_on_distance(
     data_df: pd.DataFrame,
     distance_condensed: np.ndarray | None,
     sibling_significance_level: float,
@@ -373,7 +371,7 @@ def _run_tbs_on_distance(
     stage_timings["traversal_sec"] = elapsed_since(traversal_start_sec)
     tree.annotations_df = decomposer.annotations_df
 
-    labels, report_df = _labels_and_report_from_decomposition(
+    labels, report_df = labels_and_report_from_decomposition(
         decomposition,
         data_df.index.tolist(),
     )
@@ -554,7 +552,7 @@ def _run_tbs_method(
     passthrough: bool = config.PASSTHROUGH,
     trace_level: str = "full",
 ) -> MethodRunResult:
-    return _run_tbs_on_distance(
+    return run_tbs_on_distance(
         data_df,
         distance_condensed,
         sibling_significance_level,

@@ -29,6 +29,7 @@ os.environ.setdefault("TBS_N_JOBS", "1")
 import tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator as gate_orchestrator
 import tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context as spectral_context_module
 import tree_break_selection.hierarchy_analysis.statistics.projection.spectral.marchenko_pastur as mp_worker
+from scipy.cluster.hierarchy import linkage
 from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.decomposition.backends.eigen.decomposition import (
     eigendecompose_covariance,
@@ -46,12 +47,11 @@ from tree_break_selection.hierarchy_analysis.statistics.projection.projection_di
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 from benchmarks.shared.types import MethodRunResult
-from benchmarks.shared.util.decomposition import _labels_and_report_from_decomposition
+from benchmarks.shared.util.decomposition import labels_and_report_from_decomposition
 
 
 @dataclass(frozen=True)
@@ -302,7 +302,7 @@ def _run_tbs_with_gate_bundle(
         edge_alpha=DEFAULT_EDGE_ALPHA,
         sibling_alpha=DEFAULT_SIBLING_ALPHA,
     )
-    labels, report_df = _labels_and_report_from_decomposition(
+    labels, report_df = labels_and_report_from_decomposition(
         decomposition,
         data_df.index.tolist(),
     )

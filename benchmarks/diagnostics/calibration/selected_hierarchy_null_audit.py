@@ -19,6 +19,9 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from scipy.stats import chi2
 from tree_break_selection.core_utils.tree_utils import compute_node_depths
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
@@ -41,9 +44,6 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from scipy.stats import chi2
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.runners.method_registry import METHOD_SPECS

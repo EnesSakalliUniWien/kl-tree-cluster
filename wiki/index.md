@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-07-06
+updated: 2026-07-27
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -765,6 +765,8 @@ renamed, or promoted.
 - [[llm-wiki-pattern]] - the docs-as-code memory pattern used by this project.
 - [[tree-break-selection]] - the main inferential pipeline: candidate hierarchy,
   subtree distributions, edge and sibling tests, and final traversal.
+- [[kl-te-method]] - deprecated compatibility alias for append-only entries that
+  predate the Tree-Break Selection name.
 - [[projected-wald-statistic]] - projected quadratic statistic used in edge and
   sibling tests.
 - [[top-down-traversal]] - decision extraction from precomputed edge and
@@ -778,6 +780,18 @@ renamed, or promoted.
 
 ### Analyses
 
+- [[repository-hygiene-and-completion-audit-20260727]] - current repository
+  health and completion assessment: the full executable gate passes, while the
+  unpublished branch, divergent remote work, open calibration questions,
+  absent release automation, and large retained-evidence history prevent a
+  finished-release claim.
+- [[method-application-and-plot-seams-20260727]] - ownership map separating
+  reusable space-separation methods, endotype/scRNA/MNIST application adapters,
+  plotting engines, benchmark validation, and maintenance scripts.
+- [[tree-construction-method-map]] - exact map from feature geometry through
+  linkage, neighbor joining, or IQ-TREE topology, rooting, `PosetTree`
+  promotion, branch-length fitting, and application-specific use; also marks
+  consensus, gates, plotting, and BranchArchitect as downstream consumers.
 - [[adaptive-alpha-gate-design-20260628]] - adaptive-resolution design for TBS
   alpha gates, keeping edge alpha conservative while using a no-perturbation
   sibling-alpha ladder, test-context guards, and explicit
@@ -795,11 +809,11 @@ renamed, or promoted.
   adult pancreas and Goncalves fetal pancreas plot surfaces, separating
   verified cluster-to-tree assignment from ambiguous plot aliases, overlapping
   UMAP review views, orphaned previous-run plots, and the new
-  `scripts/run_scrna_plot_pipeline.py` manifest/orchestration path.
-- [[redundant-and-legacy-code-map-20260623]] - static map of the intentional
-  c2ef9a69 legacy snapshot, live benchmark bridges that still call it, and the
-  main non-legacy redundancy surfaces in gate helpers, validation reports, cloud
-  sharding, diagnostic-panel utilities, and tests.
+  `applications/scrna/plot_pipeline.py` manifest/orchestration path.
+- [[redundant-and-legacy-code-map-20260623]] - reviewed dead/redundant-code map:
+  the old legacy package is retired, high-confidence dead-code scanning is
+  clean, method/application duplicates were consolidated, and repeated
+  diagnostic/report helpers remain recorded for contract-first cleanup.
 - [[null-edge-sibling-calibration-enhancement-plan]] - calibration roadmap
   separating selected edge-null law, sibling null support/external selected-tail
   law, and KAK/action traversal geometry before any production rule promotion.

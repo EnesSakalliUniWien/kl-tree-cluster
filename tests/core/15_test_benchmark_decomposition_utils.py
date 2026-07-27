@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from benchmarks.shared.util.decomposition import (
-    _labels_and_report_from_decomposition,
     _ok_result_from_labels,
+    labels_and_report_from_decomposition,
 )
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
@@ -20,7 +20,7 @@ def test_labels_and_report_from_decomposition_share_sample_assignment_table() ->
         }
     }
 
-    labels, report_df = _labels_and_report_from_decomposition(
+    labels, report_df = labels_and_report_from_decomposition(
         decomposition,
         ["S3", "S0", "S2", "S1"],
     )

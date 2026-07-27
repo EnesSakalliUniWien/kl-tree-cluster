@@ -9,12 +9,14 @@ statistics, traversal, pipeline contracts, integration, and visualization.
 tests/
 ├── conftest.py
 ├── core/
+├── tree/
 ├── statistics/
 ├── localization/
 ├── validation/
 ├── pipeline/
 ├── integration/
-└── visualization/
+├── visualization/
+└── wiki/
 ```
 
 ## Current Suite Map
@@ -30,6 +32,11 @@ tests/
 - `12_test_cluster_assignments.py`
 - `13_test_cluster_decomposer_threshold.py`
 - `16_test_data_utils_bool_extraction.py`
+
+### Linkage and branch-time contracts (`tree/`)
+
+- `test_linkage_branch_time_contract.py`
+- `test_optimized_branch_lengths.py`
 
 ### Statistical kernels and config wiring (`statistics/`)
 
@@ -72,6 +79,10 @@ tests/
 - `61_test_sbm_integration.py`
 - `62_test_phylogenetic_generator.py`
 
+### Wiki memory contracts (`wiki/`)
+
+- `test_memory_contract.py`
+
 ### Visualization and layout (`visualization/`)
 
 - `70_test_cluster_tree_layout.py`
@@ -105,7 +116,7 @@ Or run the suites directly:
 
 ```bash
 # 1) Core structure + decomposition
-uv run pytest tests/core/
+uv run pytest tests/core/ tests/tree/
 
 # 2) Statistical engines + calibration
 uv run pytest tests/statistics/
@@ -122,7 +133,10 @@ uv run pytest tests/pipeline/
 # 6) Integration smoke + visualization
 uv run pytest tests/integration/ tests/visualization/
 
-# 7) Full suite
+# 7) Wiki memory contracts
+uv run pytest tests/wiki/
+
+# Full suite
 uv run pytest
 ```
 

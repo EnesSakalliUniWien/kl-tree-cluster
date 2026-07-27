@@ -118,7 +118,7 @@ total inertia is \(131\). This matches \(2+8+121\).
 - `tree_break_selection/hierarchy_analysis/statistics/distributional_action.py`
   now exposes `split_distributional_action_summary`, which computes
   \(\sum_i m_i\lVert\mu_i-\mu_p\rVert^2\) from child masses and child means.
-- `scripts/pancreas_scrna_cluster_benchmark.py` copies
+- `applications/scrna/pancreas_benchmark.py` copies
   `Distributional_Split_Action_*` annotation columns into tree-edge CSV outputs
   as diagnostics; non-`none` split-action filtering is rejected until calibrated
   against the projected-Wald edge/sibling gates.

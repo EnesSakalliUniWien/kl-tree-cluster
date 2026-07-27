@@ -3,9 +3,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
-    cosine_eigendecomposition,
-)
 from benchmarks.diagnostics.spectral.kak_lens_feature_axis_clustering import (
     feature_axes_from_cosine_eigenvectors,
     feature_axis_debug_metrics,
@@ -13,6 +10,7 @@ from benchmarks.diagnostics.spectral.kak_lens_feature_axis_clustering import (
     row_normalized_weighted_matrix,
 )
 from sklearn.preprocessing import normalize
+from tree_break_selection.space_separation import cosine_eigendecomposition
 
 
 def test_feature_axes_reconstruct_raw_cosine_sample_coordinates() -> None:

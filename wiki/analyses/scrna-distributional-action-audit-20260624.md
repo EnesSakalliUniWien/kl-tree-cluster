@@ -11,8 +11,8 @@ sources:
   - tests/pipeline/66_test_scrna_benchmark_distributional_action.py
   - benchmarks/shared/runners/dispatch.py
   - benchmarks/shared/runners/tbs_runner.py
-  - scripts/audit_scrna_distributional_action.py
-  - scripts/pancreas_scrna_cluster_benchmark.py
+  - applications/scrna/analysis/audit_distributional_action.py
+  - applications/scrna/pancreas_benchmark.py
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/method_metrics.csv
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/benchmark_subset_pca.csv
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_topology_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv
@@ -86,7 +86,7 @@ collapsing to one cluster.
 
 ## Details
 
-`scripts/audit_scrna_distributional_action.py` reconstructs each tree node
+`applications/scrna/analysis/audit_distributional_action.py` reconstructs each tree node
 barycenter from the saved `benchmark_subset_pca.csv` leaf order and the TBS
 edge tables. It standardizes the PCA coordinates over the benchmark subset, then
 computes per-edge displacement, child leaf count, child leaf fraction, branch

@@ -1,6 +1,58 @@
 # tree/
 
-Core tree data structure and distribution population.
+Core tree representation, construction adapters, rooting, and branch-length
+handling. Distance and embedding geometry belongs in
+`tree_break_selection/space_separation/`; benchmark registration belongs in
+`benchmarks/shared/runners/`.
+
+## Construction method map
+
+Tree construction has five distinct stages. Keeping them separate prevents a
+branch-time or gate configuration from being mistaken for a new topology
+method.
+
+```text
+features -> geometry/distance -> topology builder -> rooting -> PosetTree
+                                                        |
+                                                        v
+                                      branch-length fit -> gates/traversal
+```
+
+| Topology route | Input geometry | Builder | Root | Active use |
+| --- | --- | --- | --- | --- |
+| Linkage | Any valid condensed distance | SciPy `linkage`; average, complete, weighted, single, centroid, median, or Ward | Final linkage merge | Canonical TBS, diffusion TBS, applications, and the adaptive-K tree grid |
+| Neighbor joining | Any valid condensed distance | scikit-bio `nj` | Minimum ancestor deviation (MAD) | Opt-in `tbs_neighbor_joining` and the adaptive-K tree grid |
+| IQ-TREE 3 | Encoded feature-state alignment, not a condensed distance | External IQ-TREE 3, default model `JC2` | MAD after Newick import | Opt-in `tbs_iqtree3` |
+
+The registered geometry routes feeding those topology builders are direct
+feature/precomputed distance, fixed Hamming-neighbor diffusion, adaptive
+pydiffmap diffusion, and optional graphtools kernel diffusion. Adaptive-cosine
+subspace applications add block-coordinate Euclidean or adaptive-diffusion
+distance before using average linkage.
+
+`linkage_ultrametric` and `fixed_topology_nnls` are branch-length strategies;
+they do not construct different topologies. Sibling gates, edge gates,
+traversal profiles, and the benchmark consensus selector are also downstream
+of tree construction. BranchArchitect is a validation/comparison adapter, not
+a production tree estimator.
+
+The durable, cross-application audit is in
+`wiki/analyses/tree-construction-method-map.md`.
+
+## Construction and representation modules
+
+| Module | Responsibility |
+| --- | --- |
+| `io.py` | Promote SciPy/sklearn merge output or an existing edge list into `PosetTree`; provide topology-only linkage fallback before NNLS |
+| `phylogenetic.py` | Neighbor joining, IQ-TREE execution/Newick import, MAD rooting, and promotion of unrooted metric trees |
+| `poset_tree.py` | Stable rooted-tree representation and facade constructors |
+| `branch_lengths.py` | Convert monotone linkage heights to normalized ultrametric edge lengths |
+| `optimized_branch_lengths.py` | Refit non-negative edge lengths on an already fixed topology |
+
+`PosetTree.from_agglomerative` and `PosetTree.from_undirected_edges` are public
+representation adapters with test coverage but no current in-repository
+method caller. They are retained as dormant API, not counted as registered TBS
+tree estimators.
 
 ## poset_tree.py — `PosetTree`
 

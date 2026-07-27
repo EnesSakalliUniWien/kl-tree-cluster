@@ -44,7 +44,7 @@ def test_scrna_benchmark_tree_edges_include_distributional_action_and_mass(
 ) -> None:
     pytest.importorskip("anndata")
     pytest.importorskip("scanpy")
-    pancreas = importlib.import_module("scripts.pancreas_scrna_cluster_benchmark")
+    pancreas = importlib.import_module("applications.scrna.pancreas_benchmark")
 
     leaf_data = pd.DataFrame(
         {

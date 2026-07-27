@@ -18,6 +18,7 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 from tree_break_selection.core_utils.tree_utils import compute_node_depths
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
@@ -55,7 +56,6 @@ from tree_break_selection.tree.distributions import (
     require_node_continuous_covariance_by_block,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
-from scipy import stats
 
 from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import (
     DEFAULT_CASE_NAMES,

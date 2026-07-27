@@ -18,13 +18,12 @@ from typing import Any, Sequence
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2
-
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.runners.dispatch import run_clustering_result
 from benchmarks.shared.runners.method_registry import METHOD_SPECS
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 from benchmarks.shared.util.time import format_timestamp_utc
+from scipy.stats import chi2
 from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,

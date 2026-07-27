@@ -5,9 +5,9 @@ status: reviewed
 updated: 2026-06-18
 sources:
   - data/feature_matrices/feature_matrix_julia_allGO_new.tsv
-  - scripts/analysis/run_allgo_method_version_tree_matrix.py
-  - scripts/analysis/go_ic_tree_summary_plots.py
-  - scripts/analysis/split_go_ic_results_by_method.py
+  - applications/endotypes/run_allgo_method_version_tree_matrix.py
+  - applications/endotypes/go_ic_tree_summary_plots.py
+  - applications/endotypes/split_go_ic_results_by_method.py
   - raw/assets/benchmark-results/julia_allGO_new_method_version_tree_matrix_selected_plus_current_20260618/method_tree_matrix_summary.csv
   - raw/assets/benchmark-results/julia_allGO_new_method_version_tree_matrix_selected_plus_current_20260618/go_ic_plots/allgo_new_quality_aware_go_ic_tree_ranking.csv
   - raw/assets/benchmark-results/julia_allGO_new_method_version_tree_matrix_selected_plus_current_20260618/go_ic_by_method/allgo_new_quality_aware_go_ic_method_summary.csv

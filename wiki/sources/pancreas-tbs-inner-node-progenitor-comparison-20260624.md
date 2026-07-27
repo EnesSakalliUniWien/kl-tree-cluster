@@ -35,8 +35,8 @@ sources:
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/method_assignments.csv
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_adaptive_diffusion_topology_projected_adaptive_k90_alpha0p01_edge0p001_tree_edges.csv
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/pancreas_classical_pipeline.h5ad
-  - scripts/analyze_pancreas_tbs_inner_nodes.py
-  - scripts/compare_pancreas_tbs_to_progenitor_signatures.py
+  - applications/scrna/analysis/analyze_pancreas_inner_nodes.py
+  - applications/scrna/analysis/compare_pancreas_progenitor_signatures.py
 tags:
   - source
   - benchmark
@@ -195,10 +195,10 @@ composition plus marker means rather than claiming biological ancestry.
 - `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/pancreas_progenitor_signature_comparison.png`
   and `pancreas_progenitor_signature_umap.png` visualize the signature
   comparison.
-- `scripts/analyze_pancreas_tbs_inner_nodes.py` regenerates the lineage summary,
+- `applications/scrna/analysis/analyze_pancreas_inner_nodes.py` regenerates the lineage summary,
   progenitor review, and plot from the TBS edge table, assignments, and AnnData
   raw marker expression.
-- `scripts/compare_pancreas_tbs_to_progenitor_signatures.py` regenerates the
+- `applications/scrna/analysis/compare_pancreas_progenitor_signatures.py` regenerates the
   progenitor-signature comparison.
 
 ## Links

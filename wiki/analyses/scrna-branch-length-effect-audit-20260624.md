@@ -4,9 +4,9 @@ type: analysis
 status: draft
 updated: 2026-06-24
 sources:
-  - scripts/audit_scrna_branch_length_effects.py
-  - scripts/pancreas_scrna_cluster_benchmark.py
-  - scripts/goncalves_pancreas_progenitor_benchmark.py
+  - applications/scrna/analysis/audit_branch_length_effects.py
+  - applications/scrna/pancreas_benchmark.py
+  - applications/scrna/goncalves_benchmark.py
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/method_metrics.csv
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_tree_branch_length_summary.csv
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_branch_time_sensitivity.csv
@@ -99,7 +99,7 @@ the adaptive-diffusion topology tree.
 
 ## Evidence
 
-- `scripts/audit_scrna_branch_length_effects.py` joins the adult and Goncalves
+- `applications/scrna/analysis/audit_branch_length_effects.py` joins the adult and Goncalves
   method metrics, branch-length summaries, assignment tables, and branch-time
   sensitivity scans into the branch-length audit output folder.
 - `raw/assets/benchmark-results/scrna_branch_length_effect_audit_20260624/scrna_branch_length_effect_audit.md`
@@ -123,7 +123,7 @@ the adaptive-diffusion topology tree.
 - `raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/tbs_umap_tree_highlighting_audit.csv`
   reports `114/114` Goncalves colored TBS cluster clades as exact.
 - Regenerating the adult and Goncalves plot manifests with
-  `scripts/run_scrna_plot_pipeline.py --dataset <dataset> --strict` completed
+  `applications/scrna/plot_pipeline.py --dataset <dataset> --strict` completed
   successfully on 2026-06-24. The adult manifest records `66` present plot
   files plus `54` older orphaned files, and the Goncalves manifest records
   `66` present plot files plus `8` orphaned q50 action/split-action diagnostic

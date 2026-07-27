@@ -1,14 +1,20 @@
 ---
 title: Redundant and Legacy Code Map 2026-06-23
 type: analysis
-status: draft
-updated: 2026-06-23
+status: reviewed
+updated: 2026-07-27
 sources:
-  - pyproject.toml
-  - benchmarks/shared/runners/method_registry.py
-  - benchmarks/shared/util/method_sets.py
-  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
-  - tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py
+  - tree_break_selection/space_separation/diffusion.py
+  - tree_break_selection/space_separation/adaptive_cosine.py
+  - tree_break_selection/space_separation/invariant_equivariant.py
+  - tree_break_selection/tree/io.py
+  - tree_break_selection/hierarchy_analysis/bootstrap_consensus.py
+  - tree_break_selection/plot/image_panel.py
+  - applications/endotypes/_shared.py
+  - applications/mnist/_shared.py
+  - benchmarks/shared/audit_utils.py
+  - benchmarks/shared/runners/tbs_runner.py
+  - benchmarks/shared/tbs_tree_context.py
   - benchmarks/validation/feature_covariance_calibration.py
   - benchmarks/validation/selected_pca_projected_wald_calibration.py
 tags:
@@ -21,163 +27,82 @@ tags:
 
 ## Summary
 
-The project had one intentional legacy code island and several repeated
-diagnostic scaffolds. The legacy code island was retired on 2026-06-25.
-
-The retired legacy island was
-`tree_break_selection/legacy_methods/commit_c2ef9a69/`, a full importable copy
-of the old `tree_break_selection` package. Its metadata says it exists for
-diagnostic old-versus-current comparisons and is not a production path.
-It has now been deleted along with `tbs_legacy_c2ef9a69`,
-`tbs_legacy_internal_spectral_diagnostic`, `tbs_rescued_legacy_v1`, and the
-related comparison panels.
-
-The main redundancy outside that snapshot is repeated benchmark/report
-plumbing: JSON serialization helpers, path builders, finite-number coercion,
-CSV-grid parsers, validation-report contracts, AWS shard resolution, and small
-test row factories. These are mostly maintenance-cost issues rather than
-runtime hazards.
+The former importable c2ef9a69 legacy package and its registry bridges were
+retired on 2026-06-25. The 2026-07-27 recheck found no high-confidence dead
+code in project-owned package, application, script, or benchmark Python files.
+It removed the clearest method- and application-level duplication while
+leaving broad diagnostic-panel plumbing as a documented maintenance surface.
 
 ## Details
 
-### Static inventory
+The adaptive cosine weighting, eigendecomposition, segmentation, and block
+coordinate logic previously lived inside a benchmark probe and was consumed by
+applications. It now has one implementation in
+`tree_break_selection/space_separation/adaptive_cosine.py`. The scRNA
+invariant/equivariant decomposition likewise moved from a dataset script into
+`tree_break_selection/space_separation/invariant_equivariant.py`.
+The fixed Hamming-neighbor diffusion engine is now public beside adaptive and
+block diffusion in `tree_break_selection/space_separation/diffusion.py`, so
+applications and experiments no longer import a private benchmark-runner
+function.
 
-A local static pass over `tree_break_selection`, `benchmarks`, `tests`, and
-`scripts` found:
+Two copied image-panel renderers were replaced by
+`tree_break_selection/plot/image_panel.py`. Repeated endotype filename and
+matrix-slug rules now use `applications/endotypes/_shared.py`; duplicated MNIST
+summary-selection and compact digit-count parsing use
+`applications/mnist/_shared.py`.
 
-- `803` project Python files.
-- `667` non-legacy Python files.
-- `134` Python files inside the c2ef9a69 legacy snapshot.
-- Approximately `187,672` non-legacy source lines and `8,369` legacy-snapshot
-  source lines, counting nonblank noncomment lines.
+The tree-construction recheck found no second implementation of neighbor
+joining, IQ-TREE import, MAD rooting, or branch-length NNLS. It did find a
+residual repeated sequence—condensed distance, SciPy `linkage`, then
+`PosetTree.from_linkage`—in the production runner, bootstrap analysis,
+diagnostic tree context, experiments, and application adapters. Those callers
+have different data contracts and output needs, so they were mapped rather
+than bulk-rewritten. `PosetTree.from_agglomerative` and
+`PosetTree.from_undirected_edges` have no live in-repository caller outside
+tests; both remain documented public representation adapters rather than being
+deleted as dead code. See [[tree-construction-method-map]].
 
-Current-vs-legacy path comparison found:
+A structural AST comparison still finds repeated small helpers across the
+large calibration-diagnostic surface, especially `_require_columns`,
+`_finite_float`, `_string_value`, `_json_default`, CLI parsers, and shard
+plumbing. Some shared implementations already exist in
+`benchmarks/shared/audit_utils.py`. Migrating dozens of active research panels
+without contract tests would create more risk than the duplication currently
+does, so this pass records the seam instead of applying a bulk rewrite.
 
-- `19` files with identical bytes at the same relative path, mostly
-  `__init__.py`, stopping-edge recovery helpers, and `plot/config.py`.
-- `69` files present in both current and legacy packages but changed.
-- `46` legacy-only files absent from the current package.
-- `27` current-only files absent from the legacy snapshot.
-
-### Legacy code map
-
-The legacy package is intentionally vendored under a nested namespace. The live
-bridge is `benchmarks/shared/runners/legacy_commit_runner.py`, which imports
-the legacy commit metadata and legacy `PosetTree`, builds a SciPy linkage tree,
-calls the old `decompose` method, and returns a standard `MethodRunResult`.
-
-The benchmark registry keeps this callable through:
-
-- `tbs_legacy_c2ef9a69` in `benchmarks/shared/runners/method_registry.py`.
-- `tbs_legacy_internal_spectral_diagnostic` in the same registry, which is a
-  current runner configured to imitate an older internal spectral diagnostic.
-- `tbs_rescued_legacy_v1`, a guarded current-runner hybrid that combines
-  branch-length state, internal support thresholds, spectral transport
-  pass-through, and regional bandwidth support.
-- `TBS_DISTANCE_TREE_METHODS` in `benchmarks/shared/util/method_sets.py`, which
-  includes the legacy and rescued-legacy method ids.
-
-Legacy-only implementation families in the c2ef9a69 snapshot include:
-
-- `decomposition/backends/random_projection/`.
-- `decomposition/core/contracts.py`.
-- `statistics/categorical_mahalanobis.py`.
-- `child_parent_divergence/single_feature_subtree_policy/`.
-- `sibling_divergence/adjusted_wald_annotation/`.
-- `sibling_divergence/pair_testing/sibling_null_prior_interpolation/`.
-- Older pooled-variance, branch-length, and projection metadata helpers.
-
-These should be treated as archived comparator implementation unless a current
-module imports them directly through the legacy namespace.
-
-### Redundancy map
-
-Exact duplicate non-legacy Python files, excluding `__init__.py`, were not
-found in the scanned project surfaces. The repeated code is function-level and
-pattern-level.
-
-High-priority source redundancy:
-
-- `tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py`
-  repeats `_annotation_bool`, `_node_split_prerequisites`, and
-  `_node_sibling_gate_open` from
-  `tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py`.
-  This is production-adjacent and should be extracted to a shared gate helper
-  before either path diverges further.
-- `benchmarks/validation/feature_covariance_calibration.py` and
-  `benchmarks/validation/selected_pca_projected_wald_calibration.py` repeat
-  validation-report helpers such as `_validate_run_inputs`,
-  `_completed_target_entry`, and `_validate_complete_report_context`.
-  A shared validation report contract module would reduce drift.
-
-Medium-priority benchmark redundancy:
-
-- AWS/cloud benchmark scripts repeat `resolve_shard_index` and command entry
-  plumbing.
-- Many calibration panels repeat `_write_manifest`, `_json_default`,
-  `_finite_float`, `_require_columns`, `rows_path`, `summary_path`,
-  `_parse_csv_list`, `_parse_float_grid`, `_bool_value`, and `_select_cases`.
-  Existing shared surfaces such as `benchmarks/shared/audit_utils.py` are the
-  natural place to consolidate stable versions, but only after the affected
-  panels are no longer changing daily.
-- `tests/validation` repeats small `_row`, `_target`, and `_rows` builders.
-  These are low-risk test-local duplication unless schema drift becomes noisy.
-
-Low-priority cleanup signals:
-
-- Ruff `F401/F841` found three concrete unused-code items:
-  `typing.Any` in
-  `benchmarks/diagnostics/spectral/adaptive_cosine_kak_benchmark_probe.py`,
-  unused `cluster_summary` assignment in
-  `benchmarks/diagnostics/spectral/kak_feature_subspace_clustering.py`, and
-  unused `numpy` import in `scripts/plot_pancreas_tbs_readable_umap_clusters.py`.
-- Local `__pycache__` directories under source paths are generated noise. They
-  should remain ignored rather than treated as code.
-
-### Cleanup order
-
-1. Fence the legacy snapshot explicitly: keep it importable only for named
-   comparator methods, and document that production code must not import it.
-2. Decide whether `tbs_legacy_c2ef9a69`, `tbs_legacy_internal_spectral_diagnostic`,
-   and `tbs_rescued_legacy_v1` remain benchmark-contract methods. If yes, keep
-   the snapshot. If no, remove their registry entries, tests, and dependent
-   panels first.
-3. Extract the duplicated gate annotation helpers from orchestrator and
-   spectral transport into one shared gate module.
-4. Consolidate validation-report helpers used by the two calibration validation
-   scripts.
-5. Move stable benchmark-panel plumbing into shared utilities only after the
-   actively changing diagnostic panels settle.
-6. Apply the small Ruff cleanup items opportunistically.
+The two validation programs
+`benchmarks/validation/feature_covariance_calibration.py` and
+`benchmarks/validation/selected_pca_projected_wald_calibration.py` still share
+report-contract and interval helpers. This is the highest-value remaining
+consolidation once their output schemas are covered by focused tests.
 
 ## Evidence
 
-- `tree_break_selection/legacy_methods/commit_c2ef9a69/METADATA.md` says the
-  snapshot is a full copy of commit `c2ef9a69e0888168950bdee4a41ae8ab9996e32f`,
-  mechanically nested for same-process imports, and intended for diagnostic
-  old-versus-current comparisons rather than production.
-- `benchmarks/shared/runners/legacy_commit_runner.py` is the direct bridge from
-  benchmark dispatch into the legacy `PosetTree`.
-- `benchmarks/shared/runners/method_registry.py` and
-  `benchmarks/shared/util/method_sets.py` keep legacy, legacy-diagnostic, and
-  guarded-rescued legacy method ids available to the benchmark runner.
-- `tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py`
-  and `tree_break_selection/hierarchy_analysis/decomposition/gates/spectral_transport.py`
-  contain duplicated gate annotation predicates.
-- `benchmarks/validation/feature_covariance_calibration.py` and
-  `benchmarks/validation/selected_pca_projected_wald_calibration.py` contain
-  duplicated validation-report contract helpers.
+- Vulture at 90% confidence reported no unused project-owned code after the
+  reorganization.
+- Ruff passes over the relocated library, application, benchmark, and test
+  surfaces.
+- Focused method, endotype, scRNA, MNIST, and benchmark-interface tests pass.
+- Exact function-body comparison identified the remaining repeated diagnostic
+  helpers described above; it found and motivated the endotype and MNIST
+  application helper consolidation.
+- Exact constructor search separated the three live registered topology
+  builders from repeated linkage call sites and two test-only public adapters.
 
 ## Links
 
 - [[project-overview]]
-- [[legacy-c2ef9a69-method-package-20260616]]
-- [[legacy-c2ef9a69-method-comparison-panel-20260616]]
-- [[old-current-method-difference-ledger-20260617]]
+- [[repository-hygiene-and-completion-audit-20260727]]
+- [[method-application-and-plot-seams-20260727]]
+- [[tree-construction-method-map]]
 
 ## Open Questions
 
-- Should the c2ef9a69 snapshot remain an importable package, or should future
-  legacy comparisons use archived outputs only?
-- Which benchmark-panel helpers are stable enough to consolidate without
-  slowing down ongoing diagnostic work?
+- Which diagnostic helper contracts are stable enough to move into
+  `benchmarks/shared/` without masking panel-specific validation semantics?
+- Should the two calibration validation reports first receive golden-schema
+  tests, then share one report-contract module?
+- After application output contracts are covered, should direct
+  distance/linkage/`PosetTree` sequences share one deep construction interface
+  in `tree_break_selection/tree/`?

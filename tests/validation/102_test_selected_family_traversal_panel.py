@@ -16,7 +16,7 @@ from benchmarks.diagnostics.calibration.selected_family_traversal_panel import (
     run_selected_family_traversal_panel,
     validate_methods,
 )
-from scripts.analysis.multiscale_umap_overlay import (
+from tree_break_selection.plot import (
     load_overlay_data,
     render_multiscale_umap_overlay,
 )

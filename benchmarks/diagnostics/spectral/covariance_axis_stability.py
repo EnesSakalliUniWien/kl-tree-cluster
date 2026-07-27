@@ -23,10 +23,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.utils.extmath import randomized_svd
+from tree_break_selection.space_separation import weight_feature_matrix
 
-from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
-    weighted_matrix,
-)
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import load_matrix
 
 SCHEMA_VERSION = "covariance_axis_stability/v1"
@@ -177,7 +175,7 @@ def run_weighting_stability(
     random_state: int,
     stability_threshold: float,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
-    values = weighted_matrix(data, weighting)
+    values = weight_feature_matrix(data, weighting)
     reference = top_sample_covariance_axes(
         values,
         n_components=n_components,

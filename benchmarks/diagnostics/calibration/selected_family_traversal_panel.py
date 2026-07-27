@@ -19,12 +19,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import pdist
+from sklearn.metrics import adjusted_rand_score
 from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     SIBLING_GATE_PROFILES,
     resolve_sibling_gate_profile,
 )
-from scipy.spatial.distance import pdist
-from sklearn.metrics import adjusted_rand_score
 
 from benchmarks.diagnostics.calibration.data_independent_sibling_gate_panel import (
     DEFAULT_DATA_ROLES,

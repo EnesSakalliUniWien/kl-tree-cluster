@@ -17,15 +17,15 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from scipy.stats import kstest
 from tree_break_selection import config
 from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
     compute_mean_branch_length,
     extract_branch_length_observation,
 )
 from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from scipy.stats import kstest
 
 from benchmarks.shared.util.time import format_timestamp_utc
 

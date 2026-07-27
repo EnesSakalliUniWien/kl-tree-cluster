@@ -19,11 +19,11 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
+from scipy.stats import chi2, kstest
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from scipy.stats import chi2, kstest
 
 from benchmarks.diagnostics.calibration.selected_hierarchy_null_audit import (
     DEFAULT_CASE_NAMES,

@@ -23,7 +23,7 @@ sources:
   - raw/assets/benchmark-results/julia_tree_estimators_20260614/alpha_audit/kl_posthoc_alpha_sensitivity_heatmaps.png
   - raw/assets/benchmark-results/julia_tree_estimators_20260614/alpha_audit/kl_neighbor_joining_posthoc_alpha_sensitivity_heatmaps.png
   - raw/assets/benchmark-results/julia_tree_estimators_20260614/analysis_debug_report.md
-  - scripts/analysis/cluster_diagnostics_panel.py
+  - applications/endotypes/cluster_diagnostics_panel.py
   - data/feature_matrices/feature_matrix_julia_GOCC_GOBP_GOMF_combined.tsv
   - benchmarks/results/00_current_20260427_blob_analysis/20260427_blob_analysis/08_full_data_adaptive_kak_signal_umap_tree_page_nmi_ordered_20260610/kak_signal_adaptive_reference_labels.csv
 tags:

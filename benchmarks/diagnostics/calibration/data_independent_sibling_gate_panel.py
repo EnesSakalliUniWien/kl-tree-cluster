@@ -19,6 +19,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.stats import chi2
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_contrast_covariance,
 )
@@ -33,7 +34,6 @@ from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     bernoulli_feature_space_from_columns,
 )
-from scipy.stats import chi2
 
 from benchmarks.diagnostics.calibration.production_admissibility_contract import (
     evaluate_production_admissibility_components,

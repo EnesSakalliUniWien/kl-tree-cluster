@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 
 
 def _load_report_module():
-    script_path = Path(__file__).resolve().parents[2] / "scripts/plot_selected_scrna_nnls_report.py"
+    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/plots/selected_nnls_report.py"
     spec = importlib.util.spec_from_file_location("plot_selected_scrna_nnls_report", script_path)
     assert spec is not None
     assert spec.loader is not None

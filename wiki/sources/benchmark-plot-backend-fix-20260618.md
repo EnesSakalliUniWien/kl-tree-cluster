@@ -2,9 +2,9 @@
 title: Benchmark Plot Backend Fix 2026-06-18
 type: source
 status: reviewed
-updated: 2026-06-18
+updated: 2026-07-27
 sources:
-  - benchmarks/shared/plots/backend.py
+  - tree_break_selection/plot/backend.py
   - benchmarks/shared/plots/__init__.py
   - benchmarks/full/run.py
   - benchmarks/shared/util/case_execution.py
@@ -33,7 +33,7 @@ command-line benchmark runs and in spawned case workers.
 
 ## Key Points
 
-- `benchmarks.shared.plots.backend.configure_matplotlib_backend()` sets
+- `tree_break_selection.plot.backend.configure_matplotlib_backend()` sets
   `MPLBACKEND=Agg` unless the user explicitly provides another backend.
 - The shared plot package calls that backend configuration before applying
   Matplotlib PDF font defaults.

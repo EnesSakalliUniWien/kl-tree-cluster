@@ -17,30 +17,32 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
+from scipy.stats import hypergeom
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+from statsmodels.stats.multitest import multipletests
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
+)
+from tree_break_selection.space_separation import (
+    SpectralBlock,
+    cosine_eigendecomposition,
+    weight_feature_matrix,
 )
 from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     bernoulli_feature_space_from_columns,
     continuous_feature_space_from_columns,
 )
-from scipy.stats import hypergeom
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from statsmodels.stats.multitest import multipletests
 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
     SCHEMA_VERSION as ADAPTIVE_SCHEMA_VERSION,
 )
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
-    SpectralBlock,
-    cosine_eigendecomposition,
     labels_from_assignments,
     run_block_tree,
     sibling_method_counts,
-    weighted_matrix,
 )
 from benchmarks.shared.util.time import format_timestamp_utc
 
@@ -350,7 +352,7 @@ def build_cosine_band_coherence_rows(
 
     for weighting in weightings:
         try:
-            values = weighted_matrix(data, weighting)
+            values = weight_feature_matrix(data, weighting)
             eigvals, eigvecs = cosine_eigendecomposition(values, max_rank=max_rank)
             spectrum_rows.extend(_spectrum_rows(str(weighting), eigvals))
             total_energy = float(np.sum(eigvals))

@@ -54,7 +54,7 @@ def test_3d_plotly_writer_shows_number_on_hover_and_visible_text(
 
 
 def _load_mnist_report_module():
-    script_path = Path(__file__).resolve().parents[2] / "scripts/plot_mnist_tbs_analysis_plotly.py"
+    script_path = Path(__file__).resolve().parents[2] / "applications/mnist/plot_interactive.py"
     spec = importlib.util.spec_from_file_location("plot_mnist_tbs_analysis_plotly", script_path)
     assert spec is not None
     assert spec.loader is not None
@@ -293,7 +293,7 @@ def test_report_manifest_records_generated_timestamp(monkeypatch, tmp_path):
 
     manifest = json.loads(report.OUT_MANIFEST.read_text(encoding="utf-8"))
     assert manifest["generated_at"] == "2026-06-24T20:38:05+02:00"
-    assert manifest["source_script"] == "scripts/plot_mnist_tbs_analysis_plotly.py"
+    assert manifest["source_script"] == "applications/mnist/plot_interactive.py"
     assert len(manifest["artifacts"]) == 4
     summary = next(
         artifact

@@ -210,7 +210,7 @@ def test_graphtools_runner_forwards_aligned_graph_and_branch_geometry(
         fake_distance,
     )
     monkeypatch.setattr(
-        "benchmarks.shared.runners.tbs_diffusion_runner._run_tbs_on_distance",
+        "benchmarks.shared.runners.tbs_diffusion_runner.run_tbs_on_distance",
         fake_tbs,
     )
     _run_tbs_diffusion_graphtools_method(

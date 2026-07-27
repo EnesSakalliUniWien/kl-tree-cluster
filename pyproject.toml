@@ -7,6 +7,7 @@ authors = [
     {name = "Tree-Break Selection contributors"}
 ]
 readme = "README.md"
+license = {file = "LICENSE"}
 
 dependencies = [
     "joblib>=1.3.0",
@@ -44,6 +45,8 @@ benchmark = [
     "hdbscan>=0.8.41",
 ]
 viz = [
+    "bokeh>=3.0.0",
+    "pillow>=10.0.0",
     "scikit-bio>=0.6.0",
     "umap-learn>=0.5.11",
     "kaleido>=0.2.1",
@@ -51,6 +54,7 @@ viz = [
     "pygraphviz>=2.0",
 ]
 all = [
+    "bokeh>=3.0.0",
     "jupyter>=1.0.0",
     "ipython>=8.12.0",
     "notebook>=7.0.0",
@@ -69,6 +73,8 @@ all = [
     "kaleido>=0.2.1",
     "pypdf>=5.0.0",
     "pygraphviz>=2.0",
+    "pillow>=10.0.0",
+    "requests>=2.31.0",
     "anndata>=0.10.0",
     "scanpy>=1.10.0",
 ]
@@ -81,6 +87,8 @@ brancharchitect = [
 ]
 scrna = [
     "anndata>=0.10.0",
+    "pillow>=10.0.0",
+    "requests>=2.31.0",
     "scanpy>=1.10.0",
 ]
 
@@ -90,6 +98,8 @@ build-backend = "flit_core.buildapi"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-q"
+python_files = ["*test_*.py"]
 markers = [
     "slow: long-running integration and regression coverage",
 ]
@@ -97,11 +107,12 @@ markers = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-src = ["benchmarks", "tree_break_selection", "scripts", "tests"]
+src = ["applications", "benchmarks", "tree_break_selection", "scripts", "tests"]
 force-exclude = true
 extend-exclude = [
     "manuscript",
     "notebooks",
+    "vendor",
 ]
 
 [tool.ruff.lint]
@@ -110,8 +121,8 @@ ignore = ["E402", "E501"]
 
 [tool.deptry]
 ignore_notebooks = true
-known_first_party = ["benchmarks", "tree_break_selection", "brancharchitect"]
+known_first_party = ["applications", "benchmarks", "tree_break_selection", "brancharchitect"]
 pep621_dev_dependency_groups = ["dev", "benchmark", "viz", "all", "experimental-gpl", "brancharchitect"]
 extend_exclude = ["^manuscript/", "^notebooks/", "^vendor/"]
-per_rule_ignores = { DEP002 = ["biopython", "orjson"] }
+per_rule_ignores = { DEP002 = ["biopython", "orjson"], DEP003 = ["tensorflow"] }
 package_module_name_map = { "python-louvain" = "community", "scikit-bio" = "skbio" }

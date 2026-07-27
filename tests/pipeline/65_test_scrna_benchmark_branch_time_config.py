@@ -13,7 +13,7 @@ def test_scrna_benchmark_branch_time_rows_use_nnls_branch_lengths() -> None:
     pytest.importorskip("anndata")
     pytest.importorskip("scanpy")
 
-    pancreas = importlib.import_module("scripts.pancreas_scrna_cluster_benchmark")
+    pancreas = importlib.import_module("applications.scrna.pancreas_benchmark")
     configs_by_label = {config.label: config for config in pancreas._method_configs(true_k=8)}
 
     nnls_rows = {
@@ -64,7 +64,7 @@ def test_scrna_benchmark_does_not_register_uncalibrated_split_action_filter_rows
     pytest.importorskip("anndata")
     pytest.importorskip("scanpy")
 
-    pancreas = importlib.import_module("scripts.pancreas_scrna_cluster_benchmark")
+    pancreas = importlib.import_module("applications.scrna.pancreas_benchmark")
     configs = pancreas._method_configs(true_k=8)
 
     assert all("split-action q50" not in config.label for config in configs)
@@ -80,7 +80,7 @@ def test_goncalves_benchmark_reuses_scrna_method_configs() -> None:
     pytest.importorskip("anndata")
     pytest.importorskip("scanpy")
 
-    pancreas = importlib.import_module("scripts.pancreas_scrna_cluster_benchmark")
-    goncalves = importlib.import_module("scripts.goncalves_pancreas_progenitor_benchmark")
+    pancreas = importlib.import_module("applications.scrna.pancreas_benchmark")
+    goncalves = importlib.import_module("applications.scrna.goncalves_benchmark")
 
     assert goncalves._run_benchmarks is pancreas._run_benchmarks

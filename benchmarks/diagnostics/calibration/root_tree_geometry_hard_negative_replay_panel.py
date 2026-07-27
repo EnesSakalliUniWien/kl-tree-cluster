@@ -20,6 +20,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import adjusted_rand_score
+
 from benchmarks.diagnostics.calibration.data_independent_sibling_gate_traversal_panel import (
     _generate_data_with_truth,
 )
@@ -30,7 +32,6 @@ from benchmarks.validation.selected_edge_type1_geometry import (
     _select_cases,
     parse_names,
 )
-from sklearn.metrics import adjusted_rand_score
 
 SCHEMA_VERSION = "root_tree_geometry_hard_negative_replay_panel/v1"
 STUDY_ROLE = "diagnostic_root_tree_geometry_hard_negative_replay_not_calibration"

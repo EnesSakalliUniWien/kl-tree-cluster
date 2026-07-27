@@ -23,12 +23,14 @@ class _FakeAdata:
 
 
 def _load_benchmark_module():
-    script_path = Path(__file__).resolve().parents[2] / "scripts/pancreas_scrna_cluster_benchmark.py"
-    spec = importlib.util.spec_from_file_location("pancreas_scrna_cluster_benchmark", script_path)
+    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/pancreas_benchmark.py"
+    spec = importlib.util.spec_from_file_location(
+        "applications.scrna.pancreas_benchmark", script_path
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
-    sys.modules[script_path.stem] = module
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 

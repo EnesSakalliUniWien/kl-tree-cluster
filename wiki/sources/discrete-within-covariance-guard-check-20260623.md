@@ -4,7 +4,7 @@ type: source
 status: reviewed
 updated: 2026-06-24
 sources:
-  - scripts/discrete_covariance_guard_diagnostic.py
+  - benchmarks/diagnostics/calibration/discrete_covariance_guard.py
   - raw/assets/benchmark-results/discrete_covariance_guard_check_20260623/manifest.json
   - raw/assets/benchmark-results/discrete_covariance_guard_check_20260623/node_covariance_comparison.csv
   - raw/assets/benchmark-results/discrete_covariance_guard_check_20260623/case_context_summary.csv
@@ -65,7 +65,7 @@ pooled null covariance with a Jeffreys-smoothed within-child analogue and a
 
 ## Evidence
 
-- `scripts/discrete_covariance_guard_diagnostic.py` defines the replay.
+- `benchmarks/diagnostics/calibration/discrete_covariance_guard.py` defines the replay.
 - `raw/assets/benchmark-results/discrete_covariance_guard_check_20260623/manifest.json`
   records generation metadata for the representative selected-node panel,
   including `generated_at = 2026-06-24T20:10:31+02:00`.

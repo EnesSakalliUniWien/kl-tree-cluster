@@ -17,7 +17,6 @@ from typing import Sequence
 
 import numpy as np
 import pandas as pd
-
 from benchmarks.diagnostics.calibration.selected_tail_law_q5_validation import (
     run_q5_selected_tail_law_validation,
 )

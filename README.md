@@ -6,6 +6,16 @@ distributions in an explicit feature space, tests child-parent and sibling
 contrasts with projected-Wald statistics, and uses strict calibration contracts
 to decide where the tree should stop splitting.
 
+## Project Status
+
+This is active research software at version `0.1.0`, not a finished production
+or publication release. The implementation is executable and extensively
+tested, but selected-hierarchy calibration, high-cardinality categorical
+transfer, and promotion of several method constants remain open research
+questions. Unsupported calibration contexts intentionally fail closed. See
+`wiki/questions/open-mathematical-questions.md` for the maintained evidence and
+remaining gaps.
+
 ## Overview
 
 - Analyse binary, categorical, and explicitly supported continuous benchmark
@@ -45,8 +55,11 @@ surfaces with their own contracts.
 - Decomposition entrypoint and traversal: `tree_break_selection/hierarchy_analysis/tree_decomposition.py`.
 - Gate orchestration and split/merge evaluation: `tree_break_selection/hierarchy_analysis/decomposition/gates/`.
 - Statistical tests, projection helpers, and FDR correction: `tree_break_selection/hierarchy_analysis/statistics/`.
+- Reusable invariant/equivariant and adaptive-cosine space separation:
+  `tree_break_selection/space_separation/`.
+- Reusable plotting engines and backend selection: `tree_break_selection/plot/`.
 - Benchmark harness and report generation: `benchmarks/`.
-- User-facing analysis commands: `scripts/analysis/`.
+- Dataset applications and their entry points: `applications/`.
 - Scientific manuscript workspace: `manuscript/`.
 - Durable project memory and open questions: `wiki/`.
 
@@ -56,8 +69,14 @@ surfaces with their own contracts.
 - `benchmarks/`: benchmark runners, reusable benchmark infrastructure, and
   benchmark diagnostics. Generated benchmark outputs belong under
   `benchmarks/results/`.
-- `scripts/analysis/`: user-facing analysis commands for tracked feature
-  matrices and real-data workflows.
+- `applications/`: dataset adapters, application entry points, and
+  application-specific reports, separated into `endotypes/`, `scrna/`, and
+  `mnist/`.
+- `scripts/`: repository maintenance and external-request helpers only;
+  reusable method, plotting, application, and manuscript-figure code does not
+  belong here.
+- `manuscript/tools/figures/`: manuscript-specific explanatory figure
+  composition built on reusable plotting interfaces.
 - `scripts/wiki/`: wiki maintenance tools.
 - `data/feature_matrices/`: canonical tracked feature matrices.
 - `data/reference/`: external reference tables used for interpretation.
@@ -208,6 +227,8 @@ performed without cleanup.
 
 - After the full test environment sync above, run the automated tests with
   `uv run pytest`.
+- Run `make check` for the repository hygiene gate: Ruff, wiki lint, and the
+  purpose-ordered full test suite.
 - In the lean development environment, run targeted tests for the code you
   changed. scRNA-only tests are skipped when their optional dependencies are
   absent, but full-suite parity expects the full environment.

@@ -5,7 +5,7 @@ status: reviewed
 updated: 2026-06-14
 sources:
   - benchmarks/diagnostics/calibration/selected_family_traversal_panel.py
-  - scripts/analysis/multiscale_umap_overlay.py
+  - tree_break_selection/plot/multiscale_umap.py
   - tree_break_selection/hierarchy_analysis/tree_decomposition.py
   - tests/validation/102_test_selected_family_traversal_panel.py
   - benchmarks/diagnostics/calibration/fixed_sibling_gate_profile_validation.py
@@ -53,7 +53,7 @@ only one flat clustering.
 - `multiscale_gene_assignments.csv` uses the decomposition sample labels, not
   raw tree leaf node ids, so the rows can join directly to UMAP coordinate
   tables.
-- `scripts/analysis/multiscale_umap_overlay.py` joins multi-scale assignments
+- `tree_break_selection/plot/multiscale_umap.py` joins multi-scale assignments
   with existing UMAP coordinates and renders stable regions as the primary
   color layer with pass-through or guard zones as an overlay.
 - The panel now writes checkpoint CSVs per case-role-method-replicate and can

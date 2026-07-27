@@ -17,6 +17,9 @@ from pathlib import Path
 import networkx as nx
 import numpy as np
 import pandas as pd
+from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import pdist
+from scipy.stats import chi2
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
     annotate_child_parent_divergence_with_context,
 )
@@ -40,9 +43,6 @@ from tree_break_selection.tree.feature_space import (
     bernoulli_feature_space_from_columns,
 )
 from tree_break_selection.tree.poset_tree import PosetTree
-from scipy.cluster.hierarchy import linkage
-from scipy.spatial.distance import pdist
-from scipy.stats import chi2
 
 from benchmarks.diagnostics.calibration.covariance_laplacian_panel import (
     analyze_covariance_laplacian,

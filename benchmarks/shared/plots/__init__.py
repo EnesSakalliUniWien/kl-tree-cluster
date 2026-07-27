@@ -1,6 +1,6 @@
 """Shared plot package defaults."""
 
-from benchmarks.shared.plots.backend import configure_matplotlib_backend
+from tree_break_selection.plot.backend import configure_matplotlib_backend
 
 configure_matplotlib_backend()
 

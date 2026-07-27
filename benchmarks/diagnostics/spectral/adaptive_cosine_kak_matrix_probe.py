@@ -20,16 +20,17 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.space_separation import (
+    adaptive_spectral_blocks,
+    cosine_eigendecomposition,
+    weight_feature_matrix,
+)
 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
     SCHEMA_VERSION,
-    adaptive_spectral_blocks,
-    cosine_eigendecomposition,
     run_block_tree,
     sibling_method_counts,
-    weighted_matrix,
 )
-
 
 MATRIX_SCHEMA_VERSION = f"{SCHEMA_VERSION}/matrix"
 
@@ -123,7 +124,7 @@ def main() -> None:
     for weighting in args.weightings:
         print(f"[{weighting}] eigendecomposition", flush=True)
         try:
-            values = weighted_matrix(data, weighting)
+            values = weight_feature_matrix(data, weighting)
             eigvals, eigvecs = cosine_eigendecomposition(values, args.max_rank)
             total_energy = float(np.sum(eigvals))
             blocks, diagnostics = adaptive_spectral_blocks(

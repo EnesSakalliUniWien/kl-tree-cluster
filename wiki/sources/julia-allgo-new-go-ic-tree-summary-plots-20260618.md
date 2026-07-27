@@ -5,8 +5,8 @@ status: reviewed
 updated: 2026-06-18
 sources:
   - data/feature_matrices/feature_matrix_julia_allGO_new.tsv
-  - scripts/analysis/go_ic_tree_summary_plots.py
-  - scripts/analysis/split_go_ic_results_by_method.py
+  - applications/endotypes/go_ic_tree_summary_plots.py
+  - applications/endotypes/split_go_ic_results_by_method.py
   - raw/assets/benchmark-results/julia_allGO_new_go_ic_tree_plots_20260618/raw_adaptive_kak/matrix_kak_probe_summary.csv
   - raw/assets/benchmark-results/julia_allGO_new_go_ic_tree_plots_20260618/adaptive_diffusion_kak/matrix_kak_diffusion_probe_summary.csv
   - raw/assets/benchmark-results/julia_allGO_new_go_ic_tree_plots_20260618/whole_adaptive_diffusion/cluster_assignments.csv

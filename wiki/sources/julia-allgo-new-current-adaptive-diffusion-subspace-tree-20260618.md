@@ -5,7 +5,7 @@ status: reviewed
 updated: 2026-06-18
 sources:
   - data/feature_matrices/feature_matrix_julia_allGO_new.tsv
-  - scripts/analysis/run_current_adaptive_diffusion_subspace_tree_experiment.py
+  - applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py
   - results/analyses/julia_allGO_new_current_adaptive_diffusion_subspace_tree_20260618_163811/README.md
   - results/analyses/julia_allGO_new_current_adaptive_diffusion_subspace_tree_20260618_163811/experiment_config.json
   - results/analyses/julia_allGO_new_current_adaptive_diffusion_subspace_tree_20260618_163811/rankings/current_adaptive_diffusion_subspace_tree_ranking.csv

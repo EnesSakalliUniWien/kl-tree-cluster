@@ -50,15 +50,21 @@ short: follow it before opening deep implementation directories.
 | Tree structure and feature-space data contracts | `tree_break_selection/tree/` |
 | Decomposition traversal and gate orchestration | `tree_break_selection/hierarchy_analysis/` |
 | Statistical kernels, projection, inflation, and FDR | `tree_break_selection/hierarchy_analysis/statistics/` |
+| Invariant/equivariant and adaptive-cosine separation | `tree_break_selection/space_separation/` |
+| Reusable plotting engines | `tree_break_selection/plot/` |
 | Full, smoke, and regression benchmark execution | `benchmarks/full/`, `benchmarks/smoke/`, `benchmarks/regression/` |
 | Standalone benchmark experiments | `benchmarks/experiments/` |
 | Benchmark-only investigation tools | `benchmarks/diagnostics/` |
-| User-facing real-data commands | `scripts/analysis/` |
+| Dataset applications and entry points | `applications/` |
+| Endotype/GO applications | `applications/endotypes/` |
+| Single-cell applications | `applications/scrna/` |
+| MNIST report applications | `applications/mnist/` |
 | Canonical tracked input matrices | `data/feature_matrices/` |
 | External reference tables | `data/reference/` |
 | Curated evidence snapshots from generated outputs | `raw/assets/` |
 | Durable project memory and open questions | `wiki/` |
 | Paper draft and derivation notes | `manuscript/` |
+| Manuscript-specific figure generators | `manuscript/tools/figures/` |
 | Local-only/generated work | `local_data/`, root `analysis/`, `benchmarks/results/`, `reports/` |
 
 ## Do Not Start Here
@@ -81,6 +87,8 @@ For the active method, read in this order:
 4. `tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py`
 5. `tree_break_selection/hierarchy_analysis/decomposition/gates/gate_evaluator.py`
 6. `tree_break_selection/hierarchy_analysis/statistics/README.md`
+7. `tree_break_selection/space_separation/README.md`
+8. `tree_break_selection/plot/README.md`
 
 ## Main Benchmark Route
 

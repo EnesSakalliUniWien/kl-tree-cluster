@@ -4,14 +4,14 @@ type: analysis
 status: draft
 updated: 2026-06-24
 sources:
-  - scripts/run_scrna_plot_pipeline.py
-  - scripts/pancreas_scrna_cluster_benchmark.py
-  - scripts/plot_pancreas_all_method_umap_clusters.py
-  - scripts/plot_pancreas_tbs_readable_umap_clusters.py
-  - scripts/plot_pancreas_tbs_cluster_radial_trees_ggtree.R
-  - scripts/plot_pancreas_tbs_umap_tree_combo_ggtree.R
-  - scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R
-  - scripts/analyze_goncalves_tbs_progenitors.py
+  - applications/scrna/plot_pipeline.py
+  - applications/scrna/pancreas_benchmark.py
+  - applications/scrna/plots/pancreas_all_method_umap_clusters.py
+  - applications/scrna/plots/pancreas_readable_umap_clusters.py
+  - applications/scrna/plots/pancreas_cluster_radial_trees_ggtree.R
+  - applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R
+  - applications/scrna/plots/goncalves_progenitor_trees_ggtree.R
+  - applications/scrna/analysis/analyze_goncalves_progenitors.py
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/plot_manifest.csv
   - raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/plot_manifest.csv
   - raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/goncalves_tbs_relation_umap_grid_ggtree.png
@@ -41,7 +41,7 @@ pancreas and Goncalves fetal pancreas UMAP/tree highlighting audits report
 
 The confusing part is the plot surface. Several generated files are duplicate
 compatibility aliases or overlapping review views. This is now addressed by
-`scripts/run_scrna_plot_pipeline.py`, which defines one plot-generator order
+`applications/scrna/plot_pipeline.py`, which defines one plot-generator order
 per scRNA dataset and writes `plot_manifest.csv`/`.json` files marking
 canonical plots, derivatives, compatibility aliases, and orphaned previous-run
 artifacts. The fix is a pipeline/manifest contract, not a change to cluster
@@ -51,30 +51,30 @@ assignment.
 
 ### Current plot families
 
-- `scripts/pancreas_scrna_cluster_benchmark.py` is the core benchmark runner.
+- `applications/scrna/pancreas_benchmark.py` is the core benchmark runner.
   It writes QC, classical UMAP overview, ARI, split/merge, quick method UMAP,
   branch-length, dendrogram, metric, assignment, and tree diagnostic outputs.
-- `scripts/plot_pancreas_all_method_umap_clusters.py` writes
+- `applications/scrna/plots/pancreas_all_method_umap_clusters.py` writes
   `all_methods_umap_clusters_all_colored.png` and `.pdf`, with all assigned
   clusters colored and only large cluster labels thresholded.
-- `scripts/plot_pancreas_tbs_readable_umap_clusters.py` writes the standalone
+- `applications/scrna/plots/pancreas_readable_umap_clusters.py` writes the standalone
   TBS UMAP comparison and then copies the all-colored rendering to the older
   `tbs_readable_umap_clusters_ge50.*` names.
-- `scripts/plot_pancreas_tbs_umap_tree_combo_ggtree.R` writes
+- `applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R` writes
   `tbs_umap_cluster_radial_tree_combo_scaled_umap_ggtree.*` and copies it to
   `tbs_umap_cluster_radial_tree_combo_all_clusters_ggtree.*` and
   `tbs_umap_cluster_radial_tree_combo_ggtree.*`.
-- `scripts/analyze_goncalves_tbs_progenitors.py` writes the Goncalves
+- `applications/scrna/analysis/analyze_goncalves_progenitors.py` writes the Goncalves
   progenitor signature UMAP, population/TBS heatmap, and exact meeting-node
   progenitor plot.
-- `scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R` writes individual
+- `applications/scrna/plots/goncalves_progenitor_trees_ggtree.R` writes individual
   progenitor radial trees, a combined tree-only panel, a wide UMAP/tree panel,
   one PNG page per UMAP/tree view, relation UMAP/tree grids that include the
   TBS clustering result, and multi-page vector PDFs.
 
 ### Implemented plot contract
 
-`scripts/run_scrna_plot_pipeline.py` is the coherent entry point for plot
+`applications/scrna/plot_pipeline.py` is the coherent entry point for plot
 review. It has `--dataset pancreas` and `--dataset goncalves` modes, optional
 `--run-generators`, `--print-commands`, and `--strict` validation. Without
 rerunning generators, it scans the current output folder and writes a plot
@@ -155,13 +155,13 @@ monophyletic proliferating-progenitor-rich joins.
 
 ## Evidence
 
-- `scripts/plot_pancreas_tbs_umap_tree_combo_ggtree.R` explicitly writes the
+- `applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R` explicitly writes the
   scaled combo, then copies it to the `all_clusters` and legacy combo names.
-- `scripts/plot_pancreas_tbs_readable_umap_clusters.py` explicitly copies the
+- `applications/scrna/plots/pancreas_readable_umap_clusters.py` explicitly copies the
   all-colored TBS UMAP rendering to the older `ge50` filenames.
-- `scripts/run_scrna_plot_pipeline.py` defines the dataset-specific plot
+- `applications/scrna/plot_pipeline.py` defines the dataset-specific plot
   generator order and writes the plot manifests.
-- `scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R` now generates
+- `applications/scrna/plots/goncalves_progenitor_trees_ggtree.R` now generates
   direct relation plots from the source CSVs instead of cropping an existing
   method-comparison PNG. The canonical relation outputs are
   `goncalves_tbs_relation_umap_grid_ggtree.*`,
@@ -177,21 +177,21 @@ monophyletic proliferating-progenitor-rich joins.
   both the adult pancreas and Goncalves output folders, and identical hashes for
   the adult `tbs_readable_umap_clusters_all_colored.png` and
   `tbs_readable_umap_clusters_ge50.png`.
-- `python3 -m py_compile scripts/run_scrna_plot_pipeline.py
-  scripts/plot_pancreas_tbs_readable_umap_clusters.py
-  scripts/analyze_goncalves_tbs_progenitors.py` passed.
-- `ruff check scripts/run_scrna_plot_pipeline.py
-  scripts/plot_pancreas_tbs_readable_umap_clusters.py
-  scripts/analyze_goncalves_tbs_progenitors.py` passed.
-- `python3 scripts/run_scrna_plot_pipeline.py --dataset pancreas --strict` and
-  `python3 scripts/run_scrna_plot_pipeline.py --dataset goncalves --strict`
+- `python3 -m py_compile applications/scrna/plot_pipeline.py
+  applications/scrna/plots/pancreas_readable_umap_clusters.py
+  applications/scrna/analysis/analyze_goncalves_progenitors.py` passed.
+- `ruff check applications/scrna/plot_pipeline.py
+  applications/scrna/plots/pancreas_readable_umap_clusters.py
+  applications/scrna/analysis/analyze_goncalves_progenitors.py` passed.
+- `python3 applications/scrna/plot_pipeline.py --dataset pancreas --strict` and
+  `python3 applications/scrna/plot_pipeline.py --dataset goncalves --strict`
   passed and regenerated `plot_manifest.csv`/`.json` files for both output
   folders.
 - Plot regeneration on 2026-06-24 succeeded by prepending
   `/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/bin` to
   `PATH` and running
   `/Users/berksakalli/miniconda3/bin/python
-  scripts/run_scrna_plot_pipeline.py --dataset pancreas --run-generators
+  applications/scrna/plot_pipeline.py --dataset pancreas --run-generators
   --strict` plus the corresponding Goncalves command. The rerender produced
   the expected `ggtree`/`ggplot2` deprecation warnings but no command failures.
 - `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_umap_tree_highlighting_audit.csv`

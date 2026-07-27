@@ -5,9 +5,9 @@ import pandas as pd
 from benchmarks.shared.runners.tbs_diffusion_runner import (
     GRAPHTOOLS_ADAPTIVE_NEIGHBOR_PROFILE_CONNECTIVITY_MINIMUM,
     GRAPHTOOLS_ADAPTIVE_NEIGHBOR_PROFILE_FRAGMENTATION_GUARD,
-    _build_adaptive_diffusion_distance,
     _resolve_graphtools_neighbor_search_k,
 )
+from tree_break_selection.space_separation import adaptive_diffusion_distance
 
 
 def test_build_adaptive_diffusion_distance_returns_finite_condensed_matrix():
@@ -18,7 +18,7 @@ def test_build_adaptive_diffusion_distance_returns_finite_condensed_matrix():
         columns=[f"f{j}" for j in range(18)],
     )
 
-    condensed, metadata = _build_adaptive_diffusion_distance(
+    condensed, metadata = adaptive_diffusion_distance(
         data,
         k_neighbors=10,
         diffusion_time=2,

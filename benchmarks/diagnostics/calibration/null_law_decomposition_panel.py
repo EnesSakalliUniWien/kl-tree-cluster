@@ -21,13 +21,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.stats import chi2
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_contrast_covariance,
 )
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
     identify_binary_sibling_children,
 )
-from scipy.stats import chi2
 
 from benchmarks.diagnostics.calibration.production_admissibility_contract import (
     evaluate_production_admissibility_components,

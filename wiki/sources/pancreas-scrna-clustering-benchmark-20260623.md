@@ -34,11 +34,11 @@ sources:
   - raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/manifest.json
   - tree_break_selection/tree/optimized_branch_lengths.py
   - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
-  - scripts/pancreas_scrna_cluster_benchmark.py
-  - scripts/plot_pancreas_tbs_cluster_radial_trees_ggtree.R
-  - scripts/plot_pancreas_tbs_umap_tree_combo_ggtree.R
-  - scripts/plot_pancreas_all_method_umap_clusters.py
-  - scripts/plot_pancreas_tbs_readable_umap_clusters.py
+  - applications/scrna/pancreas_benchmark.py
+  - applications/scrna/plots/pancreas_cluster_radial_trees_ggtree.R
+  - applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R
+  - applications/scrna/plots/pancreas_all_method_umap_clusters.py
+  - applications/scrna/plots/pancreas_readable_umap_clusters.py
   - tests/tree/test_optimized_branch_lengths.py
   - tests/statistics/46_test_continuous_covariance_numerical_psd.py
 tags:
@@ -205,15 +205,15 @@ without channel-level empty-droplet inputs.
   records the standalone TBS UMAP comparison with the same all-cluster color
   policy. The legacy `tbs_readable_umap_clusters_ge50.png` path is overwritten
   as a compatibility alias to this all-colored rendering.
-- `scripts/plot_pancreas_tbs_cluster_radial_trees_ggtree.R` is the reproducible
+- `applications/scrna/plots/pancreas_cluster_radial_trees_ggtree.R` is the reproducible
   R plotting script that converts TBS edge tables into `ape::phylo` objects and
   renders final clusters on whole radial trees with `ggtree`.
-- `scripts/plot_pancreas_tbs_umap_tree_combo_ggtree.R` renders the combined
+- `applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R` renders the combined
   UMAP-plus-tree panel with all final clusters colored and labels restricted to
   larger clusters.
-- `scripts/plot_pancreas_all_method_umap_clusters.py` renders the corrected
+- `applications/scrna/plots/pancreas_all_method_umap_clusters.py` renders the corrected
   all-method UMAP comparison with every assigned cluster colored.
-- `scripts/plot_pancreas_tbs_readable_umap_clusters.py` renders the TBS UMAP
+- `applications/scrna/plots/pancreas_readable_umap_clusters.py` renders the TBS UMAP
   cluster panel that colors every final cluster and labels only larger clusters.
 - `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/tbs_failure_diagnostic.md`
   records the original root traversal p-values, child composition, and
@@ -227,7 +227,7 @@ without channel-level empty-droplet inputs.
   visualizes merge control versus split control with overcluster ratio.
 - `raw/assets/benchmark-results/pancreas_scrna_cluster_benchmark_20260623/manifest.json`
   stores parameters, package versions, provenance, and runtime metadata.
-- `scripts/pancreas_scrna_cluster_benchmark.py` is the reproducible runner.
+- `applications/scrna/pancreas_benchmark.py` is the reproducible runner.
 - `tree_break_selection/tree/optimized_branch_lengths.py` implements the native
   fixed-topology NNLS branch-length fit used in the two new benchmark rows.
 - `tests/tree/test_optimized_branch_lengths.py` and

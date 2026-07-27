@@ -18,6 +18,9 @@ from typing import Any
 import networkx as nx
 import numpy as np
 import pandas as pd
+from scipy.optimize import linear_sum_assignment
+from scipy.spatial.distance import pdist
+from sklearn.metrics import roc_auc_score
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
@@ -25,9 +28,6 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
 )
-from scipy.optimize import linear_sum_assignment
-from scipy.spatial.distance import pdist
-from sklearn.metrics import roc_auc_score
 
 from benchmarks.diagnostics.calibration.data_independent_sibling_gate_traversal_panel import (
     _generate_data_with_truth,

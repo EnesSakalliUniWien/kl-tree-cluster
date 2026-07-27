@@ -21,8 +21,6 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.stats import chi2
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-
-from benchmarks.shared.runners.tbs_diffusion_runner import _build_diffusion_distance
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -33,8 +31,8 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.space_separation import hamming_knn_diffusion_distance
 from tree_break_selection.tree.io import tree_from_linkage
-
 
 DEFAULT_GRID: tuple[tuple[int, int], ...] = ((15, 3), (15, 5), (30, 3))
 SCHEMA_VERSION = "selected_sibling_lrt_diagnostic/v1"
@@ -252,7 +250,7 @@ def run_diffusion_lrt_cell(
     sibling_alpha: float,
 ) -> DiffusionRunResult:
     run_id = f"k{k_neighbors:02d}_t{diffusion_time}_c{n_components}"
-    distance = _build_diffusion_distance(
+    distance = hamming_knn_diffusion_distance(
         data,
         k_neighbors=k_neighbors,
         diffusion_time=diffusion_time,

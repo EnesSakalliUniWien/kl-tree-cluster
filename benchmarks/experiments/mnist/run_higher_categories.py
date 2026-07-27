@@ -27,10 +27,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import BayesianGaussianMixture
+from tree_break_selection.space_separation import hamming_knn_diffusion_distance
 from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.experiments.mnist.run import load_mnist_subset, run_tbs_clustering
-from benchmarks.shared.runners.tbs_diffusion_runner import _build_diffusion_distance
 
 HIGHER_CATEGORY_SCHEMES: dict[str, dict[int, str]] = {
     "shape_3": {
@@ -193,7 +193,7 @@ def run_tree_decomposition_on_preprocessed_data(
     if tree_construction == "diffusion":
         if verbose:
             print("  Building hierarchy with diffusion HAC")
-        diff_dist = _build_diffusion_distance(
+        diff_dist = hamming_knn_diffusion_distance(
             annotations_df,
             k_neighbors=15,
             diffusion_time=3,
@@ -244,7 +244,7 @@ def _run_diffusion_tbs_clustering(
 
     if verbose:
         print("  Building hierarchy with diffusion HAC")
-    diff_dist = _build_diffusion_distance(
+    diff_dist = hamming_knn_diffusion_distance(
         data,
         k_neighbors=15,
         diffusion_time=3,

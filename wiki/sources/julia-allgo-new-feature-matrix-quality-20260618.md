@@ -5,7 +5,7 @@ status: reviewed
 updated: 2026-06-18
 sources:
   - data/feature_matrices/feature_matrix_julia_allGO_new.tsv
-  - scripts/analysis/feature_matrix_quality_analysis.py
+  - applications/endotypes/feature_matrix_quality_analysis.py
   - raw/assets/benchmark-results/julia_allGO_new_feature_matrix_quality_20260618/README.md
   - raw/assets/benchmark-results/julia_allGO_new_feature_matrix_quality_20260618/matrix_quality_summary.csv
   - raw/assets/benchmark-results/julia_allGO_new_feature_matrix_quality_20260618/go_term_supports.csv

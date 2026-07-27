@@ -2,10 +2,13 @@
 title: Project Overview
 type: project
 status: reviewed
-updated: 2026-06-23
+updated: 2026-07-27
 sources:
   - README.md
   - docs/onboarding.md
+  - applications/README.md
+  - tree_break_selection/space_separation/README.md
+  - tree_break_selection/plot/README.md
   - manuscript/guides/full_method_logic_map.md
   - manuscript/sections/method/overview.tex
 tags:
@@ -30,9 +33,12 @@ blocks.
 The source code centers on `tree_break_selection/`, with tree structures in
 `tree_break_selection/tree/`, decomposition logic in
 `tree_break_selection/hierarchy_analysis/`, statistical tests under
-`tree_break_selection/hierarchy_analysis/statistics/`, benchmark and
-diagnostic harnesses under `benchmarks/`, user-facing real-data commands under
-`scripts/analysis/`, and validation coverage under `tests/`.
+`tree_break_selection/hierarchy_analysis/statistics/`, methodological space
+separation under `tree_break_selection/space_separation/`, and reusable
+plotting engines under `tree_break_selection/plot/`. Dataset-specific adapters
+and report composition are separated into endotype, scRNA, and MNIST
+applications under `applications/`; benchmark and diagnostic harnesses stay
+under `benchmarks/`, with validation coverage under `tests/`.
 
 Tracked feature matrices now have one canonical domain:
 `data/feature_matrices/`. External reference tables live under
@@ -57,6 +63,11 @@ The main implementation entities are [[poset-tree]] and
 - `README.md` maps the package, pipeline workflow, and testing entry points.
 - `docs/onboarding.md` defines the new-contributor route and the main code,
   benchmark, and testing paths.
+- `applications/README.md` lists every dataset application and primary command.
+- `tree_break_selection/space_separation/README.md` defines the method/application
+  seam for spectral separation.
+- `tree_break_selection/plot/README.md` defines the reusable plotting and
+  application/benchmark composition seam.
 - `data/README.md` and `reports/README.md` define the current data/report
   storage contract.
 - `manuscript/guides/full_method_logic_map.md` states the mathematical

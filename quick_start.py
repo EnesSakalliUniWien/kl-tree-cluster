@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-from tree_break_selection import config
-from tree_break_selection.tree.poset_tree import PosetTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
+from tree_break_selection import config
+from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def main():

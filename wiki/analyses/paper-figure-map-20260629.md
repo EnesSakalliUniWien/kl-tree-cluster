@@ -17,9 +17,9 @@ sources:
   - raw/assets/benchmark-results/mnist_tbs_analysis_20260624_plotly/manifest.json
   - raw/assets/benchmark-results/scrna_selected_adaptive_diffusion_nnls_manifest.json
   - raw/assets/benchmark-results/scrna_selected_adaptive_diffusion_nnls_matched_manifest.json
-  - scripts/run_scrna_plot_pipeline.py
-  - scripts/analysis/go_ic_tree_summary_plots.py
-  - scripts/analysis/run_current_adaptive_diffusion_subspace_tree_experiment.py
+  - applications/scrna/plot_pipeline.py
+  - applications/endotypes/go_ic_tree_summary_plots.py
+  - applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py
   - wiki/analyses/scrna-plot-pipeline-audit-20260624.md
   - wiki/sources/pancreas-scrna-clustering-benchmark-20260623.md
   - wiki/sources/goncalves-pancreas-progenitor-benchmark-prep-20260624.md
@@ -104,41 +104,41 @@ decks, MNIST exploratory figures, and older diagnostic/legacy figure pools.
 
 ### Generator map
 
-- `scripts/run_scrna_plot_pipeline.py` is the coherent adult/Goncalves scRNA
+- `applications/scrna/plot_pipeline.py` is the coherent adult/Goncalves scRNA
   plot manifest and orchestration layer.
-- `scripts/pancreas_scrna_cluster_benchmark.py` and
-  `scripts/goncalves_pancreas_progenitor_benchmark.py` produce the benchmark
+- `applications/scrna/pancreas_benchmark.py` and
+  `applications/scrna/goncalves_benchmark.py` produce the benchmark
   metric, UMAP, dendrogram, branch-length, and assignment surfaces.
-- `scripts/plot_pancreas_all_method_umap_clusters.py`,
-  `scripts/plot_pancreas_tbs_readable_umap_clusters.py`,
-  `scripts/plot_pancreas_tbs_radial_trees_ggtree.R`,
-  `scripts/plot_pancreas_tbs_cluster_radial_trees_ggtree.R`, and
-  `scripts/plot_pancreas_tbs_umap_tree_combo_ggtree.R` produce the main scRNA
+- `applications/scrna/plots/pancreas_all_method_umap_clusters.py`,
+  `applications/scrna/plots/pancreas_readable_umap_clusters.py`,
+  `applications/scrna/plots/pancreas_radial_trees_ggtree.R`,
+  `applications/scrna/plots/pancreas_cluster_radial_trees_ggtree.R`, and
+  `applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R` produce the main scRNA
   review figures.
-- `scripts/analyze_goncalves_tbs_progenitors.py` and
-  `scripts/plot_goncalves_tbs_progenitor_trees_ggtree.R` produce the Goncalves
+- `applications/scrna/analysis/analyze_goncalves_progenitors.py` and
+  `applications/scrna/plots/goncalves_progenitor_trees_ggtree.R` produce the Goncalves
   progenitor-specific figures.
-- `scripts/analyze_scrna_space_decomposition.py` produces the space
+- `applications/scrna/analyze_space_decomposition.py` produces the space
   decomposition plots in the 2026-06-27 rerun.
-- `scripts/audit_scrna_branch_length_effects.py`,
-  `scripts/audit_scrna_distributional_action.py`,
-  `scripts/plot_selected_scrna_nnls_report.py`,
-  `scripts/plot_selected_scrna_nnls_fit_summary.py`, and
-  `scripts/plot_selected_scrna_nnls_matched_report.py` produce the scRNA audit
+- `applications/scrna/analysis/audit_branch_length_effects.py`,
+  `applications/scrna/analysis/audit_distributional_action.py`,
+  `applications/scrna/plots/selected_nnls_report.py`,
+  `applications/scrna/plots/selected_nnls_fit_summary.py`, and
+  `applications/scrna/plots/selected_nnls_matched_report.py` produce the scRNA audit
   and selected-NNLS report figures.
-- `scripts/analysis/run_current_adaptive_diffusion_subspace_tree_experiment.py`
-  and `scripts/analysis/go_ic_tree_summary_plots.py` produce the GO/subspace
+- `applications/endotypes/run_current_adaptive_diffusion_subspace_tree_experiment.py`
+  and `applications/endotypes/go_ic_tree_summary_plots.py` produce the GO/subspace
   figure decks.
-- `scripts/plot_mnist_tbs_analysis_report.py` and
-  `scripts/plot_mnist_tbs_analysis_plotly.py` produce the static and
+- `applications/mnist/plot_report.py` and
+  `applications/mnist/plot_interactive.py` produce the static and
   interactive MNIST figure bundles.
-- `scripts/plot_handdrawn_3d_edge_gate.py`,
-  `scripts/plot_handdrawn_distance_matrix_steps.py`,
-  `scripts/plot_right_block_toytree.py`,
-  `scripts/plot_right_block_3d_points.py`,
-  `scripts/add_right_block_sibling_test.py`,
-  `scripts/add_right_block_covariance_callout.py`, and
-  `scripts/add_right_block_covariance_heatmaps.py` produce the toy-tree
+- `manuscript/tools/figures/plot_handdrawn_3d_edge_gate.py`,
+  `manuscript/tools/figures/plot_handdrawn_distance_matrix_steps.py`,
+  `manuscript/tools/figures/plot_right_block_toytree.py`,
+  `manuscript/tools/figures/plot_right_block_3d_points.py`,
+  `manuscript/tools/figures/add_right_block_sibling_test.py`,
+  `manuscript/tools/figures/add_right_block_covariance_callout.py`, and
+  `manuscript/tools/figures/add_right_block_covariance_heatmaps.py` produce the toy-tree
   explanatory report figures.
 
 ## Evidence

@@ -28,6 +28,7 @@ STAGES: tuple[Stage, ...] = (
         "Core structure + decomposition",
         (
             "tests/core",
+            "tests/tree",
         ),
     ),
     Stage(
@@ -67,6 +68,13 @@ STAGES: tuple[Stage, ...] = (
             "tests/visualization",
         ),
     ),
+    Stage(
+        7,
+        "Wiki memory contracts",
+        (
+            "tests/wiki",
+        ),
+    ),
 )
 
 
@@ -78,7 +86,9 @@ def run_pytest(test_files: tuple[str, ...]) -> int:
 
 def list_stages() -> None:
     for stage in STAGES:
-        print(f"{stage.index}. {stage.title} ({len(stage.tests)} files)")
+        target_count = len(stage.tests)
+        target_label = "target" if target_count == 1 else "targets"
+        print(f"{stage.index}. {stage.title} ({target_count} test {target_label})")
 
 
 def main() -> int:

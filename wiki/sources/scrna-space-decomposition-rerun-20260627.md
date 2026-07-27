@@ -4,9 +4,9 @@ type: source
 status: reviewed
 updated: 2026-06-27
 sources:
-  - scripts/analyze_scrna_space_decomposition.py
-  - scripts/pancreas_scrna_cluster_benchmark.py
-  - scripts/goncalves_pancreas_progenitor_benchmark.py
+  - applications/scrna/analyze_space_decomposition.py
+  - applications/scrna/pancreas_benchmark.py
+  - applications/scrna/goncalves_benchmark.py
   - pyproject.toml
   - uv.lock
   - raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/adult_pancreas_benchmark/method_metrics.csv
@@ -26,7 +26,7 @@ tags:
 
 The adult pancreas and Goncalves fetal pancreas scRNA benchmarks were rerun
 from their benchmark entry points, then analyzed with
-`scripts/analyze_scrna_space_decomposition.py`. The diagnostic standardizes the
+`applications/scrna/analyze_space_decomposition.py`. The diagnostic standardizes the
 saved benchmark PCA coordinates, decomposes the centered cell-by-PC matrix by
 SVD, treats axis 1 as the common/invariant axis, and treats axes 2 through 6 as
 orthogonal/equivariant axes. This is a descriptive PCA-space diagnostic, not a
@@ -65,7 +65,7 @@ formal Cartan decomposition claim.
 
 ## Evidence
 
-- `scripts/analyze_scrna_space_decomposition.py` defines the
+- `applications/scrna/analyze_space_decomposition.py` defines the
   `scrna_space_decomposition/v1` output contract, writes per-cell geometry,
   celltype summaries, method-cluster summaries, method summaries, axis
   loadings, plots, and a manifest.
@@ -81,13 +81,13 @@ formal Cartan decomposition claim.
   keys.
 - `raw/assets/benchmark-results/scrna_space_decomposition_rerun_20260627/space_decomposition/goncalves_fetal_pancreas/method_space_summary.csv`
   records the corresponding Goncalves method-level summaries.
-- `uv run --all-extras ruff check scripts/analyze_scrna_space_decomposition.py
-  scripts/pancreas_scrna_cluster_benchmark.py
-  scripts/goncalves_pancreas_progenitor_benchmark.py` passed.
+- `uv run --all-extras ruff check applications/scrna/analyze_space_decomposition.py
+  applications/scrna/pancreas_benchmark.py
+  applications/scrna/goncalves_benchmark.py` passed.
 - `uv run --all-extras python -m py_compile
-  scripts/analyze_scrna_space_decomposition.py
-  scripts/pancreas_scrna_cluster_benchmark.py
-  scripts/goncalves_pancreas_progenitor_benchmark.py` passed.
+  applications/scrna/analyze_space_decomposition.py
+  applications/scrna/pancreas_benchmark.py
+  applications/scrna/goncalves_benchmark.py` passed.
 
 ## Links
 

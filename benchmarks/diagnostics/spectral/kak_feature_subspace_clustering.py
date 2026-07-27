@@ -35,15 +35,17 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.space_separation import (
+    SpectralBlock,
+    adaptive_spectral_blocks,
+    cosine_eigendecomposition,
+    weight_feature_matrix,
+)
 from tree_break_selection.tree.feature_space import continuous_feature_space_from_columns
 from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
-    SpectralBlock,
-    adaptive_spectral_blocks,
-    cosine_eigendecomposition,
     sibling_method_counts,
-    weighted_matrix,
 )
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import load_matrix
 from benchmarks.diagnostics.spectral.kak_lens_feature_axis_clustering import (
@@ -334,7 +336,7 @@ def run_feature_subspace_clustering(args: argparse.Namespace) -> pd.DataFrame:
 
     for weighting in args.weightings:
         print(f"[feature-subspace] {weighting}", flush=True)
-        values = weighted_matrix(data, weighting)
+        values = weight_feature_matrix(data, weighting)
         eigvals, eigvecs = cosine_eigendecomposition(values, args.max_rank)
         blocks, _diagnostics = adaptive_spectral_blocks(
             eigvals,

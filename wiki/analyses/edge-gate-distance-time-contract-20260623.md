@@ -11,7 +11,7 @@ sources:
   - tree_break_selection/tree/optimized_branch_lengths.py
   - tree_break_selection/hierarchy_analysis/statistics/contrast_covariance.py
   - benchmarks/shared/runners/tbs_runner.py
-  - scripts/pancreas_scrna_cluster_benchmark.py
+  - applications/scrna/pancreas_benchmark.py
   - tests/statistics/22_test_edge_branch_length_regression.py
   - tests/statistics/45_test_edge_gate_math_contract.py
   - tests/statistics/46_test_continuous_covariance_numerical_psd.py

@@ -25,7 +25,7 @@ class _FakeAdata:
 
 
 def _load_benchmark_module():
-    script_path = Path(__file__).resolve().parents[2] / "scripts/goncalves_pancreas_progenitor_benchmark.py"
+    script_path = Path(__file__).resolve().parents[2] / "applications/scrna/goncalves_benchmark.py"
     spec = importlib.util.spec_from_file_location("goncalves_pancreas_progenitor_benchmark", script_path)
     assert spec is not None
     assert spec.loader is not None

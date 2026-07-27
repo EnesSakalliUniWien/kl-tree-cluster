@@ -30,6 +30,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import normalize
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -40,14 +41,15 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from sklearn.preprocessing import normalize
+from tree_break_selection.space_separation import (
+    adaptive_spectral_blocks,
+    coordinates_for_block,
+    cosine_eigendecomposition,
+    weight_feature_matrix,
+)
 
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
-    adaptive_spectral_blocks,
-    coords_for_block,
-    cosine_eigendecomposition,
     sibling_method_counts,
-    weighted_matrix,
 )
 from benchmarks.diagnostics.spectral.adaptive_cosine_kak_matrix_probe import load_matrix
 from benchmarks.diagnostics.spectral.kak_lens_alpha_sweep import (
@@ -101,7 +103,7 @@ def default_output_dir(input_path: Path) -> Path:
 
 
 def row_normalized_weighted_matrix(data: pd.DataFrame, weighting: str) -> np.ndarray:
-    values = weighted_matrix(data, weighting)
+    values = weight_feature_matrix(data, weighting)
     row_norms = np.linalg.norm(values, axis=1)
     if np.any(row_norms <= 1e-12):
         raise ValueError("Rows with zero norm cannot enter the raw KAK/cosine operator.")
@@ -353,7 +355,7 @@ def run_lens(
             f"{spec.lens_id} is not exact-feature-mappable; use raw_kak lenses only."
         )
     block = find_block(blocks, spec.block_name)
-    coordinates = coords_for_block(eigvals, eigvecs, block)
+    coordinates = coordinates_for_block(eigvals, eigvecs, block)
     common_axis_score = eigvecs[:, 0] * math.sqrt(float(eigvals[0]))
     tree, tree_metadata = build_lens_tree(
         data=data,
@@ -502,7 +504,7 @@ def main() -> None:
         if spec.family != "raw_kak":
             raise ValueError(f"Only raw_kak lenses have an exact feature-axis map: {spec.lens_id}")
         if spec.weighting not in eigensystems:
-            values = weighted_matrix(data, spec.weighting)
+            values = weight_feature_matrix(data, spec.weighting)
             eigvals, eigvecs = cosine_eigendecomposition(values, args.max_rank)
             blocks, _ = adaptive_spectral_blocks(
                 eigvals,

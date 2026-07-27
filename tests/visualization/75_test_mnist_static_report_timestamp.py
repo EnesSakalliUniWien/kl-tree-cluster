@@ -8,7 +8,7 @@ import pandas as pd
 
 
 def _load_static_report_module():
-    script_path = Path(__file__).resolve().parents[2] / "scripts/plot_mnist_tbs_analysis_report.py"
+    script_path = Path(__file__).resolve().parents[2] / "applications/mnist/plot_report.py"
     spec = importlib.util.spec_from_file_location("plot_mnist_tbs_analysis_report", script_path)
     assert spec is not None
     assert spec.loader is not None

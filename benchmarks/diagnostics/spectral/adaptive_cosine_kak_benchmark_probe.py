@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import math
 import time
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -26,7 +25,6 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from sklearn.preprocessing import normalize
 from tree_break_selection.hierarchy_analysis.cluster_assignments import (
     build_sample_cluster_assignments,
 )
@@ -41,6 +39,11 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     CalibrationSupportThresholds,
 )
+from tree_break_selection.space_separation import (
+    SpectralBlock,
+    coordinates_for_block,
+    separate_adaptive_cosine_space,
+)
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.poset_tree import PosetTree
 
@@ -48,15 +51,6 @@ from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
 
 SCHEMA_VERSION = "adaptive_cosine_kak_benchmark_probe/v1"
-
-
-@dataclass(frozen=True)
-class SpectralBlock:
-    block_id: int
-    block_name: str
-    block_start: int
-    block_end: int
-    block_type: str
 
 
 def parse_args() -> argparse.Namespace:
@@ -108,171 +102,6 @@ def default_output_dir() -> Path:
     return Path("benchmarks/results/diagnostics") / f"adaptive_cosine_kak_probe_{stamp}"
 
 
-def weighted_matrix(data: pd.DataFrame, weighting: str) -> np.ndarray:
-    values = data.to_numpy(dtype=float)
-    if weighting == "binary":
-        return values
-    if weighting == "tfidf":
-        if np.any(values < 0):
-            raise ValueError("tfidf weighting requires nonnegative feature values.")
-        from sklearn.feature_extraction.text import TfidfTransformer
-
-        return TfidfTransformer(norm=None, use_idf=True, smooth_idf=True).fit_transform(
-            values
-        ).toarray()
-    raise ValueError(f"Unknown weighting: {weighting!r}")
-
-
-def cosine_eigendecomposition(values: np.ndarray, max_rank: int) -> tuple[np.ndarray, np.ndarray]:
-    if values.ndim != 2:
-        raise ValueError("Expected a 2D matrix.")
-    row_norms = np.linalg.norm(values, axis=1)
-    if np.any(row_norms <= 1e-12):
-        raise ValueError("Rows with zero norm cannot enter the cosine operator.")
-
-    row_normed = normalize(values, norm="l2", axis=1)
-    operator = row_normed @ row_normed.T
-    eigvals, eigvecs = np.linalg.eigh(operator)
-    order = np.argsort(eigvals)[::-1]
-    eigvals = eigvals[order]
-    eigvecs = eigvecs[:, order]
-    keep = eigvals > 1e-10
-    return eigvals[keep][:max_rank], eigvecs[:, keep][:, :max_rank]
-
-
-def interval_linear_sse(x: np.ndarray, y: np.ndarray) -> float:
-    if len(x) <= 1:
-        return 0.0
-    design = np.vstack([x, np.ones_like(x)]).T
-    coef, *_ = np.linalg.lstsq(design, y, rcond=None)
-    residual = y - design @ coef
-    return float(np.sum(residual**2))
-
-
-def should_isolate_common_mode(log_eigvals: np.ndarray) -> bool:
-    if len(log_eigvals) < 8:
-        return False
-    gaps = log_eigvals[:-1] - log_eigvals[1:]
-    if len(gaps) < 4:
-        return False
-    first_gap = gaps[0]
-    tail = gaps[1:]
-    return bool(first_gap > np.median(tail) + 2.0 * np.std(tail))
-
-
-def adaptive_spectral_blocks(
-    eigvals: np.ndarray,
-    *,
-    min_segment_length: int,
-    max_segments: int,
-) -> tuple[list[SpectralBlock], dict[str, object]]:
-    rank = len(eigvals)
-    if rank == 0:
-        return [], {"selected_segments": 0, "bic": math.nan, "segmentation_sse": math.nan}
-    if rank <= min_segment_length:
-        return [
-            SpectralBlock(0, f"adaptive_modes_01_{rank:02d}", 1, rank, "all_available")
-        ], {"selected_segments": 1, "bic": math.nan, "segmentation_sse": 0.0}
-
-    log_eigvals = np.log(np.maximum(eigvals, 1e-300))
-    offset = 0
-    blocks: list[SpectralBlock] = []
-    if should_isolate_common_mode(log_eigvals):
-        blocks.append(SpectralBlock(0, "adaptive_common_mode_01", 1, 1, "common_mode"))
-        offset = 1
-
-    y = log_eigvals[offset:]
-    n = len(y)
-    x = np.arange(offset + 1, rank + 1, dtype=float)
-    if n < min_segment_length:
-        if n:
-            blocks.append(
-                SpectralBlock(
-                    len(blocks),
-                    f"adaptive_modes_{offset + 1:02d}_{rank:02d}",
-                    offset + 1,
-                    rank,
-                    "tail",
-                )
-            )
-        return blocks, {
-            "selected_segments": len(blocks),
-            "bic": math.nan,
-            "segmentation_sse": 0.0,
-            "common_mode_isolated": bool(offset == 1),
-        }
-
-    max_k = min(max_segments, max(1, n // min_segment_length))
-    sse = np.full((n, n), np.inf)
-    for start in range(n):
-        for end in range(start + min_segment_length - 1, n):
-            sse[start, end] = interval_linear_sse(x[start : end + 1], y[start : end + 1])
-
-    dp = np.full((max_k + 1, n), np.inf)
-    prev = np.full((max_k + 1, n), -1, dtype=int)
-    for end in range(min_segment_length - 1, n):
-        dp[1, end] = sse[0, end]
-    for k in range(2, max_k + 1):
-        first_valid_end = k * min_segment_length - 1
-        for end in range(first_valid_end, n):
-            for cut in range((k - 1) * min_segment_length - 1, end - min_segment_length + 1):
-                value = dp[k - 1, cut] + sse[cut + 1, end]
-                if value < dp[k, end]:
-                    dp[k, end] = value
-                    prev[k, end] = cut
-
-    selected: tuple[float, int, float] | None = None
-    for k in range(1, max_k + 1):
-        total_sse = float(dp[k, n - 1])
-        if not np.isfinite(total_sse):
-            continue
-        total_sse = max(total_sse, 1e-12)
-        parameter_count = 3 * k
-        bic = n * math.log(total_sse / n) + parameter_count * math.log(n)
-        if selected is None or bic < selected[0]:
-            selected = (bic, k, total_sse)
-    if selected is None:
-        raise RuntimeError("Could not select adaptive spectral segmentation.")
-
-    _, k, total_sse = selected
-    segments: list[tuple[int, int]] = []
-    end = n - 1
-    while k >= 1:
-        cut = prev[k, end]
-        start = 0 if k == 1 else cut + 1
-        segments.append((start + offset + 1, end + offset + 1))
-        end = cut
-        k -= 1
-
-    for start, end in reversed(segments):
-        blocks.append(
-            SpectralBlock(
-                len(blocks),
-                f"adaptive_modes_{start:02d}_{end:02d}",
-                int(start),
-                int(end),
-                "adaptive_decay_regime",
-            )
-        )
-
-    return blocks, {
-        "selected_segments": len(segments),
-        "bic": float(selected[0]),
-        "segmentation_sse": float(total_sse),
-        "common_mode_isolated": bool(offset == 1),
-        "min_segment_length": int(min_segment_length),
-        "max_segments": int(max_segments),
-    }
-
-
-def coords_for_block(eigvals: np.ndarray, eigvecs: np.ndarray, block: SpectralBlock) -> np.ndarray:
-    start = block.block_start - 1
-    end = block.block_end
-    coords = eigvecs[:, start:end] * np.sqrt(np.maximum(eigvals[start:end], 0.0))
-    if coords.ndim == 1:
-        coords = coords.reshape(-1, 1)
-    return np.nan_to_num(coords)
-
 
 def labels_from_assignments(assignments: pd.DataFrame, sample_index: pd.Index) -> np.ndarray:
     aligned = assignments.loc[sample_index]
@@ -293,7 +122,7 @@ def run_block_tree(
         DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
     ),
 ) -> tuple[pd.DataFrame, dict[str, object], pd.DataFrame]:
-    coords = coords_for_block(eigvals, eigvecs, block)
+    coords = coordinates_for_block(eigvals, eigvecs, block)
     if coords.shape[1] == 0 or not np.isfinite(coords).all():
         raise ValueError("invalid spectral block coordinates")
     distances = pdist(coords, metric="euclidean")
@@ -376,14 +205,18 @@ def run_case(
 
     for weighting in args.weightings:
         try:
-            values = weighted_matrix(data, weighting)
-            eigvals, eigvecs = cosine_eigendecomposition(values, args.max_rank)
-            total_energy = float(np.sum(eigvals))
-            blocks, diagnostics = adaptive_spectral_blocks(
-                eigvals,
+            space = separate_adaptive_cosine_space(
+                data,
+                weighting=weighting,
+                max_rank=args.max_rank,
                 min_segment_length=args.min_segment_length,
                 max_segments=args.max_segments,
             )
+            eigvals = space.eigenvalues
+            eigvecs = space.eigenvectors
+            total_energy = float(np.sum(eigvals))
+            blocks = space.blocks
+            diagnostics = space.diagnostics
         except Exception as exc:  # noqa: BLE001 - diagnostic records failures.
             rows.append(
                 {

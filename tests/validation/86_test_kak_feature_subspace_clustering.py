@@ -3,10 +3,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from benchmarks.diagnostics.spectral.adaptive_cosine_kak_benchmark_probe import (
-    SpectralBlock,
-    cosine_eigendecomposition,
-)
 from benchmarks.diagnostics.spectral.kak_feature_subspace_clustering import (
     build_feature_tree,
     feature_coordinates_for_block,
@@ -15,6 +11,10 @@ from benchmarks.diagnostics.spectral.kak_feature_subspace_clustering import (
 from benchmarks.diagnostics.spectral.kak_lens_feature_axis_clustering import (
     feature_axes_from_cosine_eigenvectors,
     row_normalized_weighted_matrix,
+)
+from tree_break_selection.space_separation import (
+    SpectralBlock,
+    cosine_eigendecomposition,
 )
 
 

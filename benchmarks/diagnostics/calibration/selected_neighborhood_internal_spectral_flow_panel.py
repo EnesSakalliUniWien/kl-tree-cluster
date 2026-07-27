@@ -19,6 +19,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import pdist
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
@@ -30,7 +31,6 @@ from tree_break_selection.hierarchy_analysis.statistics.projection.spectral.tree
     INTERNAL_DISTRIBUTION_BRANCH_LENGTH_STATE,
     INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
 )
-from scipy.spatial.distance import pdist
 
 from benchmarks.diagnostics.calibration.data_independent_sibling_gate_panel import (
     validate_data_roles,

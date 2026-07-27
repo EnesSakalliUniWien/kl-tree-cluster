@@ -4,10 +4,10 @@ type: source
 status: reviewed
 updated: 2026-06-24
 sources:
-  - scripts/goncalves_pancreas_progenitor_benchmark.py
-  - scripts/plot_pancreas_all_method_umap_clusters.py
-  - scripts/plot_pancreas_tbs_radial_trees_ggtree.R
-  - scripts/plot_pancreas_tbs_umap_tree_combo_ggtree.R
+  - applications/scrna/goncalves_benchmark.py
+  - applications/scrna/plots/pancreas_all_method_umap_clusters.py
+  - applications/scrna/plots/pancreas_radial_trees_ggtree.R
+  - applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R
   - wiki/questions/pancreas-progenitor-dataset-selection-20260624.md
   - raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/summary.md
   - raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/method_metrics.csv
@@ -34,7 +34,7 @@ comparison.
 
 ## Key Points
 
-- `scripts/goncalves_pancreas_progenitor_benchmark.py` targets the UCSC
+- `applications/scrna/goncalves_benchmark.py` targets the UCSC
   fetal-pancreas expression matrix and metadata for the Goncalves et al. human
   fetal pancreas dataset.
 - The downloaded local input paths are
@@ -64,15 +64,15 @@ comparison.
 
 ## Evidence
 
-- `ruff check scripts/goncalves_pancreas_progenitor_benchmark.py
-  scripts/plot_pancreas_all_method_umap_clusters.py` passed.
-- `python -m py_compile scripts/goncalves_pancreas_progenitor_benchmark.py
-  scripts/plot_pancreas_all_method_umap_clusters.py` passed.
+- `ruff check applications/scrna/goncalves_benchmark.py
+  applications/scrna/plots/pancreas_all_method_umap_clusters.py` passed.
+- `python -m py_compile applications/scrna/goncalves_benchmark.py
+  applications/scrna/plots/pancreas_all_method_umap_clusters.py` passed.
 - `raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/edge_gate_distance_time_model_analysis.md`
   records the topology-vs-time interpretation and branch-length summary with
   `Generated at: 2026-06-24T19:57:27+02:00`.
-- `Rscript -e "parse('scripts/plot_pancreas_tbs_radial_trees_ggtree.R');
-  parse('scripts/plot_pancreas_tbs_umap_tree_combo_ggtree.R')"` passed.
+- `Rscript -e "parse('applications/scrna/plots/pancreas_radial_trees_ggtree.R');
+  parse('applications/scrna/plots/pancreas_umap_tree_combo_ggtree.R')"` passed.
 - `raw/assets/benchmark-results/goncalves_fetal_pancreas_progenitor_benchmark_20260624/summary.md`
   records the data shape, label counts, processed-expression handling, and
   method metrics.

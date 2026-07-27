@@ -46,7 +46,7 @@ def _sample_index(sample_names: Sequence[object] | pd.Index) -> pd.Index:
     return sample_names if isinstance(sample_names, pd.Index) else pd.Index(sample_names)
 
 
-def _labels_and_report_from_decomposition(
+def labels_and_report_from_decomposition(
     decomposition: dict,
     sample_index: Sequence[object] | pd.Index,
 ) -> tuple[np.ndarray, pd.DataFrame]:
@@ -61,7 +61,7 @@ def _labels_from_decomposition(
     decomposition: dict, sample_index: Sequence[object] | pd.Index
 ) -> list[int]:
     """Extract cluster labels for each sample from a decomposition result."""
-    labels, _ = _labels_and_report_from_decomposition(decomposition, sample_index)
+    labels, _ = labels_and_report_from_decomposition(decomposition, sample_index)
     return labels.tolist()
 
 
@@ -107,7 +107,7 @@ def _ok_result_from_labels(
 
 
 __all__ = [
-    "_labels_and_report_from_decomposition",
+    "labels_and_report_from_decomposition",
     "_labels_from_decomposition",
     "_create_report_dataframe_from_labels",
     "_ok_result_from_labels",
