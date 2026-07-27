@@ -5332,6 +5332,15 @@ verification, and maintenance events here in chronological order.
   worktree pass is committed, and separated that mechanical result from the
   owner decision over 865 tracked evidence files under `results/`.
 
+### 2026-07-28
+
+- Committed the reviewed organization pass as `b247a1f6` and fast-forwarded
+  local `dev` from `8aaa2615` to that commit, preserving the approved tracked
+  evidence payload. Reverified the integrated tree with Ruff, wiki lint, all
+  1,252 purpose-ordered tests, package builds, quick start, lock resolution,
+  and the clean pinned BranchArchitect submodule. The remote `origin/dev` was
+  intentionally not pushed and remains at `8aaa2615`.
+
 ## Evidence
 
 - `raw/inbox/wiki-construction-brief.md` records the requested scaffold.
