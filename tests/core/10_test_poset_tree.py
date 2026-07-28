@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from tree_break_selection.tree.branch_lengths import compute_ultrametric_branch_lengths
-from tree_break_selection.tree.io import tree_from_linkage_topology
+from tree_break_selection.tree.construction import tree_from_linkage, tree_from_linkage_topology
 from tree_break_selection.tree.poset_tree import PosetTree
 
 
@@ -33,31 +33,14 @@ def _assert_laminar_and_inner_nodes_consistent(G: nx.DiGraph):
     assert inner_nodes_poset == inner_nodes_graph
 
 
-def test_from_tuples_edges_basic():
-    # Star: a-b, b-c, b-d
-    edges = [("a", "b", 2.0), ("b", "c", 1.0), ("b", "d", 3.0)]
-    G = PosetTree.from_undirected_edges(edges)
-
-    assert nx.is_tree(G.to_undirected())
-    # All nodes present as labels - check that nodes exist
-    for n in ["a", "b", "c", "d"]:
-        assert n in G.nodes
-        # Note: from_undirected_edges may not set 'label' attribute
-        # assert G.nodes[n]["label"] == n
-
-    _assert_laminar_and_inner_nodes_consistent(G)
-
-
-def test_from_undirected_edges_rejects_non_tree_input():
-    edges = [("a", "b", 1.0), ("b", "c", 1.0), ("c", "a", 1.0)]
-
-    with pytest.raises(ValueError, match="undirected tree"):
-        PosetTree.from_undirected_edges(edges)
-
-
 def test_find_lca_for_set_rejects_empty_node_set():
-    edges = [("root", "left", 1.0), ("root", "right", 1.0)]
-    G = PosetTree.from_undirected_edges(edges)
+    G = PosetTree()
+    G.add_node("root", is_leaf=False, label="root")
+    G.add_node("left", is_leaf=True, label="left")
+    G.add_node("right", is_leaf=True, label="right")
+    G.add_edge("root", "left", branch_length=1.0)
+    G.add_edge("root", "right", branch_length=1.0)
+    G.graph["root"] = "root"
 
     with pytest.raises(ValueError, match="empty node set"):
         G.find_lca_for_set([])
@@ -181,7 +164,7 @@ def test_from_scipy_linkage_binary_data():
     D = pdist(X, metric="hamming")
     Z = linkage(D, method="average")
 
-    G = PosetTree.from_linkage(Z, leaf_names=leaf_names)
+    G = tree_from_linkage(Z, leaf_names=leaf_names)
 
     assert G.number_of_nodes() == 2 * len(X) - 1
     assert nx.is_directed_acyclic_graph(G)

@@ -44,9 +44,11 @@ from tree_break_selection.hierarchy_analysis.statistics.projection.projection_di
     MarchenkoPasturDimensionEstimate,
     estimate_marchenko_pastur_dimension,
 )
-from tree_break_selection.tree.construction import DEFAULT_TREE_LINKAGE_METHOD
+from tree_break_selection.tree.construction import (
+    DEFAULT_TREE_LINKAGE_METHOD,
+    tree_from_linkage,
+)
 from tree_break_selection.tree.feature_space import FeatureSpace
-from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.shared.cases import get_default_test_cases
 from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
@@ -289,7 +291,7 @@ def _run_tbs_with_gate_bundle(
     feature_space: FeatureSpace | None,
 ) -> MethodRunResult:
     linkage_matrix = linkage(distance_condensed, method=DEFAULT_TREE_LINKAGE_METHOD)
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
+    tree = tree_from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
     tree.populate_node_divergences(data_df, feature_space=feature_space)
     gate_bundle = run_gate_annotation_pipeline(
         tree,

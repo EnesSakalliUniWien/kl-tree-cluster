@@ -163,7 +163,7 @@ def _build_selected_linkage_tree(
     distance_metric: str,
     linkage_method: str,
 ):
-    from tree_break_selection.tree.poset_tree import PosetTree
+    from tree_break_selection.tree.construction import tree_from_linkage
 
     values = data.to_numpy(dtype=float)
     if values.ndim != 2:
@@ -173,7 +173,7 @@ def _build_selected_linkage_tree(
     if not np.isfinite(values).all():
         raise ValueError("leaf_data contains non-finite values.")
     distances = pdist(values, metric=str(distance_metric))
-    return PosetTree.from_linkage(
+    return tree_from_linkage(
         linkage(distances, method=str(linkage_method)),
         leaf_names=data.index.tolist(),
     )

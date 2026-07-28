@@ -40,6 +40,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 from tree_break_selection.tree.construction import (
     DEFAULT_BINARY_TREE_DISTANCE_METRIC,
     DEFAULT_TREE_LINKAGE_METHOD,
+    tree_from_linkage,
 )
 
 
@@ -91,8 +92,6 @@ def bootstrap_consensus(
         ``n_boot``
             Echo of how many replicates were run.
     """
-    from tree_break_selection.tree.poset_tree import PosetTree  # local import to avoid cycles
-
     if edge_alpha is None:
         edge_alpha = DEFAULT_EDGE_ALPHA
     if sibling_alpha is None:
@@ -110,7 +109,7 @@ def bootstrap_consensus(
 
     # ---------- 0. original tree ----------
     Z_orig = linkage(pdist(data.values, metric=metric), method=linkage_method)
-    tree_orig = PosetTree.from_linkage(Z_orig, leaf_names=sample_ids)
+    tree_orig = tree_from_linkage(Z_orig, leaf_names=sample_ids)
     tree_orig.populate_node_divergences(data)
     results_orig = tree_orig.decompose(
         annotations_df=tree_orig.annotations_df,
@@ -151,7 +150,7 @@ def bootstrap_consensus(
 
         # --- build tree & decompose ---
         Z_b = linkage(pdist(X_boot.values, metric=metric), method=linkage_method)
-        tree_b = PosetTree.from_linkage(Z_b, leaf_names=boot_labels)
+        tree_b = tree_from_linkage(Z_b, leaf_names=boot_labels)
         tree_b.populate_node_divergences(X_boot)
         res_b = tree_b.decompose(
             annotations_df=tree_b.annotations_df,

@@ -28,7 +28,7 @@ from scipy.spatial.distance import pdist
 from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import BayesianGaussianMixture
 from tree_break_selection.space_separation import hamming_knn_diffusion_distance
-from tree_break_selection.tree.poset_tree import PosetTree
+from tree_break_selection.tree.construction import tree_from_linkage
 
 from benchmarks.experiments.mnist.run import load_mnist_subset, run_tbs_clustering
 
@@ -207,7 +207,7 @@ def run_tree_decomposition_on_preprocessed_data(
             pdist(annotations_df.values, metric=distance_metric),
             method=linkage_method,
         )
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=sample_names)
+    tree = tree_from_linkage(linkage_matrix, leaf_names=sample_names)
     tree.populate_node_divergences(annotations_df)
     decomposition_results = tree.decompose(
         annotations_df=tree.annotations_df,
@@ -252,7 +252,7 @@ def _run_diffusion_tbs_clustering(
     )
     Z = linkage(diff_dist, method="average")
 
-    tree = PosetTree.from_linkage(Z, leaf_names=sample_names)
+    tree = tree_from_linkage(Z, leaf_names=sample_names)
     tree.populate_node_divergences(data)
     results = tree.decompose(
         annotations_df=tree.annotations_df,

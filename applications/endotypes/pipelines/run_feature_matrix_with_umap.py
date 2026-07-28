@@ -58,8 +58,8 @@ from tree_break_selection.space_separation import (
 from tree_break_selection.tree.construction import (
     DEFAULT_BINARY_TREE_DISTANCE_METRIC,
     DEFAULT_TREE_LINKAGE_METHOD,
+    tree_from_linkage,
 )
-from tree_break_selection.tree.io import tree_from_linkage
 from tree_break_selection.tree.poset_tree import PosetTree
 
 

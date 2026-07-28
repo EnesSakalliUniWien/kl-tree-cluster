@@ -2,9 +2,9 @@
 title: Phylogenetic Tree Builders 2026-06-14
 type: source
 status: reviewed
-updated: 2026-06-14
+updated: 2026-07-28
 sources:
-  - tree_break_selection/tree/phylogenetic.py
+  - tree_break_selection/tree/construction/phylogenetic.py
   - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/runners/method_registry.py
   - tests/core/test_phylogenetic_tree_builders.py
@@ -46,7 +46,7 @@ selected-family null-law problem.
 
 ## Evidence
 
-- `tree_break_selection/tree/phylogenetic.py` implements
+- `tree_break_selection/tree/construction/phylogenetic.py` implements
   `minimum_ancestor_deviation_root`, neighbor-joining construction, IQ-TREE 3
   execution/parsing, and promotion to `PosetTree`.
 - `benchmarks/shared/runners/method_registry.py` registers

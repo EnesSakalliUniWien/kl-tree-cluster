@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable
@@ -220,9 +221,9 @@ def poset_tree_from_unrooted_metric_tree(
     for node in rooted_graph.nodes:
         tree.add_node(node)
     visited = {root_node}
-    queue = [root_node]
+    queue = deque([root_node])
     while queue:
-        parent = queue.pop(0)
+        parent = queue.popleft()
         for child, attrs in rooted_graph[parent].items():
             if child in visited:
                 continue

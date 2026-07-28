@@ -28,7 +28,7 @@ from sklearn.preprocessing import KBinsDiscretizer, StandardScaler
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from tree_break_selection.tree.poset_tree import PosetTree
+from tree_break_selection.tree.construction import tree_from_linkage
 
 
 def load_penguins() -> tuple[np.ndarray, np.ndarray, list[str]]:
@@ -193,7 +193,7 @@ def run_tbs_clustering(
     )
 
     # Create PosetTree
-    tree = PosetTree.from_linkage(Z, leaf_names=sample_names)
+    tree = tree_from_linkage(Z, leaf_names=sample_names)
 
     # Decompose
     tree.populate_node_divergences(data)

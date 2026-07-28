@@ -47,6 +47,7 @@ from tree_break_selection.space_separation import (
     resolve_neighbor_search_k,
     weight_feature_matrix,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.diagnostics.spectral.adaptive_cosine.adaptive_cosine_kak_benchmark_probe import (
@@ -399,7 +400,7 @@ def build_lens_tree(
 
     if not np.isfinite(linkage_matrix).all():
         raise ValueError(f"degenerate distances for {spec.lens_id}")
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data.index.tolist())
+    tree = tree_from_linkage(linkage_matrix, leaf_names=data.index.tolist())
     tree.populate_node_divergences(data)
     return tree, {
         **metadata,

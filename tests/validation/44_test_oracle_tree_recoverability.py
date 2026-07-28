@@ -13,6 +13,7 @@ from benchmarks.diagnostics.oracle.oracle_tree_recoverability import (
     classify_tree_recoverability_failure,
     oracle_subtree_cut,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.poset_tree import PosetTree
 
 
@@ -24,7 +25,7 @@ def _tree_from_children(children: np.ndarray) -> PosetTree:
             np.arange(2, len(children) + 2, dtype=float),
         ]
     )
-    return PosetTree.from_linkage(
+    return tree_from_linkage(
         linkage_matrix,
         leaf_names=["A", "B", "C", "D"],
     )

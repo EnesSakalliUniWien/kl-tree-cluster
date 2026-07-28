@@ -11,6 +11,7 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.column_contract
     EDGE_GATE_COLUMNS,
     SIBLING_GATE_COLUMNS,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.poset_tree import PosetTree
 
 
@@ -22,7 +23,7 @@ def _tree() -> PosetTree:
             [4, 5, 2.0, 4],
         ]
     )
-    tree = PosetTree.from_linkage(
+    tree = tree_from_linkage(
         linkage_matrix,
         leaf_names=["A", "B", "C", "D"],
     )

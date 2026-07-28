@@ -41,6 +41,7 @@ from tree_break_selection.space_separation import (
     cosine_eigendecomposition,
     weight_feature_matrix,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import continuous_feature_space_from_columns
 from tree_break_selection.tree.poset_tree import PosetTree
 
@@ -189,7 +190,7 @@ def build_feature_tree(
         linkage_matrix = linkage(values, method="ward", metric="euclidean")
     else:
         raise ValueError(f"Unsupported tree_linkage_method={tree_linkage_method!r}.")
-    return PosetTree.from_linkage(linkage_matrix, leaf_names=feature_coordinates.index.tolist())
+    return tree_from_linkage(linkage_matrix, leaf_names=feature_coordinates.index.tolist())
 
 
 def write_feature_cluster_summary(

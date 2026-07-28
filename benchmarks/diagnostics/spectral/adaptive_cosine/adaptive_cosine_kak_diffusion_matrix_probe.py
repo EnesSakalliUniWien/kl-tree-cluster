@@ -49,7 +49,7 @@ from tree_break_selection.space_separation import (
     cosine_eigendecomposition,
     weight_feature_matrix,
 )
-from tree_break_selection.tree.poset_tree import PosetTree
+from tree_break_selection.tree.construction import tree_from_linkage
 
 from benchmarks.diagnostics.spectral.adaptive_cosine.adaptive_cosine_kak_benchmark_probe import (
     SCHEMA_VERSION,
@@ -152,7 +152,7 @@ def run_block_diffusion_tree(
         raise ValueError(f"Unknown diffusion mode: {diffusion_mode!r}")
     diffusion_metadata["diffusion_mode"] = diffusion_mode
     linkage_matrix = linkage(diffusion_distances, method="average")
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data.index.tolist())
+    tree = tree_from_linkage(linkage_matrix, leaf_names=data.index.tolist())
     tree.populate_node_divergences(data)
     gate_bundle = run_gate_annotation_pipeline(
         tree,

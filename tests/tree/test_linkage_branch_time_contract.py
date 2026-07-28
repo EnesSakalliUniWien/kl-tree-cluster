@@ -85,7 +85,10 @@ def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
         captured["edge_lengths"] = [attrs["branch_length"] for _, _, attrs in tree.edges(data=True)]
         raise RuntimeError("stop after topology-only tree construction")
 
-    monkeypatch.setattr("benchmarks.shared.runners.tbs_runner.linkage", fake_linkage)
+    monkeypatch.setattr(
+        "tree_break_selection.tree.construction.build.linkage",
+        fake_linkage,
+    )
     monkeypatch.setattr(
         "benchmarks.shared.runners.tbs_runner.fit_fixed_topology_nnls_branch_lengths",
         fake_fit,

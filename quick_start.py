@@ -7,8 +7,8 @@ from sklearn.metrics import adjusted_rand_score
 from tree_break_selection.tree.construction import (
     DEFAULT_BINARY_TREE_DISTANCE_METRIC,
     DEFAULT_TREE_LINKAGE_METHOD,
+    tree_from_linkage,
 )
-from tree_break_selection.tree.poset_tree import PosetTree
 
 
 def main():
@@ -46,8 +46,8 @@ def main():
         f"{DEFAULT_TREE_LINKAGE_METHOD} linkage."
     )
 
-    # 3. PosetTree.from_linkage()
-    tree = PosetTree.from_linkage(Z, leaf_names=data.index.tolist())
+    # 3. Build the hierarchy representation.
+    tree = tree_from_linkage(Z, leaf_names=data.index.tolist())
     print("Step 3: Converted hierarchy to PosetTree structure.")
 
     # 4. PosetTree.populate_node_divergences() + PosetTree.decompose()

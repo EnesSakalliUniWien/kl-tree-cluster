@@ -5367,6 +5367,19 @@ verification, and maintenance events here in chronological order.
   lockfile. Verification passed Ruff, wiki lint, the 171-test focused tranche,
   the 332-test documented quick suite, the end-to-end quick start, and the
   14-case representative benchmark smoke without a native plotting crash.
+- Consolidated tree construction into responsibility modules under
+  `tree_break_selection/tree/construction/`: explicit method dispatch,
+  immutable defaults, hierarchical promotion, and phylogenetic rooting. The
+  dispatcher now validates builder/rooting combinations and returns one
+  construction-evidence result; method order is explicit and independent of
+  directory or import-discovery order. Removed unused sklearn/edge-list
+  adapters and shallow `PosetTree.from_*` aliases, migrated live callers to
+  direct constructors, preserved non-string linkage labels, and made bottom-up
+  traversal deterministic across node insertion order while replacing list
+  queues with deques. Deleted the three uncited exploratory notebooks after
+  proving they still imported the removed `kl_clustering_analysis` package and
+  mutable config surface throughout; no partial compatibility rewrite or alias
+  was retained.
 
 ## Evidence
 

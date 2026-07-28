@@ -44,8 +44,8 @@ from tree_break_selection.space_separation import (
     coordinates_for_block,
     separate_adaptive_cosine_space,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import FeatureSpace
-from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.shared.cases import get_test_cases_by_suite
 from benchmarks.shared.util.case_inputs import prepare_case_inputs
@@ -129,7 +129,7 @@ def run_block_tree(
         raise ValueError("degenerate spectral block distances")
 
     linkage_matrix = linkage(distances, method="average")
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data.index.tolist())
+    tree = tree_from_linkage(linkage_matrix, leaf_names=data.index.tolist())
     tree.populate_node_divergences(data, feature_space=feature_space)
     gate_bundle = run_gate_annotation_pipeline(
         tree,

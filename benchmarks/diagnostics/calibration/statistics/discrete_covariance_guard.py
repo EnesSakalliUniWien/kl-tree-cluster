@@ -33,6 +33,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.fixed
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
     identify_binary_sibling_children,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     bernoulli_feature_space_from_columns,
@@ -304,7 +305,7 @@ def _log10_p(value: float) -> float:
 
 def _build_tree(inputs: PreparedDiagnosticCase) -> PosetTree:
     linkage_matrix = linkage(inputs.distance_condensed, method="average")
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=inputs.data.index.tolist())
+    tree = tree_from_linkage(linkage_matrix, leaf_names=inputs.data.index.tolist())
     tree.populate_node_divergences(inputs.data, feature_space=inputs.feature_space)
     return tree
 

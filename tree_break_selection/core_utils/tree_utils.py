@@ -6,6 +6,7 @@ modules, avoiding circular import issues.
 
 from __future__ import annotations
 
+from collections import deque
 from collections.abc import Iterator
 
 import networkx as nx
@@ -33,7 +34,11 @@ def bottom_up_nodes(tree: nx.DiGraph) -> Iterator[object]:
     object
         Node identifiers, leaves first, root last.
     """
-    return reversed(list(nx.topological_sort(tree)))
+    ordered = nx.lexicographical_topological_sort(
+        tree,
+        key=lambda node: (type(node).__qualname__, repr(node)),
+    )
+    return reversed(list(ordered))
 
 
 def compute_node_depths(tree: nx.DiGraph) -> dict[object, int]:
@@ -54,17 +59,17 @@ def compute_node_depths(tree: nx.DiGraph) -> dict[object, int]:
     ValueError
         If the tree has no root node (all nodes have parents).
     """
-    roots = [n for n in tree.nodes() if tree.in_degree(n) == 0]
+    roots = sorted(
+        (node for node, degree in tree.in_degree() if degree == 0),
+        key=lambda node: (type(node).__qualname__, repr(node)),
+    )
     if not roots:
         raise ValueError("Tree has no root node (all nodes have parents)")
 
-    depths: dict[object, int] = {}
-    for root in roots:
-        depths[root] = 0
-
-    queue = list(roots)
+    depths: dict[object, int] = {root: 0 for root in roots}
+    queue = deque(roots)
     while queue:
-        node = queue.pop(0)
+        node = queue.popleft()
         for child in tree.successors(node):
             if child not in depths:
                 depths[child] = depths[node] + 1

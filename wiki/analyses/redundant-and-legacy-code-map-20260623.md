@@ -2,12 +2,13 @@
 title: Redundant and Legacy Code Map 2026-06-23
 type: analysis
 status: reviewed
-updated: 2026-07-27
+updated: 2026-07-28
 sources:
   - tree_break_selection/space_separation/diffusion.py
   - tree_break_selection/space_separation/adaptive_cosine.py
   - tree_break_selection/space_separation/invariant_equivariant.py
-  - tree_break_selection/tree/io.py
+  - tree_break_selection/tree/construction/build.py
+  - tree_break_selection/tree/construction/hierarchical.py
   - tree_break_selection/hierarchy_analysis/bootstrap_consensus.py
   - tree_break_selection/plot/image_panel.py
   - applications/endotypes/_shared.py
@@ -53,15 +54,12 @@ summary-selection and compact digit-count parsing use
 `applications/mnist/_shared.py`.
 
 The tree-construction recheck found no second implementation of neighbor
-joining, IQ-TREE import, MAD rooting, or branch-length NNLS. It did find a
-residual repeated sequence—condensed distance, SciPy `linkage`, then
-`PosetTree.from_linkage`—in the production runner, bootstrap analysis,
-diagnostic tree context, experiments, and application adapters. Those callers
-have different data contracts and output needs, so they were mapped rather
-than bulk-rewritten. `PosetTree.from_agglomerative` and
-`PosetTree.from_undirected_edges` have no live in-repository caller outside
-tests; both remain documented public representation adapters rather than being
-deleted as dead code. See [[tree-construction-method-map]].
+joining, IQ-TREE import, MAD rooting, or branch-length NNLS. The main runner's
+repeated dispatch, fallback, and metadata handling now live behind
+`tree/construction/build.py`; direct linkage conversions use the maintained
+constructor in `construction/hierarchical.py`. The unused sklearn and edge-list
+adapters and shallow `PosetTree.from_*` pass-through methods were deleted with
+no compatibility aliases. See [[tree-construction-method-map]].
 
 A structural AST comparison still finds repeated small helpers across the
 large calibration-diagnostic surface, especially `_require_columns`,
@@ -88,7 +86,8 @@ consolidation once their output schemas are covered by focused tests.
   helpers described above; it found and motivated the endotype and MNIST
   application helper consolidation.
 - Exact constructor search separated the three live registered topology
-  builders from repeated linkage call sites and two test-only public adapters.
+  builders from direct representation conversions and proved the two removed
+  adapters had no production callers.
 
 ## Links
 

@@ -43,17 +43,19 @@ The durable, cross-application audit is in
 
 | Module | Responsibility |
 | --- | --- |
-| `construction.py` | Immutable canonical binary-distance and linkage defaults; callers pass alternatives explicitly |
-| `io.py` | Promote SciPy/sklearn merge output or an existing edge list into `PosetTree`; provide topology-only linkage fallback before NNLS |
-| `phylogenetic.py` | Neighbor joining, IQ-TREE execution/Newick import, MAD rooting, and promotion of unrooted metric trees |
-| `poset_tree.py` | Stable rooted-tree representation and facade constructors |
+| `construction/build.py` | Explicit dispatch over linkage, neighbor joining, and IQ-TREE; validates builder/rooting combinations and returns construction evidence |
+| `construction/defaults.py` | Immutable canonical binary-distance and linkage defaults; callers pass alternatives explicitly |
+| `construction/hierarchical.py` | Promote linkage merge output into `PosetTree`; provide topology-only fallback before NNLS |
+| `construction/phylogenetic.py` | Neighbor joining, IQ-TREE execution/Newick import, MAD rooting, and promotion of unrooted metric trees |
+| `poset_tree.py` | Stable rooted-tree representation and hierarchy operations |
 | `branch_lengths.py` | Convert monotone linkage heights to normalized ultrametric edge lengths |
 | `optimized_branch_lengths.py` | Refit non-negative edge lengths on an already fixed topology |
 
-`PosetTree.from_agglomerative` and `PosetTree.from_undirected_edges` are public
-representation adapters with test coverage but no current in-repository
-method caller. They are retained as dormant API, not counted as registered TBS
-tree estimators.
+`SUPPORTED_TREE_BUILDERS` defines the method order explicitly as `linkage`,
+`neighbor_joining`, and `iqtree3`. No directory scan or import-discovery order
+selects an algorithm. The unused sklearn-agglomerative and arbitrary edge-list
+adapters and the pass-through `PosetTree.from_*` constructors were removed;
+live callers use the construction interface directly.
 
 ## poset_tree.py — `PosetTree`
 
@@ -61,9 +63,6 @@ NetworkX `DiGraph` subclass. Central data structure for the entire pipeline.
 
 | Method                                      | What it does                                                                                   |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `from_linkage(Z, leaf_names)`               | Build tree from SciPy linkage matrix. Computes branch lengths as merge distance deltas normalized by the root merge height, so root-to-leaf time sums to 1. |
-| `from_agglomerative(X, ...)`                | Build tree from sklearn `AgglomerativeClustering` fit.                                         |
-| `from_undirected_edges(edges)`              | Orient a non-empty undirected weighted tree into a directed `PosetTree`.                       |
 | `root()`                                    | Return the root node (in-degree 0), cached after first call.                                   |
 | `get_leaves(node, return_labels)`           | Collect leaf labels globally or under a subtree.                                               |
 | `compute_descendant_sets()`                 | Map every node → frozenset of its descendant leaf labels.                                      |

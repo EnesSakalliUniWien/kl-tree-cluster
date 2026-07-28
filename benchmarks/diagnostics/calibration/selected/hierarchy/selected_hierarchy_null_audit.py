@@ -42,6 +42,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.poset_tree import PosetTree
 
@@ -115,7 +116,7 @@ def _build_tree(data: pd.DataFrame, metadata: dict[str, object]) -> tuple[PosetT
     params = METHOD_SPECS["tbs"].param_grid[0]
     metric = str(params["tree_distance_metric"])
     linkage_method = str(params["tree_linkage_method"])
-    tree = PosetTree.from_linkage(
+    tree = tree_from_linkage(
         linkage(pdist(data.values, metric=metric), method=linkage_method),
         leaf_names=data.index.tolist(),
     )

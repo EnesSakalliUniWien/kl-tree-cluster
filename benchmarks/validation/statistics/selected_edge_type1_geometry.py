@@ -38,6 +38,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     bernoulli_feature_space_from_columns,
@@ -284,7 +285,7 @@ def _tree_balance(tree: nx.DiGraph, parent: object) -> float:
 def _build_tree_from_data(data: pd.DataFrame) -> PosetTree:
     distances = pdist(data.to_numpy(dtype=float), metric="hamming")
     linkage_matrix = linkage(distances, method="average")
-    return PosetTree.from_linkage(linkage_matrix, leaf_names=data.index.tolist())
+    return tree_from_linkage(linkage_matrix, leaf_names=data.index.tolist())
 
 
 def _prepare_tree_for_mode(

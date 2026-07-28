@@ -4,7 +4,6 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import networkx as nx
-import numpy as np
 
 from tree_break_selection.core_utils.tree_utils import compute_node_depths
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
@@ -43,68 +42,19 @@ class PosetTree(nx.DiGraph):
     * the root (in-degree 0) is tracked and can be retrieved via :meth:`root`.
     * leaves carry a ``label`` attribute so downstream consumers can recover the
       original sample identifiers.
-    * multiple constructors (:meth:`from_agglomerative`, :meth:`from_linkage`,
-      :meth:`from_undirected_edges`) turn clustering output or undirected edge
-      lists into a consistent directed representation where edges always point
-      from parent to child.
+    * construction modules create a consistent directed representation where
+      edges always point from parent to child.
     * utility accessors (:meth:`get_leaves`, :meth:`compute_descendant_sets`)
       provide common tree queries needed by statistical routines.
 
     Leaves have ``out_degree == 0`` and are expected to carry ``is_leaf=True``.
     """
 
-    # ---------------- Constructors ----------------
-
     def __init__(self, *args, **kwargs):
         """Initialize PosetTree with annotations_df property."""
         super().__init__(*args, **kwargs)
         self.annotations_df: pd.DataFrame | None = None
         self._depths: dict[object, int] | None = None
-
-    @classmethod
-    def from_agglomerative(
-        cls,
-        X: np.ndarray,
-        leaf_names: list[str] | None = None,
-        linkage: str = "average",
-        metric: str = "euclidean",
-    ) -> "PosetTree":
-        """Construct a tree from an :class:`sklearn.cluster.AgglomerativeClustering` fit.
-
-        Delegates to :func:`~tree_break_selection.tree.io.tree_from_agglomerative`.
-        """
-        from tree_break_selection.tree.io import tree_from_agglomerative
-
-        return tree_from_agglomerative(
-            X,
-            leaf_names=leaf_names,
-            linkage=linkage,
-            metric=metric,
-        )
-
-    @classmethod
-    def from_undirected_edges(cls, edges: Iterable[tuple]) -> "PosetTree":
-        """Orient an undirected tree and promote it to :class:`PosetTree`.
-
-        Delegates to :func:`~tree_break_selection.tree.io.tree_from_undirected_edges`.
-        """
-        from tree_break_selection.tree.io import tree_from_undirected_edges
-
-        return tree_from_undirected_edges(edges)
-
-    @classmethod
-    def from_linkage(
-        cls,
-        linkage_matrix: np.ndarray,
-        leaf_names: list[str] | None = None,
-    ) -> "PosetTree":
-        """Build a tree from a SciPy linkage matrix.
-
-        Delegates to :func:`~tree_break_selection.tree.io.tree_from_linkage`.
-        """
-        from tree_break_selection.tree.io import tree_from_linkage
-
-        return tree_from_linkage(linkage_matrix, leaf_names=leaf_names)
 
     # ---------------- Poset helpers ----------------
 

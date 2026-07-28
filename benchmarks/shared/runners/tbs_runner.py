@@ -10,7 +10,6 @@ from time import perf_counter
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage
 from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
     run_gate_annotation_pipeline,
 )
@@ -39,13 +38,12 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.neigh
     build_branch_length_distance_cache,
 )
 from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
-from tree_break_selection.tree.construction import DEFAULT_TREE_LINKAGE_METHOD
+from tree_break_selection.tree.construction import DEFAULT_TREE_LINKAGE_METHOD, build_tree
 from tree_break_selection.tree.distributions import (
     DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
     DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
 )
 from tree_break_selection.tree.feature_space import FeatureSpace
-from tree_break_selection.tree.io import tree_from_linkage_topology
 from tree_break_selection.tree.optimized_branch_lengths import (
     BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS,
     BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
@@ -53,11 +51,6 @@ from tree_break_selection.tree.optimized_branch_lengths import (
     fit_fixed_topology_nnls_branch_lengths,
     validate_branch_length_optimization_method,
 )
-from tree_break_selection.tree.phylogenetic import (
-    iqtree3_tree_from_alignment,
-    neighbor_joining_tree_from_distance,
-)
-from tree_break_selection.tree.poset_tree import PosetTree
 
 from benchmarks.shared.types import MethodRunResult
 from benchmarks.shared.util.decomposition import labels_and_report_from_decomposition
@@ -148,50 +141,21 @@ def run_tbs_on_distance(
         )
 
     tree_build_start_sec = perf_counter()
-    linkage_matrix = None
-    phylogenetic_rooting = None
-    iqtree_metadata = None
-    linkage_topology_only_branch_lengths = False
-    linkage_topology_only_reason = None
-    if tree_builder == "linkage":
-        if distance_condensed is None:
-            raise ValueError("Linkage TBS tree construction requires distance_condensed.")
-        linkage_matrix = linkage(distance_condensed, method=tree_linkage_method)
-        try:
-            tree = PosetTree.from_linkage(linkage_matrix, leaf_names=data_df.index.tolist())
-        except ValueError as exc:
-            if (
-                branch_length_optimization_method == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
-                and "nondecreasing" in str(exc)
-            ):
-                tree = tree_from_linkage_topology(
-                    linkage_matrix,
-                    leaf_names=data_df.index.tolist(),
-                    fallback_branch_length=1.0,
-                )
-                linkage_topology_only_branch_lengths = True
-                linkage_topology_only_reason = str(exc)
-            else:
-                raise
-    elif tree_builder == "neighbor_joining":
-        if distance_condensed is None:
-            raise ValueError("Neighbor-joining TBS tree construction requires distance_condensed.")
-        tree, phylogenetic_rooting = neighbor_joining_tree_from_distance(
-            distance_condensed,
-            data_df.index.astype(str).tolist(),
-            rooting=tree_rooting,
-        )
-    elif tree_builder == "iqtree3":
-        tree, phylogenetic_rooting, iqtree_metadata = iqtree3_tree_from_alignment(
-            data_df,
-            executable=iqtree_executable,
-            model=iqtree_model,
-            threads=iqtree_threads,
-            rooting=tree_rooting,
-            work_dir=iqtree_work_dir,
-        )
-    else:
-        raise ValueError(f"Unsupported TBS tree_builder: {tree_builder!r}.")
+    tree_build = build_tree(
+        data_df,
+        distance_condensed,
+        builder=tree_builder,
+        rooting=tree_rooting,
+        linkage_method=tree_linkage_method,
+        allow_topology_only_linkage=(
+            branch_length_optimization_method == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS
+        ),
+        iqtree_executable=iqtree_executable,
+        iqtree_model=iqtree_model,
+        iqtree_threads=iqtree_threads,
+        iqtree_work_dir=iqtree_work_dir,
+    )
+    tree = tree_build.tree
     stage_timings["tree_build_sec"] = elapsed_since(tree_build_start_sec)
 
     branch_length_optimization_metadata: dict[str, object] = {
@@ -382,13 +346,15 @@ def run_tbs_on_distance(
         "traversal_counters": decomposition.get("traversal_counters", {}),
         "annotations": tree.annotations_df,
         "gate_bundle": gate_annotation_bundle,
-        "linkage_matrix": linkage_matrix,
+        "linkage_matrix": tree_build.linkage_matrix,
         "tree_builder": str(tree_builder),
         "tree_rooting": str(tree_rooting),
-        "linkage_topology_only_branch_lengths": bool(linkage_topology_only_branch_lengths),
-        "linkage_topology_only_reason": linkage_topology_only_reason,
-        "phylogenetic_rooting": phylogenetic_rooting,
-        "iqtree_metadata": iqtree_metadata,
+        "linkage_topology_only_branch_lengths": bool(
+            tree_build.topology_only_branch_lengths
+        ),
+        "linkage_topology_only_reason": tree_build.topology_only_reason,
+        "phylogenetic_rooting": tree_build.phylogenetic_rooting,
+        "iqtree_metadata": tree_build.iqtree_metadata,
         "stage_timings": stage_timings,
         **branch_length_optimization_metadata,
         "spectral_minimum_dimension": int(resolved_gate_config.spectral_minimum_dimension),

@@ -11,13 +11,13 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator im
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
-from tree_break_selection.tree.poset_tree import PosetTree
+from tree_break_selection.tree.construction import tree_from_linkage
 
 
 def _build_case_tree(data_df):
     distance_matrix = pdist(data_df.values, metric="hamming")
     linkage_matrix = linkage(distance_matrix, method="complete")
-    return PosetTree.from_linkage(linkage_matrix, data_df.index.tolist())
+    return tree_from_linkage(linkage_matrix, data_df.index.tolist())
 
 
 def _find_case(case_name: str) -> dict:

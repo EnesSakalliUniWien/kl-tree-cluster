@@ -36,7 +36,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 from tree_break_selection.space_separation import hamming_knn_diffusion_distance
-from tree_break_selection.tree.io import tree_from_linkage
+from tree_break_selection.tree.construction import tree_from_linkage
 
 DEFAULT_GRID: tuple[tuple[int, int], ...] = ((15, 3), (15, 5), (30, 3))
 SCHEMA_VERSION = "selected_sibling_lrt_diagnostic/v1"

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import FeatureSpace
 from tree_break_selection.tree.poset_tree import PosetTree
 
@@ -90,7 +91,7 @@ def build_tbs_tree_context(
         distance_condensed=inputs.distance_condensed,
     )
     linkage_matrix = linkage(distance_for_tree, method=tree_linkage_method)
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=inputs.data.index.tolist())
+    tree = tree_from_linkage(linkage_matrix, leaf_names=inputs.data.index.tolist())
     feature_space = inputs.metadata.get("feature_space")
     if feature_space is not None and not isinstance(feature_space, FeatureSpace):
         raise ValueError("Benchmark feature_space metadata must be a FeatureSpace.")

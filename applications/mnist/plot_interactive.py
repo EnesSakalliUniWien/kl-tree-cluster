@@ -19,7 +19,7 @@ from benchmarks.experiments.mnist.run_higher_categories import (
 )
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
-from tree_break_selection.tree.poset_tree import PosetTree
+from tree_break_selection.tree.construction import tree_from_linkage
 
 from applications.mnist._shared import best_rows, parse_digit_counts
 
@@ -411,7 +411,7 @@ def _build_tbs_radial_tree_context(
     digit_labels = assignments["true_digit"].astype(int).to_numpy()
 
     linkage_matrix = linkage(pdist(feature_matrix), method=str(linkage_method))
-    tree = PosetTree.from_linkage(linkage_matrix, leaf_names=sample_names)
+    tree = tree_from_linkage(linkage_matrix, leaf_names=sample_names)
     descendant_sets = tree.compute_descendant_sets(use_labels=True)
     node_by_leaf_set = {frozenset(leaves): node for node, leaves in descendant_sets.items()}
     leaf_node_by_label = {

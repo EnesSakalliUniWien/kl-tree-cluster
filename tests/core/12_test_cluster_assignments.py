@@ -14,6 +14,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils import (
     EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.poset_tree import PosetTree
 
 
@@ -51,7 +52,7 @@ def _build_hierarchical_tree(
     """Build a PosetTree from a binary feature matrix."""
     distance_matrix = pdist(x.values, metric=distance_metric)
     linkage_matrix = linkage(distance_matrix, method=linkage_method)
-    tree = PosetTree.from_linkage(linkage_matrix, x.index.tolist())
+    tree = tree_from_linkage(linkage_matrix, x.index.tolist())
     return tree, linkage_matrix
 
 

@@ -7,7 +7,7 @@ from benchmarks.diagnostics.calibration.sibling.nulls.selected_sibling_lrt_diagn
     extract_sibling_lrt_rows,
     parse_grid,
 )
-from tree_break_selection.tree.io import tree_from_linkage
+from tree_break_selection.tree.construction import tree_from_linkage
 
 
 def test_bernoulli_sibling_deviance_is_zero_for_identical_children() -> None:

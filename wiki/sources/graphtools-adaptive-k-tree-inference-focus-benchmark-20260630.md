@@ -2,14 +2,14 @@
 title: Graphtools Adaptive K Tree Inference Focus Benchmark 2026-06-30
 type: source
 status: reviewed
-updated: 2026-06-30
+updated: 2026-07-28
 sources:
   - reports/graphtools_adaptive_k_tree_inference_20260630/focus_tree_inference_panel.csv
   - reports/graphtools_adaptive_k_tree_inference_20260630/focus_tree_inference_metrics_compact.csv
   - reports/graphtools_adaptive_k_tree_inference_20260630/focus_tree_inference_method_summary.csv
   - reports/graphtools_adaptive_k_tree_inference_20260630/focus_tree_inference_deltas_vs_average.csv
   - reports/graphtools_adaptive_k_tree_inference_20260630/focus_tree_inference_case_best_summary.csv
-  - tree_break_selection/tree/io.py
+  - tree_break_selection/tree/construction/hierarchical.py
   - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/runners/tbs_diffusion_runner.py
   - benchmarks/shared/runners/method_registry.py
@@ -88,7 +88,7 @@ branch-time statistics are used.
   records per-case deltas against average linkage.
 - `reports/graphtools_adaptive_k_tree_inference_20260630/focus_tree_inference_case_best_summary.csv`
   records per-case best ARI and best internal-metric topology.
-- `tree_break_selection/tree/io.py` provides the topology-only linkage
+- `tree_break_selection/tree/construction/hierarchical.py` provides the topology-only linkage
   constructor used for nonmonotone centroid/median linkage when NNLS will
   replace placeholder branch lengths.
 - `benchmarks/shared/runners/tbs_runner.py` uses that fallback only for

@@ -5,7 +5,7 @@ import subprocess
 import networkx as nx
 import numpy as np
 import pandas as pd
-from tree_break_selection.tree.phylogenetic import (
+from tree_break_selection.tree.construction.phylogenetic import (
     iqtree3_tree_from_alignment,
     minimum_ancestor_deviation_root,
     neighbor_joining_tree_from_distance,
@@ -82,11 +82,11 @@ def test_iqtree3_tree_from_alignment_runs_command_and_mad_roots_newick(
         return subprocess.CompletedProcess(cmd, 0, stdout="ok", stderr="")
 
     monkeypatch.setattr(
-        "tree_break_selection.tree.phylogenetic.shutil.which",
+        "tree_break_selection.tree.construction.phylogenetic.shutil.which",
         _fake_which,
     )
     monkeypatch.setattr(
-        "tree_break_selection.tree.phylogenetic.subprocess.run",
+        "tree_break_selection.tree.construction.phylogenetic.subprocess.run",
         _fake_run,
     )
 

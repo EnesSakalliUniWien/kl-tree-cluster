@@ -5,9 +5,10 @@ status: reviewed
 updated: 2026-07-28
 sources:
   - tree_break_selection/tree/README.md
-  - tree_break_selection/tree/io.py
-  - tree_break_selection/tree/construction.py
-  - tree_break_selection/tree/phylogenetic.py
+  - tree_break_selection/tree/construction/build.py
+  - tree_break_selection/tree/construction/defaults.py
+  - tree_break_selection/tree/construction/hierarchical.py
+  - tree_break_selection/tree/construction/phylogenetic.py
   - tree_break_selection/tree/optimized_branch_lengths.py
   - tree_break_selection/space_separation/diffusion.py
   - benchmarks/shared/runners/tbs_runner.py
@@ -46,9 +47,14 @@ topology, not additional tree builders. Gate profiles and traversal settings
 are further downstream.
 
 The canonical binary distance (`hamming`) and linkage method (`average`) are
-immutable defaults owned by `tree/construction.py`. Alternative geometry and
+immutable defaults owned by `tree/construction/defaults.py`. Alternative geometry and
 topology choices are explicit method inputs; there is no mutable package-wide
 runtime configuration.
+
+The builders are ordered explicitly as `linkage`, `neighbor_joining`, and
+`iqtree3` by `SUPPORTED_TREE_BUILDERS`. Method choice depends on the requested
+builder name and validated rooting contract, never on filesystem, directory,
+or import-discovery order.
 
 ## Details
 
@@ -77,7 +83,7 @@ the condensed-distance seam.
 
 | Route | Geometry source | Topology implementation | Rooting | Registration and availability |
 | --- | --- | --- | --- | --- |
-| Direct linkage | Configured `pdist` metric or case-supplied condensed distance | SciPy `linkage` then `PosetTree.from_linkage` | Final linkage merge (`linkage_root`) | `tbs` average is canonical; `tbs_complete` and `tbs_single` are explicit variants |
+| Direct linkage | Configured `pdist` metric or case-supplied condensed distance | SciPy `linkage` then `tree_from_linkage` | Final linkage merge (`linkage_root`) | `tbs` average is canonical; `tbs_complete` and `tbs_single` are explicit variants |
 | Fixed Hamming diffusion linkage | Binary/one-hot Hamming kNN similarity, symmetric diffusion coordinates, Euclidean diffusion distance | Average linkage | `linkage_root` | Canonical `tbs_diffusion` |
 | Adaptive pydiffmap linkage | Variable-bandwidth pydiffmap coordinates and Euclidean diffusion distance | Average linkage | `linkage_root` | `tbs_diffusion_adaptive`, with either linkage-ultrametric or fixed-topology NNLS lengths |
 | Graphtools diffusion linkage | Optional graphtools kernel, fixed or fragmentation-guard adaptive K, then Euclidean diffusion distance | Average by default; adaptive-K grid also exposes complete, weighted, single, centroid, median, and Ward | `linkage_root` | Optional GPL methods |
@@ -100,17 +106,16 @@ as valid ultrametric time.
 | Adult and fetal-pancreas scRNA | Standardized-PCA Euclidean distance or adaptive-diffusion distance | Average linkage | Topology-only, raw-linkage branch-time, and NNLS branch-time rows reuse the same topology for a given geometry |
 | MNIST benchmark and reports | Benchmark generators support thresholded binary image features with configurable distance/linkage (Roger--Stanimoto plus average linkage by default); retained alpha-sweep reports use continuous PCA50 features with Euclidean distance | Configurable benchmark linkage; average linkage in the retained PCA50 report | `benchmarks/experiments/mnist/` owns evaluation; `applications/mnist/` reconstructs the geometry recorded by each retained result rather than imposing one universal MNIST tree |
 
-### Representation adapters and dormant surfaces
+### Construction package and removed dormant surfaces
 
-`tree_break_selection/tree/io.py` owns representation conversion rather than
-method selection. `tree_from_linkage` and the topology-only linkage fallback
-are active. `PosetTree.from_agglomerative` runs sklearn
-`AgglomerativeClustering`, while `PosetTree.from_undirected_edges` deterministically
-orients an existing weighted tree. Exact call search found no current
-in-repository consumer of either facade outside their definitions and tests.
-They remain test-covered public adapters and should not be deleted merely
-because internal callers currently prefer SciPy linkage and the phylogenetic
-promotion path.
+`tree_break_selection/tree/construction/` now owns the complete construction
+responsibility by category. `build.py` validates and dispatches the three live
+methods and returns their topology, rooting, linkage, fallback, and IQ-TREE
+evidence. `hierarchical.py` owns merge-array promotion and the topology-only
+fallback. `phylogenetic.py` owns neighbor joining, IQ-TREE/Newick, and MAD
+rooting. The unused sklearn-agglomerative and arbitrary edge-list adapters were
+deleted, along with the shallow `PosetTree.from_*` facades. No compatibility
+modules or aliases remain at the old paths.
 
 ### What is not a separate tree-construction method
 
@@ -131,13 +136,11 @@ promotion path.
 ### Redundancy and locality findings
 
 The three registered topology algorithms each have one implementation. The
-remaining repetition is orchestration: direct calls to `linkage` followed by
-`PosetTree.from_linkage` occur in the main runner, benchmark tree context,
-bootstrap analysis, experiments, and application/report adapters. These call
-sites differ in distance preparation, fallback behavior, metadata, and output
-contracts, so a blind helper extraction would be shallow. A future shared
-construction interface should own validation, topology-only fallback, and
-construction metadata together before those call sites are consolidated.
+main runner now crosses one deep construction interface that owns validation,
+topology-only fallback, and construction metadata. Direct `tree_from_linkage`
+calls remain only where applications or analyses already own a prepared
+linkage matrix; they share representation conversion without hiding their
+distinct geometry preparation or output contracts.
 
 The `tree_linkage_method` field remains present in neighbor-joining and
 IQ-TREE method configurations. It does not control those topology builders,
@@ -151,7 +154,7 @@ That dual meaning should remain explicit in future configuration cleanup.
   topology fallback and fixed-topology NNLS call.
 - `benchmarks/shared/runners/method_registry.py` registers the canonical tree
   variants and the seven-linkage-plus-neighbor-joining adaptive-K grid.
-- `tree_break_selection/tree/phylogenetic.py` contains the only neighbor-joining,
+- `tree_break_selection/tree/construction/phylogenetic.py` contains the only neighbor-joining,
   IQ-TREE/Newick, and MAD-rooting implementations.
 - `tree_break_selection/space_separation/diffusion.py` owns reusable fixed
   Hamming-neighbor, adaptive, and block diffusion geometry; the benchmark
@@ -175,9 +178,6 @@ That dual meaning should remain explicit in future configuration cleanup.
 
 ## Open Questions
 
-- Should a deep `tree_break_selection/tree/` inference interface own linkage
-  validation, topology-only fallback, construction metadata, and promotion to
-  `PosetTree` before direct application and diagnostic call sites are merged?
 - Should the configuration split builder-specific fields from gate-replay
   linkage defaults so neighbor-joining and IQ-TREE runs do not appear to use
   `tree_linkage_method` for their primary topology?

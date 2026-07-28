@@ -18,7 +18,7 @@ from scipy.spatial.distance import pdist
 from sklearn.datasets import fetch_openml
 from sklearn.decomposition import PCA
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
-from tree_break_selection.tree.poset_tree import PosetTree
+from tree_break_selection.tree.construction import tree_from_linkage
 
 
 def load_mnist_subset(
@@ -85,7 +85,7 @@ def run_tbs_clustering(
         print(f"  Built hierarchy with {distance_metric} + {linkage_method}")
 
     # Create PosetTree
-    tree = PosetTree.from_linkage(Z, leaf_names=sample_names)
+    tree = tree_from_linkage(Z, leaf_names=sample_names)
 
     # Decompose
     significance_level = 0.05

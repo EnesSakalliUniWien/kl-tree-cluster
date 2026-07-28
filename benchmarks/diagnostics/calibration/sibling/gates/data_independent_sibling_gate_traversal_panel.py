@@ -44,6 +44,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.pair_observations import (
     identify_binary_sibling_children,
 )
+from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import (
     FeatureSpace,
     bernoulli_feature_space_from_columns,
@@ -198,7 +199,7 @@ def _build_tree_from_leaf_data(
     tree_linkage_method: str = SELECTED_TREE_LINKAGE_METHOD,
 ) -> PosetTree:
     distance = pdist(data.to_numpy(dtype=float), metric=str(tree_distance_metric))
-    return PosetTree.from_linkage(
+    return tree_from_linkage(
         linkage(distance, method=str(tree_linkage_method)),
         leaf_names=data.index.tolist(),
     )

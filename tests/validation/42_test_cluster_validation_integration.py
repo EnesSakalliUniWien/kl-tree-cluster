@@ -16,13 +16,13 @@ from sklearn.metrics import adjusted_rand_score
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
 )
-from tree_break_selection.tree.poset_tree import PosetTree
+from tree_break_selection.tree.construction import tree_from_linkage
 
 
 def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
     """Minimal pipeline helper for integration tests."""
     Z = linkage(pdist(data_df.values, metric="hamming"), method="complete")
-    tree = PosetTree.from_linkage(Z, leaf_names=data_df.index.tolist())
+    tree = tree_from_linkage(Z, leaf_names=data_df.index.tolist())
     tree.populate_node_divergences(data_df)
     decomposition = tree.decompose(
         annotations_df=tree.annotations_df,
