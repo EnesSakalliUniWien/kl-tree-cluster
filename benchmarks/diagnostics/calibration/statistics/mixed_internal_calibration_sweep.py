@@ -21,7 +21,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     decide_empirical_null_calibration,
@@ -138,7 +138,7 @@ def _collect_case_replicate(
         _case_with_replicate_seed(case, replicate_index),
         populate_node_distributions=True,
     )
-    edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+    edge_df, spectral_context = annotate_child_parent_divergence(
         context.tree,
         context.tree.annotations_df,
         significance_level_alpha=edge_alpha,

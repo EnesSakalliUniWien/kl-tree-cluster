@@ -44,6 +44,7 @@ from tree_break_selection.hierarchy_analysis.statistics.projection.projection_di
     MarchenkoPasturDimensionEstimate,
     estimate_marchenko_pastur_dimension,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.tree.construction import (
     DEFAULT_TREE_LINKAGE_METHOD,
     tree_from_linkage,
@@ -301,13 +302,10 @@ def _run_tbs_with_gate_bundle(
         leaf_data=data_df,
         feature_space=feature_space,
     )
-    decomposition = tree.decompose(
+    decomposition = TreeDecomposition(
+        tree=tree,
         gate_annotation_bundle=gate_bundle,
-        leaf_data=data_df,
-        feature_space=feature_space,
-        edge_alpha=DEFAULT_EDGE_ALPHA,
-        sibling_alpha=DEFAULT_SIBLING_ALPHA,
-    )
+    ).decompose_tree()
     labels, report_df = labels_and_report_from_decomposition(
         decomposition,
         data_df.index.tolist(),

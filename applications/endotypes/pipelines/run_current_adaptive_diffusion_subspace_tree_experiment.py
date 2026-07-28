@@ -45,7 +45,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
 from tree_break_selection.plot import draw_image_panel
 from tree_break_selection.space_separation import (
     adaptive_spectral_blocks,
-    block_adaptive_diffusion_distance,
+    block_adaptive_diffusion_geometry,
     coordinates_for_block,
     cosine_eigendecomposition,
     weight_feature_matrix,
@@ -1147,7 +1147,7 @@ def main() -> None:
             distances: np.ndarray | None = None
             linkage_path = ""
             try:
-                distances, diffusion_metadata = block_adaptive_diffusion_distance(
+                geometry = block_adaptive_diffusion_geometry(
                     coords,
                     k_neighbors=args.diffusion_k_neighbors,
                     diffusion_time=args.diffusion_time,
@@ -1156,6 +1156,8 @@ def main() -> None:
                     bandwidth_type=args.adaptive_bandwidth_type,
                     epsilon=args.adaptive_epsilon,
                 )
+                distances = geometry.distance_condensed
+                diffusion_metadata = geometry.metadata
                 z = linkage(distances, method="average")
                 linkage_path = str(subspace_dir / f"{subspace_safe}__linkage_matrix.csv")
                 pd.DataFrame(z, columns=["left", "right", "distance", "count"]).to_csv(

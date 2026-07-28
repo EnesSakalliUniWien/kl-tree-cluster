@@ -24,9 +24,9 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 from tree_break_selection.space_separation import (
-    adaptive_diffusion_distance,
+    adaptive_diffusion_geometry,
     adaptive_spectral_blocks,
-    block_adaptive_diffusion_distance,
+    block_adaptive_diffusion_geometry,
     coordinates_for_block,
     cosine_eigendecomposition,
     weight_feature_matrix,
@@ -187,7 +187,7 @@ def main() -> None:
 
     if "whole_adaptive_diffusion" in args.tree_geometries:
         print("[whole_adaptive_diffusion] distance", flush=True)
-        whole_distances, whole_metadata = adaptive_diffusion_distance(
+        whole_geometry = adaptive_diffusion_geometry(
             data,
             k_neighbors=args.diffusion_k_neighbors,
             diffusion_time=args.diffusion_time,
@@ -195,8 +195,9 @@ def main() -> None:
             metric="hamming",
             bandwidth_type=args.adaptive_bandwidth_type,
             epsilon=args.adaptive_epsilon,
-            return_metadata=True,
         )
+        whole_distances = whole_geometry.distance_condensed
+        whole_metadata = whole_geometry.metadata
         for method_version in args.method_versions:
             run_id = f"{method_version}__whole_adaptive_diffusion"
             family = f"{method_version}__whole_adaptive_diffusion"
@@ -282,7 +283,7 @@ def main() -> None:
                     {"kernel": "none", "metric": "euclidean"},
                 )
             if "adaptive_diffusion_cosine_subspace" in args.tree_geometries:
-                distances, metadata = block_adaptive_diffusion_distance(
+                geometry = block_adaptive_diffusion_geometry(
                     coords,
                     k_neighbors=args.diffusion_k_neighbors,
                     diffusion_time=args.diffusion_time,
@@ -292,8 +293,11 @@ def main() -> None:
                     epsilon=args.adaptive_epsilon,
                 )
                 geometry_distances["adaptive_diffusion_cosine_subspace"] = (
-                    distances,
-                    {"kernel": "pydiffmap_adaptive", **metadata, "diffusion_mode": "adaptive"},
+                    geometry.distance_condensed,
+                    {
+                        **geometry.metadata,
+                        "diffusion_mode": "adaptive",
+                    },
                 )
 
             for tree_geometry, (distances, metadata) in geometry_distances.items():

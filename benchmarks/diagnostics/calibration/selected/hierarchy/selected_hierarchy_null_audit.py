@@ -28,7 +28,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
@@ -130,7 +130,7 @@ def _run_edge_and_sibling_records(
 ) -> tuple[SiblingRecordSample, str]:
     tree, tree_metric = _build_tree(data, metadata)
     tree.populate_node_divergences(data, feature_space=feature_space)
-    edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+    edge_df, spectral_context = annotate_child_parent_divergence(
         tree,
         tree.annotations_df,
         significance_level_alpha=DEFAULT_EDGE_ALPHA,

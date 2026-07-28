@@ -145,12 +145,10 @@ def _make_annotations(
 def _decompose_with_annotations(
     tree: nx.DiGraph,
     annotations_df: pd.DataFrame,
-    monkeypatch: pytest.MonkeyPatch,
     *,
     passthrough: bool,
     spectral_transport_passthrough_guard: bool = False,
 ) -> dict[str, object]:
-    monkeypatch.setattr(TreeDecomposition, "_prepare_annotations", lambda self, df: df)
     decomposer = TreeDecomposition(
         tree=tree,
         annotations_df=annotations_df,
@@ -435,7 +433,7 @@ class TestGateEvaluator:
 
 
 class TestTreeDecompositionTraversal:
-    def test_decompose_tree_splits_to_leaf_clusters(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_decompose_tree_splits_to_leaf_clusters(self) -> None:
         tree = _make_binary_tree()
         annotations_df = _make_annotations(
             tree,
@@ -446,16 +444,13 @@ class TestTreeDecompositionTraversal:
         result = _decompose_with_annotations(
             tree,
             annotations_df,
-            monkeypatch,
             passthrough=False,
         )
 
         cluster_leaf_sets = sorted(_cluster_leaf_sets(result), key=lambda leaves: min(leaves))
         assert cluster_leaf_sets == [{"L1"}, {"L2"}, {"R1"}, {"R2"}]
 
-    def test_decompose_tree_reports_edge_and_sibling_alpha(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_direct_annotations_do_not_claim_unknown_alpha(self) -> None:
         tree = _make_binary_tree()
         annotations_df = _make_annotations(
             tree,
@@ -463,23 +458,18 @@ class TestTreeDecompositionTraversal:
             sibling_different={node: False for node in tree.nodes},
         )
 
-        monkeypatch.setattr(TreeDecomposition, "_prepare_annotations", lambda self, df: df)
         decomposer = TreeDecomposition(
             tree=tree,
             annotations_df=annotations_df,
-            edge_alpha=0.007,
-            sibling_alpha=0.123,
             passthrough=False,
         )
 
         result = decomposer.decompose_tree()
 
-        assert result["independence_analysis"]["edge_alpha"] == 0.007
-        assert result["independence_analysis"]["sibling_alpha"] == 0.123
+        assert result["independence_analysis"]["edge_alpha"] is None
+        assert result["independence_analysis"]["sibling_alpha"] is None
 
-    def test_decompose_tree_default_trace_level_is_compact(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decompose_tree_default_trace_level_is_compact(self) -> None:
         tree = _make_binary_tree()
         annotations_df = _make_annotations(
             tree,
@@ -487,7 +477,6 @@ class TestTreeDecompositionTraversal:
             sibling_different={node: False for node in tree.nodes},
         )
 
-        monkeypatch.setattr(TreeDecomposition, "_prepare_annotations", lambda self, df: df)
         decomposer = TreeDecomposition(
             tree=tree,
             annotations_df=annotations_df,
@@ -508,9 +497,7 @@ class TestTreeDecompositionTraversal:
             "live_passthrough_support_blocked_count": 0,
         }
 
-    def test_decompose_tree_passthrough_reaches_descendant_split(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decompose_tree_passthrough_reaches_descendant_split(self) -> None:
         tree = _make_deep_tree()
         edge_divergent = {node: True for node in tree.nodes}
         sibling_different = {node: False for node in tree.nodes}
@@ -525,7 +512,6 @@ class TestTreeDecompositionTraversal:
         result = _decompose_with_annotations(
             tree,
             annotations_df,
-            monkeypatch,
             passthrough=True,
         )
 
@@ -536,9 +522,7 @@ class TestTreeDecompositionTraversal:
         assert root_trace["passthrough_decision_reason"] == "pass_through"
         assert result["traversal_counters"]["live_passthrough_candidate_count"] == 1
 
-    def test_decompose_tree_without_passthrough_merges_at_root(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decompose_tree_without_passthrough_merges_at_root(self) -> None:
         tree = _make_deep_tree()
         edge_divergent = {node: True for node in tree.nodes}
         sibling_different = {node: False for node in tree.nodes}
@@ -553,16 +537,13 @@ class TestTreeDecompositionTraversal:
         result = _decompose_with_annotations(
             tree,
             annotations_df,
-            monkeypatch,
             passthrough=False,
         )
 
         cluster_leaf_sets = _cluster_leaf_sets(result)
         assert cluster_leaf_sets == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
 
-    def test_full_edge_traversal_walks_past_sibling_closed_root(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_full_edge_traversal_walks_past_sibling_closed_root(self) -> None:
         tree = _make_deep_tree()
         edge_divergent = {node: True for node in tree.nodes}
         sibling_different = {node: False for node in tree.nodes}
@@ -577,7 +558,6 @@ class TestTreeDecompositionTraversal:
         result = _decompose_with_annotations(
             tree,
             annotations_df,
-            monkeypatch,
             passthrough=False,
         )
 
@@ -591,9 +571,7 @@ class TestTreeDecompositionTraversal:
         assert full_trace[0]["edge_traversal_action"] == "continue"
         assert any(row["node_id"] == "B" and not row["actual_visited"] for row in full_trace)
 
-    def test_full_edge_traversal_stops_when_child_edges_close(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_full_edge_traversal_stops_when_child_edges_close(self) -> None:
         tree = _make_deep_tree()
         edge_divergent = {node: False for node in tree.nodes}
         edge_divergent["A"] = True
@@ -609,7 +587,6 @@ class TestTreeDecompositionTraversal:
         result = _decompose_with_annotations(
             tree,
             annotations_df,
-            monkeypatch,
             passthrough=False,
         )
 
@@ -622,9 +599,7 @@ class TestTreeDecompositionTraversal:
             "B": "edge_closed",
         }
 
-    def test_full_edge_traversal_records_branch_lengths_and_counters(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_full_edge_traversal_records_branch_lengths_and_counters(self) -> None:
         tree = _make_deep_tree()
         tree.edges["root", "A"]["branch_length"] = 1.25
         tree.edges["root", "B"]["branch_length"] = 2.5
@@ -642,7 +617,6 @@ class TestTreeDecompositionTraversal:
         result = _decompose_with_annotations(
             tree,
             annotations_df,
-            monkeypatch,
             passthrough=False,
         )
 
@@ -690,9 +664,7 @@ class TestTreeDecompositionTraversal:
         assert counters["full_edge_closed_stop_count"] == 2
         assert counters["full_edge_passthrough_candidate_count"] == 0
 
-    def test_decompose_tree_passthrough_ignores_blocked_descendant_signal(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decompose_tree_passthrough_ignores_blocked_descendant_signal(self) -> None:
         tree = _make_deep_tree()
         edge_divergent = {node: True for node in tree.nodes}
         edge_divergent["C"] = False
@@ -709,16 +681,13 @@ class TestTreeDecompositionTraversal:
         result = _decompose_with_annotations(
             tree,
             annotations_df,
-            monkeypatch,
             passthrough=True,
         )
 
         cluster_leaf_sets = _cluster_leaf_sets(result)
         assert cluster_leaf_sets == [{"A1", "A2", "C1", "C2", "D1", "D2"}]
 
-    def test_decompose_tree_selected_family_guard_blocks_passthrough(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decompose_tree_selected_family_guard_blocks_passthrough(self) -> None:
         tree = _make_deep_tree()
         edge_divergent = {node: True for node in tree.nodes}
         sibling_different = {node: False for node in tree.nodes}
@@ -732,14 +701,11 @@ class TestTreeDecompositionTraversal:
         annotations_df["Selective_Permutation_Guard_Blocked"] = False
         annotations_df.loc["root", "Selective_Permutation_Guard_Would_Block"] = True
 
-        monkeypatch.setattr(TreeDecomposition, "_prepare_annotations", lambda self, df: df)
         decomposer = TreeDecomposition(
             tree=tree,
             annotations_df=annotations_df,
             passthrough=True,
-            root_selective_permutation_guard_scope=(
-                "global_sibling_min_passthrough_descendant_refined"
-            ),
+            selected_family_passthrough_guard=True,
             trace_level="full",
         )
 
@@ -754,9 +720,7 @@ class TestTreeDecompositionTraversal:
         assert root_trace["passthrough_decision_reason"] == "passthrough_support_blocked"
         assert result["traversal_counters"]["live_passthrough_support_blocked_count"] == 1
 
-    def test_decompose_tree_spectral_support_guard_blocks_passthrough(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decompose_tree_spectral_support_guard_blocks_passthrough(self) -> None:
         tree = _make_deep_tree()
         edge_divergent = {node: True for node in tree.nodes}
         sibling_different = {node: False for node in tree.nodes}
@@ -776,7 +740,6 @@ class TestTreeDecompositionTraversal:
         result = _decompose_with_annotations(
             tree,
             annotations_df,
-            monkeypatch,
             passthrough=True,
             spectral_transport_passthrough_guard=True,
         )

@@ -2,7 +2,7 @@
 title: Wiki Log
 type: control
 status: reviewed
-updated: 2026-06-19
+updated: 2026-07-28
 sources:
   - AGENTS.md
   - raw/inbox/wiki-construction-brief.md
@@ -5380,6 +5380,117 @@ verification, and maintenance events here in chronological order.
   proving they still imported the removed `kl_clustering_analysis` package and
   mutable config surface throughout; no partial compatibility rewrite or alias
   was retained.
+- Rebuilt the executable repository map after branch consolidation, covering
+  method, application, plotting, tree-construction, and benchmark dependency
+  directions in [[repository-execution-and-benchmark-map]]. Re-ran the 14-case
+  smoke (`11` successful, `3` fail-closed skips, mean ARI `0.898`), the
+  17-case descriptive regression suite (`11` successful, `6` fail-closed
+  skips, mean ARI `0.5957`), and 288 focused architecture/benchmark tests.
+  Recorded that `regression/run_gate.py` enforces no threshold, skipped rows
+  lose stage timings, and repeated fallback `FeatureSpace` construction
+  dominates avoidable profiled work.
+- Added the missing adaptive-diffusion branch-time comparison on the same
+  14-case subset. Fixed-topology NNLS improved mean ARI from `0.5445` to
+  `0.8722` and exact-K recovery from `4/13` to `10/13` successful rows without
+  changing diffusion geometry or linkage topology, at about 36% wall-time
+  overhead. Both variants exposed the same duplicate-row pydiffmap bandwidth
+  failure; the audit also records that NNLS timing is omitted from canonical
+  CSV rows and the smoke script executes unintentionally on import.
+- Audited the adaptive pydiffmap plus fixed-topology NNLS method and its
+  numerical-library contracts. Executed checks exposed pydiffmap's hidden
+  positive-neighbor minimum, confirmed that raising K does not rescue
+  duplicate-heavy zero-bandwidth data, measured weak diffusion/NNLS geometry
+  agreement on graph and overlap cases, and found materially seed-sensitive
+  sampled edge lengths despite stable labels in three checked cases. Recorded
+  solver-termination ambiguity, feature-family mismatch, dense full-spectrum
+  scaling, dependency risk, and a correctness-first implementation order in
+  [[adaptive-diffusion-nnls-method-library-audit]].
+- Compared better diffusion implementations under the same NNLS branch policy.
+  Graphtools adaptive K completed all 14 representative cases but remained
+  slower, GPL-only, duplicate-warning-prone, and exact-K `8/14`. The
+  repository fixed-Hamming kNN route completed all 14, recovered
+  `binary_perfect_4c` exactly, reached exact-K `11/14`, mean ARI `0.863`, and
+  median ARI `1.0`. Recorded it as the strongest immediate permissive
+  implementation and a duplicate-explicit sparse scikit-learn/SciPy kernel
+  with partial `eigsh` as the preferred long-term adaptive replacement.
+- Mapped diffusion libraries and methods onto the repository's three explicit
+  `FeatureSpace` families. Bernoulli data receives binary-metric sparse
+  diffusion, categorical data receives block/simplex affinity, and continuous
+  data receives Gaussian/manifold diffusion through datafold or Scanpy.
+  Separated graph adjacency into direct graph diffusion with PyGSP rather than
+  flattening it into independent Bernoulli features; classified PHATE and
+  Palantir as trajectory comparators instead of global clustering backends.
+- Traced the complete post-diffusion construction path into topology, rooting,
+  NNLS edge fitting, typed subtree distributions, gates, and depth-first
+  decomposition. Recorded that feature-family awareness begins after topology
+  unless the upstream geometry already preserves it; average linkage is a
+  baseline rather than a diffusion-native tree estimator; TBS requires a
+  binary rooted result; and NNLS changes branch semantics without changing
+  topology. Reconciled the seven-case topology-selector evidence with the
+  later fail-closed topology-difference diagnosis and passed 15 focused tree
+  construction tests.
+- Enforced the post-diffusion construction contracts in code. The deep
+  `build_tree` interface now rejects malformed condensed distances,
+  non-binary rooted trees, leaf mismatches, and invalid branch lengths; MAD
+  endpoint roots remain binary through explicit zero-length root edges.
+  Natural label ordering, including numeric-aware numbered strings, makes
+  exact-tie resolution invariant to input row order without changing existing
+  calibration seed behavior, and construction results expose tie and shape
+  diagnostics. Replaced
+  the four distance-only diffusion functions with one `DiffusionGeometry`
+  result interface, removed their old names without aliases, required
+  explicit diffusion linkage and NNLS branch geometry, and added
+  feature-family/metric validation. Rejected a same-diffusion-coordinate NNLS
+  experiment after mean ARI fell to `0.3132`, exact-K to `2/13`, and runtime
+  rose to about `29.6` seconds; retained the original-feature dual geometry as
+  an explicit reported method contract. The final adaptive NNLS replay retained
+  exact-K `10/13`, mean ARI `0.8722`, and median ARI `1.0`; the canonical
+  14-case smoke retained exact-K `8/14`, mean ARI `0.898`, and median ARI
+  `0.970`. The focused tranche, all 122 core/tree tests, and all 1,260 ordered
+  repository tests passed.
+- Installed and classified additional diffusion comparison libraries without
+  weakening the core numerical interface. PyGSP `0.6.1` is now explicit in
+  the `diffusion` extra, deeptime `0.4.5` is isolated in `trajectory`, and
+  PHATE `2.0.0` is grouped with graphtools in `experimental-gpl`. Functional
+  smokes passed for duplicate-aware neighbors, partial `eigsh`,
+  `SpectralEmbedding`, PHATE, PyGSP heat filtering, and deeptime TICA.
+  Datafold `2.0.2` was not installed because its resolver plan would downgrade
+  NumPy, SciPy, and scikit-learn, including scikit-learn below the project's
+  declared `>=1.3.0` minimum. The synchronized full environment passed package
+  compatibility checks, Ruff, wiki lint over 271 pages, and all 1,260 ordered
+  repository tests.
+- Re-ran the repository duplication audit with independent token-clone,
+  normalized-AST, and Pylint similarity checks. Production code contains 384
+  weak-mode clone pairs and 7,587 duplicated lines across 400 files (4.14%);
+  tests contain 58 pairs and 1,298 duplicated lines across 246 files (2.81%).
+  Diagnostic research panels account for 299 production pairs and 6,287 paired
+  lines, so the result is not a blanket deletion target. Updated
+  [[redundant-and-legacy-code-map-20260623]] with responsibility-based
+  ownership, false-positive classes, and a safe cleanup order: plot export,
+  TBS runner and gate configuration, core permutation guards, endotype plots,
+  validation reporting, then contract-tested diagnostic families.
+- Completed the first duplication-cleanup tranche in the benchmark plotting
+  engine. Deleted the unused UMAP-only and UMAP-before-tree export interfaces,
+  renamed the live workflow to `create_case_report_pages_from_results()`,
+  updated its runtime and test callers directly, and kept no aliases. Reused
+  the owned figure-output path for the 3D UMAP and manifold engines. This
+  removed a net 174 lines from `benchmarks/shared/plots/export.py`; the
+  production clone scan fell from 384 to 381 pairs and from 7,587 to 7,489
+  duplicated lines. All 20 visualization tests, the complete ordered
+  1,260-test repository gate, Ruff, formatting, and wiki lint passed.
+- Completed the core duplication and responsibility cleanup. Deleted the
+  `_run_tbs_method` registry adapter and `PosetTree.decompose()` facade; all
+  callers now expose gate annotation and tree traversal as separate phases.
+  `TreeDecomposition` consumes a completed `GateAnnotationBundle` or an
+  explicit traversal-decision frame and no longer reconstructs or silently
+  recomputes gate configuration. Consolidated the selected-root and
+  selected-family permutation loops behind one statistic-driven engine and
+  replaced the two child-parent annotation paths with one context-returning
+  contract, keeping no aliases. The 10-line/70-token production clone scan
+  fell from the post-plot 381 pairs and 7,489 duplicated lines to 373 pairs
+  and 7,259 duplicated lines (3.97%). Vulture reported no project-owned dead
+  code at 90% confidence; Ruff, wiki lint over 271 pages, focused contract
+  suites, and all 1,254 ordered repository tests passed.
 
 ## Evidence
 

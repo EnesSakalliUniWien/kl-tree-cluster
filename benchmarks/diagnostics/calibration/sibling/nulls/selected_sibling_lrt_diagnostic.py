@@ -35,7 +35,8 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
-from tree_break_selection.space_separation import hamming_knn_diffusion_distance
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from tree_break_selection.space_separation import hamming_knn_diffusion_geometry
 from tree_break_selection.tree.construction import tree_from_linkage
 
 DEFAULT_GRID: tuple[tuple[int, int], ...] = ((15, 3), (15, 5), (30, 3))
@@ -270,13 +271,13 @@ def run_diffusion_lrt_cell(
     sibling_alpha: float,
 ) -> DiffusionRunResult:
     run_id = f"k{k_neighbors:02d}_t{diffusion_time}_c{n_components}"
-    distance = hamming_knn_diffusion_distance(
+    geometry = hamming_knn_diffusion_geometry(
         data,
         k_neighbors=k_neighbors,
         diffusion_time=diffusion_time,
         n_components=n_components,
     )
-    linkage_matrix = linkage(distance, method="average")
+    linkage_matrix = linkage(geometry.distance_condensed, method="average")
     tree = tree_from_linkage(linkage_matrix, leaf_names=data.index.tolist())
     tree.populate_node_divergences(data)
     gate_bundle = run_gate_annotation_pipeline(
@@ -286,12 +287,10 @@ def run_diffusion_lrt_cell(
         sibling_alpha=sibling_alpha,
         leaf_data=data,
     )
-    decomposition = tree.decompose(
+    decomposition = TreeDecomposition(
+        tree=tree,
         gate_annotation_bundle=gate_bundle,
-        leaf_data=data,
-        edge_alpha=edge_alpha,
-        sibling_alpha=sibling_alpha,
-    )
+    ).decompose_tree()
     assignments = build_sample_cluster_assignments(decomposition).loc[data.index]
     labels = assignments["cluster_id"].astype(int)
     rows = extract_sibling_lrt_rows(

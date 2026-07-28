@@ -19,7 +19,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
     fit_empirical_null_inflation_model,
@@ -183,7 +183,7 @@ def _diagnose_case(
     seed: int,
 ) -> dict[str, object]:
     context = build_tbs_tree_context(case, populate_node_distributions=True)
-    edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+    edge_df, spectral_context = annotate_child_parent_divergence(
         context.tree,
         context.tree.annotations_df,
         significance_level_alpha=DEFAULT_EDGE_ALPHA,

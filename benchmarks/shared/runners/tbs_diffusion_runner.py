@@ -16,12 +16,15 @@ from tree_break_selection.hierarchy_analysis.statistics.branch_length_utils impo
     EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
 )
 from tree_break_selection.space_separation import (
-    adaptive_diffusion_distance as _build_adaptive_diffusion_distance,
+    DiffusionGeometry,
+    hamming_knn_diffusion_geometry,
+)
+from tree_break_selection.space_separation import (
+    adaptive_diffusion_geometry as _build_adaptive_diffusion_geometry,
 )
 from tree_break_selection.space_separation import (
     compute_diffusion_coordinates as _compute_diffusion_coordinates,
 )
-from tree_break_selection.space_separation import hamming_knn_diffusion_distance
 from tree_break_selection.space_separation import (
     resolve_neighbor_search_k as _resolve_neighbor_search_k,
 )
@@ -278,7 +281,45 @@ def _require_hamming_diffusion_input(
         )
 
 
-def _build_graphtools_diffusion_distance(
+def _require_adaptive_diffusion_family_contract(
+    data_df: pd.DataFrame,
+    feature_space: FeatureSpace | None,
+    *,
+    metric: str,
+) -> str:
+    """Return the explicit feature family after validating adaptive geometry."""
+    if feature_space is None:
+        if metric == "hamming":
+            _require_hamming_diffusion_input(data_df, None)
+            return "untyped_binary"
+        raise ValueError(
+            "Adaptive diffusion with a non-Hamming metric requires an explicit FeatureSpace."
+        )
+
+    family = feature_space.family_label
+    if family == "mixed":
+        raise ValueError(
+            "Adaptive diffusion does not infer one geometry for mixed FeatureSpace families."
+        )
+    if family == "continuous":
+        if metric != "euclidean":
+            raise ValueError(
+                "Continuous adaptive diffusion requires metric='euclidean'; "
+                f"got metric={metric!r}."
+            )
+        return family
+    if family in {"bernoulli", "categorical"}:
+        if metric != "hamming":
+            raise ValueError(
+                f"{family.capitalize()} adaptive diffusion requires metric='hamming'; "
+                f"got metric={metric!r}."
+            )
+        _require_hamming_diffusion_input(data_df, feature_space)
+        return family
+    raise ValueError(f"Unsupported adaptive diffusion FeatureSpace family: {family!r}.")
+
+
+def _build_graphtools_diffusion_geometry(
     data_df: pd.DataFrame,
     *,
     k_neighbors: int,
@@ -291,9 +332,8 @@ def _build_graphtools_diffusion_distance(
     random_state: int,
     adaptive_neighbor_profile: str | None = None,
     adaptive_neighbor_grid: Sequence[int] | None = None,
-    return_metadata: bool,
-) -> np.ndarray | tuple[np.ndarray, dict[str, object]]:
-    """Compute diffusion distance from a graphtools kernel graph."""
+) -> DiffusionGeometry:
+    """Compute diffusion geometry from a graphtools kernel graph."""
     try:
         import graphtools
     except ImportError as exc:
@@ -336,11 +376,6 @@ def _build_graphtools_diffusion_distance(
         diffusion_time=diffusion_time,
         n_components=n_components,
     )
-    distance_condensed = pdist(diffusion_coords, metric="euclidean")
-
-    if not return_metadata:
-        return distance_condensed
-
     metadata = {
         "backend": "graphtools",
         "graphtools_version": str(getattr(graphtools, "__version__", "unknown")),
@@ -354,7 +389,11 @@ def _build_graphtools_diffusion_distance(
         "kernel_nonzero_entries": int(getattr(kernel_matrix, "nnz", np.count_nonzero(weights))),
     }
     metadata.update(neighbor_metadata)
-    return distance_condensed, metadata
+    return DiffusionGeometry(
+        coordinates=diffusion_coords,
+        distance_condensed=pdist(diffusion_coords, metric="euclidean"),
+        metadata=metadata,
+    )
 
 
 def _run_tbs_diffusion_method(
@@ -363,7 +402,7 @@ def _run_tbs_diffusion_method(
     k_neighbors: int,
     diffusion_time: int,
     *,
-    tree_linkage_method: str = "average",
+    tree_linkage_method: str,
     feature_space: FeatureSpace | None = None,
     branch_length_optimization_method: str = BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
     branch_length_optimization_target_metric: str = (
@@ -378,7 +417,7 @@ def _run_tbs_diffusion_method(
     """Run TBS decomposition on a Hamming nearest-neighbor diffusion tree."""
     _require_hamming_diffusion_input(data_df, feature_space)
 
-    diff_dist = hamming_knn_diffusion_distance(
+    geometry = hamming_knn_diffusion_geometry(
         data_df,
         k_neighbors=k_neighbors,
         diffusion_time=diffusion_time,
@@ -387,10 +426,11 @@ def _run_tbs_diffusion_method(
 
     return run_tbs_on_distance(
         data_df,
-        diff_dist,
+        geometry.distance_condensed,
         sibling_significance_level,
         tree_linkage_method=tree_linkage_method,
         feature_space=feature_space,
+        branch_length_data_df=data_df,
         branch_length_optimization_method=branch_length_optimization_method,
         branch_length_optimization_target_metric=branch_length_optimization_target_metric,
         branch_length_optimization_pair_sample_size=(branch_length_optimization_pair_sample_size),
@@ -398,7 +438,14 @@ def _run_tbs_diffusion_method(
         branch_length_optimization_solver_tolerance=(branch_length_optimization_solver_tolerance),
         branch_length_optimization_max_iterations=branch_length_optimization_max_iterations,
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
-        extra={"diffusion_method": "hamming_nn_diffusion"},
+        extra={
+            "diffusion_method": "hamming_nn_diffusion",
+            "diffusion_feature_family": (
+                "untyped_binary" if feature_space is None else feature_space.family_label
+            ),
+            "branch_length_geometry_contract": "explicit_original_distributional_features",
+            "diffusion_geometry": geometry.metadata,
+        },
     )
 
 
@@ -418,7 +465,7 @@ def _run_tbs_diffusion_graphtools_method(
     adaptive_neighbor_grid: Sequence[int] | None = None,
     tree_builder: str = "linkage",
     tree_rooting: str = "linkage_root",
-    tree_linkage_method: str = "average",
+    tree_linkage_method: str,
     feature_space: FeatureSpace | None = None,
     graph_data_df: pd.DataFrame | None = None,
     branch_length_data_df: pd.DataFrame | None = None,
@@ -436,7 +483,16 @@ def _run_tbs_diffusion_graphtools_method(
     graph_data = data_df if graph_data_df is None else graph_data_df
     if not graph_data.index.equals(data_df.index):
         raise ValueError("graph_data_df index must exactly match the original data index.")
-    diff_dist, graph_metadata = _build_graphtools_diffusion_distance(
+    if (
+        branch_length_optimization_method != BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC
+        and branch_length_data_df is None
+    ):
+        raise ValueError(
+            "Graphtools NNLS requires explicit branch_length_data_df geometry."
+        )
+    if branch_length_data_df is not None and not branch_length_data_df.index.equals(data_df.index):
+        raise ValueError("branch_length_data_df index must exactly match the original data index.")
+    geometry = _build_graphtools_diffusion_geometry(
         graph_data,
         k_neighbors=k_neighbors,
         diffusion_time=diffusion_time,
@@ -448,12 +504,11 @@ def _run_tbs_diffusion_graphtools_method(
         random_state=random_state,
         adaptive_neighbor_profile=adaptive_neighbor_profile,
         adaptive_neighbor_grid=adaptive_neighbor_grid,
-        return_metadata=True,
     )
 
     return run_tbs_on_distance(
         data_df,
-        diff_dist,
+        geometry.distance_condensed,
         sibling_significance_level,
         tree_builder=tree_builder,
         tree_rooting=tree_rooting,
@@ -469,10 +524,23 @@ def _run_tbs_diffusion_graphtools_method(
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
         extra={
             "diffusion_method": "graphtools_kernel_diffusion",
+            "diffusion_feature_family": (
+                "untyped" if feature_space is None else feature_space.family_label
+            ),
             "graph_geometry_source": (
                 "original_data" if graph_data_df is None else "aligned_geometry_embedding"
             ),
-            "graphtools_diffusion": graph_metadata,
+            "branch_length_geometry_contract": (
+                "unused_linkage_ultrametric"
+                if branch_length_optimization_method
+                == BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC
+                else (
+                    "explicit_original_distributional_features"
+                    if branch_length_data_df is data_df
+                    else "explicit_aligned_geometry_embedding"
+                )
+            ),
+            "graphtools_diffusion": geometry.metadata,
         },
     )
 
@@ -487,7 +555,7 @@ def _run_tbs_diffusion_adaptive_method(
     bandwidth_type: str | float | None,
     epsilon: str | float,
     *,
-    tree_linkage_method: str = "average",
+    tree_linkage_method: str,
     feature_space: FeatureSpace | None = None,
     branch_length_optimization_method: str = BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
     branch_length_optimization_target_metric: str = (
@@ -500,7 +568,12 @@ def _run_tbs_diffusion_adaptive_method(
     edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
 ) -> MethodRunResult:
     """Run TBS decomposition on an adaptive variable-bandwidth diffusion tree."""
-    diff_dist, adaptive_metadata = _build_adaptive_diffusion_distance(
+    feature_family = _require_adaptive_diffusion_family_contract(
+        data_df,
+        feature_space,
+        metric=metric,
+    )
+    geometry = _build_adaptive_diffusion_geometry(
         data_df,
         k_neighbors=k_neighbors,
         diffusion_time=diffusion_time,
@@ -508,15 +581,15 @@ def _run_tbs_diffusion_adaptive_method(
         metric=metric,
         bandwidth_type=bandwidth_type,
         epsilon=epsilon,
-        return_metadata=True,
     )
 
     return run_tbs_on_distance(
         data_df,
-        diff_dist,
+        geometry.distance_condensed,
         sibling_significance_level,
         tree_linkage_method=tree_linkage_method,
         feature_space=feature_space,
+        branch_length_data_df=data_df,
         branch_length_optimization_method=branch_length_optimization_method,
         branch_length_optimization_target_metric=branch_length_optimization_target_metric,
         branch_length_optimization_pair_sample_size=(branch_length_optimization_pair_sample_size),
@@ -526,6 +599,8 @@ def _run_tbs_diffusion_adaptive_method(
         edge_branch_length_variance_policy=edge_branch_length_variance_policy,
         extra={
             "diffusion_method": "adaptive_pydiffmap_diffusion",
-            "adaptive_diffusion": adaptive_metadata,
+            "diffusion_feature_family": feature_family,
+            "branch_length_geometry_contract": "explicit_original_distributional_features",
+            "adaptive_diffusion": geometry.metadata,
         },
     )

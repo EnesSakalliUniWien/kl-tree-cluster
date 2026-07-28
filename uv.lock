@@ -603,6 +603,32 @@ wheels = [
 ]
 
 [[package]]
+name = "deeptime"
+version = "0.4.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "threadpoolctl" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c7/6c/b95ef5fcbb407e6ffa5157200deb2856dde0a0dad0c84280b66eb0634d5d/deeptime-0.4.5.tar.gz", hash = "sha256:e290101e8a63f2338091866af671821e4d972b9d4fabf3fee4a14777f9aef414", size = 465752, upload-time = "2025-04-09T09:35:12.24Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/99/7e94f9bec9a92771c033ab6cc217e28ac94c0106ec60c0e16749193c87cb/deeptime-0.4.5-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:a755ebad819f396a2969fdd6a17fa10958807cf4d649f63213d60caccf543099", size = 1716045, upload-time = "2025-04-09T09:34:40.577Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/c1/e10f892f53f10d279a96a2f0d2b2dad3d4543eb420384bed11ad6fa293aa/deeptime-0.4.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:499a8a955ad8e9160b86e69b2860c30561e5cf6b72d12170746a345dbc3570a9", size = 1597511, upload-time = "2025-04-09T09:34:42.635Z" },
+    { url = "https://files.pythonhosted.org/packages/89/5c/ab91de6d72c6dd258185cc4931e708504c6420ecfcb8080d4cb886a3de79/deeptime-0.4.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d2c1e148bc6c9cf027347834dd5ba1a5bf51f9cd01e375162f3bd516195b7ccd", size = 2184435, upload-time = "2025-04-09T09:34:44.684Z" },
+    { url = "https://files.pythonhosted.org/packages/87/df/1e25d583049aa622e08c292e15926fca4a790c6334c79ddda55e01fde80a/deeptime-0.4.5-cp311-cp311-win_amd64.whl", hash = "sha256:ea7bead327a709eb703ecb5c2bb6f7a6c18d892b195b6e23840baea61d74fae5", size = 1617714, upload-time = "2025-04-09T09:34:46.455Z" },
+    { url = "https://files.pythonhosted.org/packages/47/c4/ed58619aedb874978f848cb6a525b436c65f2144f9a5795572838f9aacb7/deeptime-0.4.5-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:ff05e51b0763392f3b64b854545a6e41cf9a445fb642d3e690fcafa261cdb3f5", size = 1722245, upload-time = "2025-04-09T09:34:48.31Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/a3/873f0cac65bbab30e0dc5a875cd38993d4991b45ec2ce11a766f90b84179/deeptime-0.4.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:69a09c60f9d0e12c035b7be4742fab1988d8e589064492f555c1b9c0b2f1c941", size = 1592659, upload-time = "2025-04-09T09:34:50.116Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/68/4a2efb1dcefaeab852f61b18856f3fe090d79b9e98916e60ca76dd2294d5/deeptime-0.4.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ec9aeb7c2624b63d86f0a011a229ef0d9c643696ae84c78fe19f68c8cfc1bdea", size = 2167372, upload-time = "2025-04-09T09:34:52.099Z" },
+    { url = "https://files.pythonhosted.org/packages/35/b2/bf2c48fff66c56c490fb5b8c5868c6f8da32a51fe69b876ec2081956b4ea/deeptime-0.4.5-cp312-cp312-win_amd64.whl", hash = "sha256:7888d7a8f2f69ea1b0a723ad55652b224d64495a76431e57efab08abc610d1ae", size = 1623701, upload-time = "2025-04-09T09:34:54.112Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/a2/e332b96d53d631abbbd968eadc1b710143ddea1d5e54ec252d225711683b/deeptime-0.4.5-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:d9532eb850416907fe13ed63cf895133879be6afe1c9534bec002f0d60554274", size = 1722105, upload-time = "2025-04-09T09:34:56.443Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/1c/2ec0c307472e20deb2dd31fb5e8b332f52340abf354d9c752303217fe59e/deeptime-0.4.5-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:cd54f676377f6f6de42b830ed459b4ad49fc3e87822225a1c626ddef62861758", size = 1592470, upload-time = "2025-04-09T09:34:58.264Z" },
+    { url = "https://files.pythonhosted.org/packages/df/c7/0bbae335bbcd08613a3aa7bc995f7bd787f3a9c0bb2e40dfd92f6fb6d946/deeptime-0.4.5-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7fa7a6960cb656dd61b0fd788bc86ae98600cfa3566ef13d55236e1904ee0cab", size = 2169981, upload-time = "2025-04-09T09:35:00.361Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/e9/af97df1aa1ad967c2ca3ec9749c8b719d4d3c78948c3345bb3677b1a6f41/deeptime-0.4.5-cp313-cp313-win_amd64.whl", hash = "sha256:714145dcdb1cc5bdcaa11901482370f75364b32e0ea106d7990e7025ba3a0558", size = 1623493, upload-time = "2025-04-09T09:35:02.444Z" },
+]
+
+[[package]]
 name = "defusedxml"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2214,6 +2240,25 @@ wheels = [
 ]
 
 [[package]]
+name = "phate"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "deprecated" },
+    { name = "future" },
+    { name = "graphtools" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "tasklogger" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7b/1d/29bf3537a26f9d8adb54190a5f4edc480cd8899a66422f1d0ef55f2a53b7/phate-2.0.0.tar.gz", hash = "sha256:4605f33b8ca625e8fe9b6a9552a7113f60f86afd816ba9495559494f1e1b2e26", size = 46577, upload-time = "2025-10-27T21:10:05.216Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/32/7f/ab3e73eac07a3d7f0dae6f81028744f2702512cb5a1376870e6de95b7450/phate-2.0.0-py3-none-any.whl", hash = "sha256:d0ca74b188d5397be78a5be11322ca0841738b73f3e27986a6f8eb7e799d2d73", size = 52909, upload-time = "2025-10-27T21:10:04.138Z" },
+]
+
+[[package]]
 name = "pillow"
 version = "12.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3509,6 +3554,7 @@ dependencies = [
 all = [
     { name = "anndata" },
     { name = "bokeh" },
+    { name = "deeptime" },
     { name = "hdbscan" },
     { name = "igraph" },
     { name = "ipython" },
@@ -3519,6 +3565,7 @@ all = [
     { name = "notebook" },
     { name = "pillow" },
     { name = "pygraphviz" },
+    { name = "pygsp" },
     { name = "pypdf" },
     { name = "pytest" },
     { name = "python-louvain" },
@@ -3554,8 +3601,12 @@ dev = [
     { name = "wily" },
     { name = "xenon" },
 ]
+diffusion = [
+    { name = "pygsp" },
+]
 experimental-gpl = [
     { name = "graphtools" },
+    { name = "phate" },
 ]
 scrna = [
     { name = "anndata" },
@@ -3563,6 +3614,9 @@ scrna = [
     { name = "requests" },
     { name = "scanpy", version = "1.11.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scanpy", version = "1.12.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+trajectory = [
+    { name = "deeptime" },
 ]
 viz = [
     { name = "bokeh" },
@@ -3581,6 +3635,8 @@ requires-dist = [
     { name = "biopython", marker = "extra == 'brancharchitect'", specifier = ">=1.85" },
     { name = "bokeh", marker = "extra == 'all'", specifier = ">=3.0.0" },
     { name = "bokeh", marker = "extra == 'viz'", specifier = ">=3.0.0" },
+    { name = "deeptime", marker = "extra == 'all'", specifier = ">=0.4.5" },
+    { name = "deeptime", marker = "extra == 'trajectory'", specifier = ">=0.4.5" },
     { name = "graphtools", marker = "extra == 'experimental-gpl'", specifier = ">=2.1.0" },
     { name = "hdbscan", marker = "extra == 'all'", specifier = ">=0.8.41" },
     { name = "hdbscan", marker = "extra == 'benchmark'", specifier = ">=0.8.41" },
@@ -3604,6 +3660,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.24.0,<2.4" },
     { name = "orjson", marker = "extra == 'brancharchitect'", specifier = ">=3.10.0" },
     { name = "pandas", specifier = ">=2.0.0" },
+    { name = "phate", marker = "extra == 'experimental-gpl'", specifier = ">=2.0.0" },
     { name = "pillow", marker = "extra == 'all'", specifier = ">=10.0.0" },
     { name = "pillow", marker = "extra == 'scrna'", specifier = ">=10.0.0" },
     { name = "pillow", marker = "extra == 'viz'", specifier = ">=10.0.0" },
@@ -3611,6 +3668,8 @@ requires-dist = [
     { name = "pydiffmap", specifier = ">=0.2.0.1" },
     { name = "pygraphviz", marker = "extra == 'all'", specifier = ">=2.0" },
     { name = "pygraphviz", marker = "extra == 'viz'", specifier = ">=2.0" },
+    { name = "pygsp", marker = "extra == 'all'", specifier = ">=0.6.1" },
+    { name = "pygsp", marker = "extra == 'diffusion'", specifier = ">=0.6.1" },
     { name = "pypdf", marker = "extra == 'all'", specifier = ">=5.0.0" },
     { name = "pypdf", marker = "extra == 'dev'", specifier = ">=5.0.0" },
     { name = "pypdf", marker = "extra == 'viz'", specifier = ">=5.0.0" },
@@ -3638,7 +3697,7 @@ requires-dist = [
     { name = "xenon", marker = "extra == 'all'" },
     { name = "xenon", marker = "extra == 'dev'" },
 ]
-provides-extras = ["dev", "benchmark", "viz", "all", "experimental-gpl", "brancharchitect", "scrna"]
+provides-extras = ["dev", "benchmark", "diffusion", "trajectory", "viz", "all", "experimental-gpl", "brancharchitect", "scrna"]
 
 [[package]]
 name = "typing-extensions"

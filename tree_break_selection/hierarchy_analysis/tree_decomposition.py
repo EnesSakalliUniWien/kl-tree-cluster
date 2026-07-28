@@ -9,18 +9,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from ..tree.feature_space import FeatureSpace
     from ..tree.poset_tree import PosetTree
 
 import pandas as pd
 
 from ..core_utils.data_utils import extract_bool_column_dict
-from ..tree.distributions import (
-    DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT,
-    DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
-    validate_continuous_covariance_min_child_leaf_count,
-    validate_continuous_covariance_policy,
-)
 from .cluster_assignments import ClusterBoundary, build_cluster_assignments
 from .decomposition.gates.annotation_bundle import GateAnnotationBundle
 from .decomposition.gates.column_contracts import (
@@ -28,37 +21,16 @@ from .decomposition.gates.column_contracts import (
     validate_sibling_gate_columns,
 )
 from .decomposition.gates.gate_evaluator import GateEvaluator, TraversalDecision
-from .decomposition.gates.orchestrator import (
-    SiblingGateProfile,
-    build_gate_annotation_config_metadata,
-    build_gate_annotation_leaf_data_metadata,
-    resolve_sibling_gate_profile_config,
-    run_gate_annotation_pipeline,
-)
-from .decomposition.gates.spectral_transport import (
-    DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE,
-    DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
-    DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY,
-)
-from .statistics.alpha_contract import DEFAULT_EDGE_ALPHA, DEFAULT_SIBLING_ALPHA
-from .statistics.branch_length_utils import (
-    EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
-    validate_edge_branch_length_variance_policy,
-)
-from .statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
-    EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
-)
-from .statistics.projection.spectral.tree_estimator import (
-    INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-)
-from .statistics.sibling_divergence.inflation_correction.empirical_null_inflation_estimation import (
-    DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
-)
-from .statistics.sibling_divergence.inflation_correction.types.inflation_model import (
-    CalibrationSupportThresholds,
-)
 
 TraceLevel = Literal["compact", "full"]
+
+_SELECTED_FAMILY_PASSTHROUGH_SCOPES = frozenset(
+    {
+        "passthrough_descendant",
+        "global_sibling_min_passthrough_descendant",
+        "global_sibling_min_passthrough_descendant_refined",
+    }
+)
 
 
 def validate_trace_level(trace_level: str) -> TraceLevel:
@@ -97,207 +69,70 @@ class TreeDecomposition:
         annotations_df: pd.DataFrame | None = None,
         *,
         gate_annotation_bundle: GateAnnotationBundle | None = None,
-        edge_alpha: float = DEFAULT_EDGE_ALPHA,
-        sibling_alpha: float = DEFAULT_SIBLING_ALPHA,
-        leaf_data: pd.DataFrame | None = None,
-        feature_space: FeatureSpace | None = None,
-        spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
-        adaptive_projection_dimension_energy_fraction: float | None = None,
-        spectral_include_internal_barycenters: bool = False,
-        spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-        continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
-        continuous_covariance_min_child_leaf_count: int = (
-            DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
-        ),
-        edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
-        sibling_gate_profile: str | SiblingGateProfile | None = None,
-        sibling_gate_method: str = "projected_wald_inflation",
-        sibling_gate_alpha_penalty: float = 1.0,
-        root_stability_guard_threshold: float | None = None,
-        root_stability_subsample_replicates: int = 0,
-        root_stability_feature_fraction: float = 0.8,
-        root_stability_seed: int = 0,
-        root_stability_tree_distance_metric: str = "hamming",
-        root_stability_tree_linkage_method: str = "average",
-        root_selective_permutation_guard_replicates: int = 0,
-        root_selective_permutation_guard_seed: int = 0,
-        root_selective_permutation_guard_alpha: float | None = None,
-        root_selective_permutation_guard_scope: str = "root",
-        root_selective_permutation_guard_tree_distance_metric: str = "hamming",
-        root_selective_permutation_guard_tree_linkage_method: str = "average",
-        enforce_internal_support_thresholds: bool = False,
-        internal_support_thresholds: CalibrationSupportThresholds = (
-            DEFAULT_INTERNAL_SUPPORT_THRESHOLDS
-        ),
+        selected_family_passthrough_guard: bool = False,
         spectral_transport_passthrough_guard: bool = False,
-        spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
-        spectral_transport_require_mp_blocks: bool = True,
-        spectral_transport_block_log_tolerance: float = (
-            DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
-        ),
-        spectral_transport_unmatched_mode_penalty: float = (
-            DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
-        ),
         passthrough: bool = True,
         trace_level: TraceLevel = "compact",
     ):
-        """Configure decomposition thresholds and pre-compute reusable metadata.
+        """Configure traversal over completed statistical gate annotations.
 
         Parameters
         ----------
         tree
             Directed hierarchy (typically a :class:`~tree.poset_tree.PosetTree`).
         annotations_df
-            DataFrame of statistical annotations (e.g., columns produced by
-            ``hierarchy_analysis.statistics`` helpers). Used as input to the
-            gate annotation pipeline.
+            Explicit traversal decisions. Only the three gate-decision columns
+            consumed by traversal are required; statistical provenance is
+            available only through ``gate_annotation_bundle``.
         gate_annotation_bundle
-            Explicit reusable output from ``run_gate_annotation_pipeline``.
-            This is the only cache-valid gate annotation contract.
-        edge_alpha
-            Significance level used by the child-parent edge-divergence gate.
-        sibling_alpha
-            Significance level used by sibling-divergence annotations and gating.
-        sibling_gate_method
-            Sibling gate strategy. The default keeps the current projected-Wald
-            inflation path. Fixed-subspace methods avoid parent PCA/dimension
-            selection in the sibling statistic.
-        sibling_gate_profile
-            Optional named profile that expands to an auditable fixed-gate
-            method, selected-topology penalty, root-stability guard, and
-            optional selected-root permutation guard.
-        sibling_gate_alpha_penalty
-            Positive divisor applied to ``sibling_alpha`` before sibling FDR.
-            This exposes the selected-topology penalty used by fixed-gate
-            diagnostics without changing the default effective alpha.
-        root_stability_guard_threshold
-            Optional fail-closed root guard. When configured, the root sibling
-            gate is closed if its feature-subsample root stability ARI falls
-            below this threshold.
-        leaf_data
-            Raw feature matrix required for per-node spectral dimension estimation.
-            Missing leaf data is a contract error for the gate annotation pipeline.
+            Completed output from ``run_gate_annotation_pipeline``. Its metadata
+            owns traversal guard behavior.
+        selected_family_passthrough_guard
+            Use selected-family blocking columns when traversing a direct
+            annotations frame.
+        spectral_transport_passthrough_guard
+            Use spectral-transport support columns when traversing a direct
+            annotations frame.
         """
         if annotations_df is not None and gate_annotation_bundle is not None:
             raise ValueError("Pass either annotations_df or gate_annotation_bundle, not both.")
+        if annotations_df is None and gate_annotation_bundle is None:
+            raise ValueError("annotations_df or gate_annotation_bundle is required.")
+        if gate_annotation_bundle is not None and (
+            selected_family_passthrough_guard or spectral_transport_passthrough_guard
+        ):
+            raise ValueError(
+                "GateAnnotationBundle metadata owns passthrough guard behavior; "
+                "do not pass raw-annotation guard flags with a bundle."
+            )
 
         self.tree = tree
-        self._gate_annotation_bundle = gate_annotation_bundle
+        self._node_ids = tuple(self.tree.nodes)
         if gate_annotation_bundle is not None:
-            self.annotations_df = gate_annotation_bundle.annotated_df
-        elif annotations_df is not None:
-            self.annotations_df = annotations_df
-        else:
-            self.annotations_df = pd.DataFrame()
-        self.edge_alpha = float(edge_alpha)
-        self.sibling_alpha = float(sibling_alpha)
-        self._leaf_data = leaf_data
-        self._feature_space = feature_space
-        self._trace_level = validate_trace_level(str(trace_level))
-        self._spectral_minimum_dimension = int(spectral_minimum_dimension)
-        self._adaptive_projection_dimension_energy_fraction = (
-            None
-            if adaptive_projection_dimension_energy_fraction is None
-            else float(adaptive_projection_dimension_energy_fraction)
-        )
-        self._spectral_include_internal_barycenters = bool(spectral_include_internal_barycenters)
-        self._spectral_internal_distribution_mode = str(spectral_internal_distribution_mode)
-        self._continuous_covariance_policy = validate_continuous_covariance_policy(
-            continuous_covariance_policy
-        )
-        self._continuous_covariance_min_child_leaf_count = (
-            validate_continuous_covariance_min_child_leaf_count(
-                continuous_covariance_min_child_leaf_count
+            self.annotations_df = self._validated_gate_annotation_bundle(gate_annotation_bundle)
+            gate_config = gate_annotation_bundle.metadata.config
+            self._selected_family_passthrough_guard = (
+                gate_config.root_selective_permutation_guard_scope
+                in _SELECTED_FAMILY_PASSTHROUGH_SCOPES
             )
-        )
-        self._edge_branch_length_variance_policy = validate_edge_branch_length_variance_policy(
-            edge_branch_length_variance_policy
-        )
-        (
-            self._sibling_gate_profile_id,
-            self._sibling_gate_method,
-            self._sibling_gate_alpha_penalty,
-            self._root_stability_guard_threshold,
-            self._root_stability_subsample_replicates,
-            self._root_stability_feature_fraction,
-            self._root_stability_seed,
-            resolved_root_selective_permutation_guard_replicates,
-            resolved_root_selective_permutation_guard_seed,
-            resolved_root_selective_permutation_guard_alpha,
-            resolved_root_selective_permutation_guard_scope,
-            resolved_spectral_transport_passthrough_guard,
-            resolved_spectral_transport_max_cost,
-            resolved_spectral_transport_require_mp_blocks,
-            resolved_spectral_transport_block_log_tolerance,
-            resolved_spectral_transport_unmatched_mode_penalty,
-        ) = resolve_sibling_gate_profile_config(
-            sibling_gate_profile=sibling_gate_profile,
-            sibling_gate_method=sibling_gate_method,
-            sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
-            root_stability_guard_threshold=root_stability_guard_threshold,
-            root_stability_subsample_replicates=root_stability_subsample_replicates,
-            root_stability_feature_fraction=root_stability_feature_fraction,
-            root_stability_seed=root_stability_seed,
-            root_selective_permutation_guard_replicates=(
-                root_selective_permutation_guard_replicates
-            ),
-            root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
-            root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
-            root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
-            spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
-            spectral_transport_max_cost=spectral_transport_max_cost,
-            spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
-            spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
-            spectral_transport_unmatched_mode_penalty=spectral_transport_unmatched_mode_penalty,
-        )
-        self._enforce_internal_support_thresholds = bool(enforce_internal_support_thresholds)
-        self._root_stability_tree_distance_metric = str(root_stability_tree_distance_metric)
-        self._root_stability_tree_linkage_method = str(root_stability_tree_linkage_method)
-        self._root_selective_permutation_guard_replicates = int(
-            resolved_root_selective_permutation_guard_replicates
-        )
-        self._root_selective_permutation_guard_seed = int(
-            resolved_root_selective_permutation_guard_seed
-        )
-        self._root_selective_permutation_guard_alpha = (
-            None
-            if resolved_root_selective_permutation_guard_alpha is None
-            else float(resolved_root_selective_permutation_guard_alpha)
-        )
-        self._root_selective_permutation_guard_scope = str(
-            resolved_root_selective_permutation_guard_scope
-        )
-        self._root_selective_permutation_guard_tree_distance_metric = str(
-            root_selective_permutation_guard_tree_distance_metric
-        )
-        self._root_selective_permutation_guard_tree_linkage_method = str(
-            root_selective_permutation_guard_tree_linkage_method
-        )
-        self._internal_support_thresholds = internal_support_thresholds
-        self._spectral_transport_passthrough_guard = bool(
-            resolved_spectral_transport_passthrough_guard
-        )
-        self._spectral_transport_max_cost = float(resolved_spectral_transport_max_cost)
-        self._spectral_transport_require_mp_blocks = bool(
-            resolved_spectral_transport_require_mp_blocks
-        )
-        self._spectral_transport_block_log_tolerance = float(
-            resolved_spectral_transport_block_log_tolerance
-        )
-        self._spectral_transport_unmatched_mode_penalty = float(
-            resolved_spectral_transport_unmatched_mode_penalty
-        )
+            self._spectral_transport_passthrough_guard = bool(
+                gate_config.spectral_transport_passthrough_guard
+            )
+            self._annotation_edge_alpha = float(gate_annotation_bundle.metadata.edge.alpha)
+            self._annotation_sibling_alpha = float(gate_annotation_bundle.metadata.sibling.alpha)
+        else:
+            self.annotations_df = self._validated_annotations(annotations_df)
+            self._selected_family_passthrough_guard = bool(selected_family_passthrough_guard)
+            self._spectral_transport_passthrough_guard = bool(spectral_transport_passthrough_guard)
+            self._annotation_edge_alpha = None
+            self._annotation_sibling_alpha = None
+        self._trace_level = validate_trace_level(str(trace_level))
 
         # ----- root -----
         self._root = self.tree.root()
 
-        self._node_ids = tuple(self.tree.nodes)
-
         # ----- leaf partitions & counts (poset view) -----
         self._descendant_leaf_sets = self.tree.compute_descendant_sets(use_labels=True)
-
-        # ----- ensure statistical annotations are present -----
-        self.annotations_df = self._prepare_annotations(self.annotations_df)
 
         self._edge_divergent = self._extract_required_bool_annotation_column(
             "Child_Parent_Divergence_Significant"
@@ -333,11 +168,7 @@ class TreeDecomposition:
     # ---------- initialization helpers ----------
 
     def _uses_selected_family_passthrough_guard(self) -> bool:
-        return self._root_selective_permutation_guard_scope in {
-            "passthrough_descendant",
-            "global_sibling_min_passthrough_descendant",
-            "global_sibling_min_passthrough_descendant_refined",
-        }
+        return self._selected_family_passthrough_guard
 
     def _annotation_bool_value(self, node: object, column: str) -> bool:
         if column not in self.annotations_df.columns or node not in self.annotations_df.index:
@@ -403,156 +234,36 @@ class TreeDecomposition:
             bottlenecks[node] = ";".join(reason for reason in reasons if reason)
         return bottlenecks
 
-    def _prepare_annotations(self, annotations_df: pd.DataFrame) -> pd.DataFrame:
-        """Ensure statistical annotation columns are present on *annotations_df*.
-
-        Reuses precomputed gate annotations only when they are supplied as an
-        explicit ``GateAnnotationBundle`` whose metadata matches this
-        decomposition request.
-        """
-        if self._gate_annotation_bundle is not None and self._can_reuse_gate_annotation_bundle(
-            self._gate_annotation_bundle
-        ):
-            return self._gate_annotation_bundle.annotated_df
-
-        annotation_bundle = run_gate_annotation_pipeline(
-            self.tree,
-            annotations_df,
-            edge_alpha=self.edge_alpha,
-            sibling_alpha=self.sibling_alpha,
-            leaf_data=self._leaf_data,
-            feature_space=self._feature_space,
-            spectral_minimum_dimension=self._spectral_minimum_dimension,
-            adaptive_projection_dimension_energy_fraction=(
-                self._adaptive_projection_dimension_energy_fraction
-            ),
-            spectral_include_internal_barycenters=(self._spectral_include_internal_barycenters),
-            spectral_internal_distribution_mode=(self._spectral_internal_distribution_mode),
-            continuous_covariance_policy=self._continuous_covariance_policy,
-            continuous_covariance_min_child_leaf_count=(
-                self._continuous_covariance_min_child_leaf_count
-            ),
-            edge_branch_length_variance_policy=(self._edge_branch_length_variance_policy),
-            sibling_gate_profile=self._sibling_gate_profile_id,
-            sibling_gate_method=self._sibling_gate_method,
-            sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
-            root_stability_guard_threshold=self._root_stability_guard_threshold,
-            root_stability_subsample_replicates=(self._root_stability_subsample_replicates),
-            root_stability_feature_fraction=self._root_stability_feature_fraction,
-            root_stability_seed=self._root_stability_seed,
-            root_stability_tree_distance_metric=(self._root_stability_tree_distance_metric),
-            root_stability_tree_linkage_method=(self._root_stability_tree_linkage_method),
-            root_selective_permutation_guard_replicates=(
-                self._root_selective_permutation_guard_replicates
-            ),
-            root_selective_permutation_guard_seed=(self._root_selective_permutation_guard_seed),
-            root_selective_permutation_guard_alpha=(self._root_selective_permutation_guard_alpha),
-            root_selective_permutation_guard_scope=(self._root_selective_permutation_guard_scope),
-            root_selective_permutation_guard_tree_distance_metric=(
-                self._root_selective_permutation_guard_tree_distance_metric
-            ),
-            root_selective_permutation_guard_tree_linkage_method=(
-                self._root_selective_permutation_guard_tree_linkage_method
-            ),
-            enforce_internal_support_thresholds=(self._enforce_internal_support_thresholds),
-            internal_support_thresholds=self._internal_support_thresholds,
-            spectral_transport_passthrough_guard=(self._spectral_transport_passthrough_guard),
-            spectral_transport_max_cost=self._spectral_transport_max_cost,
-            spectral_transport_require_mp_blocks=(self._spectral_transport_require_mp_blocks),
-            spectral_transport_block_log_tolerance=(self._spectral_transport_block_log_tolerance),
-            spectral_transport_unmatched_mode_penalty=(
-                self._spectral_transport_unmatched_mode_penalty
-            ),
-        )
-        self._gate_annotation_bundle = annotation_bundle
-        return annotation_bundle.annotated_df
-
-    def _can_reuse_gate_annotation_bundle(
-        self,
-        gate_annotation_bundle: GateAnnotationBundle,
-    ) -> bool:
-        """Return whether existing gate annotations can be trusted as current."""
-        annotations_df = gate_annotation_bundle.annotated_df
-        if annotations_df.empty:
-            return False
-
-        validate_edge_gate_columns(annotations_df)
-        validate_sibling_gate_columns(annotations_df)
-
+    def _validated_annotations(self, annotations_df: pd.DataFrame | None) -> pd.DataFrame:
+        """Validate explicit gate decisions for every tree node."""
+        if annotations_df is None or annotations_df.empty:
+            raise ValueError("Traversal annotations must be non-empty.")
         required_gate_decision_columns = (
             "Child_Parent_Divergence_Significant",
             "Sibling_BH_Different",
             "Sibling_Divergence_Skipped",
         )
         if any(column not in annotations_df.columns for column in required_gate_decision_columns):
-            return False
+            raise ValueError("Traversal annotations are missing decision columns.")
         if any(annotations_df[column].isna().any() for column in required_gate_decision_columns):
-            return False
+            raise ValueError("Traversal decision columns must not contain missing values.")
         if set(self._node_ids) - set(annotations_df.index):
-            return False
+            raise ValueError("Traversal annotations must cover every tree node.")
+        return annotations_df
 
+    def _validated_gate_annotation_bundle(
+        self,
+        gate_annotation_bundle: GateAnnotationBundle,
+    ) -> pd.DataFrame:
+        """Validate the owned output contract from the gate annotation module."""
         metadata = gate_annotation_bundle.metadata
-
-        return (
-            metadata.pipeline == "gate_annotation"
-            and metadata.edge.alpha == self.edge_alpha
-            and metadata.sibling.alpha == self.sibling_alpha
-            and metadata.config
-            == build_gate_annotation_config_metadata(
-                spectral_minimum_dimension=self._spectral_minimum_dimension,
-                adaptive_projection_dimension_energy_fraction=(
-                    self._adaptive_projection_dimension_energy_fraction
-                ),
-                spectral_include_internal_barycenters=(self._spectral_include_internal_barycenters),
-                spectral_internal_distribution_mode=(self._spectral_internal_distribution_mode),
-                continuous_covariance_policy=self._continuous_covariance_policy,
-                continuous_covariance_min_child_leaf_count=(
-                    self._continuous_covariance_min_child_leaf_count
-                ),
-                edge_branch_length_variance_policy=(self._edge_branch_length_variance_policy),
-                sibling_gate_profile_id=self._sibling_gate_profile_id,
-                sibling_gate_method=self._sibling_gate_method,
-                sibling_gate_alpha_penalty=self._sibling_gate_alpha_penalty,
-                root_stability_guard_threshold=self._root_stability_guard_threshold,
-                root_stability_subsample_replicates=(self._root_stability_subsample_replicates),
-                root_stability_feature_fraction=self._root_stability_feature_fraction,
-                root_stability_seed=self._root_stability_seed,
-                root_stability_tree_distance_metric=(self._root_stability_tree_distance_metric),
-                root_stability_tree_linkage_method=(self._root_stability_tree_linkage_method),
-                root_selective_permutation_guard_replicates=(
-                    self._root_selective_permutation_guard_replicates
-                ),
-                root_selective_permutation_guard_seed=(self._root_selective_permutation_guard_seed),
-                root_selective_permutation_guard_alpha=(
-                    self._root_selective_permutation_guard_alpha
-                ),
-                root_selective_permutation_guard_scope=(
-                    self._root_selective_permutation_guard_scope
-                ),
-                root_selective_permutation_guard_tree_distance_metric=(
-                    self._root_selective_permutation_guard_tree_distance_metric
-                ),
-                root_selective_permutation_guard_tree_linkage_method=(
-                    self._root_selective_permutation_guard_tree_linkage_method
-                ),
-                enforce_internal_support_thresholds=(self._enforce_internal_support_thresholds),
-                internal_support_thresholds=self._internal_support_thresholds,
-                spectral_transport_passthrough_guard=(self._spectral_transport_passthrough_guard),
-                spectral_transport_max_cost=self._spectral_transport_max_cost,
-                spectral_transport_require_mp_blocks=(self._spectral_transport_require_mp_blocks),
-                spectral_transport_block_log_tolerance=(
-                    self._spectral_transport_block_log_tolerance
-                ),
-                spectral_transport_unmatched_mode_penalty=(
-                    self._spectral_transport_unmatched_mode_penalty
-                ),
-            )
-            and metadata.leaf_data
-            == build_gate_annotation_leaf_data_metadata(
-                self._leaf_data,
-                feature_space=self._feature_space,
-            )
-        )
+        if metadata.pipeline != "gate_annotation":
+            raise ValueError("GateAnnotationBundle metadata.pipeline must be 'gate_annotation'.")
+        if metadata.edge.gate != "edge" or metadata.sibling.gate != "sibling":
+            raise ValueError("GateAnnotationBundle metadata contains invalid gate identities.")
+        validate_edge_gate_columns(gate_annotation_bundle.annotated_df)
+        validate_sibling_gate_columns(gate_annotation_bundle.annotated_df)
+        return self._validated_annotations(gate_annotation_bundle.annotated_df)
 
     def _extract_required_bool_annotation_column(self, column_name: str) -> dict[object, bool]:
         """Extract a required boolean annotation column keyed by tree node id."""
@@ -957,8 +668,8 @@ class TreeDecomposition:
             "num_clusters": len(cluster_assignments),
             "traversal_counters": traversal_counters,
             "independence_analysis": {
-                "edge_alpha": self.edge_alpha,
-                "sibling_alpha": self.sibling_alpha,
+                "edge_alpha": self._annotation_edge_alpha,
+                "sibling_alpha": self._annotation_sibling_alpha,
                 "decision_mode": "sibling_divergence",
             },
         }

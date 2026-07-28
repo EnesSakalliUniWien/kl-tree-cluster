@@ -6,10 +6,6 @@ from typing import TYPE_CHECKING
 import networkx as nx
 
 from tree_break_selection.core_utils.tree_utils import compute_node_depths
-from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
-    DEFAULT_EDGE_ALPHA,
-    DEFAULT_SIBLING_ALPHA,
-)
 from tree_break_selection.tree.distributions import populate_distributions
 from tree_break_selection.tree.topology import (
     compute_descendant_leaf_sets,
@@ -22,9 +18,6 @@ from tree_break_selection.tree.topology import (
 if TYPE_CHECKING:
     import pandas as pd
 
-    from tree_break_selection.hierarchy_analysis.decomposition.gates.annotation_bundle import (
-        GateAnnotationBundle,
-    )
     from tree_break_selection.tree.feature_space import FeatureSpace
 
 
@@ -205,73 +198,6 @@ class PosetTree(nx.DiGraph):
         self.annotations_df = pd.DataFrame.from_records(node_records).set_index(
             "node_id", drop=True
         )
-
-    # ---------------- Decomposition helper ----------------
-
-    def decompose(
-        self,
-        annotations_df: pd.DataFrame | None = None,
-        gate_annotation_bundle: GateAnnotationBundle | None = None,
-        leaf_data: pd.DataFrame | None = None,
-        feature_space: FeatureSpace | None = None,
-        **decomposer_kwargs,
-    ) -> dict[str, object]:
-        """Run ``TreeDecomposition`` directly from the tree.
-
-        Parameters
-        ----------
-        annotations_df
-            Required statistics/annotations DataFrame when no gate annotation
-            bundle is provided.
-        gate_annotation_bundle
-            Explicit reusable output from ``run_gate_annotation_pipeline``.
-        leaf_data
-            Optional leaf-level probability DataFrame used by statistical gate
-            annotation.
-        **decomposer_kwargs
-            Extra keyword arguments forwarded to ``TreeDecomposition`` (e.g.,
-            ``edge_alpha``, ``sibling_alpha``).
-
-        Returns
-        -------
-        dict
-            Decomposition output from ``TreeDecomposition.decompose_tree``.
-        """
-        # Extract alpha values from kwargs using the canonical statistical defaults.
-        edge_alpha = decomposer_kwargs.pop("edge_alpha", DEFAULT_EDGE_ALPHA)
-        sibling_alpha = decomposer_kwargs.pop("sibling_alpha", DEFAULT_SIBLING_ALPHA)
-
-        if annotations_df is not None and gate_annotation_bundle is not None:
-            raise ValueError("Pass either annotations_df or gate_annotation_bundle, not both.")
-
-        if annotations_df is None and gate_annotation_bundle is None:
-            annotations_df = self.annotations_df
-
-        if annotations_df is None and gate_annotation_bundle is None:
-            raise ValueError(
-                "annotations_df or gate_annotation_bundle is required. Call "
-                "populate_node_divergences(leaf_data) first and pass "
-                "tree.annotations_df explicitly, or pass the bundle returned by "
-                "run_gate_annotation_pipeline."
-            )
-
-        from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
-
-        decomposer = TreeDecomposition(
-            tree=self,
-            annotations_df=annotations_df,
-            gate_annotation_bundle=gate_annotation_bundle,
-            edge_alpha=edge_alpha,
-            sibling_alpha=sibling_alpha,
-            leaf_data=leaf_data,
-            feature_space=feature_space,
-            **decomposer_kwargs,
-        )
-
-        # Cache annotated results back so annotations_df reflects the full pipeline
-        self.annotations_df = decomposer.annotations_df
-
-        return decomposer.decompose_tree()
 
     def build_sample_cluster_assignments(
         self, decomposition_results: dict[str, object]

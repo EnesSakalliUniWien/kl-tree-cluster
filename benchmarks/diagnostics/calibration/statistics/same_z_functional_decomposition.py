@@ -38,7 +38,7 @@ from benchmarks.diagnostics.calibration.selected.family.selected_family_traversa
     _profile_id_for_method,
     validate_methods,
 )
-from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
@@ -569,7 +569,7 @@ def run_same_z_functional_decomposition(
                 distance = pdist(data.to_numpy(dtype=float), metric="hamming")
                 for method_id in validated_methods:
                     try:
-                        result = _run_tbs_method(
+                        result = run_tbs_on_distance(
                             data,
                             distance,
                             sibling_significance_level=float(sibling_alpha),
@@ -577,6 +577,7 @@ def run_same_z_functional_decomposition(
                             edge_alpha=float(edge_alpha),
                             feature_space=feature_space,
                             sibling_gate_profile=_profile_id_for_method(method_id),
+                            trace_level="full",
                         )
                     except Exception as exc:  # pragma: no cover - diagnostic capture
                         failure_rows.append(

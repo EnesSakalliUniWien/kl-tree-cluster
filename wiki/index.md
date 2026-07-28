@@ -2,7 +2,7 @@
 title: Wiki Index
 type: control
 status: reviewed
-updated: 2026-07-27
+updated: 2026-07-28
 sources:
   - AGENTS.md
   - wiki/schema.md
@@ -36,6 +36,10 @@ renamed, or promoted.
 
 - [[project-overview]] - concise map of the Tree-Break Selection repository, source surfaces,
   method purpose, and implementation entry points.
+- [[adaptive-diffusion-nnls-method-library-audit]] - executed method and
+  dependency audit of pydiffmap topology plus fixed-topology NNLS branch time,
+  including duplicate-row failure, dual geometry, solver ambiguity, sampling
+  stability, and scaling limits.
 
 ### Tools
 
@@ -781,13 +785,17 @@ renamed, or promoted.
 ### Analyses
 
 - [[repository-hygiene-and-completion-audit-20260727]] - current repository
-  health and completion assessment: the full executable gate passes, while the
-  unpublished branch, divergent remote work, open calibration questions,
-  absent release automation, and large retained-evidence history prevent a
+  health and completion assessment: `dev` is published and only `main` and
+  `dev` remain, while unenforced benchmark acceptance, open calibration
+  questions, absent release automation, and retained-evidence policy prevent a
   finished-release claim.
 - [[method-application-and-plot-seams-20260727]] - ownership map separating
   reusable space-separation methods, endotype/scRNA/MNIST application adapters,
   plotting engines, benchmark validation, and maintenance scripts.
+- [[repository-execution-and-benchmark-map]] - current responsibility and
+  execution map across reusable methods, applications, plotting engines, and
+  benchmark claim levels; records the fresh smoke/regression results,
+  fail-closed calibration gaps, and measured runtime bottleneck.
 - [[tree-construction-method-map]] - exact map from feature geometry through
   linkage, neighbor joining, or IQ-TREE topology, rooting, `PosetTree`
   promotion, branch-length fitting, and application-specific use; also marks

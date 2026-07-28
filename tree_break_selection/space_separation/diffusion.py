@@ -4,11 +4,42 @@ from __future__ import annotations
 
 import math
 import numbers
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 from scipy.linalg import eigh
 from scipy.spatial.distance import pdist
+
+
+@dataclass(frozen=True)
+class DiffusionGeometry:
+    """Coordinates, pairwise distances, and evidence from one diffusion fit."""
+
+    coordinates: np.ndarray
+    distance_condensed: np.ndarray
+    metadata: dict[str, object]
+
+
+def _diffusion_geometry(
+    coordinates: np.ndarray,
+    *,
+    metadata: dict[str, object],
+) -> DiffusionGeometry:
+    """Build a validated diffusion result through one deep interface."""
+    values = np.asarray(coordinates, dtype=float)
+    if values.ndim != 2 or values.shape[0] < 2 or values.shape[1] < 1:
+        raise ValueError("Diffusion coordinates must be a non-empty two-dimensional matrix.")
+    if not np.isfinite(values).all():
+        raise ValueError("Diffusion coordinates contain non-finite values.")
+    distances = pdist(values, metric="euclidean")
+    if not np.isfinite(distances).all():
+        raise ValueError("Diffusion distances contain non-finite values.")
+    return DiffusionGeometry(
+        coordinates=values,
+        distance_condensed=distances,
+        metadata=dict(metadata),
+    )
 
 
 def resolve_neighbor_search_k(n_samples: int, k_neighbors: int) -> int:
@@ -105,18 +136,18 @@ def compute_diffusion_coordinates(
     return eigenvectors * (eigenvalues[None, :] ** diffusion_time)
 
 
-def hamming_knn_diffusion_distance(
+def hamming_knn_diffusion_geometry(
     data: pd.DataFrame | np.ndarray,
     k_neighbors: int,
     diffusion_time: int,
     n_components: int,
-) -> np.ndarray:
-    """Compute fixed-k Hamming-neighbor diffusion distance.
+) -> DiffusionGeometry:
+    """Compute fixed-k Hamming-neighbor diffusion geometry.
 
     The input contract is a binary or one-hot sample-by-feature matrix. The
     method symmetrizes ``1 - Hamming`` neighbor similarities, computes the
-    shared symmetric diffusion coordinates, and returns their condensed
-    Euclidean distance vector.
+    shared symmetric diffusion coordinates, and returns them with their
+    condensed Euclidean distances.
     """
 
     from scipy.sparse import lil_matrix
@@ -162,10 +193,23 @@ def hamming_knn_diffusion_distance(
         diffusion_time=diffusion_time,
         n_components=n_components,
     )
-    return pdist(diffusion_coordinates, metric="euclidean")
+    unique_rows, counts = np.unique(values, axis=0, return_counts=True)
+    return _diffusion_geometry(
+        diffusion_coordinates,
+        metadata={
+            "backend": "sklearn_hamming_knn",
+            "metric": "hamming",
+            "neighbor_search_k": int(neighbor_k),
+            "diffusion_time": int(diffusion_time),
+            "diffusion_components": int(diffusion_coordinates.shape[1]),
+            "unique_rows": int(len(unique_rows)),
+            "duplicate_rows": int(len(values) - len(unique_rows)),
+            "max_duplicate_count": int(counts.max(initial=0)),
+        },
+    )
 
 
-def adaptive_diffusion_distance(
+def adaptive_diffusion_geometry(
     data: pd.DataFrame | np.ndarray,
     *,
     k_neighbors: int,
@@ -174,9 +218,8 @@ def adaptive_diffusion_distance(
     metric: str,
     bandwidth_type: str | float | None,
     epsilon: str | float,
-    return_metadata: bool = False,
-) -> np.ndarray | tuple[np.ndarray, dict[str, object]]:
-    """Compute a variable-bandwidth pydiffmap diffusion distance."""
+) -> DiffusionGeometry:
+    """Compute variable-bandwidth pydiffmap diffusion geometry."""
 
     from pydiffmap import kernel
 
@@ -216,33 +259,33 @@ def adaptive_diffusion_distance(
         diffusion_time=diffusion_time,
         n_components=n_components,
     )
-    distances = pdist(coordinates, metric="euclidean")
-    if not return_metadata:
-        return distances
+    return _diffusion_geometry(
+        coordinates,
+        metadata={
+            "backend": "pydiffmap",
+            "metric": metric,
+            "neighbor_search_k": int(neighbor_k),
+            "bandwidth_type": (
+                bandwidth_type
+                if bandwidth_type is None or isinstance(bandwidth_type, str)
+                else float(bandwidth_type)
+            ),
+            "epsilon": float(epsilon_value),
+            "epsilon_method": epsilon_method,
+            "diffusion_time": int(diffusion_time),
+            "diffusion_components": int(coordinates.shape[1]),
+        },
+    )
 
-    metadata = {
-        "backend": "pydiffmap",
-        "metric": metric,
-        "neighbor_search_k": int(neighbor_k),
-        "bandwidth_type": (
-            bandwidth_type
-            if bandwidth_type is None or isinstance(bandwidth_type, str)
-            else float(bandwidth_type)
-        ),
-        "epsilon": float(epsilon_value),
-        "epsilon_method": epsilon_method,
-    }
-    return distances, metadata
 
-
-def block_diffusion_distance(
+def block_diffusion_geometry(
     coordinates: np.ndarray,
     *,
     k_neighbors: int,
     diffusion_time: int,
     n_components: int,
-) -> tuple[np.ndarray, dict[str, object]]:
-    """Compute fixed k-NN Gaussian diffusion distance in one spectral block."""
+) -> DiffusionGeometry:
+    """Compute fixed k-NN Gaussian diffusion geometry in one spectral block."""
 
     from scipy.sparse import lil_matrix
     from sklearn.neighbors import NearestNeighbors
@@ -291,20 +334,23 @@ def block_diffusion_distance(
         diffusion_time=diffusion_time,
         n_components=n_components,
     )
-    distances = pdist(diffusion_coordinates, metric="euclidean")
-    if not np.isfinite(distances).all() or np.allclose(distances, 0.0):
+    geometry = _diffusion_geometry(
+        diffusion_coordinates,
+        metadata={
+            "kernel": "knn_gaussian",
+            "metric": "euclidean",
+            "neighbor_search_k": int(neighbor_count - 1),
+            "epsilon": epsilon_value,
+            "diffusion_time": int(diffusion_time),
+            "diffusion_components": int(diffusion_coordinates.shape[1]),
+        },
+    )
+    if np.allclose(geometry.distance_condensed, 0.0):
         raise ValueError("Degenerate diffusion distances for block.")
-    return distances, {
-        "kernel": "knn_gaussian",
-        "metric": "euclidean",
-        "neighbor_search_k": int(neighbor_count - 1),
-        "epsilon": epsilon_value,
-        "diffusion_time": int(diffusion_time),
-        "diffusion_components": int(min(n_components, n_samples - 1)),
-    }
+    return geometry
 
 
-def block_adaptive_diffusion_distance(
+def block_adaptive_diffusion_geometry(
     coordinates: np.ndarray,
     *,
     k_neighbors: int,
@@ -313,8 +359,8 @@ def block_adaptive_diffusion_distance(
     metric: str,
     bandwidth_type: str | float | None,
     epsilon: str | float,
-) -> tuple[np.ndarray, dict[str, object]]:
-    """Compute adaptive diffusion distance in one spectral block."""
+) -> DiffusionGeometry:
+    """Compute adaptive diffusion geometry in one spectral block."""
 
     values = np.asarray(coordinates, dtype=float)
     if values.ndim != 2 or values.shape[0] < 3:
@@ -322,7 +368,7 @@ def block_adaptive_diffusion_distance(
     if not np.isfinite(values).all():
         raise ValueError("Block coordinates contain non-finite values.")
 
-    distances, metadata = adaptive_diffusion_distance(
+    geometry = adaptive_diffusion_geometry(
         values,
         k_neighbors=k_neighbors,
         diffusion_time=diffusion_time,
@@ -330,14 +376,15 @@ def block_adaptive_diffusion_distance(
         metric=metric,
         bandwidth_type=bandwidth_type,
         epsilon=epsilon,
-        return_metadata=True,
     )
-    distances = np.asarray(distances, dtype=float)
+    distances = np.asarray(geometry.distance_condensed, dtype=float)
     if not np.isfinite(distances).all() or np.allclose(distances, 0.0):
         raise ValueError("Degenerate adaptive diffusion distances for block.")
-    return distances, {
-        "kernel": "pydiffmap_adaptive",
-        **metadata,
-        "diffusion_time": int(diffusion_time),
-        "diffusion_components": int(min(n_components, values.shape[0] - 1)),
-    }
+    return DiffusionGeometry(
+        coordinates=geometry.coordinates,
+        distance_condensed=geometry.distance_condensed,
+        metadata={
+            "kernel": "pydiffmap_adaptive",
+            **geometry.metadata,
+        },
+    )

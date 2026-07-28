@@ -27,7 +27,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
@@ -491,7 +491,7 @@ def _collect_records_for_case(
     tuple[SiblingPairRecord, ...],
 ]:
     context = build_tbs_tree_context(case, populate_node_distributions=True)
-    edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+    edge_df, spectral_context = annotate_child_parent_divergence(
         context.tree,
         context.tree.annotations_df,
         significance_level_alpha=DEFAULT_EDGE_ALPHA,

@@ -29,7 +29,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     compute_whitened_wald_contrast,
@@ -1211,7 +1211,7 @@ def collect_observed_root_selected_region_row(
         near_active_absolute_tolerance=near_active_absolute_tolerance,
     )
 
-    edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+    edge_df, spectral_context = annotate_child_parent_divergence(
         context.tree,
         context.tree.annotations_df,
         significance_level_alpha=DEFAULT_EDGE_ALPHA,

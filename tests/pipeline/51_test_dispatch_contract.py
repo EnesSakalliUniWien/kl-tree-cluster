@@ -469,12 +469,14 @@ def test_method_registry_names_diffusion_methods_and_branch_lengths_explicitly()
     assert nn_diffusion.name == "TBS (Hamming NN Diffusion)"
     assert nn_params["diffusion_method"] == "hamming_nn_diffusion"
     assert nn_params["k_neighbors"] == 15
+    assert nn_params["tree_linkage_method"] == "average"
     assert nn_params["branch_length_optimization_method"] == "linkage_ultrametric"
 
     assert adaptive_diffusion.name == "TBS (Adaptive pydiffmap Diffusion)"
     assert adaptive_params["diffusion_method"] == "adaptive_pydiffmap_diffusion"
     assert adaptive_params["bandwidth_type"] == "-1/(d+2)"
     assert adaptive_params["epsilon"] == "median"
+    assert adaptive_params["tree_linkage_method"] == "average"
     assert adaptive_params["branch_length_optimization_method"] == "linkage_ultrametric"
 
     assert adaptive_nnls_diffusion.name == ("TBS (Adaptive pydiffmap Diffusion, NNLS Branch-Time)")

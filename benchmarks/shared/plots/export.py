@@ -124,82 +124,6 @@ def _tree_plot_style(tree, decomposition: dict) -> dict[str, object]:
     }
 
 
-def create_umap_plots_from_results(
-    test_results: list[ComputedResultRecord],
-    output_dir: Path,
-    timestamp: str | None = None,
-    verbose: bool = True,
-    save: bool = True,
-    collect: bool = False,
-    collected: list | None = None,
-    *,
-    pdf: PdfPages | None = None,
-) -> list:
-    if save:
-        output_dir.mkdir(exist_ok=True)
-    figs: list = collected if collected is not None else []
-
-    results_by_case = {}
-    for result in test_results:
-        case_num = result.test_case_num
-        results_by_case.setdefault(case_num, []).append(result)
-
-    for case_num, case_results in results_by_case.items():
-        if not case_results:
-            continue
-
-        first_result = case_results[0]
-        meta = first_result.meta
-        if verbose:
-            print(f"  Creating UMAP comparison plot for test case {case_num}...")
-
-        labels_to_plot = {"Ground Truth": first_result.y_true}
-        for res in case_results:
-            method_name = res.method_name
-            params = res.params
-            param_str = format_params_for_display(params)
-
-            unique_key = f"{method_name} ({param_str})" if param_str else method_name
-            metrics_text = _format_ari_nmi(res, compact=True)
-            if metrics_text:
-                unique_key = f"{unique_key} [{metrics_text}]"
-            if res.labels is not None:
-                labels_to_plot[unique_key] = res.labels
-
-        _cache_key = f"{meta['name']}_n{meta['n_samples']}"
-
-        umap_figs = create_clustering_comparison_plots(
-            X_original=first_result.x_original,
-            labels_dict=labels_to_plot,
-            test_case_num=case_num,
-            meta=meta,
-            cache_key=_cache_key,
-        )
-        n_pages = len(umap_figs)
-        for page_idx, fig in enumerate(umap_figs, start=1):
-            page_suffix = f"_p{page_idx}" if n_pages > 1 else ""
-            if pdf is not None:
-                prepare_pdf_figure(fig)
-                pdf.savefig(fig)
-                plt.close(fig)
-            elif save:
-                filename = (
-                    f"umap_comparison_case_{case_num}{page_suffix}_{timestamp}.png"
-                    if timestamp
-                    else f"umap_comparison_case_{case_num}{page_suffix}.png"
-                )
-                fig.savefig(output_dir / filename, dpi=200, bbox_inches="tight")
-                plt.close(fig)
-            elif collect:
-                figs.append({"figure": fig, "test_case_num": case_num})
-            else:
-                plt.close(fig)
-        if not collect:
-            plt.close("all")
-
-    return figs
-
-
 def _group_results_by_case(
     test_results: list[ComputedResultRecord],
 ) -> dict[int, list[ComputedResultRecord]]:
@@ -345,7 +269,7 @@ def _create_tree_panel_renderers_for_case(
     return panels
 
 
-def create_umap_then_tree_plots_from_results(
+def create_case_report_pages_from_results(
     test_results: list[ComputedResultRecord],
     output_dir: Path,
     timestamp: str | None = None,
@@ -356,99 +280,7 @@ def create_umap_then_tree_plots_from_results(
     *,
     pdf: PdfPages | None = None,
 ) -> list:
-    """For each test case: render UMAP grid, then the matching tree grid (if available)."""
-    if save:
-        output_dir.mkdir(exist_ok=True)
-    figs: list = collected if collected is not None else []
-
-    results_by_case = _group_results_by_case(test_results)
-
-    for case_num, case_results in sorted(results_by_case.items()):
-        if not case_results:
-            continue
-
-        first_result = case_results[0]
-        meta = first_result.meta
-        if verbose:
-            print(f"  Creating UMAP→Tree plots for test case {case_num}...")
-
-        labels_to_plot = {"Ground Truth": first_result.y_true}
-        for res in case_results:
-            method_name = res.method_name
-            params = res.params
-            param_str = format_params_for_display(params)
-            unique_key = f"{method_name} ({param_str})" if param_str else method_name
-            metrics_text = _format_ari_nmi(res, compact=True)
-            if metrics_text:
-                unique_key = f"{unique_key} [{metrics_text}]"
-            if res.labels is not None:
-                labels_to_plot[unique_key] = res.labels
-
-        _cache_key = f"{meta['name']}_n{meta['n_samples']}"
-
-        umap_figs = create_clustering_comparison_plots(
-            X_original=first_result.x_original,
-            labels_dict=labels_to_plot,
-            test_case_num=case_num,
-            meta=meta,
-            cache_key=_cache_key,
-        )
-        n_pages = len(umap_figs)
-        for page_idx, umap_fig in enumerate(umap_figs, start=1):
-            page_suffix = f"_p{page_idx}" if n_pages > 1 else ""
-            umap_filename = (
-                f"umap_comparison_case_{case_num}{page_suffix}_{timestamp}.png"
-                if timestamp
-                else f"umap_comparison_case_{case_num}{page_suffix}.png"
-            )
-            _save_or_collect_figure(
-                umap_fig,
-                pdf=pdf,
-                save=save,
-                collect=collect,
-                figs=figs,
-                output_path=(output_dir / umap_filename) if save else None,
-                test_case_num=case_num,
-            )
-        if not collect:
-            plt.close("all")
-
-        tree_figs = _create_tree_figures_for_case(case_num=case_num, case_results=case_results)
-        if not tree_figs:
-            continue
-        for tree_idx, tree_fig in enumerate(tree_figs, start=1):
-            tree_filename = (
-                f"tree_case_{case_num}_{tree_idx}_{timestamp}.png"
-                if timestamp
-                else f"tree_case_{case_num}_{tree_idx}.png"
-            )
-            _save_or_collect_figure(
-                tree_fig,
-                pdf=pdf,
-                save=save,
-                collect=collect,
-                figs=figs,
-                output_path=(output_dir / tree_filename) if save else None,
-                test_case_num=case_num,
-            )
-        if not collect:
-            plt.close("all")
-
-    return figs
-
-
-def create_tree_then_umap_plots_from_results(
-    test_results: list[ComputedResultRecord],
-    output_dir: Path,
-    timestamp: str | None = None,
-    verbose: bool = True,
-    save: bool = True,
-    collect: bool = False,
-    collected: list | None = None,
-    *,
-    pdf: PdfPages | None = None,
-) -> list:
-    """For each test case: render tree pages first, then UMAP comparison pages."""
+    """Render each case's tree pages followed by its UMAP comparison pages."""
     if save:
         output_dir.mkdir(exist_ok=True)
     figs: list = collected if collected is not None else []
@@ -572,17 +404,15 @@ def create_umap_3d_plots_from_results(
             meta=result.meta,
             title=title,
         )
-        if pdf is not None:
-            prepare_pdf_figure(fig)
-            pdf.savefig(fig)
-            plt.close(fig)
-        elif save:
-            fig.savefig(output_dir / filename, dpi=200, bbox_inches="tight")
-            plt.close(fig)
-        elif collect:
-            figs.append({"figure": fig, "test_case_num": i})
-        else:
-            plt.close(fig)
+        _save_or_collect_figure(
+            fig,
+            pdf=pdf,
+            save=save,
+            collect=collect,
+            figs=figs,
+            output_path=(output_dir / filename) if save else None,
+            test_case_num=i,
+        )
         if not collect:
             plt.close("all")
     return figs
@@ -637,19 +467,17 @@ def create_manifold_plots_from_results(
             y_true=result.y_true,
             title=title,
         )
-        if pdf is not None:
-            prepare_pdf_figure(fig)
-            pdf.savefig(fig)
-            plt.close(fig)
-        elif save:
-            fig.savefig(output_dir / filename, dpi=200, bbox_inches="tight")
-            if verbose:
-                print(f"    Saved manifold diagnostics (r={mantel_r:.2f}, p={mantel_p:.3f})")
-            plt.close(fig)
-        elif collect:
-            figs.append({"figure": fig, "test_case_num": i})
-        else:
-            plt.close(fig)
+        _save_or_collect_figure(
+            fig,
+            pdf=pdf,
+            save=save,
+            collect=collect,
+            figs=figs,
+            output_path=(output_dir / filename) if save else None,
+            test_case_num=i,
+        )
+        if save and pdf is None and verbose:
+            print(f"    Saved manifold diagnostics (r={mantel_r:.2f}, p={mantel_p:.3f})")
         if not collect:
             plt.close("all")
     return figs
@@ -707,11 +535,9 @@ def create_tree_plots_from_results(
 
 
 __all__ = [
-    "create_umap_plots_from_results",
+    "create_case_report_pages_from_results",
     "create_umap_3d_plots_from_results",
     "create_manifold_plots_from_results",
     "create_tree_plots_from_results",
-    "create_umap_then_tree_plots_from_results",
-    "create_tree_then_umap_plots_from_results",
     "DEFAULT_BENCHMARK_TREE_LAYOUT",
 ]

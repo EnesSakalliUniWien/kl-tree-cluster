@@ -181,6 +181,16 @@ uv venv --python 3.11 .venv
 uv sync --extra dev --extra benchmark --extra viz --locked
 ```
 
+Graph-diffusion and temporal-trajectory experiments are isolated in named
+extras:
+
+```bash
+uv sync --extra diffusion --extra trajectory --locked
+```
+
+`diffusion` installs PyGSP. `trajectory` installs deeptime. PHATE is GPLv2 and
+therefore remains isolated with graphtools in `experimental-gpl`.
+
 For the full repository test suite, include the scRNA and optional GPL extras.
 Several full-suite tests import or exercise Scanpy/AnnData and graphtools
 paths that are intentionally outside the lean development environment.

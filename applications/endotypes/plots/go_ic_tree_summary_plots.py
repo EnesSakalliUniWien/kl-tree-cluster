@@ -28,9 +28,9 @@ from sklearn.manifold import MDS
 from statsmodels.stats.multitest import multipletests
 from tree_break_selection.space_separation import (
     SpectralBlock,
-    adaptive_diffusion_distance,
-    block_adaptive_diffusion_distance,
-    block_diffusion_distance,
+    adaptive_diffusion_geometry,
+    block_adaptive_diffusion_geometry,
+    block_diffusion_geometry,
     coordinates_for_block,
     cosine_eigendecomposition,
     weight_feature_matrix,
@@ -351,7 +351,7 @@ def candidate_subspace_and_tree(
             tree_geometry = "adaptive_diffusion_cosine_subspace"
 
     if tree_geometry == "whole_adaptive_diffusion":
-        distances, _metadata = adaptive_diffusion_distance(
+        geometry = adaptive_diffusion_geometry(
             data,
             k_neighbors=15,
             diffusion_time=3,
@@ -359,8 +359,8 @@ def candidate_subspace_and_tree(
             metric="hamming",
             bandwidth_type="-1/(d+2)",
             epsilon="median",
-            return_metadata=True,
         )
+        distances = geometry.distance_condensed
         matrix = squareform(distances)
         embedding = MDS(
             n_components=2,
@@ -388,14 +388,14 @@ def candidate_subspace_and_tree(
     if tree_geometry == "adaptive_diffusion_cosine_subspace":
         mode = str(candidate.summary.get("diffusion_mode", "adaptive"))
         if mode == "fixed":
-            distances, _metadata = block_diffusion_distance(
+            geometry = block_diffusion_geometry(
                 coords,
                 k_neighbors=int(candidate.summary.get("diffusion_k_neighbors", 15)),
                 diffusion_time=int(candidate.summary.get("diffusion_time", 3)),
                 n_components=int(candidate.summary.get("diffusion_components", 30)),
             )
         else:
-            distances, _metadata = block_adaptive_diffusion_distance(
+            geometry = block_adaptive_diffusion_geometry(
                 coords,
                 k_neighbors=int(candidate.summary.get("diffusion_k_neighbors", 15)),
                 diffusion_time=int(candidate.summary.get("diffusion_time", 3)),
@@ -404,7 +404,7 @@ def candidate_subspace_and_tree(
                 bandwidth_type=candidate.summary.get("adaptive_bandwidth_type", "-1/(d+2)"),
                 epsilon=candidate.summary.get("adaptive_epsilon", "median"),
             )
-        return coords, distances
+        return coords, geometry.distance_condensed
     return None, None
 
 

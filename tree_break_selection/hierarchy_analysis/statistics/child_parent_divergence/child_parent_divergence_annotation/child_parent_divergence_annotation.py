@@ -55,51 +55,6 @@ def annotate_child_parent_divergence(
     edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
     adaptive_projection_dimension_energy_fraction: float | None = None,
     stage_timings: MutableMapping[str, float] | None = None,
-) -> pd.DataFrame:
-    """Test child-parent divergence using the projected Wald pipeline.
-
-    Uses Tree-BH (Tree-structured Benjamini-Hochberg) for FDR correction.
-    This is the only supported multiple-testing correction method for the edge gate.
-    """
-    annotated_df, _spectral_context = annotate_child_parent_divergence_with_context(
-        tree,
-        annotations_df,
-        significance_level_alpha=significance_level_alpha,
-        leaf_data=leaf_data,
-        feature_space=feature_space,
-        spectral_minimum_dimension=spectral_minimum_dimension,
-        spectral_projection_basis_dimension=spectral_projection_basis_dimension,
-        spectral_include_internal_barycenters=spectral_include_internal_barycenters,
-        spectral_internal_distribution_mode=spectral_internal_distribution_mode,
-        continuous_covariance_policy=continuous_covariance_policy,
-        continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
-        edge_branch_length_variance_policy=edge_branch_length_variance_policy,
-        adaptive_projection_dimension_energy_fraction=(
-            adaptive_projection_dimension_energy_fraction
-        ),
-        stage_timings=stage_timings,
-    )
-    return annotated_df
-
-
-def annotate_child_parent_divergence_with_context(
-    tree: nx.DiGraph,
-    annotations_df: pd.DataFrame,
-    *,
-    significance_level_alpha: float = DEFAULT_EDGE_ALPHA,
-    leaf_data: pd.DataFrame | None = None,
-    feature_space: FeatureSpace | None = None,
-    spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
-    spectral_projection_basis_dimension: int | None = None,
-    spectral_include_internal_barycenters: bool = False,
-    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
-    continuous_covariance_min_child_leaf_count: int = (
-        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
-    ),
-    edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
-    adaptive_projection_dimension_energy_fraction: float | None = None,
-    stage_timings: MutableMapping[str, float] | None = None,
 ) -> tuple[pd.DataFrame, SpectralContext]:
     """Test child-parent divergence and return typed edge-gate spectral context."""
     annotations_df = annotations_df.copy()
@@ -219,5 +174,4 @@ def annotate_child_parent_divergence_with_context(
 
 __all__ = [
     "annotate_child_parent_divergence",
-    "annotate_child_parent_divergence_with_context",
 ]

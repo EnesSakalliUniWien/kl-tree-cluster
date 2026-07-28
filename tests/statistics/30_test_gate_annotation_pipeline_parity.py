@@ -8,7 +8,7 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator im
     run_gate_annotation_pipeline,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.inflated_projected_wald_annotation.pipeline import (
     annotate_sibling_divergence,
@@ -71,7 +71,7 @@ def _build_small_binary_tree() -> tuple[nx.DiGraph, pd.DataFrame, pd.DataFrame]:
 def test_gate_annotation_pipeline_matches_sequential_gate_annotations(monkeypatch) -> None:
     tree, base_df, leaf_data = _build_small_binary_tree()
 
-    edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+    edge_df, spectral_context = annotate_child_parent_divergence(
         tree,
         base_df.copy(),
         significance_level_alpha=0.01,

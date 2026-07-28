@@ -42,6 +42,24 @@ def test_poset_tree_from_unrooted_metric_tree_uses_mad_root() -> None:
     assert tree["mad_root"]["B"]["branch_length"] == 2.0
 
 
+def test_mad_endpoint_root_is_represented_as_binary_zero_length_split() -> None:
+    graph = nx.Graph()
+    for leaf in ("A", "B", "C"):
+        graph.add_edge("center", leaf, branch_length=1.0)
+
+    tree, root = poset_tree_from_unrooted_metric_tree(
+        graph,
+        leaf_labels=["A", "B", "C"],
+        rooting="mad",
+    )
+
+    assert root.distance_from_u == 0.0
+    assert root.root_node == tree.root() == "mad_root"
+    assert tree.out_degree(tree.root()) == 2
+    assert tree.out_degree("center") == 2
+    assert tree["mad_root"]["center"]["branch_length"] == 0.0
+
+
 def test_neighbor_joining_tree_from_distance_returns_mad_rooted_poset_tree() -> None:
     distances = np.array([5.0, 9.0, 9.0, 10.0, 10.0, 8.0], dtype=float)
 

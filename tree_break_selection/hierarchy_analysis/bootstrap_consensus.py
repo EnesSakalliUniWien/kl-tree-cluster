@@ -33,15 +33,49 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
+)
+from tree_break_selection.hierarchy_analysis.tree_decomposition import (
+    TraceLevel,
+    TreeDecomposition,
 )
 from tree_break_selection.tree.construction import (
     DEFAULT_BINARY_TREE_DISTANCE_METRIC,
     DEFAULT_TREE_LINKAGE_METHOD,
     tree_from_linkage,
 )
+from tree_break_selection.tree.poset_tree import PosetTree
+
+
+def _annotate_and_decompose(
+    tree: PosetTree,
+    data: pd.DataFrame,
+    *,
+    edge_alpha: float,
+    sibling_alpha: float,
+    gate_annotation_kwargs: dict[str, Any],
+    passthrough: bool,
+    trace_level: TraceLevel,
+) -> dict[str, object]:
+    bundle = run_gate_annotation_pipeline(
+        tree,
+        tree.annotations_df.copy(),
+        edge_alpha=edge_alpha,
+        sibling_alpha=sibling_alpha,
+        leaf_data=data,
+        **gate_annotation_kwargs,
+    )
+    return TreeDecomposition(
+        tree=tree,
+        gate_annotation_bundle=bundle,
+        passthrough=passthrough,
+        trace_level=trace_level,
+    ).decompose_tree()
 
 
 def bootstrap_consensus(
@@ -53,7 +87,9 @@ def bootstrap_consensus(
     metric: str | None = None,
     linkage_method: str | None = None,
     random_seed: int = 42,
-    decompose_kwargs: dict | None = None,
+    gate_annotation_kwargs: dict[str, Any] | None = None,
+    passthrough: bool = True,
+    trace_level: TraceLevel = "compact",
 ) -> Dict[str, Any]:
     """Run bootstrap consensus on a binary DataFrame.
 
@@ -64,7 +100,7 @@ def bootstrap_consensus(
     n_boot
         Number of bootstrap replicates.
     edge_alpha, sibling_alpha
-        Significance levels forwarded to ``PosetTree.decompose()``.
+        Significance levels forwarded to the gate annotation pipeline.
         Defaults to ``DEFAULT_EDGE_ALPHA`` / ``DEFAULT_SIBLING_ALPHA``.
     metric
         Distance metric for ``pdist``. Defaults to the canonical binary-tree
@@ -73,8 +109,10 @@ def bootstrap_consensus(
         Linkage method. Defaults to the canonical tree linkage method.
     random_seed
         Seed for the bootstrap RNG.
-    decompose_kwargs
-        Extra keyword arguments forwarded to ``decompose()``.
+    gate_annotation_kwargs
+        Extra keyword arguments forwarded to ``run_gate_annotation_pipeline()``.
+    passthrough, trace_level
+        Explicit traversal behavior applied after each annotation run.
 
     Returns
     -------
@@ -100,8 +138,8 @@ def bootstrap_consensus(
         metric = DEFAULT_BINARY_TREE_DISTANCE_METRIC
     if linkage_method is None:
         linkage_method = DEFAULT_TREE_LINKAGE_METHOD
-    if decompose_kwargs is None:
-        decompose_kwargs = {}
+    if gate_annotation_kwargs is None:
+        gate_annotation_kwargs = {}
 
     sample_ids = list(data.index)
     n = len(sample_ids)
@@ -111,12 +149,14 @@ def bootstrap_consensus(
     Z_orig = linkage(pdist(data.values, metric=metric), method=linkage_method)
     tree_orig = tree_from_linkage(Z_orig, leaf_names=sample_ids)
     tree_orig.populate_node_divergences(data)
-    results_orig = tree_orig.decompose(
-        annotations_df=tree_orig.annotations_df,
-        leaf_data=data,
+    results_orig = _annotate_and_decompose(
+        tree_orig,
+        data,
         edge_alpha=edge_alpha,
         sibling_alpha=sibling_alpha,
-        **decompose_kwargs,
+        gate_annotation_kwargs=gate_annotation_kwargs,
+        passthrough=passthrough,
+        trace_level=trace_level,
     )
 
     # Extract original clades (sets of leaf labels) for support calculation
@@ -152,12 +192,14 @@ def bootstrap_consensus(
         Z_b = linkage(pdist(X_boot.values, metric=metric), method=linkage_method)
         tree_b = tree_from_linkage(Z_b, leaf_names=boot_labels)
         tree_b.populate_node_divergences(X_boot)
-        res_b = tree_b.decompose(
-            annotations_df=tree_b.annotations_df,
-            leaf_data=X_boot,
+        res_b = _annotate_and_decompose(
+            tree_b,
+            X_boot,
             edge_alpha=edge_alpha,
             sibling_alpha=sibling_alpha,
-            **decompose_kwargs,
+            gate_annotation_kwargs=gate_annotation_kwargs,
+            passthrough=passthrough,
+            trace_level=trace_level,
         )
 
         # --- accumulate co-association ---

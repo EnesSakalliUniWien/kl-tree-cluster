@@ -2,7 +2,7 @@
 title: Method, Application, and Plot Seams 2026-07-27
 type: analysis
 status: reviewed
-updated: 2026-07-27
+updated: 2026-07-28
 sources:
   - README.md
   - applications/README.md
@@ -68,6 +68,7 @@ underscore helpers or treat a diagnostic module as the owner of a method.
 ## Links
 
 - [[project-overview]]
+- [[repository-execution-and-benchmark-map]]
 - [[redundant-and-legacy-code-map-20260623]]
 - [[repository-hygiene-and-completion-audit-20260727]]
 

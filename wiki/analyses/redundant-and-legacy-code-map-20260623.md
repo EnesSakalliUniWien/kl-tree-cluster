@@ -10,14 +10,24 @@ sources:
   - tree_break_selection/tree/construction/build.py
   - tree_break_selection/tree/construction/hierarchical.py
   - tree_break_selection/hierarchy_analysis/bootstrap_consensus.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/guards.py
+  - tree_break_selection/hierarchy_analysis/decomposition/gates/orchestrator.py
+  - tree_break_selection/hierarchy_analysis/statistics/child_parent_divergence/child_parent_divergence_annotation/child_parent_divergence_annotation.py
+  - tree_break_selection/hierarchy_analysis/tree_decomposition.py
+  - tree_break_selection/tree/poset_tree.py
   - tree_break_selection/plot/image_panel.py
   - applications/endotypes/_shared.py
+  - applications/endotypes/pipelines/run_feature_matrix_with_umap.py
+  - applications/endotypes/plots/kak_signal_adaptive_umap_tree_page.py
   - applications/mnist/_shared.py
   - benchmarks/shared/audit_utils.py
+  - benchmarks/shared/plots/export.py
+  - benchmarks/shared/runners/method_registry.py
   - benchmarks/shared/runners/tbs_runner.py
   - benchmarks/shared/tbs_tree_context.py
   - benchmarks/validation/statistics/feature_covariance_calibration.py
   - benchmarks/validation/statistics/selected_pca_projected_wald_calibration.py
+  - tests/visualization/73_test_report_export_layout.py
 tags:
   - code-audit
   - legacy
@@ -31,8 +41,15 @@ tags:
 The former importable c2ef9a69 legacy package and its registry bridges were
 retired on 2026-06-25. The 2026-07-27 recheck found no high-confidence dead
 code in project-owned package, application, script, or benchmark Python files.
-It removed the clearest method- and application-level duplication while
-leaving broad diagnostic-panel plumbing as a documented maintenance surface.
+
+The 2026-07-28 clone census initially found 384 weak-mode clone pairs and 7,587
+duplicated lines, or 4.14% of scanned production lines. This is not a blanket
+deletion target. Diagnostic research panels accounted for 299 of the initial
+pairs and 6,287 paired lines. The plot-export and core annotation/traversal
+tranches were completed on 2026-07-28. Under the same 10-line/70-token weak
+threshold, the current production scan reports 373 pairs and 7,259 duplicated
+lines, or 3.97%. Broad diagnostic consolidation should wait for observable
+output-schema tests.
 
 ## Details
 
@@ -75,10 +92,111 @@ The two validation programs
 report-contract and interval helpers. This is the highest-value remaining
 consolidation once their output schemas are covered by focused tests.
 
+### 2026-07-28 clone census
+
+The production scan classified clone pairs by responsibility. Pair counts and
+paired lines can overlap when one source fragment participates in several
+matches, so they are prioritization signals rather than removable-line totals.
+
+| Surface pair | Clone pairs | Paired lines | Interpretation |
+| --- | ---: | ---: | --- |
+| diagnostics to diagnostics | 299 | 6,287 | Research-panel scaffolding dominates the total |
+| benchmark support to benchmark support | 37 | 861 | Plot export, runner forwarding, records, and validation reports |
+| applications to applications | 19 | 331 | Endotype and plotting workflows, plus small report helpers |
+| core to core | 10 | 195 | Gate configuration, permutation guards, annotations, and covariance validation |
+| core to diagnostics | 6 | 97 | Diagnostic copies of production spectral and gate calculations |
+| all other cross-surface pairs | 13 | 147 | Small application, script, and benchmark crossings |
+
+Tests contain 58 weak-mode clone pairs and 1,298 duplicated lines, or 2.81% of
+46,177 scanned lines. Most are fixture construction and repeated contract
+cases. They should be replaced only when a shared public-interface test
+expresses the same behavior; line similarity alone is not evidence that a test
+is redundant.
+
+The actionable clusters, in cleanup order, are:
+
+1. Completed on 2026-07-28: `benchmarks/shared/plots/export.py` had repeated
+   UMAP label assembly, rendering, filename, and output routing across the
+   UMAP-only, UMAP-then-tree, and tree-then-UMAP workflows. The two uncalled
+   interfaces were deleted, the live workflow became
+   `create_case_report_pages_from_results()`, and no compatibility aliases
+   remain. Shared figure output routing now also serves the 3D UMAP and
+   manifold engines. The change removed a net 174 lines from `export.py`.
+2. Completed on 2026-07-28: `_run_tbs_method` was deleted and the method
+   registry now dispatches directly to `run_tbs_on_distance()`. Registry
+   entries own the linkage and trace policy that previously hid in the
+   forwarding adapter.
+3. Completed on 2026-07-28: gate configuration is owned by
+   `run_gate_annotation_pipeline()` and its `GateAnnotationBundle`.
+   `TreeDecomposition` now consumes either that completed bundle or an
+   explicit three-column traversal decision frame; it does not reconstruct,
+   compare, or silently recompute annotation configuration. The
+   `PosetTree.decompose()` forwarding facade was removed, and callers now show
+   annotation production and traversal as separate phases.
+4. Completed on 2026-07-28: selected-root and selected-global-sibling
+   permutation guards now share one private validation, null-sampling, and
+   Monte Carlo driver while retaining their distinct statistic callbacks and
+   public contracts.
+5. Completed on 2026-07-28: child-parent annotation now has one canonical
+   function and one return contract containing both the annotated frame and
+   spectral context. The DataFrame-only forwarding path was deleted without
+   an alias.
+6. The endotype feature-matrix pipeline and KAK UMAP/tree page duplicate a
+   31-line plotting block. This belongs behind an endotype-owned plot helper,
+   not a generic repository utility.
+7. The two covariance-calibration validation programs duplicate Wilson
+   intervals, covariance generation, git-state capture, and report emission.
+   A purpose-named calibration reporting module is appropriate after golden
+   schema tests exist.
+8. Sibling-null, overlap, root-selection, and traversal diagnostic families
+   contain the largest clone groups. Each family needs one output contract and
+   one domain-owned driver before copied scripts are removed.
+
+Several high-ranked matches should not be mechanically consolidated:
+
+- `benchmarks/shared/metrics.py`,
+  `benchmarks/shared/result_records/models.py`,
+  `benchmarks/shared/result_records/dataframe.py`, and plot/runtime modules
+  repeat record-field sequences that define aligned schemas.
+- `SpectralContext` and `SpectralDecompositionResult` share fields but have
+  different ownership and lifecycle semantics.
+- Bernoulli and grouped-categorical covariance validators share structural
+  checks but enforce different feature-family invariants.
+- Test setup that looks alike can cover different public contracts.
+
 ## Evidence
 
 - Vulture at 90% confidence reported no unused project-owned code after the
   reorganization.
+- A repository-wide `jscpd` weak-mode scan with a 10-line/70-token production
+  threshold measured 384 clone pairs across 400 files, 7,587 duplicated lines
+  out of 183,106, and 46,149 duplicated tokens out of 980,227.
+- The corresponding 12-line/80-token test scan measured 58 clone pairs across
+  246 files and 1,298 duplicated lines out of 46,177.
+- Exact normalized AST function-body comparison found 48 repeated function
+  groups. Its largest exact groups are diagnostic selectors and threshold
+  helpers; the production-facing exact groups corroborate the guard and
+  calibration seams above.
+- Pylint's independent `duplicate-code` check corroborated the diagnostic and
+  validation families while retaining a 9.94/10 repository score.
+- After the plot-export consolidation, the same production clone scan fell
+  from 384 to 381 pairs and from 7,587 to 7,489 duplicated lines while scanned
+  production lines fell from 183,106 to 182,932. The only remaining
+  `export.py` matches are common argument and initialization prefixes of
+  distinct 3D UMAP, manifold, and tree interfaces, not copied rendering
+  implementations.
+- All 20 visualization tests pass through the maintained case-report interface,
+  and direct search finds no callers or aliases for the deleted plotting names.
+- After the runner, annotation/traversal, permutation, and child-parent
+  consolidation, the production scan fell again to 373 clone pairs and 7,259
+  duplicated lines across 182,914 lines (3.97%). The removed target pairs no
+  longer appear; the remaining core matches are different internal or
+  cross-surface seams.
+- Vulture reported no project-owned dead code at 90% confidence after the
+  deletions. Ruff, wiki lint over 271 pages, the focused interface suites, and
+  all 1,254 ordered repository tests pass.
+- The complete ordered repository gate passes all 1,260 tests after the
+  interface deletion and rename.
 - Ruff passes over the relocated library, application, benchmark, and test
   surfaces.
 - Focused method, endotype, scRNA, MNIST, and benchmark-interface tests pass.
@@ -102,6 +220,9 @@ consolidation once their output schemas are covered by focused tests.
   `benchmarks/shared/` without masking panel-specific validation semantics?
 - Should the two calibration validation reports first receive golden-schema
   tests, then share one report-contract module?
+- Should the remaining internal argument overlap inside the gate orchestrator
+  become a typed request object, or would that hide experimentally important
+  gate inputs?
 - After application output contracts are covered, should direct
   distance/linkage/`PosetTree` sequences share one deep construction interface
   in `tree_break_selection/tree/`?

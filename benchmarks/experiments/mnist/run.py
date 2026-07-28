@@ -18,6 +18,10 @@ from scipy.spatial.distance import pdist
 from sklearn.datasets import fetch_openml
 from sklearn.decomposition import PCA
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.tree.construction import tree_from_linkage
 
 
@@ -90,12 +94,17 @@ def run_tbs_clustering(
     # Decompose
     significance_level = 0.05
     tree.populate_node_divergences(data)
-    results = tree.decompose(
-        annotations_df=tree.annotations_df,
+    gate_bundle = run_gate_annotation_pipeline(
+        tree,
+        tree.annotations_df.copy(),
         leaf_data=data,
         edge_alpha=significance_level,
         sibling_alpha=significance_level,
     )
+    results = TreeDecomposition(
+        tree=tree,
+        gate_annotation_bundle=gate_bundle,
+    ).decompose_tree()
 
     cluster_assignments = results.get("cluster_assignments", {})
     n_clusters = results.get("num_clusters", 0)

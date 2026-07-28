@@ -48,7 +48,7 @@ from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_g
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_traversal_panel import (
     _generate_data_with_truth,
 )
-from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
     _select_cases,
@@ -414,7 +414,7 @@ def _run_one_variant(
     internal_distribution_mode: str,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, Any]:
     profile_id = None if method_id == "baseline_projected_wald" else str(method_id)
-    result = _run_tbs_method(
+    result = run_tbs_on_distance(
         data,
         distance_condensed,
         sibling_significance_level=float(sibling_alpha),
@@ -425,6 +425,7 @@ def _run_one_variant(
         spectral_include_internal_barycenters=bool(include_internal_barycenters),
         spectral_internal_distribution_mode=str(internal_distribution_mode),
         sibling_gate_profile=profile_id,
+        trace_level="full",
     )
     if result.status != "ok":
         raise RuntimeError(

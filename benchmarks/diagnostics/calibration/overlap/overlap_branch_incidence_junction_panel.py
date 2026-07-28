@@ -49,7 +49,7 @@ from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_g
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_traversal_panel import (
     _generate_data_with_truth,
 )
-from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from benchmarks.shared.util.time import format_timestamp_utc
 from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
@@ -827,7 +827,7 @@ def _run_one(
         seed=data_seed,
     )
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
-    result = _run_tbs_method(
+    result = run_tbs_on_distance(
         data,
         distance,
         sibling_significance_level=float(config.sibling_alpha),
@@ -835,6 +835,7 @@ def _run_one(
         edge_alpha=float(config.edge_alpha),
         feature_space=feature_space,
         sibling_gate_profile=str(config.profile_id),
+        trace_level="full",
     )
     node_decisions = _build_node_decisions(
         case_id=case_id,

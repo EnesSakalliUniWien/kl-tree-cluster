@@ -39,7 +39,7 @@ from benchmarks.diagnostics.calibration.traversal.production_admissibility_contr
     evaluate_production_admissibility_components,
     summarize_production_admissibility_contracts,
 )
-from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from benchmarks.shared.util.time import format_timestamp_utc
 from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
@@ -402,7 +402,7 @@ def _rows_for_replicate(
         seed=data_seed,
     )
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
-    result = _run_tbs_method(
+    result = run_tbs_on_distance(
         data,
         distance,
         sibling_significance_level=float(sibling_alpha),
@@ -419,6 +419,7 @@ def _rows_for_replicate(
             if root_selective_permutation_guard_alpha is None
             else float(root_selective_permutation_guard_alpha)
         ),
+        trace_level="full",
     )
     annotations = result.extra["annotations"]
     tree = result.extra["tree"]

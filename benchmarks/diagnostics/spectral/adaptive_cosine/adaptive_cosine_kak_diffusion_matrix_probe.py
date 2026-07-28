@@ -41,10 +41,11 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     CalibrationSupportThresholds,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.space_separation import (
     adaptive_spectral_blocks,
-    block_adaptive_diffusion_distance,
-    block_diffusion_distance,
+    block_adaptive_diffusion_geometry,
+    block_diffusion_geometry,
     coordinates_for_block,
     cosine_eigendecomposition,
     weight_feature_matrix,
@@ -132,14 +133,14 @@ def run_block_diffusion_tree(
     ),
 ) -> tuple[pd.DataFrame, dict[str, object], pd.DataFrame, dict[str, object]]:
     if diffusion_mode == "fixed":
-        diffusion_distances, diffusion_metadata = block_diffusion_distance(
+        geometry = block_diffusion_geometry(
             coords,
             k_neighbors=diffusion_k_neighbors,
             diffusion_time=diffusion_time,
             n_components=diffusion_components,
         )
     elif diffusion_mode == "adaptive":
-        diffusion_distances, diffusion_metadata = block_adaptive_diffusion_distance(
+        geometry = block_adaptive_diffusion_geometry(
             coords,
             k_neighbors=diffusion_k_neighbors,
             diffusion_time=diffusion_time,
@@ -150,6 +151,8 @@ def run_block_diffusion_tree(
         )
     else:
         raise ValueError(f"Unknown diffusion mode: {diffusion_mode!r}")
+    diffusion_distances = geometry.distance_condensed
+    diffusion_metadata = geometry.metadata
     diffusion_metadata["diffusion_mode"] = diffusion_mode
     linkage_matrix = linkage(diffusion_distances, method="average")
     tree = tree_from_linkage(linkage_matrix, leaf_names=data.index.tolist())
@@ -163,14 +166,10 @@ def run_block_diffusion_tree(
         enforce_internal_support_thresholds=enforce_internal_support_thresholds,
         internal_support_thresholds=internal_support_thresholds,
     )
-    decomposition = tree.decompose(
+    decomposition = TreeDecomposition(
+        tree=tree,
         gate_annotation_bundle=gate_bundle,
-        leaf_data=data,
-        edge_alpha=edge_alpha,
-        sibling_alpha=sibling_alpha,
-        enforce_internal_support_thresholds=enforce_internal_support_thresholds,
-        internal_support_thresholds=internal_support_thresholds,
-    )
+    ).decompose_tree()
     assignments = build_sample_cluster_assignments(decomposition).loc[data.index]
     return assignments, decomposition, tree.annotations_df, diffusion_metadata
 

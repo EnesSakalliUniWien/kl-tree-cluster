@@ -13,9 +13,13 @@ from benchmarks.shared.util.decomposition import _labels_from_decomposition
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import adjusted_rand_score
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.tree.construction import tree_from_linkage
 
 
@@ -24,13 +28,18 @@ def _run_pipeline_on_dataframe(data_df, significance_level=0.05, **kwargs):
     Z = linkage(pdist(data_df.values, metric="hamming"), method="complete")
     tree = tree_from_linkage(Z, leaf_names=data_df.index.tolist())
     tree.populate_node_divergences(data_df)
-    decomposition = tree.decompose(
-        annotations_df=tree.annotations_df,
+    gate_bundle = run_gate_annotation_pipeline(
+        tree,
+        tree.annotations_df.copy(),
         leaf_data=data_df,
         edge_alpha=DEFAULT_EDGE_ALPHA,
         sibling_alpha=significance_level,
         **kwargs,
     )
+    decomposition = TreeDecomposition(
+        tree=tree,
+        gate_annotation_bundle=gate_bundle,
+    ).decompose_tree()
     return decomposition, tree
 
 

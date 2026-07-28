@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import numpy as np
 import pandas as pd
 from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
@@ -52,15 +50,13 @@ def test_near_threshold_override_merges_borderline_siblings():
     """Test that siblings with low divergence p-value near alpha are NOT split when Sibling_BH_Different=False."""
     tree, df = _simple_tree()
 
-    # Bypass annotation pipeline — this test controls gate columns directly.
-    with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
-        baseline_result = tree.decompose(annotations_df=df)
-        assert baseline_result["num_clusters"] == 2
+    baseline_result = TreeDecomposition(tree=tree, annotations_df=df).decompose_tree()
+    assert baseline_result["num_clusters"] == 2
 
-        # Set siblings as NOT significantly different - should merge
-        df.loc["R", "Sibling_BH_Different"] = False
-        merged_result = tree.decompose(annotations_df=df)
-        assert merged_result["num_clusters"] == 1
+    # Set siblings as NOT significantly different - should merge
+    df.loc["R", "Sibling_BH_Different"] = False
+    merged_result = TreeDecomposition(tree=tree, annotations_df=df).decompose_tree()
+    assert merged_result["num_clusters"] == 1
 
 
 def test_tree_decomposition_preserves_non_string_node_ids_in_annotations():
@@ -80,8 +76,7 @@ def test_tree_decomposition_preserves_non_string_node_ids_in_annotations():
         index=[0, 1, 2],
     )
 
-    with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
-        result = tree.decompose(annotations_df=annotations)
+    result = TreeDecomposition(tree=tree, annotations_df=annotations).decompose_tree()
 
     assert result["num_clusters"] == 2
     assert [cluster["root_node"] for cluster in result["cluster_assignments"].values()] == [1, 2]

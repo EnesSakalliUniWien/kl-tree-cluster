@@ -62,8 +62,7 @@ def build_sample_cluster_assignments(
     ----------
     decomposition_results
         A decomposition result dictionary produced by
-        :meth:`TreeDecomposition.decompose_tree` or
-        :meth:`PosetTree.decompose`.
+        :meth:`TreeDecomposition.decompose_tree`.
 
     Returns
     -------

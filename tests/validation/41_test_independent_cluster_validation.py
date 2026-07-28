@@ -8,7 +8,6 @@ in isolation.
 from __future__ import annotations
 
 import unittest
-from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -62,8 +61,7 @@ class TestIndependentClusterValidation(unittest.TestCase):
     def test_annotation_dataframe_feeds_gate_decision_maps(self) -> None:
         tree, stats = _make_binary_tree()
 
-        with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
-            decomposer = TreeDecomposition(tree=tree, annotations_df=stats)
+        decomposer = TreeDecomposition(tree=tree, annotations_df=stats)
 
         self.assertEqual(set(decomposer.annotations_df.index), {"root", "L", "R"})
         self.assertEqual(set(decomposer.annotations_df.columns), set(stats.columns))
@@ -71,9 +69,7 @@ class TestIndependentClusterValidation(unittest.TestCase):
 
     def test_split_occurs_when_all_gates_pass(self) -> None:
         tree, stats = _make_binary_tree()
-        # Bypass annotation pipeline — this test controls gate columns directly.
-        with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
-            results = tree.decompose(annotations_df=stats)
+        results = TreeDecomposition(tree=tree, annotations_df=stats).decompose_tree()
 
         self.assertEqual(results["num_clusters"], 2)
         leaves = sorted(
@@ -85,9 +81,7 @@ class TestIndependentClusterValidation(unittest.TestCase):
     def test_merge_when_sibling_divergence_fails(self) -> None:
         tree, stats = _make_binary_tree()
         stats.loc["root", "Sibling_BH_Different"] = False
-        # Bypass annotation pipeline — this test controls gate columns directly.
-        with patch.object(TreeDecomposition, "_prepare_annotations", side_effect=lambda df: df):
-            results = tree.decompose(annotations_df=stats)
+        results = TreeDecomposition(tree=tree, annotations_df=stats).decompose_tree()
 
         self.assertEqual(results["num_clusters"], 1)
         cluster = next(iter(results["cluster_assignments"].values()))

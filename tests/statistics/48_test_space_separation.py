@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 from tree_break_selection.space_separation import (
     SpectralBlock,
-    block_diffusion_distance,
+    block_diffusion_geometry,
     coordinates_for_block,
     decompose_invariant_equivariant_space,
-    hamming_knn_diffusion_distance,
+    hamming_knn_diffusion_geometry,
     separate_adaptive_cosine_space,
 )
 
@@ -76,25 +76,26 @@ def test_coordinates_for_block_uses_one_based_inclusive_modes() -> None:
     )
 
 
-def test_block_diffusion_distance_is_a_public_separation_interface() -> None:
+def test_block_diffusion_geometry_is_a_public_separation_interface() -> None:
     coordinates = np.array(
         [[0.0, 0.0], [0.1, 0.0], [1.0, 1.0], [1.1, 1.0]],
         dtype=float,
     )
 
-    distances, metadata = block_diffusion_distance(
+    geometry = block_diffusion_geometry(
         coordinates,
         k_neighbors=2,
         diffusion_time=2,
         n_components=3,
     )
 
-    assert distances.shape == (6,)
-    assert np.isfinite(distances).all()
-    assert metadata["kernel"] == "knn_gaussian"
+    assert geometry.distance_condensed.shape == (6,)
+    assert geometry.coordinates.shape == (4, 3)
+    assert np.isfinite(geometry.distance_condensed).all()
+    assert geometry.metadata["kernel"] == "knn_gaussian"
 
 
-def test_hamming_diffusion_distance_is_a_public_separation_interface() -> None:
+def test_hamming_diffusion_geometry_is_a_public_separation_interface() -> None:
     binary = pd.DataFrame(
         [
             [1, 0, 0, 1],
@@ -104,20 +105,20 @@ def test_hamming_diffusion_distance_is_a_public_separation_interface() -> None:
         ]
     )
 
-    distances = hamming_knn_diffusion_distance(
+    geometry = hamming_knn_diffusion_geometry(
         binary,
         k_neighbors=2,
         diffusion_time=2,
         n_components=3,
     )
 
-    assert distances.shape == (6,)
-    assert np.isfinite(distances).all()
+    assert geometry.distance_condensed.shape == (6,)
+    assert np.isfinite(geometry.distance_condensed).all()
 
 
-def test_hamming_diffusion_distance_rejects_continuous_values() -> None:
+def test_hamming_diffusion_geometry_rejects_continuous_values() -> None:
     with np.testing.assert_raises_regex(ValueError, "binary or one-hot"):
-        hamming_knn_diffusion_distance(
+        hamming_knn_diffusion_geometry(
             np.array([[0.0, 0.5], [1.0, 0.0]]),
             k_neighbors=1,
             diffusion_time=1,

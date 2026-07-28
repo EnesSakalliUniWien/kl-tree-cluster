@@ -46,7 +46,7 @@ from benchmarks.diagnostics.calibration.selected.neighborhood.selected_neighborh
     build_topology_frontier_rows,
     summarize_topology_frontier_rows,
 )
-from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 
 SCHEMA_VERSION = "root_tie_rank_generated_neighborhood_replay/v1"
 STUDY_ROLE = "diagnostic_root_tie_rank_generated_neighborhood_replay_not_calibration"
@@ -296,7 +296,7 @@ def _replay_one_matrix(
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
 
     try:
-        result = _run_tbs_method(
+        result = run_tbs_on_distance(
             data,
             distance,
             sibling_significance_level=float(sibling_alpha),
@@ -304,6 +304,7 @@ def _replay_one_matrix(
             edge_alpha=float(edge_alpha),
             feature_space=feature_space,
             sibling_gate_profile=_profile_id_for_method(method_id),
+            trace_level="full",
         )
         run_status = str(result.status)
         skip_reason = "" if result.skip_reason is None else str(result.skip_reason)

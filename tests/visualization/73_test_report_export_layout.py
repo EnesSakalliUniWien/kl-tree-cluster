@@ -44,7 +44,7 @@ def _record() -> ComputedResultRecord:
     )
 
 
-def test_tree_then_umap_exports_tree_pages_separately(monkeypatch, tmp_path):
+def test_case_report_exports_tree_pages_before_umap_pages(monkeypatch, tmp_path):
     calls: list[str] = []
 
     def fake_tree_figures(*, case_num, case_results):
@@ -60,7 +60,7 @@ def test_tree_then_umap_exports_tree_pages_separately(monkeypatch, tmp_path):
     monkeypatch.setattr(export, "create_clustering_comparison_plots", fake_umap_figures)
 
     collected: list = []
-    figs = export.create_tree_then_umap_plots_from_results(
+    figs = export.create_case_report_pages_from_results(
         [_record()],
         tmp_path,
         verbose=False,

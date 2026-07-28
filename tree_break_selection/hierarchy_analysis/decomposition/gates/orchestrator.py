@@ -31,7 +31,7 @@ from tree_break_selection.tree.feature_space import (
 )
 
 from ...statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from ...statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
@@ -543,7 +543,7 @@ def run_gate_annotation_pipeline(
 
     # Run edge-divergence gate: child-parent edge tests
     edge_gate_start_sec = perf_counter()
-    edge_annotated_df, spectral_context = annotate_child_parent_divergence_with_context(
+    edge_annotated_df, spectral_context = annotate_child_parent_divergence(
         tree,
         annotations_df,
         significance_level_alpha=edge_alpha,

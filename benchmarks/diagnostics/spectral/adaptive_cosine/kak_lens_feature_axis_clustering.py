@@ -41,6 +41,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.space_separation import (
     adaptive_spectral_blocks,
     coordinates_for_block,
@@ -377,12 +378,10 @@ def run_lens(
         sibling_alpha=sibling_alpha,
         leaf_data=data,
     )
-    decomposition = tree.decompose(
+    decomposition = TreeDecomposition(
+        tree=tree,
         gate_annotation_bundle=gate_bundle,
-        leaf_data=data,
-        edge_alpha=edge_alpha,
-        sibling_alpha=sibling_alpha,
-    )
+    ).decompose_tree()
     assignments = build_sample_cluster_assignments(decomposition).loc[data.index]
     reconstructed_block = (
         row_normalized_values @ feature_axes[:, block.block_start - 1 : block.block_end]

@@ -31,7 +31,7 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.gate_evaluator 
     TraversalDecision,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_contrast_covariance,
@@ -430,7 +430,7 @@ def _base_edge_annotations(
     *,
     edge_alpha: float,
 ) -> pd.DataFrame:
-    annotations, _spectral_context = annotate_child_parent_divergence_with_context(
+    annotations, _spectral_context = annotate_child_parent_divergence(
         tree,
         tree.annotations_df.copy(),
         significance_level_alpha=float(edge_alpha),

@@ -103,9 +103,24 @@ def test_fixed_topology_nnls_accepts_nonmonotone_linkage_topology(
             feature_space=continuous_feature_space_from_columns(tuple(data.columns)),
             edge_branch_length_variance_policy="normalized_branch_length",
             branch_length_optimization_method="fixed_topology_nnls",
+            branch_length_data_df=data,
         )
 
     assert captured["edge_lengths"] == [1.0] * 6
+
+
+def test_fixed_topology_nnls_rejects_implicit_branch_geometry() -> None:
+    data = _small_continuous_frame()
+
+    with pytest.raises(ValueError, match="requires explicit branch_length_data_df"):
+        run_tbs_on_distance(
+            data,
+            pdist(data.to_numpy(), metric="euclidean"),
+            0.01,
+            tree_linkage_method="average",
+            feature_space=continuous_feature_space_from_columns(tuple(data.columns)),
+            branch_length_optimization_method="fixed_topology_nnls",
+        )
 
 
 def test_fixed_topology_nnls_accepts_separate_aligned_branch_geometry(

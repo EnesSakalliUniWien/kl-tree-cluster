@@ -7,7 +7,7 @@ from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator im
     run_gate_annotation_pipeline,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.spectral_context import (
     SpectralContext,
@@ -210,7 +210,7 @@ def _build_mixed_tree() -> tuple[PosetTree, pd.DataFrame, pd.DataFrame]:
 def test_cherry_with_leaf_data_uses_parent_dimension_for_leaf_pair_parent() -> None:
     tree, annotations_df, leaf_data = _build_cherry_tree()
 
-    _edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+    _edge_df, spectral_context = annotate_child_parent_divergence(
         tree,
         annotations_df.copy(),
         leaf_data=leaf_data,
@@ -304,7 +304,11 @@ def test_decompose_without_leaf_data_raises_for_missing_spectral_contract() -> N
     tree, annotations_df, _leaf_data = _build_cherry_tree()
 
     with pytest.raises(ValueError, match="require leaf_data"):
-        tree.decompose(annotations_df=annotations_df.copy(), leaf_data=None)
+        run_gate_annotation_pipeline(
+            tree,
+            annotations_df.copy(),
+            leaf_data=None,
+        )
 
 
 def test_edge_derived_sibling_dimensions_require_all_child_spectral_dimensions() -> None:

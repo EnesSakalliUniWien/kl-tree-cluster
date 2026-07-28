@@ -52,7 +52,7 @@ from tree_break_selection.hierarchy_analysis.statistics.distributional_action im
     edge_distributional_action_summary,
 )
 from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
-from tree_break_selection.space_separation import adaptive_diffusion_distance
+from tree_break_selection.space_separation import adaptive_diffusion_geometry
 from tree_break_selection.tree.continuous_distance import (
     CONTINUOUS_STANDARDIZED_EUCLIDEAN_TREE_DISTANCE_METRIC,
 )
@@ -682,8 +682,6 @@ def _decompose_with_hypothetical_edge_annotations(
     base_bundle: GateAnnotationBundle,
     annotations_df: pd.DataFrame,
     config: MethodConfig,
-    leaf_data: pd.DataFrame,
-    feature_space: object,
     sample_ids: np.ndarray,
 ) -> np.ndarray:
     edge_result = replace(base_bundle.edge_gate_result, annotated_df=annotations_df)
@@ -693,66 +691,9 @@ def _decompose_with_hypothetical_edge_annotations(
         edge_gate_result=edge_result,
         stage_timings={},
     )
-    gate_config = bundle.metadata.config
     decomposer = TreeDecomposition(
         tree=tree,
         gate_annotation_bundle=bundle,
-        edge_alpha=float(config.edge_alpha or bundle.metadata.edge.alpha),
-        sibling_alpha=float(config.significance_level or bundle.metadata.sibling.alpha),
-        leaf_data=leaf_data,
-        feature_space=feature_space,
-        spectral_minimum_dimension=int(gate_config.spectral_minimum_dimension),
-        adaptive_projection_dimension_energy_fraction=(
-            gate_config.adaptive_projection_dimension_energy_fraction
-        ),
-        spectral_include_internal_barycenters=bool(
-            gate_config.spectral_include_internal_barycenters
-        ),
-        spectral_internal_distribution_mode=str(gate_config.spectral_internal_distribution_mode),
-        continuous_covariance_policy=str(gate_config.continuous_covariance_policy),
-        continuous_covariance_min_child_leaf_count=int(
-            gate_config.continuous_covariance_min_child_leaf_count
-        ),
-        edge_branch_length_variance_policy=str(gate_config.edge_branch_length_variance_policy),
-        sibling_gate_profile=gate_config.sibling_gate_profile_id,
-        sibling_gate_method=str(gate_config.sibling_gate_method),
-        sibling_gate_alpha_penalty=float(gate_config.sibling_gate_alpha_penalty),
-        root_stability_guard_threshold=gate_config.root_stability_guard_threshold,
-        root_stability_subsample_replicates=int(gate_config.root_stability_subsample_replicates),
-        root_stability_feature_fraction=float(gate_config.root_stability_feature_fraction),
-        root_stability_seed=int(gate_config.root_stability_seed),
-        root_stability_tree_distance_metric=str(gate_config.root_stability_tree_distance_metric),
-        root_stability_tree_linkage_method=str(gate_config.root_stability_tree_linkage_method),
-        root_selective_permutation_guard_replicates=int(
-            gate_config.root_selective_permutation_guard_replicates
-        ),
-        root_selective_permutation_guard_seed=int(
-            gate_config.root_selective_permutation_guard_seed
-        ),
-        root_selective_permutation_guard_alpha=(
-            None
-            if gate_config.root_selective_permutation_guard_alpha is None
-            else float(gate_config.root_selective_permutation_guard_alpha)
-        ),
-        root_selective_permutation_guard_scope=str(
-            gate_config.root_selective_permutation_guard_scope
-        ),
-        root_selective_permutation_guard_tree_distance_metric=str(
-            gate_config.root_selective_permutation_guard_tree_distance_metric
-        ),
-        root_selective_permutation_guard_tree_linkage_method=str(
-            gate_config.root_selective_permutation_guard_tree_linkage_method
-        ),
-        enforce_internal_support_thresholds=bool(gate_config.enforce_internal_support_thresholds),
-        spectral_transport_passthrough_guard=bool(gate_config.spectral_transport_passthrough_guard),
-        spectral_transport_max_cost=float(gate_config.spectral_transport_max_cost),
-        spectral_transport_require_mp_blocks=bool(gate_config.spectral_transport_require_mp_blocks),
-        spectral_transport_block_log_tolerance=float(
-            gate_config.spectral_transport_block_log_tolerance
-        ),
-        spectral_transport_unmatched_mode_penalty=float(
-            gate_config.spectral_transport_unmatched_mode_penalty
-        ),
         passthrough=bool(config.params.get("passthrough", True)),
     )
     labels, _report = labels_and_report_from_decomposition(
@@ -1020,8 +961,6 @@ def _write_tbs_tree_diagnostics(
                     base_bundle=base_bundle,
                     annotations_df=transformed_annotations,
                     config=config,
-                    leaf_data=leaf_data,
-                    feature_space=feature_space,
                     sample_ids=sample_ids,
                 )
                 row = {
@@ -1172,7 +1111,7 @@ def _run_benchmarks(
     adaptive_metadata: dict[str, object] | None = None
     adaptive_error: str | None = None
     try:
-        adaptive_distance, metadata = adaptive_diffusion_distance(
+        geometry = adaptive_diffusion_geometry(
             X_df,
             k_neighbors=15,
             diffusion_time=3,
@@ -1180,10 +1119,9 @@ def _run_benchmarks(
             metric="euclidean",
             bandwidth_type="-1/(d+2)",
             epsilon="median",
-            return_metadata=True,
         )
-        adaptive_distance_condensed = np.asarray(adaptive_distance, dtype=float)
-        adaptive_metadata = dict(metadata)
+        adaptive_distance_condensed = np.asarray(geometry.distance_condensed, dtype=float)
+        adaptive_metadata = dict(geometry.metadata)
         adaptive_metadata.update(
             {
                 "diffusion_time": 3,

@@ -183,6 +183,7 @@ def run_clustering_result(
                 alpha,
                 k_neighbors=int(params["k_neighbors"]),
                 diffusion_time=int(params["diffusion_time"]),
+                tree_linkage_method=str(params["tree_linkage_method"]),
                 feature_space=feature_space,
                 edge_branch_length_variance_policy=str(
                     params.get("edge_branch_length_variance_policy", "none")
@@ -203,6 +204,7 @@ def run_clustering_result(
                 metric=str(params["metric"]),
                 bandwidth_type=params["bandwidth_type"],
                 epsilon=params["epsilon"],
+                tree_linkage_method=str(params["tree_linkage_method"]),
                 feature_space=feature_space,
                 edge_branch_length_variance_policy=str(
                     params.get("edge_branch_length_variance_policy", "none")
@@ -231,10 +233,11 @@ def run_clustering_result(
                 random_state=int(params.get("random_state", 0)),
                 adaptive_neighbor_profile=params.get("adaptive_neighbor_profile"),
                 adaptive_neighbor_grid=_optional_int_sequence(params.get("adaptive_neighbor_grid")),
-                tree_builder=str(params.get("tree_builder", "linkage")),
-                tree_rooting=str(params.get("tree_rooting", "linkage_root")),
-                tree_linkage_method=str(params.get("tree_linkage_method", "average")),
+                tree_builder=str(params["tree_builder"]),
+                tree_rooting=str(params["tree_rooting"]),
+                tree_linkage_method=str(params["tree_linkage_method"]),
                 feature_space=feature_space,
+                branch_length_data_df=data_df,
                 edge_branch_length_variance_policy=str(
                     params.get("edge_branch_length_variance_policy", "none")
                 ),

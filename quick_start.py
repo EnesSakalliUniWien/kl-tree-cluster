@@ -4,6 +4,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.datasets import make_blobs
 from sklearn.metrics import adjusted_rand_score
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.tree.construction import (
     DEFAULT_BINARY_TREE_DISTANCE_METRIC,
     DEFAULT_TREE_LINKAGE_METHOD,
@@ -50,17 +54,20 @@ def main():
     tree = tree_from_linkage(Z, leaf_names=data.index.tolist())
     print("Step 3: Converted hierarchy to PosetTree structure.")
 
-    # 4. PosetTree.populate_node_divergences() + PosetTree.decompose()
-    # The initial node distribution table is explicit; decompose augments it
-    # with the statistical gate annotations used for cluster extraction.
+    # 4. Compute node distributions, gate annotations, then traverse the tree.
     tree.populate_node_divergences(data)
     significance_level = 0.05
-    decomposition_results = tree.decompose(
-        annotations_df=tree.annotations_df,
+    gate_bundle = run_gate_annotation_pipeline(
+        tree,
+        tree.annotations_df.copy(),
         leaf_data=data,
         edge_alpha=significance_level,
         sibling_alpha=significance_level,
     )
+    decomposition_results = TreeDecomposition(
+        tree=tree,
+        gate_annotation_bundle=gate_bundle,
+    ).decompose_tree()
     print(
         "Step 4: Decomposed the tree to extract significant clusters (metrics computed internally)."
     )

@@ -37,6 +37,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.infla
     DEFAULT_INTERNAL_SUPPORT_THRESHOLDS,
     CalibrationSupportThresholds,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.space_separation import (
     SpectralBlock,
     adaptive_spectral_blocks,
@@ -510,14 +511,10 @@ def run_alpha_grid(
                 enforce_internal_support_thresholds=enforce_internal_support_thresholds,
                 internal_support_thresholds=internal_support_thresholds,
             )
-            decomposition = tree.decompose(
+            decomposition = TreeDecomposition(
+                tree=tree,
                 gate_annotation_bundle=gate_bundle,
-                leaf_data=data,
-                edge_alpha=edge_alpha,
-                sibling_alpha=sibling_alpha,
-                enforce_internal_support_thresholds=enforce_internal_support_thresholds,
-                internal_support_thresholds=internal_support_thresholds,
-            )
+            ).decompose_tree()
             assignments = build_sample_cluster_assignments(decomposition).loc[data.index]
             rows.append(
                 {

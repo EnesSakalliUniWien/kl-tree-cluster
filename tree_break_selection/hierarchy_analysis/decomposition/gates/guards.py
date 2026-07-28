@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 import numpy as np
 import pandas as pd
@@ -346,7 +346,7 @@ def _block_permutation_null_sample(
     )
 
 
-def selected_root_permutation_p_value(
+def _selected_permutation_p_value(
     leaf_data: pd.DataFrame,
     feature_space: FeatureSpace,
     *,
@@ -356,12 +356,13 @@ def selected_root_permutation_p_value(
     tree_distance_metric: str = "hamming",
     tree_linkage_method: str = "average",
     observed_p_value: float | None = None,
+    statistic: Callable[..., float],
+    guard_name: str,
 ) -> dict[str, float]:
-    """Estimate the selected-root p-value by feature/block permutation."""
+    """Estimate a selected-tree p-value with one shared permutation engine."""
     if method not in FIXED_SUBSPACE_SIBLING_GATE_METHODS:
         raise ValueError(
-            "Selected-root permutation requires a fixed-subspace sibling gate; "
-            f"got method={method!r}."
+            f"{guard_name} requires a fixed-subspace sibling gate; got method={method!r}."
         )
     count = int(bootstrap_replicates)
     if count < 0:
@@ -369,7 +370,7 @@ def selected_root_permutation_p_value(
     observed = (
         float(observed_p_value)
         if observed_p_value is not None and np.isfinite(float(observed_p_value))
-        else _selected_root_fixed_sibling_p_value(
+        else statistic(
             leaf_data,
             feature_space,
             method=method,
@@ -390,7 +391,7 @@ def selected_root_permutation_p_value(
     for _ in range(count):
         null_sample = _block_permutation_null_sample(leaf_data, feature_space, rng)
         null_p_values.append(
-            _selected_root_fixed_sibling_p_value(
+            statistic(
                 null_sample,
                 feature_space,
                 method=method,
@@ -406,6 +407,32 @@ def selected_root_permutation_p_value(
         "root_selective_null_min_p_value": float(np.min(null)),
         "root_selective_null_q05_p_value": float(np.quantile(null, 0.05)),
     }
+
+
+def selected_root_permutation_p_value(
+    leaf_data: pd.DataFrame,
+    feature_space: FeatureSpace,
+    *,
+    method: str,
+    bootstrap_replicates: int,
+    seed: int,
+    tree_distance_metric: str = "hamming",
+    tree_linkage_method: str = "average",
+    observed_p_value: float | None = None,
+) -> dict[str, float]:
+    """Estimate the selected-root p-value by feature/block permutation."""
+    return _selected_permutation_p_value(
+        leaf_data,
+        feature_space,
+        method=method,
+        bootstrap_replicates=bootstrap_replicates,
+        seed=seed,
+        tree_distance_metric=tree_distance_metric,
+        tree_linkage_method=tree_linkage_method,
+        observed_p_value=observed_p_value,
+        statistic=_selected_root_fixed_sibling_p_value,
+        guard_name="Selected-root permutation",
+    )
 
 
 def selected_global_sibling_min_permutation_p_value(
@@ -426,54 +453,18 @@ def selected_global_sibling_min_permutation_p_value(
     reselected null tree. It is a conservative global-family correction for
     pass-through descendant searches.
     """
-    if method not in FIXED_SUBSPACE_SIBLING_GATE_METHODS:
-        raise ValueError(
-            "Selected-family permutation requires a fixed-subspace sibling gate; "
-            f"got method={method!r}."
-        )
-    count = int(bootstrap_replicates)
-    if count < 0:
-        raise ValueError("bootstrap_replicates must be nonnegative.")
-    observed = (
-        float(observed_p_value)
-        if observed_p_value is not None and np.isfinite(float(observed_p_value))
-        else _selected_tree_fixed_sibling_min_p_value(
-            leaf_data,
-            feature_space,
-            method=method,
-            tree_distance_metric=tree_distance_metric,
-            tree_linkage_method=tree_linkage_method,
-        )
+    return _selected_permutation_p_value(
+        leaf_data,
+        feature_space,
+        method=method,
+        bootstrap_replicates=bootstrap_replicates,
+        seed=seed,
+        tree_distance_metric=tree_distance_metric,
+        tree_linkage_method=tree_linkage_method,
+        observed_p_value=observed_p_value,
+        statistic=_selected_tree_fixed_sibling_min_p_value,
+        guard_name="Selected-family permutation",
     )
-    if count <= 0:
-        return {
-            "root_observed_p_value": float(observed),
-            "root_selective_p_value": np.nan,
-            "root_selective_null_min_p_value": np.nan,
-            "root_selective_null_q05_p_value": np.nan,
-        }
-
-    rng = np.random.default_rng(int(seed))
-    null_p_values: list[float] = []
-    for _ in range(count):
-        null_sample = _block_permutation_null_sample(leaf_data, feature_space, rng)
-        null_p_values.append(
-            _selected_tree_fixed_sibling_min_p_value(
-                null_sample,
-                feature_space,
-                method=method,
-                tree_distance_metric=tree_distance_metric,
-                tree_linkage_method=tree_linkage_method,
-            )
-        )
-    null = np.asarray(null_p_values, dtype=float)
-    selected = (1.0 + float(np.sum(null <= observed))) / (float(null.size) + 1.0)
-    return {
-        "root_observed_p_value": float(observed),
-        "root_selective_p_value": float(selected),
-        "root_selective_null_min_p_value": float(np.min(null)),
-        "root_selective_null_q05_p_value": float(np.quantile(null, 0.05)),
-    }
 
 
 def _selected_linkage_root_split_labels(

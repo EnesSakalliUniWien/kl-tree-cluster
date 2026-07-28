@@ -1,5 +1,15 @@
 # Repository Hygiene and Completion Audit — 2026-07-27
 
+> **Post-audit status — 2026-07-28:** This document preserves the Git and
+> worktree snapshot inspected on 2026-07-27. The organization work was
+> subsequently committed and published on `dev`; the repository was reduced to
+> local and remote `main` and `dev`; and the divergent topology, results, and
+> publication branches and their worktrees were explicitly removed. Current
+> execution and benchmark ownership is mapped in
+> `wiki/analyses/repository-execution-and-benchmark-map.md`. Release automation,
+> benchmark acceptance criteria, statistical promotion gaps, and evidence
+> retention remain open.
+
 ## Executive Conclusion
 
 This checkout is the most advanced branch in the main local development
@@ -102,8 +112,8 @@ deprecated Scanpy version access found during the first pass was repaired.
 
 ### High priority
 
-1. Agree the canonical integration branch, reconcile divergent remote work,
-   publish it, and make the release lineage explicit.
+1. **Resolved 2026-07-28:** `dev` is the canonical published development line,
+   and only `main` and `dev` remain locally and remotely.
 2. Define statistical acceptance criteria for selected-hierarchy calibration,
    categorical transfer, and promotion of method constants.
 3. Decide which retained evidence belongs in Git, Git LFS, or release storage

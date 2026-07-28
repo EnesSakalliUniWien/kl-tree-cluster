@@ -274,10 +274,6 @@ def _diagnose_case(
     decomposer = TreeDecomposition(
         tree=context.tree,
         gate_annotation_bundle=gate_annotation_bundle,
-        edge_alpha=DEFAULT_EDGE_ALPHA,
-        sibling_alpha=DEFAULT_SIBLING_ALPHA,
-        leaf_data=context.data,
-        feature_space=context.feature_space,
         passthrough=True,
         trace_level="full",
     )

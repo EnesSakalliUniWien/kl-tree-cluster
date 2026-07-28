@@ -15,9 +15,9 @@ from benchmarks.shared.util.pdf.layout import prepare_pdf_figure
 
 from .cover_page import GROUP_ORDER, generate_overview_page, generate_section_page
 from .export import (
+    create_case_report_pages_from_results,
     create_manifold_plots_from_results,
     create_tree_plots_from_results,
-    create_tree_then_umap_plots_from_results,
     create_umap_3d_plots_from_results,
 )
 from .summary import create_validation_plot
@@ -138,7 +138,7 @@ def generate_benchmark_plots(
     if plot_umap:
         if verbose:
             logger.info("Generating Tree→UMAP comparison pages...")
-        create_tree_then_umap_plots_from_results(
+        create_case_report_pages_from_results(
             computed_results,
             plots_root,
             timestamp=None,

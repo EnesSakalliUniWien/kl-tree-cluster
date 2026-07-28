@@ -2,7 +2,7 @@
 title: Repository Hygiene and Completion Audit 2026-07-27
 type: analysis
 status: reviewed
-updated: 2026-07-27
+updated: 2026-07-28
 sources:
   - docs/repository_hygiene_audit_20260727.md
   - README.md
@@ -19,11 +19,17 @@ tags:
 
 ## Summary
 
-The current checkout is the newest coherent local development line and passes
-the complete 1,252-test suite, package build, Ruff, quick start, and wiki lint.
-It is not a finished release: the branch is unpublished, remote development is
-not fully consolidated, release metadata and CI are absent, and the maintained
-method record still contains production and publication blockers.
+The current checkout is the published `dev` development line. Local and remote
+branch state has been reduced to `main` and `dev`; the former topology,
+analysis-results, and publication branches and their worktrees were explicitly
+removed. The reorganized repository passed Ruff, wiki lint, the complete
+1,251-test suite, package build, quick start, benchmark smoke, and focused
+benchmark checks.
+
+It is still not a finished release: release metadata and CI are absent, the
+descriptive regression runner enforces no acceptance thresholds, and the
+maintained method record contains unresolved production and publication
+blockers.
 
 ## Details
 
@@ -35,24 +41,21 @@ The follow-up responsibility pass separates importable methods, dataset
 applications, benchmark diagnostics, manuscript figure composition, and
 maintenance commands into named directories with README entry maps.
 
-The organization candidate can fast-forward to `dev` after it is committed:
-local and remote `dev` share the exact candidate merge base, and an isolated
-index check found no source conflict. Merging the present `HEAD` alone would be
-incorrect because it would omit the 189-file uncommitted organization pass.
-The full integration also carries a much broader retained-evidence history,
-including 865 tracked `results/` files, so technical mergeability and evidence
-retention approval are separate decisions.
+The organization work is committed and published on `dev`. `main` remains the
+older release line. There is no remaining divergent topic branch to reconcile,
+and the primary worktree is clean. The full integration still carries a broad
+retained-evidence history, including historically tracked `results/` files, so
+branch consolidation does not settle the separate evidence-retention policy.
 
 The largest remaining repository risk is retained evidence volume. Generated
 and captured evidence spans `raw/`, `reports/`, and an ignored but historically
 tracked `results/` tree. Future large outputs need a single explicit retention
 policy; historical rewriting is a separate destructive decision.
 
-Completion has two meanings here. The current branch is the strongest local
-candidate for continued work because it contains `main` and `dev`. It is not a
-canonical final repository until divergent work is reconciled, the branch is
-published and merged, open statistical promotion gaps are resolved or scoped,
-and a release is versioned and tagged.
+Completion has two meanings here. `dev` is now the single canonical development
+line and contains `main`. It is not a finished release until open statistical
+promotion gaps are resolved or scoped, benchmark acceptance criteria are
+explicit, CI/release automation exists, and a release is versioned and tagged.
 
 ## Evidence
 
@@ -69,12 +72,12 @@ and a release is versioned and tagged.
 ## Links
 
 - [[project-overview]]
+- [[repository-execution-and-benchmark-map]]
 - [[open-mathematical-questions]]
 - [[maintenance]]
 
 ## Open Questions
 
-- Which divergent branch commits belong in the canonical integration line?
 - Which evidence bundles should remain in Git versus Git LFS or release
   storage?
 - What explicit statistical acceptance criteria define version `1.0.0`?

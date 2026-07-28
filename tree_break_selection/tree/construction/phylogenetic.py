@@ -167,12 +167,6 @@ def _graph_with_mad_root(graph: nx.Graph, root: MadRootResult) -> tuple[nx.Graph
     u, v = root.edge
     edge_length = float(rooted[u][v]["length"])
     distance_from_u = float(root.distance_from_u)
-    tolerance = max(1e-12, edge_length * 1e-10)
-    if distance_from_u <= tolerance:
-        return rooted, u
-    if edge_length - distance_from_u <= tolerance:
-        return rooted, v
-
     root_node = _MAD_ROOT_NODE
     suffix = 0
     while root_node in rooted:

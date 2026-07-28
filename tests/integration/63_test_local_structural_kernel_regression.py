@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from benchmarks.shared.cases import get_default_test_cases
-from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from benchmarks.shared.tbs_tree_context import build_tbs_tree_context
 from scipy.spatial.distance import pdist
 from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
@@ -21,7 +21,7 @@ def test_strict_sibling_calibration_rejects_gauss_null_large_without_support() -
     context = build_tbs_tree_context(case, populate_node_distributions=False)
 
     with pytest.raises(ValueError, match="selected non-null"):
-        _run_tbs_method(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
+        run_tbs_on_distance(context.data, context.distance_condensed, DEFAULT_SIBLING_ALPHA)
 
 
 @pytest.mark.slow
@@ -32,7 +32,7 @@ def test_leaf_only_cat_highcard_requires_explicit_calibration_support() -> None:
     context = build_tbs_tree_context(case, populate_node_distributions=False)
 
     with pytest.raises(ValueError, match="selected non-null"):
-        _run_tbs_method(
+        run_tbs_on_distance(
             context.data,
             context.distance_condensed,
             DEFAULT_SIBLING_ALPHA,
@@ -45,12 +45,13 @@ def test_default_sibling_calibration_marks_gauss_clear_small_boundary() -> None:
     case = next(case for case in get_default_test_cases() if case["name"] == "gauss_clear_small")
     context = build_tbs_tree_context(case, populate_node_distributions=False)
 
-    result = _run_tbs_method(
+    result = run_tbs_on_distance(
         context.data,
         context.distance_condensed,
         DEFAULT_SIBLING_ALPHA,
         edge_branch_length_variance_policy=EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
         allow_linkage_ultrametric_branch_time=True,
+        trace_level="full",
     )
 
     assert result.found_clusters == 2
@@ -69,12 +70,13 @@ def test_default_sibling_calibration_marks_gauss_clear_small_boundary() -> None:
     ]
     assert len(conservative_boundaries) == 1
 
-    relaxed_result = _run_tbs_method(
+    relaxed_result = run_tbs_on_distance(
         context.data,
         context.distance_condensed,
         0.03,
         edge_branch_length_variance_policy=EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NORMALIZED,
         allow_linkage_ultrametric_branch_time=True,
+        trace_level="full",
     )
     assert relaxed_result.found_clusters == 3
 
@@ -108,7 +110,7 @@ def test_tbs_runner_accepts_fixed_sibling_gate_profile() -> None:
         index=[f"S{index}" for index in range(16)],
         columns=[f"F{index}" for index in range(8)],
     )
-    result = _run_tbs_method(
+    result = run_tbs_on_distance(
         data,
         pdist(data.to_numpy(), metric="hamming"),
         DEFAULT_SIBLING_ALPHA,
@@ -117,6 +119,7 @@ def test_tbs_runner_accepts_fixed_sibling_gate_profile() -> None:
         root_selective_permutation_guard_replicates=1,
         root_selective_permutation_guard_seed=19,
         root_selective_permutation_guard_alpha=0.01,
+        trace_level="full",
     )
 
     metadata = result.extra["gate_bundle"].metadata.config
@@ -176,7 +179,7 @@ def test_tbs_runner_selected_root_guard_blocks_known_categorical_false_root() ->
             data_role=role,
             seed=seed,
         )
-        run = _run_tbs_method(
+        run = run_tbs_on_distance(
             data,
             pdist(data.to_numpy(dtype=float), metric="hamming"),
             0.01,
@@ -184,6 +187,7 @@ def test_tbs_runner_selected_root_guard_blocks_known_categorical_false_root() ->
             edge_alpha=0.001,
             feature_space=feature_space,
             sibling_gate_profile="fixed_coordinate_selective_root_v1",
+            trace_level="full",
         )
         annotations = run.extra["annotations"]
         root = run.extra["tree"].root()

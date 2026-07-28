@@ -13,6 +13,7 @@ from benchmarks.validation.sweeps.family_metric_nnls_grid import (
     run_family_metric_nnls_grid,
 )
 from scipy.spatial.distance import pdist
+from tree_break_selection.space_separation import DiffusionGeometry
 from tree_break_selection.tree.feature_space import (
     FeatureBlock,
     FeatureSpace,
@@ -190,24 +191,30 @@ def test_grid_writes_all_evidence_artifacts(
     assert cells["nnls_target"].eq("squared_euclidean").all()
 
 
-def test_graphtools_runner_forwards_aligned_graph_and_branch_geometry(
+def test_graphtools_runner_forwards_explicit_graph_and_branch_geometry(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     data = pd.DataFrame([[0, 1], [1, 0], [1, 1]], index=["a", "b", "c"])
     geometry = pd.DataFrame([[0.0], [1.0], [2.0]], index=data.index)
     captured: dict[str, object] = {}
 
-    def fake_distance(graph_data: pd.DataFrame, **_kwargs: object):
+    diffusion_coordinates = np.array([[0.0], [2.0], [4.0]])
+
+    def fake_geometry(graph_data: pd.DataFrame, **_kwargs: object):
         captured["graph_data"] = graph_data
-        return np.array([1.0, 2.0, 1.0]), {"backend": "fake"}
+        return DiffusionGeometry(
+            coordinates=diffusion_coordinates,
+            distance_condensed=pdist(diffusion_coordinates),
+            metadata={"backend": "fake"},
+        )
 
     def fake_tbs(*_args: object, **kwargs: object) -> MethodRunResult:
         captured["branch_data"] = kwargs["branch_length_data_df"]
         return MethodRunResult(None, 0, None, "skip", "test", {})
 
     monkeypatch.setattr(
-        "benchmarks.shared.runners.tbs_diffusion_runner._build_graphtools_diffusion_distance",
-        fake_distance,
+        "benchmarks.shared.runners.tbs_diffusion_runner._build_graphtools_diffusion_geometry",
+        fake_geometry,
     )
     monkeypatch.setattr(
         "benchmarks.shared.runners.tbs_diffusion_runner.run_tbs_on_distance",
@@ -226,9 +233,12 @@ def test_graphtools_runner_forwards_aligned_graph_and_branch_geometry(
         0,
         graph_data_df=geometry,
         branch_length_data_df=geometry,
+        tree_linkage_method="average",
+        branch_length_optimization_method="fixed_topology_nnls",
     )
 
-    assert captured == {"graph_data": geometry, "branch_data": geometry}
+    assert captured["graph_data"] is geometry
+    assert captured["branch_data"] is geometry
 
     with pytest.raises(ValueError, match="index must exactly match"):
         _run_tbs_diffusion_graphtools_method(
@@ -243,4 +253,6 @@ def test_graphtools_runner_forwards_aligned_graph_and_branch_geometry(
             "+",
             0,
             graph_data_df=geometry.iloc[::-1],
+            branch_length_data_df=geometry,
+            tree_linkage_method="average",
         )

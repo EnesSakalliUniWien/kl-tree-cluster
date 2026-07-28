@@ -27,7 +27,11 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from sklearn.metrics import accuracy_score, adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import BayesianGaussianMixture
-from tree_break_selection.space_separation import hamming_knn_diffusion_distance
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
+from tree_break_selection.space_separation import hamming_knn_diffusion_geometry
 from tree_break_selection.tree.construction import tree_from_linkage
 
 from benchmarks.experiments.mnist.run import load_mnist_subset, run_tbs_clustering
@@ -193,13 +197,13 @@ def run_tree_decomposition_on_preprocessed_data(
     if tree_construction == "diffusion":
         if verbose:
             print("  Building hierarchy with diffusion HAC")
-        diff_dist = hamming_knn_diffusion_distance(
+        diffusion_geometry = hamming_knn_diffusion_geometry(
             annotations_df,
             k_neighbors=15,
             diffusion_time=3,
             n_components=30,
         )
-        linkage_matrix = linkage(diff_dist, method="average")
+        linkage_matrix = linkage(diffusion_geometry.distance_condensed, method="average")
     else:
         if verbose:
             print(f"  Building hierarchy with {distance_metric} + {linkage_method}")
@@ -209,12 +213,17 @@ def run_tree_decomposition_on_preprocessed_data(
         )
     tree = tree_from_linkage(linkage_matrix, leaf_names=sample_names)
     tree.populate_node_divergences(annotations_df)
-    decomposition_results = tree.decompose(
-        annotations_df=tree.annotations_df,
+    gate_bundle = run_gate_annotation_pipeline(
+        tree,
+        tree.annotations_df.copy(),
         leaf_data=annotations_df,
         edge_alpha=significance_level,
         sibling_alpha=significance_level,
     )
+    decomposition_results = TreeDecomposition(
+        tree=tree,
+        gate_annotation_bundle=gate_bundle,
+    ).decompose_tree()
 
     cluster_assignments = decomposition_results.get("cluster_assignments", {})
     label_map: dict[str, int] = {}
@@ -244,22 +253,27 @@ def _run_diffusion_tbs_clustering(
 
     if verbose:
         print("  Building hierarchy with diffusion HAC")
-    diff_dist = hamming_knn_diffusion_distance(
+    diffusion_geometry = hamming_knn_diffusion_geometry(
         data,
         k_neighbors=15,
         diffusion_time=3,
         n_components=30,
     )
-    Z = linkage(diff_dist, method="average")
+    Z = linkage(diffusion_geometry.distance_condensed, method="average")
 
     tree = tree_from_linkage(Z, leaf_names=sample_names)
     tree.populate_node_divergences(data)
-    results = tree.decompose(
-        annotations_df=tree.annotations_df,
+    gate_bundle = run_gate_annotation_pipeline(
+        tree,
+        tree.annotations_df.copy(),
         leaf_data=data,
         edge_alpha=0.05,
         sibling_alpha=0.05,
     )
+    results = TreeDecomposition(
+        tree=tree,
+        gate_annotation_bundle=gate_bundle,
+    ).decompose_tree()
 
     cluster_assignments = results.get("cluster_assignments", {})
     n_clusters = results.get("num_clusters", 0)

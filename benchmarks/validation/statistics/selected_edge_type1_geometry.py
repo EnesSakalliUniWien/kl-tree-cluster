@@ -20,8 +20,11 @@ import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import pdist
 from scipy.stats import chi2
+from tree_break_selection.hierarchy_analysis.decomposition.gates.orchestrator import (
+    run_gate_annotation_pipeline,
+)
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.contrast_covariance import (
     build_contrast_covariance,
@@ -38,6 +41,7 @@ from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.proje
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.projection.gate_inputs.projection_dimensions import (
     derive_sibling_projection_dimensions_from_child_edge_comparisons,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.tree.construction import tree_from_linkage
 from tree_break_selection.tree.feature_space import (
     FeatureSpace,
@@ -350,7 +354,7 @@ def _annotate_edges(
     tree.populate_node_divergences(data, feature_space=feature_space)
     if tree.annotations_df is None:
         raise ValueError("Tree distribution population did not produce annotations_df.")
-    annotations, spectral_context = annotate_child_parent_divergence_with_context(
+    annotations, spectral_context = annotate_child_parent_divergence(
         tree,
         tree.annotations_df,
         significance_level_alpha=float(edge_alpha),
@@ -887,13 +891,18 @@ def _decompose_for_final(
     feature_space: FeatureSpace,
 ) -> tuple[str, int, str]:
     try:
-        result = tree.decompose(
-            annotations_df=tree.annotations_df,
+        gate_bundle = run_gate_annotation_pipeline(
+            tree,
+            tree.annotations_df.copy(),
             leaf_data=data,
             feature_space=feature_space,
             edge_alpha=float(edge_alpha),
             sibling_alpha=float(sibling_alpha),
         )
+        result = TreeDecomposition(
+            tree=tree,
+            gate_annotation_bundle=gate_bundle,
+        ).decompose_tree()
     except ValueError as exc:
         return "decomposition_error", 0, str(exc)
     return "ok", int(result["num_clusters"]), ""

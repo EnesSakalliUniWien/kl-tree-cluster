@@ -5,7 +5,7 @@ Builds a PosetTree and performs TBS decomposition.
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import asdict, replace
 from time import perf_counter
 
 import numpy as np
@@ -64,7 +64,7 @@ def run_tbs_on_distance(
     *,
     tree_builder: str = "linkage",
     tree_rooting: str = "linkage_root",
-    tree_linkage_method: str,
+    tree_linkage_method: str = DEFAULT_TREE_LINKAGE_METHOD,
     iqtree_executable: str = "iqtree3",
     iqtree_model: str = "JC2",
     iqtree_threads: int = 1,
@@ -162,7 +162,12 @@ def run_tbs_on_distance(
         "branch_length_optimization_method": branch_length_optimization_method,
     }
     if branch_length_optimization_method == BRANCH_LENGTH_OPTIMIZATION_FIXED_TOPOLOGY_NNLS:
-        branch_data = data_df if branch_length_data_df is None else branch_length_data_df
+        if branch_length_data_df is None:
+            raise ValueError(
+                "Fixed-topology NNLS requires explicit branch_length_data_df geometry; "
+                "implicit reuse of the distributional feature matrix is not allowed."
+            )
+        branch_data = branch_length_data_df
         if not branch_data.index.equals(data_df.index):
             raise ValueError(
                 "branch_length_data_df index must exactly match the original data index."
@@ -184,7 +189,9 @@ def run_tbs_on_distance(
             }
         )
         branch_length_optimization_metadata["branch_length_geometry_source"] = (
-            "original_data" if branch_length_data_df is None else "aligned_geometry_embedding"
+            "original_data"
+            if branch_length_data_df is data_df
+            else "aligned_geometry_embedding"
         )
     elif branch_length_optimization_method != BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC:
         raise ValueError(
@@ -287,42 +294,6 @@ def run_tbs_on_distance(
     decomposer = TreeDecomposition(
         tree=tree,
         gate_annotation_bundle=gate_annotation_bundle,
-        leaf_data=data_df,
-        feature_space=feature_space,
-        spectral_minimum_dimension=spectral_minimum_dimension,
-        adaptive_projection_dimension_energy_fraction=(
-            adaptive_projection_dimension_energy_fraction
-        ),
-        spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
-        spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
-        continuous_covariance_policy=continuous_covariance_policy,
-        continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
-        edge_branch_length_variance_policy=edge_branch_length_variance_policy,
-        enforce_internal_support_thresholds=bool(enforce_internal_support_thresholds),
-        sibling_gate_profile=sibling_gate_profile,
-        sibling_gate_method=sibling_gate_method,
-        sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
-        root_stability_guard_threshold=root_stability_guard_threshold,
-        root_stability_subsample_replicates=root_stability_subsample_replicates,
-        root_stability_feature_fraction=root_stability_feature_fraction,
-        root_stability_seed=root_stability_seed,
-        root_stability_tree_distance_metric=str(root_stability_tree_distance_metric),
-        root_stability_tree_linkage_method=root_stability_replay_linkage,
-        root_selective_permutation_guard_replicates=(root_selective_permutation_guard_replicates),
-        root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
-        root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
-        root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
-        root_selective_permutation_guard_tree_distance_metric=str(
-            root_selective_permutation_guard_tree_distance_metric
-        ),
-        root_selective_permutation_guard_tree_linkage_method=(root_selective_replay_linkage),
-        spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
-        spectral_transport_max_cost=spectral_transport_max_cost,
-        spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
-        spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
-        spectral_transport_unmatched_mode_penalty=(spectral_transport_unmatched_mode_penalty),
-        edge_alpha=edge_alpha,
-        sibling_alpha=sibling_significance_level,
         passthrough=passthrough,
         trace_level=trace_level,
     )
@@ -349,6 +320,7 @@ def run_tbs_on_distance(
         "linkage_matrix": tree_build.linkage_matrix,
         "tree_builder": str(tree_builder),
         "tree_rooting": str(tree_rooting),
+        "tree_build_diagnostics": asdict(tree_build.diagnostics),
         "linkage_topology_only_branch_lengths": bool(
             tree_build.topology_only_branch_lengths
         ),
@@ -446,129 +418,4 @@ def run_tbs_on_distance(
         status="ok",
         skip_reason=None,
         extra=result_extra,
-    )
-
-
-def _run_tbs_method(
-    data_df: pd.DataFrame,
-    distance_condensed: np.ndarray | None,
-    sibling_significance_level: float,
-    tree_linkage_method: str = DEFAULT_TREE_LINKAGE_METHOD,
-    *,
-    tree_builder: str = "linkage",
-    tree_rooting: str = "linkage_root",
-    iqtree_executable: str = "iqtree3",
-    iqtree_model: str = "JC2",
-    iqtree_threads: int = 1,
-    iqtree_work_dir: str | None = None,
-    edge_alpha: float = DEFAULT_EDGE_ALPHA,
-    feature_space: FeatureSpace | None = None,
-    spectral_minimum_dimension: int = EDGE_GATE_SPECTRAL_MINIMUM_PROJECTION_DIMENSION,
-    adaptive_projection_dimension_energy_fraction: float | None = None,
-    spectral_include_internal_barycenters: bool = False,
-    spectral_internal_distribution_mode: str = INTERNAL_DISTRIBUTION_EMPIRICAL_BARYCENTER,
-    continuous_covariance_policy: str = DEFAULT_CONTINUOUS_COVARIANCE_POLICY,
-    continuous_covariance_min_child_leaf_count: int = (
-        DEFAULT_CONTINUOUS_COVARIANCE_MIN_CHILD_LEAF_COUNT
-    ),
-    edge_branch_length_variance_policy: str = EDGE_BRANCH_LENGTH_VARIANCE_POLICY_NONE,
-    enforce_internal_support_thresholds: bool = False,
-    sibling_gate_profile: str | None = None,
-    sibling_gate_method: str = "projected_wald_inflation",
-    sibling_gate_alpha_penalty: float = 1.0,
-    root_stability_guard_threshold: float | None = None,
-    root_stability_subsample_replicates: int = 0,
-    root_stability_feature_fraction: float = 0.8,
-    root_stability_seed: int = 0,
-    root_stability_tree_distance_metric: str = "hamming",
-    root_stability_tree_linkage_method: str | None = None,
-    root_selective_permutation_guard_replicates: int = 0,
-    root_selective_permutation_guard_seed: int = 0,
-    root_selective_permutation_guard_alpha: float | None = None,
-    root_selective_permutation_guard_scope: str = "root",
-    root_selective_permutation_guard_tree_distance_metric: str = "hamming",
-    root_selective_permutation_guard_tree_linkage_method: str | None = None,
-    spectral_transport_passthrough_guard: bool = False,
-    spectral_transport_max_cost: float = DEFAULT_SPECTRAL_TRANSPORT_MAX_COST,
-    spectral_transport_require_mp_blocks: bool = True,
-    spectral_transport_block_log_tolerance: float = (
-        DEFAULT_SPECTRAL_TRANSPORT_BLOCK_LOG_TOLERANCE
-    ),
-    spectral_transport_unmatched_mode_penalty: float = (
-        DEFAULT_SPECTRAL_TRANSPORT_UNMATCHED_MODE_PENALTY
-    ),
-    neighborhood_bandwidth_profile: str | None = None,
-    distributional_action_split_filter_policy: str = DISTRIBUTIONAL_ACTION_SPLIT_FILTER_NONE,
-    distributional_action_split_filter_quantile: float = 0.0,
-    branch_length_optimization_method: str = BRANCH_LENGTH_OPTIMIZATION_LINKAGE_ULTRAMETRIC,
-    branch_length_optimization_target_metric: str = (
-        BRANCH_LENGTH_TARGET_SQUARED_STANDARDIZED_EUCLIDEAN
-    ),
-    branch_length_optimization_pair_sample_size: int | None = 100_000,
-    branch_length_optimization_random_state: int = 0,
-    branch_length_optimization_solver_tolerance: float = 1e-6,
-    branch_length_optimization_max_iterations: int | None = None,
-    allow_linkage_ultrametric_branch_time: bool = False,
-    passthrough: bool = True,
-    trace_level: str = "full",
-) -> MethodRunResult:
-    return run_tbs_on_distance(
-        data_df,
-        distance_condensed,
-        sibling_significance_level,
-        tree_builder=tree_builder,
-        tree_rooting=tree_rooting,
-        tree_linkage_method=tree_linkage_method,
-        iqtree_executable=iqtree_executable,
-        iqtree_model=iqtree_model,
-        iqtree_threads=iqtree_threads,
-        iqtree_work_dir=iqtree_work_dir,
-        edge_alpha=edge_alpha,
-        feature_space=feature_space,
-        spectral_minimum_dimension=spectral_minimum_dimension,
-        adaptive_projection_dimension_energy_fraction=(
-            adaptive_projection_dimension_energy_fraction
-        ),
-        spectral_include_internal_barycenters=(spectral_include_internal_barycenters),
-        spectral_internal_distribution_mode=str(spectral_internal_distribution_mode),
-        continuous_covariance_policy=continuous_covariance_policy,
-        continuous_covariance_min_child_leaf_count=(continuous_covariance_min_child_leaf_count),
-        edge_branch_length_variance_policy=edge_branch_length_variance_policy,
-        enforce_internal_support_thresholds=bool(enforce_internal_support_thresholds),
-        sibling_gate_profile=sibling_gate_profile,
-        sibling_gate_method=sibling_gate_method,
-        sibling_gate_alpha_penalty=sibling_gate_alpha_penalty,
-        root_stability_guard_threshold=root_stability_guard_threshold,
-        root_stability_subsample_replicates=root_stability_subsample_replicates,
-        root_stability_feature_fraction=root_stability_feature_fraction,
-        root_stability_seed=root_stability_seed,
-        root_stability_tree_distance_metric=root_stability_tree_distance_metric,
-        root_stability_tree_linkage_method=root_stability_tree_linkage_method,
-        root_selective_permutation_guard_replicates=(root_selective_permutation_guard_replicates),
-        root_selective_permutation_guard_seed=root_selective_permutation_guard_seed,
-        root_selective_permutation_guard_alpha=root_selective_permutation_guard_alpha,
-        root_selective_permutation_guard_scope=root_selective_permutation_guard_scope,
-        root_selective_permutation_guard_tree_distance_metric=(
-            root_selective_permutation_guard_tree_distance_metric
-        ),
-        root_selective_permutation_guard_tree_linkage_method=(
-            root_selective_permutation_guard_tree_linkage_method
-        ),
-        spectral_transport_passthrough_guard=spectral_transport_passthrough_guard,
-        spectral_transport_max_cost=spectral_transport_max_cost,
-        spectral_transport_require_mp_blocks=spectral_transport_require_mp_blocks,
-        spectral_transport_block_log_tolerance=spectral_transport_block_log_tolerance,
-        spectral_transport_unmatched_mode_penalty=(spectral_transport_unmatched_mode_penalty),
-        neighborhood_bandwidth_profile=neighborhood_bandwidth_profile,
-        distributional_action_split_filter_policy=distributional_action_split_filter_policy,
-        distributional_action_split_filter_quantile=distributional_action_split_filter_quantile,
-        branch_length_optimization_method=branch_length_optimization_method,
-        branch_length_optimization_target_metric=branch_length_optimization_target_metric,
-        branch_length_optimization_pair_sample_size=branch_length_optimization_pair_sample_size,
-        branch_length_optimization_random_state=branch_length_optimization_random_state,
-        branch_length_optimization_solver_tolerance=branch_length_optimization_solver_tolerance,
-        branch_length_optimization_max_iterations=branch_length_optimization_max_iterations,
-        allow_linkage_ultrametric_branch_time=allow_linkage_ultrametric_branch_time,
-        passthrough=passthrough,
-        trace_level=trace_level,
     )

@@ -127,7 +127,7 @@ def test_fixed_coordinate_sibling_gate_does_not_raise_edge_projection_floor_to_f
 
     monkeypatch.setattr(
         orchestrator,
-        "annotate_child_parent_divergence_with_context",
+        "annotate_child_parent_divergence",
         fake_edge_annotation,
     )
     monkeypatch.setattr(
@@ -193,7 +193,7 @@ def test_projected_gates_share_adaptive_projection_fraction_and_full_candidate_b
 
     monkeypatch.setattr(
         orchestrator,
-        "annotate_child_parent_divergence_with_context",
+        "annotate_child_parent_divergence",
         fake_edge_annotation,
     )
     monkeypatch.setattr(

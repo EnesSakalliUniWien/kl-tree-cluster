@@ -35,6 +35,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.space_separation import (
     SpectralBlock,
     adaptive_spectral_blocks,
@@ -271,13 +272,10 @@ def run_feature_block(
             leaf_data=active_coordinates,
             feature_space=feature_space,
         )
-        decomposition = tree.decompose(
+        decomposition = TreeDecomposition(
+            tree=tree,
             gate_annotation_bundle=gate_bundle,
-            leaf_data=active_coordinates,
-            feature_space=feature_space,
-            edge_alpha=edge_alpha,
-            sibling_alpha=sibling_alpha,
-        )
+        ).decompose_tree()
         assignments = build_sample_cluster_assignments(decomposition).loc[active_coordinates.index]
         assignments.to_csv(assignments_path)
         write_feature_cluster_summary(

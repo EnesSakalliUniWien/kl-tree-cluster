@@ -32,7 +32,7 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_SIBLING_ALPHA,
 )
 from tree_break_selection.hierarchy_analysis.statistics.child_parent_divergence.child_parent_divergence_annotation.child_parent_divergence_annotation import (
-    annotate_child_parent_divergence_with_context,
+    annotate_child_parent_divergence,
 )
 from tree_break_selection.hierarchy_analysis.statistics.sibling_divergence.pair_testing.collection.record_collection import (
     collect_sibling_pair_records,
@@ -257,7 +257,7 @@ def _collect_support_metrics(
     feature_space: FeatureSpace | None,
 ) -> tuple[dict[str, object], pd.DataFrame]:
     tree.populate_node_divergences(test_data, feature_space=feature_space)
-    edge_df, spectral_context = annotate_child_parent_divergence_with_context(
+    edge_df, spectral_context = annotate_child_parent_divergence(
         tree,
         tree.annotations_df,
         significance_level_alpha=DEFAULT_EDGE_ALPHA,
@@ -345,10 +345,6 @@ def _run_full_decomposition(
     decomposer = TreeDecomposition(
         tree=tree,
         gate_annotation_bundle=gate_bundle,
-        edge_alpha=DEFAULT_EDGE_ALPHA,
-        sibling_alpha=DEFAULT_SIBLING_ALPHA,
-        leaf_data=test_data,
-        feature_space=feature_space,
         passthrough=True,
     )
     decomposition = decomposer.decompose_tree()

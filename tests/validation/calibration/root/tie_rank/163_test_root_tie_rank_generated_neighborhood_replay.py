@@ -143,7 +143,7 @@ def test_generated_replay_builds_topology_frontier_rows(
 
     monkeypatch.setattr(
         replay,
-        "_run_tbs_method",
+        "run_tbs_on_distance",
         lambda *args, **kwargs: SimpleNamespace(
             status="ok",
             skip_reason=None,
@@ -198,7 +198,7 @@ def test_generated_replay_runner_writes_outputs(
 
     monkeypatch.setattr(
         replay,
-        "_run_tbs_method",
+        "run_tbs_on_distance",
         lambda *args, **kwargs: SimpleNamespace(
             status="ok",
             skip_reason=None,

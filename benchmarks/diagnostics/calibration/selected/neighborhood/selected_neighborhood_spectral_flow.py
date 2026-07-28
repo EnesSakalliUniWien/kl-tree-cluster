@@ -35,7 +35,7 @@ from benchmarks.diagnostics.calibration.selected.family.selected_family_traversa
 from benchmarks.diagnostics.calibration.sibling.gates.data_independent_sibling_gate_traversal_panel import (
     _generate_data_with_truth,
 )
-from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from benchmarks.shared.util.time import format_timestamp_utc
 from benchmarks.validation.statistics.selected_edge_type1_geometry import (
     _case_contract,
@@ -1230,7 +1230,7 @@ def _run_one_spectral_flow(
     )
     distance = pdist(data.to_numpy(dtype=float), metric="hamming")
     profile_id = None if method_id == "baseline_projected_wald" else str(method_id)
-    result = _run_tbs_method(
+    result = run_tbs_on_distance(
         data,
         distance,
         sibling_significance_level=float(sibling_alpha),
@@ -1239,6 +1239,7 @@ def _run_one_spectral_flow(
         feature_space=feature_space,
         spectral_minimum_dimension=int(spectral_minimum_dimension),
         sibling_gate_profile=profile_id,
+        trace_level="full",
     )
     if result.status != "ok":
         raise RuntimeError(f"TBS run failed for {case_id}/{data_role}: {result.skip_reason}")

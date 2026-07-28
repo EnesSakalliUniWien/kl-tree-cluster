@@ -46,14 +46,15 @@ from tree_break_selection.hierarchy_analysis.statistics.alpha_contract import (
     DEFAULT_EDGE_ALPHA,
     DEFAULT_SIBLING_ALPHA,
 )
+from tree_break_selection.hierarchy_analysis.tree_decomposition import TreeDecomposition
 from tree_break_selection.plot.cluster_color_mapping import (
     build_cluster_color_spec,
     present_cluster_ids,
 )
 from tree_break_selection.plot.cluster_tree_visualization import plot_tree_with_clusters
 from tree_break_selection.space_separation import (
-    adaptive_diffusion_distance,
-    hamming_knn_diffusion_distance,
+    adaptive_diffusion_geometry,
+    hamming_knn_diffusion_geometry,
 )
 from tree_break_selection.tree.construction import (
     DEFAULT_BINARY_TREE_DISTANCE_METRIC,
@@ -276,12 +277,10 @@ def _run_decomposition(
         sibling_alpha=sibling_alpha,
         leaf_data=data_df,
     )
-    decomposition = tree.decompose(
+    decomposition = TreeDecomposition(
+        tree=tree,
         gate_annotation_bundle=gate_bundle,
-        leaf_data=data_df,
-        edge_alpha=edge_alpha,
-        sibling_alpha=sibling_alpha,
-    )
+    ).decompose_tree()
 
     assignments = build_sample_cluster_assignments(decomposition)
     if assignments.empty:
@@ -325,16 +324,18 @@ def _build_linkage_tree(
 ) -> tuple[np.ndarray, str, str, dict[str, object] | None]:
     adaptive_metadata: dict[str, object] | None = None
     if tree_method == "tbs_diffusion":
-        distance_condensed = hamming_knn_diffusion_distance(
+        geometry = hamming_knn_diffusion_geometry(
             data_df,
             k_neighbors=diffusion_k_neighbors,
             diffusion_time=diffusion_time,
             n_components=diffusion_components,
         )
+        distance_condensed = geometry.distance_condensed
+        adaptive_metadata = geometry.metadata
         linkage_method = "average"
         distance_metric = "diffusion"
     elif tree_method == "tbs_diffusion_adaptive":
-        distance_condensed, adaptive_metadata = adaptive_diffusion_distance(
+        geometry = adaptive_diffusion_geometry(
             data_df,
             k_neighbors=adaptive_neighbor_k,
             diffusion_time=diffusion_time,
@@ -342,8 +343,9 @@ def _build_linkage_tree(
             metric=adaptive_metric,
             bandwidth_type=adaptive_bandwidth_type,
             epsilon=adaptive_epsilon,
-            return_metadata=True,
         )
+        distance_condensed = geometry.distance_condensed
+        adaptive_metadata = geometry.metadata
         linkage_method = "average"
         distance_metric = "adaptive_diffusion"
     else:

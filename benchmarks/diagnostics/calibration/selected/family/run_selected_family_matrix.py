@@ -24,7 +24,7 @@ from benchmarks.diagnostics.calibration.selected.family.selected_family_traversa
     _build_node_decisions,
     _build_regions_and_gene_assignments,
 )
-from benchmarks.shared.runners.tbs_runner import _run_tbs_method
+from benchmarks.shared.runners.tbs_runner import run_tbs_on_distance
 from benchmarks.shared.util.time import format_timestamp_utc
 
 
@@ -106,13 +106,14 @@ def run_matrix(args: argparse.Namespace) -> dict[str, object]:
     data = load_binary_matrix(args.feature_matrix)
     distance = pdist(data.to_numpy(dtype=float), metric=str(args.tree_distance_metric))
     with time_limit(args.timeout_seconds):
-        result = _run_tbs_method(
+        result = run_tbs_on_distance(
             data,
             distance,
             sibling_significance_level=float(args.sibling_alpha),
             tree_linkage_method=str(args.tree_linkage_method),
             edge_alpha=float(args.edge_alpha),
             sibling_gate_profile=str(args.sibling_gate_profile),
+            trace_level="full",
         )
 
     node_decisions = _build_node_decisions(
